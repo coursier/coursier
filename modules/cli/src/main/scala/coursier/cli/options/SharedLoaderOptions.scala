@@ -4,19 +4,25 @@ import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Val
 import coursier.install.RawAppDescriptor
 
 
+// format: off
 final case class SharedLoaderOptions(
 
   // deprecated, use shared instead
+  @Group(OptionGroup.launch)
+  @Hidden
   @Value("target:dependency")
   @Short("I")
-  @Short("isolated")
   @Help("(deprecated) dependencies to be put in shared class loaders")
     isolated: List[String] = Nil,
 
+  @Group(OptionGroup.launch)
+  @Hidden
   @Value("dependency[@target]")
   @Help("Dependencies to be put in shared class loaders")
     shared: List[String] = Nil,
 
+  @Group(OptionGroup.launch)
+  @Hidden
   @Help("Comma-separated isolation targets")
   @Short("i")
   @Short("isolateTarget") // former deprecated name
@@ -31,8 +37,9 @@ final case class SharedLoaderOptions(
       }
     )
 }
+// format: on
 
 object SharedLoaderOptions {
   implicit val parser = Parser[SharedLoaderOptions]
-  implicit val help = caseapp.core.help.Help[SharedLoaderOptions]
+  implicit val help   = caseapp.core.help.Help[SharedLoaderOptions]
 }

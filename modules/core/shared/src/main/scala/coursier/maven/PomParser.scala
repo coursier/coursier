@@ -12,7 +12,7 @@ final class PomParser extends SaxHandler {
   private[this] val state = new State
 
   private[this] var paths: CustomList[String] = CustomList.Nil
-  private[this] var handlers = List.empty[Option[Handler]]
+  private[this] var handlers                  = List.empty[Option[Handler]]
 
   private[this] val b = new java.lang.StringBuilder
 
@@ -33,8 +33,8 @@ final class PomParser extends SaxHandler {
   def characters(ch: Array[Char], start: Int, length: Int): Unit = {
     val readContent = handlers.headOption.exists(_.exists {
       case _: PropertyHandler => true
-      case _: ContentHandler => true
-      case _: SectionHandler => false
+      case _: ContentHandler  => true
+      case _: SectionHandler  => false
     })
     if (readContent)
       b.append(ch, start, length)
@@ -80,71 +80,71 @@ object PomParser {
     def apply[T](l: List[T]): CustomList[T] =
       l match {
         case scala.Nil => CustomList.Nil
-        case h :: t => CustomList.Cons(h, CustomList(t))
+        case h :: t    => CustomList.Cons(h, CustomList(t))
       }
   }
 
   private final class State {
-    var groupId = ""
+    var groupId       = ""
     var artifactIdOpt = Option.empty[String]
-    var version = ""
+    var version       = ""
 
-    var parentGroupIdOpt = Option.empty[String]
+    var parentGroupIdOpt    = Option.empty[String]
     var parentArtifactIdOpt = Option.empty[String]
-    var parentVersion = ""
+    var parentVersion       = ""
 
-    var description = ""
-    var url = ""
-    val licenseInfo = new ListBuffer[Info.License]
-    var licenseName = ""
-    var licenseUrl = Option.empty[String]
-    var licenseDistribution = Option.empty[String]
-    var licenseComments = Option.empty[String]
-    val developers = Nil // TODO
-    val publication = Option.empty[Versions.DateTime] // TODO
-    var scmOpt = Option.empty[Info.Scm]
-    var scmUrl = Option.empty[String]
-    var scmConnection = Option.empty[String]
+    var description            = ""
+    var url                    = ""
+    val licenseInfo            = new ListBuffer[Info.License]
+    var licenseName            = ""
+    var licenseUrl             = Option.empty[String]
+    var licenseDistribution    = Option.empty[String]
+    var licenseComments        = Option.empty[String]
+    val developers             = Nil                             // TODO
+    val publication            = Option.empty[Versions.DateTime] // TODO
+    var scmOpt                 = Option.empty[Info.Scm]
+    var scmUrl                 = Option.empty[String]
+    var scmConnection          = Option.empty[String]
     var scmDeveloperConnection = Option.empty[String]
 
     var packagingOpt = Option.empty[Type]
 
-    val dependencies = new ListBuffer[(Configuration, Dependency)]
+    val dependencies         = new ListBuffer[(Configuration, Dependency)]
     val dependencyManagement = new ListBuffer[(Configuration, Dependency)]
 
     val properties = new ListBuffer[(String, String)]
 
-    var relocationGroupIdOpt = Option.empty[Organization]
+    var relocationGroupIdOpt    = Option.empty[Organization]
     var relocationArtifactIdOpt = Option.empty[ModuleName]
-    var relocationVersionOpt = Option.empty[String]
+    var relocationVersionOpt    = Option.empty[String]
 
-    var dependencyGroupIdOpt = Option.empty[Organization]
+    var dependencyGroupIdOpt    = Option.empty[Organization]
     var dependencyArtifactIdOpt = Option.empty[ModuleName]
-    var dependencyVersion = ""
-    var dependencyOptional = false
-    var dependencyScope = Configuration.empty
-    var dependencyType = Type.empty
-    var dependencyClassifier = Classifier.empty
-    var dependencyExclusions = Set.empty[(Organization, ModuleName)]
+    var dependencyVersion       = ""
+    var dependencyOptional      = false
+    var dependencyScope         = Configuration.empty
+    var dependencyType          = Type.empty
+    var dependencyClassifier    = Classifier.empty
+    var dependencyExclusions    = Set.empty[(Organization, ModuleName)]
 
-    var dependencyExclusionGroupId = Organization("*")
+    var dependencyExclusionGroupId    = Organization("*")
     var dependencyExclusionArtifactId = ModuleName("*")
 
     var propertyNameOpt = Option.empty[String]
 
-    var profileId = ""
-    val profileDependencies = new ListBuffer[(Configuration, Dependency)]
-    val profileDependencyManagement = new ListBuffer[(Configuration, Dependency)]
-    var profileProperties = Map.empty[String, String]
-    val profileActivationProperties = new ListBuffer[(String, Option[String])]
-    var profileActiveByDefaultOpt = Option.empty[Boolean]
-    var profilePropertyNameOpt = Option.empty[String]
-    var profilePropertyValueOpt = Option.empty[String]
-    var profileActivationOsArchOpt = Option.empty[String]
-    var profileActivationOsFamilyOpt = Option.empty[String]
-    var profileActivationOsNameOpt = Option.empty[String]
+    var profileId                     = ""
+    val profileDependencies           = new ListBuffer[(Configuration, Dependency)]
+    val profileDependencyManagement   = new ListBuffer[(Configuration, Dependency)]
+    var profileProperties             = Map.empty[String, String]
+    val profileActivationProperties   = new ListBuffer[(String, Option[String])]
+    var profileActiveByDefaultOpt     = Option.empty[Boolean]
+    var profilePropertyNameOpt        = Option.empty[String]
+    var profilePropertyValueOpt       = Option.empty[String]
+    var profileActivationOsArchOpt    = Option.empty[String]
+    var profileActivationOsFamilyOpt  = Option.empty[String]
+    var profileActivationOsNameOpt    = Option.empty[String]
     var profileActivationOsVersionOpt = Option.empty[String]
-    var profileActivationJdkOpt = Option.empty[Either[VersionInterval, Seq[Version]]]
+    var profileActivationJdkOpt       = Option.empty[Either[VersionInterval, Seq[Version]]]
 
     val profiles = new ListBuffer[Profile]
 
@@ -168,7 +168,7 @@ object PomParser {
 
       for {
         finalGroupId <- groupIdOpt.toRight("No organization found")
-        artifactId <- artifactIdOpt.toRight("No artifactId found")
+        artifactId   <- artifactIdOpt.toRight("No artifactId found")
         finalVersion <- versionOpt.toRight("No version found")
 
         _ <- {
@@ -202,8 +202,11 @@ object PomParser {
 
         val projModule = Module(Organization(finalGroupId), ModuleName(artifactId), Map.empty)
 
-        val relocationDependencyOpt =
-          if (relocationGroupIdOpt.nonEmpty || relocationArtifactIdOpt.nonEmpty || relocationVersionOpt.nonEmpty)
+        val relocationDependencyOpt = {
+          val isRelocated = relocationGroupIdOpt.nonEmpty ||
+            relocationArtifactIdOpt.nonEmpty ||
+            relocationVersionOpt.nonEmpty
+          if (isRelocated)
             Some {
               Configuration.empty -> Dependency(
                 Module(
@@ -221,6 +224,7 @@ object PomParser {
             }
           else
             None
+        }
 
         Project(
           projModule,
@@ -279,7 +283,6 @@ object PomParser {
     }
 
   private val handlers = Seq[Handler](
-
     content("groupId" :: "project" :: Nil) {
       (state, content) =>
         state.groupId = content
@@ -292,7 +295,6 @@ object PomParser {
       (state, content) =>
         state.version = content
     },
-
     content("groupId" :: "parent" :: "project" :: Nil) {
       (state, content) =>
         state.parentGroupIdOpt = Some(content)
@@ -305,7 +307,6 @@ object PomParser {
       (state, content) =>
         state.parentVersion = content
     },
-
     content("description" :: "project" :: Nil) {
       (state, content) =>
         state.description = content
@@ -314,12 +315,10 @@ object PomParser {
       (state, content) =>
         state.url = content
     },
-
     content("packaging" :: "project" :: Nil) {
       (state, content) =>
         state.packagingOpt = Some(Type(content))
     },
-
     content("groupId" :: "relocation" :: "distributionManagement" :: "project" :: Nil) {
       (state, content) =>
         state.relocationGroupIdOpt = Some(Organization(content))
@@ -332,37 +331,30 @@ object PomParser {
       (state, content) =>
         state.relocationVersionOpt = Some(content)
     }
-
   ) ++ dependencyHandlers(
     "dependency" :: "dependencies" :: "project" :: Nil,
-    (s, c, d) => {
+    (s, c, d) =>
       s.dependencies += c -> d
-    }
   ) ++ dependencyHandlers(
     "dependency" :: "dependencies" :: "dependencyManagement" :: "project" :: Nil,
-    (s, c, d) => {
+    (s, c, d) =>
       s.dependencyManagement += c -> d
-    }
   ) ++ propertyHandlers(
     "properties" :: "project" :: Nil,
-    (s, k, v) => {
+    (s, k, v) =>
       s.properties += k -> v
-    }
   ) ++ profileHandlers(
     "profile" :: "profiles" :: "project" :: Nil,
-    (s, p) => {
+    (s, p) =>
       s.profiles += p
-    }
   ) ++ scmHandlers(
     "scm" :: "project" :: Nil,
-    (s, scm) => {
+    (s, scm) =>
       s.scmOpt = Some(scm)
-    }
   ) ++ licenseHandlers(
     "license" :: "licenses" :: "project" :: Nil,
-    (s, l) => {
+    (s, l) =>
       s.licenseInfo += l
-    }
   )
 
   private def profileHandlers(prefix: List[String], add: (State, Profile) => Unit) =
@@ -409,9 +401,9 @@ object PomParser {
       content("activeByDefault" :: "activation" :: prefix) {
         (state, content) =>
           state.profileActiveByDefaultOpt = content match {
-            case "true" => Some(true)
+            case "true"  => Some(true)
             case "false" => Some(false)
-            case _ => None
+            case _       => None
           }
       },
       new SectionHandler("property" :: "activation" :: prefix) {
@@ -419,10 +411,9 @@ object PomParser {
           state.profilePropertyNameOpt = None
           state.profilePropertyValueOpt = None
         }
-        def end(state: State) = {
+        def end(state: State) =
           state.profileActivationProperties +=
             state.profilePropertyNameOpt.get -> state.profilePropertyValueOpt
-        }
       },
       content("name" :: "property" :: "activation" :: prefix) {
         (state, content) =>
@@ -459,24 +450,23 @@ object PomParser {
       }
     ) ++ dependencyHandlers(
       "dependency" :: "dependencies" :: prefix,
-      (s, c, d) => {
+      (s, c, d) =>
         s.profileDependencies += c -> d
-      }
     ) ++ dependencyHandlers(
       "dependency" :: "dependencies" :: "dependencyManagement" :: prefix,
-      (s, c, d) => {
+      (s, c, d) =>
         s.profileDependencyManagement += c -> d
-      }
     ) ++ propertyHandlers(
       "properties" :: prefix,
-      (s, k, v) => {
+      (s, k, v) =>
         s.profileProperties = s.profileProperties + (k -> v)
-      }
     )
 
-  private def dependencyHandlers(prefix: List[String], add: (State, Configuration, Dependency) => Unit) =
+  private def dependencyHandlers(
+    prefix: List[String],
+    add: (State, Configuration, Dependency) => Unit
+  ) =
     Seq(
-
       new SectionHandler(prefix) {
         def start(state: State) = {
           state.dependencyGroupIdOpt = None
@@ -529,7 +519,6 @@ object PomParser {
         (state, content) =>
           state.dependencyClassifier = Classifier(content)
       },
-
       new SectionHandler("exclusion" :: "exclusions" :: prefix) {
         def start(state: State) = {
           state.dependencyExclusionGroupId = Organization("*")
@@ -553,9 +542,8 @@ object PomParser {
   private def propertyHandlers(prefix: List[String], add: (State, String, String) => Unit) =
     Seq(
       new PropertyHandler(prefix) {
-        override def name(state: State, name: String) = {
+        override def name(state: State, name: String) =
           state.propertyNameOpt = Some(name)
-        }
         override def content(state: State, content: String) = {
           add(state, state.propertyNameOpt.get, content)
           state.propertyNameOpt = None
@@ -572,8 +560,7 @@ object PomParser {
   private def scmHandlers(prefix: List[String], add: (State, Info.Scm) => Unit) =
     Seq(
       new SectionHandler(prefix) {
-        def start(state: State) = {
-        }
+        def start(state: State) = {}
         def end(state: State) = {
           val d = Info.Scm(
             url = state.scmUrl,
@@ -603,11 +590,11 @@ object PomParser {
         def start(state: State): Unit = {}
         def end(state: State): Unit = {
           val license = Info.License(
-              state.licenseName,
-              state.licenseUrl,
-              state.licenseDistribution,
-              state.licenseComments
-            )
+            state.licenseName,
+            state.licenseUrl,
+            state.licenseDistribution,
+            state.licenseComments
+          )
           add(state, license)
         }
       },

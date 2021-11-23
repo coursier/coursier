@@ -17,7 +17,8 @@ object CacheFetchTests extends TestSuite {
   def check(
     extraRepo: Repository,
     followHttpToHttpsRedirections: Boolean = false,
-    deps: Seq[Dependency] = Seq(Dependency(mod"com.github.alexarchambault:coursier_2.11", "1.0.0-M9-test")),
+    deps: Seq[Dependency] =
+      Seq(Dependency(mod"com.github.alexarchambault:coursier_2.11", "1.0.0-M9-test")),
     addCentral: Boolean = true
   ): Unit = {
 
@@ -27,10 +28,11 @@ object CacheFetchTests extends TestSuite {
       def delete(f: File): Boolean =
         if (f.isDirectory) {
           val removedContent = Option(f.listFiles()).toSeq.flatten.map(delete).forall(x => x)
-          val removedDir = f.delete()
+          val removedDir     = f.delete()
 
           removedContent && removedDir
-        } else
+        }
+        else
           f.delete()
 
       if (!delete(tmpDir))
@@ -66,9 +68,7 @@ object CacheFetchTests extends TestSuite {
 
     val res =
       try Await.result(f, Duration.Inf)
-      finally {
-        cleanTmpDir()
-      }
+      finally cleanTmpDir()
 
     val errors = res.errors
 

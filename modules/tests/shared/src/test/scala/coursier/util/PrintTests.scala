@@ -12,17 +12,15 @@ import scala.concurrent.ExecutionContext.Implicits.global
 object PrintTests extends TestSuite {
 
   object AppliedTree {
-    def apply[A](tree: Tree[A]): Seq[AppliedTree[A]] = {
-      tree.roots.map(root => {
+    def apply[A](tree: Tree[A]): Seq[AppliedTree[A]] =
+      tree.roots.map { root =>
         AppliedTree[A](root, apply(Tree(tree.children(root).toIndexedSeq)(tree.children)))
-      })
-    }
+      }
   }
 
   case class AppliedTree[A](root: A, children: Seq[AppliedTree[A]])
 
   private val runner = new TestRunner
-
 
   val tests = Tests {
     test("ignoreAttributes") {
@@ -33,7 +31,8 @@ object PrintTests extends TestSuite {
         dep.withAttributes(Attributes(Type("fooz"), Classifier.empty))
       )
 
-      val res = Print.dependenciesUnknownConfigs(deps, Map(), printExclusions = false, reorder = true)
+      val res =
+        Print.dependenciesUnknownConfigs(deps, Map(), printExclusions = false, reorder = true)
       val expectedRes = "org:name:0.1:foo"
 
       assert(res == expectedRes)
@@ -41,12 +40,12 @@ object PrintTests extends TestSuite {
 
     test("reverseTree") {
       test - async {
-        val junit = mod"junit:junit"
+        val junit        = mod"junit:junit"
         val junitVersion = "4.10"
 
         val result = await(runner.resolve(Seq(Dependency(junit, junitVersion))))
 
-        val hamcrest = mod"org.hamcrest:hamcrest-core"
+        val hamcrest        = mod"org.hamcrest:hamcrest-core"
         val hamcrestVersion = "1.1"
         val t = ReverseModuleTree(
           result,
@@ -69,7 +68,7 @@ object PrintTests extends TestSuite {
       }
 
       test - async {
-        val mod = mod"org.webjars.npm:micromatch"
+        val mod     = mod"org.webjars.npm:micromatch"
         val version = "2.3.11"
 
         val result = await(runner.resolve(

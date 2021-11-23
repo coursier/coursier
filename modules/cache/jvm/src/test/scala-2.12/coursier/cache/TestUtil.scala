@@ -10,7 +10,14 @@ import cats.data.NonEmptyList
 import cats.effect.IO
 import coursier.core.Authentication
 import coursier.util.Artifact
-import javax.net.ssl.{HostnameVerifier, KeyManagerFactory, SSLContext, SSLSession, TrustManager, X509TrustManager}
+import javax.net.ssl.{
+  HostnameVerifier,
+  KeyManagerFactory,
+  SSLContext,
+  SSLSession,
+  TrustManager,
+  X509TrustManager
+}
 import org.http4s.dsl.io._
 import org.http4s.headers.{Authorization, `WWW-Authenticate`}
 import org.http4s.server.blaze.BlazeBuilder
@@ -25,7 +32,7 @@ object TestUtil {
 
     val dummyTrustManager = Array[TrustManager](
       new X509TrustManager {
-        def getAcceptedIssuers = null
+        def getAcceptedIssuers                                                  = null
         def checkClientTrusted(certs: Array[X509Certificate], authType: String) = {}
         def checkServerTrusted(certs: Array[X509Certificate], authType: String) = {}
       }
@@ -43,10 +50,10 @@ object TestUtil {
 
   private lazy val serverSslContext: SSLContext = {
 
-    val keyPassword = "ssl-pass"
+    val keyPassword        = "ssl-pass"
     val keyManagerPassword = keyPassword
 
-    val ks = KeyStore.getInstance("JKS")
+    val ks   = KeyStore.getInstance("JKS")
     val ksIs = Thread.currentThread().getContextClassLoader.getResourceAsStream("server.keystore")
     ks.load(ksIs, keyPassword.toCharArray)
     ksIs.close()
@@ -80,9 +87,7 @@ object TestUtil {
     assert(server.baseUri.renderString.startsWith(if (withSsl) "https://" else "http://"))
 
     try f(server.baseUri)
-    finally {
-      server.shutdownNow()
-    }
+    finally server.shutdownNow()
   }
 
   def authorized(req: Request[IO], userPass: (String, String)): Boolean = {
@@ -117,7 +122,8 @@ object TestUtil {
     val (uri0, authOpt) = uri.userInfo match {
       case Some(info) =>
         assert(!info.contains(':'))
-        (uri.copy(authority = uri.authority.map(_.copy(userInfo = None))), Some(Authentication(info)))
+        val updatedUri = uri.copy(authority = uri.authority.map(_.copy(userInfo = None)))
+        (updatedUri, Some(Authentication(info)))
       case None =>
         (uri, None)
     }
@@ -151,12 +157,12 @@ object TestUtil {
   def resourceFile(name: String): File =
     Option(getClass.getResource(name)) match {
       case Some(url) => new File(url.toURI)
-      case None => throw new Exception(s"resource $name not found")
+      case None      => throw new Exception(s"resource $name not found")
     }
 
-  /**
-    * Copies a file and all files in the same folder with the same name plus a suffix
-    * @return `file` in the new location
+  /** Copies a file and all files in the same folder with the same name plus a suffix
+    * @return
+    *   `file` in the new location
     */
   def copiedWithMetaTo(file: File, toDir: Path): Path = {
     val dir = file.getParentFile
@@ -173,9 +179,9 @@ object TestUtil {
   }
 
   private def checksum(b: Array[Byte], alg: String, len: Int): String = {
-    val md = MessageDigest.getInstance(alg)
+    val md     = MessageDigest.getInstance(alg)
     val digest = md.digest(b)
-    val res = new BigInteger(1, digest).toString(16)
+    val res    = new BigInteger(1, digest).toString(16)
     if (res.length < len)
       ("0" * (len - res.length)) + res
     else

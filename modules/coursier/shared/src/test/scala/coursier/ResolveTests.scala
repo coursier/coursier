@@ -12,14 +12,28 @@ import scala.collection.compat._
 
 object ResolveTests extends TestSuite {
 
-  import TestHelpers.{ec, cache, dependenciesWithRetainedVersion, handmadeMetadataBase, validateDependencies, versionOf}
+  import TestHelpers.{
+    ec,
+    cache,
+    dependenciesWithRetainedVersion,
+    handmadeMetadataBase,
+    validateDependencies,
+    versionOf
+  }
 
   private val resolve = Resolve()
     .noMirrors
     .withCache(cache)
     .withResolutionParams(
       ResolutionParams()
-        .withOsInfo(Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1")))
+        .withOsInfo {
+          Activation.Os(
+            Some("x86_64"),
+            Set("mac", "unix"),
+            Some("mac os x"),
+            Some("10.15.1")
+          )
+        }
         .withJdkVersion("1.8.0_121")
     )
 
@@ -39,11 +53,11 @@ object ResolveTests extends TestSuite {
     test("simple sttp with forced Scala 3") - async {
 
       val resolve0 = resolve
-          .addDependencies(dep"com.softwaremill.sttp.client3:core_3.0.0-RC1:3.1.7")
-          .mapResolutionParams { params =>
-            params
-              .withScalaVersion("3.0.0-RC1")
-          }
+        .addDependencies(dep"com.softwaremill.sttp.client3:core_3.0.0-RC1:3.1.7")
+        .mapResolutionParams { params =>
+          params
+            .withScalaVersion("3.0.0-RC1")
+        }
       val res = await {
         resolve0
           .future()
@@ -106,11 +120,11 @@ object ResolveTests extends TestSuite {
 
       await(validateDependencies(res, resolve0.resolutionParams))
 
-      val upickleVersionOpt = versionOf(res, mod"com.lihaoyi:upickle_2.12")
+      val upickleVersionOpt      = versionOf(res, mod"com.lihaoyi:upickle_2.12")
       val expectedUpickleVersion = "0.7.0"
       assert(upickleVersionOpt.contains(expectedUpickleVersion))
 
-      val coursierVersionOpt = versionOf(res, mod"io.get-coursier:coursier_2.12")
+      val coursierVersionOpt      = versionOf(res, mod"io.get-coursier:coursier_2.12")
       val expectedCoursierVersion = "1.1.0-M6"
       assert(coursierVersionOpt.contains(expectedCoursierVersion))
     }
@@ -132,14 +146,34 @@ object ResolveTests extends TestSuite {
       }
 
       test("mavenMirror") {
-        test("specific") - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2"))
+        test("specific") - run {
+          MavenMirror(
+            "https://jcenter.bintray.com",
+            "https://repo1.maven.org/maven2"
+          )
+        }
         test("all") - run(MavenMirror("https://jcenter.bintray.com", "*"))
 
         test("trailingSlash") {
           test("specific") {
-            test - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2"))
-            test - run(MavenMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2/"))
-            test - run(MavenMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2/"))
+            test - run {
+              MavenMirror(
+                "https://jcenter.bintray.com/",
+                "https://repo1.maven.org/maven2"
+              )
+            }
+            test - run {
+              MavenMirror(
+                "https://jcenter.bintray.com",
+                "https://repo1.maven.org/maven2/"
+              )
+            }
+            test - run {
+              MavenMirror(
+                "https://jcenter.bintray.com/",
+                "https://repo1.maven.org/maven2/"
+              )
+            }
           }
           test("all") - run(MavenMirror("https://jcenter.bintray.com/", "*"))
         }
@@ -194,7 +228,7 @@ object ResolveTests extends TestSuite {
               .future()
           }
 
-          val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toMap
+          val found         = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toMap
           val ammVersionOpt = found.get(mod"com.lihaoyi:ammonite_2.12.8")
           assert(ammVersionOpt.exists(_.split('.').length == 3))
           assert(ammVersionOpt.exists(!_.contains("-")))
@@ -208,8 +242,8 @@ object ResolveTests extends TestSuite {
             val res = await {
               resolve0
                 .addDependencies(
-                  dep"com.chuusai:shapeless_2.12:latest.release",
-                  dep"com.chuusai:shapeless_2.12:2.3+"
+                  dep"com.chuusai:shapeless_2.10:latest.release",
+                  dep"com.chuusai:shapeless_2.10:2.3+"
                 )
                 .future()
             }
@@ -222,14 +256,13 @@ object ResolveTests extends TestSuite {
             val res = await {
               resolve0
                 .addDependencies(
-                  dep"com.chuusai:shapeless_2.12:latest.release",
-                  dep"com.chuusai:shapeless_2.12:[2.3.0,2.3.3)"
+                  dep"com.chuusai:shapeless_2.10:latest.release",
+                  dep"com.chuusai:shapeless_2.10:[2.3.0,2.3.3)"
                 )
                 .io
                 .attempt
                 .future()
             }
-
 
             val isLeft = res.isLeft
             assert(isLeft)
@@ -238,7 +271,7 @@ object ResolveTests extends TestSuite {
 
             error match {
               case e: ResolutionError.CantDownloadModule =>
-                assert(e.module == mod"com.chuusai:shapeless_2.12")
+                assert(e.module == mod"com.chuusai:shapeless_2.10")
               case _ =>
                 throw error
             }
@@ -266,7 +299,7 @@ object ResolveTests extends TestSuite {
           val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
           val expected = Set(
             mod"org.scala-lang:scala-library" -> "2.12.8",
-            mod"test:a_2.12" -> "1.0.2-SNAPSHOT"
+            mod"test:a_2.12"                  -> "1.0.2-SNAPSHOT"
           )
 
           assert(found == expected)
@@ -283,7 +316,7 @@ object ResolveTests extends TestSuite {
           val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
           val expected = Set(
             mod"org.scala-lang:scala-library" -> "2.12.8",
-            mod"test:a_2.12" -> "1.0.1"
+            mod"test:a_2.12"                  -> "1.0.1"
           )
 
           assert(found == expected)
@@ -345,7 +378,7 @@ object ResolveTests extends TestSuite {
         val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
         val expected = Set(
           mod"org.scala-lang:scala-library" -> "2.12.8",
-          mod"test:b_2.12" -> "1.0.2+20190524-1"
+          mod"test:b_2.12"                  -> "1.0.2+20190524-1"
         )
 
         assert(found == expected)
@@ -386,7 +419,10 @@ object ResolveTests extends TestSuite {
 
         val res = await {
           resolve
-            .addDependencies(dep"com.netflix.karyon:karyon-eureka:1.0.28".withConfiguration(Configuration.defaultCompile))
+            .addDependencies(
+              dep"com.netflix.karyon:karyon-eureka:1.0.28"
+                .withConfiguration(Configuration.defaultCompile)
+            )
             .future()
         }
 
@@ -415,12 +451,18 @@ object ResolveTests extends TestSuite {
         error match {
           case c: ResolutionError.ConflictingDependencies =>
             val expectedModules = Set(mod"io.grpc:grpc-core")
-            val modules = c.dependencies.map(_.module)
+            val modules         = c.dependencies.map(_.module)
             assert(modules == expectedModules)
             val expectedVersions = Map(
               mod"io.grpc:grpc-core" -> Set("1.2.0", "1.6.1", "1.7.0", "[1.2.0]", "[1.7.0]")
             )
-            val versions = c.dependencies.groupBy(_.module).view.mapValues(_.map(_.version)).iterator.toMap
+            val versions = c
+              .dependencies
+              .groupBy(_.module)
+              .view
+              .mapValues(_.map(_.version))
+              .iterator
+              .toMap
             assert(versions == expectedVersions)
           case _ =>
             sys.error(s"Unexpected error: $error")
@@ -455,7 +497,9 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res))
 
         val urls = res.dependencyArtifacts().map(_._3.url).toSet
-        val expectedUrls = Set("https://repo1.maven.org/maven2/javax/ws/rs/javax.ws.rs-api/2.1.1/javax.ws.rs-api-2.1.1.jar")
+        val expectedUrls = Set(
+          "https://repo1.maven.org/maven2/javax/ws/rs/javax.ws.rs-api/2.1.1/javax.ws.rs-api-2.1.1.jar"
+        )
 
         assert(urls == expectedUrls)
       }
@@ -485,7 +529,7 @@ object ResolveTests extends TestSuite {
         val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
         val expected = Set(
           mod"org.scala-lang:scala-library" -> "2.12.8",
-          mod"test:b_2.12" -> "1.0.1"
+          mod"test:b_2.12"                  -> "1.0.1"
         )
 
         assert(found == expected)
@@ -575,10 +619,10 @@ object ResolveTests extends TestSuite {
           error match {
             case c: ResolutionError.ConflictingDependencies =>
               val expectedModules = Set(mod"org.scala-lang:scala-library")
-              val modules = c.dependencies.map(_.module)
+              val modules         = c.dependencies.map(_.module)
               assert(modules == expectedModules)
               val expectedVersions = Set("2.12+", "2.13.0")
-              val versions = c.dependencies.map(_.version)
+              val versions         = c.dependencies.map(_.version)
               assert(versions == expectedVersions)
             case _ =>
               ???
@@ -606,10 +650,10 @@ object ResolveTests extends TestSuite {
           error match {
             case c: ResolutionError.ConflictingDependencies =>
               val expectedModules = Set(mod"com.chuusai:shapeless_2.12")
-              val modules = c.dependencies.map(_.module)
+              val modules         = c.dependencies.map(_.module)
               assert(modules == expectedModules)
               val expectedVersions = Set("[2.3.0,2.3.3)", "2.3.3")
-              val versions = c.dependencies.map(_.version)
+              val versions         = c.dependencies.map(_.version)
               assert(versions == expectedVersions)
             case _ =>
               throw error
@@ -623,10 +667,11 @@ object ResolveTests extends TestSuite {
       test - async {
 
         val resolve0 = resolve
-          .mapResolutionParams(_
-            .withUseSystemOsInfo(false)
-            .withUseSystemJdkVersion(false)
-          )
+          .mapResolutionParams { params =>
+            params
+              .withUseSystemOsInfo(false)
+              .withUseSystemJdkVersion(false)
+          }
           .addDependencies(dep"io.netty:netty-transport-native-epoll:4.1.34.Final")
 
         val res = await {
@@ -634,7 +679,8 @@ object ResolveTests extends TestSuite {
             .future()
         }
 
-        val unixCommonDepOpt = res.minDependencies.find(_.module == mod"io.netty:netty-transport-native-unix-common")
+        val unixCommonDepOpt =
+          res.minDependencies.find(_.module == mod"io.netty:netty-transport-native-unix-common")
         assert(unixCommonDepOpt.exists(!_.optional))
 
         await(validateDependencies(res, resolve0.resolutionParams))
@@ -647,12 +693,11 @@ object ResolveTests extends TestSuite {
             .withUseSystemOsInfo(false)
             .withUseSystemJdkVersion(false)
             .withOsInfo(coursier.core.Activation.Os.fromProperties(Map(
-              "os.name" -> "Linux",
-              "os.arch" -> "amd64",
-              "os.version" -> "4.9.125",
+              "os.name"        -> "Linux",
+              "os.arch"        -> "amd64",
+              "os.version"     -> "4.9.125",
               "path.separator" -> ":"
-            )))
-          )
+            ))))
           .addDependencies(dep"io.netty:netty-transport-native-epoll:4.1.34.Final")
 
         val res = await {
@@ -660,7 +705,8 @@ object ResolveTests extends TestSuite {
             .future()
         }
 
-        val unixCommonDepOpt = res.minDependencies.find(_.module == mod"io.netty:netty-transport-native-unix-common")
+        val unixCommonDepOpt =
+          res.minDependencies.find(_.module == mod"io.netty:netty-transport-native-unix-common")
         assert(unixCommonDepOpt.exists(!_.optional))
 
         await(validateDependencies(res, resolve0.resolutionParams))
@@ -673,12 +719,11 @@ object ResolveTests extends TestSuite {
             .withUseSystemOsInfo(false)
             .withUseSystemJdkVersion(false)
             .withOsInfo(coursier.core.Activation.Os.fromProperties(Map(
-              "os.name" -> "Mac OS X",
-              "os.arch" -> "x86_64",
-              "os.version" -> "10.14.5",
+              "os.name"        -> "Mac OS X",
+              "os.arch"        -> "x86_64",
+              "os.version"     -> "10.14.5",
               "path.separator" -> ":"
-            )))
-          )
+            ))))
           .addDependencies(dep"io.netty:netty-transport-native-epoll:4.1.34.Final")
 
         val res = await {
@@ -686,7 +731,8 @@ object ResolveTests extends TestSuite {
             .future()
         }
 
-        val unixCommonDepOpt = res.minDependencies.find(_.module == mod"io.netty:netty-transport-native-unix-common")
+        val unixCommonDepOpt =
+          res.minDependencies.find(_.module == mod"io.netty:netty-transport-native-unix-common")
         assert(unixCommonDepOpt.exists(!_.optional))
 
         await(validateDependencies(res, resolve0.resolutionParams))
@@ -706,7 +752,7 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res))
 
       val artifacts = res.artifacts(types = Resolution.defaultTypes + Type("so"))
-      val urls = artifacts.map(_.url).toSet
+      val urls      = artifacts.map(_.url).toSet
       val expectedUrls = Set(
         "https://repo1.maven.org/maven2/com/almworks/sqlite4java/sqlite4java/1.0.392/sqlite4java-1.0.392.jar",
         "https://repo1.maven.org/maven2/com/almworks/sqlite4java/libsqlite4java-linux-amd64/1.0.392/libsqlite4java-linux-amd64-1.0.392.so",
@@ -784,8 +830,16 @@ object ResolveTests extends TestSuite {
 
       assert(res1.projectCache.contains((mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M8")))
       assert(res1.projectCache.contains((mod"io.get-coursier:coursier-cli_2.12", "2.0.0-RC6-16")))
-      assert(res1.finalDependenciesCache.keys.exists(dep => dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.version == "1.1.0-M8"))
-      assert(res1.finalDependenciesCache.keys.exists(dep => dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.version == "2.0.0-RC6-16"))
+      assert {
+        res1.finalDependenciesCache.keys.exists(dep =>
+          dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.version == "1.1.0-M8"
+        )
+      }
+      assert {
+        res1.finalDependenciesCache.keys.exists(dep =>
+          dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.version == "2.0.0-RC6-16"
+        )
+      }
     }
 
     "config handling" - async {
@@ -824,13 +878,14 @@ object ResolveTests extends TestSuite {
       )
       assert(urls == expectedUrls)
 
-      val pubTypes = depArtifacts.map(_._2.`type`).toSet
+      val pubTypes         = depArtifacts.map(_._2.`type`).toSet
       val expectedPubTypes = Set(Type.source)
       assert(pubTypes == expectedPubTypes)
     }
 
     "user-supplied artifact type" - async {
-      val dep = dep"io.grpc:protoc-gen-grpc-java:1.23.0,classifier=linux-x86_64,ext=exe,type=protoc-plugin"
+      val dep =
+        dep"io.grpc:protoc-gen-grpc-java:1.23.0,classifier=linux-x86_64,ext=exe,type=protoc-plugin"
       assert(dep.publication.`type` == Type("protoc-plugin"))
       assert(dep.publication.ext == Extension("exe"))
       assert(dep.publication.classifier == Classifier("linux-x86_64"))
@@ -849,7 +904,8 @@ object ResolveTests extends TestSuite {
       val (_, pub, artifact) = depArtifacts.head
 
       val url = artifact.url
-      val expectedUrl = "https://repo1.maven.org/maven2/io/grpc/protoc-gen-grpc-java/1.23.0/protoc-gen-grpc-java-1.23.0-linux-x86_64.exe"
+      val expectedUrl =
+        "https://repo1.maven.org/maven2/io/grpc/protoc-gen-grpc-java/1.23.0/protoc-gen-grpc-java-1.23.0-linux-x86_64.exe"
       assert(artifact.url == expectedUrl)
 
       assert(pub.`type` == Type("protoc-plugin"))
@@ -882,7 +938,8 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res))
 
       val urls = res.dependencyArtifacts().map(_._3.url)
-      val wrongUrls = urls.filter(url => url.contains("$") || url.contains("{") || url.contains("}"))
+      val wrongUrls =
+        urls.filter(url => url.contains("$") || url.contains("{") || url.contains("}"))
 
       assert(urls.nonEmpty)
       assert(wrongUrls.isEmpty)
@@ -899,7 +956,8 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res))
 
       // The one we're interested in here
-      val pomUrl = "https://repo1.maven.org/maven2/org/apache/zookeeper/zookeeper/3.5.0-alpha/zookeeper-3.5.0-alpha.pom"
+      val pomUrl =
+        "https://repo1.maven.org/maven2/org/apache/zookeeper/zookeeper/3.5.0-alpha/zookeeper-3.5.0-alpha.pom"
       val urls = res.dependencyArtifacts().map(_._3.url).toSet
 
       assert(urls.contains(pomUrl))
@@ -948,7 +1006,8 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res))
 
       val artifacts = res.dependencyArtifacts()
-      val expectedUrl = "https://repo1.maven.org/maven2/io/netty/netty-transport-native-epoll/4.1.44.Final/netty-transport-native-epoll-4.1.44.Final-woops.jar"
+      val expectedUrl =
+        "https://repo1.maven.org/maven2/io/netty/netty-transport-native-epoll/4.1.44.Final/netty-transport-native-epoll-4.1.44.Final-woops.jar"
       val (_, _, woopsArtifact) = artifacts.find(_._3.url == expectedUrl).getOrElse {
         sys.error(s"Expected artifact with URL $expectedUrl")
       }
@@ -987,6 +1046,25 @@ object ResolveTests extends TestSuite {
           .future()
       }
       await(validateDependencies(res))
+    }
+
+    test("profile activation with missing property") {
+      async {
+        val res = await {
+          resolve
+            .addDependencies(dep"org.openjfx:javafx-base:18-ea+2")
+            .future()
+        }
+        await(validateDependencies(res))
+
+        val artifacts = res.artifacts()
+        val urls      = artifacts.map(_.url)
+        val expectedUrls = Seq(
+          "https://repo1.maven.org/maven2/org/openjfx/javafx-base/18-ea+2/javafx-base-18-ea+2.jar",
+          "https://repo1.maven.org/maven2/org/openjfx/javafx-base/18-ea+2/javafx-base-18-ea+2-mac.jar"
+        )
+        assert(urls == expectedUrls)
+      }
     }
   }
 }

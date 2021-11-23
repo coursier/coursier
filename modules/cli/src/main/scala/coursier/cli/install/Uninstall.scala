@@ -1,10 +1,11 @@
 package coursier.cli.install
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.InstallDir
 import coursier.cache.Cache
+import coursier.install.error.InstallDirException
 import coursier.util.Task
 import coursier.util.EitherT
 import coursier.util.Artifact
@@ -12,7 +13,9 @@ import coursier.cache.ArtifactError
 import java.io.File
 import scala.concurrent.ExecutionContext
 
-object Uninstall extends CaseApp[UninstallOptions] {
+object Uninstall extends CoursierCommand[UninstallOptions] {
+
+  override def group: String = CommandGroup.install
 
   def run(options: UninstallOptions, args: RemainingArgs): Unit = {
 
@@ -43,12 +46,13 @@ object Uninstall extends CaseApp[UninstallOptions] {
     if (list.isEmpty) {
       if (params.verbosity >= 0)
         System.err.println("Nothing to remove")
-    } else
+    }
+    else
       for (app <- list) {
         val resOpt =
           try installDir.delete(app)
           catch {
-            case e: InstallDir.InstallDirException if params.verbosity <= 1 =>
+            case e: InstallDirException if params.verbosity <= 1 =>
               System.err.println(e.getMessage)
               sys.exit(1)
           }

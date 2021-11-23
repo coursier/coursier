@@ -22,7 +22,13 @@ final case class OkhttpUpload(
   import OkhttpUpload.mediaType
   import coursier.publish.download.OkhttpDownload.TryOps
 
-  def upload(url: String, authentication: Option[Authentication], content: Array[Byte], logger: UploadLogger, loggingIdOpt: Option[Object]): Task[Option[Upload.Error]] = {
+  def upload(
+    url: String,
+    authentication: Option[Authentication],
+    content: Array[Byte],
+    logger: UploadLogger,
+    loggingIdOpt: Option[Object]
+  ): Task[Option[Upload.Error]] = {
 
     val body: RequestBody =
       new RequestBody {
@@ -71,14 +77,25 @@ final case class OkhttpUpload(
               case CacheUrl.BasicRealm(r) => r
             }
             Some(new Upload.Error.Unauthorized(url, realmOpt))
-          } else {
+          }
+          else {
             val content = Try(response.body().string()).getOrElse("")
-            Some(new Upload.Error.HttpError(code, response.headers().toMultimap.asScala.mapValues(_.asScala.toList).iterator.toMap, content))
+            Some(
+              new Upload.Error.HttpError(
+                code,
+                response.headers().toMultimap.asScala.mapValues(_.asScala.toList).iterator.toMap,
+                content
+              )
+            )
           }
         }
       }
 
-      logger.uploaded(url, loggingIdOpt, res.toEither.fold(e => Some(new Upload.Error.UploadError(url, e)), x => x))
+      logger.uploaded(
+        url,
+        loggingIdOpt,
+        res.toEither.fold(e => Some(new Upload.Error.UploadError(url, e)), x => x)
+      )
 
       res.get
     }
@@ -93,16 +110,13 @@ object OkhttpUpload {
       .readTimeout(60L, TimeUnit.SECONDS)
       .build()
 
-  def create(pool: ExecutorService): Upload = {
+  def create(pool: ExecutorService): Upload =
     // Seems we can't even create / shutdown the client thread pool (via its Dispatcher)…
     OkhttpUpload(client(), pool, expect100Continue = false, "")
-  }
-  def create(pool: ExecutorService, expect100Continue: Boolean): Upload = {
+  def create(pool: ExecutorService, expect100Continue: Boolean): Upload =
     // Seems we can't even create / shutdown the client thread pool (via its Dispatcher)…
     OkhttpUpload(client(), pool, expect100Continue, "")
-  }
-  def create(pool: ExecutorService, expect100Continue: Boolean, urlSuffix: String): Upload = {
+  def create(pool: ExecutorService, expect100Continue: Boolean, urlSuffix: String): Upload =
     // Seems we can't even create / shutdown the client thread pool (via its Dispatcher)…
     OkhttpUpload(client(), pool, expect100Continue, urlSuffix)
-  }
 }

@@ -20,24 +20,42 @@ import scala.collection.mutable
   def isEmpty: Boolean =
     set.isEmpty && pathLikeAppends.isEmpty
 
-
   // references previous values with as variables
-  def scriptUpdates: Seq[(String, String)] =
+  def bashScriptUpdates: Seq[(String, String)] =
     updatedEnv(
       k => Some(s"$$$k"),
-      File.pathSeparator,
+      ":",
       upfront = true
     )
 
-  def script: String = {
+  // references previous values with as variables
+  def batScriptUpdates: Seq[(String, String)] =
+    updatedEnv(
+      k => Some(s"%$k%"),
+      ";",
+      upfront = true
+    )
+
+  def bashScript: String = {
     val q = "\""
-    scriptUpdates
+    bashScriptUpdates
       .map {
         case (k, v) =>
           // FIXME Escape more?
           s"export $k=$q${v.replace(q, "\\" + q)}$q"
       }
-      .mkString("\n") // Use System.lineSeparator() instead? (this is mostly meant for bash…)
+      .mkString("\n")
+  }
+
+  def batScript: String = {
+    val q = "\""
+    batScriptUpdates
+      .map {
+        case (k, v) =>
+          // FIXME Correct way of escaping in bat scripts? Escape more?
+          s"set $q$k=${v.replace(q, "\\" + q)}$q"
+      }
+      .mkString("\r\n")
   }
 
   // puts the "path-like appends" upfront, better not to persist these updates
@@ -73,7 +91,6 @@ import scala.collection.mutable
       }
       set ++ l.toList.map(k => k -> m(k))
     }
-
 
   def alreadyApplied(): Boolean =
     alreadyApplied(EnvironmentUpdate.defaultGetEnv, File.pathSeparator)

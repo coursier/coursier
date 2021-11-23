@@ -1,6 +1,6 @@
 import $file.^.deps, deps.Deps
 import $file.^.shading, shading.Shading
-import $file.shared, shared.{CoursierPublishModule, CsCrossJvmJsModule, CsMima, CsModule, CsTests}
+import $file.shared, shared.{CoursierPublishModule, CsCrossJvmJsModule, CsMima, CsModule}
 
 import mill._, mill.scalalib._
 
@@ -16,13 +16,13 @@ trait Coursier extends CsModule with CsCrossJvmJsModule with CoursierPublishModu
   )
 }
 trait CoursierTests extends TestModule {
-  def ivyDeps = T{
+  def ivyDeps = T {
     super.ivyDeps() ++ Agg(
       Deps.scalaAsync
     )
   }
 }
-trait CoursierJvmBase extends Coursier with CsTests with CsMima with Shading {
+trait CoursierJvmBase extends Coursier with CsMima with Shading {
 
   def mimaBinaryIssueFilters = {
     import com.typesafe.tools.mima.core._
@@ -41,8 +41,8 @@ trait CoursierJvmBase extends Coursier with CsTests with CsMima with Shading {
   )
   def validNamespaces = Seq("coursier")
   def shadeRenames = Seq(
-     "fastparse.**" -> "coursier.internal.shaded.fastparse.@1",
-          "geny.**" -> "coursier.internal.shaded.geny.@1",
+    "fastparse.**"  -> "coursier.internal.shaded.fastparse.@1",
+    "geny.**"       -> "coursier.internal.shaded.geny.@1",
     "sourcecode.**" -> "coursier.internal.shaded.sourcecode.@1"
   )
 }

@@ -2,8 +2,8 @@ package coursier.cli.jvm
 
 import java.io.File
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.setup.MaybeInstallJvm
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.env.{EnvironmentUpdate, EnvVarUpdater, ProfileUpdater, WindowsEnvVarUpdater}
@@ -13,15 +13,17 @@ import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
 
-object JavaHome extends CaseApp[JavaHomeOptions] {
+object JavaHome extends CoursierCommand[JavaHomeOptions] {
+
+  override def group: String = CommandGroup.java
 
   def run(options: JavaHomeOptions, args: RemainingArgs): Unit = {
 
     val params = JavaHomeParams(options).exitOnError()
 
-    val pool = Sync.fixedThreadPool(params.cache.parallel)
-    val logger = params.output.logger()
-    val coursierCache = params.cache.cache(pool, logger)
+    val pool                  = Sync.fixedThreadPool(params.cache.parallel)
+    val logger                = params.output.logger()
+    val coursierCache         = params.cache.cache(pool, logger)
     val noUpdateCoursierCache = params.cache.cache(pool, logger, overrideTtl = Some(Duration.Inf))
 
     val (jvmCache, javaHome) = params.shared.cacheAndHome(
@@ -30,9 +32,9 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
       params.repository.repositories,
       params.output.verbosity
     )
-    val task = javaHome.getWithRetainedId(params.shared.id)
+    val task = javaHome.getWithIsSystem(params.shared.id)
 
-    val (retainedId, home) = logger.use {
+    val (isSystem, home) = logger.use {
       try task.unsafeRun()(coursierCache.ec) // TODO Better error messages for relevant exceptions
       catch {
         case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
@@ -41,14 +43,24 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
       }
     }
 
-    lazy val envUpdate = javaHome.environmentFor(retainedId, home)
+    lazy val envUpdate = javaHome.environmentFor(isSystem, home)
     if (params.env.env) {
-      val script = coursier.jvm.JavaHome.finalScript(envUpdate, jvmCache.baseDirectory.toPath)
+      val script =
+        if (params.env.windowsScript)
+          coursier.jvm.JavaHome.finalBatScript(envUpdate)
+        else
+          coursier.jvm.JavaHome.finalBashScript(envUpdate)
       print(script)
-    } else if (params.env.disableEnv) {
-      val script = coursier.jvm.JavaHome.disableScript(jvmCache.baseDirectory.toPath)
+    }
+    else if (params.env.disableEnv) {
+      val script =
+        if (params.env.windowsScript)
+          coursier.jvm.JavaHome.disableBatScript()
+        else
+          coursier.jvm.JavaHome.disableBashScript()
       print(script)
-    } else if (params.env.setup) {
+    }
+    else if (params.env.setup) {
       val setupTask = params.env.setupTask(
         envUpdate,
         params.env.envVarUpdater,
@@ -56,7 +68,8 @@ object JavaHome extends CaseApp[JavaHomeOptions] {
         MaybeInstallJvm.headerComment
       )
       setupTask.unsafeRun()(coursierCache.ec)
-    } else
+    }
+    else
       println(home.getAbsolutePath)
   }
 }

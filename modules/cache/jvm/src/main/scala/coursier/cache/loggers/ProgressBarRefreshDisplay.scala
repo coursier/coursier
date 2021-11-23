@@ -19,7 +19,7 @@ class ProgressBarRefreshDisplay(
     20.millis
 
   private var printedAnything0 = false
-  private var currentHeight = 0
+  private var currentHeight    = 0
 
   override def stop(out: Writer): Unit = {
 
@@ -59,10 +59,14 @@ class ProgressBarRefreshDisplay(
       val done0 = done
         .filter {
           case (url, _) =>
-            !url.endsWith(".sha1") && !url.endsWith(".sha256") && !url.endsWith(".md5") && !url.endsWith("/")
+            !url.endsWith(".sha1") &&
+              !url.endsWith(".sha256") &&
+              !url.endsWith(".md5") &&
+              !url.endsWith("/")
         }
 
-      for (((url, info), isDone) <- done0.iterator.map((_, true)) ++ downloads.iterator.map((_, false))) {
+      val elems = done0.iterator.map((_, true)) ++ downloads.iterator.map((_, false))
+      for (((url, info), isDone) <- elems) {
         assert(info != null, s"Incoherent state ($url)")
 
         if (!printedAnything0) {
@@ -110,7 +114,6 @@ object ProgressBarRefreshDisplay {
   ): ProgressBarRefreshDisplay =
     new ProgressBarRefreshDisplay(beforeOutput, afterOutput)
 
-
   // Scala version of http://stackoverflow.com/questions/3758606/how-to-convert-byte-size-into-human-readable-format-in-java/3758880#3758880
   def byteCount(bytes: Long, si: Boolean = false) = {
     val unit = if (si) 1000 else 1024
@@ -118,8 +121,8 @@ object ProgressBarRefreshDisplay {
       bytes.toString + "B"
     else {
       val prefixes = if (si) "kMGTPE" else "KMGTPE"
-      val exp = (math.log(bytes.toDouble) / math.log(unit.toDouble)).toInt min prefixes.length
-      val pre = prefixes.charAt(exp - 1).toString + (if (si) "" else "i")
+      val exp      = (math.log(bytes.toDouble) / math.log(unit.toDouble)).toInt min prefixes.length
+      val pre      = prefixes.charAt(exp - 1).toString + (if (si) "" else "i")
       f"${bytes / math.pow(unit.toDouble, exp.toDouble)}%.1f ${pre}B"
     }
   }
@@ -129,11 +132,9 @@ object ProgressBarRefreshDisplay {
   private def formatTimestamp(ts: Long): String =
     format.format(new Timestamp(ts))
 
-  private def display(info: RefreshInfo, isDone: Boolean): String = {
-
+  private def display(info: RefreshInfo, isDone: Boolean): String =
     info match {
       case d: RefreshInfo.DownloadInfo =>
-
         val actualFraction = d.fraction
           .orElse(if (isDone) Some(1.0) else None)
           .orElse(if (d.downloaded == 0L) Some(0.0) else None)
@@ -158,7 +159,6 @@ object ProgressBarRefreshDisplay {
           d.rate().fold("")(r => s" (${byteCount(r.toLong)} / s)")
 
       case c: RefreshInfo.CheckUpdateInfo =>
-
         if (isDone)
           (c.currentTimeOpt, c.remoteTimeOpt) match {
             case (Some(current), Some(remote)) =>
@@ -184,6 +184,5 @@ object ProgressBarRefreshDisplay {
               "" // ???
           }
     }
-  }
 
 }

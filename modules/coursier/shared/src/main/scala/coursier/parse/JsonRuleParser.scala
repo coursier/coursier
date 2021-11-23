@@ -32,7 +32,10 @@ class JsonRuleParser(
   private implicit val decodeModuleMatchers: DecodeJson[ModuleMatchers] =
     DecodeJson {
 
-      final case class Helper(exclude: List[ModuleMatcher] = Nil, include: List[ModuleMatcher] = Nil)
+      final case class Helper(
+        exclude: List[ModuleMatcher] = Nil,
+        include: List[ModuleMatcher] = Nil
+      )
 
       val decodeHelper = DecodeJson.of[Helper]
 
@@ -66,7 +69,10 @@ class JsonRuleParser(
           DontBumpRootDependencies(m)
         }
       else
-        DecodeResult.fail[DontBumpRootDependencies]("Expected JSON object for AlwaysFail rule", c.history)
+        DecodeResult.fail[DontBumpRootDependencies](
+          "Expected JSON object for AlwaysFail rule",
+          c.history
+        )
     }
 
   private val decodeStrict: DecodeJson[Strict] = {
@@ -74,7 +80,8 @@ class JsonRuleParser(
     final case class Repr(include: List[Module] = Nil, exclude: List[Module] = Nil)
 
     DecodeJson.of[Repr].map { r =>
-      val include = if (r.include.isEmpty) Set(ModuleMatcher.all) else r.include.map(ModuleMatcher(_)).toSet
+      val include =
+        if (r.include.isEmpty) Set(ModuleMatcher.all) else r.include.map(ModuleMatcher(_)).toSet
       Strict(
         include,
         r.exclude.map(ModuleMatcher(_)).toSet
@@ -83,16 +90,16 @@ class JsonRuleParser(
   }
 
   private val ruleDecoders = Map[String, DecodeJson[Rule]](
-    "always-fail" -> decodeAlwaysFail.map(x => x),
-    "same-version" -> decodeSameVersion.map(x => x),
+    "always-fail"                 -> decodeAlwaysFail.map(x => x),
+    "same-version"                -> decodeSameVersion.map(x => x),
     "dont-bump-root-dependencies" -> decodeDontBumpRootDependencies.map(x => x),
-    "strict" -> decodeStrict.map(x => x)
+    "strict"                      -> decodeStrict.map(x => x)
   )
 
   private val decodeRule: DecodeJson[(Rule, RuleResolution)] =
     DecodeJson { c =>
 
-      val hasAction = c.fieldSet.exists(_.contains("action"))
+      val hasAction     = c.fieldSet.exists(_.contains("action"))
       val ruleResCursor = c.downField("action")
 
       // FIXME We're ignoring malformed "action" fields here
@@ -100,12 +107,13 @@ class JsonRuleParser(
         .focus
         .flatMap(_.string)
         .collect {
-          case "fail" => RuleResolution.Fail
-          case "warn" => RuleResolution.Warn
+          case "fail"        => RuleResolution.Fail
+          case "warn"        => RuleResolution.Warn
           case "try-resolve" => RuleResolution.TryResolve
         }
 
-      val ruleCursor = (if (hasAction) ruleResCursor.deleteGoParent else c.acursor).downField("rule")
+      val ruleCursor =
+        (if (hasAction) ruleResCursor.deleteGoParent else c.acursor).downField("rule")
 
       ruleCursor.focus.flatMap(_.string) match {
         case None =>

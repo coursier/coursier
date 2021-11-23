@@ -16,16 +16,16 @@ package object compatibility {
 
   implicit class RichChar(val c: Char) extends AnyVal {
     def letterOrDigit = c.isLetterOrDigit
-    def letter = c.isLetter
+    def letter        = c.isLetter
   }
 
   private val utf8Bom = "\ufeff"
 
   private def entityIdx(s: String, fromIdx: Int = 0): Option[(Int, Int)] = {
 
-    var i = fromIdx
+    var i     = fromIdx
     var found = Option.empty[(Int, Int)]
-    while (found.isEmpty && i < s.length) {
+    while (found.isEmpty && i < s.length)
       if (s.charAt(i) == '&') {
         val start = i
         i += 1
@@ -44,16 +44,16 @@ package object compatibility {
             found = Some((start, i))
           }
         }
-      } else
+      }
+      else
         i += 1
-    }
 
     found
   }
 
   private def substituteEntities(s: String): String = {
 
-    val b = new StringBuilder
+    val b      = new StringBuilder
     lazy val a = s.toCharArray
 
     var i = 0
@@ -71,11 +71,11 @@ package object compatibility {
       found.nonEmpty
     }) {
       val from = found.get._1
-      val to = found.get._2
+      val to   = found.get._2
 
       b.appendAll(a, i, from - i)
 
-      val name = s.substring(from, to)
+      val name        = s.substring(from, to)
       val replacement = Entities.map.getOrElse(name, name)
       b.appendAll(replacement)
 
@@ -92,7 +92,12 @@ package object compatibility {
     substituteEntities(s)
 
   private final class XmlHandler(handler: SaxHandler) extends DefaultHandler {
-    override def startElement(uri: String, localName: String, qName: String, attributes: sax.Attributes): Unit =
+    override def startElement(
+      uri: String,
+      localName: String,
+      qName: String,
+      attributes: sax.Attributes
+    ): Unit =
       handler.startElement(qName)
     override def characters(ch: Array[Char], start: Int, length: Int): Unit =
       handler.characters(ch, start, length)
@@ -123,7 +128,9 @@ package object compatibility {
 
     val parse =
       try Right(scala.xml.XML.loadString(content))
-      catch { case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")) }
+      catch {
+        case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")"))
+      }
 
     parse.map(xmlFromElem)
   }
@@ -139,7 +146,7 @@ package object compatibility {
               case attr =>
                 val pre = attr match {
                   case a: Attribute => Option(node.getNamespace(a.pre)).getOrElse("")
-                  case _ => ""
+                  case _            => ""
                 }
 
                 val value = attr.value.collect {
@@ -151,11 +158,11 @@ package object compatibility {
 
           helper(node.attributes).toVector
         }
-        def label = node.label
-        def children = node.child.map(fromNode).toSeq
-        def isText = node match { case _: scala.xml.Text => true; case _ => false }
+        def label       = node.label
+        def children    = node.child.map(fromNode).toSeq
+        def isText      = node match { case _: scala.xml.Text => true; case _ => false }
         def textContent = node.text
-        def isElement = node match { case _: scala.xml.Elem => true; case _ => false }
+        def isElement   = node match { case _: scala.xml.Elem => true; case _ => false }
 
         override def toString = node.toString
       }
@@ -169,28 +176,30 @@ package object compatibility {
 
     val parse =
       try Right(scala.xml.XML.loadString(content))
-      catch { case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")) }
+      catch {
+        case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")"))
+      }
 
     parse.map(xmlFromElem)
   }
 
   def encodeURIComponent(s: String): String =
-    new java.net.URI(null, null, null, -1, s, null, null) .toASCIIString
+    new java.net.URI(null, null, null, -1, s, null, null).toASCIIString
 
   def regexLookbehind: String = "<="
 
   def coloredOutput: Boolean =
     // Same as coursier.paths.Util.useColorOutput()
     System.getenv("INSIDE_EMACS") == null &&
-      Option(System.getenv("COURSIER_PROGRESS"))
-        .map(_.toLowerCase(Locale.ROOT))
-        .collect {
-          case "true" | "1" | "enable" => true
-          case "false" | "0" | "disable" => false
-        }
-        .getOrElse {
-          System.getenv("COURSIER_NO_TERM") == null
-        }
+    Option(System.getenv("COURSIER_PROGRESS"))
+      .map(_.toLowerCase(Locale.ROOT))
+      .collect {
+        case "true" | "1" | "enable"   => true
+        case "false" | "0" | "disable" => false
+      }
+      .getOrElse {
+        System.getenv("COURSIER_NO_TERM") == null
+      }
 
   @deprecated("Unused internally, likely to be removed in the future", "2.0.0-RC6-19")
   def hasConsole: Boolean =

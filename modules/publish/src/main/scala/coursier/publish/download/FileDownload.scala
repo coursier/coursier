@@ -9,8 +9,7 @@ import coursier.util.Task
 
 import scala.util.control.NonFatal
 
-/**
-  * Copies
+/** Copies
   * @param base
   */
 final case class FileDownload(base: Path) extends Download {
@@ -25,16 +24,17 @@ final case class FileDownload(base: Path) extends Download {
     if (p.startsWith(base0))
       Task.delay {
         logger.downloadingIfExists(url)
-        val res = try {
-          if (Files.isRegularFile(p)) {
+        val res =
+          try if (Files.isRegularFile(p)) {
             val lastModified = Files.getLastModifiedTime(p).toInstant
             Right(Some((Some(lastModified), Files.readAllBytes(p))))
-          } else
+          }
+          else
             Right(None)
-        } catch {
-          case NonFatal(e) =>
-            Left(e)
-        }
+          catch {
+            case NonFatal(e) =>
+              Left(e)
+          }
         logger.downloadedIfExists(
           url,
           res.toOption.flatMap(_.map(_._2.length)),

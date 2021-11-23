@@ -87,7 +87,8 @@ import dataclass.{data, since}
     withTransformFetcherOpt(Some(transformFetcherOpt.fold(f)(_ andThen f)))
   def noTransformFetcher(): Resolve[F] =
     withTransformFetcherOpt(None)
-  def withTransformFetcher(fOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]]): Resolve[F] =
+  def withTransformFetcher(fOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]])
+    : Resolve[F] =
     withTransformFetcherOpt(fOpt)
 
   private def allMirrors0 =
@@ -96,15 +97,16 @@ import dataclass.{data, since}
   def allMirrors: F[Seq[Mirror]] =
     S.delay(allMirrors0)
 
-
   private def fetchVia: F[ResolutionProcess.Fetch[F]] = {
     val fetchs = cache.fetchs
     finalRepositories.map(r => ResolutionProcess.fetch(r, fetchs.head, fetchs.tail)(S))
   }
 
-  private def ioWithConflicts0(fetch: ResolutionProcess.Fetch[F]): F[(Resolution, Seq[UnsatisfiedRule])] = {
+  private def ioWithConflicts0(fetch: ResolutionProcess.Fetch[F])
+    : F[(Resolution, Seq[UnsatisfiedRule])] = {
 
-    val initialRes = Resolve.initialResolution(finalDependencies, resolutionParams, initialResolution)
+    val initialRes =
+      Resolve.initialResolution(finalDependencies, resolutionParams, initialResolution)
 
     def run(res: Resolution): F[Resolution] = {
       val t = Resolve.runProcess(res, fetch, resolutionParams.maxIterations, cache.loggerOpt)(S)
@@ -120,7 +122,10 @@ import dataclass.{data, since}
           S.point(res)
       }
 
-    def recurseOnRules(res: Resolution, rules: Seq[(Rule, RuleResolution)]): F[(Resolution, List[UnsatisfiedRule])] =
+    def recurseOnRules(
+      res: Resolution,
+      rules: Seq[(Rule, RuleResolution)]
+    ): F[(Resolution, List[UnsatisfiedRule])] =
       rules match {
         case Seq() =>
           S.point((res, Nil))
@@ -136,9 +141,10 @@ import dataclass.{data, since}
             case Right(Right(None)) =>
               recurseOnRules(res, t)
             case Right(Right(Some(newRes))) =>
-              run(newRes.withDependencySet(DependencySet.empty)).flatMap(validate0).flatMap { res0 =>
-                // FIXME check that the rule passes after it tried to address itself
-                recurseOnRules(res0, t)
+              run(newRes.withDependencySet(DependencySet.empty)).flatMap(validate0).flatMap {
+                res0 =>
+                  // FIXME check that the rule passes after it tried to address itself
+                  recurseOnRules(res0, t)
               }
           }
       }
@@ -159,7 +165,7 @@ import dataclass.{data, since}
     for {
       res0 <- run(initialRes)
       res1 <- validate0(res0)
-      t <- recurseOnRules(res1, resolutionParams.actualRules)
+      t    <- recurseOnRules(res1, resolutionParams.actualRules)
       (res2, conflicts) = t
       _ <- validateAllRules(res2, resolutionParams.actualRules)
     } yield (res2, conflicts)
@@ -186,7 +192,9 @@ object Resolve extends PlatformResolve {
     def future()(implicit ec: ExecutionContext = resolve.cache.ec): Future[Resolution] =
       resolve.io.future()
 
-    def either()(implicit ec: ExecutionContext = resolve.cache.ec): Either[ResolutionError, Resolution] = {
+    def either()(implicit
+      ec: ExecutionContext = resolve.cache.ec
+    ): Either[ResolutionError, Resolution] = {
 
       val f = resolve
         .io
@@ -209,30 +217,37 @@ object Resolve extends PlatformResolve {
     params: ResolutionParams = ResolutionParams(),
     initialResolutionOpt: Option[Resolution] = None
   ): Resolution = {
+    import coursier.core.{Resolution => CoreResolution}
+
+    val scalaOrg =
+      if (params.typelevel) Organization("org.typelevel")
+      else Organization("org.scala-lang")
 
     val forceScalaVersions =
-      if (params.doForceScalaVersion) {
-        val scalaOrg =
-          if (params.typelevel) Organization("org.typelevel")
-          else Organization("org.scala-lang")
+      if (params.doForceScalaVersion)
         if (params.selectedScalaVersion.startsWith("3"))
           Seq(
-            Module(scalaOrg, ModuleName("scala3-library")) -> params.selectedScalaVersion,
+            Module(scalaOrg, ModuleName("scala3-library"))  -> params.selectedScalaVersion,
             Module(scalaOrg, ModuleName("scala3-compiler")) -> params.selectedScalaVersion
           )
         else
           Seq(
-            Module(scalaOrg, ModuleName("scala-library")) -> params.selectedScalaVersion,
+            Module(scalaOrg, ModuleName("scala-library"))  -> params.selectedScalaVersion,
             Module(scalaOrg, ModuleName("scala-compiler")) -> params.selectedScalaVersion,
-            Module(scalaOrg, ModuleName("scala-reflect")) -> params.selectedScalaVersion,
-            Module(scalaOrg, ModuleName("scalap")) -> params.selectedScalaVersion
+            Module(scalaOrg, ModuleName("scala-reflect"))  -> params.selectedScalaVersion,
+            Module(scalaOrg, ModuleName("scalap"))         -> params.selectedScalaVersion
           )
-      } else
+      else
         Nil
 
     val mapDependencies = {
       val l = (if (params.typelevel) Seq(Typelevel.swap) else Nil) ++
-        (if (params.doForceScalaVersion) Seq(coursier.core.Resolution.forceScalaVersion(params.selectedScalaVersion)) else Nil)
+        (if (params.doForceScalaVersion)
+           Seq(CoreResolution.overrideScalaModule(params.selectedScalaVersion, scalaOrg))
+         else Nil) ++
+        (if (params.doOverrideFullSuffix)
+           Seq(CoreResolution.overrideFullSuffix(params.selectedScalaVersion))
+         else Nil)
 
       l.reduceOption((f, g) => dep => f(g(dep)))
     }
@@ -248,14 +263,15 @@ object Resolve extends PlatformResolve {
             if (reconciliation == null) {
               val rec = actualReconciliation.find(_._1.matches(m)) match {
                 case Some((_, r)) => r
-                case None => Reconciliation.Default
+                case None         => Reconciliation.Default
               }
               val prev = cache.putIfAbsent(m, rec)
               if (prev == null)
                 rec
               else
                 prev
-            } else
+            }
+            else
               reconciliation
         }
     }
@@ -289,7 +305,9 @@ object Resolve extends PlatformResolve {
       )
       .withUserActivations(
         if (params.profiles.isEmpty) None
-        else Some(params.profiles.iterator.map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true).toMap)
+        else Some(params.profiles.iterator.map(p =>
+          if (p.startsWith("!")) p.drop(1) -> false else p -> true
+        ).toMap)
       )
       .withMapDependencies(mapDependencies)
       .withExtraProperties(params.properties)
@@ -309,7 +327,7 @@ object Resolve extends PlatformResolve {
       .run(fetch, maxIterations)
 
     loggerOpt match {
-      case None => task
+      case None         => task
       case Some(logger) => logger.using(task)
     }
   }
@@ -328,11 +346,11 @@ object Resolve extends PlatformResolve {
         case ((module, version), errors) =>
           new ResolutionError.CantDownloadModule(res, module, version, errors)
       } match {
-        case Seq() =>
-          ValidationNel.success(())
-        case Seq(h, t @ _*) =>
-          ValidationNel.failures(h, t: _*)
-      }
+      case Seq() =>
+        ValidationNel.success(())
+      case Seq(h, t @ _*) =>
+        ValidationNel.failures(h, t: _*)
+    }
 
     val checkConflicts: ValidationNel[ResolutionError, Unit] =
       if (res.conflicts.isEmpty)

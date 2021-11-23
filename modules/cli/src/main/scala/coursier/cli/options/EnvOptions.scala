@@ -1,11 +1,30 @@
 package coursier.cli.options
 
-import caseapp.Name
+import caseapp._
 
+import scala.util.Properties
+
+// format: off
 final case class EnvOptions(
-  env: Boolean = false,
+
+  @Group(OptionGroup.scripting)
+    env: Boolean = false,
+
+  @Group(OptionGroup.scripting)
+  @Hidden
   @Name("disable")
     disableEnv: Boolean = false,
-  setup: Boolean = false,
-  userHome: Option[String] = None
+
+  @Group(OptionGroup.scripting)
+  @Hidden
+    windowsScript: Boolean = Properties.isWin,
+
+  @Group(OptionGroup.scripting)
+    setup: Boolean = false,
+
+  @Group(OptionGroup.scripting)
+  @Hidden
+    userHome: Option[String] = None
+
 )
+// format: on

@@ -15,18 +15,17 @@ final class DeleteOnExit(verbosity: Int) {
         s.iterator()
           .asScala
           .foreach(deleteRecursiveIfExists)
-      } finally {
-        if (s != null)
-          s.close()
       }
+      finally if (s != null)
+        s.close()
     }
 
     Files.deleteIfExists(f)
   }
 
   @volatile private var addedHook = false
-  private val deleteOnExitLock = new Object
-  private var deleteOnExit0 = List.empty[Path]
+  private val deleteOnExitLock    = new Object
+  private var deleteOnExit0       = List.empty[Path]
 
   def apply(f: Path): Unit = {
 

@@ -28,15 +28,14 @@ object InMemoryRepository {
 
     val protocolSpecificAttemptOpt = {
 
-      def ifFile: Option[Boolean] = {
+      def ifFile: Option[Boolean] =
         if (localArtifactsShouldBeCached && !new File(url.toURI).exists()) {
           val cachePath = cacheOpt.fold(coursier.cache.CacheDefaults.location)(_.location)
           // 'file' here stands for the protocol (e.g. it's https instead for https:// URLs)
           Some(new File(cachePath, s"file/${url.getPath}").exists())
-        } else {
-          Some(new File(url.toURI).exists()) // FIXME Escaping / de-escaping needed here?
         }
-      }
+        else
+          Some(new File(url.toURI).exists()) // FIXME Escaping / de-escaping needed here?
 
       def ifHttp: Option[Boolean] = {
         // HEAD request attempt, adapted from http://stackoverflow.com/questions/22541629/android-how-can-i-make-an-http-head-request/22545275#22545275
@@ -44,8 +43,12 @@ object InMemoryRepository {
         var conn: URLConnection = null
         try {
           conn = ConnectionBuilder(url.toString)
-            .withFollowHttpToHttpsRedirections(cacheOpt.fold(false)(_.followHttpToHttpsRedirections))
-            .withFollowHttpsToHttpRedirections(cacheOpt.fold(false)(_.followHttpsToHttpRedirections))
+            .withFollowHttpToHttpsRedirections(
+              cacheOpt.fold(false)(_.followHttpToHttpsRedirections)
+            )
+            .withFollowHttpsToHttpRedirections(
+              cacheOpt.fold(false)(_.followHttpsToHttpRedirections)
+            )
             .withSslSocketFactoryOpt(cacheOpt.flatMap(_.sslSocketFactoryOpt))
             .withHostnameVerifierOpt(cacheOpt.flatMap(_.hostnameVerifierOpt))
             .withMethod("HEAD")
@@ -60,10 +63,8 @@ object InMemoryRepository {
           case _: FileNotFoundException => Some(false)
           case _: IOException           => None // error other than not found
         }
-        finally {
-          if (conn != null)
-            CacheUrl.closeConn(conn)
-        }
+        finally if (conn != null)
+          CacheUrl.closeConn(conn)
       }
 
       url.getProtocol match {
@@ -84,10 +85,8 @@ object InMemoryRepository {
       catch {
         case _: IOException => false
       }
-      finally {
-        if (conn != null)
-          CacheUrl.closeConn(conn)
-      }
+      finally if (conn != null)
+        CacheUrl.closeConn(conn)
     }
 
     protocolSpecificAttemptOpt
@@ -148,9 +147,8 @@ object InMemoryRepository {
       .get((module, version))
       .fold[Either[String, (ArtifactSource, Project)]](Left("No fallback URL found")) {
         case (url, _) =>
-
           val urlStr = url.toExternalForm
-          val idx = urlStr.lastIndexOf('/')
+          val idx    = urlStr.lastIndexOf('/')
 
           if (idx < 0 || urlStr.endsWith("/"))
             Left(s"$url doesn't point to a file")
@@ -177,7 +175,8 @@ object InMemoryRepository {
               )
 
               Right((this, proj))
-            } else
+            }
+            else
               Left(s"$fileName not found under $dirUrlStr")
           }
       }
@@ -196,7 +195,7 @@ object InMemoryRepository {
       .map {
         case (url, changing) =>
           val url0 = url.toString
-          val ext = url0.substring(url0.lastIndexOf('.') + 1)
+          val ext  = url0.substring(url0.lastIndexOf('.') + 1)
           val pub = Publication(
             dependency.module.name.value, // ???
             Type(ext),

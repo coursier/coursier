@@ -95,14 +95,31 @@ final case class FileSet(elements: Seq[(Path, Content)]) {
       Task.gather.gather {
         l.map {
           case m: Group.Module =>
-            m.updateMetadata(org, name, version, licenses, developers, homePage, gitDomainPath, distMgmtRepo, now)
+            m.updateMetadata(
+              org,
+              name,
+              version,
+              licenses,
+              developers,
+              homePage,
+              gitDomainPath,
+              distMgmtRepo,
+              now
+            )
           case m: Group.MavenMetadata =>
-            m.updateContent(org, name, version, version.filter(!_.endsWith("SNAPSHOT")), version.toSeq, now)
+            m.updateContent(
+              org,
+              name,
+              version,
+              version.filter(!_.endsWith("SNAPSHOT")),
+              version.toSeq,
+              now
+            )
         }
       }
     }.flatMap { groups =>
       Group.merge(groups) match {
-        case Left(e) => Task.fail(new Exception(e))
+        case Left(e)   => Task.fail(new Exception(e))
         case Right(fs) => Task.point(fs)
       }
     }
@@ -144,8 +161,8 @@ final case class FileSet(elements: Seq[(Path, Content)]) {
         }
       }
       .map { l =>
-        val m = l.toMap
-        val current = m.keySet.map(_.module)
+        val m                 = l.toMap
+        val current           = m.keySet.map(_.module)
         val interDependencies = m.mapValues(_.filter(current)).iterator.toMap
         order(interDependencies).toVector
       }

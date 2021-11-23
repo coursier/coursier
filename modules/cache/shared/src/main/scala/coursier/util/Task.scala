@@ -20,12 +20,11 @@ final case class Task[+T](value: ExecutionContext => Future[T]) extends AnyVal {
     value(ec)
 
   def attempt: Task[Either[Throwable, T]] =
-    map(Right(_))
-    .handle {
+    map(Right(_)).handle {
       case t: Throwable => Left(t)
     }
 
-  def schedule(duration: Duration, es: ScheduledExecutorService): Task[T] = {
+  def schedule(duration: Duration, es: ScheduledExecutorService): Task[T] =
     Task { implicit ec =>
       val p = Promise[T]()
       val r: Runnable =
@@ -35,7 +34,6 @@ final case class Task[+T](value: ExecutionContext => Future[T]) extends AnyVal {
       es.schedule(r, duration.length, duration.unit)
       p.future
     }
-  }
 }
 
 object Task extends PlatformTaskCompanion {
@@ -89,4 +87,3 @@ object Task extends PlatformTaskCompanion {
     }
 
 }
-

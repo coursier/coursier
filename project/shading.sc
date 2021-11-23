@@ -10,7 +10,6 @@ import java.util.zip._
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 
-
 trait Shading extends JavaModule with PublishModule {
 
   // TODO Change that to shadedModules
@@ -18,9 +17,9 @@ trait Shading extends JavaModule with PublishModule {
   def validNamespaces: T[Seq[String]]
   def shadeRenames: T[Seq[(String, String)]]
 
-  def shadedJars = T{
+  def shadedJars = T {
     val depToDependency = resolveCoursierDependency().apply(_)
-    val depSeq = transitiveIvyDeps()
+    val depSeq          = transitiveIvyDeps()
     val (_, resolution) = mill.modules.Jvm.resolveDependenciesMetadata(
       repositoriesTask(),
       deps = depSeq.map(depToDependency),
@@ -46,19 +45,19 @@ trait Shading extends JavaModule with PublishModule {
       ).unsafeRun
 
       val errors = loadedArtifacts.collect {
-        case (false, Left(x)) => x
+        case (false, Left(x))               => x
         case (true, Left(x)) if !x.notFound => x
       }
-      if (errors.nonEmpty) {
+      if (errors.nonEmpty)
         sys.error(errors.toString)
-      }
       loadedArtifacts.collect { case (_, Right(x)) => x }
     }
 
     val shadedDepSeq = shadedDependencies()
 
     val allJars = load(resolution)
-    val retainedJars = load(resolution.subset((depSeq.toSeq.filterNot(shadedDepSeq.toSet).map(depToDependency))))
+    val retainedJars =
+      load(resolution.subset((depSeq.toSeq.filterNot(shadedDepSeq.toSet).map(depToDependency))))
 
     val shadedJars = allJars.filterNot(retainedJars.toSet)
     println(s"${shadedJars.length} JAR(s) to shade")
@@ -68,22 +67,22 @@ trait Shading extends JavaModule with PublishModule {
     shadedJars.map(os.Path(_)).map(PathRef(_))
   }
 
-  def jar = T{
+  def jar = T {
 
     val shadeRules0 = {
       val renames = shadeRenames()
       if (renames.isEmpty) Nil
       else Seq(ShadePattern.Rename(renames.toList).inAll)
     }
-    val orig = super.jar().path
-    val updated = T.dest / (orig.last.stripSuffix(".jar") + "-shaded.jar")
+    val orig        = super.jar().path
+    val updated     = T.dest / (orig.last.stripSuffix(".jar") + "-shaded.jar")
     val shadedJars0 = shadedJars().map(_.path)
 
     val shader = Shader.bytecodeShader(shadeRules0, verbose = false)
 
     val inputFiles = Seq(orig) ++ shadedJars0
 
-    var fos: OutputStream = null
+    var fos: OutputStream    = null
     var zos: ZipOutputStream = null
     try {
       fos = new FileOutputStream(updated.toIO)
@@ -96,9 +95,12 @@ trait Shading extends JavaModule with PublishModule {
           zf = new ZipFile(f.toIO)
 
           val buf = Array.ofDim[Byte](64 * 1024)
-          for (ent <- zf.entries.asScala) {
-            if (ent.getName.endsWith("/")) {
-              for ((_, updatedName) <- shader(Array.emptyByteArray, ent.getName) if !seen(updatedName)) {
+          for (ent <- zf.entries.asScala)
+            if (ent.getName.endsWith("/"))
+              for {
+                (_, updatedName) <- shader(Array.emptyByteArray, ent.getName)
+                if !seen(updatedName)
+              } {
                 seen += updatedName
                 val updatedEnt = {
                   val ent0 = new ZipEntry(updatedName)
@@ -115,8 +117,8 @@ trait Shading extends JavaModule with PublishModule {
                 }
                 zos.putNextEntry(updatedEnt)
               }
-            } else {
-              val baos = new ByteArrayOutputStream
+            else {
+              val baos            = new ByteArrayOutputStream
               var is: InputStream = null
               try {
                 is = zf.getInputStream(ent)
@@ -124,16 +126,17 @@ trait Shading extends JavaModule with PublishModule {
                 while ({
                   read = is.read(buf)
                   read >= 0
-                }) {
+                })
                   if (read > 0)
                     baos.write(buf, 0, read)
-                }
-              } finally {
-                if (is != null)
-                  is.close()
               }
+              finally if (is != null)
+                is.close()
               val bytes = baos.toByteArray
-              for ((updatedBytes, updatedName) <- shader(bytes, ent.getName) if !seen(updatedName)) {
+              for {
+                (updatedBytes, updatedName) <- shader(bytes, ent.getName)
+                if !seen(updatedName)
+              } {
                 seen += updatedName
                 val updatedEnt = {
                   val ent0 = new ZipEntry(updatedName)
@@ -156,15 +159,14 @@ trait Shading extends JavaModule with PublishModule {
                 zos.write(updatedBytes, 0, updatedBytes.length)
               }
             }
-          }
-        } finally {
-          if (zf != null)
-            zf.close()
         }
+        finally if (zf != null)
+          zf.close()
       }
 
       zos.finish()
-    } finally {
+    }
+    finally {
       if (zos != null)
         zos.close()
       if (fos != null)
@@ -176,8 +178,8 @@ trait Shading extends JavaModule with PublishModule {
 
   def publishXmlDeps = T.task {
     val convert = resolvePublishDependency().apply(_)
-    val orig = super.publishXmlDeps()
-    val shaded = shadedDependencies().iterator.map(convert).toSet
+    val orig    = super.publishXmlDeps()
+    val shaded  = shadedDependencies().iterator.map(convert).toSet
     Agg(orig.toSeq.filterNot(shaded): _*)
   }
 }

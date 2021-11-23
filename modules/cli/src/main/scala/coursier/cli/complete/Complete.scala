@@ -1,13 +1,19 @@
 package coursier.cli.complete
 
 import caseapp.core.RemainingArgs
-import caseapp.core.app.CaseApp
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.util.Sync
 
 import scala.concurrent.ExecutionContext
 
-object Complete extends CaseApp[CompleteOptions] {
+object Complete extends CoursierCommand[CompleteOptions] {
+  override def hidden: Boolean = true
+  override def group: String   = CommandGroup.resolve
 
+  override def names = List(
+    List("complete-dep"),
+    List("complete-dependency")
+  )
   def run(options: CompleteOptions, args: RemainingArgs): Unit = {
 
     val params = CompleteParams(options, args).toEither match {
@@ -19,8 +25,8 @@ object Complete extends CaseApp[CompleteOptions] {
         params0
     }
 
-    val pool = Sync.fixedThreadPool(params.cache.parallel)
-    val ec = ExecutionContext.fromExecutorService(pool)
+    val pool  = Sync.fixedThreadPool(params.cache.parallel)
+    val ec    = ExecutionContext.fromExecutorService(pool)
     val cache = params.cache.cache(pool, params.output.logger())
 
     val result = coursier.complete.Complete(cache)

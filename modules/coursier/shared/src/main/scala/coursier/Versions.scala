@@ -53,11 +53,9 @@ import dataclass._
       finalRepositories.flatMap { repositories =>
         F.gather(
           for {
-            mod <- moduleOpt.toSeq
+            mod  <- moduleOpt.toSeq
             repo <- repositories
-          } yield {
-            repo.versions(mod, cache.fetch).run.map(repo -> _.map(_._1))
-          }
+          } yield repo.versions(mod, cache.fetch).run.map(repo -> _.map(_._1))
         )
       }
 
@@ -82,7 +80,7 @@ object Versions {
     else if (versions.lengthCompare(1) == 0)
       versions.head
     else {
-      val latest = versions.map(v => Version(v.latest)).max.repr
+      val latest  = versions.map(v => Version(v.latest)).max.repr
       val release = versions.map(v => Version(v.release)).max.repr
 
       val available = versions

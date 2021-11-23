@@ -33,20 +33,22 @@ object IvyXml {
       }
       .map {
         case (name, node) =>
-          Configuration(name) -> node.attribute("extends").toSeq.flatMap(_.split(',').map(Configuration(_)))
+          Configuration(name) -> node.attribute("extends").toSeq.flatMap(
+            _.split(',').map(Configuration(_))
+          )
       }
 
   // FIXME "default(compile)" likely not to be always the default
   def mappings(mapping: String): Seq[(Configuration, Configuration)] =
     mapping.split(';').toSeq.flatMap { m =>
       val (froms, tos) = m.split("->", 2) match {
-        case Array(from) => (from, Configuration.defaultCompile.value)
+        case Array(from)     => (from, Configuration.defaultCompile.value)
         case Array(from, to) => (from, to)
       }
 
       for {
         from <- froms.split(',').toSeq
-        to <- tos.split(',').toSeq
+        to   <- tos.split(',').toSeq
       } yield (Configuration(from.trim), Configuration(to.trim))
     }
 
@@ -101,7 +103,7 @@ object IvyXml {
         val attr = node.attributesFromNamespace(attributesNamespace)
         val transitive = node.attribute("transitive") match {
           case Right("false") => false
-          case _ => true
+          case _              => true
         }
 
         for {
@@ -115,31 +117,29 @@ object IvyXml {
             .toOption
             .toSeq
             .map(ModuleName(_))
-          version <- node.attribute("rev").toOption.toSeq
-          rawConf <- node.attribute("conf").toOption.toSeq
+          version            <- node.attribute("rev").toOption.toSeq
+          rawConf            <- node.attribute("conf").toOption.toSeq
           (fromConf, toConf) <- mappings(rawConf)
           if globalExcludesFilter(fromConf, org, name)
           pub <- publications
-        } yield {
-          fromConf -> Dependency(
-            Module(org, name, attr.toMap),
-            version,
-            toConf,
-            globalExcludes.getOrElse(Configuration.all, Set.empty) ++
+        } yield fromConf -> Dependency(
+          Module(org, name, attr.toMap),
+          version,
+          toConf,
+          globalExcludes.getOrElse(Configuration.all, Set.empty) ++
             globalExcludes.getOrElse(fromConf, Set.empty) ++
-              allConfsExcludes ++
-              excludes.getOrElse(fromConf, Set.empty),
-            pub, // should come from possible artifact nodes
-            optional = false,
-            transitive = transitive
-          )
-        }
+            allConfsExcludes ++
+            excludes.getOrElse(fromConf, Set.empty),
+          pub, // should come from possible artifact nodes
+          optional = false,
+          transitive = transitive
+        )
       }
 
   private def publication(node: Node): Publication = {
-    val name = node.attribute("name").getOrElse("")
-    val type0 = node.attribute("type").toOption.fold(Type.jar)(Type(_))
-    val ext = node.attribute("ext").toOption.fold(type0.asExtension)(Extension(_))
+    val name       = node.attribute("name").getOrElse("")
+    val type0      = node.attribute("type").toOption.fold(Type.jar)(Type(_))
+    val ext        = node.attribute("ext").toOption.fold(type0.asExtension)(Extension(_))
     val classifier = node.attribute("classifier").toOption.fold(Classifier.empty)(Classifier(_))
     Publication(name, type0, ext, classifier)
   }
@@ -186,7 +186,7 @@ object IvyXml {
         .mapValues(_.map(_._2).toSet)
         .toMap
       val filter = {
-        val filters = globalExcludes.view.mapValues(set => Exclusions(set)).toMap
+        val filters       = globalExcludes.view.mapValues(set => Exclusions(set)).toMap
         val allConfFilter = filters.get(Configuration.all)
         (conf: Configuration, org: Organization, name: ModuleName) =>
           allConfFilter.forall(_(org, name)) && {
@@ -194,14 +194,16 @@ object IvyXml {
             confFilter.forall(_(org, name))
           }
       }
-      val dependencies0 = dependenciesNodeOpt.map(dependencies(_, globalExcludes, filter)).getOrElse(Nil)
+      val dependencies0 =
+        dependenciesNodeOpt.map(dependencies(_, globalExcludes, filter)).getOrElse(Nil)
 
       val configurationsNodeOpt = node.children
         .find(_.label == "configurations")
 
       val configurationsOpt = configurationsNodeOpt.map(configurations)
 
-      val configurations0 = configurationsOpt.getOrElse(Seq(Configuration.default -> Seq.empty[Configuration]))
+      val configurations0 =
+        configurationsOpt.getOrElse(Seq(Configuration.default -> Seq.empty[Configuration]))
 
       val publicationsNodeOpt = node.children
         .find(_.label == "publications")
@@ -242,7 +244,12 @@ object IvyXml {
         actualVersionOpt = None,
         if (publicationsOpt.isEmpty)
           // no publications node -> default JAR artifact
-          Seq(Configuration.all -> Publication(module.name.value, Type.jar, Extension.jar, Classifier.empty))
+          Seq(Configuration.all -> Publication(
+            module.name.value,
+            Type.jar,
+            Extension.jar,
+            Classifier.empty
+          ))
         else {
           // publications node is there -> only its content (if it is empty, no artifacts,
           // as per the Ivy manual)

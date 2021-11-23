@@ -33,127 +33,250 @@ object ResolutionTests extends TestSuite {
 
   val projects = Seq(
     Project(mod"acme:config", "1.3.0"),
-
-    Project(mod"acme:play", "2.4.0", Seq(
-      Configuration.empty -> dep"acme:play-json:2.4.0")),
-
+    Project(
+      mod"acme:play",
+      "2.4.0",
+      Seq(
+        Configuration.empty -> dep"acme:play-json:2.4.0"
+      )
+    ),
     Project(Module(org"acme", name"play-json"), "2.4.0"),
-
-    Project(Module(org"acme", name"play"), "2.4.1",
+    Project(
+      Module(org"acme", name"play"),
+      "2.4.1",
       dependencies = Seq(
-        Configuration.empty -> Dependency(Module(org"acme", name"play-json"), "${play_json_version}"),
-        Configuration.empty -> Dependency(Module(org"$${project.groupId}", name"$${WithSpecialChar©}"), "1.3.0")),
+        Configuration.empty -> Dependency(
+          Module(org"acme", name"play-json"),
+          "${play_json_version}"
+        ),
+        Configuration.empty -> Dependency(
+          Module(org"$${project.groupId}", name"$${WithSpecialChar©}"),
+          "1.3.0"
+        )
+      ),
       properties = Seq(
         "play_json_version" -> "2.4.0",
-        "WithSpecialChar©" -> "config")),
-
-    Project(Module(org"acme", name"play-extra-no-config"), "2.4.1",
+        "WithSpecialChar©"  -> "config"
+      )
+    ),
+    Project(
+      Module(org"acme", name"play-extra-no-config"),
+      "2.4.1",
       Seq(
         Configuration.empty -> Dependency(Module(org"acme", name"play"), "2.4.1")
           .withExclusions(Set((org"acme", name"config")))
       )
     ),
-
-    Project(Module(org"acme", name"play-extra-no-config-no"), "2.4.1",
+    Project(
+      Module(org"acme", name"play-extra-no-config-no"),
+      "2.4.1",
       Seq(
         Configuration.empty -> Dependency(Module(org"acme", name"play"), "2.4.1")
           .withExclusions(Set((org"*", name"config")))
       )
     ),
-
-    Project(Module(org"acme", name"module-with-missing-pom"), "1.0.0",
+    Project(
+      Module(org"acme", name"module-with-missing-pom"),
+      "1.0.0",
       dependencyManagement = Seq(
-        Configuration.`import` -> Dependency(Module(org"acme", name"missing-pom"), "1.0.0"))),
-
-    Project(Module(org"hudsucker", name"mail"), "10.0",
+        Configuration.`import` -> Dependency(Module(org"acme", name"missing-pom"), "1.0.0")
+      )
+    ),
+    Project(
+      Module(org"hudsucker", name"mail"),
+      "10.0",
       Seq(
-        Configuration.test -> Dependency(Module(org"$${project.groupId}", name"test-util"), "${project.version}"))),
-
+        Configuration.test -> Dependency(
+          Module(org"$${project.groupId}", name"test-util"),
+          "${project.version}"
+        )
+      )
+    ),
     Project(Module(org"hudsucker", name"test-util"), "10.0"),
-
-    Project(Module(org"se.ikea", name"parent"), "18.0",
+    Project(
+      Module(org"se.ikea", name"parent"),
+      "18.0",
       dependencyManagement = Seq(
         Configuration.empty -> Dependency(Module(org"acme", name"play"), "2.4.0")
           .withExclusions(Set((org"acme", name"play-json")))
       )
     ),
-
-    Project(Module(org"se.ikea", name"billy"), "18.0",
+    Project(
+      Module(org"se.ikea", name"billy"),
+      "18.0",
       dependencies = Seq(
-        Configuration.empty -> Dependency(Module(org"acme", name"play"), "")),
-      parent = Some(Module(org"se.ikea", name"parent"), "18.0")),
-
-    Project(Module(org"org.gnome", name"parent"), "7.0",
+        Configuration.empty -> Dependency(Module(org"acme", name"play"), "")
+      ),
+      parent = Some(Module(org"se.ikea", name"parent"), "18.0")
+    ),
+    Project(
+      Module(org"org.gnome", name"parent"),
+      "7.0",
       Seq(
-        Configuration.empty -> Dependency(Module(org"org.gnu", name"glib"), "13.4"))),
-
-    Project(Module(org"org.gnome", name"panel-legacy"), "7.0",
+        Configuration.empty -> Dependency(Module(org"org.gnu", name"glib"), "13.4")
+      )
+    ),
+    Project(
+      Module(org"org.gnome", name"panel-legacy"),
+      "7.0",
       dependencies = Seq(
-        Configuration.empty -> Dependency(Module(org"org.gnome", name"desktop"), "${project.version}")),
-      parent = Some(Module(org"org.gnome", name"parent"), "7.0")),
-
-    Project(Module(org"gov.nsa", name"secure-pgp"), "10.0",
+        Configuration.empty -> Dependency(
+          Module(org"org.gnome", name"desktop"),
+          "${project.version}"
+        )
+      ),
+      parent = Some(Module(org"org.gnome", name"parent"), "7.0")
+    ),
+    Project(
+      Module(org"gov.nsa", name"secure-pgp"),
+      "10.0",
       Seq(
-        Configuration.empty -> Dependency(Module(org"gov.nsa", name"crypto"), "536.89"))),
-
-    Project(Module(org"com.mailapp", name"mail-client"), "2.1",
+        Configuration.empty -> Dependency(Module(org"gov.nsa", name"crypto"), "536.89")
+      )
+    ),
+    Project(
+      Module(org"com.mailapp", name"mail-client"),
+      "2.1",
       dependencies = Seq(
         Configuration.empty -> Dependency(Module(org"gov.nsa", name"secure-pgp"), "10.0")
           .withExclusions(Set((org"*", name"$${crypto.name}")))
       ),
-      properties = Seq("crypto.name" -> "crypto", "dummy" -> "2")),
-
-    Project(Module(org"com.thoughtworks.paranamer", name"paranamer-parent"), "2.6",
+      properties = Seq("crypto.name" -> "crypto", "dummy" -> "2")
+    ),
+    Project(
+      Module(org"com.thoughtworks.paranamer", name"paranamer-parent"),
+      "2.6",
       dependencies = Seq(
-        Configuration.empty -> Dependency(Module(org"junit", name"junit"), "")),
+        Configuration.empty -> Dependency(Module(org"junit", name"junit"), "")
+      ),
       dependencyManagement = Seq(
-        Configuration.test -> Dependency(Module(org"junit", name"junit"), "4.11"))),
-
-    Project(Module(org"com.thoughtworks.paranamer", name"paranamer"), "2.6",
-      parent = Some(Module(org"com.thoughtworks.paranamer", name"paranamer-parent"), "2.6")),
-
-    Project(Module(org"com.github.dummy", name"libb"), "0.3.3",
+        Configuration.test -> Dependency(Module(org"junit", name"junit"), "4.11")
+      )
+    ),
+    Project(
+      Module(org"com.thoughtworks.paranamer", name"paranamer"),
+      "2.6",
+      parent = Some(Module(org"com.thoughtworks.paranamer", name"paranamer-parent"), "2.6")
+    ),
+    Project(
+      Module(org"com.github.dummy", name"libb"),
+      "0.3.3",
       profiles = Seq(
-        Profile("default", activeByDefault = Some(true), dependencies = Seq(
-          Configuration.empty -> Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6"))))),
-
-    Project(Module(org"com.github.dummy", name"libb"), "0.4.2",
+        Profile(
+          "default",
+          activeByDefault = Some(true),
+          dependencies = Seq(
+            Configuration.empty -> Dependency(
+              Module(org"org.escalier", name"librairie-standard"),
+              "2.11.6"
+            )
+          )
+        )
+      )
+    ),
+    Project(
+      Module(org"com.github.dummy", name"libb"),
+      "0.4.2",
       dependencies = Seq(
-        Configuration.empty -> Dependency(Module(org"org.scalaverification", name"scala-verification"), "1.12.4")),
+        Configuration.empty -> Dependency(
+          Module(org"org.scalaverification", name"scala-verification"),
+          "1.12.4"
+        )
+      ),
       profiles = Seq(
-        Profile("default", activeByDefault = Some(true), dependencies = Seq(
-          Configuration.empty -> Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6"),
-          Configuration.test -> Dependency(Module(org"org.scalaverification", name"scala-verification"), "1.12.4"))))),
-
-    Project(Module(org"com.github.dummy", name"libb"), "0.5.3",
+        Profile(
+          "default",
+          activeByDefault = Some(true),
+          dependencies = Seq(
+            Configuration.empty -> Dependency(
+              Module(org"org.escalier", name"librairie-standard"),
+              "2.11.6"
+            ),
+            Configuration.test -> Dependency(
+              Module(org"org.scalaverification", name"scala-verification"),
+              "1.12.4"
+            )
+          )
+        )
+      )
+    ),
+    Project(
+      Module(org"com.github.dummy", name"libb"),
+      "0.5.3",
       properties = Seq("special" -> "true"),
       profiles = Seq(
-        Profile("default", activation = Profile.Activation(properties = Seq("special" -> None)), dependencies = Seq(
-          Configuration.empty -> Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6"))))),
-
-    Project(Module(org"com.github.dummy", name"libb"), "0.5.4",
+        Profile(
+          "default",
+          activation = Profile.Activation(properties = Seq("special" -> None)),
+          dependencies = Seq(
+            Configuration.empty -> Dependency(
+              Module(org"org.escalier", name"librairie-standard"),
+              "2.11.6"
+            )
+          )
+        )
+      )
+    ),
+    Project(
+      Module(org"com.github.dummy", name"libb"),
+      "0.5.4",
       properties = Seq("special" -> "true"),
       profiles = Seq(
-        Profile("default", activation = Profile.Activation(properties = Seq("special" -> Some("true"))), dependencies = Seq(
-          Configuration.empty -> Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6"))))),
-
-    Project(Module(org"com.github.dummy", name"libb"), "0.5.5",
+        Profile(
+          "default",
+          activation = Profile.Activation(properties = Seq("special" -> Some("true"))),
+          dependencies = Seq(
+            Configuration.empty -> Dependency(
+              Module(org"org.escalier", name"librairie-standard"),
+              "2.11.6"
+            )
+          )
+        )
+      )
+    ),
+    Project(
+      Module(org"com.github.dummy", name"libb"),
+      "0.5.5",
       properties = Seq("special" -> "true"),
       profiles = Seq(
-        Profile("default", activation = Profile.Activation(properties = Seq("special" -> Some("!false"))), dependencies = Seq(
-          Configuration.empty -> Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6"))))),
-
-    Project(Module(org"com.github.dummy", name"libb-parent"), "0.5.6",
-      properties = Seq("special" -> "true")),
-
-    Project(Module(org"com.github.dummy", name"libb"), "0.5.6",
+        Profile(
+          "default",
+          activation = Profile.Activation(properties = Seq("special" -> Some("!false"))),
+          dependencies = Seq(
+            Configuration.empty -> Dependency(
+              Module(org"org.escalier", name"librairie-standard"),
+              "2.11.6"
+            )
+          )
+        )
+      )
+    ),
+    Project(
+      Module(org"com.github.dummy", name"libb-parent"),
+      "0.5.6",
+      properties = Seq("special" -> "true")
+    ),
+    Project(
+      Module(org"com.github.dummy", name"libb"),
+      "0.5.6",
       parent = Some(Module(org"com.github.dummy", name"libb-parent"), "0.5.6"),
       properties = Seq("special" -> "true"),
       profiles = Seq(
-        Profile("default", activation = Profile.Activation(properties = Seq("special" -> Some("!false"))), dependencies = Seq(
-          Configuration.empty -> Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6"))))),
-
-    Project(Module(org"com.github.dummy", name"libb"), "0.5.7",
+        Profile(
+          "default",
+          activation = Profile.Activation(properties = Seq("special" -> Some("!false"))),
+          dependencies = Seq(
+            Configuration.empty -> Dependency(
+              Module(org"org.escalier", name"librairie-standard"),
+              "2.11.6"
+            )
+          )
+        )
+      )
+    ),
+    Project(
+      Module(org"com.github.dummy", name"libb"),
+      "0.5.7",
       // This project demonstrates a build profile that activates only when
       // the property "special" is unset. Because "special" is set to "true"
       // here, the build profile should not be active and "librairie-standard"
@@ -165,10 +288,21 @@ object ResolutionTests extends TestSuite {
       // anyways)
       properties = Seq("special" -> "true", "!special" -> "true"),
       profiles = Seq(
-        Profile("default", activation = Profile.Activation(properties = Seq("!special" -> None)), dependencies = Seq(
-          Configuration.empty -> Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6"))))),
-
-    Project(Module(org"com.github.dummy", name"libb"), "0.5.8",
+        Profile(
+          "default",
+          activation = Profile.Activation(properties = Seq("!special" -> None)),
+          dependencies = Seq(
+            Configuration.empty -> Dependency(
+              Module(org"org.escalier", name"librairie-standard"),
+              "2.11.6"
+            )
+          )
+        )
+      )
+    ),
+    Project(
+      Module(org"com.github.dummy", name"libb"),
+      "0.5.8",
       // This project demonstrates a build profile that activates only when
       // the property "special" is unset. Because that is the case here,
       // the "default" build profile should be active and "librairie-standard"
@@ -180,69 +314,105 @@ object ResolutionTests extends TestSuite {
       // anyways)
       properties = Seq("!special" -> "true"),
       profiles = Seq(
-        Profile("default", activation = Profile.Activation(properties = Seq("!special" -> None)), dependencies = Seq(
-          Configuration.empty -> Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6"))))),
-
+        Profile(
+          "default",
+          activation = Profile.Activation(properties = Seq("!special" -> None)),
+          dependencies = Seq(
+            Configuration.empty -> Dependency(
+              Module(org"org.escalier", name"librairie-standard"),
+              "2.11.6"
+            )
+          )
+        )
+      )
+    ),
     Project(Module(org"an-org", name"a-name"), "1.0"),
-
     Project(Module(org"an-org", name"a-name"), "1.2"),
-
-    Project(Module(org"an-org", name"a-lib"), "1.0",
-      Seq(Configuration.empty -> Dependency(Module(org"an-org", name"a-name"), "1.0"))),
-
+    Project(
+      Module(org"an-org", name"a-lib"),
+      "1.0",
+      Seq(Configuration.empty -> Dependency(Module(org"an-org", name"a-name"), "1.0"))
+    ),
     Project(Module(org"an-org", name"a-lib"), "1.1"),
-
-    Project(Module(org"an-org", name"a-lib"), "1.2",
-      Seq(Configuration.empty -> Dependency(Module(org"an-org", name"a-name"), "1.2"))),
-
-    Project(Module(org"an-org", name"another-lib"), "1.0",
-      Seq(Configuration.empty -> Dependency(Module(org"an-org", name"a-name"), "1.0"))),
+    Project(
+      Module(org"an-org", name"a-lib"),
+      "1.2",
+      Seq(Configuration.empty -> Dependency(Module(org"an-org", name"a-name"), "1.2"))
+    ),
+    Project(
+      Module(org"an-org", name"another-lib"),
+      "1.0",
+      Seq(Configuration.empty -> Dependency(Module(org"an-org", name"a-name"), "1.0"))
+    ),
 
     // Must bring transitively an-org:a-name, as an optional dependency
-    Project(Module(org"an-org", name"an-app"), "1.0",
+    Project(
+      Module(org"an-org", name"an-app"),
+      "1.0",
       Seq(
-        Configuration.empty -> Dependency(Module(org"an-org", name"a-lib"), "1.0").withExclusions(Set((org"an-org", name"a-name"))),
-        Configuration.empty -> Dependency(Module(org"an-org", name"another-lib"), "1.0").withOptional(true))),
-
-    Project(Module(org"an-org", name"an-app"), "1.1",
+        Configuration.empty -> Dependency(Module(org"an-org", name"a-lib"), "1.0").withExclusions(
+          Set((org"an-org", name"a-name"))
+        ),
+        Configuration.empty -> Dependency(
+          Module(org"an-org", name"another-lib"),
+          "1.0"
+        ).withOptional(true)
+      )
+    ),
+    Project(
+      Module(org"an-org", name"an-app"),
+      "1.1",
       Seq(
-        Configuration.empty -> Dependency(Module(org"an-org", name"a-lib"), "1.1"))),
-
-    Project(Module(org"an-org", name"an-app"), "1.2",
+        Configuration.empty -> Dependency(Module(org"an-org", name"a-lib"), "1.1")
+      )
+    ),
+    Project(
+      Module(org"an-org", name"an-app"),
+      "1.2",
       Seq(
-        Configuration.empty -> Dependency(Module(org"an-org", name"a-lib"), "1.2"))),
-
-    Project(Module(org"an-org", name"my-lib-1"), "1.0.0+build.027",
-      Seq()),
-
-    Project(Module(org"an-org", name"my-lib-1"), "1.1.0+build.018",
-      Seq()),
-
-    Project(Module(org"an-org", name"my-lib-1"), "1.2.0",
-      Seq()),
-
-    Project(Module(org"an-org", name"my-lib-2"), "1.0",
+        Configuration.empty -> Dependency(Module(org"an-org", name"a-lib"), "1.2")
+      )
+    ),
+    Project(Module(org"an-org", name"my-lib-1"), "1.0.0+build.027", Seq()),
+    Project(Module(org"an-org", name"my-lib-1"), "1.1.0+build.018", Seq()),
+    Project(Module(org"an-org", name"my-lib-1"), "1.2.0", Seq()),
+    Project(
+      Module(org"an-org", name"my-lib-2"),
+      "1.0",
       Seq(
-        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-1"), "1.0.0+build.027"))),
-
-    Project(Module(org"an-org", name"my-lib-3"), "1.0",
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-1"), "1.0.0+build.027")
+      )
+    ),
+    Project(
+      Module(org"an-org", name"my-lib-3"),
+      "1.0",
       Seq(
-        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-1"), "1.1.0+build.018"))),
-
-    Project(Module(org"an-org", name"my-lib-3"), "1.1",
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-1"), "1.1.0+build.018")
+      )
+    ),
+    Project(
+      Module(org"an-org", name"my-lib-3"),
+      "1.1",
       Seq(
-        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-1"), "1.2.0"))),
-
-    Project(Module(org"an-org", name"my-app"), "1.0",
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-1"), "1.2.0")
+      )
+    ),
+    Project(
+      Module(org"an-org", name"my-app"),
+      "1.0",
       Seq(
         Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-2"), "1.0"),
-        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-3"), "1.0"))),
-
-    Project(Module(org"an-org", name"my-app"), "1.1",
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-3"), "1.0")
+      )
+    ),
+    Project(
+      Module(org"an-org", name"my-app"),
+      "1.1",
       Seq(
         Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-2"), "1.0"),
-        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-3"), "1.1")))
-
+        Configuration.empty -> Dependency(Module(org"an-org", name"my-lib-3"), "1.1")
+      )
+    )
   )
 
   val projectsMap = projects
@@ -256,7 +426,7 @@ object ResolutionTests extends TestSuite {
 
   val tests = Tests {
     test("empty") {
-      async{
+      async {
         val res = await(resolve0(
           Nil
         ))
@@ -298,7 +468,9 @@ object ResolutionTests extends TestSuite {
         assert(directDependencyErrors.isEmpty)
 
         // metadataErrors have that
-        assert(res.errors == Seq((Module(org"acme", name"missing-pom"), "1.0.0") -> List("Not found")))
+        assert(
+          res.errors == Seq((Module(org"acme", name"missing-pom"), "1.0.0") -> List("Not found"))
+        )
       }
     }
     test("single") {
@@ -311,14 +483,16 @@ object ResolutionTests extends TestSuite {
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
           .withDependencies(Set(dep.withCompileScope))
-          .withProjectCache(Map(dep.moduleVersion -> (testRepository, projectsMap(dep.moduleVersion))))
+          .withProjectCache(Map(
+            dep.moduleVersion -> (testRepository, projectsMap(dep.moduleVersion))
+          ))
 
         assert(res == expected)
       }
     }
     test("oneTransitiveDependency") {
       async {
-        val dep = Dependency(Module(org"acme", name"play"), "2.4.0")
+        val dep   = Dependency(Module(org"acme", name"play"), "2.4.0")
         val trDep = Dependency(Module(org"acme", name"play-json"), "2.4.0")
         val res = await(resolve0(
           Seq(dep)
@@ -432,7 +606,8 @@ object ResolutionTests extends TestSuite {
         val dep = Dependency(Module(org"org.gnome", name"panel-legacy"), "7.0")
         val trDeps = Seq(
           Dependency(Module(org"org.gnu", name"glib"), "13.4"),
-          Dependency(Module(org"org.gnome", name"desktop"), "7.0"))
+          Dependency(Module(org"org.gnome", name"desktop"), "7.0")
+        )
         val res = await(resolve0(
           Seq(dep)
         )).clearCaches
@@ -448,7 +623,11 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(Module(org"com.mailapp", name"mail-client"), "2.1")
         val trDeps = Seq(
-          Dependency(Module(org"gov.nsa", name"secure-pgp"), "10.0").withExclusions(Set((org"*", name"crypto"))))
+          Dependency(Module(org"gov.nsa", name"secure-pgp"), "10.0").withExclusions(Set((
+            org"*",
+            name"crypto"
+          )))
+        )
         val res = await(resolve0(
           Seq(dep)
         )).clearCaches
@@ -478,7 +657,8 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(Module(org"com.github.dummy", name"libb"), "0.3.3")
         val trDeps = Seq(
-          Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6"))
+          Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6")
+        )
         val res = await(resolve0(
           Seq(dep)
         )).clearCaches
@@ -492,21 +672,20 @@ object ResolutionTests extends TestSuite {
     }
     test("depsFromPropertyActivatedProfile") {
       val f =
-        for (version <- Seq("0.5.3", "0.5.4", "0.5.5", "0.5.6", "0.5.8")) yield {
-          async {
-            val dep = Dependency(Module(org"com.github.dummy", name"libb"), version)
-            val trDeps = Seq(
-              Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6"))
-            val res = await(resolve0(
-              Seq(dep)
-            )).clearCaches
+        for (version <- Seq("0.5.3", "0.5.4", "0.5.5", "0.5.6", "0.5.8")) yield async {
+          val dep = Dependency(Module(org"com.github.dummy", name"libb"), version)
+          val trDeps = Seq(
+            Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6")
+          )
+          val res = await(resolve0(
+            Seq(dep)
+          )).clearCaches
 
-            val expected = Resolution()
-              .withRootDependencies(Seq(dep))
-              .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
+          val expected = Resolution()
+            .withRootDependencies(Seq(dep))
+            .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
 
-            assert(res == expected)
-          }
+          assert(res == expected)
         }
 
       scala.concurrent.Future.sequence(f).map(_ => ())
@@ -539,7 +718,8 @@ object ResolutionTests extends TestSuite {
         // Like com.google.inject:guice:3.0 with org.sonatype.sisu.inject:cglib
         val dep = Dependency(Module(org"com.github.dummy", name"libb"), "0.4.2")
         val trDeps = Seq(
-          Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6"))
+          Dependency(Module(org"org.escalier", name"librairie-standard"), "2.11.6")
+        )
         val res = await(resolve0(
           Seq(dep)
         )).clearCaches
@@ -556,9 +736,13 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(Module(org"an-org", name"an-app"), "1.0")
         val trDeps = Seq(
-          Dependency(Module(org"an-org", name"a-lib"), "1.0").withExclusions(Set((org"an-org", name"a-name"))),
+          Dependency(Module(org"an-org", name"a-lib"), "1.0").withExclusions(Set((
+            org"an-org",
+            name"a-name"
+          ))),
           Dependency(Module(org"an-org", name"another-lib"), "1.0").withOptional(true),
-          Dependency(Module(org"an-org", name"a-name"), "1.0").withOptional(true))
+          Dependency(Module(org"an-org", name"a-name"), "1.0").withOptional(true)
+        )
         val res = await(resolve0(
           Seq(dep),
           filter = Some(_ => true)
@@ -576,11 +760,16 @@ object ResolutionTests extends TestSuite {
       async {
         val deps = Seq(
           Dependency(Module(org"an-org", name"an-app"), "1.0"),
-          Dependency(Module(org"an-org", name"a-lib"), "1.0").withOptional(true))
+          Dependency(Module(org"an-org", name"a-lib"), "1.0").withOptional(true)
+        )
         val trDeps = Seq(
-          Dependency(Module(org"an-org", name"a-lib"), "1.0").withExclusions(Set((org"an-org", name"a-name"))),
+          Dependency(Module(org"an-org", name"a-lib"), "1.0").withExclusions(Set((
+            org"an-org",
+            name"a-name"
+          ))),
           Dependency(Module(org"an-org", name"another-lib"), "1.0").withOptional(true),
-          Dependency(Module(org"an-org", name"a-name"), "1.0").withOptional(true))
+          Dependency(Module(org"an-org", name"a-name"), "1.0").withOptional(true)
+        )
         val res = await(resolve0(
           deps,
           filter = Some(_ => true)
@@ -598,9 +787,11 @@ object ResolutionTests extends TestSuite {
       test {
         async {
           val deps = Seq(
-            Dependency(Module(org"an-org", name"a-name"), "1.1"))
+            Dependency(Module(org"an-org", name"a-name"), "1.1")
+          )
           val depOverrides = Map(
-            Module(org"an-org", name"a-name") -> "1.0")
+            Module(org"an-org", name"a-name") -> "1.0"
+          )
 
           val res = await(resolve0(
             deps,
@@ -622,9 +813,11 @@ object ResolutionTests extends TestSuite {
 
       test - async {
         val deps = Seq(
-          Dependency(Module(org"an-org", name"an-app"), "1.1"))
+          Dependency(Module(org"an-org", name"an-app"), "1.1")
+        )
         val depOverrides = Map(
-          Module(org"an-org", name"a-lib") -> "1.0")
+          Module(org"an-org", name"a-lib") -> "1.0"
+        )
 
         val res = await(resolve0(
           deps,
@@ -647,9 +840,11 @@ object ResolutionTests extends TestSuite {
 
       test - async {
         val deps = Seq(
-          Dependency(Module(org"an-org", name"an-app"), "1.1"))
+          Dependency(Module(org"an-org", name"an-app"), "1.1")
+        )
         val depOverrides = Map(
-          Module(org"*", name"a-lib") -> "1.0")
+          Module(org"*", name"a-lib") -> "1.0"
+        )
 
         val res = await(resolve0(
           deps,
@@ -673,9 +868,11 @@ object ResolutionTests extends TestSuite {
       test {
         async {
           val deps = Seq(
-            Dependency(Module(org"an-org", name"an-app"), "1.2"))
+            Dependency(Module(org"an-org", name"an-app"), "1.2")
+          )
           val depOverrides = Map(
-            Module(org"an-org", name"a-lib") -> "1.1")
+            Module(org"an-org", name"a-lib") -> "1.1"
+          )
 
           val res = await(resolve0(
             deps,
@@ -701,9 +898,14 @@ object ResolutionTests extends TestSuite {
       test("propertySubstitution") {
         val res =
           core.Resolution.withProperties(
-            Seq(Configuration.empty -> Dependency(Module(org"a-company", name"a-name"), "${a.property}")),
-            Map("a.property" -> "a-version"))
-        val expected = Seq(Configuration.empty -> Dependency(Module(org"a-company", name"a-name"), "a-version"))
+            Seq(Configuration.empty -> Dependency(
+              Module(org"a-company", name"a-name"),
+              "${a.property}"
+            )),
+            Map("a.property" -> "a-version")
+          )
+        val expected =
+          Seq(Configuration.empty -> Dependency(Module(org"a-company", name"a-name"), "a-version"))
 
         assert(res == expected)
       }

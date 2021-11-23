@@ -25,10 +25,11 @@ object Terminal {
       val nullLog = new ProcessLogger {
         def out(s: => String): Unit = {}
         def err(s: => String): Unit = {}
-        def buffer[T](f: => T): T = f
+        def buffer[T](f: => T): T   = f
       }
       Try(Process(Seq("bash", "-c", s"$pathedTput $s 2> /dev/tty")).!!(nullLog).trim.toInt).toOption
-    } else
+    }
+    else
       None
 
   @deprecated("Should be removed at some point in future releases", "2.0.0-RC3")
@@ -38,10 +39,11 @@ object Terminal {
       val nullLog = new ProcessLogger {
         def out(s: => String): Unit = {}
         def err(s: => String): Unit = {}
-        def buffer[T](f: => T): T = f
+        def buffer[T](f: => T): T   = f
       }
       Process(Seq("bash", "-c", s"$pathedTput $s 2> /dev/tty")).!!(nullLog).trim.toInt
-    } else
+    }
+    else
       throw new Exception("TTY not available")
 
   private def consoleDimsFromTty(): Option[(Int, Int)] =
@@ -50,19 +52,22 @@ object Terminal {
       val nullLog = new ProcessLogger {
         def out(s: => String): Unit = {}
         def err(s: => String): Unit = {}
-        def buffer[T](f: => T): T = f
+        def buffer[T](f: => T): T   = f
       }
       def valueOpt(s: String) =
-        Try(Process(Seq("bash", "-c", s"$pathedTput $s 2> /dev/tty")).!!(nullLog).trim.toInt).toOption
+        Try(Process(Seq("bash", "-c", s"$pathedTput $s 2> /dev/tty")).!!(nullLog).trim.toInt)
+          .toOption
 
       for {
-        width <- valueOpt("cols")
+        width  <- valueOpt("cols")
         height <- valueOpt("lines")
       } yield (width, height)
-    } else
+    }
+    else
       None
 
-  private lazy val isWindows = System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")
+  private lazy val isWindows =
+    System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")
 
   private def fromJLine(): Option[(Int, Int)] =
     if (isWindows)
@@ -70,7 +75,8 @@ object Terminal {
         if (coursier.paths.Util.useJni()) {
           val size = coursier.jniutils.WindowsAnsiTerminal.terminalSize()
           (size.getWidth, size.getHeight)
-        } else {
+        }
+        else {
           val size = io.github.alexarchambault.windowsansi.WindowsAnsi.terminalSize()
           (size.getWidth, size.getHeight)
         }
@@ -90,26 +96,21 @@ object Terminal {
     private def control(n: Int, c: Char): Unit =
       output.write("\u001b[" + n + c)
 
-    /**
-      * Move up `n` squares
-      */
+    /* Move up `n` squares */
     def up(n: Int): Unit = if (n > 0) control(n, 'A')
-    /**
-      * Move down `n` squares
-      */
+
+    /* Move down `n` squares */
     def down(n: Int): Unit = if (n > 0) control(n, 'B')
-    /**
-      * Move left `n` squares
-      */
+
+    /* Move left `n` squares */
     def left(n: Int): Unit = if (n > 0) control(n, 'D')
 
-    /**
-      * Clear the current line
-      *
-      * n=0: clear from cursor to end of line
-      * n=1: clear from cursor to start of line
-      * n=2: clear entire line
-      */
+    /*
+     * Clear the current line
+     *
+     * n=0: clear from cursor to end of line n=1: clear from cursor to start of line n=2: clear
+     * entire line
+     */
     def clearLine(n: Int): Unit =
       control(n, 'K')
   }

@@ -28,15 +28,17 @@ final case class OkHttpClientUtil(
       b.addHeader(k, v)
 
     // ???
-    b.addHeader("Accept", "application/json,application/vnd.siesta-error-v1+json,application/vnd.siesta-validation-errors-v1+json")
+    b.addHeader(
+      "Accept",
+      "application/json,application/vnd.siesta-error-v1+json,application/vnd.siesta-validation-errors-v1+json"
+    )
 
     val r = b.build()
 
     if (verbosity >= 2) {
       val m = r.headers().toMultimap.asScala.mapValues(_.asScala.toVector)
-      for ((k, l) <- m; v <- l) {
+      for ((k, l) <- m; v <- l)
         System.err.println(s"$k: $v")
-      }
     }
 
     r
@@ -60,29 +62,34 @@ final case class OkHttpClientUtil(
       if (resp.code() == 201)
         Task.point(())
       else
-        Task.fail(new Exception(s"Failed to get $url (http status: ${resp.code()}, response: ${Try(resp.body().string()).getOrElse("")})"))
+        Task.fail(new Exception(
+          s"Failed to get $url (http status: ${resp.code()}, response: ${Try(resp.body().string()).getOrElse("")})"
+        ))
     }
 
     t.flatMap(identity)
   }
 
-  def get[T: DecodeJson](url: String, post: Option[RequestBody] = None, nested: Boolean = true): Task[T] = {
+  def get[T: DecodeJson](
+    url: String,
+    post: Option[RequestBody] = None,
+    nested: Boolean = true
+  ): Task[T] = {
 
     val t = Task.delay {
       if (verbosity >= 1)
         Console.err.println(s"Getting $url")
-      if (verbosity >= 2) {
+      if (verbosity >= 2)
         post.foreach { b =>
           val buf = new okio.Buffer
           b.writeTo(buf)
           System.err.println("Sending " + buf)
         }
-      }
       val resp = client.newCall(request(url, post)).execute()
       if (verbosity >= 1)
         Console.err.println(s"Done: $url")
 
-      if (resp.isSuccessful) {
+      if (resp.isSuccessful)
         if (nested)
           resp.body().string().decodeEither(DecodeJson.of[T]) match {
             case Left(e) =>
@@ -97,8 +104,9 @@ final case class OkHttpClientUtil(
             case Right(t) =>
               Task.point(t)
           }
-      } else {
-        val msg = s"Failed to get $url (http status: ${resp.code()}, response: ${Try(resp.body().string()).getOrElse("")})"
+      else {
+        val msg =
+          s"Failed to get $url (http status: ${resp.code()}, response: ${Try(resp.body().string()).getOrElse("")})"
         val notFound = resp.code() / 100 == 4
         if (notFound)
           Task.fail(new FileNotFoundException(msg))

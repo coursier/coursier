@@ -7,20 +7,19 @@ import coursier.publish.logging.ProgressLogger
 import coursier.publish.upload.Upload
 
 // FIXME Would have been better if dummy was passed by the Upload instance when calling the methods of UploadLogger
-final class InteractiveUploadLogger(out: Writer, dummy: Boolean, isLocal: Boolean) extends UploadLogger {
+final class InteractiveUploadLogger(out: Writer, dummy: Boolean, isLocal: Boolean)
+    extends UploadLogger {
 
   private val underlying = new ProgressLogger[Object](
-    if (isLocal) {
+    if (isLocal)
       if (dummy)
         "Would have written"
       else
         "Wrote"
-    } else {
-      if (dummy)
-        "Would have uploaded"
-      else
-        "Uploaded"
-    },
+    else if (dummy)
+      "Would have uploaded"
+    else
+      "Uploaded",
     "files",
     out,
     doneEmoji = Some("\ud83d\ude9a")

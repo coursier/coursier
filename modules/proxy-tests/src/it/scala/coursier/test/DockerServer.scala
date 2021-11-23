@@ -23,7 +23,7 @@ object DockerServer {
   ): DockerServer = {
 
     val (imagePort, hostPort) = portMapping
-    val addr = s"localhost:$hostPort"
+    val addr                  = s"localhost:$hostPort"
 
     def log(s: String): Unit =
       Console.err.println(s"[$image @ $addr] $s")
@@ -72,13 +72,15 @@ object DockerServer {
           try {
             FileUtil.readFully(url.openStream())
             log(s"$image up")
-          } catch {
+          }
+          catch {
             case e: java.io.IOException =>
               log(s"Caught $e, retrying in $retryDuration")
               Thread.sleep(retryDuration.toMillis)
               loop(retry - 1)
           }
-        } else
+        }
+        else
           throw new Exception(s"Timeout when waiting for container for $image to be up-and-running")
 
       val retryCount =
@@ -93,7 +95,8 @@ object DockerServer {
         Thread.sleep(retryDuration.toMillis)
 
       DockerServer(base, () => shutdown())
-    } catch {
+    }
+    catch {
       case t: Throwable =>
         shutdown()
         throw t

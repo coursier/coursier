@@ -3,7 +3,17 @@ package coursier.install
 import java.io.File
 
 import coursier.cache.{Cache, CacheLogger}
-import coursier.core.{Classifier, Latest, Module, Parse, Repository, Resolution, Type, Version, VersionConstraint}
+import coursier.core.{
+  Classifier,
+  Latest,
+  Module,
+  Parse,
+  Repository,
+  Resolution,
+  Type,
+  Version,
+  VersionConstraint
+}
 import coursier.{Dependency, Fetch, moduleString}
 import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
@@ -32,20 +42,44 @@ import dataclass._
   @since("2.0.1")
   prebuiltBinaries: Map[String, String] = Map.empty,
   @since("2.0.4")
-  jna: List[String] = Nil
+  jna: List[String] = Nil,
+  @since("2.1.0")
+  versionOverrides: Seq[VersionOverride] = Nil
 ) {
-  def overrideVersion(ver: String): AppDescriptor =
-    withDependencies {
-      if (dependencies.isEmpty)
-        dependencies
+  def overrideVersion(ver: String): AppDescriptor = {
+    val overriddenDesc = Parse.version(ver)
+      .flatMap { version =>
+        versionOverrides.find(_.versionRange.contains(version))
+      }
+      .map { versionOverride =>
+        withRepositories(versionOverride.repositories.getOrElse(repositories))
+          .withDependencies(versionOverride.dependencies.getOrElse(dependencies))
+          .withMainClass(
+            versionOverride.mainClass
+              .map(mc => if (mc.isEmpty) None else Some(mc))
+              .getOrElse(mainClass)
+          )
+          .withDefaultMainClass(
+            versionOverride.defaultMainClass
+              .map(dmc => if (dmc.isEmpty) None else Some(dmc))
+              .getOrElse(defaultMainClass)
+          )
+          .withJavaProperties(versionOverride.javaProperties.getOrElse(javaProperties))
+      }
+      .getOrElse(this)
+    val deps = overriddenDesc.dependencies
+    overriddenDesc.withDependencies {
+      if (deps.isEmpty)
+        deps
       else {
-        val dep = dependencies.head.withUnderlyingDependency(_.withVersion(ver))
-        dep +: dependencies.tail
+        val dep = deps.head.withUnderlyingDependency(_.withVersion(ver))
+        dep +: deps.tail
       }
     }
+  }
+
   def mainVersionOpt: Option[String] =
     dependencies.headOption.map(_.version)
-
 
   def artifacts(
     cache: Cache[Task],
@@ -54,8 +88,8 @@ import dataclass._
 
     // FIXME A bit of duplication with retainedMainVersion above
     val platformOpt = launcherType match {
-      case LauncherType.ScalaNative => Some(Platform.Native)
-      case _ => None
+      case LauncherType.ScalaNative => Some(ScalaPlatform.Native)
+      case _                        => None
     }
 
     val (scalaVersionOpt, platformSuffixOpt, deps) = processDependencies(
@@ -64,7 +98,7 @@ import dataclass._
       verbosity
     ) match {
       case Left(err) => throw new Exception(err)
-      case Right(t) => t
+      case Right(t)  => t
     }
 
     val scalaVersion = scalaVersionOpt.getOrElse {
@@ -74,7 +108,7 @@ import dataclass._
 
     val hasFullCrossVersionDeps = dependencies.exists {
       case s: JavaOrScalaDependency.ScalaDependency => s.fullCrossVersion
-      case _ => false
+      case _                                        => false
     }
 
     val resolutionParams = ResolutionParams()
@@ -109,7 +143,7 @@ import dataclass._
         val subRes = res.resolution.subset(
           sharedDependencies.map { m =>
             val module = m.module(scalaVersion)
-            val ver = res.resolution.retainedVersions.getOrElse(module, "_")
+            val ver    = res.resolution.retainedVersions.getOrElse(module, "_")
             Dependency(module, ver)
           }
         )
@@ -135,29 +169,32 @@ import dataclass._
 
   def processDependencies(
     cache: Cache[Task],
-    platformOpt: Option[Platform],
+    platformOpt: Option[ScalaPlatform],
     verbosity: Int
-  ): Either[AppArtifacts.AppArtifactsException, (Option[String], Option[String], Seq[Dependency])] = {
+  ): Either[
+    AppArtifacts.AppArtifactsException,
+    (Option[String], Option[String], Seq[Dependency])
+  ] = {
 
     val constraintOpt = scalaVersionOpt.map(coursier.core.Parse.versionConstraint)
 
     val t = {
       val onlyJavaDeps = dependencies.forall {
-        case _: JavaOrScalaDependency.JavaDependency => true
+        case _: JavaOrScalaDependency.JavaDependency  => true
         case _: JavaOrScalaDependency.ScalaDependency => false
       }
       val hasPlatformDeps = dependencies.forall {
-        case _: JavaOrScalaDependency.JavaDependency => false
+        case _: JavaOrScalaDependency.JavaDependency  => false
         case s: JavaOrScalaDependency.ScalaDependency => s.withPlatformSuffix
       }
       val platformOpt0 = platformOpt.filter(_ => hasPlatformDeps)
       if (onlyJavaDeps)
         Right((None, None))
       else {
-       def scalaDeps = dependencies.collect {
-         case s: JavaOrScalaDependency.ScalaDependency =>
-           s
-       }
+        def scalaDeps = dependencies.collect {
+          case s: JavaOrScalaDependency.ScalaDependency =>
+            s
+        }
         platformOpt0 match {
           case Some(platform) =>
             AppDescriptor.dependenciesMaxScalaVersionAndPlatform(
@@ -171,7 +208,8 @@ import dataclass._
               .toRight(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
           case None =>
             scalaVersionOpt match {
-              case Some(v) if v.split('.').length >= 3 && constraintOpt.forall(_.preferred.nonEmpty) =>
+              case Some(v)
+                  if v.split('.').length >= 3 && constraintOpt.forall(_.preferred.nonEmpty) =>
                 Right((Some(v), None))
               case _ =>
                 AppDescriptor.dependenciesMaxScalaVersion(
@@ -182,7 +220,7 @@ import dataclass._
                   verbosity
                 ).map(v => (Some(v), None))
                   .toRight(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
-                }
+            }
         }
       }
     }
@@ -190,7 +228,11 @@ import dataclass._
     t.map {
       case (scalaVersionOpt, pfVerOpt) =>
         val l = dependencies
-          .map(pfVerOpt.fold[JavaOrScalaDependency => JavaOrScalaDependency](identity)(pfVer => _.withPlatform(pfVer)))
+          .map(
+            pfVerOpt.fold[JavaOrScalaDependency => JavaOrScalaDependency](identity)(pfVer =>
+              _.withPlatform(pfVer)
+            )
+          )
           // if scalaVersionOpt is empty, we should only have Java dependencies
           .map(_.dependency(scalaVersionOpt.getOrElse("")))
 
@@ -206,8 +248,8 @@ import dataclass._
 
     // FIXME A bit of duplication with apply below
     val platformOpt = launcherType match {
-      case LauncherType.ScalaNative => Some(Platform.Native)
-      case _ => None
+      case LauncherType.ScalaNative => Some(ScalaPlatform.Native)
+      case _                        => None
     }
 
     val (scalaVersionOpt, _, deps) = processDependencies(
@@ -216,7 +258,7 @@ import dataclass._
       verbosity
     ) match {
       case Left(err) => throw new Exception(err)
-      case Right(t) => t
+      case Right(t)  => t
     }
 
     if (deps.isEmpty)
@@ -241,7 +283,7 @@ import dataclass._
           else {
             val hasFullCrossVersionDeps = dependencies.exists {
               case s: JavaOrScalaDependency.ScalaDependency => s.fullCrossVersion
-              case _ => false
+              case _                                        => false
             }
 
             val resolutionParams = ResolutionParams()
@@ -280,10 +322,10 @@ import dataclass._
 
     val opt = for {
       dep <- dependencies.headOption
-      v <- mainVersionOpt
+      v   <- mainVersionOpt
     } yield {
       val name = dep.module match {
-        case j: JavaOrScalaModule.JavaModule => j.module.name.value
+        case j: JavaOrScalaModule.JavaModule  => j.module.name.value
         case s: JavaOrScalaModule.ScalaModule => s.baseModule.name.value
       }
       s"$name.version" -> v
@@ -307,8 +349,7 @@ object AppDescriptor {
     options: Seq[String] = Nil
   )
 
-  /**
-    * Tries to find a scala version that all passed dependencies are available for.
+  /** Tries to find a scala version that all passed dependencies are available for.
     */
   private def dependenciesMaxScalaVersion(
     cache: Cache[Task],
@@ -318,19 +359,21 @@ object AppDescriptor {
     verbosity: Int
   ): Option[String] = {
 
-    val okScalaVersions = modulesScalaVersions(cache, repositories, dependencies.map(_.module), verbosity)
+    val okScalaVersions =
+      modulesScalaVersions(cache, repositories, dependencies.map(_.module), verbosity)
 
     def scalaVersionIsOk(dep: JavaOrScalaDependency.ScalaDependency, sv: String): Boolean = {
 
-      val dep0 = dep.dependency(sv)
+      val dep0        = dep.dependency(sv)
       val depVersions = listVersions(cache, repositories, dep0.module)
 
-      if (verbosity >= 2) {
-        System.err.println(s"Versions for ${dep0.module}: ${depVersions.toVector.sorted.mkString(", ")}")
-      }
+      if (verbosity >= 2)
+        System.err.println(
+          s"Versions for ${dep0.module}: ${depVersions.toVector.sorted.mkString(", ")}"
+        )
 
       latestVersions(dep.version) || {
-        val constraint = coursier.core.Parse.versionConstraint(dep.version)
+        val constraint   = coursier.core.Parse.versionConstraint(dep.version)
         val preferredSet = constraint.preferred.toSet
         if (preferredSet.isEmpty)
           depVersions.exists { v =>
@@ -351,7 +394,7 @@ object AppDescriptor {
 
     val it = (stableVersions.reverseIterator ++ unstableVersions.reverseIterator).filter { sv =>
       dependencies.forall {
-        case _: JavaOrScalaDependency.JavaDependency => true
+        case _: JavaOrScalaDependency.JavaDependency  => true
         case s: JavaOrScalaDependency.ScalaDependency => scalaVersionIsOk(s, sv.repr)
       }
     }
@@ -370,7 +413,7 @@ object AppDescriptor {
     dependencies: Seq[JavaOrScalaDependency],
     constraintOpt: Option[VersionConstraint],
     verbosity: Int,
-    platform: Platform
+    platform: ScalaPlatform
   ): Option[(String, String)] = {
 
     def platformVersions = platform
@@ -382,7 +425,7 @@ object AppDescriptor {
 
     val it = platformVersions.flatMap { pfVer =>
       val pfSuffix = platform.suffix(pfVer.repr)
-      val deps0 = dependencies.map(_.withPlatform(pfSuffix))
+      val deps0    = dependencies.map(_.withPlatform(pfSuffix))
       dependenciesMaxScalaVersion(cache, repositories, deps0, constraintOpt, verbosity)
         .iterator
         .map((_, pfVer.repr))
@@ -419,7 +462,9 @@ object AppDescriptor {
     val sets = scalaModules.map { m =>
       val base = m.baseModule.orgName + "_"
       if (verbosity >= 2)
-        System.err.println(s"Completing '$base' (org: ${m.baseModule.organization.value}, name: ${m.baseModule.name.value})")
+        System.err.println(
+          s"Completing '$base' (org: ${m.baseModule.organization.value}, name: ${m.baseModule.name.value})"
+        )
       val (n, compl) = coursier.complete.Complete(cache)
         .withRepositories(repositories)
         .withInput(base)
@@ -455,27 +500,35 @@ object AppDescriptor {
     sets.foldLeft(availableScalaVersions)(_ intersect _)
   }
 
-  private def satisfiesConstraint(sv: Version, constraintOpt: Option[VersionConstraint], verbosity: Int): Boolean =
+  private def satisfiesConstraint(
+    sv: Version,
+    constraintOpt: Option[VersionConstraint],
+    verbosity: Int
+  ): Boolean =
     constraintOpt match {
       case None =>
         true
       case Some(c) =>
         // here, either c.interval isn't VersionInterval.zero, or c.preferred is non empty, anyway
-        val inInterval = c.interval.contains(sv)
+        val inInterval           = c.interval.contains(sv)
         val lowerPreferredExists = c.preferred.forall(_.compare(sv) >= 0)
 
         lowerPreferredExists && inInterval
     }
 
-  private[install] def listVersions(cache: Cache[Task], repositories: Seq[Repository], mod: Module): Set[String] = {
+  private[install] def listVersions(
+    cache: Cache[Task],
+    repositories: Seq[Repository],
+    mod: Module
+  ): Set[String] = {
 
     def forRepo(repo: Repository): Set[String] = {
 
       val logger = cache.loggerOpt.getOrElse(CacheLogger.nop)
       val t = for {
-        _ <- Task.delay(logger.init())
-        a <- repo.versions(mod, cache.fetch).run.attempt
-        _ <- Task.delay(logger.stop())
+        _   <- Task.delay(logger.init())
+        a   <- repo.versions(mod, cache.fetch).run.attempt
+        _   <- Task.delay(logger.stop())
         res <- Task.fromEither(a)
       } yield res
 

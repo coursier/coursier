@@ -1,6 +1,5 @@
 package coursier.publish
 
-/**
-  * All things related to checksums.
+/** All things related to checksums.
   */
 package object checksum

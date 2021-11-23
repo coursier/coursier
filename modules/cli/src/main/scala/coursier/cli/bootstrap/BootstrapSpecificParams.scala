@@ -4,7 +4,7 @@ import java.nio.file.{Files, Path, Paths}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cache.Cache
+import coursier.cache.{ArchiveCache, Cache}
 import coursier.jvm.{JvmCache, JvmIndex}
 import coursier.launcher.MergeRule
 import coursier.launcher.internal.Windows
@@ -15,8 +15,6 @@ final case class BootstrapSpecificParams(
   force: Boolean,
   standalone: Boolean,
   embedFiles: Boolean,
-  javaOptions: Seq[String],
-  jvmOptionFile: Option[String],
   assembly: Boolean,
   manifestJar: Boolean,
   createBatFile: Boolean,
@@ -32,7 +30,6 @@ final case class BootstrapSpecificParams(
   graalvmJvmOptions: Seq[String],
   graalvmOptions: Seq[String],
   disableJarCheckingOpt: Option[Boolean],
-  jvmDir: Path,
   jvmIndexUrlOpt: Option[String]
 ) {
   import BootstrapSpecificParams.BootstrapPackaging
@@ -46,35 +43,40 @@ final case class BootstrapSpecificParams(
     )
 
   def jvmCache(cache: Cache[Task]): JvmCache = {
+    val archiveCache = ArchiveCache().withCache(cache)
     val c = JvmCache()
-      .withBaseDirectory(jvmDir.toFile)
-      .withCache(cache)
+      .withArchiveCache(archiveCache)
     jvmIndexUrlOpt match {
-      case None => c.withDefaultIndex
+      case None              => c.withDefaultIndex
       case Some(jvmIndexUrl) => c.withIndex(jvmIndexUrl)
     }
   }
 }
 
 object BootstrapSpecificParams {
-  def apply(options: BootstrapSpecificOptions, native: Boolean): ValidatedNel[String, BootstrapSpecificParams] = {
-
-    val graalvmVersion = options.graalvmVersion
+  def apply(
+    options: BootstrapSpecificOptions,
+    native: Boolean
+  ): ValidatedNel[String, BootstrapSpecificParams] = {
+    val graalvmVersion = options.graalvmOptions.graalvmVersion
       .map(_.trim)
       .filter(_.nonEmpty)
-      .filter(_ => !options.nativeImage.contains(false))
+      .filter(_ => !options.graalvmOptions.nativeImage.contains(false))
 
     val (graalvmJvmOptions, graalvmOptions) =
-      if (options.nativeImage.contains(false))
+      if (options.graalvmOptions.nativeImage.contains(false))
         (Nil, Nil)
       else
-        (options.graalvmJvmOption.filter(_.nonEmpty), options.graalvmOption.filter(_.nonEmpty))
+        (
+          options.graalvmOptions.graalvmJvmOption.filter(_.nonEmpty),
+          options.graalvmOptions.graalvmOption.filter(_.nonEmpty)
+        )
 
-    val assembly = options.assembly.getOrElse(false)
+    val assembly    = options.assembly.getOrElse(false)
     val manifestJar = options.manifestJar.getOrElse(false)
-    val standalone = options.standalone.getOrElse(false)
-    val hybrid = options.hybrid.getOrElse(false)
-    val nativeImage = options.nativeImage.getOrElse(graalvmVersion.nonEmpty)
+    val standalone  = options.standalone.getOrElse(false)
+    val hybrid      = options.hybrid.getOrElse(false)
+    val nativeImage = options.graalvmOptions.nativeImage.getOrElse(graalvmVersion.nonEmpty)
 
     val validateOutputType = {
       val count = Seq(
@@ -86,7 +88,10 @@ object BootstrapSpecificParams {
         native
       ).count(identity)
       if (count > 1)
-        Validated.invalidNel("Only one of --assembly (or -a), --manifest-jar, --standalone (or -s), --hybrid, --native-image, or --native (or -S), can be specified")
+        Validated.invalidNel(
+          "Only one of --assembly (or -a), --manifest-jar, --standalone (or -s), --hybrid, " +
+            "--native-image, or --native (or -S), can be specified"
+        )
       else
         Validated.validNel(())
     }
@@ -106,12 +111,12 @@ object BootstrapSpecificParams {
       if (idx < 0)
         Validated.invalidNel(s"Malformed assembly rule: $s")
       else {
-        val ruleName = s.substring(0, idx)
+        val ruleName  = s.substring(0, idx)
         val ruleValue = s.substring(idx + 1)
         ruleName match {
-          case "append" => Validated.validNel(MergeRule.Append(ruleValue))
-          case "append-pattern" => Validated.validNel(MergeRule.AppendPattern(ruleValue))
-          case "exclude" => Validated.validNel(MergeRule.Exclude(ruleValue))
+          case "append"          => Validated.validNel(MergeRule.Append(ruleValue))
+          case "append-pattern"  => Validated.validNel(MergeRule.AppendPattern(ruleValue))
+          case "exclude"         => Validated.validNel(MergeRule.Exclude(ruleValue))
           case "exclude-pattern" => Validated.validNel(MergeRule.ExcludePattern(ruleValue))
           case _ => Validated.invalidNel(s"Unrecognized rule name '$ruleName' in rule '$s'")
         }
@@ -119,10 +124,6 @@ object BootstrapSpecificParams {
     }
 
     val prependRules = if (options.defaultAssemblyRules) MergeRule.default else Nil
-
-    val jvmDir = options.jvmDir.filter(_.nonEmpty).map(Paths.get(_)).getOrElse {
-      JvmCache.defaultBaseDirectory.toPath
-    }
 
     val jvmIndex = options
       .jvmIndex
@@ -144,15 +145,11 @@ object BootstrapSpecificParams {
 
     (validateOutputType, rulesV, baseManifestOptV).mapN {
       (_, rules, baseManifestOpt) =>
-        val javaOptions = options.javaOpt
-        val jvmOptionFile = options.jvmOptionFile.map(_.trim).filter(_.nonEmpty)
         BootstrapSpecificParams(
           output,
           options.force,
           standalone,
           options.embedFiles,
-          javaOptions,
-          jvmOptionFile,
           assembly,
           manifestJar,
           createBatFile,
@@ -163,12 +160,11 @@ object BootstrapSpecificParams {
           options.proguarded,
           hybrid,
           nativeImage,
-          options.intermediateAssembly,
+          options.graalvmOptions.intermediateAssembly,
           graalvmVersion,
           graalvmJvmOptions,
           graalvmOptions,
           options.disableJarChecking,
-          jvmDir,
           jvmIndex
         )
     }

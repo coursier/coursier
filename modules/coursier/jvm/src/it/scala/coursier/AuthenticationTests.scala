@@ -32,9 +32,7 @@ object AuthenticationTests extends TestSuite {
   private def withTmpDir[T](f: Path => T): T = {
     val dir = Files.createTempDirectory("coursier-test")
     try f(dir)
-    finally {
-      deleteRecursive(dir.toFile)
-    }
+    finally deleteRecursive(dir.toFile)
   }
 
   private def testCredentials(credentials: DirectCredentials): Unit = {
@@ -54,7 +52,7 @@ object AuthenticationTests extends TestSuite {
         )
         .run()
     }
-    val modules = result.minDependencies.map(_.module)
+    val modules         = result.minDependencies.map(_.module)
     val expectedModules = Set(mod"com.abc:test")
     assert(modules == expectedModules)
   }
@@ -76,17 +74,17 @@ object AuthenticationTests extends TestSuite {
       val credentialsStr = s"$testHost $user:$password"
       val credentials = CredentialsParser.parse(credentialsStr) match {
         case Left(error) => sys.error(s"Error parsing credentials: $error")
-        case Right(c) => c
+        case Right(c)    => c
       }
       testCredentials(credentials)
     }
 
     test {
       val content =
-       s"""foo.username=$user
-          |foo.password=$password
-          |foo.host=$testHost
-          |""".stripMargin
+        s"""foo.username=$user
+           |foo.password=$password
+           |foo.host=$testHost
+           |""".stripMargin
       val allCredentials = FileCredentials.parse(content, s"'$content'")
       assert(allCredentials.length == 1)
       val credentials = allCredentials.head

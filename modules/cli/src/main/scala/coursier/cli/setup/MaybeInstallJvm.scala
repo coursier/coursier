@@ -25,24 +25,24 @@ import dataclass.data
 
   def task: Task[Unit] =
     for {
-      initialIdJavaHomeOpt <- javaHome.getWithRetainedIdIfInstalled(defaultId)
+      initialIsSystemJavaHomeOpt <- javaHome.getWithIsSystemIfInstalled(defaultId)
 
-      idJavaHomeOpt <- initialIdJavaHomeOpt match {
-        case Some((id, javaHome0)) =>
+      isSystemJavaHomeOpt <- initialIsSystemJavaHomeOpt match {
+        case Some((isSystem, javaHome0)) =>
           System.err.println(s"Found a JVM installed under $javaHome0.") // Task.delay(…)
-          Task.point(Some(id -> javaHome0))
+          Task.point(Some(isSystem -> javaHome0))
         case None =>
           confirm.confirm("No JVM found, should we try to install one?", default = true).flatMap {
             case false =>
               Task.point(None)
             case true =>
-              javaHome.getWithRetainedId(defaultId).map(Some(_))
+              javaHome.getWithIsSystem(defaultId).map(Some(_))
           }
       }
 
-      envUpdate = idJavaHomeOpt match {
-        case Some((id, javaHome0)) =>
-          javaHome.environmentFor(id, javaHome0)
+      envUpdate = isSystemJavaHomeOpt match {
+        case Some((isSystem, javaHome0)) =>
+          javaHome.environmentFor(isSystem, javaHome0)
         case None =>
           EnvironmentUpdate.empty
       }
@@ -52,7 +52,7 @@ import dataclass.data
         envVarUpdaterOpt match {
           case None =>
             Task.delay {
-              println(envUpdate.script)
+              println(envUpdate.bashScript)
               false
             }
           case Some(Left(windowsEnvVarUpdater)) =>
@@ -72,11 +72,15 @@ import dataclass.data
             }
           case Some(Right(profileUpdater)) =>
             lazy val profileFiles = profileUpdater.profileFiles() // Task.delay(…)
-            if (envUpdate.isEmpty || profileFiles.isEmpty /* just in case, should not happen */)
+            if (envUpdate.isEmpty || profileFiles.isEmpty /* just in case, should not happen */ )
               Task.point(false)
             else {
-              val profileFilesStr = profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
-              confirm.confirm(s"Should we update ${profileFilesStr.mkString(", ")}?", default = true).flatMap {
+              val profileFilesStr =
+                profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
+              confirm.confirm(
+                s"Should we update ${profileFilesStr.mkString(", ")}?",
+                default = true
+              ).flatMap {
                 case false => Task.point(false)
                 case true =>
                   Task.delay {
@@ -140,8 +144,10 @@ import dataclass.data
 
     revertedTask.flatMap { reverted =>
       val message =
-        if (reverted) s"Removed entries of JVM $id" + profileFilesOpt.fold("")(l => s" in ${l.mkString(", ")}")
-        else s"JVM $id not setup"
+        if (reverted)
+          s"Removed entries of JVM $id" + profileFilesOpt.fold("")(l => s" in ${l.mkString(", ")}")
+        else
+          s"JVM $id not setup"
 
       Task.delay(System.err.println(message))
     }
@@ -151,30 +157,31 @@ import dataclass.data
 
     val maybeRemoveJvm = javaHome.cache
       .map { jvmCache =>
-        val entryOpt = jvmCache.entry(defaultId)
+        val entryOpt = jvmCache.entries(defaultId)
           .unsafeRun()(coursierCache.ec) // meh
           .toOption
-        val id = entryOpt.fold(defaultId)(_.id) // replaces version ranges with actual versions in particular
-        val dir = jvmCache.directory(id)
-        val dirExists = Task.delay(dir.exists())
-        val removedOpt = dirExists.flatMap {
-          case false =>
-            Task.point(Some(false))
-          case true =>
-            jvmCache.delete(id)
-        }
-
-        val envUpdate = javaHome.environmentFor(id, dir)
+          .map(_.last)
+        // replaces version ranges with actual versions in particular
+        val id = entryOpt.fold(defaultId)(_.id)
 
         for {
-          removedOpt0 <- removedOpt
+          dirOpt <- jvmCache.getIfInstalled(id)
+          removedOpt0 <- dirOpt match {
+            case None => Task.point(Option(false))
+            case Some(dir) =>
+              ???
+          }
           message = removedOpt0 match {
-            case None => s"Could not remove JVM $id in $dir (concurrent operation ongoing)"
+            case None        => s"Could not remove JVM $id (concurrent operation ongoing)"
             case Some(false) => s"JVM $id was not installed"
-            case Some(true) => s"Deleted JVM $id in $dir"
+            case Some(true)  => s"Deleted JVM $id"
           }
           _ <- Task.delay(System.err.println(message))
-          _ <- tryRevertEnvVarUpdate(envUpdate, id)
+          envUpdateOpt = dirOpt.map(dir => javaHome.environmentFor(false /* ??? */, dir))
+          _ <- envUpdateOpt match {
+            case None            => ???
+            case Some(envUpdate) => tryRevertEnvVarUpdate(envUpdate, id)
+          }
         } yield ()
       }
       .getOrElse(Task.point(()))

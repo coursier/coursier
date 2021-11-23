@@ -2,12 +2,14 @@ package coursier.cli.resolve
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
+import coursier.cli.install.SharedChannelParams
 import coursier.parse.{JavaOrScalaModule, ModuleParser}
 
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 
 final case class ResolveParams(
   shared: SharedResolveParams,
+  channel: SharedChannelParams,
   benchmark: Int,
   benchmarkCache: Boolean,
   tree: Boolean,
@@ -19,26 +21,27 @@ final case class ResolveParams(
   retry: Option[(FiniteDuration, Int)]
 ) {
 
-  def cache = shared.cache
-  def output = shared.output
-  def repositories = shared.repositories
-  def dependency = shared.dependency
-  def resolution = shared.resolution
+  def cache          = shared.cache
+  def output         = shared.output
+  def repositories   = shared.repositories
+  def dependency     = shared.dependency
+  def resolution     = shared.resolution
   def classpathOrder = shared.classpathOrder
 
   def anyTree: Boolean =
     tree ||
-      reverseTree ||
-      whatDependsOn.nonEmpty
+    reverseTree ||
+    whatDependsOn.nonEmpty
 }
 
 object ResolveParams {
   def apply(options: ResolveOptions): ValidatedNel[String, ResolveParams] = {
 
-    val sharedV = SharedResolveParams(options.sharedResolveOptions)
+    val sharedV  = SharedResolveParams(options.sharedResolveOptions)
+    val channelV = SharedChannelParams(options.channelOptions)
 
-    val benchmark = options.benchmark
-    val tree = options.tree
+    val benchmark   = options.benchmark
+    val tree        = options.tree
     val reverseTree = options.reverseTree
     val whatDependsOnV = options.whatDependsOn.traverse(
       ModuleParser.javaOrScalaModule(_).toValidatedNel
@@ -47,13 +50,17 @@ object ResolveParams {
 
     val conflicts = options.conflicts
 
-    val printCheck =
-      if (Seq(tree, reverseTree, options.whatDependsOn.nonEmpty, conflicts, candidateUrls).count(identity) > 1)
+    val printCheck = {
+      val resultsAskedCount =
+        Seq(tree, reverseTree, options.whatDependsOn.nonEmpty, conflicts, candidateUrls)
+          .count(identity)
+      if (resultsAskedCount > 1)
         Validated.invalidNel(
           "Cannot specify several options among --tree, --reverse-tree, --what-depends-on, --conflicts, --candidate-urls"
         )
       else
         Validated.validNel(())
+    }
 
     val benchmarkCacheV =
       if (options.benchmark == 0 && options.benchmarkCache)
@@ -74,10 +81,11 @@ object ResolveParams {
           Validated.validNel(None)
       }
 
-    (sharedV, whatDependsOnV, printCheck, benchmarkCacheV, retryV).mapN {
-      (shared, whatDependsOn, _, benchmarkCache, retry) =>
+    (sharedV, channelV, whatDependsOnV, printCheck, benchmarkCacheV, retryV).mapN {
+      (shared, channel, whatDependsOn, _, benchmarkCache, retry) =>
         ResolveParams(
           shared,
+          channel,
           benchmark,
           benchmarkCache,
           tree,
@@ -92,13 +100,13 @@ object ResolveParams {
   }
 
   private def duration(input: String): ValidatedNel[String, FiniteDuration] =
-    try {
-      Duration(input) match {
-        case f: FiniteDuration => Validated.validNel(f)
-        case _ => Validated.invalidNel(s"Invalid non-finite duration '$input'")
-      }
-    } catch {
+    try Duration(input) match {
+      case f: FiniteDuration => Validated.validNel(f)
+      case _                 => Validated.invalidNel(s"Invalid non-finite duration '$input'")
+    }
+    catch {
       case _: IllegalArgumentException =>
-        Validated.invalidNel(s"Invalid duration '$input'") // anything interesting in the exception message?
+        // anything interesting in the exception message?
+        Validated.invalidNel(s"Invalid duration '$input'")
     }
 }

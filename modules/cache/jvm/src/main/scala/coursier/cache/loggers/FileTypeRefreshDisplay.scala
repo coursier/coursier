@@ -22,16 +22,15 @@ class FileTypeRefreshDisplay(
     20.millis
 
   private var currentHeight = 0
-  private var sizeHintOpt = Option.empty[Int]
+  private var sizeHintOpt   = Option.empty[Int]
 
   private var printedAnything0 = Option.empty[Long]
 
-  private var done = Map.empty[String, RefreshInfo]
+  private var done    = Map.empty[String, RefreshInfo]
   private var ongoing = Map.empty[String, RefreshInfo]
 
-  override def sizeHint(n: Int) = {
+  override def sizeHint(n: Int) =
     sizeHintOpt = Some(n)
-  }
 
   override def stop(out: Writer): Unit = {
 
@@ -39,7 +38,8 @@ class FileTypeRefreshDisplay(
       sizeHintOpt = None
       refresh(out, stopping = true)
       out.down(currentHeight)
-    } else {
+    }
+    else {
       for (_ <- 0 until currentHeight) {
         out.clearLine(2)
         out.down(1)
@@ -129,7 +129,7 @@ class FileTypeRefreshDisplay(
               s" [${" " * pos0}#${" " * (9 - pos0)}] "
             case Some(total) =>
               val count = done.count { case (url, _) => !excluded(url) }
-              val n = 10 * count.max(0).min(total) / total
+              val n     = 10 * count.max(0).min(total) / total
               s" [${"#" * n}${" " * (10 - n)}] "
           }
 
@@ -137,7 +137,8 @@ class FileTypeRefreshDisplay(
         if (stopping)
           printedAnything0.fold("") { start =>
             val now = System.currentTimeMillis()
-            val duration = (now - start + 500L) / 1000L // adding 500 ms so that e.g. 600 ms is rounded to 1 s
+            // adding 500 ms so that e.g. 600 ms is rounded to 1 s
+            val duration = (now - start + 500L) / 1000L
             s" in $duration s"
           }
         else if (sizeHintOpt.isEmpty) ""

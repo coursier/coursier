@@ -18,7 +18,8 @@ object Dir {
       if (Files.isRegularFile(f)) {
         logger.element(dir, f)
         LazyList(f)
-      } else if (Files.isDirectory(f)) {
+      }
+      else if (Files.isDirectory(f)) {
         var s: java.util.stream.Stream[Path] = null
         try {
           s = Files.list(f)
@@ -27,18 +28,18 @@ object Dir {
             .toVector
             .to(LazyList)
             .flatMap(files)
-        } finally {
-          if (s != null)
-            s.close()
         }
-      } else
+        finally if (s != null)
+          s.close()
+      }
+      else
         // ???
         LazyList.empty
 
     Task.delay {
       val dir0 = dir.normalize().toAbsolutePath
       val elems = files(dir0).toVector.map { f =>
-        val p = FsPath(dir0.relativize(f).iterator().asScala.map(_.toString).toVector)
+        val p       = FsPath(dir0.relativize(f).iterator().asScala.map(_.toString).toVector)
         val content = Content.File(f)
         (p, content)
       }
@@ -67,10 +68,9 @@ object Dir {
         try {
           s = Files.list(f)
           s.iterator().asScala.toVector.partition(Files.isDirectory(_))
-        } finally {
-          if (s != null)
-            s.close()
         }
+        finally if (s != null)
+          s.close()
       }
 
       val checkFiles =
@@ -84,7 +84,6 @@ object Dir {
       checkFiles match {
         case Some(false) => checkFiles
         case _ =>
-
           val checkDirs =
             dirs.foldLeft(Option.empty[Boolean]) {
               (acc, dir) =>
@@ -93,14 +92,14 @@ object Dir {
                   case _ =>
                     validate(dir) match {
                       case r @ Some(_) => r
-                      case None => acc
+                      case None        => acc
                     }
                 }
             }
 
           checkDirs match {
             case Some(_) => checkDirs
-            case None => checkFiles
+            case None    => checkFiles
           }
       }
     }
@@ -125,9 +124,9 @@ object Dir {
 
     for {
       logger0 <- before
-      a <- fileSet(dir, logger0).attempt
-      _ <- after(a.toOption.fold(0)(_.elements.length), logger0)
-      fs <- Task.fromEither(a)
+      a       <- fileSet(dir, logger0).attempt
+      _       <- after(a.toOption.fold(0)(_.elements.length), logger0)
+      fs      <- Task.fromEither(a)
     } yield fs
   }
 

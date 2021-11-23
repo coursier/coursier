@@ -33,9 +33,9 @@ import scala.collection.JavaConverters._
       val idx = id.indexOf(':')
       if (idx < 0)
         (None, id, None)
-      else if (id.length > idx + 1 && id.charAt(idx + 1) == '{') {
+      else if (id.length > idx + 1 && id.charAt(idx + 1) == '{')
         (Some(id.drop(idx + 1)), id.take(idx), None)
-      } else
+      else
         (None, id.take(idx), Some(id.drop(idx + 1)))
     }
 
@@ -45,7 +45,7 @@ import scala.collection.JavaConverters._
         inlineOpt match {
           case None =>
             find(actualId).flatMap {
-              case None => Task.fail(new Channels.AppNotFound(actualId, channels))
+              case None       => Task.fail(new Channels.AppNotFound(actualId, channels))
               case Some(data) => Task.point(data)
             }
           case Some(inline) =>
@@ -74,7 +74,14 @@ import scala.collection.JavaConverters._
       (source, rawDesc) = t1
 
       desc <- rawDesc.appDescriptor.toEither match {
-        case Left(errors) => Task.fail(new Channels.ErrorProcessingAppDescriptor(actualId, channelData.channel, errors.toList))
+        case Left(errors) =>
+          Task.fail {
+            new Channels.ErrorProcessingAppDescriptor(
+              actualId,
+              channelData.channel,
+              errors.toList
+            )
+          }
         case Right(desc0) => Task.point(desc0)
       }
 
@@ -82,10 +89,8 @@ import scala.collection.JavaConverters._
       sourceBytes = RawSource(repositoriesRepr0, source.channel.repr, actualId)
         .repr.getBytes(StandardCharsets.UTF_8)
 
-    } yield {
-      AppInfo(desc, channelData.data, source, sourceBytes)
-        .overrideVersion(overrideVersionOpt)
-    }
+    } yield AppInfo(desc, channelData.data, source, sourceBytes)
+      .overrideVersion(overrideVersionOpt)
   }
 
   private def withZipFile[T](file: File)(f: ZipFile => T): T = {
@@ -93,10 +98,9 @@ import scala.collection.JavaConverters._
     try {
       zf = new ZipFile(file)
       f(zf)
-    } finally {
-      if (zf != null)
-        zf.close()
     }
+    finally if (zf != null)
+      zf.close()
   }
 
   def find(id: String): Task[Option[ChannelData]] = {
@@ -111,7 +115,8 @@ import scala.collection.JavaConverters._
         _ = {
           for (logger <- cache.loggerOpt)
             logger.use {
-              val retainedVersion = res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
+              val retainedVersion =
+                res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
               logger.pickedModuleVersion(channel.module.repr, retainedVersion)
             }
         }
@@ -135,7 +140,7 @@ import scala.collection.JavaConverters._
           }
           .foldLeft[Task[Option[ChannelData]]](Task.point(None)) { (acc, elem) =>
             acc.flatMap {
-              case None => elem
+              case None        => elem
               case s @ Some(_) => Task.point(s)
             }
           }
@@ -145,7 +150,14 @@ import scala.collection.JavaConverters._
 
       val loggerOpt = cache.loggerOpt
 
-      val a = Artifact(channel.url, Map.empty, Map.empty, changing = true, optional = false, authentication = None)
+      val a = Artifact(
+        channel.url,
+        Map.empty,
+        Map.empty,
+        changing = true,
+        optional = false,
+        authentication = None
+      )
 
       val fetch = cache.file(a).run
 
@@ -172,14 +184,13 @@ import scala.collection.JavaConverters._
           Parse.decodeEither(content)(DecodeJson.MapDecodeJson(decodeObj))
             .left.map(err => new Exception(s"Error decoding $f (${channel.url}): $err"))
         }
-      } yield
-        m.get(id).map { obj =>
-          ChannelData(
-            channel,
-            s"$f#$id",
-            encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8)
-          )
-        }
+      } yield m.get(id).map { obj =>
+        ChannelData(
+          channel,
+          s"$f#$id",
+          encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8)
+        )
+      }
     }
 
     def fromDirectory(channel: Channel.FromDirectory): Task[Option[ChannelData]] = {
@@ -191,7 +202,8 @@ import scala.collection.JavaConverters._
           if (Files.isRegularFile(f)) {
             val b = Files.readAllBytes(f)
             Some(new String(b, StandardCharsets.UTF_8))
-          } else
+          }
+          else
             None
         }
         objOpt <- Task.fromEither {
@@ -203,14 +215,13 @@ import scala.collection.JavaConverters._
                 .map(Some(_))
           }
         }
-      } yield
-        objOpt.map { obj =>
-          ChannelData(
-            channel,
-            f.toString,
-            encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8)
-          )
-        }
+      } yield objOpt.map { obj =>
+        ChannelData(
+          channel,
+          f.toString,
+          encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8)
+        )
+      }
     }
 
     channels
@@ -227,7 +238,7 @@ import scala.collection.JavaConverters._
       }
       .foldLeft(Task.point(Option.empty[ChannelData])) { (acc, elem) =>
         acc.flatMap {
-          case None => elem
+          case None        => elem
           case s @ Some(_) => Task.point(s)
         }
       }
@@ -235,9 +246,8 @@ import scala.collection.JavaConverters._
 
   def searchAppName(query: Seq[String]): Task[List[String]] = {
 
-    def matchQuery(id: String): Boolean = {
+    def matchQuery(id: String): Boolean =
       query.isEmpty || query.exists(id.contains)
-    }
 
     def fromModule(channel: Channel.FromModule): Task[List[String]] =
       for {
@@ -249,7 +259,8 @@ import scala.collection.JavaConverters._
         _ = {
           for (logger <- cache.loggerOpt)
             logger.use {
-              val retainedVersion = res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
+              val retainedVersion =
+                res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
               logger.pickedModuleVersion(channel.module.repr, retainedVersion)
             }
         }
@@ -260,13 +271,19 @@ import scala.collection.JavaConverters._
           .map { f =>
             Task.delay {
               withZipFile(f) { zf =>
-                zf.entries().asScala.map(_.getName()).filter(_.endsWith(".json")).map(_.stripSuffix(".json")).filter(matchQuery).toList
+                zf.entries()
+                  .asScala
+                  .map(_.getName())
+                  .filter(_.endsWith(".json"))
+                  .map(_.stripSuffix(".json"))
+                  .filter(matchQuery)
+                  .toList
               }
             }
           }
           .foldLeft[Task[List[String]]](Task.point(List.empty[String])) { (acc, e) =>
             for {
-              a <- acc
+              a     <- acc
               extra <- e
             } yield a ++ extra
           }
@@ -276,7 +293,14 @@ import scala.collection.JavaConverters._
 
       val loggerOpt = cache.loggerOpt
 
-      val a = Artifact(channel.url, Map.empty, Map.empty, changing = true, optional = false, authentication = None)
+      val a = Artifact(
+        channel.url,
+        Map.empty,
+        Map.empty,
+        changing = true,
+        optional = false,
+        authentication = None
+      )
 
       val fetch = cache.file(a).run
 
@@ -303,17 +327,33 @@ import scala.collection.JavaConverters._
           Parse.decodeEither(content)(DecodeJson.MapDecodeJson(decodeObj))
             .left.map(err => new Exception(s"Error decoding $f (${channel.url}): $err"))
         }
-      } yield 
-        m.keys.filter(matchQuery).toList
-      
+      } yield m.keys.filter(matchQuery).toList
+
     }
 
     def fromDirectory(channel: Channel.FromDirectory): Task[List[String]] = Task.delay {
       if (Files.isDirectory(channel.path)) {
-        Files.find(channel.path, 1, {
-          (p: Path, _) => Files.isRegularFile(p) && Files.isReadable(p) && p.getFileName().toString().endsWith(".json")
-        }).iterator().asScala.map(_.getFileName().toString().stripSuffix(".json")).filter(matchQuery).toList
-      } else List.empty[String]
+        var stream: java.util.stream.Stream[Path] = null
+        try {
+          stream = Files.find(
+            channel.path,
+            1,
+            (p: Path, _) =>
+              Files.isRegularFile(p) &&
+              Files.isReadable(p) &&
+              p.getFileName().toString().endsWith(".json")
+          )
+          stream
+            .iterator()
+            .asScala
+            .map(_.getFileName().toString().stripSuffix(".json"))
+            .filter(matchQuery)
+            .toList
+        }
+        finally if (stream != null)
+          stream.close()
+      }
+      else List.empty[String]
     }
 
     channels
@@ -357,7 +397,6 @@ object Channels {
   def contribChannels: Seq[Channel] =
     contribChannels0
 
-
   private def repositoriesRepr(repositories: Seq[Repository]): Seq[String] =
     repositories.toList.flatMap {
       case m: MavenRepository =>
@@ -372,21 +411,24 @@ object Channels {
     }
 
   sealed abstract class ChannelsException(message: String, cause: Throwable = null)
-    extends Exception(message, cause)
+      extends Exception(message, cause)
 
   final class AppNotFound(val id: String, val channels: Seq[Channel])
-    extends ChannelsException(
-      s"Cannot find app $id in channels ${channels.map(_.repr).mkString(", ")}"
-    )
+      extends ChannelsException(
+        s"Cannot find app $id in channels ${channels.map(_.repr).mkString(", ")}"
+      )
 
   final class ErrorParsingAppDescriptor(val id: String, val channel: Channel, val reason: String)
-    extends ChannelsException(
-      s"Error parsing app descriptor for app $id from channel ${channel.repr}: $reason"
-    )
+      extends ChannelsException(
+        s"Error parsing app descriptor for app $id from channel ${channel.repr}: $reason"
+      )
 
-  final class ErrorProcessingAppDescriptor(val id: String, val channel: Channel, val errors: Seq[String])
-    extends ChannelsException(
-      s"Error processing app descriptor for app $id from channel ${channel.repr}: ${errors.mkString(", ")}"
-    )
+  final class ErrorProcessingAppDescriptor(
+    val id: String,
+    val channel: Channel,
+    val errors: Seq[String]
+  ) extends ChannelsException(
+        s"Error processing app descriptor for app $id from channel ${channel.repr}: ${errors.mkString(", ")}"
+      )
 
 }

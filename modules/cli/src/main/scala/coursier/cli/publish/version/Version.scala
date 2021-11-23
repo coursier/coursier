@@ -8,10 +8,10 @@ object Version extends CaseApp[Options] {
 
   private def output(cmd: Seq[String], dir: File): String = {
     // adapted from https://stackoverflow.com/a/16714180/3714539
-    val b = new ProcessBuilder(cmd: _*).directory(dir)
-    val p = b.start()
-    val reader = new BufferedReader(new InputStreamReader(p.getInputStream))
-    val builder = new StringBuilder
+    val b            = new ProcessBuilder(cmd: _*).directory(dir)
+    val p            = b.start()
+    val reader       = new BufferedReader(new InputStreamReader(p.getInputStream))
+    val builder      = new StringBuilder
     var line: String = null
     while ({
       line = reader.readLine()
@@ -34,7 +34,8 @@ object Version extends CaseApp[Options] {
     if (tag.isEmpty)
       Left("No git tag like v[0-9]* found")
     else {
-      val dist = output(Seq("git", "rev-list", "--count", s"$tag...HEAD"), dir).trim.toInt // can throw…
+      val dist =
+        output(Seq("git", "rev-list", "--count", s"$tag...HEAD"), dir).trim.toInt // can throw…
 
       if (dist == 0)
         Right(tag)
@@ -48,13 +49,13 @@ object Version extends CaseApp[Options] {
           if (previousVersion.forall(c => c == '.' || c.isDigit)) {
             val l = previousVersion.split('.')
             Some((l.init :+ (l.last.toInt + 1).toString).mkString(".") + "-SNAPSHOT")
-          } else {
+          }
+          else {
             val idx = previousVersion.indexOf("-M")
             if (idx < 0)
               None
-            else {
+            else
               Some(previousVersion.take(idx) + "-SNAPSHOT")
-            }
           }
 
         versionOpt.toRight {
@@ -67,10 +68,12 @@ object Version extends CaseApp[Options] {
   def run(options: Options, remainingArgs: RemainingArgs): Unit = {
 
     val dir = remainingArgs.all match {
-      case Seq() => new File(".")
+      case Seq()     => new File(".")
       case Seq(path) => new File(path)
       case other =>
-        Console.err.println(s"Too many arguments specified: ${other.mkString(" ")}\nExpected 0 or 1 argument.")
+        Console.err.println(
+          s"Too many arguments specified: ${other.mkString(" ")}\nExpected 0 or 1 argument."
+        )
         sys.exit(1)
     }
 
@@ -79,7 +82,6 @@ object Version extends CaseApp[Options] {
         Console.err.println(msg)
         sys.exit(1)
       case Right(v) =>
-
         if (options.isSnapshot) {
           val retCode =
             if (v.endsWith("-SNAPSHOT"))
@@ -89,7 +91,8 @@ object Version extends CaseApp[Options] {
           if (!options.quiet)
             Console.err.println(v)
           sys.exit(retCode)
-        } else
+        }
+        else
           println(v)
     }
   }

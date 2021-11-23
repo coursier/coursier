@@ -2,6 +2,7 @@ package coursier.cli.publish.options
 
 import caseapp._
 
+// format: off
 final case class RepositoryOptions(
 
   @Name("r")
@@ -26,6 +27,8 @@ final case class RepositoryOptions(
   snapshotVersioning: Boolean = true
 
 ) {
+  // format: on
+
   override def toString: String =
     copy(auth = auth.map(_ => "****"))
       .productIterator
@@ -34,5 +37,5 @@ final case class RepositoryOptions(
 
 object RepositoryOptions {
   implicit val parser = Parser[RepositoryOptions]
-  implicit val help = caseapp.core.help.Help[RepositoryOptions]
+  implicit val help   = caseapp.core.help.Help[RepositoryOptions]
 }

@@ -25,15 +25,13 @@ object ModuleName {
     Ordering[String].on(_.value)
 }
 
-/**
- * Identifies a "module".
- *
- * During resolution, all dependencies having the same module
- * will be given the same version, if there are no version conflicts
- * between them.
- *
- * Using the same terminology as Ivy.
- */
+/** Identifies a "module".
+  *
+  * During resolution, all dependencies having the same module will be given the same version, if
+  * there are no version conflicts between them.
+  *
+  * Using the same terminology as Ivy.
+  */
 @data(apply = false, settersCallApply = true) class Module(
   organization: Organization,
   name: ModuleName,
@@ -62,7 +60,7 @@ object ModuleName {
   def orgName: String =
     s"${organization.value}:${name.value}"
 
-  override final lazy val hashCode = tuple.hashCode()
+  final override lazy val hashCode = tuple.hashCode()
 
   private[core] def copy(
     organization: Organization = this.organization,
@@ -96,21 +94,21 @@ object Type {
   implicit val ordering: Ordering[Type] =
     Ordering[String].on(_.value)
 
-  val jar = Type("jar")
+  val jar     = Type("jar")
   val testJar = Type("test-jar")
-  val bundle = Type("bundle")
-  val doc = Type("doc")
-  val source = Type("src")
+  val bundle  = Type("bundle")
+  val doc     = Type("doc")
+  val source  = Type("src")
 
   // Typo for doc and src ???
-  val javadoc = Type("javadoc")
+  val javadoc    = Type("javadoc")
   val javaSource = Type("java-source")
 
   val ivy = Type("ivy")
   val pom = Type("pom")
 
   val empty = Type("")
-  val all = Type("*")
+  val all   = Type("*")
 
   object Exotic {
     // https://github.com/sbt/sbt/blob/47cd001eea8ef42b7c1db9ffdf48bec16b8f733b/main/src/main/scala/sbt/Defaults.scala#L227
@@ -118,9 +116,9 @@ object Type {
 
     // https://github.com/sbt/librarymanagement/blob/bb2c73e183fa52e2fb4b9ae7aca55799f3ff6624/ivy/src/main/scala/sbt/internal/librarymanagement/CustomPomParser.scala#L79
     val eclipsePlugin = Type("eclipse-plugin")
-    val hk2 = Type("hk2-jar")
-    val orbit = Type("orbit")
-    val scalaJar = Type("scala-jar")
+    val hk2           = Type("hk2-jar")
+    val orbit         = Type("orbit")
+    val scalaJar      = Type("scala-jar")
   }
 }
 
@@ -139,7 +137,7 @@ object Classifier {
 
   val empty = Classifier("")
 
-  val tests = Classifier("tests")
+  val tests   = Classifier("tests")
   val javadoc = Classifier("javadoc")
   val sources = Classifier("sources")
 }
@@ -183,9 +181,9 @@ object Configuration {
 
   val compile = Configuration("compile")
   val runtime = Configuration("runtime")
-  val test = Configuration("test")
+  val test    = Configuration("test")
 
-  val default = Configuration("default")
+  val default        = Configuration("default")
   val defaultCompile = Configuration("default(compile)")
 
   val provided = Configuration("provided")
@@ -244,13 +242,10 @@ object Attributes {
   snapshotVersioning: Option[SnapshotVersioning],
   packagingOpt: Option[Type],
   relocated: Boolean,
-
-  /**
-    * Optional exact version used to get this project metadata.
-    * May not match `version` for projects having a wrong version in their metadata.
+  /** Optional exact version used to get this project metadata. May not match `version` for projects
+    * having a wrong version in their metadata.
     */
   actualVersionOpt: Option[String],
-
   publications: Seq[(Configuration, Publication)],
 
   // Extra infos, not used during resolution
@@ -258,14 +253,14 @@ object Attributes {
 ) {
   lazy val moduleVersion = (module, version)
 
-  /** All configurations that each configuration extends, including the ones it extends transitively */
+  /** All configurations that each configuration extends, including the ones it extends transitively
+    */
   lazy val allConfigurations: Map[Configuration, Set[Configuration]] =
     Orders.allConfigurations0(configurations)
 
-  /**
-    * Version used to get this project metadata if available, else the version from metadata.
-    * May not match `version` for projects having a wrong version in their metadata, if the actual version was kept
-    * around.
+  /** Version used to get this project metadata if available, else the version from metadata. May
+    * not match `version` for projects having a wrong version in their metadata, if the actual
+    * version was kept around.
     */
   def actualVersion: String = actualVersionOpt.getOrElse(version)
 }
@@ -281,7 +276,7 @@ object Attributes {
 ) {
   def licenses: Seq[(String, Option[String])] = licenseInfo.map(li => li.name -> li.url)
 
-  def withLicenses(license: Seq[(String, Option[String])]) = {
+  def withLicenses(license: Seq[(String, Option[String])]) =
     new Info(
       description,
       homePage,
@@ -290,7 +285,6 @@ object Attributes {
       scm,
       license.map(l => Info.License(l._1, l._2, None, None))
     )
-  }
 
   def this(
     description: String,
@@ -299,7 +293,7 @@ object Attributes {
     developers: Seq[Info.Developer],
     publication: Option[Versions.DateTime],
     scm: Option[Info.Scm]
-  ) = {
+  ) =
     this(
       description,
       homePage,
@@ -308,7 +302,6 @@ object Attributes {
       scm,
       licenses.map(l => Info.License(l._1, l._2, None, None))
     )
-  }
 }
 
 object Info {
@@ -344,7 +337,7 @@ object Info {
     name: String,
     url: Option[String],
     distribution: Option[String], // Maven-specific
-    comments: Option[String] // Maven-specific
+    comments: Option[String]      // Maven-specific
   )
 
   val empty = Info("", "", Nil, None, None, Nil)

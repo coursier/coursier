@@ -8,16 +8,17 @@ import scala.util.control.NonFatal
 
 object TestUtil {
 
-  def withFile(content: String = "",
-               fileName: String = "hello",
-               suffix: String = "world")(testCode: (File, FileWriter) => Any) {
-    val file = File.createTempFile(fileName, suffix) // create the fixture
+  def withFile(
+    content: String = "",
+    fileName: String = "hello",
+    suffix: String = "world"
+  )(testCode: (File, FileWriter) => Any) {
+    val file   = File.createTempFile(fileName, suffix) // create the fixture
     val writer = new FileWriter(file)
     writer.write(content)
     writer.flush()
-    try {
-      testCode(file, writer) // "loan" the fixture to the test
-    } finally {
+    try testCode(file, writer) // "loan" the fixture to the test
+    finally {
       writer.close()
       file.delete()
     }
@@ -40,12 +41,14 @@ object TestUtil {
         val removedDir = f.delete()
 
         removedContent && removedDir
-      } else
+      }
+      else
         f.delete()
 
     if (!delete(tmpDir))
       Console.err.println(
-        s"Warning: unable to remove temporary directory $tmpDir")
+        s"Warning: unable to remove temporary directory $tmpDir"
+      )
   }
 
   def mayThrow[T](f: => T): T =

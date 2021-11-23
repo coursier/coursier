@@ -14,7 +14,7 @@ import fastparse._, NoWhitespace._
   def substituteProperties(properties: Map[String, String]): Either[String, Pattern] = {
 
     val validation = chunks.validationNelTraverse[String, Seq[Pattern.Chunk]] {
-      case prop: ChunkOrProperty.Prop => //(name, alternativesOpt) =>
+      case prop: ChunkOrProperty.Prop => // (name, alternativesOpt) =>
         properties.get(prop.name) match {
           case Some(value) =>
             ValidationNel.success(Seq(Pattern.Chunk.Const(value)))
@@ -94,12 +94,12 @@ import fastparse._, NoWhitespace._
     }
   }
 
-
   def substitute(varName: String, replacement: Seq[Chunk]): Pattern =
     Pattern(
       chunks.flatMap {
         case v: Chunk.Var if v.name == varName => replacement
-        case opt: Chunk.Opt => Seq(Chunk.Opt(Pattern(opt.content).substitute(varName, replacement).chunks))
+        case opt: Chunk.Opt =>
+          Seq(Chunk.Opt(Pattern(opt.content).substitute(varName, replacement).chunks))
         case c => Seq(c)
       }
     )
@@ -111,7 +111,7 @@ import fastparse._, NoWhitespace._
     .iterator
     .map {
       case c: Pattern.Chunk.Const => Some(c.value)
-      case _ => None
+      case _                      => None
     }
     .takeWhile(_.nonEmpty)
     .flatten
@@ -135,9 +135,10 @@ object PropertiesPattern {
   }
 
   object ChunkOrProperty {
-    @data class Prop(name: String, alternative: Option[Seq[ChunkOrProperty]]) extends ChunkOrProperty {
+    @data class Prop(name: String, alternative: Option[Seq[ChunkOrProperty]])
+        extends ChunkOrProperty {
       def string: String =
-      s"$${" + name + alternative.fold("")(alt => "-" + alt.map(_.string).mkString) + "}"
+        s"$${" + name + alternative.fold("")(alt => "-" + alt.map(_.string).mkString) + "}"
     }
     @data class Var(name: String) extends ChunkOrProperty {
       def string: String = "[" + name + "]"
@@ -162,8 +163,8 @@ object PropertiesPattern {
 
   private def parser[_: P]: P[Seq[ChunkOrProperty]] = {
 
-    val notIn = s"[]{}()$$".toSet
-    def chars = P(CharsWhile(c => !notIn(c)).!)
+    val notIn         = s"[]{}()$$".toSet
+    def chars         = P(CharsWhile(c => !notIn(c)).!)
     def noHyphenChars = P(CharsWhile(c => !notIn(c) && c != '-').!)
 
     def constant: P[ChunkOrProperty.Const] =
@@ -188,7 +189,6 @@ object PropertiesPattern {
 
     chunks
   }
-
 
   def parse(pattern: String): Either[String, PropertiesPattern] =
     fastparse.parse(pattern, parser(_)) match {
@@ -228,20 +228,27 @@ object Pattern {
     implicit def fromString(s: String): Chunk = Const(s)
   }
 
-  import Chunk.{ Var, Opt }
+  import Chunk.{Var, Opt}
 
   // Corresponds to
   //   [organisation]/[module]/(scala_[scalaVersion]/)(sbt_[sbtVersion]/)[revision]/[type]s/[artifact](-[classifier]).[ext]
 
   val default = Pattern(
     Seq(
-      Var("organisation"), "/",
-      Var("module"), "/",
+      Var("organisation"),
+      "/",
+      Var("module"),
+      "/",
       Opt("scala_", Var("scalaVersion"), "/"),
       Opt("sbt_", Var("sbtVersion"), "/"),
-      Var("revision"), "/",
-      Var("type"), "s/",
-      Var("artifact"), Opt("-", Var("classifier")), ".", Var("ext")
+      Var("revision"),
+      "/",
+      Var("type"),
+      "s/",
+      Var("artifact"),
+      Opt("-", Var("classifier")),
+      ".",
+      Var("ext")
     )
   )
 

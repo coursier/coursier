@@ -15,20 +15,17 @@ import coursier.util.Task
 
 import scala.xml.{Elem, XML}
 
-/**
-  * A subset of a [[FileSet]], with particular semantic.
+/** A subset of a [[FileSet]], with particular semantic.
   */
 sealed abstract class Group extends Product with Serializable {
 
-  /**
-    * [[FileSet]] corresponding to this [[Group]]
+  /** [[FileSet]] corresponding to this [[Group]]
     */
   def fileSet: FileSet
 
   def organization: Organization
 
-  /**
-    * Changes any reference to the first coordinates to the second ones.
+  /** Changes any reference to the first coordinates to the second ones.
     *
     * Coordinates can be our coordinates, or those of dependencies, exclusions, …
     */
@@ -48,8 +45,7 @@ sealed abstract class Group extends Product with Serializable {
 
 object Group {
 
-  /**
-    * Subset of a [[FileSet]] corresponding to a particular module.
+  /** Subset of a [[FileSet]] corresponding to a particular module.
     *
     * That is to the files of a particular - published - version of a given module.
     */
@@ -141,8 +137,7 @@ object Group {
         .updateFileNames
     }
 
-    /**
-      * Adjust the organization / name / version.
+    /** Adjust the organization / name / version.
       *
       * Possibly changing those in POM or maven-metadata.xml files.
       */
@@ -157,7 +152,9 @@ object Group {
       distMgmtRepo: Option[(String, String, String)],
       now: Instant
     ): Task[Module] =
-      if (org.isEmpty && name.isEmpty && version.isEmpty && licenses.isEmpty && developers.isEmpty && homePage.isEmpty && gitDomainPath.isEmpty)
+      if (
+        org.isEmpty && name.isEmpty && version.isEmpty && licenses.isEmpty && developers.isEmpty && homePage.isEmpty && gitDomainPath.isEmpty
+      )
         Task.point(this)
       else
         updateOrgNameVer(org, name, version)
@@ -185,7 +182,8 @@ object Group {
 
       val base = map.get((organization, name)) match {
         case None => Task.point(this)
-        case Some(to) => updateMetadata(Some(to._1), Some(to._2), None, None, None, None, None, None, now)
+        case Some(to) =>
+          updateMetadata(Some(to._1), Some(to._2), None, None, None, None, None, None, now)
       }
 
       base.flatMap { m =>
@@ -212,8 +210,7 @@ object Group {
     private def pomFileName: String =
       s"${name.value}-${snapshotVersioning.getOrElse(version)}.pom"
 
-    /**
-      * The POM file of this [[Module]], if any.
+    /** The POM file of this [[Module]], if any.
       */
     def pomOpt: Option[(String, Content)] = {
       val fileName = pomFileName
@@ -240,14 +237,15 @@ object Group {
           }
       }
 
-    /**
-      * Adjust the POM of this [[Module]], so that it contains the same org / name / version as this [[Module]].
+    /** Adjust the POM of this [[Module]], so that it contains the same org / name / version as this
+      * [[Module]].
       *
       * Calling this method, or running its [[Task]], doesn't write anything on disk. The new POM
       * stays in memory (via [[Content.InMemory]]). The returned [[Module]] only lives in memory.
       * The only effect here is possibly reading stuff on disk.
       *
-      * @param now: if the POM is edited, its last modified time.
+      * @param now:
+      *   if the POM is edited, its last modified time.
       */
     def updatePom(
       now: Instant,
@@ -278,22 +276,24 @@ object Group {
     def transformPom(now: Instant)(f: Elem => Elem): Task[Module] =
       pomOpt match {
         case None =>
-          Task.fail(new Exception(s"No POM found (files: ${files.elements.map(_._1).mkString(", ")})"))
+          Task.fail(
+            new Exception(s"No POM found (files: ${files.elements.map(_._1).mkString(", ")})")
+          )
         case Some((fileName, c)) =>
           c.contentTask.map { pomBytes =>
             val elem = f(XML.loadString(new String(pomBytes, StandardCharsets.UTF_8)))
 
-            val pomContent0 = Content.InMemory(now, Pom.print(elem).getBytes(StandardCharsets.UTF_8))
+            val pomContent0 =
+              Content.InMemory(now, Pom.print(elem).getBytes(StandardCharsets.UTF_8))
 
             val updatedContent = files.update(fileName, pomContent0)
             copy(files = updatedContent)
           }
       }
 
-
-    /**
-      * Adds a maven-metadata.xml file to this module if it doesn't have one already.
-      * @param now: last modified time of the added maven-metadata.xml, if one is indeed added.
+    /** Adds a maven-metadata.xml file to this module if it doesn't have one already.
+      * @param now:
+      *   last modified time of the added maven-metadata.xml, if one is indeed added.
       */
     def addMavenMetadata(now: Instant): Module = {
 
@@ -328,9 +328,10 @@ object Group {
       .find(_._1 == "maven-metadata.xml")
       .map(_._2)
 
-    /**
-      * Updates the maven-metadata.xml file of this [[Module]], so that it contains the same org / name.
-      * @param now: if maven-metadata.xml is edited, its last modified time.
+    /** Updates the maven-metadata.xml file of this [[Module]], so that it contains the same org /
+      * name.
+      * @param now:
+      *   if maven-metadata.xml is edited, its last modified time.
       */
     def updateMavenMetadata(now: Instant): Task[Module] =
       mavenMetadataContentOpt match {
@@ -354,7 +355,8 @@ object Group {
               coursier.publish.MavenMetadata.print(newContent).getBytes(StandardCharsets.UTF_8)
             }
 
-            val updatedContent = files.update("maven-metadata.xml", Content.InMemory(now, updatedMetadataBytes))
+            val updatedContent =
+              files.update("maven-metadata.xml", Content.InMemory(now, updatedMetadataBytes))
             copy(files = updatedContent)
           }
       }
@@ -377,18 +379,28 @@ object Group {
             if (ignoreExtensions.exists(e => n.endsWith("." + e)))
               Nil
             else
-              Seq((None, n.stripPrefix(initialFilePrefix + "."), updatedVersion0, now.atOffset(ZoneOffset.UTC).toLocalDateTime))
+              Seq((
+                None,
+                n.stripPrefix(initialFilePrefix + "."),
+                updatedVersion0,
+                now.atOffset(ZoneOffset.UTC).toLocalDateTime
+              ))
           case (n, _) if n.startsWith(initialFilePrefix + "-") =>
             val suffix = n.stripPrefix(initialFilePrefix + "-")
-            val idx = suffix.indexOf('.')
+            val idx    = suffix.indexOf('.')
             if (idx < 0)
               ???
             else if (ignoreExtensions.exists(e => n.endsWith("." + e)))
               Nil
             else {
               val classifier = suffix.take(idx)
-              val ext = suffix.drop(idx + 1)
-              Seq((Some(classifier), ext, updatedVersion0, now.atOffset(ZoneOffset.UTC).toLocalDateTime))
+              val ext        = suffix.drop(idx + 1)
+              Seq((
+                Some(classifier),
+                ext,
+                updatedVersion0,
+                now.atOffset(ZoneOffset.UTC).toLocalDateTime
+              ))
             }
           case (n, _) if n.startsWith("maven-metadata.xml.") =>
             Nil
@@ -401,11 +413,12 @@ object Group {
       }
 
       def files0(buildNumber: Int) = {
-        val updatedVersion0 = updatedVersion(buildNumber)
+        val updatedVersion0   = updatedVersion(buildNumber)
         val updatedFilePrefix = s"${name.value}-$updatedVersion0"
         DirContent(
           files.elements.map {
-            case (n, c) if n.startsWith(initialFilePrefix + ".") || n.startsWith(initialFilePrefix + "-") =>
+            case (n, c)
+                if n.startsWith(initialFilePrefix + ".") || n.startsWith(initialFilePrefix + "-") =>
               (updatedFilePrefix + n.stripPrefix(initialFilePrefix), c)
             case t =>
               t
@@ -429,10 +442,12 @@ object Group {
         case Some(c) =>
           c.contentTask.map { b =>
             val elem = XML.loadString(new String(b, StandardCharsets.UTF_8))
-            val latestSnapshotParams = publish.MavenMetadata.currentSnapshotVersioning(elem).getOrElse {
-              ???
-            }
-            val latestSnapshotVer = s"$versionPrefix-${latestSnapshotParams._2.atOffset(ZoneOffset.UTC).toLocalDateTime.format(publish.MavenMetadata.timestampPattern)}-${latestSnapshotParams._1}"
+            val latestSnapshotParams =
+              publish.MavenMetadata.currentSnapshotVersioning(elem).getOrElse {
+                ???
+              }
+            val latestSnapshotVer =
+              s"$versionPrefix-${latestSnapshotParams._2.atOffset(ZoneOffset.UTC).toLocalDateTime.format(publish.MavenMetadata.timestampPattern)}-${latestSnapshotParams._1}"
             if (snapshotVersioning.contains(latestSnapshotVer))
               latestSnapshotParams._1 -> elem // kind of meh, this is in case the source already has snapshot ver, and the dest hasn't, so the current maven metadata only comes from the source
             else {
@@ -452,7 +467,7 @@ object Group {
 
       content.map {
         case (buildNumber, elem) =>
-          val b = publish.MavenMetadata.print(elem).getBytes(StandardCharsets.UTF_8)
+          val b      = publish.MavenMetadata.print(elem).getBytes(StandardCharsets.UTF_8)
           val files1 = files0(buildNumber).update("maven-metadata.xml", Content.InMemory(now, b))
           copy(
             snapshotVersioning = Some(updatedVersion(buildNumber)),
@@ -478,11 +493,10 @@ object Group {
 
   }
 
-  /**
-    * Subset of a [[FileSet]] corresponding to maven-metadata.xml files.
+  /** Subset of a [[FileSet]] corresponding to maven-metadata.xml files.
     *
-    * This correspond to the maven-metadata.xml file under org/name/maven-metadata.xml, not the
-    * ones that can be found under org/name/version/maven-metadata.xml (these are in [[Module]]).
+    * This correspond to the maven-metadata.xml file under org/name/maven-metadata.xml, not the ones
+    * that can be found under org/name/version/maven-metadata.xml (these are in [[Module]]).
     */
   final case class MavenMetadata(
     organization: Organization,
@@ -582,9 +596,7 @@ object Group {
 
   }
 
-
-  /**
-    * Identify the [[Group]]s each file of the passed [[FileSet]] correspond to.
+  /** Identify the [[Group]] s each file of the passed [[FileSet]] correspond to.
     */
   def split(fs: FileSet): Seq[Group] = {
 
@@ -594,14 +606,13 @@ object Group {
 
     byDir.toSeq.map {
       case (dir, elements) =>
-
         val canBeMavenMetadata =
           elements.exists(_._1.elements.lastOption.contains("maven-metadata.xml")) &&
           !elements.exists(_._1.elements.lastOption.exists(_.endsWith(".pom")))
 
         dir.elements.reverse match {
           case Seq(ver, strName, reverseOrg @ _*) if reverseOrg.nonEmpty && !canBeMavenMetadata =>
-            val org = Organization(reverseOrg.reverse.mkString("."))
+            val org  = Organization(reverseOrg.reverse.mkString("."))
             val name = ModuleName(strName)
             val snapshotVersioningOpt =
               if (ver.endsWith("SNAPSHOT"))
@@ -620,8 +631,8 @@ object Group {
 
             def recognized(p: Path): Boolean =
               p.elements.lastOption.exists(n => fileNamePrefixes.exists(n.startsWith)) ||
-                p.elements.lastOption.contains("maven-metadata.xml") ||
-                p.elements.lastOption.exists(_.startsWith("maven-metadata.xml."))
+              p.elements.lastOption.contains("maven-metadata.xml") ||
+              p.elements.lastOption.exists(_.startsWith("maven-metadata.xml."))
 
             if (elements.forall(t => recognized(t._1))) {
               val strippedDir = elements.map {
@@ -629,16 +640,19 @@ object Group {
                   p.elements.last -> c
               }
               Module(org, name, ver, snapshotVersioningOpt, DirContent(strippedDir))
-            } else
-              throw new Exception(s"Unrecognized files: ${elements.filter(t => !recognized(t._1)).map(_._1.repr).mkString(", ")}")
+            }
+            else
+              throw new Exception(
+                s"Unrecognized files: ${elements.filter(t => !recognized(t._1)).map(_._1.repr).mkString(", ")}"
+              )
 
           case Seq(strName, reverseOrg @ _*) if reverseOrg.nonEmpty && canBeMavenMetadata =>
-            val org = Organization(reverseOrg.reverse.mkString("."))
+            val org  = Organization(reverseOrg.reverse.mkString("."))
             val name = ModuleName(strName)
 
             def recognized(p: Path): Boolean =
               p.elements.lastOption.contains("maven-metadata.xml") ||
-                p.elements.lastOption.exists(_.startsWith("maven-metadata.xml."))
+              p.elements.lastOption.exists(_.startsWith("maven-metadata.xml."))
 
             if (elements.forall(t => recognized(t._1))) {
               val strippedDir = elements.map {
@@ -646,8 +660,11 @@ object Group {
                   p.elements.last -> c
               }
               MavenMetadata(org, name, DirContent(strippedDir))
-            } else
-              sys.error(s"Unrecognized: ${dir.elements} (${elements.filter(t => !recognized(t._1))})")
+            }
+            else
+              sys.error(
+                s"Unrecognized: ${dir.elements} (${elements.filter(t => !recognized(t._1))})"
+              )
 
           case _ =>
             ???
@@ -655,10 +672,9 @@ object Group {
     }
   }
 
-  /**
-    * Merge [[Group]]s as a [[FileSet]].
+  /** Merge [[Group]] s as a [[FileSet]].
     *
-    * Can be "left" if some duplicated [[Module]]s or [[MavenMetadata]]s are found.
+    * Can be "left" if some duplicated [[Module]] s or [[MavenMetadata]] s are found.
     */
   def merge(groups: Seq[Group]): Either[String, FileSet] = {
 
@@ -678,18 +694,17 @@ object Group {
 
     if (duplicatedModules.isEmpty && duplicatedMeta.isEmpty)
       Right(groups.foldLeft(FileSet.empty)(_ ++ _.fileSet))
-    else {
+    else
       ???
-    }
   }
 
   private[coursier] def mergeUnsafe(groups: Seq[Group]): FileSet =
     FileSet(groups.flatMap(_.fileSet.elements))
 
-  /**
-    * Ensure all [[Module]]s in the passed `groups` have a corresponding [[MavenMetadata]] group.
+  /** Ensure all [[Module]] s in the passed `groups` have a corresponding [[MavenMetadata]] group.
     *
-    * @param now: if new files are created, their last-modified time.
+    * @param now:
+    *   if new files are created, their last-modified time.
     */
   def addOrUpdateMavenMetadata(groups: Seq[Group], now: Instant): Task[Seq[Group]] = {
 
@@ -701,7 +716,7 @@ object Group {
       .groupBy(m => (m.organization, m.name))
       .mapValues {
         case Seq(md) => md
-        case l => ???
+        case l       => ???
       }
       .iterator
       .toMap
@@ -709,7 +724,7 @@ object Group {
     val a = for ((k @ (org, name), m) <- modules.toSeq) yield {
 
       val versions = m.map(_.version)
-      val latest = versions.map(Version(_)).max.repr
+      val latest   = versions.map(Version(_)).max.repr
       val releaseOpt = Some(versions.filter(publish.MavenMetadata.isReleaseVersion).map(Version(_)))
         .filter(_.nonEmpty)
         .map(_.max.repr)
@@ -717,7 +732,12 @@ object Group {
       meta.get(k) match {
         case None =>
           val elem = publish.MavenMetadata.create(
-            org, name, Some(latest), releaseOpt, versions, now
+            org,
+            name,
+            Some(latest),
+            releaseOpt,
+            versions,
+            now
           )
           val b = publish.MavenMetadata.print(elem).getBytes(StandardCharsets.UTF_8)
           val content = DirContent(Seq(
@@ -761,7 +781,10 @@ object Group {
                 name,
                 DirContent(
                   Seq(
-                    "maven-metadata.xml" -> Content.InMemory(lastModifiedOpt.getOrElse(Instant.EPOCH), b)
+                    "maven-metadata.xml" -> Content.InMemory(
+                      lastModifiedOpt.getOrElse(Instant.EPOCH),
+                      b
+                    )
                   )
                 )
               )
@@ -780,12 +803,15 @@ object Group {
     // assert(m.snapshotVersioning.isEmpty)
 
     val root = repository.root + "/"
-    val url = root + s"${m.baseDir.mkString("/")}/maven-metadata.xml"
+    val url  = root + s"${m.baseDir.mkString("/")}/maven-metadata.xml"
 
     download.downloadIfExists(url, repository.authentication, logger).map {
       case Some((lastModifiedOpt, b)) =>
         m.copy(
-          files = m.files.update("maven-metadata.xml", Content.InMemory(lastModifiedOpt.getOrElse(Instant.EPOCH), b))
+          files = m.files.update(
+            "maven-metadata.xml",
+            Content.InMemory(lastModifiedOpt.getOrElse(Instant.EPOCH), b)
+          )
         )
       case None =>
         m
@@ -806,10 +832,9 @@ object Group {
         // dontKnow should be empty anyway…
 
         val merged = withContent match {
-          case Seq() => sys.error("can't possibly happen")
+          case Seq()  => sys.error("can't possibly happen")
           case Seq(m) => Task.point(m)
           case Seq(m, others @ _*) =>
-
             m.xmlOpt.get.contentTask.flatMap { b =>
               val mainElem = XML.loadString(new String(b, StandardCharsets.UTF_8))
 
@@ -817,7 +842,7 @@ object Group {
                 case (mainElemTask, m0) =>
                   for {
                     mainElem0 <- mainElemTask
-                    b <- m0.xmlOpt.get.contentTask
+                    b         <- m0.xmlOpt.get.contentTask
                   } yield {
                     val elem = XML.loadString(new String(b, StandardCharsets.UTF_8))
                     val info = publish.MavenMetadata.info(elem)
@@ -846,6 +871,5 @@ object Group {
 
     Task.gather.gather(tasks).map(_.flatten)
   }
-
 
 }

@@ -20,6 +20,7 @@ import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.Duration
 import scala.util.control.NonFatal
 
+// format: off
 @data class FileCache[F[_]](
   location: File,
   cachePolicies: Seq[CachePolicy] = CacheDefaults.cachePolicies,
@@ -38,10 +39,11 @@ import scala.util.control.NonFatal
   retry: Int = CacheDefaults.defaultRetryCount,
   bufferSize: Int = CacheDefaults.bufferSize,
   @since("2.0.16")
-  classLoaders: Seq[ClassLoader] = Nil,
+    classLoaders: Seq[ClassLoader] = Nil
 )(implicit
   sync: Sync[F]
 ) extends Cache[F] {
+  // format: on
 
   private def S = sync
 
@@ -68,7 +70,6 @@ import scala.util.control.NonFatal
   def withMaxRedirections(max: Int): FileCache[F] =
     withMaxRedirections(Some(max))
 
-
   def localFile(url: String, user: Option[String] = None): File =
     FileCache.localFile0(url, location, user, localArtifactsShouldBeCached)
 
@@ -77,7 +78,7 @@ import scala.util.control.NonFatal
   override def loggerOpt: Some[CacheLogger] =
     Some(logger)
 
-  private val checksums0 = if (checksums.isEmpty) Seq(None) else checksums
+  private val checksums0      = if (checksums.isEmpty) Seq(None) else checksums
   private val actualChecksums = checksums0.flatMap(_.toSeq).distinct
 
   private def download(
@@ -112,13 +113,14 @@ import scala.util.control.NonFatal
     val localFile0 = localFile(artifact.url, artifact.authentication.map(_.user))
 
     val headerSumFile = Seq(auxiliaryFile(localFile0, sumType))
-    val downloadedSumFile = artifact.checksumUrls.get(sumType).map(sumUrl => localFile(sumUrl, artifact.authentication.map(_.user)))
+    val downloadedSumFile = artifact.checksumUrls.get(sumType).map { sumUrl =>
+      localFile(sumUrl, artifact.authentication.map(_.user))
+    }
 
     EitherT {
       S.schedule(pool) {
         (headerSumFile ++ downloadedSumFile.toSeq).find(_.exists()) match {
           case Some(sumFile) =>
-
             val sumOpt = CacheChecksum.parseRawChecksum(Files.readAllBytes(sumFile.toPath))
 
             sumOpt match {
@@ -126,7 +128,8 @@ import scala.util.control.NonFatal
                 Left(new ArtifactError.ChecksumFormatError(sumType, sumFile.getPath))
 
               case Some(sum) =>
-                val calculatedSum: BigInteger = FileCache.persistedDigest(location, sumType, localFile0)
+                val calculatedSum: BigInteger =
+                  FileCache.persistedDigest(location, sumType, localFile0)
 
                 if (sum == calculatedSum)
                   Right(())
@@ -141,7 +144,8 @@ import scala.util.control.NonFatal
             }
 
           case None =>
-            Left(new ArtifactError.ChecksumNotFound(sumType, localFile0.getPath)): Either[ArtifactError, Unit]
+            val err = new ArtifactError.ChecksumNotFound(sumType, localFile0.getPath)
+            Left(err): Either[ArtifactError, Unit]
         }
       }
     }
@@ -159,7 +163,8 @@ import scala.util.control.NonFatal
           .find(_.autoMatches(artifact.url, None))
           .map(_.authentication)
         artifact.withAuthentication(authOpt)
-      } else
+      }
+      else
         artifact
     }
 
@@ -173,8 +178,7 @@ import scala.util.control.NonFatal
     artifact: Artifact,
     policy: CachePolicy,
     retry: Int = retry
-  ): EitherT[F, ArtifactError, File] = {
-
+  ): EitherT[F, ArtifactError, File] =
     EitherT {
       download(
         artifact,
@@ -189,7 +193,10 @@ import scala.util.control.NonFatal
         val checksumResults = checksums0.map {
           case None => None
           case Some(c) =>
-            val url = artifact.checksumUrls.getOrElse(c, s"${artifact.url}.${c.toLowerCase(Locale.ROOT).filter(_ != '-')}")
+            val url = artifact.checksumUrls.getOrElse(
+              c,
+              s"${artifact.url}.${c.toLowerCase(Locale.ROOT).filter(_ != '-')}"
+            )
             Some((c, url, resultsMap.get(url)))
         }
         val checksum = checksumResults.collectFirst {
@@ -222,12 +229,12 @@ import scala.util.control.NonFatal
         validateChecksum(artifact, c).map(_ => f)
     }.leftFlatMap {
       case err: ArtifactError.WrongChecksum =>
-        val badFile = localFile(artifact.url, artifact.authentication.map(_.user))
+        val badFile         = localFile(artifact.url, artifact.authentication.map(_.user))
         val badChecksumFile = new File(err.sumFile)
         val foundBadFileInCache = {
           val location0 = location.getCanonicalPath.stripSuffix(File.separator) + File.separator
           badFile.getCanonicalPath.startsWith(location0) &&
-            badChecksumFile.getCanonicalPath.startsWith(location0)
+          badChecksumFile.getCanonicalPath.startsWith(location0)
         }
         if (retry <= 0 || !foundBadFileInCache)
           EitherT(S.point(Left(err)))
@@ -247,7 +254,6 @@ import scala.util.control.NonFatal
       case err =>
         EitherT(S.point(Left(err)))
     }
-  }
 
   def file(artifact: Artifact): EitherT[F, ArtifactError, File] =
     file(artifact, retry)
@@ -256,10 +262,14 @@ import scala.util.control.NonFatal
     cachePolicies.tail.map(filePerPolicy(artifact, _, retry))
       .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry))(_ orElse _)
 
-  private def fetchPerPolicy(artifact: Artifact, policy: CachePolicy): EitherT[F, String, String] = {
+  private def fetchPerPolicy(
+    artifact: Artifact,
+    policy: CachePolicy
+  ): EitherT[F, String, String] = {
 
     val (artifact0, links) =
-      if (artifact.url.endsWith("/.links")) (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
+      if (artifact.url.endsWith("/.links"))
+        (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
       else (artifact, false)
 
     filePerPolicy(artifact0, policy).leftMap(_.describe).flatMap { f =>
@@ -276,7 +286,8 @@ import scala.util.control.NonFatal
               else
                 WebPage.listElements(artifact0.url, new String(Files.readAllBytes(f.toPath), UTF_8))
                   .mkString("\n")
-            } else
+            }
+            else
               new String(Files.readAllBytes(f.toPath), UTF_8)
           Right(content)
         }
@@ -285,66 +296,68 @@ import scala.util.control.NonFatal
             Left(s"Could not read (file:${f.getCanonicalPath}): ${e.getMessage}")
         }
 
-      val res = if (f.exists()) {
-        if (f.isDirectory) {
-          if (artifact0.url.startsWith("file:")) {
+      val res =
+        if (f.exists())
+          if (f.isDirectory)
+            if (artifact0.url.startsWith("file:")) {
 
-            val content =
-              if (links)
-                f.listFiles()
-                  .map { c =>
-                    val name = c.getName
-                    if (c.isDirectory)
-                      name + "/"
-                    else
-                      name
-                  }
-                  .sorted
-                  .mkString("\n")
-              else {
+              val content =
+                if (links)
+                  f.listFiles()
+                    .map { c =>
+                      val name = c.getName
+                      if (c.isDirectory)
+                        name + "/"
+                      else
+                        name
+                    }
+                    .sorted
+                    .mkString("\n")
+                else {
 
-                val elements = f.listFiles()
-                  .map { c =>
-                    val name = c.getName
-                    if (c.isDirectory)
-                      name + "/"
-                    else
-                      name
-                  }
-                  .sorted
-                  .map { name0 =>
-                    s"""<li><a href="$name0">$name0</a></li>"""
-                  }
-                  .mkString
+                  val elements = f.listFiles()
+                    .map { c =>
+                      val name = c.getName
+                      if (c.isDirectory)
+                        name + "/"
+                      else
+                        name
+                    }
+                    .sorted
+                    .map { name0 =>
+                      s"""<li><a href="$name0">$name0</a></li>"""
+                    }
+                    .mkString
 
-                s"""<!DOCTYPE html>
-                   |<html>
-                   |<head></head>
-                   |<body>
-                   |<ul>
-                   |$elements
-                   |</ul>
-                   |</body>
-                   |</html>
+                  s"""<!DOCTYPE html>
+                     |<html>
+                     |<head></head>
+                     |<body>
+                     |<ul>
+                     |$elements
+                     |</ul>
+                     |</body>
+                     |</html>
                  """.stripMargin
-              }
+                }
 
-            Right(content)
-          } else {
-            val f0 = new File(f, ".directory")
+              Right(content)
+            }
+            else {
+              val f0 = new File(f, ".directory")
 
-            if (f0.exists()) {
-              if (f0.isDirectory)
-                Left(s"Woops: ${f.getCanonicalPath} is a directory")
+              if (f0.exists())
+                if (f0.isDirectory)
+                  Left(s"Woops: ${f.getCanonicalPath} is a directory")
+                else
+                  read(f0)
               else
-                read(f0)
-            } else
-              notFound(f0)
-          }
-        } else
-          read(f)
-      } else
-        notFound(f)
+                notFound(f0)
+            }
+          else
+            read(f)
+        else
+          notFound(f)
 
       EitherT(S.point[Either[String, String]](res))
     }
@@ -352,13 +365,16 @@ import scala.util.control.NonFatal
 
   def fetch: Cache.Fetch[F] =
     a =>
-      cachePolicies.tail.foldLeft(fetchPerPolicy(a, cachePolicies.head))(_ orElse fetchPerPolicy(a, _))
+      cachePolicies.tail
+        .foldLeft(fetchPerPolicy(a, cachePolicies.head))(_ orElse fetchPerPolicy(a, _))
 
   override def fetchs: Seq[Cache.Fetch[F]] =
+    // format: off
     cachePolicies.map { p =>
       (a: Artifact) =>
         fetchPerPolicy(a, p)
     }
+    // format: on
 
   lazy val ec = ExecutionContext.fromExecutorService(pool)
 
@@ -366,7 +382,12 @@ import scala.util.control.NonFatal
 
 object FileCache {
 
-  private[coursier] def localFile0(url: String, cache: File, user: Option[String], localArtifactsShouldBeCached: Boolean): File =
+  private[coursier] def localFile0(
+    url: String,
+    cache: File,
+    user: Option[String],
+    localArtifactsShouldBeCached: Boolean
+  ): File =
     CachePath.localFile(url, cache, user.orNull, localArtifactsShouldBeCached)
 
   private def auxiliaryFilePrefix(file: File): String =
@@ -387,15 +408,10 @@ object FileCache {
     new File(file.getParentFile, s"${auxiliaryFilePrefix(file)}$key0")
   }
 
-
-
   def apply[F[_]]()(implicit S: Sync[F] = Task.sync): FileCache[F] =
     FileCache(CacheDefaults.location)(S)
 
-
-  /**
-    * Store computed cache in a file so we don't have to recompute them over and over.
-    */
+  /* Store computed cache in a file so we don't have to recompute them over and over. */
   private def persistedDigest(location: File, sumType: String, localFile: File): BigInteger = {
     // only store computed files within coursier cache folder
     val isInCache: Boolean = {
@@ -406,15 +422,17 @@ object FileCache {
     val digested: Array[Byte] =
       if (!isInCache) computeDigest(sumType, localFile)
       else {
-        val cacheFile = auxiliaryFile(localFile, sumType + ".computed")
+        val cacheFile     = auxiliaryFile(localFile, sumType + ".computed")
         val cacheFilePath = cacheFile.toPath
 
-        try Files.readAllBytes(cacheFilePath) catch {
+        try Files.readAllBytes(cacheFilePath)
+        catch {
           case _: NoSuchFileException =>
             val bytes: Array[Byte] = computeDigest(sumType, localFile)
 
             // Atomically write file by using a temp file in the same directory
-            val tmpFile = File.createTempFile(cacheFile.getName, ".tmp", cacheFile.getParentFile).toPath
+            val tmpFile =
+              File.createTempFile(cacheFile.getName, ".tmp", cacheFile.getParentFile).toPath
             try {
               Files.write(tmpFile, bytes)
               try Files.move(tmpFile, cacheFilePath, StandardCopyOption.ATOMIC_MOVE)
@@ -422,7 +440,8 @@ object FileCache {
                 // In the case of multiple processes/threads which all compute this digest, first thread wins.
                 case _: FileAlreadyExistsException => ()
               }
-            } finally Files.deleteIfExists(tmpFile)
+            }
+            finally Files.deleteIfExists(tmpFile)
 
             bytes
         }
@@ -438,7 +457,8 @@ object FileCache {
     try {
       is = new FileInputStream(localFile)
       FileUtil.withContent(is, new FileUtil.UpdateDigest(md))
-    } finally is.close()
+    }
+    finally is.close()
 
     md.digest()
   }

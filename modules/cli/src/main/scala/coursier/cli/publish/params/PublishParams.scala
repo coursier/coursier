@@ -16,7 +16,11 @@ import coursier.cli.publish.conf.Conf
 import coursier.cli.publish.options.PublishOptions
 import coursier.publish.Content
 import coursier.publish.bintray.BintrayApi
-import coursier.publish.checksum.logger.{BatchChecksumLogger, ChecksumLogger, InteractiveChecksumLogger}
+import coursier.publish.checksum.logger.{
+  BatchChecksumLogger,
+  ChecksumLogger,
+  InteractiveChecksumLogger
+}
 import coursier.publish.download.logger.{DownloadLogger, SimpleDownloadLogger}
 import coursier.publish.signing.{GpgSigner, NopSigner, Signer}
 import coursier.publish.signing.logger.{BatchSignerLogger, InteractiveSignerLogger, SignerLogger}
@@ -80,15 +84,15 @@ final case class PublishParams(
     else
       short.getOrElse(dir.getFileName.toString)
 
-
   lazy val signer: Signer =
     if (signature.gpg) {
       val key = signature.gpgKeyOpt match {
-        case None => GpgSigner.Key.Default
+        case None     => GpgSigner.Key.Default
         case Some(id) => GpgSigner.Key.Id(id)
       }
       GpgSigner(key)
-    } else
+    }
+    else
       NopSigner
 
   def maybeWarnSigner(out: PrintStream): Unit =
@@ -98,16 +102,14 @@ final case class PublishParams(
       case _ =>
     }
 
-
   // Signing dummy stuff to trigger any gpg dialog, before our signer logger is set up.
   // The gpg dialog and our logger seem to conflict else, leaving the terminal in a bad state.
   def initSigner: Task[Unit] =
     signer
       .sign(Content.InMemory(Instant.EPOCH, "hello".getBytes(StandardCharsets.UTF_8)))
       .flatMap {
-        case Left(msg) => Task.fail(new Exception(
-          s"Failed to sign: $msg"
-        ))
+        case Left(msg) =>
+          Task.fail(new Exception(s"Failed to sign: $msg"))
         case Right(_) => Task.point(())
       }
 
@@ -122,7 +124,12 @@ final case class PublishParams(
         val authentication = repository.repository.snapshotRepo.authentication
         if (authentication.isEmpty && verbosity >= 0)
           out.println("Warning: no Sonatype credentials passed, trying to proceed anyway")
-        val api = SonatypeApi(client, repo.restBase, repository.repository.snapshotRepo.authentication, verbosity)
+        val api = SonatypeApi(
+          client,
+          repo.restBase,
+          repository.repository.snapshotRepo.authentication,
+          verbosity
+        )
         Hooks.sonatype(repo, api, out, verbosity, batch, es)
 
       case repo: PublishRepository.Bintray =>
@@ -134,20 +141,23 @@ final case class PublishParams(
         val authentication = repository.repository.snapshotRepo.authentication
         if (authentication.isEmpty && verbosity >= 0)
           out.println("Warning: no Bintray credentials passed, trying to proceed anyway") // ???
-        val api = BintrayApi(client, "https://api.bintray.com", Some(repo.authentication), verbosity)
+        val api =
+          BintrayApi(client, "https://api.bintray.com", Some(repo.authentication), verbosity)
         Hooks.bintray(
           api,
           repo.user,
           repo.repository,
           repo.package0,
-          if (repository.bintrayLicenses.isEmpty) Seq("Apache-2.0") /* FIXME */ else repository.bintrayLicenses,
-          repository.bintrayVcsUrlOpt.getOrElse(s"https://bintray.com/${repo.user}/${repo.repository}/${repo.package0}")
+          if (repository.bintrayLicenses.isEmpty) Seq("Apache-2.0") /* FIXME */
+          else repository.bintrayLicenses,
+          repository.bintrayVcsUrlOpt.getOrElse(
+            s"https://bintray.com/${repo.user}/${repo.repository}/${repo.package0}"
+          )
         )
 
       case _ =>
         Hooks.dummy
     }
-
 
   def downloadLogger(out: PrintStream): DownloadLogger =
     new SimpleDownloadLogger(out, verbosity)
@@ -178,13 +188,13 @@ object PublishParams {
     // FIXME Get from options
     val defaultScalaVersion = scala.util.Properties.versionNumberString
 
-    val repositoryV = RepositoryParams(options.repositoryOptions)
-    val metadataV = MetadataParams(options.metadataOptions, defaultScalaVersion)
+    val repositoryV    = RepositoryParams(options.repositoryOptions)
+    val metadataV      = MetadataParams(options.metadataOptions, defaultScalaVersion)
     val singlePackageV = SinglePackageParams(options.singlePackageOptions)
-    val directoryV = DirectoryParams(options.directoryOptions, args)
-    val checksumV = ChecksumParams(options.checksumOptions)
-    val signatureV = SignatureParams(options.signatureOptions)
-    val cacheV = options.cacheOptions.params
+    val directoryV     = DirectoryParams(options.directoryOptions, args)
+    val checksumV      = ChecksumParams(options.checksumOptions)
+    val signatureV     = SignatureParams(options.signatureOptions)
+    val cacheV         = options.cacheOptions.params
 
     val verbosityV =
       (options.quiet, Tag.unwrap(options.verbose)) match {
@@ -205,7 +215,16 @@ object PublishParams {
       RefreshLogger.defaultFallbackMode
     }
 
-    val res = (repositoryV, metadataV, singlePackageV, directoryV, checksumV, signatureV, cacheV, verbosityV).mapN {
+    val res = (
+      repositoryV,
+      metadataV,
+      singlePackageV,
+      directoryV,
+      checksumV,
+      signatureV,
+      cacheV,
+      verbosityV
+    ).mapN {
       (repository, metadata, singlePackage, directory, checksum, signature, cache, verbosity) =>
         PublishParams(
           repository,
@@ -236,7 +255,7 @@ object PublishParams {
               p.directory.directories.isEmpty &&
               p.directory.sbtDirectories.forall(_ == Paths.get("."))
             if (loadDefaultIfExists) {
-              val default = Paths.get("publish.json")
+              val default        = Paths.get("publish.json")
               val projectDefault = Paths.get("project/publish.json")
               if (Files.isRegularFile(default))
                 Conf.load(default)
@@ -248,18 +267,19 @@ object PublishParams {
                   .map(Some(_))
               else
                 Right(None)
-            } else
+            }
+            else
               Right(None)
           case Some(c) =>
             val p = Paths.get(c)
-            if (Files.exists(p)) {
+            if (Files.exists(p))
               if (Files.isRegularFile(p))
                 Conf.load(p)
                   .left.map(NonEmptyList.of(_))
                   .map(Some(_))
               else
                 Left(NonEmptyList.of(s"Conf file $c is not a file"))
-            } else
+            else
               Left(NonEmptyList.of(s"Conf file $c not found"))
         }
       } yield confOpt.fold(p)(p.withConf)

@@ -24,7 +24,8 @@ object Util {
     if (cond)
       exit(msg)
 
-  implicit class ValidatedExitOnError[T](private val validated: ValidatedNel[String, T]) extends AnyVal {
+  implicit class ValidatedExitOnError[T](private val validated: ValidatedNel[String, T])
+      extends AnyVal {
     def exitOnError(errStream: PrintStream = System.err, exitCode: Int = 1): T =
       validated.toEither match {
         case Left(errors) =>

@@ -24,6 +24,7 @@ public final class CoursierPaths {
 
     private static final Object cacheDirectoryLock = new Object();
     private static volatile File cacheDirectory0 = null;
+    private static volatile File archiveCacheDirectory0 = null;
     private static volatile File jvmCacheDirectory0 = null;
 
     private static final Object configDirectoryLock = new Object();
@@ -36,6 +37,10 @@ public final class CoursierPaths {
 
     private static String computeCacheDirectory() throws IOException {
         return computeCacheDirectory("COURSIER_CACHE", "coursier.cache", "v1");
+    }
+
+    private static String computeArchiveCacheDirectory() throws IOException {
+        return computeCacheDirectory("COURSIER_ARCHIVE_CACHE", "coursier.archive.cache", "arc");
     }
 
     private static String computeJvmCacheDirectory() throws IOException {
@@ -69,6 +74,18 @@ public final class CoursierPaths {
             }
 
         return cacheDirectory0;
+    }
+
+    public static File archiveCacheDirectory() throws IOException {
+
+        if (archiveCacheDirectory0 == null)
+            synchronized (cacheDirectoryLock) {
+                if (archiveCacheDirectory0 == null) {
+                    archiveCacheDirectory0 = new File(computeArchiveCacheDirectory()).getAbsoluteFile();
+                }
+            }
+
+        return archiveCacheDirectory0;
     }
 
     public static File jvmCacheDirectory() throws IOException {

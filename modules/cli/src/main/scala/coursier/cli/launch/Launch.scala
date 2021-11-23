@@ -6,9 +6,9 @@ import java.net.{URL, URLClassLoader}
 import java.nio.file.{Files, Path}
 import java.util.concurrent.ExecutorService
 
-import caseapp.CaseApp
 import caseapp.core.RemainingArgs
 import cats.data.Validated
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.fetch.Fetch
 import coursier.cli.params.{ArtifactParams, SharedLaunchParams, SharedLoaderParams}
 import coursier.cli.resolve.{Resolve, ResolveException}
@@ -29,7 +29,7 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
 
-object Launch extends CaseApp[LaunchOptions] {
+object Launch extends CoursierCommand[LaunchOptions] {
 
   def baseLoader: ClassLoader = {
 
@@ -37,7 +37,7 @@ object Launch extends CaseApp[LaunchOptions] {
     def rootLoader(cl: ClassLoader): ClassLoader =
       Option(cl.getParent) match {
         case Some(par) => rootLoader(par)
-        case None => cl
+        case None      => cl
       }
 
     rootLoader(ClassLoader.getSystemClassLoader)
@@ -87,7 +87,7 @@ object Launch extends CaseApp[LaunchOptions] {
 
     val cpOpts = cp match {
       case Right(cp0) => Seq("-cp", cp0, mainClass)
-      case Left(jar) => Seq("-jar", jar.getAbsolutePath)
+      case Left(jar)  => Seq("-jar", jar.getAbsolutePath)
     }
 
     val cmd = Seq(javaPath) ++
@@ -109,7 +109,9 @@ object Launch extends CaseApp[LaunchOptions] {
     Right {
       () =>
         if (verbosity >= 1)
-          System.err.println(s"Running ${cmd.map("\"" + _.replace("\"", "\\\"") + "\"").mkString(" ")}")
+          System.err.println(
+            "Running " + cmd.map("\"" + _.replace("\"", "\\\"") + "\"").mkString(" ")
+          )
         if (execve0) {
           val fullEnv = (sys.env ++ extraEnv.transientUpdates())
             .iterator
@@ -122,7 +124,8 @@ object Launch extends CaseApp[LaunchOptions] {
           Execve.execve(new File(javaPath).getAbsolutePath, cmd.toArray, fullEnv)
           // execve should not return
           sys.error("something went wrong")
-        } else {
+        }
+        else {
           val p = b.start()
           p.waitFor()
         }
@@ -149,14 +152,15 @@ object Launch extends CaseApp[LaunchOptions] {
         catch {
           case e: ClassNotFoundException =>
             Left(new LaunchException.MainClassNotFound(mainClass, e))
-          }
+        }
       }
       method <- {
         try {
           val m = cls.getMethod("main", classOf[Array[String]])
           m.setAccessible(true)
           Right(m)
-        } catch {
+        }
+        catch {
           case e: NoSuchMethodException =>
             Left(new LaunchException.MainMethodNotFound(cls, e))
         }
@@ -170,8 +174,8 @@ object Launch extends CaseApp[LaunchOptions] {
       }
     } yield {
       () =>
-        val currentThread = Thread.currentThread()
-        val previousLoader = currentThread.getContextClassLoader
+        val currentThread      = Thread.currentThread()
+        val previousLoader     = currentThread.getContextClassLoader
         val previousProperties = properties.map(_._1).map(k => k -> Option(System.getProperty(k)))
         try {
           currentThread.setContextClassLoader(loader0)
@@ -186,7 +190,7 @@ object Launch extends CaseApp[LaunchOptions] {
         finally {
           currentThread.setContextClassLoader(previousLoader)
           previousProperties.foreach {
-            case (k, None) => System.clearProperty(k)
+            case (k, None)    => System.clearProperty(k)
             case (k, Some(v)) => System.setProperty(k, v)
           }
         }
@@ -203,22 +207,26 @@ object Launch extends CaseApp[LaunchOptions] {
     extraJars: Seq[File],
     classpathOrder: Boolean
   ): Seq[(Option[String], Array[File])] = {
-    val fileMap = files.toMap
+    val fileMap      = files.toMap
     val alreadyAdded = Set.empty[File] // unused???
     val parents = sharedLoaderParams.loaderNames.map { name =>
-        val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
-        val subRes = res.subset(deps.map(_.dependency(JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")), scalaVersionOpt.getOrElse(""), platformOpt.getOrElse(""))))
-        val artifacts = coursier.Artifacts.artifacts(
-          subRes,
-          artifactParams.classifiers,
-          Option(artifactParams.mainArtifacts).map(x => x),
-          Option(artifactParams.artifactTypes),
-          classpathOrder
-        ).map(_._3)
-        val files0 = artifacts
-          .map(a => fileMap.getOrElse(a, sys.error("should not happen")))
-          .filter(!alreadyAdded(_))
-        Some(name) -> files0.toArray
+      val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
+      val subRes = res.subset(deps.map(_.dependency(
+        JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")),
+        scalaVersionOpt.getOrElse(""),
+        platformOpt.getOrElse("")
+      )))
+      val artifacts = coursier.Artifacts.artifacts(
+        subRes,
+        artifactParams.classifiers,
+        Option(artifactParams.mainArtifacts).map(x => x),
+        Option(artifactParams.artifactTypes),
+        classpathOrder
+      ).map(_._3)
+      val files0 = artifacts
+        .map(a => fileMap.getOrElse(a, sys.error("should not happen")))
+        .filter(!alreadyAdded(_))
+      Some(name) -> files0.toArray
     }
     val cp = files.map(_._2).filterNot(alreadyAdded).toArray ++ extraJars
     parents :+ (None, cp)
@@ -232,24 +240,38 @@ object Launch extends CaseApp[LaunchOptions] {
         new SharedClassLoader(urls, parent, Array(name))
     }
 
-  def mainClass(params: SharedLaunchParams, files: Seq[File], mainDependencyOpt: Option[Dependency]) =
+  def mainClass(
+    params: SharedLaunchParams,
+    files: Seq[File],
+    mainDependencyOpt: Option[Dependency]
+  ): Task[String] =
     params.mainClassOpt match {
       case Some(c) =>
         Task.point(c)
       case None =>
-        Task.delay(MainClass.mainClasses(files)).flatMap { m =>
-          if (params.resolve.output.verbosity >= 2)
-            System.err.println(
-              "Found main classes:" + System.lineSeparator() +
-                m.map { case ((vendor, title), mainClass) => s"  $mainClass (vendor: $vendor, title: $title)" + System.lineSeparator() }.mkString +
-                System.lineSeparator()
-            )
-          MainClass.retainedMainClassOpt(m, mainDependencyOpt.map(d => (d.module.organization.value, d.module.name.value))) match {
-            case Some(c) =>
-              Task.point(c)
-            case None =>
-              Task.fail(new LaunchException.NoMainClassFound)
-          }
+        Task.delay(MainClass.mainClassesWithMainOne(files)).flatMap {
+          case (fromFirstJarOpt, map) =>
+            if (params.resolve.output.verbosity >= 2) {
+              System.err.println(s"Main class in first JAR: $fromFirstJarOpt")
+              System.err.println(
+                "Found main classes:" + System.lineSeparator() +
+                  map
+                    .map { case ((vendor, title), mainClass) =>
+                      s"  $mainClass (vendor: $vendor, title: $title)" + System.lineSeparator()
+                    }
+                    .mkString +
+                  System.lineSeparator()
+              )
+            }
+            MainClass.retainedMainClassOpt(
+              map,
+              mainDependencyOpt.map(d => (d.module.organization.value, d.module.name.value))
+            ).orElse(fromFirstJarOpt) match {
+              case Some(c) =>
+                Task.point(c)
+              case None =>
+                Task.fail(new LaunchException.NoMainClassFound)
+            }
         }
     }
 
@@ -277,7 +299,8 @@ object Launch extends CaseApp[LaunchOptions] {
         )
 
         (props, Some(jepJar))
-      } else
+      }
+      else
         (Nil, None)
 
     val (pythonProps, pythonEnv) =
@@ -290,7 +313,8 @@ object Launch extends CaseApp[LaunchOptions] {
             .map(e => (e.getKey, e.getValue))
             .toVector
           (props, EnvironmentUpdate(Seq("PYTHONHOME" -> home), Nil))
-        } catch {
+        }
+        catch {
           case NonFatal(e) =>
             if (params.shared.resolve.output.verbosity >= 1)
               System.err.println(s"Cannot get python home: $e")
@@ -342,7 +366,7 @@ object Launch extends CaseApp[LaunchOptions] {
         mainClass0,
         userArgs,
         javaPath,
-        params.javaOptions,
+        params.shared.javaOptions,
         properties0,
         pythonEnv + extraEnv,
         params.shared.resolve.output.verbosity,
@@ -351,7 +375,9 @@ object Launch extends CaseApp[LaunchOptions] {
         .map(f => () => Some(f()))
     else
       launch(hierarchy0, mainClass0, userArgs, properties0)
-        .map(f => { () => f(); None })
+        // format: off
+        .map {f => () => f(); None}
+        // format: on
   }
 
   // same as task below, except:
@@ -368,10 +394,11 @@ object Launch extends CaseApp[LaunchOptions] {
   ): Task[(String, () => Option[Int])] = {
 
     val logger = params.shared.resolve.output.logger()
-    val cache = params.shared.resolve.cache.cache(pool, logger)
+    val cache  = params.shared.resolve.cache.cache(pool, logger)
 
     for {
-      depsAndReposOrError0 <- Task.fromEither(Resolve.depsAndReposOrError(params.shared.resolve, dependencyArgs, cache))
+      depsAndReposOrError0 <-
+        Task.fromEither(Resolve.depsAndReposOrError(params.shared.resolve, dependencyArgs, cache))
       (deps0, repositories, scalaVersionOpt, _) = depsAndReposOrError0
       files <- {
         val params0 = params.shared.resolve.copy(
@@ -422,8 +449,8 @@ object Launch extends CaseApp[LaunchOptions] {
         case s: JavaOrScalaDependency.ScalaDependency =>
           res.rootDependencies.headOption.filter(dep =>
             dep.module.organization == s.baseDependency.module.organization &&
-              dep.module.name.value.startsWith(s.baseDependency.module.name.value) &&
-              dep.version == s.baseDependency.version
+            dep.module.name.value.startsWith(s.baseDependency.module.name.value) &&
+            dep.version == s.baseDependency.version
           ).map { dep =>
             (s.baseDependency.module.name.value, dep.moduleVersion)
           }
@@ -450,11 +477,14 @@ object Launch extends CaseApp[LaunchOptions] {
     stderr: PrintStream = System.err
   ): Task[(String, () => Option[Int])] =
     for {
-      t <- Fetch.task(params.shared.fetch, pool, dependencyArgs, stdout, stderr)
+      t <- Fetch.task(params.shared.fetch(params.channel), pool, dependencyArgs, stdout, stderr)
       (res, scalaVersionOpt, platformOpt, files) = t
       mainClass0 <- mainClass(params.shared, files.map(_._2), res.rootDependencies.headOption)
       props = extraVersionProperty(res, dependencyArgs).toSeq ++ params.shared.properties
-      javaPathEnvUpdate <- params.javaPath(params.shared.resolve.cache.cache(pool, params.shared.resolve.output.logger()))
+      javaPathEnvUpdate <- params.javaPath(params.shared.resolve.cache.cache(
+        pool,
+        params.shared.resolve.output.logger()
+      ))
       (javaPath, envUpdate) = javaPathEnvUpdate
       f <- Task.fromEither {
         launchCall(
@@ -470,7 +500,7 @@ object Launch extends CaseApp[LaunchOptions] {
             params.shared.sharedLoader,
             params.shared.artifact,
             Nil,
-            params.shared.resolve.classpathOrder.getOrElse(true),
+            params.shared.resolve.classpathOrder.getOrElse(true)
           ),
           props,
           envUpdate,
@@ -479,28 +509,34 @@ object Launch extends CaseApp[LaunchOptions] {
       }
     } yield (mainClass0, f)
 
+  override def group: String = CommandGroup.launcher
+
   def run(options: LaunchOptions, args: RemainingArgs): Unit = {
 
     var pool: ExecutorService = null
 
     // get options and dependencies from apps if any
-    val (options0, deps) = LaunchParams(options).toEither.toOption.fold((options, args.remaining)) { initialParams =>
-      val initialRepositories = initialParams.shared.resolve.repositories.repositories
-      val channels = initialParams.shared.resolve.repositories.channels
-      pool = Sync.fixedThreadPool(initialParams.shared.resolve.cache.parallel)
-      val cache = initialParams.shared.resolve.cache.cache(pool, initialParams.shared.resolve.output.logger())
-      val channels0 = Channels(channels.channels, initialRepositories, cache)
-      val res = Resolve.handleApps(options, args.remaining, channels0)(_.addApp(_))
+    val (options0, deps) =
+      LaunchParams(options).toEither.toOption.fold((options, args.remaining)) { initialParams =>
+        val initialRepositories = initialParams.shared.resolve.repositories.repositories
+        val channels            = initialParams.channel.channels
+        pool = Sync.fixedThreadPool(initialParams.shared.resolve.cache.parallel)
+        val cache = initialParams.shared.resolve.cache.cache(
+          pool,
+          initialParams.shared.resolve.output.logger()
+        )
+        val channels0 = Channels(channels, initialRepositories, cache)
+        val res       = Resolve.handleApps(options, args.remaining, channels0)(_.addApp(_))
 
-      if (options.json) {
-        val app = res._1.app
-        val app0 = app.withDependencies((res._2 ++ app.dependencies).toList)
-        println(RawAppDescriptor.encoder(app0).spaces2)
-        sys.exit(0)
+        if (options.json) {
+          val app  = res._1.app
+          val app0 = app.withDependencies((res._2 ++ app.dependencies).toList)
+          println(RawAppDescriptor.encoder(app0).spaces2)
+          sys.exit(0)
+        }
+
+        res
       }
-
-      res
-    }
 
     val params = LaunchParams(options0).exitOnError()
 

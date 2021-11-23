@@ -14,24 +14,26 @@ import scala.concurrent.{ExecutionContext, Future}
 
 package object compatibility {
 
-  private val pool = Sync.fixedThreadPool(6)
+  private val pool              = Sync.fixedThreadPool(6)
   implicit val executionContext = scala.concurrent.ExecutionContext.fromExecutorService(pool)
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] = Future {
-    val f = new File("modules/tests/shared/src/test/resources/" + path)
+    val f                    = new File("modules/tests/shared/src/test/resources/" + path)
     var is0: FileInputStream = null
     try {
       is0 = new FileInputStream(f)
       new String(Platform.readFullySync(is0), UTF_8)
-    } finally {
-      if (is0 != null)
-        is0.close()
     }
+    finally if (is0 != null)
+      is0.close()
   }
 
   private val baseRepo = {
     val dir = Paths.get("modules/tests/metadata")
-    assert(Files.isDirectory(dir), s"we're in ${Paths.get(".").toAbsolutePath.normalize}, no $dir here")
+    assert(
+      Files.isDirectory(dir),
+      s"we're in ${Paths.get(".").toAbsolutePath.normalize}, no $dir here"
+    )
     dir
   }
 
@@ -41,7 +43,9 @@ package object compatibility {
   def artifact[F[_]: Sync]: Repository.Fetch[F] =
     MockCache.create[F](baseRepo, writeMissing = fillChunks, pool = pool).fetch
   def artifactWithProxy[F[_]: Sync](proxy: java.net.Proxy): Repository.Fetch[F] =
-    MockCache.create[F](baseRepo, writeMissing = fillChunks, pool = pool).withProxy(Some(proxy)).fetch
+    MockCache.create[F](baseRepo, writeMissing = fillChunks, pool = pool).withProxy(
+      Some(proxy)
+    ).fetch
 
   val taskArtifact = artifact[Task]
 

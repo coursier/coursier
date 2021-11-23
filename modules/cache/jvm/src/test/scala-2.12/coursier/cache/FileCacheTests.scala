@@ -23,7 +23,7 @@ import scala.util.Try
 
 object FileCacheTests extends TestSuite {
 
-  private val pool = Sync.fixedThreadPool(4)
+  private val pool        = Sync.fixedThreadPool(4)
   private implicit val ec = ExecutionContext.fromExecutorService(pool)
 
   override def utestAfterAll() = {
@@ -36,11 +36,15 @@ object FileCacheTests extends TestSuite {
     .withSslSocketFactory(dummyClientSslContext.getSocketFactory)
     .withHostnameVerifier(dummyHostnameVerifier)
 
-  private def expect(artifact: Artifact, content: String, transform: FileCache[Task] => FileCache[Task]): Unit =
+  private def expect(
+    artifact: Artifact,
+    content: String,
+    transform: FileCache[Task] => FileCache[Task]
+  ): Unit =
     withTmpDir { dir =>
       val c = fileCache0()
         .withLocation(dir.toFile)
-      val res = transform(c).fetch(artifact).run.unsafeRun()
+      val res         = transform(c).fetch(artifact).run.unsafeRun()
       val expectedRes = Right(content)
       assert(res == expectedRes)
     }
@@ -48,13 +52,21 @@ object FileCacheTests extends TestSuite {
   private def expect(artifact: Artifact, content: String): Unit =
     expect(artifact, content, c => c)
 
-  private def expect(uri: Uri, content: String, transform: FileCache[Task] => FileCache[Task]): Unit =
+  private def expect(
+    uri: Uri,
+    content: String,
+    transform: FileCache[Task] => FileCache[Task]
+  ): Unit =
     expect(artifact(uri), content, transform)
 
   private def expect(uri: Uri, content: String): Unit =
     expect(artifact(uri), content, c => c)
 
-  private def error(artifact: Artifact, check: String => Boolean, transform: FileCache[Task] => FileCache[Task]): Unit =
+  private def error(
+    artifact: Artifact,
+    check: String => Boolean,
+    transform: FileCache[Task] => FileCache[Task]
+  ): Unit =
     withTmpDir { dir =>
       val c = fileCache0()
         .withLocation(dir.toFile)
@@ -66,7 +78,11 @@ object FileCacheTests extends TestSuite {
   private def error(artifact: Artifact, check: String => Boolean): Unit =
     error(artifact, check, c => c)
 
-  private def error(uri: Uri, check: String => Boolean, transform: FileCache[Task] => FileCache[Task]): Unit =
+  private def error(
+    uri: Uri,
+    check: String => Boolean,
+    transform: FileCache[Task] => FileCache[Task]
+  ): Unit =
     error(artifact(uri), check, transform)
 
   private def error(uri: Uri, check: String => Boolean): Unit =
@@ -83,7 +99,7 @@ object FileCacheTests extends TestSuite {
 
         def routes(resp: Location => IO[Response[IO]]): HttpService[IO] =
           HttpService[IO] {
-            case GET -> Root / "hello" => Ok("hello")
+            case GET -> Root / "hello"    => Ok("hello")
             case GET -> Root / "redirect" => resp(Location(Uri(path = "/hello")))
           }
         def test(resp: Location => IO[Response[IO]]): Unit =
@@ -154,7 +170,7 @@ object FileCacheTests extends TestSuite {
 
       test("httpToAuthHttps") {
 
-        val realm = "secure realm"
+        val realm    = "secure realm"
         val userPass = ("secure", "sEcUrE")
 
         def withServers[T](f: (Uri, Uri) => T): T = {
@@ -163,7 +179,10 @@ object FileCacheTests extends TestSuite {
 
           val httpRoutes = HttpService[IO] {
             case GET -> Root / "auth-redirect" =>
-              TemporaryRedirect("redirecting", Location(httpsBaseOpt.getOrElse(???) / "auth" / "hello"))
+              TemporaryRedirect(
+                "redirecting",
+                Location(httpsBaseOpt.getOrElse(???) / "auth" / "hello")
+              )
           }
 
           val httpsRoutes = HttpService[IO] {
@@ -209,7 +228,7 @@ object FileCacheTests extends TestSuite {
 
       test("httpToAuthHttp") {
 
-        val realm = "simple realm"
+        val realm    = "simple realm"
         val userPass = ("simple", "SiMpLe")
 
         val routes = HttpService[IO] {
@@ -281,7 +300,7 @@ object FileCacheTests extends TestSuite {
       }
 
       test("authHttpToAuthHttp") {
-        val realm = "simple realm"
+        val realm    = "simple realm"
         val userPass = ("simple", "SiMpLe")
 
         def routes(challengeParams: Map[String, String] = Map.empty) = HttpService[IO] {
@@ -297,7 +316,7 @@ object FileCacheTests extends TestSuite {
               unauth(realm, params = challengeParams)
         }
 
-        def testEnabled(challengeParams: Map[String, String] = Map.empty) = {
+        def testEnabled(challengeParams: Map[String, String] = Map.empty) =
           withHttpServer(routes(challengeParams)) { base =>
             expect(
               base / "redirect",
@@ -310,9 +329,8 @@ object FileCacheTests extends TestSuite {
               )
             )
           }
-        }
 
-        def testEnabledAllRealms(challengeParams: Map[String, String] = Map.empty) = {
+        def testEnabledAllRealms(challengeParams: Map[String, String] = Map.empty) =
           withHttpServer(routes(challengeParams)) { base =>
             expect(
               base / "redirect",
@@ -325,9 +343,8 @@ object FileCacheTests extends TestSuite {
               )
             )
           }
-        }
 
-        def testEnabledSeveralCreds(challengeParams: Map[String, String] = Map.empty) = {
+        def testEnabledSeveralCreds(challengeParams: Map[String, String] = Map.empty) =
           withHttpServer(routes(challengeParams)) { base =>
             expect(
               base / "redirect",
@@ -337,22 +354,23 @@ object FileCacheTests extends TestSuite {
                   .withRealm(realm)
                   .withHttpsOnly(false)
                   .withMatchHost(true),
-                credentials(base.copy(authority = base.authority.map(a => a.copy(port = a.port.map(_ + 1)))), ("something", "pass123"))
+                credentials(
+                  base.copy(authority = base.authority.map(a => a.copy(port = a.port.map(_ + 1)))),
+                  ("something", "pass123")
+                )
                   .withRealm("other realm")
                   .withMatchHost(true)
               )
             )
           }
-        }
 
-        def testDisabled(challengeParams: Map[String, String] = Map.empty) = {
+        def testDisabled(challengeParams: Map[String, String] = Map.empty) =
           withHttpServer(routes(challengeParams)) { base =>
             error(
               base / "redirect",
               _.startsWith("unauthorized: ")
             )
           }
-        }
 
         test("oldRfc2617") {
           test("enabled") {
@@ -389,8 +407,8 @@ object FileCacheTests extends TestSuite {
         test("beyondRfc7617") { // this tests that the underlying challenge-parsing code is robust enough
           val challengeParams = Map(
             "schtroumpf" -> "salsepareille",
-            "charset" -> "iso-8859-15", // out of RFC 7617
-            "abc" -> "def"
+            "charset"    -> "iso-8859-15", // out of RFC 7617
+            "abc"        -> "def"
           )
           test("enabled") {
             testEnabled(challengeParams)
@@ -409,7 +427,7 @@ object FileCacheTests extends TestSuite {
 
       test("httpsToAuthHttps") {
 
-        val realm = "secure realm"
+        val realm    = "secure realm"
         val userPass = ("secure", "sEcUrE")
 
         val routes = HttpService[IO] {
@@ -462,7 +480,7 @@ object FileCacheTests extends TestSuite {
 
       test("authHttpsToAuthHttps") {
 
-        val realm = "secure realm"
+        val realm    = "secure realm"
         val userPass = ("secure", "sEcUrE")
 
         val routes = HttpService[IO] {
@@ -518,10 +536,10 @@ object FileCacheTests extends TestSuite {
 
       test("authHttpToNoAuthHttps") {
 
-        val httpRealm = "simple realm"
+        val httpRealm  = "simple realm"
         val httpsRealm = "secure realm"
 
-        val httpUserPass = ("simple", "SiMpLe")
+        val httpUserPass  = ("simple", "SiMpLe")
         val httpsUserPass = ("secure", "sEcUrE")
 
         def withServers[T](f: (Uri, Uri) => T): T = {
@@ -630,10 +648,10 @@ object FileCacheTests extends TestSuite {
 
       test("credentialFile") {
 
-        val httpRealm = "simple realm"
+        val httpRealm  = "simple realm"
         val httpsRealm = "secure realm"
 
-        val httpUserPass = ("simple", "SiMpLe")
+        val httpUserPass  = ("simple", "SiMpLe")
         val httpsUserPass = ("secure", "sEcUrE")
 
         def withServers[T](f: (Uri, Uri) => T): T = {
@@ -642,7 +660,10 @@ object FileCacheTests extends TestSuite {
 
           val httpRoutes = HttpService[IO] {
             case GET -> Root / "auth-redirect" =>
-              TemporaryRedirect("redirecting", Location(httpsBaseOpt.getOrElse(???) / "auth" / "hello"))
+              TemporaryRedirect(
+                "redirecting",
+                Location(httpsBaseOpt.getOrElse(???) / "auth" / "hello")
+              )
             case req @ GET -> Root / "auth" / "redirect" =>
               if (authorized(req, httpUserPass))
                 TemporaryRedirect("redirecting", Location(Uri(path = "/auth/hello")))
@@ -699,10 +720,10 @@ object FileCacheTests extends TestSuite {
 
       test("ransomCase") {
 
-        val httpRealm = "simple realm"
+        val httpRealm  = "simple realm"
         val httpsRealm = "secure realm"
 
-        val httpUserPass = ("simple", "SiMpLe")
+        val httpUserPass  = ("simple", "SiMpLe")
         val httpsUserPass = ("secure", "sEcUrE")
 
         def withServers[T](f: (Uri, Uri) => T): T = {
@@ -711,7 +732,10 @@ object FileCacheTests extends TestSuite {
 
           val httpRoutes = HttpService[IO] {
             case GET -> Root / "auth-redirect" =>
-              TemporaryRedirect("redirecting", Location(httpsBaseOpt.getOrElse(???) / "auth" / "hello"))
+              TemporaryRedirect(
+                "redirecting",
+                Location(httpsBaseOpt.getOrElse(???) / "auth" / "hello")
+              )
             case req @ GET -> Root / "auth" / "redirect" =>
               if (authorized(req, httpUserPass))
                 TemporaryRedirect("redirecting", Location(Uri(path = "/auth/hello")))
@@ -817,7 +841,7 @@ object FileCacheTests extends TestSuite {
       }
 
       test("passCredentialsOnRedirect") {
-        val realm = "secure realm"
+        val realm    = "secure realm"
         val userPass = ("secure", "sEcUrE")
 
         def withServers[T](secondServerUseSsl: Boolean = true)(f: (Uri, Uri) => T): T = {
@@ -901,7 +925,7 @@ object FileCacheTests extends TestSuite {
       }
 
       test("decodeGzip") {
-        val data = new ByteArrayOutputStream
+        val data       = new ByteArrayOutputStream
         val gzipStream = new GZIPOutputStream(data)
         gzipStream.write("hello".getBytes(StandardCharsets.UTF_8))
         gzipStream.close()
@@ -920,7 +944,7 @@ object FileCacheTests extends TestSuite {
 
       test("authThenNotFound") {
 
-        val realm = "secure realm"
+        val realm    = "secure realm"
         val userPass = ("secure", "sEcUrE")
 
         val routes = HttpService[IO] {
@@ -974,7 +998,7 @@ object FileCacheTests extends TestSuite {
       test("with classloader") {
         withTmpDir { dir =>
           async {
-            val classloader = 
+            val classloader =
               new URLClassLoader(
                 CustomLoaderClasspath.files.map(new URL(_)).toArray
               )
@@ -992,7 +1016,7 @@ object FileCacheTests extends TestSuite {
 
             res match {
               case Right(file) =>
-                val actual = new String(Files.readAllBytes(file.toPath))
+                val actual   = new String(Files.readAllBytes(file.toPath))
                 val expected = new String(Files.readAllBytes(Paths.get("README.md")))
                 assert(actual == expected)
 
@@ -1013,8 +1037,8 @@ object FileCacheTests extends TestSuite {
           Map(
             "SHA-512" -> s"$dummyFileUri.sha512", // should not exist
             "SHA-256" -> s"$dummyFileUri.sha256", // should not exist
-            "SHA-1" -> s"$dummyFileUri.sha1",
-            "MD5" -> s"$dummyFileUri.md5"
+            "SHA-1"   -> s"$dummyFileUri.sha1",
+            "MD5"     -> s"$dummyFileUri.md5"
           ),
           Map(),
           changing = false,
@@ -1081,10 +1105,10 @@ object FileCacheTests extends TestSuite {
       test("fromHeader") {
 
         val content = "ok\n"
-        val b = content.getBytes(StandardCharsets.UTF_8)
-        val sha256 = TestUtil.sha256(b)
-        val sha1 = TestUtil.sha1(b)
-        val md5 = TestUtil.md5(b)
+        val b       = content.getBytes(StandardCharsets.UTF_8)
+        val sha256  = TestUtil.sha256(b)
+        val sha1    = TestUtil.sha1(b)
+        val md5     = TestUtil.md5(b)
 
         val routes = HttpService[IO] {
           case GET -> Root / "foo.txt" =>
@@ -1101,7 +1125,7 @@ object FileCacheTests extends TestSuite {
             Map(
               // no SHA-256 entry - must work fine despite that
               "SHA-1" -> uri.withPath(uri.path + ".sha1").renderString,
-              "MD5" -> uri.withPath(uri.path + ".md5").renderString
+              "MD5"   -> uri.withPath(uri.path + ".md5").renderString
             ),
             Map.empty,
             changing = false,
@@ -1123,7 +1147,7 @@ object FileCacheTests extends TestSuite {
 
     test("lastModifiedEx") {
       withTmpDir { dir =>
-        val url = "https://foo-does-no-exist-zzzzzzz/a.pom"
+        val url       = "https://foo-does-no-exist-zzzzzzz/a.pom"
         val cacheFile = dir.resolve(url.replace("://", "/"))
         Util.createDirectories(cacheFile.getParent)
         Files.write(cacheFile, Array.emptyByteArray)
@@ -1140,15 +1164,15 @@ object FileCacheTests extends TestSuite {
 
     test("stored digests work - SHA1") {
       withTmpDir { dir =>
-        val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
+        val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
         val artifact = Artifact(
           dummyFileUri,
           Map(
             "SHA-512" -> s"$dummyFileUri.sha512", // should not exist
             "SHA-256" -> s"$dummyFileUri.sha256", // should not exist
-            "SHA-1" -> s"$dummyFileUri.sha1",
-            "MD5" -> s"$dummyFileUri.md5"
+            "SHA-1"   -> s"$dummyFileUri.sha1",
+            "MD5"     -> s"$dummyFileUri.md5"
           ),
           Map(),
           changing = false,
@@ -1167,8 +1191,8 @@ object FileCacheTests extends TestSuite {
         res match {
           case Right(file: File) =>
             val computedPath = FileCache.auxiliaryFile(file, "SHA-1" + ".computed")
-            val expected = stringToByteArray("f9627d29027e5a853b65242cfbbb44f354f3836f")
-            val actual = Files.readAllBytes(computedPath.toPath)
+            val expected     = stringToByteArray("f9627d29027e5a853b65242cfbbb44f354f3836f")
+            val actual       = Files.readAllBytes(computedPath.toPath)
             assert(util.Arrays.equals(actual, expected))
           case Left(e) => throw e
         }
@@ -1177,15 +1201,15 @@ object FileCacheTests extends TestSuite {
 
     test("stored digests work - MD5") {
       withTmpDir { dir =>
-        val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
+        val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
         val artifact = Artifact(
           dummyFileUri,
           Map(
             "SHA-512" -> s"$dummyFileUri.sha512", // should not exist
             "SHA-256" -> s"$dummyFileUri.sha256", // should not exist
-            "SHA-1" -> s"$dummyFileUri.sha1",
-            "MD5" -> s"$dummyFileUri.md5"
+            "SHA-1"   -> s"$dummyFileUri.sha1",
+            "MD5"     -> s"$dummyFileUri.md5"
           ),
           Map(),
           changing = false,
@@ -1203,8 +1227,8 @@ object FileCacheTests extends TestSuite {
         res match {
           case Right(file: File) =>
             val computedPath = FileCache.auxiliaryFile(file, "MD5" + ".computed")
-            val expected = stringToByteArray("001717e73bca14e4fb2df3cabd6eac98")
-            val actual = Files.readAllBytes(computedPath.toPath)
+            val expected     = stringToByteArray("001717e73bca14e4fb2df3cabd6eac98")
+            val actual       = Files.readAllBytes(computedPath.toPath)
             assert(util.Arrays.equals(actual, expected))
           case Left(e) => throw e
         }
@@ -1213,15 +1237,15 @@ object FileCacheTests extends TestSuite {
 
     test("stored digests should not be stored outside of cache") {
       withTmpDir { dir =>
-        val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
+        val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
         val artifact = Artifact(
           dummyFileUri,
           Map(
             "SHA-512" -> s"$dummyFileUri.sha512", // should not exist
             "SHA-256" -> s"$dummyFileUri.sha256", // should not exist
-            "SHA-1" -> s"$dummyFileUri.sha1",
-            "MD5" -> s"$dummyFileUri.md5"
+            "SHA-1"   -> s"$dummyFileUri.sha1",
+            "MD5"     -> s"$dummyFileUri.md5"
           ),
           Map(),
           changing = false,
@@ -1243,7 +1267,7 @@ object FileCacheTests extends TestSuite {
 
     test("wrong stored digest should delete file in cache") {
       withTmpDir { dir =>
-        val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
+        val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
 
         val resolve = {
@@ -1256,10 +1280,14 @@ object FileCacheTests extends TestSuite {
             None
           )
 
-          FileCache().withLocation(dir.toString).withChecksums(Seq(Some("SHA-1"))).file(artifact).run
+          FileCache()
+            .withLocation(dir.toString)
+            .withChecksums(Seq(Some("SHA-1")))
+            .file(artifact)
+            .run
         }
 
-        val Right(_) = resolve.unsafeRun()
+        val Right(_)         = resolve.unsafeRun()
         val computedSha1Path = FileCache.auxiliaryFile(dummyFile.toFile, "SHA-1" + ".computed")
 
         Files.write(computedSha1Path.toPath, Array[Byte](1, 2, 3))
@@ -1272,7 +1300,7 @@ object FileCacheTests extends TestSuite {
       withTmpDir { baseDir =>
         val dir = baseDir.resolve("le repository")
         Files.createDirectories(dir)
-        val dummyFile = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
+        val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
         assert(dummyFileUri.contains("%20"))
         val artifact = Artifact(dummyFileUri)
@@ -1286,7 +1314,7 @@ object FileCacheTests extends TestSuite {
 
         res match {
           case Right(file) => assert(file.isFile)
-          case Left(e) => throw e
+          case Left(e)     => throw e
         }
       }
     }
@@ -1295,9 +1323,9 @@ object FileCacheTests extends TestSuite {
   // https://stackoverflow.com/questions/6650650/hex-encoded-string-to-byte-array/28157958#28157958
   def stringToByteArray(s: String): Array[Byte] = {
     val byteArray = new Array[Byte](s.length / 2)
-    val strBytes = new Array[String](s.length / 2)
-    var k = 0
-    var i = 0
+    val strBytes  = new Array[String](s.length / 2)
+    var k         = 0
+    var i         = 0
     while (i < s.length) {
       val j = i + 2
       strBytes(k) = s.substring(i, j)

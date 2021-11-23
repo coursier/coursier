@@ -9,19 +9,19 @@ trait Mima extends ScalaModule with PublishModule {
   def mimaPreviousVersions: T[Seq[String]]
   def mimaBinaryIssueFilters: Seq[ProblemFilter] = Seq.empty
 
-  def mimaPreviousDeps = T{
+  def mimaPreviousDeps = T {
     Agg.from(mimaPreviousVersions().map { version =>
-      ivy"${pomSettings().organization}:${artifactId()}:${version}"
+      ivy"${pomSettings().organization}:${artifactId()}:$version"
     })
   }
 
-  def mimaPreviousArtifacts = T{
+  def mimaPreviousArtifacts = T {
     resolveDeps(mimaPreviousDeps)().filter(_.path.segments.contains(artifactId()))
   }
 
-  def mimaBinaryIssues: T[List[(String, List[String])]] = T{
+  def mimaBinaryIssues: T[List[(String, List[String])]] = T {
     val currentClassFiles = compile().classes.path
-    val classPath = runClasspath()
+    val classPath         = runClasspath()
 
     val lib = new MiMaLib(classPath.map(_.path.toIO))
 
@@ -34,7 +34,7 @@ trait Mima extends ScalaModule with PublishModule {
   }
 
   def mimaReportBinaryIssues(): define.Command[Unit] = T.command {
-    val issues = mimaBinaryIssues()
+    val issues   = mimaBinaryIssues()
     var anyIssue = false
     for ((artifact, artifactIssues) <- issues if artifactIssues.nonEmpty) {
       anyIssue = true

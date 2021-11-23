@@ -36,18 +36,19 @@ trait Doc extends ScalaModule {
       args: List[String]
     ): (Boolean, Boolean, Boolean, Boolean, List[String]) =
       args match {
-        case "--npm-install"    :: rem => processArgs(true,       yarnRunBuild, watch, relativize, rem)
-        case "--yarn-run-build" :: rem => processArgs(npmInstall, true,         watch, relativize, rem)
-        case "--watch"          :: rem => processArgs(npmInstall, yarnRunBuild, true,  relativize, rem)
-        case "--relativize"     :: rem => processArgs(npmInstall, yarnRunBuild, watch, true,       rem)
-        case other              :: rem => sys.error(s"Unrecognized argument: $other")
-        case _ => (npmInstall, yarnRunBuild, watch, relativize, args)
+        case "--npm-install" :: rem    => processArgs(true, yarnRunBuild, watch, relativize, rem)
+        case "--yarn-run-build" :: rem => processArgs(npmInstall, true, watch, relativize, rem)
+        case "--watch" :: rem      => processArgs(npmInstall, yarnRunBuild, true, relativize, rem)
+        case "--relativize" :: rem => processArgs(npmInstall, yarnRunBuild, watch, true, rem)
+        case other :: rem          => sys.error(s"Unrecognized argument: $other")
+        case _                     => (npmInstall, yarnRunBuild, watch, relativize, args)
       }
-    val (npmInstall, yarnRunBuild, watch, relativize, args0) = processArgs(false, false, false, false, args.toList)
+    val (npmInstall, yarnRunBuild, watch, relativize, args0) =
+      processArgs(false, false, false, false, args.toList)
 
-    val ver = version()
+    val ver           = version()
     val latestRelease = latestTaggedVersion
-    val scalaVer = scalaVersion()
+    val scalaVer      = scalaVersion()
 
     def extraSbt(ver: String) =
       if (ver.endsWith("SNAPSHOT")) """resolvers += Resolver.sonatypeRepo("snapshots")""" + "\n"
@@ -56,14 +57,22 @@ trait Doc extends ScalaModule {
     val outputDir = os.pwd / "doc" / "processed-docs"
 
     val allArgs: Seq[String] = Seq(
-      "--classpath", classPath().map(_.path.toString).mkString(File.pathSeparator),
-      "--in", (os.pwd / "doc" / "docs").toString,
-      "--out", outputDir.toString,
-      "--site.VERSION", ver,
-      "--site.EXTRA_SBT", extraSbt(ver),
-      "--site.PLUGIN_VERSION", sbtCoursierVersion,
-      "--site.PLUGIN_EXTRA_SBT", extraSbt(sbtCoursierVersion),
-      "--site.SCALA_VERSION", scalaVer
+      "--classpath",
+      classPath().map(_.path.toString).mkString(File.pathSeparator),
+      "--in",
+      (os.pwd / "doc" / "docs").toString,
+      "--out",
+      outputDir.toString,
+      "--site.VERSION",
+      ver,
+      "--site.EXTRA_SBT",
+      extraSbt(ver),
+      "--site.PLUGIN_VERSION",
+      sbtCoursierVersion,
+      "--site.PLUGIN_EXTRA_SBT",
+      extraSbt(sbtCoursierVersion),
+      "--site.SCALA_VERSION",
+      scalaVer
     ) ++ (if (watch) Seq("--watch") else Nil) ++ args0
 
     // TODO Run yarn run thing right after, add --watch mode
@@ -89,7 +98,7 @@ trait Doc extends ScalaModule {
         workingDir = forkWorkingDir()
       )
 
-    if (watch) {
+    if (watch)
       if (yarnRunBuild)
         Util.withBgProcess(
           Seq("yarn", "run", "start"),
@@ -100,7 +109,7 @@ trait Doc extends ScalaModule {
         }
       else
         runMdoc()
-    } else {
+    else {
       runMdoc()
       if (yarnRunBuild)
         os.proc("yarn", "run", "build").call(

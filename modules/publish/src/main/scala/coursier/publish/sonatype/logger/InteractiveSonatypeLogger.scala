@@ -4,7 +4,8 @@ import java.io.{OutputStream, OutputStreamWriter}
 
 import coursier.cache.internal.Terminal.Ansi
 
-final class InteractiveSonatypeLogger(out: OutputStreamWriter, verbosity: Int) extends SonatypeLogger {
+final class InteractiveSonatypeLogger(out: OutputStreamWriter, verbosity: Int)
+    extends SonatypeLogger {
   override def listingProfiles(attempt: Int, total: Int): Unit =
     if (verbosity >= 0) {
       val extra =
@@ -22,12 +23,12 @@ final class InteractiveSonatypeLogger(out: OutputStreamWriter, verbosity: Int) e
     }
 
     val msgOpt =
-      if (errorOpt.isEmpty) {
+      if (errorOpt.isEmpty)
         if (verbosity >= 1)
           Some("Listed Sonatype profiles")
         else
           None
-      } else
+      else
         Some("Fail to list Sonatype profiles")
 
     for (msg <- msgOpt) {

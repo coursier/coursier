@@ -32,7 +32,7 @@ object Parameters {
       mainClass
         .map(c => JarAttributes.Name.MAIN_CLASS -> c)
         .toSeq ++
-      attributes
+        attributes
   }
 
   @data class Bootstrap(
@@ -57,7 +57,7 @@ object Parameters {
       content.exists { c =>
         c.entries.exists {
           case _: ClassPathEntry.Resource => true
-          case _ => false
+          case _                          => false
         }
       }
 
@@ -106,6 +106,10 @@ object Parameters {
   object NativeImage {
     def defaultGraalvmJvmOptions: Seq[String] =
       Seq("-Xmx3g")
+  }
+
+  @data class Prebuilt() extends Parameters {
+    override def isNative: Boolean = true
   }
 
   @data class ScalaNative(

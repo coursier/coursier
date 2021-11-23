@@ -13,7 +13,7 @@ abstract class InstallTests extends TestSuite {
 
   private val extraOptions =
     overrideProguarded match {
-      case None => Nil
+      case None        => Nil
       case Some(value) => Seq(s"--proguarded=$value")
     }
 
@@ -25,7 +25,8 @@ abstract class InstallTests extends TestSuite {
           args = Seq(
             launcher,
             "install",
-            "--install-dir", tmpDir.getAbsolutePath,
+            "--install-dir",
+            tmpDir.getAbsolutePath,
             """echo:{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}"""
           ) ++ extraOptions,
           directory = tmpDir
@@ -43,47 +44,14 @@ abstract class InstallTests extends TestSuite {
       else { inlineApp(); "" }
     }
 
-    def envVars(): Unit =
-      TestUtil.withTempDir { tmpDir =>
-        LauncherTestUtil.run(
-          args = Seq(
-            launcher,
-            "install",
-            "--install-dir", tmpDir.getAbsolutePath,
-            """env:{"dependencies": ["io.get-coursier:env:1.0.4"], "repositories": ["central"]}"""
-          ) ++ extraOptions,
-          directory = tmpDir
-        )
-        val envLauncher = new File(tmpDir, "env").getAbsolutePath
-
-        val csJvmLauncherOutput = LauncherTestUtil.output(
-          Seq(envLauncher, "CS_JVM_LAUNCHER"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
-        val expectedCsJvmLauncherOutput = "true" + System.lineSeparator()
-        assert(csJvmLauncherOutput == expectedCsJvmLauncherOutput)
-
-        val isCsInstalledLauncherOutput = LauncherTestUtil.output(
-          Seq(envLauncher, "IS_CS_INSTALLED_LAUNCHER"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
-        val expectedIsCsInstalledLauncherOutput = "true" + System.lineSeparator()
-        assert(isCsInstalledLauncherOutput == expectedIsCsInstalledLauncherOutput)
-      }
-    test("env vars") {
-      if (LauncherTestUtil.isWindows) "disabled"
-      else { envVars(); "" }
-    }
-
     def jnaPython(): Unit =
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(
           args = Seq(
             launcher,
             "install",
-            "--install-dir", tmpDir.getAbsolutePath,
+            "--install-dir",
+            tmpDir.getAbsolutePath,
             s"""props:{"dependencies": ["${TestUtil.propsDepStr}"], "repositories": ["central"], "jna": ["python"]}"""
           ) ++ extraOptions,
           directory = tmpDir

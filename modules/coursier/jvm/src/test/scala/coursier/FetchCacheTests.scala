@@ -19,11 +19,11 @@ object FetchCacheTests extends TestSuite {
           .asScala
           .map(remove(_)(f))
           .sum
-      } finally {
-        if (s != null)
-          s.close()
       }
-    } else if (f(d.getFileName.toString) && Files.deleteIfExists(d))
+      finally if (s != null)
+        s.close()
+    }
+    else if (f(d.getFileName.toString) && Files.deleteIfExists(d))
       1
     else
       0
@@ -36,11 +36,11 @@ object FetchCacheTests extends TestSuite {
         s.iterator()
           .asScala
           .foreach(delete)
-      } finally {
-        if (s != null)
-          s.close()
       }
-    } else
+      finally if (s != null)
+        s.close()
+    }
+    else
       Files.deleteIfExists(d)
 
   val tests = Tests {
@@ -49,7 +49,7 @@ object FetchCacheTests extends TestSuite {
 
     test("simple") - async {
 
-      val tmpCache = Files.createTempDirectory("coursier-cache-tests")
+      val tmpCache      = Files.createTempDirectory("coursier-cache-tests")
       val tmpFetchCache = Files.createTempDirectory("coursier-fetch-cache-tests")
 
       val shutdownHook: Thread =
@@ -81,7 +81,7 @@ object FetchCacheTests extends TestSuite {
 
       val artifacts0 = await(artifacts())
 
-      val pomCount = remove(tmpCache)(_.endsWith(".pom"))
+      val pomCount         = remove(tmpCache)(_.endsWith(".pom"))
       val expectedPomCount = 18
       assert(pomCount == expectedPomCount)
 
@@ -90,9 +90,9 @@ object FetchCacheTests extends TestSuite {
       assert(artifacts0 == artifacts1)
 
       val pomCount1 = remove(tmpCache)(_.endsWith(".pom"))
-      val expectedPomCount1 = 0 // no POM must have been downloaded, artifact list read directly from the fetch cache
+      // no POM must have been downloaded, artifact list read directly from the fetch cache
+      val expectedPomCount1 = 0
       assert(pomCount1 == expectedPomCount1)
-
 
       artifacts1(10).delete()
 
@@ -101,7 +101,8 @@ object FetchCacheTests extends TestSuite {
       assert(artifacts0 == artifacts2)
 
       val pomCount2 = remove(tmpCache)(_.endsWith(".pom"))
-      val expectedPomCount2 = 18 // POM must have been downloaded again, as the artifact list in cache was invalid
+      // POM must have been downloaded again, as the artifact list in cache was invalid
+      val expectedPomCount2 = 18
       assert(pomCount2 == expectedPomCount2)
 
       cleanup()

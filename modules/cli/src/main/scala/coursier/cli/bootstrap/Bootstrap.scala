@@ -5,23 +5,42 @@ import java.nio.file.Files
 import java.util.concurrent.ExecutorService
 
 import caseapp.core.RemainingArgs
-import caseapp.core.app.CaseApp
 import coursier.cache.{Cache, CacheLogger}
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.fetch.Fetch
 import coursier.cli.launch.{Launch, LaunchException}
+import coursier.cli.options.OptionGroup
 import coursier.cli.resolve.{Resolve, ResolveException}
 import coursier.cli.Util.ValidatedExitOnError
-import coursier.core.{Classifier, Dependency, Module, ModuleName, Organization, Repository, Resolution, Type}
+import coursier.core.{
+  Classifier,
+  Dependency,
+  Module,
+  ModuleName,
+  Organization,
+  Repository,
+  Resolution,
+  Type
+}
 import coursier.install.{Channels, MainClass}
 import coursier.jvm.JvmCache
-import coursier.launcher.{ClassLoaderContent, ClassPathEntry, Generator, Parameters, Preamble, ScalaNativeGenerator}
+import coursier.launcher.{
+  ClassLoaderContent,
+  ClassPathEntry,
+  Generator,
+  Parameters,
+  Preamble,
+  ScalaNativeGenerator
+}
 import coursier.launcher.native.NativeBuilder
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
+import caseapp.core.help.HelpFormat
 
-object Bootstrap extends CaseApp[BootstrapOptions] {
+object Bootstrap extends CoursierCommand[BootstrapOptions] {
+  override def group: String = CommandGroup.launcher
 
   def task(
     params: BootstrapParams,
@@ -31,21 +50,34 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     stderr: PrintStream = System.err
   ): Task[(Resolution, Option[String], Option[String], Seq[(Artifact, File)], String)] =
     for {
-      t <- Fetch.task(params.sharedLaunch.fetch, pool, dependencyArgs, stdout, stderr)
+      t <-
+        Fetch.task(params.sharedLaunch.fetch(params.channel), pool, dependencyArgs, stdout, stderr)
       (res, scalaVersionOpt, platformOpt, files) = t
       mainClass <- {
         params.sharedLaunch.mainClassOpt match {
           case Some(c) =>
             Task.point(c)
           case None =>
-            Task.delay(MainClass.mainClasses(files.map(_._2) ++ params.sharedLaunch.extraJars.map(_.toFile))).flatMap { m =>
+            Task.delay(
+              MainClass.mainClasses(files.map(_._2) ++ params.sharedLaunch.extraJars.map(_.toFile))
+            ).flatMap { data =>
               if (params.sharedLaunch.resolve.output.verbosity >= 2)
                 System.err.println(
                   "Found main classes:" + System.lineSeparator() +
-                    m.map { case ((vendor, title), mainClass) => s"  $mainClass (vendor: $vendor, title: $title)" + System.lineSeparator() }.mkString +
+                    data
+                      .map { case ((vendor, title), mainClass) =>
+                        s"  $mainClass (vendor: $vendor, title: $title)" + System.lineSeparator()
+                      }
+                      .mkString +
                     System.lineSeparator()
                 )
-              MainClass.retainedMainClassOpt(m, res.rootDependencies.headOption.map(d => (d.module.organization.value, d.module.name.value))) match {
+              MainClass.retainedMainClassOpt(
+                data,
+                res
+                  .rootDependencies
+                  .headOption
+                  .map(d => (d.module.organization.value, d.module.name.value))
+              ) match {
                 case Some(c) =>
                   Task.point(c)
                 case None =>
@@ -94,7 +126,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       .scanLeft((Set.empty[String], Seq.empty[Artifact])) {
         case ((doneUrls, _), artifacts) =>
           val artifacts0 = artifacts.filter(a => !doneUrls(a.url))
-          val doneUrls0 = doneUrls ++ artifacts0.map(_.url)
+          val doneUrls0  = doneUrls ++ artifacts0.map(_.url)
           (doneUrls0, artifacts0)
       }
       .map(_._2)
@@ -115,7 +147,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       else if (packaging.embedFiles)
         artifactFiles.partition {
           case (a, _) =>
-             a.url.startsWith("file:")
+            a.url.startsWith("file:")
         }
       else
         (Nil, artifactFiles)
@@ -178,15 +210,19 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
     var pool: ExecutorService = null
 
     // get options and dependencies from apps if any
-    val (options0, deps) = BootstrapParams(options).toEither.toOption.fold((options, args.remaining)) { initialParams =>
-      val initialRepositories = initialParams.sharedLaunch.resolve.repositories.repositories
-      val channels = initialParams.sharedLaunch.resolve.repositories.channels
-      pool = Sync.fixedThreadPool(initialParams.sharedLaunch.resolve.cache.parallel)
-      val cache = initialParams.sharedLaunch.resolve.cache.cache(pool, initialParams.sharedLaunch.resolve.output.logger())
-      val channels0 = Channels(channels.channels, initialRepositories, cache)
-      val res = Resolve.handleApps(options, args.remaining, channels0)(_.addApp(_))
-      res
-    }
+    val (options0, deps) =
+      BootstrapParams(options).toEither.toOption.fold((options, args.remaining)) { initialParams =>
+        val initialRepositories = initialParams.sharedLaunch.resolve.repositories.repositories
+        val channels            = initialParams.channel.channels
+        pool = Sync.fixedThreadPool(initialParams.sharedLaunch.resolve.cache.parallel)
+        val cache = initialParams.sharedLaunch.resolve.cache.cache(
+          pool,
+          initialParams.sharedLaunch.resolve.output.logger()
+        )
+        val channels0 = Channels(channels, initialRepositories, cache)
+        val res       = Resolve.handleApps(options, args.remaining, channels0)(_.addApp(_))
+        res
+      }
 
     val params = BootstrapParams(options0).exitOnError()
 
@@ -210,10 +246,12 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
       case Left(e: ResolveException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
         System.err.println(e.message)
         sys.exit(1)
-      case Left(e: coursier.error.FetchError) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
+      case Left(e: coursier.error.FetchError)
+          if params.sharedLaunch.resolve.output.verbosity <= 1 =>
         System.err.println(e.getMessage)
         sys.exit(1)
-      case Left(e: LaunchException.NoMainClassFound) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
+      case Left(e: LaunchException.NoMainClassFound)
+          if params.sharedLaunch.resolve.output.verbosity <= 1 =>
         System.err.println("Cannot find default main class. Specify one with -M or --main-class.")
         sys.exit(1)
       case Left(e: LaunchException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
@@ -228,9 +266,11 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
     val javaOptions =
       if (params.specific.assembly || params.specific.manifestJar)
-        params.specific.javaOptions ++ params.sharedLaunch.properties.map { case (k, v) => s"-D$k=$v" }
+        params.sharedLaunch.javaOptions ++ params.sharedLaunch.properties.map { case (k, v) =>
+          s"-D$k=$v"
+        }
       else
-        params.specific.javaOptions
+        params.sharedLaunch.javaOptions
 
     val params0 =
       if (params.sharedLaunch.resolve.dependency.native) {
@@ -264,7 +304,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           .withOptions(params.nativeOptions)
           .withLog(log)
           .withVerbosity(params.sharedLaunch.resolve.output.verbosity)
-      } else if (params.specific.nativeImage) {
+      }
+      else if (params.specific.nativeImage) {
         val fetch0 = {
           val logger = params.sharedLaunch.resolve.output.logger()
           simpleFetchFunction(
@@ -277,9 +318,14 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
         val handle = params
           .specific
-          .jvmCache(params.sharedLaunch.resolve.cache.cache(pool, params.sharedLaunch.resolve.output.logger()))
+          .jvmCache(
+            params.sharedLaunch.resolve.cache.cache(
+              pool,
+              params.sharedLaunch.resolve.output.logger()
+            )
+          )
         val javaHomeTask = handle.get(s"graalvm:$graalvmVersion")
-        val javaHome = javaHomeTask.unsafeRun()(ExecutionContext.fromExecutorService(pool))
+        val javaHome     = javaHomeTask.unsafeRun()(ExecutionContext.fromExecutorService(pool))
 
         Parameters.NativeImage(mainClass, fetch0)
           .withJars(files.map(_._2))
@@ -289,10 +335,16 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
           .withIntermediateAssembly(params.specific.nativeImageIntermediateAssembly)
           .withJavaHome(javaHome)
           .withVerbosity(params.sharedLaunch.resolve.output.verbosity)
-      } else {
+      }
+      else {
 
-        if (params.specific.createBatFile && !params.specific.force && Files.exists(params.specific.batOutput)) {
-          System.err.println(s"Error: ${params.specific.batOutput} already exists, use -f option to force erasing it.")
+        val foundNonErasableFile = params.specific.createBatFile &&
+          !params.specific.force &&
+          Files.exists(params.specific.batOutput)
+        if (foundNonErasableFile) {
+          System.err.println(
+            s"Error: ${params.specific.batOutput} already exists, use -f option to force erasing it."
+          )
           sys.exit(1)
         }
 
@@ -301,7 +353,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             Some(
               coursier.launcher.Preamble()
                 .withJavaOpts(javaOptions)
-                .withJvmOptionFile(params.specific.jvmOptionFile)
+                .withJvmOptionFile(params.jvmOptionFile)
             )
           else
             None
@@ -331,7 +383,7 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
             params.sharedLaunch.artifact.artifactTypes,
             scalaVersionOpt,
             platformOpt,
-            params.sharedLaunch.resolve.classpathOrder.getOrElse(true),
+            params.sharedLaunch.resolve.classpathOrder.getOrElse(true)
           )
 
           val main = {
@@ -341,7 +393,8 @@ object Bootstrap extends CaseApp[BootstrapOptions] {
 
           val content = (parents :+ ("" -> main)).map {
             case (name, artifacts) =>
-              val artifactFiles0 = artifacts.map(a => (a, artifactFiles.getOrElse(a, sys.error("should not happen"))))
+              val artifactFiles0 = artifacts
+                .map(a => (a, artifactFiles.getOrElse(a, sys.error("should not happen"))))
               classloaderContent(params.specific.bootstrapPackaging, artifactFiles0)
                 .withLoaderName(name)
           }

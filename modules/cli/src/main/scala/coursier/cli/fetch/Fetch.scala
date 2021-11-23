@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutorService
 
 import caseapp._
 import cats.data.Validated
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.resolve.{Output, Resolve, ResolveException}
 import coursier.core.Resolution
 import coursier.install.Channels
@@ -14,7 +15,7 @@ import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
 
-object Fetch extends CaseApp[FetchOptions] {
+object Fetch extends CoursierCommand[FetchOptions] {
 
   def task(
     params: FetchParams,
@@ -44,8 +45,8 @@ object Fetch extends CaseApp[FetchOptions] {
         res,
         params.artifact.classifiers,
         Some(params.artifact.mainArtifacts), // allow to be null?
-        Some(params.artifact.artifactTypes),  // allow to be null?
-        params.resolve.classpathOrder.getOrElse(true),
+        Some(params.artifact.artifactTypes), // allow to be null?
+        params.resolve.classpathOrder.getOrElse(true)
       )
 
       artifactFiles <- coursier.Artifacts.fetchArtifacts(
@@ -72,23 +73,31 @@ object Fetch extends CaseApp[FetchOptions] {
             Task.point(())
         }
       }
-    } yield (res, scalaVersionOpt, platformOpt, artifactFiles.collect { case (a, Some(f)) => a -> f })
+    } yield (
+      res,
+      scalaVersionOpt,
+      platformOpt,
+      artifactFiles.collect { case (a, Some(f)) => a -> f }
+    )
   }
+
+  override def group: String = CommandGroup.resolve
 
   def run(options: FetchOptions, args: RemainingArgs): Unit = {
 
     var pool: ExecutorService = null
 
     // get options and dependencies from apps if any
-    val (options0, deps) = FetchParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
-      val initialRepositories = initialParams.resolve.repositories.repositories
-      val channels = initialParams.resolve.repositories.channels
-      pool = Sync.fixedThreadPool(initialParams.resolve.cache.parallel)
-      val cache = initialParams.resolve.cache.cache(pool, initialParams.resolve.output.logger())
-      val channels0 = Channels(channels.channels, initialRepositories, cache)
-      val res = Resolve.handleApps(options, args.all, channels0)(_.addApp(_))
-      res
-    }
+    val (options0, deps) =
+      FetchParams(options).toEither.toOption.fold((options, args.all)) { initialParams =>
+        val initialRepositories = initialParams.resolve.repositories.repositories
+        val channels            = initialParams.channel.channels
+        pool = Sync.fixedThreadPool(initialParams.resolve.cache.parallel)
+        val cache = initialParams.resolve.cache.cache(pool, initialParams.resolve.output.logger())
+        val channels0 = Channels(channels, initialRepositories, cache)
+        val res       = Resolve.handleApps(options, args.all, channels0)(_.addApp(_))
+        res
+      }
 
     val params = FetchParams(options0) match {
       case Validated.Invalid(errors) =>
@@ -111,7 +120,7 @@ object Fetch extends CaseApp[FetchOptions] {
       case Left(e: coursier.error.FetchError) if params.resolve.output.verbosity <= 1 =>
         Output.errPrintln(e.getMessage)
         sys.exit(1)
-      case Left(e) => throw e
+      case Left(e)  => throw e
       case Right(t) => t
     }
 

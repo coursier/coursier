@@ -24,10 +24,12 @@ object RepositoryParams {
   def apply(options: RepositoryOptions): ValidatedNel[String, RepositoryParams] = {
 
     // FIXME Take repo from conf file into account here
-    val sonatype = options.sonatype
-      .getOrElse(options.repository.isEmpty && options.github.isEmpty && options.bintray.isEmpty) // or .getOrElse(false)?
+    val sonatype =
+      options.sonatype.getOrElse(
+        options.repository.isEmpty && options.github.isEmpty && options.bintray.isEmpty
+      ) // or .getOrElse(false)?
 
-    def defaultRepositoryV= {
+    def defaultRepositoryV = {
       val repositoryV =
         options.repository match {
           case None =>
@@ -68,14 +70,15 @@ object RepositoryParams {
 
       val (ghRepo, ghTokenOpt) =
         ghCredentials.split(":", 2) match {
-          case Array(user) => (user, None)
+          case Array(user)        => (user, None)
           case Array(user, token) => (user, Some(token))
         }
 
       val ghUserRepoV =
         ghRepo.split("/", 2) match {
           case Array(user, repo) => Validated.validNel((user, repo))
-          case _ => Validated.invalidNel(s"Invalid GitHub repository: '$ghRepo' (expected 'user/repo')")
+          case _ =>
+            Validated.invalidNel(s"Invalid GitHub repository: '$ghRepo' (expected 'user/repo')")
         }
 
       val ghTokenV =
@@ -84,7 +87,7 @@ object RepositoryParams {
           case None =>
             Option(System.getenv("GH_TOKEN")) match {
               case Some(token) => Validated.validNel(token)
-              case None => Validated.invalidNel("No GitHub token specified")
+              case None        => Validated.invalidNel("No GitHub token specified")
             }
         }
 
@@ -94,7 +97,10 @@ object RepositoryParams {
       }
     }
 
-    def fromBintray(repo: String, apiKey: Option[String]): ValidatedNel[String, PublishRepository] = {
+    def fromBintray(
+      repo: String,
+      apiKey: Option[String]
+    ): ValidatedNel[String, PublishRepository] = {
 
       val paramsV = repo.split("/", 3) match {
         case Array(user, repo0, package0) =>
@@ -104,11 +110,16 @@ object RepositoryParams {
         case Array(user) =>
           Validated.validNel((user, "maven", "default"))
         case _ =>
-          Validated.invalidNel(s"Invalid bintray repository: '$repo' (expected 'user/repository/package')")
+          Validated.invalidNel(
+            s"Invalid bintray repository: '$repo' (expected 'user/repository/package')"
+          )
       }
 
       val apiKeyV = apiKey match {
-        case None => Validated.invalidNel("No Bintray API key specified (--bintray-api-key or BINTRAY_API_KEY in the environment)")
+        case None =>
+          Validated.invalidNel(
+            "No Bintray API key specified (--bintray-api-key or BINTRAY_API_KEY in the environment)"
+          )
         case Some(key) => Validated.validNel(key)
       }
 
@@ -128,7 +139,13 @@ object RepositoryParams {
 
     val repositoryV =
       options.github.map(fromGitHub)
-        .orElse(options.bintray.map(fromBintray(_, options.bintrayApiKey.orElse(Option(System.getenv("BINTRAY_API_KEY"))))))
+        .orElse {
+          options.bintray
+            .map { repo =>
+              val apiKey = options.bintrayApiKey.orElse(Option(System.getenv("BINTRAY_API_KEY")))
+              fromBintray(repo, apiKey)
+            }
+        }
         .getOrElse {
           if (sonatype)
             fromSonatype
@@ -136,14 +153,13 @@ object RepositoryParams {
             defaultRepositoryV
         }
 
-
     def authFromEnv(userVar: String, passVar: String) = {
       val userV = Option(System.getenv(userVar)) match {
-        case None => Validated.invalidNel(s"User environment variable $userVar not set")
+        case None    => Validated.invalidNel(s"User environment variable $userVar not set")
         case Some(u) => Validated.validNel(u)
       }
       val passV = Option(System.getenv(passVar)) match {
-        case None => Validated.invalidNel(s"Password environment variable $passVar not set")
+        case None    => Validated.invalidNel(s"Password environment variable $passVar not set")
         case Some(u) => Validated.validNel(u)
       }
       (userV, passV).mapN {
@@ -159,16 +175,17 @@ object RepositoryParams {
         else
           Validated.validNel(None)
       case Some(s) =>
-
         def handleAuth(auth: String) =
           auth.split(":", 2) match {
             case Array(user, pass) =>
               Validated.validNel(Some(Authentication(user, pass)))
             case _ =>
-              Validated.invalidNel("Malformed --auth argument (expected user:password, or env:USER_ENV_VAR:PASSWORD_ENV_VAR)")
+              Validated.invalidNel(
+                "Malformed --auth argument (expected user:password, or env:USER_ENV_VAR:PASSWORD_ENV_VAR)"
+              )
           }
 
-        if (s.startsWith("env:")) {
+        if (s.startsWith("env:"))
           if (s.contains(":"))
             s.split(":", 2) match {
               case Array(userVar, passVar) =>
@@ -186,10 +203,10 @@ object RepositoryParams {
                 handleAuth(v)
             }
           }
-        } else if (s.startsWith("file:")) {
+        else if (s.startsWith("file:"))
           // TODO
           ???
-        } else
+        else
           handleAuth(s)
     }
 

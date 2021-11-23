@@ -12,11 +12,14 @@ import scala.concurrent.{Await, ExecutionContext}
 
 object Sonatype extends CaseApp[SonatypeOptions] {
 
-  def listProfiles(params: SonatypeParams, api: SonatypeApi): Task[Option[Seq[SonatypeApi.Profile]]] =
+  def listProfiles(
+    params: SonatypeParams,
+    api: SonatypeApi
+  ): Task[Option[Seq[SonatypeApi.Profile]]] =
     if (params.raw)
       for {
         json <- api.rawListProfiles()
-        _  <- Task.delay {
+        _ <- Task.delay {
           println(json.spaces2)
         }
         profiles <- Task.fromEither(api.decodeListProfilesResponse(json))
@@ -24,17 +27,21 @@ object Sonatype extends CaseApp[SonatypeOptions] {
     else
       for {
         profiles <- api.listProfiles()
-        _  <- Task.delay {
+        _ <- Task.delay {
           for (p <- profiles)
             println(s"Profile ${p.name}\n  id: ${p.id}\n  URL: ${p.uri}")
         }
       } yield Some(profiles)
 
-  def list(params: SonatypeParams, api: SonatypeApi, profileIdOpt: Option[String]): Task[Option[Seq[SonatypeApi.Repository]]] =
+  def list(
+    params: SonatypeParams,
+    api: SonatypeApi,
+    profileIdOpt: Option[String]
+  ): Task[Option[Seq[SonatypeApi.Repository]]] =
     if (params.raw)
       for {
-        json <- api.rawListProfileRepositories(profileIdOpt)
-        _ <- Task.delay(println(json.spaces2))
+        json         <- api.rawListProfileRepositories(profileIdOpt)
+        _            <- Task.delay(println(json.spaces2))
         repositories <- Task.fromEither(api.decodeListProfileRepositoriesResponse(json))
       } yield Some(repositories)
     else
@@ -53,34 +60,52 @@ object Sonatype extends CaseApp[SonatypeOptions] {
     if (params.raw)
       for {
         json <- api.rawCreateStagingRepository(profile, params.description.getOrElse(""))
-        _ <- Task.delay(println(json.spaces2))
+        _    <- Task.delay(println(json.spaces2))
       } yield ()
     else
       for {
         repoId <- api.createStagingRepository(profile, params.description.getOrElse(""))
-        _ <- Task.delay(println(s"Created repository $repoId"))
+        _      <- Task.delay(println(s"Created repository $repoId"))
       } yield ()
 
-  def close(params: SonatypeParams, api: SonatypeApi, profile: SonatypeApi.Profile, repoId: String): Task[Unit] =
+  def close(
+    params: SonatypeParams,
+    api: SonatypeApi,
+    profile: SonatypeApi.Profile,
+    repoId: String
+  ): Task[Unit] =
     for {
       _ <- api.sendCloseStagingRepositoryRequest(profile, repoId, params.description.getOrElse(""))
       _ <- Task.delay(println(s"Closed repository $repoId"))
     } yield ()
 
-  def promote(params: SonatypeParams, api: SonatypeApi, profile: SonatypeApi.Profile, repoId: String): Task[Unit] =
+  def promote(
+    params: SonatypeParams,
+    api: SonatypeApi,
+    profile: SonatypeApi.Profile,
+    repoId: String
+  ): Task[Unit] =
     for {
-      _ <- api.sendPromoteStagingRepositoryRequest(profile, repoId, params.description.getOrElse(""))
+      _ <-
+        api.sendPromoteStagingRepositoryRequest(profile, repoId, params.description.getOrElse(""))
       _ <- Task.delay(println(s"Promoted repository $repoId"))
     } yield ()
 
-  def drop(params: SonatypeParams, api: SonatypeApi, profile: SonatypeApi.Profile, repoId: String): Task[Unit] =
+  def drop(
+    params: SonatypeParams,
+    api: SonatypeApi,
+    profile: SonatypeApi.Profile,
+    repoId: String
+  ): Task[Unit] =
     for {
       _ <- api.sendDropStagingRepositoryRequest(profile, repoId, params.description.getOrElse(""))
       _ <- Task.delay(println(s"Dropped repository $repoId"))
     } yield ()
 
-
-  def maybeListProfiles(params: SonatypeParams, api: SonatypeApi): Task[Option[Seq[SonatypeApi.Profile]]] =
+  def maybeListProfiles(
+    params: SonatypeParams,
+    api: SonatypeApi
+  ): Task[Option[Seq[SonatypeApi.Profile]]] =
     if (params.listProfiles)
       listProfiles(params, api)
     else if (params.needListProfiles)
@@ -88,7 +113,11 @@ object Sonatype extends CaseApp[SonatypeOptions] {
     else
       Task.point(None)
 
-  def maybeList(params: SonatypeParams, api: SonatypeApi, profileIdOpt: Option[String]): Task[Option[Seq[SonatypeApi.Repository]]] =
+  def maybeList(
+    params: SonatypeParams,
+    api: SonatypeApi,
+    profileIdOpt: Option[String]
+  ): Task[Option[Seq[SonatypeApi.Repository]]] =
     if (params.list)
       list(params, api, profileIdOpt)
     else if (params.needListRepositories)
@@ -96,30 +125,48 @@ object Sonatype extends CaseApp[SonatypeOptions] {
     else
       Task.point(None)
 
-  def maybeCreate(params: SonatypeParams, api: SonatypeApi, profile: SonatypeApi.Profile): Task[Unit] =
+  def maybeCreate(
+    params: SonatypeParams,
+    api: SonatypeApi,
+    profile: SonatypeApi.Profile
+  ): Task[Unit] =
     if (params.create)
       create(params, api, profile)
     else
       Task.point(())
 
-  def maybeClose(params: SonatypeParams, api: SonatypeApi, profile: SonatypeApi.Profile, repoId: String): Task[Unit] =
+  def maybeClose(
+    params: SonatypeParams,
+    api: SonatypeApi,
+    profile: SonatypeApi.Profile,
+    repoId: String
+  ): Task[Unit] =
     if (params.close)
       close(params, api, profile, repoId)
     else
       Task.point(())
 
-  def maybePromote(params: SonatypeParams, api: SonatypeApi, profile: SonatypeApi.Profile, repoId: String): Task[Unit] =
+  def maybePromote(
+    params: SonatypeParams,
+    api: SonatypeApi,
+    profile: SonatypeApi.Profile,
+    repoId: String
+  ): Task[Unit] =
     if (params.promote)
       promote(params, api, profile, repoId)
     else
       Task.point(())
 
-  def maybeDrop(params: SonatypeParams, api: SonatypeApi, profile: SonatypeApi.Profile, repoId: String): Task[Unit] =
+  def maybeDrop(
+    params: SonatypeParams,
+    api: SonatypeApi,
+    profile: SonatypeApi.Profile,
+    repoId: String
+  ): Task[Unit] =
     if (params.drop)
       drop(params, api, profile, repoId)
     else
       Task.point(())
-
 
   def run(options: SonatypeOptions, remainingArgs: RemainingArgs): Unit = {
 
@@ -143,17 +190,17 @@ object Sonatype extends CaseApp[SonatypeOptions] {
     def profileTask(profiles: Seq[SonatypeApi.Profile], idOrName: Either[String, String]) = {
 
       val profileOpt = idOrName match {
-        case Left(id) => profiles.find(_.id == id)
+        case Left(id)    => profiles.find(_.id == id)
         case Right(name) => profiles.find(_.name == name)
       }
 
       profileOpt match {
         case None => Task.fail(new Exception(s"Profile ${idOrName.merge} not found"))
         case Some(p) => Task.delay {
-          if (idOrName.isRight)
-            Console.err.println(s"Profile id of ${idOrName.merge}: ${p.id}")
-          p
-        }
+            if (idOrName.isRight)
+              Console.err.println(s"Profile id of ${idOrName.merge}: ${p.id}")
+            p
+          }
       }
     }
 
@@ -193,12 +240,11 @@ object Sonatype extends CaseApp[SonatypeOptions] {
                 .map(Some(_))
 
             case (None, None) =>
-
               val profileOpt = for {
-                repoId <- params.repositoryIdOpt
+                repoId       <- params.repositoryIdOpt
                 repositories <- repositoriesOpt
-                r <- repositories.find(_.id == repoId)
-                p <- profiles.find(_.id == r.profileId)
+                r            <- repositories.find(_.id == repoId)
+                p            <- profiles.find(_.id == r.profileId)
               } yield p
 
               Task.point(profileOpt)
@@ -226,8 +272,11 @@ object Sonatype extends CaseApp[SonatypeOptions] {
               _ <- maybeDrop(params, api, profile, repoId)
             } yield ()
           case _ =>
-            if (params.close || params.promote || params.drop)
-              Task.fail(new Exception(s"No profile or repo (repositoriesOpt: $repositoriesOpt, profiles: ${profiles.mkString(", ")})"))
+            if (params.close || params.promote || params.drop) {
+              val msg =
+                s"No profile or repo (repositoriesOpt: $repositoriesOpt, profiles: ${profiles.mkString(", ")})"
+              Task.fail(new Exception(msg))
+            }
             else
               Task.point(())
         }

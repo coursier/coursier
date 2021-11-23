@@ -29,22 +29,22 @@ class NativeBuilderImpl extends NativeBuilder {
     val outpath              = output.toPath
 
     val mode = options.modeOpt match {
-      case Some("debug") => sn.Mode.debug
-      case Some("release") => sn.Mode.release
+      case Some("debug")        => sn.Mode.debug
+      case Some("release")      => sn.Mode.release
       case Some("release-fast") => sn.Mode.releaseFast
       case Some("release-full") => sn.Mode.releaseFull
-      case Some("default") => sn.Mode.default
-      case Some(other) => throw new Exception(s"Unrecognized native mode '$other'")
-      case None => sn.Mode.default
+      case Some("default")      => sn.Mode.default
+      case Some(other)          => throw new Exception(s"Unrecognized native mode '$other'")
+      case None                 => sn.Mode.default
     }
 
     val gc = options.gcOpt match {
       case Some("default") => sn.GC.default
-      case Some("none") => sn.GC.none
-      case Some("boehm") => sn.GC.boehm
-      case Some("immix") => sn.GC.immix
-      case Some(other) => throw new Exception(s"Unrecognized native GC '$other'")
-      case None => sn.GC.default
+      case Some("none")    => sn.GC.none
+      case Some("boehm")   => sn.GC.boehm
+      case Some("immix")   => sn.GC.immix
+      case Some(other)     => throw new Exception(s"Unrecognized native GC '$other'")
+      case None            => sn.GC.default
     }
 
     val clang = options.clangOpt.getOrElse {
@@ -85,16 +85,14 @@ class NativeBuilderImpl extends NativeBuilder {
           sn.Discover.targetTriple(clang, workDir)
         })
       sn.Build.build(config0, outpath)
-    } finally {
-      if (!options.keepWorkDir)
-        deleteRecursive(workDir.toFile)
     }
+    finally if (!options.keepWorkDir)
+      deleteRecursive(workDir.toFile)
   }
 
   private def deleteRecursive(f: File): Unit = {
-    if (f.isDirectory) {
+    if (f.isDirectory)
       f.listFiles().foreach(deleteRecursive)
-    }
     f.delete()
   }
 }

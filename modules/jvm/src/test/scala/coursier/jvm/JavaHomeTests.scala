@@ -4,8 +4,9 @@ import java.io.File
 import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicBoolean
 
-import coursier.cache.{ArtifactError, Cache, MockCache}
+import coursier.cache.{ArchiveCache, ArtifactError, Cache, MockCache}
 import coursier.env.EnvironmentUpdate
+import coursier.jvm.util.CommandOutput
 import coursier.internal.InMemoryCache
 import coursier.util.{Artifact, EitherT, Sync, Task}
 import utest._
@@ -15,9 +16,13 @@ import scala.util.Properties
 
 object JavaHomeTests extends TestSuite {
 
-  private val forbidCommands: JavaHome.CommandOutput =
-    new JavaHome.CommandOutput {
-      def run(command: Seq[String], keepErrorStream: Boolean, extraEnv: Seq[(String, String)]): Either[Int, String] =
+  private val forbidCommands: CommandOutput =
+    new CommandOutput {
+      def run(
+        command: Seq[String],
+        keepErrorStream: Boolean,
+        extraEnv: Seq[(String, String)]
+      ): Either[Int, String] =
         throw new Exception("should not run commands")
     }
 
@@ -42,7 +47,11 @@ object JavaHomeTests extends TestSuite {
   val tests = Tests {
 
     test("environment update should be empty for system JVM") {
-      val edit = JavaHome.environmentFor(JavaHome.systemId, new File("/home/foo/jvm/openjdk-27"), isMacOs = false)
+      val edit = JavaHome.environmentFor(
+        true,
+        new File("/home/foo/jvm/openjdk-27"),
+        isMacOs = false
+      )
       assert(edit.isEmpty)
     }
 
@@ -50,17 +59,18 @@ object JavaHomeTests extends TestSuite {
       val expectedEdit = EnvironmentUpdate()
         .withSet(Seq("JAVA_HOME" -> platformPath("/home/foo/jvm/openjdk-27")))
         .withPathLikeAppends(Seq("PATH" -> platformPath("/home/foo/jvm/openjdk-27/bin")))
-      val edit = JavaHome.environmentFor("openjdk@20", new File("/home/foo/jvm/openjdk-27"), isMacOs = false)
+      val edit =
+        JavaHome.environmentFor(false, new File("/home/foo/jvm/openjdk-27"), isMacOs = false)
       assert(edit == expectedEdit)
     }
 
     test("environment update should update only JAVA_HOME on macOS") {
       val expectedEdit = EnvironmentUpdate()
         .withSet(Seq("JAVA_HOME" -> platformPath("/home/foo/jvm/openjdk-27")))
-      val edit = JavaHome.environmentFor("openjdk@20", new File("/home/foo/jvm/openjdk-27"), isMacOs = true)
+      val edit =
+        JavaHome.environmentFor(false, new File("/home/foo/jvm/openjdk-27"), isMacOs = true)
       assert(edit == expectedEdit)
     }
-
 
     test("system JVM should respect JAVA_HOME") {
 
@@ -71,15 +81,19 @@ object JavaHomeTests extends TestSuite {
         .withOs("linux")
 
       val expectedSystem = Some(platformPath("/home/foo/jvm/adopt-31"))
-      val system = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
+      val system         = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
       assert(system == expectedSystem)
     }
 
     test("system JVM should use /usr/libexec/java_home on macOS") {
 
-      val commandOutput: JavaHome.CommandOutput =
-        new JavaHome.CommandOutput {
-          def run(command: Seq[String], keepErrorStream: Boolean, extraEnv: Seq[(String, String)]): Either[Int, String] =
+      val commandOutput: CommandOutput =
+        new CommandOutput {
+          def run(
+            command: Seq[String],
+            keepErrorStream: Boolean,
+            extraEnv: Seq[(String, String)]
+          ): Either[Int, String] =
             if (command == Seq("/usr/libexec/java_home"))
               Right("/Library/JVMs/oracle-41")
             else
@@ -92,16 +106,20 @@ object JavaHomeTests extends TestSuite {
         .withOs("darwin")
 
       val expectedSystem = Some(platformPath("/Library/JVMs/oracle-41"))
-      val system = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
+      val system         = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
       assert(system == expectedSystem)
     }
 
     test("system JVM should use get Java home via -XshowSettings:properties on Linux and Windows") {
 
-      val commandOutput: JavaHome.CommandOutput =
-        new JavaHome.CommandOutput {
-          def run(command: Seq[String], keepErrorStream: Boolean, extraEnv: Seq[(String, String)]): Either[Int, String] =
-            if (command == Seq("java", "-XshowSettings:properties", "-version")) {
+      val commandOutput: CommandOutput =
+        new CommandOutput {
+          def run(
+            command: Seq[String],
+            keepErrorStream: Boolean,
+            extraEnv: Seq[(String, String)]
+          ): Either[Int, String] =
+            if (command == Seq("java", "-XshowSettings:properties", "-version"))
               if (keepErrorStream)
                 Right(
                   """hello
@@ -117,7 +135,7 @@ object JavaHomeTests extends TestSuite {
                   """Oracle JDK 39b07
                     |""".stripMargin
                 )
-            } else
+            else
               throw new Exception(s"Unexpected command: $command")
         }
 
@@ -127,7 +145,7 @@ object JavaHomeTests extends TestSuite {
         .withOs("linux")
 
       val expectedSystem = Some(platformPath("/usr/lib/jvm/oracle-39b07"))
-      val system = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
+      val system         = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
       assert(system == expectedSystem)
     }
 
@@ -150,14 +168,18 @@ object JavaHomeTests extends TestSuite {
         val failCache: Cache[Task] =
           new Cache[Task] {
             val ec = ExecutionContext.fromExecutorService(pool)
-            val fetch = _ => EitherT[Task, String, String](Task.fail(new Exception("This cache must not be used")))
+            val fetch = _ =>
+              EitherT[Task, String, String](Task.fail(new Exception("This cache must not be used")))
             def file(artifact: Artifact): EitherT[Task, ArtifactError, File] =
-              EitherT[Task, ArtifactError, File](Task.fail(new Exception("This cache must not be used")))
+              EitherT[Task, ArtifactError, File](
+                Task.fail(new Exception("This cache must not be used"))
+              )
           }
-        val csCache = MockCache.create[Task](JvmCacheTests.mockDataLocation, pool)
+        val failArchiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(failCache)
+        val csCache          = MockCache.create[Task](JvmCacheTests.mockDataLocation, pool)
+        val archiveCache     = ArchiveCache[Task](tmpDir.toFile).withCache(csCache)
         val cache = JvmCache()
-          .withBaseDirectory(tmpDir.toFile)
-          .withCache(csCache)
+          .withArchiveCache(archiveCache)
           .withOs("the-os")
           .withArchitecture("the-arch")
           .withIndex(Task.point(index))
@@ -168,7 +190,7 @@ object JavaHomeTests extends TestSuite {
           .withCache(cache)
         val noUpdateHome = home
           .withNoUpdateCache(Some(cache))
-          .withCache(cache.withCache(failCache))
+          .withCache(cache.withArchiveCache(failArchiveCache))
 
         val initialCheckRes = home.getIfInstalled("the-jdk:1.1").unsafeRun()
         assert(initialCheckRes.isEmpty)
@@ -178,15 +200,15 @@ object JavaHomeTests extends TestSuite {
 
         home.get("the-jdk:1.1").unsafeRun() // install 1.1
 
-        val entry = index.lookup("the-jdk", "1", Some("the-os"), Some("the-arch"))
-        assert(entry.exists(_.version == "1.2"))
+        val entries = index.lookup("the-jdk", "1", Some("the-os"), Some("the-arch"))
+        assert(entries.exists(_.last.version == "1.2"))
 
-        val ifInstalled = home.getWithRetainedIdIfInstalled("the-jdk:1").unsafeRun()
+        val ifInstalled = home.getWithIsSystemIfInstalled("the-jdk:1").unsafeRun()
         assert(ifInstalled.nonEmpty)
-        assert(ifInstalled.map(_._1).contains("the-jdk@1.1"))
+        assert(ifInstalled.map(_._1).contains(false))
 
-        val (installedId, _) = home.getWithRetainedId("the-jdk:1").unsafeRun()
-        assert(installedId == "the-jdk@1.1")
+        val (isSystem, _) = home.getWithIsSystem("the-jdk:1").unsafeRun()
+        assert(!isSystem)
       }
     }
   }

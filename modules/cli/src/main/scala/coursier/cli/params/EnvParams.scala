@@ -12,7 +12,8 @@ final case class EnvParams(
   env: Boolean,
   disableEnv: Boolean,
   setup: Boolean,
-  homeOpt: Option[Path]
+  homeOpt: Option[Path],
+  windowsScript: Boolean
 ) {
   def anyFlag: Boolean = env || setup
   // TODO Allow to customize some parameters of WindowsEnvVarUpdater / ProfileUpdater?
@@ -49,7 +50,8 @@ final case class EnvParams(
               }
             case Right(profileUpdater) =>
               lazy val profileFiles = profileUpdater.profileFiles() // Task.delay(…)
-              val profileFilesStr = profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
+              val profileFilesStr =
+                profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
               val msg = s"Checking if ${profileFilesStr.mkString(", ")} need(s) updating."
               Task.delay {
                 if (verbosity >= 0)
@@ -93,7 +95,9 @@ object EnvParams {
     )
     val flagsV =
       if (flags.count(identity) > 1)
-        Validated.invalidNel("Error: can only specify one of --env, --disable / --disable-env, --setup.")
+        Validated.invalidNel(
+          "Error: can only specify one of --env, --disable / --disable-env, --setup."
+        )
       else
         Validated.validNel(())
 
@@ -102,7 +106,8 @@ object EnvParams {
         options.env,
         options.disableEnv,
         options.setup,
-        homeOpt
+        homeOpt,
+        options.windowsScript
       )
     }
   }

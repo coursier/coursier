@@ -61,7 +61,7 @@ import scala.io.{Codec, Source}
         Seq("#!/usr/bin/env sh") ++
           setVars ++
           Seq(
-            "exec " + c + " \"$@\""
+            "exec \"" + c + "\" \"$@\""
           )
     }
 
@@ -96,7 +96,7 @@ import scala.io.{Codec, Source}
 
   def value: Array[Byte] =
     kind match {
-      case Preamble.Kind.Sh => sh
+      case Preamble.Kind.Sh  => sh
       case Preamble.Kind.Bat => bat
     }
 }
@@ -105,7 +105,7 @@ object Preamble {
 
   sealed abstract class Kind extends Product with Serializable
   object Kind {
-    case object Sh extends Kind
+    case object Sh  extends Kind
     case object Bat extends Kind
   }
 
@@ -118,17 +118,15 @@ object Preamble {
         .getClassLoader
         .getResourceAsStream(path)
       Source.fromInputStream(is)(Codec.UTF8).mkString
-    } finally {
-      if (is != null)
-        is.close()
     }
+    finally if (is != null)
+      is.close()
   }
 
   private lazy val batJarTemplate: String =
     readResource("coursier/launcher/jar-launcher.bat")
   private lazy val batCommandTemplate: String =
     readResource("coursier/launcher/launcher.bat")
-
 
   private def shArgsPartitioner(jarPath: String): String = {
     val bs = "\\"

@@ -27,7 +27,11 @@ final case class SonatypeApi(
   private def postBody[B: EncodeJson](content: B): RequestBody =
     clientUtil.postBody(Json.obj("data" -> EncodeJson.of[B].apply(content)))
 
-  private def get[T: DecodeJson](url: String, post: Option[RequestBody] = None, nested: Boolean = true): Task[T] =
+  private def get[T: DecodeJson](
+    url: String,
+    post: Option[RequestBody] = None,
+    nested: Boolean = true
+  ): Task[T] =
     clientUtil.get(url, post, nested)(Response.decode[T]).map(_.data)
 
   private val clientUtil = OkHttpClientUtil(client, authentication, verbosity)
@@ -61,9 +65,9 @@ final case class SonatypeApi(
 
     withRetry { attempt =>
       for {
-        _ <- before(attempt)
-        a <- task.attempt
-        _ <- after(a.left.toOption)
+        _   <- before(attempt)
+        a   <- task.attempt
+        _   <- after(a.left.toOption)
         res <- Task.fromEither(a)
       } yield res
     }
@@ -74,20 +78,23 @@ final case class SonatypeApi(
 
   def decodeListProfilesResponse(json: Json): Either[Exception, Seq[SonatypeApi.Profile]] =
     json.as(DecodeJson.ListDecodeJson(Profiles.Profile.decode)).toEither match {
-      case Left(e) => Left(new Exception(s"Error decoding response: $e"))
+      case Left(e)  => Left(new Exception(s"Error decoding response: $e"))
       case Right(l) => Right(l.map(_.profile))
     }
 
   def listProfileRepositories(profileIdOpt: Option[String]): Task[Seq[SonatypeApi.Repository]] =
-    get(s"$base/staging/profile_repositories" + profileIdOpt.fold("")("/" + _))(DecodeJson.ListDecodeJson(RepositoryResponse.decoder))
+    get(s"$base/staging/profile_repositories" + profileIdOpt.fold("")("/" + _))(
+      DecodeJson.ListDecodeJson(RepositoryResponse.decoder)
+    )
       .map(_.map(_.repository))
 
   def rawListProfileRepositories(profileIdOpt: Option[String]): Task[Json] =
     get[Json](s"$base/staging/profile_repositories" + profileIdOpt.fold("")("/" + _))
 
-  def decodeListProfileRepositoriesResponse(json: Json): Either[Exception, Seq[SonatypeApi.Repository]] =
+  def decodeListProfileRepositoriesResponse(json: Json)
+    : Either[Exception, Seq[SonatypeApi.Repository]] =
     json.as(DecodeJson.ListDecodeJson(RepositoryResponse.decoder)).toEither match {
-      case Left(e) => Left(new Exception(s"Error decoding response: $e"))
+      case Left(e)  => Left(new Exception(s"Error decoding response: $e"))
       case Right(l) => Right(l.map(_.repository))
     }
 
@@ -105,19 +112,38 @@ final case class SonatypeApi(
       post = Some(postBody(StartRequest(description))(StartRequest.encoder))
     )
 
-  private def stagedRepoAction(action: String, profile: Profile, repositoryId: String, description: String): Task[Unit] =
+  private def stagedRepoAction(
+    action: String,
+    profile: Profile,
+    repositoryId: String,
+    description: String
+  ): Task[Unit] =
     clientUtil.create(
       s"${profile.uri}/$action",
-      post = Some(postBody(StagedRepositoryRequest(description, repositoryId))(StagedRepositoryRequest.encoder))
+      post = Some(postBody(StagedRepositoryRequest(description, repositoryId))(
+        StagedRepositoryRequest.encoder
+      ))
     )
 
-  def sendCloseStagingRepositoryRequest(profile: Profile, repositoryId: String, description: String): Task[Unit] =
+  def sendCloseStagingRepositoryRequest(
+    profile: Profile,
+    repositoryId: String,
+    description: String
+  ): Task[Unit] =
     stagedRepoAction("finish", profile, repositoryId, description)
 
-  def sendPromoteStagingRepositoryRequest(profile: Profile, repositoryId: String, description: String): Task[Unit] =
+  def sendPromoteStagingRepositoryRequest(
+    profile: Profile,
+    repositoryId: String,
+    description: String
+  ): Task[Unit] =
     stagedRepoAction("promote", profile, repositoryId, description)
 
-  def sendDropStagingRepositoryRequest(profile: Profile, repositoryId: String, description: String): Task[Unit] =
+  def sendDropStagingRepositoryRequest(
+    profile: Profile,
+    repositoryId: String,
+    description: String
+  ): Task[Unit] =
     stagedRepoAction("drop", profile, repositoryId, description)
 
   def lastActivity(repositoryId: String, action: String) =
@@ -156,7 +182,9 @@ final case class SonatypeApi(
                     .schedule(nextDelay, es)
                 else
                   // FIXME totalDelay doesn't include the duration of the requests themselves (only the time between)
-                  Task.fail(new Exception(s"Repository $repositoryId in state $other after $totalDelay"))
+                  Task.fail(
+                    new Exception(s"Repository $repositoryId in state $other after $totalDelay")
+                  )
             }
         }
       }
@@ -181,7 +209,6 @@ object SonatypeApi {
     `type`: String
   )
 
-
   def activityErrored(activity: Json): Either[List[String], Unit] =
     Activity.decoder.decodeJson(activity).toEither match {
       case Left(e) => ???
@@ -197,14 +224,21 @@ object SonatypeApi {
   def repositoryClosed(activity: Json, repoId: String): Boolean =
     Activity.decoder.decodeJson(activity).toEither match {
       case Left(_) => ???
-      case Right(a) => a.events.exists(e => e.name == "repositoryClosed" && e.properties.exists(p => p.name == "id" && p.value == repoId))
+      case Right(a) =>
+        a.events.exists { e =>
+          e.name == "repositoryClosed" &&
+          e.properties.exists(p => p.name == "id" && p.value == repoId)
+        }
     }
   def repositoryPromoted(activity: Json, repoId: String): Boolean =
     Activity.decoder.decodeJson(activity).toEither match {
       case Left(_) => ???
-      case Right(a) => a.events.exists(e => e.name == "repositoryReleased" && e.properties.exists(p => p.name == "id" && p.value == repoId))
+      case Right(a) =>
+        a.events.exists { e =>
+          e.name == "repositoryReleased" &&
+          e.properties.exists(p => p.name == "id" && p.value == repoId)
+        }
     }
-
 
   private final case class Activity(name: String, events: List[Activity.Event])
 
@@ -214,7 +248,6 @@ object SonatypeApi {
     final case class Property(name: String, value: String)
     implicit val decoder = DecodeJson.of[Activity]
   }
-
 
   private val mediaType = MediaType.parse("application/json")
 

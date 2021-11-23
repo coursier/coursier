@@ -4,7 +4,13 @@ import coursier.core.Reconciliation
 import coursier.error.conflict.{StrictRule, UnsatisfiedRule}
 import coursier.graph.Conflict
 import coursier.params.ResolutionParams
-import coursier.params.rule.{AlwaysFail, DontBumpRootDependencies, RuleResolution, SameVersion, Strict}
+import coursier.params.rule.{
+  AlwaysFail,
+  DontBumpRootDependencies,
+  RuleResolution,
+  SameVersion,
+  Strict
+}
 import coursier.util.{ModuleMatcher, ModuleMatchers}
 import utest._
 
@@ -75,7 +81,7 @@ object ResolveRulesTests extends TestSuite {
 
       test("failRuleResolution") - async {
 
-        val rule = AlwaysFail()
+        val rule    = AlwaysFail()
         val ruleRes = RuleResolution.Fail
 
         val params = ResolutionParams()
@@ -154,7 +160,7 @@ object ResolveRulesTests extends TestSuite {
     test("strict") {
       test("fail") - async {
 
-        val rule = Strict()
+        val rule    = Strict()
         val ruleRes = RuleResolution.Fail
 
         val params = ResolutionParams()
@@ -181,7 +187,7 @@ object ResolveRulesTests extends TestSuite {
 
       "for roots" - async {
 
-        val rule = Strict()
+        val rule    = Strict()
         val ruleRes = RuleResolution.Fail
 
         val params = ResolutionParams()
@@ -201,7 +207,14 @@ object ResolveRulesTests extends TestSuite {
         }
 
         val expectedEvicted = Seq(
-          Conflict(mod"org.typelevel:cats-core_2.11", "1.6.0", "1.5.0", wasExcluded = false, mod"org.typelevel:cats-core_2.11", "1.5.0")
+          Conflict(
+            mod"org.typelevel:cats-core_2.11",
+            "1.6.0",
+            "1.5.0",
+            wasExcluded = false,
+            mod"org.typelevel:cats-core_2.11",
+            "1.5.0"
+          )
         )
         val evicted = ex match {
           case f: StrictRule =>
@@ -209,7 +222,7 @@ object ResolveRulesTests extends TestSuite {
             assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
             f.conflict match {
               case e: Strict.EvictedDependencies => e.evicted.map(_.conflict)
-              case _ => ???
+              case _                             => ???
             }
           case _ =>
             throw new Exception("Unexpected exception type", ex)
@@ -243,7 +256,14 @@ object ResolveRulesTests extends TestSuite {
         }
 
         val expectedEvicted = Seq(
-          Conflict(mod"com.chuusai:shapeless_2.12", "2.3.3", "2.3.2", wasExcluded = false, mod"com.github.alexarchambault:argonaut-shapeless_6.2_2.12", "1.2.0-M4")
+          Conflict(
+            mod"com.chuusai:shapeless_2.12",
+            "2.3.4-M1",
+            "2.3.2",
+            wasExcluded = false,
+            mod"com.github.alexarchambault:argonaut-shapeless_6.2_2.12",
+            "1.2.0-M4"
+          )
         )
         val evicted = ex match {
           case f: StrictRule =>
@@ -251,7 +271,7 @@ object ResolveRulesTests extends TestSuite {
             assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
             f.conflict match {
               case e: Strict.EvictedDependencies => e.evicted.map(_.conflict)
-              case _ => ???
+              case _                             => ???
             }
           case _ =>
             throw new Exception("Unexpected exception type", ex)
@@ -315,7 +335,14 @@ object ResolveRulesTests extends TestSuite {
           }
 
           val expectedEvicted = Seq(
-            Conflict(mod"com.chuusai:shapeless_2.12", "2.3.3", "2.3.2", wasExcluded = false, mod"com.github.alexarchambault:argonaut-shapeless_6.2_2.12", "1.2.0-M4")
+            Conflict(
+              mod"com.chuusai:shapeless_2.12",
+              "2.3.3",
+              "2.3.2",
+              wasExcluded = false,
+              mod"com.github.alexarchambault:argonaut-shapeless_6.2_2.12",
+              "1.2.0-M4"
+            )
           )
           val evicted = ex match {
             case f: StrictRule =>
@@ -323,7 +350,7 @@ object ResolveRulesTests extends TestSuite {
               assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
               f.conflict match {
                 case e: Strict.EvictedDependencies => e.evicted.map(_.conflict)
-                case _ => ???
+                case _                             => ???
               }
             case _ =>
               throw new Exception("Unexpected exception type", ex)

@@ -16,16 +16,16 @@ jobs:
       matrix:
         OS: ["ubuntu-latest"]
         JDK: ["8"]
-        SCALA_VERSION: ["2.12.12"]
+        SCALA_VERSION: ["2.12.15"]
         include:
           - JDK: "8"
-            SCALA_VERSION: "2.12.12"
+            SCALA_VERSION: "2.12.15"
             OS: "windows-latest"
           - JDK: "8"
-            SCALA_VERSION: "2.13.3"
+            SCALA_VERSION: "2.13.6"
             OS: "ubuntu-latest"
           - JDK: "11"
-            SCALA_VERSION: "2.12.12"
+            SCALA_VERSION: "2.12.15"
             OS: "ubuntu-latest"
     steps:
     - name: Don't convert LF to CRLF during checkout
@@ -37,7 +37,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v6.2
+    - uses: coursier/cache-action@v6.3
     - uses: coursier/setup-action@v1
       with:
         jvm: ${{ matrix.JDK }}
@@ -59,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        SCALA_VERSION: ["2.12.12", "2.13.3"]
+        SCALA_VERSION: ["2.12.15", "2.13.6"]
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
@@ -70,7 +70,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v6.2
+    - uses: coursier/cache-action@v6.3
     - uses: coursier/setup-action@v1
       with:
         jvm: 8
@@ -87,7 +87,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v6.2
+    - uses: coursier/cache-action@v6.3
     - uses: coursier/setup-action@v1
       with:
         jvm: 8
@@ -106,7 +106,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v6.2
+    - uses: coursier/cache-action@v6.3
     - uses: coursier/setup-action@v1
       with:
         jvm: 8
@@ -114,8 +114,22 @@ jobs:
       env:
         COURSIER_JNI: force
 
+  format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.3
+    - uses: coursier/setup-action@v1
+      with:
+        jvm: 8
+        apps: scalafmt:3.0.0
+    - run: scalafmt --check
+
   publish:
-    needs: ["test", "js-test", "bin-compat", "website-check"]
+    needs: ["test", "js-test", "bin-compat", "website-check", "format"]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -123,7 +137,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6.2
+      - uses: coursier/cache-action@v6.3
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
@@ -136,7 +150,11 @@ jobs:
           echo '-Xmx2g' >> .mill-jvm-opts
 
       - name: Release
-        run: ./mill -i publishSonatype __.publishArtifacts
+        run: |
+          ./mill -i publishSonatype __.publishArtifacts || (
+            echo "Publishing exit with non-zero code, ignoring it" 1>&2
+            exit 0
+          )
         env:
           PGP_PASSWORD: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
@@ -157,13 +175,13 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6.2
+      - uses: coursier/cache-action@v6.3
       - uses: coursier/setup-action@v1
         with:
           jvm: 8
       - name: Copy artifacts
         run: ./mill -i copyLauncher artifacts/
-      - uses: actions/upload-artifact@v2.2.3
+      - uses: actions/upload-artifact@v2.2.4
         with:
           name: launchers
           path: artifacts/
@@ -180,14 +198,14 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6.2
+      - uses: coursier/cache-action@v6.3
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
       - uses: coursier/setup-action@v1
         with:
           jvm: 8
-      - uses: uraimo/run-on-arch-action@v2.0.9
+      - uses: uraimo/run-on-arch-action@v2.1.1
         with:
           arch: aarch64
           distro: ubuntu20.04
@@ -227,7 +245,7 @@ jobs:
             export PATH="/utils:$PATH"
             eval "$(cs java --env --jvm 11 --jvm-index https://github.com/coursier/jvm-index/raw/master/index.json)"
             ./mill -i copyLauncher /artifacts/
-      - uses: actions/upload-artifact@v2.2.3
+      - uses: actions/upload-artifact@v2.2.4
         with:
           name: launchers
           path: artifacts/
@@ -244,7 +262,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v6.2
+    - uses: coursier/cache-action@v6.3
     - uses: coursier/setup-action@v1
       with:
         jvm: 8
@@ -252,7 +270,7 @@ jobs:
       run: ./mill -i waitForSync
     - name: Copy artifacts
       run: ./mill -i copyJarLaunchers
-    - uses: actions/upload-artifact@v2.2.3
+    - uses: actions/upload-artifact@v2.2.4
       with:
         name: launchers
         path: artifacts/
@@ -269,7 +287,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v6.2
+    - uses: coursier/cache-action@v6.3
     - uses: coursier/setup-action@v1
       with:
         jvm: 8
@@ -291,7 +309,11 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - run: .github/scripts/update-brew-formula.sh
+      - uses: coursier/cache-action@v6.3
+      - uses: coursier/setup-action@v1
+        with:
+          jvm: 8
+      - run: .github/scripts/scala-cli.sh .github/scripts/UpdateBrewFormula.scala
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
@@ -305,7 +327,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6.2
+      - uses: coursier/cache-action@v6.3
       - uses: coursier/setup-action@v1
         with:
           jvm: 8
@@ -323,7 +345,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6.2
+      - uses: coursier/cache-action@v6.3
       - uses: coursier/setup-action@v1
         with:
           jvm: 8

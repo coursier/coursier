@@ -1,18 +1,20 @@
 package coursier.cli.search
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.Channels
 import coursier.util.Sync
 
-object Search extends CaseApp[SearchOptions] {
+object Search extends CoursierCommand[SearchOptions] {
+
+  override def group: String = CommandGroup.channel
 
   override def run(options: SearchOptions, args: RemainingArgs): Unit = {
     val params = SearchParams(options, args.all.nonEmpty).exitOnError()
-    val pool = Sync.fixedThreadPool(params.cache.parallel)
-    val cache = params.cache.cache(pool, params.output.logger())
-    val channels = Channels(params.channels, params.repositories, cache)
+    val pool   = Sync.fixedThreadPool(params.cache.parallel)
+    val cache  = params.cache.cache(pool, params.output.logger())
+    val channels = Channels(params.channels.channels, params.repositories.repositories, cache)
       .withVerbosity(params.output.verbosity)
     channels.searchAppName(args.all).attempt.unsafeRun()(cache.ec) match {
       case Left(err: Channels.ChannelsException) =>

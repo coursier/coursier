@@ -30,12 +30,12 @@ class NativeBuilderImpl extends NativeBuilder {
 
     val mode = options.modeOpt match {
       case Some(mode) => sn.Mode(mode)
-      case None => sn.Mode.default
+      case None       => sn.Mode.default
     }
 
     val gc = options.gcOpt match {
       case Some(gc) => sn.GC(gc)
-      case None => sn.GC.default
+      case None     => sn.GC.default
     }
 
     val clang = options.clangOpt.getOrElse {
@@ -76,16 +76,14 @@ class NativeBuilderImpl extends NativeBuilder {
           sn.Discover.targetTriple(clang, workDir)
         })
       sn.Build.build(config0, outpath)
-    } finally {
-      if (!options.keepWorkDir)
-        deleteRecursive(workDir.toFile)
     }
+    finally if (!options.keepWorkDir)
+      deleteRecursive(workDir.toFile)
   }
 
   private def deleteRecursive(f: File): Unit = {
-    if (f.isDirectory) {
+    if (f.isDirectory)
       f.listFiles().foreach(deleteRecursive)
-    }
     f.delete()
   }
 }

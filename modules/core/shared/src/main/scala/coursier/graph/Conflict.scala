@@ -36,25 +36,33 @@ object Conflict {
 
       val colors0 = Colors.get(coursier.core.compatibility.coloredOutput)
 
-      val treeRepr = Tree(Seq(tree).toVector.sortBy(t => (t.module.organization.value, t.module.name.value, t.module.nameWithAttributes)))(_.dependees)
-        .render { node =>
-          if (node.excludedDependsOn)
-            s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.reconciledVersion}"
-          else if (node.dependsOnVersion != node.dependsOnReconciledVersion) {
-            val assumeCompatibleVersions = compatibleVersions(node.dependsOnVersion, node.dependsOnReconciledVersion)
+      val tree0 = Tree(
+        Seq(tree).toVector.sortBy(t =>
+          (t.module.organization.value, t.module.name.value, t.module.nameWithAttributes)
+        )
+      )(_.dependees)
+      val treeRepr = tree0.render { node =>
+        if (node.excludedDependsOn)
+          s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.reconciledVersion}"
+        else if (node.dependsOnVersion != node.dependsOnReconciledVersion) {
+          val assumeCompatibleVersions =
+            compatibleVersions(node.dependsOnVersion, node.dependsOnReconciledVersion)
 
-            s"${node.module}:${node.reconciledVersion} " +
-              (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
-              s"wants ${node.dependsOnModule}:${node.dependsOnVersion}" +
-              colors0.reset
-          } else
-            s"${node.module}:${node.reconciledVersion}"
+          s"${node.module}:${node.reconciledVersion} " +
+            (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
+            s"wants ${node.dependsOnModule}:${node.dependsOnVersion}" +
+            colors0.reset
         }
+        else
+          s"${node.module}:${node.reconciledVersion}"
+      }
 
-      val assumeCompatibleVersions = Print.compatibleVersions(tree.dependsOnVersion, tree.dependsOnReconciledVersion)
+      val assumeCompatibleVersions =
+        Print.compatibleVersions(tree.dependsOnVersion, tree.dependsOnReconciledVersion)
 
       System.lineSeparator() + s"${tree.dependsOnModule.repr}:" +
-        s"${if (assumeCompatibleVersions) colors0.yellow else colors0.red}${tree.dependsOnReconciledVersion}${colors0.reset} " +
+        s"${if (assumeCompatibleVersions) colors0.yellow
+        else colors0.red}${tree.dependsOnReconciledVersion}${colors0.reset} " +
         s"(${tree.dependsOnVersion} wanted)" + System.lineSeparator() + treeRepr
     }
   }
@@ -71,18 +79,20 @@ object Conflict {
       wanted == selected || {
         val c = Parse.versionConstraint(wanted)
         val v = Version(selected)
-        if (c.interval == VersionInterval.zero) {
+        if (c.interval == VersionInterval.zero)
           if (semVer)
             c.preferred.exists(_.items.take(2) == v.items.take(2))
           else
             c.preferred.contains(v)
-        } else
+        else
           c.interval.contains(v)
       }
 
     val transitive = tree.flatMap { t =>
       t.dependees.collect {
-        case d  if !d.excludedDependsOn && !compatible(d.dependsOnReconciledVersion, d.dependsOnVersion) =>
+        case d
+            if !d.excludedDependsOn &&
+              !compatible(d.dependsOnReconciledVersion, d.dependsOnVersion) =>
           Conflicted(d)
       }
     }
@@ -113,7 +123,11 @@ object Conflict {
     fromRoots ++ transitive
   }
 
-  def apply(resolution: Resolution, withExclusions: Boolean = false, semVer: Boolean = false): Seq[Conflict] =
+  def apply(
+    resolution: Resolution,
+    withExclusions: Boolean = false,
+    semVer: Boolean = false
+  ): Seq[Conflict] =
     conflicted(resolution, withExclusions, semVer)
       .map(_.conflict)
 
