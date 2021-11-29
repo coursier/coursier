@@ -4,7 +4,7 @@ title: Proxy
 
 By default, coursier relies on [`java.net.HttpURLConnection`](https://docs.oracle.com/javase/8/docs/api/java/net/HttpURLConnection.html)
 to handle HTTP requests. `java.net.HttpURLConnection` automatically picks up
-[proxy related properties](https://docs.oracle.com/javase/8/docs/technotes/guides/net/proxies.html). Typically, `https.proxyHost` and `https.proxyPort` need to be set. In case when the proxy server requires authentication, also `https.proxyUser` and `https.proxyPassword` must be set.
+[proxy related properties](https://docs.oracle.com/javase/8/docs/technotes/guides/net/proxies.html). Typically, `https.proxyHost` and `https.proxyPort` need to be set. If the proxy server requires authentication, `https.proxyUser` and `https.proxyPassword` must also be set.
 
 ## CLI
 
