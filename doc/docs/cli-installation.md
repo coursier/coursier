@@ -45,12 +45,16 @@ On Windows, [download and execute the Windows installer](https://git.io/coursier
 If you prefer a command line-based install, or if you would like to customize the setup options, use:
 
 ```bat
-# CMD
+# cmd.exe
 > bitsadmin /transfer cs-cli https://git.io/coursier-cli-windows-exe "%cd%\cs.exe"
 > .\cs --help
 
 # PowerShell
 > Start-BitsTransfer -Source https://git.io/coursier-cli-windows-exe -Destination cs.exe
+> .\cs --help
+
+# curl (valid on cmd.exe and PowerShell)
+> curl -fLo cs.exe https://git.io/coursier-cli-windows-exe
 > .\cs --help
 ```
 
