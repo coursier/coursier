@@ -34,7 +34,7 @@ object JvmCacheTests extends TestSuite {
       f(dir)
     }
     finally if (dir != null)
-      deleteRecursive(dir.toFile)
+        deleteRecursive(dir.toFile)
   }
 
   private val poolInitialized = new AtomicBoolean(false)

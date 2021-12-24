@@ -30,7 +30,7 @@ object Dir {
             .flatMap(files)
         }
         finally if (s != null)
-          s.close()
+            s.close()
       }
       else
         // ???
@@ -70,7 +70,7 @@ object Dir {
           s.iterator().asScala.toVector.partition(Files.isDirectory(_))
         }
         finally if (s != null)
-          s.close()
+            s.close()
       }
 
       val checkFiles =

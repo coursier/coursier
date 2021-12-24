@@ -96,7 +96,7 @@ final class OutputFrame(
         var n  = 0
         while (n < bufferSize && it.hasNext) {
           val l = it.next()
-          // https://stackoverflow.com/a/25189932/3714539
+            // https://stackoverflow.com/a/25189932/3714539
             .replaceAll("\u001B\\[[\\d;]*[^\\d;]", "")
           val l0 =
             if (l.length <= width) l
