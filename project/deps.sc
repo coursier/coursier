@@ -3,7 +3,8 @@ import mill._, scalalib._
 object Deps {
   def argonautShapeless = ivy"com.github.alexarchambault::argonaut-shapeless_6.2::1.2.0"
   def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M10"
-  def catsCore          = ivy"org.typelevel::cats-core:2.6.1"
+  def catsCore          = ivy"org.typelevel::cats-core:${Versions.cats}"
+  def catsFree          = ivy"org.typelevel::cats-free:${Versions.cats}"
   def catsEffect        = ivy"org.typelevel::cats-effect::2.5.4"
   def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.6.0"
   def concurrentReferenceHashMap =
@@ -59,6 +60,7 @@ object Deps {
 }
 
 object Versions {
+  def cats          = "2.6.1"
   def fastParse     = "2.3.3"
   def http4s        = "0.18.26"
   def jniUtils      = "0.3.2"

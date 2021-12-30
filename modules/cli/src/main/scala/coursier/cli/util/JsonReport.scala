@@ -3,6 +3,10 @@ package coursier.cli.util
 import java.io.File
 import java.util.Objects
 
+import cats.Eval
+import cats.free.Cofree
+import cats.syntax.foldable._
+
 import coursier.core._
 import coursier.util.Artifact
 
@@ -69,29 +73,66 @@ object JsonReport {
     exclusions: T => Set[String]
   ): String = {
 
-    val depToTransitiveDeps = new mutable.HashMap[T, Set[String]]
-    def flattenDeps(elem: T): Set[String] =
-      if (depToTransitiveDeps.contains(elem))
-        depToTransitiveDeps(elem)
-      else {
-        val children0 = children(elem)
-        val deps =
-          children0.map(reconciledVersionStr(_)).toSet ++ children0.iterator.flatMap(flattenDeps(_))
-        depToTransitiveDeps(elem) = deps
-        deps
+    // Addresses the corner case in which any given library may list itself among its dependencies
+    // See: https://github.com/coursier/coursier/issues/2316
+    def childrenOrEmpty(elem: T): List[T] = {
+      val elemId = reconciledVersionStr(elem)
+      children(elem).filterNot(i => reconciledVersionStr(i) == elemId).toList
+    }
+
+    lazy val depToTransitiveDeps = {
+      // Builds a map of flattened dependencies starting at this element
+      // The implementation makes use of Cofree[List, T] which is a foldable co-monad
+      // and because of that, we can collapse it at each of its nodes and aggregate the results
+      def transitiveOf(elem: T): Map[T, List[String]] = {        
+        // Collapse node builds the list of dependencies by reaching to the leave first
+        // and then building back the list by prepending the head
+        def collapseNode(node: Cofree[List, T]): Eval[List[String]] = {
+          for {
+            tail     <- node.tail
+            children <- tail.foldMapM(collapseNode(_)) // collapses the tail until we reach a leave
+          } yield reconciledVersionStr(node.head) :: children
+        }
+
+        // Associate each item in the dependency tree, with the aggregated dependencies of its branches
+        def collapseIntoMap(node: Cofree[List, T]): Eval[Map[T, List[String]]] =
+          collapseNode(node).map(children => Map(node.head -> children))
+
+        // A dependency tree forms a Cofree[List, T] so we first build the structure
+        val depTree = Cofree.unfold(elem)(childrenOrEmpty(_))
+
+        // coflatMap gives us an entire subtree at each node, which we can collapse
+        // and finally fold together
+        depTree.coflatMap(collapseIntoMap).foldMapM(identity).value
       }
+
+      roots.toList.map(transitiveOf(_))
+        .foldMap(identity)
+        .map { case (elem, deps) =>
+          // The Cofree fold will include the actual node item in its dependencies list
+          // so we remove it here
+          elem -> (deps.toSet - reconciledVersionStr(elem))
+        }
+    }
+
+    def flattenedDeps(elem: T): Set[String] =
+      depToTransitiveDeps.getOrElse(elem, Set.empty[String])
 
     val rootDeps: Seq[DepNode] = roots.map { r =>
       DepNode(
         reconciledVersionStr(r),
         getFile(r),
-        children(r).map(reconciledVersionStr(_)).toSet,
-        flattenDeps(r),
+        childrenOrEmpty(r).map(reconciledVersionStr(_)).toSet,
+        flattenedDeps(r),
         exclusions(r)
       )
     }
-    val report =
-      ReportNode(conflictResolutionForRoots, rootDeps.toVector.sortBy(_.coord), ReportNode.version)
+
+    val report = ReportNode(
+      conflictResolutionForRoots,
+      rootDeps.toVector.sortBy(_.coord),
+      ReportNode.version
+    )
     printer.pretty(report.asJson)
   }
 
@@ -112,7 +153,7 @@ final case class JsonElem(
   // Option of the file path
   lazy val downloadedFile: Option[String] =
     jsonPrintRequirement.flatMap(req =>
-      req.depToArtifacts.getOrElse(dep, Seq())
+      req.depToArtifacts.getOrElse(dep, Seq()).view
         .filter(_._1.classifier == dep.attributes.classifier)
         .map(x => req.fileByArtifact.get(x._2.url))
         .filter(_.isDefined)
@@ -149,14 +190,15 @@ final case class JsonElem(
           d
       }
 
-      def excluded = resolution
+      def calculateExclusions = resolution
         .dependenciesOf(
           dep.withExclusions(Set.empty),
           withRetainedVersions = false
         )
+        .view
         .sortBy { trDep =>
           (trDep.module.organization, trDep.module.name, trDep.version)
-        }
+        } 
         .map(_.moduleVersion)
         .filterNot(dependencies.map(_.moduleVersion).toSet).map {
           case (mod, ver) =>
@@ -177,17 +219,24 @@ final case class JsonElem(
             )
         }
 
-      val dependencyElems = dependencies.map(JsonElem(
-        _,
-        artifacts,
-        jsonPrintRequirement,
-        resolution,
-        colors,
-        printExclusions,
-        excluded = false,
-        overrideClassifiers = overrideClassifiers
-      ))
-      dependencyElems ++ (if (printExclusions) excluded else Nil)
+      val dependencyElems = mutable.ListBuffer.empty[JsonElem]
+      val it = dependencies.iterator
+      while (it.hasNext) {
+        val dep = it.next()
+        val elem = JsonElem(
+          dep,
+          artifacts,
+          jsonPrintRequirement,
+          resolution,
+          colors,
+          printExclusions,
+          excluded = false,
+          overrideClassifiers = overrideClassifiers
+        )
+        dependencyElems += elem
+      }
+      dependencyElems ++ (if (printExclusions) calculateExclusions else Nil)
+      dependencyElems.toList
     }
 
   /** Override the hashcode to explicitly exclude `children`, because children will result in

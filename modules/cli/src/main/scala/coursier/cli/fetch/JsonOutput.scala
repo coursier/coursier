@@ -7,6 +7,8 @@ import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.core.Publication
 import coursier.util.Artifact
 
+import scala.collection.mutable
+
 object JsonOutput {
 
   def report(
@@ -21,7 +23,6 @@ object JsonOutput {
       artifacts
         .groupBy(_._1)
         .mapValues(_.map(t => (t._2, t._3)).toVector)
-        .iterator
         .toMap
 
     // TODO(wisechengyi): This is not exactly the root dependencies we are asking for on the command line, but it should be
@@ -29,17 +30,18 @@ object JsonOutput {
     val deps = depToArtifacts.keySet.toVector // ?? Use resolution.rootDependencies instead?
 
     // A map from requested org:name:version to reconciled org:name:version
-    val conflictResolutionForRoots = resolution
-      .rootDependencies
-      .toVector
-      .flatMap { dep =>
+    val conflictResolutionForRoots = {
+      val mutableMap = mutable.Map.empty[String, String]
+      val it = resolution.rootDependencies.iterator
+      while (it.hasNext) {
+        val dep = it.next()
         val reconciledVersion = resolution.reconciledVersions.getOrElse(dep.module, dep.version)
-        if (reconciledVersion == dep.version)
-          Nil
-        else
-          Seq(s"${dep.module}:${dep.version}" -> s"${dep.module}:$reconciledVersion")
+        if (reconciledVersion != dep.version) {
+          mutableMap += s"${dep.module}:${dep.version}" -> s"${dep.module}:$reconciledVersion"
+        }
       }
-      .toMap
+      mutableMap.toMap
+    }
 
     val artifacts0 = artifacts.map {
       case (dep, _, artifact) =>
