@@ -90,7 +90,7 @@ object JsonReport {
         def collapseNode(node: Cofree[List, T]): Eval[List[String]] = {
           for {
             tail     <- node.tail
-            children <- tail.foldMapM(collapseNode(_)) // collapses the tail until we reach a leave
+            children <- tail.foldMapM(child => Eval.defer(collapseNode(child))) // collapses the tail until we reach a leave
           } yield reconciledVersionStr(node.head) :: children
         }
 
