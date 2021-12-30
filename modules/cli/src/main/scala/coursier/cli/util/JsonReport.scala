@@ -119,7 +119,7 @@ object JsonReport {
     def flattenedDeps(elem: T): Set[String] =
       depToTransitiveDeps.getOrElse(elem, Set.empty[String])
 
-    val rootDeps: Seq[DepNode] = roots.map { r =>
+    val rootDeps: Vector[DepNode] = roots.map { r =>
       DepNode(
         reconciledVersionStr(r),
         getFile(r),
@@ -131,7 +131,7 @@ object JsonReport {
 
     val report = ReportNode(
       conflictResolutionForRoots,
-      rootDeps.toVector.sortBy(_.coord),
+      rootDeps.sortBy(_.coord),
       ReportNode.version
     )
     printer.pretty(report.asJson)
