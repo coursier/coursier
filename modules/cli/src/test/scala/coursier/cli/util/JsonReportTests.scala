@@ -6,8 +6,8 @@ import utest._
 object JsonReportTests extends TestSuite {
   val tests = Tests {
     test("empty JsonReport should be empty") {
-      val report: String = JsonReport[String](IndexedSeq(), Map())(
-        children = _ => Seq(),
+      val report: String = JsonReport[String](Vector.empty, Map())(
+        children = _ => Vector.empty,
         reconciledVersionStr = _ => "",
         requestedVersionStr = _ => "",
         getFile = _ => Option(""),
@@ -22,10 +22,10 @@ object JsonReportTests extends TestSuite {
     test("JsonReport containing two deps should not be empty") {
       val children = Map("a" -> Seq("b"), "b" -> Seq())
       val report: String = JsonReport[String](
-        roots = IndexedSeq("a", "b"),
+        roots = Vector("a", "b"),
         conflictResolutionForRoots = Map()
       )(
-        children = children(_),
+        children = children(_).toVector,
         reconciledVersionStr = s => s"$s:reconciled",
         requestedVersionStr = s => s"$s:requested",
         getFile = _ => Option(""),
@@ -62,10 +62,10 @@ object JsonReportTests extends TestSuite {
     ) {
       val children = Map("a" -> Seq("b"), "b" -> Seq())
       val report: String = JsonReport[String](
-        roots = IndexedSeq("b", "a"),
+        roots = Vector("b", "a"),
         conflictResolutionForRoots = Map()
       )(
-        children = children(_),
+        children = children(_).toVector,
         reconciledVersionStr = s => s"$s:reconciled",
         requestedVersionStr = s => s"$s:requested",
         getFile = _ => Option(""),

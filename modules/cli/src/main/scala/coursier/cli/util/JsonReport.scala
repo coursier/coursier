@@ -11,6 +11,7 @@ import coursier.core._
 import coursier.util.Artifact
 
 import scala.collection.mutable
+import scala.collection.immutable.SortedSet
 import scala.collection.parallel.ParSeq
 import argonaut._
 import Argonaut._
@@ -65,8 +66,8 @@ object JsonReport {
 
   private val printer = PrettyParams.nospace.copy(preserveOrder = true)
 
-  def apply[T](roots: IndexedSeq[T], conflictResolutionForRoots: Map[String, String])(
-    children: T => Seq[T],
+  def apply[T](roots: Vector[T], conflictResolutionForRoots: Map[String, String])(
+    children: T => Vector[T],
     reconciledVersionStr: T => String,
     requestedVersionStr: T => String,
     getFile: T => Option[String],
@@ -75,43 +76,43 @@ object JsonReport {
 
     // Addresses the corner case in which any given library may list itself among its dependencies
     // See: https://github.com/coursier/coursier/issues/2316
-    def childrenOrEmpty(elem: T): List[T] = {
+    def childrenOrEmpty(elem: T): Vector[T] = {
       val elemId = reconciledVersionStr(elem)
-      children(elem).filterNot(i => reconciledVersionStr(i) == elemId).toList
+      children(elem).filterNot(i => reconciledVersionStr(i) == elemId)
     }
 
     lazy val depToTransitiveDeps = {
       // Builds a map of flattened dependencies starting at this element
       // The implementation makes use of Cofree[List, T] which is a foldable co-monad
       // and because of that, we can collapse it at each of its nodes and aggregate the results
-      def transitiveOf(elem: T): Map[T, List[String]] = {        
+      def transitiveOf(elem: T): Map[T, Vector[String]] = {        
         // Collapse node builds the list of dependencies by reaching to the leave first
         // and then building back the list by prepending the head
-        def collapseNode(node: Cofree[List, T]): Eval[List[String]] = {
+        def collapseNode(node: Cofree[Vector, T]): Eval[Vector[String]] = {
           for {
             tail     <- node.tail
             children <- tail.foldMapM(child => Eval.defer(collapseNode(child))) // collapses the tail until we reach a leave
-          } yield reconciledVersionStr(node.head) :: children
+          } yield children :+ reconciledVersionStr(node.head)
         }
 
         // Associate each item in the dependency tree, with the aggregated dependencies of its branches
-        def collapseIntoMap(node: Cofree[List, T]): Eval[Map[T, List[String]]] =
+        def collapseIntoMap(node: Cofree[Vector, T]): Eval[Map[T, Vector[String]]] =
           collapseNode(node).map(children => Map(node.head -> children))
 
         // A dependency tree forms a Cofree[List, T] so we first build the structure
-        val depTree = Cofree.unfold(elem)(childrenOrEmpty(_))
+        val depTree: Cofree[Vector, T] = Cofree.unfold(elem)(childrenOrEmpty(_))
 
         // coflatMap gives us an entire subtree at each node, which we can collapse
         // and finally fold together
         depTree.coflatMap(collapseIntoMap).foldMapM(identity).value
       }
 
-      roots.toList.map(transitiveOf(_))
+      roots.map(transitiveOf(_))
         .foldMap(identity)
         .map { case (elem, deps) =>
           // The Cofree fold will include the actual node item in its dependencies list
           // so we remove it here
-          elem -> (deps.toSet - reconciledVersionStr(elem))
+          elem -> (deps.to[SortedSet] - reconciledVersionStr(elem))
         }
     }
 
@@ -122,7 +123,7 @@ object JsonReport {
       DepNode(
         reconciledVersionStr(r),
         getFile(r),
-        childrenOrEmpty(r).map(reconciledVersionStr(_)).toSet,
+        childrenOrEmpty(r).map(reconciledVersionStr(_)).to[SortedSet],
         flattenedDeps(r),
         exclusions(r)
       )
@@ -174,9 +175,8 @@ final case class JsonElem(
       s"${org.value}:${name.value}"
   }
 
-  lazy val children: Seq[JsonElem] =
-    if (excluded)
-      Nil
+  lazy val children: Vector[JsonElem] =
+    if (excluded) Vector.empty
     else {
       val dependencies = resolution.dependenciesOf(
         dep,
@@ -236,7 +236,7 @@ final case class JsonElem(
         dependencyElems += elem
       }
       dependencyElems ++ (if (printExclusions) calculateExclusions else Nil)
-      dependencyElems.toList
+      dependencyElems.toVector
     }
 
   /** Override the hashcode to explicitly exclude `children`, because children will result in
