@@ -12,7 +12,7 @@ import coursier.util.Artifact
 
 import scala.collection.mutable
 import scala.collection.immutable.SortedSet
-import scala.collection.parallel.ParSeq
+
 import argonaut._
 import Argonaut._
 
