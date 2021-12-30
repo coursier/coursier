@@ -57,6 +57,7 @@ object JsonReportTests extends TestSuite {
 
       assert(reportJson == expectedReportJson)
     }
+
     test(
       "JsonReport containing two deps should be sorted alphabetically regardless of input order"
     ) {
@@ -74,6 +75,34 @@ object JsonReportTests extends TestSuite {
 
       val reportJson = Parse.parse(report)
 
+      val expectedReportJson = Parse.parse(
+        """{
+          |  "conflict_resolution": {},
+          |  "dependencies": [
+          |    { "coord": "a:reconciled", "file": "", "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled" ] },
+          |    { "coord": "b:reconciled", "file": "", "directDependencies": [], "dependencies": [] }
+          |  ],
+          |  "version": "0.1.0"
+          |}""".stripMargin
+      )
+
+      assert(reportJson == expectedReportJson)
+    }
+
+    test("JsonReport should prevent walking a tree in which a dependency depends on itself") {
+      val children = Map("a" -> Vector("a", "b"), "b" -> Vector.empty)
+      val report = JsonReport[String](
+        roots = Vector("a", "b"),
+        conflictResolutionForRoots = Map.empty
+      )(
+        children = children(_),
+        reconciledVersionStr = s => s"$s:reconciled",
+        requestedVersionStr = s => s"$s:requested",
+        getFile = _ => Option(""),
+        exclusions = _ => Set.empty
+      )
+
+      val reportJson = Parse.parse(report)
       val expectedReportJson = Parse.parse(
         """{
           |  "conflict_resolution": {},
