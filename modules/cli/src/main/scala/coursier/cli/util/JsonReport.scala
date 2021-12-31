@@ -70,65 +70,14 @@ object JsonReport {
 
   // A dependency tree its a (T => Seq[T]) mapping and therefore it forms a Cofree[Chain, T]
   private type DepTree[T] = Cofree[Chain, T]
-  private class DepTreeZipper[A](
-      path: NonEmptyChain[A],
-      fetchChildren: A => Seq[A],
-      reconciledVersionStr: A => String
-    ) {
-
-    def focus: A = path.head
-
-    private def parents: Chain[A] = path.tail
-
-    def parent: Option[DepTreeZipper[A]] = {
-      parents.uncons.map { case (item, superPath) =>
-        val parentPath = NonEmptyChain.fromChainPrepend(item, superPath)
-        new DepTreeZipper(parentPath, fetchChildren, reconciledVersionStr)
-      }
-    }
-
-    lazy val visitedReconciledVersions: Set[String] =
-      path.iterator.map(reconciledVersionStr).toSet
-
-    def visited(item: A): Boolean =
-      visitedReconciledVersions(reconciledVersionStr(item))
-
-    def moveDown: Option[DepTreeZipper[A]] = {
-      val nonVisitedChildren = fetchChildren(focus).filterNot(visited)
-      if (nonVisitedChildren.isEmpty) None
-      else {
-        val newPath = nonVisitedChildren.head +: path
-        Some(new DepTreeZipper(newPath, fetchChildren, reconciledVersionStr))
-      }
-    }
-
-    lazy val siblings: Chain[DepTreeZipper[A]] = {
-      Chain.fromOption(parents.headOption).flatMap { parentItem =>
-        val seq = fetchChildren(parentItem)
-          .view
-          .filterNot(item => parent.exists(_.visited(item)))
-          .filterNot(item => reconciledVersionStr(item) == reconciledVersionStr(focus))
-          .map { item =>
-            val newPath = NonEmptyChain.fromChainPrepend(item, parents)
-            new DepTreeZipper(newPath, fetchChildren, reconciledVersionStr)
-          }
-
-        Chain.fromSeq(seq)
-      }
-    }
-
-    def children: Chain[DepTreeZipper[A]] = {
-      Chain.fromOption(moveDown).flatMap(child => Chain.one(child) ++ child.siblings)
-    }
-
-  }
   private object DepTree {
     /**
      * Builds the dependency tree of reconciled versions using the DepTreeZipper which prevents
      * walking through tree cycles
      */
     def unfold[A](root: A, fetchChildren: A => Seq[A], reconciledVersionStr: A => String): DepTree[A] = {
-      val rootZipper = new DepTreeZipper(NonEmptyChain.one(root), fetchChildren, reconciledVersionStr)
+      implicit val nodeEq: cats.Eq[A] = cats.Eq.by(reconciledVersionStr)
+      val rootZipper = TreeZipper.of(root, fetchChildren)
       Cofree.anaEval(rootZipper)(zipper => Eval.later(zipper.children), _.focus)
     }
   }
