@@ -4,7 +4,7 @@ import java.io.File
 import java.util.Objects
 
 import cats.Eval
-import cats.data.Chain
+import cats.data.{Chain, NonEmptyChain}
 import cats.free.Cofree
 import cats.syntax.foldable._
 
@@ -65,8 +65,71 @@ object ReportNode {
 
 object JsonReport {
 
-  private type DepTree[T] = Cofree[Chain, T]
   private val printer = PrettyParams.nospace.copy(preserveOrder = true)
+
+  // A dependency tree its a (T => Seq[T]) mapping and therefore it forms a Cofree[Chain, T]
+  private type DepTree[T] = Cofree[Chain, T]
+  private class DepTreeZipper[A](
+      path: NonEmptyChain[A],
+      fetchChildren: A => Seq[A],
+      reconciledVersionStr: A => String
+    ) {
+
+    def focus: A = path.head
+
+    private def parents: Chain[A] = path.tail
+
+    def parent: Option[DepTreeZipper[A]] = {
+      parents.uncons.map { case (item, superPath) =>
+        val parentPath = NonEmptyChain.fromChainPrepend(item, superPath)
+        new DepTreeZipper(parentPath, fetchChildren, reconciledVersionStr)
+      }
+    }
+
+    lazy val visitedReconciledVersions: Set[String] =
+      path.iterator.map(reconciledVersionStr).toSet
+
+    def visited(item: A): Boolean =
+      visitedReconciledVersions(reconciledVersionStr(item))
+
+    def moveDown: Option[DepTreeZipper[A]] = {
+      val nonVisitedChildren = fetchChildren(focus).filterNot(visited)
+      if (nonVisitedChildren.isEmpty) None
+      else {
+        val newPath = nonVisitedChildren.head +: path
+        Some(new DepTreeZipper(newPath, fetchChildren, reconciledVersionStr))
+      }
+    }
+
+    lazy val siblings: Chain[DepTreeZipper[A]] = {
+      Chain.fromOption(parents.headOption).flatMap { parentItem =>
+        val seq = fetchChildren(parentItem)
+          .view
+          .filterNot(item => parent.exists(_.visited(item)))
+          .map { item =>
+            val newPath = NonEmptyChain.fromChainPrepend(item, parents)
+            new DepTreeZipper(newPath, fetchChildren, reconciledVersionStr)
+          }
+
+        Chain.fromSeq(seq)
+      }
+    }
+
+    def children: Chain[DepTreeZipper[A]] = {
+      Chain.fromOption(moveDown).flatMap(child => Chain.one(child) ++ child.siblings)
+    }
+
+  }
+  private object DepTree {
+    /**
+     * Builds the dependency tree of reconciled versions using the DepTreeZipper which prevents
+     * walking through tree cycles
+     */
+    def unfold[A](root: A, fetchChildren: A => Seq[A], reconciledVersionStr: A => String): DepTree[A] = {
+      val rootZipper = new DepTreeZipper(NonEmptyChain.one(root), fetchChildren, reconciledVersionStr)
+      Cofree.unfold(rootZipper)(_.children).map(_.focus)
+    }
+  }
 
   def apply[T](roots: Vector[T], conflictResolutionForRoots: Map[String, String])(
     children: T => Seq[T],
@@ -83,7 +146,7 @@ object JsonReport {
       Chain.fromSeq(children(elem).filterNot(i => reconciledVersionStr(i) == elemId))
     }
 
-    lazy val depToTransitiveDeps = {
+    val depToTransitiveDeps = {
       // Builds a map of flattened dependencies starting at this element
       // The implementation makes use of Cofree[List, T] which is a foldable co-monad
       // and because of that, we can collapse it at each of its nodes and aggregate the results
@@ -92,7 +155,7 @@ object JsonReport {
         // and then building back the list by prepending the head
         def collapseNode(node: DepTree[T]): Eval[Chain[String]] = {
           for {
-            tail     <- node.tail
+            tail      <- node.tail
             children0 <- tail.foldMapM(child => Eval.defer(collapseNode(child))) // collapses the tail until we reach a leave
           } yield reconciledVersionStr(node.head) +: children0
         }
@@ -101,8 +164,8 @@ object JsonReport {
         def collapseIntoMap(node: DepTree[T]): Eval[Map[T, Chain[String]]] =
           collapseNode(node).map(children => Map(node.head -> children))
 
-        // A dependency tree forms a Cofree[List, T] so we first build the structure
-        val depTree: DepTree[T] = Cofree.unfold(elem)(childrenOrEmpty(_))
+        // Create the DepTree structure by unfolding it starting at the element given
+        val depTree: DepTree[T] = DepTree.unfold(elem, children, reconciledVersionStr)
 
         // coflatMap gives us an entire subtree at each node, which we can collapse
         // and finally fold together

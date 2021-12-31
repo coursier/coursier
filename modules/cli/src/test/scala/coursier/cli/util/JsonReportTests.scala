@@ -116,5 +116,33 @@ object JsonReportTests extends TestSuite {
 
       assert(reportJson == expectedReportJson)
     }
+
+    test("JsonReport should prevent walking a tree with cycles") {
+      val children = Map("a" -> Vector("b"), "b" -> Vector("a"))
+      val report = JsonReport[String](
+        roots = Vector("a", "b"),
+        conflictResolutionForRoots = Map.empty
+      )(
+        children = children(_),
+        reconciledVersionStr = s => s"$s:reconciled",
+        requestedVersionStr = s => s"$s:requested",
+        getFile = _ => Option(""),
+        exclusions = _ => Set.empty
+      )
+
+      val reportJson = Parse.parse(report)
+      val expectedReportJson = Parse.parse(
+        """{
+          |  "conflict_resolution": {},
+          |  "dependencies": [
+          |    { "coord": "a:reconciled", "file": "", "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled" ] },
+          |    { "coord": "b:reconciled", "file": "", "directDependencies": [ "a:reconciled" ], "dependencies": [ "a:reconciled" ] }
+          |  ],
+          |  "version": "0.1.0"
+          |}""".stripMargin
+      )
+
+      assert(reportJson == expectedReportJson)
+    }
   }
 }
