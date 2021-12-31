@@ -4,6 +4,7 @@ import java.io.File
 import java.util.Objects
 
 import cats.Eval
+import cats.data.Chain
 import cats.free.Cofree
 import cats.syntax.foldable._
 
@@ -64,10 +65,11 @@ object ReportNode {
 
 object JsonReport {
 
+  private type DepTree[T] = Cofree[Chain, T]
   private val printer = PrettyParams.nospace.copy(preserveOrder = true)
 
   def apply[T](roots: Vector[T], conflictResolutionForRoots: Map[String, String])(
-    children: T => Vector[T],
+    children: T => Seq[T],
     reconciledVersionStr: T => String,
     requestedVersionStr: T => String,
     getFile: T => Option[String],
@@ -76,43 +78,44 @@ object JsonReport {
 
     // Addresses the corner case in which any given library may list itself among its dependencies
     // See: https://github.com/coursier/coursier/issues/2316
-    def childrenOrEmpty(elem: T): Vector[T] = {
+    def childrenOrEmpty(elem: T): Chain[T] = {
       val elemId = reconciledVersionStr(elem)
-      children(elem).filterNot(i => reconciledVersionStr(i) == elemId)
+      Chain.fromSeq(children(elem).filterNot(i => reconciledVersionStr(i) == elemId))
     }
 
     lazy val depToTransitiveDeps = {
       // Builds a map of flattened dependencies starting at this element
       // The implementation makes use of Cofree[List, T] which is a foldable co-monad
       // and because of that, we can collapse it at each of its nodes and aggregate the results
-      def transitiveOf(elem: T): Map[T, Vector[String]] = {        
+      def transitiveOf(elem: T): Map[T, Chain[String]] = {        
         // Collapse node builds the list of dependencies by reaching to the leave first
         // and then building back the list by prepending the head
-        def collapseNode(node: Cofree[Vector, T]): Eval[Vector[String]] = {
+        def collapseNode(node: DepTree[T]): Eval[Chain[String]] = {
           for {
             tail     <- node.tail
-            children <- tail.foldMapM(child => Eval.defer(collapseNode(child))) // collapses the tail until we reach a leave
-          } yield children :+ reconciledVersionStr(node.head)
+            children0 <- tail.foldMapM(child => Eval.defer(collapseNode(child))) // collapses the tail until we reach a leave
+          } yield reconciledVersionStr(node.head) +: children0
         }
 
         // Associate each item in the dependency tree, with the aggregated dependencies of its branches
-        def collapseIntoMap(node: Cofree[Vector, T]): Eval[Map[T, Vector[String]]] =
+        def collapseIntoMap(node: DepTree[T]): Eval[Map[T, Chain[String]]] =
           collapseNode(node).map(children => Map(node.head -> children))
 
         // A dependency tree forms a Cofree[List, T] so we first build the structure
-        val depTree: Cofree[Vector, T] = Cofree.unfold(elem)(childrenOrEmpty(_))
+        val depTree: DepTree[T] = Cofree.unfold(elem)(childrenOrEmpty(_))
 
         // coflatMap gives us an entire subtree at each node, which we can collapse
         // and finally fold together
-        depTree.coflatMap(collapseIntoMap).foldMapM(identity).value
+        depTree.coflatMap(collapseIntoMap).fold.value
       }
 
-      roots.map(transitiveOf(_))
+      roots
+        .map(transitiveOf(_))
         .foldMap(identity)
         .map { case (elem, deps) =>
           // The Cofree fold will include the actual node item in its dependencies list
           // so we remove it here
-          elem -> (deps.to[SortedSet] - reconciledVersionStr(elem))
+          elem -> (deps.iterator.to[SortedSet] - reconciledVersionStr(elem))
         }
     }
 
@@ -123,7 +126,7 @@ object JsonReport {
       DepNode(
         reconciledVersionStr(r),
         getFile(r),
-        childrenOrEmpty(r).map(reconciledVersionStr(_)).to[SortedSet],
+        childrenOrEmpty(r).iterator.map(reconciledVersionStr(_)).to[SortedSet],
         flattenedDeps(r),
         exclusions(r)
       )
