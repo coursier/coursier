@@ -7,6 +7,7 @@ import cats.Eval
 import cats.data.{Chain, NonEmptyChain}
 import cats.free.Cofree
 import cats.syntax.foldable._
+import cats.syntax.traverse._
 
 import coursier.core._
 import coursier.util.Artifact
@@ -106,6 +107,7 @@ object JsonReport {
         val seq = fetchChildren(parentItem)
           .view
           .filterNot(item => parent.exists(_.visited(item)))
+          .filterNot(item => reconciledVersionStr(item) == reconciledVersionStr(focus))
           .map { item =>
             val newPath = NonEmptyChain.fromChainPrepend(item, parents)
             new DepTreeZipper(newPath, fetchChildren, reconciledVersionStr)
@@ -127,7 +129,7 @@ object JsonReport {
      */
     def unfold[A](root: A, fetchChildren: A => Seq[A], reconciledVersionStr: A => String): DepTree[A] = {
       val rootZipper = new DepTreeZipper(NonEmptyChain.one(root), fetchChildren, reconciledVersionStr)
-      Cofree.unfold(rootZipper)(_.children).map(_.focus)
+      Cofree.anaEval(rootZipper)(zipper => Eval.later(zipper.children), _.focus)
     }
   }
 
@@ -150,7 +152,7 @@ object JsonReport {
       // Builds a map of flattened dependencies starting at this element
       // The implementation makes use of Cofree[List, T] which is a foldable co-monad
       // and because of that, we can collapse it at each of its nodes and aggregate the results
-      def transitiveOf(elem: T): Map[T, Chain[String]] = {        
+      def transitiveOf(elem: T): Eval[Map[T, Chain[String]]] = {        
         // Collapse node builds the list of dependencies by reaching to the leave first
         // and then building back the list by prepending the head
         def collapseNode(node: DepTree[T]): Eval[Chain[String]] = {
@@ -169,12 +171,13 @@ object JsonReport {
 
         // coflatMap gives us an entire subtree at each node, which we can collapse
         // and finally fold together
-        depTree.coflatMap(collapseIntoMap).fold.value
+        depTree.coflatMap(collapseIntoMap).fold
       }
-
-      roots
-        .map(transitiveOf(_))
-        .foldMap(identity)
+        
+      Chain.fromSeq(roots)
+        .traverse(transitiveOf(_))
+        .value
+        .fold
         .map { case (elem, deps) =>
           // The Cofree fold will include the actual node item in its dependencies list
           // so we remove it here

@@ -118,9 +118,9 @@ object JsonReportTests extends TestSuite {
     }
 
     test("JsonReport should prevent walking a tree with cycles") {
-      val children = Map("a" -> Vector("b"), "b" -> Vector("a"))
+      val children = Map("a" -> Vector("b"), "b" -> Vector("c"), "c" -> Vector("a", "d"), "d" -> Vector.empty)
       val report = JsonReport[String](
-        roots = Vector("a", "b"),
+        roots = Vector("a", "b", "c"),
         conflictResolutionForRoots = Map.empty
       )(
         children = children(_),
@@ -135,8 +135,9 @@ object JsonReportTests extends TestSuite {
         """{
           |  "conflict_resolution": {},
           |  "dependencies": [
-          |    { "coord": "a:reconciled", "file": "", "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled" ] },
-          |    { "coord": "b:reconciled", "file": "", "directDependencies": [ "a:reconciled" ], "dependencies": [ "a:reconciled" ] }
+          |    { "coord": "a:reconciled", "file": "", "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled", "c:reconciled", "d:reconciled" ] },
+          |    { "coord": "b:reconciled", "file": "", "directDependencies": [ "c:reconciled" ], "dependencies": [ "a:reconciled", "c:reconciled", "d:reconciled" ] },
+          |    { "coord": "c:reconciled", "file": "", "directDependencies": [ "a:reconciled", "d:reconciled" ], "dependencies": [ "a:reconciled", "b:reconciled", "d:reconciled" ] }
           |  ],
           |  "version": "0.1.0"
           |}""".stripMargin
