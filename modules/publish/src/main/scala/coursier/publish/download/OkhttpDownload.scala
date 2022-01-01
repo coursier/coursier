@@ -67,7 +67,7 @@ final case class OkhttpDownload(client: OkHttpClient, pool: ExecutorService) ext
           }
         }
         finally if (response != null)
-          response.body().close()
+            response.body().close()
       }.toEither.flatMap(identity)
 
       logger.downloadedIfExists(

@@ -128,7 +128,9 @@ object MavenMetadata {
           <timestamp>{snapshotVersioning._1.format(timestampPattern)}</timestamp>
           <buildNumber>{snapshotVersioning._2}</buildNumber>
         </snapshot>
-        <lastUpdated>{now.atOffset(ZoneOffset.UTC).toLocalDateTime.format(lastUpdatedPattern)}</lastUpdated>
+        <lastUpdated>{
+      now.atOffset(ZoneOffset.UTC).toLocalDateTime.format(lastUpdatedPattern)
+    }</lastUpdated>
         <snapshotVersions>
           {
       artifacts.map {

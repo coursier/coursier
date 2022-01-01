@@ -455,7 +455,8 @@ object FetchTests extends TestSuite {
         withFile() {
           (jsonFile, _) =>
             val dependencyOpt = DependencyOptions(intransitive =
-              List("org.apache.commons:commons-compress:1.5,classifier=tests"))
+              List("org.apache.commons:commons-compress:1.5,classifier=tests")
+            )
             val resolveOpt = SharedResolveOptions(dependencyOptions = dependencyOpt)
             val options =
               FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)

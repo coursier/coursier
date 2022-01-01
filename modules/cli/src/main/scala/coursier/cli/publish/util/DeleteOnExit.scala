@@ -17,7 +17,7 @@ final class DeleteOnExit(verbosity: Int) {
           .foreach(deleteRecursiveIfExists)
       }
       finally if (s != null)
-        s.close()
+          s.close()
     }
 
     Files.deleteIfExists(f)
