@@ -21,8 +21,7 @@ final class TreeZipper[A: Eq](
 
   private def parents: Chain[A] = path.tail
 
-  def visited(item: A): Boolean =
-    path.contains(item)
+  private val visited = path.iterator.toSet
 
   /**
     * Attempts to walk the tree down to the first of the children.
@@ -45,7 +44,7 @@ final class TreeZipper[A: Eq](
   /**
     * Attempts to move the zipper up in the walked path, in case this is not the root
     */
-  val moveUp: Option[TreeZipper[A]] = {
+  def moveUp: Option[TreeZipper[A]] = {
     parents.uncons.map { case (item, superPath) =>
       val parentPath = NonEmptyChain.fromChainPrepend(item, superPath)
       new TreeZipper(parentPath, fetchChildren)
@@ -63,8 +62,7 @@ final class TreeZipper[A: Eq](
     Chain.fromOption(parents.headOption).flatMap { parentItem =>
       val seq = fetchChildren(parentItem)
         .view
-        .filterNot(item => moveUp.exists(_.visited(item)))
-        .filterNot(_ === focus)
+        .filterNot(visited)
         .map { item =>
           val newPath = NonEmptyChain.fromChainPrepend(item, parents)
           new TreeZipper(newPath, fetchChildren)

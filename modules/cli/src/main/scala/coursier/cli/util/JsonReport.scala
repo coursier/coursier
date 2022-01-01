@@ -3,11 +3,12 @@ package coursier.cli.util
 import java.io.File
 import java.util.Objects
 
-import cats.Eval
-import cats.data.{Chain, NonEmptyChain}
+import cats.{Eq, Eval, Show}
+import cats.data.Chain
 import cats.free.Cofree
 import cats.syntax.foldable._
 import cats.syntax.traverse._
+import cats.syntax.show._
 
 import coursier.core._
 import coursier.util.Artifact
@@ -68,17 +69,52 @@ object JsonReport {
 
   private val printer = PrettyParams.nospace.copy(preserveOrder = true)
 
-  // A dependency tree its a (T => Seq[T]) mapping and therefore it forms a Cofree[Chain, T]
-  private type DepTree[T] = Cofree[Chain, T]
-  private object DepTree {
-    /**
-     * Builds the dependency tree of reconciled versions using the DepTreeZipper which prevents
-     * walking through tree cycles
-     */
-    def unfold[A](root: A, fetchChildren: A => Seq[A], reconciledVersionStr: A => String): DepTree[A] = {
-      implicit val nodeEq: cats.Eq[A] = cats.Eq.by(reconciledVersionStr)
-      val rootZipper = TreeZipper.of(root, fetchChildren)
-      Cofree.anaEval(rootZipper)(zipper => Eval.later(zipper.children), _.focus)
+  // A dependency tree its a (A => Seq[A]) mapping and therefore it forms a Cofree[Chain, T]
+  private type DependencyTree[A] = Cofree[Chain, A]
+  private object DependencyTree {
+    // Collapse node builds the list of dependencies by reaching to the leave first
+    // and then building back the list by prepending the head
+    private def collapseNode[A: Show](node: DependencyTree[A]): Eval[Chain[String]] = {
+      for {
+        tail      <- node.tail
+        children0 <- tail.foldMapM(child => Eval.defer(collapseNode(child))) // collapses the tail until we reach a leave
+      } yield node.head.show +: children0
+    }
+
+    // Associate each item in the dependency tree, with the aggregated dependencies of its branches
+    private def collapseIntoMap[A: Show](node: DependencyTree[A]): Eval[Map[A, Chain[String]]] =
+      collapseNode(node).map(children => Map(node.head -> children))
+
+    // Builds a map of flattened dependencies starting at this element
+    // The implementation makes use of Cofree[List, T] which is a foldable co-monad
+    // and because of that, we can collapse it at each of its nodes and aggregate the results
+    private def transitiveOf[A: Eq: Show](elem: A, fetchChildren: A => Seq[A]): Eval[Map[A, Chain[String]]] = {
+      // Create the DepTree structure by unfolding it starting at the element given
+      val zipper = TreeZipper.of(elem, fetchChildren)
+      val depTree: DependencyTree[A] = Cofree.anaEval(zipper)(z => Eval.later(z.children), _.focus)
+
+      // coflatMap gives us an entire subtree at each node, which we can collapse
+      // and finally fold together
+      depTree.coflatMap(collapseIntoMap[A]).fold
+    }
+
+    def flatten[A](
+        roots: Vector[A],
+        fetchChildren: A => Seq[A],
+        reconciledVersionStr: A => String
+    ): Map[A, Set[String]] = {
+      implicit val nodeShow: Show[A] = Show.show(reconciledVersionStr)
+      implicit val nodeEq: Eq[A] = Eq.by(_.show)
+
+      Chain.fromSeq(roots)
+        .traverse(transitiveOf(_, fetchChildren))
+        .value
+        .fold
+        .map { case (elem, deps) =>
+          // The Cofree fold will include the actual node item in its dependencies list
+          // so we remove it here
+          elem -> (deps.iterator.to[SortedSet] - reconciledVersionStr(elem))
+        }
     }
   }
 
@@ -97,42 +133,8 @@ object JsonReport {
       Chain.fromSeq(children(elem).filterNot(i => reconciledVersionStr(i) == elemId))
     }
 
-    val depToTransitiveDeps = {
-      // Builds a map of flattened dependencies starting at this element
-      // The implementation makes use of Cofree[List, T] which is a foldable co-monad
-      // and because of that, we can collapse it at each of its nodes and aggregate the results
-      def transitiveOf(elem: T): Eval[Map[T, Chain[String]]] = {        
-        // Collapse node builds the list of dependencies by reaching to the leave first
-        // and then building back the list by prepending the head
-        def collapseNode(node: DepTree[T]): Eval[Chain[String]] = {
-          for {
-            tail      <- node.tail
-            children0 <- tail.foldMapM(child => Eval.defer(collapseNode(child))) // collapses the tail until we reach a leave
-          } yield reconciledVersionStr(node.head) +: children0
-        }
-
-        // Associate each item in the dependency tree, with the aggregated dependencies of its branches
-        def collapseIntoMap(node: DepTree[T]): Eval[Map[T, Chain[String]]] =
-          collapseNode(node).map(children => Map(node.head -> children))
-
-        // Create the DepTree structure by unfolding it starting at the element given
-        val depTree: DepTree[T] = DepTree.unfold(elem, children, reconciledVersionStr)
-
-        // coflatMap gives us an entire subtree at each node, which we can collapse
-        // and finally fold together
-        depTree.coflatMap(collapseIntoMap).fold
-      }
-        
-      Chain.fromSeq(roots)
-        .traverse(transitiveOf(_))
-        .value
-        .fold
-        .map { case (elem, deps) =>
-          // The Cofree fold will include the actual node item in its dependencies list
-          // so we remove it here
-          elem -> (deps.iterator.to[SortedSet] - reconciledVersionStr(elem))
-        }
-    }
+    val depToTransitiveDeps =
+      DependencyTree.flatten(roots, children, reconciledVersionStr)
 
     def flattenedDeps(elem: T): Set[String] =
       depToTransitiveDeps.getOrElse(elem, Set.empty[String])
