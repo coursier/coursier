@@ -73,17 +73,10 @@ object JsonReport {
   private type DependencyTree[A] = Cofree[Chain, A]
   private object DependencyTree {
     // Collapse node builds the list of dependencies by reaching to the leave first
-    // and then building back the list by prepending the head
-    private def collapseNode[A: Show](node: DependencyTree[A]): Eval[Chain[String]] = {
-      for {
-        tail      <- node.tail
-        children0 <- tail.foldMapM(child => Eval.defer(collapseNode(child))) // collapses the tail until we reach a leave
-      } yield node.head.show +: children0
-    }
-
-    // Associate each item in the dependency tree, with the aggregated dependencies of its branches
-    private def collapseIntoMap[A: Show](node: DependencyTree[A]): Eval[Map[A, Chain[String]]] =
-      collapseNode(node).map(children => Map(node.head -> children))
+    // and then building back the list.
+    // Using Eval here as it will give us a stack-safe flatMap operation
+    private def collapseNode[A: Show](node: DependencyTree[A]): Eval[Chain[String]] =
+      node.foldMapM(child => Eval.now(Chain.one(child.show)))
 
     // Builds a map of flattened dependencies starting at this element
     // The implementation makes use of Cofree[List, T] which is a foldable co-monad
@@ -91,11 +84,14 @@ object JsonReport {
     private def transitiveOf[A: Eq: Show](elem: A, fetchChildren: A => Seq[A]): Eval[Map[A, Chain[String]]] = {
       // Create the DepTree structure by unfolding it starting at the element given
       val zipper = TreeZipper.of(elem, fetchChildren)
-      val depTree: DependencyTree[A] = Cofree.anaEval(zipper)(z => Eval.later(z.children), _.focus)
+      val depTree: DependencyTree[A] = Cofree.ana(zipper)(_.children, _.focus)
 
-      // coflatMap gives us an entire subtree at each node, which we can collapse
-      // and finally fold together
-      depTree.coflatMap(collapseIntoMap[A]).fold
+      // Fold the tail of the root into a chain of dependencies
+      // and them map the root element to the dependencies
+      // Using `Eval` here to do the fold so we convert the recursive operation into a stack-safe loop
+      depTree.tail
+        .flatMap(_.foldMapM(collapseNode[A]))
+        .map(deps => Map(depTree.head -> deps))
     }
 
     def flatten[A](
@@ -110,11 +106,7 @@ object JsonReport {
         .traverse(transitiveOf(_, fetchChildren))
         .value
         .fold
-        .map { case (elem, deps) =>
-          // The Cofree fold will include the actual node item in its dependencies list
-          // so we remove it here
-          elem -> (deps.iterator.to[SortedSet] - reconciledVersionStr(elem))
-        }
+        .mapValues(_.iterator.to[SortedSet])
     }
   }
 
