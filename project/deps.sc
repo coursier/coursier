@@ -4,7 +4,7 @@ object Deps {
   def argonautShapeless = ivy"com.github.alexarchambault::argonaut-shapeless_6.2::1.2.0"
   def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M10"
   def catsCore          = ivy"org.typelevel::cats-core:2.6.1"
-  def catsEffect        = ivy"org.typelevel::cats-effect::2.5.4"
+  def catsEffect        = ivy"org.typelevel::cats-effect::3.3.4"
   def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.6.0"
   def concurrentReferenceHashMap =
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
