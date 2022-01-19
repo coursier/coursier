@@ -245,10 +245,11 @@ object MavenRepository {
             case _              => true
           })
 
-          val latest = if (nonPreVersions.nonEmpty) nonPreVersions.max else parsedVersions.max
+          val latest  = parsedVersions.max
+          val release = if (nonPreVersions.nonEmpty) nonPreVersions.max else latest
           Right(Versions(
             latest.repr,
-            latest.repr,
+            release.repr,
             parsedVersions.map(_.repr).toList,
             None
           ))
