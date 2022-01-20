@@ -38,10 +38,10 @@ object LauncherTestUtil {
       f(p)
     }
     finally if (p != null) {
-      val exited = p.waitFor(1L, TimeUnit.SECONDS)
-      if (!exited)
-        p.destroy()
-    }
+        val exited = p.waitFor(1L, TimeUnit.SECONDS)
+        if (!exited)
+          p.destroy()
+      }
   }
 
   private lazy val pathExt = Option(System.getenv("pathext"))

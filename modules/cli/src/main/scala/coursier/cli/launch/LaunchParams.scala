@@ -33,7 +33,7 @@ final case class LaunchParams(
         .withCache(cache0)
       javaExe   <- handle.javaBin(id)
       envUpdate <- handle.environmentFor(id)
-      _ <- Task.delay(logger.stop()) // FIXME Run even if stuff above fails
+      _         <- Task.delay(logger.stop()) // FIXME Run even if stuff above fails
     } yield (javaExe.toAbsolutePath.toString, envUpdate)
   }
 }
