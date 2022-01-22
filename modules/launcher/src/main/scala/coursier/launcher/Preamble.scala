@@ -120,7 +120,7 @@ object Preamble {
       Source.fromInputStream(is)(Codec.UTF8).mkString
     }
     finally if (is != null)
-      is.close()
+        is.close()
   }
 
   private lazy val batJarTemplate: String =
