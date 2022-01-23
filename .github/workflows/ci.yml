@@ -340,7 +340,7 @@ jobs:
       - uses: coursier/setup-action@v1
         with:
           jvm: 8
-      - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill updateWebsite
+      - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill -i updateWebsite
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
