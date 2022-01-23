@@ -20,12 +20,22 @@ After the setup, you can [start using Scala](https://docs.scala-lang.org/scala3/
 
 ## Native launcher
 
-### Linux & macOS
+### Linux
 
-On Linux and macOS, download and run the coursier installer with
+On Linux, download and run the coursier installer with
 
 ```bash
-$ curl -fLo cs https://git.io/coursier-cli-"$(uname | tr LD ld)"
+$ curl -fL https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz | gzip -d > cs
+$ chmod +x cs
+$ ./cs setup
+```
+
+### macOS
+
+On macOS, download and run the coursier installer with
+
+```bash
+$ curl -fL https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin.gz | gzip -d > cs
 $ chmod +x cs
 $ ./cs setup
 ```
@@ -40,17 +50,15 @@ $ cs setup
 
 ### Windows
 
-On Windows, [download and execute the Windows installer](https://git.io/coursier-cli-windows-exe).
+On Windows, [download and execute the Windows installer](https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip).
 
 If you prefer a command line-based install, or if you would like to customize the setup options, use:
 
 ```bat
 # CMD
-> bitsadmin /transfer cs-cli https://git.io/coursier-cli-windows-exe "%cd%\cs.exe"
-> .\cs --help
-
-# PowerShell
-> Start-BitsTransfer -Source https://git.io/coursier-cli-windows-exe -Destination cs.exe
+> curl -fLo cs-x86_64-pc-win32.zip https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip
+> tar -xf cs-x86_64-pc-win32.zip
+> move cs-x86_64-pc-win32.exe cs.exe
 > .\cs --help
 ```
 
@@ -77,7 +85,7 @@ substituted to `cs` in the various examples on this website.
 
 Download and run the launcher with
 ```bash
-$ curl -fLo coursier https://git.io/coursier-cli &&
+$ curl -fLo coursier https://github.com/coursier/launchers/raw/master/coursier &&
     chmod +x coursier &&
     ./coursier
 ```
@@ -100,12 +108,12 @@ $ coursier
 Install and run the JAR-based coursier launcher from the current directory at the Windows prompt, with
 ```bat
 # CMD
-> bitsadmin /transfer downloadCoursierCli https://git.io/coursier-cli "%cd%\coursier"
-> bitsadmin /transfer downloadCoursierBat https://git.io/coursier-bat "%cd%\coursier.bat"
+> bitsadmin /transfer downloadCoursierCli https://github.com/coursier/launchers/raw/master/coursier "%cd%\coursier"
+> bitsadmin /transfer downloadCoursierBat https://github.com/coursier/launchers/raw/master/coursier.bat "%cd%\coursier.bat"
 
 # PowerShell
-> Start-BitsTransfer -Source https://git.io/coursier-cli -Destination coursier
-> Start-BitsTransfer -Source https://git.io/coursier-bat -Destination coursier.bat
+> Start-BitsTransfer -Source https://github.com/coursier/launchers/raw/master/coursier -Destination coursier
+> Start-BitsTransfer -Source https://github.com/coursier/launchers/raw/master/coursier.bat -Destination coursier.bat
 ```
 
 You can then run coursier from the same directory, like
@@ -143,14 +151,12 @@ echo 'autoload -Uz compinit ; compinit' >> ~/.zshrc
 
 ### Latest launchers
 
-The various [git.io](https://git.io) shortened URLs above redirect
-to the latest launchers from the [launchers repository](https://github.com/coursier/launchers):
-
-|OS|Short URL|redirects to|
+|OS|Short URL|Long URL|
 |-|-|-|
-|Linux|<https://git.io/coursier-cli-linux>|<https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux>|
-|macOS|<https://git.io/coursier-cli-macos>|<https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin>|
-|Windows|<https://git.io/coursier-cli-windows-exe>|<https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.exe>|
+|Linux| |<https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz>|
+|macOS| |<https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin.gz>|
+|Windows| |<https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip>|
+|Linux (ARM64)| |<https://github.com/coursier/launchers/raw/master/cs-aarch64-pc-linux.gz>|
 |Any (needs JVM)|<https://git.io/coursier-cli>|<https://github.com/coursier/coursier/raw/gh-pages/coursier> (gh-pages branch of coursier repository rather than launchers repository)|
 |Any (needs JVM)| |<https://github.com/coursier/launchers/raw/master/coursier> (same launcher as above)|
 
@@ -161,8 +167,17 @@ assets:
 
 |OS|URL|Since version|
 |-|-|-|
-|Linux|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-linux>|`2.0.0-RC3-1`|
-|macOS|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-apple-darwin>|`2.0.0-RC3-1`|
-|Windows|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-win32.exe>|`2.0.0-RC6`|
+|Linux|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-linux.gz>|`2.0.16-158-gbdc8669f9`|
+|macOS|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-apple-darwin.gz>|`2.0.16-158-gbdc8669f9`|
+|Windows|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-win32.exe>|`2.0.16-158-gbdc8669f9`|
+|Linux (ARM64)|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-aarch64-pc-linux.gz>|`2.0.16-158-gbdc8669f9`|
 |Any (needs JVM)|<https://github.com/coursier/coursier/releases/download/v@VERSION@/coursier>|`1.1.0-M9`|
-|Any (needs JVM)|<https://github.com/coursier/coursier/raw/v1.1.0-M9/coursier> (up to version `1.1.0-M9`)|*Invalid for newest versions*|
+
+Former URLs, for information:
+
+|OS|URL|Since version|Up to version|
+|-|-|-|-|
+|Linux|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-linux>|`2.0.0-RC3-1`|`2.0.16`|
+|macOS|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-apple-darwin>|`2.0.0-RC3-1`|`2.0.16`|
+|Windows|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-win32.exe>|`2.0.0-RC6`|`2.0.16`|
+|Any (needs JVM)|<https://github.com/coursier/coursier/raw/v1.1.0-M9/coursier>| |`1.1.0-M9`|
