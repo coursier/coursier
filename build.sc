@@ -780,14 +780,15 @@ def updateWebsite(dryRun: Boolean = false) = {
     doc.copyVersionedData()()
     doc.generate("--npm-install", "--yarn-run-build")()
 
-    docs.updateVersionedDocs(
-      docusaurusDir,
-      versionedDocsRepo,
-      versionedDocsBranch,
-      ghTokenOpt = Some(token),
-      newVersionOpt = versionOpt,
-      dryRun = dryRun
-    )
+    for (version <- versionOpt)
+      docs.updateVersionedDocs(
+        docusaurusDir,
+        versionedDocsRepo,
+        versionedDocsBranch,
+        ghTokenOpt = Some(token),
+        newVersion = version,
+        dryRun = dryRun
+      )
 
     // copyDemoFiles()
 
