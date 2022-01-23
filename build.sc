@@ -768,6 +768,8 @@ def updateWebsite(dryRun: Boolean = false) = {
       .filter(_.startsWith("refs/tags/v"))
       .map(_.stripPrefix("refs/tags/v"))
 
+  System.err.println(s"versionOpt=$versionOpt")
+
   val token =
     if (dryRun) ""
     else
