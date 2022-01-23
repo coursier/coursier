@@ -40,74 +40,71 @@ def updateVersionedDocs(
   repo: String,
   branch: String,
   ghTokenOpt: Option[String],
-  newVersionOpt: Option[String],
+  newVersion: String,
   dryRun: Boolean
 ) = T.command {
 
-  for (newVersion <- newVersionOpt) {
+  val remote = s"https://${ghTokenOpt.map(_ + "@").getOrElse("")}github.com/$repo.git"
 
-    val remote = s"https://${ghTokenOpt.map(_ + "@").getOrElse("")}github.com/$repo.git"
+  val cloneUnder = T.dest / "repo"
+  os.makeDir.all(cloneUnder)
 
-    val cloneUnder = T.dest / "repo"
-    os.makeDir.all(cloneUnder)
+  os.proc("git", "clone", remote, "-b", branch, cloneUnder.toString).call(
+    stdin = os.Inherit,
+    stdout = os.Inherit,
+    stderr = os.Inherit
+  )
 
-    os.proc("git", "clone", remote, "-b", branch, cloneUnder.toString).call(
-      stdin = os.Inherit,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
+  // TODO Check if newVersion is already in versions.json
 
-    // TODO Check if newVersion is already in versions.json
+  // FIXME We don't necessarily run on Travis CI
+  os.proc("git", "config", "user.name", "Github Actions").call(
+    cwd = cloneUnder,
+    stdin = os.Inherit,
+    stdout = os.Inherit,
+    stderr = os.Inherit
+  )
+  os.proc("git", "config", "user.email", "actions@github.com").call(
+    cwd = cloneUnder,
+    stdin = os.Inherit,
+    stdout = os.Inherit,
+    stderr = os.Inherit
+  )
 
-    // FIXME We don't necessarily run on Travis CI
-    os.proc("git", "config", "user.name", "Github Actions").call(
+  os.proc("yarn", "run", "version", newVersion).call(
+    cwd = docusaurusDir,
+    stdin = os.Inherit,
+    stdout = os.Inherit,
+    stderr = os.Inherit
+  )
+
+  val toCopy = os.list(docusaurusDir).filter(_.last.startsWith("version"))
+
+  for (elem <- toCopy)
+    os.copy.into(elem, cloneUnder)
+
+  os.proc("git", "add", toCopy.map(_.last)).call(
+    cwd = cloneUnder,
+    stdin = os.Inherit,
+    stdout = os.Inherit,
+    stderr = os.Inherit
+  )
+
+  os.proc("git", "commit", "-m", s"Add doc for $newVersion").call(
+    cwd = cloneUnder,
+    stdin = os.Inherit,
+    stdout = os.Inherit,
+    stderr = os.Inherit
+  )
+  if (dryRun)
+    System.err.println(s"Would have pushed new docs to $repo")
+  else
+    os.proc("git", "push", "origin", branch).call(
       cwd = cloneUnder,
       stdin = os.Inherit,
       stdout = os.Inherit,
       stderr = os.Inherit
     )
-    os.proc("git", "config", "user.email", "actions@github.com").call(
-      cwd = cloneUnder,
-      stdin = os.Inherit,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
-
-    os.proc("yarn", "run", "version", newVersion).call(
-      cwd = docusaurusDir,
-      stdin = os.Inherit,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
-
-    val toCopy = os.list(docusaurusDir).filter(_.last.startsWith("version"))
-
-    for (elem <- toCopy)
-      os.copy.into(elem, cloneUnder)
-
-    os.proc("git", "add", toCopy.map(_.last)).call(
-      cwd = cloneUnder,
-      stdin = os.Inherit,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
-
-    os.proc("git", "commit", "-m", s"Add doc for $newVersion").call(
-      cwd = cloneUnder,
-      stdin = os.Inherit,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
-    if (dryRun)
-      System.err.println(s"Would have pushed new docs to $repo")
-    else
-      os.proc("git", "push", "origin", branch).call(
-        cwd = cloneUnder,
-        stdin = os.Inherit,
-        stdout = os.Inherit,
-        stderr = os.Inherit
-      )
-  }
 
   ()
 }

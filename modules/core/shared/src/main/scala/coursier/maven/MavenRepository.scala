@@ -245,17 +245,14 @@ object MavenRepository {
             case _              => true
           })
 
-          if (nonPreVersions.isEmpty)
-            Left(s"Found only pre-versions at $listingUrl")
-          else {
-            val latest = nonPreVersions.max
-            Right(Versions(
-              latest.repr,
-              latest.repr,
-              nonPreVersions.map(_.repr).toList,
-              None
-            ))
-          }
+          val latest  = parsedVersions.max
+          val release = if (nonPreVersions.nonEmpty) nonPreVersions.max else latest
+          Right(Versions(
+            latest.repr,
+            release.repr,
+            parsedVersions.map(_.repr).toList,
+            None
+          ))
         }
 
       EitherT(F.point(res.map((_, listingUrl))))
