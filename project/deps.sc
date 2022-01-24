@@ -35,7 +35,7 @@ object Deps {
     ivy"org.codehaus.plexus:plexus-container-default:2.1.1" // plexus-archiver needs its loggers
   def proguard                 = ivy"com.guardsquare:proguard-base:7.1.1"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
-  def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.0.0"
+  def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.1.0"
   def scalaJsJquery            = ivy"be.doeraene::scalajs-jquery::1.0.0"
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::1.7.7"
   def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
