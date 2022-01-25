@@ -118,7 +118,8 @@ object JsonReportTests extends TestSuite {
     }
 
     test("JsonReport should prevent walking a tree with cycles") {
-      val children = Map("a" -> Vector("b"), "b" -> Vector("c"), "c" -> Vector("a", "d"), "d" -> Vector.empty)
+      val children =
+        Map("a" -> Vector("b"), "b" -> Vector("c"), "c" -> Vector("a", "d"), "d" -> Vector.empty)
       val report = JsonReport[String](
         roots = Vector("a", "b", "c"),
         conflictResolutionForRoots = Map.empty

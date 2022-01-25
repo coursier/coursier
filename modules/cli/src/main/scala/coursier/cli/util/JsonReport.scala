@@ -81,9 +81,12 @@ object JsonReport {
     // Builds a map of flattened dependencies starting at this element
     // The implementation makes use of Cofree[List, T] which is a foldable co-monad
     // and because of that, we can collapse it at each of its nodes and aggregate the results
-    private def transitiveOf[A: Eq: Show](elem: A, fetchChildren: A => Seq[A]): Eval[Map[A, Chain[String]]] = {
+    private def transitiveOf[A: Eq: Show](
+      elem: A,
+      fetchChildren: A => Seq[A]
+    ): Eval[Map[A, Chain[String]]] = {
       // Create the DepTree structure by unfolding it starting at the element given
-      val zipper = TreeZipper.of(elem, fetchChildren)
+      val zipper                     = TreeZipper.of(elem, fetchChildren)
       val depTree: DependencyTree[A] = Cofree.ana(zipper)(_.children, _.focus)
 
       // Fold the tail of the root into a chain of dependencies
@@ -95,12 +98,12 @@ object JsonReport {
     }
 
     def flatten[A](
-        roots: Vector[A],
-        fetchChildren: A => Seq[A],
-        reconciledVersionStr: A => String
+      roots: Vector[A],
+      fetchChildren: A => Seq[A],
+      reconciledVersionStr: A => String
     ): Map[A, Set[String]] = {
       implicit val nodeShow: Show[A] = Show.show(reconciledVersionStr)
-      implicit val nodeEq: Eq[A] = Eq.by(_.show)
+      implicit val nodeEq: Eq[A]     = Eq.by(_.show)
 
       Chain.fromSeq(roots)
         .traverse(transitiveOf(_, fetchChildren))
@@ -210,7 +213,7 @@ final case class JsonElem(
         .view
         .sortBy { trDep =>
           (trDep.module.organization, trDep.module.name, trDep.version)
-        } 
+        }
         .map(_.moduleVersion)
         .filterNot(dependencies.map(_.moduleVersion).toSet).map {
           case (mod, ver) =>
@@ -232,7 +235,7 @@ final case class JsonElem(
         }
 
       val dependencyElems = mutable.ListBuffer.empty[JsonElem]
-      val it = dependencies.iterator
+      val it              = dependencies.iterator
       while (it.hasNext) {
         val dep = it.next()
         val elem = JsonElem(
