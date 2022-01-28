@@ -1,12 +1,11 @@
 def copyDocusaurusVersionedData(
   repo: String,
   branch: String,
-  docusaurusDir: os.Path
-) = T.command {
+  docusaurusDir: os.Path,
+  cloneUnder: os.Path
+): Unit = {
 
   val remote = s"https://github.com/$repo.git"
-
-  val cloneUnder = T.dest / "repo"
 
   os.proc("git", "clone", remote, "-b", branch, cloneUnder.toString).call(
     stdin = os.Inherit,
@@ -49,12 +48,12 @@ def updateVersionedDocs(
   branch: String,
   ghTokenOpt: Option[String],
   newVersion: String,
-  dryRun: Boolean
-) = T.command {
+  dryRun: Boolean,
+  cloneUnder: os.Path
+): Unit = {
 
   val remote = s"https://${ghTokenOpt.map(_ + "@").getOrElse("")}github.com/$repo.git"
 
-  val cloneUnder = T.dest / "repo"
   os.makeDir.all(cloneUnder)
 
   System.err.println()
@@ -123,11 +122,11 @@ def updateGhPages(
   ghToken: String,
   repo: String,
   dryRun: Boolean,
+  dest: os.Path,
   branch: String = "gh-pages"
-) = T.command {
+): Unit = {
   val remote = s"https://$ghToken@github.com/$repo.git"
 
-  val dest = T.dest / "gh-pages"
   os.makeDir.all(dest)
 
   os.proc("git", "clone", remote, "-q", "-b", branch, dest.toString).call(
