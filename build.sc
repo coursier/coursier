@@ -790,7 +790,8 @@ def updateWebsite(dryRun: Boolean = false) = {
         versionedDocsBranch,
         ghTokenOpt = Some(token),
         newVersion = version,
-        dryRun = dryRun
+        dryRun = dryRun,
+        cloneUnder = T.dest / "repo"
       )
 
     // copyDemoFiles()
@@ -800,8 +801,9 @@ def updateWebsite(dryRun: Boolean = false) = {
       token,
       "coursier/coursier",
       branch = "gh-pages",
-      dryRun = dryRun
-    )()
+      dryRun = dryRun,
+      dest = T.dest / "gh-pages"
+    )
   }
 }
 
