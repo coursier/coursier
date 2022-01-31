@@ -32,8 +32,9 @@ object Deps {
   def monadlessStdlib = ivy"io.monadless::monadless-stdlib:${Versions.monadless}"
   def okhttp          = ivy"com.squareup.okhttp3:okhttp:3.14.9"
   def plexusArchiver  = ivy"org.codehaus.plexus:plexus-archiver:4.2.7"
-  def plexusContainerDefault =
-    ivy"org.codehaus.plexus:plexus-container-default:2.1.1" // plexus-archiver needs its loggers
+  // plexus-archiver needs its loggers
+  def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
+    .exclude("junit" -> "junit")
   def proguard                 = ivy"com.guardsquare:proguard-base:7.1.1"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.1.0"
