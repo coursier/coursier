@@ -88,8 +88,12 @@ def updateVersionedDocs(
 
   val toCopy = os.list(docusaurusDir).filter(_.last.startsWith("version"))
 
-  for (elem <- toCopy)
-    os.copy.into(elem, cloneUnder)
+  for (elem <- toCopy) {
+    val dest = cloneUnder / elem.last
+    if (os.exists(dest))
+      os.remove.all(dest)
+    os.copy(elem, dest)
+  }
 
   runAndLog(ghTokenOpt.toSeq)("git", "add", toCopy.map(_.last)).call(
     cwd = cloneUnder,
