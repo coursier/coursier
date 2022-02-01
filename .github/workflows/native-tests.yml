@@ -26,7 +26,8 @@ jobs:
         if: runner.os == 'Linux'
       - run: brew install nailgun
         if: runner.os == 'macOS'
-      - run: ./mill -i nativeTests
+      - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
+        shell: bash
 
   test-linux-arm64-native-launcher:
     runs-on: ubuntu-18.04

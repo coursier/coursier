@@ -2,7 +2,7 @@ import $ivy.`io.get-coursier::coursier-launcher:2.0.16`
 import $ivy.`io.github.alexarchambault.mill::mill-native-image_mill0.9:0.1.9`
 
 import $file.cs
-import $file.deps, deps.{Deps, graalVmVersion, jvmIndex}
+import $file.deps, deps.{Deps, graalVmJvmId, jvmIndex}
 
 import io.github.alexarchambault.millnativeimage.NativeImage
 import mill._, mill.scalalib._
@@ -55,7 +55,7 @@ trait Launchers extends SbtModule with NativeImage {
 
   def nativeImageCsCommand    = Seq(cs.cs)
   def nativeImagePersist      = System.getenv("CI") != null
-  def nativeImageGraalVmJvmId = s"graalvm-java17:$graalVmVersion"
+  def nativeImageGraalVmJvmId = graalVmJvmId
 
   def nativeImageClassPath     = runClasspath()
   def nativeImageName          = "cs"

@@ -186,7 +186,8 @@ jobs:
         with:
           jvm: 8
       - name: Copy artifacts
-        run: ./mill -i copyLauncher artifacts/
+        run: .github/scripts/maybe-with-graalvm-home.sh copyLauncher artifacts/
+        shell: bash
       - uses: actions/upload-artifact@v2.3.1
         with:
           name: launchers
