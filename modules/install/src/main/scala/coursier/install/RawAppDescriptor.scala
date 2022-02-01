@@ -162,6 +162,35 @@ import scala.language.implicitConversions
   def repr: String =
     RawAppDescriptor.encoder.encode(this).nospaces
 
+  def overrideVersion(ver: String, useVersionOverrides: Boolean): RawAppDescriptor = {
+    val base = overrideVersion(ver)
+    if (useVersionOverrides) {
+      val ver0 = coursier.core.Version(ver)
+      val versionOverrideOpt = versionOverrides
+        .iterator
+        .flatMap { o =>
+          o.versionOverride.toEither match {
+            case Left(errors) =>
+              // FIXME Log errors
+              Iterator.empty
+            case Right(ov) if ov.versionRange.contains(ver0) =>
+              Iterator(o)
+            case Right(_) =>
+              Iterator.empty
+          }
+        }
+        .find(_ => true)
+      versionOverrideOpt.fold(base) { versionOverride =>
+        base
+          .withDependencies(versionOverride.dependencies.getOrElse(base.dependencies))
+          .withRepositories(versionOverride.repositories.getOrElse(base.repositories))
+          .withMainClass(versionOverride.mainClass.orElse(base.mainClass))
+          .withProperties(versionOverride.properties.getOrElse(base.properties))
+      }
+    }
+    else base
+  }
+
   // version substitution possibly a bit flaky…
   def overrideVersion(ver: String): RawAppDescriptor =
     withDependencies {
@@ -182,6 +211,9 @@ import scala.language.implicitConversions
 
   def overrideVersion(verOpt: Option[String]): RawAppDescriptor =
     verOpt.fold(this)(overrideVersion(_))
+
+  def overrideVersion(verOpt: Option[String], useVersionOverrides: Boolean): RawAppDescriptor =
+    verOpt.fold(this)(overrideVersion(_, useVersionOverrides))
 }
 
 object RawAppDescriptor {
