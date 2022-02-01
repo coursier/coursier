@@ -45,6 +45,7 @@ import scala.util.Properties
   coursierRepositories: Seq[Repository] = Nil,
   platform: Option[String] = Platform.get(),
   platformExtensions: Seq[String] = InstallDir.platformExtensions(),
+  @deprecated("ignored, use platform instead", "2.1.0-M4")
   os: String = System.getProperty("os.name", ""),
   nativeImageJavaHome: Option[String => Task[File]] = None,
   onlyPrebuilt: Boolean = false,

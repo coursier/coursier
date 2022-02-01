@@ -176,7 +176,6 @@ object InstallTests extends TestSuite {
     installDir(tmpDir, "linux", "x86_64")
   private def installDir(tmpDir: Path, os: String, arch: String): InstallDir =
     InstallDir(tmpDir, cache)
-      .withOs(os)
       .withPlatform(Platform.get(os, arch))
       .withPlatformExtensions(InstallDir.platformExtensions(os))
       .withBasePreamble(Preamble())
