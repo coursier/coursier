@@ -283,7 +283,10 @@ object RawAppDescriptor {
     dependencies: Option[List[String]] = None,
     repositories: Option[List[String]] = None,
     mainClass: Option[String] = None,
-    properties: Option[RawAppDescriptor.Properties] = None
+    properties: Option[RawAppDescriptor.Properties] = None,
+    @since("2.1.0-M4")
+    prebuilt: Option[String] = None,
+    prebuiltBinaries: Option[Map[String, String]] = None
   ) {
     def versionOverride: ValidatedNel[String, VersionOverride] = {
       val versionRangeV = coursier.core.Parse
@@ -305,6 +308,8 @@ object RawAppDescriptor {
             .withMainClass(mainClassOpt)
             .withDefaultMainClass(defaultMainClassOpt)
             .withJavaProperties(properties.map(_.props.sorted))
+            .withPrebuiltLauncher(prebuilt)
+            .withPrebuiltBinaries(prebuiltBinaries)
       }
     }
   }
