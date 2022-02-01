@@ -57,8 +57,9 @@ import scala.util.Properties
   archiveCache: ArchiveCache[Task] = ArchiveCache()
 ) {
 
+  private lazy val isWin = platform.exists(_.endsWith("-pc-win32"))
   private lazy val auxExtension =
-    if (Properties.isWin) ".exe"
+    if (isWin) ".exe"
     else ""
 
   import InstallDir._
@@ -106,18 +107,18 @@ import scala.util.Properties
 
   private def actualName(dest: Path): String = {
     val name = dest.getFileName.toString
-    if (Properties.isWin) name.stripSuffix(".bat")
+    if (isWin) name.stripSuffix(".bat")
     else name
   }
 
   private def actualDest(dest: Path): Path =
-    if (Properties.isWin) dest.getParent.resolve(dest.getFileName.toString + ".bat")
+    if (isWin) dest.getParent.resolve(dest.getFileName.toString + ".bat")
     else dest
 
   private def baseJarPreamble(desc: AppDescriptor): Preamble =
     basePreamble
-      .withOsKind(Properties.isWin)
-      .callsItself(Properties.isWin)
+      .withOsKind(isWin)
+      .callsItself(isWin)
       .withJavaOpts(desc.javaOptions)
       .withJvmOptionFile(desc.jvmOptionFile)
 
@@ -384,7 +385,7 @@ import scala.util.Properties
           if (inPlaceLauncher || launcherIsElsewhere) {
             val preamble =
               if (inPlaceLauncher)
-                if (Properties.isWin)
+                if (isWin)
                   basePreamble
                     .withKind(Preamble.Kind.Bat)
                     .withCommand("%~dp0\\" + auxName("%~n0", ".exe"))
@@ -398,7 +399,7 @@ import scala.util.Properties
               else {
                 assert(launcherIsElsewhere)
                 basePreamble
-                  .withKind(if (Properties.isWin) Preamble.Kind.Bat else Preamble.Kind.Sh)
+                  .withKind(if (isWin) Preamble.Kind.Bat else Preamble.Kind.Sh)
                   .withCommand(actualLauncher.toAbsolutePath.toString)
               }
             writing(tmpDest, verbosity, Some(currentTime)) {
