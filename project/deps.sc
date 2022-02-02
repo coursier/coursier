@@ -35,7 +35,7 @@ object Deps {
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
-  def proguard                 = ivy"com.guardsquare:proguard-base:7.1.1"
+  def proguard                 = ivy"com.guardsquare:proguard-base:7.2.0"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.1.0"
   def scalaJsJquery            = ivy"be.doeraene::scalajs-jquery::1.0.0"
@@ -73,6 +73,7 @@ object Versions {
 def sbtCoursierVersion = "2.0.8"
 
 def graalVmVersion = "22.0.0"
+def graalVmJvmId   = s"graalvm-java17:$graalVmVersion"
 
 // should be the default index in the upcoming coursier release (> 2.0.16)
 def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"

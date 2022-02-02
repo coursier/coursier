@@ -884,3 +884,25 @@ def jsTests(scalaVersion: String = "*") = {
 def nativeTests() = T.command {
   `cli-tests`.`native-tests`.test()()
 }
+
+object ci extends Module {
+  def copyJvm(jvm: String = deps.graalVmJvmId, dest: String = "jvm") = T.command {
+    import sys.process._
+    val cs = if (Properties.isWin) "cs.exe" else "cs"
+    val command = Seq(
+      cs,
+      "java-home",
+      "--jvm",
+      jvm,
+      "--update",
+      "--ttl",
+      "0"
+    )
+    val baseJavaHome = os.Path(command.!!.trim, os.pwd)
+    System.err.println(s"Initial Java home $baseJavaHome")
+    val destJavaHome = os.Path(dest, os.pwd)
+    os.copy(baseJavaHome, destJavaHome, createFolders = true)
+    System.err.println(s"New Java home $destJavaHome")
+    destJavaHome
+  }
+}
