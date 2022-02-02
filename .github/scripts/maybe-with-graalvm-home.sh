@@ -3,10 +3,8 @@ set -e
 
 if [[ "$OSTYPE" == "msys" ]]; then
   ./mill.bat -i ci.copyJvm --dest jvm
-  export JAVA_HOME="$(pwd -W | sed 's,/,\\,g')\\jvm"
-  export GRAALVM_HOME="$JAVA_HOME"
-  export PATH="$(pwd)/jvm/bin:$PATH"
-  echo "PATH=$PATH"
+  export GRAALVM_HOME="$(pwd -W | sed 's,/,\\,g')\\jvm"
+  echo "GRAALVM_HOME=$GRAALVM_HOME"
 
   ./mill.bat -i "$@"
 else
