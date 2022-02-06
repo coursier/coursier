@@ -151,14 +151,22 @@ echo 'autoload -Uz compinit ; compinit' >> ~/.zshrc
 
 ### Latest launchers
 
-|OS|Short URL|Long URL|
-|-|-|-|
-|Linux| |<https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz>|
-|macOS| |<https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin.gz>|
-|Windows| |<https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip>|
-|Linux (ARM64)| |<https://github.com/coursier/launchers/raw/master/cs-aarch64-pc-linux.gz>|
-|Any (needs JVM)|<https://git.io/coursier-cli>|<https://github.com/coursier/coursier/raw/gh-pages/coursier> (gh-pages branch of coursier repository rather than launchers repository)|
-|Any (needs JVM)| |<https://github.com/coursier/launchers/raw/master/coursier> (same launcher as above)|
+|OS|URL|
+|-|-|
+|Linux|<https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz>|
+|macOS|<https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin.gz>|
+|Windows|<https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip>|
+|Linux (ARM64)|<https://github.com/coursier/launchers/raw/master/cs-aarch64-pc-linux.gz>|
+|Any (needs JVM)|<https://github.com/coursier/coursier/raw/gh-pages/coursier> (gh-pages branch of coursier repository rather than launchers repository)|
+|Any (needs JVM)|<https://github.com/coursier/launchers/raw/master/coursier> (same launcher as above)|
+
+> Note that most launchers used to be available at short `git.io` URLs, and at long URLs
+*without* compression, that is not ending in `.gz` nor `.zip`.
+>
+> These URLs are not updated anymore, and
+point at former coursier versions, as using compressed launchers
+allows to save space and bandwidth (for the long URLs), and as git.io is [about to be
+deprecated](https://github.blog/changelog/2022-01-11-git-io-no-longer-accepts-new-urls).
 
 ### Specific versions
 
