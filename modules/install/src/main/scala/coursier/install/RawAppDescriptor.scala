@@ -163,32 +163,32 @@ import scala.language.implicitConversions
     RawAppDescriptor.encoder.encode(this).nospaces
 
   def overrideVersion(ver: String, useVersionOverrides: Boolean): RawAppDescriptor = {
-    val base = overrideVersion(ver)
-    if (useVersionOverrides) {
-      val ver0 = coursier.core.Version(ver)
-      val versionOverrideOpt = versionOverrides
-        .iterator
-        .flatMap { o =>
-          o.versionOverride.toEither match {
-            case Left(errors) =>
-              // FIXME Log errors
-              Iterator.empty
-            case Right(ov) if ov.versionRange.contains(ver0) =>
-              Iterator(o)
-            case Right(_) =>
-              Iterator.empty
+    val base =
+      if (useVersionOverrides) {
+        val ver0 = coursier.core.Version(ver)
+        val versionOverrideOpt = versionOverrides
+          .iterator
+          .flatMap { o =>
+            o.versionOverride.toEither match {
+              case Left(errors) =>
+                // FIXME Log errors
+                Iterator.empty
+              case Right(ov) if ov.versionRange.contains(ver0) =>
+                Iterator(o)
+              case Right(_) =>
+                Iterator.empty
+            }
           }
+          .find(_ => true)
+        versionOverrideOpt.fold(this) { versionOverride =>
+          withDependencies(versionOverride.dependencies.getOrElse(dependencies))
+            .withRepositories(versionOverride.repositories.getOrElse(repositories))
+            .withMainClass(versionOverride.mainClass.orElse(mainClass))
+            .withProperties(versionOverride.properties.getOrElse(properties))
         }
-        .find(_ => true)
-      versionOverrideOpt.fold(base) { versionOverride =>
-        base
-          .withDependencies(versionOverride.dependencies.getOrElse(base.dependencies))
-          .withRepositories(versionOverride.repositories.getOrElse(base.repositories))
-          .withMainClass(versionOverride.mainClass.orElse(base.mainClass))
-          .withProperties(versionOverride.properties.getOrElse(base.properties))
       }
-    }
-    else base
+      else this
+    base.overrideVersion(ver)
   }
 
   // version substitution possibly a bit flaky…

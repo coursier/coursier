@@ -584,7 +584,14 @@ object ResolveTests extends TestSuite {
         )
       )
 
-      val expectedScala2Output =
+      val expectedScala2135Output =
+        """net.java.dev.jna:jna:5.3.1:default
+          |org.jline:jline:3.19.0:default
+          |org.scala-lang:scala-compiler:2.13.5:default
+          |org.scala-lang:scala-library:2.13.5:default
+          |org.scala-lang:scala-reflect:2.13.5:default
+          |""".stripMargin
+      val expectedScala2138Output =
         """net.java.dev.jna:jna:5.9.0:default
           |org.jline:jline:3.21.0:default
           |org.scala-lang:scala-compiler:2.13.8:default
@@ -607,8 +614,10 @@ object ResolveTests extends TestSuite {
           |org.scala-sbt:util-interface:1.3.0:default
           |""".stripMargin
 
-      val scala2Output = output(options, "scala:2.13.8")
-      assert(scala2Output.noCrLf == expectedScala2Output.noCrLf)
+      val scala2135Output = output(options, "scala:2.13.5")
+      assert(scala2135Output.noCrLf == expectedScala2135Output.noCrLf)
+      val scala2138Output = output(options, "scala:2.13.8")
+      assert(scala2138Output.noCrLf == expectedScala2138Output.noCrLf)
       val scala3Output = output(options, "scala:3.1.1")
       assert(scala3Output.noCrLf == expectedScala3Output.noCrLf)
     }
