@@ -65,8 +65,8 @@ abstract class GetTests extends TestSuite {
       }
     }
 
-    test("tgz archive") {
-      val resourcePath = s"archives/archive.tar.gz"
+    def tarArchiveTest(ext: String): Unit = {
+      val resourcePath = s"archives/archive.tar$ext"
       val archiveUrl   = Thread.currentThread().getContextClassLoader.getResource(resourcePath)
       Predef.assert(archiveUrl != null, s"Resource $resourcePath not found")
       assert(archiveUrl.getProtocol == "file")
@@ -87,6 +87,13 @@ abstract class GetTests extends TestSuite {
         val expectedContent = "a\n"
         assert(content == expectedContent)
       }
+    }
+
+    test("tgz archive") {
+      tarArchiveTest(".gz")
+    }
+    test("tbz2 archive") {
+      tarArchiveTest(".bz2")
     }
   }
 

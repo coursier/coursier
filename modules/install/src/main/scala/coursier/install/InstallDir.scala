@@ -349,12 +349,12 @@ import scala.util.Properties
 
             case Right(a: PrebuiltApp.Compressed) =>
               (a.archiveType, a.pathInArchiveOpt) match {
-                case (ArchiveType.Tgz, None) =>
-                  ArchiveUtil.withFirstFileInTgz(a.file) { is =>
+                case (tarType: ArchiveType.Tar, None) =>
+                  ArchiveUtil.withFirstFileInCompressedTarArchive(a.file, tarType) { is =>
                     writeTo(is, genDest)
                   }
-                case (ArchiveType.Tgz, Some(subPath)) =>
-                  ArchiveUtil.withFileInTgz(a.file, subPath) { is =>
+                case (tarType: ArchiveType.Tar, Some(subPath)) =>
+                  ArchiveUtil.withFileInCompressedTarArchive(a.file, tarType, subPath) { is =>
                     writeTo(is, genDest)
                   }
                 case (ArchiveType.Gzip, None) =>
