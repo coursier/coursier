@@ -64,6 +64,30 @@ abstract class GetTests extends TestSuite {
         assert(content == expectedContent)
       }
     }
+
+    test("tgz archive") {
+      val resourcePath = s"archives/archive.tar.gz"
+      val archiveUrl   = Thread.currentThread().getContextClassLoader.getResource(resourcePath)
+      Predef.assert(archiveUrl != null, s"Resource $resourcePath not found")
+      assert(archiveUrl.getProtocol == "file")
+
+      TestUtil.withTempDir { tmpDir =>
+        val cache = new File(tmpDir, "cache").getAbsolutePath
+        val output = LauncherTestUtil.output(
+          launcher,
+          "get",
+          archiveUrl.toString,
+          "--cache",
+          cache,
+          "--archive"
+        )
+        val dir = Paths.get(output.trim)
+        val content =
+          new String(Files.readAllBytes(dir.resolve("archive/a")), StandardCharsets.UTF_8)
+        val expectedContent = "a\n"
+        assert(content == expectedContent)
+      }
+    }
   }
 
 }

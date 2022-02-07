@@ -27,7 +27,7 @@ import java.nio.file.{Files, StandardCopyOption}
       artifact.url,
       location,
       artifact.authentication.map(_.user).orNull,
-      false
+      true
     )
 
   def getIfExists(artifact: Artifact): F[Either[ArtifactError, Option[File]]] = {
