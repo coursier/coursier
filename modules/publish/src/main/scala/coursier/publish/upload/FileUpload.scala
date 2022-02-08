@@ -1,11 +1,12 @@
 package coursier.publish.upload
 
-import java.nio.file.{Files, Path}
-
 import coursier.core.Authentication
 import coursier.paths.Util
 import coursier.publish.upload.logger.UploadLogger
 import coursier.util.Task
+
+import java.net.URI
+import java.nio.file.{Files, Path, Paths}
 
 import scala.util.control.NonFatal
 
@@ -22,10 +23,10 @@ final case class FileUpload(base: Path) extends Upload {
     loggingId: Option[Object]
   ): Task[Option[Upload.Error]] = {
 
-    val p = base0.resolve(url).normalize()
+    val p = base0.resolve(Paths.get(new URI(url))).normalize()
     if (p.startsWith(base0))
       Task.delay {
-        logger.uploading(url, loggingId, Some(content.length))
+        logger.uploading(p.toString, loggingId, Some(content.length))
         val errorOpt =
           try {
             Util.createDirectories(p.getParent)
@@ -36,7 +37,7 @@ final case class FileUpload(base: Path) extends Upload {
             case NonFatal(e) =>
               Some(e)
           }
-        logger.uploaded(url, loggingId, errorOpt.map(e => new Upload.Error.FileException(e)))
+        logger.uploaded(p.toString, loggingId, errorOpt.map(e => new Upload.Error.FileException(e)))
 
         None
       }
