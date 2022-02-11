@@ -100,10 +100,10 @@ object Pom {
     val osNodeOpt = node.children.collectFirst { case n if n.label == "os" => n }
 
     val os = Activation.Os(
-      osNodeOpt.flatMap(n => text(n, "arch", "").toOption.map(_.toLowerCase)),
-      osNodeOpt.flatMap(n => text(n, "family", "").toOption.map(_.toLowerCase)).toSet,
-      osNodeOpt.flatMap(n => text(n, "name", "").toOption.map(_.toLowerCase)),
-      osNodeOpt.flatMap(n => text(n, "version", "").toOption.map(_.toLowerCase))
+      osNodeOpt.flatMap(n => text(n, "arch", "").toOption),
+      osNodeOpt.flatMap(n => text(n, "family", "").toOption).toSet,
+      osNodeOpt.flatMap(n => text(n, "name", "").toOption),
+      osNodeOpt.flatMap(n => text(n, "version", "").toOption)
     )
 
     val jdk = text(node, "jdk", "").toOption.flatMap { s =>
