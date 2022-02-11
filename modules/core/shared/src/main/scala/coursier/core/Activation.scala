@@ -75,16 +75,19 @@ object Activation {
     def isEmpty: Boolean =
       arch.isEmpty && families.isEmpty && name.isEmpty && version.isEmpty
 
+    def archMatch(current: Option[String]): Boolean =
+      archNormalized.forall(current.contains)
+
     def isActive(osInfo: Os): Boolean =
-      archNormalized.forall(osInfo.archNormalized.contains) &&
-        familiesNormalized.forall { f =>
-          if (Os.knownFamilies(f))
-            osInfo.familiesNormalized.contains(f)
-          else
-            osInfo.nameNormalized.exists(_.contains(f))
-        } &&
-        nameNormalized.forall(osInfo.nameNormalized.contains) &&
-        versionNormalized.forall(osInfo.versionNormalized.contains)
+      archMatch(osInfo.archNormalized) &&
+      familiesNormalized.forall { f =>
+        if (Os.knownFamilies(f))
+          osInfo.familiesNormalized.contains(f)
+        else
+          osInfo.nameNormalized.exists(_.contains(f))
+      } &&
+      nameNormalized.forall(osInfo.nameNormalized.contains) &&
+      versionNormalized.forall(osInfo.versionNormalized.contains)
   }
 
   object Os {
