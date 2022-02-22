@@ -143,6 +143,9 @@ object CacheUrl {
         // Early in the development of coursier, I ran into some repositories (Sonatype ones?) not
         // returning the same content for user agent "Java/…".
         conn0.setRequestProperty("User-Agent", "Coursier/2.0")
+        // Some remote repositories (AWS CodeArtifact) return a "false" 404 if maven-metadata.xml is requested
+        // with default Accept header Java sets for HttpUrlConnection
+        conn0.setRequestProperty("Accept", "*/*")
 
         conn0 match {
           case conn1: HttpsURLConnection =>
