@@ -195,7 +195,7 @@ abstract class BootstrapTests extends TestSuite {
         "disabled"
     }
 
-    test("java.class.path property") {
+    test("java class path property") {
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(
           args =
