@@ -188,7 +188,7 @@ jobs:
       - name: Copy artifacts
         run: .github/scripts/maybe-with-graalvm-home.sh copyLauncher artifacts/
         shell: bash
-      - uses: actions/upload-artifact@v2.3.1
+      - uses: actions/upload-artifact@v3
         with:
           name: launchers
           path: artifacts/
@@ -252,7 +252,7 @@ jobs:
             export PATH="/utils:$PATH"
             eval "$(cs java --env --jvm 11 --jvm-index https://github.com/coursier/jvm-index/raw/master/index.json)"
             ./mill -i copyLauncher /artifacts/
-      - uses: actions/upload-artifact@v2.3.1
+      - uses: actions/upload-artifact@v3
         with:
           name: launchers
           path: artifacts/
@@ -277,7 +277,7 @@ jobs:
       run: ./mill -i waitForSync
     - name: Copy artifacts
       run: ./mill -i copyJarLaunchers
-    - uses: actions/upload-artifact@v2.3.1
+    - uses: actions/upload-artifact@v3
       with:
         name: launchers
         path: artifacts/
