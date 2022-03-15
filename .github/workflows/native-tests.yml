@@ -14,7 +14,7 @@ jobs:
         OS: [ubuntu-latest, windows-2019, macos-latest]
     runs-on: ${{ matrix.OS }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-18.04
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
