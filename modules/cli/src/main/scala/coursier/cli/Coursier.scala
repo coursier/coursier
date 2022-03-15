@@ -87,8 +87,6 @@ object Coursier extends CommandsEntryPoint {
       }
     }
 
-    CacheUrl.setupProxyAuth()
-
     val csArgs =
       if (isGraalvmNativeImage) {
         // process -J* args ourselves
@@ -110,6 +108,8 @@ object Coursier extends CommandsEntryPoint {
       }
       else
         args
+
+    CacheUrl.setupProxyAuth()
 
     if (csArgs.nonEmpty)
       super.main(csArgs)

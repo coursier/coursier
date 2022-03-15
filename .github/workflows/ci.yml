@@ -33,12 +33,12 @@ jobs:
       run: |
         git config --global core.autocrlf false
         git config --global core.eol lf
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0-M2
+    - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: ${{ matrix.JDK }}
     - run: sudo apt-get install -y nailgun
@@ -66,15 +66,15 @@ jobs:
       run: |
         git config --global core.autocrlf false
         git config --global core.eol lf
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
         submodules: true
-    - uses: actions/setup-node@v2
+    - uses: actions/setup-node@v3
       with:
         node-version: '12'
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0-M2
+    - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: 8
     - run: npm install && ./mill -i jsTests "$SCALA_VERSION"
@@ -86,12 +86,12 @@ jobs:
     runs-on: ubuntu-latest
     name: Binary compatibility
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0-M2
+    - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: 8
     - run: ./mill -i __.mimaReportBinaryIssues
@@ -105,15 +105,15 @@ jobs:
       run: |
         git config --global core.autocrlf false
         git config --global core.eol lf
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
         submodules: true
-    - uses: actions/setup-node@v2
+    - uses: actions/setup-node@v3
       with:
         node-version: '12'
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0-M2
+    - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: 8
     - run: ./mill -i doc.generate --npm-install --yarn-run-build
@@ -123,12 +123,12 @@ jobs:
   format:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0-M2
+    - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: 8
         apps: scalafmt:3.0.0
@@ -139,7 +139,7 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
@@ -147,7 +147,7 @@ jobs:
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
-      - uses: coursier/setup-action@v1.2.0-M2
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
       - run: |
@@ -177,18 +177,18 @@ jobs:
       matrix:
         OS: ["ubuntu-latest", "windows-2019", "macos-latest"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0-M2
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
       - name: Copy artifacts
         run: .github/scripts/maybe-with-graalvm-home.sh copyLauncher artifacts/
         shell: bash
-      - uses: actions/upload-artifact@v2.3.1
+      - uses: actions/upload-artifact@v3
         with:
           name: launchers
           path: artifacts/
@@ -201,7 +201,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-18.04
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
@@ -209,7 +209,7 @@ jobs:
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
-      - uses: coursier/setup-action@v1.2.0-M2
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
       - uses: uraimo/run-on-arch-action@v2.1.1
@@ -252,7 +252,7 @@ jobs:
             export PATH="/utils:$PATH"
             eval "$(cs java --env --jvm 11 --jvm-index https://github.com/coursier/jvm-index/raw/master/index.json)"
             ./mill -i copyLauncher /artifacts/
-      - uses: actions/upload-artifact@v2.3.1
+      - uses: actions/upload-artifact@v3
         with:
           name: launchers
           path: artifacts/
@@ -265,19 +265,19 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0-M2
+    - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: 8
     - name: Wait for sync to Central
       run: ./mill -i waitForSync
     - name: Copy artifacts
       run: ./mill -i copyJarLaunchers
-    - uses: actions/upload-artifact@v2.3.1
+    - uses: actions/upload-artifact@v3
       with:
         name: launchers
         path: artifacts/
@@ -290,12 +290,12 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0-M2
+    - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: 8
     - uses: actions/download-artifact@v2
@@ -312,12 +312,12 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0-M2
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
       - run: .github/scripts/scala-cli.sh .github/scripts/UpdateBrewFormula.scala
@@ -330,15 +330,15 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: '12'
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0-M2
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill -i updateWebsite
@@ -351,15 +351,15 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: '12'
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0-M2
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill -i updateWebsite
