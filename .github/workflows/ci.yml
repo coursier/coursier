@@ -38,7 +38,7 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0-M2
+    - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: ${{ matrix.JDK }}
     - run: sudo apt-get install -y nailgun
@@ -74,7 +74,7 @@ jobs:
       with:
         node-version: '12'
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0-M2
+    - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: 8
     - run: npm install && ./mill -i jsTests "$SCALA_VERSION"
@@ -91,7 +91,7 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0-M2
+    - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: 8
     - run: ./mill -i __.mimaReportBinaryIssues
@@ -113,7 +113,7 @@ jobs:
       with:
         node-version: '12'
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0-M2
+    - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: 8
     - run: ./mill -i doc.generate --npm-install --yarn-run-build
@@ -128,7 +128,7 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0-M2
+    - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: 8
         apps: scalafmt:3.0.0
@@ -147,7 +147,7 @@ jobs:
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
-      - uses: coursier/setup-action@v1.2.0-M2
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
       - run: |
@@ -182,7 +182,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0-M2
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
       - name: Copy artifacts
@@ -209,7 +209,7 @@ jobs:
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
-      - uses: coursier/setup-action@v1.2.0-M2
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
       - uses: uraimo/run-on-arch-action@v2.1.1
@@ -270,7 +270,7 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0-M2
+    - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: 8
     - name: Wait for sync to Central
@@ -295,7 +295,7 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0-M2
+    - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: 8
     - uses: actions/download-artifact@v2
@@ -317,7 +317,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0-M2
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
       - run: .github/scripts/scala-cli.sh .github/scripts/UpdateBrewFormula.scala
@@ -338,7 +338,7 @@ jobs:
         with:
           node-version: '12'
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0-M2
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill -i updateWebsite
@@ -359,7 +359,7 @@ jobs:
         with:
           node-version: '12'
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0-M2
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill -i updateWebsite
