@@ -76,7 +76,7 @@ object DependencyParams {
             if (parent_and_child.length != 2)
               Validated.invalidNel(s"Failed to parse $str")
             else {
-              val child = parent_and_child(1)
+              val child          = parent_and_child(1)
               val child_org_name = child.split(":")
               if (child_org_name.length != 2)
                 Validated.invalidNel(s"Failed to parse $child")
