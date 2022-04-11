@@ -298,7 +298,7 @@ jobs:
     - uses: coursier/setup-action@v1.2.0-M3
       with:
         jvm: 8
-    - uses: actions/download-artifact@v2
+    - uses: actions/download-artifact@v3
       with:
         name: launchers
         path: artifacts/
