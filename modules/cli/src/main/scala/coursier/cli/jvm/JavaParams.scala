@@ -38,7 +38,7 @@ object JavaParams {
     val checkArgsV =
       if (anyArg && flags.exists(identity))
         Validated.invalidNel(
-          s"Error: unexpected arguments passed along --env, --setup, --available or installed."
+          s"Error: unexpected arguments passed along --env, --setup, --available or --installed."
         )
       else
         Validated.validNel(())
