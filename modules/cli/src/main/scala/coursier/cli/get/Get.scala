@@ -33,7 +33,7 @@ object Get extends CoursierCommand[GetOptions] {
       else if (rawUrl.endsWith("?changing=false"))
         Artifact(rawUrl.stripSuffix("?changing=false")).withChanging(false)
       else
-        Artifact(rawUrl).withChanging(params.changing)
+        Artifact(rawUrl).withChanging(params.changing.getOrElse(false))
     }
 
     if (artifacts.isEmpty)
