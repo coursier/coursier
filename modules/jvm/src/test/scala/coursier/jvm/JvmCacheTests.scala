@@ -37,6 +37,16 @@ object JvmCacheTests extends TestSuite {
       deleteRecursive(dir.toFile)
   }
 
+  def withTempDir0[T](f: os.Path => T): T = {
+    var dir: os.Path = null
+    try {
+      dir = os.temp.dir(prefix = "jvm-cache-tests-")
+      f(dir)
+    }
+    finally if (dir != null)
+      deleteRecursive(dir.toIO)
+  }
+
   private val poolInitialized = new AtomicBoolean(false)
   private lazy val pool = {
     val p = Sync.fixedThreadPool(6)
@@ -197,5 +207,27 @@ object JvmCacheTests extends TestSuite {
         }
       }
     }
+
+    test("URL id") {
+      withTempDir0 { tmpDir =>
+        val archiveCache = ArchiveCache[Task](tmpDir.toIO).withCache(cache)
+        val jvmCache = JvmCache()
+          .withArchiveCache(archiveCache)
+          .withOs("the-os")
+          .withArchitecture("the-arch")
+          .withDefaultJdkNameOpt(None)
+          .withDefaultVersionOpt(None)
+
+        val dir =
+          os.Path(jvmCache.get("https://foo.com/download/the-jdk-1.2.tar.gz").unsafeRun()(cache.ec))
+
+        val expectedDir =
+          os.rel / "https" / "foo.com" / "download" / "the-jdk-1.2.tar.gz" / "the-jdk-1.2"
+        val relDir = dir.relativeTo(tmpDir)
+
+        assert(relDir == expectedDir)
+      }
+    }
+
   }
 }

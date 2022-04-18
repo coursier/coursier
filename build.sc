@@ -504,7 +504,11 @@ class Jvm(val crossScalaVersion: String) extends CrossSbtModule with CsModule
     Deps.argonautShapeless,
     Deps.jsoniterCore
   )
-  object test extends Tests with CsTests
+  object test extends Tests with CsTests {
+    def ivyDeps = super.ivyDeps() ++ Seq(
+      Deps.osLib
+    )
+  }
 }
 
 trait Cli extends CsModule with CoursierPublishModule with Launchers {
