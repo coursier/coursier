@@ -31,6 +31,7 @@ object Deps {
   def monadlessCats   = ivy"io.monadless::monadless-cats:${Versions.monadless}"
   def monadlessStdlib = ivy"io.monadless::monadless-stdlib:${Versions.monadless}"
   def okhttp          = ivy"com.squareup.okhttp3:okhttp:3.14.9"
+  def osLib           = ivy"com.lihaoyi::os-lib:0.8.1"
   def plexusArchiver  = ivy"org.codehaus.plexus:plexus-archiver:4.2.7"
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
