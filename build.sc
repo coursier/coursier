@@ -739,7 +739,7 @@ def copyJarLaunchers(version: String = buildVersion, directory: String = "artifa
 
 def publishSonatype(tasks: mill.main.Tasks[PublishModule.PublishData]) =
   T.command {
-    val data = define.Task.sequence(tasks.value)()
+    val data = T.sequence(tasks.value)()
 
     publishing.publishSonatype(
       data = data,
@@ -858,7 +858,7 @@ def jvmTests(scalaVersion: String = "*") = {
     }
 
   T.command {
-    define.Task.sequence(tasks)()
+    T.sequence(tasks)()
 
     ()
   }
@@ -881,7 +881,7 @@ def jsTests(scalaVersion: String = "*") = {
   val tasks = scalaVersions.flatMap(sv => crossTests(sv))
 
   T.command {
-    define.Task.sequence(tasks)()
+    T.sequence(tasks)()
   }
 }
 
