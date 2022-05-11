@@ -4,6 +4,8 @@ import java.io.File
 
 import utest._
 
+import scala.util.Properties
+
 abstract class LaunchTests extends TestSuite {
 
   def launcher: String
@@ -73,7 +75,7 @@ abstract class LaunchTests extends TestSuite {
       assert(output == expected)
     }
     test("inline app") {
-      if (LauncherTestUtil.isWindows) "disabled"
+      if (Properties.isWin) "disabled"
       else { inlineApp(); "" }
     }
 
@@ -89,7 +91,7 @@ abstract class LaunchTests extends TestSuite {
       assert(output == expected)
     }
     test("inline app with id") {
-      if (LauncherTestUtil.isWindows) "disabled"
+      if (Properties.isWin) "disabled"
       else { inlineAppWithId(); "" }
     }
 

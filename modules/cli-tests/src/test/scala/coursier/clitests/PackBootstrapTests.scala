@@ -2,6 +2,8 @@ package coursier.clitests
 
 import java.util.Locale
 
+import scala.util.Properties
+
 object PackBootstrapTests extends BootstrapTests {
   val launcher = LauncherTestUtil.launcher
   override lazy val acceptsDOptions =
@@ -17,7 +19,7 @@ object PackBootstrapTests extends BootstrapTests {
     sys.props.get("coursier-test-launcher-accepts-J").map(_.toLowerCase(Locale.ROOT)) match {
       case Some("true")  => true
       case Some("false") => false
-      case None          => !LauncherTestUtil.isWindows
+      case None          => !Properties.isWin
       case Some(other) =>
         System.err.println(s"Warning: unrecognized coursier-test-launcher-accepts-J value '$other'")
         true

@@ -6,11 +6,9 @@ import java.util.concurrent.TimeUnit
 
 import coursier.cache.internal.FileUtil
 
-object LauncherTestUtil {
+import scala.util.Properties
 
-  lazy val isWindows = System.getProperty("os.name")
-    .toLowerCase(java.util.Locale.ROOT)
-    .contains("windows")
+object LauncherTestUtil {
 
   lazy val launcher = {
     val path = sys.props.getOrElse(
@@ -48,7 +46,7 @@ object LauncherTestUtil {
     .toSeq
     .flatMap(_.split(File.pathSeparator))
   def adaptCommandName(name: String, directory: File): String =
-    if (isWindows && pathExt.nonEmpty && (name.startsWith("./") || name.startsWith(".\\")))
+    if (Properties.isWin && pathExt.nonEmpty && (name.startsWith("./") || name.startsWith(".\\")))
       pathExt
         .iterator
         .map(ext => new File(directory, name + ext))

@@ -7,6 +7,8 @@ import java.nio.file.Files
 import coursier.dependencyString
 import utest._
 
+import scala.util.Properties
+
 abstract class BootstrapTests extends TestSuite {
 
   def launcher: String
@@ -207,7 +209,7 @@ abstract class BootstrapTests extends TestSuite {
           keepErrorOutput = false,
           directory = tmpDir
         )
-        if (LauncherTestUtil.isWindows) {
+        if (Properties.isWin) {
           val expectedOutput =
             (new File(tmpDir, "./cs-props-0").getCanonicalPath +: TestUtil.propsCp).mkString(
               File.pathSeparator
@@ -242,7 +244,7 @@ abstract class BootstrapTests extends TestSuite {
           keepErrorOutput = false,
           directory = tmpDir
         )
-        if (LauncherTestUtil.isWindows) {
+        if (Properties.isWin) {
           val outputElems    = new File(tmpDir, "./cs-props-1").getCanonicalPath +: TestUtil.propsCp
           val expectedOutput = outputElems.mkString(File.pathSeparator) + System.lineSeparator()
           assert(output.replace("\\\\", "\\") == expectedOutput)
@@ -343,7 +345,7 @@ abstract class BootstrapTests extends TestSuite {
           keepErrorOutput = false,
           directory = tmpDir
         )
-        if (LauncherTestUtil.isWindows) {
+        if (Properties.isWin) {
           val expectedOutput =
             new File(tmpDir, "./cs-props-hybrid").getCanonicalPath + System.lineSeparator()
           assert(output.replace("\\\\", "\\") == expectedOutput)
@@ -376,7 +378,7 @@ abstract class BootstrapTests extends TestSuite {
           keepErrorOutput = false,
           directory = tmpDir
         )
-        if (LauncherTestUtil.isWindows) {
+        if (Properties.isWin) {
           val expectedOutput =
             new File(tmpDir, "./cs-props-hybrid-shared").getCanonicalPath + System.lineSeparator()
           assert(output.replace("\\\\", "\\") == expectedOutput)
