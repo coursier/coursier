@@ -571,6 +571,7 @@ trait CliTests extends CsModule { self =>
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.caseApp,
+    Deps.osLib,
     Deps.utest
   )
   object test extends Tests with CsTests {

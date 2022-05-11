@@ -29,39 +29,37 @@ abstract class BootstrapTests extends TestSuite {
 
   val tests = Tests {
     test("simple") {
-      TestUtil.withTempDir { tmpDir =>
-        LauncherTestUtil.run(
-          args = Seq(
-            launcher,
-            "bootstrap",
-            "-o",
-            "cs-echo",
-            "io.get-coursier:echo:1.0.1"
-          ) ++ extraOptions,
-          directory = tmpDir
-        )
-        val output = LauncherTestUtil.output(
-          Seq("./cs-echo", "foo"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0)
+        os.proc(
+          launcher,
+          "bootstrap",
+          "-o",
+          "cs-echo",
+          "io.get-coursier:echo:1.0.1",
+          extraOptions
+        ).call(cwd = tmpDir)
+        val bootstrap =
+          if (Properties.isWin) (tmpDir / "cs-echo.bat").toString
+          else "./cs-echo"
+        val output = os.proc(bootstrap, "foo")
+          .call(cwd = tmpDir)
+          .out.text()
         val expectedOutput = "foo" + System.lineSeparator()
         assert(output == expectedOutput)
 
         if (acceptsJOptions) {
-          val outputWithJavaArgs = LauncherTestUtil.output(
-            Seq("./cs-echo", "-J-Dother=thing", "foo", "-J-Dfoo=baz"),
-            keepErrorOutput = false,
-            directory = tmpDir
-          )
+          val outputWithJavaArgs =
+            os.proc(bootstrap, "-J-Dother=thing", "foo", "-J-Dfoo=baz")
+              .call(cwd = tmpDir)
+              .out.text()
           assert(outputWithJavaArgs == expectedOutput)
         }
 
-        val outputWithArgsWithSpace = LauncherTestUtil.output(
-          Seq("./cs-echo", "-n foo"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
+        val outputWithArgsWithSpace =
+          os.proc(bootstrap, "-n foo")
+            .call(cwd = tmpDir)
+            .out.text()
         val expectedOutputWithArgsWithSpace = "-n foo" + System.lineSeparator()
         assert(outputWithArgsWithSpace == expectedOutputWithArgsWithSpace)
       }
@@ -69,27 +67,24 @@ abstract class BootstrapTests extends TestSuite {
 
     def javaPropsTest(): Unit =
       TestUtil.withTempDir { tmpDir =>
-        LauncherTestUtil.run(
-          args = Seq(
-            launcher,
-            "bootstrap",
-            "-o",
-            "cs-props",
-            "--property",
-            "other=thing",
-            "--java-opt",
-            "-Dfoo=baz",
-            TestUtil.propsDepStr,
-            "--jvm-option-file=.propsjvmopts"
-          ) ++ extraOptions,
-          directory = tmpDir
-        )
+        os.proc(
+          launcher,
+          "bootstrap",
+          "-o",
+          "cs-props",
+          "--property",
+          "other=thing",
+          "--java-opt",
+          "-Dfoo=baz",
+          TestUtil.propsDepStr,
+          "--jvm-option-file=.propsjvmopts",
+          extraOptions
+        ).call(cwd = os.Path(tmpDir))
 
-        val fooOutput = LauncherTestUtil.output(
-          Seq("./cs-props", "foo"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
+        val fooOutput =
+          os.proc("./cs-props", "foo")
+            .call(cwd = os.Path(tmpDir))
+            .out.text()
         val expectedFooOutput = "baz" + System.lineSeparator()
         assert(fooOutput == expectedFooOutput)
 

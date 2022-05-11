@@ -14,13 +14,16 @@ abstract class GetTests extends TestSuite {
     test("Maven Central") {
       TestUtil.withTempDir { tmpDir =>
         val cache = new File(tmpDir, "cache").getAbsolutePath
-        val output = LauncherTestUtil.output(
-          launcher,
-          "get",
-          "https://repo1.maven.org/maven2/io/get-coursier/coursier_2.13/2.0.2/coursier_2.13-2.0.2.pom.asc",
-          "--cache",
-          cache
-        )
+        val output =
+          os.proc(
+            launcher,
+            "get",
+            "https://repo1.maven.org/maven2/io/get-coursier/coursier_2.13/2.0.2/coursier_2.13-2.0.2.pom.asc",
+            "--cache",
+            cache
+          )
+            .call()
+            .out.text()
         val content = new String(Files.readAllBytes(Paths.get(output.trim)), StandardCharsets.UTF_8)
         val expectedContent =
           """-----BEGIN PGP SIGNATURE-----
@@ -41,13 +44,16 @@ abstract class GetTests extends TestSuite {
     test("GitHub") {
       TestUtil.withTempDir { tmpDir =>
         val cache = new File(tmpDir, "cache").getAbsolutePath
-        val output = LauncherTestUtil.output(
-          launcher,
-          "get",
-          "https://github.com/coursier/coursier/releases/download/v2.0.2/coursier.asc",
-          "--cache",
-          cache
-        )
+        val output =
+          os.proc(
+            launcher,
+            "get",
+            "https://github.com/coursier/coursier/releases/download/v2.0.2/coursier.asc",
+            "--cache",
+            cache
+          )
+            .call()
+            .out.text()
         val content = new String(Files.readAllBytes(Paths.get(output.trim)), StandardCharsets.UTF_8)
         val expectedContent =
           """-----BEGIN PGP SIGNATURE-----
@@ -73,14 +79,17 @@ abstract class GetTests extends TestSuite {
 
       TestUtil.withTempDir { tmpDir =>
         val cache = new File(tmpDir, "cache").getAbsolutePath
-        val output = LauncherTestUtil.output(
-          launcher,
-          "get",
-          archiveUrl.toString,
-          "--cache",
-          cache,
-          "--archive"
-        )
+        val output =
+          os.proc(
+            launcher,
+            "get",
+            archiveUrl.toString,
+            "--cache",
+            cache,
+            "--archive"
+          )
+            .call()
+            .out.text()
         val dir = Paths.get(output.trim)
         val content =
           new String(Files.readAllBytes(dir.resolve("archive/a")), StandardCharsets.UTF_8)
