@@ -6,6 +6,7 @@ These instructions will install the coursier CLI `cs` itself, as well as a typic
 By default, they will install the following applications:
 
 - `cs` itself, to further manage your Scala environment
+- `scala-cli`, a [convenient tool to compile / run / package Scala code](https://scala-cli.virtuslab.org)
 - `scala`, the Scala REPL
 - `scalac`, the Scala compiler
 - `sbt` and `sbtn`, the [sbt build toold](https://www.scala-sbt.org/)
