@@ -79,7 +79,7 @@ object `windows-ansi` extends Module {
   object ps extends JavaModule
 }
 
-object `custom-protocol-for-test` extends SbtModule {
+object `custom-protocol-for-test` extends CsModule {
   def scalaVersion = ScalaVersions.scala213
 }
 
@@ -406,7 +406,7 @@ class TestsJs(val crossScalaVersion: String) extends TestsModule with CsScalaJsM
   }
 }
 
-class ProxyTests(val crossScalaVersion: String) extends CrossSbtModule {
+class ProxyTests(val crossScalaVersion: String) extends CrossSbtModule with CsModule {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.dockerClient,
     Deps.scalaAsync,
@@ -631,7 +631,7 @@ trait Web extends CsScalaJsModule {
   // browserifyBundle("sax")
 }
 
-object `redirecting-server` extends SbtModule {
+object `redirecting-server` extends CsModule {
   def scalaVersion = ScalaVersions.scala212
   def ivyDeps = Agg(
     ivy"org.http4s::http4s-blaze-server:0.17.6",
