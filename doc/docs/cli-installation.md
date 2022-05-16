@@ -6,10 +6,10 @@ These instructions will install the coursier CLI `cs` itself, as well as a typic
 By default, they will install the following applications:
 
 - `cs` itself, to further manage your Scala environment
-- `scala`, the Scala 2 REPL
-- `scalac`, the Scala 2 compiler
+- `scala`, the Scala REPL
+- `scalac`, the Scala compiler
 - `sbt` and `sbtn`, the [sbt build toold](https://www.scala-sbt.org/)
-- `ammonite`, [an enhanced REPL](https://ammonite.io/) for Scala 2
+- `ammonite`, [an enhanced REPL](https://ammonite.io/) for Scala
 - `scalafmt`, the [Scala code formatter](https://scalameta.org/scalafmt/)
 
 They will also install a JVM if none is found on the system.
