@@ -24,7 +24,6 @@
 <url> <loc>https://get-coursier.io/docs/next/cli-launch</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://get-coursier.io/docs/next/cli-launch" /> </url>
 <url> <loc>https://get-coursier.io/docs/next/cli-overview</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://get-coursier.io/docs/next/cli-overview" /> </url>
 <url> <loc>https://get-coursier.io/docs/next/cli-resolve</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://get-coursier.io/docs/next/cli-resolve" /> </url>
-<url> <loc>https://get-coursier.io/docs/next/cli-setup</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://get-coursier.io/docs/next/cli-setup" /> </url>
 <url> <loc>https://get-coursier.io/docs/next/dev-contributing</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://get-coursier.io/docs/next/dev-contributing" /> </url>
 <url> <loc>https://get-coursier.io/docs/next/dev-website</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://get-coursier.io/docs/next/dev-website" /> </url>
 <url> <loc>https://get-coursier.io/docs/next/extra</loc> <changefreq>hourly</changefreq> <priority>1.0</priority> <xhtml:link rel="alternate" hreflang="en" href="https://get-coursier.io/docs/next/extra" /> </url>
