@@ -216,5 +216,6 @@ $ test-install-dir/ammonite
 ```
 The directory passed this way takes precedence over the ones above.
 
-One can run `cs install --setup` to [update](https://get-coursier.io/docs/cli-setup.html#how-it-sets-environment-variables-globally) profile files (Linux / macOS) or user environment variables (Windows),
+One can run `cs install --setup` to [update](https://get-coursier.io/docs/cli-installation.html#how-it-sets-environment-variables-globally) 
+profile files (Linux / macOS) or user environment variables (Windows),
 to add the installation directory to `PATH`.
