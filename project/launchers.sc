@@ -1,5 +1,5 @@
 import $ivy.`io.get-coursier::coursier-launcher:2.0.16`
-import $ivy.`io.github.alexarchambault.mill::mill-native-image_mill0.9:0.1.16`
+import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.21`
 
 import $file.cs
 import $file.deps, deps.{Deps, graalVmJvmId, jvmIndex}
