@@ -61,16 +61,19 @@ final class DependencySet private (
         // Optimized map value addition. Only mutate map if we made a change
         m.get(dep0) match {
           case None =>
-            m = m + (dep0 -> Sets.empty[Dependency].add(dep, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions)))
+            m = m + (dep0 -> Sets.empty[Dependency].add(
+              dep,
+              _.exclusions.size,
+              (a, b) => a.exclusions.subsetOf(b.exclusions)
+            ))
           case Some(groupSet) =>
             val groupSet0 = groupSet.add(
               dep,
               _.exclusions.size,
               (a, b) => a.exclusions.subsetOf(b.exclusions)
             )
-            if (groupSet ne groupSet0) {
+            if (groupSet ne groupSet0)
               m = m + (dep0 -> groupSet0)
-            }
         }
       }
       new DependencySet(set ++ dependencies, m)
