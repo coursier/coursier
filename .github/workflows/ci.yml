@@ -8,63 +8,26 @@ on:
   pull_request:
 
 jobs:
-  generate-linux-arm64-native-launcher:
-    name: Upload native launcher Linux ARM64
+  generate-native-launchers:
+    name: Upload native launcher ${{ matrix.OS }}
     if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-18.04
+    runs-on: ${{ matrix.OS }}
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest", "windows-latest", "macos-latest"]
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.3
-      - run: .github/scripts/gpg-setup.sh
-        env:
-          PGP_SECRET: ${{ secrets.PGP_SECRET }}
       - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
-      - uses: uraimo/run-on-arch-action@v2.1.2
-        with:
-          arch: aarch64
-          distro: ubuntu20.04
-
-          # Speeds up builds per the run-on-arch-action README
-          githubToken: ${{ github.token }}
-
-          setup: |
-            mkdir -p artifacts
-            mkdir -p utils
-            cp "$(cs get https://github.com/coursier/coursier/releases/download/v2.0.16/cs-aarch64-pc-linux)" utils/cs
-            chmod +x utils/cs
-
-          dockerRunArgs: |
-            --volume "${PWD}/artifacts:/artifacts"
-            --volume "${PWD}/utils:/utils"
-
-          env: |
-            JAVA_HOME: /jvm
-
-          # PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
-          # PGP_SECRET: ${{ secrets.PGP_SECRET }}
-
-          # The shell to run commands with in the container
-          shell: /bin/bash
-
-          # build-essential and libz-dev are required to build native images.
-          # git is required by some of the launcher.sc logic.
-          # python3-pip is required for some CLI tests.
-          # gnupg2 is for signing the resulting binary.
-          install: |
-            apt-get update -q -y
-            apt-get install -q -y build-essential libz-dev git python3-pip gnupg2 curl
-
-          run: |
-            set -e
-            export PATH="/utils:$PATH"
-            eval "$(cs java --env --jvm 11 --jvm-index https://github.com/coursier/jvm-index/raw/master/index.json)"
-            git config --global --add safe.directory "$(pwd)"
-            ./mill -i copyLauncher /artifacts/
+      - name: Copy artifacts
+        run: .github/scripts/maybe-with-graalvm-home.sh copyLauncher artifacts/
+        shell: bash
       - uses: actions/upload-artifact@v3
         with:
           name: launchers
@@ -72,9 +35,33 @@ jobs:
           if-no-files-found: error
           retention-days: 2
 
+  generate-jar-launchers:
+    name: Upload JAR launchers
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.3
+    - uses: coursier/setup-action@v1.2.0-M3
+      with:
+        jvm: 8
+    - name: Wait for sync to Central
+      run: ./mill -i waitForSync
+    - name: Copy artifacts
+      run: ./mill -i copyJarLaunchers
+    - uses: actions/upload-artifact@v3
+      with:
+        name: launchers
+        path: artifacts/
+        if-no-files-found: error
+        retention-days: 2
+
   upload-launchers:
     name: Upload launchers to GitHub release assets
-    needs: [generate-linux-arm64-native-launcher]
+    needs: [generate-native-launchers, generate-jar-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
