@@ -251,6 +251,7 @@ jobs:
             set -e
             export PATH="/utils:$PATH"
             eval "$(cs java --env --jvm 11 --jvm-index https://github.com/coursier/jvm-index/raw/master/index.json)"
+            git config --global --add safe.directory "$(pwd)"
             ./mill -i copyLauncher /artifacts/
       - uses: actions/upload-artifact@v3
         with:
