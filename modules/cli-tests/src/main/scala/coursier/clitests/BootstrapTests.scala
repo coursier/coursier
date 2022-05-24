@@ -4,6 +4,9 @@ import java.io._
 import java.nio.charset.Charset
 import java.nio.file.Files
 
+import scala.util.Properties
+
+import coursier.clitests.util.DockerServer
 import coursier.dependencyString
 import utest._
 
@@ -18,6 +21,9 @@ abstract class BootstrapTests extends TestSuite {
 
   def enableNailgunTest: Boolean =
     true
+
+  def hasDocker: Boolean =
+    Properties.isLinux
 
   private val extraOptions =
     overrideProguarded match {
@@ -525,6 +531,63 @@ abstract class BootstrapTests extends TestSuite {
           directory = tmpDir
         )
         assert(jnaNoSys.trim == "false")
+      }
+    }
+
+    test("authenticated proxy") {
+      if (hasDocker) authenticatedProxyTests()
+      else "Docker test disabled"
+    }
+
+    def authenticatedProxyTests(): Unit = {
+
+      def authProxyTestImage =
+        "bahamat/authenticated-proxy@sha256:568c759ac687f93d606866fbb397f39fe1350187b95e648376b971e9d7596e75"
+
+      TestUtil.withTempDir { tmpDir =>
+        LauncherTestUtil.run(
+          args = Seq(
+            launcher,
+            "bootstrap",
+            "-o",
+            "cs-echo",
+            "io.get-coursier:echo:1.0.1"
+          ) ++ extraOptions,
+          directory = tmpDir
+        )
+        val output = LauncherTestUtil.output(
+          Seq("./cs-echo", "foo"),
+          keepErrorOutput = false,
+          directory = tmpDir
+        )
+        val expectedOutput = "foo" + System.lineSeparator()
+        assert(output == expectedOutput)
+
+        DockerServer.withServer(authProxyTestImage, "", 80 -> 9083) { _ =>
+          val output = LauncherTestUtil.output(
+            Seq("./cs-echo", "foo"),
+            keepErrorOutput = false,
+            directory = tmpDir,
+            extraEnv = Map(
+              "COURSIER_CACHE" -> new File(tmpDir, "cache-1").toString
+            )
+          )
+          val expectedOutput = "foo" + System.lineSeparator()
+          assert(output == expectedOutput)
+        }
+
+        DockerServer.withServer(authProxyTestImage, "", 80 -> 9084) { _ =>
+          val output = LauncherTestUtil.output(
+            Seq("./cs-echo", "foo"),
+            keepErrorOutput = false,
+            directory = tmpDir,
+            extraEnv = Map(
+              "COURSIER_CACHE" -> new File(tmpDir, "cache-2").toString
+            )
+          )
+          val expectedOutput = "foo" + System.lineSeparator()
+          assert(output == expectedOutput)
+        }
       }
     }
   }

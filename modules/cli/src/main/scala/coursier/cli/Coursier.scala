@@ -2,6 +2,7 @@ package coursier.cli
 
 import caseapp.core.app.CommandsEntryPoint
 import caseapp.RemainingArgs
+import coursier.bootstrap.launcher.proxy.SetupProxy
 import coursier.cache.CacheUrl
 import coursier.cli.internal.{Argv0, PathUtil}
 import coursier.cli.setup.{Setup, SetupOptions}
@@ -109,7 +110,7 @@ object Coursier extends CommandsEntryPoint {
       else
         args
 
-    CacheUrl.setupProxyAuth()
+    SetupProxy.setup()
 
     if (csArgs.nonEmpty)
       super.main(csArgs)

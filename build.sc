@@ -67,6 +67,8 @@ object coursier extends Module {
 
 object directories extends Directories
 
+object `proxy-setup` extends JavaModule with CoursierPublishModule
+
 object paths extends JavaModule {
   def moduleDeps = Seq(
     directories
@@ -88,6 +90,7 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
     super.sources() ++
       directories.sources() ++
       paths.sources() ++
+      `proxy-setup`.sources() ++
       `windows-ansi`.ps.sources()
   }
   def resources = T.sources {
@@ -407,6 +410,9 @@ class TestsJs(val crossScalaVersion: String) extends TestsModule with CsScalaJsM
 }
 
 class ProxyTests(val crossScalaVersion: String) extends CrossSbtModule {
+  def moduleDeps = super.moduleDeps ++ Seq(
+    `proxy-setup`
+  )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.dockerClient,
     Deps.scalaAsync,
@@ -519,6 +525,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     install(cliScalaVersion),
     jvm(cliScalaVersion),
     launcherModule(cliScalaVersion),
+    `proxy-setup`,
     publish0(cliScalaVersion)
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
@@ -571,6 +578,8 @@ trait CliTests extends CsModule { self =>
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.caseApp,
+    Deps.dockerClient,
+    Deps.osLib,
     Deps.utest
   )
   object test extends Tests with CsTests {

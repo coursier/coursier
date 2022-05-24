@@ -1,13 +1,24 @@
 package coursier.test
 
+import coursier.bootstrap.launcher.proxy.SetupProxy
 import utest.runner.Framework
 
 class CustomFramework extends Framework {
 
   override def setup(): Unit =
-    coursier.cache.CacheUrl.setupProxyAuth(Map(
-      ("http", "localhost", "9083") -> ("jack", "insecure"),
-      ("http", "localhost", "9084") -> ("wrong", "nope")
-    ))
+    SetupProxy.setupAuthenticator(
+      "localhost",
+      "9083",
+      "jack",
+      "insecure",
+      null,
+      null,
+      null,
+      null,
+      "localhost",
+      "9084",
+      "wrong",
+      "nope"
+    )
 
 }
