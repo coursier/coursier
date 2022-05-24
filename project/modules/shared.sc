@@ -1,3 +1,6 @@
+import $ivy.`io.github.alexarchambault.mill::mill-scala-cli::0.1.0`
+import scala.cli.mill.ScalaCliCompile
+
 import $file.^.mima, mima.Mima
 import $file.^.deps, deps.{Deps, ScalaVersions}
 
@@ -81,7 +84,7 @@ trait JsTests extends TestModule {
   }
 }
 
-trait CsModule extends SbtModule {
+trait CsModule extends SbtModule with ScalaCliCompile {
   def scalacOptions = T {
     val sv = scalaVersion()
     val scala212Opts =
