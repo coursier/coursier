@@ -20,12 +20,12 @@ public final class Password<T> implements Serializable {
   }
 
   @Override
-  public final String toString() {
+  public String toString() {
     return "****";
   }
 
   @Override
-  public final int hashCode() {
+  public int hashCode() {
     return "****".hashCode();
   }
 
@@ -36,9 +36,8 @@ public final class Password<T> implements Serializable {
     if (getClass() != obj.getClass()) return false;
     Password<?> other = (Password<?>) obj;
     if (value == null) {
-      if (other.value != null) return false;
-    } else if (!value.equals(other.value)) return false;
-    return true;
+      return other.value == null;
+    } else return value.equals(other.value);
   }
 
 }
