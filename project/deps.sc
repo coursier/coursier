@@ -54,7 +54,7 @@ object Deps {
   def scalazCore       = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
   def scalazConcurrent = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
   def simulacrum       = ivy"org.typelevel::simulacrum:1.0.0"
-  def slf4JNop         = ivy"org.slf4j:slf4j-nop:1.7.33"
+  def slf4JNop         = ivy"org.slf4j:slf4j-nop:1.7.36"
   def svm              = ivy"org.graalvm.nativeimage:svm:$graalVmVersion"
   def svmSubs          = ivy"org.scalameta::svm-subs:20.2.0"
   def utest            = ivy"com.lihaoyi::utest::0.7.11"
