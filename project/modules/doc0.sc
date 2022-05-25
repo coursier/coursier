@@ -21,7 +21,7 @@ trait Doc extends ScalaModule {
     branch: String = "master",
     docusaurusDir: os.Path = os.pwd / "doc" / "website"
   ) = T.command {
-    docs.copyDocusaurusVersionedData(repo, branch, docusaurusDir)
+    docs.copyDocusaurusVersionedData(repo, branch, docusaurusDir, T.dest / "repo")
   }
 
   def forkWorkingDir = T.dest

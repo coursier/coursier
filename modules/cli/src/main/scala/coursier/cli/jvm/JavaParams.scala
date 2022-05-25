@@ -6,6 +6,7 @@ import coursier.cli.params.{CacheParams, EnvParams, OutputParams, RepositoryPara
 
 final case class JavaParams(
   available: Boolean,
+  installed: Boolean,
   shared: SharedJavaParams,
   repository: RepositoryParams,
   cache: CacheParams,
@@ -23,12 +24,13 @@ object JavaParams {
 
     val flags = Seq(
       options.available,
+      options.installed,
       envV.toOption.fold(false)(_.anyFlag)
     )
     val flagsV =
       if (flags.count(identity) > 1)
         Validated.invalidNel(
-          "Error: can only specify one of --env, --setup, --available."
+          "Error: can only specify one of --env, --setup, --available or --installed."
         )
       else
         Validated.validNel(())
@@ -36,7 +38,7 @@ object JavaParams {
     val checkArgsV =
       if (anyArg && flags.exists(identity))
         Validated.invalidNel(
-          s"Error: unexpected arguments passed along --env, --setup, or --available"
+          s"Error: unexpected arguments passed along --env, --setup, --available or --installed."
         )
       else
         Validated.validNel(())
@@ -45,6 +47,7 @@ object JavaParams {
       (shared, cache, output, env, repo, _, _) =>
         JavaParams(
           options.available,
+          options.installed,
           shared,
           repo,
           cache,

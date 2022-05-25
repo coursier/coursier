@@ -2,7 +2,14 @@ package coursier.cli.jvm
 
 import caseapp.core.parser.Parser
 import caseapp.{HelpMessage, Recurse}
-import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions, RepositoryOptions}
+import coursier.cli.options.{
+  CacheOptions,
+  EnvOptions,
+  OptionGroup,
+  OutputOptions,
+  RepositoryOptions
+}
+import caseapp.Group
 
 // format: off
 @HelpMessage(
@@ -16,7 +23,10 @@ import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions, Repository
   "$ cs java --jvm adopt:11 --setup\n"
 )
 final case class JavaOptions(
-  available: Boolean = false,
+  @Group(OptionGroup.java)
+    available: Boolean = false,
+  @Group(OptionGroup.java)
+    installed: Boolean = false,
   @Recurse
     sharedJavaOptions: SharedJavaOptions = SharedJavaOptions(),
   @Recurse

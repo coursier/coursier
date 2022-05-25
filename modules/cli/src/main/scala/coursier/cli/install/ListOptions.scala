@@ -1,6 +1,8 @@
 package coursier.cli.install
 
 import caseapp.{ExtraName => Short, HelpMessage, Parser}
+import caseapp.Group
+import coursier.cli.options.OptionGroup
 
 // format: off
 @HelpMessage(
@@ -10,6 +12,7 @@ import caseapp.{ExtraName => Short, HelpMessage, Parser}
   "$ cs list\n"
 )
 final case class ListOptions(
+  @Group(OptionGroup.install)
   @Short("dir")
     installDir: Option[String] = None,
 )

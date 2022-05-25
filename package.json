@@ -20,8 +20,7 @@
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "requirejs": "2.3.6",
-    "sax": "1.2.4",
-    "webpack-raphael": "2.1.4"
+    "sax": "1.2.4"
   },
   "scripts": {
     "browserify": "browserify"

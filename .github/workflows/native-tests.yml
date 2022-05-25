@@ -11,36 +11,37 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        OS: [ubuntu-latest, windows-2016, macos-latest]
+        OS: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.OS }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: brew install nailgun
         if: runner.os == 'macOS'
-      - run: ./mill -i nativeTests
+      - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
+        shell: bash
 
   test-linux-arm64-native-launcher:
     runs-on: ubuntu-18.04
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
-      - uses: uraimo/run-on-arch-action@v2.1.1
+      - uses: uraimo/run-on-arch-action@v2.1.2
         with:
           arch: aarch64
           distro: ubuntu20.04
@@ -64,15 +65,16 @@ jobs:
           # The shell to run commands with in the container
           shell: /bin/bash
 
-          # build-essential and libz-dev are required to build native images.
+          # build-essential, libz-dev, and zlib1g-dev are required to build native images.
           # git is required by some of the launcher.sc logic.
           # python3-pip is required for some CLI tests.
           install: |
             apt-get update -q -y
-            apt-get install -q -y build-essential libz-dev git python3-pip curl
+            apt-get install -q -y build-essential libz-dev zlib1g-dev git python3-pip curl
 
           run: |
             set -e
             export PATH="/utils:$PATH"
             eval "$(cs java --env --jvm 11 --jvm-index https://github.com/coursier/jvm-index/raw/master/index.json)"
+            git config --global --add safe.directory "$(pwd)"
             ./mill -i nativeTests

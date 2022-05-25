@@ -32,7 +32,7 @@ lazy val buildVersion = {
   }
 }
 
-trait CoursierPublishModule extends PublishModule {
+trait CoursierPublishModule extends PublishModule with JavaModule {
   import mill.scalalib.publish._
   def pomSettings = PomSettings(
     description = artifactName(),
@@ -45,6 +45,9 @@ trait CoursierPublishModule extends PublishModule {
     )
   )
   def publishVersion = T(buildVersion)
+  def javacOptions = T {
+    super.javacOptions() ++ Seq("-source", "8", "-target", "8")
+  }
 }
 
 trait CsTests extends TestModule {

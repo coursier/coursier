@@ -162,6 +162,35 @@ import scala.language.implicitConversions
   def repr: String =
     RawAppDescriptor.encoder.encode(this).nospaces
 
+  def overrideVersion(ver: String, useVersionOverrides: Boolean): RawAppDescriptor = {
+    val base =
+      if (useVersionOverrides) {
+        val ver0 = coursier.core.Version(ver)
+        val versionOverrideOpt = versionOverrides
+          .iterator
+          .flatMap { o =>
+            o.versionOverride.toEither match {
+              case Left(errors) =>
+                // FIXME Log errors
+                Iterator.empty
+              case Right(ov) if ov.versionRange.contains(ver0) =>
+                Iterator(o)
+              case Right(_) =>
+                Iterator.empty
+            }
+          }
+          .find(_ => true)
+        versionOverrideOpt.fold(this) { versionOverride =>
+          withDependencies(versionOverride.dependencies.getOrElse(dependencies))
+            .withRepositories(versionOverride.repositories.getOrElse(repositories))
+            .withMainClass(versionOverride.mainClass.orElse(mainClass))
+            .withProperties(versionOverride.properties.getOrElse(properties))
+        }
+      }
+      else this
+    base.overrideVersion(ver)
+  }
+
   // version substitution possibly a bit flaky…
   def overrideVersion(ver: String): RawAppDescriptor =
     withDependencies {
@@ -182,6 +211,9 @@ import scala.language.implicitConversions
 
   def overrideVersion(verOpt: Option[String]): RawAppDescriptor =
     verOpt.fold(this)(overrideVersion(_))
+
+  def overrideVersion(verOpt: Option[String], useVersionOverrides: Boolean): RawAppDescriptor =
+    verOpt.fold(this)(overrideVersion(_, useVersionOverrides))
 }
 
 object RawAppDescriptor {
@@ -251,7 +283,10 @@ object RawAppDescriptor {
     dependencies: Option[List[String]] = None,
     repositories: Option[List[String]] = None,
     mainClass: Option[String] = None,
-    properties: Option[RawAppDescriptor.Properties] = None
+    properties: Option[RawAppDescriptor.Properties] = None,
+    @since("2.1.0-M4")
+    prebuilt: Option[String] = None,
+    prebuiltBinaries: Option[Map[String, String]] = None
   ) {
     def versionOverride: ValidatedNel[String, VersionOverride] = {
       val versionRangeV = coursier.core.Parse
@@ -273,6 +308,8 @@ object RawAppDescriptor {
             .withMainClass(mainClassOpt)
             .withDefaultMainClass(defaultMainClassOpt)
             .withJavaProperties(properties.map(_.props.sorted))
+            .withPrebuiltLauncher(prebuilt)
+            .withPrebuiltBinaries(prebuiltBinaries)
       }
     }
   }

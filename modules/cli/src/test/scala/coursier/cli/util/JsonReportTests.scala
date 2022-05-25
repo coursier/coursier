@@ -6,8 +6,8 @@ import utest._
 object JsonReportTests extends TestSuite {
   val tests = Tests {
     test("empty JsonReport should be empty") {
-      val report: String = JsonReport[String](IndexedSeq(), Map())(
-        children = _ => Seq(),
+      val report: String = JsonReport[String](Vector.empty, Map())(
+        children = _ => Vector.empty,
         reconciledVersionStr = _ => "",
         requestedVersionStr = _ => "",
         getFile = _ => Option(""),
@@ -22,10 +22,10 @@ object JsonReportTests extends TestSuite {
     test("JsonReport containing two deps should not be empty") {
       val children = Map("a" -> Seq("b"), "b" -> Seq())
       val report: String = JsonReport[String](
-        roots = IndexedSeq("a", "b"),
+        roots = Vector("a", "b"),
         conflictResolutionForRoots = Map()
       )(
-        children = children(_),
+        children = children(_).toVector,
         reconciledVersionStr = s => s"$s:reconciled",
         requestedVersionStr = s => s"$s:requested",
         getFile = _ => Option(""),
@@ -57,15 +57,16 @@ object JsonReportTests extends TestSuite {
 
       assert(reportJson == expectedReportJson)
     }
+
     test(
       "JsonReport containing two deps should be sorted alphabetically regardless of input order"
     ) {
       val children = Map("a" -> Seq("b"), "b" -> Seq())
       val report: String = JsonReport[String](
-        roots = IndexedSeq("b", "a"),
+        roots = Vector("b", "a"),
         conflictResolutionForRoots = Map()
       )(
-        children = children(_),
+        children = children(_).toVector,
         reconciledVersionStr = s => s"$s:reconciled",
         requestedVersionStr = s => s"$s:requested",
         getFile = _ => Option(""),
@@ -80,6 +81,64 @@ object JsonReportTests extends TestSuite {
           |  "dependencies": [
           |    { "coord": "a:reconciled", "file": "", "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled" ] },
           |    { "coord": "b:reconciled", "file": "", "directDependencies": [], "dependencies": [] }
+          |  ],
+          |  "version": "0.1.0"
+          |}""".stripMargin
+      )
+
+      assert(reportJson == expectedReportJson)
+    }
+
+    test("JsonReport should prevent walking a tree in which a dependency depends on itself") {
+      val children = Map("a" -> Vector("a", "b"), "b" -> Vector.empty)
+      val report = JsonReport[String](
+        roots = Vector("a", "b"),
+        conflictResolutionForRoots = Map.empty
+      )(
+        children = children(_),
+        reconciledVersionStr = s => s"$s:reconciled",
+        requestedVersionStr = s => s"$s:requested",
+        getFile = _ => Option(""),
+        exclusions = _ => Set.empty
+      )
+
+      val reportJson = Parse.parse(report)
+      val expectedReportJson = Parse.parse(
+        """{
+          |  "conflict_resolution": {},
+          |  "dependencies": [
+          |    { "coord": "a:reconciled", "file": "", "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled" ] },
+          |    { "coord": "b:reconciled", "file": "", "directDependencies": [], "dependencies": [] }
+          |  ],
+          |  "version": "0.1.0"
+          |}""".stripMargin
+      )
+
+      assert(reportJson == expectedReportJson)
+    }
+
+    test("JsonReport should prevent walking a tree with cycles") {
+      val children =
+        Map("a" -> Vector("b"), "b" -> Vector("c"), "c" -> Vector("a", "d"), "d" -> Vector.empty)
+      val report = JsonReport[String](
+        roots = Vector("a", "b", "c"),
+        conflictResolutionForRoots = Map.empty
+      )(
+        children = children(_),
+        reconciledVersionStr = s => s"$s:reconciled",
+        requestedVersionStr = s => s"$s:requested",
+        getFile = _ => Option(""),
+        exclusions = _ => Set.empty
+      )
+
+      val reportJson = Parse.parse(report)
+      val expectedReportJson = Parse.parse(
+        """{
+          |  "conflict_resolution": {},
+          |  "dependencies": [
+          |    { "coord": "a:reconciled", "file": "", "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled", "c:reconciled", "d:reconciled" ] },
+          |    { "coord": "b:reconciled", "file": "", "directDependencies": [ "c:reconciled" ], "dependencies": [ "a:reconciled", "c:reconciled", "d:reconciled" ] },
+          |    { "coord": "c:reconciled", "file": "", "directDependencies": [ "a:reconciled", "d:reconciled" ], "dependencies": [ "a:reconciled", "b:reconciled", "d:reconciled" ] }
           |  ],
           |  "version": "0.1.0"
           |}""".stripMargin

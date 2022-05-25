@@ -9,6 +9,7 @@ object DefaultAppList {
       "coursier",
       "scala",
       "scalac",
+      "scala-cli",
       "sbt",
       "sbtn",
       "scalafmt"

@@ -3,8 +3,8 @@ package coursier.cli.resolve
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.cli.install.SharedChannelOptions
 import coursier.cli.options.{
-  CacheOptions,
   DependencyOptions,
+  OptionGroup,
   OutputOptions,
   RepositoryOptions,
   ResolutionOptions
@@ -23,26 +23,37 @@ import coursier.install.RawAppDescriptor
 )
 final case class ResolveOptions(
 
+  @Group(OptionGroup.resolution)
   @Help("Print the duration of each iteration of the resolution (if negative, doesn't print per iteration benchmark -> less overhead)")
+  @Hidden
   @Short("B")
   @Value("# warm-up resolutions")
     benchmark: Int = 0,
 
-  benchmarkCache: Boolean = false,
+  @Group(OptionGroup.resolution)
+  @Hidden
+    benchmarkCache: Boolean = false,
 
+  @Group(OptionGroup.resolution)
   @Help("Print dependencies as a tree")
   @Short("t")
     tree: Boolean = false,
+  @Group(OptionGroup.resolution)
   @Help("Print dependencies as a reversed tree (dependees as children)")
   @Short("T")
     reverseTree: Boolean = false,
+  @Group(OptionGroup.resolution)
   @Help("Print what depends on the passed modules")
   @Value("org:name")
     whatDependsOn: List[String] = Nil,
+  @Group(OptionGroup.resolution)
   @Help("Print candidate artifact URLs")
+  @Hidden
     candidateUrls: Boolean = false,
 
+  @Group(OptionGroup.resolution)
   @Help("Print conflicts")
+  @Hidden
     conflicts: Boolean = false,
 
   @Recurse
@@ -50,12 +61,16 @@ final case class ResolveOptions(
   @Recurse
     channelOptions: SharedChannelOptions = SharedChannelOptions(),
 
+  @Group(OptionGroup.resolution)
   @Help("Force printing / generating results, even if errored")
   @Short("F")
     forcePrint: Boolean = false,
-
-  retry: Option[String] = None,
-  attempts: Option[Int] = None
+  @Group(OptionGroup.resolution)
+  @Hidden
+    retry: Option[String] = None,
+  @Group(OptionGroup.resolution)
+  @Hidden
+    attempts: Option[Int] = None
 
 ) {
   // format: on
