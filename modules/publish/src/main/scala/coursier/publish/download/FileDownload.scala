@@ -26,11 +26,11 @@ final case class FileDownload(base: Path) extends Download {
         logger.downloadingIfExists(url)
         val res =
           try if (Files.isRegularFile(p)) {
-            val lastModified = Files.getLastModifiedTime(p).toInstant
-            Right(Some((Some(lastModified), Files.readAllBytes(p))))
-          }
-          else
-            Right(None)
+              val lastModified = Files.getLastModifiedTime(p).toInstant
+              Right(Some((Some(lastModified), Files.readAllBytes(p))))
+            }
+            else
+              Right(None)
           catch {
             case NonFatal(e) =>
               Left(e)

@@ -60,12 +60,12 @@ trait Signer {
       .collect {
         case Left((path, content))
             if !signed(path) &&
-              !path.elements.lastOption.exists(n =>
-                dontSignExtensions.exists(e => n.endsWith("." + e))
-              ) &&
-              !path.elements.lastOption.exists(n =>
-                dontSignFiles(n) || dontSignFiles.exists(f => n.startsWith(f + "."))
-              ) =>
+            !path.elements.lastOption.exists(n =>
+              dontSignExtensions.exists(e => n.endsWith("." + e))
+            ) &&
+            !path.elements.lastOption.exists(n =>
+              dontSignFiles(n) || dontSignFiles.exists(f => n.startsWith(f + "."))
+            ) =>
           (path, content)
       }
 

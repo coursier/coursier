@@ -51,7 +51,7 @@ object Manual {
             val pomOrError =
               for {
                 _ <-
-                  (if (xml.label == "project") Right(()) else Left("Project definition not found"))
+                  if (xml.label == "project") Right(()) else Left("Project definition not found")
                 proj <- coursier.maven.Pom.project(xml)
               } yield proj
 
