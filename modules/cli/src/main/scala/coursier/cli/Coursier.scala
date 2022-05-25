@@ -42,6 +42,7 @@ object Coursier extends CommandsEntryPoint {
     resolve.Resolve,
     search.Search,
     setup.Setup,
+    version.Version,
     install.Uninstall,
     install.Update
   )
