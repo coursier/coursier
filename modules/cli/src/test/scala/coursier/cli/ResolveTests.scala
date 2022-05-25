@@ -611,7 +611,7 @@ object ResolveTests extends TestSuite {
           |org.scala-lang:tasty-core_3:3.1.1:default
           |org.scala-lang.modules:scala-asm:9.1.0-scala-1:default
           |org.scala-sbt:compiler-interface:1.3.5:default
-          |org.scala-sbt:util-interface:1.3.0:default
+          |org.scala-sbt:util-interface:2.1.0:default
           |""".stripMargin
 
       val scala2135Output = output(options, "scala:2.13.5")
