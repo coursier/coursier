@@ -57,7 +57,7 @@ object Deps {
   def slf4JNop         = ivy"org.slf4j:slf4j-nop:1.7.33"
   def svm              = ivy"org.graalvm.nativeimage:svm:$graalVmVersion"
   def svmSubs          = ivy"org.scalameta::svm-subs:20.2.0"
-  def utest            = ivy"com.lihaoyi::utest::0.7.10"
+  def utest            = ivy"com.lihaoyi::utest::0.7.11"
   def windowsAnsi      = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.3"
 }
 
