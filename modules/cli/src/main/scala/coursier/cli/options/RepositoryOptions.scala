@@ -7,7 +7,7 @@ import coursier.cli.install.SharedChannelOptions
 final case class RepositoryOptions(
 
   @Group(OptionGroup.repository)
-  @HelpMessage("Repository - for multiple repositories, separate with comma and/or add this option multiple times (e.g. -r central,ivy2local -r sonatype:snapshots, or equivalently -r central,ivy2local,sonatype:snapshots)")
+  @HelpMessage("Repository - for multiple repositories, specify this option multiple times (e.g. -r central -r ivy2local -r sonatype:snapshots)")
   @ValueDescription("maven|sonatype:$repo|ivy2local|bintray:$org/$repo|bintray-ivy:$org/$repo|typesafe:ivy-$repo|typesafe:$repo|sbt-plugin:$repo|scala-integration|scala-nightlies|ivy:$pattern|jitpack|clojars|jcenter|apache:$repo")
   @ExtraName("r")
     repository: List[String] = Nil,

@@ -2,6 +2,8 @@ package coursier.core
 
 import dataclass.data
 
+import java.util.Locale
+
 // Maven-specific
 @data class Activation(
   properties: Seq[(String, Option[String])],
@@ -60,25 +62,32 @@ object Activation {
     name: Option[String],
     version: Option[String] // FIXME Could this be an interval?
   ) {
+    private lazy val archNormalized = arch
+      .map(_.toLowerCase(Locale.US))
+      .map {
+        case "x86-64" => "x86_64" // seems required by org.nd4j:nd4j-native:0.5.0
+        case arch     => arch
+      }
+    private lazy val familiesNormalized = families.map(_.toLowerCase(Locale.US))
+    private lazy val nameNormalized     = name.map(_.toLowerCase(Locale.US))
+    private lazy val versionNormalized  = version.map(_.toLowerCase(Locale.US))
+
     def isEmpty: Boolean =
       arch.isEmpty && families.isEmpty && name.isEmpty && version.isEmpty
 
     def archMatch(current: Option[String]): Boolean =
-      arch.forall(current.toSeq.contains) || {
-        // seems required by org.nd4j:nd4j-native:0.5.0
-        arch.toSeq.contains("x86-64") && current.toSeq.contains("x86_64")
-      }
+      archNormalized.forall(current.contains)
 
     def isActive(osInfo: Os): Boolean =
-      archMatch(osInfo.arch) &&
-      families.forall { f =>
+      archMatch(osInfo.archNormalized) &&
+      familiesNormalized.forall { f =>
         if (Os.knownFamilies(f))
-          osInfo.families.contains(f)
+          osInfo.familiesNormalized.contains(f)
         else
-          osInfo.name.exists(_.contains(f))
+          osInfo.nameNormalized.exists(_.contains(f))
       } &&
-      name.forall(osInfo.name.toSeq.contains) &&
-      version.forall(osInfo.version.toSeq.contains)
+      nameNormalized.forall(osInfo.nameNormalized.contains) &&
+      versionNormalized.forall(osInfo.versionNormalized.contains)
   }
 
   object Os {

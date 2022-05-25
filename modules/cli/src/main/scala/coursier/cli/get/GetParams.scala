@@ -9,7 +9,7 @@ final case class GetParams(
   output: OutputParams,
   separator: String,
   force: Boolean,
-  changing: Boolean
+  changing: Option[Boolean]
 )
 
 object GetParams {

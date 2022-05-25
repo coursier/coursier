@@ -504,7 +504,11 @@ class Jvm(val crossScalaVersion: String) extends CrossSbtModule with CsModule
     Deps.argonautShapeless,
     Deps.jsoniterCore
   )
-  object test extends Tests with CsTests
+  object test extends Tests with CsTests {
+    def ivyDeps = super.ivyDeps() ++ Seq(
+      Deps.osLib
+    )
+  }
 }
 
 trait Cli extends CsModule with CoursierPublishModule with Launchers {
@@ -521,6 +525,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     Deps.argonautShapeless,
     Deps.caseApp,
     Deps.catsCore,
+    Deps.catsFree,
     Deps.dataClass,
     Deps.monadlessCats,
     Deps.monadlessStdlib,
@@ -734,7 +739,7 @@ def copyJarLaunchers(version: String = buildVersion, directory: String = "artifa
 
 def publishSonatype(tasks: mill.main.Tasks[PublishModule.PublishData]) =
   T.command {
-    val data = define.Task.sequence(tasks.value)()
+    val data = T.sequence(tasks.value)()
 
     publishing.publishSonatype(
       data = data,
@@ -768,6 +773,8 @@ def updateWebsite(dryRun: Boolean = false) = {
       .filter(_.startsWith("refs/tags/v"))
       .map(_.stripPrefix("refs/tags/v"))
 
+  System.err.println(s"versionOpt=$versionOpt")
+
   val token =
     if (dryRun) ""
     else
@@ -780,14 +787,16 @@ def updateWebsite(dryRun: Boolean = false) = {
     doc.copyVersionedData()()
     doc.generate("--npm-install", "--yarn-run-build")()
 
-    docs.updateVersionedDocs(
-      docusaurusDir,
-      versionedDocsRepo,
-      versionedDocsBranch,
-      ghTokenOpt = Some(token),
-      newVersionOpt = versionOpt,
-      dryRun = dryRun
-    )
+    for (version <- versionOpt)
+      docs.updateVersionedDocs(
+        docusaurusDir,
+        versionedDocsRepo,
+        versionedDocsBranch,
+        ghTokenOpt = Some(token),
+        newVersion = version,
+        dryRun = dryRun,
+        cloneUnder = T.dest / "repo"
+      )
 
     // copyDemoFiles()
 
@@ -796,8 +805,9 @@ def updateWebsite(dryRun: Boolean = false) = {
       token,
       "coursier/coursier",
       branch = "gh-pages",
-      dryRun = dryRun
-    )()
+      dryRun = dryRun,
+      dest = T.dest / "gh-pages"
+    )
   }
 }
 
@@ -848,7 +858,7 @@ def jvmTests(scalaVersion: String = "*") = {
     }
 
   T.command {
-    define.Task.sequence(tasks)()
+    T.sequence(tasks)()
 
     ()
   }
@@ -871,10 +881,32 @@ def jsTests(scalaVersion: String = "*") = {
   val tasks = scalaVersions.flatMap(sv => crossTests(sv))
 
   T.command {
-    define.Task.sequence(tasks)()
+    T.sequence(tasks)()
   }
 }
 
 def nativeTests() = T.command {
   `cli-tests`.`native-tests`.test()()
+}
+
+object ci extends Module {
+  def copyJvm(jvm: String = deps.graalVmJvmId, dest: String = "jvm") = T.command {
+    import sys.process._
+    val cs = if (Properties.isWin) "cs.exe" else "cs"
+    val command = Seq(
+      cs,
+      "java-home",
+      "--jvm",
+      jvm,
+      "--update",
+      "--ttl",
+      "0"
+    )
+    val baseJavaHome = os.Path(command.!!.trim, os.pwd)
+    System.err.println(s"Initial Java home $baseJavaHome")
+    val destJavaHome = os.Path(dest, os.pwd)
+    os.copy(baseJavaHome, destJavaHome, createFolders = true)
+    System.err.println(s"New Java home $destJavaHome")
+    destJavaHome
+  }
 }
