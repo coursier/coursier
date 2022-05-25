@@ -25,7 +25,7 @@ object Deps {
   def jsoniterMacros =
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
   def jsoup           = ivy"org.jsoup:jsoup:1.14.3"
-  def logbackClassic  = ivy"ch.qos.logback:logback-classic:1.2.10"
+  def logbackClassic  = ivy"ch.qos.logback:logback-classic:1.2.11"
   def macroParadise   = ivy"org.scalamacros:::paradise:2.1.1"
   def mdoc            = ivy"org.scalameta::mdoc:2.2.24"
   def monadlessCats   = ivy"io.monadless::monadless-cats:${Versions.monadless}"
@@ -36,7 +36,7 @@ object Deps {
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
-  def proguard                 = ivy"com.guardsquare:proguard-base:7.2.0"
+  def proguard                 = ivy"com.guardsquare:proguard-base:7.2.1"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.1.0"
   def scalaJsJquery            = ivy"be.doeraene::scalajs-jquery::1.0.0"
@@ -57,7 +57,7 @@ object Deps {
   def slf4JNop         = ivy"org.slf4j:slf4j-nop:1.7.33"
   def svm              = ivy"org.graalvm.nativeimage:svm:$graalVmVersion"
   def svmSubs          = ivy"org.scalameta::svm-subs:20.2.0"
-  def utest            = ivy"com.lihaoyi::utest::0.7.10"
+  def utest            = ivy"com.lihaoyi::utest::0.7.11"
   def windowsAnsi      = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.3"
 }
 
@@ -66,7 +66,7 @@ object Versions {
   def fastParse     = "2.3.3"
   def http4s        = "0.18.26"
   def jniUtils      = "0.3.3"
-  def jsoniterScala = "2.12.1"
+  def jsoniterScala = "2.12.4"
   def monadless     = "0.0.13"
   def scalaz        = "7.2.34"
 }
