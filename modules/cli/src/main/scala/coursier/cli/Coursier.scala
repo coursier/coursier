@@ -7,6 +7,7 @@ import coursier.cli.internal.{Argv0, PathUtil}
 import coursier.cli.setup.{Setup, SetupOptions}
 import coursier.install.InstallDir
 import coursier.jniutils.ModuleFileName
+import coursier.proxy.SetupProxy
 
 import java.nio.file.Paths
 import java.util.Scanner
@@ -110,7 +111,7 @@ object Coursier extends CommandsEntryPoint {
       else
         args
 
-    CacheUrl.setupProxyAuth()
+    SetupProxy.setup()
 
     if (csArgs.nonEmpty)
       super.main(csArgs)

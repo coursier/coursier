@@ -4,6 +4,9 @@ import java.io._
 import java.nio.charset.Charset
 import java.nio.file.Files
 
+import scala.util.Properties
+
+import coursier.clitests.util.TestAuthProxy
 import coursier.dependencyString
 import utest._
 
@@ -20,6 +23,9 @@ abstract class BootstrapTests extends TestSuite {
 
   def enableNailgunTest: Boolean =
     true
+
+  def hasDocker: Boolean =
+    Properties.isLinux
 
   private val extraOptions =
     overrideProguarded match {
@@ -522,6 +528,67 @@ abstract class BootstrapTests extends TestSuite {
           directory = tmpDir
         )
         assert(jnaNoSys.trim == "false")
+      }
+    }
+
+    test("authenticated proxy") {
+      if (hasDocker) authenticatedProxyTest()
+      else "Docker test disabled"
+    }
+
+    def authenticatedProxyTest(): Unit = {
+
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0, os.pwd)
+
+        os.proc(launcher, "bootstrap", "-o", "cs-echo", "io.get-coursier:echo:1.0.1", extraOptions)
+          .call(cwd = tmpDir)
+
+        val output = os.proc("./cs-echo", "foo")
+          .call(cwd = tmpDir)
+          .out.text()
+        val expectedOutput = "foo" + System.lineSeparator()
+        assert(output == expectedOutput)
+
+        val okM2Dir = tmpDir / "m2-ok"
+        os.write(okM2Dir / "settings.xml", TestAuthProxy.m2Settings(), createFolders = true)
+        val nopeM2Dir = tmpDir / "m2-nope"
+        os.write(
+          nopeM2Dir / "settings.xml",
+          TestAuthProxy.m2Settings(9083, "wrong", "nope"),
+          createFolders = true
+        )
+
+        TestAuthProxy.withAuthProxy { _ =>
+
+          val proc = os.proc("./cs-echo", "foo")
+
+          val failCheck = proc
+            .call(
+              cwd = tmpDir,
+              env = Map(
+                "COURSIER_CACHE" -> (tmpDir / "cache-1").toString,
+                "CS_MAVEN_HOME"  -> nopeM2Dir.toString
+              ),
+              check = false,
+              mergeErrIntoOut = true
+            )
+
+          assert(failCheck.exitCode != 0)
+          assert(failCheck.out.text().contains("407 Proxy Authentication Required"))
+
+          val output = proc
+            .call(
+              cwd = tmpDir,
+              env = Map(
+                "COURSIER_CACHE" -> (tmpDir / "cache-1").toString,
+                "CS_MAVEN_HOME"  -> okM2Dir.toString
+              )
+            )
+            .out.text()
+          val expectedOutput = "foo" + System.lineSeparator()
+          assert(output == expectedOutput)
+        }
       }
     }
   }

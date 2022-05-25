@@ -67,6 +67,10 @@ object coursier extends Module {
 
 object directories extends Directories
 
+object `proxy-setup` extends JavaModule with CoursierPublishModule {
+  def artifactName = "coursier-proxy-setup"
+}
+
 object paths extends JavaModule {
   def moduleDeps = Seq(
     directories
@@ -84,10 +88,26 @@ object `custom-protocol-for-test` extends CsModule {
 }
 
 object `bootstrap-launcher` extends BootstrapLauncher { self =>
+  def proxySources = T.sources {
+    val dest = T.dest / "sources"
+    val orig = `proxy-setup`.sources()
+    for ((pathRef, idx) <- orig.zipWithIndex)
+      os.copy.into(pathRef.path, dest / s"dir-$idx", copyAttributes = true, createFolders = true)
+    os.walk(dest)
+      .filter(_.last.endsWith(".java"))
+      .filter(os.isFile(_))
+      .foreach { f =>
+        val content = os.read(f)
+          .replaceAll("package coursier.proxy;", "package coursier.bootstrap.launcher.proxy;")
+        os.write.over(f, content)
+      }
+    Seq(PathRef(dest))
+  }
   def sources = T.sources {
     super.sources() ++
       directories.sources() ++
       paths.sources() ++
+      proxySources() ++
       `windows-ansi`.ps.sources()
   }
   def resources = T.sources {
@@ -407,6 +427,9 @@ class TestsJs(val crossScalaVersion: String) extends TestsModule with CsScalaJsM
 }
 
 class ProxyTests(val crossScalaVersion: String) extends CrossSbtModule with CsModule {
+  def moduleDeps = super.moduleDeps ++ Seq(
+    `proxy-setup`
+  )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.dockerClient,
     Deps.scalaAsync,
@@ -519,6 +542,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     install(cliScalaVersion),
     jvm(cliScalaVersion),
     launcherModule(cliScalaVersion),
+    `proxy-setup`,
     publish0(cliScalaVersion)
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
@@ -570,6 +594,7 @@ trait CliTests extends CsModule { self =>
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.caseApp,
+    Deps.dockerClient,
     Deps.osLib,
     Deps.utest
   )

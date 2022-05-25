@@ -1,6 +1,7 @@
 package coursier.bootstrap.launcher;
 
 import coursier.bootstrap.launcher.jniutils.BootstrapNativeApi;
+import coursier.bootstrap.launcher.proxy.SetupProxy;
 
 import java.io.File;
 import java.io.IOException;
@@ -52,6 +53,8 @@ public class Bootstrap {
 
         Thread thread = Thread.currentThread();
         ClassLoader contextLoader = thread.getContextClassLoader();
+
+        SetupProxy.setup();
 
         Python.maybeSetPythonProperties(contextLoader);
 
