@@ -4,7 +4,9 @@ import $file.^.deps, deps.{Deps, ScalaVersions}
 import mill._, mill.scalalib._, mill.scalajslib._
 
 trait CsMima extends Mima {
-  def mimaPreviousVersions = Seq("2.0.16")
+  def mimaPreviousVersions = T {
+    Seq.empty[String]
+  }
 }
 
 def commitHash = T {
