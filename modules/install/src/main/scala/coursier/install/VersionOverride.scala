@@ -10,5 +10,8 @@ import coursier.core.{Repository, VersionInterval}
   repositories: Option[Seq[Repository]] = None,
   mainClass: Option[String] = None,
   defaultMainClass: Option[String] = None,
-  javaProperties: Option[Seq[(String, String)]] = None
+  javaProperties: Option[Seq[(String, String)]] = None,
+  @since("2.1.0-M4")
+  prebuiltLauncher: Option[String] = None,
+  prebuiltBinaries: Option[Map[String, String]] = None
 )

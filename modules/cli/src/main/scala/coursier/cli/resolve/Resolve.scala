@@ -377,7 +377,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
           // kind of meh - so that the id can be picked as default output name by bootstrap
           // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
           .withName(rawDesc.name.orElse(info.appDescriptor.nameOpt))
-          .overrideVersion(info.overrideVersionOpt)
+          .overrideVersion(info.overrideVersionOpt, useVersionOverrides = true)
 
       e match {
         case Left(err) =>

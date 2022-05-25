@@ -3,7 +3,7 @@ package coursier.cache
 import java.io.{File, FileInputStream, FileOutputStream}
 import java.util.zip.GZIPInputStream
 
-import org.codehaus.plexus.archiver.tar.TarGZipUnArchiver
+import org.codehaus.plexus.archiver.tar.{TarBZip2UnArchiver, TarGZipUnArchiver}
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver
 import org.codehaus.plexus.logging.{AbstractLogger, Logger}
 
@@ -38,6 +38,10 @@ object UnArchiver {
             Right(u)
           case ArchiveType.Tgz =>
             val u = new TarGZipUnArchiver
+            u.enableLogging(nopLogger())
+            Right(u)
+          case ArchiveType.Tbz2 =>
+            val u = new TarBZip2UnArchiver
             u.enableLogging(nopLogger())
             Right(u)
           case ArchiveType.Gzip =>

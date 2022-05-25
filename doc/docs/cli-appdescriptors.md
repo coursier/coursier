@@ -149,8 +149,7 @@ as key, and your application descriptor as value, like
 Put that file on at a URL where your users can consume it.
 It can be a file in a GitHub repository, or a GitHub gist, but
 any service allowing to download that file via HTTP should work.
-In the case of GitHub and GitHub gists, note that you can shorten
-the resulting URL with [git.io](https://git.io). Don't forget
+Don't forget
 to give your users the link to the "raw" content of your channel.
 
 Once that file is available at some URL, like `https://git.io/Jv8um`, your
@@ -240,11 +239,11 @@ application descriptors.
 Such a file must be made available at a public URL. This URL can then be passed
 to the `--channel` option of the `install` command.
 
-For example, the [following URL](https://git.io/Jvl0m)
+For example, the [following URL](https://gist.githubusercontent.com/alexarchambault/5f6c8c25997063a07ea769d7a2b61466/raw/3aadef1c006777bba024f492a28da8d6698ee6a0/demo-channel.json)
 contains two application descriptors, for `"my-scala"` and `"my-scalac"`, that can
 be installed via
 ```bash
-$ cs install --channel https://git.io/Jvl0m my-scala
+$ cs install --channel https://gist.githubusercontent.com/alexarchambault/5f6c8c25997063a07ea769d7a2b61466/raw/3aadef1c006777bba024f492a28da8d6698ee6a0/demo-channel.json my-scala
 $ my-scala --help
 …
 ```

@@ -28,45 +28,55 @@ import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
   // format: on
 
   def getIfInstalled(id: String): Task[Option[File]] =
-    entries(id).flatMap {
-      case Left(err) => Task.fail(new JvmCache.JvmNotFoundInIndex(id, err))
-      case Right(entries0) =>
-        entries0
-          .reverse
-          .map(getIfInstalled(_))
-          .foldLeft(Task.point(Option.empty[File])) {
-            (acc, task) =>
-              acc.flatMap {
-                case None    => task
-                case Some(f) => Task.point(Some(f))
-              }
-          }
-    }
+    if (id.contains("://"))
+      getIfInstalled(Artifact.fromUrl(id))
+    else
+      entries(id).flatMap {
+        case Left(err) => Task.fail(new JvmCache.JvmNotFoundInIndex(id, err))
+        case Right(entries0) =>
+          entries0
+            .reverse
+            .map(getIfInstalled(_))
+            .foldLeft(Task.point(Option.empty[File])) {
+              (acc, task) =>
+                acc.flatMap {
+                  case None    => task
+                  case Some(f) => Task.point(Some(f))
+                }
+            }
+      }
 
   def getIfInstalled(entry: JvmIndexEntry): Task[Option[File]] = {
-
     val artifact = Artifact(entry.url).withChanging(entry.version.endsWith("SNAPSHOT"))
+    getIfInstalled(artifact)
+  }
 
+  def getIfInstalled(artifact: Artifact): Task[Option[File]] =
     archiveCache.getIfExists(artifact).flatMap {
       case Left(e)          => Task.fail(e)
       case Right(None)      => Task.point(None)
-      case Right(Some(dir)) => JvmCache.finalDirectory(entry.url, dir, os).map(Some(_))
+      case Right(Some(dir)) => JvmCache.finalDirectory(artifact.url, dir, os).map(Some(_))
     }
-  }
 
   def get(
     entry: JvmIndexEntry,
     logger: Option[JvmCacheLogger]
   ): Task[File] = {
-
     val artifact = Artifact(entry.url).withChanging(entry.version.endsWith("SNAPSHOT"))
+    get(artifact, logger)
+  }
+
+  def get(
+    artifact: Artifact,
+    logger: Option[JvmCacheLogger]
+  ): Task[File] = {
 
     val task = archiveCache.get(artifact).flatMap {
       case Left(err) => Task.fail(err)
       case Right(f)  => Task.point(f)
     }
 
-    task.flatMap(JvmCache.finalDirectory(entry.url, _, os))
+    task.flatMap(JvmCache.finalDirectory(artifact.url, _, os))
   }
 
   def entries(id: String): Task[Either[String, Seq[JvmIndexEntry]]] =
@@ -91,10 +101,13 @@ import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
     get(entry, None)
 
   def get(id: String): Task[File] =
-    entries(id).flatMap {
-      case Left(err)       => Task.fail(new JvmCache.JvmNotFoundInIndex(id, err))
-      case Right(entries0) => get(entries0.last, None)
-    }
+    if (id.contains("://"))
+      get(Artifact.fromUrl(id), None)
+    else
+      entries(id).flatMap {
+        case Left(err)       => Task.fail(new JvmCache.JvmNotFoundInIndex(id, err))
+        case Right(entries0) => get(entries0.last, None)
+      }
 
   def withIndex(index: Task[JvmIndex]): JvmCache =
     withIndex(Some(index))

@@ -5,7 +5,8 @@ import java.nio.charset.StandardCharsets
 
 import caseapp.core.RemainingArgs
 import cats.data.Validated
-import coursier.cli.options.{DependencyOptions, OutputOptions, ResolutionOptions}
+import coursier.cli.install.SharedChannelOptions
+import coursier.cli.options.{CacheOptions, DependencyOptions, OutputOptions, ResolutionOptions}
 import coursier.cli.resolve.{
   Resolve,
   ResolveException,
@@ -13,8 +14,11 @@ import coursier.cli.resolve.{
   ResolveParams,
   SharedResolveOptions
 }
+import coursier.install.Channels
 import coursier.util.Sync
 import utest._
+
+import java.nio.file.Paths
 
 import scala.concurrent.ExecutionContext
 
@@ -43,6 +47,33 @@ object ResolveTests extends TestSuite {
       case Validated.Valid(params0) =>
         params0
     }
+
+  def output(options: SharedResolveOptions, args: String*): String =
+    output(ResolveOptions(sharedResolveOptions = options), args: _*)
+
+  def output(options: ResolveOptions, args: String*): String = {
+
+    val stdout = new ByteArrayOutputStream
+
+    // get options and dependencies from apps if any
+
+    val initialParams = paramsOrThrow(options)
+
+    val (options0, deps) = {
+      val initialRepositories = initialParams.repositories.repositories
+      val channels            = initialParams.channel.channels
+      val cache               = initialParams.cache.cache(pool, initialParams.output.logger())
+      val channels0           = Channels(channels, initialRepositories, cache)
+      Resolve.handleApps(options, args, channels0)(_.addApp(_))
+    }
+
+    val params = paramsOrThrow(options0)
+    val ps     = new PrintStream(stdout, true, "UTF-8")
+    Resolve.printTask(params, pool, ps, ps, deps)
+      .unsafeRun()(ec)
+
+    new String(stdout.toByteArray, "UTF-8")
+  }
 
   private implicit class CrLfStringOps(private val s: String) extends AnyVal {
     def noCrLf: String =
@@ -414,18 +445,6 @@ object ResolveTests extends TestSuite {
       assert(output.noCrLf == expectedOutput.noCrLf)
     }
 
-    def output(options: SharedResolveOptions, args: String*): String = {
-
-      val stdout = new ByteArrayOutputStream
-      val params = paramsOrThrow(options)
-
-      val ps = new PrintStream(stdout, true, "UTF-8")
-      Resolve.printTask(params, pool, ps, ps, args)
-        .unsafeRun()(ec)
-
-      new String(stdout.toByteArray, "UTF-8")
-    }
-
     test("ignore binary scala version") {
       val options = SharedResolveOptions(
         resolutionOptions = ResolutionOptions(
@@ -547,6 +566,60 @@ object ResolveTests extends TestSuite {
             false
         }
       Predef.assert(!success, "Expected a resolution exception")
+    }
+
+    test("app descriptors version overrides") {
+      val jsonUrl = Thread.currentThread().getContextClassLoader.getResource("test-apps/scala.json")
+      assert(jsonUrl != null)
+      val channelDir = Paths.get(jsonUrl.toURI).getParent.normalize
+      val options = ResolveOptions(
+        channelOptions = SharedChannelOptions(
+          defaultChannels = false,
+          channel = List(channelDir.toString)
+        ),
+        sharedResolveOptions = SharedResolveOptions(
+          cacheOptions = CacheOptions(
+            ttl = Some("0")
+          )
+        )
+      )
+
+      val expectedScala2135Output =
+        """net.java.dev.jna:jna:5.3.1:default
+          |org.jline:jline:3.19.0:default
+          |org.scala-lang:scala-compiler:2.13.5:default
+          |org.scala-lang:scala-library:2.13.5:default
+          |org.scala-lang:scala-reflect:2.13.5:default
+          |""".stripMargin
+      val expectedScala2138Output =
+        """net.java.dev.jna:jna:5.9.0:default
+          |org.jline:jline:3.21.0:default
+          |org.scala-lang:scala-compiler:2.13.8:default
+          |org.scala-lang:scala-library:2.13.8:default
+          |org.scala-lang:scala-reflect:2.13.8:default
+          |""".stripMargin
+      val expectedScala3Output =
+        """com.google.protobuf:protobuf-java:3.7.0:default
+          |net.java.dev.jna:jna:5.3.1:default
+          |org.jline:jline-reader:3.19.0:default
+          |org.jline:jline-terminal:3.19.0:default
+          |org.jline:jline-terminal-jna:3.19.0:default
+          |org.scala-lang:scala-library:2.13.6:default
+          |org.scala-lang:scala3-compiler_3:3.1.1:default
+          |org.scala-lang:scala3-interfaces:3.1.1:default
+          |org.scala-lang:scala3-library_3:3.1.1:default
+          |org.scala-lang:tasty-core_3:3.1.1:default
+          |org.scala-lang.modules:scala-asm:9.1.0-scala-1:default
+          |org.scala-sbt:compiler-interface:1.3.5:default
+          |org.scala-sbt:util-interface:1.3.0:default
+          |""".stripMargin
+
+      val scala2135Output = output(options, "scala:2.13.5")
+      assert(scala2135Output.noCrLf == expectedScala2135Output.noCrLf)
+      val scala2138Output = output(options, "scala:2.13.8")
+      assert(scala2138Output.noCrLf == expectedScala2138Output.noCrLf)
+      val scala3Output = output(options, "scala:3.1.1")
+      assert(scala3Output.noCrLf == expectedScala3Output.noCrLf)
     }
   }
 }

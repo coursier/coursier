@@ -65,6 +65,15 @@ import dataclass._
               .getOrElse(defaultMainClass)
           )
           .withJavaProperties(versionOverride.javaProperties.getOrElse(javaProperties))
+          .withPrebuiltLauncher {
+            versionOverride.prebuiltLauncher
+              .map(l => if (l.isEmpty) None else Some(l))
+              .getOrElse(prebuiltLauncher)
+          }
+          .withPrebuiltBinaries {
+            versionOverride.prebuiltBinaries
+              .getOrElse(prebuiltBinaries)
+          }
       }
       .getOrElse(this)
     val deps = overriddenDesc.dependencies

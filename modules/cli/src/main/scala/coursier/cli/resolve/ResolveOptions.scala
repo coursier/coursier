@@ -3,7 +3,6 @@ package coursier.cli.resolve
 import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
 import coursier.cli.install.SharedChannelOptions
 import coursier.cli.options.{
-  CacheOptions,
   DependencyOptions,
   OptionGroup,
   OutputOptions,

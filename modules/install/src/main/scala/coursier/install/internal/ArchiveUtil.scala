@@ -1,5 +1,6 @@
 package coursier.install.internal
 
+import coursier.cache.ArchiveType
 import org.apache.commons.compress.archivers.{ArchiveEntry, ArchiveStreamFactory}
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 
@@ -10,19 +11,28 @@ import scala.jdk.CollectionConverters._
 
 object ArchiveUtil {
 
-  private def withTgzEntriesIterator[T](
-    tgz: File
+  private def withCompressedTarArchiveEntriesIterator[T](
+    archive: File,
+    compression: ArchiveType.Tar
   )(
     f: Iterator[(ArchiveEntry, InputStream)] => T
   ): T = {
+
+    val method = compression match {
+      case ArchiveType.Tgz  => CompressorStreamFactory.GZIP
+      case ArchiveType.Tbz2 => CompressorStreamFactory.BZIP2
+    }
+
     // https://alexwlchan.net/2019/09/unpacking-compressed-archives-in-scala/
     var fis: FileInputStream = null
     try {
-      fis = new FileInputStream(tgz)
-      val uncompressedInputStream = new CompressorStreamFactory().createCompressorInputStream(
-        if (fis.markSupported()) fis
-        else new BufferedInputStream(fis)
-      )
+      fis = new FileInputStream(archive)
+      val uncompressedInputStream = new CompressorStreamFactory()
+        .createCompressorInputStream(
+          method,
+          if (fis.markSupported()) fis
+          else new BufferedInputStream(fis)
+        )
       val archiveInputStream = new ArchiveStreamFactory().createArchiveInputStream(
         if (uncompressedInputStream.markSupported()) uncompressedInputStream
         else new BufferedInputStream(uncompressedInputStream)
@@ -51,17 +61,24 @@ object ArchiveUtil {
       fis.close()
   }
 
-  def withFirstFileInTgz[T](tgz: File)(f: InputStream => T): T =
-    withTgzEntriesIterator(tgz) { it =>
+  def withFirstFileInCompressedTarArchive[T](
+    archive: File,
+    compression: ArchiveType.Tar
+  )(f: InputStream => T): T =
+    withCompressedTarArchiveEntriesIterator(archive, compression) { it =>
       val it0 = it.filter(!_._1.isDirectory).map(_._2)
       if (it0.hasNext)
         f(it0.next())
       else
-        throw new NoSuchElementException(s"No file found in $tgz")
+        throw new NoSuchElementException(s"No file found in $archive")
     }
 
-  def withFileInTgz[T](tgz: File, pathInArchive: String)(f: InputStream => T): T =
-    withTgzEntriesIterator(tgz) { it =>
+  def withFileInCompressedTarArchive[T](
+    archive: File,
+    compression: ArchiveType.Tar,
+    pathInArchive: String
+  )(f: InputStream => T): T =
+    withCompressedTarArchiveEntriesIterator(archive, compression) { it =>
       val it0 = it.collect {
         case (ent, is) if !ent.isDirectory && ent.getName == pathInArchive =>
           is
@@ -69,7 +86,7 @@ object ArchiveUtil {
       if (it0.hasNext)
         f(it0.next())
       else
-        throw new NoSuchElementException(s"$pathInArchive not found in $tgz")
+        throw new NoSuchElementException(s"$pathInArchive not found in $archive")
     }
 
   def withGzipContent[T](gzFile: File)(f: InputStream => T): T = {

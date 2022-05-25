@@ -81,7 +81,8 @@ class ClassLoaders {
         List<URL> urls = getURLs(strUrls);
         List<URL> localURLs = download.getLocalURLs(urls);
 
-        ClassLoader parentClassLoader = readBaseLoaders(contextLoader);
+        ClassLoader hideStuffClassLoader = new HideNativeApiClassLoader(contextLoader);
+        ClassLoader parentClassLoader = readBaseLoaders(hideStuffClassLoader);
 
         return new URLClassLoader(localURLs.toArray(new URL[0]), parentClassLoader);
     }

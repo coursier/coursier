@@ -26,14 +26,11 @@ object Get extends CoursierCommand[GetOptions] {
       .withCache(cache)
 
     val artifacts = args.all.map { rawUrl =>
-      if (rawUrl.endsWith("?changing"))
-        Artifact(rawUrl.stripSuffix("?changing")).withChanging(true)
-      else if (rawUrl.endsWith("?changing=true"))
-        Artifact(rawUrl.stripSuffix("?changing=true")).withChanging(true)
-      else if (rawUrl.endsWith("?changing=false"))
-        Artifact(rawUrl.stripSuffix("?changing=false")).withChanging(false)
-      else
-        Artifact(rawUrl).withChanging(params.changing)
+      val artifact = Artifact.fromUrl(rawUrl)
+      params.changing match {
+        case None           => artifact
+        case Some(changing) => artifact.withChanging(changing)
+      }
     }
 
     if (artifacts.isEmpty)

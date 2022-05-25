@@ -76,9 +76,10 @@ object DependencyParams {
             if (parent_and_child.length != 2)
               Validated.invalidNel(s"Failed to parse $str")
             else {
-              val child_org_name = parent_and_child(1).split(":")
+              val child          = parent_and_child(1)
+              val child_org_name = child.split(":")
               if (child_org_name.length != 2)
-                Validated.invalidNel(s"Failed to parse $child_org_name")
+                Validated.invalidNel(s"Failed to parse $child")
               else
                 Validated.fromEither(
                   ModuleParser.javaOrScalaModule(parent_and_child(0)).left.map(NonEmptyList.one)

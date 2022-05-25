@@ -190,27 +190,31 @@ object MavenRepository {
     artifact
   }
 
-  def snapshotVersioningArtifact(
+  def actualSnapshotVersioningArtifact(
     module: Module,
     version: String
-  ): Option[Artifact] = {
+  ): Artifact = {
 
     val path = moduleVersionPath(module, version) :+ "maven-metadata.xml"
 
-    val artifact =
-      Artifact(
-        urlFor(path),
-        Map.empty,
-        Map.empty,
-        changing = true,
-        optional = false,
-        authentication = authentication
-      )
-        .withDefaultChecksums
-        .withDefaultSignature
-
-    Some(artifact)
+    Artifact(
+      urlFor(path),
+      Map.empty,
+      Map.empty,
+      changing = true,
+      optional = false,
+      authentication = authentication
+    )
+      .withDefaultChecksums
+      .withDefaultSignature
   }
+
+  @deprecated("Use actualSnapshotVersioningArtifact instead", "2.1.0-M2")
+  def snapshotVersioningArtifact(
+    module: Module,
+    version: String
+  ): Option[Artifact] =
+    Some(actualSnapshotVersioningArtifact(module, version))
 
   private def versionsFromListing[F[_]](
     module: Module,
@@ -241,17 +245,14 @@ object MavenRepository {
             case _              => true
           })
 
-          if (nonPreVersions.isEmpty)
-            Left(s"Found only pre-versions at $listingUrl")
-          else {
-            val latest = nonPreVersions.max
-            Right(Versions(
-              latest.repr,
-              latest.repr,
-              nonPreVersions.map(_.repr).toList,
-              None
-            ))
-          }
+          val latest  = parsedVersions.max
+          val release = if (nonPreVersions.nonEmpty) nonPreVersions.max else latest
+          Right(Versions(
+            latest.repr,
+            release.repr,
+            parsedVersions.map(_.repr).toList,
+            None
+          ))
         }
 
       EitherT(F.point(res.map((_, listingUrl))))
@@ -293,21 +294,18 @@ object MavenRepository {
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
-  ): EitherT[F, String, SnapshotVersioning] =
-    EitherT(
-      snapshotVersioningArtifact(module, version) match {
-        case None => F.point(Left("Not supported"))
-        case Some(artifact) =>
-          fetch(artifact).run.map { eitherStr =>
-            for {
-              str <- eitherStr
-              xml <- compatibility.xmlParseDom(str)
-              _   <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found"))
-              snapshotVersioning <- Pom.snapshotVersioning(xml)
-            } yield snapshotVersioning
-          }
-      }
-    )
+  ): EitherT[F, String, SnapshotVersioning] = {
+    val artifact = actualSnapshotVersioningArtifact(module, version)
+    val task = fetch(artifact).run.map { eitherStr =>
+      for {
+        str <- eitherStr
+        xml <- compatibility.xmlParseDom(str)
+        _   <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found"))
+        snapshotVersioning <- Pom.snapshotVersioning(xml)
+      } yield snapshotVersioning
+    }
+    EitherT(task)
+  }
 
   def find[F[_]](
     module: Module,

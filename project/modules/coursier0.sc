@@ -10,8 +10,9 @@ trait Coursier extends CsModule with CsCrossJvmJsModule with CoursierPublishModu
     Deps.dataClass
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
-    Deps.argonautShapeless,
     Deps.fastParse,
+    Deps.jsoniterCore,
+    Deps.jsoniterMacros,
     Deps.scalaReflect(scalaVersion())
   )
 }

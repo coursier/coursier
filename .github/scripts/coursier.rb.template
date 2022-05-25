@@ -22,7 +22,7 @@ class Coursier < Formula
 
     unless build.without? "zsh-completions"
       chmod 0555, bin/"coursier"
-      output = Utils.safe_popen_read("#{bin}/coursier", "--completions", "zsh")
+      output = Utils.safe_popen_read("#{bin}/coursier", "completions", "zsh")
       (zsh_completion/"_coursier").write output
     end
   end

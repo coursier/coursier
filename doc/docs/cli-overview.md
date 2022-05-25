@@ -158,7 +158,7 @@ $ cs java-home --jvm 9
 ~/Library/Caches/Coursier/jvm/adopt@1.9.0-0/Contents/Home
 ```
 
-One can [update](https://get-coursier.io/docs/cli-setup.html#how-it-sets-environment-variables-globally) profile files (Linux / macOS) or user environment variables (Windows) for a specific JVM with `--setup`, like
+One can [update](https://get-coursier.io/docs/cli-installation.html#how-it-sets-environment-variables-globally) profile files (Linux / macOS) or user environment variables (Windows) for a specific JVM with `--setup`, like
 ```bash
 $ cs java --jvm openjdk:1.14 --setup
 ```
@@ -243,4 +243,4 @@ manager. Or you can manage JVMs any other way while using the `install` command.
 `setup` only conveniently sets them up in one go, and it only sets up a JVM if it doesn't find
 one already installed.
 
-See the [dedicated page](cli-setup.md) for more details about what the `setup` command does.
+See the [dedicated page](cli-installation.md) for more details about what the `setup` command does.

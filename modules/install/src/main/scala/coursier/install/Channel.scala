@@ -1,5 +1,6 @@
 package coursier.install
 
+import java.io.File
 import java.nio.file.{FileSystem, FileSystems, Path}
 import java.util.regex.Pattern.quote
 
@@ -116,7 +117,7 @@ object Channel {
           FromUrl(url)
       }
     }
-    else if (s.contains(":")) {
+    else if (s.contains(":") && !s.contains(File.separator) && !s.contains("/")) {
       val hasVersion = s.split(':').count(_.nonEmpty) >= 3
       if (hasVersion)
         DependencyParser.javaOrScalaDependencyParams(s).flatMap {

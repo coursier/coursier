@@ -1,12 +1,11 @@
 def copyDocusaurusVersionedData(
   repo: String,
   branch: String,
-  docusaurusDir: os.Path
-) = T.command {
+  docusaurusDir: os.Path,
+  cloneUnder: os.Path
+): Unit = {
 
   val remote = s"https://github.com/$repo.git"
-
-  val cloneUnder = T.dest / "repo"
 
   os.proc("git", "clone", remote, "-b", branch, cloneUnder.toString).call(
     stdin = os.Inherit,
@@ -35,79 +34,89 @@ def copyDocusaurusVersionedData(
   }
 }
 
+private def runAndLog(secrets: Seq[String])(command: os.Shellable*) = {
+  val msg = secrets.foldLeft(s"Running ${command.flatMap(_.value)}") { (msg0, secret) =>
+    msg0.replace(secret, "****")
+  }
+  System.err.println(msg)
+  os.proc(command: _*)
+}
+
 def updateVersionedDocs(
   docusaurusDir: os.Path,
   repo: String,
   branch: String,
   ghTokenOpt: Option[String],
-  newVersionOpt: Option[String],
-  dryRun: Boolean
-) = T.command {
+  newVersion: String,
+  dryRun: Boolean,
+  cloneUnder: os.Path
+): Unit = {
 
-  for (newVersion <- newVersionOpt) {
+  val remote = s"https://${ghTokenOpt.map(_ + "@").getOrElse("")}github.com/$repo.git"
 
-    val remote = s"https://${ghTokenOpt.map(_ + "@").getOrElse("")}github.com/$repo.git"
+  os.makeDir.all(cloneUnder)
 
-    val cloneUnder = T.dest / "repo"
-    os.makeDir.all(cloneUnder)
+  System.err.println()
+  runAndLog(ghTokenOpt.toSeq)("git", "clone", remote, "-b", branch, cloneUnder.toString).call(
+    stdin = os.Inherit,
+    stdout = os.Inherit,
+    stderr = os.Inherit
+  )
 
-    os.proc("git", "clone", remote, "-b", branch, cloneUnder.toString).call(
-      stdin = os.Inherit,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
+  // TODO Check if newVersion is already in versions.json
 
-    // TODO Check if newVersion is already in versions.json
+  // FIXME We don't necessarily run on Travis CI
+  runAndLog(ghTokenOpt.toSeq)("git", "config", "user.name", "Github Actions").call(
+    cwd = cloneUnder,
+    stdin = os.Inherit,
+    stdout = os.Inherit,
+    stderr = os.Inherit
+  )
+  runAndLog(ghTokenOpt.toSeq)("git", "config", "user.email", "actions@github.com").call(
+    cwd = cloneUnder,
+    stdin = os.Inherit,
+    stdout = os.Inherit,
+    stderr = os.Inherit
+  )
 
-    // FIXME We don't necessarily run on Travis CI
-    os.proc("git", "config", "user.name", "Github Actions").call(
-      cwd = cloneUnder,
-      stdin = os.Inherit,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
-    os.proc("git", "config", "user.email", "actions@github.com").call(
-      cwd = cloneUnder,
-      stdin = os.Inherit,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
+  runAndLog(ghTokenOpt.toSeq)("yarn", "run", "version", newVersion).call(
+    cwd = docusaurusDir,
+    stdin = os.Inherit,
+    stdout = os.Inherit,
+    stderr = os.Inherit
+  )
 
-    os.proc("yarn", "run", "version", newVersion).call(
-      cwd = docusaurusDir,
-      stdin = os.Inherit,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
+  val toCopy = os.list(docusaurusDir).filter(_.last.startsWith("version"))
 
-    val toCopy = os.list(docusaurusDir).filter(_.last.startsWith("version"))
-
-    for (elem <- toCopy)
-      os.copy.into(elem, cloneUnder)
-
-    os.proc("git", "add", toCopy.map(_.last)).call(
-      cwd = cloneUnder,
-      stdin = os.Inherit,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
-
-    os.proc("git", "commit", "-m", s"Add doc for $newVersion").call(
-      cwd = cloneUnder,
-      stdin = os.Inherit,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
-    if (dryRun)
-      System.err.println(s"Would have pushed new docs to $repo")
-    else
-      os.proc("git", "push", "origin", branch).call(
-        cwd = cloneUnder,
-        stdin = os.Inherit,
-        stdout = os.Inherit,
-        stderr = os.Inherit
-      )
+  for (elem <- toCopy) {
+    val dest = cloneUnder / elem.last
+    if (os.exists(dest))
+      os.remove.all(dest)
+    os.copy(elem, dest)
   }
+
+  runAndLog(ghTokenOpt.toSeq)("git", "add", toCopy.map(_.last)).call(
+    cwd = cloneUnder,
+    stdin = os.Inherit,
+    stdout = os.Inherit,
+    stderr = os.Inherit
+  )
+
+  runAndLog(ghTokenOpt.toSeq)("git", "commit", "-m", s"Add doc for $newVersion").call(
+    cwd = cloneUnder,
+    stdin = os.Inherit,
+    stdout = os.Inherit,
+    stderr = os.Inherit
+  )
+  if (dryRun)
+    System.err.println(s"Would have pushed new docs to $repo")
+  else
+    runAndLog(ghTokenOpt.toSeq)("git", "push", "origin", branch).call(
+      cwd = cloneUnder,
+      stdin = os.Inherit,
+      stdout = os.Inherit,
+      stderr = os.Inherit
+    )
 
   ()
 }
@@ -117,11 +126,11 @@ def updateGhPages(
   ghToken: String,
   repo: String,
   dryRun: Boolean,
+  dest: os.Path,
   branch: String = "gh-pages"
-) = T.command {
+): Unit = {
   val remote = s"https://$ghToken@github.com/$repo.git"
 
-  val dest = T.dest / "gh-pages"
   os.makeDir.all(dest)
 
   os.proc("git", "clone", remote, "-q", "-b", branch, dest.toString).call(

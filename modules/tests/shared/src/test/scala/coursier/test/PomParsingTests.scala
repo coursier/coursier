@@ -335,6 +335,30 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
+
+    test("caseInsensitiveOperatingSystemActivation") {
+      val profileNode = """
+        <profile>
+          <id>profile1</id>
+          <activation>
+            <os>
+              <family>Windows</family>
+              <arch>amd64</arch>
+            </os>
+          </activation>
+        </profile>
+                       """
+      val profile     = Pom.profile(xmlParseDom(profileNode).toOption.get).right.get
+      val windowsOs = core.Activation.Os.fromProperties(Map(
+        "os.name"        -> "Windows 10",
+        "os.arch"        -> "amd64",
+        "os.version"     -> "10.0",
+        "path.separator" -> ";"
+      ))
+      val isActive = profile.activation.os.isActive(windowsOs)
+
+      assert(isActive)
+    }
   }
 
 }

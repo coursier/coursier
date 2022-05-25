@@ -24,7 +24,9 @@ import caseapp.Group
 )
 final case class JavaOptions(
   @Group(OptionGroup.java)
-  available: Boolean = false,
+    available: Boolean = false,
+  @Group(OptionGroup.java)
+    installed: Boolean = false,
   @Recurse
     sharedJavaOptions: SharedJavaOptions = SharedJavaOptions(),
   @Recurse
