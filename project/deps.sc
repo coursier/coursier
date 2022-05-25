@@ -55,7 +55,7 @@ object Deps {
   def scalazConcurrent = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
   def simulacrum       = ivy"org.typelevel::simulacrum:1.0.0"
   def slf4JNop         = ivy"org.slf4j:slf4j-nop:1.7.36"
-  def svm              = ivy"org.graalvm.nativeimage:svm:$graalVmVersion"
+  def svm              = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
   def utest            = ivy"com.lihaoyi::utest::0.7.11"
   def windowsAnsi      = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.3"
 }
@@ -72,7 +72,7 @@ object Versions {
 
 def sbtCoursierVersion = "2.0.8"
 
-def graalVmVersion = "22.0.0"
+def graalVmVersion = "22.1.0"
 def graalVmJvmId   = s"graalvm-java17:$graalVmVersion"
 
 // should be the default index in the upcoming coursier release (> 2.0.16)
