@@ -81,7 +81,7 @@ object DependencyTree {
 
         def excluded = resolution
           .dependenciesOf(
-            dep0.withExclusions(Set.empty),
+            dep0.withExclusions(Set.empty[(Organization, ModuleName)]),
             withRetainedVersions = false
           )
           .sortBy { trDep =>

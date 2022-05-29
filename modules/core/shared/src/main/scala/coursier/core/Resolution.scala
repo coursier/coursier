@@ -223,10 +223,7 @@ object Resolution {
         .withType(dep.attributes.`type`.map(substituteProps0))
         .withClassifier(dep.attributes.classifier.map(substituteProps0)),
       configuration = dep.configuration.map(substituteProps0),
-      exclusions = dep.exclusions.map {
-        case (org, name) =>
-          (org.map(substituteProps0), name.map(substituteProps0))
-      }
+      exclusions = dep.exclusions.map(substituteProps0)
     )
 
     // FIXME The content of the optional tag may also be a property in
@@ -360,21 +357,17 @@ object Resolution {
     */
   def withExclusions(
     dependencies: Seq[(Configuration, Dependency)],
-    exclusions: Set[(Organization, ModuleName)]
-  ): Seq[(Configuration, Dependency)] = {
-
-    val filter = Exclusions(exclusions)
-
+    exclusions: Exclusions
+  ): Seq[(Configuration, Dependency)] =
     dependencies
       .filter {
         case (_, dep) =>
-          filter(dep.module.organization, dep.module.name)
+          exclusions(dep.module.organization, dep.module.name)
       }
       .map {
         case (config, dep) =>
-          config -> dep.withExclusions(Exclusions.minimize(dep.exclusions ++ exclusions))
+          config -> dep.withExclusions(dep.exclusions.join(exclusions))
       }
-  }
 
   def withParentConfigurations(
     config: Configuration,

@@ -9,7 +9,7 @@ final case class DeprecatedModuleRequirements(
 ) {
   def apply(dep: Dependency): Dependency =
     dep.withExclusions(
-      localExcludes.getOrElse(dep.module.orgName, dep.exclusions) | globalExcludes
+      localExcludes.getOrElse(dep.module.orgName, dep.exclusions.toSet) | globalExcludes
     )
   def apply(deps: Seq[(Dependency, Map[String, String])]): Seq[(Dependency, Map[String, String])] =
     deps.map {

@@ -96,8 +96,8 @@ object Orders {
     "Can give incorrect results - will likely be removed at some point in future versions",
     "2.0.0-RC3"
   )
-  val exclusionsPartialOrder: PartialOrdering[Set[(Organization, ModuleName)]] =
-    new PartialOrdering[Set[(Organization, ModuleName)]] {
+  val exclusionsPartialOrder: PartialOrdering[Exclusions] =
+    new PartialOrdering[Exclusions] {
       def boolCmp(a: Boolean, b: Boolean) = (a, b) match {
         case (true, true)   => Some(0)
         case (true, false)  => Some(1)
@@ -105,9 +105,9 @@ object Orders {
         case (false, false) => None
       }
 
-      def tryCompare(x: Set[(Organization, ModuleName)], y: Set[(Organization, ModuleName)]) = {
-        val (xAll, xExcludeByOrg1, xExcludeByName1, xRemaining0) = Exclusions.partition(x)
-        val (yAll, yExcludeByOrg1, yExcludeByName1, yRemaining0) = Exclusions.partition(y)
+      def tryCompare(x: Exclusions, y: Exclusions) = {
+        val (xAll, xExcludeByOrg1, xExcludeByName1, xRemaining0) = x.partitioned()
+        val (yAll, yExcludeByOrg1, yExcludeByName1, yRemaining0) = y.partitioned()
 
         boolCmp(xAll, yAll).orElse {
           def filtered(e: Set[(Organization, ModuleName)]) =
@@ -176,7 +176,7 @@ object Orders {
       .groupBy(dep => (dep.optional, dep.configuration))
       .mapValues { deps =>
         deps.head.withExclusions(deps.foldLeft(Exclusions.one)((acc, dep) =>
-          Exclusions.meet(acc, dep.exclusions)
+          acc.meet(dep.exclusions)
         ))
       }
       .toList
@@ -212,7 +212,10 @@ object Orders {
   ): Set[Dependency] =
     dependencies
       .groupBy(
-        _.withConfiguration(Configuration.empty).withExclusions(Set.empty).withOptional(false)
+        _.withConfiguration(Configuration.empty).withExclusions(Set.empty[(
+          Organization,
+          ModuleName
+        )]).withOptional(false)
       )
       .mapValues(deps => minDependenciesUnsafe(deps, configs(deps.head.moduleVersion)))
       .valuesIterator

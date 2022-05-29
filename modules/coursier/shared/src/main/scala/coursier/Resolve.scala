@@ -42,15 +42,15 @@ import dataclass.{data, since}
 
   def finalDependencies: Seq[Dependency] = {
 
-    val filter = Exclusions(resolutionParams.exclusions)
+    val exclusions = Exclusions(resolutionParams.exclusions)
 
     dependencies
       .filter { dep =>
-        filter(dep.module.organization, dep.module.name)
+        exclusions(dep.module.organization, dep.module.name)
       }
       .map { dep =>
         dep.withExclusions(
-          Exclusions.minimize(dep.exclusions ++ resolutionParams.exclusions)
+          dep.exclusions.join(exclusions)
         )
       }
   }

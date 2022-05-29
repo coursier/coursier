@@ -384,7 +384,7 @@ object Info {
   def isEmpty: Boolean =
     name.isEmpty && `type`.isEmpty && ext.isEmpty && classifier.isEmpty
 
-  override def hashCode(): Int = tuple.hashCode
+  final override lazy val hashCode = tuple.hashCode
 }
 
 object Publication {

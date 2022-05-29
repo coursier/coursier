@@ -13,7 +13,7 @@ import dataclass.data
   module: Module,
   version: String,
   configuration: Configuration,
-  exclusions: Set[(Organization, ModuleName)],
+  exclusions: Exclusions,
   publication: Publication,
   // Maven-specific
   optional: Boolean,
@@ -46,18 +46,29 @@ import dataclass.data
   ): Dependency =
     withPublication(Publication(name, `type`, ext, classifier))
 
+  def withExclusions(exclusions: Set[(Organization, ModuleName)])
+    : Dependency = withExclusions(Exclusions(exclusions))
+
   private[core] def copy(
     module: Module = this.module,
     version: String = this.version,
     configuration: Configuration = this.configuration,
-    exclusions: Set[(Organization, ModuleName)] = this.exclusions,
+    exclusions: Exclusions = this.exclusions,
     attributes: Attributes = this.attributes,
     optional: Boolean = this.optional,
     transitive: Boolean = this.transitive
-  ) = Dependency(module, version, configuration, exclusions, attributes, optional, transitive)
+  ) = Dependency(
+    module,
+    version,
+    configuration,
+    exclusions,
+    Publication("", attributes.`type`, Extension.empty, attributes.classifier),
+    optional,
+    transitive
+  )
 
   lazy val clearExclusions: Dependency =
-    withExclusions(Set.empty)
+    withExclusions(Exclusions.zero)
 
   override lazy val hashCode: Int =
     tuple.hashCode()
@@ -68,11 +79,11 @@ object Dependency {
   private[coursier] val instanceCache: ConcurrentMap[Dependency, Dependency] =
     coursier.util.Cache.createCache()
 
-  def apply(
+  private[core] def apply(
     module: Module,
     version: String,
     configuration: Configuration,
-    exclusions: Set[(Organization, ModuleName)],
+    exclusions: Exclusions,
     publication: Publication,
     optional: Boolean,
     transitive: Boolean
@@ -91,13 +102,32 @@ object Dependency {
 
   def apply(
     module: Module,
+    version: String,
+    configuration: Configuration,
+    exclusions: Set[(Organization, ModuleName)],
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean
+  ): Dependency =
+    Dependency(
+      module,
+      version,
+      configuration,
+      Exclusions(exclusions),
+      publication,
+      optional,
+      transitive
+    )
+
+  def apply(
+    module: Module,
     version: String
   ): Dependency =
     Dependency(
       module,
       version,
       Configuration.empty,
-      Set.empty[(Organization, ModuleName)],
+      Exclusions.zero,
       Publication("", Type.empty, Extension.empty, Classifier.empty),
       optional = false,
       transitive = true
@@ -116,7 +146,7 @@ object Dependency {
       module,
       version,
       configuration,
-      exclusions,
+      Exclusions(exclusions),
       Publication("", attributes.`type`, Extension.empty, attributes.classifier),
       optional,
       transitive

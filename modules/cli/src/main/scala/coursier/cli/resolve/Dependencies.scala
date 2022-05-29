@@ -61,7 +61,7 @@ object Dependencies {
       case None => dep
       case Some(exclusions) =>
         dep.withExclusions(
-          Exclusions.minimize(dep.exclusions ++ exclusions.map(m => (m.organization, m.name)))
+          dep.exclusions.join(Exclusions(exclusions.map(m => (m.organization, m.name)).toSet))
         )
     }
 
