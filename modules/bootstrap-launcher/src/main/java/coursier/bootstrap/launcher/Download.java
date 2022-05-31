@@ -99,7 +99,7 @@ class Download {
             final Optional<String> userInfoOpt = Optional.ofNullable(url.getUserInfo());
             final Optional<String> userInfoUserOpt = userInfoOpt.map(userInfo -> userInfo.split(":", 2)[0]);
             final Optional<DirectCredentials> directCredentialsOpt = directCredentials.stream()
-                .filter(credentials -> credentials.isMatchHost())
+                .filter(DirectCredentials::isMatchHost)
                 .filter(credentials -> credentials.getUsernameOpt().isPresent() && (!userInfoUserOpt.isPresent() || credentials.getUsernameOpt().get().equals(userInfoUserOpt.get())))
                 .filter(credentials -> credentials.getPasswordOpt().isPresent())
                 .filter(credentials -> ("http".equals(url.getProtocol()) && !credentials.isHttpsOnly()) || "https".equals(url.getProtocol()))

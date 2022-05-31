@@ -94,12 +94,10 @@ public final class FileCredentials extends Credentials {
 
   @Override
   public String toString() {
-    final StringBuilder b = new StringBuilder("FileCredentials(");
-    b.append(String.valueOf(path));
-    b.append(", ");
-    b.append(String.valueOf(optional));
-    b.append(")");
-    return b.toString();
+    return "FileCredentials(" + path +
+            ", " +
+            optional +
+            ")";
   }
 
   @Override
@@ -119,9 +117,8 @@ public final class FileCredentials extends Credentials {
     FileCredentials other = (FileCredentials) obj;
     if (optional != other.optional) return false;
     if (path == null) {
-      if (other.path != null) return false;
-    } else if (!path.equals(other.path)) return false;
-    return true;
+      return other.path == null;
+    } else return path.equals(other.path);
   }
 
 }
