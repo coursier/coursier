@@ -10,6 +10,7 @@ import scala.collection.compat.immutable.LazyList
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 import dataclass.data
+import MinimizedExclusions._
 
 object Resolution {
 
@@ -223,7 +224,7 @@ object Resolution {
         .withType(dep.attributes.`type`.map(substituteProps0))
         .withClassifier(dep.attributes.classifier.map(substituteProps0)),
       configuration = dep.configuration.map(substituteProps0),
-      exclusions = dep.exclusions.map(substituteProps0)
+      minimizedExclusions = dep.minimizedExclusions.map(substituteProps0)
     )
 
     // FIXME The content of the optional tag may also be a property in
@@ -357,17 +358,20 @@ object Resolution {
     */
   def withExclusions(
     dependencies: Seq[(Configuration, Dependency)],
-    exclusions: Exclusions
-  ): Seq[(Configuration, Dependency)] =
+    exclusions: Set[(Organization, ModuleName)]
+  ): Seq[(Configuration, Dependency)] = {
+    val minimizedExclusions = MinimizedExclusions(exclusions)
+
     dependencies
       .filter {
         case (_, dep) =>
-          exclusions(dep.module.organization, dep.module.name)
+          minimizedExclusions(dep.module.organization, dep.module.name)
       }
       .map {
         case (config, dep) =>
-          config -> dep.withExclusions(dep.exclusions.join(exclusions))
+          config -> dep.withMinimizedExclusions(dep.minimizedExclusions.join(minimizedExclusions))
       }
+  }
 
   def withParentConfigurations(
     config: Configuration,

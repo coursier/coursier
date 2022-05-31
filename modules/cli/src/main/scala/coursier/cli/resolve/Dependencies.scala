@@ -60,8 +60,8 @@ object Dependencies {
     perModuleExclude.get(dep.module) match {
       case None => dep
       case Some(exclusions) =>
-        dep.withExclusions(
-          dep.exclusions.join(Exclusions(exclusions.map(m => (m.organization, m.name)).toSet))
+        dep.withMinimizedExclusions(
+          dep.minimizedExclusions.join(Exclusions(exclusions.map(m => (m.organization, m.name))))
         )
     }
 

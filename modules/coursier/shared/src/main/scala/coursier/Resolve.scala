@@ -17,6 +17,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.higherKinds
 import dataclass.{data, since}
+import coursier.core.MinimizedExclusions
 
 @data class Resolve[F[_]](
   cache: Cache[F],
@@ -42,15 +43,15 @@ import dataclass.{data, since}
 
   def finalDependencies: Seq[Dependency] = {
 
-    val exclusions = Exclusions(resolutionParams.exclusions)
+    val exclusions = MinimizedExclusions(resolutionParams.exclusions)
 
     dependencies
       .filter { dep =>
         exclusions(dep.module.organization, dep.module.name)
       }
       .map { dep =>
-        dep.withExclusions(
-          dep.exclusions.join(exclusions)
+        dep.withMinimizedExclusions(
+          dep.minimizedExclusions.join(exclusions)
         )
       }
   }

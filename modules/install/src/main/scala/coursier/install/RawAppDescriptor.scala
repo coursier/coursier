@@ -137,7 +137,9 @@ import scala.language.implicitConversions
           .withDependencies {
             dependencies.map { dep =>
               dep.withUnderlyingDependency { dep0 =>
-                dep0.withExclusions(dep0.exclusions.join(Exclusions(exclusions.toSet)))
+                dep0.withMinimizedExclusions(
+                  dep0.minimizedExclusions.join(Exclusions(exclusions.toSet))
+                )
               }
             }
           }

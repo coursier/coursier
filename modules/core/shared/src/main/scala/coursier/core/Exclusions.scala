@@ -1,148 +1,16 @@
 package coursier.core
 
-import dataclass.data
-import coursier.core.Exclusions._
-
 object Exclusions {
 
-  val allOrganizations = Organization("*")
-  val allNames         = ModuleName("*")
+  @deprecated(
+    "This method is slow and will be replaced by MinimizedExcludes in a future versio",
+    "2.1.0-M6"
+  )
+  def partition(
+    exclusions: Set[(Organization, ModuleName)]
+  ): (Boolean, Set[Organization], Set[ModuleName], Set[(Organization, ModuleName)]) = {
 
-  val zero = Exclusions(ExcludeNone)
-  val one  = Exclusions(ExcludeAll)
-
-  private[core] sealed trait ExclusionData {
-    def apply(org: Organization, module: ModuleName): Boolean
-
-    def join(other: ExclusionData): ExclusionData
-    def meet(other: ExclusionData): ExclusionData
-
-    def partitioned()
-      : (Boolean, Set[Organization], Set[ModuleName], Set[(Organization, ModuleName)])
-    def map(f: String => String): ExclusionData
-
-    def size(): Int
-
-    def subsetOf(other: ExclusionData): Boolean
-
-    def toSet(): Set[(Organization, ModuleName)]
-  }
-
-  private[core] case object ExcludeNone extends ExclusionData {
-    override def apply(org: Organization, module: ModuleName): Boolean = true
-
-    override def join(other: ExclusionData): ExclusionData = other
-    override def meet(other: ExclusionData): ExclusionData = ExcludeNone
-    override def partitioned()
-      : (Boolean, Set[Organization], Set[ModuleName], Set[(Organization, ModuleName)]) =
-      (false, Set.empty, Set.empty, Set.empty)
-    override def map(f: String => String): ExclusionData = ExcludeNone
-
-    override def size(): Int                              = 0
-    override def subsetOf(other: ExclusionData): Boolean  = true
-    override def toSet(): Set[(Organization, ModuleName)] = Set.empty
-  }
-
-  private[core] case object ExcludeAll extends ExclusionData {
-    override def apply(org: Organization, module: ModuleName): Boolean = false
-
-    override def join(other: ExclusionData): ExclusionData = ExcludeAll
-    override def meet(other: ExclusionData): ExclusionData = other
-
-    override def partitioned()
-      : (Boolean, Set[Organization], Set[ModuleName], Set[(Organization, ModuleName)]) =
-      (true, Set.empty, Set.empty, Set.empty)
-    override def map(f: String => String): ExclusionData = ExcludeAll
-
-    override def size(): Int                              = 1
-    override def subsetOf(other: ExclusionData): Boolean  = other == ExcludeAll
-    override def toSet(): Set[(Organization, ModuleName)] = Set((allOrganizations, allNames))
-  }
-
-  private[core] case class ExcludeSpecific(
-    byOrg: Set[Organization],
-    byModule: Set[ModuleName],
-    specific: Set[(Organization, ModuleName)]
-  ) extends ExclusionData {
-    override def apply(org: Organization, module: ModuleName): Boolean =
-      !byModule(module) &&
-      !byOrg(org) &&
-      !specific((org, module))
-
-    override def join(other: ExclusionData): ExclusionData =
-      other match {
-        case ExcludeNone => this
-        case ExcludeAll  => ExcludeAll
-        case ExcludeSpecific(otherByOrg, otherByModule, otherSpecific) =>
-          val joinedByOrg    = byOrg ++ otherByOrg
-          val joinedByModule = byModule ++ otherByModule
-
-          val joinedSpecific =
-            specific.filter { case e @ (org, module) =>
-              !otherByOrg(org) && !otherByModule(module)
-            } ++
-              otherSpecific.filter { case e @ (org, module) =>
-                !byOrg(org) && !byModule(module)
-              }
-
-          ExcludeSpecific(joinedByOrg, joinedByModule, joinedSpecific)
-      }
-
-    override def meet(other: ExclusionData): ExclusionData =
-      other match {
-        case ExcludeNone => this
-        case ExcludeAll  => ExcludeAll
-        case ExcludeSpecific(otherByOrg, otherByModule, otherSpecific) =>
-          val metByOrg    = byOrg intersect otherByOrg
-          val metByModule = byModule intersect otherByModule
-
-          val metSpecific =
-            specific.filter { case e @ (org, module) =>
-              otherByOrg(org) || otherByModule(module) || otherSpecific(e)
-            } ++
-              otherSpecific.filter { case e @ (org, module) =>
-                byOrg(org) || byModule(module) || specific(e)
-              }
-
-          if (metByOrg.isEmpty && metByModule.isEmpty && metSpecific.isEmpty)
-            ExcludeNone
-          else
-            ExcludeSpecific(metByOrg, metByModule, metSpecific)
-      }
-
-    override def partitioned()
-      : (Boolean, Set[Organization], Set[ModuleName], Set[(Organization, ModuleName)]) =
-      (false, byOrg, byModule, specific)
-
-    override def map(f: String => String): ExclusionData =
-      ExcludeSpecific(
-        byOrg.map(_.map(f)),
-        byModule.map(_.map(f)),
-        specific.map { case (org, module) =>
-          org.map(f) -> module.map(f)
-        }
-      )
-
-    override def size(): Int = byOrg.size + byModule.size + specific.size
-
-    override def subsetOf(other: ExclusionData): Boolean =
-      other match {
-        case ExcludeNone => false
-        case ExcludeAll  => false
-        case ExcludeSpecific(otherByOrg, otherByModule, otherSpecific) =>
-          byOrg.subsetOf(otherByOrg) && byModule.subsetOf(otherByModule) && specific.subsetOf(
-            otherSpecific
-          )
-      }
-
-    override def toSet(): Set[(Organization, ModuleName)] =
-      byOrg.map(_ -> allNames) ++ byModule.map(allOrganizations -> _) ++ specific
-  }
-
-  def apply(exclusions: Set[(Organization, ModuleName)]): Exclusions = {
-    if (exclusions.isEmpty)
-      return zero
-
+    var all0           = false
     val excludeByOrg0  = Set.newBuilder[Organization]
     val excludeByName0 = Set.newBuilder[ModuleName]
     val remaining0     = Set.newBuilder[(Organization, ModuleName)]
@@ -152,7 +20,7 @@ object Exclusions {
       val excl = it.next()
       if (excl._1 == allOrganizations)
         if (excl._2 == allNames)
-          return one
+          all0 = true
         else
           excludeByName0 += excl._2
       else if (excl._2 == allNames)
@@ -161,65 +29,122 @@ object Exclusions {
         remaining0 += excl
     }
 
-    Exclusions(ExcludeSpecific(
-      excludeByOrg0.result(),
-      excludeByName0.result(),
-      remaining0.result()
-    ))
+    (all0, excludeByOrg0.result(), excludeByName0.result(), remaining0.result())
   }
-}
 
-@data class Exclusions(data: ExclusionData) {
-  def apply(org: Organization, module: ModuleName): Boolean = data(org, module)
+  @deprecated(
+    "This method is slow and will be replaced by MinimizedExcludes in a future versio",
+    "2.1.0-M6"
+  )
+  def apply(exclusions: Set[(Organization, ModuleName)]): (Organization, ModuleName) => Boolean = {
 
-  def join(other: Exclusions): Exclusions = {
-    val newData = data.join(other.data)
-    // If no data was changed, no need to construct a new instance and create a new hashcode
-    if (newData eq this.data)
-      return this
-    else if (newData eq other.data)
-      return other
+    val (all, excludeByOrg, excludeByName, remaining) = partition(exclusions)
+
+    if (all) (_, _) => false
     else
-      return Exclusions(newData)
+      (org, name) =>
+        !excludeByName(name) &&
+        !excludeByOrg(org) &&
+        !remaining((org, name))
   }
 
-  def meet(other: Exclusions): Exclusions = {
-    val newData = data.meet(other.data)
-    // If no data was changed, no need to construct a new instance and create a new hashcode
-    if (newData eq this.data)
-      return this
-    else if (newData eq other.data)
-      return other
-    else
-      return Exclusions(newData)
+  @deprecated(
+    "This method is slow and will be replaced by MinimizedExcludes in a future versio",
+    "2.1.0-M6"
+  )
+  def minimize(exclusions: Set[(Organization, ModuleName)]): Set[(Organization, ModuleName)] = {
+
+    val (all, excludeByOrg, excludeByName, remaining) = partition(exclusions)
+
+    if (all) one
+    else {
+
+      val b = Set.newBuilder[(Organization, ModuleName)]
+      b.sizeHint(excludeByOrg.size + excludeByName.size + remaining.size)
+
+      val orgIt = excludeByOrg.iterator
+      while (orgIt.hasNext)
+        b += ((orgIt.next(), allNames))
+
+      val nameIt = excludeByName.iterator
+      while (nameIt.hasNext)
+        b += ((allOrganizations, nameIt.next()))
+
+      val remIt = remaining.iterator
+      while (remIt.hasNext) {
+        val elem = remIt.next()
+        if (!excludeByOrg(elem._1) && !excludeByName(elem._2))
+          b += elem
+      }
+
+      b.result()
+    }
   }
 
-  def map(f: String => String): Exclusions = {
-    val newData = data.map(f)
-    // If no data was changed, no need to construct a new instance and create a new hashcode
-    if (newData eq this.data)
-      return this
-    else
-      return Exclusions(newData)
+  val allOrganizations = Organization("*")
+  val allNames         = ModuleName("*")
+
+  @deprecated(
+    "This method is slow and will be replaced by MinimizedExcludes in a future versio",
+    "2.1.0-M6"
+  )
+  val zero = Set.empty[(Organization, ModuleName)]
+  @deprecated(
+    "This method is slow and will be replaced by MinimizedExcludes in a future versio",
+    "2.1.0-M6"
+  )
+  val one = Set((allOrganizations, allNames))
+
+  @deprecated(
+    "This method is slow and will be replaced by MinimizedExcludes in a future versio",
+    "2.1.0-M6"
+  )
+  def join(
+    x: Set[(Organization, ModuleName)],
+    y: Set[(Organization, ModuleName)]
+  ): Set[(Organization, ModuleName)] =
+    minimize(x ++ y)
+
+  @deprecated(
+    "This method is slow and will be replaced by MinimizedExcludes in a future versio",
+    "2.1.0-M6"
+  )
+  def meet(
+    x: Set[(Organization, ModuleName)],
+    y: Set[(Organization, ModuleName)]
+  ): Set[(Organization, ModuleName)] = {
+
+    val (
+      (xAll, xExcludeByOrg, xExcludeByName, xRemaining),
+      (yAll, yExcludeByOrg, yExcludeByName, yRemaining)
+    ) =
+      (partition(x), partition(y))
+
+    val all = xAll && yAll
+
+    if (all) one
+    else {
+      val excludeByOrg =
+        if (xAll) yExcludeByOrg
+        else if (yAll) xExcludeByOrg
+        else xExcludeByOrg intersect yExcludeByOrg
+      val excludeByName =
+        if (xAll) yExcludeByName
+        else if (yAll) xExcludeByName
+        else xExcludeByName intersect yExcludeByName
+
+      val remaining =
+        xRemaining.filter { case e @ (org, name) =>
+          yAll || yExcludeByOrg(org) || yExcludeByName(name) || yRemaining(e)
+        } ++
+          yRemaining.filter { case e @ (org, name) =>
+            xAll || xExcludeByOrg(org) || xExcludeByName(name) || xRemaining(e)
+          }
+
+      excludeByOrg.map((_, allNames)) ++
+        excludeByName.map((allOrganizations, _)) ++
+        remaining
+    }
   }
 
-  def partitioned()
-    : (Boolean, Set[Organization], Set[ModuleName], Set[(Organization, ModuleName)]) =
-    data.partitioned()
-
-  def isEmpty: Boolean = data == ExcludeNone
-
-  def nonEmpty: Boolean = data != ExcludeNone
-
-  def size(): Int = data.size()
-
-  def subsetOf(other: Exclusions): Boolean = data.subsetOf(other.data)
-
-  def toSet(): Set[(Organization, ModuleName)] = data.toSet()
-
-  def toVector(): Vector[(Organization, ModuleName)] = data.toSet().toVector
-
-  def toSeq(): Seq[(Organization, ModuleName)] = data.toSet().toSeq
-
-  final override lazy val hashCode = data.hashCode()
 }

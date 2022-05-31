@@ -42,7 +42,11 @@ final class DependencySet private (
   def covers(dependency: Dependency): Boolean = {
     val dep0 = dependency.clearExclusions
     val set  = grouped.getOrElse(dep0, Sets.empty[Dependency])
-    set.covers(dependency, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
+    set.covers(
+      dependency,
+      _.minimizedExclusions.size,
+      (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
+    )
   }
 
   def add(dependency: Dependency): DependencySet =
@@ -63,14 +67,14 @@ final class DependencySet private (
           case None =>
             m = m + (dep0 -> Sets.empty[Dependency].add(
               dep,
-              _.exclusions.size,
-              (a, b) => a.exclusions.subsetOf(b.exclusions)
+              _.minimizedExclusions.size,
+              (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
             ))
           case Some(groupSet) =>
             val groupSet0 = groupSet.add(
               dep,
-              _.exclusions.size,
-              (a, b) => a.exclusions.subsetOf(b.exclusions)
+              _.minimizedExclusions.size,
+              (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
             )
             if (groupSet ne groupSet0)
               m = m + (dep0 -> groupSet0)
@@ -96,7 +100,11 @@ final class DependencySet private (
             m -= dep0
           else {
             val l = prev
-              .remove(dep, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
+              .remove(
+                dep,
+                _.minimizedExclusions.size,
+                (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
+              )
             m += ((dep0, l))
           }
       }
