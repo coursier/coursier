@@ -19,6 +19,7 @@ import utest._
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 import coursier.core.Version
+import scala.util.Properties
 
 object InstallTests extends TestSuite {
 
@@ -51,7 +52,7 @@ object InstallTests extends TestSuite {
     else
       try Files.deleteIfExists(d)
       catch {
-        case e: FileSystemException if Windows.isWindows =>
+        case e: FileSystemException if Properties.isWin =>
           System.err.println(s"Ignored error while deleting temporary file $d: $e")
       }
 
@@ -499,7 +500,7 @@ object InstallTests extends TestSuite {
         val launcher = installDir0.actualDest(id)
 
         def testRun(): Unit = {
-          val expectedRetCode = if (Windows.isWindows) 0 else 1
+          val expectedRetCode = if (Properties.isWin) 0 else 1
           val output = commandOutput(
             tmpDir.toFile,
             mergeError = true,
@@ -508,7 +509,7 @@ object InstallTests extends TestSuite {
             "--help"
           )
           val expectedInOutput =
-            if (Windows.isWindows) "Failed to get console mode:"
+            if (Properties.isWin) "Failed to get console mode:"
             else "entering *experimental* thin client - BEEP WHIRR"
           assert(output.contains(expectedInOutput))
         }
@@ -549,7 +550,7 @@ object InstallTests extends TestSuite {
         val launcher = installDir0.actualDest(id)
 
         def testRun(): Unit = {
-          val expectedRetCode = if (Windows.isWindows) 0 else 1
+          val expectedRetCode = if (Properties.isWin) 0 else 1
           val output = commandOutput(
             tmpDir.toFile,
             mergeError = true,
@@ -558,7 +559,7 @@ object InstallTests extends TestSuite {
             "--help"
           )
           val expectedInOutput =
-            if (Windows.isWindows) "Failed to get console mode:"
+            if (Properties.isWin) "Failed to get console mode:"
             else "entering *experimental* thin client - BEEP WHIRR"
           assert(output.contains(expectedInOutput))
         }

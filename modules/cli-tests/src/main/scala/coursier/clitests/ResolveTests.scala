@@ -8,7 +8,7 @@ abstract class ResolveTests extends TestSuite {
 
   val tests = Tests {
     test("rules") {
-      val output = LauncherTestUtil.output(
+      val proc = os.proc(
         launcher,
         "resolve",
         "-r",
@@ -17,10 +17,11 @@ abstract class ResolveTests extends TestSuite {
         "--rule",
         "SameVersion(com.fasterxml.jackson.core:jackson-*)"
       )
+      val output = proc.call().out.text()
       val jacksonOutput = output
-        .split(System.lineSeparator())
+        .linesIterator
         .filter(_.startsWith("com.fasterxml.jackson.core:jackson-"))
-        .toSeq
+        .toVector
       val expectedJacksonOutput = Seq(
         "com.fasterxml.jackson.core:jackson-annotations:2.9.6:default",
         "com.fasterxml.jackson.core:jackson-core:2.9.6:default",

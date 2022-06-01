@@ -148,7 +148,7 @@ object ArchiveCache {
 
   private def archiveType(url: String): ArchiveType =
     // TODO Case-insensitive comparisons?
-    if (url.endsWith(".tar.gz") || url.endsWith(".tgz"))
+    if (url.endsWith(".tar.gz") || url.endsWith(".tgz") || url.endsWith(".apk"))
       ArchiveType.Tgz
     else if (url.endsWith(".tar.bz2") || url.endsWith(".tbz2"))
       ArchiveType.Tbz2

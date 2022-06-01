@@ -6,15 +6,17 @@ These instructions will install the coursier CLI `cs` itself, as well as a typic
 By default, they will install the following applications:
 
 - `cs` itself, to further manage your Scala environment
-- `scala`, the Scala 2 REPL
-- `scalac`, the Scala 2 compiler
+- `scala-cli`, a [convenient tool to compile / run / package Scala code](https://scala-cli.virtuslab.org)
+- `scala`, the Scala REPL
+- `scalac`, the Scala compiler
 - `sbt` and `sbtn`, the [sbt build toold](https://www.scala-sbt.org/)
-- `ammonite`, [an enhanced REPL](https://ammonite.io/) for Scala 2
+- `ammonite`, [an enhanced REPL](https://ammonite.io/) for Scala
 - `scalafmt`, the [Scala code formatter](https://scalameta.org/scalafmt/)
 
 They will also install a JVM if none is found on the system.
 
-If you want more control over what gets installed and how, read about the [`setup`](cli-setup.md) command.
+If you want more control over what gets installed and how, please check out 
+the [Command-line options](#command-line-options) section.
 
 After the setup, you can [start using Scala](https://docs.scala-lang.org/scala3/getting-started.html#create-a-hello-world-project-with-sbt), or install more applications with the [`install`](cli-install.md) command.
 
@@ -54,12 +56,21 @@ On Windows, [download and execute the Windows installer](https://github.com/cour
 
 If you prefer a command line-based install, or if you would like to customize the setup options, use:
 
+```pwsh
+# PowerShell
+Invoke-WebRequest -Uri "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip" -OutFile "cs-x86_64-pc-win32.zip"
+Expand-Archive -Path "cs-x86_64-pc-win32.zip"
+Rename-Item -Path "cs-x86_64-pc-win32.exe" -NewName "cs.exe"
+Remove-Item -Path "cs-x86_64-pc-win32.zip"
+.\cs --help
+```
+
 ```bat
-# CMD
-> curl -fLo cs-x86_64-pc-win32.zip https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip
-> tar -xf cs-x86_64-pc-win32.zip
-> move cs-x86_64-pc-win32.exe cs.exe
-> .\cs --help
+:: CMD
+curl -fLo cs-x86_64-pc-win32.zip https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip
+tar -xf cs-x86_64-pc-win32.zip
+move cs-x86_64-pc-win32.exe cs.exe
+.\cs --help
 ```
 
 ### Check your setup
@@ -189,3 +200,142 @@ Former URLs, for information:
 |macOS|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-apple-darwin>|`2.0.0-RC3-1`|`2.0.16`|
 |Windows|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-win32.exe>|`2.0.0-RC6`|`2.0.16`|
 |Any (needs JVM)|<https://github.com/coursier/coursier/raw/v1.1.0-M9/coursier>| |`1.1.0-M9`|
+
+## Command-line options
+
+### Interactive mode
+
+Launched without options, `setup` checks that a JVM and the standard Scala CLI tools are
+installed on your system, and updates your profile files (Linux / macOS) or user environment variables
+(Windows).
+
+It asks you to confirm prior to performing any of these actions.
+
+To answer yes to all these questions beforehand, pass `--yes` or `-y` to `setup`:
+```bash
+$ cs setup --yes
+```
+
+### Non-interactive mode
+
+If you prefer the `setup` command not to update your profile files (`~/.profile` and the like),
+pass `--env` to it, and call `eval` (from bash or zsh) on its output:
+```bash
+$ eval "$(cs setup --env)"
+```
+This updates `JAVA_HOME` and `PATH` for the duration of the current session.
+
+Pass it a JVM id and a list of applications to
+- use that JVM in the current session, and
+- ensure some applications are installed,
+  like
+```bash
+$ eval "$(cs setup --env --jvm 11 --apps sbt-launcher,ammonite)"
+$ sbt
+…
+$ amm
+…
+$ java -version
+openjdk version "11.0.6" 2020-01-14
+OpenJDK Runtime Environment AdoptOpenJDK (build 11.0.6+10)
+OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.6+10, mixed mode)
+```
+
+The `setup` command currently doesn't offer a way to revert the changes
+it made to the environment variables of the current session. It's mostly
+made to easily setup CI environments, rather than switch JVMs. If you're
+interested in trying / switching JVM, see the
+[`--env` and `--disable` options](cli-java.md#environment-variables) of the
+[`java` command](cli-java.md).
+
+### Overriding defaults
+
+#### JVM
+
+The JVM installed if [none is found on your system](cli-java.md#system-jvm-detection)
+is the same as the [`java` command](cli-java.md), the latest AdoptOpenJDK 8 as of
+writing this.
+
+Pass `--jvm` to ignore the already installed jvm and install a custom one:
+```bash
+$ cs setup --jvm 11
+```
+
+#### JVM directory
+
+JVMs are extracted in
+[the JVM cache directory](cli-java.md#managed-jvm-directory) by default.
+
+Pass a custom directory to extract JVM under with `--jvm-dir`:
+```bash
+$ eval "$(cs setup --jvm 11 --jvm-dir test-jvm)"
+…
+$ echo "$JAVA_HOME"
+…/test-jvm/adopt@1.11.0-6
+```
+
+#### Applications
+
+The `setup` command installs a number of standard Scala CLI applications by default.
+Pass a custom list of applications to install instead with `--apps`.
+
+```bash
+$ cs setup --apps sbt-launcher,ammonite
+```
+
+`--apps` can be specified multiple times, and expects a `,`-separared list of applications.
+
+See the documentation of the [`install` command](cli-install.md) for more details about
+where these applications are defined, how to add your own, etc.
+
+#### Application directory
+
+Applications are installed in [the installation directory of coursier](cli-install.md#installation-directory)
+by default.
+
+Pass a custom directory to install applications in with `--install-dir`:
+```bash
+$ eval "$(cs setup --apps sbt-launcher,ammonite --install-dir tmp-install)"
+…
+$ tmp-install/sbt
+…
+$ tmp-install/amm
+…
+```
+
+#### Profile files directory
+
+Pass a custom directory that contains `.profile` / `.bash_profile` / `.zprofile` files with:
+```bash
+$ cs setup --user-home test-home
+…
+$ cat test-home/.profile
+
+# >>> coursier install directory >>>
+export PATH="$PATH:/Users/alex/Library/Application Support/Coursier/bin"
+# <<< coursier install directory <<<
+```
+
+## How it sets environment variables globally
+
+### Linux / macOS
+
+The `setup` command updates the following files:
+- `~/.profile` (created if needed),
+- `~/.zprofile` if zsh is the current shell (created if needed, respects `ZDOTDIR`),
+- `~/.bash_profile` (only if it exists).
+
+For example, if `~/.bash_profile` doesn't exist and you're using zsh, both `~/.profile`
+and `~/.zprofile` will be updated (and created if needed).
+
+The sections the `setup` command adds to your profile files are clearly delimited, like
+```bash
+# >>> coursier install directory >>>
+export PATH="$PATH:/Users/alex/Library/Application Support/Coursier/bin"
+# <<< coursier install directory <<<
+```
+
+### Windows
+
+On Windows, the `setup` command updates the `User` environment variables.
+

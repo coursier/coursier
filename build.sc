@@ -67,6 +67,10 @@ object coursier extends Module {
 
 object directories extends Directories
 
+object `proxy-setup` extends JavaModule with CoursierPublishModule {
+  def artifactName = "coursier-proxy-setup"
+}
+
 object paths extends JavaModule {
   def moduleDeps = Seq(
     directories
@@ -79,15 +83,31 @@ object `windows-ansi` extends Module {
   object ps extends JavaModule
 }
 
-object `custom-protocol-for-test` extends SbtModule {
+object `custom-protocol-for-test` extends CsModule {
   def scalaVersion = ScalaVersions.scala213
 }
 
 object `bootstrap-launcher` extends BootstrapLauncher { self =>
+  def proxySources = T.sources {
+    val dest = T.dest / "sources"
+    val orig = `proxy-setup`.sources()
+    for ((pathRef, idx) <- orig.zipWithIndex)
+      os.copy.into(pathRef.path, dest / s"dir-$idx", copyAttributes = true, createFolders = true)
+    os.walk(dest)
+      .filter(_.last.endsWith(".java"))
+      .filter(os.isFile(_))
+      .foreach { f =>
+        val content = os.read(f)
+          .replaceAll("package coursier.proxy;", "package coursier.bootstrap.launcher.proxy;")
+        os.write.over(f, content)
+      }
+    Seq(PathRef(dest))
+  }
   def sources = T.sources {
     super.sources() ++
       directories.sources() ++
       paths.sources() ++
+      proxySources() ++
       `windows-ansi`.ps.sources()
   }
   def resources = T.sources {
@@ -406,7 +426,10 @@ class TestsJs(val crossScalaVersion: String) extends TestsModule with CsScalaJsM
   }
 }
 
-class ProxyTests(val crossScalaVersion: String) extends CrossSbtModule {
+class ProxyTests(val crossScalaVersion: String) extends CrossSbtModule with CsModule {
+  def moduleDeps = super.moduleDeps ++ Seq(
+    `proxy-setup`
+  )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.dockerClient,
     Deps.scalaAsync,
@@ -504,7 +527,11 @@ class Jvm(val crossScalaVersion: String) extends CrossSbtModule with CsModule
     Deps.argonautShapeless,
     Deps.jsoniterCore
   )
-  object test extends Tests with CsTests
+  object test extends Tests with CsTests {
+    def ivyDeps = super.ivyDeps() ++ Seq(
+      Deps.osLib
+    )
+  }
 }
 
 trait Cli extends CsModule with CoursierPublishModule with Launchers {
@@ -515,6 +542,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     install(cliScalaVersion),
     jvm(cliScalaVersion),
     launcherModule(cliScalaVersion),
+    `proxy-setup`,
     publish0(cliScalaVersion)
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
@@ -525,8 +553,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     Deps.dataClass,
     Deps.monadlessCats,
     Deps.monadlessStdlib,
-    Deps.svmSubs,
-    ivy"com.chuusai::shapeless:2.3.7"
+    ivy"com.chuusai::shapeless:2.3.9"
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.svm
@@ -567,6 +594,8 @@ trait CliTests extends CsModule { self =>
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.caseApp,
+    Deps.dockerClient,
+    Deps.osLib,
     Deps.utest
   )
   object test extends Tests with CsTests {
@@ -626,7 +655,7 @@ trait Web extends CsScalaJsModule {
   // browserifyBundle("sax")
 }
 
-object `redirecting-server` extends SbtModule {
+object `redirecting-server` extends CsModule {
   def scalaVersion = ScalaVersions.scala212
   def ivyDeps = Agg(
     ivy"org.http4s::http4s-blaze-server:0.17.6",
@@ -735,7 +764,7 @@ def copyJarLaunchers(version: String = buildVersion, directory: String = "artifa
 
 def publishSonatype(tasks: mill.main.Tasks[PublishModule.PublishData]) =
   T.command {
-    val data = define.Task.sequence(tasks.value)()
+    val data = T.sequence(tasks.value)()
 
     publishing.publishSonatype(
       data = data,
@@ -854,7 +883,7 @@ def jvmTests(scalaVersion: String = "*") = {
     }
 
   T.command {
-    define.Task.sequence(tasks)()
+    T.sequence(tasks)()
 
     ()
   }
@@ -877,7 +906,7 @@ def jsTests(scalaVersion: String = "*") = {
   val tasks = scalaVersions.flatMap(sv => crossTests(sv))
 
   T.command {
-    define.Task.sequence(tasks)()
+    T.sequence(tasks)()
   }
 }
 

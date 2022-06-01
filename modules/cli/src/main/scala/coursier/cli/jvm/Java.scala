@@ -13,6 +13,7 @@ import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
+import scala.util.Properties
 
 object Java extends CoursierCommand[JavaOptions] {
   override def stopAtFirstUnrecognized = true
@@ -48,19 +49,40 @@ object Java extends CoursierCommand[JavaOptions] {
       params.output.verbosity
     )
 
-    if (params.available) {
+    if (params.available || params.installed) {
       val task =
         for {
           index <- jvmCache.index.getOrElse(sys.error("should not happen"))
-          maybeError <- Task.delay {
+          maybeErrorTask <- Task.delay {
             index.available().map { map =>
               val available = for {
                 (name, versionMap) <- map.toVector.sortBy(_._1)
                 version <- versionMap.keysIterator.toVector.map(Version(_)).sorted.map(_.repr)
               } yield s"$name:$version"
-              for (id <- available)
-                System.out.println(id)
+
+              if (params.available)
+                Task.delay {
+                  for (id <- available)
+                    System.out.println(id)
+                }
+              else {
+                assert(params.installed)
+
+                val resultsTask = Task.gather.gather {
+                  available.map { id =>
+                    jvmCache.getIfInstalled(id).map((id, _))
+                  }
+                }
+                resultsTask.map { results =>
+                  for ((id, fileOpt) <- results; file <- fileOpt)
+                    System.out.println(s"$id installed at $file")
+                }
+              }
             }
+          }
+          maybeError <- maybeErrorTask match {
+            case Left(err) => Task.point(Left(err))
+            case Right(t)  => t.map(Right(_))
           }
         } yield maybeError
 
@@ -100,7 +122,7 @@ object Java extends CoursierCommand[JavaOptions] {
         }
 
         // should we use isFile instead of exists?
-        if (Windows.isWindows)
+        if (Properties.isWin)
           Windows.pathExtensions
             .map(ext => new File(home, s"bin/java$ext"))
             .filter(_.exists())

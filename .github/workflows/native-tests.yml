@@ -11,15 +11,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        OS: [ubuntu-latest, windows-2019, macos-latest]
+        OS: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.OS }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0-M2
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
       - run: sudo apt-get install -y nailgun
@@ -33,15 +33,15 @@ jobs:
     runs-on: ubuntu-18.04
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0-M2
+      - uses: coursier/setup-action@v1.2.0-M3
         with:
           jvm: 8
-      - uses: uraimo/run-on-arch-action@v2.1.1
+      - uses: uraimo/run-on-arch-action@v2.1.2
         with:
           arch: aarch64
           distro: ubuntu20.04
@@ -76,4 +76,5 @@ jobs:
             set -e
             export PATH="/utils:$PATH"
             eval "$(cs java --env --jvm 11 --jvm-index https://github.com/coursier/jvm-index/raw/master/index.json)"
+            git config --global --add safe.directory "$(pwd)"
             ./mill -i nativeTests
