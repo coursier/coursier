@@ -263,6 +263,8 @@ object Attributes {
     * version was kept around.
     */
   def actualVersion: String = actualVersionOpt.getOrElse(version)
+
+  final override lazy val hashCode = tuple.hashCode
 }
 
 /** Extra project info, not used during resolution */
