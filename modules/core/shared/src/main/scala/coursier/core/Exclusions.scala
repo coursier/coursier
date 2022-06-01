@@ -3,7 +3,7 @@ package coursier.core
 object Exclusions {
 
   @deprecated(
-    "This method is slow and will be replaced by MinimizedExcludes in a future versio",
+    "This method is slow and will be replaced by MinimizedExclusions in a future version",
     "2.1.0-M6"
   )
   def partition(
@@ -33,7 +33,7 @@ object Exclusions {
   }
 
   @deprecated(
-    "This method is slow and will be replaced by MinimizedExcludes in a future versio",
+    "This method is slow and will be replaced by MinimizedExclusions in a future version",
     "2.1.0-M6"
   )
   def apply(exclusions: Set[(Organization, ModuleName)]): (Organization, ModuleName) => Boolean = {
@@ -49,7 +49,7 @@ object Exclusions {
   }
 
   @deprecated(
-    "This method is slow and will be replaced by MinimizedExcludes in a future versio",
+    "This method will be replaced by MinimizedExclusions in a future version",
     "2.1.0-M6"
   )
   def minimize(exclusions: Set[(Organization, ModuleName)]): Set[(Organization, ModuleName)] = {
@@ -85,18 +85,18 @@ object Exclusions {
   val allNames         = ModuleName("*")
 
   @deprecated(
-    "This method is slow and will be replaced by MinimizedExcludes in a future versio",
+    "This method will be replaced by MinimizedExclusions in a future version",
     "2.1.0-M6"
   )
   val zero = Set.empty[(Organization, ModuleName)]
   @deprecated(
-    "This method is slow and will be replaced by MinimizedExcludes in a future versio",
+    "This method will be replaced by MinimizedExclusions in a future version",
     "2.1.0-M6"
   )
   val one = Set((allOrganizations, allNames))
 
   @deprecated(
-    "This method is slow and will be replaced by MinimizedExcludes in a future versio",
+    "This method will be replaced by MinimizedExclusions in a future version",
     "2.1.0-M6"
   )
   def join(
@@ -106,7 +106,7 @@ object Exclusions {
     minimize(x ++ y)
 
   @deprecated(
-    "This method is slow and will be replaced by MinimizedExcludes in a future versio",
+    "This method will be replaced by MinimizedExclusions in a future version",
     "2.1.0-M6"
   )
   def meet(

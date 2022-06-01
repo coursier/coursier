@@ -65,9 +65,17 @@ import MinimizedExclusions._
   ): Dependency =
     withPublication(Publication(name, `type`, ext, classifier))
 
+  @deprecated(
+    "This method will be dropped in favor of withMinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
   def withExclusions(newExclusions: Set[(Organization, ModuleName)]): Dependency =
     withMinimizedExclusions(MinimizedExclusions(newExclusions))
 
+  @deprecated(
+    "This method will be dropped in favor of minimizedExclusions() in a future version",
+    "2.1.0-M6"
+  )
   def exclusions(): Set[(Organization, ModuleName)] = minimizedExclusions.toSet
 
   private[core] def copy(
