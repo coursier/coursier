@@ -54,7 +54,6 @@ object cache extends Module {
   object js  extends Cross[CacheJs](ScalaVersions.all: _*)
 }
 object launcher extends Cross[Launcher](ScalaVersions.all ++ Seq(ScalaVersions.scala211): _*)
-object publish  extends Cross[Publish](ScalaVersions.all: _*)
 object env      extends Cross[Env](ScalaVersions.all: _*)
 object `launcher-native_03`    extends LauncherNative03
 object `launcher-native_040M2` extends LauncherNative040M2
@@ -173,8 +172,6 @@ object `cli-tests` extends CliTests
 
 object web extends Web
 
-def publish0 = publish
-
 class UtilJvm(val crossScalaVersion: String) extends UtilJvmBase {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.jsoup
@@ -266,29 +263,6 @@ class Launcher(val crossScalaVersion: String) extends LauncherBase {
   def resourceBootstrap           = `bootstrap-launcher`.proguardedResourceAssembly()
   def noProguardBootstrap         = `bootstrap-launcher`.assembly()
   def noProguardResourceBootstrap = `bootstrap-launcher`.resourceAssembly()
-}
-
-class Publish(val crossScalaVersion: String) extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima {
-  def artifactName = "coursier-publish"
-  def moduleDeps = Seq(
-    core.jvm(),
-    cache.jvm()
-  )
-  def ivyDeps = super.ivyDeps() ++ Agg(
-    Deps.argonautShapeless,
-    Deps.catsCore,
-    Deps.collectionCompat,
-    Deps.okhttp
-  )
-  def mimaPreviousVersions = T {
-    val previous = super.mimaPreviousVersions()
-    if (crossScalaVersion.startsWith("2.13."))
-      // this module wasn't published in 2.13 when coursier was built with sbt
-      previous.filter(_ != "2.0.16")
-    else
-      previous
-  }
 }
 
 class Env(val crossScalaVersion: String) extends CrossSbtModule with CsModule
@@ -542,8 +516,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     install(cliScalaVersion),
     jvm(cliScalaVersion),
     launcherModule(cliScalaVersion),
-    `proxy-setup`,
-    publish0(cliScalaVersion)
+    `proxy-setup`
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.argonautShapeless,

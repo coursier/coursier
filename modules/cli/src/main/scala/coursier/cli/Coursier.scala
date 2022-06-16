@@ -39,7 +39,6 @@ object Coursier extends CommandsEntryPoint {
     jvm.JavaHome,
     launch.Launch,
     install.List,
-    publish.Publish,
     resolve.Resolve,
     search.Search,
     setup.Setup,
