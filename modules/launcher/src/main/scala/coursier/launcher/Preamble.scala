@@ -41,9 +41,13 @@ import scala.io.{Codec, Source}
       .sorted
       // escaping possibly a bit loose :-|
       .map { case (k, v) => s"""export $k="$v"""" }
+
     val lines = command match {
       case None =>
-        val javaCmd = Seq("java") ++
+        val setJavaCmd =
+          """[ -x "$JAVA_HOME/bin/java" ] && JAVA_CMD="$JAVA_HOME/bin/java" || JAVA_CMD=java"""
+
+        val javaCmd = Seq("$JAVA_CMD") ++
           // escaping possibly a bit loose :-|
           javaOpts.map(s => "'" + s.replace("'", "\\'") + "'") ++
           jvmOptionFile.toSeq.map(_ => "${extra_jvm_opts[@]}") ++
@@ -55,6 +59,7 @@ import scala.io.{Codec, Source}
           setVars ++
           Seq(Preamble.shArgsPartitioner(jarPath.getOrElse("$0"))) ++
           jvmOptionFile.toSeq.map(f => Preamble.bashJvmOptFile(f)) ++
+          Seq(setJavaCmd) ++
           Seq("exec " + javaCmd.mkString(" "))
 
       case Some(c) =>

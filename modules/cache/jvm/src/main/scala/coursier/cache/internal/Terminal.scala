@@ -2,7 +2,7 @@ package coursier.cache.internal
 
 import java.io.{File, Writer}
 
-import scala.util.Try
+import scala.util.{Properties, Try}
 
 object Terminal {
 
@@ -66,11 +66,8 @@ object Terminal {
     else
       None
 
-  private lazy val isWindows =
-    System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")
-
   private def fromJLine(): Option[(Int, Int)] =
-    if (isWindows)
+    if (Properties.isWin)
       Some {
         if (coursier.paths.Util.useJni()) {
           val size = coursier.jniutils.WindowsAnsiTerminal.terminalSize()

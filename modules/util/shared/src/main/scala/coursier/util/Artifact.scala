@@ -10,7 +10,9 @@ import dataclass.data
   changing: Boolean = false,
   optional: Boolean = false,
   authentication: Option[Authentication] = None
-)
+) {
+  final override lazy val hashCode = tuple.hashCode()
+}
 
 object Artifact {
 
