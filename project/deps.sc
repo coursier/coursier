@@ -55,7 +55,7 @@ object Deps {
   def simulacrum       = ivy"org.typelevel::simulacrum:1.0.0"
   def slf4JNop         = ivy"org.slf4j:slf4j-nop:1.7.36"
   def svm              = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
-  def utest            = ivy"com.lihaoyi::utest::0.7.11"
+  def utest            = ivy"com.lihaoyi::utest::0.8.0"
   def windowsAnsi      = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.3"
 }
 
