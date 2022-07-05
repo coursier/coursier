@@ -92,7 +92,7 @@ class Util {
                     // flush and close the BufferedOutputStream
                     bos.flush();
                     bos.close();
-                } catch (Exception e) {}
+                } catch (Exception ignored) {}
             }
         }
     }

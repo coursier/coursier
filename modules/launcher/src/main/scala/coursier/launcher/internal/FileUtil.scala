@@ -72,7 +72,7 @@ private[coursier] object FileUtil {
     }
 
   def tryHideWindows(path: Path): Boolean =
-    Windows.isWindows && {
+    scala.util.Properties.isWin && {
       try {
         Files.setAttribute(path, "dos:hidden", java.lang.Boolean.TRUE, LinkOption.NOFOLLOW_LINKS)
         true

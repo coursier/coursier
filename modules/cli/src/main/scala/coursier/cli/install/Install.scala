@@ -17,6 +17,7 @@ import coursier.paths.Util
 import coursier.util.Sync
 
 import scala.concurrent.duration.Duration
+import scala.util.Properties
 
 object Install extends CoursierCommand[InstallOptions] {
 
@@ -157,7 +158,7 @@ object Install extends CoursierCommand[InstallOptions] {
 
         if (!path(params.shared.dir.toAbsolutePath.toString)) {
           System.err.println(s"Warning: ${params.shared.dir} is not in your PATH")
-          if (!Windows.isWindows) {
+          if (!Properties.isWin) {
             val rcFile = ShellUtil.rcFileOpt.getOrElse("your shell configuration file")
             System.err.println(
               s"""To fix that, add the following line to $rcFile

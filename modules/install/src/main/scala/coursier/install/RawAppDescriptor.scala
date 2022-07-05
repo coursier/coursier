@@ -10,6 +10,7 @@ import coursier.core.{
   Resolution,
   Type,
   Repository,
+  MinimizedExclusions,
   VersionInterval
 }
 import coursier.parse.{
@@ -136,7 +137,9 @@ import scala.language.implicitConversions
           .withDependencies {
             dependencies.map { dep =>
               dep.withUnderlyingDependency { dep0 =>
-                dep0.withExclusions(dep0.exclusions ++ exclusions)
+                dep0.withMinimizedExclusions(
+                  dep0.minimizedExclusions.join(MinimizedExclusions(exclusions.toSet))
+                )
               }
             }
           }

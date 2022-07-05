@@ -1,4 +1,5 @@
 import $file.^.deps, deps.{Deps, ScalaVersions}
+import $file.shared, shared.CsModule
 
 import coursier.launcher.{AssemblyGenerator, ClassPathEntry, Parameters, Preamble}
 import mill._, mill.scalalib._
@@ -10,7 +11,7 @@ import java.util.zip._
 import scala.collection.JavaConverters._
 import scala.util.Properties.isWin
 
-trait BootstrapLauncher extends SbtModule {
+trait BootstrapLauncher extends CsModule {
 
   def proguardClassPath: T[Seq[PathRef]]
 

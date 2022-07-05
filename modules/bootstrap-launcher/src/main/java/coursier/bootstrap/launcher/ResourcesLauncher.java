@@ -1,6 +1,7 @@
 package coursier.bootstrap.launcher;
 
 import coursier.bootstrap.launcher.jar.JarFile;
+import coursier.bootstrap.launcher.jniutils.BootstrapNativeApi;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -68,9 +69,7 @@ public class ResourcesLauncher {
                 .contains("windows");
 
         if (isWindows)
-            coursier.paths.Util.useJni(() -> {
-                coursier.bootstrap.launcher.jniutils.BootstrapNativeApi.setup();
-            });
+            coursier.paths.Util.useJni(BootstrapNativeApi::setup);
 
         Download download = Download.getDefault();
 

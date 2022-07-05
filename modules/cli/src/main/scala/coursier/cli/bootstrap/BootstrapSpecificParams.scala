@@ -10,6 +10,8 @@ import coursier.launcher.MergeRule
 import coursier.launcher.internal.Windows
 import coursier.util.Task
 
+import scala.util.Properties
+
 final case class BootstrapSpecificParams(
   output: Path,
   force: Boolean,
@@ -104,7 +106,7 @@ object BootstrapSpecificParams {
         .getOrElse("bootstrap")
     }.toAbsolutePath
 
-    val createBatFile = options.bat.getOrElse(Windows.isWindows)
+    val createBatFile = options.bat.getOrElse(Properties.isWin)
 
     val rulesV = options.assemblyRule.traverse { s =>
       val idx = s.indexOf(':')

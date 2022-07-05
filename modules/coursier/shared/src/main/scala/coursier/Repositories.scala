@@ -7,6 +7,8 @@ object Repositories {
     MavenRepository("https://repo1.maven.org/maven2")
   def sonatype(name: String): MavenRepository =
     MavenRepository(s"https://oss.sonatype.org/content/repositories/$name")
+  def sonatypeS01(name: String): MavenRepository =
+    MavenRepository(s"https://s01.oss.sonatype.org/content/repositories/$name")
   def bintray(id: String): MavenRepository =
     MavenRepository(s"https://dl.bintray.com/$id")
   def bintray(owner: String, repo: String): MavenRepository =

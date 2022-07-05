@@ -8,6 +8,8 @@ import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.launcher.internal.Windows
 import coursier.util.Task
 
+import scala.util.Properties
+
 final case class EnvParams(
   env: Boolean,
   disableEnv: Boolean,
@@ -18,7 +20,7 @@ final case class EnvParams(
   def anyFlag: Boolean = env || setup
   // TODO Allow to customize some parameters of WindowsEnvVarUpdater / ProfileUpdater?
   def envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater] =
-    if (Windows.isWindows)
+    if (Properties.isWin)
       Left(WindowsEnvVarUpdater().withUseJni(Some(coursier.paths.Util.useJni())))
     else
       Right(

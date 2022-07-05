@@ -13,6 +13,7 @@ import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
+import scala.util.Properties
 
 object Java extends CoursierCommand[JavaOptions] {
   override def stopAtFirstUnrecognized = true
@@ -121,7 +122,7 @@ object Java extends CoursierCommand[JavaOptions] {
         }
 
         // should we use isFile instead of exists?
-        if (Windows.isWindows)
+        if (Properties.isWin)
           Windows.pathExtensions
             .map(ext => new File(home, s"bin/java$ext"))
             .filter(_.exists())

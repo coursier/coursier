@@ -4,6 +4,7 @@ import java.io.Writer
 import java.util.Locale
 
 import scala.concurrent.duration.Duration
+import scala.util.Properties
 
 trait RefreshDisplay {
 
@@ -27,16 +28,10 @@ trait RefreshDisplay {
 
 object RefreshDisplay {
 
-  private lazy val isWindows: Boolean =
-    sys.props
-      .get("os.name")
-      .map(_.toLowerCase(Locale.ROOT))
-      .exists(_.contains("windows"))
-
   def truncated(s: String, width: Int): String =
     if (s.length <= width)
       s
-    else if (isWindows)
+    else if (Properties.isWin)
       // seems unicode character '…' isn't fine in Windows terminal, plus width is actually shorter (scrollbar?)
       s.take(width - 4) + "..."
     else

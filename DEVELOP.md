@@ -62,7 +62,7 @@ on coursier.
 If you still want to open the coursier sources in IntelliJ, generate IntelliJ configuration files with
 the following command rather than using the import project functionality of IntelliJ:
 ```text
-$ ./mill.scalalib.GenIdea/idea
+$ ./mill mill.scalalib.GenIdea/idea
 ```
 
 IntelliJ should automatically pick up changes in the generated config files.

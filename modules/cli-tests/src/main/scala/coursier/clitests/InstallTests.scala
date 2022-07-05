@@ -4,6 +4,8 @@ import java.io.File
 
 import utest._
 
+import scala.util.Properties
+
 abstract class InstallTests extends TestSuite {
 
   def launcher: String
@@ -40,7 +42,7 @@ abstract class InstallTests extends TestSuite {
         assert(output == expectedOutput)
       }
     test("inline app") {
-      if (LauncherTestUtil.isWindows) "disabled"
+      if (Properties.isWin) "disabled"
       else { inlineApp(); "" }
     }
 
@@ -74,7 +76,7 @@ abstract class InstallTests extends TestSuite {
         assert(jnaLibraryPathOutput.trim.nonEmpty)
       }
     test("JNA Python") {
-      if (LauncherTestUtil.isWindows) "disabled"
+      if (Properties.isWin) "disabled"
       else { jnaPython(); "" }
     }
   }

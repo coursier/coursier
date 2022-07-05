@@ -263,6 +263,8 @@ object Attributes {
     * version was kept around.
     */
   def actualVersion: String = actualVersionOpt.getOrElse(version)
+
+  final override lazy val hashCode = tuple.hashCode
 }
 
 /** Extra project info, not used during resolution */
@@ -384,7 +386,7 @@ object Info {
   def isEmpty: Boolean =
     name.isEmpty && `type`.isEmpty && ext.isEmpty && classifier.isEmpty
 
-  override def hashCode(): Int = tuple.hashCode
+  final override lazy val hashCode = tuple.hashCode
 }
 
 object Publication {

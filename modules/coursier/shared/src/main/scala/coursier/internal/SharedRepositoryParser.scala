@@ -12,6 +12,8 @@ object SharedRepositoryParser {
       Right(Repositories.central)
     else if (s.startsWith("sonatype:"))
       Right(Repositories.sonatype(s.stripPrefix("sonatype:")))
+    else if (s.startsWith("sonatype-s01:"))
+      Right(Repositories.sonatypeS01(s.stripPrefix("sonatype-s01:")))
     else if (s.startsWith("bintray:")) {
       val s0 = s.stripPrefix("bintray:")
       val id =
