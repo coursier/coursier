@@ -35,7 +35,7 @@ object Deps {
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
-  def proguard                 = ivy"com.guardsquare:proguard-base:7.2.1"
+  def proguard                 = ivy"com.guardsquare:proguard-base:7.2.2"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.2.0"
   def scalaJsJquery            = ivy"be.doeraene::scalajs-jquery::1.0.0"
@@ -55,7 +55,7 @@ object Deps {
   def simulacrum       = ivy"org.typelevel::simulacrum:1.0.0"
   def slf4JNop         = ivy"org.slf4j:slf4j-nop:1.7.36"
   def svm              = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
-  def utest            = ivy"com.lihaoyi::utest::0.7.11"
+  def utest            = ivy"com.lihaoyi::utest::0.8.0"
   def windowsAnsi      = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.3"
 }
 
@@ -79,7 +79,7 @@ def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"
 
 object ScalaVersions {
   def scala213 = "2.13.6"
-  def scala212 = "2.12.15"
+  def scala212 = "2.12.16"
   val all      = Seq(scala213, scala212)
 
   // only used by the launcher module
