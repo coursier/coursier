@@ -35,7 +35,7 @@ object Deps {
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
-  def proguard                 = ivy"com.guardsquare:proguard-base:7.2.1"
+  def proguard                 = ivy"com.guardsquare:proguard-base:7.2.2"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.2.0"
   def scalaJsJquery            = ivy"be.doeraene::scalajs-jquery::1.0.0"
