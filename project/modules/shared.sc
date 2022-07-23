@@ -113,6 +113,7 @@ trait CsModule extends SbtModule with ScalaCliCompile {
     }
     parent ++ extra
   }
+  def scalaCliVersion = "0.1.10"
 }
 
 trait CsCrossJvmJsModule extends CrossSbtModule with CsModule {
