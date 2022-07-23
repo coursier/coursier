@@ -114,6 +114,12 @@ trait CsModule extends SbtModule with ScalaCliCompile {
     parent ++ extra
   }
   def scalaCliVersion = "0.1.10"
+
+  // Remove once we switch to Scala CLI >= 0.1.11
+  def extraScalaCliOptions = super.extraScalaCliOptions() ++ Seq(
+    "--bloop-version",
+    "1.5.2-sc-1"
+  )
 }
 
 trait CsCrossJvmJsModule extends CrossSbtModule with CsModule {
