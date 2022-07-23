@@ -601,7 +601,7 @@ trait CliTests extends CsModule { self =>
   }
 }
 
-def webScalaVersion = ScalaVersions.scala212
+def webScalaVersion = ScalaVersions.scala213
 trait Web extends CsScalaJsModule {
   def scalaVersion = webScalaVersion
   // ScalaJSBundlerPlugin
@@ -609,7 +609,6 @@ trait Web extends CsScalaJsModule {
     coursier.js(webScalaVersion)
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
-    Deps.scalaJsJquery,
     Deps.scalaJsReact
   )
   def moduleKind = mill.scalajslib.api.ModuleKind.CommonJSModule
