@@ -481,17 +481,19 @@ import scala.util.control.NonFatal
         case false => S.point(Right(true))
         case true =>
           checkNeeded.flatMap {
-            case false                => S.point(Right(false))
-            case true if !checkRemote => S.point(Right(true))
-            case true if checkRemote =>
-              doCheckRemote.run.flatMap {
-                case Right(false) =>
-                  blockingIO {
-                    Blocking.doTouchCheckFile(file, url, updateLinks = false)
-                    Right(false)
-                  }
-                case other => S.point(other)
-              }
+            case false => S.point(Right(false))
+            case true =>
+              if (checkRemote)
+                doCheckRemote.run.flatMap {
+                  case Right(false) =>
+                    blockingIO {
+                      Blocking.doTouchCheckFile(file, url, updateLinks = false)
+                      Right(false)
+                    }
+                  case other => S.point(other)
+                }
+              else
+                S.point(Right(true))
           }
       }
 

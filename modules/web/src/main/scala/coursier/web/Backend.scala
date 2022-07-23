@@ -14,7 +14,6 @@ import coursier.{
 import coursier.util.{Artifact, EitherT, Gather, Task}
 import japgolly.scalajs.react._
 import org.scalajs.dom
-import org.scalajs.jquery.jQuery
 
 import scala.scalajs.js
 import scala.util.{Failure, Success}
@@ -78,16 +77,16 @@ final class Backend($ : BackendScope[_, State]) {
     val layouter = js.Dynamic.newInstance(Dracula.Layout.Spring)(graph)
     layouter.layout()
 
-    val width = jQuery("#dependencies")
+    val width = g.jQuery("#dependencies")
       .width()
-    val height = jQuery("#dependencies")
+    val height = g.jQuery("#dependencies")
       .height()
       .asInstanceOf[Int]
       .max(400)
 
     println(s"width: $width, height: $height")
 
-    jQuery("#depgraphcanvas")
+    g.jQuery("#depgraphcanvas")
       .html("") // empty()
 
     val renderer = js.Dynamic.newInstance(Dracula.Renderer.Raphael)(
@@ -100,11 +99,11 @@ final class Backend($ : BackendScope[_, State]) {
     println("Rendered canvas")
   }
 
-  def updateDepGraphBtn(resolution: Resolution)(e: raw.SyntheticEvent[_]) = CallbackTo[Unit] {
+  def updateDepGraphBtn(resolution: Resolution)(e: facade.SyntheticEvent[_]) = CallbackTo[Unit] {
     updateDepGraph(resolution)
   }
 
-  def updateTree(resolution: Resolution, target: String, reverse: Boolean) = {
+  def updateTree(resolution: Resolution, target: String, reverse: Boolean): Unit = {
 
     val minDependencies = resolution.minDependencies
 
@@ -135,7 +134,7 @@ final class Backend($ : BackendScope[_, State]) {
         .map(tree)
         .map(js.JSON.stringify(_))
     )
-    jQuery(target).asInstanceOf[js.Dynamic]
+    g.jQuery(target)
       .treeview(js.Dictionary("data" -> js.Array(minDependencies.toList.map(tree): _*)))
   }
 
@@ -195,12 +194,12 @@ final class Backend($ : BackendScope[_, State]) {
       ()
     }
   }
-  def handleResolve(e: raw.SyntheticEvent[_]) = {
+  def handleResolve(e: facade.SyntheticEvent[_]) = {
 
     val c = CallbackTo[Unit] {
       println(s"Resolving")
       e.preventDefault()
-      jQuery("#results").css("display", "block")
+      g.jQuery("#results").css("display", "block")
     }
 
     c.flatMap { _ =>
@@ -208,22 +207,22 @@ final class Backend($ : BackendScope[_, State]) {
     }
   }
 
-  def clearLog(e: raw.SyntheticEvent[_]) =
+  def clearLog(e: facade.SyntheticEvent[_]) =
     $.modState(_.copy(log = Nil))
 
-  def toggleReverseTree(e: raw.SyntheticEvent[_]) =
+  def toggleReverseTree(e: facade.SyntheticEvent[_]) =
     $.modState { s =>
       for (res <- s.resolutionOpt)
         updateTree(res, "#deptree", reverse = !s.reverseTree)
       s.copy(reverseTree = !s.reverseTree)
     }
 
-  def editModule(idx: Int)(e: raw.SyntheticEvent[_]) = {
+  def editModule(idx: Int)(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState(_.copy(editModuleIdx = idx))
   }
 
-  def removeModule(idx: Int)(e: raw.SyntheticEvent[_]) = {
+  def removeModule(idx: Int)(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState(s =>
       s.copy(
@@ -238,7 +237,7 @@ final class Backend($ : BackendScope[_, State]) {
   def updateModule(
     moduleIdx: Int,
     update: (Dependency, String) => Dependency
-  )(e: raw.SyntheticEvent[dom.raw.HTMLInputElement]) =
+  )(e: facade.SyntheticEvent[dom.raw.HTMLInputElement]) =
     if (moduleIdx >= 0) {
       e.persist()
       $.modState { state =>
@@ -252,7 +251,7 @@ final class Backend($ : BackendScope[_, State]) {
     else
       CallbackTo.pure(())
 
-  def addModule(e: raw.SyntheticEvent[_]) = {
+  def addModule(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState { state =>
       val modules = state.modules :+ Dependency(Module(org"", name""), "")
@@ -264,12 +263,12 @@ final class Backend($ : BackendScope[_, State]) {
     }
   }
 
-  def editRepo(idx: Int)(e: raw.SyntheticEvent[_]) = {
+  def editRepo(idx: Int)(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState(_.copy(editRepoIdx = idx))
   }
 
-  def removeRepo(idx: Int)(e: raw.SyntheticEvent[_]) = {
+  def removeRepo(idx: Int)(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState(s =>
       s.copy(
@@ -281,7 +280,7 @@ final class Backend($ : BackendScope[_, State]) {
     )
   }
 
-  def moveRepo(idx: Int, up: Boolean)(e: raw.SyntheticEvent[_]) = {
+  def moveRepo(idx: Int, up: Boolean)(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState { s =>
       val idx0 = if (up) idx - 1 else idx + 1
@@ -305,7 +304,7 @@ final class Backend($ : BackendScope[_, State]) {
   def updateRepo(
     repoIdx: Int,
     update: ((String, MavenRepository), String) => (String, MavenRepository)
-  )(e: raw.SyntheticEvent[dom.raw.HTMLInputElement]) =
+  )(e: facade.SyntheticEvent[dom.raw.HTMLInputElement]) =
     if (repoIdx >= 0)
       $.modState { state =>
         val repo = state.repositories(repoIdx)
@@ -317,7 +316,7 @@ final class Backend($ : BackendScope[_, State]) {
     else
       CallbackTo.pure(())
 
-  def addRepo(e: raw.SyntheticEvent[_]) = {
+  def addRepo(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState { state =>
       val repositories = state.repositories :+ ("" -> MavenRepository(""))
@@ -329,13 +328,13 @@ final class Backend($ : BackendScope[_, State]) {
     }
   }
 
-  def enablePopover(e: raw.SyntheticMouseEvent[_]) = CallbackTo[Unit] {
+  def enablePopover(e: facade.SyntheticMouseEvent[_]) = CallbackTo[Unit] {
     g.$("[data-toggle='popover']")
       .popover()
   }
 
   object options {
-    def toggleOptional(e: raw.SyntheticEvent[_]) =
+    def toggleOptional(e: facade.SyntheticEvent[_]) =
       $.modState(s =>
         s.copy(
           options = s.options

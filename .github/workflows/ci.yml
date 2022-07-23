@@ -8,6 +8,25 @@ on:
   pull_request:
 
 jobs:
+  compile-all:
+    runs-on: ubuntu-latest
+    name: Compile everything
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.3
+    - uses: coursier/setup-action@v1.2.0
+      with:
+        jvm: "temurin:17"
+    - run: ./mill -i __.compile
+
   test:
     runs-on: ${{ matrix.OS }}
     name: ${{ matrix.OS }} Scala ${{ matrix.SCALA_VERSION }} JDK ${{ matrix.JDK }}
@@ -135,7 +154,7 @@ jobs:
     - run: scalafmt --check
 
   publish:
-    needs: ["test", "js-test", "bin-compat", "website-check", "format"]
+    needs: ["compile-all", "test", "js-test", "bin-compat", "website-check", "format"]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
