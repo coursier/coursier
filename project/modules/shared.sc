@@ -100,8 +100,7 @@ trait CsModule extends SbtModule with ScalaCliCompile {
   def scalacPluginIvyDeps = T {
     val sv = scalaVersion()
     val scala212Plugins =
-      if (sv.startsWith("2.11.") || sv.startsWith("2.12."))
-        Agg(Deps.macroParadise)
+      if (sv.startsWith("2.12.")) Agg(Deps.macroParadise)
       else Nil
     super.scalacPluginIvyDeps() ++ scala212Plugins
   }

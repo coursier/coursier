@@ -53,8 +53,8 @@ object cache extends Module {
   object jvm extends Cross[CacheJvm](ScalaVersions.all: _*)
   object js  extends Cross[CacheJs](ScalaVersions.all: _*)
 }
-object launcher extends Cross[Launcher](ScalaVersions.all ++ Seq(ScalaVersions.scala211): _*)
-object env      extends Cross[Env](ScalaVersions.all: _*)
+object launcher                extends Cross[Launcher](ScalaVersions.all: _*)
+object env                     extends Cross[Env](ScalaVersions.all: _*)
 object `launcher-native_03`    extends LauncherNative03
 object `launcher-native_040M2` extends LauncherNative040M2
 object `launcher-native_04`    extends LauncherNative04
@@ -846,7 +846,7 @@ def jvmTests(scalaVersion: String = "*") = {
     else Seq(simpleNativeCliTest())
 
   val scalaVersions =
-    if (scalaVersion == "*") ScalaVersions.scala211 +: ScalaVersions.all
+    if (scalaVersion == "*") ScalaVersions.all
     else Seq(scalaVersion)
 
   val tasks = nonCrossTests ++

@@ -82,8 +82,5 @@ object ScalaVersions {
   def scala212 = "2.12.16"
   val all      = Seq(scala213, scala212)
 
-  // only used by the launcher module
-  def scala211 = "2.11.12"
-
   def scalaJs = "1.9.0"
 }
