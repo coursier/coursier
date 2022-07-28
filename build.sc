@@ -560,7 +560,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
   object test extends Tests with CsTests
 }
 
-trait CliTests extends CsModule { self =>
+trait CliTests extends CsModule with CoursierPublishModule { self =>
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion)
