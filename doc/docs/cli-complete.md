@@ -1,31 +1,31 @@
 ---
-title: complete
+title: complete-dep
 ---
 
-`complete` allows one to complete _Maven_ coordinates.
+`complete-dep` allows one to complete _Maven_ coordinates.
 
 It can answer questions such as:
 
 - What artifacts are published under a given _Maven_ _groupId_, for example `org.scala-lang` or `io.circe`?
 - For a given _Maven_ _groupId_ and _artifactId_, which version(s) of the artifact are available?
 
-The `complete` command takes a single argument which is composed of up to 3 colon-separated components.
+The `complete-dep` command takes a single argument which is composed of up to 3 colon-separated components.
 
-`cs complete groupId:artifactId:version`
+`cs complete-dep groupId:artifactId:version`
 
 Let's demonstrate this with a few examples.
 
 ## Looking-up a _Maven_ _groupId_
 
 ```bash
-$ cs complete org.scala-lang
+$ cs complete-dep org.scala-lang
 org.scala-lang
 org.scala-lang-osgi
 
-$ cs complete com.zax
+$ cs complete-dep com.zax
 com.zaxxer
 
-$ cs complete com.typesafe.
+$ cs complete-dep com.typesafe.
 com.typesafe.akka
 com.typesafe.conductr
 com.typesafe.config
@@ -40,7 +40,7 @@ com.typesafe.webdriver_2.10
 com.typesafe.zinc
 ```
 
-As can be seen from these 3 examples, there are two _Maven_ _groupIds_ that share the common `org.scala-lang` prefix whereas `com.zax` has exactly one matching _groupId_. Finally, `cs complete com.typesafe.` will list more than 80 matching _groupIds_.
+As can be seen from these 3 examples, there are two _Maven_ _groupIds_ that share the common `org.scala-lang` prefix whereas `com.zax` has exactly one matching _groupId_. Finally, `cs complete-dep com.typesafe.` will list more than 80 matching _groupIds_.
 
 We can now focus on searching for some artifacts under these _groupIds_.
 
@@ -51,7 +51,7 @@ Passing a _Maven_ _groupId_ terminated by a colon will trigger a lookup of all a
 For example:
 
 ```bash
-$ cs complete com.zaxxer:
+$ cs complete-dep com.zaxxer:
 HikariCP
 HikariCP-agent
 HikariCP-java6
@@ -66,7 +66,7 @@ kuill
 nuprocess
 sansorm
 
-$ cs complete com.typesafe.akka:
+$ cs complete-dep com.typesafe.akka:
 akka
 akka-actor-testkit-typed_2.11
 akka-actor-testkit-typed_2.12
@@ -104,14 +104,14 @@ hello-kernel_2.10
 hello-kernel_2.11
 ```
 
-An interesting observation that can be made when looking at the output for `cs complete com.typesafe.akka:` is that each artifact is published against one or more minor versions of _Scala_ (e.g. `2.11`, `2.12`, `2.13`, etc.). This is because these are _Scala_ libraries that are cross-built for each _Scala_ version supported by the library.
+An interesting observation that can be made when looking at the output for `cs complete-dep com.typesafe.akka:` is that each artifact is published against one or more minor versions of _Scala_ (e.g. `2.11`, `2.12`, `2.13`, etc.). This is because these are _Scala_ libraries that are cross-built for each _Scala_ version supported by the library.
 
 > Note: _Scala_ guarantees binary compatibility between patch releases with a minor release.
 
 For example, if we take the `akka-actor-typed` library:
 
 ```bash
-$ cs complete com.typesafe.akka:akka-actor-typed
+$ cs complete-dep com.typesafe.akka:akka-actor-typed
 akka-actor-typed_2.11
 akka-actor-typed_2.12
 akka-actor-typed_2.13
@@ -126,14 +126,14 @@ We see that it was published against 3 _Scala_ releases (ignoring Milestone rele
 
 ## Looking-up artifact versions
 
-Given a _Maven_ _groupId_ and _artifactId_, we can use `cs complete` to look up which version[s] of the artifact have been published.
+Given a _Maven_ _groupId_ and _artifactId_, we can use `cs complete-dep` to look up which version[s] of the artifact have been published.
 
 We'll take two examples, one for a _Java_ library and one for a _Scala_ Library.
 
 Let's start with the `HikariCP` library.
 
 ```bash
-$ cs complete com.zaxxer:HikariCP:
+$ cs complete-dep com.zaxxer:HikariCP:
 1.1.3
 1.1.4
 
@@ -159,7 +159,7 @@ Pretty straightforward...
 Let's look at the `akka-actor-typed` library published for _Scala_ 2.13.
 
 ```bash
-$ cs complete com.typesafe.akka:akka-actor-typed_2.13:
+$ cs complete-dep com.typesafe.akka:akka-actor-typed_2.13:
 2.5.23
 2.5.24
 2.5.25
@@ -191,4 +191,4 @@ $ cs complete com.typesafe.akka:akka-actor-typed_2.13:
 2.6.10
 ```
 
-In conclusion we can say that `cs complete` is a very powerful command that allows us to easily look-up library (artifact) version information from the command line.
+In conclusion we can say that `cs complete-dep` is a very powerful command that allows us to easily look-up library (artifact) version information from the command line.
