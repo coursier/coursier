@@ -143,6 +143,9 @@ object CacheUrl {
         // Early in the development of coursier, I ran into some repositories (Sonatype ones?) not
         // returning the same content for user agent "Java/…".
         conn0.setRequestProperty("User-Agent", "Coursier/2.0")
+        // Some remote repositories (AWS CodeArtifact) return a "false" 404 if maven-metadata.xml is requested
+        // with default Accept header Java sets for HttpUrlConnection
+        conn0.setRequestProperty("Accept", "*/*")
 
         conn0 match {
           case conn1: HttpsURLConnection =>
@@ -495,6 +498,7 @@ object CacheUrl {
 
   // seems there's no way to pass proxy authentication per connection…
   // see https://stackoverflow.com/questions/34877470/basic-proxy-authentication-for-https-urls-returns-http-1-0-407-proxy-authenticat
+  @deprecated("Use coursier.proxy.SetupProxy.setup() instead", "2.1.0-M7")
   def setupProxyAuth(credentials: Map[(String, String, String), (String, String)]): Unit = {
     Authenticator.setDefault(
       new Authenticator {
@@ -513,6 +517,7 @@ object CacheUrl {
       System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "")
   }
 
+  @deprecated("Use coursier.proxy.SetupProxy.setup() instead", "2.1.0-M7")
   def setupProxyAuth(): Unit = {
     def authOpt(scheme: String): Option[((String, String, String), (String, String))] =
       for {

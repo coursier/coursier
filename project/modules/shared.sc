@@ -1,10 +1,15 @@
+import $ivy.`io.github.alexarchambault.mill::mill-scala-cli::0.1.0`
+
 import $file.^.mima, mima.Mima
 import $file.^.deps, deps.{Deps, ScalaVersions}
 
 import mill._, mill.scalalib._, mill.scalajslib._
+import scala.cli.mill.ScalaCliCompile
 
 trait CsMima extends Mima {
-  def mimaPreviousVersions = Seq("2.0.16")
+  def mimaPreviousVersions = T {
+    Seq.empty[String]
+  }
 }
 
 def commitHash = T {
@@ -32,7 +37,7 @@ lazy val buildVersion = {
   }
 }
 
-trait CoursierPublishModule extends PublishModule {
+trait CoursierPublishModule extends PublishModule with JavaModule {
   import mill.scalalib.publish._
   def pomSettings = PomSettings(
     description = artifactName(),
@@ -45,6 +50,9 @@ trait CoursierPublishModule extends PublishModule {
     )
   )
   def publishVersion = T(buildVersion)
+  def javacOptions = T {
+    super.javacOptions() ++ Seq("-source", "8", "-target", "8")
+  }
 }
 
 trait CsTests extends TestModule {
@@ -78,7 +86,7 @@ trait JsTests extends TestModule {
   }
 }
 
-trait CsModule extends SbtModule {
+trait CsModule extends SbtModule with ScalaCliCompile {
   def scalacOptions = T {
     val sv = scalaVersion()
     val scala212Opts =
@@ -92,8 +100,7 @@ trait CsModule extends SbtModule {
   def scalacPluginIvyDeps = T {
     val sv = scalaVersion()
     val scala212Plugins =
-      if (sv.startsWith("2.11.") || sv.startsWith("2.12."))
-        Agg(Deps.macroParadise)
+      if (sv.startsWith("2.12.")) Agg(Deps.macroParadise)
       else Nil
     super.scalacPluginIvyDeps() ++ scala212Plugins
   }
@@ -106,9 +113,16 @@ trait CsModule extends SbtModule {
     }
     parent ++ extra
   }
+  def scalaCliVersion = "0.1.10"
+
+  // Remove once we switch to Scala CLI >= 0.1.11
+  def extraScalaCliOptions = super.extraScalaCliOptions() ++ Seq(
+    "--bloop-version",
+    "1.5.2-sc-1"
+  )
 }
 
-trait CsCrossJvmJsModule extends CrossSbtModule {
+trait CsCrossJvmJsModule extends CrossSbtModule with CsModule {
   def sources = T.sources {
     val shared = PathRef(millSourcePath / os.up / "shared" / "src" / "main")
     super.sources() ++ Seq(shared)

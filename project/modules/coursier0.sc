@@ -7,12 +7,13 @@ import mill._, mill.scalalib._
 trait Coursier extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier"
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
-    Deps.dataClass
+    Deps.dataClass,
+    Deps.jsoniterMacros,
+    Deps.scalaReflect(scalaVersion()) // ???
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
-    Deps.argonautShapeless,
     Deps.fastParse,
-    Deps.scalaReflect(scalaVersion())
+    Deps.jsoniterCore
   )
 }
 trait CoursierTests extends TestModule {

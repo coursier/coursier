@@ -19,6 +19,7 @@ import utest._
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 import coursier.core.Version
+import scala.util.Properties
 
 object InstallTests extends TestSuite {
 
@@ -51,7 +52,7 @@ object InstallTests extends TestSuite {
     else
       try Files.deleteIfExists(d)
       catch {
-        case e: FileSystemException if Windows.isWindows =>
+        case e: FileSystemException if Properties.isWin =>
           System.err.println(s"Ignored error while deleting temporary file $d: $e")
       }
 
@@ -176,7 +177,6 @@ object InstallTests extends TestSuite {
     installDir(tmpDir, "linux", "x86_64")
   private def installDir(tmpDir: Path, os: String, arch: String): InstallDir =
     InstallDir(tmpDir, cache)
-      .withOs(os)
       .withPlatform(Platform.get(os, arch))
       .withPlatformExtensions(InstallDir.platformExtensions(os))
       .withBasePreamble(Preamble())
@@ -500,7 +500,7 @@ object InstallTests extends TestSuite {
         val launcher = installDir0.actualDest(id)
 
         def testRun(): Unit = {
-          val expectedRetCode = if (Windows.isWindows) 0 else 1
+          val expectedRetCode = if (Properties.isWin) 0 else 1
           val output = commandOutput(
             tmpDir.toFile,
             mergeError = true,
@@ -509,7 +509,7 @@ object InstallTests extends TestSuite {
             "--help"
           )
           val expectedInOutput =
-            if (Windows.isWindows) "Failed to get console mode:"
+            if (Properties.isWin) "Failed to get console mode:"
             else "entering *experimental* thin client - BEEP WHIRR"
           assert(output.contains(expectedInOutput))
         }
@@ -550,7 +550,7 @@ object InstallTests extends TestSuite {
         val launcher = installDir0.actualDest(id)
 
         def testRun(): Unit = {
-          val expectedRetCode = if (Windows.isWindows) 0 else 1
+          val expectedRetCode = if (Properties.isWin) 0 else 1
           val output = commandOutput(
             tmpDir.toFile,
             mergeError = true,
@@ -559,7 +559,7 @@ object InstallTests extends TestSuite {
             "--help"
           )
           val expectedInOutput =
-            if (Windows.isWindows) "Failed to get console mode:"
+            if (Properties.isWin) "Failed to get console mode:"
             else "entering *experimental* thin client - BEEP WHIRR"
           assert(output.contains(expectedInOutput))
         }
@@ -819,6 +819,70 @@ object InstallTests extends TestSuite {
         assert(updated.exists(identity))
 
         testRun(scala3CompilerJars, scala3Properties)
+      }
+
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
+    }
+
+    test("override prebuilt / prebuiltBinaries") {
+      val id = "cs"
+      val versionOverride =
+        RawAppDescriptor.RawVersionOverride("(,2.0.16]")
+          .withPrebuilt(Some(
+            "https://github.com/coursier/coursier/releases/download/v${version}/cs-${platform}"
+          ))
+          .withPrebuiltBinaries(Some(Map()))
+      val appInfo0 = appInfo(
+        RawAppDescriptor(List("io.get-coursier::coursier-cli:latest.release"))
+          .withRepositories(List("central", "typesafe:ivy-releases"))
+          .withName(Some("cs"))
+          .withLauncherType("prebuilt")
+          .withPrebuilt(None)
+          .withPrebuiltBinaries(Map(
+            "x86_64-pc-linux" -> "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-linux.gz",
+            "x86_64-apple-darwin" -> "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-apple-darwin.gz",
+            "x86_64-pc-win32" -> "zip+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-win32.zip"
+          ))
+          .withVersionOverrides(List(versionOverride)),
+        id
+      )
+
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
+        val installDir0 = installDir(tmpDir, os, arch)
+          .withVerbosity(1)
+
+        val created = installDir0.createOrUpdate(appInfo0)
+        assert(created.exists(identity))
+
+        val launcher = installDir0.actualDest(id)
+        assert(Files.isRegularFile(launcher))
+
+        val ext               = if (os == "windows") ".exe" else ""
+        val auxiliaryLauncher = launcher.getParent.resolve(InstallDir.auxName(id, ext))
+        assert(Files.isRegularFile(auxiliaryLauncher))
+
+        def testRun(expectedContent: String): Unit = {
+          assert(Files.isRegularFile(auxiliaryLauncher))
+          val content = new String(Files.readAllBytes(auxiliaryLauncher), StandardCharsets.UTF_8)
+          assert(content == expectedContent)
+        }
+
+        val pf = installDir0.platform.getOrElse(sys.error("No platform?"))
+
+        testRun(s"cs-$pf-2.1.0-M3-1")
+
+        val overridenAppInfo = appInfo0.overrideVersion("2.0.13")
+        val overridden       = installDir0.createOrUpdate(overridenAppInfo)
+        assert(overridden.exists(identity))
+
+        testRun(s"cs-$pf-2.0.13")
+
+        val updated = installDir0.createOrUpdate(appInfo0)
+        assert(updated.exists(identity))
+
+        testRun(s"cs-$pf-2.1.0-M3-1")
       }
 
       test("linux") - run("linux", "x86_64")

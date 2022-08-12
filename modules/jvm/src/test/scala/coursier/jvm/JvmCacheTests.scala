@@ -37,6 +37,16 @@ object JvmCacheTests extends TestSuite {
       deleteRecursive(dir.toFile)
   }
 
+  def withTempDir0[T](f: os.Path => T): T = {
+    var dir: os.Path = null
+    try {
+      dir = os.temp.dir(prefix = "jvm-cache-tests-")
+      f(dir)
+    }
+    finally if (dir != null)
+      deleteRecursive(dir.toIO)
+  }
+
   private val poolInitialized = new AtomicBoolean(false)
   private lazy val pool = {
     val p = Sync.fixedThreadPool(6)
@@ -54,150 +64,170 @@ object JvmCacheTests extends TestSuite {
     dir
   }
 
+  private val strIndex =
+    """{
+      |  "the-os": {
+      |    "the-arch": {
+      |      "jdk@the-jdk": {
+      |        "1.1": "tgz+https://foo.com/download/the-jdk-1.1.tar.gz",
+      |        "1.2": "tgz+https://foo.com/download/the-jdk-1.2.tar.gz"
+      |      }
+      |    }
+      |  },
+      |  "darwin": {
+      |    "the-arch": {
+      |      "jdk@the-jdk": {
+      |        "1.1": "tgz+https://foo.com/download/the-jdk-1.1-macos.tar.gz",
+      |        "1.2": "tgz+https://foo.com/download/the-jdk-1.2.tar.gz"
+      |      }
+      |    }
+      |  },
+      |  "windows": {
+      |    "the-arch": {
+      |      "jdk@the-jdk": {
+      |        "1.1": "tgz+https://foo.com/download/the-jdk-1.1-windows.tar.gz",
+      |        "1.2": "tgz+https://foo.com/download/the-jdk-1.2-windows.tar.gz"
+      |      }
+      |    }
+      |  }
+      |}
+      |""".stripMargin
+  private val index = JvmIndex.fromString(strIndex).fold(throw _, identity)
+
+  private val cache = MockCache.create[Task](mockDataLocation, pool)
+
   val tests = Tests {
-    test("simple") {
-      val strIndex =
-        """{
-          |  "the-os": {
-          |    "the-arch": {
-          |      "jdk@the-jdk": {
-          |        "1.1": "tgz+https://foo.com/download/the-jdk-1.1.tar.gz",
-          |        "1.2": "tgz+https://foo.com/download/the-jdk-1.2.tar.gz"
-          |      }
-          |    }
-          |  },
-          |  "darwin": {
-          |    "the-arch": {
-          |      "jdk@the-jdk": {
-          |        "1.1": "tgz+https://foo.com/download/the-jdk-1.1-macos.tar.gz",
-          |        "1.2": "tgz+https://foo.com/download/the-jdk-1.2.tar.gz"
-          |      }
-          |    }
-          |  },
-          |  "windows": {
-          |    "the-arch": {
-          |      "jdk@the-jdk": {
-          |        "1.1": "tgz+https://foo.com/download/the-jdk-1.1-windows.tar.gz",
-          |        "1.2": "tgz+https://foo.com/download/the-jdk-1.2-windows.tar.gz"
-          |      }
-          |    }
-          |  }
-          |}
-          |""".stripMargin
-      val index = JvmIndex.fromString(strIndex).fold(throw _, identity)
+    test("specific version") {
+      withTempDir { tmpDir =>
+        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
+        val jvmCache = JvmCache()
+          .withArchiveCache(archiveCache)
+          .withOs(theOS)
+          .withArchitecture("the-arch")
+          .withDefaultJdkNameOpt(None)
+          .withDefaultVersionOpt(None)
+          .withIndex(Task.point(index))
 
-      val cache = MockCache.create[Task](mockDataLocation, pool)
+        val home           = jvmCache.get("the-jdk:1.1").unsafeRun()(cache.ec)
+        val expectedOutput = "the jdk 1.1\n"
+        val javaExec       = new File(new File(home, "bin"), filename)
 
-      test("specific version") {
-        withTempDir { tmpDir =>
-          val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
-          val jvmCache = JvmCache()
-            .withArchiveCache(archiveCache)
-            .withOs(theOS)
-            .withArchitecture("the-arch")
-            .withDefaultJdkNameOpt(None)
-            .withDefaultVersionOpt(None)
-            .withIndex(Task.point(index))
-
-          val home           = jvmCache.get("the-jdk:1.1").unsafeRun()(cache.ec)
-          val expectedOutput = "the jdk 1.1\n"
-          val javaExec       = new File(new File(home, "bin"), filename)
-
-          val output = Seq(javaExec.getAbsolutePath, "-version").!!
-          assert(output.replace("\r\n", "\n") == expectedOutput)
-        }
+        val output = Seq(javaExec.getAbsolutePath, "-version").!!
+        assert(output.replace("\r\n", "\n") == expectedOutput)
       }
+    }
 
-      test("version range") {
-        withTempDir { tmpDir =>
-          val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
-          val jvmCache = JvmCache()
-            .withArchiveCache(archiveCache)
-            .withOs(theOS)
-            .withArchitecture("the-arch")
-            .withDefaultJdkNameOpt(None)
-            .withDefaultVersionOpt(None)
-            .withIndex(Task.point(index))
+    test("version range") {
+      withTempDir { tmpDir =>
+        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
+        val jvmCache = JvmCache()
+          .withArchiveCache(archiveCache)
+          .withOs(theOS)
+          .withArchitecture("the-arch")
+          .withDefaultJdkNameOpt(None)
+          .withDefaultVersionOpt(None)
+          .withIndex(Task.point(index))
 
-          val home           = jvmCache.get("the-jdk:1+").unsafeRun()(cache.ec)
-          val javaExec       = new File(new File(home, "bin"), filename)
+        val home           = jvmCache.get("the-jdk:1+").unsafeRun()(cache.ec)
+        val javaExec       = new File(new File(home, "bin"), filename)
+        val output         = Seq(javaExec.getAbsolutePath, "-version").!!
+        val expectedOutput = "the jdk 1.2\n"
+        assert(output.replace("\r\n", "\n") == expectedOutput)
+      }
+    }
+
+    test("Contents/Home directory on macOS") {
+      withTempDir { tmpDir =>
+        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
+        val jvmCache = JvmCache()
+          .withArchiveCache(archiveCache)
+          .withOs("darwin")
+          .withArchitecture("the-arch")
+          .withDefaultJdkNameOpt(None)
+          .withDefaultVersionOpt(None)
+          .withIndex(Task.point(index))
+
+        val home = jvmCache.get("the-jdk:1.1").unsafeRun()(cache.ec)
+        assert(home.getName == "Home")
+        assert(home.getParentFile.getName == "Contents")
+        val javaExec = new File(home, "bin/java")
+        try {
           val output         = Seq(javaExec.getAbsolutePath, "-version").!!
-          val expectedOutput = "the jdk 1.2\n"
-          assert(output.replace("\r\n", "\n") == expectedOutput)
+          val expectedOutput = "the jdk 1.1\n"
+          assert(output == expectedOutput)
+          ()
         }
-      }
-
-      test("Contents/Home directory on macOS") {
-        withTempDir { tmpDir =>
-          val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
-          val jvmCache = JvmCache()
-            .withArchiveCache(archiveCache)
-            .withOs("darwin")
-            .withArchitecture("the-arch")
-            .withDefaultJdkNameOpt(None)
-            .withDefaultVersionOpt(None)
-            .withIndex(Task.point(index))
-
-          val home = jvmCache.get("the-jdk:1.1").unsafeRun()(cache.ec)
-          assert(home.getName == "Home")
-          assert(home.getParentFile.getName == "Contents")
-          val javaExec = new File(home, "bin/java")
-          try {
-            val output         = Seq(javaExec.getAbsolutePath, "-version").!!
-            val expectedOutput = "the jdk 1.1\n"
-            assert(output == expectedOutput)
-            ()
-          }
-          catch {
-            case _: IOException if Properties.isWin => ()
-          }
-
-          val alreadyThereHome = jvmCache
-            .getIfInstalled("the-jdk:1.1")
-            .unsafeRun()(cache.ec)
-            .getOrElse {
-              sys.error("Should have been there")
-            }
-          assert(alreadyThereHome.getName == "Home")
-          assert(alreadyThereHome.getParentFile.getName == "Contents")
-          val alreadyThereJavaExec = new File(alreadyThereHome, "bin/java")
-          try {
-            val output         = Seq(alreadyThereJavaExec.getAbsolutePath, "-version").!!
-            val expectedOutput = "the jdk 1.1\n"
-            assert(output == expectedOutput)
-            ()
-          }
-          catch {
-            case _: IOException if Properties.isWin => ()
-          }
+        catch {
+          case _: IOException if Properties.isWin => ()
         }
-      }
 
-      test("no Contents/Home directory on macOS") {
-        withTempDir { tmpDir =>
-          val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
-          val jvmCache = JvmCache()
-            .withArchiveCache(archiveCache)
-            .withOs("darwin")
-            .withArchitecture("the-arch")
-            .withDefaultJdkNameOpt(None)
-            .withDefaultVersionOpt(None)
-            .withIndex(Task.point(index))
-
-          val home = jvmCache.get("the-jdk:1.2").unsafeRun()(cache.ec)
-          assert(home.getName == "the-jdk-1.2")
-          val javaExec = new File(home, "bin/java")
-          try {
-            val output         = Seq(javaExec.getAbsolutePath, "-version").!!
-            val expectedOutput = "the jdk 1.2\n"
-            assert(output == expectedOutput)
-            ()
+        val alreadyThereHome = jvmCache
+          .getIfInstalled("the-jdk:1.1")
+          .unsafeRun()(cache.ec)
+          .getOrElse {
+            sys.error("Should have been there")
           }
-          catch {
-            case _: IOException if Properties.isWin => ()
-          }
+        assert(alreadyThereHome.getName == "Home")
+        assert(alreadyThereHome.getParentFile.getName == "Contents")
+        val alreadyThereJavaExec = new File(alreadyThereHome, "bin/java")
+        try {
+          val output         = Seq(alreadyThereJavaExec.getAbsolutePath, "-version").!!
+          val expectedOutput = "the jdk 1.1\n"
+          assert(output == expectedOutput)
+          ()
+        }
+        catch {
+          case _: IOException if Properties.isWin => ()
         }
       }
     }
+
+    test("no Contents/Home directory on macOS") {
+      withTempDir { tmpDir =>
+        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
+        val jvmCache = JvmCache()
+          .withArchiveCache(archiveCache)
+          .withOs("darwin")
+          .withArchitecture("the-arch")
+          .withDefaultJdkNameOpt(None)
+          .withDefaultVersionOpt(None)
+          .withIndex(Task.point(index))
+
+        val home = jvmCache.get("the-jdk:1.2").unsafeRun()(cache.ec)
+        assert(home.getName == "the-jdk-1.2")
+        val javaExec = new File(home, "bin/java")
+        try {
+          val output         = Seq(javaExec.getAbsolutePath, "-version").!!
+          val expectedOutput = "the jdk 1.2\n"
+          assert(output == expectedOutput)
+          ()
+        }
+        catch {
+          case _: IOException if Properties.isWin => ()
+        }
+      }
+    }
+
+    test("URL id") {
+      withTempDir0 { tmpDir =>
+        val archiveCache = ArchiveCache[Task](tmpDir.toIO).withCache(cache)
+        val jvmCache = JvmCache()
+          .withArchiveCache(archiveCache)
+          .withOs("the-os")
+          .withArchitecture("the-arch")
+          .withDefaultJdkNameOpt(None)
+          .withDefaultVersionOpt(None)
+
+        val dir =
+          os.Path(jvmCache.get("https://foo.com/download/the-jdk-1.2.tar.gz").unsafeRun()(cache.ec))
+
+        val expectedDir =
+          os.rel / "https" / "foo.com" / "download" / "the-jdk-1.2.tar.gz" / "the-jdk-1.2"
+        val relDir = dir.relativeTo(tmpDir)
+
+        assert(relDir == expectedDir)
+      }
+    }
+
   }
 }
