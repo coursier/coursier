@@ -9,7 +9,7 @@ object Deps {
   def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.8.1"
   def concurrentReferenceHashMap =
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
-  def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.5"
+  def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.6"
   def dockerClient      = ivy"com.spotify:docker-client:8.16.0"
   def fastParse         = ivy"com.lihaoyi::fastparse::${Versions.fastParse}"
   def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:${Versions.http4s}"
