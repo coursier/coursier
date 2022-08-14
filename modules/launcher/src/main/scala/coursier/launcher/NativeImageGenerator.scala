@@ -117,7 +117,7 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
           Left(retCode)
       }
       finally if (tmpFile != null)
-        Files.deleteIfExists(tmpFile)
+          Files.deleteIfExists(tmpFile)
 
     res match {
       case Left(retCode) =>
