@@ -24,8 +24,6 @@ jobs:
           jvm: 8
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
-      - run: brew install nailgun
-        if: runner.os == 'macOS'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
         shell: bash
 
