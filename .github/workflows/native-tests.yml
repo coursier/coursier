@@ -39,7 +39,7 @@ jobs:
       - uses: coursier/setup-action@v1.2.1
         with:
           jvm: 8
-      - uses: uraimo/run-on-arch-action@v2.1.2
+      - uses: uraimo/run-on-arch-action@v2.2.0
         with:
           arch: aarch64
           distro: ubuntu20.04
