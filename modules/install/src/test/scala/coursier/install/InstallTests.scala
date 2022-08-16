@@ -47,7 +47,7 @@ object InstallTests extends TestSuite {
           .foreach(delete)
       }
       finally if (s != null)
-        s.close()
+          s.close()
     }
     else
       try Files.deleteIfExists(d)
@@ -69,7 +69,7 @@ object InstallTests extends TestSuite {
       t(zf)
     }
     finally if (zf != null)
-      zf.close()
+        zf.close()
   }
 
   private def assertHasNotEntry(f: File, path: String) =

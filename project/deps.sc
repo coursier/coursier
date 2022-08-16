@@ -6,10 +6,10 @@ object Deps {
   def catsCore          = ivy"org.typelevel::cats-core:${Versions.cats}"
   def catsFree          = ivy"org.typelevel::cats-free:${Versions.cats}"
   def catsEffect        = ivy"org.typelevel::cats-effect::2.5.5"
-  def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.6.0"
+  def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.8.1"
   def concurrentReferenceHashMap =
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
-  def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.5"
+  def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.6"
   def dockerClient      = ivy"com.spotify:docker-client:8.16.0"
   def fastParse         = ivy"com.lihaoyi::fastparse::${Versions.fastParse}"
   def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:${Versions.http4s}"
@@ -27,7 +27,7 @@ object Deps {
   def jsoup           = ivy"org.jsoup:jsoup:1.15.2"
   def logbackClassic  = ivy"ch.qos.logback:logback-classic:1.2.11"
   def macroParadise   = ivy"org.scalamacros:::paradise:2.1.1"
-  def mdoc            = ivy"org.scalameta::mdoc:2.3.2"
+  def mdoc            = ivy"org.scalameta::mdoc:2.3.3"
   def monadlessCats   = ivy"io.monadless::monadless-cats:${Versions.monadless}"
   def monadlessStdlib = ivy"io.monadless::monadless-stdlib:${Versions.monadless}"
   def osLib           = ivy"com.lihaoyi::os-lib:0.8.1"
@@ -35,14 +35,13 @@ object Deps {
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
-  def proguard                 = ivy"com.guardsquare:proguard-base:7.2.1"
+  def proguard                 = ivy"com.guardsquare:proguard-base:7.2.2"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.2.0"
-  def scalaJsJquery            = ivy"be.doeraene::scalajs-jquery::1.0.0"
-  def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::1.7.7"
+  def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.1"
   def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
   def scalaNativeTools040M2    = ivy"org.scala-native::tools:0.4.0-M2"
-  def scalaNativeTools040      = ivy"org.scala-native::tools:0.4.3"
+  def scalaNativeTools040      = ivy"org.scala-native::tools:0.4.5"
   def scalaReflect(sv: String) = ivy"org.scala-lang:scala-reflect:$sv"
   def scalaXml(sv: String) = {
     val ver =
@@ -55,8 +54,8 @@ object Deps {
   def simulacrum       = ivy"org.typelevel::simulacrum:1.0.0"
   def slf4JNop         = ivy"org.slf4j:slf4j-nop:1.7.36"
   def svm              = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
-  def utest            = ivy"com.lihaoyi::utest::0.7.11"
-  def windowsAnsi      = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.3"
+  def utest            = ivy"com.lihaoyi::utest::0.8.0"
+  def windowsAnsi      = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.4"
 }
 
 object Versions {
@@ -79,11 +78,8 @@ def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"
 
 object ScalaVersions {
   def scala213 = "2.13.6"
-  def scala212 = "2.12.15"
+  def scala212 = "2.12.16"
   val all      = Seq(scala213, scala212)
-
-  // only used by the launcher module
-  def scala211 = "2.11.12"
 
   def scalaJs = "1.9.0"
 }

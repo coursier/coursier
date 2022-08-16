@@ -58,7 +58,7 @@ object ArchiveUtil {
       f(it)
     }
     finally if (fis != null)
-      fis.close()
+        fis.close()
   }
 
   def withFirstFileInCompressedTarArchive[T](
