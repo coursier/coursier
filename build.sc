@@ -637,11 +637,8 @@ object `redirecting-server` extends CsModule {
   def mainClass = Some("redirectingserver.RedirectingServer")
 }
 
-// FIXME Not run… should be moved to cli-tests
-def simpleNativeCliTest() = T.command {
+def simpleNative03CliTest() = T.command {
   `launcher-native_03`.publishLocal()()
-  `launcher-native_040M2`.publishLocal()()
-  `launcher-native_04`.publishLocal()()
   val launcher = cli.launcher().path
   val tmpDir   = os.temp.dir(prefix = "coursier-bootstrap-scala-native-test")
   def cleanUp(): Unit =
@@ -659,6 +656,32 @@ def simpleNativeCliTest() = T.command {
         "-o",
         "native-echo",
         "io.get-coursier:echo_native0.3_2.11:1.0.1"
+      ).call(cwd = tmpDir) // TODO inherit all
+      os.proc(tmpDir / "native-echo", "-n", "foo", "a").call()
+    }
+    finally cleanUp()
+  assert(res.out.text == "foo a")
+}
+
+def simpleNative04CliTest() = T.command {
+  `launcher-native_04`.publishLocal()()
+  val launcher = cli.launcher().path
+  val tmpDir   = os.temp.dir(prefix = "coursier-bootstrap-scala-native-test")
+  def cleanUp(): Unit =
+    try os.remove.all(tmpDir)
+    catch {
+      case _: java.io.IOException =>
+        System.err.println(s"Error removing $tmpDir, ignoring it")
+    }
+  val res =
+    try {
+      os.proc(
+        launcher.toString,
+        "bootstrap",
+        "-S",
+        "-o",
+        "native-echo",
+        "io.get-coursier:echo_native0.4_2.13:1.0.5"
       ).call(cwd = tmpDir) // TODO inherit all
       os.proc(tmpDir / "native-echo", "-n", "foo", "a").call()
     }
@@ -842,7 +865,11 @@ def jvmTests(scalaVersion: String = "*") = {
 
   val extraTests =
     if (Properties.isWin) Nil
-    else Seq(simpleNativeCliTest())
+    else
+      Seq(
+        simpleNative03CliTest(),
+        simpleNative04CliTest()
+      )
 
   val scalaVersions =
     if (scalaVersion == "*") ScalaVersions.all
