@@ -78,7 +78,7 @@ object MavenRepository {
   private[coursier] def parseRawPomDom(str: String): Either[String, Project] =
     for {
       xml  <- compatibility.xmlParseDom(str)
-      _    <- (if (xml.label == "project") Right(()) else Left("Project definition not found"))
+      _    <- if (xml.label == "project") Right(()) else Left("Project definition not found")
       proj <- Pom.project(xml)
     } yield proj
 
@@ -272,7 +272,7 @@ object MavenRepository {
         for {
           str      <- eitherStr
           xml      <- compatibility.xmlParseDom(str)
-          _        <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found"))
+          _        <- if (xml.label == "metadata") Right(()) else Left("Metadata not found")
           versions <- Pom.versions(xml)
         } yield (versions, artifact.url)
       }
@@ -298,9 +298,9 @@ object MavenRepository {
     val artifact = actualSnapshotVersioningArtifact(module, version)
     val task = fetch(artifact).run.map { eitherStr =>
       for {
-        str <- eitherStr
-        xml <- compatibility.xmlParseDom(str)
-        _   <- (if (xml.label == "metadata") Right(()) else Left("Metadata not found"))
+        str                <- eitherStr
+        xml                <- compatibility.xmlParseDom(str)
+        _                  <- if (xml.label == "metadata") Right(()) else Left("Metadata not found")
         snapshotVersioning <- Pom.snapshotVersioning(xml)
       } yield snapshotVersioning
     }

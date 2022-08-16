@@ -60,8 +60,8 @@ object CacheUrl {
         val handlerFactoryOpt = clsOpt0.flatMap {
           cls =>
             try Some(
-              cls.getDeclaredConstructor().newInstance().asInstanceOf[URLStreamHandlerFactory]
-            )
+                cls.getDeclaredConstructor().newInstance().asInstanceOf[URLStreamHandlerFactory]
+              )
             catch {
               case e: InstantiationException =>
                 printError(e)
@@ -498,6 +498,7 @@ object CacheUrl {
 
   // seems there's no way to pass proxy authentication per connection…
   // see https://stackoverflow.com/questions/34877470/basic-proxy-authentication-for-https-urls-returns-http-1-0-407-proxy-authenticat
+  @deprecated("Use coursier.proxy.SetupProxy.setup() instead", "2.1.0-M7")
   def setupProxyAuth(credentials: Map[(String, String, String), (String, String)]): Unit = {
     Authenticator.setDefault(
       new Authenticator {
@@ -516,6 +517,7 @@ object CacheUrl {
       System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "")
   }
 
+  @deprecated("Use coursier.proxy.SetupProxy.setup() instead", "2.1.0-M7")
   def setupProxyAuth(): Unit = {
     def authOpt(scheme: String): Option[((String, String, String), (String, String))] =
       for {

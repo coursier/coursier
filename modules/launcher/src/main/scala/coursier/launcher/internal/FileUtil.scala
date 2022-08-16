@@ -33,7 +33,7 @@ private[coursier] object FileUtil {
       readFullyUnsafe(is0)
     }
     finally if (is0 != null)
-      is0.close()
+        is0.close()
   }
 
   def withOutputStream[T](path: Path)(f: OutputStream => T): T = {
@@ -43,7 +43,7 @@ private[coursier] object FileUtil {
       f(os)
     }
     finally if (os != null)
-      os.close()
+        os.close()
   }
 
   def tryMakeExecutable(path: Path): Boolean =
@@ -72,7 +72,7 @@ private[coursier] object FileUtil {
     }
 
   def tryHideWindows(path: Path): Boolean =
-    Windows.isWindows && {
+    scala.util.Properties.isWin && {
       try {
         Files.setAttribute(path, "dos:hidden", java.lang.Boolean.TRUE, LinkOption.NOFOLLOW_LINKS)
         true

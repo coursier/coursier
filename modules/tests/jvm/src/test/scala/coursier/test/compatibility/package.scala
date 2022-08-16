@@ -25,7 +25,7 @@ package object compatibility {
       new String(Platform.readFullySync(is0), UTF_8)
     }
     finally if (is0 != null)
-      is0.close()
+        is0.close()
   }
 
   private val baseRepo = {

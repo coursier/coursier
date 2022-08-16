@@ -12,7 +12,7 @@ import java.util.List;
 
 class ResourcesClassLoaders extends ClassLoaders {
 
-    private JarFile sourceJarFile;
+    private final JarFile sourceJarFile;
 
     ResourcesClassLoaders(JarFile sourceJarFile, Download download) throws MirrorPropertiesException, IOException  {
         super(download);

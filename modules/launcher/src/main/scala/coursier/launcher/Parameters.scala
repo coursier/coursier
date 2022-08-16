@@ -8,6 +8,8 @@ import java.util.zip.ZipEntry
 import coursier.launcher.internal.Windows
 import dataclass._
 
+import scala.util.Properties
+
 sealed abstract class Parameters extends Product with Serializable {
   def isNative: Boolean = false
 }
@@ -95,8 +97,8 @@ object Parameters {
     verbosity: Int = 0,
     intermediateAssembly: Boolean = false,
     windowsPathExtensions: Option[Seq[String]] =
-      if (Windows.isWindows) Some(Windows.pathExtensions) else None,
-    isWindows: Boolean = Windows.isWindows
+      if (Properties.isWin) Some(Windows.pathExtensions) else None,
+    isWindows: Boolean = Properties.isWin
   ) extends Parameters {
     override def isNative: Boolean = true
     def withJavaHome(home: File): NativeImage =

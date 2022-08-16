@@ -57,7 +57,7 @@ trait Shading extends JavaModule with PublishModule {
 
     val allJars = load(resolution)
     val retainedJars =
-      load(resolution.subset((depSeq.toSeq.filterNot(shadedDepSeq.toSet).map(depToDependency))))
+      load(resolution.subset(depSeq.toSeq.filterNot(shadedDepSeq.toSet).map(depToDependency)))
 
     val shadedJars = allJars.filterNot(retainedJars.toSet)
     println(s"${shadedJars.length} JAR(s) to shade")
@@ -131,7 +131,7 @@ trait Shading extends JavaModule with PublishModule {
                     baos.write(buf, 0, read)
               }
               finally if (is != null)
-                is.close()
+                  is.close()
               val bytes = baos.toByteArray
               for {
                 (updatedBytes, updatedName) <- shader(bytes, ent.getName)
@@ -161,7 +161,7 @@ trait Shading extends JavaModule with PublishModule {
             }
         }
         finally if (zf != null)
-          zf.close()
+            zf.close()
       }
 
       zos.finish()

@@ -4,7 +4,14 @@ import java.net.{URL, URLDecoder}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.core.{Configuration, Dependency, Exclusions, Module, ModuleName, Organization}
+import coursier.core.{
+  Configuration,
+  Dependency,
+  MinimizedExclusions,
+  Module,
+  ModuleName,
+  Organization
+}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
 
 object Dependencies {
@@ -60,8 +67,10 @@ object Dependencies {
     perModuleExclude.get(dep.module) match {
       case None => dep
       case Some(exclusions) =>
-        dep.withExclusions(
-          Exclusions.minimize(dep.exclusions ++ exclusions.map(m => (m.organization, m.name)))
+        dep.withMinimizedExclusions(
+          dep.minimizedExclusions.join(MinimizedExclusions(exclusions.map(m =>
+            (m.organization, m.name)
+          )))
         )
     }
 

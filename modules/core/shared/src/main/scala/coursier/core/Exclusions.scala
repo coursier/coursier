@@ -2,6 +2,10 @@ package coursier.core
 
 object Exclusions {
 
+  @deprecated(
+    "This method is slow and will be replaced by MinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
   def partition(
     exclusions: Set[(Organization, ModuleName)]
   ): (Boolean, Set[Organization], Set[ModuleName], Set[(Organization, ModuleName)]) = {
@@ -28,6 +32,10 @@ object Exclusions {
     (all0, excludeByOrg0.result(), excludeByName0.result(), remaining0.result())
   }
 
+  @deprecated(
+    "This method is slow and will be replaced by MinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
   def apply(exclusions: Set[(Organization, ModuleName)]): (Organization, ModuleName) => Boolean = {
 
     val (all, excludeByOrg, excludeByName, remaining) = partition(exclusions)
@@ -40,6 +48,10 @@ object Exclusions {
         !remaining((org, name))
   }
 
+  @deprecated(
+    "This method will be replaced by MinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
   def minimize(exclusions: Set[(Organization, ModuleName)]): Set[(Organization, ModuleName)] = {
 
     val (all, excludeByOrg, excludeByName, remaining) = partition(exclusions)
@@ -72,15 +84,31 @@ object Exclusions {
   val allOrganizations = Organization("*")
   val allNames         = ModuleName("*")
 
+  @deprecated(
+    "This method will be replaced by MinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
   val zero = Set.empty[(Organization, ModuleName)]
-  val one  = Set((allOrganizations, allNames))
+  @deprecated(
+    "This method will be replaced by MinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
+  val one = Set((allOrganizations, allNames))
 
+  @deprecated(
+    "This method will be replaced by MinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
   def join(
     x: Set[(Organization, ModuleName)],
     y: Set[(Organization, ModuleName)]
   ): Set[(Organization, ModuleName)] =
     minimize(x ++ y)
 
+  @deprecated(
+    "This method will be replaced by MinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
   def meet(
     x: Set[(Organization, ModuleName)],
     y: Set[(Organization, ModuleName)]

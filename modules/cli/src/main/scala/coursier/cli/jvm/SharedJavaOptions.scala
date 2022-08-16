@@ -18,6 +18,9 @@ final case class SharedJavaOptions(
     update: Boolean = false,
 
   @Group(OptionGroup.java)
-    jvmIndex: Option[String] = None
+    jvmIndex: Option[String] = None,
+
+  @Group(OptionGroup.java)
+    architecture: Option[String] = None
 )
 // format: on
