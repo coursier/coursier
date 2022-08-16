@@ -19,13 +19,11 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0-M3
+      - uses: coursier/setup-action@v1.2.1
         with:
           jvm: 8
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
-      - run: brew install nailgun
-        if: runner.os == 'macOS'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
         shell: bash
 
@@ -38,7 +36,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0-M3
+      - uses: coursier/setup-action@v1.2.1
         with:
           jvm: 8
       - uses: uraimo/run-on-arch-action@v2.1.2

@@ -108,7 +108,7 @@ package object compatibility {
   }
 
   def xmlParseDom(s: String): Either[String, Xml.Node] = {
-    val doc = {
+    val doc =
       if (s.isEmpty) None
       else
         for {
@@ -121,7 +121,6 @@ package object compatibility {
             .dropWhile(_.nodeType != ELEMENT_NODE)
             .headOption
         } yield rootNode
-    }
 
     Right(doc.fold(Xml.Node.empty)(fromNode))
   }
