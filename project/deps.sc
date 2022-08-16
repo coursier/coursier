@@ -46,7 +46,7 @@ object Deps {
   def scalaXml(sv: String) = {
     val ver =
       if (sv.startsWith("2.12.")) "1.3.0"
-      else "2.0.1"
+      else "2.1.0"
     ivy"org.scala-lang.modules::scala-xml:$ver"
   }
   def scalazCore       = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
