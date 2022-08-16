@@ -181,7 +181,7 @@ import scala.collection.JavaConverters._
           new String(b, StandardCharsets.UTF_8)
         }
         m <- Task.fromEither {
-          Parse.decodeEither(content)(DecodeJson.MapDecodeJson(decodeObj))
+          Parse.decodeEither(content)(DecodeJson.MapDecodeJson(DecodeJson.StringDecodeJson, decodeObj))
             .left.map(err => new Exception(s"Error decoding $f (${channel.url}): $err"))
         }
       } yield m.get(id).map { obj =>
@@ -324,7 +324,7 @@ import scala.collection.JavaConverters._
           new String(b, StandardCharsets.UTF_8)
         }
         m <- Task.fromEither {
-          Parse.decodeEither(content)(DecodeJson.MapDecodeJson(decodeObj))
+          Parse.decodeEither(content)(DecodeJson.MapDecodeJson(DecodeJson.StringDecodeJson, decodeObj))
             .left.map(err => new Exception(s"Error decoding $f (${channel.url}): $err"))
         }
       } yield m.keys.filter(matchQuery).toList
