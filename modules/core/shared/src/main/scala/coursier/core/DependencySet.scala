@@ -42,7 +42,11 @@ final class DependencySet private (
   def covers(dependency: Dependency): Boolean = {
     val dep0 = dependency.clearExclusions
     val set  = grouped.getOrElse(dep0, Sets.empty[Dependency])
-    set.covers(dependency, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
+    set.covers(
+      dependency,
+      _.minimizedExclusions.size,
+      (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
+    )
   }
 
   def add(dependency: Dependency): DependencySet =
@@ -55,20 +59,28 @@ final class DependencySet private (
     if (dependencies.isEmpty)
       this
     else {
-      val m = new mutable.HashMap[Dependency, Sets[Dependency]]
-      m ++= grouped
+      var m = grouped
       for (dep <- dependencies) {
         val dep0 = dep.clearExclusions
-        val l = m
-          .getOrElse(dep0, Sets.empty[Dependency])
-          .add(
-            dep,
-            _.exclusions.size,
-            (a, b) => a.exclusions.subsetOf(b.exclusions)
-          )
-        m(dep0) = l
+        // Optimized map value addition. Only mutate map if we made a change
+        m.get(dep0) match {
+          case None =>
+            m = m + (dep0 -> Sets.empty[Dependency].add(
+              dep,
+              _.minimizedExclusions.size,
+              (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
+            ))
+          case Some(groupSet) =>
+            val groupSet0 = groupSet.add(
+              dep,
+              _.minimizedExclusions.size,
+              (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
+            )
+            if (groupSet ne groupSet0)
+              m = m + (dep0 -> groupSet0)
+        }
       }
-      new DependencySet(set ++ dependencies, m.toMap)
+      new DependencySet(set ++ dependencies, m)
     }
 
   def remove(dependencies: Iterable[Dependency]): DependencySet =
@@ -78,8 +90,7 @@ final class DependencySet private (
     if (dependencies.isEmpty)
       this
     else {
-      val m = new mutable.HashMap[Dependency, Sets[Dependency]]
-      m ++= grouped
+      var m = grouped
       for (dep <- dependencies) {
         val dep0 = dep.clearExclusions
         // getOrElse useful if we're passed duplicated stuff in dependencies
@@ -89,7 +100,11 @@ final class DependencySet private (
             m -= dep0
           else {
             val l = prev
-              .remove(dep, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
+              .remove(
+                dep,
+                _.minimizedExclusions.size,
+                (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
+              )
             m += ((dep0, l))
           }
       }

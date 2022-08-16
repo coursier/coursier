@@ -3,6 +3,7 @@ import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.21`
 
 import $file.cs
 import $file.deps, deps.{Deps, graalVmJvmId, jvmIndex}
+import $file.modules.shared, shared.CsModule
 
 import io.github.alexarchambault.millnativeimage.NativeImage
 import mill._, mill.scalalib._
@@ -35,7 +36,7 @@ def platformSuffix: String = {
   s"$arch-$os"
 }
 
-trait Launchers extends SbtModule with NativeImage {
+trait Launchers extends CsModule with NativeImage {
 
   def transitiveJars: T[Agg[PathRef]] = {
 

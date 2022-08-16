@@ -10,7 +10,7 @@ import java.net.URLClassLoader;
 // classloader, to find specific classloaders.
 public class SharedClassLoader extends URLClassLoader {
 
-    private String[] isolationTargets;
+    private final String[] isolationTargets;
 
     public SharedClassLoader(
             URL[] urls,

@@ -53,9 +53,8 @@ object cache extends Module {
   object jvm extends Cross[CacheJvm](ScalaVersions.all: _*)
   object js  extends Cross[CacheJs](ScalaVersions.all: _*)
 }
-object launcher extends Cross[Launcher](ScalaVersions.all ++ Seq(ScalaVersions.scala211): _*)
-object publish  extends Cross[Publish](ScalaVersions.all: _*)
-object env      extends Cross[Env](ScalaVersions.all: _*)
+object launcher                extends Cross[Launcher](ScalaVersions.all: _*)
+object env                     extends Cross[Env](ScalaVersions.all: _*)
 object `launcher-native_03`    extends LauncherNative03
 object `launcher-native_040M2` extends LauncherNative040M2
 object `launcher-native_04`    extends LauncherNative04
@@ -66,6 +65,10 @@ object coursier extends Module {
 }
 
 object directories extends Directories
+
+object `proxy-setup` extends JavaModule with CoursierPublishModule {
+  def artifactName = "coursier-proxy-setup"
+}
 
 object paths extends JavaModule {
   def moduleDeps = Seq(
@@ -79,15 +82,31 @@ object `windows-ansi` extends Module {
   object ps extends JavaModule
 }
 
-object `custom-protocol-for-test` extends SbtModule {
+object `custom-protocol-for-test` extends CsModule {
   def scalaVersion = ScalaVersions.scala213
 }
 
 object `bootstrap-launcher` extends BootstrapLauncher { self =>
+  def proxySources = T.sources {
+    val dest = T.dest / "sources"
+    val orig = `proxy-setup`.sources()
+    for ((pathRef, idx) <- orig.zipWithIndex)
+      os.copy.into(pathRef.path, dest / s"dir-$idx", copyAttributes = true, createFolders = true)
+    os.walk(dest)
+      .filter(_.last.endsWith(".java"))
+      .filter(os.isFile(_))
+      .foreach { f =>
+        val content = os.read(f)
+          .replaceAll("package coursier.proxy;", "package coursier.bootstrap.launcher.proxy;")
+        os.write.over(f, content)
+      }
+    Seq(PathRef(dest))
+  }
   def sources = T.sources {
     super.sources() ++
       directories.sources() ++
       paths.sources() ++
+      proxySources() ++
       `windows-ansi`.ps.sources()
   }
   def resources = T.sources {
@@ -152,8 +171,6 @@ object cli         extends Cli
 object `cli-tests` extends CliTests
 
 object web extends Web
-
-def publish0 = publish
 
 class UtilJvm(val crossScalaVersion: String) extends UtilJvmBase {
   def ivyDeps = super.ivyDeps() ++ Agg(
@@ -246,29 +263,6 @@ class Launcher(val crossScalaVersion: String) extends LauncherBase {
   def resourceBootstrap           = `bootstrap-launcher`.proguardedResourceAssembly()
   def noProguardBootstrap         = `bootstrap-launcher`.assembly()
   def noProguardResourceBootstrap = `bootstrap-launcher`.resourceAssembly()
-}
-
-class Publish(val crossScalaVersion: String) extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima {
-  def artifactName = "coursier-publish"
-  def moduleDeps = Seq(
-    core.jvm(),
-    cache.jvm()
-  )
-  def ivyDeps = super.ivyDeps() ++ Agg(
-    Deps.argonautShapeless,
-    Deps.catsCore,
-    Deps.collectionCompat,
-    Deps.okhttp
-  )
-  def mimaPreviousVersions = T {
-    val previous = super.mimaPreviousVersions()
-    if (crossScalaVersion.startsWith("2.13."))
-      // this module wasn't published in 2.13 when coursier was built with sbt
-      previous.filter(_ != "2.0.16")
-    else
-      previous
-  }
 }
 
 class Env(val crossScalaVersion: String) extends CrossSbtModule with CsModule
@@ -406,7 +400,10 @@ class TestsJs(val crossScalaVersion: String) extends TestsModule with CsScalaJsM
   }
 }
 
-class ProxyTests(val crossScalaVersion: String) extends CrossSbtModule {
+class ProxyTests(val crossScalaVersion: String) extends CrossSbtModule with CsModule {
+  def moduleDeps = super.moduleDeps ++ Seq(
+    `proxy-setup`
+  )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.dockerClient,
     Deps.scalaAsync,
@@ -519,7 +516,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     install(cliScalaVersion),
     jvm(cliScalaVersion),
     launcherModule(cliScalaVersion),
-    publish0(cliScalaVersion)
+    `proxy-setup`
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.argonautShapeless,
@@ -529,8 +526,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     Deps.dataClass,
     Deps.monadlessCats,
     Deps.monadlessStdlib,
-    Deps.svmSubs,
-    ivy"com.chuusai::shapeless:2.3.7"
+    ivy"com.chuusai::shapeless:2.3.9"
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.svm
@@ -564,13 +560,15 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
   object test extends Tests with CsTests
 }
 
-trait CliTests extends CsModule { self =>
+trait CliTests extends CsModule with CoursierPublishModule { self =>
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion)
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.caseApp,
+    Deps.dockerClient,
+    Deps.osLib,
     Deps.utest
   )
   object test extends Tests with CsTests {
@@ -603,7 +601,7 @@ trait CliTests extends CsModule { self =>
   }
 }
 
-def webScalaVersion = ScalaVersions.scala212
+def webScalaVersion = ScalaVersions.scala213
 trait Web extends CsScalaJsModule {
   def scalaVersion = webScalaVersion
   // ScalaJSBundlerPlugin
@@ -611,7 +609,6 @@ trait Web extends CsScalaJsModule {
     coursier.js(webScalaVersion)
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
-    Deps.scalaJsJquery,
     Deps.scalaJsReact
   )
   def moduleKind = mill.scalajslib.api.ModuleKind.CommonJSModule
@@ -630,7 +627,7 @@ trait Web extends CsScalaJsModule {
   // browserifyBundle("sax")
 }
 
-object `redirecting-server` extends SbtModule {
+object `redirecting-server` extends CsModule {
   def scalaVersion = ScalaVersions.scala212
   def ivyDeps = Agg(
     ivy"org.http4s::http4s-blaze-server:0.17.6",
@@ -640,11 +637,8 @@ object `redirecting-server` extends SbtModule {
   def mainClass = Some("redirectingserver.RedirectingServer")
 }
 
-// FIXME Not run… should be moved to cli-tests
-def simpleNativeCliTest() = T.command {
+def simpleNative03CliTest() = T.command {
   `launcher-native_03`.publishLocal()()
-  `launcher-native_040M2`.publishLocal()()
-  `launcher-native_04`.publishLocal()()
   val launcher = cli.launcher().path
   val tmpDir   = os.temp.dir(prefix = "coursier-bootstrap-scala-native-test")
   def cleanUp(): Unit =
@@ -662,6 +656,32 @@ def simpleNativeCliTest() = T.command {
         "-o",
         "native-echo",
         "io.get-coursier:echo_native0.3_2.11:1.0.1"
+      ).call(cwd = tmpDir) // TODO inherit all
+      os.proc(tmpDir / "native-echo", "-n", "foo", "a").call()
+    }
+    finally cleanUp()
+  assert(res.out.text == "foo a")
+}
+
+def simpleNative04CliTest() = T.command {
+  `launcher-native_04`.publishLocal()()
+  val launcher = cli.launcher().path
+  val tmpDir   = os.temp.dir(prefix = "coursier-bootstrap-scala-native-test")
+  def cleanUp(): Unit =
+    try os.remove.all(tmpDir)
+    catch {
+      case _: java.io.IOException =>
+        System.err.println(s"Error removing $tmpDir, ignoring it")
+    }
+  val res =
+    try {
+      os.proc(
+        launcher.toString,
+        "bootstrap",
+        "-S",
+        "-o",
+        "native-echo",
+        "io.get-coursier:echo_native0.4_2.13:1.0.5"
       ).call(cwd = tmpDir) // TODO inherit all
       os.proc(tmpDir / "native-echo", "-n", "foo", "a").call()
     }
@@ -845,10 +865,14 @@ def jvmTests(scalaVersion: String = "*") = {
 
   val extraTests =
     if (Properties.isWin) Nil
-    else Seq(simpleNativeCliTest())
+    else
+      Seq(
+        simpleNative03CliTest(),
+        simpleNative04CliTest()
+      )
 
   val scalaVersions =
-    if (scalaVersion == "*") ScalaVersions.scala211 +: ScalaVersions.all
+    if (scalaVersion == "*") ScalaVersions.all
     else Seq(scalaVersion)
 
   val tasks = nonCrossTests ++

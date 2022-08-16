@@ -2,6 +2,8 @@ package coursier.clitests
 
 import java.util.Locale
 
+import scala.util.Properties
+
 object PackBootstrapTests extends BootstrapTests {
   val launcher = LauncherTestUtil.launcher
   override lazy val acceptsDOptions =
@@ -17,7 +19,7 @@ object PackBootstrapTests extends BootstrapTests {
     sys.props.get("coursier-test-launcher-accepts-J").map(_.toLowerCase(Locale.ROOT)) match {
       case Some("true")  => true
       case Some("false") => false
-      case None          => !LauncherTestUtil.isWindows
+      case None          => !Properties.isWin
       case Some(other) =>
         System.err.println(s"Warning: unrecognized coursier-test-launcher-accepts-J value '$other'")
         true
@@ -31,7 +33,9 @@ object PackBootstrapTests extends BootstrapTests {
       None
   override lazy val enableNailgunTest: Boolean =
     // TODO Re-enable that on Windows using snailgun?
-    !System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows") &&
+    !Properties.isWin &&
     // running into weird class loading errors with nailgun and JDK >= 11
-    sys.props.get("java.version").exists(_.startsWith("1."))
+    sys.props.get("java.version").exists(_.startsWith("1.")) &&
+    // Disabling nailgun mac test on CI (seems we can't install nailgun with brew anymore on GitHub Mac runners)
+    (!Properties.isMac || System.getenv("CI") == null)
 }

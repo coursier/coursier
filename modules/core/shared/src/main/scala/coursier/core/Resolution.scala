@@ -10,6 +10,7 @@ import scala.collection.compat.immutable.LazyList
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 import dataclass.data
+import MinimizedExclusions._
 
 object Resolution {
 
@@ -223,10 +224,7 @@ object Resolution {
         .withType(dep.attributes.`type`.map(substituteProps0))
         .withClassifier(dep.attributes.classifier.map(substituteProps0)),
       configuration = dep.configuration.map(substituteProps0),
-      exclusions = dep.exclusions.map {
-        case (org, name) =>
-          (org.map(substituteProps0), name.map(substituteProps0))
-      }
+      minimizedExclusions = dep.minimizedExclusions.map(substituteProps0)
     )
 
     // FIXME The content of the optional tag may also be a property in
@@ -362,17 +360,16 @@ object Resolution {
     dependencies: Seq[(Configuration, Dependency)],
     exclusions: Set[(Organization, ModuleName)]
   ): Seq[(Configuration, Dependency)] = {
-
-    val filter = Exclusions(exclusions)
+    val minimizedExclusions = MinimizedExclusions(exclusions)
 
     dependencies
       .filter {
         case (_, dep) =>
-          filter(dep.module.organization, dep.module.name)
+          minimizedExclusions(dep.module.organization, dep.module.name)
       }
       .map {
         case (config, dep) =>
-          config -> dep.withExclusions(Exclusions.minimize(dep.exclusions ++ exclusions))
+          config -> dep.withMinimizedExclusions(dep.minimizedExclusions.join(minimizedExclusions))
       }
   }
 
@@ -1183,7 +1180,7 @@ object Resolution {
 
     val (importDeps, standardDeps) = {
 
-      val dependencies0 = addDependencies((project0.dependencies +: profiles0.map(_.dependencies)))
+      val dependencies0 = addDependencies(project0.dependencies +: profiles0.map(_.dependencies))
 
       val (importDeps0, standardDeps0) = dependencies0
         .map { dep =>
@@ -1201,7 +1198,7 @@ object Resolution {
     val importDepsMgmt = {
 
       val dependenciesMgmt0 =
-        addDependencies((project0.dependencyManagement +: profiles0.map(_.dependencyManagement)))
+        addDependencies(project0.dependencyManagement +: profiles0.map(_.dependencyManagement))
 
       dependenciesMgmt0.flatMap { dep =>
         val (conf0, dep0) = withProperties(dep, propertiesMap0)
@@ -1343,7 +1340,7 @@ object Resolution {
     classpathOrder: Boolean
   ): Seq[(Dependency, Publication, Artifact)] =
     for {
-      dep <- (if (classpathOrder) orderedDependencies else minDependencies.toSeq)
+      dep <- if (classpathOrder) orderedDependencies else minDependencies.toSeq
       (source, proj) <- projectCache
         .get(dep.moduleVersion)
         .toSeq
