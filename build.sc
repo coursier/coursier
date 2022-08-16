@@ -526,7 +526,8 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     Deps.dataClass,
     Deps.monadlessCats,
     Deps.monadlessStdlib,
-    ivy"com.chuusai::shapeless:2.3.9"
+    ivy"com.chuusai::shapeless:2.3.9",
+    Deps.slf4JNop
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.svm
