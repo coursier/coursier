@@ -87,7 +87,7 @@ class NativeBuilderImpl extends NativeBuilder {
       sn.Build.build(config0, outpath)
     }
     finally if (!options.keepWorkDir)
-      deleteRecursive(workDir.toFile)
+        deleteRecursive(workDir.toFile)
   }
 
   private def deleteRecursive(f: File): Unit = {

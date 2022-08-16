@@ -1180,7 +1180,7 @@ object Resolution {
 
     val (importDeps, standardDeps) = {
 
-      val dependencies0 = addDependencies((project0.dependencies +: profiles0.map(_.dependencies)))
+      val dependencies0 = addDependencies(project0.dependencies +: profiles0.map(_.dependencies))
 
       val (importDeps0, standardDeps0) = dependencies0
         .map { dep =>
@@ -1198,7 +1198,7 @@ object Resolution {
     val importDepsMgmt = {
 
       val dependenciesMgmt0 =
-        addDependencies((project0.dependencyManagement +: profiles0.map(_.dependencyManagement)))
+        addDependencies(project0.dependencyManagement +: profiles0.map(_.dependencyManagement))
 
       dependenciesMgmt0.flatMap { dep =>
         val (conf0, dep0) = withProperties(dep, propertiesMap0)
@@ -1340,7 +1340,7 @@ object Resolution {
     classpathOrder: Boolean
   ): Seq[(Dependency, Publication, Artifact)] =
     for {
-      dep <- (if (classpathOrder) orderedDependencies else minDependencies.toSeq)
+      dep <- if (classpathOrder) orderedDependencies else minDependencies.toSeq
       (source, proj) <- projectCache
         .get(dep.moduleVersion)
         .toSeq
