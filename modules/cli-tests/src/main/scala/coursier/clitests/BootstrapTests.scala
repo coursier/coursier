@@ -494,7 +494,7 @@ abstract class BootstrapTests extends TestSuite {
               )
             }
             finally if (bgProc != null)
-              bgProc.destroy()
+                bgProc.destroy()
 
           val expectedOutput = "foo" + System.lineSeparator()
           assert(output == expectedOutput)

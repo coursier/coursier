@@ -33,7 +33,7 @@ object InfoFile {
         false
     }
     finally if (zf != null)
-      zf.close()
+        zf.close()
   }
 
   def readSource(f: Path): Option[(Source, Array[Byte])] = {
@@ -64,7 +64,7 @@ object InfoFile {
         throw new Exception(s"Reading $f", e)
     }
     finally if (zf != null)
-      zf.close()
+        zf.close()
   }
 
   private[coursier] def appDescriptor(path: String, content: Array[Byte]) =
@@ -98,7 +98,7 @@ object InfoFile {
         throw new Exception(s"Reading $f", e)
     }
     finally if (zf != null)
-      zf.close()
+        zf.close()
   }
 
   def extraEntries(
@@ -186,7 +186,7 @@ object InfoFile {
         throw new Exception(s"Reading $infoFile", e)
     }
     finally if (f != null)
-      f.close()
+        f.close()
   }
 
   def writeInfoFile(
