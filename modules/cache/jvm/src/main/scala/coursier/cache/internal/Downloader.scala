@@ -111,7 +111,7 @@ import scala.util.control.NonFatal
               Right(res)
             }
             finally if (!success)
-              logger.checkingUpdatesResult(url, currentLastModifiedOpt, None)
+                logger.checkingUpdatesResult(url, currentLastModifiedOpt, None)
 
           case other =>
             Left(
@@ -133,7 +133,7 @@ import scala.util.control.NonFatal
           Left(ex)
       }
       finally if (conn != null)
-        CacheUrl.closeConn(conn)
+          CacheUrl.closeConn(conn)
     }
 
     def lastCheck(file: File): Option[Long] =
@@ -170,7 +170,7 @@ import scala.util.control.NonFatal
               fos.write(content.getBytes(UTF_8))
             }
             finally if (fos != null)
-              fos.close()
+                fos.close()
             true
           }
           catch {
@@ -262,13 +262,13 @@ import scala.util.control.NonFatal
                 new FileOutputStream(tmp, partialDownload)
               }
               try Downloader.readFullyTo(
-                in,
-                out,
-                logger,
-                url,
-                if (partialDownload) alreadyDownloaded else 0L,
-                bufferSize
-              )
+                  in,
+                  out,
+                  logger,
+                  url,
+                  if (partialDownload) alreadyDownloaded else 0L,
+                  bufferSize
+                )
               finally out.close()
             }
             finally in.close()
@@ -300,7 +300,7 @@ import scala.util.control.NonFatal
         }
       }
       finally if (conn != null)
-        CacheUrl.closeConn(conn)
+          CacheUrl.closeConn(conn)
     }
 
     def checkDownload(
@@ -481,17 +481,19 @@ import scala.util.control.NonFatal
         case false => S.point(Right(true))
         case true =>
           checkNeeded.flatMap {
-            case false                => S.point(Right(false))
-            case true if !checkRemote => S.point(Right(true))
-            case true if checkRemote =>
-              doCheckRemote.run.flatMap {
-                case Right(false) =>
-                  blockingIO {
-                    Blocking.doTouchCheckFile(file, url, updateLinks = false)
-                    Right(false)
-                  }
-                case other => S.point(other)
-              }
+            case false => S.point(Right(false))
+            case true =>
+              if (checkRemote)
+                doCheckRemote.run.flatMap {
+                  case Right(false) =>
+                    blockingIO {
+                      Blocking.doTouchCheckFile(file, url, updateLinks = false)
+                      Right(false)
+                    }
+                  case other => S.point(other)
+                }
+              else
+                S.point(Right(true))
           }
       }
 
@@ -810,7 +812,7 @@ object Downloader {
             Right(len)
           }
           finally if (!success)
-            logger.gettingLengthResult(url, None)
+              logger.gettingLengthResult(url, None)
 
         case other =>
           Left(
@@ -822,7 +824,7 @@ object Downloader {
       }
     }
     finally if (conn != null)
-      CacheUrl.closeConn(conn)
+        CacheUrl.closeConn(conn)
   }
 
 }

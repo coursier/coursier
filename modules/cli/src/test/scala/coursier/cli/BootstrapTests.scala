@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
 import java.util.zip.ZipInputStream
 
-import caseapp.core.RemainingArgs
+import caseapp.core.{Indexed, RemainingArgs}
 import coursier.cli.bootstrap.{Bootstrap, BootstrapOptions, BootstrapSpecificOptions}
 import coursier.cli.options.{
   ArtifactOptions,
@@ -86,7 +86,10 @@ object BootstrapTests extends TestSuite {
 
         Bootstrap.run(
           bootstrapOptions,
-          RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+          RemainingArgs(
+            Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
+            Seq()
+          )
         )
 
         def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
@@ -147,7 +150,10 @@ object BootstrapTests extends TestSuite {
 
         Bootstrap.run(
           bootstrapOptions,
-          RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+          RemainingArgs(
+            Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
+            Seq()
+          )
         )
 
         def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
@@ -207,7 +213,10 @@ object BootstrapTests extends TestSuite {
 
         Bootstrap.run(
           bootstrapOptions,
-          RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+          RemainingArgs(
+            Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
+            Seq()
+          )
         )
 
         val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
@@ -248,7 +257,10 @@ object BootstrapTests extends TestSuite {
 
           Bootstrap.run(
             bootstrapOptions,
-            RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+            RemainingArgs(
+              Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
+              Seq()
+            )
           )
 
           def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
@@ -312,7 +324,10 @@ object BootstrapTests extends TestSuite {
           )
           Bootstrap.run(
             bootstrapOptions,
-            RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+            RemainingArgs(
+              Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
+              Seq()
+            )
           )
 
           // We need to wait between two runs to ensure we don't accidentally get the same hash
@@ -326,7 +341,10 @@ object BootstrapTests extends TestSuite {
           )
           Bootstrap.run(
             bootstrapOptions2,
-            RemainingArgs(Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"), Seq())
+            RemainingArgs(
+              Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
+              Seq()
+            )
           )
 
           val bootstrap1SHA256 = MessageDigest.getInstance("SHA-256")
@@ -369,7 +387,10 @@ object BootstrapTests extends TestSuite {
 
         Bootstrap.run(
           bootstrapOptions,
-          RemainingArgs(Seq("org.scalameta:metals_2.12:0.2.0"), Seq())
+          RemainingArgs(
+            Seq(Indexed("org.scalameta:metals_2.12:0.2.0")),
+            Seq()
+          )
         )
 
         val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
@@ -411,8 +432,8 @@ object BootstrapTests extends TestSuite {
           bootstrapOptions,
           RemainingArgs(
             Seq(
-              "io.get-coursier:sbt-launcher_2.12:1.1.0-M3",
-              "io.get-coursier:coursier-okhttp_2.12:1.1.0-M9"
+              Indexed("io.get-coursier:sbt-launcher_2.12:1.1.0-M3"),
+              Indexed("io.get-coursier:coursier-okhttp_2.12:1.1.0-M9")
             ),
             Seq()
           )
