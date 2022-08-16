@@ -5,7 +5,6 @@ import java.util.zip.GZIPInputStream
 
 import org.codehaus.plexus.archiver.tar.{TarBZip2UnArchiver, TarGZipUnArchiver}
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver
-import org.codehaus.plexus.logging.{AbstractLogger, Logger}
 
 trait UnArchiver {
   def extract(archiveType: ArchiveType, archive: File, destDir: File, overwrite: Boolean): Unit
@@ -13,16 +12,6 @@ trait UnArchiver {
 
 object UnArchiver {
   private final class DefaultUnArchiver extends UnArchiver {
-
-    private def nopLogger(): Logger =
-      new AbstractLogger(Logger.LEVEL_DISABLED, "foo") {
-        override def debug(message: String, throwable: Throwable)      = ()
-        override def info(message: String, throwable: Throwable)       = ()
-        override def warn(message: String, throwable: Throwable)       = ()
-        override def error(message: String, throwable: Throwable)      = ()
-        override def fatalError(message: String, throwable: Throwable) = ()
-        override def getChildLogger(name: String)                      = this
-      }
 
     def extract(
       archiveType: ArchiveType,
@@ -33,17 +22,11 @@ object UnArchiver {
       val unArchiver: Either[() => Unit, org.codehaus.plexus.archiver.UnArchiver] =
         archiveType match {
           case ArchiveType.Zip =>
-            val u = new ZipUnArchiver
-            u.enableLogging(nopLogger())
-            Right(u)
+            Right(new ZipUnArchiver)
           case ArchiveType.Tgz =>
-            val u = new TarGZipUnArchiver
-            u.enableLogging(nopLogger())
-            Right(u)
+            Right(new TarGZipUnArchiver)
           case ArchiveType.Tbz2 =>
-            val u = new TarBZip2UnArchiver
-            u.enableLogging(nopLogger())
-            Right(u)
+            Right(new TarBZip2UnArchiver)
           case ArchiveType.Gzip =>
             Left { () =>
               // TODO Case-insensitive stripSuffix?
