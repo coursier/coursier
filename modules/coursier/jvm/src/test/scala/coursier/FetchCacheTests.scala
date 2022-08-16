@@ -21,7 +21,7 @@ object FetchCacheTests extends TestSuite {
           .sum
       }
       finally if (s != null)
-        s.close()
+          s.close()
     }
     else if (f(d.getFileName.toString) && Files.deleteIfExists(d))
       1
@@ -38,7 +38,7 @@ object FetchCacheTests extends TestSuite {
           .foreach(delete)
       }
       finally if (s != null)
-        s.close()
+          s.close()
     }
     else
       Files.deleteIfExists(d)
