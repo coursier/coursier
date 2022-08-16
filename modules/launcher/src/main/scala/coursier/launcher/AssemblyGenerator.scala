@@ -54,7 +54,7 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
       writeEntries(jars.map(Right(_)), zos, rules, extraZipEntries)
     }
     finally if (zos != null)
-      zos.close()
+        zos.close()
   }
 
   def writeEntries(

@@ -9,7 +9,7 @@ object Deps {
   def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.8.1"
   def concurrentReferenceHashMap =
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
-  def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.5"
+  def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.6"
   def dockerClient      = ivy"com.spotify:docker-client:8.16.0"
   def fastParse         = ivy"com.lihaoyi::fastparse::${Versions.fastParse}"
   def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:${Versions.http4s}"
@@ -55,7 +55,7 @@ object Deps {
   def slf4JNop         = ivy"org.slf4j:slf4j-nop:1.7.36"
   def svm              = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
   def utest            = ivy"com.lihaoyi::utest::0.8.0"
-  def windowsAnsi      = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.3"
+  def windowsAnsi      = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.4"
 }
 
 object Versions {

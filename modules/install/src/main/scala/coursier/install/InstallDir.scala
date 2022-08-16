@@ -481,7 +481,7 @@ import scala.util.Properties
           .sorted
       }
       finally if (s != null)
-        s.close()
+          s.close()
     }
     else
       Nil
@@ -613,7 +613,7 @@ object InstallDir {
           os.write(buf, 0, read)
     }
     finally if (os != null)
-      os.close()
+        os.close()
   }
 
 }
