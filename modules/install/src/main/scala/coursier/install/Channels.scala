@@ -100,7 +100,7 @@ import scala.collection.JavaConverters._
       f(zf)
     }
     finally if (zf != null)
-      zf.close()
+        zf.close()
   }
 
   def find(id: String): Task[Option[ChannelData]] = {
@@ -351,7 +351,7 @@ import scala.collection.JavaConverters._
             .toList
         }
         finally if (stream != null)
-          stream.close()
+            stream.close()
       }
       else List.empty[String]
     }

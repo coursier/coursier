@@ -2,14 +2,14 @@ import mill._, scalalib._
 
 object Deps {
   def argonautShapeless = ivy"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.1"
-  def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M10"
+  def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M15"
   def catsCore          = ivy"org.typelevel::cats-core:${Versions.cats}"
   def catsFree          = ivy"org.typelevel::cats-free:${Versions.cats}"
   def catsEffect        = ivy"org.typelevel::cats-effect::2.5.5"
   def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.8.1"
   def concurrentReferenceHashMap =
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
-  def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.5"
+  def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.6"
   def dockerClient      = ivy"com.spotify:docker-client:8.16.0"
   def fastParse         = ivy"com.lihaoyi::fastparse::${Versions.fastParse}"
   def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:${Versions.http4s}"
@@ -24,7 +24,7 @@ object Deps {
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${Versions.jsoniterScala}"
   def jsoniterMacros =
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
-  def jsoup           = ivy"org.jsoup:jsoup:1.15.1"
+  def jsoup           = ivy"org.jsoup:jsoup:1.15.2"
   def logbackClassic  = ivy"ch.qos.logback:logback-classic:1.2.11"
   def macroParadise   = ivy"org.scalamacros:::paradise:2.1.1"
   def mdoc            = ivy"org.scalameta::mdoc:2.3.3"
@@ -55,7 +55,7 @@ object Deps {
   def slf4JNop         = ivy"org.slf4j:slf4j-nop:1.7.36"
   def svm              = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
   def utest            = ivy"com.lihaoyi::utest::0.8.0"
-  def windowsAnsi      = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.3"
+  def windowsAnsi      = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.4"
 }
 
 object Versions {
