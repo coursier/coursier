@@ -194,17 +194,17 @@ object FetchTests extends TestSuite {
       }
     }
 
-    /** Result without exclusion:
-      * \|└─ org.apache.avro:avro:1.7.4
-      * \|├─ com.thoughtworks.paranamer:paranamer:2.3
-      * \|├─ org.apache.commons:commons-compress:1.4.1
-      * \|│ └─ org.tukaani:xz:1.0 // this should be fetched
-      * \|├─ org.codehaus.jackson:jackson-core-asl:1.8.8
-      * \|├─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
-      * \|│ └─ org.codehaus.jackson:jackson-core-asl:1.8.8
-      * \|├─ org.slf4j:slf4j-api:1.6.4
-      * \|└─ org.xerial.snappy:snappy-java:1.0.4.1
-      */
+    /* Result without exclusion:
+     * |└─ org.apache.avro:avro:1.7.4
+     * |├─ com.thoughtworks.paranamer:paranamer:2.3
+     * |├─ org.apache.commons:commons-compress:1.4.1
+     * |│ └─ org.tukaani:xz:1.0 // this should be fetched
+     * |├─ org.codehaus.jackson:jackson-core-asl:1.8.8
+     * |├─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
+     * |│ └─ org.codehaus.jackson:jackson-core-asl:1.8.8
+     * |├─ org.slf4j:slf4j-api:1.6.4
+     * |└─ org.xerial.snappy:snappy-java:1.0.4.1
+     */
     test("avro exclude xz should not fetch xz") - withFile(
       "org.apache.avro:avro--org.tukaani:xz"
     ) { (file, writer) =>
@@ -241,19 +241,19 @@ object FetchTests extends TestSuite {
       }
     }
 
-    /** Result without exclusion:
-      * \|├─ org.apache.avro:avro:1.7.4
-      * \|│ ├─ com.thoughtworks.paranamer:paranamer:2.3
-      * \|│ ├─ org.apache.commons:commons-compress:1.4.1
-      * \|│ │ └─ org.tukaani:xz:1.0
-      * \|│ ├─ org.codehaus.jackson:jackson-core-asl:1.8.8
-      * \|│ ├─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
-      * \|│ │ └─ org.codehaus.jackson:jackson-core-asl:1.8.8
-      * \|│ ├─ org.slf4j:slf4j-api:1.6.4
-      * \|│ └─ org.xerial.snappy:snappy-java:1.0.4.1
-      * \|└─ org.apache.commons:commons-compress:1.4.1
-      * \| └─ org.tukaani:xz:1.0
-      */
+    /* Result without exclusion:
+     * |├─ org.apache.avro:avro:1.7.4
+     * |│ ├─ com.thoughtworks.paranamer:paranamer:2.3
+     * |│ ├─ org.apache.commons:commons-compress:1.4.1
+     * |│ │ └─ org.tukaani:xz:1.0
+     * |│ ├─ org.codehaus.jackson:jackson-core-asl:1.8.8
+     * |│ ├─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
+     * |│ │ └─ org.codehaus.jackson:jackson-core-asl:1.8.8
+     * |│ ├─ org.slf4j:slf4j-api:1.6.4
+     * |│ └─ org.xerial.snappy:snappy-java:1.0.4.1
+     * |└─ org.apache.commons:commons-compress:1.4.1
+     * | └─ org.tukaani:xz:1.0
+     */
     test("avro excluding xz + commons-compress should still fetch xz") - withFile(
       "org.apache.avro:avro--org.tukaani:xz"
     ) {
@@ -292,11 +292,11 @@ object FetchTests extends TestSuite {
 
     }
 
-    /** Result:
-      * \|├─ org.apache.commons:commons-compress:1.4.1
-      * \|│ └─ org.tukaani:xz:1.0 -> 1.1
-      * \|└─ org.tukaani:xz:1.1
-      */
+    /* Result:
+     * |├─ org.apache.commons:commons-compress:1.4.1
+     * |│ └─ org.tukaani:xz:1.0 -> 1.1
+     * |└─ org.tukaani:xz:1.1
+     */
     test("requested xz:1.1 should not have conflicts") - withFile() {
       (excludeFile, writer) =>
         withFile() {
@@ -316,11 +316,11 @@ object FetchTests extends TestSuite {
         }
     }
 
-    /** Result:
-      * \|├─ org.apache.commons:commons-compress:1.5
-      * \|│ └─ org.tukaani:xz:1.2
-      * \|└─ org.tukaani:xz:1.1 -> 1.2
-      */
+    /* Result:
+     * |├─ org.apache.commons:commons-compress:1.5
+     * |│ └─ org.tukaani:xz:1.2
+     * |└─ org.tukaani:xz:1.1 -> 1.2
+     */
     test(
       "org.apache.commons:commons-compress:1.5 org.tukaani:xz:1.1 should have conflicts"
     ) - withFile() {
@@ -342,10 +342,10 @@ object FetchTests extends TestSuite {
         }
     }
 
-    /** Result:
-      * \|└─ org.apache.commons:commons-compress:1.5
-      * \| └─ org.tukaani:xz:1.2
-      */
+    /* Result:
+     * |└─ org.apache.commons:commons-compress:1.5
+     * | └─ org.tukaani:xz:1.2
+     */
     test("classifier tests should have tests.jar") - withFile() {
       (excludeFile, _) =>
         withFile() {
@@ -373,12 +373,12 @@ object FetchTests extends TestSuite {
         }
     }
 
-    /** Result:
-      * \|├─ org.apache.commons:commons-compress:1.5
-      * \|│ └─ org.tukaani:xz:1.2
-      * \|└─ org.apache.commons:commons-compress:1.5
-      * \| └─ org.tukaani:xz:1.2
-      */
+    /* Result:
+     * |├─ org.apache.commons:commons-compress:1.5
+     * |│ └─ org.tukaani:xz:1.2
+     * |└─ org.apache.commons:commons-compress:1.5
+     * | └─ org.tukaani:xz:1.2
+     */
     test("mixed vanilla and classifier  should have tests.jar and .jar") - withFile() {
       (excludeFile, _) =>
         withFile() {
@@ -416,10 +416,10 @@ object FetchTests extends TestSuite {
         }
     }
 
-    /** Result:
-      * \|└─ org.apache.commons:commons-compress:1.5
-      * \| └─ org.tukaani:xz:1.2 // should not be fetched
-      */
+    /* Result:
+     * |└─ org.apache.commons:commons-compress:1.5
+     * | └─ org.tukaani:xz:1.2 // should not be fetched
+     */
     test("intransitive should only fetch a single jar") - withFile() {
       (_, _) =>
         withFile() {
@@ -446,16 +446,16 @@ object FetchTests extends TestSuite {
         }
     }
 
-    /** Result:
-      * \|└─ org.apache.commons:commons-compress:1.5
-      * \| └─ org.tukaani:xz:1.2
-      */
+    /* Result:
+     * |└─ org.apache.commons:commons-compress:1.5
+     * | └─ org.tukaani:xz:1.2
+     */
     test("intransitive classifier should only fetch a single tests jar") - withFile() {
       (excludeFile, _) =>
         withFile() {
           (jsonFile, _) =>
-            val dependencyOpt = DependencyOptions(intransitive =
-              List("org.apache.commons:commons-compress:1.5,classifier=tests")
+            val dependencyOpt = DependencyOptions(
+              intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests")
             )
             val resolveOpt = SharedResolveOptions(dependencyOptions = dependencyOpt)
             val options =
@@ -479,10 +479,10 @@ object FetchTests extends TestSuite {
         }
     }
 
-    /** Result:
-      * \|└─ org.apache.commons:commons-compress:1.5 -> 1.4.1
-      * \| └─ org.tukaani:xz:1.0
-      */
+    /* Result:
+     * |└─ org.apache.commons:commons-compress:1.5 -> 1.4.1
+     * | └─ org.tukaani:xz:1.0
+     */
     test("classifier with forced version should fetch tests jar") - withFile() {
       (excludeFile, _) =>
         withFile() {
@@ -520,10 +520,10 @@ object FetchTests extends TestSuite {
         }
     }
 
-    /** Result:
-      * \|└─ org.apache.commons:commons-compress:1.5 -> 1.4.1
-      * \| └─ org.tukaani:xz:1.0 // should not be there
-      */
+    /* Result:
+     * |└─ org.apache.commons:commons-compress:1.5 -> 1.4.1
+     * | └─ org.tukaani:xz:1.0 // should not be there
+     */
     test("intransitive, classifier, forced version should fetch a single tests jar") - withFile() {
       (excludeFile, _) =>
         withFile() {
@@ -614,9 +614,9 @@ object FetchTests extends TestSuite {
         }
     }
 
-    /** Result:
-      * \|└─ a:b:c
-      */
+    /* Result:
+     * |└─ a:b:c
+     */
     test(
       "local file dep url should have coursier-fetch-test.jar and cached for second run"
     ) - withFile() {
@@ -677,9 +677,9 @@ object FetchTests extends TestSuite {
         }
     }
 
-    /** Result:
-      * \|└─ org.apache.commons:commons-compress:1.5
-      */
+    /* Result:
+     * |└─ org.apache.commons:commons-compress:1.5
+     */
     test("external dep url should fetch junit-4.12.jar") - withFile() {
       (jsonFile, _) =>
         val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
@@ -707,9 +707,9 @@ object FetchTests extends TestSuite {
         checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
     }
 
-    /** Result:
-      * \|└─ h:i:j
-      */
+    /* Result:
+     * |└─ h:i:j
+     */
     test("external dep url with arbitrary coords should fetch junit-4.12.jar") - withFile() {
       (jsonFile, _) =>
         val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
@@ -737,9 +737,9 @@ object FetchTests extends TestSuite {
         checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
     }
 
-    /** Result:
-      * \|└─ org.apache.commons:commons-compress:1.5
-      */
+    /* Result:
+     * |└─ org.apache.commons:commons-compress:1.5
+     */
     test(
       "external dep url with classifier should fetch junit-4.12.jar and classifier gets thrown away"
     ) - withFile() {
@@ -774,11 +774,11 @@ object FetchTests extends TestSuite {
         checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
     }
 
-    /** Result:
-      * \|└─ org.apache.commons:commons-compress:1.5
-      * \| └─ org.tukaani:xz:1.2
-      * \|└─ org.tukaani:xz:1.2 // with the file from the URL
-      */
+    /* Result:
+     * |└─ org.apache.commons:commons-compress:1.5
+     * | └─ org.tukaani:xz:1.2
+     * |└─ org.tukaani:xz:1.2 // with the file from the URL
+     */
     test(
       "external dep url with classifier that is a transitive dep should fetch junit-4.12.jar and classifier gets thrown away"
     ) - withFile() {
@@ -811,10 +811,10 @@ object FetchTests extends TestSuite {
         checkPath(depNodes.last.file, "junit/junit/4.12/junit-4.12.jar")
     }
 
-    /** Result:
-      * \|└─ org.apache.commons:commons-compress:1.5,classifier=sources └─
-      * org.tukaani:xz:1.2,classifier=sources
-      */
+    /* Result:
+     * |└─ org.apache.commons:commons-compress:1.5,classifier=sources └─
+     * org.tukaani:xz:1.2,classifier=sources
+     */
     test("classifier sources should fetch sources jar") - withFile() {
       (jsonFile, _) =>
         val artifactOpt = ArtifactOptions(sources = true)
@@ -850,11 +850,11 @@ object FetchTests extends TestSuite {
         ))
     }
 
-    /** Result:
-      * \|└─ org.apache.commons:commons-compress:1.5
-      * \|└─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
-      * \| └─ org.codehaus.jackson:jackson-core-asl:1.8.8
-      */
+    /* Result:
+     * |└─ org.apache.commons:commons-compress:1.5
+     * |└─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
+     * | └─ org.codehaus.jackson:jackson-core-asl:1.8.8
+     */
     test(
       "external dep url with another dep should fetch junit-4.12.jar and jars for jackson-mapper"
     ) - withFile() {
@@ -908,8 +908,8 @@ object FetchTests extends TestSuite {
         )
     }
 
-    /** Result: Error
-      */
+    /* Result: Error
+     */
     test("external dep url with forced version should throw an error") - withFile() {
       (jsonFile, _) =>
         val resolutionOpt =
@@ -941,9 +941,9 @@ object FetchTests extends TestSuite {
         assert(thrownException)
     }
 
-    /** Result:
-      * \|└─ org.apache.commons:commons-compress:1.5
-      */
+    /* Result:
+     * |└─ org.apache.commons:commons-compress:1.5
+     */
     test("external dep url with the same forced version should fetch junit-4.12.jar") - withFile() {
       (jsonFile, _) =>
         val resolutionOpt =
@@ -972,9 +972,9 @@ object FetchTests extends TestSuite {
         checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
     }
 
-    /** Result:
-      * \|└─ org.apache.commons:commons-compress:1.4.1 -> 1.5
-      */
+    /* Result:
+     * |└─ org.apache.commons:commons-compress:1.4.1 -> 1.5
+     */
     test("external dep url on higher version should fetch junit-4.12.jar") - withFile() {
       (jsonFile, _) =>
         val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
@@ -1002,10 +1002,10 @@ object FetchTests extends TestSuite {
         checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
     }
 
-    /** Result:
-      * \|└─ org.apache.commons:commons-compress:1.4.1 -> 1.5
-      * \| └─ org.tukaani:xz:1.2
-      */
+    /* Result:
+     * |└─ org.apache.commons:commons-compress:1.4.1 -> 1.5
+     * | └─ org.tukaani:xz:1.2
+     */
     test("external dep url on lower version should fetch higher version") - withFile() {
       (jsonFile, _) =>
         val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
