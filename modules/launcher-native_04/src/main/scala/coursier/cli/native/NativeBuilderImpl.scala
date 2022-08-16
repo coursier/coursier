@@ -7,6 +7,8 @@ import coursier.launcher.native.NativeBuilder
 import coursier.launcher.Parameters.ScalaNative.ScalaNativeOptions
 
 import scala.scalanative.{build => sn}
+import scala.scalanative.build.NativeConfig
+import scala.scalanative.util.Scope
 
 class NativeBuilderImpl extends NativeBuilder {
 
@@ -25,7 +27,6 @@ class NativeBuilderImpl extends NativeBuilder {
   ): Unit = {
 
     val classpath: Seq[Path] = files.map(_.toPath)
-    val main: String         = mainClass + "$"
     val outpath              = output.toPath
 
     val mode = options.modeOpt match {
@@ -62,7 +63,7 @@ class NativeBuilderImpl extends NativeBuilder {
       (if (options.prependDefaultCompileOptions) sn.Discover.compileOptions() else Nil) ++
         options.compileOptions
 
-    val config = sn.Config.empty
+    val nativeConfig = sn.NativeConfig.empty
       .withGC(gc)
       .withMode(mode)
       .withLinkStubs(options.linkStubs)
@@ -70,21 +71,27 @@ class NativeBuilderImpl extends NativeBuilder {
       .withClangPP(clangpp)
       .withLinkingOptions(linkingOptions)
       .withCompileOptions(compileOptions)
-      .withNativelib(options.nativeLibOpt.getOrElse(
-        sn.Discover.nativelib(files.map(_.toPath)).get
-      ))
-      .withMainClass(main)
-      .withClassPath(classpath)
+      .withTargetTriple(options.targetTripleOpt)
+      .withEmbedResources(true)
+
+    if (mainClass.endsWith("$"))
+      ???
 
     var workDir: Path = null
     try {
       workDir = options.workDirOpt.getOrElse(Files.createTempDirectory("scala-native-"))
-      val config0 = config
+      val config = sn.Config.empty
+        .withCompilerConfig(nativeConfig)
         .withWorkdir(workDir)
-        .withTargetTriple(options.targetTripleOpt.getOrElse {
-          sn.Discover.targetTriple(clang, workDir)
-        })
-      sn.Build.build(config0, outpath)
+        .withMainClass(mainClass)
+        .withClassPath(classpath)
+      System.err.println("Class path:")
+      for (f <- classpath)
+        System.err.println(s"  $f")
+      System.err.println(s"Main class: $mainClass")
+      Scope { implicit scope =>
+        sn.Build.build(config, outpath)
+      }
     }
     finally if (!options.keepWorkDir)
         deleteRecursive(workDir.toFile)

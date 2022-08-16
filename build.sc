@@ -53,8 +53,8 @@ object cache extends Module {
   object jvm extends Cross[CacheJvm](ScalaVersions.all: _*)
   object js  extends Cross[CacheJs](ScalaVersions.all: _*)
 }
-object launcher extends Cross[Launcher](ScalaVersions.all ++ Seq(ScalaVersions.scala211): _*)
-object env      extends Cross[Env](ScalaVersions.all: _*)
+object launcher                extends Cross[Launcher](ScalaVersions.all: _*)
+object env                     extends Cross[Env](ScalaVersions.all: _*)
 object `launcher-native_03`    extends LauncherNative03
 object `launcher-native_040M2` extends LauncherNative040M2
 object `launcher-native_04`    extends LauncherNative04
@@ -560,7 +560,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
   object test extends Tests with CsTests
 }
 
-trait CliTests extends CsModule { self =>
+trait CliTests extends CsModule with CoursierPublishModule { self =>
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion)
@@ -601,7 +601,7 @@ trait CliTests extends CsModule { self =>
   }
 }
 
-def webScalaVersion = ScalaVersions.scala212
+def webScalaVersion = ScalaVersions.scala213
 trait Web extends CsScalaJsModule {
   def scalaVersion = webScalaVersion
   // ScalaJSBundlerPlugin
@@ -609,7 +609,6 @@ trait Web extends CsScalaJsModule {
     coursier.js(webScalaVersion)
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
-    Deps.scalaJsJquery,
     Deps.scalaJsReact
   )
   def moduleKind = mill.scalajslib.api.ModuleKind.CommonJSModule
@@ -638,11 +637,8 @@ object `redirecting-server` extends CsModule {
   def mainClass = Some("redirectingserver.RedirectingServer")
 }
 
-// FIXME Not run… should be moved to cli-tests
-def simpleNativeCliTest() = T.command {
+def simpleNative03CliTest() = T.command {
   `launcher-native_03`.publishLocal()()
-  `launcher-native_040M2`.publishLocal()()
-  `launcher-native_04`.publishLocal()()
   val launcher = cli.launcher().path
   val tmpDir   = os.temp.dir(prefix = "coursier-bootstrap-scala-native-test")
   def cleanUp(): Unit =
@@ -660,6 +656,32 @@ def simpleNativeCliTest() = T.command {
         "-o",
         "native-echo",
         "io.get-coursier:echo_native0.3_2.11:1.0.1"
+      ).call(cwd = tmpDir) // TODO inherit all
+      os.proc(tmpDir / "native-echo", "-n", "foo", "a").call()
+    }
+    finally cleanUp()
+  assert(res.out.text == "foo a")
+}
+
+def simpleNative04CliTest() = T.command {
+  `launcher-native_04`.publishLocal()()
+  val launcher = cli.launcher().path
+  val tmpDir   = os.temp.dir(prefix = "coursier-bootstrap-scala-native-test")
+  def cleanUp(): Unit =
+    try os.remove.all(tmpDir)
+    catch {
+      case _: java.io.IOException =>
+        System.err.println(s"Error removing $tmpDir, ignoring it")
+    }
+  val res =
+    try {
+      os.proc(
+        launcher.toString,
+        "bootstrap",
+        "-S",
+        "-o",
+        "native-echo",
+        "io.get-coursier:echo_native0.4_2.13:1.0.5"
       ).call(cwd = tmpDir) // TODO inherit all
       os.proc(tmpDir / "native-echo", "-n", "foo", "a").call()
     }
@@ -843,10 +865,14 @@ def jvmTests(scalaVersion: String = "*") = {
 
   val extraTests =
     if (Properties.isWin) Nil
-    else Seq(simpleNativeCliTest())
+    else
+      Seq(
+        simpleNative03CliTest(),
+        simpleNative04CliTest()
+      )
 
   val scalaVersions =
-    if (scalaVersion == "*") ScalaVersions.scala211 +: ScalaVersions.all
+    if (scalaVersion == "*") ScalaVersions.all
     else Seq(scalaVersion)
 
   val tasks = nonCrossTests ++
