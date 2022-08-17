@@ -16,7 +16,7 @@ final case class SharedResolveParams(
 ) {
   def updatedResolution(scalaVersionOpt: Option[String]): ResolutionParams =
     resolution
-      .withScalaVersionOpt(resolution.scalaVersionOpt.flatMap(_ => scalaVersionOpt))
+      .withScalaVersionOpt(scalaVersionOpt.orElse(resolution.scalaVersionOpt))
       .withExclusions(
         dependency.exclude
           .map { m =>
