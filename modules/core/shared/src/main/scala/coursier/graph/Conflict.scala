@@ -114,6 +114,7 @@ object Conflict {
           version,
           excludedDependsOn = false,
           Map.empty,
+          Nil,
           Map.empty
         )
         Seq(Conflicted(node))

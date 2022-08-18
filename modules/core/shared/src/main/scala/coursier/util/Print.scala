@@ -107,7 +107,8 @@ object Print {
 
       val t = ReverseModuleTree.fromDependencyTree(
         roots0.map(_.module).distinct,
-        DependencyTree(resolution, withExclusions = printExclusions)
+        DependencyTree(resolution, withExclusions = printExclusions),
+        resolution.rootDependencies
       )
 
       val tree0 = Tree(

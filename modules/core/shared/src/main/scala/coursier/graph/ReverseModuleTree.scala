@@ -1,6 +1,6 @@
 package coursier.graph
 
-import coursier.core.{Module, Resolution}
+import coursier.core.{Dependency, Module, Resolution}
 
 import scala.collection.compat._
 import scala.collection.mutable
@@ -50,7 +50,11 @@ sealed abstract class ReverseModuleTree {
 
 object ReverseModuleTree {
 
-  def fromModuleTree(roots: Seq[Module], moduleTrees: Seq[ModuleTree]): Seq[ReverseModuleTree] = {
+  def fromModuleTree(
+    roots: Seq[Module],
+    moduleTrees: Seq[ModuleTree],
+    rootDependencies: Seq[Dependency]
+  ): Seq[ReverseModuleTree] = {
 
     // Some assumptions about moduleTrees, and the ModuleTree-s we get though their children:
     // - any two ModuleTree-s with the same module are assumed to have the same reconciledVersion
@@ -103,13 +107,15 @@ object ReverseModuleTree {
       reconciled,
       excludedDependsOn = false,
       dependees0,
+      rootDependencies,
       versions0
     )
   }
 
   def fromDependencyTree(
     roots: Seq[Module],
-    dependencyTrees: Seq[DependencyTree]
+    dependencyTrees: Seq[DependencyTree],
+    rootDependencies: Seq[Dependency]
   ): Seq[ReverseModuleTree] = {
 
     val alreadySeen = new mutable.HashSet[DependencyTree]
@@ -156,6 +162,7 @@ object ReverseModuleTree {
       reconciled,
       excludedDependsOn = false,
       dependees0,
+      rootDependencies,
       versions0
     )
   }
@@ -167,7 +174,7 @@ object ReverseModuleTree {
   ): Seq[ReverseModuleTree] = {
     val t      = DependencyTree(resolution, withExclusions = withExclusions)
     val roots0 = Option(roots).getOrElse(resolution.minDependencies.toVector.map(_.module))
-    fromDependencyTree(roots0, t)
+    fromDependencyTree(roots0, t, resolution.rootDependencies)
   }
 
   private[graph] final case class Node(
@@ -179,10 +186,12 @@ object ReverseModuleTree {
     dependsOnReconciledVersion: String,
     excludedDependsOn: Boolean,
     allDependees: Map[Module, Seq[(Module, String, Boolean)]],
+    rootDependencies: Seq[Dependency],
     versions: Map[Module, (String, String)]
   ) extends ReverseModuleTree {
-    def dependees: Seq[Node] =
-      for {
+    def dependees: Seq[Node] = {
+
+      val transitively = for {
         (m, wantVer, excl)     <- allDependees.getOrElse(module, Nil)
         (reconciled, retained) <- versions.get(m)
       } yield Node(
@@ -194,8 +203,31 @@ object ReverseModuleTree {
         reconciledVersion,
         excl,
         allDependees,
+        rootDependencies,
         versions
       )
+
+      val root =
+        rootDependencies.filter(dep => dep.module == module).flatMap { dep =>
+          versions.get(module).map {
+            case (reconciled, retained) =>
+              Node(
+                module,
+                dep.version,
+                retained,
+                module,
+                dep.version,
+                reconciled,
+                false,
+                allDependees,
+                rootDependencies,
+                versions
+              )
+          }
+        }
+
+      transitively ++ root
+    }
   }
 
 }
