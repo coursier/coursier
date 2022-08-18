@@ -4,7 +4,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.util.Random
 import java.util.zip.{Deflater, ZipEntry, ZipInputStream, ZipOutputStream}
 
-import coursier.launcher.internal.Zip
+import coursier.launcher.internal.{WrappedZipInputStream, Zip}
 import utest._
 
 object ZipTests extends TestSuite {
@@ -29,17 +29,19 @@ object ZipTests extends TestSuite {
       val result = baos.toByteArray
 
       val zos = new ZipOutputStream(new ByteArrayOutputStream)
-      val entryNames = Zip.zipEntries(new ZipInputStream(new ByteArrayInputStream(result)))
-        .map {
-          case (ent, content) =>
-            println(ent.getCompressedSize)
-            val name = ent.getName
-            zos.putNextEntry(ent)
-            zos.write(content)
-            zos.closeEntry()
-            name
-        }
-        .toVector
+      val entryNames =
+        WrappedZipInputStream(Right(new ZipInputStream(new ByteArrayInputStream(result))))
+          .entriesWithData()
+          .map {
+            case (ent, content) =>
+              println(ent.getCompressedSize)
+              val name = ent.getName
+              zos.putNextEntry(ent)
+              zos.write(content)
+              zos.closeEntry()
+              name
+          }
+          .toVector
       zos.close()
       assert(entryNames == Vector("entry.dat"))
     }
