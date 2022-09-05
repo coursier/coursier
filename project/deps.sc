@@ -36,7 +36,7 @@ object Deps {
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
   def proguard                 = ivy"com.guardsquare:proguard-base:7.2.2"
-  def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
+  def scalaAsync               = ivy"org.scala-lang.modules::scala-async:1.0.1"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.3.0"
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.1"
   def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
