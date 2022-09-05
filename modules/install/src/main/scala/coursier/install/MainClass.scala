@@ -33,7 +33,7 @@ object MainClass {
             new JManifest(is).getMainAttributes
           }
           finally if (is != null)
-            is.close()
+              is.close()
 
         def attributeOpt(name: String) =
           Option(attributes.getValue(name))

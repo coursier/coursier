@@ -34,7 +34,7 @@ object JvmCacheTests extends TestSuite {
       f(dir)
     }
     finally if (dir != null)
-      deleteRecursive(dir.toFile)
+        deleteRecursive(dir.toFile)
   }
 
   def withTempDir0[T](f: os.Path => T): T = {
@@ -44,7 +44,7 @@ object JvmCacheTests extends TestSuite {
       f(dir)
     }
     finally if (dir != null)
-      deleteRecursive(dir.toIO)
+        deleteRecursive(dir.toIO)
   }
 
   private val poolInitialized = new AtomicBoolean(false)

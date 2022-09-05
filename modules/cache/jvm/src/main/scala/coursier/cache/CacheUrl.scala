@@ -60,8 +60,8 @@ object CacheUrl {
         val handlerFactoryOpt = clsOpt0.flatMap {
           cls =>
             try Some(
-              cls.getDeclaredConstructor().newInstance().asInstanceOf[URLStreamHandlerFactory]
-            )
+                cls.getDeclaredConstructor().newInstance().asInstanceOf[URLStreamHandlerFactory]
+              )
             catch {
               case e: InstantiationException =>
                 printError(e)

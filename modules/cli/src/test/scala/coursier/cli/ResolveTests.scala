@@ -3,7 +3,7 @@ package coursier.cli
 import java.io.{ByteArrayOutputStream, File, PrintStream}
 import java.nio.charset.StandardCharsets
 
-import caseapp.core.RemainingArgs
+import caseapp.core.{Indexed, RemainingArgs}
 import cats.data.Validated
 import coursier.cli.install.SharedChannelOptions
 import coursier.cli.options.{CacheOptions, DependencyOptions, OutputOptions, ResolutionOptions}
@@ -85,7 +85,10 @@ object ResolveTests extends TestSuite {
       val options = ResolveOptions(
         whatDependsOn = List("org.htrace:htrace-core")
       )
-      val args = RemainingArgs(Seq("org.apache.spark:spark-sql_2.12:2.4.0"), Nil)
+      val args = RemainingArgs(
+        Seq(Indexed("org.apache.spark:spark-sql_2.12:2.4.0")),
+        Nil
+      )
 
       val stdout = new ByteArrayOutputStream
 
@@ -118,7 +121,10 @@ object ResolveTests extends TestSuite {
       val options = ResolveOptions(
         whatDependsOn = List("*:htrace-*")
       )
-      val args = RemainingArgs(Seq("org.apache.spark:spark-sql_2.12:2.4.0"), Nil)
+      val args = RemainingArgs(
+        Seq(Indexed("org.apache.spark:spark-sql_2.12:2.4.0")),
+        Nil
+      )
 
       val stdout = new ByteArrayOutputStream
 
@@ -153,8 +159,8 @@ object ResolveTests extends TestSuite {
       )
       val args = RemainingArgs(
         Seq(
-          "ioi.get-coursier:coursier-core_2.12:1.1.0-M9",
-          "io.get-coursier:coursier-cache_2.12:1.1.0-M9"
+          Indexed("ioi.get-coursier:coursier-core_2.12:1.1.0-M9"),
+          Indexed("io.get-coursier:coursier-cache_2.12:1.1.0-M9")
         ),
         Nil
       )
@@ -368,7 +374,7 @@ object ResolveTests extends TestSuite {
         classpathOrder = Option(true)
       )
       val args = RemainingArgs(
-        Seq("io.get-coursier:coursier-cli_2.12:1.1.0-M9"),
+        Seq(Indexed("io.get-coursier:coursier-cli_2.12:1.1.0-M9")),
         Nil
       )
 
@@ -388,7 +394,10 @@ object ResolveTests extends TestSuite {
       val options = ResolveOptions(
         candidateUrls = true
       )
-      val args = RemainingArgs(Seq("com.github.alexarchambault:case-app_2.13:2.0.0-M9"), Nil)
+      val args = RemainingArgs(
+        Seq(Indexed("com.github.alexarchambault:case-app_2.13:2.0.0-M9")),
+        Nil
+      )
 
       val stdout = new ByteArrayOutputStream
 
@@ -421,8 +430,8 @@ object ResolveTests extends TestSuite {
       )
       val args = RemainingArgs(
         Seq(
-          "com.github.alexarchambault::argonaut-shapeless_6.2:1.2.0-M12",
-          "com.chuusai::shapeless:2.3.3"
+          Indexed("com.github.alexarchambault::argonaut-shapeless_6.2:1.2.0-M12"),
+          Indexed("com.chuusai::shapeless:2.3.3")
         ),
         Nil
       )

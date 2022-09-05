@@ -67,7 +67,7 @@ object ThreadUtil {
       f(pool)
     }
     finally if (pool != null)
-      pool.shutdown()
+        pool.shutdown()
   }
 
 }

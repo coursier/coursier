@@ -82,7 +82,7 @@ object CacheLocks {
             ifLocked
         }
         finally if (lock != null)
-          lock.release()
+            lock.release()
       }
 
       resOpt match {
@@ -94,7 +94,7 @@ object CacheLocks {
 
     try loop()
     finally if (channel != null)
-      channel.close()
+        channel.close()
   }
 
   def withLockFor[T](

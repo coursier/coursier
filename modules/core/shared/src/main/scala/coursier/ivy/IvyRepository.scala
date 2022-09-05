@@ -108,23 +108,23 @@ import dataclass._
                       dependency.configuration,
                       Set.empty
                     ).contains(conf)) &&
-                      (
-                        p.`type` == dependency.attributes.`type` ||
-                        (p.ext == dependency.attributes.`type`.asExtension && project.packagingOpt.toSeq.contains(
-                          p.`type`
-                        )) // wow
-                      ) =>
+                    (
+                      p.`type` == dependency.attributes.`type` ||
+                      (p.ext == dependency.attributes.`type`.asExtension && project.packagingOpt.toSeq.contains(
+                        p.`type`
+                      )) // wow
+                    ) =>
                   p
               }
             else
               project.publications.collect {
                 case (conf, p)
                     if conf == Configuration.all ||
-                      conf == dependency.configuration ||
-                      project.allConfigurations.getOrElse(
-                        dependency.configuration,
-                        Set.empty
-                      ).contains(conf) =>
+                    conf == dependency.configuration ||
+                    project.allConfigurations.getOrElse(
+                      dependency.configuration,
+                      Set.empty
+                    ).contains(conf) =>
                   p
               }
           case Some(classifiers) =>
@@ -290,7 +290,7 @@ import dataclass._
         F.point {
           for {
             xml <- compatibility.xmlParseDom(ivy)
-            _ <- (if (xml.label == "ivy-module") Right(()) else Left("Module definition not found"))
+            _   <- if (xml.label == "ivy-module") Right(()) else Left("Module definition not found")
             proj <- IvyXml.project(xml)
           } yield proj
         }

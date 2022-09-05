@@ -189,9 +189,8 @@ import coursier.cache._
 import coursier.interop.cats._
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import scala.concurrent.ExecutionContext
-
-implicit val cs = IO.contextShift(ExecutionContext.global)
 
 val cache = FileCache[IO]()
 
@@ -326,9 +325,8 @@ import coursier.cache._
 import coursier.interop.cats._
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global
 import scala.concurrent.ExecutionContext
-
-implicit val cs = IO.contextShift(ExecutionContext.global)
 
 val cache = FileCache[IO]()
 

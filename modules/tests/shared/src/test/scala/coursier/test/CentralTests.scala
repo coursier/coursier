@@ -418,7 +418,7 @@ abstract class CentralTests extends TestSuite {
           val zookeeperTestArtifacts = dependencyArtifacts.collect {
             case (dep, pub, artifact)
                 if dep.module == mod"org.apache.zookeeper:zookeeper" &&
-                  pub.`type` == Type.testJar =>
+                pub.`type` == Type.testJar =>
               (pub, artifact)
           }
 

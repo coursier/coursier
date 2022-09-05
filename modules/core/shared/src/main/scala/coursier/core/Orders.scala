@@ -113,7 +113,7 @@ object Orders {
           def filtered(e: Set[(Organization, ModuleName)]) =
             e.filter { case (org, name) =>
               !xExcludeByOrg1(org) && !yExcludeByOrg1(org) &&
-                !xExcludeByName1(name) && !yExcludeByName1(name)
+              !xExcludeByName1(name) && !yExcludeByName1(name)
             }
 
           def removeIntersection[T](a: Set[T], b: Set[T]) =

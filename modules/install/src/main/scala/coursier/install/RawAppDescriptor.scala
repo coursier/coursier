@@ -344,7 +344,7 @@ object RawAppDescriptor {
 
             if (conflictingRanges.isEmpty) Validated.valid(ranges :+ range)
             else {
-              val conflicts = conflictingRanges.map(i => "\"$i\"").mkString("[", ", ", "]")
+              val conflicts = conflictingRanges.map(i => "\"" + i + "\"").mkString("[", ", ", "]")
               Validated.invalidNel(s"""versionRange "$range" conflicts with $conflicts""")
             }
           }

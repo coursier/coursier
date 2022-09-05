@@ -148,7 +148,7 @@ final case class ResolutionOptions(
 
     val profiles = profile.toSet
 
-    val extraStrictRule = {
+    val extraStrictRule =
       if (strict.getOrElse(strictExclude.nonEmpty || strictInclude.nonEmpty)) {
         val modules = strictInclude.map(_.trim).filter(_.nonEmpty) ++
           strictExclude.map(_.trim).filter(_.nonEmpty).map("!" + _)
@@ -156,7 +156,6 @@ final case class ResolutionOptions(
       }
       else
         Nil
-    }
 
     val rulesV = (extraStrictRule ::: rules)
       .traverse { s =>

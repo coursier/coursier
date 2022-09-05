@@ -62,7 +62,7 @@ object Conflict {
 
       System.lineSeparator() + s"${tree.dependsOnModule.repr}:" +
         s"${if (assumeCompatibleVersions) colors0.yellow
-        else colors0.red}${tree.dependsOnReconciledVersion}${colors0.reset} " +
+          else colors0.red}${tree.dependsOnReconciledVersion}${colors0.reset} " +
         s"(${tree.dependsOnVersion} wanted)" + System.lineSeparator() + treeRepr
     }
   }
@@ -92,7 +92,7 @@ object Conflict {
       t.dependees.collect {
         case d
             if !d.excludedDependsOn &&
-              !compatible(d.dependsOnReconciledVersion, d.dependsOnVersion) =>
+            !compatible(d.dependsOnReconciledVersion, d.dependsOnVersion) =>
           Conflicted(d)
       }
     }

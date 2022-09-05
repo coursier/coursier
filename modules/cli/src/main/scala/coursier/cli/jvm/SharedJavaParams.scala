@@ -15,6 +15,7 @@ final case class SharedJavaParams(
   allowSystemJvm: Boolean,
   requireSystemJvm: Boolean,
   update: Boolean,
+  architecture: Option[String],
   jvmChannelOpt: Option[JvmChannel]
 ) {
   def id: String =
@@ -28,8 +29,12 @@ final case class SharedJavaParams(
   ): (JvmCache, coursier.jvm.JavaHome) = {
     def jvmCacheOf(cache: Cache[Task]) = {
       val archiveCache = ArchiveCache().withCache(cache)
-      val c = JvmCache()
+      val baseCache = JvmCache()
         .withArchiveCache(archiveCache)
+      val c = architecture match {
+        case None       => baseCache
+        case Some(arch) => baseCache.withArchitecture(arch)
+      }
       jvmChannelOpt match {
         case None             => c.withDefaultIndex
         case Some(jvmChannel) => c.withIndexChannel(repositories, jvmChannel)
@@ -114,6 +119,7 @@ object SharedJavaParams {
           allowSystem,
           requireSystem,
           options.update,
+          options.architecture,
           indexChannelOpt
         )
     }

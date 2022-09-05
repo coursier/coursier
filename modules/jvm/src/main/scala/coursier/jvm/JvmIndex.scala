@@ -59,7 +59,7 @@ object JvmIndex {
       f(zf)
     }
     finally if (zf != null)
-      zf.close()
+        zf.close()
   }
 
   private def fromModule(

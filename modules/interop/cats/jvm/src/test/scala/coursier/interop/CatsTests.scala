@@ -1,6 +1,7 @@
 package coursier.interop
 
 import _root_.cats.effect.IO
+import _root_.cats.effect.unsafe.IORuntime
 import coursier.moduleString
 import coursier.interop.cats.{coursierGatherFromCats => _, _}
 import coursier.test.compatibility.executionContext
@@ -12,10 +13,9 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object CatsTests extends TestSuite {
 
-  private implicit val cs = _root_.cats.effect.IO.contextShift(executionContext)
-
   // few basic tests from CentralTests, to ensure everything is wired correctly with cats.effect.IO
 
+  private implicit def ioRuntime: IORuntime = IORuntime.global
   private implicit val ioToFuture: ToFuture[IO] =
     new ToFuture[IO] {
       def toFuture[T](ec: ExecutionContext, f: IO[T]) =

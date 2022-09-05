@@ -64,7 +64,7 @@ object InMemoryRepository {
           case _: IOException           => None // error other than not found
         }
         finally if (conn != null)
-          CacheUrl.closeConn(conn)
+            CacheUrl.closeConn(conn)
       }
 
       url.getProtocol match {
@@ -86,7 +86,7 @@ object InMemoryRepository {
         case _: IOException => false
       }
       finally if (conn != null)
-        CacheUrl.closeConn(conn)
+          CacheUrl.closeConn(conn)
     }
 
     protocolSpecificAttemptOpt

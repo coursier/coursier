@@ -110,7 +110,7 @@ object DependencyParser {
     if (attrs.size > validAttrsKeys.size || extraAttributes.nonEmpty)
       Some(
         s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")}. ${if (extraAttributes.nonEmpty) s"The following are invalid: " +
-          s"${extraAttributes.map(_ + s" in " + dep).mkString(", ")}"}"
+            s"${extraAttributes.map(_ + s" in " + dep).mkString(", ")}"}"
       )
     else None
   }

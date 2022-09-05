@@ -11,13 +11,13 @@ final class ConsoleDim {
   private def setup(): Unit = {
 
     try SigWinch.addHandler(
-      new Runnable {
-        def run(): Unit =
-          lock.synchronized {
-            dimsOpt = None
-          }
-      }
-    )
+        new Runnable {
+          def run(): Unit =
+            lock.synchronized {
+              dimsOpt = None
+            }
+        }
+      )
     catch {
       case _: IllegalArgumentException =>
       // ignored

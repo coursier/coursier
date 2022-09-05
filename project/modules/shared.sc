@@ -100,8 +100,7 @@ trait CsModule extends SbtModule with ScalaCliCompile {
   def scalacPluginIvyDeps = T {
     val sv = scalaVersion()
     val scala212Plugins =
-      if (sv.startsWith("2.11.") || sv.startsWith("2.12."))
-        Agg(Deps.macroParadise)
+      if (sv.startsWith("2.12.")) Agg(Deps.macroParadise)
       else Nil
     super.scalacPluginIvyDeps() ++ scala212Plugins
   }
@@ -114,6 +113,13 @@ trait CsModule extends SbtModule with ScalaCliCompile {
     }
     parent ++ extra
   }
+  def scalaCliVersion = "0.1.10"
+
+  // Remove once we switch to Scala CLI >= 0.1.11
+  def extraScalaCliOptions = super.extraScalaCliOptions() ++ Seq(
+    "--bloop-version",
+    "1.5.2-sc-1"
+  )
 }
 
 trait CsCrossJvmJsModule extends CrossSbtModule with CsModule {

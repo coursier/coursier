@@ -11,9 +11,8 @@ import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 abstract class PlatformCatsImplicits {
 
   implicit def coursierSyncFromCats[F[_], F0[_]](implicit
-    N: _root_.cats.effect.Sync[F],
-    par: _root_.cats.Parallel.Aux[F, F0],
-    cs: _root_.cats.effect.ContextShift[F]
+    N: _root_.cats.effect.Async[F],
+    par: _root_.cats.Parallel.Aux[F, F0]
   ): Sync[F] =
     new Sync[F] {
       def point[A](a: A): F[A] =
@@ -31,7 +30,7 @@ abstract class PlatformCatsImplicits {
             // FIXME Is this instantiation costly? Cache it?
             ExecutionContext.fromExecutorService(pool)
         }
-        cs.evalOn(ec0)(N.delay(f))
+        N.evalOn(N.delay(f), ec0)
       }
 
       def gather[A](elems: Seq[F[A]]): F[Seq[A]] =
