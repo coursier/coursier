@@ -179,11 +179,11 @@ final case class JsonElem(
     )
 
   lazy val reconciledVersion: String = resolution.reconciledVersions
-    .getOrElse(dep.module, dep.version)
+    .getOrElse(dep.module, dep.version).intern
 
   // These are used to printing json output
-  val reconciledVersionStr = s"${dep.mavenPrefix}:$reconciledVersion"
-  val requestedVersionStr  = s"${dep.module}:${dep.version}"
+  lazy val reconciledVersionStr = s"${dep.mavenPrefix}:$reconciledVersion".intern
+  val requestedVersionStr  = s"${dep.module}:${dep.version}".intern
 
   lazy val exclusions: Set[String] = dep.exclusions.map {
     case (org, name) =>
