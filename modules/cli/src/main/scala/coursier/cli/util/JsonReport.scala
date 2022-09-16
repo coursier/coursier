@@ -178,12 +178,16 @@ final case class JsonElem(
         .headOption
     )
 
-  lazy val reconciledVersion: String = resolution.reconciledVersions
-    .getOrElse(dep.module, dep.version).intern
+  // `reconciledVersion`, `reconciledVersionStr`, `requestedVersionStr` are fields
+  // whose values are frequently duplicated across instances of `JsonElem` and their
+  // transitive `Dependencies`. Here we cast these values to `Symbol`, which is an
+  // interned collection, effectively deduping the string values in memory.
+  lazy val reconciledVersion: String = Symbol(resolution.reconciledVersions
+    .getOrElse(dep.module, dep.version).intern).name
 
   // These are used to printing json output
-  lazy val reconciledVersionStr = s"${dep.mavenPrefix}:$reconciledVersion".intern
-  val requestedVersionStr  = s"${dep.module}:${dep.version}".intern
+  lazy val reconciledVersionStr = Symbol(s"${dep.mavenPrefix}:$reconciledVersion").name
+  val requestedVersionStr       = Symbol(s"${dep.module}:${dep.version}").name
 
   lazy val exclusions: Set[String] = dep.exclusions.map {
     case (org, name) =>
