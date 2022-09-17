@@ -183,7 +183,7 @@ final case class JsonElem(
   // transitive `Dependencies`. Here we cast these values to `Symbol`, which is an
   // interned collection, effectively deduping the string values in memory.
   lazy val reconciledVersion: String = Symbol(resolution.reconciledVersions
-    .getOrElse(dep.module, dep.version).intern).name
+    .getOrElse(dep.module, dep.version)).name
 
   // These are used to printing json output
   lazy val reconciledVersionStr = Symbol(s"${dep.mavenPrefix}:$reconciledVersion").name
