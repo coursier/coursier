@@ -88,6 +88,7 @@ object Complete {
   def scalaBinaryVersion(scalaVersion: String): String =
     if (scalaVersion.contains("-M") || scalaVersion.contains("-RC"))
       scalaVersion
+    else if (scalaVersion.startsWith("3")) "3"
     else
       scalaVersion.split('.').take(2).mkString(".")
 
