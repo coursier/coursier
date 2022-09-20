@@ -499,7 +499,7 @@ abstract class BootstrapTests extends TestSuite {
         }
     }
 
-    test("python") {
+    test("python jep") {
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(
           args = Seq(
@@ -507,7 +507,7 @@ abstract class BootstrapTests extends TestSuite {
             "bootstrap",
             "-o",
             "props-python",
-            "--python",
+            "--python-jep",
             TestUtil.propsDepStr
           ) ++ extraOptions,
           directory = tmpDir

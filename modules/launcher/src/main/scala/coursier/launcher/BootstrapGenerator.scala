@@ -59,7 +59,7 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
         parameters.deterministic,
         parameters.extraZipEntries,
         parameters.javaProperties,
-        parameters.python,
+        parameters.pythonJep,
         parameters.extraContent
       )
 
@@ -77,7 +77,7 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
     deterministic: Boolean,
     extraZipEntries: Seq[(ZipEntry, Array[Byte])],
     properties: Seq[(String, String)],
-    python: Boolean,
+    pythonJep: Boolean,
     extraContent: Map[String, Seq[ClassLoaderContent]]
   ): Unit = {
 
@@ -212,8 +212,8 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
         .mkString("\n")
     putStringEntry(resourceDir + "bootstrap.properties", propFileContent)
 
-    if (python)
-      putBinaryEntry(resourceDir + "set-python-properties", time, Array.emptyByteArray)
+    if (pythonJep)
+      putBinaryEntry(resourceDir + "set-python-jep-properties", time, Array.emptyByteArray)
 
     outputZip.closeEntry()
   }

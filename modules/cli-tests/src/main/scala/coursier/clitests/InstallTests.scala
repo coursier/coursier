@@ -54,7 +54,7 @@ abstract class InstallTests extends TestSuite {
             "install",
             "--install-dir",
             tmpDir.getAbsolutePath,
-            s"""props:{"dependencies": ["${TestUtil.propsDepStr}"], "repositories": ["central"], "jna": ["python"]}"""
+            s"""props:{"dependencies": ["${TestUtil.propsDepStr}"], "repositories": ["central"], "jna": ["python-jep"]}"""
           ) ++ extraOptions,
           directory = tmpDir
         )

@@ -49,7 +49,7 @@ object LaunchParams {
       val fork: Boolean =
         options.fork.getOrElse(
           options.jep ||
-          shared.python ||
+          shared.pythonJep ||
           shared.javaOptions.nonEmpty ||
           sharedJava.jvm.nonEmpty ||
           SharedLaunchParams.defaultFork

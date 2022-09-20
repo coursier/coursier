@@ -406,7 +406,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
             .withProguarded(params.specific.proguarded)
             .withHybridAssembly(params.specific.hybrid)
             .withDisableJarChecking(params.specific.disableJarCheckingOpt)
-            .withPython(params.sharedLaunch.python)
+            .withPythonJep(params.sharedLaunch.pythonJep)
         }
       }
 

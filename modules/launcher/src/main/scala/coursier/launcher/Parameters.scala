@@ -49,7 +49,7 @@ object Parameters {
     hybridAssembly: Boolean = false,
     extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil,
     @since("2.0.4")
-    python: Boolean = false,
+    pythonJep: Boolean = false,
     @since
     extraContent: Map[String, Seq[ClassLoaderContent]] = Map()
   ) extends Parameters {

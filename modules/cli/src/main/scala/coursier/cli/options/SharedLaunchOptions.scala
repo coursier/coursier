@@ -30,7 +30,7 @@ final case class SharedLaunchOptions(
 
   @Group(OptionGroup.launch)
   @Hidden
-    python: Option[Boolean] = None,
+    pythonJep: Option[Boolean] = None,
 
   @Recurse
     sharedLoaderOptions: SharedLoaderOptions = SharedLoaderOptions(),
@@ -55,7 +55,7 @@ final case class SharedLaunchOptions(
           mainClass,
       javaOpt = app.javaOptions ++ javaOpt,
       property = app.properties.props.map { case (k, v) => s"$k=$v" }.toList ++ property,
-      python = python.orElse(if (app.jna.contains("python")) Some(true) else None)
+      pythonJep = pythonJep.orElse(if (app.jna.contains("python-jep")) Some(true) else None)
     )
 
   def app: RawAppDescriptor =
@@ -96,7 +96,7 @@ final case class SharedLaunchOptions(
         }
       )
       .withJna {
-        if (python.getOrElse(false)) List("python")
+        if (pythonJep.getOrElse(false)) List("python-jep")
         else Nil
       }
 }

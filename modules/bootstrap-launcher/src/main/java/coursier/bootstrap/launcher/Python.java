@@ -7,7 +7,7 @@ import coursier.paths.Jep;
 
 class Python {
 
-    private static void setPythonProperties() throws Exception {
+    private static void setPythonJepProperties() throws Exception {
         List<Map.Entry<String, String>> properties = Jep.pythonProperties();
         for (Map.Entry<String, String> entry : properties) {
             String key = entry.getKey();
@@ -18,10 +18,10 @@ class Python {
 
     static void maybeSetPythonProperties(ClassLoader contextLoader) throws Exception {
         // only checking if that file exists for now
-        String resource = ClassLoaders.resourceDir + "set-python-properties";
-        boolean doSetProps = contextLoader.getResource(resource) != null;
-        if (doSetProps) {
-            setPythonProperties();
+        String jepResource = ClassLoaders.resourceDir + "set-python-jep-properties";
+        boolean doSetJepProps = contextLoader.getResource(jepResource) != null;
+        if (doSetJepProps) {
+            setPythonJepProperties();
         }
     }
 
