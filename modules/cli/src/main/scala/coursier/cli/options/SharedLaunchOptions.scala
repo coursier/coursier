@@ -22,7 +22,7 @@ final case class SharedLaunchOptions(
   @Value("key=value")
   @Short("D")
     property: List[String] = Nil,
-  
+
   @Group(OptionGroup.launch)
   @Help("Add Java command-line options")
   @Value("option")
