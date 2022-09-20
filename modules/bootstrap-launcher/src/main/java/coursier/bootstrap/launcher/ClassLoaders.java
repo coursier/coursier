@@ -7,6 +7,7 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
+import coursier.bootstrap.launcher.jar.JarFile;
 import coursier.paths.Mirror;
 import coursier.paths.Mirror.MirrorPropertiesException;
 
@@ -88,6 +89,14 @@ class ClassLoaders {
         ClassLoader parentClassLoader = readBaseLoaders(hideStuffClassLoader);
 
         return new URLClassLoader(localURLs.toArray(new URL[0]), parentClassLoader);
+    }
+
+    Download getDownload() {
+        return download;
+    }
+
+    JarFile sourceJarFileOrNull() {
+        return null;
     }
 
 }

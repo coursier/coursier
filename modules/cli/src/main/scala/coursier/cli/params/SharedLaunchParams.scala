@@ -17,6 +17,7 @@ final case class SharedLaunchParams(
   javaOptions: Seq[String],
   properties: Seq[(String, String)],
   extraJars: Seq[Path],
+  pythonOpt: Option[Boolean],
   pythonJepOpt: Option[Boolean]
 ) {
   def fetch(channel: SharedChannelParams): FetchParams =
@@ -28,6 +29,7 @@ final case class SharedLaunchParams(
       channel = channel
     )
 
+  def python    = pythonOpt.getOrElse(false)
   def pythonJep = pythonJepOpt.getOrElse(false)
 }
 
@@ -90,6 +92,7 @@ object SharedLaunchParams {
           options.javaOpt,
           properties,
           extraJars,
+          options.python,
           options.pythonJep
         )
     }

@@ -50,6 +50,7 @@ object LaunchParams {
         options.fork.getOrElse(
           options.jep ||
           shared.pythonJep ||
+          shared.python ||
           shared.javaOptions.nonEmpty ||
           sharedJava.jvm.nonEmpty ||
           SharedLaunchParams.defaultFork

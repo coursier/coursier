@@ -529,6 +529,69 @@ abstract class BootstrapTests extends TestSuite {
       }
     }
 
+    test("python") {
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0)
+        os.proc(
+          launcher,
+          "bootstrap",
+          "-o",
+          "echo-scalapy",
+          "--python",
+          "io.get-coursier:scalapy-echo_2.13:1.0.7",
+          extraOptions
+        ).call(cwd = tmpDir, stdin = os.Inherit, stdout = os.Inherit)
+        os.proc(
+          launcher,
+          "bootstrap",
+          "-o",
+          "echo-scalapy-no-python",
+          "io.get-coursier:scalapy-echo_2.13:1.0.7",
+          extraOptions
+        ).call(cwd = tmpDir, stdin = os.Inherit, stdout = os.Inherit)
+
+        def bootstrap(name: String): String =
+          if (Properties.isWin) (tmpDir / s"$name.bat").toString
+          else s"./$name"
+        val res = os.proc(bootstrap("echo-scalapy"), "a", "b").call(cwd = tmpDir)
+        assert(res.out.trim() == "a b")
+
+      // Commented out, as things can work without Python-specific setup in some
+      // environments.
+      // val noPythonRes = os.proc(bootstrap("echo-scalapy-no-python"), "a", "b").call(
+      //   cwd = tmpDir,
+      //   mergeErrIntoOut = true,
+      //   check = false
+      // )
+      // System.err.write(noPythonRes.out.bytes)
+      // assert(noPythonRes.exitCode != 0)
+      }
+    }
+
+    test("python native") {
+      // both false means native launcher, where we can't use 'cs bootstrap --native'
+      // (as it class loads a launcher-native module at runtime)
+      if (acceptsDOptions || acceptsJOptions)
+        pythonNativeTest()
+    }
+    def pythonNativeTest(): Unit = {
+      TestUtil.withTempDir { tmpDir =>
+        os.proc(
+          launcher,
+          "bootstrap",
+          "-o",
+          "echo-scalapy-native",
+          "--python",
+          "--native",
+          "io.get-coursier:scalapy-echo_native0.4_2.13:1.0.7",
+          extraOptions
+        ).call(cwd = os.Path(tmpDir), stdin = os.Inherit, stdout = os.Inherit)
+
+        val res = os.proc("./echo-scalapy-native", "a", "b").call(cwd = os.Path(tmpDir))
+        assert(res.out.trim() == "a b")
+      }
+    }
+
     test("authenticated proxy") {
       if (hasDocker) authenticatedProxyTest()
       else "Docker test disabled"

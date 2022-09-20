@@ -95,4 +95,8 @@ class ResourcesClassLoaders extends ClassLoaders {
         return new URLClassLoader(localURLs.toArray(new URL[0]), parentClassLoader);
     }
 
+    JarFile sourceJarFileOrNull() {
+        return sourceJarFile;
+    }
+
 }

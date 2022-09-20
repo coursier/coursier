@@ -304,6 +304,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
           .withOptions(params.nativeOptions)
           .withLog(log)
           .withVerbosity(params.sharedLaunch.resolve.output.verbosity)
+          .withPython(params.sharedLaunch.python)
       }
       else if (params.specific.nativeImage) {
         val fetch0 = {
@@ -399,14 +400,42 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
                 .withLoaderName(name)
           }
 
-          Parameters.Bootstrap(content, mainClass)
+          val params0 = Parameters.Bootstrap(content, mainClass)
             .withJavaProperties(params.sharedLaunch.properties)
             .withDeterministic(params.specific.deterministicOutput)
             .withPreambleOpt(preambleOpt)
             .withProguarded(params.specific.proguarded)
             .withHybridAssembly(params.specific.hybrid)
             .withDisableJarChecking(params.specific.disableJarCheckingOpt)
+            .withPython(params.sharedLaunch.python)
             .withPythonJep(params.sharedLaunch.pythonJep)
+
+          if (params.sharedLaunch.python) {
+            val task = Fetch.task(
+              params.sharedLaunch.fetch(params.channel),
+              pool,
+              Seq("io.github.alexarchambault.python:interface:0.1.0")
+            )
+            val (_, _, _, pythonFiles) = task.attempt.unsafeRun()(ec) match {
+              case Left(e: ResolveException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
+                System.err.println(e.message)
+                sys.exit(1)
+              case Left(e: coursier.error.FetchError)
+                  if params.sharedLaunch.resolve.output.verbosity <= 1 =>
+                System.err.println(e.getMessage)
+                sys.exit(1)
+              case Left(e)   => throw e
+              case Right(t0) => t0
+            }
+
+            val pythonContent = Seq(
+              classloaderContent(params.specific.bootstrapPackaging, pythonFiles)
+            )
+
+            params0.addExtraContent("python", pythonContent)
+          }
+          else
+            params0
         }
       }
 

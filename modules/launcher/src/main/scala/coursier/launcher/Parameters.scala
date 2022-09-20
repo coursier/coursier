@@ -49,8 +49,9 @@ object Parameters {
     hybridAssembly: Boolean = false,
     extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil,
     @since("2.0.4")
-    pythonJep: Boolean = false,
+    python: Boolean = false,
     @since
+    pythonJep: Boolean = false,
     extraContent: Map[String, Seq[ClassLoaderContent]] = Map()
   ) extends Parameters {
 
@@ -126,7 +127,9 @@ object Parameters {
     jars: Seq[File] = Nil,
     options: ScalaNative.ScalaNativeOptions = ScalaNative.ScalaNativeOptions(),
     log: String => Unit = s => System.err.println(s),
-    verbosity: Int = 0
+    verbosity: Int = 0,
+    @since
+    python: Boolean = false
   ) extends Parameters {
     override def isNative: Boolean = true
   }
