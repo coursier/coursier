@@ -49,14 +49,16 @@ object Parameters {
     hybridAssembly: Boolean = false,
     extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil,
     @since("2.0.4")
-    python: Boolean = false
+    python: Boolean = false,
+    @since
+    extraContent: Map[String, Seq[ClassLoaderContent]] = Map()
   ) extends Parameters {
 
     def withPreamble(preamble: Preamble): Bootstrap =
       withPreambleOpt(Some(preamble))
 
     def hasResources: Boolean =
-      content.exists { c =>
+      (content.iterator ++ extraContent.valuesIterator.flatMap(_.iterator)).exists { c =>
         c.entries.exists {
           case _: ClassPathEntry.Resource => true
           case _                          => false
@@ -73,6 +75,9 @@ object Parameters {
         }
       else
         preambleOpt
+
+    def addExtraContent(name: String, content: Seq[ClassLoaderContent]): Bootstrap =
+      withExtraContent(extraContent + (name -> content))
   }
 
   @data class ManifestJar(

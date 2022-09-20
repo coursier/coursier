@@ -14,15 +14,20 @@ class ResourcesClassLoaders extends ClassLoaders {
 
     private final JarFile sourceJarFile;
 
-    ResourcesClassLoaders(JarFile sourceJarFile, Download download) throws MirrorPropertiesException, IOException  {
-        super(download);
+    ResourcesClassLoaders(JarFile sourceJarFile, Download download, String prefix) throws MirrorPropertiesException, IOException  {
+        super(download, prefix);
         this.sourceJarFile = sourceJarFile;
     }
 
-    private final static String jarDir = ClassLoaders.resourceDir + "jars/";
-    private final static String defaultJarResource = ClassLoaders.resourceDir + "bootstrap-jar-resources";
+    private final String defaultJarResource = ClassLoaders.resourceDir + prefix + "-jar-resources";
 
     private List<URL> getResourceURLs(String[] resources) throws IOException {
+
+        String jarDir = null;
+        if (prefix.equals("bootstrap"))
+          jarDir = ClassLoaders.resourceDir + "jars/";
+        else
+          jarDir = ClassLoaders.resourceDir + "jars/" + prefix + "/";
 
         List<String> errors = new ArrayList<>();
         List<URL> urls = new ArrayList<>();
@@ -57,8 +62,8 @@ class ResourcesClassLoaders extends ClassLoaders {
         ClassLoader parentLoader = baseLoader;
         int i = 1;
         while (true) {
-            String[] strUrls = Util.readStringSequence(ClassLoaders.resourceDir + "bootstrap-jar-urls-" + i, baseLoader);
-            String[] resources = Util.readStringSequence(ClassLoaders.resourceDir + "bootstrap-jar-resources-" + i, baseLoader);
+            String[] strUrls = Util.readStringSequence(ClassLoaders.resourceDir + prefix + "-jar-urls-" + i, baseLoader);
+            String[] resources = Util.readStringSequence(ClassLoaders.resourceDir + prefix + "-jar-resources-" + i, baseLoader);
 
             if (strUrls.length == 0 && resources.length == 0)
                 break;
@@ -78,7 +83,7 @@ class ResourcesClassLoaders extends ClassLoaders {
 
     ClassLoader createClassLoader(ClassLoader contextLoader) throws IOException {
 
-        String[] strUrls = Util.readStringSequence(ClassLoaders.defaultURLResource, contextLoader);
+        String[] strUrls = Util.readStringSequence(defaultURLResource, contextLoader);
         String[] resources = Util.readStringSequence(defaultJarResource, contextLoader);
         List<URL> urls = getURLs(strUrls);
         List<URL> resourceURLs = getResourceURLs(resources);

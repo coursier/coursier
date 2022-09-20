@@ -13,11 +13,14 @@ import coursier.paths.Mirror.MirrorPropertiesException;
 class ClassLoaders {
 
     final static String resourceDir = "coursier/bootstrap/launcher/";
-    final static String defaultURLResource = resourceDir + "bootstrap-jar-urls";
+    protected final String prefix;
+    final String defaultURLResource;
     private final List<Mirror> mirrors = Mirror.load();
     protected final Download download;
 
-    ClassLoaders(Download download) throws MirrorPropertiesException, IOException {
+    ClassLoaders(Download download, String prefix) throws MirrorPropertiesException, IOException {
+        this.prefix = prefix;
+        this.defaultURLResource = resourceDir + prefix + "-jar-urls";
         this.download = download;
     }
 

@@ -59,7 +59,8 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
         parameters.deterministic,
         parameters.extraZipEntries,
         parameters.javaProperties,
-        parameters.python
+        parameters.python,
+        parameters.extraContent
       )
 
       zos.close()
@@ -76,10 +77,15 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
     deterministic: Boolean,
     extraZipEntries: Seq[(ZipEntry, Array[Byte])],
     properties: Seq[(String, String)],
-    python: Boolean
+    python: Boolean,
+    extraContent: Map[String, Seq[ClassLoaderContent]]
   ): Unit = {
 
     val content0 = ClassLoaderContent.withUniqueFileNames(content)
+    val extraContent0 = extraContent.toVector.map {
+      case (name, content) =>
+        (name, ClassLoaderContent.withUniqueFileNames(content))
+    }
 
     val bootstrapJar =
       FileUtil.readFully {
@@ -156,38 +162,45 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
       outputZip.closeEntry()
     }
 
-    val len = content0.length
-    for ((c, idx) <- content0.zipWithIndex) {
+    val allContent = Seq("bootstrap" -> content0) ++ extraContent0
+    for ((name, content0) <- allContent) {
+      val len = content0.length
+      for ((c, idx) <- content0.zipWithIndex) {
 
-      val urls = c.entries.collect {
-        case u: ClassPathEntry.Url =>
-          u.url
+        val urls = c.entries.collect {
+          case u: ClassPathEntry.Url =>
+            u.url
+        }
+        val resources = c.entries.collect {
+          case r: ClassPathEntry.Resource =>
+            r.fileName
+        }
+
+        val suffix = if (idx == len - 1) "" else "-" + (idx + 1)
+
+        // really needed to sort here?
+        putStringEntry(resourceDir + s"$name-jar-urls" + suffix, urls.sorted.mkString("\n"))
+        putStringEntry(
+          resourceDir + s"$name-jar-resources" + suffix,
+          resources.sorted.mkString("\n")
+        )
+
+        if (c.loaderName.nonEmpty)
+          putStringEntry(resourceDir + s"$name-loader-name" + suffix, c.loaderName)
       }
-      val resources = c.entries.collect {
-        case r: ClassPathEntry.Resource =>
-          r.fileName
-      }
 
-      val suffix = if (idx == len - 1) "" else "-" + (idx + 1)
-
-      // really needed to sort here?
-      putStringEntry(resourceDir + "bootstrap-jar-urls" + suffix, urls.sorted.mkString("\n"))
-      putStringEntry(
-        resourceDir + "bootstrap-jar-resources" + suffix,
-        resources.sorted.mkString("\n")
-      )
-
-      if (c.loaderName.nonEmpty)
-        putStringEntry(resourceDir + "bootstrap-loader-name" + suffix, c.loaderName)
+      val nameDir =
+        if (name == "bootstrap") ""
+        else name + "/"
+      for (e <- content0.flatMap(_.entries).collect { case e: ClassPathEntry.Resource => e })
+        putBinaryEntry(
+          // FIXME Use name here too
+          s"${resourceDir}jars/$nameDir${e.fileName}",
+          e.lastModified,
+          e.content,
+          compressed = false
+        )
     }
-
-    for (e <- content0.flatMap(_.entries).collect { case e: ClassPathEntry.Resource => e })
-      putBinaryEntry(
-        s"${resourceDir}jars/${e.fileName}",
-        e.lastModified,
-        e.content,
-        compressed = false
-      )
 
     val propFileContent =
       (("bootstrap.mainClass" -> mainClass) +: properties)
