@@ -10,8 +10,6 @@ import coursier.clitests.util.TestAuthProxy
 import coursier.dependencyString
 import utest._
 
-import scala.util.Properties
-
 abstract class BootstrapTests extends TestSuite {
 
   def launcher: String
