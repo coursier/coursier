@@ -3,6 +3,8 @@ package coursier.paths;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import dev.dirs.GetWinDirs;
 import dev.dirs.ProjectDirectories;
@@ -100,23 +102,27 @@ public final class CoursierPaths {
         return jvmCacheDirectory0;
     }
 
+    public static ProjectDirectories directoriesInstance(String name) {
+        GetWinDirs getWinDirs;
+        if (coursier.paths.Util.useJni())
+            getWinDirs = guids -> {
+                String[] dirs = new String[guids.length];
+                for (int i = 0; i < guids.length; i++) {
+                    dirs[i] = coursier.jniutils.WindowsKnownFolders.knownFolderPath("{" + guids[i] + "}");
+                }
+                return dirs;
+            };
+        else
+            getWinDirs = GetWinDirs.powerShellBased;
+        return ProjectDirectories.from(null, null, name, getWinDirs);
+    }
+
     private static ProjectDirectories coursierDirectories() throws IOException {
 
         if (coursierDirectories0 == null)
             synchronized (coursierDirectoriesLock) {
                 if (coursierDirectories0 == null) {
-                    GetWinDirs getWinDirs;
-                    if (coursier.paths.Util.useJni())
-                        getWinDirs = guids -> {
-                            String[] dirs = new String[guids.length];
-                            for (int i = 0; i < guids.length; i++) {
-                                dirs[i] = coursier.jniutils.WindowsKnownFolders.knownFolderPath("{" + guids[i] + "}");
-                            }
-                            return dirs;
-                        };
-                    else
-                        getWinDirs = GetWinDirs.powerShellBased;
-                    coursierDirectories0 = ProjectDirectories.from(null, null, "Coursier", getWinDirs);
+                    coursierDirectories0 = directoriesInstance("Coursier");
                 }
             }
 
@@ -193,4 +199,28 @@ public final class CoursierPaths {
     public static File projectCacheDirectory() throws IOException {
         return new File(coursierDirectories().cacheDir);
     }
+
+    private static Path scalaConfigFile0 = null;
+
+    public static Path scalaConfigFile() throws Throwable {
+        if (scalaConfigFile0 == null) {
+            Path configPath = null;
+            String fromEnv = System.getenv("SCALA_CLI_CONFIG");
+            if (fromEnv != null && fromEnv.length() > 0)
+                configPath = Paths.get(fromEnv);
+            if (configPath == null) {
+                String fromProps = System.getProperty("scala-cli.config");
+                if (fromProps != null && fromProps.length() > 0)
+                    configPath = Paths.get(fromProps);
+            }
+            if (configPath == null) {
+                ProjectDirectories dirs = CoursierPaths.directoriesInstance("ScalaCli");
+                configPath = Paths.get(dirs.dataLocalDir).resolve("secrets/config.json");
+            }
+
+            scalaConfigFile0 = configPath;
+        }
+        return scalaConfigFile0;
+    }
+
 }
