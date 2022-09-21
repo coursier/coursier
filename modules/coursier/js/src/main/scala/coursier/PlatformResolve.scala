@@ -12,4 +12,7 @@ abstract class PlatformResolve {
       Repositories.central
     )
 
+  def proxySetup(): Unit =
+    ()
+
 }

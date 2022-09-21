@@ -3,5 +3,6 @@ package coursier.clitests
 import caseapp._
 
 final case class RunOptions(
-  launcher: String
+  launcher: String,
+  assembly: String
 )

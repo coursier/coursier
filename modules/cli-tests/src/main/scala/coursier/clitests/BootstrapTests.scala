@@ -1,8 +1,11 @@
 package coursier.clitests
 
 import java.io._
+import java.net.ServerSocket
 import java.nio.charset.Charset
 import java.nio.file.Files
+import java.util.UUID
+import java.util.regex.Pattern
 
 import scala.util.Properties
 
@@ -13,6 +16,7 @@ import utest._
 abstract class BootstrapTests extends TestSuite {
 
   def launcher: String
+  def assembly: String
   def acceptsDOptions: Boolean = true
   def acceptsJOptions: Boolean = true
 
@@ -652,5 +656,125 @@ abstract class BootstrapTests extends TestSuite {
         }
       }
     }
+
+    test("config file authenticated proxy") {
+      if (hasDocker) configFileAuthenticatedProxyTest()
+      else "Docker test disabled"
+    }
+
+    def withAuthProxy[T](f: (String, String, Int) => T): T = {
+      val networkName = "cs-test-" + UUID.randomUUID().toString
+      var containerId = ""
+      try {
+        os.proc("docker", "network", "create", networkName)
+          .call(stdin = os.Inherit, stdout = os.Inherit)
+        val host = {
+          val res  = os.proc("docker", "network", "inspect", networkName).call(stdin = os.Inherit)
+          val resp = ujson.read(res.out.trim())
+          resp.arr(0).apply("IPAM").apply("Config").arr(0).apply("Gateway").str
+        }
+        val port = {
+          val s = new ServerSocket(0)
+          try s.getLocalPort
+          finally s.close()
+        }
+        val res = os.proc(
+          "docker",
+          "run",
+          "-d",
+          "--rm",
+          "-p",
+          s"$port:80",
+          "--network",
+          networkName,
+          "bahamat/authenticated-proxy@sha256:568c759ac687f93d606866fbb397f39fe1350187b95e648376b971e9d7596e75"
+        )
+          .call(stdin = os.Inherit)
+        containerId = res.out.trim()
+        f(networkName, host, port)
+      }
+      finally {
+        if (containerId.nonEmpty) {
+          System.err.println(s"Removing container $containerId")
+          os.proc("docker", "rm", "-f", containerId)
+            .call(stdin = os.Inherit, stdout = os.Inherit)
+        }
+        os.proc("docker", "network", "rm", networkName)
+          .call(stdin = os.Inherit, stdout = os.Inherit)
+      }
+    }
+
+    def configFileAuthenticatedProxyTest(): Unit =
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0, os.pwd)
+
+        os.proc(launcher, "bootstrap", "-o", "cs-echo", "io.get-coursier:echo:1.0.1", extraOptions)
+          .call(cwd = tmpDir)
+
+        val output = os.proc("./cs-echo", "foo")
+          .call(cwd = tmpDir)
+          .out.text()
+        val expectedOutput = "foo" + System.lineSeparator()
+        assert(output == expectedOutput)
+
+        withAuthProxy { (networkName, proxyHost, proxyPort) =>
+          val configContent =
+            s"""{
+               |  "httpProxy": {
+               |    "address": "http://$proxyHost:$proxyPort",
+               |    "user": "value:jack",
+               |    "password": "value:insecure"
+               |  }
+               |}
+               |""".stripMargin
+          val configFile = tmpDir / "config.json"
+          os.write(configFile, configContent)
+
+          val header = "*** Running command ***"
+
+          val words = Seq("a", "b", "foo")
+
+          val scriptContent =
+            s"""#!/usr/bin/env bash
+               |set -e
+               |export PATH="$$(pwd)/bin:$$PATH"
+               |if ./cs-echo a b foo; then
+               |  echo "Expected command to fail at first"
+               |  exit 1
+               |fi
+               |export SCALA_CLI_CONFIG="$$(pwd)/config.json"
+               |echo "$header"
+               |exec ./cs-echo ${words.map(w => "\"" + w + "\"").mkString(" ")}
+               |""".stripMargin
+          os.write(tmpDir / "script.sh", scriptContent)
+
+          os.copy(
+            os.Path(assembly, os.pwd),
+            tmpDir / "bin" / "cs",
+            createFolders = true,
+            copyAttributes = true
+          )
+
+          val res = os.proc(
+            "docker",
+            "run",
+            "--rm",
+            "--dns",
+            "0.0.0.0",
+            "--network",
+            networkName,
+            "-v",
+            s"$tmpDir:/data",
+            "-w",
+            "/data",
+            "eclipse-temurin:17",
+            "/bin/bash",
+            "./script.sh"
+          )
+            .call(cwd = tmpDir)
+          val output = res.out.text().split(Pattern.quote(header)).last
+          assert(output.trim() == words.mkString(" "))
+        }
+      }
   }
 }

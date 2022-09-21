@@ -45,6 +45,7 @@ object Run extends CaseApp[RunOptions] {
     }
     val bootstrapTests = new BootstrapTests {
       val launcher = options.launcher
+      val assembly = options.assembly
     }
     val launchResults = TestRunner.runAndPrint(
       launchTests.tests,

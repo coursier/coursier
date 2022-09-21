@@ -2,8 +2,12 @@ package coursier
 
 import java.io.File
 
+import scala.cli.config.{ConfigDb, Keys}
+
 import coursier.params.MirrorConfFile
 import coursier.parse.RepositoryParser
+import coursier.paths.CoursierPaths
+import coursier.proxy.SetupProxy
 
 abstract class PlatformResolve {
 
@@ -66,5 +70,22 @@ abstract class PlatformResolve {
       .orElse(fromPropsOpt)
       .getOrElse(default)
   }
+
+  def proxySetup(): Unit =
+    if (!SetupProxy.setup()) {
+      val configPath = CoursierPaths.scalaConfigFile()
+      val db = ConfigDb.open(configPath)
+        .fold(e => throw new Exception(e), identity)
+      val addrOpt     = db.get(Keys.proxyAddress).fold(e => throw new Exception(e), identity)
+      val userOpt     = db.get(Keys.proxyUser).fold(e => throw new Exception(e), identity)
+      val passwordOpt = db.get(Keys.proxyPassword).fold(e => throw new Exception(e), identity)
+
+      for (addr <- addrOpt) {
+        val userOrNull     = userOpt.map(_.get().value).orNull
+        val passwordOrNull = passwordOpt.map(_.get().value).orNull
+        SetupProxy.setProxyProperties(addr, userOrNull, passwordOrNull, "")
+        SetupProxy.setupAuthenticator()
+      }
+    }
 
 }
