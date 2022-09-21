@@ -56,7 +56,7 @@ public class Bootstrap {
 
         SetupProxy.setup();
 
-        Python.maybeSetPythonProperties(contextLoader);
+        Python.maybeSetPythonProperties(classLoaders.sourceJarFileOrNull(), classLoaders.getDownload(), contextLoader);
 
         ClassLoader classLoader = classLoaders.createClassLoader(contextLoader);
 

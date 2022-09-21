@@ -253,7 +253,8 @@ class CacheJs(val crossScalaVersion: String) extends Cache with CsScalaJsModule 
 
 class Launcher(val crossScalaVersion: String) extends LauncherBase {
   def ivyDeps = super.ivyDeps() ++ Seq(
-    Deps.collectionCompat
+    Deps.collectionCompat,
+    Deps.pythonNativeLibs
   )
   def compileIvyDeps = Agg(
     Deps.dataClass
@@ -855,6 +856,11 @@ def jvmTests(scalaVersion: String = "*") = {
     // format: on
   ).flatten
 
+  val prerequisites = Seq(
+    // required for some tests of `cli-tests`
+    `launcher-native_04`.publishLocal()
+  )
+
   val nonCrossTests = Seq(
     // format: off
     `bootstrap-launcher` .test .test(),
@@ -876,7 +882,7 @@ def jvmTests(scalaVersion: String = "*") = {
     if (scalaVersion == "*") ScalaVersions.all
     else Seq(scalaVersion)
 
-  val tasks = nonCrossTests ++
+  val tasks = prerequisites ++ nonCrossTests ++
     // extraTests ++ // disabled for now (issues on GitHub actions)
     scalaVersions.flatMap { sv =>
       crossTests(sv) ++ crossIts(sv)

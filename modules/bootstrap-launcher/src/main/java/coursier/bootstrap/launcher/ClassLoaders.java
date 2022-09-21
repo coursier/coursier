@@ -7,17 +7,21 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
+import coursier.bootstrap.launcher.jar.JarFile;
 import coursier.paths.Mirror;
 import coursier.paths.Mirror.MirrorPropertiesException;
 
 class ClassLoaders {
 
     final static String resourceDir = "coursier/bootstrap/launcher/";
-    final static String defaultURLResource = resourceDir + "bootstrap-jar-urls";
+    protected final String prefix;
+    final String defaultURLResource;
     private final List<Mirror> mirrors = Mirror.load();
     protected final Download download;
 
-    ClassLoaders(Download download) throws MirrorPropertiesException, IOException {
+    ClassLoaders(Download download, String prefix) throws MirrorPropertiesException, IOException {
+        this.prefix = prefix;
+        this.defaultURLResource = resourceDir + prefix + "-jar-urls";
         this.download = download;
     }
 
@@ -85,6 +89,14 @@ class ClassLoaders {
         ClassLoader parentClassLoader = readBaseLoaders(hideStuffClassLoader);
 
         return new URLClassLoader(localURLs.toArray(new URL[0]), parentClassLoader);
+    }
+
+    Download getDownload() {
+        return download;
+    }
+
+    JarFile sourceJarFileOrNull() {
+        return null;
     }
 
 }

@@ -6,6 +6,7 @@ import java.net.{URL, URLClassLoader}
 import java.nio.file.{Files, Path}
 import java.util.concurrent.ExecutorService
 
+import ai.kien.python.Python
 import caseapp.core.RemainingArgs
 import cats.data.Validated
 import coursier.cli.{CoursierCommand, CommandGroup}
@@ -28,6 +29,7 @@ import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 import scala.util.control.NonFatal
+import scala.util.{Failure, Success}
 
 object Launch extends CoursierCommand[LaunchOptions] {
 
@@ -303,8 +305,8 @@ object Launch extends CoursierCommand[LaunchOptions] {
       else
         (Nil, None)
 
-    val (pythonProps, pythonEnv) =
-      if (params.shared.python || params.jep)
+    val (pythonJepProps, pythonJepEnv) =
+      if (params.shared.pythonJep || params.jep)
         try {
           val home = Jep.pythonHome()
           val props = Jep.pythonProperties()
@@ -322,6 +324,20 @@ object Launch extends CoursierCommand[LaunchOptions] {
         }
       else
         (Nil, EnvironmentUpdate.empty)
+
+    val pythonProps =
+      if (params.shared.python)
+        Python().scalapyProperties match {
+          case Success(props) => props
+          case Failure(e) =>
+            if (params.shared.resolve.output.verbosity >= 2)
+              throw new Exception(e)
+            else if (params.shared.resolve.output.verbosity >= 1)
+              System.err.println(s"Cannot get python properties: $e")
+            Nil
+        }
+      else
+        Nil
 
     val extraJars = params.shared.extraJars.map(_.toFile) ++ jepExtraJar.toSeq
     val hierarchy0 =
@@ -344,7 +360,9 @@ object Launch extends CoursierCommand[LaunchOptions] {
     val properties0 = {
       val m = new java.util.LinkedHashMap[String, String]
       // order matters - jcp first, so that it can be referenced from subsequent variables before expansion
-      for ((k, v) <- jcp.iterator ++ jlp.iterator ++ pythonProps.iterator ++ props.iterator)
+      def allProps =
+        jcp.iterator ++ jlp.iterator ++ pythonJepProps.iterator ++ pythonProps.iterator ++ props.iterator
+      for ((k, v) <- allProps)
         m.put(k, v)
       val m0 = coursier.paths.Util.expandProperties(System.getProperties, m)
       // don't unnecessarily inject java.class.path - passing -cp to the Java invocation is enough
@@ -368,7 +386,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
         javaPath,
         params.shared.javaOptions,
         properties0,
-        pythonEnv + extraEnv,
+        pythonJepEnv + extraEnv,
         params.shared.resolve.output.verbosity,
         params.execve
       )

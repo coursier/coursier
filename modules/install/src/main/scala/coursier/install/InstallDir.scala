@@ -166,6 +166,7 @@ import scala.util.Properties
           .withDeterministic(true)
           .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
           .withExtraZipEntries(infoEntries)
+          .withPythonJep(desc.jna.contains("python-jep"))
           .withPython(desc.jna.contains("python"))
 
         overrideProguardedBootstraps
