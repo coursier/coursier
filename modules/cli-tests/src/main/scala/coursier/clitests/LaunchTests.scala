@@ -127,5 +127,23 @@ abstract class LaunchTests extends TestSuite {
       val expectedOutput = "foo" + System.lineSeparator()
       assert(output == expectedOutput)
     }
+
+    test("python") {
+      val output =
+        os.proc(
+          launcher,
+          "launch",
+          "--python",
+          "io.get-coursier:scalapy-echo_2.13:1.0.7",
+          "--",
+          "a",
+          "b",
+          "foo"
+        )
+          .call()
+          .out.text()
+      val expectedOutput = "a b foo" + System.lineSeparator()
+      assert(output == expectedOutput)
+    }
   }
 }
