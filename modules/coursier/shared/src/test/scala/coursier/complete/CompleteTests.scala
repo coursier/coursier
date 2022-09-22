@@ -2,13 +2,30 @@ package coursier.complete
 
 import coursier.Repositories
 import coursier.ivy.IvyRepository
+import coursier.util.Task
 import utest._
 
 import scala.async.Async.{async, await}
+import scala.concurrent.Future
 
 object CompleteTests extends TestSuite {
 
   import coursier.TestHelpers.{ec, cache, handmadeMetadataCache}
+
+  private def simpleUsing(complete: Complete[Task])(
+    input: String,
+    expected: (Int, Seq[String])
+  ): Future[Unit] =
+    async {
+      val res = await {
+        complete
+          .withInput(input)
+          .complete()
+          .future()
+      }
+
+      assert(res == expected)
+    }
 
   val tests = Tests {
 
@@ -20,17 +37,7 @@ object CompleteTests extends TestSuite {
         ))
         .withScalaVersion("2.12.8")
 
-      def simple(input: String, expected: (Int, Seq[String])) =
-        async {
-          val res = await {
-            complete
-              .withInput(input)
-              .complete()
-              .future()
-          }
-
-          assert(res == expected)
-        }
+      val simple = simpleUsing(complete) _
 
       test - simple("io.get-c", (0, Seq("io.get-coursier")))
       test - simple("io.get-coursier", (0, Seq("io.get-coursier")))
@@ -553,17 +560,7 @@ object CompleteTests extends TestSuite {
         .withRepositories(Seq(repo))
         .withScalaVersion("2.12.8")
 
-      def simple(input: String, expected: (Int, Seq[String])) =
-        async {
-          val res = await {
-            complete
-              .withInput(input)
-              .complete()
-              .future()
-          }
-
-          assert(res == expected)
-        }
+      val simple = simpleUsing(complete) _
 
       test - simple("", 0 -> Seq("com.example", "com.thoughtworks", "test"))
       test - simple("co", 0 -> Seq("com.example", "com.thoughtworks"))
@@ -579,6 +576,25 @@ object CompleteTests extends TestSuite {
       test - simple("com.example:a_2.11:0", 19 -> Seq("0.1.0-SNAPSHOT", "0.2.0-SNAPSHOT"))
       test - simple("com.example:a_2.11:0.1", 19 -> Seq("0.1.0-SNAPSHOT"))
     }
-  }
 
+    test(
+      "should use 3 as binary version when binary version not specified and full version scala 3"
+    ) {
+      val complete = Complete(cache)
+        .withRepositories(Seq(
+          Repositories.central
+        ))
+        .withScalaVersion("3.2.0")
+
+      val simple = simpleUsing(complete) _
+
+      val expected = 17 -> List("dependency")
+      test - simple("io.get-coursier::", 17 -> List("dependency"))
+      test - simple(
+        "io.get-coursier::dependency:",
+        28 -> List("0.2.0", "0.2.1", "0.2.2")
+      )
+      test - simple("io.get-coursierz", 0 -> Nil)
+    }
+  }
 }
