@@ -13,6 +13,8 @@ abstract class PlatformResolve {
 
   def confFileMirrors(confFile: Path): Seq[Mirror] =
     Nil
+  def confFileRepositories(confFile: Path): Option[Seq[Repository]] =
+    None
 
   val defaultRepositories: Seq[Repository] =
     Seq(

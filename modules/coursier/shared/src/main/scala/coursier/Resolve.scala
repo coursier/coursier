@@ -30,7 +30,8 @@ import scala.language.higherKinds
   @since
   initialResolution: Option[Resolution] = None,
   @since
-  confFiles: Seq[Resolve.Path] = Resolve.defaultConfFiles
+  confFiles: Seq[Resolve.Path] = Resolve.defaultConfFiles,
+  preferConfFileDefaultRepositories: Boolean = true
 )(implicit
   sync: Sync[F]
 ) {
@@ -57,8 +58,21 @@ import scala.language.higherKinds
       }
   }
 
-  def finalRepositories: F[Seq[Repository]] =
-    allMirrors.map(Mirror.replace(repositories, _))
+  def finalRepositories: F[Seq[Repository]] = {
+    val repositories0 =
+      if (preferConfFileDefaultRepositories) {
+        val defaultFromConfOpt = confFiles
+          .iterator
+          .flatMap(Resolve.confFileRepositories(_).iterator)
+          .take(1)
+          .toList
+          .headOption
+        defaultFromConfOpt.getOrElse(repositories)
+      }
+      else
+        repositories
+    allMirrors.map(Mirror.replace(repositories0, _))
+  }
 
   def addDependencies(dependencies: Dependency*): Resolve[F] =
     withDependencies(this.dependencies ++ dependencies)

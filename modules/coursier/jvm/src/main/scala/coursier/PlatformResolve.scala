@@ -35,6 +35,17 @@ abstract class PlatformResolve {
     }
   }
 
+  def confFileRepositories(confFile: Path): Option[Seq[Repository]] = {
+    val db       = ConfigDb.open(confFile).fold(e => throw new Exception(e), identity)
+    val valueOpt = db.get(Keys.defaultRepositories).fold(e => throw new Exception(e), identity)
+    valueOpt.map { inputs =>
+      RepositoryParser.repositories(inputs).either match {
+        case Left(errors) => ???
+        case Right(repos) => repos
+      }
+    }
+  }
+
   lazy val defaultRepositories: Seq[Repository] = {
 
     val spaceSep = "\\s+".r
