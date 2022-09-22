@@ -3,7 +3,7 @@ package coursier
 import java.util.concurrent.ConcurrentHashMap
 
 import coursier.cache.{Cache, CacheLogger}
-import coursier.core.{Activation, DependencySet, Exclusions, Reconciliation}
+import coursier.core.{Activation, DependencySet, Exclusions, MinimizedExclusions, Reconciliation}
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.graph.ReverseModuleTree
@@ -12,12 +12,11 @@ import coursier.params.{Mirror, MirrorConfFile, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
 import coursier.util.Monad.ops._
+import dataclass.{data, since}
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.higherKinds
-import dataclass.{data, since}
-import coursier.core.MinimizedExclusions
 
 @data class Resolve[F[_]](
   cache: Cache[F],
@@ -29,7 +28,9 @@ import coursier.core.MinimizedExclusions
   throughOpt: Option[F[Resolution] => F[Resolution]] = None,
   transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]] = None,
   @since
-  initialResolution: Option[Resolution] = None
+  initialResolution: Option[Resolution] = None,
+  @since
+  confFiles: Seq[Resolve.Path] = Resolve.defaultConfFiles
 )(implicit
   sync: Sync[F]
 ) {
@@ -73,6 +74,8 @@ import coursier.core.MinimizedExclusions
 
   def addMirrorConfFiles(mirrorConfFiles: MirrorConfFile*): Resolve[F] =
     withMirrorConfFiles(this.mirrorConfFiles ++ mirrorConfFiles)
+  def addConfFiles(confFiles: Resolve.Path*): Resolve[F] =
+    withConfFiles(this.confFiles ++ confFiles)
 
   def mapResolutionParams(f: ResolutionParams => ResolutionParams): Resolve[F] =
     withResolutionParams(f(resolutionParams))
@@ -93,7 +96,9 @@ import coursier.core.MinimizedExclusions
     withTransformFetcherOpt(fOpt)
 
   private def allMirrors0 =
-    mirrors ++ mirrorConfFiles.flatMap(_.mirrors())
+    mirrors ++
+      mirrorConfFiles.flatMap(_.mirrors()) ++
+      confFiles.flatMap(Resolve.confFileMirrors)
 
   def allMirrors: F[Seq[Mirror]] =
     S.delay(allMirrors0)

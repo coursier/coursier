@@ -3,6 +3,7 @@ package coursier.bootstrap.launcher;
 import coursier.bootstrap.launcher.jar.JarFile;
 import coursier.bootstrap.launcher.proxy.SetupProxy;
 import coursier.paths.CoursierPaths;
+import coursier.paths.Mirror;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -15,6 +16,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public final class Config {
 
@@ -67,6 +70,73 @@ public final class Config {
         return baos.toByteArray();
     }
 
+    static String[] mirrorValues(String input) {
+        String[] split0 = input.split("=", 2);
+        if (split0.length != 2)
+          throw new RuntimeException("Error parsing mirror value '" + input + "'");
+        String[] split1 = split0[1].split(";");
+
+        ArrayList<String> res = new ArrayList<>();
+
+        res.add(split0[0].trim());
+
+        for (String s : split1) {
+            String s0 = s.trim();
+            if (s0.length() > 0) {
+                res.add(s0);
+            }
+        }
+
+        return res.toArray(new String[res.size()]);
+    }
+
+    static Mirror parseMirror(String input) {
+        if (input.startsWith("tree:")) {
+            String input0 = input.substring("tree:".length());
+            String[] values = mirrorValues(input0);
+            ArrayList<String> from = new ArrayList<>(Arrays.asList(values));
+            from.remove(0);
+            return Mirror.of(from, values[0], Mirror.Types.TREE);
+        } else if (input.startsWith("maven:")) {
+            String input0 = input.substring("maven:".length());
+            String[] values = mirrorValues(input0);
+            ArrayList<String> from = new ArrayList<>(Arrays.asList(values));
+            from.remove(0);
+            return Mirror.of(from, values[0], Mirror.Types.MAVEN);
+        } else {
+            String[] values = mirrorValues(input);
+            ArrayList<String> from = new ArrayList<>(Arrays.asList(values));
+            from.remove(0);
+            return Mirror.of(from, values[0], Mirror.Types.MAVEN);
+        }
+    }
+
+    static Mirror[] mirrors(String configFile) throws IOException, InterruptedException {
+
+        Process proc = new ProcessBuilder(csCommand(), "config", "repositories.mirrors", "--config-file", configFile)
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .redirectInput(ProcessBuilder.Redirect.INHERIT)
+                .start();
+
+        byte[] output = readAllBytes(proc.getInputStream());
+        int exitCode = proc.waitFor();
+        if (exitCode != 0) {
+            System.err.println("Warning: failed to read proxy address from " + configFile + ", ignoring it.");
+            return new Mirror[] {};
+        }
+        String content = new String(output, StandardCharsets.UTF_8).trim();
+        String[] rawMirrors = content.split(System.lineSeparator());
+
+        ArrayList<Mirror> mirrors = new ArrayList<>();
+        for (String rawMirror : rawMirrors) {
+            Mirror m = parseMirror(rawMirror);
+            mirrors.add(m);
+        }
+
+        return mirrors.toArray(new Mirror[mirrors.size()]);
+    }
+
     private static String proxyAddress(String configFile) throws IOException, InterruptedException {
 
         Process proc = new ProcessBuilder(csCommand(), "config", "httpProxy.address", "--config-file", configFile)
@@ -113,6 +183,12 @@ public final class Config {
         byte[] content = Files.readAllBytes(configFile);
         String strContent = new String(content, StandardCharsets.UTF_8);
         return strContent.contains("\"httpProxy\"");
+    }
+
+    static boolean mightContainMirrors(Path configFile) throws IOException {
+        byte[] content = Files.readAllBytes(configFile);
+        String strContent = new String(content, StandardCharsets.UTF_8);
+        return strContent.contains("\"repositories\"") && strContent.contains("\"mirrors\"");
     }
 
     public static void maybeLoadConfig() throws Throwable {

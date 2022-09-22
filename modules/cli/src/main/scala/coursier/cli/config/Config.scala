@@ -8,10 +8,17 @@ import coursier.paths.CoursierPaths
 import java.nio.file.{Files, Paths}
 import java.util.Base64
 
-import scala.cli.config.{ConfigDb, Keys, PasswordOption}
+import scala.cli.config.{ConfigDb, Key, Keys, PasswordOption}
 
 object Config extends Command[ConfigOptions] {
   override def hidden = true
+
+  val repositoriesMirrors = new Key.StringListEntry(Seq("repositories"), "mirrors")
+
+  def extraKeys: Map[String, Key[_]] =
+    Seq(repositoriesMirrors)
+      .map(k => k.fullName -> k)
+      .toMap
 
   def run(options: ConfigOptions, args: RemainingArgs): Unit = {
 

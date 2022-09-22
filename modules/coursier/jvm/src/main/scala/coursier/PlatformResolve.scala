@@ -4,19 +4,34 @@ import java.io.File
 
 import scala.cli.config.{ConfigDb, Keys}
 
-import coursier.params.MirrorConfFile
+import coursier.params.{Mirror, MirrorConfFile}
 import coursier.parse.RepositoryParser
 import coursier.paths.CoursierPaths
 import coursier.proxy.SetupProxy
 
 abstract class PlatformResolve {
 
+  type Path = java.nio.file.Path
+
+  def defaultConfFiles: Seq[Path] =
+    Seq(coursier.paths.CoursierPaths.scalaConfigFile())
   def defaultMirrorConfFiles: Seq[MirrorConfFile] = {
     val files = coursier.paths.Mirror.defaultConfigFiles().toSeq ++
       Option(coursier.paths.Mirror.extraConfigFile()).toSeq
     files.map { f =>
       // Warn if f has group and others read permissions?
       MirrorConfFile(f.getAbsolutePath, optional = true)
+    }
+  }
+
+  def confFileMirrors(confFile: Path): Seq[Mirror] = {
+    val db       = ConfigDb.open(confFile).fold(e => throw new Exception(e), identity)
+    val valueOpt = db.get(Keys.repositoriesMirrors).fold(e => throw new Exception(e), identity)
+    valueOpt.toList.flatten.map { input =>
+      Mirror.parse(input) match {
+        case Left(err) => throw new Exception(s"Malformed mirror: $err")
+        case Right(m)  => m
+      }
     }
   }
 

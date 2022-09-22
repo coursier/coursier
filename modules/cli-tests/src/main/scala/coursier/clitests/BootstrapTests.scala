@@ -1,12 +1,14 @@
 package coursier.clitests
 
 import java.io._
-import java.net.ServerSocket
+import java.net.{ServerSocket, URI}
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.util.UUID
 import java.util.regex.Pattern
+import java.util.zip.ZipFile
 
+import scala.io.{Codec, Source}
 import scala.util.Properties
 
 import coursier.clitests.util.TestAuthProxy
@@ -776,5 +778,83 @@ abstract class BootstrapTests extends TestSuite {
           assert(output.trim() == words.mkString(" "))
         }
       }
+
+    test("mirror") {
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0, os.pwd)
+        val cache  = tmpDir / "cache"
+
+        val propsLauncher = tmpDir / "props"
+        os.proc(
+          launcher,
+          "bootstrap",
+          "io.get-coursier:props:1.0.7",
+          "--cache",
+          cache,
+          "-o",
+          propsLauncher
+        )
+          .call(stdin = os.Inherit, stdout = os.Inherit)
+
+        val urls0 = {
+          val zf = new ZipFile(propsLauncher.toIO)
+          val e  = zf.getEntry("coursier/bootstrap/launcher/bootstrap-jar-urls")
+          val is = zf.getInputStream(e)
+          try Source.fromInputStream(is)(Codec.UTF8).mkString.linesIterator.toVector
+          finally is.close()
+        }
+
+        assert(urls0.nonEmpty)
+        assert(urls0.forall(_.startsWith("https://repo1.maven.org/maven2/")))
+
+        val configContent =
+          s"""{
+             |  "repositories": {
+             |    "mirrors": [
+             |      "https://maven-central.storage-download.googleapis.com/maven2 = https://repo1.maven.org/maven2"
+             |    ]
+             |  }
+             |}
+             |""".stripMargin
+        val configFile = tmpDir / "config.json"
+        os.write(configFile, configContent)
+
+        val binDir = tmpDir / "bin"
+        val ext    = if (Properties.isWin) ".bat" else ""
+        os.copy(
+          os.Path(assembly, os.pwd),
+          binDir / s"cs$ext",
+          createFolders = true,
+          copyAttributes = true
+        )
+
+        val (pathVarName, pathValue) = sys.env
+          .find(_._1.toLowerCase(java.util.Locale.ROOT) == "path")
+          .getOrElse(("PATH", ""))
+        val fullPath =
+          Seq(binDir.toString, pathValue).mkString(File.pathSeparator)
+        val propsLauncher0 =
+          if (Properties.isWin) propsLauncher / os.up / (propsLauncher.last + ".bat")
+          else propsLauncher
+        val res1 = os.proc(propsLauncher0, "java.class.path")
+          .call(
+            env = Map(
+              "SCALA_CLI_CONFIG" -> configFile.toString,
+              "COURSIER_CACHE"   -> cache.toString,
+              pathVarName        -> fullPath
+            )
+          )
+        val jars1 = res1.out.trim()
+          .split(File.pathSeparator)
+          .toVector
+          .map(os.Path(_, os.pwd))
+          .filter(_ != propsLauncher)
+          .map(_.relativeTo(cache))
+
+        val gcsPrefix =
+          os.rel / "https" / "maven-central.storage-download.googleapis.com" / "maven2"
+        assert(jars1.forall(_.startsWith(gcsPrefix)))
+      }
+    }
   }
 }
