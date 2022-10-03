@@ -8,6 +8,7 @@ import java.util.UUID
 import java.util.regex.Pattern
 import java.util.zip.ZipFile
 
+import scala.concurrent.duration.Duration
 import scala.io.{Codec, Source}
 import scala.util.Properties
 
@@ -854,6 +855,131 @@ abstract class BootstrapTests extends TestSuite {
         val gcsPrefix =
           os.rel / "https" / "maven-central.storage-download.googleapis.com" / "maven2"
         assert(jars1.forall(_.startsWith(gcsPrefix)))
+      }
+    }
+
+    test("credentials from properties") {
+      val user     = "alex"
+      val password = "secure1234"
+      val realm    = "therealm"
+      val host     = "127.0.0.1"
+      val port = {
+        val s = new ServerSocket(0)
+        try s.getLocalPort()
+        finally s.close()
+      }
+      TestUtil.withTempDir("credentialstest") { root0 =>
+        val root = os.Path(root0)
+
+        val propertiesContent =
+          s"""simple.username=$user
+             |simple.password=$password
+             |simple.host=$host
+             |simple.realm=$realm
+             |simple.https-only=false
+             |simple.auto=true
+             |""".stripMargin
+        val propertiesFile = root / "credentials.properties"
+        os.write(propertiesFile, propertiesContent)
+        val credentialsEnv = Map("COURSIER_CREDENTIALS" -> propertiesFile.toNIO.toUri.toString)
+
+        val propsDep    = "io.get-coursier:props:1.0.7"
+        val firstCache  = root / "cache"
+        val secondCache = root / "cache-2"
+        val thirdCache  = root / "cache-3"
+        os.proc(launcher, "fetch", propsDep, "--cache", firstCache)
+          .call(cwd = root, stdin = os.Inherit, stdout = os.Inherit)
+        val proc = os.proc(
+          launcher,
+          "launch",
+          "io.get-coursier:http-server_2.12:1.0.1",
+          "--",
+          "--user",
+          user,
+          "--password",
+          password,
+          "--realm",
+          realm,
+          "--directory",
+          firstCache / "https" / "repo1.maven.org" / "maven2",
+          "--host",
+          host,
+          "--port",
+          port,
+          "-v"
+        )
+          .spawn(cwd = root, mergeErrIntoOut = true)
+        try {
+
+          // a timeout around this would be great…
+          System.err.println(s"Waiting for local HTTP server to get started on $host:$port…")
+          var lineOpt = Option.empty[String]
+          while (
+            proc.isAlive() && {
+              lineOpt = Some(proc.stdout.readLine())
+              !lineOpt.exists(_.startsWith("Listening on "))
+            }
+          )
+            for (l <- lineOpt)
+              System.err.println(l)
+
+          // Seems required, especially when using native launchers
+          val waitFor = Duration(2L, "s")
+          System.err.println(s"Waiting $waitFor")
+          Thread.sleep(waitFor.toMillis)
+
+          val t = new Thread("test-http-server-output") {
+            setDaemon(true)
+            override def run(): Unit = {
+              var line = ""
+              while (
+                proc.isAlive() && {
+                  line = proc.stdout.readLine()
+                  line != null
+                }
+              )
+                System.err.println(line)
+            }
+          }
+          t.start()
+
+          val propsLauncher = root / "props"
+          os.proc(
+            launcher,
+            "bootstrap",
+            "--no-default",
+            "-r",
+            s"http://$host:$port",
+            propsDep,
+            "-o",
+            propsLauncher,
+            "--cache",
+            secondCache
+          )
+            .call(cwd = root, env = credentialsEnv)
+
+          val propsLauncher0 =
+            if (Properties.isWin) propsLauncher / os.up / s"${propsLauncher.last}.bat"
+            else propsLauncher
+          val res = os.proc(propsLauncher0, "java.class.path")
+            .call(
+              cwd = root,
+              env = Map("COURSIER_CACHE" -> thirdCache.toString) ++ credentialsEnv
+            )
+          val propsBootstrapCp =
+            res.out.trim().split(File.pathSeparator).toVector.map(os.Path(_, root))
+          val actualCp = propsBootstrapCp.filter(_ != propsLauncher)
+          assert(actualCp.nonEmpty)
+          assert(actualCp.forall(_.startsWith(thirdCache)))
+        }
+        finally {
+          proc.destroy()
+          Thread.sleep(100L)
+          if (proc.isAlive()) {
+            Thread.sleep(1000L)
+            proc.destroyForcibly()
+          }
+        }
       }
     }
   }
