@@ -211,9 +211,11 @@ class CacheJvm(val crossScalaVersion: String) extends CacheJvmBase {
     Deps.jniUtils,
     Deps.plexusArchiver,
     Deps.plexusContainerDefault,
+    Deps.scalaCliConfig,
     Deps.windowsAnsi
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+    Deps.jsoniterMacros,
     Deps.svm
   )
   def sources = T.sources {

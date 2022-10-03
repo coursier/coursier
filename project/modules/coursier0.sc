@@ -13,8 +13,7 @@ trait Coursier extends CsModule with CsCrossJvmJsModule with CoursierPublishModu
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.fastParse,
-    Deps.jsoniterCore,
-    Deps.scalaCliConfig
+    Deps.jsoniterCore
   )
 }
 trait CoursierTests extends TestModule {
