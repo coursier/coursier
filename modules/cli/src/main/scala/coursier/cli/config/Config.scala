@@ -3,6 +3,7 @@ package coursier.cli.config
 import caseapp.core.RemainingArgs
 import caseapp.core.app.Command
 import coursier.cache.ArchiveCache
+import coursier.cache.internal.TmpConfig
 import coursier.paths.CoursierPaths
 
 import java.nio.file.{Files, Paths}
@@ -46,7 +47,9 @@ object Config extends Command[ConfigOptions] {
           sys.exit(1)
         case Seq(name, values @ _*) =>
           val keysMap = Keys.map ++
-            Seq(Keys.repositoriesMirrors, Keys.defaultRepositories).map(e => e.fullName -> e)
+            Seq(Keys.repositoriesMirrors, Keys.defaultRepositories, TmpConfig.credentialsKey).map(
+              e => e.fullName -> e
+            )
           keysMap.get(name) match {
             case None => unrecognizedKey(name)
             case Some(entry) =>

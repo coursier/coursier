@@ -191,6 +191,31 @@ public final class Config {
         return strContent.contains("\"repositories\"") && strContent.contains("\"mirrors\"");
     }
 
+    public static String repositoriesCredentials(String configFile) throws IOException, InterruptedException {
+
+        Process proc = new ProcessBuilder(csCommand(), "config", "repositories.credentials", "--config-file", configFile)
+                .redirectOutput(ProcessBuilder.Redirect.PIPE)
+                .redirectError(ProcessBuilder.Redirect.INHERIT)
+                .redirectInput(ProcessBuilder.Redirect.INHERIT)
+                .start();
+
+        byte[] output = readAllBytes(proc.getInputStream());
+        int exitCode = proc.waitFor();
+        if (exitCode != 0) {
+            System.err.println("Warning: failed to read repositories credentials from " + configFile + ", ignoring it.");
+            return "";
+        }
+        return new String(output, StandardCharsets.UTF_8).trim();
+    }
+
+    public static boolean mightContainRepositoriesCredentials(Path configFile) throws IOException {
+        if (!Files.exists(configFile))
+          return false;
+        byte[] content = Files.readAllBytes(configFile);
+        String strContent = new String(content, StandardCharsets.UTF_8);
+        return strContent.contains("\"repositories\"") && strContent.contains("\"credentials\"");
+    }
+
     public static void maybeLoadConfig() throws Throwable {
         Path configPath = CoursierPaths.scalaConfigFile();
 

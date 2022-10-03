@@ -5,9 +5,13 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import coursier.bootstrap.launcher.Config;
+import coursier.paths.CoursierPaths;
 
 /**
  * Java copy of coursier.credentials.Credentials
@@ -18,10 +22,16 @@ public abstract class Credentials implements Serializable {
 
   public abstract List<DirectCredentials> get() throws IOException;
 
+  public static List<Credentials> credentials() throws IOException {
+    List<Credentials> list = new ArrayList<>(credentialsFromProperties());
+    list.addAll(credentialsFromConfig());
+    return list;
+  }
+
   /**
    * Java copy of coursier.cache.CacheDefaults::credentials
    */
-  public static List<Credentials> credentials() throws IOException {
+  static List<Credentials> credentialsFromProperties() throws IOException {
     if (!credentialPropOpt().isPresent()) {
       // Warn if those files have group and others read permissions?
       final List<File> configDirs = Arrays.asList(coursier.paths.CoursierPaths.configDirectories());
@@ -52,6 +62,20 @@ public abstract class Credentials implements Serializable {
           }
         })
         .orElseGet(Collections::emptyList);
+    }
+  }
+
+  static List<DirectCredentials> credentialsFromConfig() {
+    try {
+      Path configPath = CoursierPaths.scalaConfigFile();
+      if (Config.mightContainRepositoriesCredentials(configPath)) {
+        String props = Config.repositoriesCredentials(configPath.toString());
+        return FileCredentials.parse(props, configPath.toString());
+      } else {
+        return new ArrayList<DirectCredentials>(Arrays.asList(new DirectCredentials[0]));
+      }
+    } catch (Throwable ex) { // kind of meh to catch all these…
+      throw new RuntimeException(ex);
     }
   }
 

@@ -4,7 +4,7 @@ import java.io._
 import java.net.{ServerSocket, URI}
 import java.nio.charset.Charset
 import java.nio.file.Files
-import java.util.UUID
+import java.util.{Locale, UUID}
 import java.util.regex.Pattern
 import java.util.zip.ZipFile
 
@@ -859,6 +859,13 @@ abstract class BootstrapTests extends TestSuite {
     }
 
     test("credentials from properties") {
+      credentialsTest(useConfig = false)
+    }
+    test("credentials from config") {
+      credentialsTest(useConfig = true)
+    }
+
+    def credentialsTest(useConfig: Boolean): Unit = {
       val user     = "alex"
       val password = "secure1234"
       val realm    = "therealm"
@@ -871,17 +878,56 @@ abstract class BootstrapTests extends TestSuite {
       TestUtil.withTempDir("credentialstest") { root0 =>
         val root = os.Path(root0)
 
-        val propertiesContent =
-          s"""simple.username=$user
-             |simple.password=$password
-             |simple.host=$host
-             |simple.realm=$realm
-             |simple.https-only=false
-             |simple.auto=true
-             |""".stripMargin
-        val propertiesFile = root / "credentials.properties"
-        os.write(propertiesFile, propertiesContent)
-        val credentialsEnv = Map("COURSIER_CREDENTIALS" -> propertiesFile.toNIO.toUri.toString)
+        val credentialsEnv =
+          if (useConfig) {
+
+            val binDir = root / "bin"
+            val ext    = if (Properties.isWin) ".bat" else ""
+            os.copy(
+              os.Path(assembly, os.pwd),
+              binDir / s"cs$ext",
+              createFolders = true,
+              copyAttributes = true
+            )
+
+            val (pathKey, currentPath) =
+              sys.env.find(_._1.toLowerCase(Locale.ROOT) == "path").getOrElse(("PATH", ""))
+            val fullPath =
+              Seq(binDir.toString, currentPath).mkString(File.pathSeparator)
+
+            val configContent =
+              s"""{
+                 |  "repositories": {
+                 |    "credentials": [
+                 |      {
+                 |        "host": "$host",
+                 |        "user": "value:$user",
+                 |        "password": "value:$password",
+                 |        "realm": "$realm",
+                 |        "httpsOnly": false,
+                 |        "matchHost": true
+                 |      }
+                 |    ]
+                 |  }
+                 |}
+                 |""".stripMargin
+            val configFile = root / "credentials.json"
+            os.write(configFile, configContent)
+            Map("SCALA_CLI_CONFIG" -> configFile.toString, pathKey -> fullPath)
+          }
+          else {
+            val propertiesContent =
+              s"""simple.username=$user
+                 |simple.password=$password
+                 |simple.host=$host
+                 |simple.realm=$realm
+                 |simple.https-only=false
+                 |simple.auto=true
+                 |""".stripMargin
+            val propertiesFile = root / "credentials.properties"
+            os.write(propertiesFile, propertiesContent)
+            Map("COURSIER_CREDENTIALS" -> propertiesFile.toNIO.toUri.toString)
+          }
 
         val propsDep    = "io.get-coursier:props:1.0.7"
         val firstCache  = root / "cache"

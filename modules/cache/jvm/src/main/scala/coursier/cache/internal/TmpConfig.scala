@@ -88,7 +88,29 @@ object TmpConfig {
       writeToArray(value.map(asJson))(codec)
 
     def asString(value: List[DirectCredentials]): Seq[String] =
-      sys.error("Inline credentials not supported, please manually edit the config file")
+      value
+        .zipWithIndex
+        .map {
+          case (cred, idx) =>
+            val prefix = s"configRepo$idx"
+            val lines  = new ListBuffer[String]
+            if (cred.host.nonEmpty)
+              lines += s"$prefix.host=${cred.host}"
+            for (u <- cred.usernameOpt)
+              lines += s"$prefix.username=$u"
+            for (p <- cred.passwordOpt)
+              lines += s"$prefix.password=${p.value}"
+            for (r <- cred.realm)
+              lines += s"$prefix.realm=$r"
+            if (cred.httpsOnly != DirectCredentials.defaultHttpsOnly)
+              lines += s"$prefix.https-only=${cred.httpsOnly}"
+            if (cred.matchHost != DirectCredentials.defaultMatchHost)
+              lines += s"$prefix.auto=${cred.matchHost}"
+            if (cred.passOnRedirect != DirectCredentials().passOnRedirect)
+              lines += s"$prefix.pass-on-redirect=${cred.passOnRedirect}"
+            // seems cred.optional can't be changed from properties…
+            lines.map(_ + System.lineSeparator()).mkString
+        }
     def fromString(values: Seq[String]): Either[Key.MalformedValue, List[DirectCredentials]] =
       sys.error("Inline credentials not accepted, please manually edit the config file")
   }

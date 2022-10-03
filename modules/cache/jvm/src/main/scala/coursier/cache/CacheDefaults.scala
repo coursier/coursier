@@ -11,6 +11,7 @@ import coursier.paths.{CachePath, CoursierPaths}
 import coursier.util.Sync
 
 import scala.cli.config.{ConfigDb, Key, PasswordOption}
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.{Failure, Success, Try}
 
