@@ -45,7 +45,9 @@ object Config extends Command[ConfigOptions] {
           System.err.println("No argument passed")
           sys.exit(1)
         case Seq(name, values @ _*) =>
-          Keys.map.get(name) match {
+          val keysMap = Keys.map ++
+            Seq(Keys.repositoriesMirrors, Keys.defaultRepositories).map(e => e.fullName -> e)
+          keysMap.get(name) match {
             case None => unrecognizedKey(name)
             case Some(entry) =>
               if (values.isEmpty)
