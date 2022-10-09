@@ -23,21 +23,15 @@ object JvmIndex {
 
   def handleAliases(indexName: String): String =
     indexName match {
-      case "cs"       => coursierIndexUrl
-      case "cs-maven" => coursierIndexCoordinates
-      case "jabba"    => jabbaIndexUrl
-      case other      => other
+      case "cs"  => coursierIndexUrl
+      case other => other
     }
 
   def defaultIndexUrl: String =
     coursierIndexUrl
 
-  def jabbaIndexUrl: String =
-    "https://github.com/shyiko/jabba/raw/master/index.json"
   def coursierIndexUrl: String =
     "https://github.com/coursier/jvm-index/raw/master/index.json"
-  def coursierIndexCoordinates: String =
-    "io.get-coursier:jvm-index"
 
   private def artifact(url: String) = Artifact(url).withChanging(true)
 
@@ -147,39 +141,13 @@ object JvmIndex {
         Task.fromEither(fromString(content))
     }
 
-  def jabbaIndexGraalvmJava8Hack(index: JvmIndex): JvmIndex =
-    index.withContent(
-      index.content.map {
-        case (os, m1) =>
-          os -> m1.map {
-            case (arch, m2) =>
-              arch -> m2.flatMap {
-                case (jdkName @ "jdk@graalvm", m3) =>
-                  val jdk8 = jdkName -> m3.map {
-                    case (version, url) =>
-                      version -> url.replace("-java11-", "-java8-")
-                  }
-                  val jdk11 = s"$jdkName-java11" -> m3.collect {
-                    case (version, url) if url.contains("-java8-") || url.contains("-java11-") =>
-                      version -> url.replace("-java8-", "-java11-")
-                  }
-                  Seq(jdk8, jdk11).filter(_._2.nonEmpty)
-                case (jdkName, m3) =>
-                  Seq(jdkName -> m3)
-              }
-          }
-      }
-    )
-
   def load(
     cache: Cache[Task]
   ): Task[JvmIndex] =
     load(cache, defaultIndexUrl)
-      .map(jabbaIndexGraalvmJava8Hack)
 
   def load(): Task[JvmIndex] =
     load(FileCache(), defaultIndexUrl)
-      .map(jabbaIndexGraalvmJava8Hack)
 
   lazy val currentOs: Either[String, String] =
     Option(System.getProperty("os.name")).map(_.toLowerCase(Locale.ROOT)) match {

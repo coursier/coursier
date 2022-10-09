@@ -68,9 +68,8 @@ openjdk:1.14.0
 
 ## JVM index
 
-Currently, the `java` and `java-home` commands rely on
-[the index](https://github.com/shyiko/jabba/blob/master/index.json)
-from the command-line tool [jabba](https://github.com/shyiko/jabba).
+By default `java` and `java-home` commands rely on
+[coursier index](https://github.com/coursier/jvm-index).
 This index is regularly updated, and lists a large variety of JVMs
 for Linux / macOS / Windows.
 
@@ -85,8 +84,12 @@ To list the JVM that can be installed from it, run
 $ cs java --available
 ```
 
-If needed, that index could be complemented or replaced by
-[an index of our own](https://github.com/coursier/jvm-index) at some point.
+It's also possible to specify another source for JVM index providing it to
+`--jvm-index` option. For example,
+
+```bash
+cs java --available --jvm-index https://url/of/your/index.json
+```
 
 ## Short JVM names
 
