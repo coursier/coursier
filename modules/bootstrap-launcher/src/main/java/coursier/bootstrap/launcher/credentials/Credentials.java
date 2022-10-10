@@ -39,7 +39,6 @@ public abstract class Credentials implements Serializable {
       return credentials;
     } else {
       return credentialPropOpt()
-        .filter(Credentials::isPropFile)
         .map(s -> {
           if (isPropFile(s)) {
             try {
