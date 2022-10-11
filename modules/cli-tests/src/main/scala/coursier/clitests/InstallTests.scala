@@ -23,21 +23,17 @@ abstract class InstallTests extends TestSuite {
 
     def inlineApp(): Unit =
       TestUtil.withTempDir { tmpDir =>
-        LauncherTestUtil.run(
-          args = Seq(
-            launcher,
-            "install",
-            "--install-dir",
-            tmpDir.getAbsolutePath,
-            """echo:{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}"""
-          ) ++ extraOptions,
-          directory = tmpDir
-        )
-        val output = LauncherTestUtil.output(
-          Seq(new File(tmpDir, "echo").getAbsolutePath, "foo"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
+        os.proc(
+          launcher,
+          "install",
+          "--install-dir",
+          tmpDir.getAbsolutePath,
+          """echo:{"dependencies": ["io.get-coursier:echo:1.0.1"], "repositories": ["central"]}""",
+          extraOptions
+        ).call(cwd = os.Path(tmpDir, os.pwd))
+        val output = os.proc(new File(tmpDir, "echo").getAbsolutePath, "foo")
+          .call(cwd = os.Path(tmpDir, os.pwd))
+          .out.text()
         val expectedOutput = "foo" + System.lineSeparator()
         assert(output == expectedOutput)
       }

@@ -45,6 +45,10 @@ object Run extends CaseApp[RunOptions] {
     }
     val bootstrapTests = new BootstrapTests {
       val launcher = options.launcher
+      val assembly = options.assembly
+    }
+    val fetchTests = new FetchTests {
+      val launcher = options.launcher
     }
     val launchResults = TestRunner.runAndPrint(
       launchTests.tests,
@@ -56,11 +60,17 @@ object Run extends CaseApp[RunOptions] {
       "BootstrapTests",
       executor = bootstrapTests
     )
+    val fetchResults = TestRunner.runAndPrint(
+      fetchTests.tests,
+      "FetchTests",
+      executor = fetchTests
+    )
 
     var anyError = false
 
     anyError = processResults("LaunchTests.", launchResults.leaves) || anyError
     anyError = processResults("BootstrapTests.", bootstrapResults.leaves) || anyError
+    anyError = processResults("FetchTests.", fetchResults.leaves) || anyError
 
     if (anyError)
       sys.exit(1)

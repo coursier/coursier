@@ -35,9 +35,11 @@ object Deps {
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
+  def pprint                   = ivy"com.lihaoyi::pprint:0.7.3"
   def proguard                 = ivy"com.guardsquare:proguard-base:7.2.2"
   def pythonNativeLibs         = ivy"ai.kien::python-native-libs:0.2.4"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
+  def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:0.1.15"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.3.0"
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.1"
   def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
@@ -55,6 +57,7 @@ object Deps {
   def simulacrum       = ivy"org.typelevel::simulacrum:1.0.0"
   def slf4JNop         = ivy"org.slf4j:slf4j-nop:2.0.1"
   def svm              = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
+  def ujson            = ivy"com.lihaoyi::ujson:1.4.2"
   def utest            = ivy"com.lihaoyi::utest::0.8.1"
   def windowsAnsi      = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.4"
 }

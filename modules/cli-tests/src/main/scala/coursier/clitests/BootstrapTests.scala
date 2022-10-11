@@ -1,9 +1,15 @@
 package coursier.clitests
 
 import java.io._
+import java.net.{ServerSocket, URI}
 import java.nio.charset.Charset
 import java.nio.file.Files
+import java.util.{Locale, UUID}
+import java.util.regex.Pattern
+import java.util.zip.ZipFile
 
+import scala.concurrent.duration.Duration
+import scala.io.{Codec, Source}
 import scala.util.Properties
 
 import coursier.clitests.util.TestAuthProxy
@@ -13,6 +19,7 @@ import utest._
 abstract class BootstrapTests extends TestSuite {
 
   def launcher: String
+  def assembly: String
   def acceptsDOptions: Boolean = true
   def acceptsJOptions: Boolean = true
 
@@ -649,6 +656,375 @@ abstract class BootstrapTests extends TestSuite {
             .out.text()
           val expectedOutput = "foo" + System.lineSeparator()
           assert(output == expectedOutput)
+        }
+      }
+    }
+
+    test("config file authenticated proxy") {
+      if (hasDocker) configFileAuthenticatedProxyTest()
+      else "Docker test disabled"
+    }
+
+    def withAuthProxy[T](f: (String, String, Int) => T): T = {
+      val networkName = "cs-test-" + UUID.randomUUID().toString
+      var containerId = ""
+      try {
+        os.proc("docker", "network", "create", networkName)
+          .call(stdin = os.Inherit, stdout = os.Inherit)
+        val host = {
+          val res  = os.proc("docker", "network", "inspect", networkName).call(stdin = os.Inherit)
+          val resp = ujson.read(res.out.trim())
+          resp.arr(0).apply("IPAM").apply("Config").arr(0).apply("Gateway").str
+        }
+        val port = {
+          val s = new ServerSocket(0)
+          try s.getLocalPort
+          finally s.close()
+        }
+        val res = os.proc(
+          "docker",
+          "run",
+          "-d",
+          "--rm",
+          "-p",
+          s"$port:80",
+          "--network",
+          networkName,
+          "bahamat/authenticated-proxy@sha256:568c759ac687f93d606866fbb397f39fe1350187b95e648376b971e9d7596e75"
+        )
+          .call(stdin = os.Inherit)
+        containerId = res.out.trim()
+        f(networkName, host, port)
+      }
+      finally {
+        if (containerId.nonEmpty) {
+          System.err.println(s"Removing container $containerId")
+          os.proc("docker", "rm", "-f", containerId)
+            .call(stdin = os.Inherit, stdout = os.Inherit)
+        }
+        os.proc("docker", "network", "rm", networkName)
+          .call(stdin = os.Inherit, stdout = os.Inherit)
+      }
+    }
+
+    def configFileAuthenticatedProxyTest(): Unit =
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0, os.pwd)
+
+        os.proc(launcher, "bootstrap", "-o", "cs-echo", "io.get-coursier:echo:1.0.1", extraOptions)
+          .call(cwd = tmpDir)
+
+        val output = os.proc("./cs-echo", "foo")
+          .call(cwd = tmpDir)
+          .out.text()
+        val expectedOutput = "foo" + System.lineSeparator()
+        assert(output == expectedOutput)
+
+        withAuthProxy { (networkName, proxyHost, proxyPort) =>
+          val configContent =
+            s"""{
+               |  "httpProxy": {
+               |    "address": "http://$proxyHost:$proxyPort",
+               |    "user": "value:jack",
+               |    "password": "value:insecure"
+               |  }
+               |}
+               |""".stripMargin
+          val configFile = tmpDir / "config.json"
+          os.write(configFile, configContent)
+
+          val header = "*** Running command ***"
+
+          val words = Seq("a", "b", "foo")
+
+          val scriptContent =
+            s"""#!/usr/bin/env bash
+               |set -e
+               |export PATH="$$(pwd)/bin:$$PATH"
+               |if ./cs-echo a b foo; then
+               |  echo "Expected command to fail at first"
+               |  exit 1
+               |fi
+               |export SCALA_CLI_CONFIG="$$(pwd)/config.json"
+               |echo "$header"
+               |exec ./cs-echo ${words.map(w => "\"" + w + "\"").mkString(" ")}
+               |""".stripMargin
+          os.write(tmpDir / "script.sh", scriptContent)
+
+          os.copy(
+            os.Path(assembly, os.pwd),
+            tmpDir / "bin" / "cs",
+            createFolders = true,
+            copyAttributes = true
+          )
+
+          val res = os.proc(
+            "docker",
+            "run",
+            "--rm",
+            "--dns",
+            "0.0.0.0",
+            "--network",
+            networkName,
+            "-v",
+            s"$tmpDir:/data",
+            "-w",
+            "/data",
+            "eclipse-temurin:17",
+            "/bin/bash",
+            "./script.sh"
+          )
+            .call(cwd = tmpDir)
+          val output = res.out.text().split(Pattern.quote(header)).last
+          assert(output.trim() == words.mkString(" "))
+        }
+      }
+
+    test("mirror") {
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0, os.pwd)
+        val cache  = tmpDir / "cache"
+
+        val propsLauncher = tmpDir / "props"
+        os.proc(
+          launcher,
+          "bootstrap",
+          "io.get-coursier:props:1.0.7",
+          "--cache",
+          cache,
+          "-o",
+          propsLauncher
+        )
+          .call(stdin = os.Inherit, stdout = os.Inherit)
+
+        val urls0 = {
+          val zf = new ZipFile(propsLauncher.toIO)
+          val e  = zf.getEntry("coursier/bootstrap/launcher/bootstrap-jar-urls")
+          val is = zf.getInputStream(e)
+          try Source.fromInputStream(is)(Codec.UTF8).mkString.linesIterator.toVector
+          finally is.close()
+        }
+
+        assert(urls0.nonEmpty)
+        assert(urls0.forall(_.startsWith("https://repo1.maven.org/maven2/")))
+
+        val configContent =
+          s"""{
+             |  "repositories": {
+             |    "mirrors": [
+             |      "https://maven-central.storage-download.googleapis.com/maven2 = https://repo1.maven.org/maven2"
+             |    ]
+             |  }
+             |}
+             |""".stripMargin
+        val configFile = tmpDir / "config.json"
+        os.write(configFile, configContent)
+
+        val binDir = tmpDir / "bin"
+        val ext    = if (Properties.isWin) ".bat" else ""
+        os.copy(
+          os.Path(assembly, os.pwd),
+          binDir / s"cs$ext",
+          createFolders = true,
+          copyAttributes = true
+        )
+
+        val (pathVarName, pathValue) = sys.env
+          .find(_._1.toLowerCase(java.util.Locale.ROOT) == "path")
+          .getOrElse(("PATH", ""))
+        val fullPath =
+          Seq(binDir.toString, pathValue).mkString(File.pathSeparator)
+        val propsLauncher0 =
+          if (Properties.isWin) propsLauncher / os.up / (propsLauncher.last + ".bat")
+          else propsLauncher
+        val res1 = os.proc(propsLauncher0, "java.class.path")
+          .call(
+            env = Map(
+              "SCALA_CLI_CONFIG" -> configFile.toString,
+              "COURSIER_CACHE"   -> cache.toString,
+              pathVarName        -> fullPath
+            )
+          )
+        val jars1 = res1.out.trim()
+          .split(File.pathSeparator)
+          .toVector
+          .map(os.Path(_, os.pwd))
+          .filter(_ != propsLauncher)
+          .map(_.relativeTo(cache))
+
+        val gcsPrefix =
+          os.rel / "https" / "maven-central.storage-download.googleapis.com" / "maven2"
+        assert(jars1.forall(_.startsWith(gcsPrefix)))
+      }
+    }
+
+    test("credentials from properties") {
+      credentialsTest(useConfig = false)
+    }
+    test("credentials from config") {
+      credentialsTest(useConfig = true)
+    }
+
+    def credentialsTest(useConfig: Boolean): Unit = {
+      val user     = "alex"
+      val password = "secure1234"
+      val realm    = "therealm"
+      val host     = "127.0.0.1"
+      val port = {
+        val s = new ServerSocket(0)
+        try s.getLocalPort()
+        finally s.close()
+      }
+      TestUtil.withTempDir("credentialstest") { root0 =>
+        val root = os.Path(root0)
+
+        val credentialsEnv =
+          if (useConfig) {
+
+            val binDir = root / "bin"
+            val ext    = if (Properties.isWin) ".bat" else ""
+            os.copy(
+              os.Path(assembly, os.pwd),
+              binDir / s"cs$ext",
+              createFolders = true,
+              copyAttributes = true
+            )
+
+            val (pathKey, currentPath) =
+              sys.env.find(_._1.toLowerCase(Locale.ROOT) == "path").getOrElse(("PATH", ""))
+            val fullPath =
+              Seq(binDir.toString, currentPath).mkString(File.pathSeparator)
+
+            val configContent =
+              s"""{
+                 |  "repositories": {
+                 |    "credentials": [
+                 |      {
+                 |        "host": "$host",
+                 |        "user": "value:$user",
+                 |        "password": "value:$password",
+                 |        "realm": "$realm",
+                 |        "httpsOnly": false,
+                 |        "matchHost": true
+                 |      }
+                 |    ]
+                 |  }
+                 |}
+                 |""".stripMargin
+            val configFile = root / "credentials.json"
+            os.write(configFile, configContent)
+            Map("SCALA_CLI_CONFIG" -> configFile.toString, pathKey -> fullPath)
+          }
+          else {
+            val propertiesContent =
+              s"""simple.username=$user
+                 |simple.password=$password
+                 |simple.host=$host
+                 |simple.realm=$realm
+                 |simple.https-only=false
+                 |simple.auto=true
+                 |""".stripMargin
+            val propertiesFile = root / "credentials.properties"
+            os.write(propertiesFile, propertiesContent)
+            Map("COURSIER_CREDENTIALS" -> propertiesFile.toNIO.toUri.toString)
+          }
+
+        val propsDep    = "io.get-coursier:props:1.0.7"
+        val firstCache  = root / "cache"
+        val secondCache = root / "cache-2"
+        val thirdCache  = root / "cache-3"
+        os.proc(launcher, "fetch", propsDep, "--cache", firstCache)
+          .call(cwd = root, stdin = os.Inherit, stdout = os.Inherit)
+        val proc = os.proc(
+          launcher,
+          "launch",
+          "io.get-coursier:http-server_2.12:1.0.1",
+          "--",
+          "--user",
+          user,
+          "--password",
+          password,
+          "--realm",
+          realm,
+          "--directory",
+          firstCache / "https" / "repo1.maven.org" / "maven2",
+          "--host",
+          host,
+          "--port",
+          port,
+          "-v"
+        )
+          .spawn(cwd = root, mergeErrIntoOut = true)
+        try {
+
+          // a timeout around this would be great…
+          System.err.println(s"Waiting for local HTTP server to get started on $host:$port…")
+          var lineOpt = Option.empty[String]
+          while (
+            proc.isAlive() && {
+              lineOpt = Some(proc.stdout.readLine())
+              !lineOpt.exists(_.startsWith("Listening on "))
+            }
+          )
+            for (l <- lineOpt)
+              System.err.println(l)
+
+          // Seems required, especially when using native launchers
+          val waitFor = Duration(2L, "s")
+          System.err.println(s"Waiting $waitFor")
+          Thread.sleep(waitFor.toMillis)
+
+          val t = new Thread("test-http-server-output") {
+            setDaemon(true)
+            override def run(): Unit = {
+              var line = ""
+              while (
+                proc.isAlive() && {
+                  line = proc.stdout.readLine()
+                  line != null
+                }
+              )
+                System.err.println(line)
+            }
+          }
+          t.start()
+
+          val propsLauncher = root / "props"
+          os.proc(
+            launcher,
+            "bootstrap",
+            "--no-default",
+            "-r",
+            s"http://$host:$port",
+            propsDep,
+            "-o",
+            propsLauncher,
+            "--cache",
+            secondCache
+          )
+            .call(cwd = root, env = credentialsEnv)
+
+          val propsLauncher0 =
+            if (Properties.isWin) propsLauncher / os.up / s"${propsLauncher.last}.bat"
+            else propsLauncher
+          val res = os.proc(propsLauncher0, "java.class.path")
+            .call(
+              cwd = root,
+              env = Map("COURSIER_CACHE" -> thirdCache.toString) ++ credentialsEnv
+            )
+          val propsBootstrapCp =
+            res.out.trim().split(File.pathSeparator).toVector.map(os.Path(_, root))
+          val actualCp = propsBootstrapCp.filter(_ != propsLauncher)
+          assert(actualCp.nonEmpty)
+          assert(actualCp.forall(_.startsWith(thirdCache)))
+        }
+        finally {
+          proc.destroy()
+          Thread.sleep(100L)
+          if (proc.isAlive()) {
+            Thread.sleep(1000L)
+            proc.destroyForcibly()
+          }
         }
       }
     }

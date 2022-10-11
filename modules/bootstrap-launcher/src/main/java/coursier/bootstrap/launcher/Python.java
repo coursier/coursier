@@ -12,7 +12,7 @@ import java.util.Map;
 
 class Python {
 
-    private static void exit(String message) {
+    static void exit(String message) {
         System.err.println(message);
         System.exit(255);
     }
