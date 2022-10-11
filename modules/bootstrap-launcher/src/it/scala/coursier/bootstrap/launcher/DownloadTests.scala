@@ -64,7 +64,8 @@ object DownloadTests extends TestSuite {
         assert(remoteUrls.size == localUrls.size)
         assert(
           localUrls
-            .map(url => Paths.get(url.toURI).toFile).forall(_.exists)
+            .map(url => Paths.get(url.toURI).toFile)
+            .forall(_.exists())
         )
       }
     }
@@ -82,7 +83,8 @@ object DownloadTests extends TestSuite {
         assert(remoteUrls.size == localUrls.size)
         assert(
           localUrls
-            .map(url => Paths.get(url.toURI).toFile).forall(_.exists)
+            .map(url => Paths.get(url.toURI).toFile)
+            .forall(_.exists())
         )
       }
     }
@@ -105,7 +107,8 @@ object DownloadTests extends TestSuite {
         assert(remoteUrls.size == localUrls.size)
         assert(
           localUrls
-            .map(url => Paths.get(url.toURI).toFile).forall(_.exists)
+            .map(url => Paths.get(url.toURI).toFile)
+            .forall(_.exists())
         )
       }
     }
