@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 import coursier.bootstrap.launcher.jar.JarFile;
+import coursier.paths.CoursierPaths;
 import coursier.paths.Mirror;
 import coursier.paths.Mirror.MirrorPropertiesException;
 
@@ -16,7 +19,7 @@ class ClassLoaders {
     final static String resourceDir = "coursier/bootstrap/launcher/";
     protected final String prefix;
     final String defaultURLResource;
-    private final List<Mirror> mirrors = Mirror.load();
+    private List<Mirror> mirrors = null;
     protected final Download download;
 
     ClassLoaders(Download download, String prefix) throws MirrorPropertiesException, IOException {
@@ -25,7 +28,30 @@ class ClassLoaders {
         this.download = download;
     }
 
+    private void maybeInitMirrors() throws Throwable {
+        if (mirrors == null) {
+            mirrors = Mirror.load();
+
+            Path configPath = CoursierPaths.scalaConfigFile();
+
+            if (Files.exists(configPath) && Config.mightContainMirrors(configPath)) {
+                ArrayList<Mirror> mirrors0 = new ArrayList<>(mirrors);
+                Mirror[] configMirrors = Config.mirrors(configPath.toString());
+                for (Mirror m : configMirrors) {
+                    mirrors0.add(m);
+                }
+                mirrors = mirrors0;
+            }
+        }
+    }
+
     List<URL> getURLs(String[] rawURLs) {
+
+        try {
+            maybeInitMirrors();
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
 
         List<String> errors = new ArrayList<>();
         List<URL> urls = new ArrayList<>();

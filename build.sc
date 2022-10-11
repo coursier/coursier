@@ -211,9 +211,11 @@ class CacheJvm(val crossScalaVersion: String) extends CacheJvmBase {
     Deps.jniUtils,
     Deps.plexusArchiver,
     Deps.plexusContainerDefault,
+    Deps.scalaCliConfig,
     Deps.windowsAnsi
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+    Deps.jsoniterMacros,
     Deps.svm
   )
   def sources = T.sources {
@@ -322,7 +324,8 @@ trait LauncherNative04 extends CsModule with CoursierPublishModule {
 class CoursierJvm(val crossScalaVersion: String) extends CoursierJvmBase { self =>
   def moduleDeps = Seq(
     core.jvm(),
-    cache.jvm()
+    cache.jvm(),
+    `proxy-setup`
   )
   // Put CoursierTests right after TestModule, and see what happens
   object test extends TestModule with Tests with CoursierTests with CsTests with JvmTests
@@ -516,8 +519,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     coursier.jvm(cliScalaVersion),
     install(cliScalaVersion),
     jvm(cliScalaVersion),
-    launcherModule(cliScalaVersion),
-    `proxy-setup`
+    launcherModule(cliScalaVersion)
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.argonautShapeless,
@@ -571,14 +573,18 @@ trait CliTests extends CsModule with CoursierPublishModule { self =>
     Deps.caseApp,
     Deps.dockerClient,
     Deps.osLib,
+    Deps.pprint,
+    Deps.ujson,
     Deps.utest
   )
   object test extends Tests with CsTests {
     def forkArgs = {
       val launcherTask = cli.launcher.map(_.path)
+      val assemblyTask = cli.assembly.map(_.path)
       T {
         super.forkArgs() ++ Seq(
           s"-Dcoursier-test-launcher=${launcherTask()}",
+          s"-Dcoursier-test-assembly=${assemblyTask()}",
           "-Dcoursier-test-launcher-accepts-D=false",
           "-Dcoursier-test-launcher-accepts-J=false"
         )
@@ -593,8 +599,10 @@ trait CliTests extends CsModule with CoursierPublishModule { self =>
     def forkArgs = {
       val launcherTask = cli.nativeImage.map(_.path)
       T {
+        val launcher = launcherTask()
         super.forkArgs() ++ Seq(
-          s"-Dcoursier-test-launcher=${launcherTask()}",
+          s"-Dcoursier-test-launcher=$launcher",
+          s"-Dcoursier-test-assembly=$launcher",
           "-Dcoursier-test-launcher-accepts-D=false",
           "-Dcoursier-test-launcher-accepts-J=false"
         )
