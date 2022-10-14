@@ -46,20 +46,15 @@ object Deps {
   def scalaNativeTools040M2    = ivy"org.scala-native::tools:0.4.0-M2"
   def scalaNativeTools040      = ivy"org.scala-native::tools:0.4.7"
   def scalaReflect(sv: String) = ivy"org.scala-lang:scala-reflect:$sv"
-  def scalaXml(sv: String) = {
-    val ver =
-      if (sv.startsWith("2.12.")) "1.3.0"
-      else "2.1.0"
-    ivy"org.scala-lang.modules::scala-xml:$ver"
-  }
-  def scalazCore       = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
-  def scalazConcurrent = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
-  def simulacrum       = ivy"org.typelevel::simulacrum:1.0.0"
-  def slf4JNop         = ivy"org.slf4j:slf4j-nop:2.0.1"
-  def svm              = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
-  def ujson            = ivy"com.lihaoyi::ujson:1.4.2"
-  def utest            = ivy"com.lihaoyi::utest::0.8.1"
-  def windowsAnsi      = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.4"
+  def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.1.0"
+  def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
+  def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
+  def simulacrum               = ivy"org.typelevel::simulacrum:1.0.0"
+  def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.1"
+  def svm                      = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
+  def ujson                    = ivy"com.lihaoyi::ujson:1.4.2"
+  def utest                    = ivy"com.lihaoyi::utest::0.8.1"
+  def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.4"
 }
 
 object Versions {
@@ -82,7 +77,7 @@ def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"
 
 object ScalaVersions {
   def scala213 = "2.13.6"
-  def scala212 = "2.12.16"
+  def scala212 = "2.12.17"
   val all      = Seq(scala213, scala212)
 
   def scalaJs = "1.9.0"
