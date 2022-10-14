@@ -1,13 +1,14 @@
 package coursier
 
 import java.io.File
+import java.nio.file.{Path, Paths}
 
 import coursier.params.MirrorConfFile
 import utest._
 
 import scala.async.Async.{async, await}
 
-object MirrorConfFileTests extends TestSuite {
+object MirrorTests extends TestSuite {
 
   import TestHelpers.{ec, cache, validateDependencies}
 
@@ -42,13 +43,38 @@ object MirrorConfFileTests extends TestSuite {
         assert(artifacts.forall(_.url.startsWith("https://jcenter.bintray.com")))
       }
 
-      test {
+      test("property file") {
         val mirrorFilePath = Option(getClass.getResource("/test-mirror.properties"))
           .map(u => new File(u.toURI).getAbsolutePath)
           .getOrElse {
             throw new Exception("test-mirror.properties resource not found")
           }
         run(MirrorConfFile(mirrorFilePath))
+      }
+
+      def runConfFile(file: Path) = async {
+        val res = await {
+          Resolve()
+            .noMirrors
+            .withCache(cache)
+            .addConfFiles(file)
+            .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M10")
+            .future()
+        }
+
+        await(validateDependencies(res))
+
+        val artifacts = res.artifacts()
+        assert(artifacts.forall(_.url.startsWith("https://jcenter.bintray.com")))
+      }
+
+      test("conf file") {
+        val confFilePath = Option(getClass.getResource("/test-mirror.json"))
+          .map(u => Paths.get(u.toURI))
+          .getOrElse {
+            throw new Exception("test-mirror.json resource not found")
+          }
+        runConfFile(confFilePath)
       }
     }
   }

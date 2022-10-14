@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
+import java.net.URISyntaxException;
+import java.net.URI;
 import java.util.*;
 
 public final class SetupProxy {
@@ -125,10 +127,76 @@ public final class SetupProxy {
         }
     }
 
-    private static void setProperty(String key, String value) {
+    static void setProperty(String key, String value) {
         if (debug)
           System.err.println("cs-proxy: setProperty(" + key + ", " + value + ")");
         System.setProperty(key, value);
+    }
+
+    public static void setProxyProperties(
+        String addressValue,
+        String usernameValue,
+        String passwordValue,
+        String nonProxyHostsValue
+    ) throws URISyntaxException {
+
+        if (addressValue != null && addressValue.length() > 0) {
+            URI proxyUri = new URI(addressValue);
+
+            String protocol = proxyUri.getScheme();
+            int port = proxyUri.getPort();
+            if (port < 0)
+                port = protocol.equals("https") ? 443 : 80;
+
+            SetupProxy.setProxyProperties(
+                proxyUri.getScheme(),
+                proxyUri.getHost(),
+                Integer.toString(port),
+                usernameValue,
+                passwordValue,
+                nonProxyHostsValue,
+                ""
+            );
+        }
+    }
+
+    public static void setProxyProperties(
+        String protocolValue,
+        String hostValue,
+        String portValue,
+        String usernameValue,
+        String passwordValue,
+        String nonProxyHostsValue,
+        String propertyPrefix
+    ) {
+
+        setupTunnelingProp();
+
+        String protocol = protocolValue == null ? "https" : protocolValue;
+
+        // Setting these is coursier-specific I think.
+        // These ensure that we send credentials only if the proxy itself uses that protocol
+        // (so that we don't send credentials to an HTTP proxy if it's supposed to use HTTPS).
+        setProperty(propertyPrefix + "http.proxyProtocol", protocol);
+        setProperty(propertyPrefix + "https.proxyProtocol", protocol);
+
+        setProperty(propertyPrefix + "http.proxyHost", hostValue);
+        setProperty(propertyPrefix + "https.proxyHost", hostValue);
+        if (portValue != null) {
+            setProperty(propertyPrefix + "http.proxyPort", portValue);
+            setProperty(propertyPrefix + "https.proxyPort", portValue);
+        }
+        if (usernameValue != null) {
+            setProperty(propertyPrefix + "http.proxyUser", usernameValue);
+            setProperty(propertyPrefix + "https.proxyUser", usernameValue);
+        }
+        if (passwordValue != null) {
+            setProperty(propertyPrefix + "http.proxyPassword", passwordValue);
+            setProperty(propertyPrefix + "https.proxyPassword", passwordValue);
+        }
+        if (nonProxyHostsValue != null)
+            // protocol is always http for this one
+            setProperty(propertyPrefix + "http.nonProxyHosts", nonProxyHostsValue);
     }
 
     public static void setupPropertiesFrom(File m2Settings, String propertyPrefix) throws ParserConfigurationException, SAXException, IOException {
@@ -160,33 +228,15 @@ public final class SetupProxy {
                 String nonProxyHostsValue = map.get("nonProxyHosts");
 
                 if (hostValue != null) {
-                    setupTunnelingProp();
-
-                    String protocol = protocolValue == null ? "https" : protocolValue;
-
-                    // Setting these is coursier-specific I think.
-                    // These ensure that we send credentials only if the proxy itself uses that protocol
-                    // (so that we don't send credentials to an HTTP proxy if it's supposed to use HTTPS).
-                    setProperty(propertyPrefix + "http.proxyProtocol", protocol);
-                    setProperty(propertyPrefix + "https.proxyProtocol", protocol);
-
-                    setProperty(propertyPrefix + "http.proxyHost", hostValue);
-                    setProperty(propertyPrefix + "https.proxyHost", hostValue);
-                    if (portValue != null) {
-                        setProperty(propertyPrefix + "http.proxyPort", portValue);
-                        setProperty(propertyPrefix + "https.proxyPort", portValue);
-                    }
-                    if (usernameValue != null) {
-                        setProperty(propertyPrefix + "http.proxyUser", usernameValue);
-                        setProperty(propertyPrefix + "https.proxyUser", usernameValue);
-                    }
-                    if (passwordValue != null) {
-                        setProperty(propertyPrefix + "http.proxyPassword", passwordValue);
-                        setProperty(propertyPrefix + "https.proxyPassword", passwordValue);
-                    }
-                    if (nonProxyHostsValue != null)
-                        // protocol is always http for this one
-                        setProperty(propertyPrefix + "http.nonProxyHosts", nonProxyHostsValue);
+                    setProxyProperties(
+                        protocolValue,
+                        hostValue,
+                        portValue,
+                        usernameValue,
+                        passwordValue,
+                        nonProxyHostsValue,
+                        propertyPrefix
+                    );
                 }
             }
         }
@@ -226,7 +276,7 @@ public final class SetupProxy {
         setupPropertiesFrom(m2Settings, "");
     }
 
-    public static void setupAuthenticator(
+    public static boolean setupAuthenticator(
             String httpProtocol,
             String httpHost,
             String httpPort,
@@ -247,7 +297,7 @@ public final class SetupProxy {
         boolean enable = httpHost != null && httpUser != null || httpsHost != null && httpsUser != null;
 
         if (!enable)
-            return;
+            return false;
 
         setupTunnelingProp();
         Authenticator.setDefault(
@@ -272,9 +322,11 @@ public final class SetupProxy {
                     }
                 }
         );
+
+        return true;
     }
 
-    public static void setupAuthenticator() {
+    public static boolean setupAuthenticator() {
 
         String httpProtocol = System.getProperty("http.proxyProtocol");
         String httpHost = System.getProperty("http.proxyHost");
@@ -292,14 +344,14 @@ public final class SetupProxy {
 
         String httpsPort = httpsPortValue == null ? "443" : httpsPortValue;
 
-        setupAuthenticator(
+        return setupAuthenticator(
                 httpProtocol, httpHost, httpPort, httpUser, httpPassword,
                 httpsProtocol, httpsHost, httpsPort, httpsUser, httpsPassword,
                 null, null, null, null, null);
     }
 
-    public static void setup() throws ParserConfigurationException, SAXException, IOException {
+    public static boolean setup() throws ParserConfigurationException, SAXException, IOException {
         setupProperties();
-        setupAuthenticator();
+        return setupAuthenticator();
     }
 }

@@ -2,12 +2,16 @@ package coursier.cache
 
 import java.io.{File, FilenameFilter}
 import java.net.URI
+import java.nio.file.Path
 
-import coursier.credentials.{Credentials, FileCredentials}
+import coursier.cache.internal.TmpConfig
+import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.parse.{CachePolicyParser, CredentialsParser}
-import coursier.paths.CachePath
+import coursier.paths.{CachePath, CoursierPaths}
 import coursier.util.Sync
 
+import scala.cli.config.{ConfigDb, Key, PasswordOption}
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.{Duration, DurationInt}
 import scala.util.{Failure, Success, Try}
 
@@ -90,43 +94,55 @@ object CacheDefaults {
   private def isPropFile(s: String) =
     s.startsWith("/") || s.startsWith("file:")
 
-  def credentials: Seq[Credentials] =
-    if (credentialPropOpt.isEmpty) {
-      // Warn if those files have group and others read permissions?
-      val configDirs = coursier.paths.CoursierPaths.configDirectories().toSeq
-      val mainCredentialsFiles =
-        configDirs.map(configDir => new File(configDir, "credentials.properties"))
-      val otherFiles = {
-        // delay listing files until credentials are really needed?
-        val dirs = configDirs.map(configDir => new File(configDir, "credentials"))
-        val files = dirs.flatMap { dir =>
-          val listOrNull = dir.listFiles { (dir, name) =>
-            !name.startsWith(".") && name.endsWith(".properties")
+  def credentials: Seq[Credentials] = {
+    val legacyCredentials =
+      if (credentialPropOpt.isEmpty) {
+        // Warn if those files have group and others read permissions?
+        val configDirs = coursier.paths.CoursierPaths.configDirectories().toSeq
+        val mainCredentialsFiles =
+          configDirs.map(configDir => new File(configDir, "credentials.properties"))
+        val otherFiles = {
+          // delay listing files until credentials are really needed?
+          val dirs = configDirs.map(configDir => new File(configDir, "credentials"))
+          val files = dirs.flatMap { dir =>
+            val listOrNull = dir.listFiles { (dir, name) =>
+              !name.startsWith(".") && name.endsWith(".properties")
+            }
+            Option(listOrNull).toSeq.flatten
           }
-          Option(listOrNull).toSeq.flatten
+          Option(files).toSeq.flatten.map { f =>
+            FileCredentials(f.getAbsolutePath, optional = true) // non optional?
+          }
         }
-        Option(files).toSeq.flatten.map { f =>
-          FileCredentials(f.getAbsolutePath, optional = true) // non optional?
-        }
+        mainCredentialsFiles.map(f => FileCredentials(f.getAbsolutePath, optional = true)) ++
+          otherFiles
       }
-      mainCredentialsFiles.map(f => FileCredentials(f.getAbsolutePath, optional = true)) ++
-        otherFiles
-    }
-    else
-      credentialPropOpt
-        .toSeq
-        .flatMap {
-          case path if isPropFile(path) =>
-            // hope Windows users can manage to use file:// URLs fine
-            val path0 =
-              if (path.startsWith("file:"))
-                new File(new URI(path)).getAbsolutePath
-              else
-                path
-            Seq(FileCredentials(path0, optional = true))
-          case s =>
-            CredentialsParser.parseSeq(s).either.toSeq.flatten
-        }
+      else
+        credentialPropOpt
+          .toSeq
+          .flatMap {
+            case path if isPropFile(path) =>
+              // hope Windows users can manage to use file:// URLs fine
+              val path0 =
+                if (path.startsWith("file:"))
+                  new File(new URI(path)).getAbsolutePath
+                else
+                  path
+              Seq(FileCredentials(path0, optional = true))
+            case s =>
+              CredentialsParser.parseSeq(s).either.toSeq.flatten
+          }
+
+    val configPath        = CoursierPaths.scalaConfigFile()
+    val configCredentials = credentialsFromConfig(configPath)
+
+    configCredentials ++ legacyCredentials
+  }
+
+  def credentialsFromConfig(configPath: Path): Seq[Credentials] = {
+    val configDb = ConfigDb.open(configPath).fold(e => throw new Exception(e), identity)
+    configDb.get(TmpConfig.credentialsKey).fold(e => throw new Exception(e), _.getOrElse(Nil))
+  }
 
   val noEnvCachePolicies = Seq(
     // first, try to update changing artifacts that were previously downloaded (follows TTL)

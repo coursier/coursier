@@ -18,6 +18,17 @@ object LauncherTestUtil {
       path
   }
 
+  lazy val assembly = {
+    val path = sys.props.getOrElse(
+      "coursier-test-assembly",
+      sys.error("Java property coursier-test-assembly not set")
+    )
+    if (path.startsWith("./") || path.startsWith(".\\"))
+      os.Path(path, os.pwd).toString
+    else
+      path
+  }
+
   private lazy val pathExt = Option(System.getenv("pathext"))
     .toSeq
     .flatMap(_.split(File.pathSeparator))

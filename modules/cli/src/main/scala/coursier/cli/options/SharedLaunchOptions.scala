@@ -22,12 +22,15 @@ final case class SharedLaunchOptions(
   @Value("key=value")
   @Short("D")
     property: List[String] = Nil,
-  
+
   @Group(OptionGroup.launch)
   @Help("Add Java command-line options")
   @Value("option")
     javaOpt: List[String] = Nil,
 
+  @Group(OptionGroup.launch)
+  @Hidden
+    pythonJep: Option[Boolean] = None,
   @Group(OptionGroup.launch)
   @Hidden
     python: Option[Boolean] = None,
@@ -55,6 +58,7 @@ final case class SharedLaunchOptions(
           mainClass,
       javaOpt = app.javaOptions ++ javaOpt,
       property = app.properties.props.map { case (k, v) => s"$k=$v" }.toList ++ property,
+      pythonJep = pythonJep.orElse(if (app.jna.contains("python-jep")) Some(true) else None),
       python = python.orElse(if (app.jna.contains("python")) Some(true) else None)
     )
 
@@ -96,7 +100,8 @@ final case class SharedLaunchOptions(
         }
       )
       .withJna {
-        if (python.getOrElse(false)) List("python")
+        if (pythonJep.getOrElse(false)) List("python-jep")
+        else if (python.getOrElse(false)) List("python")
         else Nil
       }
 }

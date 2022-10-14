@@ -14,7 +14,7 @@ public class Launcher {
             coursier.paths.Util.useJni(BootstrapNativeApi::setup);
 
         Download download = Download.getDefault();
-        ClassLoaders classLoaders = new ClassLoaders(download);
+        ClassLoaders classLoaders = new ClassLoaders(download, "bootstrap");
 
         Bootstrap.main(args, classLoaders);
     }

@@ -73,7 +73,7 @@ public class ResourcesLauncher {
 
         Download download = Download.getDefault();
 
-        ClassLoaders classLoaders = new ResourcesClassLoaders(sourceJarFile, download);
+        ClassLoaders classLoaders = new ResourcesClassLoaders(sourceJarFile, download, "bootstrap");
 
         Bootstrap.main(args, classLoaders);
     }

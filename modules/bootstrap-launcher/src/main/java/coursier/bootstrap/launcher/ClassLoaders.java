@@ -4,24 +4,54 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import coursier.bootstrap.launcher.jar.JarFile;
+import coursier.paths.CoursierPaths;
 import coursier.paths.Mirror;
 import coursier.paths.Mirror.MirrorPropertiesException;
 
 class ClassLoaders {
 
     final static String resourceDir = "coursier/bootstrap/launcher/";
-    final static String defaultURLResource = resourceDir + "bootstrap-jar-urls";
-    private final List<Mirror> mirrors = Mirror.load();
+    protected final String prefix;
+    final String defaultURLResource;
+    private List<Mirror> mirrors = null;
     protected final Download download;
 
-    ClassLoaders(Download download) throws MirrorPropertiesException, IOException {
+    ClassLoaders(Download download, String prefix) throws MirrorPropertiesException, IOException {
+        this.prefix = prefix;
+        this.defaultURLResource = resourceDir + prefix + "-jar-urls";
         this.download = download;
     }
 
+    private void maybeInitMirrors() throws Throwable {
+        if (mirrors == null) {
+            mirrors = Mirror.load();
+
+            Path configPath = CoursierPaths.scalaConfigFile();
+
+            if (Files.exists(configPath) && Config.mightContainMirrors(configPath)) {
+                ArrayList<Mirror> mirrors0 = new ArrayList<>(mirrors);
+                Mirror[] configMirrors = Config.mirrors(configPath.toString());
+                for (Mirror m : configMirrors) {
+                    mirrors0.add(m);
+                }
+                mirrors = mirrors0;
+            }
+        }
+    }
+
     List<URL> getURLs(String[] rawURLs) {
+
+        try {
+            maybeInitMirrors();
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
 
         List<String> errors = new ArrayList<>();
         List<URL> urls = new ArrayList<>();
@@ -85,6 +115,14 @@ class ClassLoaders {
         ClassLoader parentClassLoader = readBaseLoaders(hideStuffClassLoader);
 
         return new URLClassLoader(localURLs.toArray(new URL[0]), parentClassLoader);
+    }
+
+    Download getDownload() {
+        return download;
+    }
+
+    JarFile sourceJarFileOrNull() {
+        return null;
     }
 
 }

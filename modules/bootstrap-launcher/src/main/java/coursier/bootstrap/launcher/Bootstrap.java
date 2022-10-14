@@ -54,9 +54,10 @@ public class Bootstrap {
         Thread thread = Thread.currentThread();
         ClassLoader contextLoader = thread.getContextClassLoader();
 
-        SetupProxy.setup();
+        if (!SetupProxy.setup())
+            Config.maybeLoadConfig();
 
-        Python.maybeSetPythonProperties(contextLoader);
+        Python.maybeSetPythonProperties(classLoaders.sourceJarFileOrNull(), classLoaders.getDownload(), contextLoader);
 
         ClassLoader classLoader = classLoaders.createClassLoader(contextLoader);
 

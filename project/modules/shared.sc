@@ -87,6 +87,7 @@ trait JsTests extends TestModule {
 }
 
 trait CsModule extends SbtModule with ScalaCliCompile {
+  def enableScalaCli = false
   def scalacOptions = T {
     val sv = scalaVersion()
     val scala212Opts =

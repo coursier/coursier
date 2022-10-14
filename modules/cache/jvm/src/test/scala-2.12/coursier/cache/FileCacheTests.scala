@@ -766,8 +766,10 @@ object FileCacheTests extends TestSuite {
 
         val credFile = TestUtil.resourceFile("/credentials.properties")
         assert(credFile.exists())
+        val confFile = TestUtil.resourceFile("/credentials.json")
+        assert(confFile.exists())
 
-        test {
+        test("cred file https") {
           withServers { (httpBaseUri, _) =>
             expect(
               httpBaseUri / "auth-redirect",
@@ -778,12 +780,33 @@ object FileCacheTests extends TestSuite {
           }
         }
 
-        test {
+        test("cred file http") {
           withServers { (httpBaseUri, _) =>
             expect(
               httpBaseUri / "auth" / "redirect",
               "hello auth",
               _.addFileCredentials(credFile)
+            )
+          }
+        }
+
+        test("conf file https") {
+          withServers { (httpBaseUri, _) =>
+            expect(
+              httpBaseUri / "auth-redirect",
+              "hello auth secure",
+              _.withFollowHttpToHttpsRedirections(true)
+                .addCredentials(CacheDefaults.credentialsFromConfig(confFile.toPath): _*)
+            )
+          }
+        }
+
+        test("conf file http") {
+          withServers { (httpBaseUri, _) =>
+            expect(
+              httpBaseUri / "auth" / "redirect",
+              "hello auth",
+              _.addCredentials(CacheDefaults.credentialsFromConfig(confFile.toPath): _*)
             )
           }
         }

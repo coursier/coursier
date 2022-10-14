@@ -6,6 +6,7 @@ import scala.util.Properties
 
 object PackBootstrapTests extends BootstrapTests {
   val launcher = LauncherTestUtil.launcher
+  val assembly = LauncherTestUtil.assembly
   override lazy val acceptsDOptions =
     sys.props.get("coursier-test-launcher-accepts-D").map(_.toLowerCase(Locale.ROOT)) match {
       case Some("true")  => true
