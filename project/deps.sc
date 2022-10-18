@@ -39,7 +39,7 @@ object Deps {
   def proguard                 = ivy"com.guardsquare:proguard-base:7.2.2"
   def pythonNativeLibs         = ivy"ai.kien::python-native-libs:0.2.4"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
-  def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:0.1.15"
+  def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:0.1.16"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.3.0"
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.1"
   def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
