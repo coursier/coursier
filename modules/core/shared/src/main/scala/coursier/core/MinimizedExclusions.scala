@@ -1,7 +1,7 @@
 package coursier.core
 
-import dataclass.data
 import coursier.core.Exclusions.{allOrganizations, allNames}
+import dataclass.data
 import MinimizedExclusions._
 
 /** This file defines a special-purpose structure for exclusions that has the following
@@ -63,7 +63,7 @@ object MinimizedExclusions {
     override def toSet(): Set[(Organization, ModuleName)] = Set((allOrganizations, allNames))
   }
 
-  final case class ExcludeSpecific(
+  @data class ExcludeSpecific(
     byOrg: Set[Organization],
     byModule: Set[ModuleName],
     specific: Set[(Organization, ModuleName)]
@@ -77,15 +77,15 @@ object MinimizedExclusions {
       other match {
         case ExcludeNone => this
         case ExcludeAll  => ExcludeAll
-        case ExcludeSpecific(otherByOrg, otherByModule, otherSpecific) =>
-          val joinedByOrg    = byOrg ++ otherByOrg
-          val joinedByModule = byModule ++ otherByModule
+        case other: ExcludeSpecific =>
+          val joinedByOrg    = byOrg ++ other.byOrg
+          val joinedByModule = byModule ++ other.byModule
 
           val joinedSpecific =
             specific.filter { case e @ (org, module) =>
-              !otherByOrg(org) && !otherByModule(module)
+              !other.byOrg(org) && !other.byModule(module)
             } ++
-              otherSpecific.filter { case e @ (org, module) =>
+              other.specific.filter { case e @ (org, module) =>
                 !byOrg(org) && !byModule(module)
               }
 
@@ -96,15 +96,15 @@ object MinimizedExclusions {
       other match {
         case ExcludeNone => this
         case ExcludeAll  => ExcludeAll
-        case ExcludeSpecific(otherByOrg, otherByModule, otherSpecific) =>
-          val metByOrg    = byOrg intersect otherByOrg
-          val metByModule = byModule intersect otherByModule
+        case other: ExcludeSpecific =>
+          val metByOrg    = byOrg intersect other.byOrg
+          val metByModule = byModule intersect other.byModule
 
           val metSpecific =
             specific.filter { case e @ (org, module) =>
-              otherByOrg(org) || otherByModule(module) || otherSpecific(e)
+              other.byOrg(org) || other.byModule(module) || other.specific(e)
             } ++
-              otherSpecific.filter { case e @ (org, module) =>
+              other.specific.filter { case e @ (org, module) =>
                 byOrg(org) || byModule(module) || specific(e)
               }
 
@@ -133,10 +133,10 @@ object MinimizedExclusions {
       other match {
         case ExcludeNone => false
         case ExcludeAll  => false
-        case ExcludeSpecific(otherByOrg, otherByModule, otherSpecific) =>
-          byOrg.subsetOf(otherByOrg) && byModule.subsetOf(otherByModule) && specific.subsetOf(
-            otherSpecific
-          )
+        case other: ExcludeSpecific =>
+          byOrg.subsetOf(other.byOrg) &&
+          byModule.subsetOf(other.byModule) &&
+          specific.subsetOf(other.specific)
       }
 
     override def toSet(): Set[(Organization, ModuleName)] =
@@ -173,7 +173,7 @@ object MinimizedExclusions {
   }
 }
 
-final case class MinimizedExclusions(data: ExclusionData) {
+@data class MinimizedExclusions(data: ExclusionData) {
   def apply(org: Organization, module: ModuleName): Boolean = data(org, module)
 
   def join(other: MinimizedExclusions): MinimizedExclusions = {
