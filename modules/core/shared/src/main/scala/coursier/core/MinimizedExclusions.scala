@@ -142,34 +142,39 @@ object MinimizedExclusions {
       byOrg.map(_ -> allNames) ++ byModule.map(allOrganizations -> _) ++ specific
   }
 
-  def apply(exclusions: Set[(Organization, ModuleName)]): MinimizedExclusions = {
+  def apply(exclusions: Set[(Organization, ModuleName)]): MinimizedExclusions =
     if (exclusions.isEmpty)
-      return zero
+      zero
+    else {
 
-    val excludeByOrg0  = Set.newBuilder[Organization]
-    val excludeByName0 = Set.newBuilder[ModuleName]
-    val remaining0     = Set.newBuilder[(Organization, ModuleName)]
+      val excludeByOrg0  = Set.newBuilder[Organization]
+      val excludeByName0 = Set.newBuilder[ModuleName]
+      val remaining0     = Set.newBuilder[(Organization, ModuleName)]
 
-    val it = exclusions.iterator
-    while (it.hasNext) {
-      val excl = it.next()
-      if (excl._1 == allOrganizations)
-        if (excl._2 == allNames)
-          return one
+      val it    = exclusions.iterator
+      var isOne = false
+      while (it.hasNext && !isOne) {
+        val excl = it.next()
+        if (excl._1 == allOrganizations)
+          if (excl._2 == allNames)
+            isOne = true
+          else
+            excludeByName0 += excl._2
+        else if (excl._2 == allNames)
+          excludeByOrg0 += excl._1
         else
-          excludeByName0 += excl._2
-      else if (excl._2 == allNames)
-        excludeByOrg0 += excl._1
-      else
-        remaining0 += excl
-    }
+          remaining0 += excl
+      }
 
-    MinimizedExclusions(ExcludeSpecific(
-      excludeByOrg0.result(),
-      excludeByName0.result(),
-      remaining0.result()
-    ))
-  }
+      if (isOne)
+        one
+      else
+        MinimizedExclusions(ExcludeSpecific(
+          excludeByOrg0.result(),
+          excludeByName0.result(),
+          remaining0.result()
+        ))
+    }
 }
 
 @data class MinimizedExclusions(data: MinimizedExclusions.ExclusionData) {
@@ -179,31 +184,31 @@ object MinimizedExclusions {
     val newData = data.join(other.data)
     // If no data was changed, no need to construct a new instance and create a new hashcode
     if (newData eq this.data)
-      return this
+      this
     else if (newData eq other.data)
-      return other
+      other
     else
-      return MinimizedExclusions(newData)
+      MinimizedExclusions(newData)
   }
 
   def meet(other: MinimizedExclusions): MinimizedExclusions = {
     val newData = data.meet(other.data)
     // If no data was changed, no need to construct a new instance and create a new hashcode
     if (newData eq this.data)
-      return this
+      this
     else if (newData eq other.data)
-      return other
+      other
     else
-      return MinimizedExclusions(newData)
+      MinimizedExclusions(newData)
   }
 
   def map(f: String => String): MinimizedExclusions = {
     val newData = data.map(f)
     // If no data was changed, no need to construct a new instance and create a new hashcode
     if (newData eq this.data)
-      return this
+      this
     else
-      return MinimizedExclusions(newData)
+      MinimizedExclusions(newData)
   }
 
   def partitioned()
