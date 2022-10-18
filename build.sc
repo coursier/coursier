@@ -185,7 +185,7 @@ class CoreJvm(val crossScalaVersion: String) extends CoreJvmBase {
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.concurrentReferenceHashMap,
-    Deps.scalaXml(scalaVersion())
+    Deps.scalaXml
   )
   object test extends Tests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
