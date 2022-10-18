@@ -10,12 +10,12 @@ import MinimizedExclusions._
   *   - The data structure is split into various cases, optimizing common cases for join/meet
   *   - The hashcode is cached, such that recalculating the hashcode for these exclusions is cached.
   */
-private[coursier] object MinimizedExclusions {
+object MinimizedExclusions {
 
-  private[coursier] val zero = MinimizedExclusions(ExcludeNone)
-  private[coursier] val one  = MinimizedExclusions(ExcludeAll)
+  val zero = MinimizedExclusions(ExcludeNone)
+  val one  = MinimizedExclusions(ExcludeAll)
 
-  private[coursier] sealed trait ExclusionData {
+  sealed abstract class ExclusionData extends Product with Serializable {
     def apply(org: Organization, module: ModuleName): Boolean
 
     def join(other: ExclusionData): ExclusionData
@@ -32,7 +32,7 @@ private[coursier] object MinimizedExclusions {
     def toSet(): Set[(Organization, ModuleName)]
   }
 
-  private[coursier] case object ExcludeNone extends ExclusionData {
+  case object ExcludeNone extends ExclusionData {
     override def apply(org: Organization, module: ModuleName): Boolean = true
 
     override def join(other: ExclusionData): ExclusionData = other
@@ -47,7 +47,7 @@ private[coursier] object MinimizedExclusions {
     override def toSet(): Set[(Organization, ModuleName)] = Set.empty
   }
 
-  private[coursier] case object ExcludeAll extends ExclusionData {
+  case object ExcludeAll extends ExclusionData {
     override def apply(org: Organization, module: ModuleName): Boolean = false
 
     override def join(other: ExclusionData): ExclusionData = ExcludeAll
@@ -63,7 +63,7 @@ private[coursier] object MinimizedExclusions {
     override def toSet(): Set[(Organization, ModuleName)] = Set((allOrganizations, allNames))
   }
 
-  private[coursier] case class ExcludeSpecific(
+  final case class ExcludeSpecific(
     byOrg: Set[Organization],
     byModule: Set[ModuleName],
     specific: Set[(Organization, ModuleName)]
@@ -143,7 +143,7 @@ private[coursier] object MinimizedExclusions {
       byOrg.map(_ -> allNames) ++ byModule.map(allOrganizations -> _) ++ specific
   }
 
-  private[coursier] def apply(exclusions: Set[(Organization, ModuleName)]): MinimizedExclusions = {
+  def apply(exclusions: Set[(Organization, ModuleName)]): MinimizedExclusions = {
     if (exclusions.isEmpty)
       return zero
 
@@ -173,7 +173,7 @@ private[coursier] object MinimizedExclusions {
   }
 }
 
-private[coursier] case class MinimizedExclusions(data: ExclusionData) {
+final case class MinimizedExclusions(data: ExclusionData) {
   def apply(org: Organization, module: ModuleName): Boolean = data(org, module)
 
   def join(other: MinimizedExclusions): MinimizedExclusions = {
