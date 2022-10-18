@@ -68,8 +68,8 @@ openjdk:1.14.0
 
 ## JVM index
 
-By default `java` and `java-home` commands rely on
-[coursier index](https://github.com/coursier/jvm-index).
+By default, the `java` and `java-home` commands rely on
+the [coursier index](https://github.com/coursier/jvm-index).
 This index is regularly updated, and lists a large variety of JVMs
 for Linux / macOS / Windows.
 
@@ -84,7 +84,7 @@ To list the JVM that can be installed from it, run
 $ cs java --available
 ```
 
-JVM index source could be changed providing `--jvm-index` option. Possible values are
+The JVM index source can be changed by using the `--jvm-index` option. Possible values are
 
 - `cs` (default)
 
@@ -92,9 +92,9 @@ JVM index source could be changed providing `--jvm-index` option. Possible value
 
 - `cs-maven`
 
-  Fetches index from [io.get-coursier:jvm-index](https://repo1.maven.org/maven2/io/get-coursier/jvm-index/) maven repository
+  Fetches index from [io.get-coursier:jvm-index](https://repo1.maven.org/maven2/io/get-coursier/jvm-index/) Maven repository
 
-- arbitrary URL
+- an arbitrary URL
 
   It's also possible to specify arbitrary URL containing JVM index. For example,
 
