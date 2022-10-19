@@ -150,7 +150,7 @@ OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.6+10, mixed mode)
 ```
 will automatically download the latest AdoptOpenJDK 11 (in the coursier cache), unpack it (in the [managed JVM directory](https://get-coursier.io/docs/cli-java.html#managed-jvm-directory)), and run it with `-version`.
 
-It uses the [index](https://github.com/shyiko/jabba/blob/8c8e6be29610a3d5ea505087a791e9a57f6e48a6/index.json) of jabba to know where to download JVM archives, and assumes AdoptOpenJDK if only a version is passed.
+It uses the [index](https://github.com/coursier/jvm-index) by default to know where to download JVM archives from, and assumes AdoptOpenJDK if only a version is passed.
 
 The `java-home` command prints the Java home of a JVM, like
 ```bash
