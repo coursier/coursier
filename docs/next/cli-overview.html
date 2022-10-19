@@ -153,7 +153,7 @@ OpenJDK Runtime Environment AdoptOpenJDK (build 11.0.6+10)
 OpenJDK 64-Bit Server VM AdoptOpenJDK (build 11.0.6+10, mixed mode)
 </code></pre>
 <p>will automatically download the latest AdoptOpenJDK 11 (in the coursier cache), unpack it (in the <a href="https://get-coursier.io/docs/cli-java.html#managed-jvm-directory">managed JVM directory</a>), and run it with <code>-version</code>.</p>
-<p>It uses the <a href="https://github.com/shyiko/jabba/blob/8c8e6be29610a3d5ea505087a791e9a57f6e48a6/index.json">index</a> of jabba to know where to download JVM archives, and assumes AdoptOpenJDK if only a version is passed.</p>
+<p>It uses the <a href="https://github.com/coursier/jvm-index">index</a> by default to know where to download JVM archives from, and assumes AdoptOpenJDK if only a version is passed.</p>
 <p>The <code>java-home</code> command prints the Java home of a JVM, like</p>
 <pre><code class="hljs css language-bash">$ cs java-home --jvm 9
 ~/Library/Caches/Coursier/jvm/adopt@1.9.0-0/Contents/Home
