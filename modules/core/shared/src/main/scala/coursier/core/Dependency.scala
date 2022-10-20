@@ -122,7 +122,7 @@ object Dependency {
   private[coursier] val instanceCache: ConcurrentMap[Dependency, Dependency] =
     coursier.util.Cache.createCache()
 
-  private[core] def apply(
+  def apply(
     module: Module,
     version: String,
     configuration: Configuration,
