@@ -1,6 +1,7 @@
 package coursier.maven
 
 import coursier.core._
+import coursier.core.Validation._
 import coursier.util.Traverse.TraverseOps
 
 import scala.collection.compat._
@@ -32,11 +33,15 @@ object Pom {
   ): Either[String, Module] =
     for {
       organization <- {
-        val e = text(node, "groupId", "Organization").map(Organization(_))
+        val e = text(node, "groupId", "Organization")
+          .flatMap(validateCoordinate(_, "groupId"))
+          .map(Organization(_))
         defaultGroupId.fold(e)(g => Right(e.getOrElse(g)))
       }
       name <- {
-        val n = text(node, "artifactId", "Name").map(ModuleName(_))
+        val n = text(node, "artifactId", "Name")
+          .flatMap(validateCoordinate(_, "artifactId"))
+          .map(ModuleName(_))
         defaultArtifactId.fold(n)(n0 => Right(n.getOrElse(n0)))
       }
     } yield Module(organization, name, Map.empty).trim
@@ -62,22 +67,23 @@ object Pom {
         .map(_.children.filter(_.label == "exclusion"))
         .getOrElse(Seq.empty)
 
-      xmlExclusions
-        .eitherTraverse(module(_, defaultArtifactId = Some(ModuleName("*"))))
-        .map { exclusions =>
+      for {
+        exclusions <- xmlExclusions
+          .eitherTraverse(module(_, defaultArtifactId = Some(ModuleName("*"))))
+        version <- validateCoordinate(version0, "version")
+      } yield {
+        val optional = text(node, "optional", "").toSeq.contains("true")
 
-          val optional = text(node, "optional", "").toSeq.contains("true")
-
-          scopeOpt.getOrElse(Configuration.empty) -> Dependency(
-            mod,
-            version0,
-            Configuration.empty,
-            exclusions.map(mod => (mod.organization, mod.name)).toSet,
-            Attributes(typeOpt.getOrElse(Type.empty), classifierOpt.getOrElse(Classifier.empty)),
-            optional,
-            transitive = true
-          )
-        }
+        scopeOpt.getOrElse(Configuration.empty) -> Dependency(
+          mod,
+          version0,
+          Configuration.empty,
+          exclusions.map(mod => (mod.organization, mod.name)).toSet,
+          Attributes(typeOpt.getOrElse(Type.empty), classifierOpt.getOrElse(Classifier.empty)),
+          optional,
+          transitive = true
+        )
+      }
     }
 
   private def profileActivation(node: Node): (Option[Boolean], Activation) = {

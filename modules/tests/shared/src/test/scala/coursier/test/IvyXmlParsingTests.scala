@@ -65,5 +65,50 @@ object IvyXmlParsingTests extends TestSuite {
 
       assert(result == expected)
     }
+
+    test("'/' and '\\' are invalid in organisation") {
+      val node = """
+        <ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
+          <info organisation="com\github\gseitz" module="sbt-release" revision="1.0.12" status="release" publication="20191016122629" e:sbtVersion="1.0" e:scalaVersion="2.12">
+          </info>
+        </ivy-module>
+      """
+
+      val failure = IvyXml.project(xmlParseDom(node).toOption.get)
+
+      assert(failure.isLeft)
+      val message = failure.left.toOption.get
+      assert(message.contains("com\\github\\gseitz"))
+    }
+
+    test("'/' and '\\' are invalid in module") {
+      val node = """
+        <ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
+          <info organisation="com.github.gseitz" module="sbt/release" revision="1.0.12" status="release" publication="20191016122629" e:sbtVersion="1.0" e:scalaVersion="2.12">
+          </info>
+        </ivy-module>
+      """
+
+      val failure = IvyXml.project(xmlParseDom(node).toOption.get)
+
+      assert(failure.isLeft)
+      val message = failure.left.toOption.get
+      assert(message.contains("sbt/release"))
+    }
+
+    test("'/' and '\\' are invalid in revision") {
+      val node = """
+        <ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
+          <info organisation="com.github.gseitz" module="sbt.release" revision="1.0.12/SNAPSHOT" status="release" publication="20191016122629" e:sbtVersion="1.0" e:scalaVersion="2.12">
+          </info>
+        </ivy-module>
+      """
+
+      val failure = IvyXml.project(xmlParseDom(node).toOption.get)
+
+      assert(failure.isLeft)
+      val message = failure.left.toOption.get
+      assert(message.contains("1.0.12/SNAPSHOT"))
+    }
   }
 }
