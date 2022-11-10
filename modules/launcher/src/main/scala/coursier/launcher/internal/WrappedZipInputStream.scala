@@ -1,6 +1,6 @@
 package coursier.launcher.internal
 
-import java.io.{Closeable, InputStream}
+import java.io.{ByteArrayOutputStream, Closeable, InputStream}
 import java.util.zip.ZipEntry
 
 /*
@@ -42,8 +42,19 @@ final case class WrappedZipInputStream(
       case Left(zis)  => zis.closeEntry()
       case Right(zis) => zis.closeEntry()
     }
-  def readAllBytes(): Array[Byte] =
-    wrapped.merge.readAllBytes()
+  def readAllBytes(): Array[Byte] = {
+    val baos = new ByteArrayOutputStream
+    val is   = wrapped.merge
+    val buf  = Array.ofDim[Byte](16 * 1024)
+    var read = 0
+    while ({
+      read = is.read(buf)
+      read >= 0
+    })
+      if (read > 0)
+        baos.write(buf, 0, read)
+    baos.toByteArray
+  }
   def close(): Unit =
     wrapped.merge.close()
 }
