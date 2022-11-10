@@ -12,6 +12,7 @@ import coursier.core.{
   Publication,
   Type
 }
+import coursier.core.Validation._
 import coursier.util.ValidationNel
 import coursier.util.Traverse._
 
@@ -254,8 +255,12 @@ object DependencyParser {
                 // not using : to split, which would mess up with the parser
                 // Using a proper parsing library would help support ':'.
                 s.split("%", 2) match {
-                  case Array(o, n) => Right((Organization(o), ModuleName(n)))
-                  case _           => Left(s"Malformed exclusion: '$s' (expected 'org%name')")
+                  case Array(o, n) =>
+                    for {
+                      org  <- validateCoordinate(o, "organization")
+                      name <- validateCoordinate(n, "module name")
+                    } yield (Organization(o), ModuleName(n))
+                  case _ => Left(s"Malformed exclusion: '$s' (expected 'org%name')")
                 }
               })
               .getOrElse(Right(Nil))
@@ -305,29 +310,31 @@ object DependencyParser {
 
             parts0.flatMap {
               case (org, rawName, version, config, orgNameSep, withPlatformSuffix) =>
-                excludeOpt.flatMap { exclude =>
-                  ModuleParser.javaOrScalaModule(s"$org$orgNameSep$rawName").map { mod =>
-                    val dep = Dependency(
-                      dummyModule,
-                      version,
-                      config,
-                      exclude,
-                      publication,
-                      optional = false,
-                      transitive = true
-                    )
-                    val dep0 = JavaOrScalaDependency(mod, dep)
-                    val dep1 =
-                      if (withPlatformSuffix)
-                        dep0 match {
-                          case j: JavaOrScalaDependency.JavaDependency => j
-                          case s: JavaOrScalaDependency.ScalaDependency =>
-                            s.withWithPlatformSuffix(true)
-                        }
-                      else
-                        dep0
-                    (dep1, extraDependencyParams)
-                  }
+                for {
+                  exclude <- excludeOpt
+                  version <- validateCoordinate(version, "version")
+                  module  <- ModuleParser.javaOrScalaModule(s"$org$orgNameSep$rawName")
+                } yield {
+                  val dep = Dependency(
+                    dummyModule,
+                    version,
+                    config,
+                    exclude,
+                    publication,
+                    optional = false,
+                    transitive = true
+                  )
+                  val dep0 = JavaOrScalaDependency(module, dep)
+                  val dep1 =
+                    if (withPlatformSuffix)
+                      dep0 match {
+                        case j: JavaOrScalaDependency.JavaDependency => j
+                        case s: JavaOrScalaDependency.ScalaDependency =>
+                          s.withWithPlatformSuffix(true)
+                      }
+                    else
+                      dep0
+                  (dep1, extraDependencyParams)
                 }
             }
         }

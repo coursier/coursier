@@ -2,6 +2,7 @@ package coursier.core
 
 import java.util.concurrent.ConcurrentMap
 
+import coursier.core.Validation._
 import dataclass.data
 import MinimizedExclusions._
 
@@ -20,6 +21,7 @@ import MinimizedExclusions._
   optional: Boolean,
   transitive: Boolean
 ) {
+  assertValid(version, "version")
   lazy val moduleVersion = (module, version)
 
   def this(

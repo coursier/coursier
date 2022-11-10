@@ -1341,6 +1341,22 @@ object FileCacheTests extends TestSuite {
         }
       }
     }
+
+    test("does not accept redundant path elements like .. or .") {
+      intercept[IllegalArgumentException] {
+        val localFile = FileCache.localFile0(
+          "https://evil-repo.org/com.fake/../../../../../../lib1.jar",
+          CacheDefaults.location,
+          None,
+          false
+        )
+        assert(
+          localFile.toString.endsWith("https/evil-repo.org/com.fake/../../../../../../lib1.jar")
+        )
+        assert(false) // local file is out of cache
+      }
+      ()
+    }
   }
 
   // https://stackoverflow.com/questions/6650650/hex-encoded-string-to-byte-array/28157958#28157958

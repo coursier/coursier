@@ -1,6 +1,7 @@
 package coursier.maven
 
 import coursier.core._
+import coursier.core.Validation._
 import coursier.util.SaxHandler
 
 import scala.collection.mutable.ListBuffer
@@ -159,17 +160,25 @@ object PomParser {
       val properties0 = properties.toList
 
       val parentModuleOpt =
-        (parentGroupIdOpt, parentArtifactIdOpt) match {
-          case (Some(parentGroupId), Some(parentArtifactId)) =>
-            Some(Module(Organization(parentGroupId), ModuleName(parentArtifactId), Map.empty))
-          case _ =>
-            None
-        }
+        for {
+          parentGroupId <- parentGroupIdOpt
+            .toRight("Parent organization missing")
+            .flatMap(validateCoordinate(_, "parent groupId"))
+          parentArtifactId <- parentArtifactIdOpt
+            .toRight("Parent artifactId missing")
+            .flatMap(validateCoordinate(_, "parent artifactId"))
+        } yield Module(Organization(parentGroupId), ModuleName(parentArtifactId), Map.empty)
 
       for {
-        finalGroupId <- groupIdOpt.toRight("No organization found")
-        artifactId   <- artifactIdOpt.toRight("No artifactId found")
-        finalVersion <- versionOpt.toRight("No version found")
+        finalGroupId <- groupIdOpt
+          .toRight("No organization found")
+          .flatMap(validateCoordinate(_, "groupId"))
+        artifactId <- artifactIdOpt
+          .toRight("No artifactId found")
+          .flatMap(validateCoordinate(_, "artifactId"))
+        finalVersion <- versionOpt
+          .toRight("No version found")
+          .flatMap(validateCoordinate(_, "version"))
 
         _ <- {
           if (parentModuleOpt.exists(_.organization.value.isEmpty))
@@ -179,7 +188,7 @@ object PomParser {
         }
 
         _ <- {
-          if (parentModuleOpt.nonEmpty && parentVersion.isEmpty)
+          if (parentModuleOpt.isRight && parentVersion.isEmpty)
             Left("No parent version found")
           else
             Right(())
@@ -191,7 +200,10 @@ object PomParser {
 
       } yield {
 
-        val parentOpt = parentModuleOpt.map((_, parentVersion))
+        val parentOpt = for {
+          parentModule  <- parentModuleOpt
+          parentVersion <- validateCoordinate(parentVersion, "parent version")
+        } yield (parentModule, parentVersion)
 
         val extraAttrsMap = extraAttrs
           .map {
@@ -237,7 +249,7 @@ object PomParser {
               config -> dep
           },
           Map.empty,
-          parentOpt,
+          parentOpt.toOption,
           dependencyManagement.toList,
           properties0,
           profiles.toList,
