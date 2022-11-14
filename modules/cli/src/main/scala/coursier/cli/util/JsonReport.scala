@@ -82,30 +82,26 @@ object JsonReport {
       elem: A,
       fetchChildren: A => Seq[A]
     ): Eval[Map[A, Set[String]]] = {
-      println()
-      val knownElems = mutable.HashMap[String, mutable.Set[String]]() 
+      val knownElems = mutable.HashMap[String, mutable.Set[String]]()
       def collectDeps[A: Eq: Show](
         elem: A,
         fetchChildren: A => Seq[A]
       ): mutable.Set[String] = {
         val key = elem.show
-        if(knownElems.contains(key)) {
-          return knownElems.get(key).orNull
-        } else {
+        knownElems.get(key).getOrElse {
           val deps = mutable.HashSet[String]()
           knownElems.put(key, deps)
-          for(child <- fetchChildren(elem)) {
+          for (child <- fetchChildren(elem)) {
             deps.add(child.show)
             val childDeps = collectDeps(child, fetchChildren)
-            for(dep <- childDeps) {
+            for (dep <- childDeps)
               deps.add(dep)
-            }
           }
-          return deps
+          deps
         }
       }
       val result = collectDeps(elem, fetchChildren).toSet[String]
-      return Eval.now(Map(elem -> result))
+      Eval.now(Map(elem -> result))
     }
 
     def flatten[A](
