@@ -224,19 +224,10 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
 
   def resourceDir: String = "coursier/bootstrap/launcher/"
 
-  private lazy val proguardedResourcesBootstrapOpt = {
-    val path = "bootstrap-resources.jar"
-    // caching in spite of Thread.currentThread().getContextClassLoader that may change…
-    val found = Thread.currentThread().getContextClassLoader.getResourceAsStream(path) != null
-    if (found) Some(path)
-    else None
-  }
-
   private def bootstrapResourcePath(hasResources: Boolean, proguarded: Boolean) =
     (hasResources, proguarded) match {
       case (true, true) =>
-        // first one may not have been packaged if coursier was built with JDK 11
-        proguardedResourcesBootstrapOpt.getOrElse("bootstrap-resources-orig.jar")
+        "bootstrap-resources.jar"
       case (true, false) =>
         "bootstrap-resources-orig.jar"
       case (false, true) =>

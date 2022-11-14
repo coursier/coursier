@@ -2,6 +2,7 @@ package coursier.ivy
 
 import coursier.core._
 import coursier.util.Xml._
+import coursier.core.Validation._
 
 import scala.collection.compat._
 
@@ -13,11 +14,15 @@ object IvyXml {
     for {
       org <- node
         .attribute("organisation")
+        .flatMap(validateCoordinate(_, "organisation"))
         .map(Organization(_))
       name <- node
         .attribute("module")
+        .flatMap(validateCoordinate(_, "module"))
         .map(ModuleName(_))
-      version <- node.attribute("revision")
+      version <- node
+        .attribute("revision")
+        .flatMap(validateCoordinate(_, "revision"))
     } yield {
       val attr = node.attributesFromNamespace(attributesNamespace)
       (Module(org, name, attr.toMap), version)
@@ -109,15 +114,21 @@ object IvyXml {
         for {
           org <- node
             .attribute("org")
+            .flatMap(validateCoordinate(_, "org"))
             .toOption
             .toSeq
             .map(Organization(_))
           name <- node
             .attribute("name")
+            .flatMap(validateCoordinate(_, "name"))
             .toOption
             .toSeq
             .map(ModuleName(_))
-          version            <- node.attribute("rev").toOption.toSeq
+          version <- node
+            .attribute("rev")
+            .flatMap(validateCoordinate(_, "rev"))
+            .toOption
+            .toSeq
           rawConf            <- node.attribute("conf").toOption.toSeq
           (fromConf, toConf) <- mappings(rawConf)
           if globalExcludesFilter(fromConf, org, name)

@@ -2,6 +2,7 @@ package coursier.core
 
 import java.util.concurrent.ConcurrentMap
 
+import coursier.core.Validation._
 import dataclass.data
 import MinimizedExclusions._
 
@@ -20,6 +21,7 @@ import MinimizedExclusions._
   optional: Boolean,
   transitive: Boolean
 ) {
+  assertValid(version, "version")
   lazy val moduleVersion = (module, version)
 
   def this(
@@ -122,7 +124,7 @@ object Dependency {
   private[coursier] val instanceCache: ConcurrentMap[Dependency, Dependency] =
     coursier.util.Cache.createCache()
 
-  private[core] def apply(
+  def apply(
     module: Module,
     version: String,
     configuration: Configuration,

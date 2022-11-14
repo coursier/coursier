@@ -338,6 +338,27 @@ object DependencyParserTests extends TestSuite {
           assert(dep == expected)
       }
     }
+
+    test("'/' and '\\' are invalid in organization") {
+      DependencyParser.dependencyParams("org/apache/avro:avro:1.7.4", "2.11.11") match {
+        case Left(err)       => assert(err.contains("org/apache/avro"))
+        case Right((dep, _)) => assert(false)
+      }
+    }
+
+    test("'/' and '\\' are invalid in module name") {
+      DependencyParser.dependencyParams("org-apache-avro:avro\\avro:1.7.4", "2.11.11") match {
+        case Left(err)       => assert(err.contains("avro\\avro"))
+        case Right((dep, _)) => assert(false)
+      }
+    }
+
+    test("'/' and '\\' are invalid in version") {
+      DependencyParser.dependencyParams("org-apache-avro:avro:1.7.4/SNAPSHOT", "2.11.11") match {
+        case Left(err)       => assert(err.contains("1.7.4/SNAPSHOT"))
+        case Right((dep, _)) => assert(false)
+      }
+    }
   }
 
 }

@@ -8,7 +8,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -84,7 +83,12 @@ public class CachePath {
         if (user != null)
             userPart = user + "@";
 
-        return new File(cache, escape(protocol + "/" + userPart + remaining));
+        Path localPath = cache.toPath().normalize().resolve(escape(protocol + "/" + userPart + remaining));
+        if (!localPath.normalize().equals(localPath)) {
+          throw new IllegalArgumentException(url + " contains at least one redundant path element");
+        }
+
+        return localPath.toFile();
     }
 
     public static File temporaryFile(File file) {

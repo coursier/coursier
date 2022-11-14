@@ -2,6 +2,7 @@ package coursier.core
 
 import java.util.concurrent.ConcurrentMap
 
+import coursier.core.Validation._
 import coursier.util.Artifact
 import dataclass.data
 
@@ -37,6 +38,8 @@ object ModuleName {
   name: ModuleName,
   attributes: Map[String, String]
 ) {
+  assertValid(organization.value, "organization")
+  assertValid(name.value, "module name")
 
   def trim: Module = copy(
     organization.map(_.trim),
@@ -406,4 +409,14 @@ trait ArtifactSource {
     project: Project,
     overrideClassifiers: Option[Seq[Classifier]]
   ): Seq[(Publication, Artifact)]
+}
+
+private[coursier] object Validation {
+  def validateCoordinate(value: String, name: String): Either[String, String] =
+    Seq('/', '\\').foldLeft[Either[String, String]](Right(value)) { (acc, char) =>
+      acc.filterOrElse(value => !value.contains(char), s"$name $value contains invalid '$char'")
+    }
+
+  def assertValid(value: String, name: String): Unit =
+    validateCoordinate(value, name).fold(msg => throw new AssertionError(msg), identity)
 }

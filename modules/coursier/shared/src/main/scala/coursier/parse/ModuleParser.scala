@@ -3,6 +3,7 @@ package coursier.parse
 import coursier.core.{Module, ModuleName, Organization}
 import coursier.util.Traverse._
 import coursier.util.ValidationNel
+import coursier.core.Validation._
 
 object ModuleParser {
 
@@ -16,39 +17,31 @@ object ModuleParser {
     val parts = s.split(":", -1)
 
     val values = parts match {
-      case Array(org, rawName) =>
-        Right((Organization(org), rawName, None))
-      case Array(org, "", rawName) =>
-        Right((Organization(org), rawName, Some(false)))
-      case Array(org, "", "", rawName) =>
-        Right((Organization(org), rawName, Some(true)))
-      case _ =>
-        Left(s"malformed module: $s")
+      case Array(org, rawName)         => Right((org, rawName, None))
+      case Array(org, "", rawName)     => Right((org, rawName, Some(false)))
+      case Array(org, "", "", rawName) => Right((org, rawName, Some(true)))
+      case _                           => Left(s"malformed module: $s")
     }
 
-    values.flatMap {
-      case (org, rawName, scalaFullVerOpt) =>
-        val splitName = rawName.split(';')
+    for {
+      values <- values
+      (rawOrg, rawName, scalaFullVerOpt) = values
+      org <- validateCoordinate(rawOrg, "organization")
+      splitName = rawName.split(';')
+      name <-
+        if (splitName.tail.exists(!_.contains("="))) Left(s"malformed attribute(s) in $s")
+        else validateCoordinate(splitName.head, "module name")
+    } yield {
+      val attributes = splitName.tail.map(_.split("=", 2)).map {
+        case Array(key, value) => key -> value
+      }.toMap
 
-        if (splitName.tail.exists(!_.contains("=")))
-          Left(s"malformed attribute(s) in $s")
-        else {
-          val name = splitName.head
-          val attributes = splitName.tail.map(_.split("=", 2)).map {
-            case Array(key, value) => key -> value
-          }.toMap
+      val baseModule = Module(Organization(org), ModuleName(name), attributes)
 
-          val baseModule = Module(org, ModuleName(name), attributes)
-
-          val module = scalaFullVerOpt match {
-            case None =>
-              JavaOrScalaModule.JavaModule(baseModule)
-            case Some(scalaFullVer) =>
-              JavaOrScalaModule.ScalaModule(baseModule, scalaFullVer)
-          }
-
-          Right(module)
-        }
+      scalaFullVerOpt match {
+        case None               => JavaOrScalaModule.JavaModule(baseModule)
+        case Some(scalaFullVer) => JavaOrScalaModule.ScalaModule(baseModule, scalaFullVer)
+      }
     }
   }
 

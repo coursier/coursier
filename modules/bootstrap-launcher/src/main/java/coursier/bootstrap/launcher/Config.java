@@ -58,6 +58,10 @@ public final class Config {
         }
     }
 
+    private static void printVersionMessage() {
+        System.err.println("Note that a cs command from coursier >= v2.1.0-M7-34-gf519b50a3 is recommended.");
+    }
+
     private static byte[] readAllBytes(InputStream is) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         byte[] buf = new byte[16384];
@@ -123,6 +127,7 @@ public final class Config {
         int exitCode = proc.waitFor();
         if (exitCode != 0) {
             System.err.println("Warning: failed to read proxy address from " + configFile + ", ignoring it.");
+            printVersionMessage();
             return new Mirror[] {};
         }
         String content = new String(output, StandardCharsets.UTF_8).trim();
@@ -149,6 +154,7 @@ public final class Config {
         int exitCode = proc.waitFor();
         if (exitCode != 0) {
             System.err.println("Warning: failed to read proxy address from " + configFile + ", ignoring it.");
+            printVersionMessage();
             return "";
         }
         return new String(output, StandardCharsets.UTF_8).trim();
@@ -166,6 +172,7 @@ public final class Config {
         int exitCode = proc.waitFor();
         if (exitCode != 0) {
             System.err.println("Warning: failed to read proxy " + keyName + " from " + configFile + ", ignoring it.");
+            printVersionMessage();
             return "";
         }
         return new String(output, StandardCharsets.UTF_8).trim();
@@ -203,6 +210,7 @@ public final class Config {
         int exitCode = proc.waitFor();
         if (exitCode != 0) {
             System.err.println("Warning: failed to read repositories credentials from " + configFile + ", ignoring it.");
+            printVersionMessage();
             return "";
         }
         return new String(output, StandardCharsets.UTF_8).trim();
