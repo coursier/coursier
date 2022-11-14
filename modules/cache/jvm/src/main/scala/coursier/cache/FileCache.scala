@@ -458,7 +458,7 @@ object FileCache {
       is = new FileInputStream(localFile)
       FileUtil.withContent(is, new FileUtil.UpdateDigest(md))
     }
-    finally is.close()
+    finally if (is != null) is.close()
 
     md.digest()
   }
