@@ -57,6 +57,8 @@ object CacheLocks {
           lock =
             try channel.tryLock()
             catch {
+              case _: OverlappingFileLockException =>
+                null
               case ex: IOException if ex.getMessage == "Resource deadlock avoided" =>
                 deadlockAvoided = true
                 Thread.sleep(200L)
@@ -76,10 +78,6 @@ object CacheLocks {
               channel = null
               Files.deleteIfExists(lockFile)
             }
-        }
-        catch {
-          case _: OverlappingFileLockException =>
-            ifLocked
         }
         finally if (lock != null)
             lock.release()

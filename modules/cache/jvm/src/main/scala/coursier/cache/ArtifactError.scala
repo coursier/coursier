@@ -146,6 +146,7 @@ object ArtifactError {
     "locked",
     file.toString
   )
+  @deprecated("Not thrown by coursier anymore", "2.1.0-RC2")
   final class ConcurrentDownload(val url: String) extends Recoverable(
     "concurrent download",
     url
