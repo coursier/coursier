@@ -391,7 +391,8 @@ import scala.util.control.NonFatal
       file: File,
       url: String,
       keepHeaderChecksums: Boolean,
-      allCredentials0: Seq[DirectCredentials]
+      allCredentials0: Seq[DirectCredentials],
+      proceed: () => Boolean
     ): Either[ArtifactError, Unit] = {
 
       val tmp = CachePath.temporaryFile(file)
@@ -401,10 +402,14 @@ import scala.util.control.NonFatal
       var success = false
 
       try {
-        val res = CacheLocks.withLockOr(location, file)(
-          Downloader.downloading(url, file, sslRetry) {
-            doDownload(file, url, keepHeaderChecksums, allCredentials0, tmp)
-          },
+        val res = Downloader.downloading(url, file, sslRetry)(
+          CacheLocks.withLockOr(location, file)(
+            if (proceed())
+              doDownload(file, url, keepHeaderChecksums, allCredentials0, tmp)
+            else
+              Right(()),
+            checkDownload(file, url, allCredentials0, tmp)
+          ),
           checkDownload(file, url, allCredentials0, tmp)
         )
         success = res.isRight
@@ -506,10 +511,11 @@ import scala.util.control.NonFatal
   private def remote(
     file: File,
     url: String,
-    keepHeaderChecksums: Boolean
+    keepHeaderChecksums: Boolean,
+    proceed: () => Boolean
   ): F[Either[ArtifactError, Unit]] =
     allCredentials.flatMap { allCredentials0 =>
-      blockingIO(Blocking.remote(file, url, keepHeaderChecksums, allCredentials0))
+      blockingIO(Blocking.remote(file, url, keepHeaderChecksums, allCredentials0, proceed))
     }
 
   private def errFile(file: File) = new File(file.getParentFile, "." + file.getName + ".error")
@@ -517,7 +523,8 @@ import scala.util.control.NonFatal
   private def remoteKeepErrors(
     file: File,
     url: String,
-    keepHeaderChecksums: Boolean
+    keepHeaderChecksums: Boolean,
+    proceed: () => Boolean
   ): F[Either[ArtifactError, Unit]] = {
 
     val errFile0 = errFile(file)
@@ -533,7 +540,7 @@ import scala.util.control.NonFatal
       if (errFile0.exists())
         errFile0.delete()
 
-    remote(file, url, keepHeaderChecksums).flatMap { e =>
+    remote(file, url, keepHeaderChecksums, proceed).flatMap { e =>
       blockingIO {
         e match {
           case err @ Left(nf: ArtifactError.NotFound) if nf.permanent.contains(true) =>
@@ -547,16 +554,23 @@ import scala.util.control.NonFatal
     }
   }
 
+  private def checkFileExistsBlocking(
+    file: File,
+    url: String
+  ): Boolean =
+    file.exists() && {
+      logger.foundLocally(url)
+      true
+    }
+
   private def checkFileExists(
     file: File,
     url: String,
     log: Boolean = true // ignored???
   ): F[Either[ArtifactError, Unit]] =
     blockingIO {
-      if (file.exists()) {
-        logger.foundLocally(url)
+      if (checkFileExistsBlocking(file, url))
         Right(())
-      }
       else
         Left(new ArtifactError.NotFound(file.toString))
     }
@@ -591,8 +605,15 @@ import scala.util.control.NonFatal
           needsUpdate <- shouldDownload(file, url, checkRemote = true)
           _ <- {
             val f: F[Either[ArtifactError, Unit]] =
-              if (needsUpdate) remoteKeepErrors(file, url, keepHeaderChecksums)
-              else S.point(Right(()))
+              if (needsUpdate)
+                remoteKeepErrors(
+                  file,
+                  url,
+                  keepHeaderChecksums,
+                  () => !checkFileExistsBlocking(file, url)
+                )
+              else
+                S.point(Right(()))
             EitherT(f)
           }
         } yield ()
@@ -622,9 +643,19 @@ import scala.util.control.NonFatal
             maybeUpdate.run
           case CachePolicy.FetchMissing =>
             EitherT(checkFileExists(file, url))
-              .orElse(EitherT(remoteKeepErrors(file, url, keepHeaderChecksums))).run
+              .orElse {
+                EitherT(
+                  remoteKeepErrors(
+                    file,
+                    url,
+                    keepHeaderChecksums,
+                    () => !checkFileExistsBlocking(file, url)
+                  )
+                )
+              }
+              .run
           case CachePolicy.ForceDownload =>
-            remoteKeepErrors(file, url, keepHeaderChecksums)
+            remoteKeepErrors(file, url, keepHeaderChecksums, () => true)
         }
       }
 
@@ -705,7 +736,8 @@ object Downloader {
     file: File,
     sslRetry: Int
   )(
-    f: => Either[ArtifactError, T]
+    f: => Either[ArtifactError, T],
+    ifLocked: => Option[Either[ArtifactError, T]]
   ): Either[ArtifactError, T] = {
 
     @tailrec
@@ -721,11 +753,7 @@ object Downloader {
             }
           }
 
-          val res = res0.getOrElse {
-            Left(new ArtifactError.ConcurrentDownload(url))
-          }
-
-          Some(res)
+          res0.orElse(ifLocked)
         }
         catch {
           case _: javax.net.ssl.SSLException if retry >= 1 =>
