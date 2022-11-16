@@ -3,9 +3,9 @@ package coursier.launcher
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, FileNotFoundException}
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
-import java.util.zip.{CRC32, ZipEntry, ZipException, ZipInputStream, ZipOutputStream}
+import java.util.zip.{CRC32, ZipEntry, ZipException, ZipOutputStream}
 
-import coursier.launcher.internal.{FileUtil, Zip}
+import coursier.launcher.internal.{FileUtil, WrappedZipInputStream, Zip}
 
 object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
 
@@ -35,7 +35,9 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
                 parameters.content
               else {
                 val files =
-                  resources.map(r => () => new ZipInputStream(new ByteArrayInputStream(r.content)))
+                  resources.map(r =>
+                    () => WrappedZipInputStream.create(new ByteArrayInputStream(r.content))
+                  )
 
                 AssemblyGenerator.writeEntries(files.map(Left(_)), zos, MergeRule.default)
 
@@ -105,7 +107,7 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
           is
       }
 
-    val bootstrapZip = new ZipInputStream(new ByteArrayInputStream(bootstrapJar))
+    val bootstrapZip = WrappedZipInputStream.create(new ByteArrayInputStream(bootstrapJar))
 
     for ((ent, content) <- extraZipEntries) {
       try outputZip.putNextEntry(ent)
@@ -117,7 +119,7 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
       outputZip.closeEntry()
     }
 
-    for ((ent, data) <- Zip.zipEntries(bootstrapZip)) {
+    for ((ent, data) <- bootstrapZip.entriesWithData()) {
       try outputZip.putNextEntry(ent)
       catch {
         case _: ZipException if ent.isDirectory =>
