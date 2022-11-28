@@ -45,7 +45,7 @@ object Deps {
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.1"
   def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
   def scalaNativeTools040M2    = ivy"org.scala-native::tools:0.4.0-M2"
-  def scalaNativeTools040      = ivy"org.scala-native::tools:0.4.8"
+  def scalaNativeTools040      = ivy"org.scala-native::tools:0.4.9"
   def scalaReflect(sv: String) = ivy"org.scala-lang:scala-reflect:$sv"
   def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.1.0"
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
