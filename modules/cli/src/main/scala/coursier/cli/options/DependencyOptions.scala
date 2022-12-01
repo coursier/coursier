@@ -50,7 +50,8 @@ final case class DependencyOptions(
   @Group(OptionGroup.dependency)
   @Help("Path to file with dependencies. " +
     "Dependencies should be separated with newline character")
-    dependencyFiles: List[String] = Nil
+  @Short("f")
+    dependencyFile: List[String] = Nil
 
 )
 // format: on

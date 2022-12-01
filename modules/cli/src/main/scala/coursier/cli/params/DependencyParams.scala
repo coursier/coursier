@@ -59,10 +59,10 @@ object DependencyParams {
       }
 
     val fromFilesDependenciesV: ValidatedNel[String, Seq[String]] =
-      if (options.dependencyFiles.isEmpty)
+      if (options.dependencyFile.isEmpty)
         Validated.validNel(Seq.empty)
       else {
-        val files = options.dependencyFiles
+        val files = options.dependencyFile
         val fromFileDependencies = files.flatMap { file =>
           val source = Source.fromFile(file)
           val lines =

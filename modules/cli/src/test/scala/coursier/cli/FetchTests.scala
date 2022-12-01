@@ -87,7 +87,7 @@ object FetchTests extends TestSuite {
     test("fetch dependencies from file") - withFile(
       "junit:junit:4.12"
     ) { (file, writer) =>
-      val dependencyOpt = DependencyOptions(dependencyFiles = List(file.getAbsolutePath))
+      val dependencyOpt = DependencyOptions(dependencyFile = List(file.getAbsolutePath))
       val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
       val options       = FetchOptions(resolveOptions = resolveOpt)
       val params        = paramsOrThrow(options)
