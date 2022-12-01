@@ -15,6 +15,7 @@ final case class DependencyParams(
   perModuleExclude: Map[JavaOrScalaModule, Set[JavaOrScalaModule]], // FIXME key should be Module
   intransitiveDependencies: Seq[(JavaOrScalaDependency, Map[String, String])],
   sbtPluginDependencies: Seq[(JavaOrScalaDependency, Map[String, String])],
+  fromFilesDependencies: Seq[String],
   platformOpt: Option[ScalaPlatform]
 ) {
   def native: Boolean =
@@ -55,6 +56,23 @@ object DependencyParams {
                   .map("  " + _)
                   .mkString(System.lineSeparator())
             )
+      }
+
+    val fromFilesDependenciesV: ValidatedNel[String, Seq[String]] =
+      if (options.dependencyFiles.isEmpty)
+        Validated.validNel(Seq.empty)
+      else {
+        val files = options.dependencyFiles
+        val fromFileDependencies = files.flatMap { file =>
+          val source = Source.fromFile(file)
+          val lines =
+            try source.mkString.split("\n").filter(_.nonEmpty)
+            finally source.close()
+          lines.toSeq
+        }
+
+        Validated.validNel(fromFileDependencies.toSeq)
+
       }
 
     val perModuleExcludeV: ValidatedNel[String, Map[JavaOrScalaModule, Set[JavaOrScalaModule]]] =
@@ -187,14 +205,23 @@ object DependencyParams {
       perModuleExcludeV,
       intransitiveDependenciesV,
       sbtPluginDependenciesV,
+      fromFilesDependenciesV,
       platformOptV
     ).mapN {
-      (exclude, perModuleExclude, intransitiveDependencies, sbtPluginDependencies, platformOpt) =>
+      (
+        exclude,
+        perModuleExclude,
+        intransitiveDependencies,
+        sbtPluginDependencies,
+        fromFileDependencies,
+        platformOpt
+      ) =>
         DependencyParams(
           exclude,
           perModuleExclude,
           intransitiveDependencies,
           sbtPluginDependencies,
+          fromFileDependencies,
           platformOpt
         )
     }

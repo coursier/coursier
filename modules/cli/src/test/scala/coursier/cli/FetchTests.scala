@@ -84,6 +84,20 @@ object FetchTests extends TestSuite {
       assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
     }
 
+    test("fetch dependencies from file") - withFile(
+      "junit:junit:4.12"
+    ) { (file, writer) =>
+      val dependencyOpt = DependencyOptions(dependencyFiles = List(file.getAbsolutePath))
+      val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
+      val options       = FetchOptions(resolveOptions = resolveOpt)
+      val params        = paramsOrThrow(options)
+
+      val (_, _, _, files) = Fetch.task(params, pool, Seq.empty)
+        .unsafeRun()(ec)
+
+      assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
+    }
+
     test("Underscore and source classifier should fetch default and source files") {
       val artifactOpt = ArtifactOptions(
         classifier = List("_"),
