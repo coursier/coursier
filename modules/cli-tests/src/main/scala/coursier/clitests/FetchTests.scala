@@ -98,8 +98,8 @@ abstract class FetchTests extends TestSuite {
         os.proc(launcher, "fetch", "org.scalacheck::scalacheck:1.16.0", "--scala-version", "3")
           .call()
       assert(res0.exitCode == 0)
-      val output = res0.out.text()
-      val scalacheckPath = Seq("org", "scalacheck", "scalacheck_3", "1.16.0").mkString(`/`)
+      val output           = res0.out.text()
+      val scalacheckPath   = Seq("org", "scalacheck", "scalacheck_3", "1.16.0").mkString(`/`)
       val scalaLibraryPath = Seq("org", "scala-lang", "scala3-library_3").mkString(`/`)
       assert(output.contains(scalacheckPath) && output.contains(scalaLibraryPath))
     }
@@ -109,8 +109,8 @@ abstract class FetchTests extends TestSuite {
         os.proc(launcher, "fetch", "org.scalacheck::scalacheck:1.16.0", "--scala-version", "3.2")
           .call()
       assert(res0.exitCode == 0)
-      val output = res0.out.text()
-      val scalacheckPath = Seq("org", "scalacheck", "scalacheck_3", "1.16.0").mkString(`/`)
+      val output           = res0.out.text()
+      val scalacheckPath   = Seq("org", "scalacheck", "scalacheck_3", "1.16.0").mkString(`/`)
       val scalaLibraryPath = Seq("org", "scala-lang", "scala3-library_3", "3.2").mkString(`/`)
       assert(output.contains(scalacheckPath) && output.contains(scalaLibraryPath))
     }
@@ -120,8 +120,8 @@ abstract class FetchTests extends TestSuite {
         os.proc(launcher, "fetch", "org.scalacheck::scalacheck:1.16.0", "--scala-version", "2")
           .call()
       assert(res0.exitCode == 0)
-      val output = res0.out.text()
-      val scalacheckPath = Seq("org", "scalacheck", "scalacheck_2.13", "1.16.0").mkString(`/`)
+      val output           = res0.out.text()
+      val scalacheckPath   = Seq("org", "scalacheck", "scalacheck_2.13", "1.16.0").mkString(`/`)
       val scalaLibraryPath = Seq("org", "scala-lang", "scala-library", "2.13.").mkString(`/`)
       assert(output.contains(scalacheckPath) && output.contains(scalaLibraryPath))
     }
