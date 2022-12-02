@@ -27,7 +27,18 @@ object JavaOrScalaModule {
 
   def scalaBinaryVersion(scalaVersion: String): String =
     // Directly inspired from https://github.com/sbt/librarymanagement/blob/5ef0af2486d19cc237684000ef34c99191b88dfd/core/src/main/scala/sbt/internal/librarymanagement/cross/CrossVersionUtil.scala#L87
-    if (scalaVersion.startsWith("3"))
+    if (scalaVersion.startsWith("2."))
+      scalaVersion match {
+        case ReleaseV(maj, min, _) =>
+          s"$maj.$min"
+        case BinCompatV(maj, min, _, _, _) =>
+          s"$maj.$min"
+        case NonReleaseV_1(maj, min, patch, _) if patch.toLong > 0 =>
+          s"$maj.$min"
+        case _ =>
+          scalaVersion
+      }
+    else
       scalaVersion match {
         case ReleaseV(maj, _, _) =>
           maj
@@ -36,17 +47,6 @@ object JavaOrScalaModule {
         case BinCompatV(maj, min, patch, stageOrNull, _) =>
           val stage = if (stageOrNull != null) stageOrNull else ""
           scalaBinaryVersion(s"$maj.$min.$patch$stage")
-        case _ =>
-          scalaVersion
-      }
-    else
-      scalaVersion match {
-        case ReleaseV(maj, min, _) =>
-          s"$maj.$min"
-        case BinCompatV(maj, min, _, _, _) =>
-          s"$maj.$min"
-        case NonReleaseV_1(maj, min, patch, _) if patch.toLong > 0 =>
-          s"$maj.$min"
         case _ =>
           scalaVersion
       }
