@@ -45,6 +45,7 @@ $ ./mill -w __.compile
 Using the default import functionality of Metals is _not_ recommended. Instead,
 generate bloop configuration files with
 ```text
+$ ./mill clean
 $ ./mill mill.contrib.bloop.Bloop/install
 ```
 
