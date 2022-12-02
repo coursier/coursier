@@ -27,7 +27,7 @@ object JavaOrScalaModule {
 
   def scalaBinaryVersion(scalaVersion: String): String =
     // Directly inspired from https://github.com/sbt/librarymanagement/blob/5ef0af2486d19cc237684000ef34c99191b88dfd/core/src/main/scala/sbt/internal/librarymanagement/cross/CrossVersionUtil.scala#L87
-    if (scalaVersion.startsWith("3."))
+    if (scalaVersion.startsWith("3"))
       scalaVersion match {
         case ReleaseV(maj, _, _) =>
           maj

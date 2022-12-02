@@ -80,7 +80,8 @@ object Resolve extends CoursierCommand[ResolveOptions] {
           .withRepositories(params.repositories.repositories)
           .withScalaVersionOpt(
             params.resolution.scalaVersionOpt.map { s =>
-              if (s.count(_ == '.') == 1 && s.forall(c => c.isDigit || c == '.')) s + "+"
+              // add a "+" to partial Scala version numbers such as "2.13", "2.12", "3"
+              if (s.count(_ == '.') < 2 && s.forall(c => c.isDigit || c == '.')) s + "+"
               else s
             }
           )

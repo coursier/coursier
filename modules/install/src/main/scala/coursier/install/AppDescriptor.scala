@@ -458,7 +458,9 @@ object AppDescriptor {
     }
 
     val availableScalaVersions =
-      listVersions(cache, repositories, mod"org.scala-lang:scala-library")
+      listVersions(cache, repositories, mod"org.scala-lang:scala-library") ++
+        listVersions(cache, repositories, mod"org.scala-lang:scala3-library_3")
+          .filterNot(_.endsWith("NIGHTLY")) // Nightlies cannot be used as a "binary" version
 
     if (verbosity >= 2) {
       System.err.println(s"Found ${availableScalaVersions.size} scala versions:")
