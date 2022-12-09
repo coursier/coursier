@@ -59,6 +59,23 @@ $ cs fetch --javadoc com.lihaoyi:ammonite_2.12.8:1.6.0
 …
 ```
 
+## File arguments
+
+Pass `--dependency-file <filename>` to read dependecies from file. 
+File content should a list of dependencies separated by a newline character.
+Example usage:
+```bash
+$ cs fetch --dependency-file file_1 --dependency-file file_2
+/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/io/circe/circe-generic_2.13/0.12.3/circe-generic_2.13-0.12.3.jar
+/path/to/coursier/cache/v1/https/repo1.maven.org/maven2/com/lihaoyi/ammonite_2.12.8/1.6.0/ammonite_2.12.8-1.6.0.jar
+…
+```
+With `file_1` content:
+```
+io.circe::circe-generic:0.12.3
+com.lihaoyi:ammonite_2.12.8:1.6.0
+```
+
 ## Multiple classifiers
 
 With both `--sources` and `--javadoc`, if you want to retain standard JARs along

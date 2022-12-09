@@ -9,6 +9,9 @@ import coursier.install.ScalaPlatform
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
 
 import scala.io.Source
+import scala.util.Try
+import coursier.util.ValidationNel
+import coursier.util.Traverse._
 
 final case class DependencyParams(
   exclude: Set[JavaOrScalaModule],
@@ -63,16 +66,28 @@ object DependencyParams {
         Validated.validNel(Seq.empty)
       else {
         val files = options.dependencyFile
-        val fromFileDependencies = files.flatMap { file =>
-          val source = Source.fromFile(file)
-          val lines =
-            try source.mkString.split("\n").filter(_.nonEmpty)
-            finally source.close()
-          lines.toSeq
+        val fromFileDependencies = files.toSeq.validationNelTraverse { file =>
+          val validated = Try {
+            val source = Source.fromFile(file)
+            val lines =
+              try source.mkString.split("\n").filter(_.nonEmpty)
+              finally source.close()
+            lines.toSeq
+          }.toEither
+          ValidationNel.fromEither(validated)
         }
 
-        Validated.validNel(fromFileDependencies.toSeq)
-
+        fromFileDependencies.either match {
+          case Left(errors) =>
+            Validated.invalidNel(
+              s"Cannot read dependencies from files:" + System.lineSeparator() +
+                errors
+                  .map("  " + _.getMessage())
+                  .mkString(System.lineSeparator())
+            )
+          case Right(lines) =>
+            Validated.validNel(lines.flatten)
+        }
       }
 
     val perModuleExcludeV: ValidatedNel[String, Map[JavaOrScalaModule, Set[JavaOrScalaModule]]] =

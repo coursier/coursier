@@ -98,6 +98,46 @@ object FetchTests extends TestSuite {
       assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
     }
 
+    test("fail fetching dependencies from file with invalid content") - withFile(
+      "junit:junit:4.12, something_else"
+    ) { (file, writer) =>
+      val dependencyOpt = DependencyOptions(dependencyFile = List(file.getAbsolutePath))
+      val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
+      val options       = FetchOptions(resolveOptions = resolveOpt)
+      val params        = paramsOrThrow(options)
+
+      val thrownException =
+        try {
+          Fetch.task(params, pool, Seq.empty).unsafeRun()(ec)
+          false
+        }
+        catch {
+          case _: ResolveException =>
+            true
+        }
+      assert(thrownException)
+    }
+
+    test("fail fetching dependencies from non-existing file") {
+      val path          = "path/to/non-existing-file"
+      val dependencyOpt = DependencyOptions(dependencyFile = List(path))
+      val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
+      val options       = FetchOptions(resolveOptions = resolveOpt)
+
+      val errorMessage =
+        "Got errors:" + System.lineSeparator() + "  " + "Cannot read dependencies from files:" + System.lineSeparator() + "  " + path + " (No such file or directory)"
+      val thrownException =
+        try {
+          paramsOrThrow(options)
+          false
+        }
+        catch {
+          case e: Throwable =>
+            e.getMessage().trim() == errorMessage
+        }
+      assert(thrownException)
+    }
+
     test("Underscore and source classifier should fetch default and source files") {
       val artifactOpt = ArtifactOptions(
         classifier = List("_"),
