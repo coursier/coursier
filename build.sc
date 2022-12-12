@@ -228,19 +228,12 @@ class CacheJvm(val crossScalaVersion: String) extends CacheJvmBase {
     `custom-protocol-for-test`.runClasspath()
   }
   object test extends Tests with CsTests {
-    def ivyDeps = T {
-      val sv = scalaVersion()
-      val extra =
-        if (sv.startsWith("2.12."))
-          Agg(
-            Deps.http4sBlazeServer,
-            Deps.http4sDsl,
-            Deps.logbackClassic,
-            Deps.scalaAsync
-          )
-        else Agg.empty[Dep]
-      super.ivyDeps() ++ extra
-    }
+    def ivyDeps = super.ivyDeps() ++ Agg(
+      Deps.http4sBlazeServer,
+      Deps.http4sDsl,
+      Deps.logbackClassic,
+      Deps.scalaAsync
+    )
   }
 }
 class CacheJs(val crossScalaVersion: String) extends Cache with CsScalaJsModule {
