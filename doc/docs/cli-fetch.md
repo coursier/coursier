@@ -61,8 +61,8 @@ $ cs fetch --javadoc com.lihaoyi:ammonite_2.12.8:1.6.0
 
 ## File arguments
 
-Pass `--dependency-file <filename>` to read dependecies from file. 
-File content should a list of dependencies separated by a newline character.
+Pass `--dependency-file <filename>` to read dependencies from a file. 
+The file content should be a list of dependencies separated by a newline character.
 Example usage:
 ```bash
 $ cs fetch --dependency-file file_1 --dependency-file file_2
@@ -74,6 +74,10 @@ With `file_1` content:
 ```
 io.circe::circe-generic:0.12.3
 com.lihaoyi:ammonite_2.12.8:1.6.0
+```
+And `file_2`:
+```
+com.chuusai:shapeless_2.13:2.3.3
 ```
 
 ## Multiple classifiers

@@ -106,36 +106,23 @@ object FetchTests extends TestSuite {
       val options       = FetchOptions(resolveOptions = resolveOpt)
       val params        = paramsOrThrow(options)
 
-      val thrownException =
-        try {
-          Fetch.task(params, pool, Seq.empty).unsafeRun()(ec)
-          false
-        }
-        catch {
-          case _: ResolveException =>
-            true
-        }
-      assert(thrownException)
+      intercept[ResolveException] {
+        Fetch.task(params, pool, Seq.empty).unsafeRun()(ec)
+      }
     }
 
     test("fail fetching dependencies from non-existing file") {
-      val path          = "path/to/non-existing-file"
+      val path          = "non-existing-file-path"
       val dependencyOpt = DependencyOptions(dependencyFile = List(path))
       val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
       val options       = FetchOptions(resolveOptions = resolveOpt)
 
       val errorMessage =
-        "Got errors:" + System.lineSeparator() + "  " + "Cannot read dependencies from files:" + System.lineSeparator() + "  " + path + " (No such file or directory)"
-      val thrownException =
-        try {
-          paramsOrThrow(options)
-          false
-        }
-        catch {
-          case e: Throwable =>
-            e.getMessage().trim() == errorMessage
-        }
-      assert(thrownException)
+        "Got errors:" + System.lineSeparator() + "  " + "Cannot read dependencies from files:" + System.lineSeparator() + "  " + path
+      val thrownException = intercept[RuntimeException] {
+        paramsOrThrow(options)
+      }
+      assert(thrownException.getMessage().startsWith(errorMessage))
     }
 
     test("Underscore and source classifier should fetch default and source files") {
