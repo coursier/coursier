@@ -85,7 +85,7 @@ object TestUtil {
       val builder = BlazeServerBuilder[IO](ExecutionContext.global)
         .withHttpApp(Router("/" -> routes).orNotFound)
 
-      (if (withSsl) builder.withSSLContext(serverSslContext) else builder)
+      (if (withSsl) builder.withSslContext(serverSslContext) else builder)
         .bindHttp(0, "localhost")
         .resource
     }
@@ -120,7 +120,7 @@ object TestUtil {
       uri.copy(
         authority = uri.authority.map { authority =>
           authority.copy(
-            userInfo = userOpt
+            userInfo = userOpt.map(s => Uri.UserInfo(s, None))
           )
         }
       )
@@ -129,9 +129,8 @@ object TestUtil {
   def artifact(uri: Uri, changing: Boolean): Artifact = {
     val (uri0, authOpt) = uri.userInfo match {
       case Some(info) =>
-        assert(!info.contains(':'))
         val updatedUri = uri.copy(authority = uri.authority.map(_.copy(userInfo = None)))
-        (updatedUri, Some(Authentication(info)))
+        (updatedUri, Some(Authentication(info.username)))
       case None =>
         (uri, None)
     }
