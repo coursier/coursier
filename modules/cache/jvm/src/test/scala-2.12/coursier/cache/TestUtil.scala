@@ -77,12 +77,11 @@ object TestUtil {
     f: Uri => T
   ): T = {
 
+    import cats.effect.unsafe.implicits.global
+
     val server = {
 
-      implicit val cs    = IO.contextShift(ExecutionContext.global)
-      implicit val timer = IO.timer(ExecutionContext.global)
-
-      val builder = BlazeServerBuilder[IO](ExecutionContext.global)
+      val builder = BlazeServerBuilder[IO]
         .withHttpApp(Router("/" -> routes).orNotFound)
 
       (if (withSsl) builder.withSslContext(serverSslContext) else builder)

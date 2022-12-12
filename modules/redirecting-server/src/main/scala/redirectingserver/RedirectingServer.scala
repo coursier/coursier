@@ -1,6 +1,7 @@
 package redirectingserver
 
 import cats.effect.IO
+import cats.effect.unsafe.implicits.global // ???
 import org.http4s._
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.dsl.io._
@@ -30,10 +31,7 @@ object RedirectingServer {
         TemporaryRedirect(Location(path.segments.foldLeft(redirectTo)(_ / _)))
     }
 
-    implicit val cs    = IO.contextShift(ExecutionContext.global)
-    implicit val timer = IO.timer(ExecutionContext.global)
-
-    BlazeServerBuilder[IO](ExecutionContext.global)
+    BlazeServerBuilder[IO]
       .bindHttp(port, host)
       .withHttpApp(Router("/" -> service(host, port, redirectTo)).orNotFound)
       .resource
