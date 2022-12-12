@@ -1,7 +1,8 @@
 package redirectingserver
 
+import cats.effect.IO
 import org.http4s._
-import org.http4s.dsl._
+import org.http4s.dsl.io._
 import org.http4s.headers._
 import org.http4s.server.blaze.BlazeBuilder
 
@@ -19,19 +20,19 @@ object RedirectingServer {
     val redirectTo =
       Uri.unsafeFromString(if (args.length >= 3) args(2) else "https://repo1.maven.org/maven2")
 
-    def service(host: String, port: Int, redirectTo: Uri) = HttpService {
+    def service(host: String, port: Int, redirectTo: Uri) = HttpService[IO] {
       case GET -> Path("health-check") =>
         Ok("Server running")
       case (method @ (GET | HEAD)) -> Path(path @ _*) =>
         println(s"${method.name} ${path.mkString("/")}")
-        TemporaryRedirect(path.foldLeft(redirectTo)(_ / _))
+        TemporaryRedirect(Location(path.foldLeft(redirectTo)(_ / _)))
     }
 
-    val server = BlazeBuilder
+    val server = BlazeBuilder[IO]
       .bindHttp(port, host)
       .mountService(service(host, port, redirectTo))
       .start
-      .unsafeRun()
+      .unsafeRunSync()
 
     println(s"Listening on http://$host:$port")
 
@@ -42,6 +43,6 @@ object RedirectingServer {
       while (System.in.read() != -1) {}
     }
 
-    server.shutdown.unsafeRun()
+    server.shutdown.unsafeRunSync()
   }
 }
