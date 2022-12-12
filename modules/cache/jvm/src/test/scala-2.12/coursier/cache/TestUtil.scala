@@ -20,9 +20,13 @@ import javax.net.ssl.{
 }
 import org.http4s.dsl.io._
 import org.http4s.headers.{Authorization, `WWW-Authenticate`}
-import org.http4s.server.blaze.BlazeBuilder
+import org.http4s.server.Router
+import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.syntax.kleisli._
 import org.http4s.util.CaseInsensitiveString
-import org.http4s.{BasicCredentials, Challenge, HttpService, Request, Uri}
+import org.http4s.{BasicCredentials, Challenge, HttpRoutes, Request, Uri}
+
+import scala.concurrent.ExecutionContext
 
 object TestUtil {
 
@@ -67,7 +71,7 @@ object TestUtil {
   }
 
   def withHttpServer[T](
-    routes: HttpService[IO],
+    routes: HttpRoutes[IO],
     withSsl: Boolean = false
   )(
     f: Uri => T
@@ -75,19 +79,23 @@ object TestUtil {
 
     val server = {
 
-      val builder = BlazeBuilder[IO]
-        .mountService(routes)
+      implicit val cs    = IO.contextShift(ExecutionContext.global)
+      implicit val timer = IO.timer(ExecutionContext.global)
+
+      val builder = BlazeServerBuilder[IO](ExecutionContext.global)
+        .withHttpApp(Router("/" -> routes).orNotFound)
 
       (if (withSsl) builder.withSSLContext(serverSslContext) else builder)
         .bindHttp(0, "localhost")
-        .start
-        .unsafeRunSync()
+        .resource
     }
 
-    assert(server.baseUri.renderString.startsWith(if (withSsl) "https://" else "http://"))
-
-    try f(server.baseUri)
-    finally server.shutdownNow()
+    server
+      .use { server0 =>
+        assert(server0.baseUri.renderString.startsWith(if (withSsl) "https://" else "http://"))
+        IO(f(server0.baseUri))
+      }
+      .unsafeRunSync()
   }
 
   def authorized(req: Request[IO], userPass: (String, String)): Boolean = {

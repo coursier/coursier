@@ -14,7 +14,7 @@ import coursier.paths.Util
 import coursier.util.{Artifact, Sync, Task}
 import org.http4s.dsl.io._
 import org.http4s.headers.{Authorization, Location}
-import org.http4s.{Header, HttpService, Response, Uri}
+import org.http4s.{Header, HttpRoutes, Response, Uri}
 import utest._
 
 import scala.async.Async.{async, await}
@@ -97,8 +97,8 @@ object FileCacheTests extends TestSuite {
 
       test("httpToHttp") {
 
-        def routes(resp: Location => IO[Response[IO]]): HttpService[IO] =
-          HttpService[IO] {
+        def routes(resp: Location => IO[Response[IO]]): HttpRoutes[IO] =
+          HttpRoutes.of[IO] {
             case GET -> Root / "hello"    => Ok("hello")
             case GET -> Root / "redirect" => resp(Location(Uri(path = "/hello")))
           }
@@ -115,7 +115,7 @@ object FileCacheTests extends TestSuite {
       }
 
       test("httpsToHttps") {
-        val routes = HttpService[IO] {
+        val routes = HttpRoutes.of[IO] {
           case GET -> Root / "hello" => Ok("hello")
           case GET -> Root / "redirect" =>
             TemporaryRedirect("redirecting", Location(Uri(path = "/hello")))
@@ -131,12 +131,12 @@ object FileCacheTests extends TestSuite {
 
           var httpsBaseOpt = Option.empty[Uri]
 
-          val httpRoutes = HttpService[IO] {
+          val httpRoutes = HttpRoutes.of[IO] {
             case GET -> Root / "redirect" =>
               TemporaryRedirect("redirecting", Location(httpsBaseOpt.getOrElse(???) / "hello"))
           }
 
-          val httpsRoutes = HttpService[IO] {
+          val httpsRoutes = HttpRoutes.of[IO] {
             case GET -> Root / "hello" => Ok("hello secure")
           }
 
@@ -177,7 +177,7 @@ object FileCacheTests extends TestSuite {
 
           var httpsBaseOpt = Option.empty[Uri]
 
-          val httpRoutes = HttpService[IO] {
+          val httpRoutes = HttpRoutes.of[IO] {
             case GET -> Root / "auth-redirect" =>
               TemporaryRedirect(
                 "redirecting",
@@ -185,7 +185,7 @@ object FileCacheTests extends TestSuite {
               )
           }
 
-          val httpsRoutes = HttpService[IO] {
+          val httpsRoutes = HttpRoutes.of[IO] {
             case req @ GET -> Root / "auth" / "hello" =>
               if (authorized(req, userPass))
                 Ok("hello auth secure")
@@ -231,7 +231,7 @@ object FileCacheTests extends TestSuite {
         val realm    = "simple realm"
         val userPass = ("simple", "SiMpLe")
 
-        val routes = HttpService[IO] {
+        val routes = HttpRoutes.of[IO] {
           case GET -> Root / "redirect" =>
             TemporaryRedirect("redirecting", Location(Uri(path = "/auth/hello")))
           case req @ GET -> Root / "auth" / "hello" =>
@@ -303,7 +303,7 @@ object FileCacheTests extends TestSuite {
         val realm    = "simple realm"
         val userPass = ("simple", "SiMpLe")
 
-        def routes(challengeParams: Map[String, String] = Map.empty) = HttpService[IO] {
+        def routes(challengeParams: Map[String, String] = Map.empty) = HttpRoutes.of[IO] {
           case req @ GET -> Root / "redirect" =>
             if (authorized(req, userPass))
               TemporaryRedirect("redirecting", Location(Uri(path = "/hello")))
@@ -430,7 +430,7 @@ object FileCacheTests extends TestSuite {
         val realm    = "secure realm"
         val userPass = ("secure", "sEcUrE")
 
-        val routes = HttpService[IO] {
+        val routes = HttpRoutes.of[IO] {
           case GET -> Root / "redirect" =>
             TemporaryRedirect("redirecting", Location(Uri(path = "/auth/hello")))
           case req @ GET -> Root / "auth" / "hello" =>
@@ -483,7 +483,7 @@ object FileCacheTests extends TestSuite {
         val realm    = "secure realm"
         val userPass = ("secure", "sEcUrE")
 
-        val routes = HttpService[IO] {
+        val routes = HttpRoutes.of[IO] {
           case req @ GET -> Root / "redirect" =>
             if (authorized(req, userPass))
               TemporaryRedirect("redirecting", Location(Uri(path = "/hello")))
@@ -546,7 +546,7 @@ object FileCacheTests extends TestSuite {
 
           var httpsBaseOpt = Option.empty[Uri]
 
-          val httpRoutes = HttpService[IO] {
+          val httpRoutes = HttpRoutes.of[IO] {
             case req @ GET -> Root / "redirect" =>
               if (authorized(req, httpUserPass))
                 TemporaryRedirect("redirecting", Location(httpsBaseOpt.getOrElse(???) / "hello"))
@@ -554,7 +554,7 @@ object FileCacheTests extends TestSuite {
                 unauth(httpRealm)
           }
 
-          val httpsRoutes = HttpService[IO] {
+          val httpsRoutes = HttpRoutes.of[IO] {
             case req @ GET -> Root / "hello" =>
               val authHeaderOpt = req.headers.get(Authorization)
               if (authHeaderOpt.isEmpty)
@@ -658,7 +658,7 @@ object FileCacheTests extends TestSuite {
 
           var httpsBaseOpt = Option.empty[Uri]
 
-          val httpRoutes = HttpService[IO] {
+          val httpRoutes = HttpRoutes.of[IO] {
             case GET -> Root / "auth-redirect" =>
               TemporaryRedirect(
                 "redirecting",
@@ -676,7 +676,7 @@ object FileCacheTests extends TestSuite {
                 unauth(httpRealm)
           }
 
-          val httpsRoutes = HttpService[IO] {
+          val httpsRoutes = HttpRoutes.of[IO] {
             case req @ GET -> Root / "auth" / "hello" =>
               if (authorized(req, httpsUserPass))
                 Ok("hello auth secure")
@@ -730,7 +730,7 @@ object FileCacheTests extends TestSuite {
 
           var httpsBaseOpt = Option.empty[Uri]
 
-          val httpRoutes = HttpService[IO] {
+          val httpRoutes = HttpRoutes.of[IO] {
             case GET -> Root / "auth-redirect" =>
               TemporaryRedirect(
                 "redirecting",
@@ -748,7 +748,7 @@ object FileCacheTests extends TestSuite {
                 unauth(httpRealm, "bAsIc")
           }
 
-          val httpsRoutes = HttpService[IO] {
+          val httpsRoutes = HttpRoutes.of[IO] {
             case req @ GET -> Root / "auth" / "hello" =>
               if (authorized(req, httpsUserPass))
                 Ok("hello auth secure")
@@ -815,7 +815,7 @@ object FileCacheTests extends TestSuite {
 
       test("maxRedirects") {
 
-        val httpRoutes = HttpService[IO] {
+        val httpRoutes = HttpRoutes.of[IO] {
           case GET -> Root / "hello" =>
             Ok("hello")
           case GET -> Root / "redirect" / n if Try(n.toInt).isSuccess =>
@@ -871,12 +871,12 @@ object FileCacheTests extends TestSuite {
 
           var base2Opt = Option.empty[Uri]
 
-          val routes1 = HttpService[IO] {
+          val routes1 = HttpRoutes.of[IO] {
             case GET -> Root / "redirect" =>
               TemporaryRedirect("redirecting", Location(base2Opt.getOrElse(???) / "hello"))
           }
 
-          val routes2 = HttpService[IO] {
+          val routes2 = HttpRoutes.of[IO] {
             case req @ GET -> Root / "hello" =>
               if (authorized(req, userPass))
                 Ok("hello")
@@ -953,7 +953,7 @@ object FileCacheTests extends TestSuite {
         gzipStream.write("hello".getBytes(StandardCharsets.UTF_8))
         gzipStream.close()
 
-        val routes = HttpService[IO] {
+        val routes = HttpRoutes.of[IO] {
           case GET -> Root / "hello.txt" =>
             Ok(data.toByteArray).map(_.putHeaders(
               Header("Content-Encoding", "gzip")
@@ -970,7 +970,7 @@ object FileCacheTests extends TestSuite {
         val realm    = "secure realm"
         val userPass = ("secure", "sEcUrE")
 
-        val routes = HttpService[IO] {
+        val routes = HttpRoutes.of[IO] {
           case req @ GET -> Root / "hello" =>
             if (authorized(req, userPass))
               NotFound("not found")
@@ -1133,7 +1133,7 @@ object FileCacheTests extends TestSuite {
         val sha1    = TestUtil.sha1(b)
         val md5     = TestUtil.md5(b)
 
-        val routes = HttpService[IO] {
+        val routes = HttpRoutes.of[IO] {
           case GET -> Root / "foo.txt" =>
             Ok(b).map(_.putHeaders(
               Header("X-Checksum-SHA256", sha256),
