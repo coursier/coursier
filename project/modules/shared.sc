@@ -1,10 +1,7 @@
-import $ivy.`io.github.alexarchambault.mill::mill-scala-cli::0.1.0`
-
 import $file.^.mima, mima.Mima
 import $file.^.deps, deps.{Deps, ScalaVersions}
 
 import mill._, mill.scalalib._, mill.scalajslib._
-import scala.cli.mill.ScalaCliCompile
 
 trait CsMima extends Mima {
   def mimaPreviousVersions = T {
@@ -123,8 +120,7 @@ trait JsTests extends TestModule {
   }
 }
 
-trait CsModule extends SbtModule with ScalaCliCompile {
-  def enableScalaCli = false
+trait CsModule extends SbtModule {
   def scalacOptions = T {
     val sv = scalaVersion()
     val scala212Opts =
@@ -151,13 +147,6 @@ trait CsModule extends SbtModule with ScalaCliCompile {
     }
     parent ++ extra
   }
-  def scalaCliVersion = "0.1.10"
-
-  // Remove once we switch to Scala CLI >= 0.1.11
-  def extraScalaCliOptions = super.extraScalaCliOptions() ++ Seq(
-    "--bloop-version",
-    "1.5.2-sc-1"
-  )
 }
 
 trait CsCrossJvmJsModule extends CrossSbtModule with CsModule {
