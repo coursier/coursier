@@ -22,7 +22,7 @@ import scala.async.Async.{async, await}
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
-object FileCacheTests extends TestSuite {
+object FileCacheRedirectionTests extends TestSuite {
 
   private val pool        = Sync.fixedThreadPool(4)
   private implicit val ec = ExecutionContext.fromExecutorService(pool)
@@ -42,7 +42,7 @@ object FileCacheTests extends TestSuite {
     content: String,
     transform: FileCache[Task] => FileCache[Task]
   ): Unit =
-    withTmpDir { dir =>
+    withTmpDir0 { dir =>
       val c = fileCache0()
         .withLocation(dir.toFile)
       val res         = transform(c).fetch(artifact).run.unsafeRun()
@@ -68,7 +68,7 @@ object FileCacheTests extends TestSuite {
     check: String => Boolean,
     transform: FileCache[Task] => FileCache[Task]
   ): Unit =
-    withTmpDir { dir =>
+    withTmpDir0 { dir =>
       val c = fileCache0()
         .withLocation(dir.toFile)
       val res = transform(c).fetch(artifact).run.unsafeRun()
@@ -1032,7 +1032,7 @@ object FileCacheTests extends TestSuite {
       }
 
       test("with classloader") {
-        withTmpDir { dir =>
+        withTmpDir0 { dir =>
           async {
             val classloader =
               new URLClassLoader(
@@ -1185,7 +1185,7 @@ object FileCacheTests extends TestSuite {
     }
 
     test("lastModifiedEx") {
-      withTmpDir { dir =>
+      withTmpDir0 { dir =>
         val url       = "https://foo-does-no-exist-zzzzzzz/a.pom"
         val cacheFile = dir.resolve(url.replace("://", "/"))
         Util.createDirectories(cacheFile.getParent)
@@ -1202,7 +1202,7 @@ object FileCacheTests extends TestSuite {
     }
 
     test("stored digests work - SHA1") {
-      withTmpDir { dir =>
+      withTmpDir0 { dir =>
         val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
         val artifact = Artifact(
@@ -1239,7 +1239,7 @@ object FileCacheTests extends TestSuite {
     }
 
     test("stored digests work - MD5") {
-      withTmpDir { dir =>
+      withTmpDir0 { dir =>
         val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
         val artifact = Artifact(
@@ -1275,7 +1275,7 @@ object FileCacheTests extends TestSuite {
     }
 
     test("stored digests should not be stored outside of cache") {
-      withTmpDir { dir =>
+      withTmpDir0 { dir =>
         val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
         val artifact = Artifact(
@@ -1305,7 +1305,7 @@ object FileCacheTests extends TestSuite {
     }
 
     test("wrong stored digest should delete file in cache") {
-      withTmpDir { dir =>
+      withTmpDir0 { dir =>
         val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
 
@@ -1336,7 +1336,7 @@ object FileCacheTests extends TestSuite {
     }
 
     test("un-escape characters in file URL") {
-      withTmpDir { baseDir =>
+      withTmpDir0 { baseDir =>
         val dir = baseDir.resolve("le repository")
         Files.createDirectories(dir)
         val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)

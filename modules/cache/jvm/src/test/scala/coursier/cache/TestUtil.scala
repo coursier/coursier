@@ -145,7 +145,7 @@ object TestUtil {
     f.delete()
   }
 
-  def withTmpDir[T](f: Path => T): T = {
+  def withTmpDir0[T](f: Path => T): T = {
     val dir = Files.createTempDirectory("coursier-test")
     val shutdownHook: Thread =
       new Thread {
