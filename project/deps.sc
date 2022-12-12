@@ -81,5 +81,5 @@ object ScalaVersions {
   def scala212 = "2.12.17"
   val all      = Seq(scala213, scala212)
 
-  def scalaJs = "1.9.0"
+  def scalaJs = "1.12.0"
 }
