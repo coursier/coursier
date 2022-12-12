@@ -2,12 +2,10 @@ package redirectingserver
 
 import cats.effect.IO
 import org.http4s._
+import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.dsl.io._
 import org.http4s.headers._
 import org.http4s.server.Router
-import org.http4s.server.blaze.BlazeServerBuilder
-import org.http4s.syntax.kleisli._
-
 import scala.concurrent.ExecutionContext
 
 object RedirectingServer {
@@ -25,11 +23,11 @@ object RedirectingServer {
       Uri.unsafeFromString(if (args.length >= 3) args(2) else "https://repo1.maven.org/maven2")
 
     def service(host: String, port: Int, redirectTo: Uri) = HttpRoutes.of[IO] {
-      case GET -> Path("health-check") =>
+      case GET -> Root / "health-check" =>
         Ok("Server running")
-      case (method @ (GET | HEAD)) -> Path(path @ _*) =>
-        println(s"${method.name} ${path.mkString("/")}")
-        TemporaryRedirect(Location(path.foldLeft(redirectTo)(_ / _)))
+      case (method @ (GET | HEAD)) -> path =>
+        println(s"${method.name} ${path.renderString}")
+        TemporaryRedirect(Location(path.segments.foldLeft(redirectTo)(_ / _)))
     }
 
     implicit val cs    = IO.contextShift(ExecutionContext.global)

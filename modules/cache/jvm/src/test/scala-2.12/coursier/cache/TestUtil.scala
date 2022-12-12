@@ -18,13 +18,13 @@ import javax.net.ssl.{
   TrustManager,
   X509TrustManager
 }
+import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.dsl.io._
 import org.http4s.headers.{Authorization, `WWW-Authenticate`}
 import org.http4s.server.Router
-import org.http4s.server.blaze.BlazeServerBuilder
-import org.http4s.syntax.kleisli._
 import org.http4s.util.CaseInsensitiveString
 import org.http4s.{BasicCredentials, Challenge, HttpRoutes, Request, Uri}
+import org.typelevel.ci.CIString
 
 import scala.concurrent.ExecutionContext
 
@@ -101,10 +101,10 @@ object TestUtil {
   def authorized(req: Request[IO], userPass: (String, String)): Boolean = {
 
     val res = for {
-      token <- req.headers.get(Authorization).map(_.credentials).collect {
+      token <- req.headers.get[Authorization].map(_.credentials).collect {
         case t: org.http4s.Credentials.Token => t
       }
-      if token.authScheme == CaseInsensitiveString("Basic")
+      if token.authScheme == CIString("Basic")
       c = BasicCredentials(token.token)
       if (c.username, c.password) == userPass
     } yield ()
