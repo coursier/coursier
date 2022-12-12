@@ -3,7 +3,6 @@ package coursier.cli
 import java.io._
 import java.nio.charset.StandardCharsets.UTF_8
 import java.security.MessageDigest
-import java.util.zip.ZipInputStream
 
 import caseapp.core.{Indexed, RemainingArgs}
 import coursier.cli.bootstrap.{Bootstrap, BootstrapOptions, BootstrapSpecificOptions}
@@ -17,6 +16,7 @@ import coursier.cli.options.{
 import coursier.cli.resolve.SharedResolveOptions
 import coursier.cli.TestUtil.withFile
 import coursier.launcher.BootstrapGenerator.resourceDir
+import io.github.scala_cli.zip.ZipInputStream
 import utest._
 
 /** Bootstrap test is not covered by Pants because it does not prebuild a bootstrap.jar

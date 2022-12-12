@@ -3,9 +3,9 @@ package coursier.launcher
 import java.io.{ByteArrayInputStream, File, OutputStream}
 import java.nio.file.Path
 import java.util.jar.{Attributes => JarAttributes, JarOutputStream}
-import java.util.zip.{CRC32, ZipEntry, ZipFile, ZipInputStream, ZipOutputStream}
+import java.util.zip.{CRC32, ZipEntry, ZipFile, ZipOutputStream}
 
-import coursier.launcher.internal.{FileUtil, Zip}
+import coursier.launcher.internal.{FileUtil, WrappedZipInputStream, Zip}
 
 import scala.collection.mutable
 
@@ -58,14 +58,14 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
   }
 
   def writeEntries(
-    jars: Seq[Either[() => ZipInputStream, File]],
+    jars: Seq[Either[() => WrappedZipInputStream, File]],
     zos: ZipOutputStream,
     rules: Seq[MergeRule]
   ): Unit =
     writeEntries(jars, zos, rules, Nil)
 
   private def writeEntries(
-    jars: Seq[Either[() => ZipInputStream, File]],
+    jars: Seq[Either[() => WrappedZipInputStream, File]],
     zos: ZipOutputStream,
     rules: Seq[MergeRule],
     extraZipEntries: Seq[(ZipEntry, Array[Byte])]
@@ -86,15 +86,15 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
     var ignore = Set.empty[String]
 
     for (jar <- jars) {
-      var zif: ZipFile        = null
-      var zis: ZipInputStream = null
+      var zif: ZipFile               = null
+      var zis: WrappedZipInputStream = null
 
       try {
         val entries =
           jar match {
             case Left(f) =>
               zis = f()
-              Zip.zipEntries(zis)
+              zis.entriesWithData()
             case Right(f) =>
               zif = new ZipFile(f)
               Zip.zipEntries(zif)

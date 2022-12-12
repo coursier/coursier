@@ -256,6 +256,7 @@ class CacheJs(val crossScalaVersion: String) extends Cache with CsScalaJsModule 
 class Launcher(val crossScalaVersion: String) extends LauncherBase {
   def ivyDeps = super.ivyDeps() ++ Seq(
     Deps.collectionCompat,
+    Deps.noCrcZis,
     Deps.pythonNativeLibs
   )
   def compileIvyDeps = Agg(
@@ -529,6 +530,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     Deps.dataClass,
     Deps.monadlessCats,
     Deps.monadlessStdlib,
+    Deps.noCrcZis,
     ivy"com.chuusai::shapeless:2.3.10",
     Deps.slf4JNop
   )

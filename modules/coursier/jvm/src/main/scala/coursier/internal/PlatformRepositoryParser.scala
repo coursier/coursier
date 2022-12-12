@@ -61,36 +61,34 @@ abstract class PlatformRepositoryParser {
           case None =>
             repo
           case Some(userInfo) =>
-            userInfo.split(":", 2) match {
-              case Array(user, password) =>
-                val baseUrl = new java.net.URL(
-                  url.getProtocol,
-                  url.getHost,
-                  url.getPort,
-                  url.getFile
-                ).toString
+            val authBase = userInfo.split(":", 2) match {
+              case Array(user, password) => Authentication(user, password)
+              case Array(user)           => Authentication(user)
+            }
 
-                val auth = Authentication(user, password)
-                  .withHttpsOnly(url.getProtocol != "http")
+            val auth = authBase.withHttpsOnly(url.getProtocol != "http")
 
-                repo.map {
-                  case m: MavenRepository =>
-                    m.withRoot(baseUrl).withAuthentication(Some(auth))
-                  case i: IvyRepository =>
-                    i.withAuthentication(Some(auth)).withPattern(
-                      coursier.ivy.Pattern(
-                        coursier.ivy.Pattern.Chunk.Const(baseUrl) +: i.pattern.chunks.dropWhile {
-                          case _: coursier.ivy.Pattern.Chunk.Const => true
-                          case _                                   => false
-                        }
-                      )
-                    )
-                  case r =>
-                    sys.error(s"Unrecognized repository: $r")
-                }
+            val baseUrl = new java.net.URL(
+              url.getProtocol,
+              url.getHost,
+              url.getPort,
+              url.getFile
+            ).toString
 
-              case _ =>
-                Left(s"No password found in user info of URL $url")
+            repo.map {
+              case m: MavenRepository =>
+                m.withRoot(baseUrl).withAuthentication(Some(auth))
+              case i: IvyRepository =>
+                i.withAuthentication(Some(auth)).withPattern(
+                  coursier.ivy.Pattern(
+                    coursier.ivy.Pattern.Chunk.Const(baseUrl) +: i.pattern.chunks.dropWhile {
+                      case _: coursier.ivy.Pattern.Chunk.Const => true
+                      case _                                   => false
+                    }
+                  )
+                )
+              case r =>
+                sys.error(s"Unrecognized repository: $r")
             }
         }
       }
