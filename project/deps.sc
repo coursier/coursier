@@ -5,7 +5,7 @@ object Deps {
   def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M21"
   def catsCore          = ivy"org.typelevel::cats-core:${Versions.cats}"
   def catsFree          = ivy"org.typelevel::cats-free:${Versions.cats}"
-  def catsEffect        = ivy"org.typelevel::cats-effect::3.4.1"
+  def catsEffect        = ivy"org.typelevel::cats-effect::3.4.2"
   def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.9.0"
   def concurrentReferenceHashMap =
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
@@ -31,7 +31,7 @@ object Deps {
   def monadlessCats   = ivy"io.monadless::monadless-cats:${Versions.monadless}"
   def monadlessStdlib = ivy"io.monadless::monadless-stdlib:${Versions.monadless}"
   def noCrcZis        = ivy"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
-  def osLib           = ivy"com.lihaoyi::os-lib:0.8.1"
+  def osLib           = ivy"com.lihaoyi::os-lib:0.9.0"
   def plexusArchiver  = ivy"org.codehaus.plexus:plexus-archiver:4.6.0"
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
@@ -40,7 +40,7 @@ object Deps {
   def proguard                 = ivy"com.guardsquare:proguard-base:7.3.0"
   def pythonNativeLibs         = ivy"ai.kien::python-native-libs:0.2.4"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
-  def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:0.1.17"
+  def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:0.1.18"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.3.0"
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.1"
   def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
@@ -81,5 +81,5 @@ object ScalaVersions {
   def scala212 = "2.12.17"
   val all      = Seq(scala213, scala212)
 
-  def scalaJs = "1.9.0"
+  def scalaJs = "1.12.0"
 }
