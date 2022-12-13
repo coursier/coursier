@@ -59,17 +59,16 @@ object MavenRepository {
     Configuration.test    -> Seq(Configuration.runtime)
   )
 
-  private[coursier] def dirModuleName(module: Module, sbtAttrStub: Boolean): String =
-    if (sbtAttrStub) {
-      var name = module.name.value
-      for (scalaVersion <- module.attributes.get("scalaVersion"))
-        name = name + "_" + scalaVersion
-      for (sbtVersion <- module.attributes.get("sbtVersion"))
-        name = name + "_" + sbtVersion
-      name
-    }
-    else
-      module.name.value
+  /** To resolve an sbt plugin from Maven we append the scalaVersion and sbtVersion attributes to
+    * the module name. For instance, the name 'example' with extra-attributes 'scalaVersion' ->
+    * '2.12' and 'sbtVersion' -> '1.0' becomes 'example_2.12_1.0'.
+    */
+  private[coursier] def appendCrossVersionIfSbtPlugin(
+    module: Module,
+    sbtAttrStub: Boolean
+  ): ModuleName =
+    if (sbtAttrStub) SbtPlugin.appendSbtCrossVersion(module.name, module.attributes)
+    else module.name
 
   private[coursier] def parseRawPomSax(str: String): Either[String, Project] =
     coursier.core.compatibility.xmlParseSax(str, new PomParser)
@@ -114,8 +113,10 @@ object MavenRepository {
   // only used during benchmarks
   private[coursier] var useSaxParser = true
 
-  private def modulePath(module: Module): Seq[String] =
-    module.organization.value.split('.').toSeq :+ dirModuleName(module, sbtAttrStub)
+  private def modulePath(module: Module): Seq[String] = {
+    val moduleDirectory = appendCrossVersionIfSbtPlugin(module, sbtAttrStub).value
+    module.organization.value.split('.').toSeq :+ moduleDirectory
+  }
 
   private def moduleVersionPath(module: Module, version: String): Seq[String] =
     modulePath(module) :+ toBaseVersion(version)
@@ -140,15 +141,7 @@ object MavenRepository {
     b.result()
   }
 
-  def projectArtifact(
-    module: Module,
-    version: String,
-    versioningValue: Option[String]
-  ): Artifact = {
-
-    val path = moduleVersionPath(module, version) :+
-      s"${module.name.value}-${versioningValue getOrElse version}.pom"
-
+  private def projectArtifact(path: Seq[String], version: String): Artifact =
     Artifact(
       urlFor(path),
       Map.empty,
@@ -159,14 +152,10 @@ object MavenRepository {
     )
       .withDefaultChecksums
       .withDefaultSignature
-  }
 
   private def versionsArtifact(module: Module): Artifact = {
 
-    val path = module.organization.value.split('.').toSeq ++ Seq(
-      dirModuleName(module, sbtAttrStub),
-      "maven-metadata.xml"
-    )
+    val path = modulePath(module) :+ "maven-metadata.xml"
 
     val artifact =
       Artifact(
@@ -194,7 +183,6 @@ object MavenRepository {
     module: Module,
     version: String
   ): Artifact = {
-
     val path = moduleVersionPath(module, version) :+ "maven-metadata.xml"
 
     Artifact(
@@ -368,21 +356,43 @@ object MavenRepository {
     F: Monad[F]
   ): EitherT[F, String, Project] = {
 
-    val projectArtifact0 = projectArtifact(module, version, versioningValue)
+    val directoryPath = moduleVersionPath(module, version)
 
-    for {
-      str <- fetch(projectArtifact0)
-      proj0 <- EitherT(F.point[Either[String, Project]](
-        if (useSaxParser) parseRawPomSax(str)
-        else parseRawPomDom(str)
-      ))
-    } yield Pom.addOptionalDependenciesInConfig(
-      proj0
-        .withActualVersionOpt(Some(version))
-        .withConfigurations(defaultConfigurations),
-      Set(Configuration.empty, Configuration.default),
-      Configuration.optional
-    )
+    def parsePom(str: String) =
+      EitherT.fromEither(if (useSaxParser) parseRawPomSax(str) else parseRawPomDom(str))
+
+    def fetchArtifact = {
+      val artifactName = appendCrossVersionIfSbtPlugin(module, sbtAttrStub).value
+      val path         = directoryPath :+ s"$artifactName-${versioningValue.getOrElse(version)}.pom"
+      val artifact     = projectArtifact(path, version)
+      fetch(artifact).flatMap(parsePom)
+    }
+
+    /** In case of an sbt plugin, for instance org.example:example:1.0.0 with extra-attributes
+      * scalaVersion->2.12 and sbtVersion->1.0, we first try the valid Maven path
+      * 'org/example/example_2.12_1.0/1.0.0/example_2.12_1.0-1.0.0-jar' then the deprecated path
+      * 'org/example/example_2.12_1.0/1.0.0/example-1.0.0-jar`
+      */
+    def fetchSbtPlugin: EitherT[F, String, Project] =
+      fetchArtifact.orElse {
+        val deprecatedPath = directoryPath :+
+          s"${module.name.value}-${versioningValue.getOrElse(version)}.pom"
+        val deprecatedArtifact = projectArtifact(deprecatedPath, version)
+        fetch(deprecatedArtifact)
+          .flatMap(parsePom)
+          .map(_.withUseDeprecatedSbtPluginPath(true))
+      }
+
+    (if (SbtPlugin.isSbtPlugin(module.attributes)) fetchSbtPlugin else fetchArtifact)
+      .map { proj0 =>
+        Pom.addOptionalDependenciesInConfig(
+          proj0
+            .withActualVersionOpt(Some(version))
+            .withConfigurations(defaultConfigurations),
+          Set(Configuration.empty, Configuration.default),
+          Configuration.optional
+        )
+      }
   }
 
   private def artifacts0(
@@ -412,16 +422,18 @@ object MavenRepository {
           )
         )
 
-      val path = dependency.module.organization.value.split('.').toSeq ++ Seq(
-        MavenRepository.dirModuleName(dependency.module, sbtAttrStub),
-        toBaseVersion(project.actualVersion),
-        dependency.module.name.value +
+      // for sbt plugins, the name of the deprecated pom file does not contain the cross version
+      val artifactName =
+        if (project.useDeprecatedSbtPluginPath) dependency.module.name
+        else appendCrossVersionIfSbtPlugin(dependency.module, sbtAttrStub)
+      val path =
+        moduleVersionPath(dependency.module, project.actualVersion) :+
+          artifactName.value +
           "-" +
           versioning.getOrElse(project.actualVersion) +
           Some(publication.classifier.value).filter(_.nonEmpty).map("-" + _).mkString +
           "." +
           publication.ext.value
-      )
 
       val changing0 = changing.getOrElse(isSnapshot(project.actualVersion))
 

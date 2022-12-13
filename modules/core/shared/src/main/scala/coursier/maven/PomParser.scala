@@ -196,7 +196,7 @@ object PomParser {
 
         extraAttrs <- properties0
           .collectFirst { case ("extraDependencyAttributes", s) => Pom.extraAttributes(s) }
-          .getOrElse(Right(Map.empty))
+          .getOrElse(Right(Map.empty[Pom.ModuleVersion, Map[String, String]]))
 
       } yield {
 
@@ -204,13 +204,6 @@ object PomParser {
           parentModule  <- parentModuleOpt
           parentVersion <- validateCoordinate(parentVersion, "parent version")
         } yield (parentModule, parentVersion)
-
-        val extraAttrsMap = extraAttrs
-          .map {
-            case (mod, ver) =>
-              (mod.withAttributes(Map.empty), ver) -> mod.attributes
-          }
-          .toMap
 
         val projModule = Module(Organization(finalGroupId), ModuleName(artifactId), Map.empty)
 
@@ -243,9 +236,13 @@ object PomParser {
           finalVersion,
           (relocationDependencyOpt.toList ::: dependencies.toList).map {
             case (config, dep0) =>
-              val dep = extraAttrsMap.get(dep0.moduleVersion).fold(dep0)(attrs =>
-                dep0.withModule(dep0.module.withAttributes(attrs))
-              )
+              val dep = extraAttrs.get(dep0.moduleVersion).fold(dep0) { attrs =>
+                // For an sbt plugin, we remove the suffix from the name and we add the sbtVersion
+                // and scalaVersion attributes.
+                val adaptedName   = SbtPlugin.removeSbtCrossVersion(dep0.module.name, attrs)
+                val adaptedModule = dep0.module.withName(adaptedName).withAttributes(attrs)
+                dep0.withModule(adaptedModule)
+              }
               config -> dep
           },
           Map.empty,

@@ -206,18 +206,11 @@ object Repository {
       hasOrg(Complete.Input.Org(module.organization.value), partial = false).flatMap {
         case false => F.point(false)
         case true =>
-          val prefix = s"${module.organization.value}:"
-          val actualModuleName =
-            if (sbtAttrStub)
-              MavenRepository.dirModuleName(
-                module,
-                sbtAttrStub = true
-              ) // wish that hack didn't need to exist
-            else
-              module.name.value
+          val prefix           = s"${module.organization.value}:"
+          val actualModuleName = MavenRepository.appendCrossVersionIfSbtPlugin(module, sbtAttrStub)
           hasName(Complete.Input.Name(
             module.organization,
-            prefix + actualModuleName,
+            prefix + actualModuleName.value,
             prefix.length,
             ""
           ))

@@ -8,6 +8,7 @@ import scala.collection.compat._
 
 object Pom {
   import coursier.util.Xml._
+  type ModuleVersion = (Module, String)
 
   /** Returns either a property's key-value pair or an error if the elem is not an element.
     *
@@ -218,17 +219,9 @@ object Pom {
 
       extraAttrs <- properties
         .collectFirst { case ("extraDependencyAttributes", s) => extraAttributes(s) }
-        .getOrElse(Right(Map.empty))
+        .getOrElse(Right(Map.empty[ModuleVersion, Map[String, String]]))
 
     } yield {
-
-      val extraAttrsMap = extraAttrs
-        .map {
-          case (mod, ver) =>
-            (mod.withAttributes(Map.empty), ver) -> mod.attributes
-        }
-        .toMap
-
       val description = pom.children
         .find(_.label == "description")
         .map(_.textContent)
@@ -313,7 +306,7 @@ object Pom {
         version,
         (relocationDependencyOpt.toSeq ++ deps).map {
           case (config, dep0) =>
-            val dep = extraAttrsMap.get(dep0.moduleVersion).fold(dep0)(attrs =>
+            val dep = extraAttrs.get(dep0.moduleVersion).fold(dep0)(attrs =>
               dep0.withModule(dep0.module.withAttributes(attrs))
             )
             config -> dep
@@ -489,7 +482,7 @@ object Pom {
 
   val extraAttributeDropPrefix = "e:"
 
-  def extraAttribute(s: String): Either[String, (Module, String)] = {
+  def extraAttribute(s: String): Either[String, (ModuleVersion, Map[String, String])] = {
     // vaguely does the same as:
     // https://github.com/apache/ant-ivy/blob/2.2.0/src/java/org/apache/ivy/core/module/id/ModuleRevisionId.java#L291
 
@@ -528,21 +521,21 @@ object Pom {
       name    <- attrFrom(attrs, extraAttributeName).map(ModuleName(_))
       version <- attrFrom(attrs, extraAttributeVersion)
     } yield {
-      val remainingAttrs = attrs.view.filterKeys(!extraAttributeBase(_))
-      (Module(org, name, remainingAttrs.toVector.toMap), version)
+      val remainingAttrs = attrs.view.filterKeys(!extraAttributeBase(_)).toMap
+      ((Module(org, name, Map.empty), version), remainingAttrs)
     }
   }
 
-  def extraAttributes(s: String): Either[String, Seq[(Module, String)]] = {
+  def extraAttributes(s: String): Either[String, Map[ModuleVersion, Map[String, String]]] = {
 
     val lines = s.split('\n').toSeq.map(_.trim).filter(_.nonEmpty)
 
-    lines.foldLeft[Either[String, Seq[(Module, String)]]](Right(Vector.empty)) {
+    lines.foldLeft[Either[String, Map[ModuleVersion, Map[String, String]]]](Right(Map.empty)) {
       case (acc, line) =>
         for {
           modVers <- acc
           modVer  <- extraAttribute(line)
-        } yield modVers :+ modVer
+        } yield modVers + modVer
     }
   }
 
