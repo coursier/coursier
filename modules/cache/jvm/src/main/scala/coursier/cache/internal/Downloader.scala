@@ -150,13 +150,12 @@ import scala.util.control.NonFatal
     def doTouchCheckFile(file: File, url: String, updateLinks: Boolean): Unit = {
       val ts = clock.millis()
       val f  = ttlFile(file)
-      if (f.exists())
-        f.setLastModified(ts)
-      else {
+      if (!f.exists()) {
         val fos = new FileOutputStream(f)
         fos.write(Array.empty[Byte])
         fos.close()
       }
+      f.setLastModified(ts)
 
       if (updateLinks && file.getName == ".directory") {
         val linkFile = FileCache.auxiliaryFile(file, "links")
@@ -437,6 +436,28 @@ import scala.util.control.NonFatal
   private def ttlFile(file: File): File =
     new File(file.getParent, s".${file.getName}.checked")
 
+  private def checkNeeded(file: File) = ttl match {
+    case None                       => S.point(true)
+    case Some(ttl) if !ttl.isFinite => S.point(false)
+    case Some(ttl) =>
+      blockingIO {
+        Blocking.lastCheck(file).fold(true) { ts =>
+          val now = clock.millis()
+          now > ts + ttl.toMillis
+        }
+      }
+  }
+
+  private def checkNeededBlocking(file: File) = ttl match {
+    case None                       => true
+    case Some(ttl) if !ttl.isFinite => false
+    case Some(ttl) =>
+      Blocking.lastCheck(file).fold(true) { ts =>
+        val now = clock.millis()
+        now > ts + ttl.toMillis
+      }
+  }
+
   private def shouldDownload(
     file: File,
     url: String,
@@ -460,18 +481,6 @@ import scala.util.control.NonFatal
         Right(())
     }
 
-    def checkNeeded = ttl match {
-      case None                       => S.point(true)
-      case Some(ttl) if !ttl.isFinite => S.point(false)
-      case Some(ttl) =>
-        blockingIO {
-          Blocking.lastCheck(file).fold(true) { ts =>
-            val now = clock.millis()
-            now > ts + ttl.toMillis
-          }
-        }
-    }
-
     def doCheckRemote = for {
       fileLastModOpt <- blockingIOE(Blocking.fileLastModified(file))
       urlLastModOpt  <- EitherT(urlLastModified(url, fileLastModOpt, logger))
@@ -488,7 +497,7 @@ import scala.util.control.NonFatal
       blockingIO(file.exists()).flatMap {
         case false => S.point(Right(true))
         case true =>
-          checkNeeded.flatMap {
+          checkNeeded(file).flatMap {
             case false => S.point(Right(false))
             case true =>
               if (checkRemote)
@@ -510,6 +519,9 @@ import scala.util.control.NonFatal
       res <- EitherT(checkShouldDownload)
     } yield res
   }
+
+  private def shouldDownloadSecondCheckBlocking(file: File): Boolean =
+    !file.exists() || checkNeededBlocking(file)
 
   private def remote(
     file: File,
@@ -613,7 +625,7 @@ import scala.util.control.NonFatal
                   file,
                   url,
                   keepHeaderChecksums,
-                  () => !checkFileExistsBlocking(file, url)
+                  () => shouldDownloadSecondCheckBlocking(file)
                 )
               else
                 S.point(Right(()))

@@ -232,6 +232,8 @@ class CacheJvm(val crossScalaVersion: String) extends CacheJvmBase {
       Deps.http4sBlazeServer,
       Deps.http4sDsl,
       Deps.logbackClassic,
+      Deps.osLib,
+      Deps.pprint,
       Deps.scalaAsync
     )
   }
