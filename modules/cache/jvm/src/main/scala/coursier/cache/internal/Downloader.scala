@@ -4,6 +4,7 @@ import java.io.{Serializable => _, _}
 import java.net.{HttpURLConnection, URLConnection, MalformedURLException}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, StandardCopyOption}
+import java.time.Clock
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.zip.GZIPInputStream
@@ -15,7 +16,7 @@ import coursier.credentials.DirectCredentials
 import coursier.paths.{CachePath, Util}
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
 import coursier.util.Monad.ops._
-import dataclass.data
+import dataclass._
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
@@ -40,7 +41,9 @@ import scala.util.control.NonFatal
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   bufferSize: Int = CacheDefaults.bufferSize,
   @since("2.0.16")
-    classLoaders: Seq[ClassLoader] = Nil
+    classLoaders: Seq[ClassLoader] = Nil,
+  @since("2.1.0-RC3")
+    clock: Clock = Clock.systemDefaultZone()
 )(implicit
   S: Sync[F]
 ) {
@@ -145,7 +148,7 @@ import scala.util.control.NonFatal
       } yield ts
 
     def doTouchCheckFile(file: File, url: String, updateLinks: Boolean): Unit = {
-      val ts = System.currentTimeMillis()
+      val ts = clock.millis()
       val f  = ttlFile(file)
       if (f.exists())
         f.setLastModified(ts)
@@ -447,7 +450,7 @@ import scala.util.control.NonFatal
         Left(new ArtifactError.NotFound(url, Some(true)))
       else if (cacheErrors && errFile0.exists()) {
         val ts  = errFile0.lastModified()
-        val now = System.currentTimeMillis()
+        val now = clock.millis()
         if (ts > 0L && (ttl.exists(!_.isFinite) || now < ts + ttl.fold(0L)(_.toMillis)))
           Left(new ArtifactError.NotFound(url))
         else
@@ -463,7 +466,7 @@ import scala.util.control.NonFatal
       case Some(ttl) =>
         blockingIO {
           Blocking.lastCheck(file).fold(true) { ts =>
-            val now = System.currentTimeMillis()
+            val now = clock.millis()
             now > ts + ttl.toMillis
           }
         }
