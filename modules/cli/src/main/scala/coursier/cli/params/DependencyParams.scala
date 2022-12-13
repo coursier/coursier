@@ -8,10 +8,10 @@ import coursier.core._
 import coursier.install.ScalaPlatform
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
 
+import java.nio.file.{Files, Paths}
+import java.nio.charset.StandardCharsets
+
 import scala.io.Source
-import scala.util.Try
-import coursier.util.ValidationNel
-import coursier.util.Traverse._
 
 final case class DependencyParams(
   exclude: Set[JavaOrScalaModule],
@@ -61,34 +61,17 @@ object DependencyParams {
             )
       }
 
-    val fromFilesDependenciesV: ValidatedNel[String, Seq[String]] =
-      if (options.dependencyFile.isEmpty)
-        Validated.validNel(Seq.empty)
-      else {
-        val files = options.dependencyFile
-        val fromFileDependencies = files.toSeq.validationNelTraverse { file =>
-          val validated = Try {
-            val source = Source.fromFile(file)
-            val lines =
-              try source.mkString.split("\n").filter(_.nonEmpty)
-              finally source.close()
-            lines.toSeq
-          }.toEither
-          ValidationNel.fromEither(validated)
+    val fromFilesDependencies: Seq[String] =
+      options.dependencyFile
+        .iterator
+        .flatMap { file =>
+          val content = new String(Files.readAllBytes(Paths.get(file)), StandardCharsets.UTF_8)
+          content
+            .linesIterator
+            .map(_.trim)
+            .filter(_.nonEmpty)
         }
-
-        fromFileDependencies.either match {
-          case Left(errors) =>
-            Validated.invalidNel(
-              s"Cannot read dependencies from files:" + System.lineSeparator() +
-                errors
-                  .map("  " + _.getMessage())
-                  .mkString(System.lineSeparator())
-            )
-          case Right(lines) =>
-            Validated.validNel(lines.flatten)
-        }
-      }
+        .toVector
 
     val perModuleExcludeV: ValidatedNel[String, Map[JavaOrScalaModule, Set[JavaOrScalaModule]]] =
       if (options.localExcludeFile.isEmpty)
@@ -220,23 +203,15 @@ object DependencyParams {
       perModuleExcludeV,
       intransitiveDependenciesV,
       sbtPluginDependenciesV,
-      fromFilesDependenciesV,
       platformOptV
     ).mapN {
-      (
-        exclude,
-        perModuleExclude,
-        intransitiveDependencies,
-        sbtPluginDependencies,
-        fromFileDependencies,
-        platformOpt
-      ) =>
+      (exclude, perModuleExclude, intransitiveDependencies, sbtPluginDependencies, platformOpt) =>
         DependencyParams(
           exclude,
           perModuleExclude,
           intransitiveDependencies,
           sbtPluginDependencies,
-          fromFileDependencies,
+          fromFilesDependencies,
           platformOpt
         )
     }

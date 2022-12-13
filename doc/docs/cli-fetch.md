@@ -61,7 +61,7 @@ $ cs fetch --javadoc com.lihaoyi:ammonite_2.12.8:1.6.0
 
 ## File arguments
 
-Pass `--dependency-file <filename>` to read dependencies from a file. 
+Pass `--dependency-file <filename>` to read dependencies from a file.
 The file content should be a list of dependencies separated by a newline character.
 Example usage:
 ```bash
