@@ -117,12 +117,11 @@ object FetchTests extends TestSuite {
       val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
       val options       = FetchOptions(resolveOptions = resolveOpt)
 
-      val errorMessage =
-        "Got errors:" + System.lineSeparator() + "  " + "Cannot read dependencies from files:" + System.lineSeparator() + "  " + path
-      val thrownException = intercept[RuntimeException] {
+      val expectedErrorMessage = s"Error reading dependencies from $path"
+      val thrownException = intercept[Exception] {
         paramsOrThrow(options)
       }
-      assert(thrownException.getMessage().startsWith(errorMessage))
+      assert(thrownException.getMessage == expectedErrorMessage)
     }
 
     test("Underscore and source classifier should fetch default and source files") {

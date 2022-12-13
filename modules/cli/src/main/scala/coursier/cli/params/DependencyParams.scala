@@ -12,6 +12,7 @@ import java.nio.file.{Files, Paths}
 import java.nio.charset.StandardCharsets
 
 import scala.io.Source
+import scala.util.control.NonFatal
 
 final case class DependencyParams(
   exclude: Set[JavaOrScalaModule],
@@ -63,15 +64,21 @@ object DependencyParams {
 
     val fromFilesDependencies: Seq[String] =
       options.dependencyFile
-        .iterator
-        .flatMap { file =>
-          val content = new String(Files.readAllBytes(Paths.get(file)), StandardCharsets.UTF_8)
-          content
-            .linesIterator
-            .map(_.trim)
-            .filter(_.nonEmpty)
-        }
         .toVector
+        .flatMap { file =>
+          try {
+            val content = new String(Files.readAllBytes(Paths.get(file)), StandardCharsets.UTF_8)
+            content
+              .linesIterator
+              .map(_.trim)
+              .filter(_.nonEmpty)
+              .toVector
+          }
+          catch {
+            case NonFatal(e) =>
+              throw new Exception(s"Error reading dependencies from $file", e)
+          }
+        }
 
     val perModuleExcludeV: ValidatedNel[String, Map[JavaOrScalaModule, Set[JavaOrScalaModule]]] =
       if (options.localExcludeFile.isEmpty)
