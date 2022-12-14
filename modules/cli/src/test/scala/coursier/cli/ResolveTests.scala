@@ -613,7 +613,7 @@ object ResolveTests extends TestSuite {
           |org.jline:jline-reader:3.19.0:default
           |org.jline:jline-terminal:3.19.0:default
           |org.jline:jline-terminal-jna:3.19.0:default
-          |org.scala-lang:scala-library:2.13.6:default
+          |org.scala-lang:scala-library:2.13.10:default
           |org.scala-lang:scala3-compiler_3:3.1.1:default
           |org.scala-lang:scala3-interfaces:3.1.1:default
           |org.scala-lang:scala3-library_3:3.1.1:default
