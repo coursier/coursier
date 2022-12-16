@@ -61,7 +61,6 @@ jobs:
 
   test-linux-arm64-native-launcher:
     runs-on: ubuntu-18.04
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v3
         with:
@@ -71,7 +70,7 @@ jobs:
       - uses: coursier/setup-action@v1.3.0
         with:
           jvm: 8
-      - uses: uraimo/run-on-arch-action@v2.1.2
+      - uses: uraimo/run-on-arch-action@v2.2.0
         with:
           arch: aarch64
           distro: ubuntu20.04
