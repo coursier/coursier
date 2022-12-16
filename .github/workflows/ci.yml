@@ -212,6 +212,54 @@ jobs:
           if-no-files-found: error
           retention-days: 2
 
+  generate-native-static-launcher:
+    name: Upload native static launcher
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v6.4
+      - uses: coursier/setup-action@v1.3.0
+        with:
+          jvm: 8
+      - name: Copy artifacts
+        run: .github/scripts/maybe-with-graalvm-home.sh copyStaticLauncher artifacts/
+        shell: bash
+      - uses: actions/upload-artifact@v3
+        with:
+          name: launchers
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 2
+
+  generate-native-mostly-static-launcher:
+    name: Upload native static launcher
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v6.4
+      - uses: coursier/setup-action@v1.3.0
+        with:
+          jvm: 8
+      - name: Copy artifacts
+        run: .github/scripts/maybe-with-graalvm-home.sh copyMostlyStaticLauncher artifacts/
+        shell: bash
+      - uses: actions/upload-artifact@v3
+        with:
+          name: launchers
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 2
+
   generate-linux-arm64-native-launcher:
     name: Upload native launcher Linux ARM64
     needs: test
@@ -304,7 +352,7 @@ jobs:
 
   upload-launchers:
     name: Upload launchers to GitHub release assets
-    needs: [generate-native-launchers, generate-linux-arm64-native-launcher, generate-jar-launchers]
+    needs: [generate-native-launchers, generate-native-static-launcher, generate-native-mostly-static-launcher, generate-linux-arm64-native-launcher, generate-jar-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
