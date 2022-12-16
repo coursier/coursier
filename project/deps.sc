@@ -77,6 +77,8 @@ def graalVmJvmId   = s"graalvm-java17:$graalVmVersion"
 // should be the default index in the upcoming coursier release (> 2.0.16)
 def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"
 
+def csDockerVersion = "2.1.0-RC1"
+
 object ScalaVersions {
   def scala213 = "2.13.6"
   def scala212 = "2.12.17"
