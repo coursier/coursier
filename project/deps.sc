@@ -86,3 +86,8 @@ object ScalaVersions {
 
   def scalaJs = "1.12.0"
 }
+
+object Docker {
+  def customMuslBuilderImageName = "scala-cli-base-musl"
+  def muslBuilder                = s"$customMuslBuilderImageName:latest"
+}

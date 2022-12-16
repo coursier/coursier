@@ -2,7 +2,7 @@ import $ivy.`io.get-coursier::coursier-launcher:2.0.16`
 import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.21`
 
 import $file.cs
-import $file.deps, deps.{Deps, graalVmJvmId, jvmIndex}
+import $file.deps, deps.{Deps, Docker, graalVmJvmId, jvmIndex}
 import $file.modules.shared, shared.CsModule
 
 import io.github.alexarchambault.millnativeimage.NativeImage
@@ -125,6 +125,52 @@ trait Launchers extends CsModule {
         extraNativeImageArgs = Nil
       )
     )
+  }
+
+  private def setupLocaleAndOptions(params: NativeImage.DockerParams): NativeImage.DockerParams =
+    params.copy(
+      prepareCommand = maybePassNativeImageJpmsOption +
+        params.prepareCommand +
+        """
+          |set -v
+          |apt-get update
+          |apt-get install -q -y locales
+          |locale-gen en_US.UTF-8
+          |export LANG=en_US.UTF-8
+          |export LANGUAGE=en_US:en
+          |export LC_ALL=en_US.UTF-8""".stripMargin
+    )
+
+  object `static-image` extends CliNativeImage {
+    def nativeImageDockerParams = T {
+      val baseDockerParams = NativeImage.linuxStaticParams(
+        Docker.muslBuilder,
+        s"https://github.com/coursier/coursier/releases/download/v${deps.csDockerVersion}/cs-x86_64-pc-linux.gz"
+      )
+      val dockerParams = setupLocaleAndOptions(baseDockerParams)
+      buildHelperImage()
+      Some(dockerParams)
+    }
+    def buildHelperImage = T {
+      os.proc("docker", "build", "-t", Docker.customMuslBuilderImageName, ".")
+        .call(cwd = os.pwd / "project" / "musl-image", stdout = os.Inherit)
+      ()
+    }
+    def writeNativeImageScript(scriptDest: String, imageDest: String = "") = T.command {
+      buildHelperImage()
+      super.writeNativeImageScript(scriptDest, imageDest)()
+    }
+  }
+
+  object `mostly-static-image` extends CliNativeImage {
+    def nativeImageDockerParams = T {
+      val baseDockerParams = NativeImage.linuxMostlyStaticParams(
+        "ubuntu:18.04", // TODO Pin that
+        s"https://github.com/coursier/coursier/releases/download/v${deps.csDockerVersion}/cs-x86_64-pc-linux.gz"
+      )
+      val dockerParams = setupLocaleAndOptions(baseDockerParams)
+      Some(dockerParams)
+    }
   }
 
   def transitiveJars: T[Agg[PathRef]] = {
