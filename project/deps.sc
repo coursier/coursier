@@ -51,8 +51,8 @@ object Deps {
   def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.1.0"
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
   def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
-  def simulacrum               = ivy"org.typelevel::simulacrum:1.0.0"
-  def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.5"
+  def simulacrum               = ivy"org.typelevel::simulacrum:1.0.1"
+  def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.6"
   def svm                      = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
   def ujson                    = ivy"com.lihaoyi::ujson:2.0.0"
   def utest                    = ivy"com.lihaoyi::utest::0.8.1"
@@ -77,10 +77,17 @@ def graalVmJvmId   = s"graalvm-java17:$graalVmVersion"
 // should be the default index in the upcoming coursier release (> 2.0.16)
 def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"
 
+def csDockerVersion = "2.1.0-RC1"
+
 object ScalaVersions {
   def scala213 = "2.13.6"
   def scala212 = "2.12.17"
   val all      = Seq(scala213, scala212)
 
   def scalaJs = "1.12.0"
+}
+
+object Docker {
+  def customMuslBuilderImageName = "scala-cli-base-musl"
+  def muslBuilder                = s"$customMuslBuilderImageName:latest"
 }

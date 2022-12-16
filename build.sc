@@ -588,13 +588,14 @@ trait CliTests extends CsModule with CoursierPublishModule { self =>
       }
     }
   }
-  object `native-tests` extends Tests with CsTests with Bloop.Module {
+  trait NativeTests extends Tests with CsTests with Bloop.Module {
+    def cliLauncher: T[PathRef]
     def skipBloop = true
     def sources = T.sources {
       super.sources() ++ self.test.sources()
     }
     def forkArgs = {
-      val launcherTask = cli.nativeImage.map(_.path)
+      val launcherTask = cliLauncher.map(_.path)
       T {
         val launcher = launcherTask()
         super.forkArgs() ++ Seq(
@@ -605,6 +606,15 @@ trait CliTests extends CsModule with CoursierPublishModule { self =>
         )
       }
     }
+  }
+  object `native-tests` extends NativeTests {
+    def cliLauncher = cli.nativeImage
+  }
+  object `native-static-tests` extends NativeTests {
+    def cliLauncher = cli.`static-image`.nativeImage
+  }
+  object `native-mostly-static-tests` extends NativeTests {
+    def cliLauncher = cli.`mostly-static-image`.nativeImage
   }
 }
 
@@ -699,6 +709,20 @@ def simpleNative04CliTest() = T.command {
 def copyLauncher(directory: String = "artifacts") = T.command {
   val nativeLauncher = cli.nativeImage().path
   ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, os.pwd))
+}
+
+def copyStaticLauncher(directory: String = "artifacts") = T.command {
+  val nativeLauncher = cli.`static-image`.nativeImage().path
+  ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, os.pwd), suffix = "-static")
+}
+
+def copyMostlyStaticLauncher(directory: String = "artifacts") = T.command {
+  val nativeLauncher = cli.`mostly-static-image`.nativeImage().path
+  ghreleaseassets.copyLauncher(
+    nativeLauncher,
+    os.Path(directory, os.pwd),
+    suffix = "-mostly-static"
+  )
 }
 
 def uploadLaunchers(directory: String = "artifacts") = T.command {
@@ -923,6 +947,14 @@ def jsTests(scalaVersion: String = "*") = {
 
 def nativeTests() = T.command {
   `cli-tests`.`native-tests`.test()()
+}
+
+def nativeStaticTests() = T.command {
+  `cli-tests`.`native-static-tests`.test()()
+}
+
+def nativeMostlyStaticTests() = T.command {
+  `cli-tests`.`native-mostly-static-tests`.test()()
 }
 
 object ci extends Module {
