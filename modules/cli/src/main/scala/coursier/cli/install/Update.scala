@@ -31,14 +31,14 @@ object Update extends CoursierCommand[UpdateOptions] {
     val noUpdateCoursierCache =
       params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
-    val graalvmHome = { version: String =>
+    val graalvmHome = { graalVmVersion: String =>
       params.sharedJava.javaHome(
         cache,
         noUpdateCoursierCache,
         params.repository.repositories,
         params.output.verbosity
       )
-        .get(s"graalvm:$version")
+        .get(graalVmVersion)
     }
 
     val installDir = params.shared.installDir(cache, params.repository.repositories)

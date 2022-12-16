@@ -40,8 +40,8 @@ object Setup extends CoursierCommand[SetupOptions] {
       if (params.env.env) None
       else Some(params.env.envVarUpdater)
 
-    val graalvmHome = { version: String =>
-      javaHome.get(s"graalvm:$version")
+    val graalvmHome = { graalVmVersion: String =>
+      javaHome.get(graalVmVersion)
     }
 
     val installCache = cache.withLogger(params.output.logger(byFileType = true))

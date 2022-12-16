@@ -17,7 +17,7 @@ object InstallDirTests extends TestSuite {
       val version = "X.Y.Z"
 
       val installDir = InstallDir()
-        .withGraalvmParamsOpt(Some(GraalvmParams(Some(version), Nil)))
+        .withGraalvmParamsOpt(Some(GraalvmParams(version, Nil)))
 
       val params = installDir.params(
         AppDescriptor().withLauncherType(LauncherType.GraalvmNativeImage),

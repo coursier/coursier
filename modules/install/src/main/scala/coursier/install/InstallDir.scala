@@ -192,7 +192,7 @@ import scala.util.Properties
 
         val graalvmHomeOpt = for {
           ver <- desc.graalvmOptions.flatMap(_.version)
-            .orElse(graalvmParamsOpt.flatMap(_.defaultVersion))
+            .orElse(graalvmParamsOpt.map(_.defaultVersion))
           home <- nativeImageJavaHome.map(_(ver).unsafeRun()(cache.ec)) // meh
         } yield home
 
@@ -201,7 +201,7 @@ import scala.util.Properties
             desc.graalvmOptions.toSeq.flatMap(_.options) ++
               graalvmParamsOpt.map(_.extraNativeImageOptions).getOrElse(Nil)
           )
-          .withGraalvmVersion(graalvmParamsOpt.flatMap(_.defaultVersion))
+          .withGraalvmVersion(graalvmParamsOpt.map(_.defaultVersion))
           .withJars(appArtifacts.fetchResult.files)
           .withNameOpt(Some(desc.nameOpt.getOrElse(dest.getFileName.toString)))
           .withJavaHome(graalvmHomeOpt)

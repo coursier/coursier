@@ -32,6 +32,7 @@ import coursier.launcher.{
   Preamble,
   ScalaNativeGenerator
 }
+import coursier.install.GraalvmParams
 import coursier.launcher.native.NativeBuilder
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Sync, Task}
@@ -315,7 +316,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
           )
         }
 
-        val graalvmVersion = params.specific.graalvmVersionOpt.getOrElse("latest.release")
+        val graalvmVersion = GraalvmParams.resolveGraalVmOptions(params.specific.graalvmVersionOpt)
 
         val handle = params
           .specific
@@ -325,7 +326,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
               params.sharedLaunch.resolve.output.logger()
             )
           )
-        val javaHomeTask = handle.get(s"graalvm:$graalvmVersion")
+        val javaHomeTask = handle.get(graalvmVersion)
         val javaHome     = javaHomeTask.unsafeRun()(ExecutionContext.fromExecutorService(pool))
 
         Parameters.NativeImage(mainClass, fetch0)

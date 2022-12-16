@@ -14,7 +14,7 @@ final case class GraalvmOptions(
     intermediateAssembly: Boolean = false,
   @Group("Graalvm")
   @Hidden
-  @Help("GraalVM version to use to generate native images")
+  @Help("Use a specific GraalVM version to use to generate native images, such as `22.3`, or `graalvm:21`, or `system`")
   @Short("graalvm")
     graalvmVersion: Option[String] = None,
   @Group("Graalvm")

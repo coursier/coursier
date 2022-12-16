@@ -49,8 +49,10 @@ object SharedInstallParams {
       case None    => defaultDir
     }
 
+    val graalvmVersion = GraalvmParams.resolveGraalVmOptions(options.graalvmDefaultVersion)
+
     val graalvmParams = GraalvmParams(
-      options.graalvmDefaultVersion.filter(_.nonEmpty),
+      graalvmVersion,
       options.graalvmOption
     )
 

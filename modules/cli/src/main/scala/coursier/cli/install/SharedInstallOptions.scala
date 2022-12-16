@@ -16,7 +16,7 @@ final case class SharedInstallOptions(
 
   @Group(OptionGroup.install)
   @Hidden
-    graalvmDefaultVersion: Option[String] = SharedInstallOptions.defaultGraalvmVersion,
+    graalvmDefaultVersion: Option[String] = None,
 
   @Group(OptionGroup.install)
   @Short("dir")
@@ -42,8 +42,3 @@ final case class SharedInstallOptions(
 
 )
 // format: on
-
-object SharedInstallOptions {
-  def defaultGraalvmVersion: Option[String] =
-    Some("19.3")
-}
