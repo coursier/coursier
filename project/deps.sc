@@ -12,7 +12,7 @@ object Deps {
   def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.6"
   def dockerClient      = ivy"com.spotify:docker-client:8.16.0"
   def fastParse         = ivy"com.lihaoyi::fastparse::${Versions.fastParse}"
-  def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:0.23.12"
+  def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:0.23.13"
   def http4sDsl         = ivy"org.http4s::http4s-dsl:${Versions.http4s}"
   def http4sServer      = ivy"org.http4s::http4s-server:${Versions.http4s}"
   def java8Compat       = ivy"org.scala-lang.modules::scala-java8-compat:1.0.2"
