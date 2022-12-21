@@ -47,6 +47,8 @@ trait Launchers extends CsModule {
     def nativeImagePersist      = System.getenv("CI") != null
     def nativeImageGraalVmJvmId = graalVmJvmId
 
+    def nativeImageUseJpms = Some(false)
+
     def nativeImageName          = "cs"
     private def staticLibDirName = "native-libs"
     private def copyCsjniutilTo(destDir: os.Path): Unit = {
