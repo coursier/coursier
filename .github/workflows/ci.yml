@@ -237,7 +237,7 @@ jobs:
           retention-days: 2
 
   generate-native-mostly-static-launcher:
-    name: Upload native static launcher
+    name: Upload native mostly static launcher
     needs: test
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: "ubuntu-latest"
