@@ -27,49 +27,6 @@ jobs:
         jvm: "temurin:17"
     - run: ./mill -i __.compile
 
-  test:
-    runs-on: ${{ matrix.OS }}
-    name: ${{ matrix.OS }} Scala ${{ matrix.SCALA_VERSION }} JDK ${{ matrix.JDK }}
-    strategy:
-      fail-fast: false
-      matrix:
-        OS: ["ubuntu-latest"]
-        JDK: ["8"]
-        SCALA_VERSION: ["2.12.17"]
-        include:
-          - JDK: "8"
-            SCALA_VERSION: "2.12.17"
-            OS: "windows-latest"
-          - JDK: "8"
-            SCALA_VERSION: "2.13.6"
-            OS: "ubuntu-latest"
-          - JDK: "11"
-            SCALA_VERSION: "2.12.17"
-            OS: "ubuntu-latest"
-    steps:
-    - name: Don't convert LF to CRLF during checkout
-      if: runner.os == 'Windows'
-      run: |
-        git config --global core.autocrlf false
-        git config --global core.eol lf
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-        submodules: true
-    - uses: coursier/cache-action@v6.4
-    - uses: coursier/setup-action@v1.3.0
-      with:
-        jvm: ${{ matrix.JDK }}
-    - run: sudo apt-get install -y nailgun
-      if: runner.os == 'Linux'
-    # - run: .github/scripts/scala-native-setup.sh
-    #   if: runner.os != 'Windows'
-    - run: ./mill -i jvmTests "$SCALA_VERSION"
-      shell: bash
-      env:
-        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
-        COURSIER_JNI: force
-
   js-test:
     runs-on: ubuntu-latest
     name: Scala.JS Scala ${{ matrix.SCALA_VERSION }}
@@ -152,7 +109,7 @@ jobs:
     - run: scalafmt --check
 
   publish:
-    needs: ["compile-all", "test", "js-test", "bin-compat", "website-check", "format"]
+    needs: ["compile-all", "js-test", "bin-compat", "website-check", "format"]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -186,7 +143,6 @@ jobs:
 
   generate-native-launchers:
     name: Upload native launcher ${{ matrix.OS }}
-    needs: test
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ${{ matrix.OS }}
     strategy:
@@ -214,7 +170,6 @@ jobs:
 
   generate-native-static-launcher:
     name: Upload native static launcher
-    needs: test
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: "ubuntu-latest"
     steps:
@@ -238,7 +193,6 @@ jobs:
 
   generate-native-mostly-static-launcher:
     name: Upload native mostly static launcher
-    needs: test
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: "ubuntu-latest"
     steps:
@@ -262,7 +216,6 @@ jobs:
 
   generate-linux-arm64-native-launcher:
     name: Upload native launcher Linux ARM64
-    needs: test
     #if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-18.04
     steps:
