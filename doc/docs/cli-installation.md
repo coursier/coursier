@@ -39,6 +39,9 @@ Currently, we support the following architectures: x86-64 and ARM64.
 On macOS, download and run the coursier installer with
 
 ```bash
+# On Apple M1:
+$ curl -fL https://github.com/VirtusLab/coursier-m1/releases/latest/download/cs-aarch64-apple-darwin.gz | gzip -d > cs
+# Otherwise:
 $ curl -fL https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin.gz | gzip -d > cs
 $ chmod +x cs
 $ ./cs setup
