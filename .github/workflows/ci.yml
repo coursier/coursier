@@ -280,7 +280,7 @@ jobs:
       - uses: uraimo/run-on-arch-action@v2.1.2
         with:
           arch: aarch64
-          distro: ubuntu20.04
+          distro: ubuntu22.04
 
           # Speeds up builds per the run-on-arch-action README
           githubToken: ${{ github.token }}
