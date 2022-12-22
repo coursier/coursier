@@ -1,9 +1,13 @@
 package redirectingserver
 
+import cats.effect.IO
+import cats.effect.unsafe.implicits.global // ???
 import org.http4s._
-import org.http4s.dsl._
+import org.http4s.blaze.server.BlazeServerBuilder
+import org.http4s.dsl.io._
 import org.http4s.headers._
-import org.http4s.server.blaze.BlazeBuilder
+import org.http4s.server.Router
+import scala.concurrent.ExecutionContext
 
 object RedirectingServer {
   def main(args: Array[String]): Unit = {
@@ -19,19 +23,20 @@ object RedirectingServer {
     val redirectTo =
       Uri.unsafeFromString(if (args.length >= 3) args(2) else "https://repo1.maven.org/maven2")
 
-    def service(host: String, port: Int, redirectTo: Uri) = HttpService {
-      case GET -> Path("health-check") =>
+    def service(host: String, port: Int, redirectTo: Uri) = HttpRoutes.of[IO] {
+      case GET -> Root / "health-check" =>
         Ok("Server running")
-      case (method @ (GET | HEAD)) -> Path(path @ _*) =>
-        println(s"${method.name} ${path.mkString("/")}")
-        TemporaryRedirect(path.foldLeft(redirectTo)(_ / _))
+      case (method @ (GET | HEAD)) -> path =>
+        println(s"${method.name} ${path.renderString}")
+        TemporaryRedirect(Location(path.segments.foldLeft(redirectTo)(_ / _)))
     }
 
-    val server = BlazeBuilder
+    BlazeServerBuilder[IO]
       .bindHttp(port, host)
-      .mountService(service(host, port, redirectTo))
-      .start
-      .unsafeRun()
+      .withHttpApp(Router("/" -> service(host, port, redirectTo)).orNotFound)
+      .resource
+      .use(_ => IO.never)
+      .unsafeRunSync()
 
     println(s"Listening on http://$host:$port")
 
@@ -41,7 +46,5 @@ object RedirectingServer {
       println("Press Ctrl+D to exit")
       while (System.in.read() != -1) {}
     }
-
-    server.shutdown.unsafeRun()
   }
 }

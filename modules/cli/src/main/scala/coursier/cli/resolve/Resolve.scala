@@ -60,9 +60,10 @@ object Resolve extends CoursierCommand[ResolveOptions] {
 
     lift {
 
+      val fromFilesDependencies = params.dependency.fromFilesDependencies
       val (javaOrScalaDeps, urlDeps) = unlift {
         Dependencies.withExtraRepo(
-          args,
+          args ++ fromFilesDependencies,
           params.dependency.intransitiveDependencies
         )
       }

@@ -84,6 +84,46 @@ object FetchTests extends TestSuite {
       assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
     }
 
+    test("fetch dependencies from file") - withFile(
+      "junit:junit:4.12"
+    ) { (file, writer) =>
+      val dependencyOpt = DependencyOptions(dependencyFile = List(file.getAbsolutePath))
+      val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
+      val options       = FetchOptions(resolveOptions = resolveOpt)
+      val params        = paramsOrThrow(options)
+
+      val (_, _, _, files) = Fetch.task(params, pool, Seq.empty)
+        .unsafeRun()(ec)
+
+      assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
+    }
+
+    test("fail fetching dependencies from file with invalid content") - withFile(
+      "junit:junit:4.12, something_else"
+    ) { (file, writer) =>
+      val dependencyOpt = DependencyOptions(dependencyFile = List(file.getAbsolutePath))
+      val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
+      val options       = FetchOptions(resolveOptions = resolveOpt)
+      val params        = paramsOrThrow(options)
+
+      intercept[ResolveException] {
+        Fetch.task(params, pool, Seq.empty).unsafeRun()(ec)
+      }
+    }
+
+    test("fail fetching dependencies from non-existing file") {
+      val path          = "non-existing-file-path"
+      val dependencyOpt = DependencyOptions(dependencyFile = List(path))
+      val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
+      val options       = FetchOptions(resolveOptions = resolveOpt)
+
+      val expectedErrorMessage = s"Error reading dependencies from $path"
+      val thrownException = intercept[Exception] {
+        paramsOrThrow(options)
+      }
+      assert(thrownException.getMessage == expectedErrorMessage)
+    }
+
     test("Underscore and source classifier should fetch default and source files") {
       val artifactOpt = ArtifactOptions(
         classifier = List("_"),

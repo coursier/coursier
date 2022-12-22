@@ -12,8 +12,9 @@ object Deps {
   def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.6"
   def dockerClient      = ivy"com.spotify:docker-client:8.16.0"
   def fastParse         = ivy"com.lihaoyi::fastparse::${Versions.fastParse}"
-  def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:${Versions.http4s}"
+  def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:0.23.13"
   def http4sDsl         = ivy"org.http4s::http4s-dsl:${Versions.http4s}"
+  def http4sServer      = ivy"org.http4s::http4s-server:${Versions.http4s}"
   def java8Compat       = ivy"org.scala-lang.modules::scala-java8-compat:1.0.2"
   def jimfs             = ivy"com.google.jimfs:jimfs:1.2"
   def jniUtils          = ivy"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
@@ -40,7 +41,7 @@ object Deps {
   def proguard                 = ivy"com.guardsquare:proguard-base:7.3.0"
   def pythonNativeLibs         = ivy"ai.kien::python-native-libs:0.2.4"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
-  def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:0.1.18"
+  def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:0.1.19"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.3.0"
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.1"
   def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
@@ -50,8 +51,8 @@ object Deps {
   def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.1.0"
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
   def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
-  def simulacrum               = ivy"org.typelevel::simulacrum:1.0.0"
-  def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.5"
+  def simulacrum               = ivy"org.typelevel::simulacrum:1.0.1"
+  def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.6"
   def svm                      = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
   def ujson                    = ivy"com.lihaoyi::ujson:2.0.0"
   def utest                    = ivy"com.lihaoyi::utest::0.8.1"
@@ -59,9 +60,9 @@ object Deps {
 }
 
 object Versions {
-  def cats          = "2.7.0"
+  def cats          = "2.9.0"
   def fastParse     = "2.3.3"
-  def http4s        = "0.18.26"
+  def http4s        = "0.23.16"
   def jniUtils      = "0.3.3"
   def jsoniterScala = "2.13.5"
   def monadless     = "0.0.13"
@@ -76,10 +77,17 @@ def graalVmJvmId   = s"graalvm-java17:$graalVmVersion"
 // should be the default index in the upcoming coursier release (> 2.0.16)
 def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"
 
+def csDockerVersion = "2.1.0-RC1"
+
 object ScalaVersions {
   def scala213 = "2.13.6"
   def scala212 = "2.12.17"
   val all      = Seq(scala213, scala212)
 
   def scalaJs = "1.12.0"
+}
+
+object Docker {
+  def customMuslBuilderImageName = "scala-cli-base-musl"
+  def muslBuilder                = s"$customMuslBuilderImageName:latest"
 }

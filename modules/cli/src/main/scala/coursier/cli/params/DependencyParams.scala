@@ -8,13 +8,18 @@ import coursier.core._
 import coursier.install.ScalaPlatform
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
 
+import java.nio.file.{Files, Paths}
+import java.nio.charset.StandardCharsets
+
 import scala.io.Source
+import scala.util.control.NonFatal
 
 final case class DependencyParams(
   exclude: Set[JavaOrScalaModule],
   perModuleExclude: Map[JavaOrScalaModule, Set[JavaOrScalaModule]], // FIXME key should be Module
   intransitiveDependencies: Seq[(JavaOrScalaDependency, Map[String, String])],
   sbtPluginDependencies: Seq[(JavaOrScalaDependency, Map[String, String])],
+  fromFilesDependencies: Seq[String],
   platformOpt: Option[ScalaPlatform]
 ) {
   def native: Boolean =
@@ -56,6 +61,24 @@ object DependencyParams {
                   .mkString(System.lineSeparator())
             )
       }
+
+    val fromFilesDependencies: Seq[String] =
+      options.dependencyFile
+        .toVector
+        .flatMap { file =>
+          try {
+            val content = new String(Files.readAllBytes(Paths.get(file)), StandardCharsets.UTF_8)
+            content
+              .linesIterator
+              .map(_.trim)
+              .filter(_.nonEmpty)
+              .toVector
+          }
+          catch {
+            case NonFatal(e) =>
+              throw new Exception(s"Error reading dependencies from $file", e)
+          }
+        }
 
     val perModuleExcludeV: ValidatedNel[String, Map[JavaOrScalaModule, Set[JavaOrScalaModule]]] =
       if (options.localExcludeFile.isEmpty)
@@ -195,6 +218,7 @@ object DependencyParams {
           perModuleExclude,
           intransitiveDependencies,
           sbtPluginDependencies,
+          fromFilesDependencies,
           platformOpt
         )
     }

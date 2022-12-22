@@ -203,9 +203,10 @@ def writeInZip(name: String, file: os.Path, zip: os.Path): Unit = {
 
 def copyLauncher(
   nativeLauncher: os.Path,
-  directory: os.Path
+  directory: os.Path,
+  suffix: String = ""
 ): Unit = {
-  val name = s"cs-$platformSuffix$platformExtension"
+  val name = s"cs-$platformSuffix$suffix$platformExtension"
   if (Properties.isWin)
     writeInZip(name, nativeLauncher, directory / s"cs-$platformSuffix.zip")
   else {

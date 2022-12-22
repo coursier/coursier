@@ -228,19 +228,14 @@ class CacheJvm(val crossScalaVersion: String) extends CacheJvmBase {
     `custom-protocol-for-test`.runClasspath()
   }
   object test extends Tests with CsTests {
-    def ivyDeps = T {
-      val sv = scalaVersion()
-      val extra =
-        if (sv.startsWith("2.12."))
-          Agg(
-            Deps.http4sBlazeServer,
-            Deps.http4sDsl,
-            Deps.logbackClassic,
-            Deps.scalaAsync
-          )
-        else Agg.empty[Dep]
-      super.ivyDeps() ++ extra
-    }
+    def ivyDeps = super.ivyDeps() ++ Agg(
+      Deps.http4sBlazeServer,
+      Deps.http4sDsl,
+      Deps.logbackClassic,
+      Deps.osLib,
+      Deps.pprint,
+      Deps.scalaAsync
+    )
   }
 }
 class CacheJs(val crossScalaVersion: String) extends Cache with CsScalaJsModule {
@@ -593,13 +588,14 @@ trait CliTests extends CsModule with CoursierPublishModule { self =>
       }
     }
   }
-  object `native-tests` extends Tests with CsTests with Bloop.Module {
+  trait NativeTests extends Tests with CsTests with Bloop.Module {
+    def cliLauncher: T[PathRef]
     def skipBloop = true
     def sources = T.sources {
       super.sources() ++ self.test.sources()
     }
     def forkArgs = {
-      val launcherTask = cli.nativeImage.map(_.path)
+      val launcherTask = cliLauncher.map(_.path)
       T {
         val launcher = launcherTask()
         super.forkArgs() ++ Seq(
@@ -610,6 +606,15 @@ trait CliTests extends CsModule with CoursierPublishModule { self =>
         )
       }
     }
+  }
+  object `native-tests` extends NativeTests {
+    def cliLauncher = cli.nativeImage
+  }
+  object `native-static-tests` extends NativeTests {
+    def cliLauncher = cli.`static-image`.nativeImage
+  }
+  object `native-mostly-static-tests` extends NativeTests {
+    def cliLauncher = cli.`mostly-static-image`.nativeImage
   }
 }
 
@@ -642,9 +647,9 @@ trait Web extends CsScalaJsModule {
 object `redirecting-server` extends CsModule {
   def scalaVersion = ScalaVersions.scala212
   def ivyDeps = Agg(
-    ivy"org.http4s::http4s-blaze-server:0.17.6",
-    ivy"org.http4s::http4s-dsl:0.17.6",
-    ivy"org.http4s::http4s-server:0.17.6"
+    Deps.http4sBlazeServer,
+    Deps.http4sDsl,
+    Deps.http4sServer
   )
   def mainClass = Some("redirectingserver.RedirectingServer")
 }
@@ -704,6 +709,20 @@ def simpleNative04CliTest() = T.command {
 def copyLauncher(directory: String = "artifacts") = T.command {
   val nativeLauncher = cli.nativeImage().path
   ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, os.pwd))
+}
+
+def copyStaticLauncher(directory: String = "artifacts") = T.command {
+  val nativeLauncher = cli.`static-image`.nativeImage().path
+  ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, os.pwd), suffix = "-static")
+}
+
+def copyMostlyStaticLauncher(directory: String = "artifacts") = T.command {
+  val nativeLauncher = cli.`mostly-static-image`.nativeImage().path
+  ghreleaseassets.copyLauncher(
+    nativeLauncher,
+    os.Path(directory, os.pwd),
+    suffix = "-mostly-static"
+  )
 }
 
 def uploadLaunchers(directory: String = "artifacts") = T.command {
@@ -928,6 +947,14 @@ def jsTests(scalaVersion: String = "*") = {
 
 def nativeTests() = T.command {
   `cli-tests`.`native-tests`.test()()
+}
+
+def nativeStaticTests() = T.command {
+  `cli-tests`.`native-static-tests`.test()()
+}
+
+def nativeMostlyStaticTests() = T.command {
+  `cli-tests`.`native-mostly-static-tests`.test()()
 }
 
 object ci extends Module {

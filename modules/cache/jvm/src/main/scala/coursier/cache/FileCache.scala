@@ -5,6 +5,7 @@ import java.math.BigInteger
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{FileAlreadyExistsException, Files, NoSuchFileException, StandardCopyOption}
 import java.security.MessageDigest
+import java.time.Clock
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
@@ -39,7 +40,9 @@ import scala.util.control.NonFatal
   retry: Int = CacheDefaults.defaultRetryCount,
   bufferSize: Int = CacheDefaults.bufferSize,
   @since("2.0.16")
-    classLoaders: Seq[ClassLoader] = Nil
+    classLoaders: Seq[ClassLoader] = Nil,
+  @since("2.1.0-RC3")
+    clock: Clock = Clock.systemDefaultZone()
 )(implicit
   sync: Sync[F]
 ) extends Cache[F] {
@@ -102,7 +105,8 @@ import scala.util.control.NonFatal
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
       bufferSize,
-      classLoaders
+      classLoaders,
+      clock
     ).download
 
   def validateChecksum(

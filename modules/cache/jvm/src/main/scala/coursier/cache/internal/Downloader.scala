@@ -4,6 +4,7 @@ import java.io.{Serializable => _, _}
 import java.net.{HttpURLConnection, URLConnection, MalformedURLException}
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, StandardCopyOption}
+import java.time.Clock
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.zip.GZIPInputStream
@@ -15,7 +16,7 @@ import coursier.credentials.DirectCredentials
 import coursier.paths.{CachePath, Util}
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
 import coursier.util.Monad.ops._
-import dataclass.data
+import dataclass._
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.Duration
@@ -40,7 +41,9 @@ import scala.util.control.NonFatal
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   bufferSize: Int = CacheDefaults.bufferSize,
   @since("2.0.16")
-    classLoaders: Seq[ClassLoader] = Nil
+    classLoaders: Seq[ClassLoader] = Nil,
+  @since("2.1.0-RC3")
+    clock: Clock = Clock.systemDefaultZone()
 )(implicit
   S: Sync[F]
 ) {
@@ -145,15 +148,14 @@ import scala.util.control.NonFatal
       } yield ts
 
     def doTouchCheckFile(file: File, url: String, updateLinks: Boolean): Unit = {
-      val ts = System.currentTimeMillis()
+      val ts = clock.millis()
       val f  = ttlFile(file)
-      if (f.exists())
-        f.setLastModified(ts)
-      else {
+      if (!f.exists()) {
         val fos = new FileOutputStream(f)
         fos.write(Array.empty[Byte])
         fos.close()
       }
+      f.setLastModified(ts)
 
       if (updateLinks && file.getName == ".directory") {
         val linkFile = FileCache.auxiliaryFile(file, "links")
@@ -434,6 +436,28 @@ import scala.util.control.NonFatal
   private def ttlFile(file: File): File =
     new File(file.getParent, s".${file.getName}.checked")
 
+  private def checkNeeded(file: File) = ttl match {
+    case None                       => S.point(true)
+    case Some(ttl) if !ttl.isFinite => S.point(false)
+    case Some(ttl) =>
+      blockingIO {
+        Blocking.lastCheck(file).fold(true) { ts =>
+          val now = clock.millis()
+          now > ts + ttl.toMillis
+        }
+      }
+  }
+
+  private def checkNeededBlocking(file: File) = ttl match {
+    case None                       => true
+    case Some(ttl) if !ttl.isFinite => false
+    case Some(ttl) =>
+      Blocking.lastCheck(file).fold(true) { ts =>
+        val now = clock.millis()
+        now > ts + ttl.toMillis
+      }
+  }
+
   private def shouldDownload(
     file: File,
     url: String,
@@ -447,7 +471,7 @@ import scala.util.control.NonFatal
         Left(new ArtifactError.NotFound(url, Some(true)))
       else if (cacheErrors && errFile0.exists()) {
         val ts  = errFile0.lastModified()
-        val now = System.currentTimeMillis()
+        val now = clock.millis()
         if (ts > 0L && (ttl.exists(!_.isFinite) || now < ts + ttl.fold(0L)(_.toMillis)))
           Left(new ArtifactError.NotFound(url))
         else
@@ -455,18 +479,6 @@ import scala.util.control.NonFatal
       }
       else
         Right(())
-    }
-
-    def checkNeeded = ttl match {
-      case None                       => S.point(true)
-      case Some(ttl) if !ttl.isFinite => S.point(false)
-      case Some(ttl) =>
-        blockingIO {
-          Blocking.lastCheck(file).fold(true) { ts =>
-            val now = System.currentTimeMillis()
-            now > ts + ttl.toMillis
-          }
-        }
     }
 
     def doCheckRemote = for {
@@ -485,7 +497,7 @@ import scala.util.control.NonFatal
       blockingIO(file.exists()).flatMap {
         case false => S.point(Right(true))
         case true =>
-          checkNeeded.flatMap {
+          checkNeeded(file).flatMap {
             case false => S.point(Right(false))
             case true =>
               if (checkRemote)
@@ -507,6 +519,9 @@ import scala.util.control.NonFatal
       res <- EitherT(checkShouldDownload)
     } yield res
   }
+
+  private def shouldDownloadSecondCheckBlocking(file: File): Boolean =
+    !file.exists() || checkNeededBlocking(file)
 
   private def remote(
     file: File,
@@ -610,7 +625,7 @@ import scala.util.control.NonFatal
                   file,
                   url,
                   keepHeaderChecksums,
-                  () => !checkFileExistsBlocking(file, url)
+                  () => shouldDownloadSecondCheckBlocking(file)
                 )
               else
                 S.point(Right(()))
