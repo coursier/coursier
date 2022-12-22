@@ -71,7 +71,7 @@ object Versions {
 
 def sbtCoursierVersion = "2.0.8"
 
-def graalVmVersion = "22.1.0"
+def graalVmVersion = "22.3.0"
 def graalVmJvmId   = s"graalvm-java17:$graalVmVersion"
 
 // should be the default index in the upcoming coursier release (> 2.0.16)
