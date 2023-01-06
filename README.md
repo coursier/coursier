@@ -7,6 +7,8 @@
 
 ## Documentation
 
+Coursier is the Scala application and artifact manager. It can install Scala applications and setup your Scala development environment. It can also download and cache artifacts from the web.
+
 See the [website](https://get-coursier.io) for more details.
 
 ## Code of Conduct
