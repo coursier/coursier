@@ -79,10 +79,11 @@ trait Launchers extends CsModule {
         if (usesDocker) s"/data/$staticLibDirName"
         else staticLibDir().path.toString
       val extraOpts =
-        if (Properties.isLinux)
+        if (Properties.isLinux && arch == "aarch64")
           Seq(
             // required on the Linux / ARM64 CI in particular (not sure why)
-            "-Djdk.lang.Process.launchMechanism=vfork" // https://mbien.dev/blog/entry/custom-java-runtimes-with-jlink
+            "-Djdk.lang.Process.launchMechanism=vfork", // https://mbien.dev/blog/entry/custom-java-runtimes-with-jlink
+            "-H:PageSize=65536" // Make sure binary runs on kernels with page size set to 4k, 16 and 64k
           )
         else
           Nil
