@@ -24,7 +24,7 @@ abstract class SetupTests extends TestSuite {
         assert(result.exitCode == 0)
 
         for (app <- List("scala", "sbt", "cs"))
-          assert(os.exists(installDir / app))
+          assert(os.exists(installDir / app) || os.exists(installDir / s"$app.bat"))
       }
     }
 
