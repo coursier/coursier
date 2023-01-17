@@ -10,14 +10,21 @@ abstract class SetupTests extends TestSuite {
 
     test("setup") {
       TestUtil.withTempDir { tempDir =>
+        val homeDir    = os.Path(tempDir, os.pwd)
+        val installDir = homeDir / "bin"
         val result = os.proc(
           launcher,
           "setup",
           "--yes",
+          "--user-home",
+          homeDir.toString,
           "--install-dir",
-          tempDir.getAbsolutePath
-        ).call(cwd = os.Path(tempDir, os.pwd))
+          installDir.toString
+        ).call()
         assert(result.exitCode == 0)
+
+        for (app <- List("scala", "sbt", "cs"))
+          assert(os.exists(installDir / app))
       }
     }
 
