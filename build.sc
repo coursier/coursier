@@ -705,7 +705,13 @@ def simpleNative04CliTest() = T.command {
     finally cleanUp()
   assert(res.out.text == "foo a")
 }
-
+def copyTo(task: mill.main.Tasks[PathRef], dest: os.Path) = T.command {
+  if (task.value.length > 1)
+    sys.error("Expected a single task")
+  val ref = task.value.head()
+  os.makeDir.all(dest / os.up)
+  os.copy.over(ref.path, dest)
+}
 def copyLauncher(directory: String = "artifacts") = T.command {
   val nativeLauncher = cli.nativeImage().path
   ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, os.pwd))

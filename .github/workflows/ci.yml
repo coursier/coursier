@@ -205,6 +205,9 @@ jobs:
       - name: Copy artifacts
         run: .github/scripts/maybe-with-graalvm-home.sh copyLauncher artifacts/
         shell: bash
+      - name: Build OS packages
+        run: .github/scripts/generate-os-packages.sh
+        shell: bash
       - uses: actions/upload-artifact@v3
         with:
           name: launchers
