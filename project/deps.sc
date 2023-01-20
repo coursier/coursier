@@ -38,7 +38,7 @@ object Deps {
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
   def pprint                   = ivy"com.lihaoyi::pprint:0.8.1"
-  def proguard                 = ivy"com.guardsquare:proguard-base:7.3.0"
+  def proguard                 = ivy"com.guardsquare:proguard-base:7.3.1"
   def pythonNativeLibs         = ivy"ai.kien::python-native-libs:0.2.4"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
   def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:0.1.20"
