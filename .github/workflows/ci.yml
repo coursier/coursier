@@ -185,9 +185,8 @@ jobs:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
 
   generate-native-launchers:
-    name: Upload native launcher ${{ matrix.OS }}
+    name: Test and upload native launcher ${{ matrix.OS }}
     needs: test
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ${{ matrix.OS }}
     strategy:
       fail-fast: false
@@ -202,6 +201,10 @@ jobs:
       - uses: coursier/setup-action@v1.3.0
         with:
           jvm: 8
+      - run: sudo apt-get install -y nailgun
+        if: runner.os == 'Linux'
+      - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
+        shell: bash
       - name: Copy artifacts
         run: .github/scripts/maybe-with-graalvm-home.sh copyLauncher artifacts/
         shell: bash
@@ -216,9 +219,8 @@ jobs:
           retention-days: 2
 
   generate-native-static-launcher:
-    name: Upload native static launcher
+    name: Test and upload native static launcher
     needs: test
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v3
@@ -229,6 +231,10 @@ jobs:
       - uses: coursier/setup-action@v1.3.0
         with:
           jvm: 8
+      - run: sudo apt-get install -y nailgun
+        if: runner.os == 'Linux'
+      - run: .github/scripts/maybe-with-graalvm-home.sh nativeStaticTests
+        shell: bash
       - name: Copy artifacts
         run: .github/scripts/maybe-with-graalvm-home.sh copyStaticLauncher artifacts/
         shell: bash
@@ -240,9 +246,8 @@ jobs:
           retention-days: 2
 
   generate-native-mostly-static-launcher:
-    name: Upload native mostly static launcher
+    name: Test and upload native mostly static launcher
     needs: test
-    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v3
@@ -253,6 +258,10 @@ jobs:
       - uses: coursier/setup-action@v1.3.0
         with:
           jvm: 8
+      - run: sudo apt-get install -y nailgun
+        if: runner.os == 'Linux'
+      - run: .github/scripts/maybe-with-graalvm-home.sh nativeMostlyStaticTests
+        shell: bash
       - name: Copy artifacts
         run: .github/scripts/maybe-with-graalvm-home.sh copyMostlyStaticLauncher artifacts/
         shell: bash
