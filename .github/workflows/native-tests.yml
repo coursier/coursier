@@ -26,6 +26,15 @@ jobs:
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
         shell: bash
+      - name: Copy artifacts
+        run: .github/scripts/maybe-with-graalvm-home.sh copyLauncher artifacts/
+        shell: bash
+      - uses: actions/upload-artifact@v3
+        with:
+          name: launchers
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 2
 
   test-native-static-launcher:
     runs-on: ubuntu-latest
@@ -42,6 +51,15 @@ jobs:
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeStaticTests
         shell: bash
+      - name: Copy artifacts
+        run: .github/scripts/maybe-with-graalvm-home.sh copyStaticLauncher artifacts/
+        shell: bash
+      - uses: actions/upload-artifact@v3
+        with:
+          name: launchers
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 2
 
   test-native-mostly-static-launcher:
     runs-on: ubuntu-latest
@@ -58,3 +76,12 @@ jobs:
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeMostlyStaticTests
         shell: bash
+      - name: Copy artifacts
+        run: .github/scripts/maybe-with-graalvm-home.sh copyMostlyStaticLauncher artifacts/
+        shell: bash
+      - uses: actions/upload-artifact@v3
+        with:
+          name: launchers
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 2
