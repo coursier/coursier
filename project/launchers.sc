@@ -1,5 +1,5 @@
 import $ivy.`io.get-coursier::coursier-launcher:2.0.16`
-import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.21`
+import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.23`
 
 import $file.cs
 import $file.deps, deps.{Deps, Docker, graalVmJvmId, jvmIndex}
@@ -46,6 +46,8 @@ trait Launchers extends CsModule {
     def nativeImageCsCommand    = Seq(cs.cs)
     def nativeImagePersist      = System.getenv("CI") != null
     def nativeImageGraalVmJvmId = graalVmJvmId
+
+    def nativeImageUseJpms = Some(false)
 
     def nativeImageName          = "cs"
     private def staticLibDirName = "native-libs"
