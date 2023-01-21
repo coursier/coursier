@@ -1,5 +1,5 @@
 import $ivy.`io.get-coursier::coursier-launcher:2.0.16`
-import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.21`
+import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.23`
 
 import $file.cs
 import $file.deps, deps.{Deps, Docker, graalVmJvmId, jvmIndex}
@@ -47,6 +47,8 @@ trait Launchers extends CsModule {
     def nativeImagePersist      = System.getenv("CI") != null
     def nativeImageGraalVmJvmId = graalVmJvmId
 
+    def nativeImageUseJpms = Some(false)
+
     def nativeImageName          = "cs"
     private def staticLibDirName = "native-libs"
     private def copyCsjniutilTo(destDir: os.Path): Unit = {
@@ -79,10 +81,11 @@ trait Launchers extends CsModule {
         if (usesDocker) s"/data/$staticLibDirName"
         else staticLibDir().path.toString
       val extraOpts =
-        if (Properties.isLinux)
+        if (Properties.isLinux && arch == "aarch64")
           Seq(
             // required on the Linux / ARM64 CI in particular (not sure why)
-            "-Djdk.lang.Process.launchMechanism=vfork" // https://mbien.dev/blog/entry/custom-java-runtimes-with-jlink
+            "-Djdk.lang.Process.launchMechanism=vfork", // https://mbien.dev/blog/entry/custom-java-runtimes-with-jlink
+            "-H:PageSize=65536" // Make sure binary runs on kernels with page size set to 4k, 16 and 64k
           )
         else
           Nil
