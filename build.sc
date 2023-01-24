@@ -23,7 +23,7 @@ import $file.project.modules.shared, shared.{
   JvmTests
 }
 import $file.project.modules.`sbt-maven-repository0`,
-`sbt-maven-repository0`.{SbtMavenRepository, SbtMavenRepositoryJvmBase}
+  `sbt-maven-repository0`.{SbtMavenRepository, SbtMavenRepositoryJvmBase}
 import $file.project.modules.tests0, tests0.TestsModule
 import $file.project.modules.util0, util0.{Util, UtilJvmBase}
 import $file.project.publishing, publishing.mavenOrg

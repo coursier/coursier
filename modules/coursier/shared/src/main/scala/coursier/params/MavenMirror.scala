@@ -1,7 +1,7 @@
 package coursier.params
 
 import coursier.core.Repository
-import coursier.maven.MavenRepository
+import coursier.maven.MavenRepositoryBase
 import dataclass.data
 
 /** Assumes Maven repository roots listed in `from` are mirrored at `to`.
@@ -19,7 +19,7 @@ import dataclass.data
 
   def matches(repo: Repository): Option[Repository] =
     repo match {
-      case m: MavenRepository =>
+      case m: MavenRepositoryBase =>
         val url     = m.root
         val matches = matchesAll || from.contains(url)
         if (matches)

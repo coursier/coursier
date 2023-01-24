@@ -1,7 +1,6 @@
 package coursier.core
 
 import coursier.core.compatibility.encodeURIComponent
-import coursier.maven.MavenRepository
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.util.Monad.ops._
 import dataclass.data

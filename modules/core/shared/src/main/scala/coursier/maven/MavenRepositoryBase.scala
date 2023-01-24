@@ -16,6 +16,9 @@ trait MavenRepositoryBase extends Repository {
   def authentication: Option[Authentication]
   def changing: Option[Boolean]
   def root: String
+  def withRoot(root: String): MavenRepositoryBase
+  def withAuthentication(auth: Option[Authentication]): MavenRepositoryBase
+  def withVersionsCheckHasModule(versionCheckHasModule: Boolean): MavenRepositoryBase
 
   private[coursier] def moduleDirectory(module: Module): String
   override def repr: String = root

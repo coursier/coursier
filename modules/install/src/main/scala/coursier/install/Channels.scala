@@ -12,7 +12,7 @@ import coursier.cache.internal.FileUtil
 import coursier.core.Repository
 import coursier.install.Codecs.{decodeObj, encodeObj}
 import coursier.ivy.IvyRepository
-import coursier.maven.MavenRepository
+import coursier.maven.MavenRepositoryBase
 import coursier.util.{Artifact, Task}
 import dataclass._
 import scala.collection.JavaConverters._
@@ -405,7 +405,7 @@ object Channels {
 
   private def repositoriesRepr(repositories: Seq[Repository]): Seq[String] =
     repositories.toList.flatMap {
-      case m: MavenRepository =>
+      case m: MavenRepositoryBase =>
         // FIXME This discards authentication, …
         List(m.root)
       case i: IvyRepository =>
