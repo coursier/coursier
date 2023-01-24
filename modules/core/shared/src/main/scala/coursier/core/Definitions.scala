@@ -40,7 +40,6 @@ object ModuleName {
 ) {
   assertValid(organization.value, "organization")
   assertValid(name.value, "module name")
-  assertValidIfSbtPlugin(name, attributes)
 
   def trim: Module = copy(
     organization.map(_.trim),
@@ -253,14 +252,7 @@ object Attributes {
   publications: Seq[(Configuration, Publication)],
 
   // Extra infos, not used during resolution
-  info: Info,
-
-  /** In case of an sbt plugin, we use this field to remember that the pom file, was resolved from
-    * the deprecated Maven path 'org/example/example_2.12_1.0/1.0.0/example-1.0.0.pom'. This is
-    * later used to fetch the artifatcs, the jar files.
-    */
-  @dataclass.since("2.1.0")
-  useDeprecatedSbtPluginPath: Boolean = false
+  info: Info
 ) {
   lazy val moduleVersion = (module, version)
 
@@ -419,30 +411,6 @@ trait ArtifactSource {
   ): Seq[(Publication, Artifact)]
 }
 
-private[coursier] object SbtPlugin {
-  def isSbtPlugin(attributes: Map[String, String]): Boolean =
-    getSbtCrossVersion(attributes).nonEmpty
-
-  def appendSbtCrossVersion(name: ModuleName, attributes: Map[String, String]): ModuleName = {
-    val adaptedName = for {
-      suffix <- getSbtCrossVersion(attributes)
-      if !name.value.endsWith(suffix)
-    } yield name.copy(value = name.value + suffix)
-    adaptedName.getOrElse(name)
-  }
-
-  def removeSbtCrossVersion(name: ModuleName, attributes: Map[String, String]): ModuleName =
-    getSbtCrossVersion(attributes)
-      .map(suffix => name.copy(value = name.value.stripSuffix(suffix)))
-      .getOrElse(name)
-
-  def getSbtCrossVersion(attributes: Map[String, String]): Option[String] =
-    for {
-      sbtVersion   <- attributes.get("sbtVersion")
-      scalaVersion <- attributes.get("scalaVersion")
-    } yield s"_${scalaVersion}_$sbtVersion"
-}
-
 private[coursier] object Validation {
   def validateCoordinate(value: String, name: String): Either[String, String] =
     Seq('/', '\\').foldLeft[Either[String, String]](Right(value)) { (acc, char) =>
@@ -451,17 +419,4 @@ private[coursier] object Validation {
 
   def assertValid(value: String, name: String): Unit =
     validateCoordinate(value, name).fold(msg => throw new AssertionError(msg), identity)
-
-  /** To avoid mismatch in the conflict resolution of sbt plugins, we check that all sbt plugins do
-    * not contain the sbt cross-version '_2.12_1.0' in their name. The module of an sbt plugin
-    * whether it is resolved from the deprecated pom or the new pom should always be the same. It
-    * should contain the extra-attributes but not the sbt cross-version in its name.
-    */
-  def assertValidIfSbtPlugin(name: ModuleName, attributes: Map[String, String]): Unit =
-    SbtPlugin.getSbtCrossVersion(attributes).foreach { sbtCrossVersion =>
-      assert(
-        !name.value.endsWith(sbtCrossVersion),
-        s"Redundant suffix $sbtCrossVersion in sbt plugin ${name.value} of attributes ${attributes.mkString(", ")}"
-      )
-    }
 }

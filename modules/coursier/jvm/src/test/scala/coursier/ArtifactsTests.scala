@@ -313,17 +313,13 @@ object ArtifactsTests extends TestSuite {
     }
 
     "Don't group artifacts with same URL" - async {
-
       val res = await {
         Resolve()
           .noMirrors
-          .addDependencies(
-            dep"com.frugalmechanic:fm-sbt-s3-resolver;scalaVersion=2.12;sbtVersion=1.0:0.18.0"
-          )
+          .addDependencies(dep"com.amazonaws:aws-java-sdk-s3:1.11.507")
           .withCache(cache)
           .future()
       }
-
       val artifacts = Artifacts.artifacts(res, Set.empty, None, None, true).map(_._3).distinct
       val groupedArtifacts = Artifacts.groupArtifacts(artifacts)
 

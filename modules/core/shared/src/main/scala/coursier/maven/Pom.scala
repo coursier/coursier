@@ -6,9 +6,10 @@ import coursier.util.Traverse.TraverseOps
 
 import scala.collection.compat._
 
-object Pom {
+object Pom extends Pom
+
+trait Pom {
   import coursier.util.Xml._
-  type ModuleVersion = (Module, String)
 
   /** Returns either a property's key-value pair or an error if the elem is not an element.
     *
@@ -217,22 +218,17 @@ object Pom {
 
       profiles <- xmlProfiles.eitherTraverse(profile)
 
-      extraAttrs <- properties
-        .collectFirst { case ("extraDependencyAttributes", s) => extraAttributes(s) }
-        .getOrElse(Right(Map.empty[ModuleVersion, Map[String, String]]))
-
-    } yield {
-      val description = pom.children
+      description = pom.children
         .find(_.label == "description")
         .map(_.textContent)
         .getOrElse("")
 
-      val homePage = pom.children
+      homePage = pom.children
         .find(_.label == "url")
         .map(_.textContent)
         .getOrElse("")
 
-      val licenses = pom.children
+      licenses = pom.children
         .find(_.label == "licenses")
         .toSeq
         .flatMap(_.children)
@@ -243,7 +239,7 @@ object Pom {
           }.toSeq
         }
 
-      val developers = pom.children
+      developers = pom.children
         .find(_.label == "developers")
         .toSeq
         .flatMap(_.children)
@@ -259,7 +255,7 @@ object Pom {
           case Right(d) => d
         }
 
-      val scm = pom.children
+      scm = pom.children
         .find(_.label == "scm")
         .flatMap { n =>
           Option(Info.Scm(
@@ -271,9 +267,9 @@ object Pom {
           )
         }
 
-      val finalProjModule = projModule.withOrganization(groupId)
+      finalProjModule = projModule.withOrganization(groupId)
 
-      val relocationDependencyOpt = pom
+      relocationDependencyOpt = pom
         .children
         .find(_.label == "distributionManagement")
         .flatMap(_.children.find(_.label == "relocation"))
@@ -301,37 +297,50 @@ object Pom {
           )
         }
 
-      Project(
+      proj <- project(
         finalProjModule,
         version,
-        (relocationDependencyOpt.toSeq ++ deps).map {
-          case (config, dep0) =>
-            val dep = extraAttrs.get(dep0.moduleVersion).fold(dep0)(attrs =>
-              dep0.withModule(dep0.module.withAttributes(attrs))
-            )
-            config -> dep
-        },
-        Map.empty,
+        relocationDependencyOpt.toSeq ++ deps,
         parentModuleOpt.map((_, parentVersionOpt.getOrElse(""))),
         depMgmts,
         properties,
         profiles,
-        None,
-        None,
         packagingOpt(pom),
         relocationDependencyOpt.nonEmpty,
-        None,
-        Nil,
-        Info(
-          description,
-          homePage,
-          licenses,
-          developers,
-          None,
-          scm
-        )
+        Info(description, homePage, licenses, developers, None, scm)
       )
-    }
+    } yield proj
+
+  private[coursier] def project(
+    finalProjModule: Module,
+    finalVersion: String,
+    dependencies: Seq[(Configuration, Dependency)],
+    parent: Option[(Module, String)],
+    dependencyManagement: Seq[(Configuration, Dependency)],
+    properties: Seq[(String, String)],
+    profiles: Seq[Profile],
+    packaging: Option[Type],
+    relocated: Boolean,
+    info: Info
+  ): Either[String, Project] = Right(
+    Project(
+      finalProjModule,
+      finalVersion,
+      dependencies,
+      Map.empty,
+      parent,
+      dependencyManagement,
+      properties,
+      profiles,
+      None,
+      None,
+      packaging,
+      relocated,
+      None,
+      Nil,
+      info
+    )
+  )
 
   def versions(node: Node): Either[String, Versions] =
     for {
@@ -481,63 +490,6 @@ object Pom {
   )
 
   val extraAttributeDropPrefix = "e:"
-
-  def extraAttribute(s: String): Either[String, (ModuleVersion, Map[String, String])] = {
-    // vaguely does the same as:
-    // https://github.com/apache/ant-ivy/blob/2.2.0/src/java/org/apache/ivy/core/module/id/ModuleRevisionId.java#L291
-
-    // dropping the attributes with a value of NULL here...
-
-    val rawParts = s.split(extraAttributeSeparator).toSeq
-
-    val partsOrError =
-      if (rawParts.length % 2 == 0) {
-        val malformed = rawParts.filter(!_.startsWith(extraAttributePrefix))
-        if (malformed.isEmpty)
-          Right(rawParts.map(_.drop(extraAttributePrefix.length)))
-        else
-          Left(
-            s"Malformed attributes ${malformed.map("'" + _ + "'").mkString(", ")} in extra attributes '$s'"
-          )
-      }
-      else
-        Left(s"Malformed extra attributes '$s'")
-
-    def attrFrom(attrs: Map[String, String], name: String): Either[String, String] =
-      attrs
-        .get(name)
-        .toRight(s"$name not found in extra attributes '$s'")
-
-    for {
-      parts <- partsOrError
-      attrs = parts
-        .grouped(2)
-        .collect {
-          case Seq(k, v) if v != "NULL" =>
-            k.stripPrefix(extraAttributeDropPrefix) -> v
-        }
-        .toMap
-      org     <- attrFrom(attrs, extraAttributeOrg).map(Organization(_))
-      name    <- attrFrom(attrs, extraAttributeName).map(ModuleName(_))
-      version <- attrFrom(attrs, extraAttributeVersion)
-    } yield {
-      val remainingAttrs = attrs.view.filterKeys(!extraAttributeBase(_)).toMap
-      ((Module(org, name, Map.empty), version), remainingAttrs)
-    }
-  }
-
-  def extraAttributes(s: String): Either[String, Map[ModuleVersion, Map[String, String]]] = {
-
-    val lines = s.split('\n').toSeq.map(_.trim).filter(_.nonEmpty)
-
-    lines.foldLeft[Either[String, Map[ModuleVersion, Map[String, String]]]](Right(Map.empty)) {
-      case (acc, line) =>
-        for {
-          modVers <- acc
-          modVer  <- extraAttribute(line)
-        } yield modVers + modVer
-    }
-  }
 
   def addOptionalDependenciesInConfig(
     proj: Project,

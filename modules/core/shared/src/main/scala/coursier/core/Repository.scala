@@ -121,6 +121,7 @@ object Repository {
   trait Complete[F[_]] {
     def organization(prefix: String): F[Either[Throwable, Seq[String]]]
     def moduleName(organization: Organization, prefix: String): F[Either[Throwable, Seq[String]]]
+    protected def moduleDirectory(module: Module): String
     def versions(module: Module, prefix: String): F[Either[Throwable, Seq[String]]]
 
     private def org(
@@ -195,22 +196,15 @@ object Repository {
           .exists(_.completions.contains(nameInput.input.drop(nameInput.from)))
       }
 
-    def sbtAttrStub: Boolean = false
-
-    def hasModule(
-      module: Module,
-      sbtAttrStub: Boolean = sbtAttrStub
-    )(implicit
-      F: Monad[F]
-    ): F[Boolean] =
+    def hasModule(module: Module)(implicit F: Monad[F]): F[Boolean] =
       hasOrg(Complete.Input.Org(module.organization.value), partial = false).flatMap {
         case false => F.point(false)
         case true =>
-          val prefix           = s"${module.organization.value}:"
-          val actualModuleName = MavenRepository.appendCrossVersionIfSbtPlugin(module, sbtAttrStub)
+          val prefix              = s"${module.organization.value}:"
+          val moduleDirectoryName = moduleDirectory(module)
           hasName(Complete.Input.Name(
             module.organization,
-            prefix + actualModuleName.value,
+            prefix + moduleDirectoryName,
             prefix.length,
             ""
           ))
