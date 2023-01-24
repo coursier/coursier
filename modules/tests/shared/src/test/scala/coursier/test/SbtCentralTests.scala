@@ -4,11 +4,8 @@ package test
 import utest._
 
 import scala.async.Async.{async, await}
-import coursier.core.{Classifier, Configuration, Extension, Type}
-import coursier.graph.{Conflict, ModuleTree}
 import coursier.maven.SbtMavenRepository
 import coursier.test.compatibility._
-import coursier.util.{Artifact, Print, Tree}
 
 import scala.concurrent.Future
 
