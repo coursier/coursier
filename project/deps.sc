@@ -28,7 +28,7 @@ object Deps {
   def jsoup           = ivy"org.jsoup:jsoup:1.15.3"
   def logbackClassic  = ivy"ch.qos.logback:logback-classic:1.2.11"
   def macroParadise   = ivy"org.scalamacros:::paradise:2.1.1"
-  def mdoc            = ivy"org.scalameta::mdoc:2.3.6"
+  def mdoc            = ivy"org.scalameta::mdoc:2.3.7"
   def monadlessCats   = ivy"io.monadless::monadless-cats:${Versions.monadless}"
   def monadlessStdlib = ivy"io.monadless::monadless-stdlib:${Versions.monadless}"
   def noCrcZis        = ivy"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
