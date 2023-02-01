@@ -33,7 +33,7 @@ object NativeBuilder {
     val loader = new URLClassLoader(files.map(_.toURI.toURL).toArray, parentLoader)
 
     val cls = loader.loadClass("coursier.launcher.NativeBuilderImpl")
-    cls.newInstance().asInstanceOf[NativeBuilder]
+    cls.getDeclaredConstructor().asInstanceOf[NativeBuilder]
   }
 
 }
