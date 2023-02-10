@@ -265,9 +265,9 @@ private[coursier] class MavenRepositoryInternal(
           coursier.core.compatibility.xmlParseSax(str, new PomParser).project
         else
           for {
-            xml       <- compatibility.xmlParseDom(str)
-            _         <- if (xml.label == "project") Right(()) else Left("Project definition not found")
-            proj      <- Pom.project(xml)
+            xml  <- compatibility.xmlParseDom(str)
+            _    <- if (xml.label == "project") Right(()) else Left("Project definition not found")
+            proj <- Pom.project(xml)
           } yield proj
 
       for {

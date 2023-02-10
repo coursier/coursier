@@ -146,10 +146,10 @@ object SbtMavenRepository {
 
         SbtMavenRepository.getSbtCrossVersion(module.attributes) match {
           case Some(crossVersion) =>
-            /** In case of an sbt plugin, for instance org.example:example:1.0.0 with extra-attributes
-              * scalaVersion->2.12 and sbtVersion->1.0, we first try the valid Maven pattern
-              * 'org/example/example_2.12_1.0/1.0.0/example_2.12_1.0-1.0.0-jar' then the legacy pattern
-              * 'org/example/example_2.12_1.0/1.0.0/example-1.0.0-jar`
+            /** In case of an sbt plugin, for instance org.example:example:1.0.0 with
+              * extra-attributes scalaVersion->2.12 and sbtVersion->1.0, we first try the valid
+              * Maven pattern 'org/example/example_2.12_1.0/1.0.0/example_2.12_1.0-1.0.0-jar' then
+              * the legacy pattern 'org/example/example_2.12_1.0/1.0.0/example-1.0.0-jar`
               */
             tryFetch(module.name.value + crossVersion).orElse(tryFetch(module.name.value))
           case None => tryFetch(module.name.value)
