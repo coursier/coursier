@@ -3,17 +3,14 @@ package coursier
 import coursier.core.{Classifier, Configuration, Info, Project}
 import coursier.core.compatibility._
 import coursier.util.Traverse.TraverseOps
-import coursier.maven.PomParser
+import coursier.maven.MavenRepository
 import utest._
 
 object PomParserTests extends TestSuite {
 
-  private def parseRawPomSax(str: String): Either[String, Project] =
-    coursier.core.compatibility.xmlParseSax(str, new PomParser).project
-
   val tests = Tests {
     test("scm field is optional") {
-      val success = parseRawPomSax(
+      val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
           |    <modelVersion>4.0.0</modelVersion>
@@ -28,7 +25,7 @@ object PomParserTests extends TestSuite {
     }
 
     test("all fields in scm is optional") {
-      val success = parseRawPomSax(
+      val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
           |    <modelVersion>4.0.0</modelVersion>
@@ -48,7 +45,7 @@ object PomParserTests extends TestSuite {
     }
 
     test("can parse scm info") {
-      val success = parseRawPomSax(
+      val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
           |    <modelVersion>4.0.0</modelVersion>
@@ -71,7 +68,7 @@ object PomParserTests extends TestSuite {
     }
 
     test("properties are parsed") {
-      val success = parseRawPomSax(
+      val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
           |    <modelVersion>4.0.0</modelVersion>
@@ -91,7 +88,7 @@ object PomParserTests extends TestSuite {
     }
 
     test("licenses are optional") {
-      val success = parseRawPomSax(
+      val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
           |  <modelVersion>4.0.0</modelVersion>
@@ -107,7 +104,7 @@ object PomParserTests extends TestSuite {
     }
 
     test("licenses with just name and url") {
-      val success = parseRawPomSax(
+      val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
           |  <modelVersion>4.0.0</modelVersion>
@@ -136,7 +133,7 @@ object PomParserTests extends TestSuite {
     }
 
     test("licenses with just name and url (binary compat test)") {
-      val success = parseRawPomSax(
+      val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
           |  <modelVersion>4.0.0</modelVersion>
@@ -160,7 +157,7 @@ object PomParserTests extends TestSuite {
     }
 
     test("multiple licenses with just name and url") {
-      val success = parseRawPomSax(
+      val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
           |  <modelVersion>4.0.0</modelVersion>
@@ -199,7 +196,7 @@ object PomParserTests extends TestSuite {
     }
 
     test("license with maven distribution and comments") {
-      val success = parseRawPomSax(
+      val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
           |  <modelVersion>4.0.0</modelVersion>
@@ -230,7 +227,7 @@ object PomParserTests extends TestSuite {
     }
 
     test("license with maven distribution and comments (binary compat test)") {
-      val success = parseRawPomSax(
+      val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
           |  <modelVersion>4.0.0</modelVersion>
@@ -256,7 +253,7 @@ object PomParserTests extends TestSuite {
     }
 
     test("'/' and '\\' are invalid in groupId") {
-      val failure = parseRawPomSax(
+      val failure = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
           |    <modelVersion>4.0.0</modelVersion>
@@ -271,7 +268,7 @@ object PomParserTests extends TestSuite {
     }
 
     test("'/' and '\\' are invalid in artifactId") {
-      val failure = parseRawPomSax(
+      val failure = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
           |    <modelVersion>4.0.0</modelVersion>
@@ -286,7 +283,7 @@ object PomParserTests extends TestSuite {
     }
 
     test("'/' and '\\' are invalid in version") {
-      val failure = parseRawPomSax(
+      val failure = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
           |    <modelVersion>4.0.0</modelVersion>

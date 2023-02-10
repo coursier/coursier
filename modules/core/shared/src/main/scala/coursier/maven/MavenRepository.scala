@@ -13,6 +13,10 @@ object MavenRepository {
     Configuration.test    -> Seq(Configuration.runtime)
   )
 
+  private[coursier] def parseRawPomSax(str: String): Either[String, Project] =
+    coursier.core.compatibility.xmlParseSax(str, new PomParser)
+      .project
+
   private def actualRoot(root: String): String =
     root.stripSuffix("/")
 
