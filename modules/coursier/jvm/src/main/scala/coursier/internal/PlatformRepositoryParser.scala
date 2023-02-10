@@ -7,7 +7,7 @@ import coursier.LocalRepositories
 import coursier.cache.CacheUrl
 import coursier.core.{Authentication, Repository}
 import coursier.ivy.IvyRepository
-import coursier.maven.MavenRepositoryBase
+import coursier.maven.MavenRepositoryLike
 
 abstract class PlatformRepositoryParser {
 
@@ -25,7 +25,7 @@ abstract class PlatformRepositoryParser {
       val repo = SharedRepositoryParser.repository(input)
 
       val url = repo.map {
-        case m: MavenRepositoryBase =>
+        case m: MavenRepositoryLike =>
           m.root
         case i: IvyRepository =>
           // FIXME We're not handling metadataPattern here
@@ -76,7 +76,7 @@ abstract class PlatformRepositoryParser {
             ).toString
 
             repo.map {
-              case m: MavenRepositoryBase =>
+              case m: MavenRepositoryLike =>
                 m.withRoot(baseUrl).withAuthentication(Some(auth))
               case i: IvyRepository =>
                 i.withAuthentication(Some(auth)).withPattern(

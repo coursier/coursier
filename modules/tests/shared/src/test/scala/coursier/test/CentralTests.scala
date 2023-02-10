@@ -6,7 +6,7 @@ import utest._
 import scala.async.Async.{async, await}
 import coursier.core.{Classifier, Configuration, Extension, Type}
 import coursier.graph.{Conflict, ModuleTree}
-import coursier.maven.MavenRepositoryBase
+import coursier.maven.MavenRepositoryLike
 import coursier.test.compatibility._
 import coursier.util.{Artifact, Print, Tree}
 
@@ -16,7 +16,7 @@ object CentralTests extends CentralTests
 
 abstract class CentralTests extends TestSuite {
 
-  def central: MavenRepositoryBase = Repositories.central
+  def central: MavenRepositoryLike = Repositories.central
   private def centralBase          = central.root
 
   private final def isActualCentral = centralBase == Repositories.central.root

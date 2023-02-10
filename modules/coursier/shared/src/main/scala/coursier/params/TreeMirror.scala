@@ -2,7 +2,7 @@ package coursier.params
 
 import coursier.core.Repository
 import coursier.ivy.IvyRepository
-import coursier.maven.MavenRepositoryBase
+import coursier.maven.MavenRepositoryLike
 import dataclass.data
 
 /** Assumes any tree with a prefix in `from` is mirrored under `to`.
@@ -19,7 +19,7 @@ import dataclass.data
 
   def matches(repo: Repository): Option[Repository] =
     repo match {
-      case m: MavenRepositoryBase =>
+      case m: MavenRepositoryLike =>
         val url = m.root
         from
           .find(f => url == f || url.startsWith(f + "/"))

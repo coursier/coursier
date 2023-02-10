@@ -5,7 +5,7 @@ import coursier.util.Monad
 import dataclass.data
 
 @data class MavenComplete[F[_]](
-  repo: MavenRepositoryBase,
+  repo: MavenRepositoryLike,
   fetch: Repository.Fetch[F],
   F: Monad[F]
 ) extends Repository.Complete[F] {
