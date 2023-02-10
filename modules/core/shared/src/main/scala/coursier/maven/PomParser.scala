@@ -6,7 +6,7 @@ import coursier.util.SaxHandler
 
 import scala.collection.mutable.ListBuffer
 
-class PomParser extends SaxHandler {
+final class PomParser extends SaxHandler {
 
   import PomParser._
 
@@ -57,126 +57,8 @@ class PomParser extends SaxHandler {
     b.setLength(0)
   }
 
-  def project: Either[String, Project] = {
-    val groupIdOpt = Some(state.groupId).filter(_.nonEmpty)
-      .orElse(state.parentGroupIdOpt.filter(_.nonEmpty))
-
-    val versionOpt = Some(state.version).filter(_.nonEmpty)
-      .orElse(Some(state.parentVersion).filter(_.nonEmpty))
-
-    val properties0 = state.properties.toList
-
-    val parentModuleOpt =
-      for {
-        parentGroupId <- state.parentGroupIdOpt
-          .toRight("Parent organization missing")
-          .flatMap(validateCoordinate(_, "parent groupId"))
-        parentArtifactId <- state.parentArtifactIdOpt
-          .toRight("Parent artifactId missing")
-          .flatMap(validateCoordinate(_, "parent artifactId"))
-      } yield Module(Organization(parentGroupId), ModuleName(parentArtifactId), Map.empty)
-
-    for {
-      finalGroupId <- groupIdOpt
-        .toRight("No organization found")
-        .flatMap(validateCoordinate(_, "groupId"))
-      artifactId <- state.artifactIdOpt
-        .toRight("No artifactId found")
-        .flatMap(validateCoordinate(_, "artifactId"))
-      finalVersion <- versionOpt
-        .toRight("No version found")
-        .flatMap(validateCoordinate(_, "version"))
-
-      _ <- {
-        if (parentModuleOpt.exists(_.organization.value.isEmpty))
-          Left("Parent organization missing")
-        else
-          Right(())
-      }
-
-      _ <- {
-        if (parentModuleOpt.isRight && state.parentVersion.isEmpty)
-          Left("No parent version found")
-        else
-          Right(())
-      }
-
-      parentOpt = for {
-        parentModule  <- parentModuleOpt
-        parentVersion <- validateCoordinate(state.parentVersion, "parent version")
-      } yield (parentModule, parentVersion)
-
-      projModule = Module(Organization(finalGroupId), ModuleName(artifactId), Map.empty)
-
-      relocationDependencyOpt = {
-        val isRelocated = state.relocationGroupIdOpt.nonEmpty ||
-          state.relocationArtifactIdOpt.nonEmpty ||
-          state.relocationVersionOpt.nonEmpty
-        if (isRelocated)
-          Some {
-            Configuration.empty -> Dependency(
-              Module(
-                organization = state.relocationGroupIdOpt.getOrElse(projModule.organization),
-                name = state.relocationArtifactIdOpt.getOrElse(projModule.name),
-                attributes = projModule.attributes
-              ),
-              state.relocationVersionOpt.getOrElse(finalVersion),
-              Configuration.empty,
-              Set.empty[(Organization, ModuleName)],
-              Attributes.empty,
-              optional = false,
-              transitive = true
-            )
-          }
-        else
-          None
-      }
-
-      proj <- project(
-        projModule,
-        finalVersion,
-        relocationDependencyOpt.toList ::: state.dependencies.toList,
-        parentOpt.toOption,
-        state.dependencyManagement.toList,
-        properties0,
-        state.profiles.toList,
-        state.packagingOpt,
-        relocated = relocationDependencyOpt.nonEmpty,
-        Info(
-          state.description,
-          state.url,
-          state.developers,
-          state.publication,
-          state.scmOpt,
-          state.licenseInfo.toSeq
-        )
-      )
-    } yield proj
-  }
-
-  protected def project(
-    finalProjModule: Module,
-    finalVersion: String,
-    dependencies: Seq[(Configuration, Dependency)],
-    parent: Option[(Module, String)],
-    dependencyManagement: Seq[(Configuration, Dependency)],
-    properties: Seq[(String, String)],
-    profiles: Seq[Profile],
-    packaging: Option[Type],
-    relocated: Boolean,
-    info: Info
-  ): Either[String, Project] = Pom.project(
-    finalProjModule,
-    finalVersion,
-    dependencies,
-    parent,
-    dependencyManagement,
-    properties,
-    profiles,
-    packaging,
-    relocated,
-    info
-  )
+  def project: Either[String, Project] =
+    state.project
 }
 
 object PomParser {
@@ -266,6 +148,111 @@ object PomParser {
     var profileActivationJdkOpt       = Option.empty[Either[VersionInterval, Seq[Version]]]
 
     val profiles = new ListBuffer[Profile]
+
+    def project: Either[String, Project] = {
+
+      val groupIdOpt = Some(groupId).filter(_.nonEmpty)
+        .orElse(parentGroupIdOpt.filter(_.nonEmpty))
+
+      val versionOpt = Some(version).filter(_.nonEmpty)
+        .orElse(Some(parentVersion).filter(_.nonEmpty))
+
+      val properties0 = properties.toList
+
+      val parentModuleOpt =
+        for {
+          parentGroupId <- parentGroupIdOpt
+            .toRight("Parent organization missing")
+            .flatMap(validateCoordinate(_, "parent groupId"))
+          parentArtifactId <- parentArtifactIdOpt
+            .toRight("Parent artifactId missing")
+            .flatMap(validateCoordinate(_, "parent artifactId"))
+        } yield Module(Organization(parentGroupId), ModuleName(parentArtifactId), Map.empty)
+
+      for {
+        finalGroupId <- groupIdOpt
+          .toRight("No organization found")
+          .flatMap(validateCoordinate(_, "groupId"))
+        artifactId <- artifactIdOpt
+          .toRight("No artifactId found")
+          .flatMap(validateCoordinate(_, "artifactId"))
+        finalVersion <- versionOpt
+          .toRight("No version found")
+          .flatMap(validateCoordinate(_, "version"))
+
+        _ <- {
+          if (parentModuleOpt.exists(_.organization.value.isEmpty))
+            Left("Parent organization missing")
+          else
+            Right(())
+        }
+
+        _ <- {
+          if (parentModuleOpt.isRight && parentVersion.isEmpty)
+            Left("No parent version found")
+          else
+            Right(())
+        }
+
+      } yield {
+
+        val parentOpt = for {
+          parentModule  <- parentModuleOpt
+          parentVersion <- validateCoordinate(parentVersion, "parent version")
+        } yield (parentModule, parentVersion)
+
+        val projModule = Module(Organization(finalGroupId), ModuleName(artifactId), Map.empty)
+
+        val relocationDependencyOpt = {
+          val isRelocated = relocationGroupIdOpt.nonEmpty ||
+            relocationArtifactIdOpt.nonEmpty ||
+            relocationVersionOpt.nonEmpty
+          if (isRelocated)
+            Some {
+              Configuration.empty -> Dependency(
+                Module(
+                  organization = relocationGroupIdOpt.getOrElse(projModule.organization),
+                  name = relocationArtifactIdOpt.getOrElse(projModule.name),
+                  attributes = projModule.attributes
+                ),
+                relocationVersionOpt.getOrElse(finalVersion),
+                Configuration.empty,
+                Set.empty[(Organization, ModuleName)],
+                Attributes.empty,
+                optional = false,
+                transitive = true
+              )
+            }
+          else
+            None
+        }
+
+        Project(
+          projModule,
+          finalVersion,
+          relocationDependencyOpt.toList ::: dependencies.toList,
+          Map.empty,
+          parentOpt.toOption,
+          dependencyManagement.toList,
+          properties0,
+          profiles.toList,
+          None,
+          None,
+          packagingOpt,
+          relocated = relocationDependencyOpt.nonEmpty,
+          None,
+          Nil,
+          Info(
+            description,
+            url,
+            developers,
+            publication,
+            scmOpt,
+            licenseInfo.toSeq
+          )
+        )
+      }
+    }
   }
 
   private sealed abstract class Handler(val path: List[String])

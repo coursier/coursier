@@ -6,9 +6,7 @@ import coursier.util.Traverse.TraverseOps
 
 import scala.collection.compat._
 
-object Pom extends Pom
-
-trait Pom {
+object Pom {
   import coursier.util.Xml._
 
   /** Returns either a property's key-value pair or an error if the elem is not an element.
