@@ -3,11 +3,10 @@ package coursier.maven
 import coursier.core.{Authentication, Module, Repository}
 import coursier.util.Artifact
 
-/**
-  * A [[Repository]] instance backed by a Maven repository
+/** A [[Repository]] instance backed by a Maven repository
   *
-  * As such, it has a root URL, and may require some authentication. Methods below
-  * allows to read and update those.
+  * As such, it has a root URL, and may require some authentication. Methods below allows to read
+  * and update those.
   */
 trait MavenRepositoryLike extends Repository {
 
