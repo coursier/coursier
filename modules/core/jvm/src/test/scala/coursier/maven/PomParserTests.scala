@@ -1,10 +1,13 @@
 package coursier
 
-import coursier.core.{Classifier, Configuration, Info, Project}
+import coursier.core.{Classifier, Configuration}
 import coursier.core.compatibility._
 import coursier.util.Traverse.TraverseOps
 import coursier.maven.MavenRepository
+import coursier.maven.Pom
 import utest._
+import coursier.core.Info
+import coursier.core.Info.License
 
 object PomParserTests extends TestSuite {
 

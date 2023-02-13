@@ -6,12 +6,7 @@ import dataclass._
 
 object MavenRepository {
 
-  val defaultConfigurations = Map(
-    Configuration.compile -> Seq.empty,
-    Configuration.runtime -> Seq(Configuration.compile),
-    Configuration.default -> Seq(Configuration.runtime),
-    Configuration.test    -> Seq(Configuration.runtime)
-  )
+  def defaultConfigurations = MavenRepositoryInternal.defaultConfigurations
 
   private[coursier] def parseRawPomSax(str: String): Either[String, Project] =
     coursier.core.compatibility.xmlParseSax(str, new PomParser)

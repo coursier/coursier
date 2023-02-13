@@ -313,6 +313,7 @@ object ArtifactsTests extends TestSuite {
     }
 
     "Don't group artifacts with same URL" - async {
+
       val res = await {
         Resolve()
           .noMirrors
@@ -320,6 +321,7 @@ object ArtifactsTests extends TestSuite {
           .withCache(cache)
           .future()
       }
+
       val artifacts = Artifacts.artifacts(res, Set.empty, None, None, true).map(_._3).distinct
       val groupedArtifacts = Artifacts.groupArtifacts(artifacts)
 

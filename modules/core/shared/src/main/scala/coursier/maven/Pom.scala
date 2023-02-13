@@ -216,17 +216,19 @@ object Pom {
 
       profiles <- xmlProfiles.eitherTraverse(profile)
 
-      description = pom.children
+    } yield {
+
+      val description = pom.children
         .find(_.label == "description")
         .map(_.textContent)
         .getOrElse("")
 
-      homePage = pom.children
+      val homePage = pom.children
         .find(_.label == "url")
         .map(_.textContent)
         .getOrElse("")
 
-      licenses = pom.children
+      val licenses = pom.children
         .find(_.label == "licenses")
         .toSeq
         .flatMap(_.children)
@@ -237,7 +239,7 @@ object Pom {
           }.toSeq
         }
 
-      developers = pom.children
+      val developers = pom.children
         .find(_.label == "developers")
         .toSeq
         .flatMap(_.children)
@@ -253,7 +255,7 @@ object Pom {
           case Right(d) => d
         }
 
-      scm = pom.children
+      val scm = pom.children
         .find(_.label == "scm")
         .flatMap { n =>
           Option(Info.Scm(
@@ -265,9 +267,9 @@ object Pom {
           )
         }
 
-      finalProjModule = projModule.withOrganization(groupId)
+      val finalProjModule = projModule.withOrganization(groupId)
 
-      relocationDependencyOpt = pom
+      val relocationDependencyOpt = pom
         .children
         .find(_.label == "distributionManagement")
         .flatMap(_.children.find(_.label == "relocation"))
@@ -295,50 +297,31 @@ object Pom {
           )
         }
 
-      proj <- project(
+      Project(
         finalProjModule,
         version,
         relocationDependencyOpt.toSeq ++ deps,
+        Map.empty,
         parentModuleOpt.map((_, parentVersionOpt.getOrElse(""))),
         depMgmts,
         properties,
         profiles,
+        None,
+        None,
         packagingOpt(pom),
         relocationDependencyOpt.nonEmpty,
-        Info(description, homePage, licenses, developers, None, scm)
+        None,
+        Nil,
+        Info(
+          description,
+          homePage,
+          licenses,
+          developers,
+          None,
+          scm
+        )
       )
-    } yield proj
-
-  private[coursier] def project(
-    finalProjModule: Module,
-    finalVersion: String,
-    dependencies: Seq[(Configuration, Dependency)],
-    parent: Option[(Module, String)],
-    dependencyManagement: Seq[(Configuration, Dependency)],
-    properties: Seq[(String, String)],
-    profiles: Seq[Profile],
-    packaging: Option[Type],
-    relocated: Boolean,
-    info: Info
-  ): Either[String, Project] = Right(
-    Project(
-      finalProjModule,
-      finalVersion,
-      dependencies,
-      Map.empty,
-      parent,
-      dependencyManagement,
-      properties,
-      profiles,
-      None,
-      None,
-      packaging,
-      relocated,
-      None,
-      Nil,
-      info
-    )
-  )
+    }
 
   def versions(node: Node): Either[String, Versions] =
     for {
