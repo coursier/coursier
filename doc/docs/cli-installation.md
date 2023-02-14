@@ -24,22 +24,28 @@ After the setup, you can [start using Scala](https://docs.scala-lang.org/scala3/
 
 ### Linux
 
-On Linux, download and run the coursier installer with
+On Linux, download the coursier installer with
 
 ```bash
-$ curl -fL "https://github.com/coursier/launchers/raw/master/cs-$(uname -m)-pc-linux.gz" | gzip -d > cs
+# On x86-64 (aka AMD64)
+$ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
+# On ARM64
+$ curl -fL "https://github.com/VirtusLab/coursier-m1/releases/latest/download/cs-aarch64-pc-linux.gz" | gzip -d > cs
+```
+
+Then, run it with
+
+```bash
 $ chmod +x cs
 $ ./cs setup
 ```
-
-Currently, we support the following architectures: x86-64 and ARM64.
 
 ### macOS
 
 On macOS, download and run the coursier installer with
 
 ```bash
-# On Apple M1:
+# On Apple Silicon (M1, M2, ...):
 $ curl -fL https://github.com/VirtusLab/coursier-m1/releases/latest/download/cs-aarch64-apple-darwin.gz | gzip -d > cs
 # Otherwise:
 $ curl -fL https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin.gz | gzip -d > cs
