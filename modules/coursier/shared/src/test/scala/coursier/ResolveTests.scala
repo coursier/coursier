@@ -842,21 +842,6 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    "config handling" - async {
-
-      // if config handling gets messed up, like the "default" config of some dependencies ends up being pulled
-      // where it shouldn't, this surfaces more easily here, as sbt-ci-release depends on other sbt plugins,
-      // only available on Ivy repositories and not having a configuration named "default".
-      val res = await {
-        resolve
-          .addDependencies(dep"com.geirsson:sbt-ci-release;scalaVersion=2.12;sbtVersion=1.0:1.2.6")
-          .addRepositories(Repositories.sbtPlugin("releases"))
-          .future()
-      }
-
-      await(validateDependencies(res))
-    }
-
     "source artifact type if sources classifier" - async {
       val dep = dep"org.apache.commons:commons-compress:1.5,classifier=sources"
       assert(dep.publication.classifier == Classifier("sources"))

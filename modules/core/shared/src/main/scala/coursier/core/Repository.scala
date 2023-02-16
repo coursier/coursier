@@ -1,7 +1,6 @@
 package coursier.core
 
 import coursier.core.compatibility.encodeURIComponent
-import coursier.maven.MavenRepository
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.util.Monad.ops._
 import dataclass.data
@@ -121,6 +120,7 @@ object Repository {
   trait Complete[F[_]] {
     def organization(prefix: String): F[Either[Throwable, Seq[String]]]
     def moduleName(organization: Organization, prefix: String): F[Either[Throwable, Seq[String]]]
+    protected def moduleDirectory(module: Module): String
     def versions(module: Module, prefix: String): F[Either[Throwable, Seq[String]]]
 
     private def org(
@@ -195,29 +195,15 @@ object Repository {
           .exists(_.completions.contains(nameInput.input.drop(nameInput.from)))
       }
 
-    def sbtAttrStub: Boolean = false
-
-    def hasModule(
-      module: Module,
-      sbtAttrStub: Boolean = sbtAttrStub
-    )(implicit
-      F: Monad[F]
-    ): F[Boolean] =
+    def hasModule(module: Module)(implicit F: Monad[F]): F[Boolean] =
       hasOrg(Complete.Input.Org(module.organization.value), partial = false).flatMap {
         case false => F.point(false)
         case true =>
-          val prefix = s"${module.organization.value}:"
-          val actualModuleName =
-            if (sbtAttrStub)
-              MavenRepository.dirModuleName(
-                module,
-                sbtAttrStub = true
-              ) // wish that hack didn't need to exist
-            else
-              module.name.value
+          val prefix              = s"${module.organization.value}:"
+          val moduleDirectoryName = moduleDirectory(module)
           hasName(Complete.Input.Name(
             module.organization,
-            prefix + actualModuleName,
+            prefix + moduleDirectoryName,
             prefix.length,
             ""
           ))
