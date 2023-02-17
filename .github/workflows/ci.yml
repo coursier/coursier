@@ -8,13 +8,190 @@ on:
   pull_request:
 
 jobs:
+  compile-all:
+    runs-on: ubuntu-latest
+    name: Compile everything
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3.0
+      with:
+        jvm: "temurin:17"
+    - run: ./mill -i __.compile
+
+  test:
+    runs-on: ${{ matrix.OS }}
+    name: ${{ matrix.OS }} Scala ${{ matrix.SCALA_VERSION }} JDK ${{ matrix.JDK }}
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest"]
+        JDK: ["8"]
+        SCALA_VERSION: ["2.12.17"]
+        include:
+          - JDK: "8"
+            SCALA_VERSION: "2.12.17"
+            OS: "windows-latest"
+          - JDK: "8"
+            SCALA_VERSION: "2.13.6"
+            OS: "ubuntu-latest"
+          - JDK: "11"
+            SCALA_VERSION: "2.12.17"
+            OS: "ubuntu-latest"
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3.0
+      with:
+        jvm: ${{ matrix.JDK }}
+    - run: sudo apt-get install -y nailgun
+      if: runner.os == 'Linux'
+    # - run: .github/scripts/scala-native-setup.sh
+    #   if: runner.os != 'Windows'
+    - run: ./mill -i jvmTests "$SCALA_VERSION"
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        COURSIER_JNI: force
+
+  js-test:
+    runs-on: ubuntu-latest
+    name: Scala.JS Scala ${{ matrix.SCALA_VERSION }}
+    strategy:
+      fail-fast: false
+      matrix:
+        SCALA_VERSION: ["2.12.17", "2.13.6"]
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '12'
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3.0
+      with:
+        jvm: 8
+    - run: npm install && ./mill -i jsTests "$SCALA_VERSION"
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+
+  bin-compat:
+    runs-on: ubuntu-latest
+    name: Binary compatibility
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3.0
+      with:
+        jvm: 8
+    - run: ./mill -i __.mimaReportBinaryIssues
+
+  website-check:
+    runs-on: ubuntu-latest
+    name: Website check
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: actions/setup-node@v3
+      with:
+        node-version: '12'
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3.0
+      with:
+        jvm: 8
+    - run: ./mill -i doc.generate --npm-install --yarn-run-build
+      env:
+        COURSIER_JNI: force
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3.0
+      with:
+        jvm: 8
+        apps: scalafmt:3.0.0
+    - run: scalafmt --check
+
+  publish:
+    needs: ["compile-all", "test", "js-test", "bin-compat", "website-check", "format"]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v6.4
+      - run: .github/scripts/gpg-setup.sh
+        env:
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+      - uses: coursier/setup-action@v1.3.0
+        with:
+          jvm: 8
+      - run: |
+          mv .mill-jvm-opts .mill-jvm-opts.bak
+          cat .mill-jvm-opts.bak | grep -v -- '-Xmx' > .mill-jvm-opts
+          echo '-Xmx2g' >> .mill-jvm-opts
+
+      - name: Release
+        run: |
+          ./mill -i publishSonatype __.publishArtifacts || (
+            echo "Publishing exit with non-zero code, ignoring it" 1>&2
+            exit 0
+          )
+        env:
+          PGP_PASSWORD: ${{ secrets.PGP_PASSPHRASE }}
+          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+
   generate-native-launchers:
     name: Test and upload native launcher ${{ matrix.OS }}
+    needs: test
     runs-on: ${{ matrix.OS }}
     strategy:
       fail-fast: false
       matrix:
-        OS: ["windows-latest"]
+        OS: ["ubuntu-latest", "windows-latest", "macos-latest"]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -41,9 +218,88 @@ jobs:
           if-no-files-found: error
           retention-days: 2
 
+  generate-native-static-launcher:
+    name: Test and upload native static launcher
+    needs: test
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v6.4
+      - uses: coursier/setup-action@v1.3.0
+        with:
+          jvm: 8
+      - run: sudo apt-get install -y nailgun
+        if: runner.os == 'Linux'
+      - run: .github/scripts/maybe-with-graalvm-home.sh nativeStaticTests
+        shell: bash
+      - name: Copy artifacts
+        run: .github/scripts/maybe-with-graalvm-home.sh copyStaticLauncher artifacts/
+        shell: bash
+      - uses: actions/upload-artifact@v3
+        with:
+          name: launchers
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 2
+
+  generate-native-mostly-static-launcher:
+    name: Test and upload native mostly static launcher
+    needs: test
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v6.4
+      - uses: coursier/setup-action@v1.3.0
+        with:
+          jvm: 8
+      - run: sudo apt-get install -y nailgun
+        if: runner.os == 'Linux'
+      - run: .github/scripts/maybe-with-graalvm-home.sh nativeMostlyStaticTests
+        shell: bash
+      - name: Copy artifacts
+        run: .github/scripts/maybe-with-graalvm-home.sh copyMostlyStaticLauncher artifacts/
+        shell: bash
+      - uses: actions/upload-artifact@v3
+        with:
+          name: launchers
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 2
+
+  generate-jar-launchers:
+    name: Upload JAR launchers
+    needs: publish
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3.0
+      with:
+        jvm: 8
+    - name: Wait for sync to Central
+      run: ./mill -i waitForSync
+    - name: Copy artifacts
+      run: ./mill -i copyJarLaunchers
+    - uses: actions/upload-artifact@v3
+      with:
+        name: launchers
+        path: artifacts/
+        if-no-files-found: error
+        retention-days: 2
+
   upload-launchers:
     name: Upload launchers to GitHub release assets
-    needs: generate-native-launchers
+    needs: [generate-native-launchers, generate-native-static-launcher, generate-native-mostly-static-launcher, generate-jar-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -83,6 +339,7 @@ jobs:
 
   update-website-latest:
     name: Update website (snapshot)
+    needs: publish
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
