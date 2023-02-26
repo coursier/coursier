@@ -328,21 +328,17 @@ public final class SetupProxy {
 
     public static boolean setupAuthenticator() {
 
-        String httpProtocol = System.getProperty("http.proxyProtocol");
+        String httpProtocol = System.getProperty("http.proxyProtocol", "http");
         String httpHost = System.getProperty("http.proxyHost");
-        String httpPortValue = System.getProperty("http.proxyPort");
+        String httpPort = System.getProperty("http.proxyPort", "80");
         String httpUser = System.getProperty("http.proxyUser");
         String httpPassword = System.getProperty("http.proxyPassword");
 
-        String httpPort = httpPortValue == null ? "80" : httpPortValue;
-
-        String httpsProtocol = System.getProperty("https.proxyProtocol");
+        String httpsProtocol = System.getProperty("https.proxyProtocol", "https");
         String httpsHost = System.getProperty("https.proxyHost");
-        String httpsPortValue = System.getProperty("https.proxyPort");
+        String httpsPort = System.getProperty("https.proxyPort", "443");
         String httpsUser = System.getProperty("https.proxyUser");
         String httpsPassword = System.getProperty("https.proxyPassword");
-
-        String httpsPort = httpsPortValue == null ? "443" : httpsPortValue;
 
         return setupAuthenticator(
                 httpProtocol, httpHost, httpPort, httpUser, httpPassword,
