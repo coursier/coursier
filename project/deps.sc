@@ -20,7 +20,7 @@ object Deps {
   def jniUtils          = ivy"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
   def jniUtilsBootstrap =
     ivy"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
-  def jol = ivy"org.openjdk.jol:jol-core:0.16"
+  def jol = ivy"org.openjdk.jol:jol-core:0.17"
   def jsoniterCore =
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${Versions.jsoniterScala}"
   def jsoniterMacros =
