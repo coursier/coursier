@@ -352,7 +352,7 @@ Use it like
 import coursier._
 
 val versions = Versions()
-  // .withModule(mod"org.typelevel:cats-kernel_2.12")
+  .withModule(mod"org.typelevel:cats-kernel_2.12")
   .run()
 ```
 
