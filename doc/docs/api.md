@@ -341,3 +341,21 @@ ioFiles: cats.effect.IO[Seq[java.io.File]]
 
 Note that this example requires the `coursier-cats-interop` module
 (`io.get-coursier::coursier-cats-interop:@VERSION@`).
+
+## Versions
+
+`coursier.Versions` resolves artifact versions.
+
+Use it like
+
+```scala mdoc:reset
+import coursier._
+
+val versions = Versions()
+  // .withModule(mod"org.typelevel:cats-kernel_2.12")
+  .run()
+```
+
+```scala mdoc:passthrough
+versions.latest: String
+```
