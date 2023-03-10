@@ -69,10 +69,10 @@ and fetch their artifacts.</p>
 <pre><code class="hljs css language-scala"><span class="hljs-comment">// build.sbt</span>
 resolvers += <span class="hljs-type">Resolver</span>.sonatypeRepo(<span class="hljs-string">"snapshots"</span>)
 libraryDependencies ++= <span class="hljs-type">Seq</span>(
-  <span class="hljs-string">"io.get-coursier"</span> %% <span class="hljs-string">"coursier"</span> % <span class="hljs-string">"2.1.0-RC6-1-498c26f17-SNAPSHOT"</span>,
+  <span class="hljs-string">"io.get-coursier"</span> %% <span class="hljs-string">"coursier"</span> % <span class="hljs-string">"2.1.0-RC6-3-f42bfa3ae-SNAPSHOT"</span>,
 )
 </code></pre>
-<h2><a class="anchor" aria-hidden="true" id="resolve"></a><a href="#resolve" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Resolve</h2>
+<h2><a class="anchor" aria-hidden="true" id="resolve-api"></a><a href="#resolve-api" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Resolve API</h2>
 <p><code>coursier.Resolve</code> allows to run resolutions, that is
 finding all the transitive dependencies of some initial dependencies (while
 reconciling their versions at the same time).</p>
@@ -129,7 +129,7 @@ repositories at once, wiping the default ones and any previously passed one.</p>
 </code></pre>
 <h3><a class="anchor" aria-hidden="true" id="cache"></a><a href="#cache" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Cache</h3>
 <p>One can override the default cache, and adjust its parameters, with
-<code>withCache</code>,</p>
+<code>withCache</code>:</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
 <span class="hljs-keyword">import</span> coursier.cache._
 <span class="hljs-keyword">import</span> coursier.cache.loggers._
@@ -173,43 +173,7 @@ pool.shutdown()
   .withResolutionParams(params)
   .run()
 </code></pre>
-<h3><a class="anchor" aria-hidden="true" id="future"></a><a href="#future" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Future</h3>
-<p>If you prefer to eagerly run resolutions in the background via a <code>Future</code>,
-call <code>future</code> instead of <code>run</code>, like</p>
-<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
-
-<span class="hljs-keyword">val</span> futureResolution = <span class="hljs-type">Resolve</span>()
-  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
-  .future()
-</code></pre>
-<h3><a class="anchor" aria-hidden="true" id="io"></a><a href="#io" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>IO</h3>
-<p>If you prefer resolutions to be run lazily in the background via an IO monad,
-call <code>io</code> instead of <code>run</code> or <code>future</code>, like</p>
-<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
-
-<span class="hljs-keyword">val</span> ioResolution = <span class="hljs-type">Resolve</span>()
-  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
-  .io
-</code></pre>
-<p>The default IO monad is the rather basic <code>coursier.util.Task</code>, that ships with
-coursier. This monad can be changed by changing the cache <em>upfront</em>, like</p>
-<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
-<span class="hljs-keyword">import</span> coursier.cache._
-<span class="hljs-keyword">import</span> coursier.interop.cats._
-
-<span class="hljs-keyword">import</span> cats.effect.<span class="hljs-type">IO</span>
-<span class="hljs-keyword">import</span> cats.effect.unsafe.implicits.global
-<span class="hljs-keyword">import</span> scala.concurrent.<span class="hljs-type">ExecutionContext</span>
-
-<span class="hljs-keyword">val</span> cache = <span class="hljs-type">FileCache</span>[<span class="hljs-type">IO</span>]()
-
-<span class="hljs-keyword">val</span> ioResolution = <span class="hljs-type">Resolve</span>(cache) <span class="hljs-comment">// note the cache passed here</span>
-  .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
-  .io
-</code></pre>
-<p>Note that this example requires the <code>coursier-cats-interop</code> module
-(<code>io.get-coursier::coursier-cats-interop:2.1.0-RC6-1-498c26f17-SNAPSHOT</code>).</p>
-<h2><a class="anchor" aria-hidden="true" id="fetch"></a><a href="#fetch" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Fetch</h2>
+<h2><a class="anchor" aria-hidden="true" id="fetch-api"></a><a href="#fetch-api" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Fetch API</h2>
 <p><code>coursier.Fetch</code> resolves dependencies, then fetches their artifacts.</p>
 <p>Use it like</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
@@ -227,7 +191,7 @@ coursier. This monad can be changed by changing the cache <em>upfront</em>, like
 <li><a href="#cache">adjust the cache</a>, or</li>
 <li><a href="#resolution-parameters">change the resolution parameters</a>,</li>
 </ul>
-<p>with the same methods as <a href="#resolve"><code>coursier.Resolve</code></a>.</p>
+<p>with the same methods as <a href="#resolve-api"><code>coursier.Resolve</code></a>.</p>
 <h3><a class="anchor" aria-hidden="true" id="classifiers"></a><a href="#classifiers" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Classifiers</h3>
 <p>Call <code>addClassifiers</code> to adjust the classifiers you're interested in, like</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
@@ -266,26 +230,47 @@ types, call <code>allArtifactTypes</code> or <code>addArtifactType</code>, like<
 </code></pre>
 <p>If none of these methods are called, artifact types are automatically adjusted
 depending on <a href="#classifiers">classifiers</a>.</p>
-<h3><a class="anchor" aria-hidden="true" id="future-1"></a><a href="#future-1" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Future</h3>
-<p>Like for <a href="#future"><code>Resolve</code></a>, fetching can be (eagerly) run in the background
-by calling <code>future</code> rather than <code>run</code>, like</p>
+<h2><a class="anchor" aria-hidden="true" id="versions-api"></a><a href="#versions-api" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Versions API</h2>
+<p><code>coursier.Versions</code> resolves available artifact versions.</p>
+<p>Use it like</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
 
-<span class="hljs-keyword">val</span> futureFiles = <span class="hljs-type">Fetch</span>()
+<span class="hljs-keyword">val</span> versions = <span class="hljs-type">Versions</span>()
+  .withModule(<span class="hljs-string">mod"org.typelevel:cats-kernel_2.12"</span>)
+  .run()
+</code></pre>
+<pre><code class="hljs css language-scala">versions.latest
+<span class="hljs-comment">// res13: String = "2.9.0"</span>
+</code></pre>
+<p>One can</p>
+<ul>
+<li><a href="#repositories">adjust repositories</a>,</li>
+<li><a href="#cache">adjust the cache</a></li>
+</ul>
+<p>with the same methods as <a href="#resolve-api"><code>coursier.Resolve</code></a>.</p>
+<h2><a class="anchor" aria-hidden="true" id="asynchronous-synchronous-evaluation"></a><a href="#asynchronous-synchronous-evaluation" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Asynchronous / synchronous evaluation</h2>
+<p>With the <code>.run()</code> methods, the API methods perform network calls on the calling thread, which may or may not fit with your needs. Coursier also provides ways to use its API asynchronously with your effect of choice.</p>
+<h3><a class="anchor" aria-hidden="true" id="future"></a><a href="#future" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Future</h3>
+<p>If you prefer to eagerly run calls in the background via a <code>Future</code>,
+call <code>future</code> instead of <code>run</code>, like</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+
+<span class="hljs-comment">// You can do this for other APIs too, like Fetch</span>
+<span class="hljs-keyword">val</span> futureResolution = <span class="hljs-type">Resolve</span>()
   .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
   .future()
 </code></pre>
-<h3><a class="anchor" aria-hidden="true" id="io-1"></a><a href="#io-1" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>IO</h3>
-<p>Like for <a href="#io"><code>Resolve</code></a>, fetching can be (lazily) run in the background
-by calling <code>io</code> rather than <code>run</code>, like</p>
+<h3><a class="anchor" aria-hidden="true" id="io"></a><a href="#io" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>IO</h3>
+<p>If you prefer resolutions to be run lazily in the background via an IO monad,
+call <code>io</code> instead of <code>run</code> or <code>future</code>, like</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
 
-<span class="hljs-keyword">val</span> ioFiles = <span class="hljs-type">Fetch</span>()
+<span class="hljs-keyword">val</span> ioResolution = <span class="hljs-type">Resolve</span>()
   .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
   .io
 </code></pre>
-<p>Here too, the default IO monad is <code>coursier.util.Task</code> that ships with coursier.</p>
-<p>One can use another IO monad by adjusting the cache <em>upfront</em>, like</p>
+<p>The default IO monad is the rather basic <code>coursier.util.Task</code>, that ships with
+coursier. This monad can be changed by changing the cache <em>upfront</em>, like</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
 <span class="hljs-keyword">import</span> coursier.cache._
 <span class="hljs-keyword">import</span> coursier.interop.cats._
@@ -296,13 +281,13 @@ by calling <code>io</code> rather than <code>run</code>, like</p>
 
 <span class="hljs-keyword">val</span> cache = <span class="hljs-type">FileCache</span>[<span class="hljs-type">IO</span>]()
 
-<span class="hljs-keyword">val</span> ioFiles = <span class="hljs-type">Fetch</span>(cache) <span class="hljs-comment">// note the cache passed here</span>
+<span class="hljs-keyword">val</span> ioResolution = <span class="hljs-type">Resolve</span>(cache) <span class="hljs-comment">// note the cache passed here</span>
   .addDependencies(<span class="hljs-string">dep"org.tpolecat:doobie-core_2.12:0.6.0"</span>)
   .io
 </code></pre>
 <p>Note that this example requires the <code>coursier-cats-interop</code> module
-(<code>io.get-coursier::coursier-cats-interop:2.1.0-RC6-1-498c26f17-SNAPSHOT</code>).</p>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/next/sbt-pgp-coursier"><span class="arrow-prev">← </span><span>sbt-pgp-coursier</span></a><a class="docs-next button" href="/docs/next/api-low-level"><span>Low-level API</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#resolve">Resolve</a><ul class="toc-headings"><li><a href="#dependencies">Dependencies</a></li><li><a href="#repositories">Repositories</a></li><li><a href="#cache">Cache</a></li><li><a href="#resolution-parameters">Resolution parameters</a></li><li><a href="#future">Future</a></li><li><a href="#io">IO</a></li></ul></li><li><a href="#fetch">Fetch</a><ul class="toc-headings"><li><a href="#classifiers">Classifiers</a></li><li><a href="#artifact-types">Artifact types</a></li><li><a href="#future-1">Future</a></li><li><a href="#io-1">IO</a></li></ul></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><h2><a href="/" class="nav-home">Coursier</a></h2><div><h5><a href="/docs/overview">Docs</a></h5><a href="/docs/overview">Overview</a><a href="/docs/cli-installation">Install CLI</a><a href="/docs/sbt-coursier">Setup sbt</a><a href="/docs/api">Use the API</a></div><div><h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5><a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"/></a><a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"/></a></div></section><section class="copyright">Copyright © 2023 coursier contributors</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+(<code>io.get-coursier::coursier-cats-interop:2.1.0-RC6-3-f42bfa3ae-SNAPSHOT</code>).</p>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/next/sbt-pgp-coursier"><span class="arrow-prev">← </span><span>sbt-pgp-coursier</span></a><a class="docs-next button" href="/docs/next/api-low-level"><span>Low-level API</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#resolve-api">Resolve API</a><ul class="toc-headings"><li><a href="#dependencies">Dependencies</a></li><li><a href="#repositories">Repositories</a></li><li><a href="#cache">Cache</a></li><li><a href="#resolution-parameters">Resolution parameters</a></li></ul></li><li><a href="#fetch-api">Fetch API</a><ul class="toc-headings"><li><a href="#classifiers">Classifiers</a></li><li><a href="#artifact-types">Artifact types</a></li></ul></li><li><a href="#versions-api">Versions API</a></li><li><a href="#asynchronous-synchronous-evaluation">Asynchronous / synchronous evaluation</a><ul class="toc-headings"><li><a href="#future">Future</a></li><li><a href="#io">IO</a></li></ul></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><h2><a href="/" class="nav-home">Coursier</a></h2><div><h5><a href="/docs/overview">Docs</a></h5><a href="/docs/overview">Overview</a><a href="/docs/cli-installation">Install CLI</a><a href="/docs/sbt-coursier">Setup sbt</a><a href="/docs/api">Use the API</a></div><div><h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5><a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"/></a><a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"/></a></div></section><section class="copyright">Copyright © 2023 coursier contributors</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
                     return;
