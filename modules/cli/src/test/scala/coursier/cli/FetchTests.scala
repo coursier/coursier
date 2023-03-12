@@ -1557,5 +1557,75 @@ object FetchTests extends TestSuite {
       )
       assert(files.map(_._2.getName).toSet.equals(expectedFiles))
     }
+
+    // sbt-plugin-example-diamond is a diamond graph of sbt plugins.
+    // Diamond depends on left and right which both depend on bottom.
+    //             sbt-plugin-example-diamond
+    //                        / \
+    // sbt-plugin-example-left   sbt-plugin-example-right
+    //                        \ /
+    //             sbt-plugin-example-bottom
+    // Depending on the version of sbt-plugin-example-diamond, different patterns
+    // are tested:
+    // - Some plugins are only published to the deprecated Maven path, some to the new
+    // - There may be some conflict resolution to perform on sbt-plugin-example-bottom,
+    //   mixing old and new Maven paths.
+    test("sbt-plugin-example-diamond") {
+
+      def checkResolveDiamond(version: String)(expectedJars: String*) {
+        val options = FetchOptions(
+          resolveOptions = SharedResolveOptions(
+            dependencyOptions = DependencyOptions(
+              sbtPlugin = List(s"ch.epfl.scala:sbt-plugin-example-diamond:$version")
+            )
+          )
+        )
+        val params           = paramsOrThrow(options)
+        val (_, _, _, files) = Fetch.task(params, pool, Seq.empty).unsafeRun()(ec)
+
+        val obtained = files.map(_._2.getName).toSet
+        assert(obtained == expectedJars.toSet)
+      }
+
+      // only deprecated Maven paths
+      test("0.1.0") - checkResolveDiamond("0.1.0")(
+        "sbt-plugin-example-diamond-0.1.0.jar",
+        "sbt-plugin-example-left-0.1.0.jar",
+        "sbt-plugin-example-right-0.1.0.jar",
+        "sbt-plugin-example-bottom-0.1.0.jar"
+      )
+
+      // diamond and left use the new Maven path
+      test("0.2.0") - checkResolveDiamond("0.2.0")(
+        "sbt-plugin-example-diamond_2.12_1.0-0.2.0.jar",
+        "sbt-plugin-example-left_2.12_1.0-0.2.0.jar",
+        "sbt-plugin-example-right-0.1.0.jar",
+        "sbt-plugin-example-bottom-0.1.0.jar"
+      )
+
+      // conflict resolution between new and deprecated Maven paths
+      test("0.3.0") - checkResolveDiamond("0.3.0")(
+        "sbt-plugin-example-diamond_2.12_1.0-0.3.0.jar",
+        "sbt-plugin-example-left_2.12_1.0-0.3.0.jar",
+        "sbt-plugin-example-right-0.1.0.jar",
+        "sbt-plugin-example-bottom_2.12_1.0-0.2.0.jar"
+      )
+
+      // bottom use the new Maven path but not right
+      test("0.4.0") - checkResolveDiamond("0.4.0")(
+        "sbt-plugin-example-diamond_2.12_1.0-0.4.0.jar",
+        "sbt-plugin-example-left_2.12_1.0-0.3.0.jar",
+        "sbt-plugin-example-right-0.2.0.jar",
+        "sbt-plugin-example-bottom_2.12_1.0-0.2.0.jar"
+      )
+
+      // only new Maven paths with conflict resolution on bottom
+      test("0.5.0") - checkResolveDiamond("0.5.0")(
+        "sbt-plugin-example-diamond_2.12_1.0-0.5.0.jar",
+        "sbt-plugin-example-left_2.12_1.0-0.3.0.jar",
+        "sbt-plugin-example-right_2.12_1.0-0.3.0.jar",
+        "sbt-plugin-example-bottom_2.12_1.0-0.3.0.jar"
+      )
+    }
   }
 }

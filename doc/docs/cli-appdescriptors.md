@@ -370,6 +370,8 @@ replaced by one of
 - `x86_64-pc-linux`
 - `x86_64-apple-darwin`
 - `x86_64-pc-win32`
+- `aarch64-pc-linux`
+- `aarch64-apple-darwin`
 
 Example
 ```json
@@ -377,3 +379,21 @@ Example
 ```
 For version `2.0.0-RC6-6` on macOS, this gets transformed as
 [this URL](https://github.com/coursier/coursier/releases/download/v2.0.0-RC6-6/cs-x86_64-apple-darwin).
+
+#### `prebuiltBinaries`
+
+Like `prebuilt`, specifies the URLs at which prebuilt versions of the application are available, but
+URLs are specific to platforms.
+
+Example
+
+~~~ json
+"prebuiltBinaries": {
+  "x86_64-apple-darwin": "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-apple-darwin.gz",
+  "x86_64-pc-win32": "zip+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-win32.zip"
+}
+~~~
+For version `2.1.0` on Windows, this gets transformed as
+[this URL](https://github.com/coursier/coursier/releases/download/v2.1.0/cs-x86_64-pc-win32.zip).
+
+The possible values for platforms are listed in the previous section.

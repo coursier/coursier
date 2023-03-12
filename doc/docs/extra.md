@@ -102,4 +102,4 @@ Coursier will search for your plugin with the following order on various classlo
 
 Real Word Examples:
 
-* [coursier-s3](https://github.com/rtfpessoa/coursier-s3), a plugin for S3, is under development
+* [coursier-s3](https://github.com/alexarchambault/coursier-s3), a plugin for S3, is under development

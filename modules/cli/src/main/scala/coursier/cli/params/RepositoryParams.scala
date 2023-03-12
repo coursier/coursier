@@ -11,7 +11,7 @@ import coursier.cli.options.RepositoryOptions
 import coursier.core.Repository
 import coursier.install.Channel
 import coursier.ivy.IvyRepository
-import coursier.maven.MavenRepository
+import coursier.maven.{MavenRepository, SbtMavenRepository}
 import coursier.parse.RepositoryParser
 
 final case class RepositoryParams(
@@ -49,10 +49,11 @@ object RepositoryParams {
       var repos = defaults ++ repos0
 
       // take sbtPluginHack into account
-      repos = repos.map {
-        case m: MavenRepository => m.withSbtAttrStub(options.sbtPluginHack)
-        case other              => other
-      }
+      if (options.sbtPluginHack)
+        repos = repos.map {
+          case m: MavenRepository => SbtMavenRepository(m)
+          case other              => other
+        }
 
       // take dropInfoAttr into account
       if (options.dropInfoAttr)

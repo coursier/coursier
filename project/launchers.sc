@@ -99,7 +99,7 @@ trait Launchers extends CsModule {
   private val arch = sys.props.getOrElse("os.arch", "").toLowerCase(java.util.Locale.ROOT)
   private def isCI = System.getenv("CI") != null
   def nativeImage =
-    if (Properties.isLinux && arch == "x86_64" && isCI)
+    if (Properties.isLinux && isCI)
       `linux-docker-image`.nativeImage
     else
       `base-image`.nativeImage

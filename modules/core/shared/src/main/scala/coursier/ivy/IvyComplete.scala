@@ -48,6 +48,9 @@ import dataclass.data
       case Right(Some((_, l))) => Right(l)
     }
 
+  override protected def moduleDirectory(module: Module): String =
+    module.name.value
+
   def versions(module: Module, prefix: String): F[Either[Throwable, Seq[String]]] =
     F.map(repo.availableVersions(module, fetch, prefix).run) {
       case Left(e)     => Left(new Exception(e))

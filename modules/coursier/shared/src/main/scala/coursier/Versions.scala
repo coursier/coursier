@@ -2,10 +2,15 @@ package coursier
 
 import coursier.cache.Cache
 import coursier.core.Version
+import coursier.error.CoursierError
 import coursier.params.{Mirror, MirrorConfFile}
 import coursier.util.{Sync, Task}
 import coursier.util.Monad.ops._
 import dataclass._
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 @data class Versions[F[_]](
   cache: Cache[F],
@@ -104,5 +109,52 @@ object Versions {
   ) {
     def versions: coursier.core.Versions =
       merge(results.flatMap(_._2.toSeq).toVector)
+  }
+  implicit class VersionsTaskOps(private val versions: Versions[Task]) extends AnyVal {
+
+    def futureResult()(implicit ec: ExecutionContext = versions.cache.ec): Future[Result] =
+      versions.result.future()
+
+    def future()(implicit
+      ec: ExecutionContext = versions.cache.ec
+    ): Future[coursier.core.Versions] =
+      versions.versions.future()
+
+    def eitherResult()(implicit
+      ec: ExecutionContext = versions.cache.ec
+    ): Either[CoursierError, Result] = {
+
+      val f = versions
+        .result
+        .map(Right(_))
+        .handle { case ex: CoursierError => Left(ex) }
+        .future()
+
+      Await.result(f, Duration.Inf)
+    }
+
+    def either()(implicit
+      ec: ExecutionContext = versions.cache.ec
+    ): Either[CoursierError, coursier.core.Versions] = {
+
+      val f = versions
+        .versions
+        .map(Right(_))
+        .handle { case ex: CoursierError => Left(ex) }
+        .future()
+
+      Await.result(f, Duration.Inf)
+    }
+
+    def runResult()(implicit ec: ExecutionContext = versions.cache.ec): Result = {
+      val f = versions.result.future()
+      Await.result(f, Duration.Inf)
+    }
+
+    def run()(implicit ec: ExecutionContext = versions.cache.ec): coursier.core.Versions = {
+      val f = versions.versions.future()
+      Await.result(f, Duration.Inf)
+    }
+
   }
 }

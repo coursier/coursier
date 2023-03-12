@@ -6,6 +6,7 @@ import utest._
 import scala.async.Async.{async, await}
 import coursier.core.{Classifier, Configuration, Extension, Type}
 import coursier.graph.{Conflict, ModuleTree}
+import coursier.maven.MavenRepositoryLike
 import coursier.test.compatibility._
 import coursier.util.{Artifact, Print, Tree}
 
@@ -15,15 +16,14 @@ object CentralTests extends CentralTests
 
 abstract class CentralTests extends TestSuite {
 
-  def central             = Repositories.central
-  private def centralBase = central.root
+  def central: MavenRepositoryLike = Repositories.central
+  private def centralBase          = central.root
 
   private final def isActualCentral = centralBase == Repositories.central.root
 
-  private lazy val runner = new TestRunner(repositories = Seq(central))
+  protected lazy val runner = new TestRunner(repositories = Seq(central))
 
   def tests = Tests {
-
     test("logback") {
       async {
         val dep = dep"ch.qos.logback:logback-classic:1.1.3"
@@ -641,19 +641,6 @@ abstract class CentralTests extends TestSuite {
         assert(pomOpt.forall(hasSha1))
         assert(pomOpt.forall(hasMd5))
         assert(pomOpt.forall(hasSig))
-      }
-    }
-
-    test("sbtPluginVersionRange") {
-      val mod = mod"org.ensime:sbt-ensime;scalaVersion=2.10;sbtVersion=0.13"
-      val ver = "1.12.+"
-
-      test {
-        // doesn't work via proxies, which don't list all the upstream available versions
-        if (isActualCentral)
-          runner.resolutionCheck(mod, ver)
-        else
-          Future.successful(())
       }
     }
 
