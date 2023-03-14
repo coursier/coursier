@@ -22,6 +22,8 @@ import $file.project.modules.shared, shared.{
   JsTests,
   JvmTests
 }
+import $file.project.modules.`sbt-maven-repository0`,
+  `sbt-maven-repository0`.{SbtMavenRepository, SbtMavenRepositoryJvmBase}
 import $file.project.modules.tests0, tests0.TestsModule
 import $file.project.modules.util0, util0.{Util, UtilJvmBase}
 import $file.project.publishing, publishing.mavenOrg
@@ -48,6 +50,10 @@ object util extends Module {
 object core extends Module {
   object jvm extends Cross[CoreJvm](ScalaVersions.all: _*)
   object js  extends Cross[CoreJs](ScalaVersions.all: _*)
+}
+object `sbt-maven-repository` extends Module {
+  object jvm extends Cross[SbtMavenRepositoryJvm](ScalaVersions.all: _*)
+  object js  extends Cross[SbtMavenRepositoryJs](ScalaVersions.all: _*)
 }
 object cache extends Module {
   object jvm extends Cross[CacheJvm](ScalaVersions.all: _*)
@@ -203,6 +209,18 @@ class CoreJs(val crossScalaVersion: String) extends Core with CsScalaJsModule {
   object test extends Tests with CsTests
 }
 
+class SbtMavenRepositoryJvm(val crossScalaVersion: String) extends SbtMavenRepositoryJvmBase {
+  def moduleDeps = super.moduleDeps ++ Seq(
+    core.jvm()
+  )
+}
+class SbtMavenRepositoryJs(val crossScalaVersion: String) extends SbtMavenRepository
+    with CsScalaJsModule {
+  def moduleDeps = super.moduleDeps ++ Seq(
+    core.js()
+  )
+}
+
 class CacheJvm(val crossScalaVersion: String) extends CacheJvmBase {
   def moduleDeps = Seq(
     util.jvm()
@@ -353,7 +371,8 @@ class CoursierJs(val crossScalaVersion: String) extends Coursier with CsScalaJsM
 
 class TestsJvm(val crossScalaVersion: String) extends TestsModule { self =>
   def moduleDeps = super.moduleDeps ++ Seq(
-    core.jvm()
+    core.jvm(),
+    `sbt-maven-repository`.jvm()
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.jsoup
@@ -390,7 +409,8 @@ class TestsJvm(val crossScalaVersion: String) extends TestsModule { self =>
 }
 class TestsJs(val crossScalaVersion: String) extends TestsModule with CsScalaJsModule {
   def moduleDeps = super.moduleDeps ++ Seq(
-    core.js()
+    core.js(),
+    `sbt-maven-repository`.js()
   )
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
   object test extends Tests with CsTests with JsTests {
@@ -513,6 +533,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion),
+    `sbt-maven-repository`.jvm(cliScalaVersion),
     install(cliScalaVersion),
     jvm(cliScalaVersion),
     launcherModule(cliScalaVersion)
@@ -705,7 +726,13 @@ def simpleNative04CliTest() = T.command {
     finally cleanUp()
   assert(res.out.text == "foo a")
 }
-
+def copyTo(task: mill.main.Tasks[PathRef], dest: os.Path) = T.command {
+  if (task.value.length > 1)
+    sys.error("Expected a single task")
+  val ref = task.value.head()
+  os.makeDir.all(dest / os.up)
+  os.copy.over(ref.path, dest)
+}
 def copyLauncher(directory: String = "artifacts") = T.command {
   val nativeLauncher = cli.nativeImage().path
   ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, os.pwd))

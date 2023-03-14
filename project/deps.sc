@@ -2,10 +2,10 @@ import mill._, scalalib._
 
 object Deps {
   def argonautShapeless = ivy"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.1"
-  def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M21"
+  def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M24"
   def catsCore          = ivy"org.typelevel::cats-core:${Versions.cats}"
   def catsFree          = ivy"org.typelevel::cats-free:${Versions.cats}"
-  def catsEffect        = ivy"org.typelevel::cats-effect::3.4.4"
+  def catsEffect        = ivy"org.typelevel::cats-effect::3.4.8"
   def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.9.0"
   def concurrentReferenceHashMap =
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
@@ -20,33 +20,33 @@ object Deps {
   def jniUtils          = ivy"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
   def jniUtilsBootstrap =
     ivy"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
-  def jol = ivy"org.openjdk.jol:jol-core:0.16"
+  def jol = ivy"org.openjdk.jol:jol-core:0.17"
   def jsoniterCore =
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${Versions.jsoniterScala}"
   def jsoniterMacros =
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
-  def jsoup           = ivy"org.jsoup:jsoup:1.15.3"
+  def jsoup           = ivy"org.jsoup:jsoup:1.15.4"
   def logbackClassic  = ivy"ch.qos.logback:logback-classic:1.2.11"
   def macroParadise   = ivy"org.scalamacros:::paradise:2.1.1"
-  def mdoc            = ivy"org.scalameta::mdoc:2.3.6"
+  def mdoc            = ivy"org.scalameta::mdoc:2.3.7"
   def monadlessCats   = ivy"io.monadless::monadless-cats:${Versions.monadless}"
   def monadlessStdlib = ivy"io.monadless::monadless-stdlib:${Versions.monadless}"
   def noCrcZis        = ivy"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
-  def osLib           = ivy"com.lihaoyi::os-lib:0.9.0"
-  def plexusArchiver  = ivy"org.codehaus.plexus:plexus-archiver:4.6.1"
+  def osLib           = ivy"com.lihaoyi::os-lib:0.9.1"
+  def plexusArchiver  = ivy"org.codehaus.plexus:plexus-archiver:4.6.2"
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
   def pprint                   = ivy"com.lihaoyi::pprint:0.8.1"
-  def proguard                 = ivy"com.guardsquare:proguard-base:7.3.0"
+  def proguard                 = ivy"com.guardsquare:proguard-base:7.3.1"
   def pythonNativeLibs         = ivy"ai.kien::python-native-libs:0.2.4"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
-  def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:0.1.19"
-  def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.3.0"
+  def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:0.2.0"
+  def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.4.0"
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.1"
   def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
   def scalaNativeTools040M2    = ivy"org.scala-native::tools:0.4.0-M2"
-  def scalaNativeTools040      = ivy"org.scala-native::tools:0.4.9"
+  def scalaNativeTools040      = ivy"org.scala-native::tools:0.4.10"
   def scalaReflect(sv: String) = ivy"org.scala-lang:scala-reflect:$sv"
   def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.1.0"
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
@@ -54,15 +54,15 @@ object Deps {
   def simulacrum               = ivy"org.typelevel::simulacrum:1.0.1"
   def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.6"
   def svm                      = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
-  def ujson                    = ivy"com.lihaoyi::ujson:2.0.0"
+  def ujson                    = ivy"com.lihaoyi::ujson:3.0.0"
   def utest                    = ivy"com.lihaoyi::utest::0.8.1"
   def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.4"
 }
 
 object Versions {
   def cats          = "2.9.0"
-  def fastParse     = "2.3.3"
-  def http4s        = "0.23.17"
+  def fastParse     = "3.0.0"
+  def http4s        = "0.23.18"
   def jniUtils      = "0.3.3"
   def jsoniterScala = "2.13.5"
   def monadless     = "0.0.13"
@@ -71,7 +71,7 @@ object Versions {
 
 def sbtCoursierVersion = "2.0.8"
 
-def graalVmVersion = "22.1.0"
+def graalVmVersion = "22.3.0"
 def graalVmJvmId   = s"graalvm-java17:$graalVmVersion"
 
 // should be the default index in the upcoming coursier release (> 2.0.16)

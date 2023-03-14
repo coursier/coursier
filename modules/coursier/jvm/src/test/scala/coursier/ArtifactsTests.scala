@@ -317,9 +317,7 @@ object ArtifactsTests extends TestSuite {
       val res = await {
         Resolve()
           .noMirrors
-          .addDependencies(
-            dep"com.frugalmechanic:fm-sbt-s3-resolver;scalaVersion=2.12;sbtVersion=1.0:0.18.0"
-          )
+          .addDependencies(dep"com.amazonaws:aws-java-sdk-s3:1.11.507")
           .withCache(cache)
           .future()
       }

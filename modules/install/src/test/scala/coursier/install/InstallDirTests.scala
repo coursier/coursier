@@ -12,27 +12,22 @@ import utest._
 object InstallDirTests extends TestSuite {
 
   val tests = Tests {
-    test("pass the GraalVM version to launcher params") {
+    test("fallback to JVM when pass the GraalVM params") { // https://github.com/coursier/coursier/pull/2652
 
-      val version = "X.Y.Z"
-
-      val installDir = InstallDir()
-        .withGraalvmParamsOpt(Some(GraalvmParams(Some(version), Nil)))
-
-      val params = installDir.params(
+      val mainClass = "main.class"
+      val params = InstallDir().params(
         AppDescriptor().withLauncherType(LauncherType.GraalvmNativeImage),
         AppArtifacts(),
         Nil,
-        "main.class",
-        Paths.get("/foo")
+        mainClass
       )
 
-      val nativeParams = params match {
-        case n: Parameters.NativeImage => n
-        case _                         => sys.error(s"Unrecognized parameters type: $params")
+      val bootstrapParams = params match {
+        case b: Parameters.Bootstrap => b
+        case _                       => sys.error(s"Unrecognized parameters type: $params")
       }
 
-      assert(nativeParams.graalvmVersion == Some(version))
+      assert(bootstrapParams.mainClass == mainClass)
     }
 
     test("assume SSL handshake exceptions are not found errors") {

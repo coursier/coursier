@@ -2,7 +2,9 @@
 set -e
 
 if [[ "$OSTYPE" == "msys" ]]; then
-  ./mill.bat -i ci.copyJvm --dest jvm
+  if [[ ! -e jvm ]]; then
+    ./mill.bat -i ci.copyJvm --dest jvm
+  fi
   export GRAALVM_HOME="$(pwd -W | sed 's,/,\\,g')\\jvm"
   echo "GRAALVM_HOME=$GRAALVM_HOME"
 
