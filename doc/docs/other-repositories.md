@@ -28,3 +28,11 @@ $ cs fetch --no-default \
   -r central -r sonatype:snapshots \
   org.scalameta:scalafmt-cli_2.12:2.0.0-RC4+29-f2154330-SNAPSHOT
 ```
+
+## Ivy Repositories
+
+It is possible to use a custom Ivy repository and pattern by concatenating them:
+
+```
+$ cs fetch --repository  https://corporate.com/ivy-repo/[org]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext] sh.almond:scala-kernel_2.12.8:0.2.2
+```
