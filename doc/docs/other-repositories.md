@@ -34,5 +34,5 @@ $ cs fetch --no-default \
 It is possible to use a custom Ivy repository and pattern by concatenating them:
 
 ```
-$ cs fetch --repository  https://corporate.com/ivy-repo/[org]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext] sh.almond:scala-kernel_2.12.8:0.2.2
+$ cs fetch --repository  "https://corporate.com/ivy-repo/[org]/[module]/[baseRev](-[folderItegRev])/[module]-[baseRev](-[fileItegRev])(-[classifier]).[ext]" sh.almond:scala-kernel_2.12.8:0.2.2
 ```
