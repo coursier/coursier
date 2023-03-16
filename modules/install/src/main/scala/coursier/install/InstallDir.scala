@@ -423,36 +423,48 @@ import scala.util.Properties
 
       launcher = actualDest(name)
 
-      sourceAndBytes <- Task.fromEither(
-        InfoFile.readSource(launcher).toRight(new Exception(s"Error reading source from $launcher"))
-      )
-      (source, sourceBytes) = sourceAndBytes
+      writtenOpt <-
+        if (Files.exists(launcher))
+          for {
+            sourceAndBytes <- Task.fromEither(InfoFile.readSource(launcher).toRight(
+              new Exception(s"Error reading source from $launcher")
+            ))
+            (source, sourceBytes) = sourceAndBytes
 
-      pathDescriptorBytes <- update(source).flatMap {
-        case Some(res) => Task.point(res)
-        case None => Task.fail(new Exception(s"${source.id} not found in ${source.channel.repr}"))
-      }
-      (path, descriptorBytes) = pathDescriptorBytes
+            pathDescriptorBytes <- update(source).flatMap {
+              case Some(res) => Task.point(res)
+              case None =>
+                Task.fail(new Exception(s"${source.id} not found in ${source.channel.repr}"))
+            }
+            (path, descriptorBytes) = pathDescriptorBytes
 
-      desc <- Task.fromEither(InfoFile.appDescriptor(path, descriptorBytes))
+            desc <- Task.fromEither(InfoFile.appDescriptor(path, descriptorBytes))
 
-      appInfo = {
-        val info = AppInfo(desc, descriptorBytes, source, sourceBytes)
-        val foundName = info.appDescriptor.nameOpt
-          .getOrElse(info.source.id)
-        if (foundName == name)
-          info
-        else
-          // just in case, that shouldn't happen
-          info.withAppDescriptor(info.appDescriptor.withNameOpt(Some(name)))
-      }
+            appInfo = {
+              val info = AppInfo(desc, descriptorBytes, source, sourceBytes)
+              val foundName = info.appDescriptor.nameOpt
+                .getOrElse(info.source.id)
+              if (foundName == name)
+                info
+              else
+                // just in case, that shouldn't happen
+                info.withAppDescriptor(info.appDescriptor.withNameOpt(Some(name)))
+            }
 
-      writtenOpt <- Task.delay {
-        val writtenOpt0 = createOrUpdate(appInfo, currentTime, force)
-        if (!writtenOpt0.exists(!_) && verbosity >= 1)
-          System.err.println(s"No new update for $name" + System.lineSeparator())
-        writtenOpt0
-      }
+            writtenOpt <- Task.delay {
+              val writtenOpt0 = createOrUpdate(appInfo, currentTime, force)
+              if (!writtenOpt0.exists(!_) && verbosity >= 1)
+                System.err.println(s"No new update for $name" + System.lineSeparator())
+              writtenOpt0
+            }
+          } yield writtenOpt
+        else {
+          System.out.println(
+            s"""Cannot find installed application '$name' (installation directory is ${launcher.getParent()}).
+               |Try running 'cs install $name'.""".stripMargin
+          )
+          Task.point(Some(false))
+        }
     } yield writtenOpt
 
   def envUpdate: EnvironmentUpdate =
