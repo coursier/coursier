@@ -459,7 +459,7 @@ import scala.util.Properties
             }
           } yield writtenOpt
         else {
-          System.out.println(
+          System.err.println(
             s"""Cannot find installed application '$name' (installation directory is ${launcher.getParent()}).
                |Try running 'cs install $name'.""".stripMargin
           )
