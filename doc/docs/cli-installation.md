@@ -164,7 +164,15 @@ coursier completion data into your completions directory.
 You can install the completions with:
 ```bash
 mkdir -p ~/.zsh/completion
-cs --completions zsh > ~/.zsh/completion/cs
+```
+```bash
+echo '#compdef _cs cs
+
+function _cs {
+  eval "$(cs complete zsh-v1 $CURRENT $words[@])"
+}' > ~/.zsh/completion/_cs
+```
+```bash
 echo 'fpath=(~/.zsh/completion $fpath)' >> ~/.zshrc
 echo 'autoload -Uz compinit ; compinit' >> ~/.zshrc
 ```
