@@ -26,7 +26,7 @@ object Deps {
   def jsoniterMacros =
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
   def jsoup           = ivy"org.jsoup:jsoup:1.15.4"
-  def logbackClassic  = ivy"ch.qos.logback:logback-classic:1.4.6"
+  def logbackClassic  = ivy"ch.qos.logback:logback-classic:1.2.11"
   def macroParadise   = ivy"org.scalamacros:::paradise:2.1.1"
   def mdoc            = ivy"org.scalameta::mdoc:2.3.7"
   def monadlessCats   = ivy"io.monadless::monadless-cats:${Versions.monadless}"
