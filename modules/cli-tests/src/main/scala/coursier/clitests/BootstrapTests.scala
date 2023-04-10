@@ -404,6 +404,43 @@ abstract class BootstrapTests extends TestSuite {
       }
     }
 
+    test("hybrid with rules") {
+      TestUtil.withTempDir { tmpDir =>
+        val tmpDir0 = os.Path(tmpDir, os.pwd)
+
+        def generate(output: String, extraArgs: String*): Unit =
+          os.proc(
+            LauncherTestUtil.adaptCommandName(launcher, tmpDir),
+            "bootstrap",
+            "-o",
+            output,
+            TestUtil.propsDepStr,
+            "io.get-coursier:echo:1.0.2",
+            "--shared",
+            "io.get-coursier:echo",
+            "--hybrid",
+            extraArgs,
+            extraOptions
+          ).call(cwd = tmpDir0)
+
+        generate("base")
+        generate("with-rule", "-R", "exclude:coursier/echo/Echo.class")
+
+        def hasEchoEntry(output: String): Boolean = {
+          val zf = new ZipFile((tmpDir0 / output).toIO)
+          try
+            zf.entries()
+              .asScala
+              .exists(_.getName == "coursier/echo/Echo.class")
+          finally
+            zf.close()
+        }
+
+        assert(hasEchoEntry("base"))
+        assert(!hasEchoEntry("with-rule"))
+      }
+    }
+
     test("standalone") {
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(

@@ -39,7 +39,7 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
                     () => WrappedZipInputStream.create(new ByteArrayInputStream(r.content))
                   )
 
-                AssemblyGenerator.writeEntries(files.map(Left(_)), zos, MergeRule.default)
+                AssemblyGenerator.writeEntries(files.map(Left(_)), zos, parameters.rules)
 
                 val remaining = c.entries.collect { case u: ClassPathEntry.Url => u }
                 if (remaining.isEmpty)
