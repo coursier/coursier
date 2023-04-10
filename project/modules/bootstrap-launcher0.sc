@@ -79,7 +79,7 @@ trait BootstrapLauncher extends CsModule {
     val cp         = upstreamAssemblyClasspath().toSeq.map(_.path)
     val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
-    val dest = T.ctx().dest / "bootstrap-orig.jar"
+    val dest = T.dest / "bootstrap-orig.jar"
 
     val params = Parameters.Assembly()
       .withFiles((baseJar +: cp).map(_.toIO))
@@ -129,7 +129,7 @@ trait BootstrapLauncher extends CsModule {
     val cp         = upstreamAssemblyClasspath().toSeq.map(_.path)
     val mainClass0 = resourceAssemblyMainClass()
 
-    val dest = T.ctx().dest / "bootstrap-orig.jar"
+    val dest = T.dest / "bootstrap-orig.jar"
 
     val params = Parameters.Assembly()
       .withFiles((baseJar +: cp).map(_.toIO))
