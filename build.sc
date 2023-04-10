@@ -116,7 +116,20 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
       `windows-ansi`.ps.sources()
   }
   def resources = T.sources {
-    super.resources() ++ directories.resources()
+    (super.resources() ++ directories.resources()).flatMap { ref =>
+      val dir = ref.path
+      if (os.exists(dir) && os.isDir(dir)) {
+        val nonIgnoredFiles = os.walk(dir)
+          .filter(os.isFile(_))
+          .map(_.relativeTo(dir))
+          .filter(!_.startsWith(os.sub / "META-INF" / "native-image"))
+        if (nonIgnoredFiles.isEmpty) Nil
+        else
+          sys.error(s"Resource directory $dir contains unexpected resources $nonIgnoredFiles")
+      }
+      else
+        Seq(ref)
+    }
   }
   def proguardClassPath = T {
     proguard.runClasspath()

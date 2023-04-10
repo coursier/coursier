@@ -8,6 +8,7 @@ import java.util.{Locale, UUID}
 import java.util.regex.Pattern
 import java.util.zip.ZipFile
 
+import scala.collection.JavaConverters._
 import scala.concurrent.duration.Duration
 import scala.io.{Codec, Source}
 import scala.util.Properties
@@ -376,6 +377,14 @@ abstract class BootstrapTests extends TestSuite {
           "--hybrid",
           extraOptions
         ).call(cwd = tmpDir0)
+
+        val zf = new ZipFile((tmpDir0 / "cs-props-hybrid-shared").toIO)
+        val nativeImageEntries = zf.entries()
+          .asScala
+          .filter(_.getName.startsWith("META-INF/native-image/"))
+          .toVector
+        zf.close()
+        assert(nativeImageEntries.isEmpty)
 
         val output = os.proc(
           LauncherTestUtil.adaptCommandName("./cs-props-hybrid-shared", tmpDir),
