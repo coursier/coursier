@@ -231,27 +231,25 @@ abstract class BootstrapTests extends TestSuite {
       }
     }
 
-    test("java.class.path property in expansion") {
+    test("java_class_path property in expansion") {
       TestUtil.withTempDir { tmpDir =>
-        LauncherTestUtil.run(
-          args = Seq(
-            launcher,
-            "bootstrap",
-            "-o",
-            "cs-props-1",
-            "--property",
-            "foo=${java.class.path}",
-            TestUtil.propsDepStr
-          ) ++ extraOptions,
-          directory = tmpDir
-        )
-        val output = LauncherTestUtil.output(
-          Seq("./cs-props-1", "foo"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
+        val pwd     = if (Properties.isWin) os.Path(os.pwd.toIO.getCanonicalFile) else os.pwd
+        val tmpDir0 = os.Path(if (Properties.isWin) tmpDir.getCanonicalFile else tmpDir, pwd)
+        os.proc(
+          LauncherTestUtil.adaptCommandName(launcher, tmpDir),
+          "bootstrap",
+          "-o",
+          "cs-props-1",
+          "--property",
+          "foo=${java.class.path}",
+          TestUtil.propsDepStr,
+          extraOptions
+        ).call(cwd = tmpDir0)
+        val output = os.proc(LauncherTestUtil.adaptCommandName("./cs-props-1", tmpDir), "foo")
+          .call(cwd = tmpDir0)
+          .out.text()
         if (Properties.isWin) {
-          val outputElems    = new File(tmpDir, "./cs-props-1").getCanonicalPath +: TestUtil.propsCp
+          val outputElems    = (tmpDir0 / "cs-props-1").toString +: TestUtil.propsCp
           val expectedOutput = outputElems.mkString(File.pathSeparator) + System.lineSeparator()
           assert(output.replace("\\\\", "\\") == expectedOutput)
         }
@@ -363,27 +361,28 @@ abstract class BootstrapTests extends TestSuite {
       }
     }
 
-    test("hybrid with shared dep java.class.path") {
+    test("hybrid with shared dep java class path") {
       TestUtil.withTempDir { tmpDir =>
-        LauncherTestUtil.run(
-          args = Seq(
-            launcher,
-            "bootstrap",
-            "-o",
-            "cs-props-hybrid-shared",
-            TestUtil.propsDepStr,
-            "io.get-coursier:echo:1.0.2",
-            "--shared",
-            "io.get-coursier:echo",
-            "--hybrid"
-          ) ++ extraOptions,
-          directory = tmpDir
+        val tmpDir0 = os.Path(tmpDir, os.pwd)
+        os.proc(
+          LauncherTestUtil.adaptCommandName(launcher, tmpDir),
+          "bootstrap",
+          "-o",
+          "cs-props-hybrid-shared",
+          TestUtil.propsDepStr,
+          "io.get-coursier:echo:1.0.2",
+          "--shared",
+          "io.get-coursier:echo",
+          "--hybrid",
+          extraOptions
+        ).call(cwd = tmpDir0)
+
+        val output = os.proc(
+          LauncherTestUtil.adaptCommandName("./cs-props-hybrid-shared", tmpDir),
+          "java.class.path"
         )
-        val output = LauncherTestUtil.output(
-          Seq("./cs-props-hybrid-shared", "java.class.path"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
+          .call(cwd = tmpDir0)
+          .out.text(Codec.default)
         if (Properties.isWin) {
           val expectedOutput =
             new File(tmpDir, "./cs-props-hybrid-shared").getCanonicalPath + System.lineSeparator()
