@@ -17,12 +17,10 @@ import coursier.clitests.util.TestAuthProxy
 import coursier.dependencyString
 import utest._
 
-abstract class BootstrapTests extends TestSuite {
+abstract class BootstrapTests extends TestSuite with LauncherOptions {
 
   def launcher: String
   def assembly: String
-  def acceptsDOptions: Boolean = true
-  def acceptsJOptions: Boolean = true
 
   def overrideProguarded: Option[Boolean] =
     None
