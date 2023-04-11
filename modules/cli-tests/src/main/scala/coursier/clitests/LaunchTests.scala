@@ -145,5 +145,39 @@ abstract class LaunchTests extends TestSuite {
       val expectedOutput = "a b foo" + System.lineSeparator()
       assert(output == expectedOutput)
     }
+
+    test("extra jars") {
+      if (Properties.isWin) "Disabled" // issues escaping the parameter ending in '\*'
+      else extraJarsTest()
+    }
+    def extraJarsTest(): Unit = {
+      val files = os.proc(launcher, "fetch", "org.scala-lang:scala3-compiler_3:3.1.3")
+        .call()
+        .out.lines()
+        .map(os.Path(_, os.pwd))
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0, os.pwd)
+        val dir    = tmpDir / "cp"
+        for (f <- files)
+          os.copy.into(f, dir, createFolders = true)
+        val output = os.proc(
+          launcher,
+          "launch",
+          "--extra-jars",
+          if (Properties.isWin) {
+            val q = "\""
+            s"$q$dir/*$q"
+          }
+          else s"$dir/*",
+          "-M",
+          "dotty.tools.MainGenericCompiler"
+        ).call(mergeErrIntoOut = true).out.lines()
+        val expectedFirstLines = Seq(
+          "Usage: scalac <options> <source files>",
+          "where possible standard options include:"
+        )
+        assert(output.containsSlice(expectedFirstLines))
+      }
+    }
   }
 }
