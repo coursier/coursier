@@ -1,6 +1,7 @@
 package coursier.clitests
 
 import java.io.File
+import java.util.zip.ZipFile
 
 import utest._
 
@@ -210,6 +211,77 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
           "where possible standard options include:"
         )
         assert(output.containsSlice(expectedFirstLines))
+      }
+    }
+
+    test("launch with hybrid launcher") {
+      TestUtil.withTempDir("hybrid-test") { tmpDir =>
+        val tmpDir0 = os.Path(tmpDir, os.pwd)
+
+        def check(
+          expectEntries: Seq[String],
+          expectMissingEntries: Seq[String],
+          extraCsArgs: Seq[String]
+        ): Unit = {
+          val workDir = tmpDir0 / "tmp"
+          os.remove.all(workDir)
+          os.proc(
+            launcher,
+            "launch",
+            "sh.almond:::scala-kernel:0.13.6",
+            "--shared",
+            "sh.almond:::scala-kernel-api",
+            "--scala",
+            "2.12.17",
+            "-r",
+            "jitpack",
+            "--hybrid",
+            "--work-dir",
+            workDir,
+            "--fork",
+            extraCsArgs,
+            "--",
+            "--help"
+          ).call(cwd = tmpDir0)
+          val found = os.list(workDir)
+          val hybridLauncher = found match {
+            case Seq(f) => f
+            case _ =>
+              sys.error(s"Expected one file in work dir, got ${found.map(_.relativeTo(workDir))}")
+          }
+          val zf = new ZipFile(hybridLauncher.toIO)
+          for (name <- expectEntries) {
+            val found = zf.getEntry(name) != null
+            assert(found)
+          }
+          for (name <- expectMissingEntries) {
+            val missing = zf.getEntry(name) == null
+            assert(missing)
+          }
+          zf.close()
+        }
+
+        check(
+          Seq(
+            "almond/display/PrettyPrint.class",
+            "coursier/bootstrap/launcher/jars/scala-kernel_2.12.17-0.13.6.jar"
+          ),
+          Nil,
+          Nil
+        )
+
+        check(
+          Seq(
+            "coursier/bootstrap/launcher/jars/scala-kernel_2.12.17-0.13.6.jar"
+          ),
+          Seq(
+            "almond/display/PrettyPrint.class"
+          ),
+          Seq(
+            "-R",
+            "exclude:almond/display/PrettyPrint.class"
+          )
+        )
       }
     }
   }
