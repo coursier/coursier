@@ -186,7 +186,6 @@ jobs:
 
   generate-native-launchers:
     name: Test and upload native launcher ${{ matrix.OS }}
-    needs: test
     runs-on: ${{ matrix.OS }}
     strategy:
       fail-fast: false
@@ -220,7 +219,6 @@ jobs:
 
   generate-native-static-launcher:
     name: Test and upload native static launcher
-    needs: test
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v3
@@ -247,7 +245,6 @@ jobs:
 
   generate-native-mostly-static-launcher:
     name: Test and upload native mostly static launcher
-    needs: test
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v3
