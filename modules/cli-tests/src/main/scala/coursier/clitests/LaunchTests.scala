@@ -6,7 +6,7 @@ import utest._
 
 import scala.util.Properties
 
-abstract class LaunchTests extends TestSuite {
+abstract class LaunchTests extends TestSuite with LauncherOptions {
 
   def launcher: String
 
@@ -169,6 +169,39 @@ abstract class LaunchTests extends TestSuite {
             s"$q$dir/*$q"
           }
           else s"$dir/*",
+          "-M",
+          "dotty.tools.MainGenericCompiler"
+        ).call(mergeErrIntoOut = true).out.lines()
+        val expectedFirstLines = Seq(
+          "Usage: scalac <options> <source files>",
+          "where possible standard options include:"
+        )
+        assert(output.containsSlice(expectedFirstLines))
+      }
+    }
+
+    test("extra jars with properties") {
+      if (acceptsJOptions)
+        extraJarsWithProperties()
+      else
+        "Disabled"
+    }
+    def extraJarsWithProperties(): Unit = {
+      val files = os.proc(launcher, "fetch", "org.scala-lang:scala3-compiler_3:3.1.3")
+        .call()
+        .out.lines()
+        .map(os.Path(_, os.pwd))
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0, os.pwd)
+        val dir    = tmpDir / "cp"
+        for (f <- files)
+          os.copy.into(f, dir, createFolders = true)
+        val output = os.proc(
+          launcher,
+          s"-J-Dthe.directory=$dir",
+          "launch",
+          "--extra-jars",
+          s"$${the.directory}/*",
           "-M",
           "dotty.tools.MainGenericCompiler"
         ).call(mergeErrIntoOut = true).out.lines()

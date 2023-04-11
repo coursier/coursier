@@ -79,7 +79,7 @@ object SharedLaunchParams {
     }
 
     // check if those exist?
-    val extraJars = options.extraJars.flatMap(ClassPathUtil.classPath)
+    val extraJars = options.extraJars.flatMap(ClassPathUtil.classPath(_, sys.props.get))
 
     (resolveV, artifactV, sharedLoaderV, propertiesV).mapN {
       (resolve, artifact, sharedLoader, properties) =>
