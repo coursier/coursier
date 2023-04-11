@@ -1,4 +1,4 @@
-import $ivy.`io.get-coursier::coursier-launcher:2.0.16`
+import $ivy.`io.get-coursier::coursier-launcher:2.1.0`
 import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.23`
 
 import $file.cs
@@ -206,7 +206,7 @@ trait Launchers extends CsModule {
         jvmIndex
       ).!!.trim
     }
-    val outputDir = T.ctx().dest / "config"
+    val outputDir = T.dest / "config"
     val command = Seq(
       s"$graalVmHome/bin/java",
       s"-agentlib:native-image-agent=config-output-dir=$outputDir",
@@ -250,7 +250,7 @@ trait Launchers extends CsModule {
     val cp         = jarClassPath().map(_.path)
     val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
-    val dest = T.ctx().dest / (if (isWin) "launcher.bat" else "launcher")
+    val dest = T.dest / (if (isWin) "launcher.bat" else "launcher")
 
     val preamble = Preamble()
       .withOsKind(isWin)
@@ -288,7 +288,7 @@ trait Launchers extends CsModule {
     val cp         = jarClassPath().map(_.path)
     val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
-    val dest = T.ctx().dest / (if (isWin) "launcher.bat" else "launcher")
+    val dest = T.dest / (if (isWin) "launcher.bat" else "launcher")
 
     val preamble = Preamble()
       .withOsKind(isWin)

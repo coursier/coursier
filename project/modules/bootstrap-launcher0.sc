@@ -75,16 +75,25 @@ trait BootstrapLauncher extends CsModule {
   // TODO Factor stuff in the assembly / proguarding code below (use the base assemblies in proguard tasks, …)
 
   def assembly = T {
+    import coursier.launcher.MergeRule._
+    import java.util.regex.Pattern
+
     val baseJar    = jar().path
     val cp         = upstreamAssemblyClasspath().toSeq.map(_.path)
     val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
-    val dest = T.ctx().dest / "bootstrap-orig.jar"
+    val dest = T.dest / "bootstrap-orig.jar"
 
     val params = Parameters.Assembly()
       .withFiles((baseJar +: cp).map(_.toIO))
       .withMainClass(mainClass0)
       .withPreambleOpt(None)
+      .withRules(
+        Seq(
+          ExcludePattern("^" + Pattern.quote("META-INF/native-image/") + ".*"),
+          ExcludePattern("^" + Pattern.quote("META-INF/MANIFEST.MF") + "$")
+        )
+      )
 
     AssemblyGenerator.generate(params, dest.toNIO)
 
@@ -101,8 +110,9 @@ trait BootstrapLauncher extends CsModule {
     val baseJar = jar().path
     val cp      = upstreamAssemblyClasspath().toSeq.map(_.path)
     val q       = "\""
-    val classPathConf =
-      cp.map(f => s"-injars $q$f$q(!META-INF/MANIFEST.MF)").mkString(System.lineSeparator())
+    val classPathConf = cp
+      .map(f => s"-injars $q$f$q(!META-INF/MANIFEST.MF;!META-INF/native-image/**)")
+      .mkString(System.lineSeparator())
     val sharedConf = sharedProguardConf()
 
     val confContent =
@@ -125,16 +135,25 @@ trait BootstrapLauncher extends CsModule {
 
   def resourceAssemblyMainClass = T("coursier.bootstrap.launcher.ResourcesLauncher")
   def resourceAssembly = T {
+    import coursier.launcher.MergeRule._
+    import java.util.regex.Pattern
+
     val baseJar    = jar().path
     val cp         = upstreamAssemblyClasspath().toSeq.map(_.path)
     val mainClass0 = resourceAssemblyMainClass()
 
-    val dest = T.ctx().dest / "bootstrap-orig.jar"
+    val dest = T.dest / "bootstrap-orig.jar"
 
     val params = Parameters.Assembly()
       .withFiles((baseJar +: cp).map(_.toIO))
       .withMainClass(mainClass0)
       .withPreambleOpt(None)
+      .withRules(
+        Seq(
+          ExcludePattern("^" + Pattern.quote("META-INF/native-image/") + ".*"),
+          ExcludePattern("^" + Pattern.quote("META-INF/MANIFEST.MF") + "$")
+        )
+      )
 
     AssemblyGenerator.generate(params, dest.toNIO)
 
@@ -211,8 +230,9 @@ trait BootstrapLauncher extends CsModule {
     val baseJar = resourceJar().path
     val cp      = upstreamAssemblyClasspath().toSeq.map(_.path)
     val q       = "\""
-    val classPathConf =
-      cp.map(f => s"-injars $q$f$q(!META-INF/MANIFEST.MF)").mkString(System.lineSeparator())
+    val classPathConf = cp
+      .map(f => s"-injars $q$f$q(!META-INF/MANIFEST.MF;!META-INF/native-image/**)")
+      .mkString(System.lineSeparator())
     val sharedConf = sharedResourceProguardConf()
 
     val confContent =
