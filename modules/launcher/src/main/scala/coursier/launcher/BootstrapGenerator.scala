@@ -120,12 +120,21 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
     }
 
     for ((ent, data) <- bootstrapZip.entriesWithData()) {
-      try outputZip.putNextEntry(ent)
-      catch {
-        case _: ZipException if ent.isDirectory =>
-        // likely a duplicate entry error, ignoring it for directories
-      }
-      outputZip.write(data)
+      val writeData =
+        try {
+          outputZip.putNextEntry(ent)
+          true
+        }
+        catch {
+          case _: ZipException if ent.isDirectory =>
+            // likely a duplicate entry error, ignoring it for directories
+            false
+          case e: ZipException if e.getMessage.startsWith("duplicate entry") =>
+            // bootstrap entry already in user entries, assuming the user entry will work fine
+            false
+        }
+      if (writeData)
+        outputZip.write(data)
       outputZip.closeEntry()
     }
 

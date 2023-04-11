@@ -1071,5 +1071,24 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         }
       }
     }
+
+    test("hybrid with coursier dependency") {
+      TestUtil.withTempDir("hybrid-cs") { tmpDir =>
+        os.proc(
+          launcher,
+          "bootstrap",
+          "--hybrid",
+          "sh.almond:::scala-kernel:0.13.6",
+          "--shared",
+          "sh.almond:::scala-kernel-api",
+          "-r",
+          "jitpack",
+          "--scala",
+          "2.12.17",
+          "-o",
+          "almond212"
+        ).call(cwd = os.Path(tmpDir, os.pwd))
+      }
+    }
   }
 }
