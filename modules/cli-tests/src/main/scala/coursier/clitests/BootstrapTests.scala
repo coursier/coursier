@@ -242,7 +242,7 @@ abstract class BootstrapTests extends TestSuite {
           "-o",
           "cs-props-1",
           "--property",
-          "foo=${java.class.path}",
+          "foo=${java.class.path}__${java.class.path}",
           TestUtil.propsDepStr,
           extraOptions
         ).call(cwd = tmpDir0)
@@ -250,14 +250,14 @@ abstract class BootstrapTests extends TestSuite {
           .call(cwd = tmpDir0)
           .out.text()
         if (Properties.isWin) {
-          val outputElems    = (tmpDir0 / "cs-props-1").toString +: TestUtil.propsCp
-          val expectedOutput = outputElems.mkString(File.pathSeparator) + System.lineSeparator()
+          val outputElems =
+            ((tmpDir0 / "cs-props-1").toString +: TestUtil.propsCp).mkString(File.pathSeparator)
+          val expectedOutput = outputElems + "__" + outputElems + System.lineSeparator()
           assert(output.replace("\\\\", "\\") == expectedOutput)
         }
         else {
-          val expectedOutput =
-            ("./cs-props-1" +: TestUtil.propsCp).mkString(File.pathSeparator) +
-              System.lineSeparator()
+          val cp             = ("./cs-props-1" +: TestUtil.propsCp).mkString(File.pathSeparator)
+          val expectedOutput = cp + "__" + cp + System.lineSeparator()
           assert(output == expectedOutput)
         }
       }
