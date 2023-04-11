@@ -238,7 +238,6 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
             "--hybrid",
             "--work-dir",
             workDir,
-            "--fork",
             extraCsArgs,
             "--",
             "--help"

@@ -407,7 +407,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
       b.result()
     }
 
-    if (params.fork)
+    if (params.fork || params.hybrid)
       launchFork(
         hierarchy0,
         mainClass0,
