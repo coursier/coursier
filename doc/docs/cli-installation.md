@@ -15,7 +15,7 @@ By default, they will install the following applications:
 
 They will also install a JVM if none is found on the system.
 
-If you want more control over what gets installed and how, please check out 
+If you want more control over what gets installed and how, please check out
 the [Command-line options](#command-line-options) section.
 
 After the setup, you can [start using Scala](https://docs.scala-lang.org/scala3/getting-started.html#create-a-hello-world-project-with-sbt), or install more applications with the [`install`](cli-install.md) command.
@@ -39,6 +39,8 @@ Then, run it with
 $ chmod +x cs
 $ ./cs setup
 ```
+
+Other flavors of native Linux launchers are available, see [below](#other-native-linux-launchers).
 
 ### macOS
 
@@ -358,3 +360,40 @@ export PATH="$PATH:/Users/alex/Library/Application Support/Coursier/bin"
 
 On Windows, the `setup` command updates the `User` environment variables.
 
+## Other native Linux launchers
+
+Flavors of the native Linux launchers other than the default one are available. Note that these are only
+built for the x86-64 architecture for now (no ARM64).
+
+### Static launchers
+
+These can run in environments where glibc is not available, such as Alpine docker images. These can be
+downloaded from GitHub release assets, like the standard launchers. Their file names end with `linux-static`.
+
+
+```bash
+$ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-static.gz" | gzip -d > cs
+```
+
+### Mostly static launchers
+
+These require glibc and libz, but do not need the C++ standard library. They are meant to be used from
+so called ["distroless" Docker images](https://github.com/GoogleContainerTools/distroless). These can be
+downloaded from GitHub release assets, like the standard launchers. Their file names end with `linux-mostly-static`.
+
+
+```bash
+$ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-mostly-static.gz" | gzip -d > cs
+```
+
+### Container launchers
+
+These are temporary. These are just like the standard launchers, but built without GraalVM container support
+(using the `-H:-UseContainerSupport` option at build time). These are meant to workaround issues with
+the GraalVM container support, if ever you run into them. These can be
+downloaded from GitHub release assets, like the standard launchers. Their file names end with `linux-container`.
+
+
+```bash
+$ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-container.gz" | gzip -d > cs
+```

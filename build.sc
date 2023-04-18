@@ -650,6 +650,9 @@ trait CliTests extends CsModule with CoursierPublishModule { self =>
   object `native-mostly-static-tests` extends NativeTests {
     def cliLauncher = cli.`mostly-static-image`.nativeImage
   }
+  object `native-container-tests` extends NativeTests {
+    def cliLauncher = cli.`container-image`.nativeImage
+  }
 }
 
 def webScalaVersion = ScalaVersions.scala213
@@ -762,6 +765,15 @@ def copyMostlyStaticLauncher(directory: String = "artifacts") = T.command {
     nativeLauncher,
     os.Path(directory, os.pwd),
     suffix = "-mostly-static"
+  )
+}
+
+def copyContainerLauncher(directory: String = "artifacts") = T.command {
+  val nativeLauncher = cli.`container-image`.nativeImage().path
+  ghreleaseassets.copyLauncher(
+    nativeLauncher,
+    os.Path(directory, os.pwd),
+    suffix = "-container"
   )
 }
 
@@ -995,6 +1007,10 @@ def nativeStaticTests() = T.command {
 
 def nativeMostlyStaticTests() = T.command {
   `cli-tests`.`native-mostly-static-tests`.test()()
+}
+
+def nativeContainerTests() = T.command {
+  `cli-tests`.`native-container-tests`.test()()
 }
 
 object ci extends Module {
