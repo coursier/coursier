@@ -15,7 +15,7 @@ By default, they will install the following applications:
 
 They will also install a JVM if none is found on the system.
 
-If you want more control over what gets installed and how, please check out 
+If you want more control over what gets installed and how, please check out
 the [Command-line options](#command-line-options) section.
 
 After the setup, you can [start using Scala](https://docs.scala-lang.org/scala3/getting-started.html#create-a-hello-world-project-with-sbt), or install more applications with the [`install`](cli-install.md) command.
