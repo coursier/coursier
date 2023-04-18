@@ -651,7 +651,7 @@ trait CliTests extends CsModule with CoursierPublishModule { self =>
     def cliLauncher = cli.`mostly-static-image`.nativeImage
   }
   object `native-container-tests` extends NativeTests {
-    def cliLauncher = cli.`container-image`.nativeImage
+    def cliLauncher = cli.containerImage
   }
 }
 
@@ -769,7 +769,7 @@ def copyMostlyStaticLauncher(directory: String = "artifacts") = T.command {
 }
 
 def copyContainerLauncher(directory: String = "artifacts") = T.command {
-  val nativeLauncher = cli.`container-image`.nativeImage().path
+  val nativeLauncher = cli.containerImage().path
   ghreleaseassets.copyLauncher(
     nativeLauncher,
     os.Path(directory, os.pwd),
