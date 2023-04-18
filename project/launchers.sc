@@ -182,6 +182,20 @@ trait Launchers extends CsModule {
     )
   }
 
+  // Same as container-image, but built from docker to avoid glibc version issues
+  object `container-image-from-docker` extends CliNativeImage {
+    def nativeImageDockerParams = `linux-docker-image`.nativeImageDockerParams()
+    def nativeImageOptions = super.nativeImageOptions() ++ Seq(
+      "-H:-UseContainerSupport"
+    )
+  }
+
+  def containerImage =
+    if (Properties.isLinux && isCI)
+      `container-image-from-docker`.nativeImage
+    else
+      `container-image`.nativeImage
+
   def transitiveJars: T[Agg[PathRef]] = {
 
     def allModuleDeps(todo: List[JavaModule]): List[JavaModule] =
