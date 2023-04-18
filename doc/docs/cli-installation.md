@@ -40,6 +40,8 @@ $ chmod +x cs
 $ ./cs setup
 ```
 
+Other flavors of native Linux launchers are available, see [below](#other-native-linux-launchers).
+
 ### macOS
 
 On macOS, download and run the coursier installer with
@@ -358,3 +360,28 @@ export PATH="$PATH:/Users/alex/Library/Application Support/Coursier/bin"
 
 On Windows, the `setup` command updates the `User` environment variables.
 
+## Other native Linux launchers
+
+Flavors of the native Linux launchers other than the default one are available. Note that these are only
+built for the x86-64 architecture for now (no ARM64).
+
+### Static launchers
+
+These can run in environments where glibc is not available, such as Alpine docker images. These can be
+downloaded from GitHub release assets, like the standard launchers. Their file names end with `linux-static`.
+
+
+```bash
+$ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-static.gz" | gzip -d > cs
+```
+
+### Mostly static launchers
+
+These require glibc and libz, but do not need the C++ standard library. They are meant to be used from
+so called ["distroless" Docker images](https://github.com/GoogleContainerTools/distroless). These can be
+downloaded from GitHub release assets, like the standard launchers. Their file names end with `linux-mostly-static`.
+
+
+```bash
+$ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-mostly-static.gz" | gzip -d > cs
+```
