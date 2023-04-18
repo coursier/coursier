@@ -176,6 +176,12 @@ trait Launchers extends CsModule {
     }
   }
 
+  object `container-image` extends CliNativeImage {
+    def nativeImageOptions = super.nativeImageOptions() ++ Seq(
+      "-H:-UseContainerSupport"
+    )
+  }
+
   def transitiveJars: T[Agg[PathRef]] = {
 
     def allModuleDeps(todo: List[JavaModule]): List[JavaModule] =

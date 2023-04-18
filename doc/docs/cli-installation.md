@@ -385,3 +385,15 @@ downloaded from GitHub release assets, like the standard launchers. Their file n
 ```bash
 $ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-mostly-static.gz" | gzip -d > cs
 ```
+
+### Container launchers
+
+These are temporary. These are just like the standard launchers, but built without GraalVM container support
+(using the `-H:-UseContainerSupport` option at build time). These are meant to workaround issues with
+the GraalVM container support, if ever you run into them. These can be
+downloaded from GitHub release assets, like the standard launchers. Their file names end with `linux-container`.
+
+
+```bash
+$ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-container.gz" | gzip -d > cs
+```
