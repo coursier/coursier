@@ -556,6 +556,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     Deps.caseApp,
     Deps.catsCore,
     Deps.catsFree,
+    Deps.classPathUtil,
     Deps.dataClass,
     Deps.monadlessCats,
     Deps.monadlessStdlib,
