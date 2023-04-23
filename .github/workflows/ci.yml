@@ -44,7 +44,7 @@ jobs:
           - JDK: "8"
             SCALA_VERSION: "2.13.6"
             OS: "ubuntu-latest"
-          - JDK: "11"
+          - JDK: "17"
             SCALA_VERSION: "2.12.17"
             OS: "ubuntu-latest"
     steps:
@@ -279,6 +279,33 @@ jobs:
           if-no-files-found: error
           retention-days: 2
 
+  generate-native-container-launcher:
+    name: Test and upload native container launcher
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v6.4
+      - uses: coursier/setup-action@v1.3.0
+        with:
+          jvm: 8
+          version: "2.1.0"
+      - run: sudo apt-get install -y nailgun
+        if: runner.os == 'Linux'
+      - run: .github/scripts/maybe-with-graalvm-home.sh nativeContainerTests
+        shell: bash
+      - name: Copy artifacts
+        run: .github/scripts/maybe-with-graalvm-home.sh copyContainerLauncher artifacts/
+        shell: bash
+      - uses: actions/upload-artifact@v3
+        with:
+          name: launchers
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 2
+
   generate-jar-launchers:
     name: Upload JAR launchers
     needs: publish
@@ -307,7 +334,7 @@ jobs:
 
   upload-launchers:
     name: Upload launchers to GitHub release assets
-    needs: [generate-native-launchers, generate-native-static-launcher, generate-native-mostly-static-launcher, generate-jar-launchers]
+    needs: [generate-native-launchers, generate-native-static-launcher, generate-native-mostly-static-launcher, generate-native-container-launcher, generate-jar-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
