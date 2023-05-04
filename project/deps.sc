@@ -6,7 +6,7 @@ object Deps {
   def catsCore          = ivy"org.typelevel::cats-core:${Versions.cats}"
   def catsFree          = ivy"org.typelevel::cats-free:${Versions.cats}"
   def catsEffect        = ivy"org.typelevel::cats-effect::3.4.8"
-  def classPathUtil     = ivy"io.get-coursier::class-path-util:0.1.1"
+  def classPathUtil     = ivy"io.get-coursier::class-path-util:0.1.2"
   def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.10.0"
   def concurrentReferenceHashMap =
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
@@ -26,7 +26,7 @@ object Deps {
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${Versions.jsoniterScala}"
   def jsoniterMacros =
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
-  def jsoup           = ivy"org.jsoup:jsoup:1.15.4"
+  def jsoup           = ivy"org.jsoup:jsoup:1.16.1"
   def logbackClassic  = ivy"ch.qos.logback:logback-classic:1.2.12"
   def macroParadise   = ivy"org.scalamacros:::paradise:2.1.1"
   def mdoc            = ivy"org.scalameta::mdoc:2.3.7"
