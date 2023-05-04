@@ -25,6 +25,7 @@ jobs:
     - uses: coursier/setup-action@v1.3.0
       with:
         jvm: "temurin:17"
+        version: "2.1.0"
     - run: ./mill -i __.compile
 
   test:
@@ -43,7 +44,7 @@ jobs:
           - JDK: "8"
             SCALA_VERSION: "2.13.6"
             OS: "ubuntu-latest"
-          - JDK: "11"
+          - JDK: "17"
             SCALA_VERSION: "2.12.17"
             OS: "ubuntu-latest"
     steps:
@@ -60,6 +61,7 @@ jobs:
     - uses: coursier/setup-action@v1.3.0
       with:
         jvm: ${{ matrix.JDK }}
+        version: "2.1.0"
     - run: sudo apt-get install -y nailgun
       if: runner.os == 'Linux'
     # - run: .github/scripts/scala-native-setup.sh
@@ -94,6 +96,7 @@ jobs:
     - uses: coursier/setup-action@v1.3.0
       with:
         jvm: 8
+        version: "2.1.0"
     - run: npm install && ./mill -i jsTests "$SCALA_VERSION"
       shell: bash
       env:
@@ -111,6 +114,7 @@ jobs:
     - uses: coursier/setup-action@v1.3.0
       with:
         jvm: 8
+        version: "2.1.0"
     - run: ./mill -i __.mimaReportBinaryIssues
 
   website-check:
@@ -133,6 +137,7 @@ jobs:
     - uses: coursier/setup-action@v1.3.0
       with:
         jvm: 8
+        version: "2.1.0"
     - run: ./mill -i doc.generate --npm-install --yarn-run-build
       env:
         COURSIER_JNI: force
@@ -149,6 +154,7 @@ jobs:
       with:
         jvm: 8
         apps: scalafmt:3.0.0
+        version: "2.1.0"
     - run: scalafmt --check
 
   publish:
@@ -167,6 +173,7 @@ jobs:
       - uses: coursier/setup-action@v1.3.0
         with:
           jvm: 8
+          version: "2.1.0"
       - run: |
           mv .mill-jvm-opts .mill-jvm-opts.bak
           cat .mill-jvm-opts.bak | grep -v -- '-Xmx' > .mill-jvm-opts
@@ -186,7 +193,6 @@ jobs:
 
   generate-native-launchers:
     name: Test and upload native launcher ${{ matrix.OS }}
-    needs: test
     runs-on: ${{ matrix.OS }}
     strategy:
       fail-fast: false
@@ -201,6 +207,7 @@ jobs:
       - uses: coursier/setup-action@v1.3.0
         with:
           jvm: 8
+          version: "2.1.0"
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
@@ -220,7 +227,6 @@ jobs:
 
   generate-native-static-launcher:
     name: Test and upload native static launcher
-    needs: test
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v3
@@ -231,6 +237,7 @@ jobs:
       - uses: coursier/setup-action@v1.3.0
         with:
           jvm: 8
+          version: "2.1.0"
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeStaticTests
@@ -247,7 +254,6 @@ jobs:
 
   generate-native-mostly-static-launcher:
     name: Test and upload native mostly static launcher
-    needs: test
     runs-on: "ubuntu-latest"
     steps:
       - uses: actions/checkout@v3
@@ -258,12 +264,40 @@ jobs:
       - uses: coursier/setup-action@v1.3.0
         with:
           jvm: 8
+          version: "2.1.0"
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeMostlyStaticTests
         shell: bash
       - name: Copy artifacts
         run: .github/scripts/maybe-with-graalvm-home.sh copyMostlyStaticLauncher artifacts/
+        shell: bash
+      - uses: actions/upload-artifact@v3
+        with:
+          name: launchers
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 2
+
+  generate-native-container-launcher:
+    name: Test and upload native container launcher
+    runs-on: "ubuntu-latest"
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v6.4
+      - uses: coursier/setup-action@v1.3.0
+        with:
+          jvm: 8
+          version: "2.1.0"
+      - run: sudo apt-get install -y nailgun
+        if: runner.os == 'Linux'
+      - run: .github/scripts/maybe-with-graalvm-home.sh nativeContainerTests
+        shell: bash
+      - name: Copy artifacts
+        run: .github/scripts/maybe-with-graalvm-home.sh copyContainerLauncher artifacts/
         shell: bash
       - uses: actions/upload-artifact@v3
         with:
@@ -286,6 +320,7 @@ jobs:
     - uses: coursier/setup-action@v1.3.0
       with:
         jvm: 8
+        version: "2.1.0"
     - name: Wait for sync to Central
       run: ./mill -i waitForSync
     - name: Copy artifacts
@@ -299,7 +334,7 @@ jobs:
 
   upload-launchers:
     name: Upload launchers to GitHub release assets
-    needs: [generate-native-launchers, generate-native-static-launcher, generate-native-mostly-static-launcher, generate-jar-launchers]
+    needs: [generate-native-launchers, generate-native-static-launcher, generate-native-mostly-static-launcher, generate-native-container-launcher, generate-jar-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -311,6 +346,7 @@ jobs:
     - uses: coursier/setup-action@v1.3.0
       with:
         jvm: 8
+        version: "2.1.0"
     - uses: actions/download-artifact@v3
       with:
         name: launchers
@@ -333,6 +369,7 @@ jobs:
       - uses: coursier/setup-action@v1.3.0
         with:
           jvm: 8
+          version: "2.1.0"
       - run: .github/scripts/scala-cli.sh .github/scripts/UpdateBrewFormula.scala
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -354,6 +391,7 @@ jobs:
       - uses: coursier/setup-action@v1.3.0
         with:
           jvm: 8
+          version: "2.1.0"
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill -i updateWebsite
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -375,6 +413,7 @@ jobs:
       - uses: coursier/setup-action@v1.3.0
         with:
           jvm: 8
+          version: "2.1.0"
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill -i updateWebsite
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

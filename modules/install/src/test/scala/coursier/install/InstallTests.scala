@@ -432,6 +432,27 @@ object InstallTests extends TestSuite {
       test("windows") - run("windows", "x86_64")
     }
 
+    test("try updating a non-installed app") {
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
+        val installDir0 = installDir(tmpDir, os, arch)
+          .withVerbosity(1)
+
+        val result =
+          installDir0.maybeUpdate(
+            "dummy-app-id",
+            src => sys.error("illegal: that code should not be reached")
+          ).attempt.unsafeRun()(cache.ec)
+
+        assert(
+          result.contains(Some(false))
+        ) // TODO Check the output contains "Cannot find installed application 'dummy-app-id'..."
+      }
+
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
+    }
+
     test("install a prebuilt launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 

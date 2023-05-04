@@ -8,6 +8,7 @@ import java.util.{Locale, UUID}
 import java.util.regex.Pattern
 import java.util.zip.ZipFile
 
+import scala.collection.JavaConverters._
 import scala.concurrent.duration.Duration
 import scala.io.{Codec, Source}
 import scala.util.Properties
@@ -16,12 +17,10 @@ import coursier.clitests.util.TestAuthProxy
 import coursier.dependencyString
 import utest._
 
-abstract class BootstrapTests extends TestSuite {
+abstract class BootstrapTests extends TestSuite with LauncherOptions {
 
   def launcher: String
   def assembly: String
-  def acceptsDOptions: Boolean = true
-  def acceptsJOptions: Boolean = true
 
   def overrideProguarded: Option[Boolean] =
     None
@@ -231,34 +230,32 @@ abstract class BootstrapTests extends TestSuite {
       }
     }
 
-    test("java.class.path property in expansion") {
+    test("java_class_path property in expansion") {
       TestUtil.withTempDir { tmpDir =>
-        LauncherTestUtil.run(
-          args = Seq(
-            launcher,
-            "bootstrap",
-            "-o",
-            "cs-props-1",
-            "--property",
-            "foo=${java.class.path}",
-            TestUtil.propsDepStr
-          ) ++ extraOptions,
-          directory = tmpDir
-        )
-        val output = LauncherTestUtil.output(
-          Seq("./cs-props-1", "foo"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
+        val pwd     = if (Properties.isWin) os.Path(os.pwd.toIO.getCanonicalFile) else os.pwd
+        val tmpDir0 = os.Path(if (Properties.isWin) tmpDir.getCanonicalFile else tmpDir, pwd)
+        os.proc(
+          LauncherTestUtil.adaptCommandName(launcher, tmpDir),
+          "bootstrap",
+          "-o",
+          "cs-props-1",
+          "--property",
+          "foo=${java.class.path}__${java.class.path}",
+          TestUtil.propsDepStr,
+          extraOptions
+        ).call(cwd = tmpDir0)
+        val output = os.proc(LauncherTestUtil.adaptCommandName("./cs-props-1", tmpDir), "foo")
+          .call(cwd = tmpDir0)
+          .out.text()
         if (Properties.isWin) {
-          val outputElems    = new File(tmpDir, "./cs-props-1").getCanonicalPath +: TestUtil.propsCp
-          val expectedOutput = outputElems.mkString(File.pathSeparator) + System.lineSeparator()
+          val outputElems =
+            ((tmpDir0 / "cs-props-1").toString +: TestUtil.propsCp).mkString(File.pathSeparator)
+          val expectedOutput = outputElems + "__" + outputElems + System.lineSeparator()
           assert(output.replace("\\\\", "\\") == expectedOutput)
         }
         else {
-          val expectedOutput =
-            ("./cs-props-1" +: TestUtil.propsCp).mkString(File.pathSeparator) +
-              System.lineSeparator()
+          val cp             = ("./cs-props-1" +: TestUtil.propsCp).mkString(File.pathSeparator)
+          val expectedOutput = cp + "__" + cp + System.lineSeparator()
           assert(output == expectedOutput)
         }
       }
@@ -363,27 +360,36 @@ abstract class BootstrapTests extends TestSuite {
       }
     }
 
-    test("hybrid with shared dep java.class.path") {
+    test("hybrid with shared dep java class path") {
       TestUtil.withTempDir { tmpDir =>
-        LauncherTestUtil.run(
-          args = Seq(
-            launcher,
-            "bootstrap",
-            "-o",
-            "cs-props-hybrid-shared",
-            TestUtil.propsDepStr,
-            "io.get-coursier:echo:1.0.2",
-            "--shared",
-            "io.get-coursier:echo",
-            "--hybrid"
-          ) ++ extraOptions,
-          directory = tmpDir
+        val tmpDir0 = os.Path(tmpDir, os.pwd)
+        os.proc(
+          LauncherTestUtil.adaptCommandName(launcher, tmpDir),
+          "bootstrap",
+          "-o",
+          "cs-props-hybrid-shared",
+          TestUtil.propsDepStr,
+          "io.get-coursier:echo:1.0.2",
+          "--shared",
+          "io.get-coursier:echo",
+          "--hybrid",
+          extraOptions
+        ).call(cwd = tmpDir0)
+
+        val zf = new ZipFile((tmpDir0 / "cs-props-hybrid-shared").toIO)
+        val nativeImageEntries = zf.entries()
+          .asScala
+          .filter(_.getName.startsWith("META-INF/native-image/"))
+          .toVector
+        zf.close()
+        assert(nativeImageEntries.isEmpty)
+
+        val output = os.proc(
+          LauncherTestUtil.adaptCommandName("./cs-props-hybrid-shared", tmpDir),
+          "java.class.path"
         )
-        val output = LauncherTestUtil.output(
-          Seq("./cs-props-hybrid-shared", "java.class.path"),
-          keepErrorOutput = false,
-          directory = tmpDir
-        )
+          .call(cwd = tmpDir0)
+          .out.text(Codec.default)
         if (Properties.isWin) {
           val expectedOutput =
             new File(tmpDir, "./cs-props-hybrid-shared").getCanonicalPath + System.lineSeparator()
@@ -393,6 +399,43 @@ abstract class BootstrapTests extends TestSuite {
           val expectedOutput = "./cs-props-hybrid-shared" + System.lineSeparator()
           assert(output == expectedOutput)
         }
+      }
+    }
+
+    test("hybrid with rules") {
+      TestUtil.withTempDir { tmpDir =>
+        val tmpDir0 = os.Path(tmpDir, os.pwd)
+
+        def generate(output: String, extraArgs: String*): Unit =
+          os.proc(
+            LauncherTestUtil.adaptCommandName(launcher, tmpDir),
+            "bootstrap",
+            "-o",
+            output,
+            TestUtil.propsDepStr,
+            "io.get-coursier:echo:1.0.2",
+            "--shared",
+            "io.get-coursier:echo",
+            "--hybrid",
+            extraArgs,
+            extraOptions
+          ).call(cwd = tmpDir0)
+
+        generate("base")
+        generate("with-rule", "-R", "exclude:coursier/echo/Echo.class")
+
+        def hasEchoEntry(output: String): Boolean = {
+          val zf = new ZipFile((tmpDir0 / output).toIO)
+          try
+            zf.entries()
+              .asScala
+              .exists(_.getName == "coursier/echo/Echo.class")
+          finally
+            zf.close()
+        }
+
+        assert(hasEchoEntry("base"))
+        assert(!hasEchoEntry("with-rule"))
       }
     }
 
@@ -1026,6 +1069,25 @@ abstract class BootstrapTests extends TestSuite {
             proc.destroyForcibly()
           }
         }
+      }
+    }
+
+    test("hybrid with coursier dependency") {
+      TestUtil.withTempDir("hybrid-cs") { tmpDir =>
+        os.proc(
+          launcher,
+          "bootstrap",
+          "--hybrid",
+          "sh.almond:::scala-kernel:0.13.6",
+          "--shared",
+          "sh.almond:::scala-kernel-api",
+          "-r",
+          "jitpack",
+          "--scala",
+          "2.12.17",
+          "-o",
+          "almond212"
+        ).call(cwd = os.Path(tmpDir, os.pwd))
       }
     }
   }

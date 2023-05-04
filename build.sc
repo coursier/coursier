@@ -116,7 +116,20 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
       `windows-ansi`.ps.sources()
   }
   def resources = T.sources {
-    super.resources() ++ directories.resources()
+    (super.resources() ++ directories.resources()).flatMap { ref =>
+      val dir = ref.path
+      if (os.exists(dir) && os.isDir(dir)) {
+        val nonIgnoredFiles = os.walk(dir)
+          .filter(os.isFile(_))
+          .map(_.relativeTo(dir))
+          .filter(!_.startsWith(os.sub / "META-INF" / "native-image"))
+        if (nonIgnoredFiles.isEmpty) Nil
+        else
+          sys.error(s"Resource directory $dir contains unexpected resources $nonIgnoredFiles")
+      }
+      else
+        Seq(ref)
+    }
   }
   def proguardClassPath = T {
     proguard.runClasspath()
@@ -543,6 +556,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     Deps.caseApp,
     Deps.catsCore,
     Deps.catsFree,
+    Deps.classPathUtil,
     Deps.dataClass,
     Deps.monadlessCats,
     Deps.monadlessStdlib,
@@ -636,6 +650,9 @@ trait CliTests extends CsModule with CoursierPublishModule { self =>
   }
   object `native-mostly-static-tests` extends NativeTests {
     def cliLauncher = cli.`mostly-static-image`.nativeImage
+  }
+  object `native-container-tests` extends NativeTests {
+    def cliLauncher = cli.containerImage
   }
 }
 
@@ -749,6 +766,15 @@ def copyMostlyStaticLauncher(directory: String = "artifacts") = T.command {
     nativeLauncher,
     os.Path(directory, os.pwd),
     suffix = "-mostly-static"
+  )
+}
+
+def copyContainerLauncher(directory: String = "artifacts") = T.command {
+  val nativeLauncher = cli.containerImage().path
+  ghreleaseassets.copyLauncher(
+    nativeLauncher,
+    os.Path(directory, os.pwd),
+    suffix = "-container"
   )
 }
 
@@ -982,6 +1008,10 @@ def nativeStaticTests() = T.command {
 
 def nativeMostlyStaticTests() = T.command {
   `cli-tests`.`native-mostly-static-tests`.test()()
+}
+
+def nativeContainerTests() = T.command {
+  `cli-tests`.`native-container-tests`.test()()
 }
 
 object ci extends Module {
