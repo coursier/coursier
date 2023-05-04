@@ -1090,5 +1090,90 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         ).call(cwd = os.Path(tmpDir, os.pwd))
       }
     }
+
+    test("jni-utils from bootstrap") {
+      if (Properties.isWin)
+        jniUtilFromBootstrapTest()
+      else
+        "disabled"
+    }
+
+    test("jni-utils from hybrid bootstrap") {
+      if (Properties.isWin)
+        jniUtilFromBootstrapTest("--hybrid")
+      else
+        "disabled"
+    }
+
+    test("jni-utils from standalone bootstrap") {
+      if (Properties.isWin)
+        jniUtilFromBootstrapTest("--standalone")
+      else
+        "disabled"
+    }
+
+    def jniUtilFromBootstrapTest(extraOpts: String*): Unit = {
+      TestUtil.withTempDir("jni-cs") { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0, os.pwd)
+
+        val repo        = tmpDir / "repo"
+        val appLauncher = tmpDir / "app"
+        val actualAppLauncher =
+          if (Properties.isWin) tmpDir / "app.bat"
+          else appLauncher
+
+        val appSource = tmpDir / "TestApp.scala"
+        os.write(
+          appSource,
+          """//> using scala "2.13.10"
+            |//> using lib "io.get-coursier.jniutils:windows-jni-utils:0.3.3"
+            |//> using publish.organization "io.get-coursier.tests"
+            |//> using publish.name "test-app"
+            |//> using publish.version "0.1.0"
+            |
+            |package testapp
+            |
+            |import coursier.jniutils.WindowsEnvironmentVariables
+            |
+            |object TestApp {
+            |  def main(args: Array[String]): Unit = {
+            |    val path = WindowsEnvironmentVariables.get("PATH")
+            |    System.err.println(s"PATH=$path")
+            |  }
+            |}
+            |""".stripMargin
+        )
+
+        os.proc(
+          TestUtil.scalaCli,
+          "--power",
+          "publish",
+          "--server=false",
+          "--publish-repo",
+          repo.toNIO.toUri.toASCIIString,
+          appSource
+        )
+          .call(cwd = tmpDir, stdin = os.Inherit, stdout = os.Inherit)
+
+        os.proc(
+          launcher,
+          "bootstrap",
+          "-r",
+          repo.toNIO.toUri.toASCIIString,
+          "io.get-coursier.tests::test-app:0.1.0",
+          "--scala",
+          "2.13.10",
+          "-o",
+          appLauncher,
+          extraOpts
+        ).call(cwd = tmpDir, stdin = os.Inherit, stdout = os.Inherit)
+
+        os.proc(actualAppLauncher)
+          .call(cwd = tmpDir, stdin = os.Inherit, stdout = os.Inherit)
+
+        os.proc("java", "-Dcoursier.jni.check.throw=true", "-jar", appLauncher)
+          .call(cwd = tmpDir, stdin = os.Inherit, stdout = os.Inherit)
+      }
+    }
   }
 }
