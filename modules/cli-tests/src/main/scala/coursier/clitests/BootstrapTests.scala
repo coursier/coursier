@@ -1170,6 +1170,9 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
 
         os.proc(actualAppLauncher)
           .call(cwd = tmpDir, stdin = os.Inherit, stdout = os.Inherit)
+
+        os.proc("java", "-Dcoursier.jni.check.throw=true", "-jar", appLauncher)
+          .call(cwd = tmpDir, stdin = os.Inherit, stdout = os.Inherit)
       }
     }
   }
