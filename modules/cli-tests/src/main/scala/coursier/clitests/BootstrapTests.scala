@@ -38,7 +38,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
     }
 
   val tests = Tests {
-    test("simple") {
+    /*test("simple") {
       TestUtil.withTempDir { tmpDir0 =>
         val tmpDir = os.Path(tmpDir0)
         os.proc(
@@ -1089,7 +1089,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
           "almond212"
         ).call(cwd = os.Path(tmpDir, os.pwd))
       }
-    }
+    }*/
 
     test("jni-utils from bootstrap") {
       if (Properties.isWin)

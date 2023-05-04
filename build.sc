@@ -951,10 +951,10 @@ def jvmTests(scalaVersion: String = "*") = {
 
   val nonCrossTests = Seq(
     // format: off
+    `cli-tests`          .test .test(),
     `bootstrap-launcher` .test .test(),
     `bootstrap-launcher` .it   .test(),
-    cli                  .test .test(),
-    `cli-tests`          .test .test()
+    cli                  .test .test()
     // format: on
   )
 
@@ -970,7 +970,7 @@ def jvmTests(scalaVersion: String = "*") = {
     if (scalaVersion == "*") ScalaVersions.all
     else Seq(scalaVersion)
 
-  val tasks = prerequisites ++ nonCrossTests ++
+  val tasks = nonCrossTests ++ prerequisites ++
     // extraTests ++ // disabled for now (issues on GitHub actions)
     scalaVersions.flatMap { sv =>
       crossTests(sv) ++ crossIts(sv)
