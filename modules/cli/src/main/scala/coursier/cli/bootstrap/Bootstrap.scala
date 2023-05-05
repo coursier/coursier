@@ -409,6 +409,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
             .withDisableJarChecking(params.specific.disableJarCheckingOpt)
             .withPython(params.sharedLaunch.python)
             .withPythonJep(params.sharedLaunch.pythonJep)
+            .withRules(params.specific.assemblyRules)
 
           if (params.sharedLaunch.python) {
             val task = Fetch.task(

@@ -78,23 +78,33 @@ object JsonReport {
     private def collapseNode[A: Show](node: DependencyTree[A]): Eval[Chain[String]] =
       node.foldMapM(child => Eval.now(Chain.one(child.show)))
 
-    // Builds a map of flattened dependencies starting at this element
-    // The implementation makes use of Cofree[List, T] which is a foldable co-monad
-    // and because of that, we can collapse it at each of its nodes and aggregate the results
     private def transitiveOf[A: Eq: Show](
       elem: A,
       fetchChildren: A => Seq[A]
-    ): Eval[Map[A, Chain[String]]] = {
-      // Create the DepTree structure by unfolding it starting at the element given
-      val zipper                     = TreeZipper.of(elem, fetchChildren)
-      val depTree: DependencyTree[A] = Cofree.ana(zipper)(_.children, _.focus)
-
-      // Fold the tail of the root into a chain of dependencies
-      // and them map the root element to the dependencies
-      // Using `Eval` here to do the fold so we convert the recursive operation into a stack-safe loop
-      depTree.tail
-        .flatMap(_.foldMapM(collapseNode[A]))
-        .map(deps => Map(depTree.head -> deps))
+    ): Eval[Map[A, Set[String]]] = {
+      val knownElems = new mutable.HashMap[String, mutable.Set[String]]
+      def collectDeps(
+        elem: A,
+        seen: mutable.Set[String]
+      ): mutable.Set[String] = {
+        val key = elem.show
+        if (seen.contains(key))
+          seen
+        else {
+          seen.add(key)
+          knownElems.get(key).getOrElse {
+            val deps = new mutable.HashSet[String]
+            knownElems.put(key, deps)
+            for (child <- fetchChildren(elem) if !seen.contains(child.show)) {
+              deps += child.show
+              deps ++= collectDeps(child, seen)
+            }
+            deps
+          }
+        }
+      }
+      val result = collectDeps(elem, new mutable.HashSet[String]).toSet[String]
+      Eval.now(Map(elem -> result))
     }
 
     def flatten[A](

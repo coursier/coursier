@@ -42,10 +42,16 @@ object Run extends CaseApp[RunOptions] {
 
     val launchTests = new LaunchTests {
       val launcher = options.launcher
+
+      def acceptsDOptions = true
+      def acceptsJOptions = true
     }
     val bootstrapTests = new BootstrapTests {
       val launcher = options.launcher
       val assembly = options.assembly
+
+      def acceptsDOptions = true
+      def acceptsJOptions = true
     }
     val fetchTests = new FetchTests {
       val launcher = options.launcher

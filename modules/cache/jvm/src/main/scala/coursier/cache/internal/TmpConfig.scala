@@ -75,8 +75,9 @@ object TmpConfig {
     private val codec: JsonValueCodec[List[AsJson]] =
       JsonCodecMaker.make
 
-    def prefix = Seq("repositories")
-    def name   = "credentials"
+    def prefix      = Seq("repositories")
+    def name        = "credentials"
+    def description = "Repository credentials"
 
     def parse(json: Array[Byte]): Either[Key.EntryError, List[DirectCredentials]] =
       try Right(readFromArray(json)(codec).map(_.credentials))

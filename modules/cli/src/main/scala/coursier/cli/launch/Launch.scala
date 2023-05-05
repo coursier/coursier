@@ -19,7 +19,13 @@ import coursier.env.EnvironmentUpdate
 import coursier.error.ResolutionError
 import coursier.install.{Channels, MainClass, RawAppDescriptor}
 import coursier.jvm.Execve
-import coursier.launcher.{BootstrapGenerator, ClassLoaderContent, ClassPathEntry, Parameters}
+import coursier.launcher.{
+  BootstrapGenerator,
+  ClassLoaderContent,
+  ClassPathEntry,
+  MergeRule,
+  Parameters
+}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.paths.Jep
 import coursier.util.{Artifact, Sync, Task}
@@ -54,7 +60,10 @@ object Launch extends CoursierCommand[LaunchOptions] {
     properties: Seq[(String, String)],
     extraEnv: EnvironmentUpdate,
     verbosity: Int,
-    execve: Option[Boolean]
+    execve: Option[Boolean],
+    hybrid: Boolean,
+    assemblyRules: Seq[MergeRule],
+    workDirOpt: Option[Path]
   ): Either[LaunchException, () => Int] = {
 
     val cp = hierarchy match {
@@ -63,20 +72,40 @@ object Launch extends CoursierCommand[LaunchOptions] {
       case _ =>
         val content = hierarchy.map {
           case (nameOpt, files) =>
-            val entries = files.toSeq.map(f => ClassPathEntry.Url(f.toURI.toASCIIString))
+            val entries = files.toSeq.map { f =>
+              if (hybrid)
+                ClassPathEntry.Resource(
+                  f.getName,
+                  f.lastModified(),
+                  Files.readAllBytes(f.toPath)
+                )
+              else {
+                val url = f.toURI.toASCIIString
+                ClassPathEntry.Url(url)
+              }
+            }
             ClassLoaderContent(entries, nameOpt.getOrElse(""))
         }
-        val tmpFile = Files.createTempFile("coursier-launch-", ".jar")
-        // not sure that will be fine if we use execve instead of ProcessBuilder
-        // (does the shutdown hook run deleting the file? or doesn't it, leaving junk behind?)
-        Runtime.getRuntime().addShutdownHook(
-          new Thread {
-            override def run(): Unit =
-              Files.deleteIfExists(tmpFile)
-          }
-        )
+        val tmpFile = workDirOpt match {
+          case Some(workDir) =>
+            Files.createDirectories(workDir)
+            Files.createTempFile(workDir, "coursier-launch-", ".jar")
+          case None =>
+            val f = Files.createTempFile("coursier-launch-", ".jar")
+            // not sure that will be fine if we use execve instead of ProcessBuilder
+            // (does the shutdown hook run deleting the file? or doesn't it, leaving junk behind?)
+            Runtime.getRuntime().addShutdownHook(
+              new Thread {
+                override def run(): Unit =
+                  Files.deleteIfExists(f)
+              }
+            )
+            f
+        }
         val bootstrapParams = Parameters.Bootstrap(content, mainClass)
           .withPreambleOpt(None)
+          .withHybridAssembly(hybrid)
+          .withRules(assemblyRules)
         BootstrapGenerator.generate(bootstrapParams, tmpFile)
         Left(tmpFile.toAbsolutePath.toFile)
     }
@@ -378,7 +407,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
       b.result()
     }
 
-    if (params.fork)
+    if (params.fork || params.hybrid)
       launchFork(
         hierarchy0,
         mainClass0,
@@ -388,7 +417,10 @@ object Launch extends CoursierCommand[LaunchOptions] {
         properties0,
         pythonJepEnv + extraEnv,
         params.shared.resolve.output.verbosity,
-        params.execve
+        params.execve,
+        params.hybrid,
+        params.assemblyRules,
+        params.workDir
       )
         .map(f => () => Some(f()))
     else
