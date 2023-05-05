@@ -8,7 +8,7 @@ import coursier.cli.fetch.FetchParams
 import coursier.cli.install.SharedChannelParams
 import coursier.cli.options.SharedLaunchOptions
 import coursier.cli.resolve.SharedResolveParams
-import coursier.cli.util.ClassPathUtil
+import coursier.cputil.ClassPathUtil
 
 final case class SharedLaunchParams(
   resolve: SharedResolveParams,
@@ -79,7 +79,7 @@ object SharedLaunchParams {
     }
 
     // check if those exist?
-    val extraJars = options.extraJars.flatMap(ClassPathUtil.classPath(_, sys.props.get))
+    val extraJars = options.extraJars.flatMap(ClassPathUtil.classPath(_))
 
     (resolveV, artifactV, sharedLoaderV, propertiesV).mapN {
       (resolve, artifact, sharedLoader, properties) =>

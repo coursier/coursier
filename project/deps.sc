@@ -5,8 +5,9 @@ object Deps {
   def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M24"
   def catsCore          = ivy"org.typelevel::cats-core:${Versions.cats}"
   def catsFree          = ivy"org.typelevel::cats-free:${Versions.cats}"
-  def catsEffect        = ivy"org.typelevel::cats-effect::3.4.8"
-  def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.9.0"
+  def catsEffect        = ivy"org.typelevel::cats-effect::3.4.10"
+  def classPathUtil     = ivy"io.get-coursier::class-path-util:0.1.2"
+  def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.10.0"
   def concurrentReferenceHashMap =
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
   def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.6"
@@ -25,7 +26,7 @@ object Deps {
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${Versions.jsoniterScala}"
   def jsoniterMacros =
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
-  def jsoup           = ivy"org.jsoup:jsoup:1.15.4"
+  def jsoup           = ivy"org.jsoup:jsoup:1.16.1"
   def logbackClassic  = ivy"ch.qos.logback:logback-classic:1.2.12"
   def macroParadise   = ivy"org.scalamacros:::paradise:2.1.1"
   def mdoc            = ivy"org.scalameta::mdoc:2.3.7"
@@ -41,7 +42,7 @@ object Deps {
   def proguard                 = ivy"com.guardsquare:proguard-base:7.3.2"
   def pythonNativeLibs         = ivy"ai.kien::python-native-libs:0.2.4"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
-  def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:0.2.0"
+  def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:0.2.1"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.4.0"
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.1"
   def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
@@ -73,6 +74,8 @@ def sbtCoursierVersion = "2.0.8"
 
 def graalVmVersion = "22.3.0"
 def graalVmJvmId   = s"graalvm-java17:$graalVmVersion"
+
+def scalaCliVersion = "1.0.0-RC1"
 
 // should be the default index in the upcoming coursier release (> 2.0.16)
 def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"

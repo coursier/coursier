@@ -1,5 +1,6 @@
 import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
-import $file.project.deps, deps.{Deps, ScalaVersions}
+import $ivy.`io.get-coursier.util::get-cs:0.1.1`
+import $file.project.deps, deps.{Deps, ScalaVersions, scalaCliVersion}
 import $file.project.docs
 import $file.project.ghreleaseassets
 import $file.project.launchers, launchers.{Launchers, platformBootstrapExtension}
@@ -30,6 +31,8 @@ import $file.project.publishing, publishing.mavenOrg
 import $file.project.relativize, relativize.{relativize => doRelativize}
 import $file.project.sync
 import $file.project.workers
+
+import _root_.coursier.getcs.GetCs
 
 import mill._
 import mill.scalalib._
@@ -556,6 +559,7 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
     Deps.caseApp,
     Deps.catsCore,
     Deps.catsFree,
+    Deps.classPathUtil,
     Deps.dataClass,
     Deps.monadlessCats,
     Deps.monadlessStdlib,
@@ -608,12 +612,15 @@ trait CliTests extends CsModule with CoursierPublishModule { self =>
     Deps.ujson,
     Deps.utest
   )
+  private def sharedTestArgs = Seq(
+    s"-Dcoursier-test.scala-cli=${GetCs.scalaCli(scalaCliVersion)}"
+  )
   object test extends Tests with CsTests {
     def forkArgs = {
       val launcherTask = cli.launcher.map(_.path)
       val assemblyTask = cli.assembly.map(_.path)
       T {
-        super.forkArgs() ++ Seq(
+        super.forkArgs() ++ sharedTestArgs ++ Seq(
           s"-Dcoursier-test-launcher=${launcherTask()}",
           s"-Dcoursier-test-assembly=${assemblyTask()}",
           "-Dcoursier-test-launcher-accepts-D=false",
@@ -632,7 +639,7 @@ trait CliTests extends CsModule with CoursierPublishModule { self =>
       val launcherTask = cliLauncher.map(_.path)
       T {
         val launcher = launcherTask()
-        super.forkArgs() ++ Seq(
+        super.forkArgs() ++ sharedTestArgs ++ Seq(
           s"-Dcoursier-test-launcher=$launcher",
           s"-Dcoursier-test-assembly=$launcher",
           "-Dcoursier-test-launcher-accepts-D=false",
