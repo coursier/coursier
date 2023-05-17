@@ -54,6 +54,14 @@ final case class LaunchOptions(
 
   @Group(OptionGroup.launch)
   @Hidden
+  @Help(
+    "Launch app using a temporary bootstrap launcher with hard-coded URLs, that is lightweight and can be copied to other machines. " +
+    "This can be useful if the app inspects its class path, and copies the launcher somewhere else."
+  )
+    useBootstrap: Boolean = false,
+
+  @Group(OptionGroup.launch)
+  @Hidden
   @Value("append:$path|append-pattern:$pattern|exclude:$path|exclude-pattern:$pattern")
   @Short("R")
   @Help("Assembly rules to use to launch an app with a shared loader, if a hybrid launcher is being used (see --hybrid)")

@@ -192,10 +192,10 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
         val suffix = if (idx == len - 1) "" else "-" + (idx + 1)
 
         // really needed to sort here?
-        putStringEntry(resourceDir + s"$name-jar-urls" + suffix, urls.sorted.mkString("\n"))
+        putStringEntry(resourceDir + s"$name-jar-urls" + suffix, urls.mkString("\n"))
         putStringEntry(
           resourceDir + s"$name-jar-resources" + suffix,
-          resources.sorted.mkString("\n")
+          resources.mkString("\n")
         )
 
         if (c.loaderName.nonEmpty)

@@ -760,7 +760,7 @@ object InstallTests extends TestSuite {
       test("windows") - run("windows", "x86_64")
     }
 
-    test("install, override and update scalac") {
+    test("install and override and update scalac") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
         val id = "scalac"
         val versionOverride =
@@ -806,9 +806,9 @@ object InstallTests extends TestSuite {
 
         val scala3CompilerJars =
           Seq(
-            "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.6/scala-library-2.13.6.jar",
             "https://repo1.maven.org/maven2/org/scala-lang/scala3-compiler_3/3.0.1/scala3-compiler_3-3.0.1.jar",
-            "https://repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.0.1/scala3-library_3-3.0.1.jar"
+            "https://repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.0.1/scala3-library_3-3.0.1.jar",
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.6/scala-library-2.13.6.jar"
           )
         val scala3Properties =
           Seq(
