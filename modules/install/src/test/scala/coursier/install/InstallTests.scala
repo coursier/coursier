@@ -760,7 +760,7 @@ object InstallTests extends TestSuite {
       test("windows") - run("windows", "x86_64")
     }
 
-    test("install, override and update scalac") {
+    test("install and override and update scalac") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
         val id = "scalac"
         val versionOverride =
