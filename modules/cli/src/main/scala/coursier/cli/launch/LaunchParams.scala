@@ -21,6 +21,7 @@ final case class LaunchParams(
   fetchCacheIKnowWhatImDoing: Option[String],
   execve: Option[Boolean],
   hybrid: Boolean,
+  useBootstrap: Boolean,
   assemblyRules: Seq[MergeRule],
   workDir: Option[Path]
 ) {
@@ -90,6 +91,7 @@ object LaunchParams {
         options.fetchCacheIKnowWhatImDoing,
         options.execve,
         options.hybrid,
+        options.useBootstrap,
         prependRules ++ rules,
         options.workDir
           .filter(_.trim.nonEmpty)

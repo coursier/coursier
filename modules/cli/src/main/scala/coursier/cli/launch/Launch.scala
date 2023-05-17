@@ -62,12 +62,13 @@ object Launch extends CoursierCommand[LaunchOptions] {
     verbosity: Int,
     execve: Option[Boolean],
     hybrid: Boolean,
+    useBootstrap: Boolean,
     assemblyRules: Seq[MergeRule],
     workDirOpt: Option[Path]
   ): Either[LaunchException, () => Int] = {
 
     val cp = hierarchy match {
-      case Seq((None, files)) =>
+      case Seq((None, files)) if !useBootstrap =>
         Right(files.map(_._2.getAbsolutePath).mkString(File.pathSeparator))
       case _ =>
         val content = hierarchy.map {
@@ -419,7 +420,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
       b.result()
     }
 
-    if (params.fork || params.hybrid)
+    if (params.fork || params.hybrid || params.useBootstrap)
       launchFork(
         hierarchy0,
         mainClass0,
@@ -431,6 +432,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
         params.shared.resolve.output.verbosity,
         params.execve,
         params.hybrid,
+        params.useBootstrap,
         params.assemblyRules,
         params.workDir
       )
