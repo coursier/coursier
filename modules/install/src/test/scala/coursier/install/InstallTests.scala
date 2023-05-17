@@ -806,9 +806,9 @@ object InstallTests extends TestSuite {
 
         val scala3CompilerJars =
           Seq(
-            "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.6/scala-library-2.13.6.jar",
             "https://repo1.maven.org/maven2/org/scala-lang/scala3-compiler_3/3.0.1/scala3-compiler_3-3.0.1.jar",
-            "https://repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.0.1/scala3-library_3-3.0.1.jar"
+            "https://repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.0.1/scala3-library_3-3.0.1.jar",
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.6/scala-library-2.13.6.jar"
           )
         val scala3Properties =
           Seq(
