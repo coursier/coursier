@@ -34,7 +34,7 @@ object Deps {
   def monadlessStdlib = ivy"io.monadless::monadless-stdlib:${Versions.monadless}"
   def noCrcZis        = ivy"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
   def osLib           = ivy"com.lihaoyi::os-lib:0.9.1"
-  def plexusArchiver  = ivy"org.codehaus.plexus:plexus-archiver:4.6.3"
+  def plexusArchiver  = ivy"org.codehaus.plexus:plexus-archiver:4.7.1"
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
