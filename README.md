@@ -1,4 +1,5 @@
 # Coursier
+# 打包：mill -i cli.assembly
 
 [![Build status](https://github.com/coursier/coursier/workflows/CI/badge.svg)](https://github.com/coursier/coursier/actions?query=workflow%3ACI)
 [![Join the chat at https://gitter.im/coursier/coursier](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/coursier/coursier?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
