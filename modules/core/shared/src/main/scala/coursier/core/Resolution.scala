@@ -337,8 +337,8 @@ object Resolution {
           // way of distinguishing empty exclusions from no exclusion section and optional set to
           // false from no optional section in the dependency management for now.
 
-          if (dep.exclusions.isEmpty)
-            dep = dep.withExclusions(mgmtDep.exclusions)
+          if (dep.minimizedExclusions.isEmpty)
+            dep = dep.withMinimizedExclusions(mgmtDep.minimizedExclusions)
 
           if (mgmtDep.optional)
             dep = dep.withOptional(mgmtDep.optional)
@@ -537,7 +537,7 @@ object Resolution {
         withProperties(project0.dependencies, properties),
         withProperties(project0.dependencyManagement, properties)
       ),
-      from.exclusions
+      from.minimizedExclusions.toSet()
     )
       .flatMap {
         case (config0, dep0) =>

@@ -78,7 +78,7 @@ import MinimizedExclusions._
     "This method will be dropped in favor of minimizedExclusions() in a future version",
     "2.1.0-M6"
   )
-  def exclusions(): Set[(Organization, ModuleName)] = minimizedExclusions.toSet
+  def exclusions(): Set[(Organization, ModuleName)] = minimizedExclusions.toSet()
 
   private[core] def copy(
     module: Module = this.module,
@@ -99,7 +99,7 @@ import MinimizedExclusions._
   )
 
   lazy val clearExclusions: Dependency =
-    withExclusions(Exclusions.zero)
+    withMinimizedExclusions(MinimizedExclusions.zero)
 
   // Overriding toString to be backwards compatible with Set-based exclusion representation
   override def toString(): String = {
@@ -107,7 +107,7 @@ import MinimizedExclusions._
       module.toString,
       version.toString,
       configuration.toString,
-      exclusions.toString,
+      minimizedExclusions.toString,
       publication.toString,
       optional.toString,
       transitive.toString

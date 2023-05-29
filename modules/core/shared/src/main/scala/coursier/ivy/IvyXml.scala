@@ -197,7 +197,7 @@ object IvyXml {
         .mapValues(_.map(_._2).toSet)
         .toMap
       val filter = {
-        val filters       = globalExcludes.view.mapValues(set => Exclusions(set)).toMap
+        val filters       = globalExcludes.view.mapValues(set => MinimizedExclusions(set)).toMap
         val allConfFilter = filters.get(Configuration.all)
         (conf: Configuration, org: Organization, name: ModuleName) =>
           allConfFilter.forall(_(org, name)) && {

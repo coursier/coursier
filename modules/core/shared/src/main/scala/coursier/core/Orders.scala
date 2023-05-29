@@ -176,7 +176,7 @@ object Orders {
       .groupBy(dep => (dep.optional, dep.configuration))
       .mapValues { deps =>
         deps.head.withExclusions(deps.foldLeft(Exclusions.one)((acc, dep) =>
-          Exclusions.meet(acc, dep.exclusions)
+          Exclusions.meet(acc, dep.minimizedExclusions.toSet())
         ))
       }
       .toList
@@ -187,7 +187,10 @@ object Orders {
         optCmp   <- optionalPartialOrder.tryCompare(xOpt, yOpt).iterator
         scopeCmp <- configurationPartialOrder0(configs).tryCompare(xScope, yScope).iterator
         if optCmp * scopeCmp >= 0
-        exclCmp <- exclusionsPartialOrder.tryCompare(xDep.exclusions, yDep.exclusions).iterator
+        exclCmp <- exclusionsPartialOrder.tryCompare(
+          xDep.minimizedExclusions.toSet(),
+          yDep.minimizedExclusions.toSet()
+        ).iterator
         if optCmp * exclCmp >= 0
         if scopeCmp * exclCmp >= 0
         xIsMin = optCmp < 0 || scopeCmp < 0 || exclCmp < 0

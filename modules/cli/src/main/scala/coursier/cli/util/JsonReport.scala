@@ -199,7 +199,7 @@ final case class JsonElem(
   lazy val reconciledVersionStr = Symbol(s"${dep.mavenPrefix}:$reconciledVersion").name
   val requestedVersionStr       = Symbol(s"${dep.module}:${dep.version}").name
 
-  lazy val exclusions: Set[String] = dep.exclusions.map {
+  lazy val exclusions: Set[String] = dep.minimizedExclusions.toSet().map {
     case (org, name) =>
       s"${org.value}:${name.value}"
   }
@@ -221,7 +221,7 @@ final case class JsonElem(
 
       def calculateExclusions = resolution
         .dependenciesOf(
-          dep.withExclusions(Set.empty),
+          dep.withMinimizedExclusions(MinimizedExclusions.zero),
           withRetainedVersions = false
         )
         .view
@@ -234,7 +234,7 @@ final case class JsonElem(
             JsonElem(
               Dependency(mod, ver)
                 .withConfiguration(Configuration.empty)
-                .withExclusions(Set.empty[(Organization, ModuleName)])
+                .withMinimizedExclusions(MinimizedExclusions.zero)
                 .withAttributes(Attributes.empty)
                 .withOptional(false)
                 .withTransitive(false),
