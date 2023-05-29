@@ -10,6 +10,7 @@ import coursier.cli.channel.Channel
 import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.setup.MaybeSetupPath
 import coursier.cli.Util.ValidatedExitOnError
+import coursier.env.ShellUtil
 import coursier.install.{Channels, InstallDir, RawSource}
 import coursier.install.error.InstallDirException
 import coursier.launcher.internal.Windows
