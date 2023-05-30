@@ -1,0 +1,233 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>install · Coursier</title><meta name="viewport" content="width=device-width"/><meta name="generator" content="Docusaurus"/><meta name="description" content="&lt;p&gt;The &lt;code&gt;install&lt;/code&gt; command installs Scala applications in the&lt;/p&gt;
+"/><meta name="docsearch:version" content="2.1.3"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="install · Coursier"/><meta property="og:type" content="website"/><meta property="og:url" content="https://get-coursier.io/"/><meta property="og:description" content="&lt;p&gt;The &lt;code&gt;install&lt;/code&gt; command installs Scala applications in the&lt;/p&gt;
+"/><meta name="twitter:card" content="summary"/><link rel="shortcut icon" href="/undefined"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><link rel="alternate" type="application/atom+xml" href="https://get-coursier.io/blog/atom.xml" title="Coursier Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://get-coursier.io/blog/feed.xml" title="Coursier Blog RSS Feed"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><h2 class="headerTitle">Coursier</h2></a><a href="/versions"><h3>2.1.3</h3></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/docs/2.1.3/overview" target="_self">Docs</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li><li class=""><a href="https://github.com/coursier/coursier" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="container docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Command-line</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Intro</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/2.1.3/overview">Overview</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Command-line</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/2.1.3/cli-overview">Overview</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/cli-installation">Installation</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/2.1.3/cli-install">install</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/cli-launch">launch</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/cli-bootstrap">bootstrap</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/cli-java">java</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/cli-resolve">resolve</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/cli-fetch">fetch</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/cli-complete">complete-dep</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/cli-setup">setup</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/cli-appdescriptors">Application descriptors</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Motivation</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/2.1.3/overview-motivations">Motivations</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/overview-in-the-wild">Users</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">sbt plugins</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/2.1.3/sbt-coursier">sbt-coursier</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/sbt-pgp-coursier">sbt-pgp-coursier</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">API</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/2.1.3/api">API</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/api-low-level">Low-level API</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/api-scala-js">Scala.js</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Other</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/2.1.3/cache">Cache</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/ttl">TTL</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/other-repositories">Repositories</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/other-credentials">Credentials</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/other-proxy">Proxy</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/json-report">JSON report</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/extra">Extra</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/limitations">Limitations</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/other-version-handling">Version handling</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/faq">FAQ</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Development</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/2.1.3/dev-contributing">Contributing</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.3/dev-website">Website</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              const headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                if (event.target.tagName === 'A') {
+                  document.body.classList.remove('tocActive');
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer"><div class="wrapper"><div class="post"><header class="postHeader"><a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/master/doc/docs/cli-install.md" target="_blank" rel="noreferrer noopener">Edit</a><h1 class="postHeaderTitle">install</h1></header><article><div><span><p>The <code>install</code> command installs Scala applications in the
+<a href="#installation-directory">installation directory</a>
+configured when installing <code>cs</code> (<code>~/.local/share/coursier/bin</code> by default on Linux):</p>
+<pre><code class="hljs css language-bash">$ cs install scalafmt
+$ scalafmt --version
+scalafmt 3.0.6
+</code></pre>
+<p>You may give a specific version number as follows:</p>
+<pre><code class="hljs css language-bash">$ cs install scalafmt:2.4.2
+$ scalafmt --version
+scalafmt 2.4.2
+</code></pre>
+<p>This can be used to install a specific version of Scala itself:</p>
+<pre><code class="hljs css language-bash">$ cs install scala:2.12.15 scalac:2.12.15
+$ scala -version
+Scala code runner version 2.12.15 -- Copyright 2002-2021, LAMP/EPFL and Lightbend, Inc.
+</code></pre>
+<p>If the installation directory is not already on your <code>PATH</code>, you may add it for the current session with</p>
+<pre><code class="hljs css language-bash">$ <span class="hljs-built_in">eval</span> <span class="hljs-string">"<span class="hljs-variable">$(cs install --env)</span>"</span> <span class="hljs-comment"># add installation directory in PATH in the current session</span>
+</code></pre>
+<p><a href="#search">The <code>search</code> command</a> can help you find the application you are looking for:</p>
+<pre><code class="hljs css language-bash">$ cs search fmt
+scalafmt
+</code></pre>
+<p><a href="#update">The <code>update</code> command</a> updates installed applications if newer versions are available:</p>
+<pre><code class="hljs css language-bash">$ cs update scala
+</code></pre>
+<p>Running <code>cs update</code> with no argument updates all the installed applications:</p>
+<pre><code class="hljs css language-bash">$ cs update
+</code></pre>
+<p><a href="#uninstall">The <code>uninstall</code> command</a> allows to uninstall it:</p>
+<pre><code class="hljs css language-bash">$ cs uninstall scala
+$ scala
+scala: <span class="hljs-built_in">command</span> not found
+</code></pre>
+<p><a href="#list">The <code>list</code> command</a> allows you to view all of your currently installed
+applications:</p>
+<pre><code class="hljs css language-bash">$ cs list
+amm
+coursier
+cs
+sbt
+sbtn
+scala
+scalac
+scalafmt
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="java-options"></a><a href="#java-options" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Java Options</h2>
+<p>One can pass Java arguments to the installed applications:</p>
+<ul>
+<li>by prefixing Java options with <code>-J</code>, and / or</li>
+<li>by setting the <code>JAVA_OPTS</code> environment variable.</li>
+</ul>
+<p>For example</p>
+<pre><code class="hljs css language-text">$ cs install scala
+$ scala -J-Xmx2g -J-Dfoo=bar -J-Dvalue=123
+…
+scala> sys.props("foo")
+val res0: String = bar
+…
+$ JAVA_OPTS="-Xmx2g -Dfoo=bar -Dvalue=123" scala
+…
+scala> sys.props("value")
+val res0: String = 123
+…
+</code></pre>
+<p>Both kinds of options can be mixed, like</p>
+<pre><code class="hljs css language-text">$ JAVA_OPTS="-Xmx2g -Dfoo=bar" scala -J-Dvalue=123
+…
+scala> sys.props("foo")
+val res0: String = bar
+
+scala> sys.props("value")
+val res1: String = 123
+…
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="search"></a><a href="#search" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Search</h2>
+<p>Search for the application you are looking for with <code>cs search</code>:</p>
+<pre><code class="hljs css language-bash">$ cs search fmt
+scalafmt
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="update"></a><a href="#update" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Update</h2>
+<p>Update specific applications with <code>cs update</code>, like</p>
+<pre><code class="hljs css language-bash">$ cs update coursier
+</code></pre>
+<p>Update all installed applications at once with</p>
+<pre><code class="hljs css language-bash">$ cs update
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="uninstall"></a><a href="#uninstall" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Uninstall</h2>
+<p>The <code>uninstall</code> command uninstalls applications previously installed
+by the <code>install</code> command.</p>
+<p>Pass it the application names of applications to uninstall, like</p>
+<pre><code class="hljs css language-bash">$ cs uninstall scala scalac
+</code></pre>
+<p>It also accepts a <code>--all</code> option to uninstall all applications
+from the installation directory.</p>
+<pre><code class="hljs css language-bash">$ cs uninstall --all
+</code></pre>
+<blockquote>
+<p>The above command uninstalls <code>cs</code> itself as well!
+If you need to reinstall it, use the <a href="/docs/2.1.3/cli-installation">installation instructions</a> again.</p>
+</blockquote>
+<p>Note that the <code>uninstall</code> command only uninstalls applications previously
+installed by the <code>install</code> command, not files put in the installation
+directory by other means. It checks if a file was installed by
+the <code>install</code> command by looking for <a href="/docs/2.1.3/cli-appdescriptors#application-metadata">its metadata</a> in it.</p>
+<p>Note also that some applications have a different name when installed
+and when used and uninstalled:</p>
+<pre><code class="hljs css language-bash">$ cs install ammonite
+$ amm
+…
+$ cs uninstall amm <span class="hljs-comment"># ammonite is installed as "amm"</span>
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="list"></a><a href="#list" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>List</h2>
+<p>The <code>list</code> command lists all the installed applications. By default this will
+list the applications in your <a href="#installation-directory">default installation
+directory</a>. However, you can explicitly provide a
+different directory with the <code>--dir</code> flag if you have your install directory in
+a custom location.</p>
+<pre><code class="hljs css language-bash">$ cs list --dir /myCustomDirectory
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="channels"></a><a href="#channels" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Channels</h2>
+<p>Application descriptors are pulled via &quot;channels&quot;: repositories listing available applications and how they must be installed.</p>
+<p>By default, coursier uses the Main channel <code>io.get-coursier:apps</code>.
+It can be disabled with the <code>--default-channels=false</code> option.</p>
+<p>There also exists a Contrib channel <code>io.get-coursier:apps-contrib</code>, which is not used by default, and can be enabled with <code>--contrib</code>.
+For example:</p>
+<pre><code class="hljs css language-bash">$ cs install --contrib proguard
+</code></pre>
+<p>Both of those are <a href="https://github.com/coursier/apps">defined on GitHub</a>, where you can see the full list of applications that they contain.
+Feel free to send pull requests to add applications to the Contrib channel.</p>
+<p>Custom channels can be provided with <code>--channel &lt;custom-channel&gt;</code>.
+This is useful if you <a href="/docs/2.1.3/cli-appdescriptors">create your own application descriptors</a>.</p>
+<h2><a class="anchor" aria-hidden="true" id="installation-directory"></a><a href="#installation-directory" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Installation directory</h2>
+<p>Applications are installed in OS-specific directories.
+These respect the
+<a href="https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html">&quot;XDG Base directory specification&quot;</a>
+on Linux.</p>
+<p>The default application directory is:</p>
+<ul>
+<li>Linux: <code>~/.local/share/coursier/bin</code></li>
+<li>macOS: <code>~/Library/Application Support/Coursier/bin</code></li>
+<li>Windows:</li>
+</ul>
+<p>The actual installation directory is computed via:</p>
+<ul>
+<li>the <code>COURSIER_BIN_DIR</code> environment variable if it's defined, else</li>
+<li>the <code>COURSIER_INSTALL_DIR</code> environment variable if it's defined, else</li>
+<li>the <code>coursier.install.dir</code> Java property if it's defined,</li>
+<li>else, the default OS-specific directory above is used.</li>
+</ul>
+<p>Note that the <code>install</code>, <code>update</code>, <code>uninstall</code>, and <code>setup</code> commands also
+accept a directory via <code>--dir</code> or <code>--install-dir</code>, like</p>
+<pre><code class="hljs css language-bash">$ cs install ammonite --install-dir <span class="hljs-built_in">test</span>-install-dir
+$ <span class="hljs-built_in">test</span>-install-dir/ammonite
+…
+</code></pre>
+<p>The directory passed this way takes precedence over the ones above.</p>
+<p>One can run <code>cs install --setup</code> to <a href="https://get-coursier.io/docs/cli-installation.html#how-it-sets-environment-variables-globally">update</a>
+profile files (Linux / macOS) or user environment variables (Windows),
+to add the installation directory to <code>PATH</code>.</p>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/2.1.3/cli-installation"><span class="arrow-prev">← </span><span>Installation</span></a><a class="docs-next button" href="/docs/2.1.3/cli-launch"><span>launch</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#java-options">Java Options</a></li><li><a href="#search">Search</a></li><li><a href="#update">Update</a></li><li><a href="#uninstall">Uninstall</a></li><li><a href="#list">List</a></li><li><a href="#channels">Channels</a></li><li><a href="#installation-directory">Installation directory</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><h2><a href="/" class="nav-home">Coursier</a></h2><div><h5><a href="/docs/overview">Docs</a></h5><a href="/docs/overview">Overview</a><a href="/docs/cli-installation">Install CLI</a><a href="/docs/sbt-coursier">Setup sbt</a><a href="/docs/api">Use the API</a></div><div><h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5><a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"/></a><a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"/></a></div></section><section class="copyright">Copyright © 2023 coursier contributors</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
+                indexName: 'get-coursier',
+                inputSelector: '#search_input_react',
+                algoliaOptions: {}
+              });
+            </script></body></html>
