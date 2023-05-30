@@ -204,7 +204,7 @@ object TestHelpers extends PlatformTestHelpers {
       params,
       mainArtifactsPart + classifiersPart + artifactTypesPart + extraKeyPart
     ) {
-      artifacts.map(_.url)
+      artifacts.map(_.url).distinct
     }
   }
 
