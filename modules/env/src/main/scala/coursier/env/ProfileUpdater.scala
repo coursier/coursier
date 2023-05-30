@@ -6,6 +6,7 @@ import java.nio.file.{Files, Path, Paths}
 
 import dataclass.data
 import java.nio.file.FileAlreadyExistsException
+import java.nio.file.FileSystemException
 
 @data class ProfileUpdater(
   home: Option[Path] = ProfileUpdater.defaultHome,
@@ -15,14 +16,15 @@ import java.nio.file.FileAlreadyExistsException
 ) extends EnvVarUpdater {
 
   def profileFiles(): Seq[Path] =
-    ShellUtil.shell match {
+    ShellUtil.shell(getEnv) match {
       case Some(Shell.Fish) =>
         val fishConfig = getEnv.flatMap(_("XDG_CONFIG_HOME"))
           .map(Paths.get(_))
-          .getOrElse(Paths.get(System.getProperty("user.home")).resolve(".config"))
-          .resolve("fish")
-          .resolve("config.fish")
-        Seq(fishConfig)
+          .orElse(home)
+          .toSeq
+          .map(_.resolve(".config/fish/config.fish"))
+
+        fishConfig
 
       case _ =>
         // https://github.com/rust-lang/rustup.rs/blob/15db63918b9a2b11c302e30b97bf9448e2abd3b9/src/cli/self_update.rs#L1067
@@ -151,7 +153,7 @@ import java.nio.file.FileAlreadyExistsException
   }
 
   private def contentFor(update: EnvironmentUpdate): String =
-    ShellUtil.shell match {
+    ShellUtil.shell(getEnv) match {
       case Some(Shell.Fish) =>
         val set = update
           .set

@@ -145,7 +145,7 @@ object Java extends CoursierCommand[JavaOptions] {
           if (params.env.windowsScript)
             coursier.jvm.JavaHome.finalBatScript(envUpdate)
           else
-            ShellUtil.shell match {
+            ShellUtil.shell() match {
               case Some(Shell.Fish) => coursier.jvm.JavaHome.finalFishScript(envUpdate)
               case _                => coursier.jvm.JavaHome.finalBashScript(envUpdate)
             }
@@ -156,7 +156,7 @@ object Java extends CoursierCommand[JavaOptions] {
           if (params.env.windowsScript)
             coursier.jvm.JavaHome.disableBatScript()
           else
-            ShellUtil.shell match {
+            ShellUtil.shell() match {
               case Some(Shell.Fish) => coursier.jvm.JavaHome.disableFishScript()
               case _                => coursier.jvm.JavaHome.disableBashScript()
             }
