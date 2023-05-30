@@ -1,7 +1,6 @@
 [submodule "tests/metadata"]
 	path = modules/tests/metadata
 	url = https://github.com/coursier/test-metadata.git
-	branch = failure-isnt-optional
 [submodule "modules/directories"]
 	path = modules/directories
 	url = https://github.com/coursier/directories-jvm.git
