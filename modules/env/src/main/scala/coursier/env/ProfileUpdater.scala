@@ -6,6 +6,7 @@ import java.nio.file.{Files, Path, Paths}
 
 import dataclass.data
 import java.nio.file.FileAlreadyExistsException
+import java.nio.file.FileSystemException
 
 @data class ProfileUpdater(
   home: Option[Path] = ProfileUpdater.defaultHome,
@@ -14,33 +15,43 @@ import java.nio.file.FileAlreadyExistsException
   pathSeparator: String = File.pathSeparator
 ) extends EnvVarUpdater {
 
-  def profileFiles(): Seq[Path] = {
+  def profileFiles(): Seq[Path] =
+    ShellUtil.shell(getEnv) match {
+      case Some(Shell.Fish) =>
+        val fishConfig = getEnv.flatMap(_("XDG_CONFIG_HOME"))
+          .map(Paths.get(_))
+          .orElse(home)
+          .toSeq
+          .map(_.resolve(".config/fish/config.fish"))
 
-    // https://github.com/rust-lang/rustup.rs/blob/15db63918b9a2b11c302e30b97bf9448e2abd3b9/src/cli/self_update.rs#L1067
+        fishConfig
 
-    val main = home.toSeq.map(_.resolve(".profile"))
+      case _ =>
+        // https://github.com/rust-lang/rustup.rs/blob/15db63918b9a2b11c302e30b97bf9448e2abd3b9/src/cli/self_update.rs#L1067
 
-    val zprofile = {
-      val isZsh = getEnv.flatMap(_("SHELL")).exists(_.contains("zsh"))
-      if (isZsh) {
-        val zDotDirOpt = getEnv.flatMap { getEnv0 =>
-          getEnv0("ZDOTDIR")
-            .flatMap(dir => home.map(_.getFileSystem().getPath(dir)))
-            .orElse(home)
+        val main = home.toSeq.map(_.resolve(".profile"))
+
+        val zprofile = {
+          val isZsh = getEnv.flatMap(_("SHELL")).exists(_.contains("zsh"))
+          if (isZsh) {
+            val zDotDirOpt = getEnv.flatMap { getEnv0 =>
+              getEnv0("ZDOTDIR")
+                .flatMap(dir => home.map(_.getFileSystem().getPath(dir)))
+                .orElse(home)
+            }
+            zDotDirOpt.toSeq.map(_.resolve(".zprofile"))
+          }
+          else
+            Nil
         }
-        zDotDirOpt.toSeq.map(_.resolve(".zprofile"))
-      }
-      else
-        Nil
+
+        val bashProfile = home
+          .map(_.resolve(".bash_profile"))
+          .filter(Files.isRegularFile(_))
+          .toSeq
+
+        main ++ zprofile ++ bashProfile
     }
-
-    val bashProfile = home
-      .map(_.resolve(".bash_profile"))
-      .filter(Files.isRegularFile(_))
-      .toSeq
-
-    main ++ zprofile ++ bashProfile
-  }
 
   private def startEndIndices(start: String, end: String, content: String): Option[(Int, Int)] = {
     val startIdx = content.indexOf(start)
@@ -141,28 +152,48 @@ import java.nio.file.FileAlreadyExistsException
     updatedSomething
   }
 
-  private def contentFor(update: EnvironmentUpdate): String = {
+  private def contentFor(update: EnvironmentUpdate): String =
+    ShellUtil.shell(getEnv) match {
+      case Some(Shell.Fish) =>
+        val set = update
+          .set
+          .map {
+            case (k, v) =>
+              s"""set -gx $k "${v.replace("\"", "\\\"")}"""" + "\n"
+          }
+          .mkString
 
-    val set = update
-      .set
-      .map {
-        case (k, v) =>
-          // FIXME Needs more escaping?
-          s"""export $k="${v.replace("\"", "\\\"")}"""" + "\n"
-      }
-      .mkString
+        val updates = update
+          .pathLikeAppends
+          .map {
+            case (k, v) =>
+              s"""set -gx $k "$$$k$pathSeparator${v.replace("\"", "\\\"")}"""" + "\n"
+          }
+          .mkString
 
-    val updates = update
-      .pathLikeAppends
-      .map {
-        case (k, v) =>
-          // FIXME Needs more escaping?
-          s"""export $k="$$$k$pathSeparator${v.replace("\"", "\\\"")}"""" + "\n"
-      }
-      .mkString
+        set + updates
 
-    set + updates
-  }
+      case _ =>
+        val set = update
+          .set
+          .map {
+            case (k, v) =>
+              // FIXME Needs more escaping?
+              s"""export $k="${v.replace("\"", "\\\"")}"""" + "\n"
+          }
+          .mkString
+
+        val updates = update
+          .pathLikeAppends
+          .map {
+            case (k, v) =>
+              // FIXME Needs more escaping?
+              s"""export $k="$$$k$pathSeparator${v.replace("\"", "\\\"")}"""" + "\n"
+          }
+          .mkString
+
+        set + updates
+    }
 
   def applyUpdate(update: EnvironmentUpdate): Boolean =
     applyUpdate(update, None)
