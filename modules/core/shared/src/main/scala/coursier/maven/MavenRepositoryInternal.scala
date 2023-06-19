@@ -422,7 +422,7 @@ private[coursier] class MavenRepositoryInternal(
           ) -> optional
       }
 
-      val allPubs = packagingPublicationOpt.map(_ -> true).toSeq ++ extraPubs
+      val allPubs = packagingPublicationOpt.map(_ -> false).toSeq ++ extraPubs
       val optional = allPubs
         .groupBy(_._1)
         .view
