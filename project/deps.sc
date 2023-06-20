@@ -5,9 +5,9 @@ object Deps {
   def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M24"
   def catsCore          = ivy"org.typelevel::cats-core:${Versions.cats}"
   def catsFree          = ivy"org.typelevel::cats-free:${Versions.cats}"
-  def catsEffect        = ivy"org.typelevel::cats-effect::3.4.11"
+  def catsEffect        = ivy"org.typelevel::cats-effect::3.5.0"
   def classPathUtil     = ivy"io.get-coursier::class-path-util:0.1.4"
-  def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.10.0"
+  def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.11.0"
   def concurrentReferenceHashMap =
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
   def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.6"
@@ -47,7 +47,7 @@ object Deps {
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.1"
   def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
   def scalaNativeTools040M2    = ivy"org.scala-native::tools:0.4.0-M2"
-  def scalaNativeTools040      = ivy"org.scala-native::tools:0.4.12"
+  def scalaNativeTools040      = ivy"org.scala-native::tools:0.4.14"
   def scalaReflect(sv: String) = ivy"org.scala-lang:scala-reflect:$sv"
   def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.1.0"
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
@@ -63,7 +63,7 @@ object Deps {
 object Versions {
   def cats          = "2.9.0"
   def fastParse     = "3.0.1"
-  def http4s        = "0.23.19"
+  def http4s        = "0.23.21"
   def jniUtils      = "0.3.3"
   def jsoniterScala = "2.13.5"
   def monadless     = "0.0.13"
@@ -84,7 +84,7 @@ def csDockerVersion = "2.1.0-RC1"
 
 object ScalaVersions {
   def scala213 = "2.13.6"
-  def scala212 = "2.12.17"
+  def scala212 = "2.12.18"
   val all      = Seq(scala213, scala212)
 
   def scalaJs = "1.12.0"
