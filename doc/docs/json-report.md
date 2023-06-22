@@ -11,6 +11,27 @@ The report will contain the info about resolved modules and their relationships.
 
 ## Format and Version Change Log
 
+### 0.1.1
+
+Add `checksums` and `url` to the report.
+
+```
+{
+  "version": "0.1.1",
+  "dependencies": [
+    {
+	  "checksums": {
+	    "MD5": <md5>,
+		"SHA-1": <sha1>,
+		...
+	  },
+	  ...
+	}
+  ],
+  ...
+}
+```
+
 ### 0.0.1
 
 Add 'version' field to the report.

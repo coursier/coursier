@@ -48,12 +48,20 @@ object Fetch extends CoursierCommand[FetchOptions] {
         Some(params.artifact.artifactTypes), // allow to be null?
         params.resolve.classpathOrder.getOrElse(true)
       )
-
+      distinctArtifacts = artifacts.map(_._3).distinct
       artifactFiles <- coursier.Artifacts.fetchArtifacts(
-        artifacts.map(_._3).distinct,
+        distinctArtifacts,
         cache
         // FIXME Allow to adjust retryCount via CLI args?
       )
+
+      checksums <- if (params.jsonOutputOpt.isDefined)
+        coursier.Artifacts.fetchChecksums(
+          pool,
+          distinctArtifacts,
+          cache
+        ).map(Some(_))
+      else Task.point(None)
 
       _ <- {
         params.jsonOutputOpt match {
@@ -64,6 +72,7 @@ object Fetch extends CoursierCommand[FetchOptions] {
                 artifacts,
                 artifactFiles.collect { case (a, Some(f)) => a -> f },
                 params.artifact.classifiers,
+                checksums,
                 printExclusions = false
               )
 

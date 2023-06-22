@@ -2,8 +2,10 @@ package coursier
 
 import java.io.File
 import java.lang.{Boolean => JBoolean}
+import java.util.concurrent.ExecutorService
+import java.nio.charset.StandardCharsets
 
-import coursier.cache.{ArtifactError, Cache}
+import coursier.cache.{ArtifactError, Cache, CacheLogger}
 import coursier.core.Publication
 import coursier.error.FetchError
 import coursier.util.{Artifact, Sync, Task}
@@ -297,6 +299,73 @@ object Artifacts {
       .toVector
       .sortBy(_._1)
       .map(_._2)
+
+  private[coursier] def fetchChecksums[F[_]](
+    pool: ExecutorService,
+    artifacts: Seq[Artifact],
+    cache: Cache[F],
+    otherCaches: Cache[F]*
+  )(implicit
+    S: Sync[F]
+  ): F[Seq[(Artifact, Map[String, String])]] = {
+    import java.nio.file.Files
+
+    def checksumFile(checksumArtifact: Artifact, caches: List[Cache[F]]): F[Option[File]] =
+      caches match {
+        case cache :: caches =>
+          cache
+            .file(checksumArtifact)
+            .run
+            .flatMap {
+              case Right(file) => S.point(Some(file))
+              case Left(_)     => checksumFile(checksumArtifact, caches)
+            }
+        case _ => S.point(None)
+      }
+    val caches = cache :: otherCaches.toList
+    val checksumUrls =
+      artifacts.map { artifact =>
+        S.gather(
+          artifact
+            .checksumUrls
+            .map {
+              case (checksumType, url) =>
+                checksumFile(Artifact(url), caches).map(checksumType -> _)
+            }
+            .toSeq
+        ).flatMap { checksumFiles =>
+          val checksumValues = checksumFiles.collect {
+            case (checksumType, Some(file)) =>
+              S.schedule(pool)(Files.readAllBytes(file.toPath))
+                .map(new String(_, StandardCharsets.UTF_8))
+                .map(checksumType -> _)
+          }
+          S.gather(checksumValues)
+            .map(checksumValues => artifact -> checksumValues.toMap)
+        }
+      }
+
+    val loggers = caches
+      .map(_.loggerOpt)
+      .collect {
+        case Some(logger) => logger
+      }
+
+    val initLoggers = S.delay {
+      for (logger <- loggers)
+        logger.init()
+    }
+    val stopLoggers = S.delay {
+      for (logger <- loggers)
+        logger.stop()
+    }
+    for {
+      _                <- initLoggers
+      checksumsAttempt <- S.attempt(S.gather(checksumUrls))
+      _                <- stopLoggers
+      checksums        <- S.fromAttempt(checksumsAttempt)
+    } yield checksums
+  }
 
   private[coursier] def fetchArtifacts[F[_]](
     artifacts: Seq[Artifact],
