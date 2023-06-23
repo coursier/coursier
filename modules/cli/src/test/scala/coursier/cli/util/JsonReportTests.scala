@@ -13,6 +13,7 @@ object JsonReportTests extends TestSuite {
         getUrl = _ => Option(""),
         getFile = _ => Option(""),
         getChecksums = _ => None,
+        getMetadata = _ => None,
         exclusions = _ => Set.empty
       )
 
@@ -33,6 +34,7 @@ object JsonReportTests extends TestSuite {
         getUrl = _ => Option(""),
         getFile = _ => Option(""),
         getChecksums = _ => None,
+        getMetadata = _ => None,
         exclusions = _ => Set.empty
       )
 
@@ -46,6 +48,7 @@ object JsonReportTests extends TestSuite {
            |      "coord": "a:reconciled",
            |      "file": "",
            |      "url": "",
+           |      "metadata": null,
            |      "directDependencies": [ "b:reconciled" ],
            |      "dependencies": [ "b:reconciled" ]
            |    },
@@ -53,6 +56,7 @@ object JsonReportTests extends TestSuite {
            |      "coord": "b:reconciled",
            |      "file": "",
            |      "url": "",
+           |      "metadata": null,
            |      "directDependencies": [],
            |      "dependencies": []
            |    }
@@ -78,6 +82,7 @@ object JsonReportTests extends TestSuite {
         getUrl = _ => Option(""),
         getFile = _ => Option(""),
         getChecksums = _ => None,
+        getMetadata = _ => None,
         exclusions = _ => Set.empty
       )
 
@@ -87,8 +92,8 @@ object JsonReportTests extends TestSuite {
         s"""{
            |  "conflict_resolution": {},
            |  "dependencies": [
-           |    { "coord": "a:reconciled", "file": "", "url": "", "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled" ] },
-           |    { "coord": "b:reconciled", "file": "", "url": "", "directDependencies": [], "dependencies": [] }
+           |    { "coord": "a:reconciled", "file": "", "url": "", "metadata": null, "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled" ] },
+           |    { "coord": "b:reconciled", "file": "", "url": "", "metadata": null, "directDependencies": [], "dependencies": [] }
            |  ],
            |  "version": "${ReportNode.version}"
            |}""".stripMargin
@@ -109,6 +114,7 @@ object JsonReportTests extends TestSuite {
         getUrl = _ => Option(""),
         getFile = _ => Option(""),
         getChecksums = _ => None,
+        getMetadata = _ => None,
         exclusions = _ => Set.empty
       )
 
@@ -117,8 +123,8 @@ object JsonReportTests extends TestSuite {
         s"""{
            |  "conflict_resolution": {},
            |  "dependencies": [
-           |    { "coord": "a:reconciled", "file": "", "url": "", "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled" ] },
-           |    { "coord": "b:reconciled", "file": "", "url": "", "directDependencies": [], "dependencies": [] }
+           |    { "coord": "a:reconciled", "file": "", "url": "", "metadata": null, "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled" ] },
+           |    { "coord": "b:reconciled", "file": "", "url": "", "metadata": null, "directDependencies": [], "dependencies": [] }
            |  ],
            |  "version": "${ReportNode.version}"
            |}""".stripMargin
@@ -140,6 +146,7 @@ object JsonReportTests extends TestSuite {
         getUrl = _ => Option(""),
         getFile = _ => Option(""),
         getChecksums = _ => None,
+        getMetadata = _ => None,
         exclusions = _ => Set.empty
       )
 
@@ -148,9 +155,9 @@ object JsonReportTests extends TestSuite {
         s"""{
            |  "conflict_resolution": {},
            |  "dependencies": [
-           |    { "coord": "a:reconciled", "file": "", "url": "", "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled", "c:reconciled", "d:reconciled" ] },
-           |    { "coord": "b:reconciled", "file": "", "url": "", "directDependencies": [ "c:reconciled" ], "dependencies": [ "a:reconciled", "c:reconciled", "d:reconciled" ] },
-           |    { "coord": "c:reconciled", "file": "", "url": "", "directDependencies": [ "a:reconciled", "d:reconciled" ], "dependencies": [ "a:reconciled", "b:reconciled", "d:reconciled" ] }
+           |    { "coord": "a:reconciled", "file": "", "url": "", "metadata": null, "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled", "c:reconciled", "d:reconciled" ] },
+           |    { "coord": "b:reconciled", "file": "", "url": "", "metadata": null, "directDependencies": [ "c:reconciled" ], "dependencies": [ "a:reconciled", "c:reconciled", "d:reconciled" ] },
+           |    { "coord": "c:reconciled", "file": "", "url": "", "metadata": null, "directDependencies": [ "a:reconciled", "d:reconciled" ], "dependencies": [ "a:reconciled", "b:reconciled", "d:reconciled" ] }
            |  ],
            |  "version": "${ReportNode.version}"
            |}""".stripMargin
@@ -173,6 +180,7 @@ object JsonReportTests extends TestSuite {
         getUrl = _ => Option(""),
         getFile = _ => Option(""),
         getChecksums = _ => Some(Map(hashType -> hashValue)),
+        getMetadata = _ => None,
         exclusions = _ => Set.empty
       )
       val reportJson = Parse.parse(report)
@@ -186,6 +194,7 @@ object JsonReportTests extends TestSuite {
            |      "url": "",
            |      "directDependencies": [],
            |      "dependencies": [],
+           |      "metadata": null,
            |      "checksums": {
            |         "$hashType": "$hashValue"
            |      }

@@ -54,11 +54,19 @@ object Fetch extends CoursierCommand[FetchOptions] {
         cache
         // FIXME Allow to adjust retryCount via CLI args?
       )
+      metadataFiles <- coursier.Artifacts.fetchArtifacts(
+        distinctArtifacts.map(_.metadata).collect {
+          case Some(metadata) => metadata
+        },
+        cache
+      )
 
       checksums <- if (params.jsonOutputOpt.isDefined)
         coursier.Artifacts.fetchChecksums(
           pool,
-          distinctArtifacts,
+          distinctArtifacts ++ distinctArtifacts.map(_.metadata).collect {
+            case Some(artifact) => artifact
+          },
           cache
         ).map(Some(_))
       else Task.point(None)
@@ -70,7 +78,7 @@ object Fetch extends CoursierCommand[FetchOptions] {
               val report = JsonOutput.report(
                 res,
                 artifacts,
-                artifactFiles.collect { case (a, Some(f)) => a -> f },
+                (artifactFiles ++ metadataFiles).collect { case (a, Some(f)) => a -> f },
                 params.artifact.classifiers,
                 checksums,
                 printExclusions = false

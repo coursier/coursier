@@ -80,6 +80,7 @@ object JsonOutput {
       _.requestedVersionStr,
       _.url,
       _.downloadedFile,
+      _.metadata,
       _.checksums,
       _.exclusions
     )

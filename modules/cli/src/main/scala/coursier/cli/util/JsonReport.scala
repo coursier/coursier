@@ -27,6 +27,18 @@ final case class JsonPrintRequirement(
   artifactToChecksums: Map[Artifact, Map[String, String]]
 )
 
+final case class MetadataNode(
+  url: String,
+  file: Option[String],
+  checksums: Map[String, String]
+)
+
+object MetadataNode {
+  import argonaut.ArgonautShapeless._
+  implicit val encodeJson = EncodeJson.of[MetadataNode]
+  implicit val decodeJson = DecodeJson.of[MetadataNode]
+}
+
 /** Represents a resolved dependency's artifact in the JsonReport.
   * @param coord
   *   String representation of the artifact's maven coordinate.
@@ -41,6 +53,7 @@ final case class DepNode(
   file: Option[String],
   directDependencies: Set[String],
   dependencies: Set[String],
+  metadata: Option[MetadataNode],
   exclusions: Set[String] = Set.empty,
   checksums: Map[String, String] = Map.empty
 )
@@ -132,6 +145,7 @@ object JsonReport {
     requestedVersionStr: T => String,
     getUrl: T => Option[String],
     getFile: T => Option[String],
+    getMetadata: T => Option[MetadataNode],
     getChecksums: T => Option[Map[String, String]],
     exclusions: T => Set[String]
   ): String = {
@@ -156,6 +170,7 @@ object JsonReport {
         getFile(r),
         childrenOrEmpty(r).iterator.map(reconciledVersionStr(_)).to[SortedSet],
         flattenedDeps(r),
+        getMetadata(r),
         exclusions(r),
         getChecksums(r).getOrElse(Map.empty)
       )
@@ -196,6 +211,17 @@ final case class JsonElem(
           case (artifact, Some(file)) => (artifact, file)
         }
         .headOption
+    )
+
+  def metadata: Option[MetadataNode] =
+    for {
+      req       <- jsonPrintRequirement
+      metadata  <- artifactFile.flatMap(_._1.metadata)
+      checksums <- req.artifactToChecksums.get(metadata)
+    } yield MetadataNode(
+      metadata.url,
+      req.fileByArtifact.get(metadata.url).map(_.getPath),
+      checksums
     )
 
   // This is used to printing json output

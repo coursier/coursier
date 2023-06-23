@@ -20,13 +20,20 @@ Add `checksums` and `url` to the report.
   "version": "0.1.1",
   "dependencies": [
     {
-	  "checksums": {
-	    "MD5": <md5>,
-		"SHA-1": <sha1>,
-		...
-	  },
-	  ...
-	}
+      "checksums": {
+        "MD5": <md5>,
+        "SHA-1": <sha1>,
+        ...
+      },
+      "metadata": {
+        "file": <local>,
+        "url": <url>,
+        "checksums": {
+          ...
+        }
+      }
+      ...
+    }
   ],
   ...
 }
