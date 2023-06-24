@@ -198,7 +198,8 @@ final case class JsonElem(
 ) {
 
   // Cache `artifactFile` so it can be used for both `checkums` and `file`
-  private lazy val artifactFile: Option[(Artifact, File)] = jsonPrintRequirement
+  // Note, that the `file` does not have to exist; there are quite a few dependencies which only have a pom
+  private lazy val artifactFile: Option[(Artifact, Option[File])] = jsonPrintRequirement
     .flatMap(req =>
       req
         .depToArtifacts.getOrElse(dep, Seq())
@@ -208,7 +209,7 @@ final case class JsonElem(
             artifact -> req.fileByArtifact.get(artifact.url)
         }
         .collect {
-          case (artifact, Some(file)) => (artifact, file)
+          case (artifact, file) => (artifact, file)
         }
         .headOption
     )
@@ -226,8 +227,7 @@ final case class JsonElem(
 
   // This is used to printing json output
   // Option of the file path
-  def downloadedFile: Option[String] = artifactFile
-    .map(_._2.getPath)
+  def downloadedFile: Option[String] = artifactFile.flatMap(_._2.map(_.getPath))
 
   def url: Option[String] = artifactFile.map(_._1.url)
 
