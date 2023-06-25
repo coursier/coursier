@@ -302,6 +302,7 @@ object Artifacts {
 
   private[coursier] def fetchChecksums[F[_]](
     pool: ExecutorService,
+    allowedChecksumTypes: Set[String],
     artifacts: Seq[Artifact],
     cache: Cache[F],
     otherCaches: Cache[F]*
@@ -328,8 +329,8 @@ object Artifacts {
         S.gather(
           artifact
             .checksumUrls
-            .map {
-              case (checksumType, url) =>
+            .collect {
+              case (checksumType, url) if allowedChecksumTypes.contains(checksumType) =>
                 checksumFile(Artifact(url), caches).map(checksumType -> _)
             }
             .toSeq
@@ -337,7 +338,7 @@ object Artifacts {
           val checksumValues = checksumFiles.collect {
             case (checksumType, Some(file)) =>
               S.schedule(pool)(Files.readAllBytes(file.toPath))
-                .map(new String(_, StandardCharsets.UTF_8))
+                .map(new String(_, StandardCharsets.UTF_8).split("\\s+").head)
                 .map(checksumType -> _)
           }
           S.gather(checksumValues)

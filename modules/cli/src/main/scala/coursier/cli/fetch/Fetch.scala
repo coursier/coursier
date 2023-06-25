@@ -64,6 +64,7 @@ object Fetch extends CoursierCommand[FetchOptions] {
       checksums <- if (params.jsonOutputOpt.isDefined)
         coursier.Artifacts.fetchChecksums(
           pool,
+          Set("MD5", "SHA-1"),
           distinctArtifacts ++ distinctArtifacts.map(_.metadata).collect {
             case Some(artifact) => artifact
           },
