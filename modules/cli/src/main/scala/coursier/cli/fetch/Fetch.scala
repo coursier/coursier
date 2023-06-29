@@ -61,11 +61,29 @@ object Fetch extends CoursierCommand[FetchOptions] {
         cache
       )
 
+      parentArtifacts = {
+        def parents(child: coursier.core.Project): Seq[(coursier.core.Dependency, coursier.core.Publication, coursier.util.Artifact)] = {
+          child.parent.flatMap {
+            case mv@(module, version) => res.projectCache.get(mv).map {
+              case (artifactSource, project) =>
+                val dependency = coursier.core.Dependency(module, version)
+                val artifacts = artifactSource.artifacts(dependency, project, None)
+                artifacts.map {case (pub, art) => (dependency, pub, art)} ++ parents(project)
+            }
+          }
+        }.toSeq.flatten
+        res.projectCache.values.flatMap {
+          case (_, proj) => parents(proj)
+        }.toSeq.distinct
+      }
+      parentFiles <- {
+        coursier.Artifacts.fetchArtifacts(parentArtifacts.flatMap(_._3.metadata), cache)
+      }
       checksums <- if (params.jsonOutputOpt.isDefined)
         coursier.Artifacts.fetchChecksums(
           pool,
           Set("MD5", "SHA-1"),
-          distinctArtifacts ++ distinctArtifacts.map(_.metadata).collect {
+          distinctArtifacts ++ (distinctArtifacts ++ parentArtifacts.map(_._3).distinct).map(_.metadata).collect {
             case Some(artifact) => artifact
           },
           cache
@@ -78,8 +96,8 @@ object Fetch extends CoursierCommand[FetchOptions] {
             Task.delay {
               val report = JsonOutput.report(
                 res,
-                artifacts,
-                (artifactFiles ++ metadataFiles).collect { case (a, Some(f)) => a -> f },
+                artifacts ++ parentArtifacts,
+                (artifactFiles ++ metadataFiles ++ parentFiles).collect { case (a, Some(f)) => a -> f },
                 params.artifact.classifiers,
                 checksums,
                 printExclusions = false

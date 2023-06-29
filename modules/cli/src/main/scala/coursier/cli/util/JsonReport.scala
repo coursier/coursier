@@ -225,15 +225,19 @@ final case class JsonElem(
       checksums
     )
 
+  def isMetadata: Boolean = artifactFile.exists {
+      case (artifact, _) => artifact.metadata.exists(_.url == artifact.url)
+    }
+
   // This is used to printing json output
   // Option of the file path
-  def downloadedFile: Option[String] = artifactFile.flatMap(_._2.map(_.getPath))
+  def downloadedFile: Option[String] = artifactFile.flatMap(_._2.map(_.getPath)).filterNot(_ => isMetadata)
 
-  def url: Option[String] = artifactFile.map(_._1.url)
+  def url: Option[String] = artifactFile.map(_._1.url).filterNot(_ => isMetadata)
 
   lazy val checksums: Option[Map[String, String]] = for {
     req       <- jsonPrintRequirement
-    artifact  <- artifactFile.map(_._1)
+    artifact  <- artifactFile.map(_._1).filterNot(_ => isMetadata)
     checksums <- req.artifactToChecksums.get(artifact)
   } yield checksums
 
