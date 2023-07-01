@@ -226,12 +226,13 @@ final case class JsonElem(
     )
 
   def isMetadata: Boolean = artifactFile.exists {
-      case (artifact, _) => artifact.metadata.exists(_.url == artifact.url)
-    }
+    case (artifact, _) => artifact.metadata.exists(_.url == artifact.url)
+  }
 
   // This is used to printing json output
   // Option of the file path
-  def downloadedFile: Option[String] = artifactFile.flatMap(_._2.map(_.getPath)).filterNot(_ => isMetadata)
+  def downloadedFile: Option[String] =
+    artifactFile.flatMap(_._2.map(_.getPath)).filterNot(_ => isMetadata)
 
   def url: Option[String] = artifactFile.map(_._1.url).filterNot(_ => isMetadata)
 

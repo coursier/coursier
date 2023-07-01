@@ -9,7 +9,7 @@ import caseapp._
 import cats.data.Validated
 import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.resolve.{Output, Resolve, ResolveException}
-import coursier.core.Resolution
+import coursier.core.{Dependency, Resolution, Publication, Project}
 import coursier.install.Channels
 import coursier.util.{Artifact, Sync, Task}
 
@@ -54,38 +54,33 @@ object Fetch extends CoursierCommand[FetchOptions] {
         cache
         // FIXME Allow to adjust retryCount via CLI args?
       )
-      metadataFiles <- coursier.Artifacts.fetchArtifacts(
-        distinctArtifacts.map(_.metadata).collect {
-          case Some(metadata) => metadata
-        },
-        cache
-      )
 
       parentArtifacts = {
-        def parents(child: coursier.core.Project): Seq[(coursier.core.Dependency, coursier.core.Publication, coursier.util.Artifact)] = {
+        def parents(child: Project): Seq[(Dependency, Publication, Artifact)] =
           child.parent.flatMap {
-            case mv@(module, version) => res.projectCache.get(mv).map {
-              case (artifactSource, project) =>
-                val dependency = coursier.core.Dependency(module, version)
-                val artifacts = artifactSource.artifacts(dependency, project, None)
-                artifacts.map {case (pub, art) => (dependency, pub, art)} ++ parents(project)
-            }
+            case mv @ (module, version) => res.projectCache.get(mv).map {
+                case (artifactSource, project) =>
+                  val dependency = Dependency(module, version)
+                  val artifacts  = artifactSource.artifacts(dependency, project, None)
+                  artifacts.map { case (pub, art) => (dependency, pub, art) } ++ parents(project)
+              }
           }
-        }.toSeq.flatten
+            .toSeq.flatten
         res.projectCache.values.flatMap {
           case (_, proj) => parents(proj)
         }.toSeq.distinct
       }
-      parentFiles <- {
-        coursier.Artifacts.fetchArtifacts(parentArtifacts.flatMap(_._3.metadata), cache)
-      }
+      metadataFiles <- coursier.Artifacts.fetchArtifacts(
+        (distinctArtifacts.flatMap(_.metadata) ++ parentArtifacts.flatMap(_._3.metadata)).distinct,
+        cache
+      )
       checksums <- if (params.jsonOutputOpt.isDefined)
         coursier.Artifacts.fetchChecksums(
           pool,
           Set("MD5", "SHA-1"),
-          distinctArtifacts ++ (distinctArtifacts ++ parentArtifacts.map(_._3).distinct).map(_.metadata).collect {
-            case Some(artifact) => artifact
-          },
+          (distinctArtifacts ++ (distinctArtifacts ++ parentArtifacts.map(_._3)).map(
+            _.metadata
+          ).flatten).distinct,
           cache
         ).map(Some(_))
       else Task.point(None)
@@ -97,7 +92,7 @@ object Fetch extends CoursierCommand[FetchOptions] {
               val report = JsonOutput.report(
                 res,
                 artifacts ++ parentArtifacts,
-                (artifactFiles ++ metadataFiles ++ parentFiles).collect { case (a, Some(f)) => a -> f },
+                (artifactFiles ++ metadataFiles).collect { case (a, Some(f)) => a -> f },
                 params.artifact.classifiers,
                 checksums,
                 printExclusions = false
