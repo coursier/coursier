@@ -191,7 +191,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         val expectedOtherOutput = "thing" + System.lineSeparator()
         assert(otherOutput == expectedOtherOutput)
 
-      // FIXME Test more stuff like cs-props above?
+        // FIXME Test more stuff like cs-props above?
       }
     test("java props via assembly") {
       if (acceptsDOptions) {
@@ -606,15 +606,15 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         val res = os.proc(bootstrap("echo-scalapy"), "a", "b").call(cwd = tmpDir)
         assert(res.out.trim() == "a b")
 
-      // Commented out, as things can work without Python-specific setup in some
-      // environments.
-      // val noPythonRes = os.proc(bootstrap("echo-scalapy-no-python"), "a", "b").call(
-      //   cwd = tmpDir,
-      //   mergeErrIntoOut = true,
-      //   check = false
-      // )
-      // System.err.write(noPythonRes.out.bytes)
-      // assert(noPythonRes.exitCode != 0)
+        // Commented out, as things can work without Python-specific setup in some
+        // environments.
+        // val noPythonRes = os.proc(bootstrap("echo-scalapy-no-python"), "a", "b").call(
+        //   cwd = tmpDir,
+        //   mergeErrIntoOut = true,
+        //   check = false
+        // )
+        // System.err.write(noPythonRes.out.bytes)
+        // assert(noPythonRes.exitCode != 0)
       }
     }
 
