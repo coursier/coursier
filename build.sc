@@ -543,7 +543,7 @@ class Cli(val crossScalaVersion: String) extends CsModule with CrossSbtModule
     Deps.noCrcZis,
     ivy"com.chuusai::shapeless:2.3.10",
     Deps.slf4JNop,
-    ivy"org.scala-lang.modules::scala-collection-compat:2.11.0"
+    Deps.collectionCompat
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.svm
