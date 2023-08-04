@@ -119,7 +119,7 @@ object JsonReport {
         .traverse(transitiveOf(_, fetchChildren))
         .value
         .fold
-        .mapValues(_.iterator.to[SortedSet])
+        .map { case (k, v) => k -> v.iterator.to(SortedSet) }
     }
   }
 
@@ -148,7 +148,7 @@ object JsonReport {
       DepNode(
         reconciledVersionStr(r),
         getFile(r),
-        childrenOrEmpty(r).iterator.map(reconciledVersionStr(_)).to[SortedSet],
+        childrenOrEmpty(r).iterator.map(reconciledVersionStr(_)).to(SortedSet),
         flattenedDeps(r),
         exclusions(r)
       )

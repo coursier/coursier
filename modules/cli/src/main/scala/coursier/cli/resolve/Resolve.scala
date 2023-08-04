@@ -10,7 +10,6 @@ import coursier.cache.Cache
 import coursier.cache.loggers.RefreshLogger
 import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.install.Install
-import coursier.cli.util.MonadlessTask._
 import coursier.core.{Dependency, Module, Repository}
 import coursier.error.ResolutionError
 import coursier.install.{AppArtifacts, AppDescriptor, Channel, Channels, RawAppDescriptor}
@@ -18,6 +17,7 @@ import coursier.parse.JavaOrScalaModule
 import coursier.util._
 
 import scala.concurrent.ExecutionContext
+import scala.util.Try
 
 object Resolve extends CoursierCommand[ResolveOptions] {
 
@@ -25,15 +25,22 @@ object Resolve extends CoursierCommand[ResolveOptions] {
     */
   private def benchmark[T](iterations: Int): Task[T] => Task[T] = { run =>
 
-    val res = lift {
+    val res = for {
+      start <- Task.delay(System.currentTimeMillis())
+      res0  <- run
+      end   <- Task.delay(System.currentTimeMillis())
+      _ = Console.err.println(s"${end - start} ms")
+    } yield res0
 
-      val start = unlift(Task.delay(System.currentTimeMillis()))
-      val res0  = unlift(run)
-      val end   = unlift(Task.delay(System.currentTimeMillis()))
-      Console.err.println(s"${end - start} ms")
+    // val res = lift {
 
-      res0
-    }
+    //   val start = unlift(Task.delay(System.currentTimeMillis()))
+    //   val res0  = unlift(run)
+    //   val end   = unlift(Task.delay(System.currentTimeMillis()))
+    //   Console.err.println(s"${end - start} ms")
+
+    //   res0
+    // }
 
     def result(warmUp: Int): Task[T] =
       if (warmUp >= iterations)
@@ -51,13 +58,17 @@ object Resolve extends CoursierCommand[ResolveOptions] {
     result(0)
   }
 
+  private def lift[A](f: => A) =
+    Try(f).toEither
+
+  private def unlift[A](e: => Either[Throwable, A]): A =
+    e.fold(throw _, identity)
+
   private[cli] def depsAndReposOrError(
     params: SharedResolveParams,
     args: Seq[String],
     cache: Cache[Task]
-  ) = {
-    import coursier.cli.util.MonadlessEitherThrowable._
-
+  ) =
     lift {
 
       val fromFilesDependencies = params.dependency.fromFilesDependencies
@@ -147,7 +158,6 @@ object Resolve extends CoursierCommand[ResolveOptions] {
 
       (deps0, repositories, scalaVersionOpt, platformOpt)
     }
-  }
 
   def printTask(
     params: ResolveParams,
@@ -261,17 +271,17 @@ object Resolve extends CoursierCommand[ResolveOptions] {
 
     val depsAndReposOrError0 = depsAndReposOrError(params, args, cache)
 
-    lift {
+    for {
 
-      val (deps, repositories, scalaVersionOpt, platformOpt) =
-        unlift(Task.fromEither(depsAndReposOrError0))
-      val params0 = params.copy(
+      res0 <- Task.fromEither(depsAndReposOrError0)
+      (deps, repositories, scalaVersionOpt, platformOpt) = res0
+      params0 = params.copy(
         resolution = params.updatedResolution(scalaVersionOpt)
       )
 
-      Output.printDependencies(params0.output, params0.resolution, deps, stdout, stderr)
+      _ = Output.printDependencies(params0.output, params0.resolution, deps, stdout, stderr)
 
-      val (res, _, errorOpt) = unlift {
+      res1 <-
         coursier.Resolve()
           .withDependencies(deps)
           .withRepositories(repositories)
@@ -304,15 +314,18 @@ object Resolve extends CoursierCommand[ResolveOptions] {
             case e =>
               Task.fromEither(e.map { case (r, w) => (r, w, None) })
           }
-      }
+
+      (res, _, errorOpt) = res1
 
       // TODO Print warnings
 
-      for (ex <- errorOpt; err <- ex.errors)
-        stderr.println(err.getMessage)
+      _ = {
+        for (ex <- errorOpt; err <- ex.errors)
+          stderr.println(err.getMessage)
+      }
 
-      (res, scalaVersionOpt, platformOpt, errorOpt)
-    }
+    } yield (res, scalaVersionOpt, platformOpt, errorOpt)
+
   }
 
   // Add options and dependencies from the app to the passed options / dependencies
