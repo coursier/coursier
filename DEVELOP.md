@@ -73,13 +73,13 @@ Run this command again to re-import the project if you change the build configur
 ### Run the CLI from sources
 
 ```text
-$ ./mill -i cli[2.12].run …args…
+$ ./mill -i cli[2.12.18].run …args…
 ```
 
 ### Generate a JVM launcher of the CLI
 
 ```text
-$ ./mill show cli[2.12].standaloneLauncher
+$ ./mill show cli[2.12.18].standaloneLauncher
 ```
 
 This should print the path to the generated launcher, that can be copied, or run on other
@@ -88,7 +88,7 @@ machines.
 ### Generate a GraalVM native image of the CLI
 
 ```text
-$ ./mill -i show cli[2.12].nativeImage
+$ ./mill -i show cli[2.12.18].nativeImage
 ```
 
 This should print the path to the generated native image.
