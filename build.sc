@@ -64,7 +64,7 @@ object cache extends Module {
 }
 object launcher             extends Cross[Launcher](ScalaVersions.all: _*)
 object env                  extends Cross[Env](ScalaVersions.all: _*)
-object `launcher-native_04` extends Cross[LauncherNative04](ScalaVersions.all:_*)
+object `launcher-native_04` extends Cross[LauncherNative04](ScalaVersions.all: _*)
 
 object coursier extends Module {
   object jvm extends Cross[CoursierJvm](ScalaVersions.all: _*)
@@ -521,15 +521,16 @@ class Jvm(val crossScalaVersion: String) extends CrossSbtModule with CsModule
   }
 }
 
-class Cli(val cliScalaVersion: String) extends CsModule with CoursierPublishModule with Launchers {
+class Cli(val crossScalaVersion: String) extends CsModule with CrossSbtModule
+    with CoursierPublishModule with Launchers {
   def artifactName = "coursier-cli"
-  def scalaVersion = cliScalaVersion
+  def scalaVersion = crossScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(cliScalaVersion),
-    `sbt-maven-repository`.jvm(cliScalaVersion),
-    install(cliScalaVersion),
-    jvm(cliScalaVersion),
-    launcherModule(cliScalaVersion)
+    coursier.jvm(crossScalaVersion),
+    `sbt-maven-repository`.jvm(crossScalaVersion),
+    install(crossScalaVersion),
+    jvm(crossScalaVersion),
+    launcherModule(crossScalaVersion)
   )
 
   def ivyDeps = super.ivyDeps() ++ Agg(
@@ -541,7 +542,8 @@ class Cli(val cliScalaVersion: String) extends CsModule with CoursierPublishModu
     Deps.dataClass,
     Deps.noCrcZis,
     ivy"com.chuusai::shapeless:2.3.10",
-    Deps.slf4JNop
+    Deps.slf4JNop,
+    ivy"org.scala-lang.modules::scala-collection-compat:2.11.0"
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.svm
@@ -575,10 +577,11 @@ class Cli(val cliScalaVersion: String) extends CsModule with CoursierPublishModu
   object test extends Tests with CsTests
 }
 
-class CliTests(val cliScalaVersion: String) extends CsModule with CoursierPublishModule { self =>
-  def scalaVersion = cliScalaVersion
+class CliTests(val crossScalaVersion: String) extends CsModule with CrossSbtModule
+    with CoursierPublishModule { self =>
+  def scalaVersion = crossScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(cliScalaVersion)
+    coursier.jvm(crossScalaVersion)
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.caseApp,
