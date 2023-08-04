@@ -32,16 +32,6 @@ object Resolve extends CoursierCommand[ResolveOptions] {
       _ = Console.err.println(s"${end - start} ms")
     } yield res0
 
-    // val res = lift {
-
-    //   val start = unlift(Task.delay(System.currentTimeMillis()))
-    //   val res0  = unlift(run)
-    //   val end   = unlift(Task.delay(System.currentTimeMillis()))
-    //   Console.err.println(s"${end - start} ms")
-
-    //   res0
-    // }
-
     def result(warmUp: Int): Task[T] =
       if (warmUp >= iterations)
         for {
