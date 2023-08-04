@@ -524,7 +524,6 @@ class Jvm(val crossScalaVersion: String) extends CrossSbtModule with CsModule
 class Cli(val crossScalaVersion: String) extends CsModule with CrossSbtModule
     with CoursierPublishModule with Launchers {
   def artifactName = "coursier-cli"
-  def scalaVersion = crossScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(crossScalaVersion),
     `sbt-maven-repository`.jvm(crossScalaVersion),
@@ -968,6 +967,10 @@ def nativeMostlyStaticTests() = T.command {
 
 def nativeContainerTests() = T.command {
   `cli-tests`(ScalaVersions.scala212).`native-container-tests`.test()()
+}
+
+def cliNativeImageLauncher() = T.command {
+  cli(ScalaVersions.scala212).nativeImage()
 }
 
 object ci extends Module {
