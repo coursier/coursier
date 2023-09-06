@@ -20,9 +20,8 @@ import java.nio.file.FileSystemException
       case Some(Shell.Fish) =>
         val fishConfig = getEnv.flatMap(_("XDG_CONFIG_HOME"))
           .map(Paths.get(_))
-          .orElse(home)
-          .toSeq
-          .map(_.resolve(".config/fish/config.fish"))
+          .map(_.resolve("fish/config.fish"))
+          .fold(home.map(_.resolve(".config/fish/config.fish")).toSeq)(Seq(_))
 
         fishConfig
 

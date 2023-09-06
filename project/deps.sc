@@ -2,10 +2,10 @@ import mill._, scalalib._
 
 object Deps {
   def argonautShapeless = ivy"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.1"
-  def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M24"
+  def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M25"
   def catsCore          = ivy"org.typelevel::cats-core:${Versions.cats}"
   def catsFree          = ivy"org.typelevel::cats-free:${Versions.cats}"
-  def catsEffect        = ivy"org.typelevel::cats-effect::3.5.0"
+  def catsEffect        = ivy"org.typelevel::cats-effect::3.5.1"
   def classPathUtil     = ivy"io.get-coursier::class-path-util:0.1.4"
   def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.11.0"
   def concurrentReferenceHashMap =
@@ -17,7 +17,7 @@ object Deps {
   def http4sDsl         = ivy"org.http4s::http4s-dsl:${Versions.http4s}"
   def http4sServer      = ivy"org.http4s::http4s-server:${Versions.http4s}"
   def java8Compat       = ivy"org.scala-lang.modules::scala-java8-compat:1.0.2"
-  def jimfs             = ivy"com.google.jimfs:jimfs:1.2"
+  def jimfs             = ivy"com.google.jimfs:jimfs:1.3.0"
   def jniUtils          = ivy"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
   def jniUtilsBootstrap =
     ivy"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
@@ -32,7 +32,7 @@ object Deps {
   def mdoc           = ivy"org.scalameta::mdoc:2.3.7"
   def noCrcZis       = ivy"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
   def osLib          = ivy"com.lihaoyi::os-lib:0.9.1"
-  def plexusArchiver = ivy"org.codehaus.plexus:plexus-archiver:4.7.1"
+  def plexusArchiver = ivy"org.codehaus.plexus:plexus-archiver:4.8.0"
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
@@ -47,21 +47,21 @@ object Deps {
   def scalaNativeTools040M2    = ivy"org.scala-native::tools:0.4.0-M2"
   def scalaNativeTools040      = ivy"org.scala-native::tools:0.4.14"
   def scalaReflect(sv: String) = ivy"org.scala-lang:scala-reflect:$sv"
-  def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.1.0"
+  def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.2.0"
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
   def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
   def simulacrum               = ivy"org.typelevel::simulacrum:1.0.1"
   def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.6"
   def svm                      = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
-  def ujson                    = ivy"com.lihaoyi::ujson:3.0.0"
+  def ujson                    = ivy"com.lihaoyi::ujson:3.1.2"
   def utest                    = ivy"com.lihaoyi::utest::0.8.1"
   def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.5"
 }
 
 object Versions {
-  def cats          = "2.9.0"
+  def cats          = "2.10.0"
   def fastParse     = "3.0.1"
-  def http4s        = "0.23.21"
+  def http4s        = "0.23.23"
   def jniUtils      = "0.3.3"
   def jsoniterScala = "2.13.5"
   def scalaz        = "7.2.35"
