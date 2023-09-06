@@ -176,7 +176,7 @@ object JavaHome {
   def systemId: String =
     "system"
   def defaultJvm: String =
-    "adopt@1.8+"
+    "adoptium@11"
   def defaultId: String =
     s"$systemId|$defaultJvm"
 
