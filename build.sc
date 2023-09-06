@@ -64,7 +64,7 @@ object cache extends Module {
 }
 object launcher             extends Cross[Launcher](ScalaVersions.all: _*)
 object env                  extends Cross[Env](ScalaVersions.all: _*)
-object `launcher-native_04` extends Cross[LauncherNative04](mainCliScalaVersion)
+object `launcher-native_04` extends Cross[LauncherNative04](ScalaVersions.all: _*)
 
 object coursier extends Module {
   object jvm extends Cross[CoursierJvm](ScalaVersions.all: _*)
@@ -187,8 +187,8 @@ object interop extends Module {
 object jvm     extends Cross[Jvm](ScalaVersions.all: _*)
 object install extends Cross[Install](ScalaVersions.all: _*)
 
-object cli         extends Cross[Cli](mainCliScalaVersion)
-object `cli-tests` extends Cross[CliTests](mainCliScalaVersion)
+object cli         extends Cross[Cli](ScalaVersions.all: _*)
+object `cli-tests` extends Cross[CliTests](ScalaVersions.all: _*)
 
 object web extends Web
 
