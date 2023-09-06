@@ -64,7 +64,7 @@ object cache extends Module {
 }
 object launcher             extends Cross[Launcher](ScalaVersions.all: _*)
 object env                  extends Cross[Env](ScalaVersions.all: _*)
-object `launcher-native_04` extends LauncherNative04
+object `launcher-native_04` extends Cross[LauncherNative04](mainCliScalaVersion)
 
 object coursier extends Module {
   object jvm extends Cross[CoursierJvm](ScalaVersions.all: _*)
@@ -187,8 +187,8 @@ object interop extends Module {
 object jvm     extends Cross[Jvm](ScalaVersions.all: _*)
 object install extends Cross[Install](ScalaVersions.all: _*)
 
-object cli         extends Cli
-object `cli-tests` extends CliTests
+object cli         extends Cross[Cli](mainCliScalaVersion)
+object `cli-tests` extends Cross[CliTests](mainCliScalaVersion)
 
 object web extends Web
 
@@ -316,13 +316,12 @@ class Env(val crossScalaVersion: String) extends CrossSbtModule with CsModule
   }
 }
 
-def cliScalaVersion = ScalaVersions.scala212
-def launcherModule  = launcher
-trait LauncherNative04 extends CsModule with CoursierPublishModule {
+def mainCliScalaVersion = ScalaVersions.scala212
+def launcherModule = launcher
+class LauncherNative04(val crossScalaVersion: String) extends CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-launcher-native_0.4"
-  def scalaVersion = cliScalaVersion
   def compileModuleDeps = Seq(
-    launcherModule(cliScalaVersion)
+    launcherModule()
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.scalaNativeTools040
@@ -522,15 +521,15 @@ class Jvm(val crossScalaVersion: String) extends CrossSbtModule with CsModule
   }
 }
 
-trait Cli extends CsModule with CoursierPublishModule with Launchers {
+class Cli(val crossScalaVersion: String) extends CsCrossJvmJsModule
+    with CoursierPublishModule with Launchers {
   def artifactName = "coursier-cli"
-  def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(cliScalaVersion),
-    `sbt-maven-repository`.jvm(cliScalaVersion),
-    install(cliScalaVersion),
-    jvm(cliScalaVersion),
-    launcherModule(cliScalaVersion)
+    coursier.jvm(),
+    `sbt-maven-repository`.jvm(),
+    install(),
+    jvm(),
+    launcherModule()
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.argonautShapeless,
@@ -577,10 +576,10 @@ trait Cli extends CsModule with CoursierPublishModule with Launchers {
   object test extends Tests with CsTests
 }
 
-trait CliTests extends CsModule with CoursierPublishModule { self =>
-  def scalaVersion = cliScalaVersion
+class CliTests(val crossScalaVersion: String) extends CsCrossJvmJsModule
+    with CoursierPublishModule { self =>
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(cliScalaVersion)
+    coursier.jvm()
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.caseApp,
@@ -595,8 +594,8 @@ trait CliTests extends CsModule with CoursierPublishModule { self =>
   )
   object test extends Tests with CsTests {
     def forkArgs = {
-      val launcherTask = cli.launcher.map(_.path)
-      val assemblyTask = cli.assembly.map(_.path)
+      val launcherTask = cli().launcher.map(_.path)
+      val assemblyTask = cli().assembly.map(_.path)
       T {
         super.forkArgs() ++ sharedTestArgs ++ Seq(
           s"-Dcoursier-test-launcher=${launcherTask()}",
@@ -627,16 +626,16 @@ trait CliTests extends CsModule with CoursierPublishModule { self =>
     }
   }
   object `native-tests` extends NativeTests {
-    def cliLauncher = cli.nativeImage
+    def cliLauncher = cli().nativeImage
   }
   object `native-static-tests` extends NativeTests {
-    def cliLauncher = cli.`static-image`.nativeImage
+    def cliLauncher = cli().`static-image`.nativeImage
   }
   object `native-mostly-static-tests` extends NativeTests {
-    def cliLauncher = cli.`mostly-static-image`.nativeImage
+    def cliLauncher = cli().`mostly-static-image`.nativeImage
   }
   object `native-container-tests` extends NativeTests {
-    def cliLauncher = cli.containerImage
+    def cliLauncher = cli().containerImage
   }
 }
 
@@ -677,8 +676,8 @@ object `redirecting-server` extends CsModule {
 }
 
 def simpleNative04CliTest() = T.command {
-  `launcher-native_04`.publishLocal()()
-  val launcher = cli.launcher().path
+  `launcher-native_04`(mainCliScalaVersion).publishLocal()()
+  val launcher = cli(mainCliScalaVersion).launcher().path
   val tmpDir   = os.temp.dir(prefix = "coursier-bootstrap-scala-native-test")
   def cleanUp(): Unit =
     try os.remove.all(tmpDir)
@@ -709,17 +708,17 @@ def copyTo(task: mill.main.Tasks[PathRef], dest: os.Path) = T.command {
   os.copy.over(ref.path, dest)
 }
 def copyLauncher(directory: String = "artifacts") = T.command {
-  val nativeLauncher = cli.nativeImage().path
+  val nativeLauncher = cli(mainCliScalaVersion).nativeImage().path
   ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, os.pwd))
 }
 
 def copyStaticLauncher(directory: String = "artifacts") = T.command {
-  val nativeLauncher = cli.`static-image`.nativeImage().path
+  val nativeLauncher = cli(mainCliScalaVersion).`static-image`.nativeImage().path
   ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, os.pwd), suffix = "-static")
 }
 
 def copyMostlyStaticLauncher(directory: String = "artifacts") = T.command {
-  val nativeLauncher = cli.`mostly-static-image`.nativeImage().path
+  val nativeLauncher = cli(mainCliScalaVersion).`mostly-static-image`.nativeImage().path
   ghreleaseassets.copyLauncher(
     nativeLauncher,
     os.Path(directory, os.pwd),
@@ -728,7 +727,7 @@ def copyMostlyStaticLauncher(directory: String = "artifacts") = T.command {
 }
 
 def copyContainerLauncher(directory: String = "artifacts") = T.command {
-  val nativeLauncher = cli.containerImage().path
+  val nativeLauncher = cli(mainCliScalaVersion).containerImage().path
   ghreleaseassets.copyLauncher(
     nativeLauncher,
     os.Path(directory, os.pwd),
@@ -737,7 +736,7 @@ def copyContainerLauncher(directory: String = "artifacts") = T.command {
 }
 
 def uploadLaunchers(directory: String = "artifacts") = T.command {
-  val version = cli.publishVersion()
+  val version = cli(mainCliScalaVersion).publishVersion()
   ghreleaseassets.uploadLaunchers(version, os.Path(directory, os.pwd))
 }
 
@@ -746,14 +745,14 @@ def bootstrapLauncher(
   dest: String = s"coursier$platformBootstrapExtension"
 ) = T.command {
   val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
-  cli.run(Seq(
+  cli(mainCliScalaVersion).run(Seq(
     "bootstrap",
     "-o",
     dest,
     "-f",
     s"$mavenOrg::coursier-cli:$version",
     "--scala",
-    cliScalaVersion
+    mainCliScalaVersion
   ) ++ extraArgs: _*).map { _ =>
     os.Path(dest, os.pwd)
   }
@@ -761,7 +760,7 @@ def bootstrapLauncher(
 
 def assemblyLauncher(version: String = buildVersion, dest: String = "coursier.jar") = T.command {
   val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
-  cli.run(Seq(
+  cli(mainCliScalaVersion).run(Seq(
     "bootstrap",
     "--assembly",
     "-o",
@@ -769,14 +768,14 @@ def assemblyLauncher(version: String = buildVersion, dest: String = "coursier.ja
     "-f",
     s"$mavenOrg::coursier-cli:$version",
     "--scala",
-    cliScalaVersion
+    mainCliScalaVersion
   ) ++ extraArgs: _*).map { _ =>
     os.Path(dest, os.pwd)
   }
 }
 
 def waitForSync(version: String = buildVersion) = T.command {
-  val launcher  = cli.launcher().path
+  val launcher  = cli(mainCliScalaVersion).launcher().path
   val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
   sync.waitForSync(
     launcher.toString,
@@ -898,15 +897,15 @@ def jvmTests(scalaVersion: String = "*") = {
 
   val prerequisites = Seq(
     // required for some tests of `cli-tests`
-    `launcher-native_04`.publishLocal()
+    `launcher-native_04`(scalaVersion).publishLocal()
   )
 
   val nonCrossTests = Seq(
     // format: off
-    `bootstrap-launcher` .test .test(),
-    `bootstrap-launcher` .it   .test(),
-    cli                  .test .test(),
-    `cli-tests`          .test .test()
+    `bootstrap-launcher`      .test .test(),
+    `bootstrap-launcher`      .it   .test(),
+    cli(scalaVersion)         .test .test(),
+    `cli-tests`(scalaVersion) .test .test()
     // format: on
   )
 
@@ -956,19 +955,23 @@ def jsTests(scalaVersion: String = "*") = {
 }
 
 def nativeTests() = T.command {
-  `cli-tests`.`native-tests`.test()()
+  `cli-tests`(mainCliScalaVersion).`native-tests`.test()()
 }
 
 def nativeStaticTests() = T.command {
-  `cli-tests`.`native-static-tests`.test()()
+  `cli-tests`(mainCliScalaVersion).`native-static-tests`.test()()
 }
 
 def nativeMostlyStaticTests() = T.command {
-  `cli-tests`.`native-mostly-static-tests`.test()()
+  `cli-tests`(mainCliScalaVersion).`native-mostly-static-tests`.test()()
 }
 
 def nativeContainerTests() = T.command {
-  `cli-tests`.`native-container-tests`.test()()
+  `cli-tests`(mainCliScalaVersion).`native-container-tests`.test()()
+}
+
+def cliNativeImageLauncher() = T.command {
+  cli(mainCliScalaVersion).nativeImage()
 }
 
 object ci extends Module {

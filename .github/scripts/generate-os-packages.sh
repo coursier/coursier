@@ -14,7 +14,7 @@ fi
 
 
 launcher() {
-  local launcherMillCommand="cli.nativeImage"
+  local launcherMillCommand="cliNativeImageLauncher"
   local launcherName
 
   if [[ "$OSTYPE" == "msys" ]]; then
