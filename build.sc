@@ -538,8 +538,6 @@ class Cli(val crossScalaVersion: String) extends CsCrossJvmJsModule
     Deps.catsFree,
     Deps.classPathUtil,
     Deps.dataClass,
-    Deps.monadlessCats,
-    Deps.monadlessStdlib,
     Deps.noCrcZis,
     ivy"com.chuusai::shapeless:2.3.10",
     Deps.slf4JNop

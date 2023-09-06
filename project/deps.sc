@@ -26,15 +26,13 @@ object Deps {
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${Versions.jsoniterScala}"
   def jsoniterMacros =
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
-  def jsoup           = ivy"org.jsoup:jsoup:1.16.1"
-  def logbackClassic  = ivy"ch.qos.logback:logback-classic:1.2.12"
-  def macroParadise   = ivy"org.scalamacros:::paradise:2.1.1"
-  def mdoc            = ivy"org.scalameta::mdoc:2.3.7"
-  def monadlessCats   = ivy"io.monadless::monadless-cats:${Versions.monadless}"
-  def monadlessStdlib = ivy"io.monadless::monadless-stdlib:${Versions.monadless}"
-  def noCrcZis        = ivy"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
-  def osLib           = ivy"com.lihaoyi::os-lib:0.9.1"
-  def plexusArchiver  = ivy"org.codehaus.plexus:plexus-archiver:4.8.0"
+  def jsoup          = ivy"org.jsoup:jsoup:1.16.1"
+  def logbackClassic = ivy"ch.qos.logback:logback-classic:1.2.12"
+  def macroParadise  = ivy"org.scalamacros:::paradise:2.1.1"
+  def mdoc           = ivy"org.scalameta::mdoc:2.3.7"
+  def noCrcZis       = ivy"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
+  def osLib          = ivy"com.lihaoyi::os-lib:0.9.1"
+  def plexusArchiver = ivy"org.codehaus.plexus:plexus-archiver:4.8.0"
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
@@ -66,7 +64,6 @@ object Versions {
   def http4s        = "0.23.23"
   def jniUtils      = "0.3.3"
   def jsoniterScala = "2.13.5"
-  def monadless     = "0.0.13"
   def scalaz        = "7.2.35"
 }
 
