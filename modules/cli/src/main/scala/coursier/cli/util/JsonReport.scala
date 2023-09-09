@@ -13,6 +13,7 @@ import cats.syntax.show._
 import coursier.core._
 import coursier.util.Artifact
 
+import scala.collection.compat._
 import scala.collection.mutable
 import scala.collection.immutable.SortedSet
 
@@ -119,7 +120,7 @@ object JsonReport {
         .traverse(transitiveOf(_, fetchChildren))
         .value
         .fold
-        .mapValues(_.iterator.to[SortedSet])
+        .map { case (k, v) => k -> v.iterator.to(SortedSet) }
     }
   }
 
@@ -148,7 +149,7 @@ object JsonReport {
       DepNode(
         reconciledVersionStr(r),
         getFile(r),
-        childrenOrEmpty(r).iterator.map(reconciledVersionStr(_)).to[SortedSet],
+        childrenOrEmpty(r).iterator.map(reconciledVersionStr(_)).to(SortedSet),
         flattenedDeps(r),
         exclusions(r)
       )
