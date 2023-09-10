@@ -176,7 +176,7 @@ object JavaHome {
   def systemId: String =
     "system"
   def defaultJvm: String =
-    "adopt@1.8+"
+    "adoptium@11"
   def defaultId: String =
     s"$systemId|$defaultJvm"
 
@@ -280,6 +280,23 @@ object JavaHome {
     preamble + envUpdate.bashScript + "\n"
   }
 
+  def finalFishScript(
+    envUpdate: EnvironmentUpdate,
+    getEnv: String => Option[String] = k => Option(System.getenv(k)),
+    pathSeparator: String = File.pathSeparator
+  ): String = {
+
+    val preamble =
+      if (getEnv("CS_FORMER_JAVA_HOME").isEmpty) {
+        val saveJavaHome = """set -x CS_FORMER_JAVA_HOME "$JAVA_HOME""""
+        saveJavaHome + "\n"
+      }
+      else
+        ""
+
+    preamble + envUpdate.fishScript + "\n"
+  }
+
   def finalBatScript(
     envUpdate: EnvironmentUpdate,
     getEnv: String => Option[String] = k => Option(System.getenv(k)),
@@ -310,6 +327,21 @@ object JavaHome {
       case Some(_) =>
         """export JAVA_HOME="$CS_FORMER_JAVA_HOME"""" + "\n" +
           """unset CS_FORMER_JAVA_HOME""" + "\n"
+    }
+
+  def disableFishScript(
+    getEnv: String => Option[String] = k => Option(System.getenv(k)),
+    pathSeparator: String = ":",
+    isMacOs: Boolean = JvmIndex.defaultOs() == "darwin"
+  ): String =
+    getEnv("CS_FORMER_JAVA_HOME") match {
+      case None => ""
+      case Some("") =>
+        """set -e JAVA_HOME""" + "\n" +
+          """set -e CS_FORMER_JAVA_HOME""" + "\n"
+      case Some(_) =>
+        """set -x JAVA_HOME "$CS_FORMER_JAVA_HOME"""" + "\n" +
+          """set -e CS_FORMER_JAVA_HOME""" + "\n"
     }
 
   def disableBatScript(

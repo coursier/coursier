@@ -72,19 +72,28 @@ trait BootstrapLauncher extends CsModule {
     cp.filter(!_.path.last.startsWith("scala-"))
   }
 
-  // TODO Factor stuff in the assembly / proguarding code below (use the base assemblies in proguard tasks, …)
+  private def rules = {
+    import java.util.regex.Pattern
+    import coursier.launcher.MergeRule._
+    Seq(
+      ExcludePattern("^" + Pattern.quote("META-INF/services/coursier.jniutils.NativeApi")),
+      ExcludePattern("^" + Pattern.quote("META-INF/native-image/") + ".*"),
+      ExcludePattern("^" + Pattern.quote("META-INF/MANIFEST.MF") + "$")
+    )
+  }
 
   def assembly = T {
     val baseJar    = jar().path
     val cp         = upstreamAssemblyClasspath().toSeq.map(_.path)
     val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
-    val dest = T.ctx().dest / "bootstrap-orig.jar"
+    val dest = T.dest / "bootstrap-orig.jar"
 
     val params = Parameters.Assembly()
       .withFiles((baseJar +: cp).map(_.toIO))
       .withMainClass(mainClass0)
       .withPreambleOpt(None)
+      .withRules(rules)
 
     AssemblyGenerator.generate(params, dest.toNIO)
 
@@ -98,16 +107,11 @@ trait BootstrapLauncher extends CsModule {
     val conf = T.dest / "configuration.pro"
     val dest = T.dest / "proguard-bootstrap.jar"
 
-    val baseJar = jar().path
-    val cp      = upstreamAssemblyClasspath().toSeq.map(_.path)
-    val q       = "\""
-    val classPathConf =
-      cp.map(f => s"-injars $q$f$q(!META-INF/MANIFEST.MF)").mkString(System.lineSeparator())
+    val baseJar    = assembly().path
     val sharedConf = sharedProguardConf()
 
     val confContent =
       s"""-injars "$baseJar"
-         |$classPathConf
          |-outjars "$dest"
          |$sharedConf
          |""".stripMargin
@@ -129,78 +133,16 @@ trait BootstrapLauncher extends CsModule {
     val cp         = upstreamAssemblyClasspath().toSeq.map(_.path)
     val mainClass0 = resourceAssemblyMainClass()
 
-    val dest = T.ctx().dest / "bootstrap-orig.jar"
+    val dest = T.dest / "bootstrap-orig.jar"
 
     val params = Parameters.Assembly()
       .withFiles((baseJar +: cp).map(_.toIO))
       .withMainClass(mainClass0)
       .withPreambleOpt(None)
+      .withRules(rules)
 
     AssemblyGenerator.generate(params, dest.toNIO)
 
-    PathRef(dest)
-  }
-
-  def resourceJar = T {
-    val baseJar                    = jar().path
-    val resourceAssemblyMainClass0 = resourceAssemblyMainClass()
-    val dest                       = T.dest / "resource-bootstrap.jar"
-    val buf                        = Array.ofDim[Byte](64 * 1024)
-    val zf                         = new ZipFile(baseJar.toIO)
-    val fos                        = new FileOutputStream(dest.toIO)
-    val zos                        = new ZipOutputStream(new BufferedOutputStream(fos))
-    var is: InputStream            = null
-    for (ent <- zf.entries.asScala) {
-      if (ent.getName == "META-INF/MANIFEST.MF") {
-        var read = -1
-        val baos = new ByteArrayOutputStream
-        is = zf.getInputStream(ent)
-        while ({
-          read = is.read(buf)
-          read >= 0
-        })
-          if (read > 0)
-            baos.write(buf, 0, read)
-        is.close()
-        is = null
-
-        val content  = baos.toByteArray
-        val manifest = new java.util.jar.Manifest(new ByteArrayInputStream(content))
-        val attr: java.util.jar.Attributes = manifest.getMainAttributes
-        attr.put(java.util.jar.Attributes.Name.MAIN_CLASS, resourceAssemblyMainClass0)
-
-        val baos0 = new ByteArrayOutputStream
-        manifest.write(baos0)
-        val updatedContent = baos0.toByteArray
-
-        val ent0 = new ZipEntry(ent)
-        ent0.setSize(updatedContent.length)
-        ent0.setCompressedSize(-1L)
-        val crc = new CRC32
-        crc.update(updatedContent)
-        ent0.setCrc(crc.getValue)
-        zos.putNextEntry(ent0)
-        zos.write(updatedContent)
-      }
-      else {
-        zos.putNextEntry(ent)
-        var read = -1
-        is = zf.getInputStream(ent)
-        while ({
-          read = is.read(buf)
-          read >= 0
-        })
-          if (read > 0)
-            zos.write(buf, 0, read)
-        is.close()
-        is = null
-      }
-      zos.closeEntry()
-    }
-    zos.finish()
-    zos.close()
-    fos.close()
-    zf.close()
     PathRef(dest)
   }
 
@@ -208,16 +150,11 @@ trait BootstrapLauncher extends CsModule {
     val conf = T.dest / "configuration.pro"
     val dest = T.dest / "proguard-resource-bootstrap.jar"
 
-    val baseJar = resourceJar().path
-    val cp      = upstreamAssemblyClasspath().toSeq.map(_.path)
-    val q       = "\""
-    val classPathConf =
-      cp.map(f => s"-injars $q$f$q(!META-INF/MANIFEST.MF)").mkString(System.lineSeparator())
+    val baseJar    = resourceAssembly().path
     val sharedConf = sharedResourceProguardConf()
 
     val confContent =
       s"""-injars "$baseJar"
-         |$classPathConf
          |-outjars "$dest"
          |$sharedConf
          |""".stripMargin

@@ -432,6 +432,27 @@ object InstallTests extends TestSuite {
       test("windows") - run("windows", "x86_64")
     }
 
+    test("try updating a non-installed app") {
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
+        val installDir0 = installDir(tmpDir, os, arch)
+          .withVerbosity(1)
+
+        val result =
+          installDir0.maybeUpdate(
+            "dummy-app-id",
+            src => sys.error("illegal: that code should not be reached")
+          ).attempt.unsafeRun()(cache.ec)
+
+        assert(
+          result.contains(Some(false))
+        ) // TODO Check the output contains "Cannot find installed application 'dummy-app-id'..."
+      }
+
+      test("linux") - run("linux", "x86_64")
+      test("mac") - run("mac", "x86_64")
+      test("windows") - run("windows", "x86_64")
+    }
+
     test("install a prebuilt launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
@@ -739,7 +760,7 @@ object InstallTests extends TestSuite {
       test("windows") - run("windows", "x86_64")
     }
 
-    test("install, override and update scalac") {
+    test("install and override and update scalac") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
         val id = "scalac"
         val versionOverride =
@@ -785,9 +806,9 @@ object InstallTests extends TestSuite {
 
         val scala3CompilerJars =
           Seq(
-            "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.6/scala-library-2.13.6.jar",
             "https://repo1.maven.org/maven2/org/scala-lang/scala3-compiler_3/3.0.1/scala3-compiler_3-3.0.1.jar",
-            "https://repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.0.1/scala3-library_3-3.0.1.jar"
+            "https://repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.0.1/scala3-library_3-3.0.1.jar",
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.6/scala-library-2.13.6.jar"
           )
         val scala3Properties =
           Seq(
@@ -805,7 +826,8 @@ object InstallTests extends TestSuite {
           Seq(
             "https://repo1.maven.org/maven2/org/scala-lang/scala-compiler/2.12.8/scala-compiler-2.12.8.jar",
             "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.8/scala-library-2.12.8.jar",
-            "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.12.8/scala-reflect-2.12.8.jar"
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.12.8/scala-reflect-2.12.8.jar",
+            "https://repo1.maven.org/maven2/org/scala-lang/modules/scala-xml_2.12/1.0.6/scala-xml_2.12-1.0.6.jar"
           )
         val scala2Properties =
           Seq(

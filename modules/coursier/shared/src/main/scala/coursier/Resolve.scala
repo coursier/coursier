@@ -247,8 +247,8 @@ object Resolve extends PlatformResolve {
       if (params.doForceScalaVersion)
         if (params.selectedScalaVersion.startsWith("3"))
           Seq(
-            Module(scalaOrg, ModuleName("scala3-library"))  -> params.selectedScalaVersion,
-            Module(scalaOrg, ModuleName("scala3-compiler")) -> params.selectedScalaVersion
+            Module(scalaOrg, ModuleName("scala3-library_3"))  -> params.selectedScalaVersion,
+            Module(scalaOrg, ModuleName("scala3-compiler_3")) -> params.selectedScalaVersion
           )
         else
           Seq(

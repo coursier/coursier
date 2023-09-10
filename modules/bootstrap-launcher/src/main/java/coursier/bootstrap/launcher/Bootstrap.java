@@ -61,7 +61,7 @@ public class Bootstrap {
 
         ClassLoader classLoader = classLoaders.createClassLoader(contextLoader);
 
-        boolean isSimpleLoader = classLoader.getParent().getParent().equals(contextLoader) && (classLoader instanceof URLClassLoader);
+        boolean isSimpleLoader = classLoader.getParent().equals(contextLoader) && (classLoader instanceof URLClassLoader);
         String previousJavaClassPath = null;
 
         if (isSimpleLoader) {

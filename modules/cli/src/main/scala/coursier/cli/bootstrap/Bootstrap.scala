@@ -137,23 +137,25 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
     loaderNames.zip(perLoaderUniqueArtifacts)
   }
 
-  private def classloaderContent(
+  def classloaderContent(
     packaging: BootstrapSpecificParams.BootstrapPackaging,
     artifactFiles: Seq[(Artifact, File)]
   ): ClassLoaderContent = {
     val (asFiles, asUrls) =
       if (packaging.standalone || packaging.hybrid)
-        (artifactFiles, Nil)
-      else if (packaging.embedFiles)
-        artifactFiles.partition {
+        (artifactFiles.map(_._2), Nil)
+      else if (packaging.embedFiles) {
+        val (asFiles0, asUrls0) = artifactFiles.partition {
           case (a, _) =>
             a.url.startsWith("file:")
         }
+        (asFiles0.map(_._2), asUrls0)
+      }
       else
         (Nil, artifactFiles)
 
     val urls0 = asUrls.map(_._1.url).map(ClassPathEntry.Url(_))
-    val files0 = asFiles.map(_._2).map { f =>
+    val files0 = asFiles.map { f =>
       ClassPathEntry.Resource(
         f.getName,
         f.lastModified(),
@@ -409,6 +411,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
             .withDisableJarChecking(params.specific.disableJarCheckingOpt)
             .withPython(params.sharedLaunch.python)
             .withPythonJep(params.sharedLaunch.pythonJep)
+            .withRules(params.specific.assemblyRules)
 
           if (params.sharedLaunch.python) {
             val task = Fetch.task(

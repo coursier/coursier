@@ -317,20 +317,23 @@ object ArtifactsTests extends TestSuite {
       val res = await {
         Resolve()
           .noMirrors
-          .addDependencies(
-            dep"com.frugalmechanic:fm-sbt-s3-resolver;scalaVersion=2.12;sbtVersion=1.0:0.18.0"
-          )
+          .addDependencies(dep"com.amazonaws:aws-java-sdk-s3:1.11.507")
           .withCache(cache)
           .future()
       }
 
-      val artifacts = Artifacts.artifacts(res, Set.empty, None, None, true).map(_._3).distinct
-      val groupedArtifacts = Artifacts.groupArtifacts(artifacts)
+      val databindUrl =
+        "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.6.7.2/jackson-databind-2.6.7.2.jar"
+
+      val artifacts   = Artifacts.artifacts(res, Set.empty, None, None, true).map(_._3).distinct
+      val databindOpt = artifacts.find(_.url == databindUrl)
+      assert(databindOpt.isDefined)
+      val groupedArtifacts = Artifacts.groupArtifacts(artifacts :+ databindOpt.get)
 
       assert(groupedArtifacts.length == 2)
 
       val expectedDuplicatedUrls = Set(
-        "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.6.7.2/jackson-databind-2.6.7.2.jar"
+        databindUrl
       )
 
       val firstGroupUrls = groupedArtifacts.head.map(_.url).toSet

@@ -45,7 +45,12 @@ final case class DependencyOptions(
   @Group(OptionGroup.dependency)
   @Help("Enable scala-native")
   @Short("S")
-    native: Boolean = false
+    native: Boolean = false,
+
+  @Group(OptionGroup.dependency)
+  @Help("Path to file with dependencies. " +
+    "Dependencies should be separated with newline character")
+    dependencyFile: List[String] = Nil
 
 )
 // format: on

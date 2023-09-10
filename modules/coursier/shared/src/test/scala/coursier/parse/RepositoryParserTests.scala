@@ -2,15 +2,15 @@ package coursier.parse
 
 import coursier.core.Repository
 import coursier.ivy.IvyRepository
-import coursier.maven.MavenRepository
+import coursier.maven.MavenRepositoryLike
 import utest._
 
 object RepositoryParserTests extends TestSuite {
 
   private def isMavenRepo(repo: Repository): Boolean =
     repo match {
-      case _: MavenRepository => true
-      case _                  => false
+      case _: MavenRepositoryLike => true
+      case _                      => false
     }
 
   private def isIvyRepo(repo: Repository): Boolean =

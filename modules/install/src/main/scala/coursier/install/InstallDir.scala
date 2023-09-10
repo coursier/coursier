@@ -122,12 +122,49 @@ import scala.util.Properties
       .withJavaOpts(desc.javaOptions)
       .withJvmOptionFile(desc.jvmOptionFile)
 
-  private[install] def params(
+  private def bootstrapParamsLike(
     desc: AppDescriptor,
     appArtifacts: AppArtifacts,
     infoEntries: Seq[(ZipEntry, Array[Byte])],
     mainClass: String,
-    dest: Path
+    baseJarPreamble: Preamble
+  ): Parameters = {
+    val isStandalone = desc.launcherType != LauncherType.Bootstrap
+    val sharedContentOpt =
+      if (appArtifacts.shared.isEmpty) None
+      else {
+        val entries = appArtifacts.shared.map {
+          case (a, f) =>
+            classpathEntry(a, f, forceResource = isStandalone)
+        }
+
+        Some(ClassLoaderContent(entries))
+      }
+    val mainContent = ClassLoaderContent(
+      appArtifacts.fetchResult.artifacts.map {
+        case (a, f) =>
+          classpathEntry(a, f, forceResource = isStandalone)
+      }
+    )
+
+    val params0 = Parameters.Bootstrap(sharedContentOpt.toSeq :+ mainContent, mainClass)
+      .withPreamble(baseJarPreamble)
+      .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
+      .withDeterministic(true)
+      .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
+      .withExtraZipEntries(infoEntries)
+      .withPythonJep(desc.jna.contains("python-jep"))
+      .withPython(desc.jna.contains("python"))
+
+    overrideProguardedBootstraps
+      .fold(params0)(params0.withProguarded)
+  }
+
+  private[install] def params(
+    desc: AppDescriptor,
+    appArtifacts: AppArtifacts,
+    infoEntries: Seq[(ZipEntry, Array[Byte])],
+    mainClass: String
   ): Parameters = {
 
     val baseJarPreamble0 = baseJarPreamble(desc)
@@ -142,36 +179,7 @@ import scala.util.Properties
           .withExtraZipEntries(infoEntries)
 
       case _: LauncherType.BootstrapLike =>
-        val isStandalone = desc.launcherType != LauncherType.Bootstrap
-        val sharedContentOpt =
-          if (appArtifacts.shared.isEmpty) None
-          else {
-            val entries = appArtifacts.shared.map {
-              case (a, f) =>
-                classpathEntry(a, f, forceResource = isStandalone)
-            }
-
-            Some(ClassLoaderContent(entries))
-          }
-        val mainContent = ClassLoaderContent(
-          appArtifacts.fetchResult.artifacts.map {
-            case (a, f) =>
-              classpathEntry(a, f, forceResource = isStandalone)
-          }
-        )
-
-        val params0 = Parameters.Bootstrap(sharedContentOpt.toSeq :+ mainContent, mainClass)
-          .withPreamble(baseJarPreamble0)
-          .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
-          .withDeterministic(true)
-          .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
-          .withExtraZipEntries(infoEntries)
-          .withPythonJep(desc.jna.contains("python-jep"))
-          .withPython(desc.jna.contains("python"))
-
-        overrideProguardedBootstraps
-          .fold(params0)(params0.withProguarded)
-
+        bootstrapParamsLike(desc, appArtifacts, infoEntries, mainClass, baseJarPreamble0)
       case LauncherType.Assembly =>
         assert(appArtifacts.shared.isEmpty) // just in case
 
@@ -188,24 +196,7 @@ import scala.util.Properties
       case LauncherType.GraalvmNativeImage =>
         assert(appArtifacts.shared.isEmpty) // just in case
 
-        val fetch = simpleFetch(cache, coursierRepositories)
-
-        val graalvmHomeOpt = for {
-          ver <- desc.graalvmOptions.flatMap(_.version)
-            .orElse(graalvmParamsOpt.flatMap(_.defaultVersion))
-          home <- nativeImageJavaHome.map(_(ver).unsafeRun()(cache.ec)) // meh
-        } yield home
-
-        Parameters.NativeImage(mainClass, fetch)
-          .withGraalvmOptions(
-            desc.graalvmOptions.toSeq.flatMap(_.options) ++
-              graalvmParamsOpt.map(_.extraNativeImageOptions).getOrElse(Nil)
-          )
-          .withGraalvmVersion(graalvmParamsOpt.flatMap(_.defaultVersion))
-          .withJars(appArtifacts.fetchResult.files)
-          .withNameOpt(Some(desc.nameOpt.getOrElse(dest.getFileName.toString)))
-          .withJavaHome(graalvmHomeOpt)
-          .withVerbosity(verbosity)
+        bootstrapParamsLike(desc, appArtifacts, infoEntries, mainClass, baseJarPreamble0)
 
       case LauncherType.Prebuilt =>
         Parameters.Prebuilt()
@@ -336,7 +327,7 @@ import scala.util.Properties
               )
                 throw new NoPrebuiltBinaryAvailable(notFoundUrls)
 
-              val params0 = params(desc, appArtifacts, infoEntries, mainClass, dest)
+              val params0 = params(desc, appArtifacts, infoEntries, mainClass)
 
               writing(genDest, verbosity, Some(currentTime)) {
                 Generator.generate(params0, genDest)
@@ -432,36 +423,48 @@ import scala.util.Properties
 
       launcher = actualDest(name)
 
-      sourceAndBytes <- Task.fromEither(
-        InfoFile.readSource(launcher).toRight(new Exception(s"Error reading source from $launcher"))
-      )
-      (source, sourceBytes) = sourceAndBytes
+      writtenOpt <-
+        if (Files.exists(launcher))
+          for {
+            sourceAndBytes <- Task.fromEither(InfoFile.readSource(launcher).toRight(
+              new Exception(s"Error reading source from $launcher")
+            ))
+            (source, sourceBytes) = sourceAndBytes
 
-      pathDescriptorBytes <- update(source).flatMap {
-        case Some(res) => Task.point(res)
-        case None => Task.fail(new Exception(s"${source.id} not found in ${source.channel.repr}"))
-      }
-      (path, descriptorBytes) = pathDescriptorBytes
+            pathDescriptorBytes <- update(source).flatMap {
+              case Some(res) => Task.point(res)
+              case None =>
+                Task.fail(new Exception(s"${source.id} not found in ${source.channel.repr}"))
+            }
+            (path, descriptorBytes) = pathDescriptorBytes
 
-      desc <- Task.fromEither(InfoFile.appDescriptor(path, descriptorBytes))
+            desc <- Task.fromEither(InfoFile.appDescriptor(path, descriptorBytes))
 
-      appInfo = {
-        val info = AppInfo(desc, descriptorBytes, source, sourceBytes)
-        val foundName = info.appDescriptor.nameOpt
-          .getOrElse(info.source.id)
-        if (foundName == name)
-          info
-        else
-          // just in case, that shouldn't happen
-          info.withAppDescriptor(info.appDescriptor.withNameOpt(Some(name)))
-      }
+            appInfo = {
+              val info = AppInfo(desc, descriptorBytes, source, sourceBytes)
+              val foundName = info.appDescriptor.nameOpt
+                .getOrElse(info.source.id)
+              if (foundName == name)
+                info
+              else
+                // just in case, that shouldn't happen
+                info.withAppDescriptor(info.appDescriptor.withNameOpt(Some(name)))
+            }
 
-      writtenOpt <- Task.delay {
-        val writtenOpt0 = createOrUpdate(appInfo, currentTime, force)
-        if (!writtenOpt0.exists(!_) && verbosity >= 1)
-          System.err.println(s"No new update for $name" + System.lineSeparator())
-        writtenOpt0
-      }
+            writtenOpt <- Task.delay {
+              val writtenOpt0 = createOrUpdate(appInfo, currentTime, force)
+              if (!writtenOpt0.exists(!_) && verbosity >= 1)
+                System.err.println(s"No new update for $name" + System.lineSeparator())
+              writtenOpt0
+            }
+          } yield writtenOpt
+        else {
+          System.err.println(
+            s"""Cannot find installed application '$name' (installation directory is ${launcher.getParent()}).
+               |Try running 'cs install $name'.""".stripMargin
+          )
+          Task.point(Some(false))
+        }
     } yield writtenOpt
 
   def envUpdate: EnvironmentUpdate =

@@ -109,7 +109,7 @@ object Output {
           val classpathOrder = params.classpathOrder.getOrElse(false)
           Print.dependenciesUnknownConfigs(
             if (classpathOrder) res.orderedDependencies else res.minDependencies.toVector,
-            res.projectCache.mapValues { case (_, p) => p },
+            res.projectCache.map { case (k, (_, p)) => k -> p },
             printExclusions = withExclusions,
             reorder = !classpathOrder
           )

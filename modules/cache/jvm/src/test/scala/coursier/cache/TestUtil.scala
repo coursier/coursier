@@ -18,11 +18,15 @@ import javax.net.ssl.{
   TrustManager,
   X509TrustManager
 }
+import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.dsl.io._
 import org.http4s.headers.{Authorization, `WWW-Authenticate`}
-import org.http4s.server.blaze.BlazeBuilder
+import org.http4s.server.Router
 import org.http4s.util.CaseInsensitiveString
-import org.http4s.{BasicCredentials, Challenge, HttpService, Request, Uri}
+import org.http4s.{BasicCredentials, Challenge, HttpRoutes, Request, Uri}
+import org.typelevel.ci.CIString
+
+import scala.concurrent.ExecutionContext
 
 object TestUtil {
 
@@ -67,36 +71,39 @@ object TestUtil {
   }
 
   def withHttpServer[T](
-    routes: HttpService[IO],
+    routes: HttpRoutes[IO],
     withSsl: Boolean = false
   )(
     f: Uri => T
   ): T = {
 
+    import cats.effect.unsafe.implicits.global
+
     val server = {
 
-      val builder = BlazeBuilder[IO]
-        .mountService(routes)
+      val builder = BlazeServerBuilder[IO]
+        .withHttpApp(Router("/" -> routes).orNotFound)
 
-      (if (withSsl) builder.withSSLContext(serverSslContext) else builder)
+      (if (withSsl) builder.withSslContext(serverSslContext) else builder)
         .bindHttp(0, "localhost")
-        .start
-        .unsafeRunSync()
+        .resource
     }
 
-    assert(server.baseUri.renderString.startsWith(if (withSsl) "https://" else "http://"))
-
-    try f(server.baseUri)
-    finally server.shutdownNow()
+    server
+      .use { server0 =>
+        assert(server0.baseUri.renderString.startsWith(if (withSsl) "https://" else "http://"))
+        IO(f(server0.baseUri))
+      }
+      .unsafeRunSync()
   }
 
   def authorized(req: Request[IO], userPass: (String, String)): Boolean = {
 
     val res = for {
-      token <- req.headers.get(Authorization).map(_.credentials).collect {
+      token <- req.headers.get[Authorization].map(_.credentials).collect {
         case t: org.http4s.Credentials.Token => t
       }
-      if token.authScheme == CaseInsensitiveString("Basic")
+      if token.authScheme == CIString("Basic")
       c = BasicCredentials(token.token)
       if (c.username, c.password) == userPass
     } yield ()
@@ -112,7 +119,7 @@ object TestUtil {
       uri.copy(
         authority = uri.authority.map { authority =>
           authority.copy(
-            userInfo = userOpt
+            userInfo = userOpt.map(s => Uri.UserInfo(s, None))
           )
         }
       )
@@ -121,9 +128,8 @@ object TestUtil {
   def artifact(uri: Uri, changing: Boolean): Artifact = {
     val (uri0, authOpt) = uri.userInfo match {
       case Some(info) =>
-        assert(!info.contains(':'))
         val updatedUri = uri.copy(authority = uri.authority.map(_.copy(userInfo = None)))
-        (updatedUri, Some(Authentication(info)))
+        (updatedUri, Some(Authentication(info.username)))
       case None =>
         (uri, None)
     }
@@ -139,7 +145,13 @@ object TestUtil {
     f.delete()
   }
 
-  def withTmpDir[T](f: Path => T): T = {
+  def withTmpDir[T](f: os.Path => T): T = {
+    val dir = os.temp.dir(prefix = "coursier-test")
+    try f(dir)
+    finally os.remove.all(dir)
+  }
+
+  def withTmpDir0[T](f: Path => T): T = {
     val dir = Files.createTempDirectory("coursier-test")
     val shutdownHook: Thread =
       new Thread {
