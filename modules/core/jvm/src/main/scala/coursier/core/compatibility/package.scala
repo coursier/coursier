@@ -2,7 +2,9 @@ package coursier.core
 
 import java.io.CharArrayReader
 import java.util.Locale
+import javax.xml.parsers.ParserConfigurationException
 import javax.xml.parsers.SAXParserFactory
+import javax.xml.XMLConstants
 
 import coursier.util.{SaxHandler, Xml}
 import org.xml.sax
@@ -108,6 +110,30 @@ package object compatibility {
   private lazy val spf = {
     val spf0 = SAXParserFactory.newInstance()
     spf0.setNamespaceAware(false)
+
+    // Fixing CVE-2022-46751: External Entity Reference Vulnerability
+    def trySetFeature(feature: String, value: Boolean): Unit = {
+      try spf0.setFeature(feature, value)
+      catch {
+        case _: ParserConfigurationException | _: sax.SAXNotRecognizedException | _: sax.SAXNotSupportedException =>
+          ()
+      }
+    }
+    // Allow doctype processing
+    trySetFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
+    // Process XML in accordance with the XML specification to avoid conditions such as denial of service attacks
+    trySetFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
+    // Disallow external entities
+    trySetFeature("http://xml.org/sax/features/external-general-entities", false)
+    trySetFeature("http://xml.org/sax/features/external-parameter-entities", false)
+    // Allow external dtd
+    trySetFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", true)
+    // Disallow XInclude processing
+    try spf0.setXIncludeAware(false)
+    catch {
+      case e: UnsupportedOperationException => ()
+    }
+
     spf0
   }
 

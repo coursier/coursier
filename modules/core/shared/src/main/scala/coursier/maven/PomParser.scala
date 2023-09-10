@@ -194,23 +194,12 @@ object PomParser {
             Right(())
         }
 
-        extraAttrs <- properties0
-          .collectFirst { case ("extraDependencyAttributes", s) => Pom.extraAttributes(s) }
-          .getOrElse(Right(Map.empty))
-
       } yield {
 
         val parentOpt = for {
           parentModule  <- parentModuleOpt
           parentVersion <- validateCoordinate(parentVersion, "parent version")
         } yield (parentModule, parentVersion)
-
-        val extraAttrsMap = extraAttrs
-          .map {
-            case (mod, ver) =>
-              (mod.withAttributes(Map.empty), ver) -> mod.attributes
-          }
-          .toMap
 
         val projModule = Module(Organization(finalGroupId), ModuleName(artifactId), Map.empty)
 
@@ -241,13 +230,7 @@ object PomParser {
         Project(
           projModule,
           finalVersion,
-          (relocationDependencyOpt.toList ::: dependencies.toList).map {
-            case (config, dep0) =>
-              val dep = extraAttrsMap.get(dep0.moduleVersion).fold(dep0)(attrs =>
-                dep0.withModule(dep0.module.withAttributes(attrs))
-              )
-              config -> dep
-          },
+          relocationDependencyOpt.toList ::: dependencies.toList,
           Map.empty,
           parentOpt.toOption,
           dependencyManagement.toList,

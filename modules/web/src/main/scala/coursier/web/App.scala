@@ -10,6 +10,7 @@ import coursier.{
   moduleString,
   organizationString
 }
+import coursier.maven.MavenRepositoryLike
 import japgolly.scalajs.react.vdom.{Attr, TagMod}
 import japgolly.scalajs.react.vdom.HtmlAttrs.dangerouslySetInnerHtml
 import japgolly.scalajs.react._
@@ -79,7 +80,7 @@ object App {
             )),
             <.td(TagMod(
               res.projectCache.get(dep.moduleVersion) match {
-                case Some((source: MavenRepository, proj)) =>
+                case Some((source: MavenRepositoryLike, proj)) =>
                   // FIXME Maven specific, generalize with source.artifacts
                   val version0 = finalVersionOpt getOrElse dep.version
                   val relPath =

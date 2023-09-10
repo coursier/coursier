@@ -10,6 +10,7 @@ import coursier.cli.channel.Channel
 import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.setup.MaybeSetupPath
 import coursier.cli.Util.ValidatedExitOnError
+import coursier.env.ShellUtil
 import coursier.install.{Channels, InstallDir, RawSource}
 import coursier.install.error.InstallDirException
 import coursier.launcher.internal.Windows
@@ -159,7 +160,7 @@ object Install extends CoursierCommand[InstallOptions] {
         if (!path(params.shared.dir.toAbsolutePath.toString)) {
           System.err.println(s"Warning: ${params.shared.dir} is not in your PATH")
           if (!Properties.isWin) {
-            val rcFile = ShellUtil.rcFileOpt.getOrElse("your shell configuration file")
+            val rcFile = ShellUtil.rcFileOpt().getOrElse("your shell configuration file")
             System.err.println(
               s"""To fix that, add the following line to $rcFile
                  |

@@ -9,6 +9,7 @@ import com.google.common.jimfs.Jimfs
 import utest._
 
 import scala.collection.compat.immutable.LazyList
+import java.nio.file.Paths
 
 object ProfileUpdaterTests extends TestSuite {
 
@@ -88,6 +89,37 @@ object ProfileUpdaterTests extends TestSuite {
       val dotProfile =
         new String(Files.readAllBytes(home.resolve(".profile")), StandardCharsets.UTF_8)
       assert(dotProfile.contains(expectedInDotProfile))
+    }
+
+    test("set variable in ~/.config/alex/fish/config.fish") {
+      val fs   = Jimfs.newFileSystem(Configuration.unix())
+      val home = fs.getPath("/home/alex/")
+      val env = Map(
+        "SHELL" -> "/bin/fish"
+      )
+      val updater = ProfileUpdater()
+        .withHome(Some(home))
+        .withGetEnv(Some(env.get))
+        .withCharset(StandardCharsets.UTF_8)
+        .withPathSeparator(":")
+
+      val expectedProfileFiles = Seq("/home/alex/.config/fish/config.fish")
+      val profileFiles         = updater.profileFiles().map(_.toString)
+      assert(profileFiles == expectedProfileFiles)
+
+      val update = EnvironmentUpdate().withSet(Seq("JAVA_HOME" -> "/foo/jvm/oracle-jdk-1.5"))
+      updater.applyUpdate(update)
+
+      val expectedInFishConfig =
+        """
+          |set -gx JAVA_HOME "/foo/jvm/oracle-jdk-1.5"
+          |""".stripMargin
+      val fishConfig =
+        new String(
+          Files.readAllBytes(home.resolve(".config/fish/config.fish")),
+          StandardCharsets.UTF_8
+        )
+      assert(fishConfig.contains(expectedInFishConfig))
     }
 
     test("create ~/.profile and ~/.zprofile") {
@@ -280,6 +312,64 @@ object ProfileUpdaterTests extends TestSuite {
            |""".stripMargin
 
       val newDotProfileBytes = Files.readAllBytes(home.resolve(".profile"))
+      val newDotProfile      = new String(newDotProfileBytes, StandardCharsets.UTF_8)
+      assert(newDotProfile.contains(newlyExpectedInDotProfile))
+
+      // checking that the last update changed the previous one,
+      // rather than simply appended stuff to the file
+      val startTagIndices = indicesOf(newDotProfile, s"# >>> $title >>>")
+      assert(startTagIndices.length == 1)
+
+      val endTagIndices = indicesOf(newDotProfile, s"# <<< $title <<<")
+      assert(endTagIndices.length == 1)
+
+      val exportPathIndices = indicesOf(newDotProfile, "export PATH=")
+      assert(endTagIndices.length == 1)
+    }
+
+    test("update the previous section fish") {
+      val fs   = Jimfs.newFileSystem(Configuration.unix())
+      val home = fs.getPath("/home/alex")
+      val env = Map(
+        "SHELL" -> "/bin/fish"
+      )
+      val updater = ProfileUpdater()
+        .withHome(Some(home))
+        .withGetEnv(Some(env.get))
+        .withCharset(StandardCharsets.UTF_8)
+        .withPathSeparator(":")
+      val title = "foo title"
+
+      val expectedProfileFiles = Seq("/home/alex/.config/fish/config.fish")
+      val profileFiles         = updater.profileFiles().map(_.toString)
+      assert(profileFiles == expectedProfileFiles)
+
+      val update = EnvironmentUpdate()
+        .withPathLikeAppends(Seq("PATH" -> "/foo/bin"))
+
+      updater.applyUpdate(update, title)
+
+      val expectedInFishConfig =
+        s"""# >>> $title >>>
+           |set -gx PATH "$$PATH:/foo/bin"
+           |# <<< $title <<<
+           |""".stripMargin
+      val fishConfigBytes = Files.readAllBytes(home.resolve(".config/fish/config.fish"))
+      val fishConfig      = new String(fishConfigBytes, StandardCharsets.UTF_8)
+      assert(fishConfig.contains(expectedInFishConfig))
+
+      val newUpdate = EnvironmentUpdate()
+        .withPathLikeAppends(Seq("PATH" -> "/other/bin"))
+
+      updater.applyUpdate(newUpdate, title)
+
+      val newlyExpectedInDotProfile =
+        s"""# >>> $title >>>
+           |set -gx PATH "$$PATH:/other/bin"
+           |# <<< $title <<<
+           |""".stripMargin
+
+      val newDotProfileBytes = Files.readAllBytes(home.resolve(".config/fish/config.fish"))
       val newDotProfile      = new String(newDotProfileBytes, StandardCharsets.UTF_8)
       assert(newDotProfile.contains(newlyExpectedInDotProfile))
 

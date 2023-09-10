@@ -33,7 +33,12 @@ documentation (its address should be printed in the console).
 
 ## Watch mode
 
-To run the website while watching its sources (which live under `doc/docs`), run
+To run the website while watching its sources (which live under `doc/docs`), run once
+```bash
+$ ./mill -i doc.generate --npm-install --yarn-run-build
+```
+
+Then run the following command to actually watch the documentation markdown files for changes:
 ```bash
 $ ./mill -i doc.generate --npm-install --yarn-run-build --watch
 ```

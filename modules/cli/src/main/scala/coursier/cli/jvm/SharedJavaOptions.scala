@@ -7,6 +7,7 @@ import coursier.cli.options.OptionGroup
 final case class SharedJavaOptions(
 
   @Group(OptionGroup.java)
+  @HelpMessage("The JVM you're targeting (e.g. --jvm temurin:1.17)")
     jvm: Option[String] = None,
 
   @Group(OptionGroup.java)
@@ -18,6 +19,7 @@ final case class SharedJavaOptions(
     update: Boolean = false,
 
   @Group(OptionGroup.java)
+  @HelpMessage("Location of the JVM index that you'd like to use")
     jvmIndex: Option[String] = None,
 
   @Group(OptionGroup.java)

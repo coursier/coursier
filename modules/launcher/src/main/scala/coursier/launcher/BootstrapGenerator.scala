@@ -39,7 +39,7 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
                     () => WrappedZipInputStream.create(new ByteArrayInputStream(r.content))
                   )
 
-                AssemblyGenerator.writeEntries(files.map(Left(_)), zos, MergeRule.default)
+                AssemblyGenerator.writeEntries(files.map(Left(_)), zos, parameters.rules)
 
                 val remaining = c.entries.collect { case u: ClassPathEntry.Url => u }
                 if (remaining.isEmpty)
@@ -120,12 +120,21 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
     }
 
     for ((ent, data) <- bootstrapZip.entriesWithData()) {
-      try outputZip.putNextEntry(ent)
-      catch {
-        case _: ZipException if ent.isDirectory =>
-        // likely a duplicate entry error, ignoring it for directories
-      }
-      outputZip.write(data)
+      val writeData =
+        try {
+          outputZip.putNextEntry(ent)
+          true
+        }
+        catch {
+          case _: ZipException if ent.isDirectory =>
+            // likely a duplicate entry error, ignoring it for directories
+            false
+          case e: ZipException if e.getMessage.startsWith("duplicate entry") =>
+            // bootstrap entry already in user entries, assuming the user entry will work fine
+            false
+        }
+      if (writeData)
+        outputZip.write(data)
       outputZip.closeEntry()
     }
 
@@ -183,10 +192,10 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
         val suffix = if (idx == len - 1) "" else "-" + (idx + 1)
 
         // really needed to sort here?
-        putStringEntry(resourceDir + s"$name-jar-urls" + suffix, urls.sorted.mkString("\n"))
+        putStringEntry(resourceDir + s"$name-jar-urls" + suffix, urls.mkString("\n"))
         putStringEntry(
           resourceDir + s"$name-jar-resources" + suffix,
-          resources.sorted.mkString("\n")
+          resources.mkString("\n")
         )
 
         if (c.loaderName.nonEmpty)

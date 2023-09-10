@@ -47,6 +47,16 @@ import scala.collection.mutable
       .mkString("\n")
   }
 
+  def fishScript: String = {
+    val q = "\""
+    bashScriptUpdates
+      .map {
+        case (k, v) =>
+          s"""set -x $k "${v.replace(q, "\\" + q)}""""
+      }
+      .mkString("\n")
+  }
+
   def batScript: String = {
     val q = "\""
     batScriptUpdates

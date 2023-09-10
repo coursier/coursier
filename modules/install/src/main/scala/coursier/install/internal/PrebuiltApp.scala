@@ -206,7 +206,7 @@ object PrebuiltApp {
 
     if (desc.launcherType.isNative)
       desc.prebuiltLauncher
-        .orElse(desc.prebuiltBinaries.get(platform.getOrElse("")))
+        .orElse(platform.flatMap(desc.prebuiltBinaries.get))
         .map(patternArtifacts)
     else
       None

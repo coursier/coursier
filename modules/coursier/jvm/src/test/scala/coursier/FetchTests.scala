@@ -5,6 +5,7 @@ import java.io.File
 import coursier.core.{Activation, Configuration, Extension}
 import coursier.params.ResolutionParams
 import coursier.ivy.IvyRepository
+import coursier.util.Task
 import utest._
 
 import scala.async.Async.{async, await}
@@ -333,6 +334,33 @@ object FetchTests extends TestSuite {
       }
     }
 
-  }
+    test("jai_core") {
+      test("ko") {
+        val cache1 = cache match {
+          case cache: coursier.cache.MockCache[Task] =>
+            cache.withDummyArtifact(_ => false)
+        }
+        try {
+          val res = fetch
+            .withCache(cache1)
+            .addDependencies(dep"javax.media:jai_core:1.1.3")
+            .run()
+          println(s"res=$res")
+          assert(false)
+        }
+        catch { case _: coursier.error.FetchError.DownloadingArtifacts => () }
+      }
 
+      test("ok") - async {
+        val res = await {
+          val osgeo = MavenRepository("https://repo.osgeo.org/repository/release")
+          fetch
+            .withRepositories(Seq(osgeo, Repositories.central))
+            .addDependencies(dep"javax.media:jai_core:1.1.3")
+            .future()
+        }
+        assert(res(0) != null)
+      }
+    }
+  }
 }

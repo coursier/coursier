@@ -19,7 +19,13 @@ import coursier.env.EnvironmentUpdate
 import coursier.error.ResolutionError
 import coursier.install.{Channels, MainClass, RawAppDescriptor}
 import coursier.jvm.Execve
-import coursier.launcher.{BootstrapGenerator, ClassLoaderContent, ClassPathEntry, Parameters}
+import coursier.launcher.{
+  BootstrapGenerator,
+  ClassLoaderContent,
+  ClassPathEntry,
+  MergeRule,
+  Parameters
+}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.paths.Jep
 import coursier.util.{Artifact, Sync, Task}
@@ -46,7 +52,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
   }
 
   def launchFork(
-    hierarchy: Seq[(Option[String], Array[File])],
+    hierarchy: Seq[(Option[String], Array[(Option[Artifact], File)])],
     mainClass: String,
     args: Seq[String],
     javaPath: String,
@@ -54,29 +60,56 @@ object Launch extends CoursierCommand[LaunchOptions] {
     properties: Seq[(String, String)],
     extraEnv: EnvironmentUpdate,
     verbosity: Int,
-    execve: Option[Boolean]
+    execve: Option[Boolean],
+    hybrid: Boolean,
+    useBootstrap: Boolean,
+    assemblyRules: Seq[MergeRule],
+    workDirOpt: Option[Path]
   ): Either[LaunchException, () => Int] = {
 
     val cp = hierarchy match {
-      case Seq((None, files)) =>
-        Right(files.map(_.getAbsolutePath).mkString(File.pathSeparator))
+      case Seq((None, files)) if !useBootstrap =>
+        Right(files.map(_._2.getAbsolutePath).mkString(File.pathSeparator))
       case _ =>
         val content = hierarchy.map {
           case (nameOpt, files) =>
-            val entries = files.toSeq.map(f => ClassPathEntry.Url(f.toURI.toASCIIString))
+            val entries = files.toSeq.map { case (aOpt, f) =>
+              if (hybrid)
+                ClassPathEntry.Resource(
+                  f.getName,
+                  f.lastModified(),
+                  Files.readAllBytes(f.toPath)
+                )
+              else {
+                val url = aOpt
+                  .filter(_.authentication.isEmpty) // that might be surprising down-the-line…
+                  .map(_.url)
+                  .getOrElse(f.toURI.toASCIIString)
+                ClassPathEntry.Url(url)
+              }
+            }
             ClassLoaderContent(entries, nameOpt.getOrElse(""))
         }
-        val tmpFile = Files.createTempFile("coursier-launch-", ".jar")
-        // not sure that will be fine if we use execve instead of ProcessBuilder
-        // (does the shutdown hook run deleting the file? or doesn't it, leaving junk behind?)
-        Runtime.getRuntime().addShutdownHook(
-          new Thread {
-            override def run(): Unit =
-              Files.deleteIfExists(tmpFile)
-          }
-        )
+        val tmpFile = workDirOpt match {
+          case Some(workDir) =>
+            Files.createDirectories(workDir)
+            Files.createTempFile(workDir, "coursier-launch-", ".jar")
+          case None =>
+            val f = Files.createTempFile("coursier-launch-", ".jar")
+            // not sure that will be fine if we use execve instead of ProcessBuilder
+            // (does the shutdown hook run deleting the file? or doesn't it, leaving junk behind?)
+            Runtime.getRuntime().addShutdownHook(
+              new Thread {
+                override def run(): Unit =
+                  Files.deleteIfExists(f)
+              }
+            )
+            f
+        }
         val bootstrapParams = Parameters.Bootstrap(content, mainClass)
           .withPreambleOpt(None)
+          .withHybridAssembly(hybrid)
+          .withRules(assemblyRules)
         BootstrapGenerator.generate(bootstrapParams, tmpFile)
         Left(tmpFile.toAbsolutePath.toFile)
     }
@@ -208,29 +241,38 @@ object Launch extends CoursierCommand[LaunchOptions] {
     artifactParams: ArtifactParams,
     extraJars: Seq[File],
     classpathOrder: Boolean
-  ): Seq[(Option[String], Array[File])] = {
+  ): Seq[(Option[String], Array[(Option[Artifact], File)])] = {
     val fileMap      = files.toMap
     val alreadyAdded = Set.empty[File] // unused???
-    val parents = sharedLoaderParams.loaderNames.map { name =>
-      val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
-      val subRes = res.subset(deps.map(_.dependency(
-        JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")),
-        scalaVersionOpt.getOrElse(""),
-        platformOpt.getOrElse("")
-      )))
-      val artifacts = coursier.Artifacts.artifacts(
-        subRes,
-        artifactParams.classifiers,
-        Option(artifactParams.mainArtifacts).map(x => x),
-        Option(artifactParams.artifactTypes),
-        classpathOrder
-      ).map(_._3)
-      val files0 = artifacts
-        .map(a => fileMap.getOrElse(a, sys.error("should not happen")))
-        .filter(!alreadyAdded(_))
-      Some(name) -> files0.toArray
-    }
-    val cp = files.map(_._2).filterNot(alreadyAdded).toArray ++ extraJars
+    val parents: Seq[(Some[String], Array[(Option[Artifact], File)])] =
+      sharedLoaderParams
+        .loaderNames
+        .map { name =>
+          val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
+          val subRes = res.subset(deps.map(_.dependency(
+            JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")),
+            scalaVersionOpt.getOrElse(""),
+            platformOpt.getOrElse("")
+          )))
+          val artifacts = coursier.Artifacts.artifacts(
+            subRes,
+            artifactParams.classifiers,
+            Option(artifactParams.mainArtifacts).map(x => x),
+            Option(artifactParams.artifactTypes),
+            classpathOrder
+          ).map(_._3)
+          val files0 = artifacts
+            .map(a => (Option(a), fileMap.getOrElse(a, sys.error("should not happen"))))
+            .filter { case (_, f) => !alreadyAdded(f) }
+          Some(name) -> files0.toArray
+        }
+    val cp =
+      files
+        .filter { case (_, f) => !alreadyAdded(f) }
+        .map { case (a, f) => (Option(a), f) }
+        .toArray ++
+        extraJars
+          .map((None, _))
     parents :+ (None, cp)
   }
 
@@ -282,7 +324,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
     javaPath: String,
     mainClass0: String,
     files: Seq[File],
-    hierarchy: Seq[(Option[String], Array[File])],
+    hierarchy: Seq[(Option[String], Array[(Option[Artifact], File)])],
     props: Seq[(String, String)],
     extraEnv: EnvironmentUpdate,
     userArgs: Seq[String]
@@ -344,14 +386,14 @@ object Launch extends CoursierCommand[LaunchOptions] {
       if (extraJars.isEmpty) hierarchy
       else {
         val (nameOpt, files0) = hierarchy.last
-        hierarchy.init :+ ((nameOpt, files0 ++ extraJars))
+        hierarchy.init :+ ((nameOpt, files0 ++ extraJars.map((None, _))))
       }
 
     val jcp =
       hierarchy0 match {
         case Seq((None, files)) =>
           Seq(
-            "java.class.path" -> files.map(_.getAbsolutePath).mkString(File.pathSeparator)
+            "java.class.path" -> files.map(_._2.getAbsolutePath).mkString(File.pathSeparator)
           )
         case _ =>
           Nil
@@ -378,7 +420,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
       b.result()
     }
 
-    if (params.fork)
+    if (params.fork || params.hybrid || params.useBootstrap)
       launchFork(
         hierarchy0,
         mainClass0,
@@ -388,11 +430,20 @@ object Launch extends CoursierCommand[LaunchOptions] {
         properties0,
         pythonJepEnv + extraEnv,
         params.shared.resolve.output.verbosity,
-        params.execve
+        params.execve,
+        params.hybrid,
+        params.useBootstrap,
+        params.assemblyRules,
+        params.workDir
       )
         .map(f => () => Some(f()))
     else
-      launch(hierarchy0, mainClass0, userArgs, properties0)
+      launch(
+        hierarchy0.map { case (name, f) => (name, f.map(_._2)) },
+        mainClass0,
+        userArgs,
+        properties0
+      )
         // format: off
         .map {f => () => f(); None}
         // format: on
@@ -428,18 +479,19 @@ object Launch extends CoursierCommand[LaunchOptions] {
           .withResolutionParams(params0.resolution)
           .withCache(cache)
           .withFetchCache(params.fetchCacheIKnowWhatImDoing.map(new File(_)))
-          .io
+          .ioResult
+          .map(_.artifacts)
       }
       javaPathEnvUpdate <- params.javaPath(cache)
       (javaPath, envUpdate) = javaPathEnvUpdate
-      mainClass0 <- mainClass(params.shared, files, deps0.headOption)
+      mainClass0 <- mainClass(params.shared, files.map(_._2), deps0.headOption)
       f <- Task.fromEither {
         launchCall(
           params,
           javaPath,
           mainClass0,
-          files,
-          Seq((None, files.toArray)),
+          files.map(_._2),
+          Seq((None, files.map { case (a, f) => (Option(a), f) }.toArray)),
           params.shared.properties,
           envUpdate,
           userArgs

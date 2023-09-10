@@ -24,8 +24,10 @@ import caseapp.Group
 )
 final case class JavaOptions(
   @Group(OptionGroup.java)
+  @HelpMessage("List all available JVMs")
     available: Boolean = false,
   @Group(OptionGroup.java)
+  @HelpMessage("List all the installed JVMs")
     installed: Boolean = false,
   @Recurse
     sharedJavaOptions: SharedJavaOptions = SharedJavaOptions(),

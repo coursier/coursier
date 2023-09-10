@@ -52,7 +52,9 @@ object Parameters {
     python: Boolean = false,
     @since
     pythonJep: Boolean = false,
-    extraContent: Map[String, Seq[ClassLoaderContent]] = Map()
+    extraContent: Map[String, Seq[ClassLoaderContent]] = Map(),
+    @since
+    rules: Seq[MergeRule] = MergeRule.default
   ) extends Parameters {
 
     def withPreamble(preamble: Preamble): Bootstrap =

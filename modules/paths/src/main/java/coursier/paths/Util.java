@@ -68,6 +68,7 @@ public class Util {
                 if (subValue == null)
                     subValue = ""; // throw instead?
                 value = value.substring(0, start) + subValue + value.substring(end);
+                matcher = propertyRegex.matcher(value);
             }
 
             resolved.put(k, value);

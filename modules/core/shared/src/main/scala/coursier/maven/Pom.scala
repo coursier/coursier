@@ -216,18 +216,7 @@ object Pom {
 
       profiles <- xmlProfiles.eitherTraverse(profile)
 
-      extraAttrs <- properties
-        .collectFirst { case ("extraDependencyAttributes", s) => extraAttributes(s) }
-        .getOrElse(Right(Map.empty))
-
     } yield {
-
-      val extraAttrsMap = extraAttrs
-        .map {
-          case (mod, ver) =>
-            (mod.withAttributes(Map.empty), ver) -> mod.attributes
-        }
-        .toMap
 
       val description = pom.children
         .find(_.label == "description")
@@ -311,13 +300,7 @@ object Pom {
       Project(
         finalProjModule,
         version,
-        (relocationDependencyOpt.toSeq ++ deps).map {
-          case (config, dep0) =>
-            val dep = extraAttrsMap.get(dep0.moduleVersion).fold(dep0)(attrs =>
-              dep0.withModule(dep0.module.withAttributes(attrs))
-            )
-            config -> dep
-        },
+        relocationDependencyOpt.toSeq ++ deps,
         Map.empty,
         parentModuleOpt.map((_, parentVersionOpt.getOrElse(""))),
         depMgmts,
@@ -488,63 +471,6 @@ object Pom {
   )
 
   val extraAttributeDropPrefix = "e:"
-
-  def extraAttribute(s: String): Either[String, (Module, String)] = {
-    // vaguely does the same as:
-    // https://github.com/apache/ant-ivy/blob/2.2.0/src/java/org/apache/ivy/core/module/id/ModuleRevisionId.java#L291
-
-    // dropping the attributes with a value of NULL here...
-
-    val rawParts = s.split(extraAttributeSeparator).toSeq
-
-    val partsOrError =
-      if (rawParts.length % 2 == 0) {
-        val malformed = rawParts.filter(!_.startsWith(extraAttributePrefix))
-        if (malformed.isEmpty)
-          Right(rawParts.map(_.drop(extraAttributePrefix.length)))
-        else
-          Left(
-            s"Malformed attributes ${malformed.map("'" + _ + "'").mkString(", ")} in extra attributes '$s'"
-          )
-      }
-      else
-        Left(s"Malformed extra attributes '$s'")
-
-    def attrFrom(attrs: Map[String, String], name: String): Either[String, String] =
-      attrs
-        .get(name)
-        .toRight(s"$name not found in extra attributes '$s'")
-
-    for {
-      parts <- partsOrError
-      attrs = parts
-        .grouped(2)
-        .collect {
-          case Seq(k, v) if v != "NULL" =>
-            k.stripPrefix(extraAttributeDropPrefix) -> v
-        }
-        .toMap
-      org     <- attrFrom(attrs, extraAttributeOrg).map(Organization(_))
-      name    <- attrFrom(attrs, extraAttributeName).map(ModuleName(_))
-      version <- attrFrom(attrs, extraAttributeVersion)
-    } yield {
-      val remainingAttrs = attrs.view.filterKeys(!extraAttributeBase(_))
-      (Module(org, name, remainingAttrs.toVector.toMap), version)
-    }
-  }
-
-  def extraAttributes(s: String): Either[String, Seq[(Module, String)]] = {
-
-    val lines = s.split('\n').toSeq.map(_.trim).filter(_.nonEmpty)
-
-    lines.foldLeft[Either[String, Seq[(Module, String)]]](Right(Vector.empty)) {
-      case (acc, line) =>
-        for {
-          modVers <- acc
-          modVer  <- extraAttribute(line)
-        } yield modVers :+ modVer
-    }
-  }
 
   def addOptionalDependenciesInConfig(
     proj: Project,

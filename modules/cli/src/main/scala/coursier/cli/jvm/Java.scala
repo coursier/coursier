@@ -8,6 +8,7 @@ import coursier.cli.params.EnvParams
 import coursier.cli.setup.MaybeInstallJvm
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.core.Version
+import coursier.env.{Shell, ShellUtil}
 import coursier.jvm.{Execve, JvmCache, JvmCacheLogger}
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
@@ -144,7 +145,10 @@ object Java extends CoursierCommand[JavaOptions] {
           if (params.env.windowsScript)
             coursier.jvm.JavaHome.finalBatScript(envUpdate)
           else
-            coursier.jvm.JavaHome.finalBashScript(envUpdate)
+            ShellUtil.shell() match {
+              case Some(Shell.Fish) => coursier.jvm.JavaHome.finalFishScript(envUpdate)
+              case _                => coursier.jvm.JavaHome.finalBashScript(envUpdate)
+            }
         print(script)
       }
       else if (params.env.disableEnv) {
@@ -152,7 +156,10 @@ object Java extends CoursierCommand[JavaOptions] {
           if (params.env.windowsScript)
             coursier.jvm.JavaHome.disableBatScript()
           else
-            coursier.jvm.JavaHome.disableBashScript()
+            ShellUtil.shell() match {
+              case Some(Shell.Fish) => coursier.jvm.JavaHome.disableFishScript()
+              case _                => coursier.jvm.JavaHome.disableBashScript()
+            }
         print(script)
       }
       else if (params.env.setup) {

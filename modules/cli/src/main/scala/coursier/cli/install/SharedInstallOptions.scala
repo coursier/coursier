@@ -45,5 +45,5 @@ final case class SharedInstallOptions(
 
 object SharedInstallOptions {
   def defaultGraalvmVersion: Option[String] =
-    Some("19.3")
+    Some("22.1")
 }
