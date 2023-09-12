@@ -251,6 +251,25 @@ object ResolveTests extends TestSuite {
             await(validateDependencies(res))
           }
 
+          test("resolveConcreteVersion") - async {
+
+            val res = await {
+              resolve0
+                .addDependencies(
+                  dep"com.chuusai:shapeless_2.12:2.3+"
+                )
+                .future()
+            }
+
+            await(validateDependencies(res))
+            val transitives = res.dependencyArtifacts().map(_._1)
+
+            assert(transitives.find(d => d.module == mod"com.chuusai:shapeless_2.12") match {
+              case Some(d) => d.version == "2.3.3"
+              case _       => false
+            })
+          }
+
           test("out") - async {
 
             val res = await {
