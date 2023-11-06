@@ -1,4 +1,4 @@
-import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
+import $ivy.`com.lihaoyi::mill-contrib-bloop:`
 import $ivy.`io.get-coursier.util::get-cs:0.1.1`
 import $file.project.deps, deps.{Deps, ScalaVersions, scalaCliVersion}
 import $file.project.docs
@@ -43,8 +43,7 @@ import scala.concurrent.duration._
 import scala.util.Properties
 
 // Tell mill modules are under modules/
-implicit def millModuleBasePath: define.BasePath =
-  define.BasePath(super.millModuleBasePath.value / "modules")
+def millSourcePath = super.millSourcePath / "modules"
 
 object util extends Module {
   object jvm extends Cross[UtilJvm](ScalaVersions.all: _*)
