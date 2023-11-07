@@ -19,7 +19,7 @@ lazy val cs: String =
 
     candidates
       .filter(_.canExecute)
-      .toStream
+      .to(LazyList)
       .headOption
       .map(_.getAbsolutePath)
       .getOrElse {

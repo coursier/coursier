@@ -259,7 +259,7 @@ class CacheJvm(val crossScalaVersion: String) extends CacheJvmBase {
   def customLoaderCp = T {
     `custom-protocol-for-test`.runClasspath()
   }
-  object test extends Tests with CsTests {
+  object test extends CacheJvmBaseTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.http4sBlazeServer,
       Deps.http4sDsl,
@@ -309,7 +309,7 @@ class Env(val crossScalaVersion: String) extends CrossSbtModule with CsModule
     Deps.collectionCompat,
     Deps.jniUtils
   )
-  object test extends Tests with CsTests {
+  object test extends CrossSbtModuleTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.jimfs
     )
@@ -698,7 +698,7 @@ def simpleNative04CliTest() = T.command {
       os.proc(tmpDir / "native-echo", "-n", "foo", "a").call()
     }
     finally cleanUp()
-  assert(res.out.text == "foo a")
+  assert(res.out.text() == "foo a")
 }
 def copyTo(task: mill.main.Tasks[PathRef], dest: os.Path) = T.command {
   if (task.value.length > 1)

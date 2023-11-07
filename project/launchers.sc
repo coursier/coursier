@@ -61,7 +61,7 @@ trait Launchers extends CsModule {
         "-A",
         "lib"
       ).call()
-      val libPath = os.Path(libRes.out.text.trim, os.pwd)
+      val libPath = os.Path(libRes.out.text().trim(), os.pwd)
       os.copy.over(libPath, destDir / "csjniutils.lib")
     }
 
