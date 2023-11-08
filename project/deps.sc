@@ -32,7 +32,7 @@ object Deps {
   def mdoc           = ivy"org.scalameta::mdoc:2.3.7"
   def noCrcZis       = ivy"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
   def osLib          = ivy"com.lihaoyi::os-lib:0.9.2"
-  def plexusArchiver = ivy"org.codehaus.plexus:plexus-archiver:4.8.0"
+  def plexusArchiver = ivy"org.codehaus.plexus:plexus-archiver:4.9.0"
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
@@ -54,7 +54,7 @@ object Deps {
   def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.9"
   def svm                      = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
   def ujson                    = ivy"com.lihaoyi::ujson:3.1.2"
-  def utest                    = ivy"com.lihaoyi::utest::0.8.1"
+  def utest                    = ivy"com.lihaoyi::utest::0.8.2"
   def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.5"
 }
 
