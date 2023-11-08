@@ -5,7 +5,7 @@ object Deps {
   def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M26"
   def catsCore          = ivy"org.typelevel::cats-core:${Versions.cats}"
   def catsFree          = ivy"org.typelevel::cats-free:${Versions.cats}"
-  def catsEffect        = ivy"org.typelevel::cats-effect::3.5.1"
+  def catsEffect        = ivy"org.typelevel::cats-effect::3.5.2"
   def classPathUtil     = ivy"io.get-coursier::class-path-util:0.1.4"
   def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.11.0"
   def concurrentReferenceHashMap =
