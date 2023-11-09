@@ -317,8 +317,9 @@ class Env(val crossScalaVersion: String) extends CrossSbtModule with CsModule
 }
 
 def mainCliScalaVersion = ScalaVersions.scala212
-def launcherModule = launcher
-class LauncherNative04(val crossScalaVersion: String) extends CsCrossJvmJsModule with CoursierPublishModule {
+def launcherModule      = launcher
+class LauncherNative04(val crossScalaVersion: String) extends CsCrossJvmJsModule
+    with CoursierPublishModule {
   def artifactName = "coursier-launcher-native_0.4"
   def compileModuleDeps = Seq(
     launcherModule()
