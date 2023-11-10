@@ -44,7 +44,8 @@ import scala.concurrent.duration._
 import scala.util.Properties
 
 // Tell mill modules are under modules/
-def millSourcePath = super.millSourcePath / "modules"
+implicit def millModuleBasePath: define.BasePath =
+  define.BasePath(super.millModuleBasePath.value / "modules")
 
 object util extends Module {
   object jvm extends Cross[UtilJvm](ScalaVersions.all: _*)
