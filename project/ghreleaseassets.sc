@@ -1,7 +1,5 @@
 // from https://github.com/coursier/coursier/blob/382250d4f26b4728400a0546088e27ca0f129e8b/scripts/shared/UploadGhRelease.sc
 
-import $ivy.`com.softwaremill.sttp.client::core:2.0.0-RC6`
-
 import $file.docs, docs.gitRepoHasChanges
 import $file.launchers, launchers.{platformExtension, platformSuffix}
 import $file.publishing, publishing.{ghOrg, ghName}

@@ -1,6 +1,5 @@
-import $file.project.millconfig
-import $ivy.`com.lihaoyi::mill-contrib-bloop:`
-import $ivy.`io.get-coursier.util::get-cs:0.1.1`
+import $meta._
+
 import $file.project.deps, deps.{Deps, ScalaVersions, scalaCliVersion}
 import $file.project.docs
 import $file.project.ghreleaseassets
