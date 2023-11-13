@@ -1,4 +1,5 @@
-import $ivy.`com.lihaoyi::mill-contrib-bloop:$MILL_VERSION`
+import $file.project.millconfig
+import $ivy.`com.lihaoyi::mill-contrib-bloop:`
 import $ivy.`io.get-coursier.util::get-cs:0.1.1`
 import $file.project.deps, deps.{Deps, ScalaVersions, scalaCliVersion}
 import $file.project.docs
@@ -135,13 +136,13 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
   def proguardClassPath = T {
     proguard.runClasspath()
   }
-  object test extends Tests with CsTests {
+  object test extends SbtModuleTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Seq(
       Deps.collectionCompat,
       Deps.java8Compat
     )
   }
-  object it extends Tests with CsTests {
+  object it extends SbtModuleTests with CsTests {
     def sources = T.sources(
       millSourcePath / "src" / "it" / "scala",
       millSourcePath / "src" / "it" / "java"
@@ -207,7 +208,7 @@ class CoreJvm(val crossScalaVersion: String) extends CoreJvmBase {
     Deps.concurrentReferenceHashMap,
     Deps.scalaXml
   )
-  object test extends Tests with CsTests {
+  object test extends CrossSbtModuleTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.jol
     )
@@ -220,7 +221,7 @@ class CoreJs(val crossScalaVersion: String) extends Core with CsScalaJsModule {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.scalaJsDom
   )
-  object test extends Tests with CsTests
+  object test extends ScalaJSTests with CsTests
 }
 
 class SbtMavenRepositoryJvm(val crossScalaVersion: String) extends SbtMavenRepositoryJvmBase {
@@ -259,7 +260,7 @@ class CacheJvm(val crossScalaVersion: String) extends CacheJvmBase {
   def customLoaderCp = T {
     `custom-protocol-for-test`.runClasspath()
   }
-  object test extends Tests with CsTests {
+  object test extends CacheJvmBaseTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.http4sBlazeServer,
       Deps.http4sDsl,
@@ -309,7 +310,7 @@ class Env(val crossScalaVersion: String) extends CrossSbtModule with CsModule
     Deps.collectionCompat,
     Deps.jniUtils
   )
-  object test extends Tests with CsTests {
+  object test extends CrossSbtModuleTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.jimfs
     )
@@ -336,8 +337,8 @@ class CoursierJvm(val crossScalaVersion: String) extends CoursierJvmBase { self 
     `proxy-setup`
   )
   // Put CoursierTests right after TestModule, and see what happens
-  object test extends TestModule with Tests with CoursierTests with CsTests with JvmTests
-  object it extends TestModule with Tests with CoursierTests with CsTests with JvmTests {
+  object test extends TestModule with CrossSbtModuleTests with CoursierTests with CsTests with JvmTests
+  object it extends TestModule with CrossSbtModuleTests with CoursierTests with CsTests with JvmTests {
     def sources = T.sources(
       millSourcePath / "src" / "it" / "scala",
       millSourcePath / "src" / "it" / "java"
@@ -360,7 +361,7 @@ class CoursierJs(val crossScalaVersion: String) extends Coursier with CsScalaJsM
     core.js(),
     cache.js()
   )
-  object test extends Tests with CsTests with JsTests with CoursierTests
+  object test extends ScalaJSTests with CsTests with JsTests with CoursierTests
 }
 
 class TestsJvm(val crossScalaVersion: String) extends TestsModule { self =>
@@ -371,12 +372,12 @@ class TestsJvm(val crossScalaVersion: String) extends TestsModule { self =>
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.jsoup
   )
-  object test extends Tests with CsTests with JvmTests {
+  object test extends CrossSbtModuleTests with CsTests with JvmTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm()
     )
   }
-  object it extends Tests with CsTests with JvmTests with workers.UsesRedirectingServer {
+  object it extends CrossSbtModuleTests with CsTests with JvmTests with workers.UsesRedirectingServer {
     def redirectingServerCp =
       `redirecting-server`.runClasspath()
     def redirectingServerMainClass =
@@ -407,7 +408,7 @@ class TestsJs(val crossScalaVersion: String) extends TestsModule with CsScalaJsM
     `sbt-maven-repository`.js()
   )
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
-  object test extends Tests with CsTests with JsTests {
+  object test extends ScalaJSTests with CsTests with JsTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.js()
     )
@@ -423,7 +424,7 @@ class ProxyTests(val crossScalaVersion: String) extends CrossSbtModule with CsMo
     Deps.scalaAsync,
     Deps.slf4JNop
   )
-  object it extends Tests with CsTests {
+  object it extends CrossSbtModuleTests with CsTests {
     def sources = T.sources(
       millSourcePath / "src" / "it" / "scala",
       millSourcePath / "src" / "it" / "java"
@@ -443,7 +444,7 @@ class ScalazJvm(val crossScalaVersion: String) extends Scalaz with CsMima {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.scalazConcurrent
   )
-  object test extends Tests with CsTests {
+  object test extends CrossSbtModuleTests with CsTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
@@ -462,7 +463,7 @@ class CatsJvm(val crossScalaVersion: String) extends Cats with CsMima {
   def moduleDeps = Seq(
     cache.jvm()
   )
-  object test extends Tests with CsTests {
+  object test extends CrossSbtModuleTests with CsTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
@@ -493,7 +494,7 @@ class Install(val crossScalaVersion: String) extends CrossSbtModule with CsModul
     Deps.argonautShapeless,
     Deps.catsCore
   )
-  object test extends Tests with CsTests
+  object test extends CrossSbtModuleTests with CsTests
 }
 
 class Jvm(val crossScalaVersion: String) extends CrossSbtModule with CsModule
@@ -515,7 +516,7 @@ class Jvm(val crossScalaVersion: String) extends CrossSbtModule with CsModule
     Deps.argonautShapeless,
     Deps.jsoniterCore
   )
-  object test extends Tests with CsTests {
+  object test extends CrossSbtModuleTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Seq(
       Deps.osLib
     )
@@ -573,7 +574,7 @@ class Cli(val crossScalaVersion: String) extends CsCrossJvmJsModule
     os.write.over(jar, baos.toByteArray)
     PathRef(jar)
   }
-  object test extends Tests with CsTests
+  object test extends CrossSbtModuleTests with CsTests
 }
 
 class CliTests(val crossScalaVersion: String) extends CsCrossJvmJsModule
@@ -592,7 +593,7 @@ class CliTests(val crossScalaVersion: String) extends CsCrossJvmJsModule
   private def sharedTestArgs = Seq(
     s"-Dcoursier-test.scala-cli=${GetCs.scalaCli(scalaCliVersion)}"
   )
-  object test extends Tests with CsTests {
+  object test extends CrossSbtModuleTests with CsTests {
     def forkArgs = {
       val launcherTask = cli().launcher.map(_.path)
       val assemblyTask = cli().assembly.map(_.path)
@@ -606,7 +607,7 @@ class CliTests(val crossScalaVersion: String) extends CsCrossJvmJsModule
       }
     }
   }
-  trait NativeTests extends Tests with CsTests with Bloop.Module {
+  trait NativeTests extends CrossSbtModuleTests with CsTests with Bloop.Module {
     def cliLauncher: T[PathRef]
     def skipBloop = true
     def sources = T.sources {
@@ -698,7 +699,7 @@ def simpleNative04CliTest() = T.command {
       os.proc(tmpDir / "native-echo", "-n", "foo", "a").call()
     }
     finally cleanUp()
-  assert(res.out.text == "foo a")
+  assert(res.out.text() == "foo a")
 }
 def copyTo(task: mill.main.Tasks[PathRef], dest: os.Path) = T.command {
   if (task.value.length > 1)

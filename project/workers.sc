@@ -61,13 +61,13 @@ trait UsesRedirectingServer extends Module {
     server.proc.stdin.close()
     var serverRunning = false
     var countDown     = 20
-    while (!serverRunning && server.proc.isAlive && countDown > 0) {
+    while (!serverRunning && server.proc.isAlive() && countDown > 0) {
       serverRunning = server.healthCheck()
       if (!serverRunning)
         Thread.sleep(500L)
       countDown -= 1
     }
-    if (serverRunning && server.proc.isAlive)
+    if (serverRunning && server.proc.isAlive())
       server
     else
       sys.error("Cannot run redirecting server")
@@ -136,13 +136,13 @@ def testRepoServer = T.worker {
   server.proc.stdin.close()
   var serverRunning = false
   var countDown     = 20
-  while (!serverRunning && server.proc.isAlive && countDown > 0) {
+  while (!serverRunning && server.proc.isAlive() && countDown > 0) {
     serverRunning = server.healthCheck()
     if (!serverRunning)
       Thread.sleep(500L)
     countDown -= 1
   }
-  if (serverRunning && server.proc.isAlive) {
+  if (serverRunning && server.proc.isAlive()) {
     T.log.outputStream.println(s"Test repository listening on ${server.url}")
     server
   }

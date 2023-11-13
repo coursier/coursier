@@ -1,5 +1,5 @@
 import $ivy.`io.get-coursier::coursier-launcher:2.1.0`
-import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.23`
+import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.26`
 
 import $file.cs
 import $file.deps, deps.{Deps, Docker, graalVmJvmId, jvmIndex}
@@ -61,7 +61,7 @@ trait Launchers extends CsModule {
         "-A",
         "lib"
       ).call()
-      val libPath = os.Path(libRes.out.text.trim, os.pwd)
+      val libPath = os.Path(libRes.out.text().trim(), os.pwd)
       os.copy.over(libPath, destDir / "csjniutils.lib")
     }
 
