@@ -115,7 +115,7 @@ jobs:
       with:
         jvm: 8
         version: "2.1.0"
-    - run: ./mill -i __.mimaReportBinaryIssues
+    - run: ./mill -i -k __.mimaReportBinaryIssues
 
   website-check:
     runs-on: ubuntu-latest
