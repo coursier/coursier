@@ -10,26 +10,26 @@ trait CsMima extends Mima {
 }
 
 def commitHash = T {
-  os.proc("git", "rev-parse", "HEAD").call().out.text.trim
+  os.proc("git", "rev-parse", "HEAD").call().out.text().trim()
 }
 
 lazy val latestTaggedVersion = os.proc("git", "describe", "--abbrev=0", "--tags", "--match", "v*")
   .call().out
-  .trim
+  .trim()
 lazy val buildVersion = {
-  val gitHead = os.proc("git", "rev-parse", "HEAD").call().out.trim
+  val gitHead = os.proc("git", "rev-parse", "HEAD").call().out.trim()
   val maybeExactTag = scala.util.Try {
     os.proc("git", "describe", "--exact-match", "--tags", "--always", gitHead)
       .call().out
-      .trim
+      .trim()
       .stripPrefix("v")
   }
   maybeExactTag.toOption.getOrElse {
     val commitsSinceTaggedVersion =
-      os.proc('git, "rev-list", gitHead, "--not", latestTaggedVersion, "--count")
-        .call().out.trim
+      os.proc("git", "rev-list", gitHead, "--not", latestTaggedVersion, "--count")
+        .call().out.trim()
         .toInt
-    val gitHash = os.proc("git", "rev-parse", "--short", "HEAD").call().out.trim
+    val gitHash = os.proc("git", "rev-parse", "--short", "HEAD").call().out.trim()
     s"${latestTaggedVersion.stripPrefix("v")}-$commitsSinceTaggedVersion-$gitHash-SNAPSHOT"
   }
 }
@@ -139,7 +139,7 @@ trait CsModule extends SbtModule {
     super.scalacPluginIvyDeps() ++ scala212Plugins
   }
   def sources = T.sources {
-    val sbv    = mill.scalalib.api.Util.scalaBinaryVersion(scalaVersion())
+    val sbv    = mill.scalalib.api.ZincWorkerUtil.scalaBinaryVersion(scalaVersion())
     val parent = super.sources()
     val extra = parent.map(_.path).filter(_.last == "scala").flatMap { p =>
       val dirNames = Seq(s"scala-$sbv")

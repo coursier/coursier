@@ -84,7 +84,7 @@ trait BootstrapLauncher extends CsModule {
 
   def assembly = T {
     val baseJar    = jar().path
-    val cp         = upstreamAssemblyClasspath().toSeq.map(_.path)
+    val cp         = upstreamAssemblyClasspath().iterator.toSeq.map(_.path)
     val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
     val dest = T.dest / "bootstrap-orig.jar"
@@ -130,7 +130,7 @@ trait BootstrapLauncher extends CsModule {
   def resourceAssemblyMainClass = T("coursier.bootstrap.launcher.ResourcesLauncher")
   def resourceAssembly = T {
     val baseJar    = jar().path
-    val cp         = upstreamAssemblyClasspath().toSeq.map(_.path)
+    val cp         = upstreamAssemblyClasspath().iterator.toSeq.map(_.path)
     val mainClass0 = resourceAssemblyMainClass()
 
     val dest = T.dest / "bootstrap-orig.jar"

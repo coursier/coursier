@@ -25,7 +25,7 @@ trait Mima extends ScalaModule with PublishModule {
 
     val lib = new MiMaLib(classPath.map(_.path.toIO))
 
-    mimaPreviousArtifacts().toList.map(_.path).map { path =>
+    mimaPreviousArtifacts().iterator.toList.map(_.path).map { path =>
       val problems = lib.collectProblems(path.toIO, currentClassFiles.toIO)
       path.toString -> problems.filter { problem =>
         mimaBinaryIssueFilters.forall(_.apply(problem))
