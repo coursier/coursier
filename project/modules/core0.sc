@@ -2,6 +2,8 @@ import $file.^.deps, deps.Deps
 import $file.^.shading, shading.Shading
 import $file.shared,
   shared.{CoursierPublishModule, CsCrossJvmJsModule, CsMima, CsModule, commitHash}
+import mill._
+import com.github.lolgab.mill.mima._
 
 trait Core extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-core"
@@ -31,24 +33,23 @@ trait Core extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
 trait CoreJvmBase extends Core with CsMima with Shading {
 
   def mimaBinaryIssueFilters = {
-    import com.typesafe.tools.mima.core._
-    super.mimaBinaryIssueFilters ++ Seq(
+    super.mimaBinaryIssueFilters() ++ Seq(
       // false positives, coursier.core.DependencySet#Sets is private
-      ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.DependencySet#Sets.copy"),
-      ProblemFilters.exclude[IncompatibleResultTypeProblem](
+      ProblemFilter.exclude[IncompatibleMethTypeProblem]("coursier.core.DependencySet#Sets.copy"),
+      ProblemFilter.exclude[IncompatibleResultTypeProblem](
         "coursier.core.DependencySet#Sets.copy$default$1"
       ),
-      ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.DependencySet#Sets.this"),
-      ProblemFilters.exclude[IncompatibleMethTypeProblem]("coursier.core.DependencySet#Sets.apply"),
-      ProblemFilters.exclude[IncompatibleResultTypeProblem](
+      ProblemFilter.exclude[IncompatibleMethTypeProblem]("coursier.core.DependencySet#Sets.this"),
+      ProblemFilter.exclude[IncompatibleMethTypeProblem]("coursier.core.DependencySet#Sets.apply"),
+      ProblemFilter.exclude[IncompatibleResultTypeProblem](
         "coursier.core.DependencySet#Sets.required"
       ),
 
       // PomParser#State is private, so this can be ignored
-      ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser#State.licenses"),
+      ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser#State.licenses"),
 
       // ignore shaded-stuff related errors
-      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.shaded."))
+//      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.shaded."))
     )
   }
 

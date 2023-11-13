@@ -1,6 +1,7 @@
 import $file.^.deps, deps.Deps
 import $file.^.shading, shading.Shading
 import $file.shared, shared.{CoursierPublishModule, CsCrossJvmJsModule, CsMima, CsModule}
+import com.github.lolgab.mill.mima._
 
 import mill._, mill.scalalib._
 
@@ -26,14 +27,13 @@ trait CoursierTests extends TestModule {
 trait CoursierJvmBase extends Coursier with CsMima with Shading {
 
   def mimaBinaryIssueFilters = {
-    import com.typesafe.tools.mima.core._
-    super.mimaBinaryIssueFilters ++ Seq(
+    super.mimaBinaryIssueFilters() ++ Seq(
       // changed private[coursier] method
-      ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.Resolve.initialResolution"),
+      ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.Resolve.initialResolution"),
       // removed private[coursier] method
-      ProblemFilters.exclude[DirectMissingMethodProblem]("coursier.Artifacts.artifacts0"),
+      ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.Artifacts.artifacts0"),
       // ignore shaded-stuff related errors
-      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.shaded."))
+//      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.shaded."))
     )
   }
 

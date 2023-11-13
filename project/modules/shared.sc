@@ -1,4 +1,5 @@
-import $file.^.mima, mima.Mima
+import $ivy.`com.github.lolgab::mill-mima::0.0.23`
+import com.github.lolgab.mill.mima.Mima
 import $file.^.deps, deps.{Deps, ScalaVersions}
 
 import mill._, mill.scalalib._, mill.scalajslib._

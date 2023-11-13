@@ -1,6 +1,8 @@
 import $file.^.deps, deps.Deps
 import $file.^.shading, shading.Shading
 import $file.shared, shared.{CoursierPublishModule, CsCrossJvmJsModule, CsMima, CsModule}
+import mill._
+import com.github.lolgab.mill.mima._
 
 trait Cache extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-cache"
@@ -22,24 +24,23 @@ trait CacheJvmBase extends Cache with CsMima with Shading {
   )
 
   def mimaBinaryIssueFilters = {
-    import com.typesafe.tools.mima.core._
-    super.mimaBinaryIssueFilters ++ Seq(
+    super.mimaBinaryIssueFilters() ++ Seq(
       // new methods added to sealed trait
-      ProblemFilters.exclude[ReversedMissingMethodProblem](
+      ProblemFilter.exclude[ReversedMissingMethodProblem](
         "coursier.cache.CachePolicy.acceptChanging"
       ),
-      ProblemFilters.exclude[ReversedMissingMethodProblem](
+      ProblemFilter.exclude[ReversedMissingMethodProblem](
         "coursier.cache.CachePolicy.rejectChanging"
       ),
-      ProblemFilters.exclude[ReversedMissingMethodProblem](
+      ProblemFilter.exclude[ReversedMissingMethodProblem](
         "coursier.cache.CachePolicy.acceptsChangingArtifacts"
       ),
       // private class
-      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.CacheUrl#Args")),
-      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.CacheUrl$Args")),
-      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.CacheUrl.BasicRealm")),
+//      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.CacheUrl#Args")),
+//      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.CacheUrl$Args")),
+//      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.CacheUrl.BasicRealm")),
       // ignore shaded-stuff related errors
-      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.shaded."))
+//      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.shaded."))
     )
   }
 
