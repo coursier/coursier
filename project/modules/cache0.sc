@@ -36,11 +36,11 @@ trait CacheJvmBase extends Cache with CsMima with Shading {
         "coursier.cache.CachePolicy.acceptsChangingArtifacts"
       ),
       // private class
-//      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.CacheUrl#Args")),
-//      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.CacheUrl$Args")),
-//      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.CacheUrl.BasicRealm")),
+      ProblemFilter.exclude[Problem]("coursier.cache.CacheUrl#Args*"),
+      ProblemFilter.exclude[Problem]("coursier.cache.CacheUrl$Args*"),
+      ProblemFilter.exclude[Problem]("coursier.cache.CacheUrl.BasicRealm*"),
       // ignore shaded-stuff related errors
-//      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.cache.shaded."))
+      ProblemFilter.exclude[Problem]("coursier.cache.shaded.*"),
     )
   }
 

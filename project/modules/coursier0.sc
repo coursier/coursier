@@ -33,7 +33,7 @@ trait CoursierJvmBase extends Coursier with CsMima with Shading {
       // removed private[coursier] method
       ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.Artifacts.artifacts0"),
       // ignore shaded-stuff related errors
-//      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.shaded."))
+      ProblemFilter.exclude[Problem]("coursier.internal.shaded.*")
     )
   }
 

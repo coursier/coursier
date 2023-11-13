@@ -49,7 +49,7 @@ trait CoreJvmBase extends Core with CsMima with Shading {
       ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser#State.licenses"),
 
       // ignore shaded-stuff related errors
-//      (pb: Problem) => pb.matchName.forall(!_.startsWith("coursier.core.shaded."))
+      ProblemFilter.exclude[Problem]("coursier.core.shaded.*")
     )
   }
 
