@@ -19,9 +19,10 @@ trait Doc extends ScalaModule {
   def copyVersionedData(
     repo: String = "coursier/versioned-docs",
     branch: String = "master",
-    docusaurusDir: os.Path = os.pwd / "doc" / "website"
+    docusaurusDir: String = "doc/website"
   ) = T.command {
-    docs.copyDocusaurusVersionedData(repo, branch, docusaurusDir, T.dest / "repo")
+    val dir = os.Path(docusaurusDir, os.pwd)
+    docs.copyDocusaurusVersionedData(repo, branch, dir, T.dest / "repo")
   }
 
   def forkWorkingDir = T.dest

@@ -2,6 +2,7 @@ import $file.^.deps, deps.Deps
 import $file.^.shading, shading.Shading
 import $file.shared,
   shared.{CoursierPublishModule, CsCrossJvmJsModule, CsMima, CsModule, commitHash}
+import mill._
 
 trait SbtMavenRepository extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-sbt-maven-repository"
