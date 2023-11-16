@@ -1,11 +1,14 @@
-import $file.^.mima, mima.Mima
+import $ivy.`com.github.lolgab::mill-mima::0.1.0`
+import com.github.lolgab.mill.mima.Mima
 import $file.^.deps, deps.{Deps, ScalaVersions}
 
 import mill._, mill.scalalib._, mill.scalajslib._
 
 trait CsMima extends Mima {
-  def mimaPreviousVersions = T {
-    Seq.empty[String]
+  override def mimaPreviousVersions: T[Seq[String]] = T {
+    // 2.1.x broke binary compatibility with 2.0.x
+    // 0.to(16).map(v => s"2.0.$v") ++
+      0.to(7).map(v => s"2.1.$v")
   }
 }
 
