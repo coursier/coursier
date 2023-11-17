@@ -20,7 +20,7 @@ abstract class LowPriorityScalazImplicits extends PlatformScalazImplicits {
     new Gather[F] {
       def point[A](a: A)                       = N.pure(a)
       def bind[A, B](elem: F[A])(f: A => F[B]) = N.bind(elem)(f)
-      def gather[A](elems: Seq[F[A]])          = N.map(N.gather(elems))(l => l)
+      def gather[A](elems: Seq[F[A]])          = N.map(N.gather(_root_.scalaz.IList.fromSeq(elems)))(_.toList)
     }
 
 }
