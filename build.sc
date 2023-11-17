@@ -337,8 +337,10 @@ class CoursierJvm(val crossScalaVersion: String) extends CoursierJvmBase { self 
     `proxy-setup`
   )
   // Put CoursierTests right after TestModule, and see what happens
-  object test extends TestModule with CrossSbtModuleTests with CoursierTests with CsTests with JvmTests
-  object it extends TestModule with CrossSbtModuleTests with CoursierTests with CsTests with JvmTests {
+  object test extends TestModule with CrossSbtModuleTests with CoursierTests with CsTests
+      with JvmTests
+  object it extends TestModule with CrossSbtModuleTests with CoursierTests with CsTests
+      with JvmTests {
     def sources = T.sources(
       millSourcePath / "src" / "it" / "scala",
       millSourcePath / "src" / "it" / "java"
@@ -377,7 +379,8 @@ class TestsJvm(val crossScalaVersion: String) extends TestsModule { self =>
       coursier.jvm()
     )
   }
-  object it extends CrossSbtModuleTests with CsTests with JvmTests with workers.UsesRedirectingServer {
+  object it extends CrossSbtModuleTests with CsTests with JvmTests
+      with workers.UsesRedirectingServer {
     def redirectingServerCp =
       `redirecting-server`.runClasspath()
     def redirectingServerMainClass =
