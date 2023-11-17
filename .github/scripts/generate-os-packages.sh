@@ -17,7 +17,7 @@ launcher() {
   local launcherMillCommand="cliNativeImageLauncher"
   local launcherName
 
-  if [[ "$OS" == "Windows_NT" ]]; then
+  if [[ "${OS-}" == "Windows_NT" ]]; then
     launcherName="cs.exe"
   else
     launcherName="cs"
