@@ -57,10 +57,10 @@ trait Shading extends JavaModule with PublishModule {
     val shadedDepSeq = shadedDependencies()
 
     val allJars = load(resolution)
-    val retainedJars =
-      load(resolution.subset(
-        depSeq.iterator.toSeq.filterNot(shadedDepSeq.iterator.toSet).map(depToDependency)
-      ))
+    val subset = depSeq.iterator.map(depToDependency).toSeq.filterNot(
+      shadedDepSeq.iterator.map(depToDependency).toSet
+    )
+    val retainedJars = load(resolution.subset(subset))
 
     val shadedJars = allJars.filterNot(retainedJars.toSet)
     println(s"${shadedJars.length} JAR(s) to shade")
