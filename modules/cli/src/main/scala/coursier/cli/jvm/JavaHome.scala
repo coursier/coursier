@@ -44,20 +44,19 @@ object JavaHome extends CoursierCommand[JavaHomeOptions] {
     }
 
     lazy val envUpdate = javaHome.environmentFor(isSystem, home)
-
-    def windowsShell = Option(System.getenv("OSTYPE")).getOrElse("")
-
     if (params.env.env) {
       val script =
-        if (params.env.windowsScript && windowsShell.isEmpty)
+        if (params.env.windowsScript)
           coursier.jvm.JavaHome.finalBatScript(envUpdate)
-        else
+        else if (params.env.windowsPosixScript)
           coursier.jvm.JavaHome.finalBashScript(envUpdate).replace('\\', '/')
+        else
+          coursier.jvm.JavaHome.finalBashScript(envUpdate)
       print(script)
     }
     else if (params.env.disableEnv) {
       val script =
-        if (params.env.windowsScript && windowsShell.isEmpty)
+        if (params.env.windowsScript)
           coursier.jvm.JavaHome.disableBatScript()
         else
           coursier.jvm.JavaHome.disableBashScript()

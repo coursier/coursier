@@ -140,22 +140,22 @@ object Java extends CoursierCommand[JavaOptions] {
         sys.exit(1)
       }
 
-      def windowsShell = Option(System.getenv("OSTYPE")).getOrElse("")
-
       if (params.env.env) {
         val script =
-          if (params.env.windowsScript && windowsShell.isEmpty)
+          if (params.env.windowsScript)
             coursier.jvm.JavaHome.finalBatScript(envUpdate)
+          else if (params.env.windowsPosixScript)
+            coursier.jvm.JavaHome.finalBashScript(envUpdate).replace('\\', '/')
           else
             ShellUtil.shell() match {
               case Some(Shell.Fish) => coursier.jvm.JavaHome.finalFishScript(envUpdate)
-              case _                => coursier.jvm.JavaHome.finalBashScript(envUpdate).replace('\\', '/')
+              case _                => coursier.jvm.JavaHome.finalBashScript(envUpdate)
             }
         print(script)
       }
       else if (params.env.disableEnv) {
         val script =
-          if (params.env.windowsScript && windowsShell.isEmpty)
+          if (params.env.windowsScript)
             coursier.jvm.JavaHome.disableBatScript()
           else
             ShellUtil.shell() match {

@@ -18,7 +18,11 @@ final case class EnvOptions(
 
   @Group(OptionGroup.scripting)
   @Hidden
-    windowsScript: Boolean = Properties.isWin,
+    windowsScript: Option[Boolean] = None,
+
+  @Group(OptionGroup.scripting)
+  @Hidden
+    windowsPosixScript: Option[Boolean] = None,
 
   @Group(OptionGroup.scripting)
   @HelpMessage("Sets the default JVM to be used")
