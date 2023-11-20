@@ -23,7 +23,7 @@ trait CacheJvmBase extends Cache with CsMima with Shading {
     "dev.dirs.**" -> "coursier.cache.shaded.dirs.@1"
   )
 
-  def mimaBinaryIssueFilters = {
+  def mimaBinaryIssueFilters =
     super.mimaBinaryIssueFilters() ++ Seq(
       // new methods added to sealed trait
       ProblemFilter.exclude[ReversedMissingMethodProblem](
@@ -40,9 +40,8 @@ trait CacheJvmBase extends Cache with CsMima with Shading {
       ProblemFilter.exclude[Problem]("coursier.cache.CacheUrl$Args*"),
       ProblemFilter.exclude[Problem]("coursier.cache.CacheUrl.BasicRealm*"),
       // ignore shaded-stuff related errors
-      ProblemFilter.exclude[Problem]("coursier.cache.shaded.*"),
+      ProblemFilter.exclude[Problem]("coursier.cache.shaded.*")
     )
-  }
 
   trait CacheJvmBaseTests extends CrossSbtModuleTests {
     def sources = T.sources {

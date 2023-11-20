@@ -26,7 +26,7 @@ trait CoursierTests extends TestModule {
 }
 trait CoursierJvmBase extends Coursier with CsMima with Shading {
 
-  def mimaBinaryIssueFilters = {
+  def mimaBinaryIssueFilters =
     super.mimaBinaryIssueFilters() ++ Seq(
       // changed private[coursier] method
       ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.Resolve.initialResolution"),
@@ -35,7 +35,6 @@ trait CoursierJvmBase extends Coursier with CsMima with Shading {
       // ignore shaded-stuff related errors
       ProblemFilter.exclude[Problem]("coursier.internal.shaded.*")
     )
-  }
 
   def shadedDependencies = Agg(
     Deps.fastParse

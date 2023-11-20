@@ -32,7 +32,7 @@ trait Core extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
 }
 trait CoreJvmBase extends Core with CsMima with Shading {
 
-  def mimaBinaryIssueFilters = {
+  def mimaBinaryIssueFilters =
     super.mimaBinaryIssueFilters() ++ Seq(
       // false positives, coursier.core.DependencySet#Sets is private
       ProblemFilter.exclude[IncompatibleMethTypeProblem]("coursier.core.DependencySet#Sets.copy"),
@@ -51,7 +51,6 @@ trait CoreJvmBase extends Core with CsMima with Shading {
       // ignore shaded-stuff related errors
       ProblemFilter.exclude[Problem]("coursier.core.shaded.*")
     )
-  }
 
   def shadedDependencies = Agg(
     Deps.fastParse

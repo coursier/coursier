@@ -8,7 +8,7 @@ trait CsMima extends Mima {
   override def mimaPreviousVersions: T[Seq[String]] = T {
     // 2.1.x broke binary compatibility with 2.0.x
     // 0.to(16).map(v => s"2.0.$v") ++
-      0.to(7).map(v => s"2.1.$v")
+    0.to(7).map(v => s"2.1.$v")
   }
 }
 

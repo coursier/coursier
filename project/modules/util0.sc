@@ -15,12 +15,11 @@ trait Util extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
 }
 
 trait UtilJvmBase extends Util with CsMima with Shading {
-  def mimaBinaryIssueFilters = {
+  def mimaBinaryIssueFilters =
     super.mimaBinaryIssueFilters() ++
       Seq(
         ProblemFilter.exclude[Problem]("coursier.util.shaded.*")
-    )
-  }
+      )
   def shadedDependencies = Agg(
     Deps.jsoup
   )
