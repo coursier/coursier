@@ -48,6 +48,8 @@ object JavaHome extends CoursierCommand[JavaHomeOptions] {
       val script =
         if (params.env.windowsScript)
           coursier.jvm.JavaHome.finalBatScript(envUpdate)
+        else if (params.env.windowsPosixScript)
+          coursier.jvm.JavaHome.finalBashScript(envUpdate).replace('\\', '/')
         else
           coursier.jvm.JavaHome.finalBashScript(envUpdate)
       print(script)

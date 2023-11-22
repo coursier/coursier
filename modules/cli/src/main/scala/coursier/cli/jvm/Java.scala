@@ -144,6 +144,8 @@ object Java extends CoursierCommand[JavaOptions] {
         val script =
           if (params.env.windowsScript)
             coursier.jvm.JavaHome.finalBatScript(envUpdate)
+          else if (params.env.windowsPosixScript)
+            coursier.jvm.JavaHome.finalBashScript(envUpdate).replace('\\', '/')
           else
             ShellUtil.shell() match {
               case Some(Shell.Fish) => coursier.jvm.JavaHome.finalFishScript(envUpdate)
