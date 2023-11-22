@@ -1,6 +1,3 @@
-import $ivy.`io.get-coursier::coursier-launcher:2.1.0`
-import $ivy.`io.github.alexarchambault.mill::mill-native-image::0.1.26`
-
 import $file.cs
 import $file.deps, deps.{Deps, Docker, graalVmJvmId, jvmIndex}
 import $file.modules.shared, shared.CsModule

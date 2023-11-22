@@ -1,4 +1,3 @@
-import $ivy.`com.github.lolgab::mill-mima::0.1.0`
 import com.github.lolgab.mill.mima.Mima
 import $file.^.deps, deps.{Deps, ScalaVersions}
 
@@ -103,7 +102,8 @@ trait CsScalaJsModule extends ScalaJSModule {
   def scalaJSVersion = ScalaVersions.scalaJs
 }
 
-trait JvmTests extends TestModule {
+trait JvmTests extends JavaModule with TestModule {
+  def defaultCommandName() = "test"
   def sources = T.sources {
     val shared = Seq(
       millSourcePath / os.up / "shared" / "src" / "test",
@@ -113,8 +113,8 @@ trait JvmTests extends TestModule {
   }
 }
 
-trait JsTests extends TestModule {
-  def sources = T.sources {
+trait JsTests extends JavaModule with TestModule {
+  override def sources = T.sources {
     val shared = Seq(
       millSourcePath / os.up / os.up / "shared" / "src" / "test",
       millSourcePath / os.up / os.up / "js" / "src" / "test"
