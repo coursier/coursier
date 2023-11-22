@@ -220,7 +220,7 @@ trait CoreJs extends Core with CsScalaJsModule {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.scalaJsDom
   )
-  object test extends ScalaJSTests with CsTests
+  object test extends SbtModuleTests with ScalaJSTests with CsTests
 }
 
 trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase {
@@ -362,7 +362,7 @@ trait CoursierJs extends Coursier with CsScalaJsModule {
     core.js(),
     cache.js()
   )
-  object test extends ScalaJSTests with CsTests with JsTests with CoursierTests
+  object test extends SbtModuleTests with ScalaJSTests with CsTests with JsTests with CoursierTests
 }
 
 trait TestsJvm extends TestsModule { self =>
@@ -410,7 +410,7 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
     `sbt-maven-repository`.js()
   )
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
-  object test extends ScalaJSTests with CsTests with JsTests {
+  object test extends SbtModuleTests with ScalaJSTests with CsTests with JsTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.js()
     )
