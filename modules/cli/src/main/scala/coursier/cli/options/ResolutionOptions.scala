@@ -93,7 +93,12 @@ final case class ResolutionOptions(
   @Help("Default configuration (default(compile) by default)")
   @Value("configuration")
   @Short("c")
-    defaultConfiguration: String = "default(compile)"
+    defaultConfiguration: String = "default(compile)",
+
+  @Group(OptionGroup.resolution)
+  @Hidden
+  @Help("Resolve transitive provided dependencies")
+    keepProvidedDependencies: Boolean = false
 
 ) {
   // format: on
@@ -195,6 +200,7 @@ final case class ResolutionOptions(
           .withRules(rules)
           .withReconciliation(reconciliation)
           .withDefaultConfiguration(Configuration(defaultConfiguration))
+          .withKeepProvidedDependencies(keepProvidedDependencies)
     }
   }
 }

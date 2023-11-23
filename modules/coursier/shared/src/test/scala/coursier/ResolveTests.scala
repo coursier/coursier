@@ -1051,5 +1051,16 @@ object ResolveTests extends TestSuite {
         assert(urls == expectedUrls)
       }
     }
+
+    test("keep provided dependencies") - async {
+
+      val resolve0 = resolve
+        .addDependencies(dep"com.lihaoyi:pprint_2.12:0.5.4")
+        .mapResolutionParams(_.withKeepProvidedDependencies(true))
+
+      val res = await(resolve0.future())
+
+      await(validateDependencies(res, resolve0.resolutionParams))
+    }
   }
 }
