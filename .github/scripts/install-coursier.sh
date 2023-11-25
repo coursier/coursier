@@ -1,13 +1,22 @@
 #!/bin/bash
 
-# download cs binary for various environments
+# download cs binary launcher for posix shell environments
 
 set -o nounset errexit
 
 case `uname` in
 Darwin*)
   set -x
-  brew install coursier/formulas/coursier
+  case `uname -m` in
+  arm64*)
+    # Apple Silicon (M1, M2, ...):
+    curl -fL https://github.com/VirtusLab/coursier-m1/releases/latest/download/cs-aarch64-apple-darwin.gz | gzip -d > cs
+    ;;
+  x86_64*)
+    curl -fL https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin.gz | gzip -d > cs
+    ;;
+  esac
+  chmod +x cs
   cs setup
   ;;
 Linux*)
