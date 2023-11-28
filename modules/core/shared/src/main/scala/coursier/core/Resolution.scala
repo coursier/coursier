@@ -711,7 +711,7 @@ object Resolution {
   extraProperties: Seq[(String, String)] = Nil,
   forceProperties: Map[String, String] = Map.empty, // FIXME Make that a seq too?
   defaultConfiguration: Configuration = Configuration.defaultCompile,
-  @since("2.2.0")
+  @since("2.1.9")
   keepProvidedDependencies: Boolean = false
 ) {
 

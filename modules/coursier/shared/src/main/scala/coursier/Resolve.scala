@@ -333,7 +333,7 @@ object Resolve extends PlatformResolve {
       .withExtraProperties(params.properties)
       .withForceProperties(params.forcedProperties)
       .withDefaultConfiguration(params.defaultConfiguration)
-      .withKeepProvidedDependencies(params.keepProvidedDependencies)
+      .withKeepProvidedDependencies(params.keepProvidedDependencies.getOrElse(false))
   }
 
   private[coursier] def runProcess[F[_]](

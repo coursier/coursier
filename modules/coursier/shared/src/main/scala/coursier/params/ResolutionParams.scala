@@ -33,8 +33,8 @@ import dataclass.data
   defaultConfiguration: Configuration = Configuration.defaultCompile,
   @since("2.0.17")
   overrideFullSuffixOpt: Option[Boolean] = None,
-  @since("2.2.0")
-  keepProvidedDependencies: Boolean = false
+  @since("2.1.9")
+  keepProvidedDependencies: Option[Boolean] = None
 ) {
 
   def addForceVersion(fv: (Module, String)*): ResolutionParams =
@@ -74,6 +74,9 @@ import dataclass.data
     withJdkVersionOpt(Some(Version(version)))
   def withJdkVersion(version: Version): ResolutionParams =
     withJdkVersionOpt(Some(version))
+
+  def withKeepProvidedDependencies(keepProvidedDependencies: Boolean): ResolutionParams =
+    withKeepProvidedDependencies(Some(keepProvidedDependencies))
 
   def addReconciliation(reconciliation: (ModuleMatchers, Reconciliation)*): ResolutionParams =
     withReconciliation(this.reconciliation ++ reconciliation)

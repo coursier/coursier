@@ -97,7 +97,7 @@ final case class ResolutionOptions(
 
   @Group(OptionGroup.resolution)
   @Hidden
-  @Help("Resolve transitive provided dependencies")
+  @Help("Keep provided dependencies")
     keepProvidedDependencies: Boolean = false
 
 ) {
