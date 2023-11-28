@@ -1,0 +1,7 @@
+com.lihaoyi:pprint_2.12:0.5.4:default
+org.scala-lang:scala-compiler:2.12.8:default
+org.scala-lang:scala-library:2.12.8:default
+com.lihaoyi:fansi_2.12:0.2.6:default
+org.scala-lang:scala-reflect:2.12.8:default
+com.lihaoyi:sourcecode_2.12:0.1.5:default
+org.scala-lang.modules:scala-xml_2.12:1.0.6:default
