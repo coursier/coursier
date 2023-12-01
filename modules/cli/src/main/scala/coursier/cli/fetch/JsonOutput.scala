@@ -16,6 +16,7 @@ object JsonOutput {
     artifacts: Seq[(Dependency, Publication, Artifact)],
     files: Seq[(Artifact, File)],
     classifiers: Set[Classifier],
+    checksums: Option[Seq[(Artifact, Map[String, String])]],
     printExclusions: Boolean // common.verbosityLevel >= 1
   ): String = {
 
@@ -24,6 +25,12 @@ object JsonOutput {
         .groupBy(_._1)
         .mapValues(_.map(t => (t._2, t._3)).toVector)
         .toMap
+
+    val artifactToChecksums = checksums
+      .map(
+        _.map { case (checksumType, checksums) => checksumType -> checksums }.toMap
+      )
+      .getOrElse(Map.empty)
 
     // TODO(wisechengyi): This is not exactly the root dependencies we are asking for on the command line, but it should be
     // a strict super set.
@@ -43,13 +50,13 @@ object JsonOutput {
     }
 
     val artifacts0 = artifacts.map {
-      case (dep, _, artifact) =>
-        (dep, artifact)
+      case (dep, _, artifact) => (dep, artifact)
     }
 
     val jsonReq = JsonPrintRequirement(
       files.map { case (a, f) => a.url -> f }.toMap,
-      depToArtifacts
+      depToArtifacts,
+      artifactToChecksums
     )
     val roots = deps.map { d =>
       JsonElem(
@@ -71,7 +78,10 @@ object JsonOutput {
       _.children,
       _.reconciledVersionStr,
       _.requestedVersionStr,
+      _.url,
       _.downloadedFile,
+      _.metadata,
+      _.checksums,
       _.exclusions
     )
   }

@@ -10,12 +10,15 @@ object JsonReportTests extends TestSuite {
         children = _ => Vector.empty,
         reconciledVersionStr = _ => "",
         requestedVersionStr = _ => "",
+        getUrl = _ => Option(""),
         getFile = _ => Option(""),
+        getChecksums = _ => None,
+        getMetadata = _ => None,
         exclusions = _ => Set.empty
       )
 
       assert(
-        report == "{\"conflict_resolution\":{},\"dependencies\":[],\"version\":\"0.1.0\"}"
+        report == s"""{"conflict_resolution":{},"dependencies":[],"version":"${ReportNode.version}"}"""
       )
     }
 
@@ -28,31 +31,38 @@ object JsonReportTests extends TestSuite {
         children = children(_).toVector,
         reconciledVersionStr = s => s"$s:reconciled",
         requestedVersionStr = s => s"$s:requested",
+        getUrl = _ => Option(""),
         getFile = _ => Option(""),
+        getChecksums = _ => None,
+        getMetadata = _ => None,
         exclusions = _ => Set.empty
       )
 
       val reportJson = Parse.parse(report)
 
       val expectedReportJson = Parse.parse(
-        """{
-          |  "conflict_resolution": {},
-          |  "dependencies": [
-          |    {
-          |      "coord": "a:reconciled",
-          |      "file": "",
-          |      "directDependencies": [ "b:reconciled" ],
-          |      "dependencies": [ "b:reconciled" ]
-          |    },
-          |    {
-          |      "coord": "b:reconciled",
-          |      "file": "",
-          |      "directDependencies": [],
-          |      "dependencies": []
-          |    }
-          |  ],
-          |  "version": "0.1.0"
-          |}""".stripMargin
+        s"""{
+           |  "conflict_resolution": {},
+           |  "dependencies": [
+           |    {
+           |      "coord": "a:reconciled",
+           |      "file": "",
+           |      "url": "",
+           |      "metadata": null,
+           |      "directDependencies": [ "b:reconciled" ],
+           |      "dependencies": [ "b:reconciled" ]
+           |    },
+           |    {
+           |      "coord": "b:reconciled",
+           |      "file": "",
+           |      "url": "",
+           |      "metadata": null,
+           |      "directDependencies": [],
+           |      "dependencies": []
+           |    }
+           |  ],
+           |  "version": "${ReportNode.version}"
+           |}""".stripMargin
       )
 
       assert(reportJson == expectedReportJson)
@@ -69,21 +79,24 @@ object JsonReportTests extends TestSuite {
         children = children(_).toVector,
         reconciledVersionStr = s => s"$s:reconciled",
         requestedVersionStr = s => s"$s:requested",
+        getUrl = _ => Option(""),
         getFile = _ => Option(""),
+        getChecksums = _ => None,
+        getMetadata = _ => None,
         exclusions = _ => Set.empty
       )
 
       val reportJson = Parse.parse(report)
 
       val expectedReportJson = Parse.parse(
-        """{
-          |  "conflict_resolution": {},
-          |  "dependencies": [
-          |    { "coord": "a:reconciled", "file": "", "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled" ] },
-          |    { "coord": "b:reconciled", "file": "", "directDependencies": [], "dependencies": [] }
-          |  ],
-          |  "version": "0.1.0"
-          |}""".stripMargin
+        s"""{
+           |  "conflict_resolution": {},
+           |  "dependencies": [
+           |    { "coord": "a:reconciled", "file": "", "url": "", "metadata": null, "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled" ] },
+           |    { "coord": "b:reconciled", "file": "", "url": "", "metadata": null, "directDependencies": [], "dependencies": [] }
+           |  ],
+           |  "version": "${ReportNode.version}"
+           |}""".stripMargin
       )
 
       assert(reportJson == expectedReportJson)
@@ -98,20 +111,23 @@ object JsonReportTests extends TestSuite {
         children = children(_),
         reconciledVersionStr = s => s"$s:reconciled",
         requestedVersionStr = s => s"$s:requested",
+        getUrl = _ => Option(""),
         getFile = _ => Option(""),
+        getChecksums = _ => None,
+        getMetadata = _ => None,
         exclusions = _ => Set.empty
       )
 
       val reportJson = Parse.parse(report)
       val expectedReportJson = Parse.parse(
-        """{
-          |  "conflict_resolution": {},
-          |  "dependencies": [
-          |    { "coord": "a:reconciled", "file": "", "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled" ] },
-          |    { "coord": "b:reconciled", "file": "", "directDependencies": [], "dependencies": [] }
-          |  ],
-          |  "version": "0.1.0"
-          |}""".stripMargin
+        s"""{
+           |  "conflict_resolution": {},
+           |  "dependencies": [
+           |    { "coord": "a:reconciled", "file": "", "url": "", "metadata": null, "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled" ] },
+           |    { "coord": "b:reconciled", "file": "", "url": "", "metadata": null, "directDependencies": [], "dependencies": [] }
+           |  ],
+           |  "version": "${ReportNode.version}"
+           |}""".stripMargin
       )
 
       assert(reportJson == expectedReportJson)
@@ -127,24 +143,69 @@ object JsonReportTests extends TestSuite {
         children = children(_),
         reconciledVersionStr = s => s"$s:reconciled",
         requestedVersionStr = s => s"$s:requested",
+        getUrl = _ => Option(""),
         getFile = _ => Option(""),
+        getChecksums = _ => None,
+        getMetadata = _ => None,
         exclusions = _ => Set.empty
       )
 
       val reportJson = Parse.parse(report)
       val expectedReportJson = Parse.parse(
-        """{
-          |  "conflict_resolution": {},
-          |  "dependencies": [
-          |    { "coord": "a:reconciled", "file": "", "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled", "c:reconciled", "d:reconciled" ] },
-          |    { "coord": "b:reconciled", "file": "", "directDependencies": [ "c:reconciled" ], "dependencies": [ "a:reconciled", "c:reconciled", "d:reconciled" ] },
-          |    { "coord": "c:reconciled", "file": "", "directDependencies": [ "a:reconciled", "d:reconciled" ], "dependencies": [ "a:reconciled", "b:reconciled", "d:reconciled" ] }
-          |  ],
-          |  "version": "0.1.0"
-          |}""".stripMargin
+        s"""{
+           |  "conflict_resolution": {},
+           |  "dependencies": [
+           |    { "coord": "a:reconciled", "file": "", "url": "", "metadata": null, "directDependencies": [ "b:reconciled" ], "dependencies": [ "b:reconciled", "c:reconciled", "d:reconciled" ] },
+           |    { "coord": "b:reconciled", "file": "", "url": "", "metadata": null, "directDependencies": [ "c:reconciled" ], "dependencies": [ "a:reconciled", "c:reconciled", "d:reconciled" ] },
+           |    { "coord": "c:reconciled", "file": "", "url": "", "metadata": null, "directDependencies": [ "a:reconciled", "d:reconciled" ], "dependencies": [ "a:reconciled", "b:reconciled", "d:reconciled" ] }
+           |  ],
+           |  "version": "${ReportNode.version}"
+           |}""".stripMargin
+      )
+
+      assert(reportJson == expectedReportJson)
+    }
+
+    test("JsonReport should include hashes") {
+      val hashType  = "MD5"
+      val hashValue = "value"
+      val children  = Map("a" -> Vector.empty)
+      val report = JsonReport[String](
+        roots = Vector("a"),
+        conflictResolutionForRoots = Map.empty
+      )(
+        children = children(_),
+        reconciledVersionStr = s => s,
+        requestedVersionStr = s => s,
+        getUrl = _ => Option(""),
+        getFile = _ => Option(""),
+        getChecksums = _ => Some(Map(hashType -> hashValue)),
+        getMetadata = _ => None,
+        exclusions = _ => Set.empty
+      )
+      val reportJson = Parse.parse(report)
+      val expectedReportJson = Parse.parse(
+        s"""{
+           |  "conflict_resolution": {},
+           |  "dependencies": [
+           |    {
+           |      "coord": "a",
+           |      "file": "",
+           |      "url": "",
+           |      "directDependencies": [],
+           |      "dependencies": [],
+           |      "metadata": null,
+           |      "checksums": {
+           |         "$hashType": "$hashValue"
+           |      }
+           |    }
+           |  ],
+           |  "version": "${ReportNode.version}"
+           |}""".stripMargin
       )
 
       assert(reportJson == expectedReportJson)
     }
   }
+
 }

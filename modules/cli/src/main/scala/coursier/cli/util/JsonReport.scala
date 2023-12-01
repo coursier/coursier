@@ -24,8 +24,21 @@ import Argonaut._
   */
 final case class JsonPrintRequirement(
   fileByArtifact: Map[String, File],
-  depToArtifacts: Map[Dependency, Vector[(Publication, Artifact)]]
+  depToArtifacts: Map[Dependency, Vector[(Publication, Artifact)]],
+  artifactToChecksums: Map[Artifact, Map[String, String]]
 )
+
+final case class MetadataNode(
+  url: String,
+  file: Option[String],
+  checksums: Map[String, String]
+)
+
+object MetadataNode {
+  import argonaut.ArgonautShapeless._
+  implicit val encodeJson = EncodeJson.of[MetadataNode]
+  implicit val decodeJson = DecodeJson.of[MetadataNode]
+}
 
 /** Represents a resolved dependency's artifact in the JsonReport.
   * @param coord
@@ -37,10 +50,13 @@ final case class JsonPrintRequirement(
   */
 final case class DepNode(
   coord: String,
+  url: Option[String],
   file: Option[String],
   directDependencies: Set[String],
   dependencies: Set[String],
-  exclusions: Set[String] = Set.empty
+  metadata: Option[MetadataNode],
+  exclusions: Set[String] = Set.empty,
+  checksums: Map[String, String] = Map.empty
 )
 
 final case class ReportNode(
@@ -63,7 +79,7 @@ object ReportNode {
   import argonaut.ArgonautShapeless._
   implicit val encodeJson = EncodeJson.of[ReportNode]
   implicit val decodeJson = DecodeJson.of[ReportNode]
-  val version             = "0.1.0"
+  val version             = "0.1.1"
 }
 
 object JsonReport {
@@ -128,7 +144,10 @@ object JsonReport {
     children: T => Seq[T],
     reconciledVersionStr: T => String,
     requestedVersionStr: T => String,
+    getUrl: T => Option[String],
     getFile: T => Option[String],
+    getMetadata: T => Option[MetadataNode],
+    getChecksums: T => Option[Map[String, String]],
     exclusions: T => Set[String]
   ): String = {
 
@@ -148,10 +167,13 @@ object JsonReport {
     val rootDeps: Vector[DepNode] = roots.map { r =>
       DepNode(
         reconciledVersionStr(r),
+        getUrl(r),
         getFile(r),
         childrenOrEmpty(r).iterator.map(reconciledVersionStr(_)).to(SortedSet),
         flattenedDeps(r),
-        exclusions(r)
+        getMetadata(r),
+        exclusions(r),
+        getChecksums(r).getOrElse(Map.empty)
       )
     }
 
@@ -176,18 +198,50 @@ final case class JsonElem(
   overrideClassifiers: Set[Classifier]
 ) {
 
-  // This is used to printing json output
-  // Option of the file path
-  lazy val downloadedFile: Option[String] =
-    jsonPrintRequirement.flatMap(req =>
-      req.depToArtifacts.getOrElse(dep, Seq()).view
-        .filter(_._1.classifier == dep.attributes.classifier)
-        .map(x => req.fileByArtifact.get(x._2.url))
-        .filter(_.isDefined)
-        .filter(_.nonEmpty)
-        .map(_.get.getPath)
+  // Cache `artifactFile` so it can be used for both `checkums` and `file`
+  // Note, that the `file` does not have to exist; there are quite a few dependencies which only have a pom
+  private lazy val artifactFile: Option[(Artifact, Option[File])] = jsonPrintRequirement
+    .flatMap(req =>
+      req
+        .depToArtifacts.getOrElse(dep, Seq())
+        .view
+        .collect {
+          case (pub, artifact) if pub.classifier == dep.attributes.classifier =>
+            artifact -> req.fileByArtifact.get(artifact.url)
+        }
+        .collect {
+          case (artifact, file) => (artifact, file)
+        }
         .headOption
     )
+
+  def metadata: Option[MetadataNode] =
+    for {
+      req       <- jsonPrintRequirement
+      metadata  <- artifactFile.flatMap(_._1.metadata)
+      checksums <- req.artifactToChecksums.get(metadata)
+    } yield MetadataNode(
+      metadata.url,
+      req.fileByArtifact.get(metadata.url).map(_.getPath),
+      checksums
+    )
+
+  def isMetadata: Boolean = artifactFile.exists {
+    case (artifact, _) => artifact.metadata.exists(_.url == artifact.url)
+  }
+
+  // This is used to printing json output
+  // Option of the file path
+  def downloadedFile: Option[String] =
+    artifactFile.flatMap(_._2.map(_.getPath)).filterNot(_ => isMetadata)
+
+  def url: Option[String] = artifactFile.map(_._1.url).filterNot(_ => isMetadata)
+
+  lazy val checksums: Option[Map[String, String]] = for {
+    req       <- jsonPrintRequirement
+    artifact  <- artifactFile.map(_._1).filterNot(_ => isMetadata)
+    checksums <- req.artifactToChecksums.get(artifact)
+  } yield checksums
 
   // `reconciledVersion`, `reconciledVersionStr`, `requestedVersionStr` are fields
   // whose values are frequently duplicated across instances of `JsonElem` and their

@@ -12,6 +12,8 @@ import dataclass.data
   authentication: Option[Authentication] = None
 ) {
   final override lazy val hashCode = tuple.hashCode()
+
+  def metadata: Option[Artifact] = extra.get("metadata")
 }
 
 object Artifact {

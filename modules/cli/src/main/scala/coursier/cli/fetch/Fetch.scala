@@ -9,7 +9,7 @@ import caseapp._
 import cats.data.Validated
 import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.resolve.{Output, Resolve, ResolveException}
-import coursier.core.Resolution
+import coursier.core.{Dependency, Resolution, Publication, Project}
 import coursier.install.Channels
 import coursier.util.{Artifact, Sync, Task}
 
@@ -48,12 +48,42 @@ object Fetch extends CoursierCommand[FetchOptions] {
         Some(params.artifact.artifactTypes), // allow to be null?
         params.resolve.classpathOrder.getOrElse(true)
       )
-
+      distinctArtifacts = artifacts.map(_._3).distinct
       artifactFiles <- coursier.Artifacts.fetchArtifacts(
-        artifacts.map(_._3).distinct,
+        distinctArtifacts,
         cache
         // FIXME Allow to adjust retryCount via CLI args?
       )
+
+      parentArtifacts = {
+        def parents(child: Project): Seq[(Dependency, Publication, Artifact)] =
+          child.parent.flatMap {
+            case mv @ (module, version) => res.projectCache.get(mv).map {
+                case (artifactSource, project) =>
+                  val dependency = Dependency(module, version)
+                  val artifacts  = artifactSource.artifacts(dependency, project, None)
+                  artifacts.map { case (pub, art) => (dependency, pub, art) } ++ parents(project)
+              }
+          }
+            .toSeq.flatten
+        res.projectCache.values.flatMap {
+          case (_, proj) => parents(proj)
+        }.toSeq.distinct
+      }
+      metadataFiles <- coursier.Artifacts.fetchArtifacts(
+        (distinctArtifacts.flatMap(_.metadata) ++ parentArtifacts.flatMap(_._3.metadata)).distinct,
+        cache
+      )
+      checksums <- if (params.jsonOutputOpt.isDefined)
+        coursier.Artifacts.fetchChecksums(
+          pool,
+          Set("MD5", "SHA-1"),
+          (distinctArtifacts ++ (distinctArtifacts ++ parentArtifacts.map(_._3)).map(
+            _.metadata
+          ).flatten).distinct,
+          cache
+        ).map(Some(_))
+      else Task.point(None)
 
       _ <- {
         params.jsonOutputOpt match {
@@ -61,9 +91,10 @@ object Fetch extends CoursierCommand[FetchOptions] {
             Task.delay {
               val report = JsonOutput.report(
                 res,
-                artifacts,
-                artifactFiles.collect { case (a, Some(f)) => a -> f },
+                artifacts ++ parentArtifacts,
+                (artifactFiles ++ metadataFiles).collect { case (a, Some(f)) => a -> f },
                 params.artifact.classifiers,
+                checksums,
                 printExclusions = false
               )
 
