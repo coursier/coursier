@@ -176,7 +176,7 @@ jobs:
     - uses: coursier/setup-action@v1.3.0
       with:
         jvm: 8
-        apps: scalafmt:3.0.0
+        apps: scalafmt
         version: "2.1.0"
     - run: scalafmt --check
 
