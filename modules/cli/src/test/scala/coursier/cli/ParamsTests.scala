@@ -2,10 +2,10 @@ package coursier.cli
 
 import java.io.{File, FileWriter}
 
-import coursier.moduleString
 import coursier.cli.options.DependencyOptions
 import coursier.cli.params.DependencyParams
 import coursier.parse.JavaOrScalaModule
+import coursier.util.StringInterpolators._
 import utest._
 
 object ParamsTests extends TestSuite {

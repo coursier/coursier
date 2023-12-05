@@ -1,5 +1,6 @@
 package coursier
 
+import coursier.core.Repository
 import coursier.params.{Mirror, MirrorConfFile}
 
 abstract class PlatformResolve {

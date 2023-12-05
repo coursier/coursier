@@ -4,7 +4,15 @@ import java.io.File
 import java.lang.{Boolean => JBoolean}
 
 import coursier.cache.{Cache, FileCache}
-import coursier.core.Publication
+import coursier.core.{
+  Classifier,
+  Dependency,
+  Publication,
+  Repository,
+  Resolution,
+  ResolutionProcess,
+  Type
+}
 import coursier.error.CoursierError
 import coursier.internal.FetchCache
 import coursier.params.{Mirror, ResolutionParams}

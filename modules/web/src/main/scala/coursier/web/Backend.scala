@@ -1,17 +1,10 @@
 package coursier.web
 
 import coursier.cache.{AlwaysDownload, CacheLogger}
-import coursier.core.ResolutionProcess
-import coursier.{
-  Dependency,
-  MavenRepository,
-  Module,
-  Repository,
-  Resolution,
-  moduleNameString,
-  organizationString
-}
+import coursier.core.{Dependency, Module, Repository, Resolution, ResolutionProcess}
+import coursier.maven.MavenRepository
 import coursier.util.{Artifact, EitherT, Gather, Task}
+import coursier.util.StringInterpolators._
 import japgolly.scalajs.react._
 import org.scalajs.dom
 
@@ -159,15 +152,15 @@ final class Backend($ : BackendScope[_, State]) {
 
     $.state.map { s =>
 
-      def task =
-        coursier.Resolution()
+      def task = {
+        val res = Resolution()
           .withRootDependencies(s.modules)
           .withFilter(Some(dep => s.options.followOptional || !dep.optional))
-          .process
-          .run(
-            fetch(s.repositories.map { case (_, repo) => repo }, AlwaysDownload(logger).fetch),
-            100
-          )
+        ResolutionProcess(res).run(
+          fetch(s.repositories.map { case (_, repo) => repo }, AlwaysDownload(logger).fetch),
+          100
+        )
+      }
 
       implicit val ec = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
@@ -254,7 +247,7 @@ final class Backend($ : BackendScope[_, State]) {
   def addModule(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState { state =>
-      val modules = state.modules :+ Dependency(Module(org"", name""), "")
+      val modules = state.modules :+ Dependency(Module(org"", name"", Map.empty), "")
       println(s"Modules:\n${modules.mkString("\n")}")
       state.copy(
         modules = modules,

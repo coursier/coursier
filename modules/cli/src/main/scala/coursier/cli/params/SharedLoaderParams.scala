@@ -2,9 +2,9 @@ package coursier.cli.params
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.dependencyString
 import coursier.cli.options.SharedLoaderOptions
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, ModuleParser}
+import coursier.util.StringInterpolators._
 
 final case class SharedLoaderParams(
   loaderNames: Seq[String],

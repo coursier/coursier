@@ -6,14 +6,15 @@ import java.nio.file.{Files, Paths, Path}
 import java.util.zip.ZipFile
 
 import argonaut.{DecodeJson, Parse}
-import coursier.{Dependency, Fetch, moduleString}
+import coursier.Fetch
 import coursier.cache.{Cache, FileCache}
 import coursier.cache.internal.FileUtil
-import coursier.core.Repository
+import coursier.core.{Dependency, Repository}
 import coursier.install.Codecs.{decodeObj, encodeObj}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepositoryLike
 import coursier.util.{Artifact, Task}
+import coursier.util.StringInterpolators._
 import dataclass._
 import scala.collection.JavaConverters._
 

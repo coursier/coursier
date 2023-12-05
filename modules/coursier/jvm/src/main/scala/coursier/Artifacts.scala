@@ -4,7 +4,7 @@ import java.io.File
 import java.lang.{Boolean => JBoolean}
 
 import coursier.cache.{ArtifactError, Cache}
-import coursier.core.Publication
+import coursier.core._
 import coursier.error.FetchError
 import coursier.util.{Artifact, Sync, Task}
 import coursier.util.Monad.ops._

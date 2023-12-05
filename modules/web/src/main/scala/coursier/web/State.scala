@@ -1,6 +1,7 @@
 package coursier.web
 
-import coursier.{Dependency, MavenRepository, Resolution}
+import coursier.core.{Dependency, Resolution}
+import coursier.maven.MavenRepository
 
 final case class State(
   modules: Seq[Dependency],

@@ -1,5 +1,4 @@
-package coursier
-package core
+package coursier.core
 
 import coursier.util.{EitherT, Gather, Monad}
 import coursier.util.Monad.ops._
@@ -382,7 +381,7 @@ object ResolutionProcess {
   }
 
   def fetch[F[_]](
-    repositories: Seq[core.Repository],
+    repositories: Seq[Repository],
     fetch: Repository.Fetch[F],
     fetchs: Seq[Repository.Fetch[F]] = Nil
   )(implicit
