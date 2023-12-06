@@ -28,16 +28,16 @@ On Linux, download the coursier installer with
 
 ```bash
 # On x86-64 (aka AMD64)
-$ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
+curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
 # On ARM64
-$ curl -fL "https://github.com/VirtusLab/coursier-m1/releases/latest/download/cs-aarch64-pc-linux.gz" | gzip -d > cs
+curl -fL "https://github.com/VirtusLab/coursier-m1/releases/latest/download/cs-aarch64-pc-linux.gz" | gzip -d > cs
 ```
 
 Then, run it with
 
 ```bash
-$ chmod +x cs
-$ ./cs setup
+chmod +x cs
+./cs setup
 ```
 
 Other flavors of native Linux launchers are available, see [below](#other-native-linux-launchers).
