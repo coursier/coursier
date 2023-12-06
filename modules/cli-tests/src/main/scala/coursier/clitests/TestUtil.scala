@@ -3,7 +3,7 @@ package coursier.clitests
 import java.io.{File, FileWriter}
 import java.nio.file.Files
 
-import coursier.dependencyString
+import coursier.util.StringInterpolators._
 
 object TestUtil {
 

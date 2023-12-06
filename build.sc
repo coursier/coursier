@@ -434,7 +434,7 @@ trait ProxyTests extends CrossSbtModule with CsModule {
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
-    def testFramework = "coursier.test.CustomFramework"
+    def testFramework = "coursier.tests.CustomFramework"
   }
   // sharedTestResources
 }

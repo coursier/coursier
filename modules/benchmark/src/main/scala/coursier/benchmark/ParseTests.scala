@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 
 import coursier.maven.MavenRepository
-import coursier.moduleString
+import coursier.util.StringInterpolators._
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader
 import org.openjdk.jmh.annotations._
 

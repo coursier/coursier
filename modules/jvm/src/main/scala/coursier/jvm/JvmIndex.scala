@@ -8,10 +8,9 @@ import java.util.zip.ZipFile
 
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
-import coursier.{Dependency, Repository}
 import coursier.cache.{ArchiveType, Cache, FileCache}
 import coursier.cache.internal.FileUtil
-import coursier.core.{Latest, Parse, Version}
+import coursier.core.{Dependency, Latest, Parse, Repository, Version}
 import coursier.util.{Artifact, Task}
 import coursier.util.Traverse.TraverseOps
 import dataclass.data

@@ -3,7 +3,7 @@ package coursier.cli
 import java.io.{File, FileWriter}
 import java.nio.file.Files
 
-import coursier.dependencyString
+import coursier.util.StringInterpolators._
 import scala.util.control.NonFatal
 
 object TestUtil {

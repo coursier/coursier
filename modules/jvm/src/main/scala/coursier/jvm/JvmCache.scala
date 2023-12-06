@@ -4,8 +4,8 @@ import java.io.File
 import java.time.Instant
 import java.util.concurrent.ScheduledExecutorService
 
-import coursier.Repository
 import coursier.cache.{ArchiveCache, Cache, CacheDefaults, CacheLogger, FileCache, UnArchiver}
+import coursier.core.Repository
 import coursier.util.{Artifact, Task}
 import dataclass.data
 

@@ -1,7 +1,6 @@
 package coursier.internal
 
-import coursier.core.{ModuleName, Organization}
-import coursier.{Dependency, Module}
+import coursier.core.{Dependency, Module, ModuleName, Organization}
 
 object Typelevel {
 

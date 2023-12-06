@@ -5,8 +5,8 @@ import java.nio.file.{Path, Paths}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.Repository
 import coursier.cache.{ArchiveCache, Cache}
+import coursier.core.Repository
 import coursier.jvm.{JvmCache, JvmCacheLogger, JvmChannel, JvmIndex}
 import coursier.util.Task
 

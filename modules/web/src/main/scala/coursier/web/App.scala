@@ -1,16 +1,8 @@
 package coursier.web
 
-import coursier.core.{Configuration, ModuleName, Organization, Type}
-import coursier.{
-  Dependency,
-  MavenRepository,
-  Module,
-  Resolution,
-  moduleNameString,
-  moduleString,
-  organizationString
-}
-import coursier.maven.MavenRepositoryLike
+import coursier.core.{Configuration, Dependency, Module, ModuleName, Organization, Resolution, Type}
+import coursier.maven.{MavenRepository, MavenRepositoryLike}
+import coursier.util.StringInterpolators._
 import japgolly.scalajs.react.vdom.{Attr, TagMod}
 import japgolly.scalajs.react.vdom.HtmlAttrs.dangerouslySetInnerHtml
 import japgolly.scalajs.react._
@@ -297,7 +289,7 @@ object App {
           moduleEditModal((
             deps
               .lift(editModuleIdx)
-              .fold(Module(org"", name"") -> "")(_.moduleVersion),
+              .fold(Module(org"", name"", Map.empty) -> "")(_.moduleVersion),
             editModuleIdx,
             backend
           ))
@@ -673,7 +665,7 @@ object App {
                 ^.`type`  := "button",
                 ^.`class` := "btn btn-default",
                 ^.onClick ==> backend.updateDepGraphBtn(
-                  S.resolutionOpt.getOrElse(Resolution.empty)
+                  S.resolutionOpt.getOrElse(Resolution())
                 ),
                 "Redraw"
               ),

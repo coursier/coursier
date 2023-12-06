@@ -5,6 +5,7 @@ import java.io.File
 import coursier.cache.{Cache, CacheLogger}
 import coursier.core.{
   Classifier,
+  Dependency,
   Latest,
   Module,
   Parse,
@@ -14,10 +15,11 @@ import coursier.core.{
   Version,
   VersionConstraint
 }
-import coursier.{Dependency, Fetch, moduleString}
+import coursier.Fetch
 import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Task}
+import coursier.util.StringInterpolators._
 import dataclass._
 
 @data class AppDescriptor(
