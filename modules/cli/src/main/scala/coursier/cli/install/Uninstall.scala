@@ -1,5 +1,8 @@
 package coursier.cli.install
 
+import java.io.File
+import java.io.FileNotFoundException
+
 import caseapp.core.RemainingArgs
 import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.Util.ValidatedExitOnError
@@ -10,8 +13,8 @@ import coursier.util.Task
 import coursier.util.EitherT
 import coursier.util.Artifact
 import coursier.cache.ArtifactError
-import java.io.File
 import scala.concurrent.ExecutionContext
+import java.nio.file.NoSuchFileException
 
 object Uninstall extends CoursierCommand[UninstallOptions] {
 
@@ -54,6 +57,9 @@ object Uninstall extends CoursierCommand[UninstallOptions] {
           catch {
             case e: InstallDirException if params.verbosity <= 1 =>
               System.err.println(e.getMessage)
+              sys.exit(1)
+            case _: FileNotFoundException | _: NoSuchFileException =>
+              System.err.println(s"$app is not installed by coursier")
               sys.exit(1)
           }
         resOpt match {
