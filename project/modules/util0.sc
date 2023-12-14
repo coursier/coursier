@@ -10,8 +10,7 @@ trait Util extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
     Deps.collectionCompat
   )
   def compileIvyDeps = Agg(
-    Deps.dataClass,
-    Deps.simulacrum
+    Deps.dataClass
   )
 }
 

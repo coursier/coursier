@@ -8,7 +8,6 @@ trait TestsModule extends CsCrossJvmJsModule {
     Deps.scalaAsync
   )
   def compileIvyDeps = Agg(
-    Deps.dataClass,
-    Deps.simulacrum
+    Deps.dataClass
   )
 }
