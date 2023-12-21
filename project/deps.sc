@@ -50,7 +50,6 @@ object Deps {
   def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.2.0"
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
   def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
-  def simulacrum               = ivy"org.typelevel::simulacrum:1.0.1"
   def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.9"
   def svm                      = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
   def ujson                    = ivy"com.lihaoyi::ujson:3.1.3"
@@ -80,7 +79,7 @@ def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"
 def csDockerVersion = "2.1.0-RC1"
 
 object ScalaVersions {
-  def scala213 = "2.13.6"
+  def scala213 = "2.13.12"
   def scala212 = "2.12.18"
   val all      = Seq(scala213, scala212)
 
