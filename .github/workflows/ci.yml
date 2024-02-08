@@ -192,7 +192,7 @@ jobs:
       - uses: coursier/cache-action@v6.4
       - run: .github/scripts/gpg-setup.sh
         env:
-          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+          PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
       - uses: coursier/setup-action@v1.3.0
         with:
           jvm: 8
@@ -209,8 +209,8 @@ jobs:
             exit 0
           )
         env:
-          PGP_PASSWORD: ${{ secrets.PGP_PASSPHRASE }}
-          PGP_SECRET: ${{ secrets.PGP_SECRET }}
+          PGP_PASSWORD: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
+          PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
 
