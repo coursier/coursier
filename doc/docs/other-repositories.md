@@ -29,6 +29,8 @@ $ cs fetch --no-default \
   org.scalameta:scalafmt-cli_2.12:2.0.0-RC4+29-f2154330-SNAPSHOT
 ```
 
+⚠️ _Avoid using `~/.m2/repository` as a repository as it is maven's internal file-system cache._ 
+
 ## Ivy Repositories
 
 It is possible to use a custom Ivy repository and pattern by concatenating them:
