@@ -6,9 +6,11 @@ import coursier.credentials.DirectCredentials
 
 import scala.cli.config.Key
 import java.nio.file.Path
+import scala.cli.commands.SpecificationLevel
 import scala.cli.config.PasswordOption
 import scala.collection.mutable.ListBuffer
 
+@deprecated("Unused by coursier now", "2.1.15")
 object TmpConfig {
 
   private final case class AsJson(
@@ -55,6 +57,10 @@ object TmpConfig {
     }
   }
 
+  private final class JsonReaderError(cause: JsonReaderException)
+      extends Key.EntryError("Error parsing config JSON", Some(cause))
+
+  @deprecated("Use scala.cli.config.Keys.repositoryCredentials instead", "2.1.15")
   val credentialsKey: Key[List[DirectCredentials]] = new Key[List[DirectCredentials]] {
 
     private def asJson(credentials: DirectCredentials): AsJson =
@@ -75,15 +81,16 @@ object TmpConfig {
     private val codec: JsonValueCodec[List[AsJson]] =
       JsonCodecMaker.make
 
-    def prefix      = Seq("repositories")
-    def name        = "credentials"
-    def description = "Repository credentials"
+    def prefix             = Seq("repositories")
+    def name               = "credentials"
+    def description        = "Repository credentials"
+    def specificationLevel = SpecificationLevel.EXPERIMENTAL
 
     def parse(json: Array[Byte]): Either[Key.EntryError, List[DirectCredentials]] =
       try Right(readFromArray(json)(codec).map(_.credentials))
       catch {
         case e: JsonReaderException =>
-          Left(new Key.JsonReaderError(e))
+          Left(new JsonReaderError(e))
       }
     def write(value: List[DirectCredentials]): Array[Byte] =
       writeToArray(value.map(asJson))(codec)
