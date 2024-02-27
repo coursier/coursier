@@ -59,16 +59,16 @@ jobs:
       matrix:
         OS: ["ubuntu-latest"]
         JDK: ["8"]
-        SCALA_VERSION: ["2.12.18"]
+        SCALA_VERSION: ["2.12.19"]
         include:
           - JDK: "8"
-            SCALA_VERSION: "2.12.18"
+            SCALA_VERSION: "2.12.19"
             OS: "windows-latest"
           - JDK: "8"
             SCALA_VERSION: "2.13.12"
             OS: "ubuntu-latest"
           - JDK: "17"
-            SCALA_VERSION: "2.12.18"
+            SCALA_VERSION: "2.12.19"
             OS: "ubuntu-latest"
     steps:
     - name: Don't convert LF to CRLF during checkout
@@ -101,7 +101,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        SCALA_VERSION: ["2.12.18", "2.13.12"]
+        SCALA_VERSION: ["2.12.19", "2.13.12"]
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
