@@ -63,7 +63,7 @@ object Versions {
   def http4s        = "0.23.25"
   def jniUtils      = "0.3.3"
   def jsoniterScala = "2.13.5"
-  def scalaz        = "7.2.35"
+  def scalaz        = "7.3.8"
 }
 
 def sbtCoursierVersion = "2.0.8"
