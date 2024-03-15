@@ -81,7 +81,7 @@ trait Shading extends JavaModule with PublishModule {
     val updated     = T.dest / (orig.last.stripSuffix(".jar") + "-shaded.jar")
     val shadedJars0 = shadedJars().map(_.path)
 
-    val shader = Shader.bytecodeShader(shadeRules0, verbose = false)
+    val shader = Shader.bytecodeShader(shadeRules0, verbose = false, skipManifest = true)
 
     val inputFiles = Seq(orig) ++ shadedJars0
 
