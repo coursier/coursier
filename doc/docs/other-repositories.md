@@ -50,7 +50,7 @@ The second policy only looks at what's already in cache (this one may be redunda
 
 The third one tries to actually fetch things.
 
-If we have 3 repositories and a dependency is already in cache for the third one, it will be peaked in cache from the third repo (by the first two policies). 
+If we have 3 repositories and a dependency is already in cache for the third one, it will be picked in cache from the third repo (by the first two policies). 
 
 Even if the dependency was actually available in the first or second repositories.
 
