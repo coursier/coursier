@@ -29,6 +29,10 @@ $ cs fetch --no-default \
   org.scalameta:scalafmt-cli_2.12:2.0.0-RC4+29-f2154330-SNAPSHOT
 ```
 
+⚠️ _Avoid using `~/.m2/repository` as a repository if you can. This is maven's internal file-system cache and it's not meant to be read by external tools.
+By using it you are risking running into some issues like e.g. directories with POMs inside but without corresponding jar files.
+You can read more about it [here](https://github.com/ghostbuster91/demos/tree/coursier-not-found) and [here](https://github.com/coursier/coursier/issues/1832#issuecomment-1357764540)._ 
+
 ## Ivy Repositories
 
 It is possible to use a custom Ivy repository and pattern by concatenating them:
