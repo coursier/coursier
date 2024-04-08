@@ -47,7 +47,7 @@ import scala.io.{Codec, Source}
         val setJavaCmd =
           """[ -x "$JAVA_HOME/bin/java" ] && JAVA_CMD="$JAVA_HOME/bin/java" || JAVA_CMD=java"""
 
-        val javaCmd = Seq("$JAVA_CMD") ++
+        val javaCmd = Seq("\"$JAVA_CMD\"") ++
           // escaping possibly a bit loose :-|
           javaOpts.map(s => "'" + s.replace("'", "\\'") + "'") ++
           jvmOptionFile.toSeq.map(_ => "${extra_jvm_opts[@]}") ++
