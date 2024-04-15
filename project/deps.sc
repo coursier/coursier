@@ -31,12 +31,12 @@ object Deps {
   def macroParadise  = ivy"org.scalamacros:::paradise:2.1.1"
   def mdoc           = ivy"org.scalameta::mdoc:2.5.1"
   def noCrcZis       = ivy"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
-  def osLib          = ivy"com.lihaoyi::os-lib:0.9.3"
+  def osLib          = ivy"com.lihaoyi::os-lib:0.10.0"
   def plexusArchiver = ivy"org.codehaus.plexus:plexus-archiver:4.9.0"
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
-  def pprint                   = ivy"com.lihaoyi::pprint:0.8.1"
+  def pprint                   = ivy"com.lihaoyi::pprint:0.9.0"
   def proguard                 = ivy"com.guardsquare:proguard-base:7.4.2"
   def pythonNativeLibs         = ivy"ai.kien::python-native-libs:0.2.4"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
@@ -52,14 +52,14 @@ object Deps {
   def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
   def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.13"
   def svm                      = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
-  def ujson                    = ivy"com.lihaoyi::ujson:3.2.0"
+  def ujson                    = ivy"com.lihaoyi::ujson:3.3.0"
   def utest                    = ivy"com.lihaoyi::utest::0.8.3"
   def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.5"
 }
 
 object Versions {
   def cats          = "2.10.0"
-  def fastParse     = "3.0.2"
+  def fastParse     = "3.1.0"
   def http4s        = "0.23.25"
   def jniUtils      = "0.3.3"
   def jsoniterScala = "2.13.5"
