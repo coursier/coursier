@@ -47,7 +47,7 @@ object Deps {
   def scalaNativeTools040M2    = ivy"org.scala-native::tools:0.4.0-M2"
   def scalaNativeTools040      = ivy"org.scala-native::tools:0.4.17"
   def scalaReflect(sv: String) = ivy"org.scala-lang:scala-reflect:$sv"
-  def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.2.0"
+  def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.3.0"
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
   def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
   def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.13"
