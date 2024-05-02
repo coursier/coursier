@@ -291,7 +291,7 @@ object RawAppDescriptor {
     prebuilt: Option[String] = None,
     prebuiltBinaries: Option[Map[String, String]] = None,
     @since("2.2.0")
-    launcherType: Option[String] = None,
+    launcherType: Option[String] = None
   ) {
     def versionOverride: ValidatedNel[String, VersionOverride] = {
       val versionRangeV = coursier.core.Parse
@@ -306,7 +306,9 @@ object RawAppDescriptor {
       }
 
       val launcherTypeV: ValidatedNel[String, Option[LauncherType]] =
-        launcherType.map(lt => Validated.fromEither(LauncherType.parse(lt).left.map(NonEmptyList.one))).sequence
+        launcherType.map(lt =>
+          Validated.fromEither(LauncherType.parse(lt).left.map(NonEmptyList.one))
+        ).sequence
 
       (versionRangeV, repositoriesV, dependenciesV, launcherTypeV).mapN {
         (versionRange, repositories, dependencies, launcherType) =>

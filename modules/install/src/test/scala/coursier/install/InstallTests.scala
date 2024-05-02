@@ -775,7 +775,9 @@ object InstallTests extends TestSuite {
           RawAppDescriptor(List("org.scala-lang:scala3-compiler_3:3.0.1"))
             .withRepositories(List("central"))
             .withLauncherType("prebuilt")
-            .withPrebuilt(Some("zip+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}.zip!scala3-${version}/bin/scalac"))
+            .withPrebuilt(Some(
+              "zip+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}.zip!scala3-${version}/bin/scalac"
+            ))
             .withVersionOverrides(List(versionOverride)),
           id
         )
