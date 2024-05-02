@@ -66,7 +66,7 @@ object Versions {
   def scalaz        = "7.2.36"
 }
 
-def sbtCoursierVersion = "2.0.8"
+def sbtCoursierVersion = "2.1.4"
 
 def graalVmVersion = "22.3.0"
 def graalVmJvmId   = s"graalvm-java17:$graalVmVersion"
