@@ -220,7 +220,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        OS: ["ubuntu-latest", "windows-latest", "macos-latest"]
+        OS: ["ubuntu-latest", "windows-latest", "macos-12"]
     steps:
       - uses: actions/checkout@v4
         with:
