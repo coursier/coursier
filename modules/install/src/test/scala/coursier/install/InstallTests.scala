@@ -772,7 +772,7 @@ object InstallTests extends TestSuite {
               Seq("scala.usejavacp" -> "true")
             )))
         val appInfo0 = appInfo(
-          RawAppDescriptor(List("org.scala-lang:scala3-compiler_3:3.0.1"))
+          RawAppDescriptor(List("org.scala-lang:scala3-compiler_3:3.3.3"))
             .withRepositories(List("central"))
             .withLauncherType("prebuilt")
             .withPrebuilt(Some(
@@ -820,7 +820,7 @@ object InstallTests extends TestSuite {
         }
 
         if (currentOs == os)
-          testOutput("Scala compiler version 3.0.1 -- Copyright 2002-2021, LAMP/EPFL")
+          testOutput("Scala compiler version 3.3.3 -- Copyright 2002-2024, LAMP/EPFL")
 
         val overridenAppInfo = appInfo0.overrideVersion("2.12.8")
         val overridden       = installDir0.createOrUpdate(overridenAppInfo)
@@ -846,7 +846,7 @@ object InstallTests extends TestSuite {
         assert(updated.exists(identity))
 
         if (currentOs == os)
-          testOutput("Scala compiler version 3.0.1 -- Copyright 2002-2021, LAMP/EPFL")
+          testOutput("Scala compiler version 3.3.3 -- Copyright 2002-2024, LAMP/EPFL")
       }
 
       test("linux") - run("linux", "x86_64")
