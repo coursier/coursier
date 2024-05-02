@@ -14,6 +14,6 @@ import coursier.core.{Repository, VersionInterval}
   @since("2.1.0-M4")
   prebuiltLauncher: Option[String] = None,
   prebuiltBinaries: Option[Map[String, String]] = None,
-  @since("2.10.0")
+  @since("2.2.0")
   launcherType: Option[LauncherType] = None,
 )
