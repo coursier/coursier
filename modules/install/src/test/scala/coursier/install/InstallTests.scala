@@ -765,15 +765,17 @@ object InstallTests extends TestSuite {
         val id = "scalac"
         val versionOverride =
           RawAppDescriptor.RawVersionOverride("(,2.max]")
+            .withLauncherType(Some("bootstrap"))
             .withDependencies(Some(List("org.scala-lang:scala-compiler:2.12.8")))
             .withMainClass(Some("scala.tools.nsc.Main"))
+            .withProperties(Some(RawAppDescriptor.Properties(
+              Seq("scala.usejavacp" -> "true")
+            )))
         val appInfo0 = appInfo(
           RawAppDescriptor(List("org.scala-lang:scala3-compiler_3:3.0.1"))
             .withRepositories(List("central"))
-            .withMainClass(Some("dotty.tools.dotc.Main"))
-            .withProperties(RawAppDescriptor.Properties(
-              Seq("scala.usejavacp" -> "true")
-            ))
+            .withLauncherType("prebuilt")
+            .withPrebuilt(Some("zip+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}.zip!scala3-${version}/bin/scalac"))
             .withVersionOverrides(List(versionOverride)),
           id
         )
@@ -804,19 +806,19 @@ object InstallTests extends TestSuite {
           assert(properties == expectedProperties)
         }
 
-        val scala3CompilerJars =
-          Seq(
-            "https://repo1.maven.org/maven2/org/scala-lang/scala3-compiler_3/3.0.1/scala3-compiler_3-3.0.1.jar",
-            "https://repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.0.1/scala3-library_3-3.0.1.jar",
-            "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.6/scala-library-2.13.6.jar"
+        def testOutput(expectedInOut: String): Unit = {
+          val output = commandOutput(
+            tmpDir.toFile,
+            mergeError = true,
+            expectedReturnCode = 0,
+            launcher.toAbsolutePath.toString,
+            "-version"
           )
-        val scala3Properties =
-          Seq(
-            "bootstrap.mainClass=dotty.tools.dotc.Main",
-            "scala.usejavacp=true",
-            "scala3-compiler_3.version=3.0.1"
-          )
-        testRun(scala3CompilerJars, scala3Properties)
+          assert(output.contains(expectedInOut))
+        }
+
+        if (currentOs == os)
+          testOutput("Scala compiler version 3.0.1 -- Copyright 2002-2021, LAMP/EPFL")
 
         val overridenAppInfo = appInfo0.overrideVersion("2.12.8")
         val overridden       = installDir0.createOrUpdate(overridenAppInfo)
@@ -835,12 +837,14 @@ object InstallTests extends TestSuite {
             "scala.usejavacp=true",
             "scala-compiler.version=2.12.8"
           )
+
         testRun(scala2CompilerJars, scala2Properties)
 
         val updated = installDir0.createOrUpdate(appInfo0)
         assert(updated.exists(identity))
 
-        testRun(scala3CompilerJars, scala3Properties)
+        if (currentOs == os)
+          testOutput("Scala compiler version 3.0.1 -- Copyright 2002-2021, LAMP/EPFL")
       }
 
       test("linux") - run("linux", "x86_64")
