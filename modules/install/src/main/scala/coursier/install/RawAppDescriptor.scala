@@ -290,7 +290,7 @@ object RawAppDescriptor {
     @since("2.1.0-M4")
     prebuilt: Option[String] = None,
     prebuiltBinaries: Option[Map[String, String]] = None,
-    @since("2.2.0")
+    @since("2.1.10")
     launcherType: Option[String] = None
   ) {
     def versionOverride: ValidatedNel[String, VersionOverride] = {
