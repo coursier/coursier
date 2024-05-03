@@ -19,7 +19,7 @@ import utest._
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 import coursier.core.Version
-import scala.util.Properties
+import scala.util.{Properties, Using}
 
 object InstallTests extends TestSuite {
 
@@ -91,6 +91,12 @@ object InstallTests extends TestSuite {
 
       new String(FileUtil.readFully(zf.getInputStream(ent)), StandardCharsets.UTF_8)
     }
+
+  private def findInSource(f: File, needle: String, enc: String = "ISO_8859_1") = {
+    Using(scala.io.Source.fromFile(f, enc)) { s =>
+      s.getLines().exists(line => line.contains(needle))
+    }.get
+  }
 
   private def commandOutput(command: String*): String =
     commandOutput(new File("."), mergeError = false, expectedReturnCode = 0, command: _*)
@@ -791,6 +797,13 @@ object InstallTests extends TestSuite {
         val launcher = installDir0.actualDest(id)
         assert(Files.isRegularFile(launcher))
 
+        // for a prebuilt launcher, we expect the path of the launcher to appear somewhere in the script
+        val scala3path = {
+          val original = "github.com/scala/scala3/releases/download/3.3.3/scala3-3.3.3.zip/scala3-3.3.3/bin/scala"
+          if (currentOs == "windows") original.replace('/', '\\')
+          else original
+        }
+
         def testRun(expectedUrls: Seq[String], expectedProperties: Seq[String]): Unit = {
           assert(Files.isRegularFile(launcher))
 
@@ -808,6 +821,14 @@ object InstallTests extends TestSuite {
           assert(properties == expectedProperties)
         }
 
+        def searchInScript(needle: String): Unit = {
+          assert(Files.isRegularFile(launcher))
+
+          val foundNeedle = findInSource(launcher.toFile(), needle)
+          val expected = true
+          assert(foundNeedle == expected)
+        }
+
         def testOutput(expectedInOut: String): Unit = {
           val output = commandOutput(
             tmpDir.toFile,
@@ -819,6 +840,7 @@ object InstallTests extends TestSuite {
           assert(output.contains(expectedInOut))
         }
 
+        searchInScript(scala3path)
         if (currentOs == os)
           testOutput("Scala compiler version 3.3.3 -- Copyright 2002-2024, LAMP/EPFL")
 
@@ -845,6 +867,7 @@ object InstallTests extends TestSuite {
         val updated = installDir0.createOrUpdate(appInfo0)
         assert(updated.exists(identity))
 
+        searchInScript(scala3path)
         if (currentOs == os)
           testOutput("Scala compiler version 3.3.3 -- Copyright 2002-2024, LAMP/EPFL")
       }
