@@ -289,7 +289,9 @@ object RawAppDescriptor {
     properties: Option[RawAppDescriptor.Properties] = None,
     @since("2.1.0-M4")
     prebuilt: Option[String] = None,
-    prebuiltBinaries: Option[Map[String, String]] = None
+    prebuiltBinaries: Option[Map[String, String]] = None,
+    @since("2.1.10")
+    launcherType: Option[String] = None
   ) {
     def versionOverride: ValidatedNel[String, VersionOverride] = {
       val versionRangeV = coursier.core.Parse
@@ -303,8 +305,13 @@ object RawAppDescriptor {
         case None                          => (None, None)
       }
 
-      (versionRangeV, repositoriesV, dependenciesV).mapN {
-        (versionRange, repositories, dependencies) =>
+      val launcherTypeV: ValidatedNel[String, Option[LauncherType]] =
+        launcherType.map(lt =>
+          Validated.fromEither(LauncherType.parse(lt).left.map(NonEmptyList.one))
+        ).sequence
+
+      (versionRangeV, repositoriesV, dependenciesV, launcherTypeV).mapN {
+        (versionRange, repositories, dependencies, launcherType) =>
           VersionOverride(versionRange)
             .withDependencies(dependencies)
             .withRepositories(repositories)
@@ -313,6 +320,7 @@ object RawAppDescriptor {
             .withJavaProperties(properties.map(_.props.sorted))
             .withPrebuiltLauncher(prebuilt)
             .withPrebuiltBinaries(prebuiltBinaries)
+            .withLauncherType(launcherType)
       }
     }
   }

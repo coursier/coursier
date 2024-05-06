@@ -76,6 +76,10 @@ import dataclass._
             versionOverride.prebuiltBinaries
               .getOrElse(prebuiltBinaries)
           }
+          .withLauncherType {
+            versionOverride.launcherType
+              .getOrElse(launcherType)
+          }
       }
       .getOrElse(this)
     val deps = overriddenDesc.dependencies
