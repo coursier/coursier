@@ -92,11 +92,10 @@ object InstallTests extends TestSuite {
       new String(FileUtil.readFully(zf.getInputStream(ent)), StandardCharsets.UTF_8)
     }
 
-  private def findInSource(f: File, needle: String, enc: String = "ISO_8859_1") = {
+  private def findInSource(f: File, needle: String, enc: String = "ISO_8859_1") =
     Using(scala.io.Source.fromFile(f, enc)) { s =>
       s.getLines().exists(line => line.contains(needle))
     }.get
-  }
 
   private def commandOutput(command: String*): String =
     commandOutput(new File("."), mergeError = false, expectedReturnCode = 0, command: _*)
@@ -799,7 +798,8 @@ object InstallTests extends TestSuite {
 
         // for a prebuilt launcher, we expect the path of the launcher to appear somewhere in the script
         val scala3path = {
-          val original = "github.com/scala/scala3/releases/download/3.3.3/scala3-3.3.3.zip/scala3-3.3.3/bin/scala"
+          val original =
+            "github.com/scala/scala3/releases/download/3.3.3/scala3-3.3.3.zip/scala3-3.3.3/bin/scala"
           if (currentOs == "windows") original.replace('/', '\\')
           else original
         }
@@ -825,7 +825,7 @@ object InstallTests extends TestSuite {
           assert(Files.isRegularFile(launcher))
 
           val foundNeedle = findInSource(launcher.toFile(), needle)
-          val expected = true
+          val expected    = true
           assert(foundNeedle == expected)
         }
 
