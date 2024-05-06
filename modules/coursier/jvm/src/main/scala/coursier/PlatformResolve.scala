@@ -41,7 +41,9 @@ abstract class PlatformResolve {
     val valueOpt = db.get(Keys.defaultRepositories).fold(e => throw new Exception(e), identity)
     valueOpt.map { inputs =>
       RepositoryParser.repositories(inputs).either match {
-        case Left(errors) => ???
+        case Left(errors) =>
+          val errorMessage = errors.mkString("Malformed repositories:\n", "\n", "")
+          throw new Exception(errorMessage)
         case Right(repos) => repos
       }
     }
