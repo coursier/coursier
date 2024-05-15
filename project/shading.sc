@@ -1,5 +1,3 @@
-import $ivy.`com.eed3si9n.jarjarabrams::jarjar-abrams-core:0.3.0`
-
 import com.eed3si9n.jarjarabrams.{ShadePattern, Shader}
 import coursier.util.{Gather, Task}
 import mill._, mill.scalalib._
