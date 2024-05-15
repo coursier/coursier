@@ -16,9 +16,9 @@ trait Shading extends JavaModule with PublishModule {
   def shadeRenames: T[Seq[(String, String)]]
 
   def shadedJars = T {
-    val depToDependency = resolveCoursierDependency().apply(_)
+    val depToDependency = (d: Dep) => bindDependency().apply(d).dep
     val depSeq          = transitiveIvyDeps().map(_.toDep)
-    val (_, resolution) = mill.modules.Jvm.resolveDependenciesMetadata(
+    val (_, resolution) = mill.util.Jvm.resolveDependenciesMetadata(
       repositoriesTask(),
       deps = depSeq.map(depToDependency),
       force = depSeq.filter(_.force).map(depToDependency),
