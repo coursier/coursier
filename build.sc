@@ -544,7 +544,7 @@ trait Cli extends CsCrossJvmJsModule
     Deps.collectionCompat,
     Deps.dataClass,
     Deps.noCrcZis,
-    ivy"com.chuusai::shapeless:2.3.10",
+    ivy"com.chuusai::shapeless:2.3.11",
     Deps.slf4JNop
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
