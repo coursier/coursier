@@ -85,15 +85,12 @@ object paths extends JavaModule {
     Deps.jniUtils
   )
 }
-object `windows-ansi` extends Module {
-  object ps extends JavaModule
-}
 
 object `custom-protocol-for-test` extends CsModule {
   def scalaVersion = ScalaVersions.scala213
 }
 
-object `bootstrap-launcher` extends BootstrapLauncher { self =>
+object `bootstrap-launcher` extends BootstrapLauncher with CoursierModule { self =>
   def proxySources = T.sources {
     val dest = T.dest / "sources"
     val orig = `proxy-setup`.sources()
@@ -109,12 +106,25 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
       }
     Seq(PathRef(dest))
   }
+  def windowsAnsiPsSources = T {
+    val jars = resolveDeps(
+      T.task {
+        Agg(Deps.windowsAnsi.exclude("*" -> "*"))
+          .map(bindDependency())
+      },
+      sources = true
+    )()
+    jars.foreach { jar =>
+      mill.api.IO.unpackZip(jar.path, os.rel)
+    }
+    Seq(PathRef(T.dest))
+  }
   def sources = T.sources {
     super.sources() ++
       directories.sources() ++
       paths.sources() ++
       proxySources() ++
-      `windows-ansi`.ps.sources()
+      windowsAnsiPsSources()
   }
   def resources = T.sources {
     (super.resources() ++ directories.resources()).flatMap { ref =>
