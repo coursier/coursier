@@ -119,7 +119,7 @@ object `bootstrap-launcher` extends BootstrapLauncher with CoursierModule { self
     }
     Seq(PathRef(T.dest))
   }
-  def sources = T.sources {
+  def sources = T {
     super.sources() ++
       directories.sources() ++
       paths.sources() ++
