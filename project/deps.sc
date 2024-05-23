@@ -55,6 +55,7 @@ object Deps {
   def ujson                    = ivy"com.lihaoyi::ujson:3.3.1"
   def utest                    = ivy"com.lihaoyi::utest::0.8.3"
   def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.5"
+  def windowsAnsiPs            = ivy"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
 }
 
 object Versions {

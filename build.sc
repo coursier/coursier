@@ -90,7 +90,7 @@ object `custom-protocol-for-test` extends CsModule {
   def scalaVersion = ScalaVersions.scala213
 }
 
-object `bootstrap-launcher` extends BootstrapLauncher with CoursierModule { self =>
+object `bootstrap-launcher` extends BootstrapLauncher { self =>
   def proxySources = T.sources {
     val dest = T.dest / "sources"
     val orig = `proxy-setup`.sources()
@@ -109,7 +109,7 @@ object `bootstrap-launcher` extends BootstrapLauncher with CoursierModule { self
   def windowsAnsiPsSources = T {
     val jars = resolveDeps(
       T.task {
-        Agg(Deps.windowsAnsi.exclude("*" -> "*"))
+        Agg(Deps.windowsAnsiPs.exclude("*" -> "*"))
           .map(bindDependency())
       },
       sources = true
