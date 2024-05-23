@@ -73,16 +73,16 @@ object coursier extends Module {
 
 object directories extends Directories {
   def initSources: T[PathRef] = T {
-    val org = "dirs-dev"
-    val repo = "directories-jvm"
-    val commit = "7acadf2ab9a4ce306d840d652cdb77fade11b94b"
-    val url = s"https://github.com/${org}/${repo}/archive/${commit}.zip"
+    val org      = "dirs-dev"
+    val repo     = "directories-jvm"
+    val commit   = "7acadf2ab9a4ce306d840d652cdb77fade11b94b"
+    val url      = s"https://github.com/$org/$repo/archive/$commit.zip"
     val unpacked = mill.util.Util.downloadUnpackZip(url)
-    val src = unpacked.path / s"${repo}-${commit}" / "src"
+    val src      = unpacked.path / s"$repo-$commit" / "src"
     PathRef(src)
   }
-  def sources = T.sources { initSources().path / "main" / "java" }
-  def resources = T.sources { initSources().path / "main" / "resources" }
+  def sources   = T.sources(initSources().path / "main" / "java")
+  def resources = T.sources(initSources().path / "main" / "resources")
 }
 
 object `proxy-setup` extends JavaModule with CoursierPublishModule {
