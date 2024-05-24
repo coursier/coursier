@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <packaging>jar</packaging>
+    <groupId>org.webjars.npm</groupId>
+    <artifactId>commoner</artifactId>
+    <version>0.10.8</version>
+    <name>commoner</name>
+    <description>WebJar for commoner</description>
+    <url>http://webjars.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <scm>
+        <url>https://github.com/benjamn/commoner</url>
+        <connection>https://github.com/benjamn/commoner.git</connection>
+        <developerConnection>https://github.com/benjamn/commoner.git</developerConnection>
+        <tag>v0.10.8</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>webjars</id>
+            <url>http://webjars.org</url>
+        </developer>
+    </developers>
+
+    <licenses>
+        
+        <license>
+            <name>MIT</name>
+            <url>https://spdx.org/licenses/MIT#licenseText</url>
+            <distribution>repo</distribution>
+        </license>
+        
+    </licenses>
+
+    
+    <issueManagement>
+        <url>https://github.com/benjamn/commoner/issues</url>
+    </issueManagement>
+    
+
+    <dependencies>
+        
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>private</artifactId>
+            <version>[0.1.6,0.2)</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>commander</artifactId>
+            <version>[2.5.0,3)</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>detective</artifactId>
+            <version>[4.3.1,5)</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>recast</artifactId>
+            <version>[0.11.17,0.12)</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>glob</artifactId>
+            <version>[5.0.15,6)</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>q</artifactId>
+            <version>[1.1.2,2)</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>graceful-fs</artifactId>
+            <version>[4.1.2,5)</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>iconv-lite</artifactId>
+            <version>[0.4.5,0.5)</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>mkdirp</artifactId>
+            <version>[0.5.0,0.6)</version>
+        </dependency>
+        
+        
+    </dependencies>
+
+</project>

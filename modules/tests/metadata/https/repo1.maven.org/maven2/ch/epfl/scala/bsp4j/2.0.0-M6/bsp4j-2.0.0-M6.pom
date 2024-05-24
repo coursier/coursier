@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>ch.epfl.scala</groupId>
+    <artifactId>bsp4j</artifactId>
+    <packaging>jar</packaging>
+    <description>bsp4j</description>
+    <url>https://github.com/scalacenter/bloop</url>
+    <version>2.0.0-M6</version>
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>bsp4j</name>
+    <inceptionYear>2017</inceptionYear>
+    <organization>
+        <name>ch.epfl.scala</name>
+        <url>https://github.com/scalacenter/bloop</url>
+    </organization>
+    <scm>
+        <url>https://github.com/scalacenter/bsp</url>
+        <connection>scm:git:git@github.com:scalacenter/bsp.git</connection>
+    </scm>
+    <developers>
+        <developer>
+            <id>olafurpg</id>
+            <name>Ólafur Páll Geirsson</name>
+            <url>https://github.com/olafurpg</url>
+            <email>olafurpg@gmail.com</email>
+        </developer>
+        <developer>
+            <id>jvican</id>
+            <name>Jorge Vicente Cantero</name>
+            <url>https://github.com/jvican</url>
+            <email>jorge@vican.me</email>
+        </developer>
+        <developer>
+            <id>jastice</id>
+            <name>Justin Kaeser</name>
+            <url>https://github.com/jastice</url>
+            <email>justin@justinkaeser.com</email>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>org.eclipse.lsp4j</groupId>
+            <artifactId>org.eclipse.lsp4j.generator</artifactId>
+            <version>0.8.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.lsp4j</groupId>
+            <artifactId>org.eclipse.lsp4j.jsonrpc</artifactId>
+            <version>0.8.1</version>
+        </dependency>
+    </dependencies>
+</project>

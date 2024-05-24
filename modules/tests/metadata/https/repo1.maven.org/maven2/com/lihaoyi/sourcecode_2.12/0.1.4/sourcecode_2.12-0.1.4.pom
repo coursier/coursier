@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.lihaoyi</groupId>
+    <artifactId>sourcecode_2.12</artifactId>
+    <packaging>bundle</packaging>
+    <description>sourcecode</description>
+    <url>https://github.com/lihaoyi/sourcecode</url>
+    <version>0.1.4</version>
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>http://www.opensource.org/licenses/mit-license.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>sourcecode</name>
+    <organization>
+        <name>com.lihaoyi</name>
+        <url>https://github.com/lihaoyi/sourcecode</url>
+    </organization>
+    <scm>
+        <url>https://github.com/lihaoyi/sourcecode</url>
+        <connection>scm:git:git@github.com:lihaoyi/sourcecode.git</connection>
+    </scm>
+    <developers>
+        <developer>
+            <id>lihaoyi</id>
+            <name>Li Haoyi</name>
+            <email>haoyi.sg@gmail.com</email>
+            <url>https://github.com/lihaoyi</url>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-compiler</artifactId>
+            <version>2.12.2</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.12.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+            <version>2.12.2</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

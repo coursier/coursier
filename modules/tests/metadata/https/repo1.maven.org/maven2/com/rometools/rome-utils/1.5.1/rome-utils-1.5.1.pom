@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.rometools</groupId>
+		<artifactId>rome-parent</artifactId>
+		<version>1.5.1</version>
+	</parent>
+
+	<artifactId>rome-utils</artifactId>
+	<packaging>jar</packaging>
+	<version>1.5.1</version>
+
+	<name>rome-utils</name>
+
+	<description>Utility classes for ROME projects</description>
+
+	<url>http://rometools.github.io/rome-utils/</url>
+
+	<scm>
+		<connection>scm:git:ssh://github.com/rometools/rome-utils.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/rometools/rome-utils.git</developerConnection>
+		<url>https://github.com/rometools/rome-utils</url>
+	</scm>
+
+	<developers>
+		<developer>
+			<name>Patrick Gotthard</name>
+			<url>http://www.patrick-gotthard.de</url>
+			<timezone>+1</timezone>
+		</developer>
+	</developers>
+
+    <repositories>
+        <repository>
+            <id>sonatype-nexus-snapshots</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>hamcrest-core</artifactId>
+					<groupId>org.hamcrest</groupId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.hamcrest</groupId>
+			<artifactId>hamcrest-all</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	
+</project>

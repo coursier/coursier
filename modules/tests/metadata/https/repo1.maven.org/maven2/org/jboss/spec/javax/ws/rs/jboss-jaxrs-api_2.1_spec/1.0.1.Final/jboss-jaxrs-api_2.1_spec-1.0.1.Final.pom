@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.jboss</groupId>
+    <artifactId>jboss-parent</artifactId>
+    <version>25</version>
+  </parent>
+
+  <groupId>org.jboss.spec.javax.ws.rs</groupId>
+  <artifactId>jboss-jaxrs-api_2.1_spec</artifactId>
+  <version>1.0.1.Final</version>
+  <packaging>jar</packaging>
+
+  <name>JAX-RS 2.1: The Java(TM) API for RESTful Web Services</name>
+  <description>JSR 370: JAX-RS 2.1: The Java(TM) API for RESTful Web Services</description>
+
+  <licenses>
+    <license>
+      <name>Common Development and Distribution License</name>
+      <url>http://repository.jboss.org/licenses/cddl.txt</url>
+      <distribution>repo</distribution>
+    </license>
+    <license>
+     <name>GNU General Public License, Version 2 with the Classpath Exception</name>
+     <url>http://repository.jboss.org/licenses/gpl-2.0-ce.txt</url>
+     <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git@github.com:jboss/jboss-jaxrs-api_spec.git</connection>
+    <developerConnection>scm:git:git@github.com:jboss/jboss-jaxrs-api_spec.git</developerConnection>
+    <url>https://github.com/jboss/jboss-jaxrs-api_spec</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>${project.basedir}/src/main/resources</directory>
+      </resource>
+      <!-- Include LICENSE in the META-INF directory -->
+      <resource>
+        <directory>${project.basedir}</directory>
+        <includes>
+          <include>LICENSE</include>
+        </includes>
+        <targetPath>META-INF</targetPath>
+      </resource>
+    </resources>
+
+    <plugins>
+      <!-- Generate the OSGi jar Manifest. -->
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>bundle-manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultSpecificationEntries>false</addDefaultSpecificationEntries>
+            </manifest>
+            <manifestEntries>
+              <Automatic-Module-Name>beta.jboss.jaxrs.api_2_1</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+          <instructions>
+            <Specification-Title>JSR 370: The Java(TM) API for RESTful Web Services</Specification-Title>
+            <Specification-Vendor>Oracle</Specification-Vendor>
+            <Specification-Version>2.1</Specification-Version>
+            <Export-Package>
+              javax.ws.rs*;version=2.1
+            </Export-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+      <!-- Add the OSGi Manifest to the main jar -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Specification-Title>JSR 370: The Java(TM) API for RESTful Web Services</Specification-Title>
+              <Specification-Vendor>Oracle</Specification-Vendor>
+              <Specification-Version>2.1</Specification-Version>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.github.fommil.netlib</groupId>
+        <artifactId>native_system-xbuilds</artifactId>
+        <version>1.1</version>
+    </parent>
+
+    <artifactId>netlib-native_system-linux-armhf</artifactId>
+    <packaging>so</packaging>
+
+    <!--
+    This is built using a custom cross compiler from Debian,
+    using the "rpi" config file in this directory.
+        
+        http://elinux.org/RPi_Linaro_GCC_Compilation
+        http://crosstool-ng.org
+        http://stackoverflow.com/a/13384349/1041691
+
+    (don't forget to use `CT_DEBUG_CT_SAVE_STEPS=1`)
+
+    Note that although Ubuntu has a gnueabihf compiler, it
+    is targeted a ludicrously niche ARMv7 chip that is not
+    backwards compatible with the Raspberry Pi.
+
+    And obtain a JDK for ARM from
+
+      http://jdk8.java.net/download.html
+
+    installed into
+
+      /opt/gnueabihf-arm/jdk8
+        
+    along with the contents of
+        
+        for A in b/blas/libblas-dev_1.2.20110419-5_armhf.deb b/blas/libblas3_1.2.20110419-5_armhf.deb l/lapack/liblapack-dev_3.4.2%2bdfsg-1_armhf.deb l/lapack/liblapack3_3.4.2%2bdfsg-1_armhf.deb ; do
+          curl -O "http://archive.raspbian.org/raspbian/pool/main/$A"
+          ar vx `basename $A`
+          sudo tar xfzv data.tar.gz -C /opt/gnueabihf-arm/
+        done
+    -->
+    <properties>
+        <netlib.src>../../../netlib</netlib.src>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>native_system-java</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.fommil.netlib</groupId>
+                <artifactId>generator</artifactId>
+                <executions>
+                    <execution>
+                        <id>blas</id>
+                    </execution>
+                    <execution>
+                        <id>lapack</id>
+                    </execution>
+                    <execution>
+                        <id>arpack</id>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <javahOS>linux</javahOS>
+                    <jdkIncludePath>/opt/gnueabihf-arm/jdk8/include</jdkIncludePath>
+                    <compilerExecutable>arm-rpi-linux-gnueabi-gcc</compilerExecutable>
+                    <linkerExecutable>arm-rpi-linux-gnueabi-gcc</linkerExecutable>
+                    <compilerStartOptions>
+                        <compilerStartOption>-Os</compilerStartOption>
+                        <compilerStartOption>-I/opt/gnueabihf-arm/usr/include/</compilerStartOption>
+                    </compilerStartOptions>
+                    <linkerMiddleOptions>
+<!-- Inspect binary with
+arm-rpi-linux-gnueabi-readelf -a target/netlib-native_system-linux-armhf.so | grep "Shared library:"
+-->
+                        <linkerMiddleOption>-L/opt/gnueabihf-arm/usr/lib/libblas</linkerMiddleOption>
+                        <linkerMiddleOption>-L/opt/gnueabihf-arm/usr/lib/lapack</linkerMiddleOption>
+                        <linkerMiddleOption>-shared</linkerMiddleOption>
+                        <linkerMiddleOption>-lgfortran</linkerMiddleOption>
+                        <linkerMiddleOption>-lblas</linkerMiddleOption>
+                        <linkerMiddleOption>-llapack</linkerMiddleOption>
+                        <linkerMiddleOption>-Wl,-s</linkerMiddleOption>
+                        <linkerMiddleOption>-Wl,--version-script=${netlib.src}/symbol.map</linkerMiddleOption>
+                        <linkerMiddleOption>-Wl,--gc-sections</linkerMiddleOption>
+                    </linkerMiddleOptions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>runtime</id>
+                    </execution>
+                    <execution>
+                        <id>source</id>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

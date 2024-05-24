@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.python</groupId>
+    <artifactId>jython-standalone</artifactId>
+    <packaging>jar</packaging>
+    <name>Jython</name>
+    <version>2.5.3</version>
+    <url>http://www.jython.org/</url>
+    <description>
+        Jython is an implementation of the high-level, dynamic, object-oriented
+        language Python written in 100% Pure Java, and seamlessly integrated with
+        the Java platform. It thus allows you to run Python on any Java platform.
+    </description>
+    <licenses>
+        <license>
+            <name>Jython Software License</name>
+            <url>http://www.jython.org/Project/license.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:hg:http://hg.python.org/jython</connection>
+        <developerConnection>scm:hg:ssh://hg@hg.python.org/jython</developerConnection>
+        <url>http://hg.python.org/jython</url>
+    </scm>
+    <!-- Just put my name in for now to make the maven uploader happy -->
+    <developers>
+        <developer>
+            <id>fwierzbicki</id>
+            <name>Frank Wierzbicki</name>
+        </developer>
+    </developers>
+</project>

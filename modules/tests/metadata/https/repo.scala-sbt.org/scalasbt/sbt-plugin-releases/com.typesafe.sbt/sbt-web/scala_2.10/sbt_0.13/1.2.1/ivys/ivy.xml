@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
+	<info organisation="com.typesafe.sbt" module="sbt-web" revision="1.2.1" status="release" publication="20150622102226" e:sbtVersion="0.13" e:scalaVersion="2.10">
+		<license name="Apache-2.0" url="http://www.apache.org/licenses/LICENSE-2.0.html"/>
+		<description homepage="https://github.com/sbt/sbt-web">
+		sbt web support
+		</description>
+	</info>
+	<configurations>
+		<conf name="compile" visibility="public" description=""/>
+		<conf name="runtime" visibility="public" description="" extends="compile"/>
+		<conf name="test" visibility="public" description="" extends="runtime"/>
+		<conf name="provided" visibility="public" description=""/>
+		<conf name="optional" visibility="public" description=""/>
+		
+		
+		
+		
+		<conf name="sources" visibility="public" description=""/>
+		<conf name="docs" visibility="public" description=""/>
+		<conf name="pom" visibility="public" description=""/>
+		
+		
+		
+	</configurations>
+	<publications>
+		<artifact name="sbt-web" type="jar" ext="jar" conf="compile"/>
+		<artifact name="sbt-web" type="src" ext="jar" conf="sources" e:classifier="sources"/>
+		<artifact name="sbt-web" type="doc" ext="jar" conf="docs" e:classifier="javadoc"/>
+	</publications>
+	<dependencies>
+		
+		<dependency org="org.scala-lang" name="scala-library" rev="2.10.4" conf="provided->default(compile)"/>
+		<dependency org="org.scala-sbt" name="sbt" rev="0.13.8" conf="provided->default(compile)"/>
+		
+		
+		<dependency org="com.typesafe.akka" name="akka-actor_2.10" rev="2.3.9" conf="compile->default(compile)"/>
+		<dependency org="org.webjars" name="webjars-locator" rev="0.25" conf="compile->default(compile)"/>
+		<dependency org="org.specs2" name="specs2-core_2.10" rev="3.4" conf="test->default(compile)"/>
+		<dependency org="junit" name="junit" rev="4.12" conf="test->default(compile)"/>
+		<override org="org.scala-lang" module="scala-library" matcher="exact" rev="2.10.4"/>
+		<override org="org.scala-lang" module="scala-compiler" matcher="exact" rev="2.10.4"/>
+		<override org="org.scala-lang" module="scala-reflect" matcher="exact" rev="2.10.4"/>
+	</dependencies>
+</ivy-module>

@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<properties>
+	    <project.build.sourceEncoding>ISO8859-1</project.build.sourceEncoding>
+	</properties>
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>org.itadaki</groupId>
+	<artifactId>bzip2</artifactId>
+	<version>0.9.1</version>
+	<packaging>jar</packaging>
+	<name>Itadaki jbzip2</name>
+	<description>jbzip2 is a Java bzip2 compression/decompression library. It can be used as a replacement for the Apache CBZip2InputStream / CBZip2OutputStream classes.</description>
+	<url>https://code.google.com/p/jbzip2/</url>
+	<scm>
+		<connection>scm:svn:http://jbzip2.googlecode.com/svn/trunk/</connection>
+		<developerConnection>scm:svn:http://jbzip2.googlecode.com/svn/trunk/</developerConnection>
+		<url>http://jbzip2.googlecode.com/svn/trunk/</url>
+	</scm>
+	
+	<licenses>
+		<license>
+			<name>MIT License (MIT)</name>
+			<url>http://opensource.org/licenses/mit-license.php</url>
+		</license>
+	</licenses>
+	
+	<developers>
+		<developer>
+			<id></id>
+			<name></name>
+			<email></email>
+			<roles>
+				<role></role>
+				<role></role>
+			</roles>
+		</developer>
+	</developers>
+
+	<build>
+		<extensions>
+			<extension>
+				<groupId>org.apache.maven.wagon</groupId>
+				<artifactId>wagon-http-lightweight</artifactId>
+				<version>1.0</version>
+			</extension>
+		</extensions>
+
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>2.3</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.10.3</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+						<configuration>
+							<quiet>true</quiet>
+							<archive>
+								<manifest>
+									<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+									<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+								</manifest>
+								<manifestEntries>
+									<Implementation-Build>${implementation.build}</Implementation-Build>
+									<Implementation-Build-Date>${maven.build.timestamp}</Implementation-Build-Date>
+									<X-Compile-Source-JDK>1.7</X-Compile-Source-JDK>
+									<X-Compile-Target-JDK>1.7</X-Compile-Target-JDK>
+								</manifestEntries>
+							</archive>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.4</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+						<configuration>
+							<archive>
+								<manifest>
+									<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+									<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+								</manifest>
+								<manifestEntries>
+									<Implementation-Build>${implementation.build}</Implementation-Build>
+									<Implementation-Build-Date>${maven.build.timestamp}</Implementation-Build-Date>
+									<X-Compile-Source-JDK>1.7</X-Compile-Source-JDK>
+									<X-Compile-Target-JDK>1.7</X-Compile-Target-JDK>
+								</manifestEntries>
+							</archive>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+		
+	</build>
+</project>

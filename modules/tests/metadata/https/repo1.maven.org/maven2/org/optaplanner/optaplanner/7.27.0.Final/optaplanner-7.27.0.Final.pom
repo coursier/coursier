@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.kie</groupId>
+    <artifactId>kie-parent</artifactId>
+    <version>7.27.0.Final</version>
+    <!-- relativePath causes out-of-date problems on hudson slaves -->
+    <!--<relativePath>../droolsjbpm-build-bootstrap/pom.xml</relativePath>-->
+  </parent>
+
+  <groupId>org.optaplanner</groupId>
+  <artifactId>optaplanner</artifactId>
+  <packaging>pom</packaging>
+
+  <name>OptaPlanner multiproject parent</name>
+  <description>
+    OptaPlanner solves planning problems.
+    This lightweight, embeddable planning engine implements powerful and scalable algorithms
+    to optimize business resource scheduling and planning.
+
+    This module is just the multiproject parent. The planning engine itself is in optaplanner-core.
+  </description>
+  <url>https://www.optaplanner.org</url>
+  <inceptionYear>2006</inceptionYear>
+
+  <properties>
+    <spotbugs.failOnViolation>true</spotbugs.failOnViolation>
+  </properties>
+
+  <repositories>
+    <!-- Bootstrap repository to locate the parent pom when the parent pom has not been build locally. -->
+    <repository>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Repository Group</name>
+      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <scm>
+    <connection>scm:git:git@github.com:kiegroup/optaplanner.git</connection>
+    <developerConnection>scm:git:git@github.com:kiegroup/optaplanner.git</developerConnection>
+    <url>https://github.com/kiegroup/optaplanner</url>
+  </scm>
+  <issueManagement>
+    <system>jira</system>
+    <url>https://issues.jboss.org/browse/PLANNER</url>
+  </issueManagement>
+
+  <modules>
+    <module>optaplanner-core</module>
+    <module>optaplanner-persistence</module>
+    <module>optaplanner-integration</module>
+    <module>optaplanner-benchmark</module>
+    <module>optaplanner-test</module>
+    <module>optaplanner-examples</module>
+    <module>optaplanner-webexamples</module>
+  </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.optaplanner</groupId>
+        <artifactId>optaplanner-bom</artifactId>
+        <version>${version.org.kie}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-bom</artifactId>
+        <version>${version.org.kie}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.soup</groupId>
+        <artifactId>kie-soup-bom</artifactId>
+        <version>${version.org.kie}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.glassfish</groupId>
+        <artifactId>javax.json</artifactId>
+        <!-- Old version until this issue is resolved: https://github.com/ImmobilienScout24/illegal-transitive-dependency-check/issues/30 -->
+        <version>1.0.4</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <profiles>
+    <profile>
+      <id>fullProfile</id>
+      <activation>
+        <property>
+          <name>full</name>
+        </property>
+      </activation>
+      <modules>
+        <module>optaplanner-docs</module>
+        <module>optaplanner-distribution</module>
+      </modules>
+    </profile>
+
+    <profile>
+      <id>run-code-coverage</id>
+      <properties>
+        <jacoco.excludes>*Lexer:org.optaplanner.core.impl.testdata.domain.*:*TestdataAbstractSolutionBasedSolution</jacoco.excludes>
+
+        <!-- jacoco.exec.file is defined in kie-parent -->
+        <!--suppress UnresolvedMavenProperty -->
+        <jacoco.agent.line>-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${version.jacoco.plugin}/org.jacoco.agent-${version.jacoco.plugin}-runtime.jar=destfile=${jacoco.exec.file},append=true,excludes=${jacoco.excludes}</jacoco.agent.line>
+        <surefire.argLine>
+          -Dfile.encoding=${project.build.sourceEncoding}
+          ${jacoco.agent.line}
+        </surefire.argLine>
+      </properties>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.codehaus.cargo</groupId>
+              <artifactId>cargo-maven2-plugin</artifactId>
+              <configuration>
+                <configuration>
+                  <properties>
+                    <cargo.start.jvmargs>${jacoco.agent.line}</cargo.start.jvmargs>
+                  </properties>
+                </configuration>
+              </configuration>
+            </plugin>
+            <plugin>
+              <groupId>net.ltgt.gwt.maven</groupId>
+              <artifactId>gwt-maven-plugin</artifactId>
+              <configuration>
+                <skipCompilation>true</skipCompilation>
+              </configuration>
+            </plugin>
+            <plugin>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <configuration>
+                <argLine>${surefire.argLine}</argLine>
+              </configuration>
+              <dependencies>
+                <dependency>
+                  <groupId>org.jacoco</groupId>
+                  <artifactId>org.jacoco.agent</artifactId>
+                  <version>${version.jacoco.plugin}</version>
+                  <classifier>runtime</classifier>
+                </dependency>
+              </dependencies>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>com.github.spotbugs</groupId>
+          <artifactId>spotbugs-maven-plugin</artifactId>
+          <configuration>
+            <maxRank>14</maxRank>
+            <includeTests>true</includeTests>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>validate</id>
+              <phase>validate</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <configuration>
+                <checkstyleRules combine.self="override">
+                  <module name="Checker">
+                    <property name="severity" value="warning" default="warning"/>
+                    <!-- Checks whether files end with a new line. -->
+                    <module name="NewlineAtEndOfFile">
+                      <property name="lineSeparator" value="lf"/>
+                    </module>
+                    <!-- Checks for whitespace. -->
+                    <module name="FileTabCharacter">
+                      <property name="severity" value="error"/>
+                      <property name="eachLine" value="true"/>
+                    </module>
+                    <module name="SuppressWarningsFilter"/>
+                    <module name="TreeWalker">
+                      <property name="cacheFile" value="target/cachefile"/>
+                      <property name="tabWidth" value="4"/>
+                      <!-- Checks for Javadoc comments. -->
+                      <module name="JavadocStyle"/>
+                      <!-- TODO: Enable NonEmptyAtclauseDescription after https://github.com/checkstyle/checkstyle/issues/1064 is fixed -->
+                      <!-- Update: #1064 is resolved and the performance has greatly improved but this check still adds ~2 seconds -->
+                      <!-- to the build time -> always measure build time before enabling this module (use github.com/jcgay/maven-profiler) -->
+                      <!--<module name="NonEmptyAtclauseDescription"/>-->
+                      <!-- Checks for imports. -->
+                      <module name="RedundantImport"/>
+                      <!-- defaults to sun.* packages -->
+                      <module name="IllegalImport"/>
+                      <!-- Checks for size violations. -->
+                      <!--<module name="LineLength">-->
+                      <!--<property name="max" value="120"/>-->
+                      <!--</module>-->
+                      <module name="ParameterNumber"/>
+                      <!-- Checks for whitespace. -->
+                      <module name="GenericWhitespace"/>
+                      <module name="MethodParamPad"/>
+                      <module name="NoWhitespaceBefore"/>
+                      <module name="ParenPad"/>
+                      <module name="TypecastParenPad"/>
+                      <module name="WhitespaceAfter"/>
+                      <module name="WhitespaceAround">
+                        <property name="allowEmptyConstructors" value="true"/>
+                        <property name="allowEmptyTypes" value="true"/>
+                      </module>
+                      <!-- Checks for blocks. -->
+                      <module name="LeftCurly"/>
+                      <module name="NeedBraces"/>
+                      <module name="RightCurly"/>
+                      <!-- Checks for common coding problems. -->
+                      <module name="EmptyStatement"/>
+                      <module name="EqualsHashCode"/>
+                      <module name="IllegalInstantiation"/>
+                      <module name="InnerAssignment"/>
+                      <module name="OneStatementPerLine"/>
+                      <!-- Checks for class design. -->
+                      <!--<module name="HideUtilityClassConstructor"/>-->
+                      <module name="InterfaceIsType"/>
+                      <!-- Miscellaneous other checks. -->
+                      <module name="ArrayTypeStyle"/>
+                      <module name="UpperEll"/>
+                      <module name="SuppressWarningsHolder"/>
+                    </module>
+                  </module>
+                </checkstyleRules>
+                <consoleOutput>true</consoleOutput>
+                <logViolationsToConsole>true</logViolationsToConsole>
+                <failOnViolation>true</failOnViolation>
+                <failsOnError>true</failsOnError>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+</project>

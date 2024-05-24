@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.get-coursier</groupId>
+    <artifactId>coursier_2.12</artifactId>
+    <packaging>jar</packaging>
+    <description>coursier</description>
+    <url>https://github.com/coursier/coursier</url>
+    <version>2.0.16</version>
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>coursier</name>
+    <organization>
+        <name>io.get-coursier</name>
+        <url>https://github.com/coursier/coursier</url>
+    </organization>
+    <scm>
+        <url>https://github.com/coursier/coursier</url>
+        <connection>scm:git:https://github.com/coursier/coursier.git</connection>
+        <developerConnection>scm:git:git@github.com:coursier/coursier.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <id>alexarchambault</id>
+            <name>Alexandre Archambault</name>
+            <url>https://github.com/alexarchambault</url>
+            <email>alexandre.archambault@gmail.com</email>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.12.12</version>
+        </dependency>
+        <dependency>
+            <groupId>io.get-coursier</groupId>
+            <artifactId>coursier-core_2.12</artifactId>
+            <version>2.0.16</version>
+        </dependency>
+        <dependency>
+            <groupId>io.get-coursier</groupId>
+            <artifactId>coursier-cache_2.12</artifactId>
+            <version>2.0.16</version>
+        </dependency>
+        <!-- shaded dependency com.lihaoyi:fastparse_2.12
+ <dependency>
+      <groupId>com.lihaoyi</groupId>
+      <artifactId>fastparse_2.12</artifactId>
+      <version>2.3.0</version>
+      
+      
+      
+      
+      
+    </dependency>
+-->
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+            <version>2.12.12</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>utest_2.12</artifactId>
+            <version>0.7.5</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-async_2.12</artifactId>
+            <version>0.10.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.github.alexarchambault</groupId>
+            <artifactId>argonaut-shapeless_6.2_2.12</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.github.alexarchambault</groupId>
+            <artifactId>data-class_2.12</artifactId>
+            <version>0.2.4</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

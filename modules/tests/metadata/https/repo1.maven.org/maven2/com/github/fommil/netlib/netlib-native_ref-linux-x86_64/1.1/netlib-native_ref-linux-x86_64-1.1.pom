@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.github.fommil.netlib</groupId>
+        <artifactId>native_ref-xbuilds</artifactId>
+        <version>1.1</version>
+    </parent>
+
+    <artifactId>netlib-native_ref-linux-x86_64</artifactId>
+    <packaging>so</packaging>
+
+    <!--
+    This is built natively for Linux x86_64 on an x86_64 architecture.
+    Ubuntu Wheezy is best as it compiles for GLIBC_2.2.5 whereas Ubuntu
+    requires the more recent GLIBC_2.13.
+
+      sudo apt-get install gfortran openjdk-7-jdk
+
+    It is impossible to compile a library on Ubuntu that has static
+    references to the fortran libraries, as the static fortran library
+    has not been compiled with -fPIC. The only workaround would be
+    to compile gcc from scratch, with the flags added, and then compile
+    these natives. That is not a wise move.
+    -->
+    <properties>
+        <netlib.src>../../../netlib</netlib.src>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>native_ref-java</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.fommil.netlib</groupId>
+                <artifactId>generator</artifactId>
+                <executions>
+                    <execution>
+                        <id>blas</id>
+                    </execution>
+                    <execution>
+                        <id>lapack</id>
+                    </execution>
+                    <execution>
+                        <id>arpack</id>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <javahOS>linux</javahOS>
+                    <linkerMiddleOptions>
+                        <linkerMiddleOption>-shared</linkerMiddleOption>
+                        <linkerMiddleOption>-lgfortran</linkerMiddleOption>
+                        <linkerMiddleOption>-Wl,-s</linkerMiddleOption>
+                        <linkerMiddleOption>-Wl,--version-script=${netlib.src}/symbol.map</linkerMiddleOption>
+                        <linkerMiddleOption>-Wl,--gc-sections</linkerMiddleOption>
+                    </linkerMiddleOptions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>runtime</id>
+                    </execution>
+                    <execution>
+                        <id>source</id>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

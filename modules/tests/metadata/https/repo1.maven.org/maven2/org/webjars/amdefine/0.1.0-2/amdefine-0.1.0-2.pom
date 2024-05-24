@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+
+    <packaging>jar</packaging>
+    <groupId>org.webjars</groupId>
+    <artifactId>amdefine</artifactId>
+    <version>0.1.0-2</version>
+    <name>amdefine</name>
+    <description>WebJar for amdefine</description>
+    <url>http://webjars.org</url>
+
+    <licenses>
+        <license>
+            <name>BSD</name>
+            <url>https://github.com/jrburke/amdefine/blob/master/LICENSE</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>http://github.com/webjars/amdefine</url>
+        <connection>scm:git:https://github.com/webjars/amdefine.git</connection>
+        <developerConnection>scm:git:https://github.com/webjars/amdefine.git</developerConnection>
+        <tag>amdefine-0.1.0-2</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>jamesroper</id>
+            <name>James Roper</name>
+            <email>james@jazzy.id.au</email>
+        </developer>
+    </developers>
+    
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <upstreamVersion>0.1.0</upstreamVersion>
+        <sourceUrl>https://github.com/jrburke/amdefine</sourceUrl>
+        <destDir>${project.build.outputDirectory}/META-INF/resources/webjars/${project.artifactId}/${upstreamVersion}</destDir>
+        <extractDir>${project.build.directory}/amdefine-${upstreamVersion}</extractDir>
+        <requirejs>
+            {
+                "paths": {
+                    "amdefine": "amdefine"
+                }
+            }
+        </requirejs>
+    </properties>
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>wagon-maven-plugin</artifactId>
+                <version>1.0-beta-4</version>
+                <executions>
+                    <execution>
+                        <id>download-js</id>
+                        <phase>process-resources</phase>
+                        <goals><goal>download-single</goal></goals>
+                        <configuration>
+                            <url>${sourceUrl}/archive</url>
+                            <fromFile>${upstreamVersion}.zip</fromFile>
+                            <toFile>${project.build.directory}/amdefine.zip</toFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                      <phase>process-resources</phase>
+                      <goals><goal>run</goal></goals>
+                      <configuration>
+                          <target>
+                              <echo message="unzip archive" />
+                              <unzip src="${project.build.directory}/amdefine.zip" dest="${project.build.directory}" />
+                              <echo message="moving resources" />
+                              <move file="${extractDir}/amdefine.js" todir="${destDir}" />
+                              <move file="${extractDir}/intercept.js" todir="${destDir}" />
+                              <move file="${extractDir}/package.json" todir="${destDir}" />
+                          </target>
+                      </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.1</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.5.1</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>sonatype-nexus-staging</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>

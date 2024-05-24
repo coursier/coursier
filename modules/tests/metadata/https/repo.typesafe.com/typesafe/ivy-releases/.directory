@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 3.2 Final//EN">
+<html>
+<head><meta name="robots" content="noindex" />
+<title>Index of ivy-releases/</title>
+</head>
+<body>
+<h1>Index of ivy-releases/</h1>
+<pre>Name                         Last modified      Size</pre><hr/>
+<pre><a href="com/">com/</a>                          14-Apr-2021 06:20    -
+<a href="com.cunei/">com.cunei/</a>                    14-Apr-2021 06:18    -
+<a href="com.github.mpeltonen/">com.github.mpeltonen/</a>         14-Apr-2021 06:26    -
+<a href="com.lightbend/">com.lightbend/</a>                14-Apr-2021 06:18    -
+<a href="com.lightbend.markdown/">com.lightbend.markdown/</a>       14-Apr-2021 06:18    -
+<a href="com.typesafe/">com.typesafe/</a>                 14-Apr-2021 06:20    -
+<a href="com.typesafe.activator/">com.typesafe.activator/</a>       14-Apr-2021 06:19    -
+<a href="com.typesafe.builder/">com.typesafe.builder/</a>         14-Apr-2021 06:18    -
+<a href="com.typesafe.config/">com.typesafe.config/</a>          14-Apr-2021 06:18    -
+<a href="com.typesafe.dbuild/">com.typesafe.dbuild/</a>          14-Apr-2021 06:18    -
+<a href="com.typesafe.markdown/">com.typesafe.markdown/</a>        14-Apr-2021 06:18    -
+<a href="com.typesafe.play/">com.typesafe.play/</a>            14-Apr-2021 06:19    -
+<a href="com.typesafe.rp/">com.typesafe.rp/</a>              14-Apr-2021 06:18    -
+<a href="com.typesafe.sbt/">com.typesafe.sbt/</a>             14-Apr-2021 06:26    -
+<a href="com.typesafe.sbtaspectj/">com.typesafe.sbtaspectj/</a>      14-Apr-2021 06:26    -
+<a href="com.typesafe.sbteclipse/">com.typesafe.sbteclipse/</a>      14-Apr-2021 06:19    -
+<a href="com.typesafe.sbtidea/">com.typesafe.sbtidea/</a>         14-Apr-2021 06:26    -
+<a href="com.typesafe.sbtmultijvm/">com.typesafe.sbtmultijvm/</a>     14-Apr-2021 06:27    -
+<a href="com.typesafe.sbtosgi/">com.typesafe.sbtosgi/</a>         14-Apr-2021 06:26    -
+<a href="com.typesafe.sbtrc/">com.typesafe.sbtrc/</a>           14-Apr-2021 06:20    -
+<a href="com.typesafe.sbtscalariform/">com.typesafe.sbtscalariform/</a>  14-Apr-2021 06:27    -
+<a href="com.typesafe.schoir/">com.typesafe.schoir/</a>          14-Apr-2021 06:26    -
+<a href="com.typesafe.startscript/">com.typesafe.startscript/</a>     14-Apr-2021 06:26    -
+<a href="com.typesafe.training/">com.typesafe.training/</a>        14-Apr-2021 06:26    -
+<a href="klang/">klang/</a>                        14-Apr-2021 06:18    -
+<a href="org/">org/</a>                          14-Apr-2021 06:26    -
+<a href="org.scala-sbt/">org.scala-sbt/</a>                14-Apr-2021 06:18    -
+<a href="org.scala-sbt.ivy/">org.scala-sbt.ivy/</a>            14-Apr-2021 06:20    -
+<a href="org.scala-sbt.sxr/">org.scala-sbt.sxr/</a>            14-Apr-2021 06:20    -
+<a href="org.scala-tools.sbinary/">org.scala-tools.sbinary/</a>      14-Apr-2021 06:20    -
+<a href="org.scala-tools.sbt/">org.scala-tools.sbt/</a>          14-Apr-2021 06:18    -
+<a href="play/">play/</a>                         14-Apr-2021 06:27    -
+</pre>
+<hr/><address style="font-size:small;">Artifactory Online Server at scala.jfrog.io Port 80</address></body></html>

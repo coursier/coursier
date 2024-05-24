@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>james-project</artifactId>
+        <groupId>org.apache.james</groupId>
+        <version>1.8</version>
+        <relativePath />
+    </parent>
+
+    <artifactId>apache-mime4j-project</artifactId>
+    <version>0.7.2</version>
+    <packaging>pom</packaging>
+
+    <name>Apache JAMES Mime4j Project</name>
+    <description>Java stream based MIME message parser</description>
+    <url>http://james.apache.org/mime4j</url>
+    <inceptionYear>2004</inceptionYear>
+
+    <modules>
+        <module>core</module>
+        <module>dom</module>
+        <module>storage</module>
+        <module>benchmark</module>
+        <module>examples</module>
+        <module>assemble</module>
+    </modules>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/james/mime4j/tags/apache-mime4j-project-0.7.2</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/mime4j/tags/apache-mime4j-project-0.7.2</developerConnection>
+        <url>http://svn.apache.org/viewvc/james/mime4j/tags/apache-mime4j-project-0.7.2</url>
+    </scm>
+    <issueManagement>
+        <url>http://issues.apache.org/jira/browse/MIME4J</url>
+    </issueManagement>
+
+    <distributionManagement>
+        <site>
+            <id>mime4j-website</id>
+            <url>scpexe://people.apache.org/www/james.apache.org/mime4j/</url>
+        </site>
+    </distributionManagement>
+
+    <properties>
+        <target.jdk>1.5</target.jdk>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>1.1.1</version>
+            </dependency>
+            <dependency>
+                <groupId>log4j</groupId>
+                <artifactId>log4j</artifactId>
+                <version>1.2.14</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>3.8.2</version>
+                <type>jar</type>
+                <!-- Removed as a workaround for an unidentified M2 bug -->
+                <scope>test</scope>
+                <optional>true</optional>
+            </dependency>
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>1.4</version>
+                <scope>test</scope>
+                <optional>true</optional>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <!-- See https://issues.apache.org/**jira/browse/FELIX-3037<https://issues.apache.org/jira/browse/FELIX-3037>-->
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>2.3.4</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <inherited>true</inherited>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>NOTICE.*</exclude>
+                                <exclude>LICENSE.*</exclude>
+                                <exclude>**/main/resources/long-multipart.msg</exclude>
+                                <exclude>**/main/resources/META-INF/services/org.apache.james.mime4j.dom.MessageServiceFactory</exclude>
+                                <exclude>**/test/resources/testmsgs/*</exclude>
+                                <exclude>**/test/resources/mimetools-testmsgs/*</exclude>
+                                <!-- Generated by Maven -->
+                                <exclude>release.properties</exclude>
+                                <exclude>dist/**/*</exclude>
+                                <!-- Eclipse -->
+                                <exclude>**/.*</exclude>
+                                <exclude>.*/**/*</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+                        <manifestEntries>
+                            <Specification-Title>Apache Mime4j</Specification-Title>
+                            <Specification-Version>${project.version}</Specification-Version>
+                            <Specification-Vendor>The Apache Software Foundation</Specification-Vendor>
+                            <Implementation-Title>Apache Mime4j</Implementation-Title>
+                            <Implementation-Version>${project.version}</Implementation-Version>
+                            <Implementation-Vendor>The Apache Software Foundation</Implementation-Vendor>
+                            <Implementation-Vendor-Id>org.apache</Implementation-Vendor-Id>
+                            <url>${project.url}</url>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <inherited>true</inherited>
+                <configuration>
+                    <excludePackageNames>org.apache.james.mime4j.field.address.parser:org.apache.james.mime4j.field.contentdisposition.parser:org.apache.james.mime4j.field.contenttype.parser:org.apache.james.mime4j.field.datetime.parser:org.apache.james.mime4j.field.language.parser:org.apache.james.mime4j.field.mimeversion.parser:org.apache.james.mime4j.field.structured.parser</excludePackageNames>
+                </configuration>
+            </plugin>
+            <!-- Add NOTICE and LICENSE to generated JAR -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-remote-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                        <configuration>
+                            <resourceBundles>
+                                <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
+                            </resourceBundles>
+                            <properties>
+                                <addLicense>true</addLicense>
+                            </properties>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>bundle-manifest</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <extensions>true</extensions>
+                <configuration>
+                    <instructions>
+                        <Export-Package>org.apache.james.mime4j.*</Export-Package>
+                        <Embed-Dependency>*;scope=runtime</Embed-Dependency>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

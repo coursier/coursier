@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>ch.epfl.scala</groupId>
+    <artifactId>sbt-plugin-example-bottom</artifactId>
+    <packaging>jar</packaging>
+    <description>An empty artifact that we use to test resolving a diamond graph of dependencies of sbt plugins. This is the bottom dependency of the diamond. It has no dependency.</description>
+    <url>https://github.com/adpi2/sbt-plugin-example-diamond</url>
+    <version>0.1.0</version>
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>sbt-plugin-example-bottom</name>
+    <organization>
+        <name>ch.epfl.scala</name>
+        <url>https://github.com/adpi2/sbt-plugin-example-diamond</url>
+    </organization>
+    <scm>
+        <url>https://github.com/adpi2/sbt-plugin-example-diamond</url>
+        <connection>https://github.com/adpi2/sbt-plugin-example-diamond.git</connection>
+    </scm>
+    <developers>
+        <developer>
+            <id>adpi2</id>
+            <name>Adrien Piquerez</name>
+            <url>https://github.com/adpi2/</url>
+            <email>adrien.piquerez@gmail.com</email>
+        </developer>
+    </developers>
+    <properties>
+        <scalaVersion>2.12</scalaVersion>
+        <sbtVersion>1.0</sbtVersion>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.12.17</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-sbt</groupId>
+            <artifactId>sbt</artifactId>
+            <version>1.8.0</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

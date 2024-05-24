@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.kie</groupId>
+    <artifactId>kie-parent</artifactId>
+    <version>7.0.0.Final</version>
+    <!-- relativePath causes out-of-date problems on hudson slaves -->
+    <!--<relativePath>../droolsjbpm-build-bootstrap/pom.xml</relativePath>-->
+  </parent>
+
+  <groupId>org.drools</groupId>
+  <artifactId>drools</artifactId>
+  <packaging>pom</packaging>
+
+  <name>Drools Multiproject</name>
+  <description>
+    Drools Expert is the rule engine and Drools Fusion does complex event processing (CEP).
+  </description>
+
+  <properties>
+    <surefire.forkCount>1</surefire.forkCount>
+  </properties>
+
+  <repositories>
+    <!-- Bootstrap repository to locate the parent pom when the parent pom has not been build locally. -->
+    <repository>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Repository Group</name>
+      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <scm>
+    <connection>scm:git:https://github.com:kiegroup/drools.git</connection>
+    <developerConnection>scm:git:git@github.com:kirgroup/drools.git</developerConnection>
+    <url>https://github.com/kiegroup/drools</url>
+  </scm>
+
+  <modules>
+    <module>kie-test-util</module>
+    <module>drools-beliefs</module>
+    <module>drools-core</module>
+    <module>drools-compiler</module>
+    <module>drools-cdi</module>
+    <module>drools-jsr94</module>
+    <module>drools-verifier</module>
+    <module>drools-persistence</module>
+    <module>drools-templates</module>
+    <module>drools-decisiontables</module>
+    <module>drools-examples</module>
+    <module>drools-pmml</module>
+    <module>drools-scorecards</module>
+    <module>kie-ci</module>
+    <module>kie-ci-osgi</module>
+    <module>kie-dmn</module>
+    <module>drools-examples-api</module>
+    <module>drools-examples-cdi</module>
+    <module>drools-workbench-models</module>
+    <module>drools-test-coverage</module>
+  </modules>
+
+  <dependencyManagement>
+    <!-- Important: Do not add any additional dependency versions here!
+         The dependency management should only import drools-bom and kie-third-party-bom to get the proper versions
+         it needs. Any additional 3rd party dependency versions need to go directly into kie-third-party-bom. -->
+    <dependencies>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-bom</artifactId>
+        <version>${version.org.kie}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <forkCount>${surefire.forkCount}</forkCount>
+            <reuseForks>true</reuseForks>
+            <runOrder>hourly</runOrder>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>fullProfile</id>
+      <activation>
+        <property>
+          <name>full</name>
+        </property>
+      </activation>
+      <modules>
+        <module>drools-distribution</module>
+      </modules>
+    </profile>
+  </profiles>
+
+</project>

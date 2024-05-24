@@ -1,0 +1,466 @@
+<!--
+  ~  * Copyright 2016 Skymind, Inc.
+  ~  *
+  ~  *    Licensed under the Apache License, Version 2.0 (the "License");
+  ~  *    you may not use this file except in compliance with the License.
+  ~  *    You may obtain a copy of the License at
+  ~  *
+  ~  *        http://www.apache.org/licenses/LICENSE-2.0
+  ~  *
+  ~  *    Unless required by applicable law or agreed to in writing, software
+  ~  *    distributed under the License is distributed on an "AS IS" BASIS,
+  ~  *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~  *    See the License for the specific language governing permissions and
+  ~  *    limitations under the License.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.datavec</groupId>
+    <artifactId>datavec-parent</artifactId>
+
+    <packaging>pom</packaging>
+
+    <version>0.8.0</version>
+    <modules>
+        <module>datavec-api</module>
+        <module>datavec-data</module>
+        <module>datavec-geo</module>
+        <module>datavec-hadoop</module>
+        <module>datavec-spark</module>
+        <module>datavec-camel</module>
+        <module>datavec-dataframe</module>
+        <module>datavec-local</module>
+        <module>datavec-spark-inference-server</module>
+    </modules>
+    <name>DataVec</name>
+
+    <url>http://nd4j.org</url>
+
+    <description>Vectorization Rosetta Stone for the JVM</description>
+
+    <developers>
+        <developer>
+            <id>agibsonccc</id>
+            <name>Adam Gibson</name>
+            <email>0@blix.io</email>
+        </developer>
+        <developer>
+            <id>jpatanooga</id>
+            <name>Josh Patterson</name>
+            <email>josh@floe.tv</email>
+        </developer>
+    </developers>
+
+    <properties>
+        <jcommander.version>1.27</jcommander.version>
+        <play.version>2.4.6</play.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <slf4j.version>1.7.7</slf4j.version>
+        <nd4j.version>0.8.0</nd4j.version>
+        <junit.version>4.12</junit.version>
+        <jackson.version>2.8.7</jackson.version>    <!-- To match spark and geoip2 -->
+        <commons-compress.version>1.8.1</commons-compress.version>
+        <commons-lang3.version>3.3.1</commons-lang3.version>
+        <commons-math3.version>3.3</commons-math3.version>
+        <commons-io.version>2.4</commons-io.version>
+        <args4j.version>2.0.29</args4j.version>
+        <lombok.version>1.16.10</lombok.version>
+        <jodatime.version>2.9.2</jodatime.version>
+        <freemarker.version>2.3.23</freemarker.version>
+        <logback.version>1.1.2</logback.version>
+        <maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
+        <reflections.version>0.9.10</reflections.version>
+        <opencv.version>3.1.0</opencv.version>
+        <ffmpeg.version>3.2.1</ffmpeg.version>
+        <leptonica.version>1.73</leptonica.version>
+        <javacpp-presets.version>1.3</javacpp-presets.version>
+        <javacpp.version>1.3.2</javacpp.version>
+        <javacv.version>1.3.1</javacv.version>
+        <geoip2.version>2.8.1</geoip2.version>
+        <stream.analytics.version>2.7.0</stream.analytics.version>
+    </properties>
+
+    <prerequisites>
+        <maven>3.0</maven>
+    </prerequisites>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>sonatype-nexus-snapshots</id>
+            <name>Sonatype Nexus snapshot repository</name>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>nexus-releases</id>
+            <name>Nexus Release Repository</name>
+            <url>http://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
+
+
+    <profiles>
+        <profile>
+            <id>test-nd4j-native</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+                <dependency>
+                    <groupId>org.nd4j</groupId>
+                    <artifactId>nd4j-native</artifactId>
+                    <version>${nd4j.version}</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+
+        <!-- For running unit tests with nd4j-cuda-8.0: "mvn clean test -P test-nd4j-cuda-8.0" -->
+        <profile>
+            <id>test-nd4j-cuda-8.0</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <dependencies>
+
+                <dependency>
+                    <groupId>org.nd4j</groupId>
+                    <artifactId>nd4j-cuda-8.0</artifactId>
+                    <version>${nd4j.version}</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+            <!-- Default to ALL modules here, unlike nd4j-native -->
+        </profile>
+
+        <profile>
+            <id>qa</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>2.10</version>
+                        <executions>
+                            <execution>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>copy-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>release-sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>1.6</version>
+                        <configuration>
+                            <passphrase>${gpg.passphrase}</passphrase>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-source-plugin</artifactId>
+                        <version>3.0.1</version>
+                        <executions>
+                            <execution>
+                                <id>attach-sources</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>2.10.4</version>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    <scm>
+        <connection>scm:git:git@github.com:deeplearning4j/DataVec.git</connection>
+        <developerConnection>scm:git:git@github.com:deeplearning4j/DataVec.git</developerConnection>
+        <url>git@github.com:deeplearning4j/DataVec.git</url>
+        <tag>HEAD</tag>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+
+    <build>
+
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.10.4</version>
+                    <configuration>
+                        <additionalparam>-Xdoclint:none</additionalparam>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.0.1</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.19.1</version>
+                    <configuration>
+                        <argLine>-Ddtype=float</argLine>
+                        <!--
+                        By default: Surefire will set the classpath based on the manifest. Because tests are not included
+                        in the JAR, any tests that rely on class path scanning for resources in the tests directory will not
+                        function correctly without this configuration.
+                        For example, tests for custom transforms (where the custom transform is defined in the test directory)
+                        will fail due to the custom transform not being found on the classpath.
+                        http://maven.apache.org/surefire/maven-surefire-plugin/examples/class-loading.html
+                        -->
+                        <useSystemClassLoader>true</useSystemClassLoader>
+                        <useManifestOnlyJar>false</useManifestOnlyJar>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.5.3</version>
+                    <configuration>
+                        <mavenExecutorId>forked-path</mavenExecutorId>
+                        <!-- To deploy to an open staging repository: -Darguments=-DstagingRepositoryId=orgnd4j-xxxx -->
+                        <arguments> -Psonatype-oss-release -DskipTests ${arguments}</arguments>
+                        <localCheckout>true</localCheckout>
+                        <pushChanges>false</pushChanges>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.6</version>
+                    <configuration>
+                        <passphrase>${gpg.passphrase}</passphrase>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>sign-artifacts</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>sign</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.5.1</version>
+                    <configuration>
+                        <source>1.7</source>
+                        <target>1.7</target>
+                    </configuration>
+                </plugin>
+
+            </plugins>
+
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>3.2.2</version>
+                <configuration>
+                    <scalaVersion>${scala.version}</scalaVersion>
+                    <args>
+                        <arg>-deprecation</arg>
+                        <arg>-explaintypes</arg>
+                    </args>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>scala-compile-first</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>scala-test-compile</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>${maven-deploy-plugin.version}</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.6</version>
+                <executions>
+                    <execution>
+                        <id>default-deploy</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>nexus-releases</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <skipStagingRepositoryClose>true</skipStagingRepositoryClose>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
+              <groupId>com.lewisd</groupId>
+              <artifactId>lint-maven-plugin</artifactId>
+              <version>0.0.11</version>
+              <configuration>
+                <failOnViolation>true</failOnViolation>
+                <onlyRunRules>
+                  <rule>DuplicateDep</rule>
+                  <rule>RedundantDepVersion</rule>
+                  <rule>RedundantPluginVersion</rule>
+                  <rule>VersionProp</rule>
+                  <rule>DotVersionProperty</rule>
+                </onlyRunRules>
+                <xmlOutputFile>${project.build.directory}/maven-lint-result.xml</xmlOutputFile>
+              </configuration>
+              <executions>
+                <execution>
+                  <id>pom-lint</id>
+                  <phase>validate</phase>
+                  <goals>
+                    <goal>check</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+
+            <plugin>
+              <groupId>org.commonjava.maven.plugins</groupId>
+              <artifactId>directory-maven-plugin</artifactId>
+              <version>0.1</version>
+              <executions>
+                <execution>
+                  <id>directories</id>
+                  <goals>
+                    <goal>highest-basedir</goal>
+                  </goals>
+                  <phase>validate</phase>
+                  <configuration>
+                    <property>datavecBasedir</property>
+                    <project>
+                      <groupId>org.datavec</groupId>
+                      <artifactId>datavec-parent</artifactId>
+                    </project>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
+            <plugin>
+              <groupId>net.revelc.code.formatter</groupId>
+              <artifactId>formatter-maven-plugin</artifactId>
+              <version>2.0.0</version>
+              <!-- <executions> -->
+              <!--   <execution> -->
+              <!--     <goals> -->
+              <!--       <goal>validate</goal> -->
+              <!--     </goals> -->
+              <!--   </execution> -->
+              <!-- </executions> -->
+              <configuration>
+                <configFile>${datavecBasedir}/contrib/formatter.xml</configFile>
+              </configuration>
+            </plugin>
+
+        </plugins>
+
+    </build>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

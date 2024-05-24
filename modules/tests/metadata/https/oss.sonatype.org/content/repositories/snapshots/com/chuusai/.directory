@@ -1,0 +1,475 @@
+<html>
+  <head>
+    <title>Index of /repositories/snapshots/com/chuusai</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+
+    <link rel="icon" type="image/png" href="https://oss.sonatype.org/favicon.png">
+    <!--[if IE]>
+    <link rel="SHORTCUT ICON" href="https://oss.sonatype.org/favicon.ico"/>
+    <![endif]-->
+
+    <link rel="stylesheet" href="https://oss.sonatype.org/static/css/Sonatype-content.css?2.14.13-01" type="text/css" media="screen" title="no title" charset="utf-8">
+  </head>
+  <body>
+    <h1>Index of /repositories/snapshots/com/chuusai</h1>
+    <table cellspacing="10">
+      <tr>
+        <th align="left">Name</th>
+        <th>Last Modified</th>
+        <th>Size</th>
+        <th>Description</th>
+      </tr>
+      <tr>
+        <td><a href="../">Parent Directory</a></td>
+      </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.10.0-M4/">shapeless_2.10.0-M4/</a></td>
+            <td>Sat Nov 01 15:12:37 UTC 2014</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.10.0-M5/">shapeless_2.10.0-M5/</a></td>
+            <td>Sat Nov 01 15:12:38 UTC 2014</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.10.0-M6/">shapeless_2.10.0-M6/</a></td>
+            <td>Sat Nov 01 15:12:33 UTC 2014</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.10.0-RC1/">shapeless_2.10.0-RC1/</a></td>
+            <td>Sat Nov 01 15:12:39 UTC 2014</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.10.0-RC2/">shapeless_2.10.0-RC2/</a></td>
+            <td>Sat Nov 01 15:12:29 UTC 2014</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.10.0-RC5/">shapeless_2.10.0-RC5/</a></td>
+            <td>Sat Nov 01 15:12:40 UTC 2014</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.10.0-SNAPSHOT/">shapeless_2.10.0-SNAPSHOT/</a></td>
+            <td>Sat Jun 30 19:17:01 UTC 2012</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.10.0/">shapeless_2.10.0/</a></td>
+            <td>Sat Nov 01 15:12:37 UTC 2014</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.10.1-SNAPSHOT/">shapeless_2.10.1-SNAPSHOT/</a></td>
+            <td>Thu Feb 28 02:53:35 UTC 2013</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.10.4/">shapeless_2.10.4/</a></td>
+            <td>Fri Jun 12 14:47:42 UTC 2015</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.10.5/">shapeless_2.10.5/</a></td>
+            <td>Fri Mar 13 01:41:04 UTC 2015</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.10/">shapeless_2.10/</a></td>
+            <td>Thu Jun 21 14:10:07 UTC 2018</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.11.0-M8/">shapeless_2.11.0-M8/</a></td>
+            <td>Sat Nov 01 15:12:23 UTC 2014</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.11.0-SNAPSHOT/">shapeless_2.11.0-SNAPSHOT/</a></td>
+            <td>Sat Aug 10 09:55:04 UTC 2013</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.11/">shapeless_2.11/</a></td>
+            <td>Thu Jun 21 14:10:13 UTC 2018</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.12.0-M1/">shapeless_2.12.0-M1/</a></td>
+            <td>Wed Jul 08 23:05:34 UTC 2015</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.12.0-M2/">shapeless_2.12.0-M2/</a></td>
+            <td>Wed Aug 19 23:28:48 UTC 2015</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.12.0-M3/">shapeless_2.12.0-M3/</a></td>
+            <td>Mon Feb 29 01:47:54 UTC 2016</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.12.0-M4/">shapeless_2.12.0-M4/</a></td>
+            <td>Sun May 15 22:00:50 UTC 2016</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.12.0-M5/">shapeless_2.12.0-M5/</a></td>
+            <td>Mon Aug 22 03:22:35 UTC 2016</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.12.0-RC2/">shapeless_2.12.0-RC2/</a></td>
+            <td>Thu Oct 20 12:33:27 UTC 2016</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.12/">shapeless_2.12/</a></td>
+            <td>Thu Jun 21 14:10:13 UTC 2018</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.13.0-M1/">shapeless_2.13.0-M1/</a></td>
+            <td>Tue May 02 18:46:52 UTC 2017</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.13.0-M2/">shapeless_2.13.0-M2/</a></td>
+            <td>Mon Jan 01 08:30:30 UTC 2018</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.13.0-M3/">shapeless_2.13.0-M3/</a></td>
+            <td>Sun Feb 11 23:54:31 UTC 2018</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.13.0-M4/">shapeless_2.13.0-M4/</a></td>
+            <td>Wed Jun 20 11:20:54 UTC 2018</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.13.0-M5/">shapeless_2.13.0-M5/</a></td>
+            <td>Fri Jan 04 20:07:06 UTC 2019</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.13.0-RC1/">shapeless_2.13.0-RC1/</a></td>
+            <td>Sat Apr 06 17:09:45 UTC 2019</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.13.0-RC2/">shapeless_2.13.0-RC2/</a></td>
+            <td>Mon May 20 11:09:46 UTC 2019</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.13.0-RC3/">shapeless_2.13.0-RC3/</a></td>
+            <td>Thu May 30 21:43:42 UTC 2019</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.13/">shapeless_2.13/</a></td>
+            <td>Sat Jun 08 08:15:18 UTC 2019</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.9.1-1/">shapeless_2.9.1-1/</a></td>
+            <td>Sat Nov 01 15:12:30 UTC 2014</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.9.1/">shapeless_2.9.1/</a></td>
+            <td>Sat Nov 01 15:12:28 UTC 2014</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.9.2/">shapeless_2.9.2/</a></td>
+            <td>Sat Nov 01 15:12:22 UTC 2014</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_2.9.3/">shapeless_2.9.3/</a></td>
+            <td>Sat Nov 01 15:12:34 UTC 2014</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_native0.2_2.11/">shapeless_native0.2_2.11/</a></td>
+            <td>Wed Jun 14 09:16:01 UTC 2017</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_native0.3_2.11/">shapeless_native0.3_2.11/</a></td>
+            <td>Thu Jun 21 14:10:17 UTC 2018</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_native0.4.0-M2_2.11/">shapeless_native0.4.0-M2_2.11/</a></td>
+            <td>Tue May 28 10:28:37 UTC 2019</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.10/">shapeless_sjs0.6_2.10/</a></td>
+            <td>Thu Jun 21 14:10:11 UTC 2018</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.11/">shapeless_sjs0.6_2.11/</a></td>
+            <td>Thu Jun 21 14:10:06 UTC 2018</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.12.0-M1/">shapeless_sjs0.6_2.12.0-M1/</a></td>
+            <td>Wed Jul 08 23:05:33 UTC 2015</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.12.0-M2/">shapeless_sjs0.6_2.12.0-M2/</a></td>
+            <td>Wed Aug 19 23:28:49 UTC 2015</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.12.0-M3/">shapeless_sjs0.6_2.12.0-M3/</a></td>
+            <td>Mon Feb 29 01:47:53 UTC 2016</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.12.0-M4/">shapeless_sjs0.6_2.12.0-M4/</a></td>
+            <td>Sun May 15 22:00:53 UTC 2016</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.12.0-M5/">shapeless_sjs0.6_2.12.0-M5/</a></td>
+            <td>Mon Aug 22 03:22:37 UTC 2016</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.12.0-RC2/">shapeless_sjs0.6_2.12.0-RC2/</a></td>
+            <td>Thu Oct 20 12:33:33 UTC 2016</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.12/">shapeless_sjs0.6_2.12/</a></td>
+            <td>Thu Jun 21 14:10:10 UTC 2018</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.13.0-M1/">shapeless_sjs0.6_2.13.0-M1/</a></td>
+            <td>Tue May 02 18:46:57 UTC 2017</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.13.0-M2/">shapeless_sjs0.6_2.13.0-M2/</a></td>
+            <td>Mon Jan 01 08:30:32 UTC 2018</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.13.0-M3/">shapeless_sjs0.6_2.13.0-M3/</a></td>
+            <td>Sun Feb 11 23:54:40 UTC 2018</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.13.0-M4/">shapeless_sjs0.6_2.13.0-M4/</a></td>
+            <td>Wed Jun 20 11:20:36 UTC 2018</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.13.0-M5/">shapeless_sjs0.6_2.13.0-M5/</a></td>
+            <td>Fri Jan 04 20:07:17 UTC 2019</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.13.0-RC1/">shapeless_sjs0.6_2.13.0-RC1/</a></td>
+            <td>Sat Apr 06 17:09:49 UTC 2019</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.13.0-RC2/">shapeless_sjs0.6_2.13.0-RC2/</a></td>
+            <td>Mon May 20 11:09:59 UTC 2019</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.13.0-RC3/">shapeless_sjs0.6_2.13.0-RC3/</a></td>
+            <td>Thu May 30 21:43:47 UTC 2019</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+                  <tr>
+            <td><a href="https://oss.sonatype.org/content/repositories/snapshots/com/chuusai/shapeless_sjs0.6_2.13/">shapeless_sjs0.6_2.13/</a></td>
+            <td>Sat Jun 08 08:15:22 UTC 2019</td>
+            <td align="right">
+                              &nbsp;
+                          </td>
+            <td></td>
+          </tr>
+            </table>
+  </body>
+</html>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.netflix.karyon</groupId>
+  <artifactId>karyon-spi</artifactId>
+  <version>1.0.28</version>
+  <dependencies>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.6.4</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.netflix.governator</groupId>
+      <artifactId>governator</artifactId>
+      <version>1.8.1</version>
+      <scope>runtime</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>archaius-core</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+  </dependencies>
+  <name>karyon-spi</name>
+  <description>karyon-spi</description>
+  <developers>
+    <developer>
+      <id>netflixgithub</id>
+      <name>Netflix Open Source Development</name>
+      <email>talent@netflix.com</email>
+    </developer>
+  </developers>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <properties>
+    <nebula_Manifest_Version>1.0</nebula_Manifest_Version>
+    <nebula_Implementation_Title>com.netflix.karyon#karyon-spi;1.0.28</nebula_Implementation_Title>
+    <nebula_Implementation_Version>1.0.28</nebula_Implementation_Version>
+    <nebula_Built_Status>integration</nebula_Built_Status>
+    <nebula_Built_By>jenkins</nebula_Built_By>
+    <nebula_Built_OS>Linux</nebula_Built_OS>
+    <nebula_Build_Date>2015-08-25_09:43:44</nebula_Build_Date>
+    <nebula_Gradle_Version>2.2.1</nebula_Gradle_Version>
+    <nebula_Module_Owner>talent@netflix.com</nebula_Module_Owner>
+    <nebula_Module_Email>talent@netflix.com</nebula_Module_Email>
+    <nebula_Module_Source>/karyon-spi</nebula_Module_Source>
+    <nebula_Module_Origin>git@github.com:Netflix/karyon.git</nebula_Module_Origin>
+    <nebula_Change>92dcf52</nebula_Change>
+    <nebula_Build_Host>https://netflixoss.ci.cloudbees.com/</nebula_Build_Host>
+    <nebula_Build_Job>NetflixOSS/karyon/karyon-1.x-release</nebula_Build_Job>
+    <nebula_Build_Number>1</nebula_Build_Number>
+    <nebula_Build_Id>1</nebula_Build_Id>
+    <nebula_Created_By>1.7.0_79-b15 (Oracle Corporation)</nebula_Created_By>
+    <nebula_Build_Java_Version>1.7.0_79</nebula_Build_Java_Version>
+    <nebula_X_Compile_Target_JDK>1.7</nebula_X_Compile_Target_JDK>
+    <nebula_X_Compile_Source_JDK>1.7</nebula_X_Compile_Source_JDK>
+  </properties>
+  <scm>
+    <url>scm:git@github.com:Netflix/karyon.git</url>
+    <connection>scm:git@github.com:Netflix/karyon.git</connection>
+  </scm>
+  <url>https://github.com/Netflix/karyon</url>
+</project>

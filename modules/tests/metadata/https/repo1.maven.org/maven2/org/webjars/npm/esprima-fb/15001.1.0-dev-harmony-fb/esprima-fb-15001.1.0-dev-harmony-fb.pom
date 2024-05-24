@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <packaging>jar</packaging>
+    <groupId>org.webjars.npm</groupId>
+    <artifactId>esprima-fb</artifactId>
+    <version>15001.1.0-dev-harmony-fb</version>
+    <name>esprima-fb</name>
+    <description>WebJar for esprima-fb</description>
+    <url>http://webjars.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <scm>
+        <url>http://github.com/facebook/esprima</url>
+        <connection>http://github.com/facebook/esprima.git</connection>
+        <developerConnection>http://github.com/facebook/esprima.git</developerConnection>
+        <tag>v15001.1.0-dev-harmony-fb</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>webjars</id>
+            <url>http://webjars.org</url>
+        </developer>
+    </developers>
+
+    <licenses>
+        
+        <license>
+            <name>BSD</name>
+            <url>https://spdx.org/licenses/BSD#licenseText</url>
+            <distribution>repo</distribution>
+        </license>
+        
+    </licenses>
+
+    <dependencies>
+        
+    </dependencies>
+
+</project>

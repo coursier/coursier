@@ -1,0 +1,39 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+
+  <groupId>io.apigee</groupId>
+  <artifactId>rhino</artifactId>
+  <name>rhino</name>
+  <description>The Rhino JavaScript Engine for Java</description>
+  <version>1.7R5pre4</version>
+  <packaging>jar</packaging>
+
+  <organization>
+    <!-- Change this for a non-Apigee-specific version of Rhino! -->
+    <name>Apigee Corporation</name>
+    <url>http://www.apigee.com/</url>
+  </organization>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <licenses>
+    <license>
+      <name>Mozilla Public License 2.0</name>
+      <url>http://www.mozilla.org/MPL/2.0/</url>
+    </license>
+  </licenses>
+
+  <scm>
+    <url>git@github.com:apigee/rhino.git</url>
+    <connection>scm:git:https://github.com/apigee/rhino.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/apigee/rhino.git</developerConnection>
+  </scm>
+</project>

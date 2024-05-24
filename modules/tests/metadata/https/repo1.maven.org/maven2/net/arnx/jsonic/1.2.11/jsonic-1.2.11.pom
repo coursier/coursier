@@ -1,0 +1,64 @@
+<?xml version="1.0" ?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>net.arnx</groupId>
+	<artifactId>jsonic</artifactId>
+	<packaging>jar</packaging>
+	<name>jsonic</name>
+	<version>1.2.11</version>
+	<description>simple json encoder/decoder for java</description>
+	<url>http://jsonic.sourceforge.jp/</url>
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<scm>
+		<url>http://svn.sourceforge.jp/svnroot/jsonic/</url>
+		<connection>scm:svn:http://svn.sourceforge.jp/svnroot/jsonic/</connection>
+	</scm>
+	<developers>
+		<developer>
+			<id>hidekatsu.izuno</id>
+			<name>Hidekatsu Izuno</name>
+			<email>hidekatsu.izuno@gmail.com</email>
+		</developer>
+	</developers>
+	<repositories>
+		<repository>
+			<id>maven.seasar.org</id>
+			<name>The Seasar Foundation Maven2 Repository</name>
+			<url>http://maven.seasar.org/maven2/</url>
+		</repository>
+	</repositories>
+	<dependencies>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>[2.4,)</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring</artifactId>
+			<version>[2.5,3)</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>com.google.inject</groupId>
+			<artifactId>guice</artifactId>
+			<version>[2.0,)</version>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.seasar.container</groupId>
+			<artifactId>s2-framework</artifactId>
+			<version>[2.4,2.5)</version>
+			<optional>true</optional>
+		</dependency>
+	</dependencies>
+</project>

@@ -1,0 +1,1162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<!--
+    Tag order follows model description at http://maven.apache.org/ref/3.0.3/maven-model/maven.html
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>10</version>
+        <relativePath />
+    </parent>
+
+    <groupId>org.apache.james</groupId>
+    <artifactId>james-project</artifactId>
+    <version>1.8</version>
+    <packaging>pom</packaging>
+
+    <name>Apache James Project</name>
+    <description>
+        The Apache Java Enterprise Mail Server (a.k.a. Apache James) is a 100% pure Java SMTP, IMAP and POP3 Mail server.
+        We have designed James to be a complete and portable enterprise mail engine solution based on currently available
+        open protocols. James is also a mail application platform. We have developed a Java API to let you write Java
+        code to process emails that we call the mailet API. A mailet can generate an automatic reply, update a database,
+        prevent spam, build a message archive, or whatever you can imagine. A matcher determines whether your mailet
+        should process an email in the server. The James project hosts the Mailet API, and James provides an implementation
+        of this mail application platform API.
+    </description>
+    <url>http://james.apache.org/</url>
+    <inceptionYear>2006</inceptionYear>
+
+    <developers>
+        <!--
+            Roles to use:
+            <role>Developer</role>
+            <role>Emeritus</role>
+            <role>PMC member</role>
+            <role>PMC chair</role>
+        -->
+        <developer>
+            <id>bago</id>
+            <name>Stefano Bagnara</name>
+            <email>bago@apache.org</email>
+            <timezone>2</timezone>
+            <roles>
+                <role>Developer</role>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>norman</id>
+            <name>Norman Maurer</name>
+            <email>norman@apache.org</email>
+            <timezone>2</timezone>
+            <roles>
+                <role>Developer</role>
+                <role>PMC Chair</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>serge</id>
+            <name>Serge Knystautas</name>
+            <email>sergek@lokitech.com</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <properties>
+                <Donator>Serge was the original donator of the James code, which has since been massively
+                    improved by people smarter than him. He tries to answer questions on the listserv and make
+                    code
+                    contributions when he does get a rare bit of free time.</Donator>
+            </properties>
+        </developer>
+        <developer>
+            <id>benrdf</id>
+            <name>Bernd Fondermann</name>
+            <email>bf_jak@brainlounge.de</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>sbrewin</id>
+            <name>Steve Brewin</name>
+            <email>sbrewin@synsys.com</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>hilmer</id>
+            <name>Søren Hilmer</name>
+            <email>sh@widetrail.dk</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>noel</id>
+            <name>Noel J. Bergman</name>
+            <email>noel@devtech.com</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>danny</id>
+            <name>Danny Angus</name>
+            <email>danny@apache.org</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+                <role>PMC Member</role>
+            </roles>
+            <organization>Student Loans Company ltd</organization>
+            <organizationUrl>http://www.slc.co.uk</organizationUrl>
+            <properties>
+                <Description>Danny is a member of the Apache Software Foundation and married father
+                    of two by night, and by day works as lead technical consultant for the Student Loans
+                    Company ltd.</Description>
+            </properties>
+        </developer>
+        <developer>
+            <id>adc</id>
+            <name>Alan D. Cabrera</name>
+            <email>list@toolazydogs.com</email>
+            <timezone>-8</timezone>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>hbedi</id>
+            <name>Harmeet Bedi</name>
+            <email>harmeet@kodemuse.com</email>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>jasonw</id>
+            <name>Jason Webb</name>
+            <email>jw@inovem.com</email>
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>vincenzo</id>
+            <name>Vincenzo Gianferrari Pini</name>
+            <email>vincenzo.gianferraripini@praxis.it</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>rdonkin</id>
+            <name>Robert Burrell Donkin</name>
+            <email>rdonkin@apache.org</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>niklas</id>
+            <name>Niklas Therning</name>
+            <email>niklas@apache.org</email>
+            <organization>Trillian AB</organization>
+            <roles>
+                <role>Developer</role>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>jcheng</id>
+            <name>Joe Cheng</name>
+            <email>joe@joecheng.com</email>
+            <properties>
+                <Description>Former author to the mime4j product</Description>
+            </properties>
+        </developer>
+        <developer>
+            <id>mwiederkehr</id>
+            <name>Markus Wiederkehr</name>
+            <email>mwiederkehr@apache.org</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>olegk</id>
+            <name>Oleg Kalnichevski</name>
+            <email>olegk@apache.org</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>manolo</id>
+            <name>Manuel Carrasco Monino</name>
+            <email>manolo@apache.org</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>eric</id>
+            <name>Eric Charles</name>
+            <email>eric@apache.org</email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>felixk</id>
+            <name>Felix Knecht</name>
+            <email>felixk@apache.org</email>
+            <timezone>1</timezone>
+            <roles>
+                <role>Developer</role>
+                <role>PMC Member</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>ieugen</id>
+            <name>Ioan Eugen Stan</name>
+            <email>ieugen@apache.org </email>
+            <timezone />
+            <roles>
+                <role>Developer</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <contributors>
+        <contributor>
+            <name>Rob Oxspring</name>
+            <properties>
+                <Contribution>Contributed to the mime4j product</Contribution>
+            </properties>
+        </contributor>
+        <contributor>
+            <name>Roger Fullerton</name>
+            <properties>
+                <Contribution>Wrote spfjava, the first spf implementation in java</Contribution>
+            </properties>
+        </contributor>
+        <contributor>
+            <name>Alan D. Cabrera [ADC]</name>
+            <email>list@toolazydogs.com</email>
+        </contributor>
+        <contributor>
+            <name>Darrell DeBoer (DD)</name>
+        </contributor>
+        <contributor>
+            <name>Stephen J. McConnell (SJM)</name>
+            <email>mcconnell@apache.org</email>
+        </contributor>
+        <contributor>
+            <name>Peter M. Goldstein (PG)</name>
+            <email>farsight@alum.mit.edu</email>
+        </contributor>
+        <contributor>
+            <name>Pete Donald (PD)</name>
+        </contributor>
+        <contributor>
+            <name>Charles Benett (CB)</name>
+            <email>charles@benett1.demon.co.uk</email>
+        </contributor>
+        <contributor>
+            <name>Federico Barbieri (FB)</name>
+            <email>scoobie@systemy.it</email>
+        </contributor>
+        <contributor>
+            <name>Stuart Roebuck (SR)</name>
+            <email>stuart.roebuck@adolos.co.uk</email>
+        </contributor>
+        <contributor>
+            <name>Ivan Seskar (IS)</name>
+            <email>iseskar@upsideweb.com</email>
+        </contributor>
+        <contributor>
+            <name>Prasanna Uppaladadium (PU)</name>
+            <email>prasanna@vayusphere.com</email>
+        </contributor>
+        <contributor>
+            <name>Gabriel Bucher (GB)</name>
+            <email>gabriel.bucher@razor.ch</email>
+        </contributor>
+        <contributor>
+            <name>Matthew Pangaro (MP)</name>
+            <email>mattp@lokitech.com</email>
+        </contributor>
+        <contributor>
+            <name>Jason Borden (JB)</name>
+            <email>jborden@javasense.com</email>
+        </contributor>
+        <contributor>
+            <name>Randy Stanard (RS)</name>
+            <email>rstanard@lokitech.com</email>
+            <properties>
+                <Contribution>Contributed the James logo</Contribution>
+            </properties>
+        </contributor>
+        <contributor>
+            <name>Samuel Sadek (SS)</name>
+            <email>Samuel.Sadek@kpmg.co.uk</email>
+        </contributor>
+        <contributor>
+            <name>Stephan Schiessling (SS2)</name>
+            <email>s@rapi.com</email>
+        </contributor>
+        <contributor>
+            <name>Eung-ju Park (EP)</name>
+            <email>colus@apache.org</email>
+        </contributor>
+        <contributor>
+            <name>Paul Hammant (PH)</name>
+            <email>Paul_Hammant@yahoo.com</email>
+        </contributor>
+        <contributor>
+            <name>Jeff Keyser (JK)</name>
+            <email>JKeyser@telocity.com</email>
+        </contributor>
+        <contributor>
+            <name>Andrei Ivanov (AI)</name>
+            <email>myfam@surfeu.fi</email>
+        </contributor>
+        <contributor>
+            <name>Brad Walker (BW)</name>
+            <email>bwalker@studentadvantage.com</email>
+        </contributor>
+        <contributor>
+            <name>Christian Buchegger (CB2)</name>
+            <properties>
+                <email>christian.buchegger@planet-interkom.de</email>
+            </properties>
+            <!--
+                See http://jira.codehaus.org/browse/MDOAP-36
+                <email>christian.buchegger@planet-interkom.de</email>
+            -->
+        </contributor>
+        <contributor>
+            <name>Shilpa Dalmia (SD)</name>
+            <email>shilpa@postx.com</email>
+        </contributor>
+        <contributor>
+            <name>Steve Short (SS3)</name>
+            <email>sshort@postx.com</email>
+        </contributor>
+        <contributor>
+            <name>Aaron Knauf (AK)</name>
+            <email>aknauf@xtra.co.nz</email>
+        </contributor>
+        <contributor>
+            <name>Serge "Sergei" Sozonoff (SS4)</name>
+            <email>serge@globalbeach.com</email>
+        </contributor>
+        <contributor>
+            <name>Kai Londenberg [KL]</name>
+            <!--
+                See http://jira.codehaus.org/browse/MDOAP-36
+                <email>kai.londenberg@my-vwclub.de</email>
+            -->
+            <properties>
+                <email>kai.londenberg@my-vwclub.de</email>
+            </properties>
+        </contributor>
+        <contributor>
+            <name>Mark Imel [MI]</name>
+            <email>james@imelshire.com</email>
+        </contributor>
+        <contributor>
+            <name>Kevin Schmidt [KS]</name>
+            <email>ktschmidt@earthlink.net</email>
+        </contributor>
+        <contributor>
+            <name>Hontvari Jozsef [HJ]</name>
+            <email>hontvari2@solware.com</email>
+        </contributor>
+        <contributor>
+            <name>Cesar Bonadio [CB3]</name>
+            <email>bonadio@picture.com.br</email>
+        </contributor>
+        <contributor>
+            <name>Marco Tedone [MT]</name>
+            <email>mtedone@jemos.org</email>
+        </contributor>
+        <contributor>
+            <name>Tim Stephenson [TS]</name>
+            <email>tim@thestephensons.me.uk</email>
+        </contributor>
+        <contributor>
+            <name>Richard O. Hammer [ROH]</name>
+            <email>rohammer@earthlink.net</email>
+        </contributor>
+    </contributors>
+
+    <mailingLists>
+        <mailingList>
+            <name>Server Development (including components)</name>
+            <subscribe>server-dev-subscribe@james.apache.org</subscribe>
+            <unsubscribe>server-dev-unsubscribe@james.apache.org</unsubscribe>
+            <post>server-dev@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-server-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Server User</name>
+            <subscribe>server-user-subscribe@james.apache.org</subscribe>
+            <unsubscribe>server-user-unsubscribe@james.apache.org</unsubscribe>
+            <post>server-user@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-server-user/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Mime4J</name>
+            <subscribe>mime4j-dev-subscribe@james.apache.org</subscribe>
+            <unsubscribe>mime4j-dev-unsubscribe@james.apache.org</unsubscribe>
+            <post>mime4j-dev@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-mime4j-dev/</archive>
+        </mailingList>
+        <mailingList>
+            <name>General</name>
+            <subscribe>general-subscribe@james.apache.org</subscribe>
+            <unsubscribe>general-unsubscribe@james.apache.org</unsubscribe>
+            <post>general@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-general/</archive>
+        </mailingList>
+        <mailingList>
+            <name>Website Development</name>
+            <subscribe>site-dev-subscribe@james.apache.org</subscribe>
+            <unsubscribe>site-dev-unsubscribe@james.apache.org</unsubscribe>
+            <post>site-dev@james.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/james-site-dev/</archive>
+        </mailingList>
+    </mailingLists>
+
+    <prerequisites>
+        <maven>3.0.2</maven>
+    </prerequisites>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/james/project/tags/james-project-1.8</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/james/project/tags/james-project-1.8</developerConnection>
+        <url>http://svn.apache.org/viewvc/james/project/tags/james-project-1.8</url>
+    </scm>
+
+    <issueManagement>
+        <system>JIRA</system>
+        <url>http://issues.apache.org/jira/browse/JAMES</url>
+    </issueManagement>
+
+    <ciManagement>
+        <system>Jenkins</system>
+        <url>https://builds.apache.org/</url>
+    </ciManagement>
+
+    <distributionManagement>
+        <site>
+            <id>james-website</id>
+            <!--
+                Add postfix to build deploy url to avoid accidently overriding the common module's
+                website when using "-Psite-reports" by chance
+            -->
+            <url>scpexe://people.apache.org/www/james.apache.org/${deployTechnicalSiteDirectory}</url>
+        </site>
+    </distributionManagement>
+
+    <properties>
+        <!--
+            Following properties can be overridden in inheriting pom.xml if needed,
+            otherwise the set values are used by default.
+        -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <target.jdk>1.6</target.jdk>
+        <james-skin.version>1.7</james-skin.version>
+        <!--
+            This property contains the directory where to deploy when running using "-Psite-reports" profile
+            to avoid accidently overriding the common modules website. Empty by default.
+        -->
+        <deployTechnicalSiteDirectory />
+    </properties>
+
+    <repositories>
+        <!-- JBoss.org repository - required for APIviz Javadoc build -->
+        <!-- apiviz stuff, comment ATM as it doesn't works on poms packaging pom -->
+        <!--
+        <repository>
+            <id>jboss.releases</id>
+            <name>JBoss releases</name>
+            <url>https://repository.jboss.org/nexus/content/repositories/releases/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        -->
+    </repositories>
+
+    <build>
+        <extensions>
+            <extension>
+                <!-- Adding a Protocol to Deploy the Site (support for ssh/scp) -->
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-ssh-external</artifactId>
+                <version>2.0</version>
+            </extension>
+        </extensions>
+        <pluginManagement>
+            <plugins>
+                <!-- Order by groupId / artifactId / scope -->
+                <plugin>
+                    <groupId>org.apache.felix</groupId>
+                    <artifactId>maven-bundle-plugin</artifactId>
+                    <version>2.3.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>2.2.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-changes-plugin</artifactId>
+                    <version>2.6</version>
+                    <configuration>
+                        <onlyCurrentVersion>true</onlyCurrentVersion>
+                        <resolutionIds>Fixed</resolutionIds>
+                        <statusIds>Resolved,Closed</statusIds>
+                        <columnNames>Type,Key,Summary,Status,Resolution,Fix Version</columnNames>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>2.4.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>2.3.2</version>
+                    <configuration>
+                        <optimize>true</optimize>
+                        <source>${target.jdk}</source>
+                        <target>${target.jdk}</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>2.3</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.7</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-doap-plugin</artifactId>
+                    <version>1.1</version>
+                    <configuration>
+                        <doapOptions>
+                            <!-- See http://projects.apache.org/languages.html -->
+                            <programmingLanguage>Java</programmingLanguage>
+                            <!-- http://projects.apache.org/categories.html -->
+                            <category>mail, network-server</category>
+                            <!-- Default values -->
+                            <bugDatabase>${project.issueManagement.url}</bugDatabase>
+                            <created>${project.inceptionYear}-01-01</created>
+                            <description>${project.description}</description>
+                            <downloadPage>${project.url}/download.cgi</downloadPage>
+                            <homepage>${project.url}</homepage>
+                            <license>${project.url}/license.html</license>
+                            <mailingList>${project.url}/mail-lists.html</mailingList>
+                            <name>${project.name}</name>
+                            <scmAnonymous>${project.scm.connection}</scmAnonymous>
+                            <scmDeveloper>${project.scm.developerConnection}</scmDeveloper>
+                            <shortdesc>The Apache James Project</shortdesc>
+                            <vendor>${project.organization.name}</vendor>
+                        </doapOptions>
+                        <asfExtOptions>
+                            <charter>${project.description}</charter>
+                            <!-- Default values -->
+                            <pmc>${project.url}</pmc>
+                            <name>${project.name}</name>
+
+                            <!-- If this Apache project implements a standard -->
+                            <standards>
+                                <standard>
+                                    <title>Extensible Stylesheet Language - Formatting Objects (XSL-FO 1.1)</title>
+                                    <body>W3C</body>
+                                    <id>XSL 1.1</id>
+                                    <url>http://www.w3.org/TR/xsl11/</url>
+                                </standard>
+                            </standards>
+                        </asfExtOptions>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-eclipse-plugin</artifactId>
+                    <version>2.8</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>2.3.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.8</version>
+                    <configuration>
+                        <linksource>true</linksource>
+                        <maxmemory>1g</maxmemory>
+                        <minmemory>256m</minmemory>
+                        <source>${target.jdk}</source>
+                        <tags>
+                            <tag>
+                                <name>note</name>
+                                <placement>a</placement>
+                                <head>NOTE</head>
+                            </tag>
+                            <tag>
+                                <name>todo</name>
+                                <placement>a</placement>
+                                <head>TODO</head>
+                            </tag>
+                            <tag>
+                                <name>warning</name>
+                                <placement>a</placement>
+                                <head>WARNING</head>
+                            </tag>
+                        </tags>
+                        <!-- apiviz stuff, comment ATM as it doesn't works on poms packaging pom -->
+                        <!--
+                            <doclet>org.jboss.apiviz.APIviz</doclet>
+                            <docletArtifact>
+                            <groupId>org.jboss.apiviz</groupId>
+                            <artifactId>apiviz</artifactId>
+                            <version>1.3.1.GA</version>
+                            </docletArtifact>
+                            <useStandardDocletOptions>true</useStandardDocletOptions>
+                            <charset>UTF-8</charset>
+                            <encoding>UTF-8</encoding>
+                            <docencoding>UTF-8</docencoding>
+                            <breakiterator>true</breakiterator>
+                            <version>true</version>
+                            <author>true</author>
+                            <keywords>true</keywords>
+                            <additionalparam>-sourceclasspath ${project.build.outputDirectory}</additionalparam>
+                        -->
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.4</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jxr-plugin</artifactId>
+                    <version>2.3</version>
+                    <configuration>
+                        <aggregate>true</aggregate>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-plugin-plugin</artifactId>
+                    <version>2.9</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-pmd-plugin</artifactId>
+                    <version>2.5</version>
+                    <configuration>
+                        <aggregate>true</aggregate>
+                        <targetJdk>${target.jdk}</targetJdk>
+                        <rulesets>
+                            <ruleset>/rulesets/basic.xml</ruleset>
+                            <ruleset>/rulesets/unusedcode.xml</ruleset>
+                            <ruleset>/rulesets/imports.xml</ruleset>
+                        </rulesets>
+                        <format>xml</format>
+                        <linkXref>true</linkXref>
+                        <sourceEncoding>utf-8</sourceEncoding>
+                        <minimumTokens>100</minimumTokens>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-project-info-reports-plugin</artifactId>
+                    <version>2.4</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-remote-resources-plugin</artifactId>
+                    <version>1.2.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>2.2.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>2.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-scm-plugin</artifactId>
+                    <version>1.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.1.2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>1.5</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-site-plugin</artifactId>
+                    <version>3.0</version>
+                    <executions>
+                        <execution>
+                            <id>attach-descriptor</id>
+                            <goals>
+                                <goal>attach-descriptor</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <dependencies>
+                        <dependency>
+                            <groupId>org.apache.maven.wagon</groupId>
+                            <artifactId>wagon-ssh</artifactId>
+                            <version>2.0</version>
+                        </dependency>
+                    </dependencies>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.10</version>
+                    <configuration>
+                        <argLine>-Xms256m -Xmx512m</argLine>
+                        <forkMode>always</forkMode>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-report-plugin</artifactId>
+                    <version>2.10</version>
+                    <configuration>
+                        <aggregate>true</aggregate>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-war-plugin</artifactId>
+                    <version>2.1.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.rat</groupId>
+                    <artifactId>apache-rat-plugin</artifactId>
+                    <version>0.8</version>
+                    <configuration>
+                        <excludes>
+                            <exclude>BUILDING.*</exclude>
+                            <exclude>HOWTO.*</exclude>
+                            <exclude>HOWTO_*</exclude>
+                            <exclude>LICENSE.*</exclude>
+                            <exclude>NOTICE.*</exclude>
+                            <!-- site resources -->
+                            <exclude>src/site/resources/download*.cgi</exclude>
+                            <exclude>src/site/resources/downloads/formatting.xml</exclude>
+                            <exclude>src/site/resources/js/galleria/**</exclude>
+                            <exclude>src/site/resources/model-eclipse-modeler/*</exclude>
+                            <exclude>src/site/resources/robots.txt</exclude>
+                            <!-- Generated by Maven -->
+                            <exclude>release.properties</exclude>
+                            <exclude>dist/**/*</exclude>
+                            <exclude>**/derby.log</exclude>
+                            <!-- Eclipse -->
+                            <exclude>**/.*</exclude>
+                            <exclude>.*/**/*</exclude>
+                            <!-- Schemas for offline use -->
+                            <exclude>**/META-INF/XSD/activemq-core-*.xsd</exclude>
+                            <exclude>**/META-INF/XSD/camel-spring-*.xsd</exclude>
+                            <exclude>**/META-INF/XSD/spring-beans-*.xsd</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>cobertura-maven-plugin</artifactId>
+                    <version>2.5.1</version>
+                    <configuration>
+                        <aggregate>true</aggregate>
+                        <!--
+                            Whether to remove GPL licensed files from the generated report. This is required to distribute
+                            the report as part of a distribution, which is licensed under the ASL, or a similar license,
+                            which is incompatible with the GPL
+                        -->
+                        <omitGplFiles>true</omitGplFiles>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>1.2.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>findbugs-maven-plugin</artifactId>
+                    <version>2.3.2</version>
+                    <configuration>
+                        <!-- required by dashboard plugin and jenkins -->
+                        <xmlOutput>true</xmlOutput>
+                        <effort>Max</effort>
+                        <findbugsXmlOutput>true</findbugsXmlOutput>
+                        <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>javacc-maven-plugin</artifactId>
+                    <version>2.6</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>taglist-maven-plugin</artifactId>
+                    <version>2.4</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>versions-maven-plugin</artifactId>
+                    <version>1.2</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-doap-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>site</id>
+                        <phase>site</phase>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <configuration>
+                    <reportPlugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-project-info-reports-plugin</artifactId>
+                            <reportSets>
+                                <reportSet>
+                                    <reports>
+                                        <report>license</report>
+                                        <report>project-team</report>
+                                    </reports>
+                                </reportSet>
+                            </reportSets>
+                        </plugin>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-javadoc-plugin</artifactId>
+                            <reportSets>
+                                <reportSet>
+                                    <reports>
+                                        <report>aggregate</report>
+                                    </reports>
+                                </reportSet>
+                            </reportSets>
+                        </plugin>
+                    </reportPlugins>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!--
+            Switches between generating the documentation site (without using this profile) and
+            generating the technical reports site (using this profile)
+        -->
+        <profile>
+            <id>site-reports</id>
+            <properties>
+                <!--
+                    This property contains the directory where to deploy when running using "-Psite-reports" profile
+                    to avoid accidently overriding the common modules website
+                -->
+                <deployTechnicalSiteDirectory>technical-reports/</deployTechnicalSiteDirectory>
+            </properties>
+
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <groupId>org.apache.maven.plugins</groupId>
+                            <artifactId>maven-site-plugin</artifactId>
+                            <configuration>
+                                <siteDirectory>${basedir}/src/reporting-site</siteDirectory>
+                                <reportPlugins combine.children="append">
+                                    <!-- Order matters. First project-info-reports, second jxr. -->
+                                    <plugin>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-project-info-reports-plugin</artifactId>
+                                        <reports>
+                                            <report>dependencies</report>
+                                            <report>dependency-management</report>
+                                            <report>dependency-convergence</report>
+                                            <report>distribution-management</report>
+                                            <report>index</report>
+                                            <report>issue-tracking</report>
+                                            <report>license</report>
+                                            <report>mailing-list</report>
+                                            <report>modules</report>
+                                            <report>plugin-management</report>
+                                            <report>plugins</report>
+                                            <report>project-team</report>
+                                            <report>scm</report>
+                                            <report>summary</report>
+                                        </reports>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-jxr-plugin</artifactId>
+                                        <configuration>
+                                            <aggregate>true</aggregate>
+                                        </configuration>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-dependency-plugin</artifactId>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-surefire-report-plugin</artifactId>
+                                        <configuration>
+                                            <aggregate>true</aggregate>
+                                        </configuration>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.codehaus.mojo</groupId>
+                                        <artifactId>cobertura-maven-plugin</artifactId>
+                                        <configuration>
+                                            <aggregate>true</aggregate>
+                                            <!--
+                                                Whether to remove GPL licensed files from the generated report. This is required to distribute
+                                                the report as part of a distribution, which is licensed under the ASL, or a similar license,
+                                                which is incompatible with the GPL
+                                            -->
+                                            <omitGplFiles>true</omitGplFiles>
+                                        </configuration>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.apache.rat</groupId>
+                                        <artifactId>apache-rat-plugin</artifactId>
+                                        <configuration>
+                                            <excludes>
+                                                <exclude>BUILDING.*</exclude>
+                                                <exclude>HOWTO.*</exclude>
+                                                <exclude>HOWTO_*</exclude>
+                                                <exclude>LICENSE.*</exclude>
+                                                <exclude>NOTICE.*</exclude>
+                                                <!-- site resources -->
+                                                <exclude>src/site/resources/download*.cgi</exclude>
+                                                <exclude>src/site/resources/downloads/formatting.xml</exclude>
+                                                <exclude>src/site/resources/js/galleria/**</exclude>
+                                                <exclude>src/site/resources/model-eclipse-modeler/*</exclude>
+                                                <exclude>src/site/resources/robots.txt</exclude>
+                                                <!-- Generated by Maven -->
+                                                <exclude>release.properties</exclude>
+                                                <exclude>dist/**/*</exclude>
+                                                <exclude>**/derby.log</exclude>
+                                                <!-- Eclipse -->
+                                                <exclude>**/.*</exclude>
+                                                <exclude>.*/**/*</exclude>
+                                                <!-- Schemas for offline use -->
+                                                <exclude>**/META-INF/XSD/activemq-core-*.xsd</exclude>
+                                                <exclude>**/META-INF/XSD/camel-spring-*.xsd</exclude>
+                                                <exclude>**/META-INF/XSD/spring-beans-*.xsd</exclude>
+                                            </excludes>
+                                        </configuration>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-pmd-plugin</artifactId>
+                                        <configuration>
+                                            <aggregate>true</aggregate>
+                                            <targetJdk>${target.jdk}</targetJdk>
+                                            <rulesets>
+                                                <ruleset>/rulesets/basic.xml</ruleset>
+                                                <ruleset>/rulesets/unusedcode.xml</ruleset>
+                                                <ruleset>/rulesets/imports.xml</ruleset>
+                                            </rulesets>
+                                            <format>xml</format>
+                                            <linkXref>true</linkXref>
+                                            <sourceEncoding>utf-8</sourceEncoding>
+                                            <minimumTokens>100</minimumTokens>
+                                        </configuration>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-javadoc-plugin</artifactId>
+                                        <configuration>
+                                            <linksource>true</linksource>
+                                            <maxmemory>1g</maxmemory>
+                                            <minmemory>256m</minmemory>
+                                            <source>${target.jdk}</source>
+                                            <tags>
+                                                <tag>
+                                                    <name>note</name>
+                                                    <placement>a</placement>
+                                                    <head>NOTE</head>
+                                                </tag>
+                                                <tag>
+                                                    <name>todo</name>
+                                                    <placement>a</placement>
+                                                    <head>TODO</head>
+                                                </tag>
+                                                <tag>
+                                                    <name>warning</name>
+                                                    <placement>a</placement>
+                                                    <head>WARNING</head>
+                                                </tag>
+                                            </tags>
+                                            <!-- apiviz stuff, comment ATM as it doesn't works on poms packaging pom -->
+                                            <!--
+                                                <doclet>org.jboss.apiviz.APIviz</doclet>
+                                                <docletArtifact>
+                                                <groupId>org.jboss.apiviz</groupId>
+                                                <artifactId>apiviz</artifactId>
+                                                <version>1.3.1.GA</version>
+                                                </docletArtifact>
+                                                <useStandardDocletOptions>true</useStandardDocletOptions>
+                                                <charset>UTF-8</charset>
+                                                <encoding>UTF-8</encoding>
+                                                <docencoding>UTF-8</docencoding>
+                                                <breakiterator>true</breakiterator>
+                                                <version>true</version>
+                                                <author>true</author>
+                                                <keywords>true</keywords>
+                                                <additionalparam>-sourceclasspath ${project.build.outputDirectory}</additionalparam>
+                                            -->
+                                        </configuration>
+                                        <reportSets>
+                                            <reportSet>
+                                                <reports>
+                                                    <report>aggregate</report>
+                                                    <report>test-aggregate</report>
+                                                </reports>
+                                            </reportSet>
+                                        </reportSets>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.codehaus.mojo</groupId>
+                                        <artifactId>findbugs-maven-plugin</artifactId>
+                                        <configuration>
+                                            <!-- required by dashboard plugin and jenkins -->
+                                            <xmlOutput>true</xmlOutput>
+                                            <effort>Max</effort>
+                                            <findbugsXmlOutput>true</findbugsXmlOutput>
+                                            <findbugsXmlWithMessages>true</findbugsXmlWithMessages>
+                                        </configuration>
+                                    </plugin>
+                                    <plugin>
+                                        <groupId>org.codehaus.mojo</groupId>
+                                        <artifactId>versions-maven-plugin</artifactId>
+                                        <reportSets>
+                                            <reportSet>
+                                                <reports>
+                                                    <report>dependency-updates-report</report>
+                                                    <report>plugin-updates-report</report>
+                                                    <report>property-updates-report</report>
+                                                </reports>
+                                            </reportSet>
+                                        </reportSets>
+                                    </plugin>
+                                    <!--
+                                        <plugin>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-changes-plugin</artifactId>
+                                        <configuration>
+                                        <onlyCurrentVersion>true</onlyCurrentVersion>
+                                        <resolutionIds>Fixed</resolutionIds>
+                                        <statusIds>Resolved,Closed</statusIds>
+                                        <columnNames>Type,Key,Summary,Status,Resolution,Fix Version</columnNames>
+                                        </configuration>
+                                        <reportSets>
+                                        <reportSet>
+                                        <reports>
+                                        <report>jira-report</report>
+                                        </reports>
+                                        </reportSet>
+                                        </reportSets>
+                                        </plugin>
+                                    -->
+                                </reportPlugins>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
+</project>

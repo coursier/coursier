@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata modelVersion="1.1.0">
+  <groupId>org.webjars.npm</groupId>
+  <artifactId>iconv-lite</artifactId>
+  <versioning>
+    <latest>0.6.3</latest>
+    <release>0.6.3</release>
+    <versions>
+      <version>0.2.11</version>
+      <version>0.4.3</version>
+      <version>0.4.8</version>
+      <version>0.4.9</version>
+      <version>0.4.13</version>
+      <version>0.4.15</version>
+      <version>0.4.19</version>
+      <version>0.4.21</version>
+      <version>0.4.22</version>
+      <version>0.4.23</version>
+      <version>0.4.24</version>
+      <version>0.5.0</version>
+      <version>0.5.1</version>
+      <version>0.5.2</version>
+      <version>0.6.2</version>
+      <version>0.6.3</version>
+    </versions>
+    <lastUpdated>20210608055849</lastUpdated>
+  </versioning>
+</metadata>

@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.scalameta</groupId>
+    <artifactId>mtags_2.12</artifactId>
+    <packaging>jar</packaging>
+    <description>mtags</description>
+    <url>https://github.com/scalameta/metals</url>
+    <version>0.2.0</version>
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>mtags</name>
+    <organization>
+        <name>org.scalameta</name>
+        <url>https://github.com/scalameta/metals</url>
+    </organization>
+    <scm>
+        <url>https://github.com/scalameta/metals</url>
+        <connection>scm:git:https://github.com/scalameta/metals.git</connection>
+        <developerConnection>scm:git:git@github.com:scalameta/metals.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <id>laughedelic</id>
+            <name>Alexey Alekhin</name>
+            <email>laughedelic@gmail.com</email>
+            <url>https://github.com/laughedelic</url>
+        </developer>
+        <developer>
+            <id>gabro</id>
+            <name>Gabriele Petronella</name>
+            <email>gabriele@buildo.io</email>
+            <url>https://github.com/gabro</url>
+        </developer>
+        <developer>
+            <id>jvican</id>
+            <name>Jorge Vicente Cantero</name>
+            <email>jorgevc@fastmail.es</email>
+            <url>https://jvican.github.io/</url>
+        </developer>
+        <developer>
+            <id>olafurpg</id>
+            <name>Ólafur Páll Geirsson</name>
+            <email>olafurpg@gmail.com</email>
+            <url>https://geirsson.com</url>
+        </developer>
+        <developer>
+            <id>ShaneDelmore</id>
+            <name>Shane Delmore</name>
+            <email>sdelmore@twitter.com</email>
+            <url>http://delmore.io</url>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.12.7</version>
+        </dependency>
+        <dependency>
+            <groupId>com.thoughtworks.qdox</groupId>
+            <artifactId>qdox</artifactId>
+            <version>2.0-M9</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scalameta</groupId>
+            <artifactId>scalameta_2.12</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+    </dependencies>
+</project>

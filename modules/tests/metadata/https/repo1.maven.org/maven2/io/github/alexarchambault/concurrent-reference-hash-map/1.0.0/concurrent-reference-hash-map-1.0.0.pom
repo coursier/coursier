@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.github.alexarchambault</groupId>
+    <artifactId>concurrent-reference-hash-map</artifactId>
+    <packaging>jar</packaging>
+    <description>concurrent-reference-hash-map</description>
+    <url>https://github.com/alexarchambault/concurrent-reference-hash-map</url>
+    <version>1.0.0</version>
+    <licenses>
+        <license>
+            <name>GNU LGPL 2.1</name>
+            <url>https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>concurrent-reference-hash-map</name>
+    <organization>
+        <name>io.github.alexarchambault</name>
+        <url>https://github.com/alexarchambault/concurrent-reference-hash-map</url>
+    </organization>
+    <scm>
+        <url>https://github.com/alexarchambault/concurrent-reference-hash-map</url>
+        <connection>scm:git:https://github.com/alexarchambault/concurrent-reference-hash-map.git</connection>
+        <developerConnection>scm:git:git@github.com:alexarchambault/concurrent-reference-hash-map.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <id>alexarchambault</id>
+            <name>Alexandre Archambault</name>
+            <url>https://github.com/alexarchambault</url>
+        </developer>
+    </developers>
+</project>

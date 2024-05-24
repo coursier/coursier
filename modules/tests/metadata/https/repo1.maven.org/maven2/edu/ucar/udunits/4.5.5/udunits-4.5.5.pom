@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>edu.ucar</groupId>
+    <artifactId>thredds-parent</artifactId>
+    <version>4.5.5</version>
+  </parent>
+
+  <artifactId>udunits</artifactId>
+  <packaging>jar</packaging>
+  <name>udunits</name>
+  <url>http://www.unidata.ucar.edu/software/udunits//</url>
+
+  <description>The ucar.units Java package is for decoding and encoding
+    formatted unit specifications (e.g. "m/s"), converting numeric values
+    between compatible units (e.g. between "m/s" and "knot"), and for
+    performing arithmetic operations on units (e.g. dividing one unit by
+    another, raising a unit to a power).</description>
+
+  <properties>
+    <!-- NB: Avoid platform encoding warning when copying resources. -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+  </properties>
+
+  <developers>
+    <developer>
+      <id>emmerson</id>
+      <name>Steve Emmerson</name>
+      <url>http://www.unidata.ucar.edu/staff/steve/</url>
+    </developer>
+  </developers>
+
+  <dependencies>
+    <!-- calendar / datetime -->
+    <dependency>
+      <groupId>joda-time</groupId>
+      <artifactId>joda-time</artifactId>
+    </dependency>
+    <!-- concurrency annotations -->
+    <dependency>
+      <groupId>net.jcip</groupId>
+      <artifactId>jcip-annotations</artifactId>
+    </dependency>
+  </dependencies>
+
+  <!-- build>
+    <defaultGoal>install</defaultGoal>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.5</source>
+          <target>1.5</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.3.1</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <packageName>ucar.units</packageName>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build -->
+
+  <reporting>
+    <plugins>
+      <!-- NB: Generate javadocs as part of site generation. -->
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.7</version>
+        <configuration>
+          <maxmemory>1024m</maxmemory>
+          <!-- NB: Workaround for javadoc bug when classes in the default
+            package access classes from non-default packages. See:
+            http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=5101868 -->
+          <use>false</use>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+
+</project>

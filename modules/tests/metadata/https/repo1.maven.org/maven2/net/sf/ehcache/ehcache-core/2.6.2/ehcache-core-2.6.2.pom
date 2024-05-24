@@ -1,0 +1,882 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>net.sf.ehcache</groupId>
+    <artifactId>ehcache-parent</artifactId>
+    <version>2.3</version>
+    <relativePath/>
+  </parent>
+
+  <artifactId>ehcache-core</artifactId>
+  <packaging>jar</packaging>
+  <version>2.6.2</version>
+
+  <name>Ehcache Core</name>
+  <description>This is the ehcache core module. Pair it with other modules for added functionality.</description>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>src/assemble/EHCACHE-CORE-LICENSE.txt</url>
+    </license>
+  </licenses>
+  <url>http://ehcache.org</url>
+
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <net.sf.ehcache.speedAdjustmentFactor>5</net.sf.ehcache.speedAdjustmentFactor>
+    <testDir>src/test/java</testDir>
+    <testResources>src/test/resources</testResources>
+    <name>ehcache</name>
+    <skipCheckstyle>false</skipCheckstyle>
+    <skipJavadoc>false</skipJavadoc>
+    <build.timestamp>${maven.build.timestamp}</build.timestamp>
+    <tests.supplemental.args/>
+    <surefire.version>2.10</surefire.version>
+  </properties>
+
+  <dependencies>
+    <!--Required scope -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.6.1</version>
+      <scope>compile</scope>
+    </dependency>
+    
+    <!-- packaged into the main jar using shade plugin. Its dependency is removed in the final pom 
+    <dependency>
+      <groupId>net.sf.ehcache</groupId>
+      <artifactId>ehcache-rest-agent</artifactId>
+      <version>${project.version}</version>
+    </dependency-->    
+
+    <!-- With slf4j, users must choose a concrete logging implementation
+      at deploy time, which they provide The maven dependency declarations are
+      reproduced here for convenience.
+
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-jdk14</artifactId>
+        <version>1.6.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+        <version>1.6.1</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>1.6.1</version>
+      </dependency>
+    -->
+
+    <!-- Provided scope. This one, or another concrete logging implementation
+      must be provided. -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-jdk14</artifactId>
+      <version>1.6.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.servlet</groupId>
+      <artifactId>servlet-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-core</artifactId>
+      <version>3.5.1-Final</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.transaction</groupId>
+      <artifactId>jta</artifactId>
+      <version>1.1</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>net.sf.ehcache</groupId>
+      <artifactId>sizeof-agent</artifactId>
+      <version>1.0.1</version>
+      <scope>provided</scope>
+    </dependency>    
+
+    <!-- Test scope -->
+    <dependency>
+      <groupId>org.codehaus.btm</groupId>
+      <artifactId>btm</artifactId>
+      <version>2.0.1</version>
+      <scope>test</scope>
+    </dependency>    
+    <dependency>
+      <groupId>net.sf.hibernate</groupId>
+      <artifactId>hibernate</artifactId>
+      <scope>test</scope>
+    </dependency>   
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-core</artifactId>
+      <version>1.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest-library</artifactId>
+      <version>1.2</version>
+      <scope>test</scope>
+    </dependency>      
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.10</version>
+      <scope>test</scope>
+    </dependency>   
+    <dependency>
+      <groupId>dom4j</groupId>
+      <artifactId>dom4j</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>javassist</groupId>
+      <artifactId>javassist</artifactId>
+      <version>3.4.GA</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate</groupId>
+      <artifactId>hibernate-ehcache</artifactId>
+      <version>3.3.2.GA</version>
+      <scope>test</scope>
+      <exclusions>
+        <exclusion>
+          <artifactId>ehcache</artifactId>
+          <groupId>net.sf.ehcache</groupId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <!-- Needed by net.sf.ehcache.hibernate.HibernateAPIUsageTest.testAPIAsUsedByHibernate2() -->
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.1.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.derby</groupId>
+      <artifactId>derby</artifactId>
+      <version>10.5.3.0_1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>1.8.2</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xsom</groupId>
+      <artifactId>xsom</artifactId>
+      <version>20100725</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.beanshell</groupId>
+      <artifactId>bsh</artifactId>
+      <version>1.3.0</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+      <resource>
+        <directory>${project.build.directory}/generated-resources</directory>
+        <filtering>false</filtering>
+      </resource>
+    </resources>
+    <testSourceDirectory>${basedir}/${testDir}</testSourceDirectory>
+    <testResources>
+      <testResource>
+        <directory>${basedir}/src/main/config/jcache</directory>
+      </testResource>
+      <testResource>
+        <directory>${basedir}/${testResources}</directory>
+      </testResource>
+    </testResources>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.3.1</version>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <License>Apache Software License, Version 2.0</License>
+            </manifestEntries>
+          </archive>
+        </configuration>
+        <executions>
+          <execution>
+            <id>test-jar</id>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.7</version>
+
+        <configuration>
+          <skip>${skipJavadoc}</skip>
+          <author>true</author>
+          <!--<destDir>${project.build.directory}/site/javadoc</destDir> -->
+          <header><![CDATA[<a href="/" target="_top">ehcache</a>]]></header>
+          <minmemory>128m</minmemory>
+          <maxmemory>512</maxmemory>
+          <overview>${basedir}/src/main/java/net/sf/ehcache/overview.html
+          </overview>
+          <use>true</use>
+          <version>true</version>
+          <windowtitle>${project.name} ${project.version} API</windowtitle>
+        </configuration>
+
+        <executions>
+          <execution>
+            <id>generate-javadoc</id>
+            <phase>pre-site</phase>
+            <goals>
+              <goal>javadoc</goal>
+            </goals>
+            <configuration>
+              <!--<doclet>ydoc.doclets.YStandard</doclet> -->
+              <!--<docletPath> -->
+              <!--${ydoc.home}/lib/ydoc.jar${path.separator}${ydoc.home}/lib/class2svg.jar${path.separator}${ydoc.home}/resources -->
+              <!--</docletPath> -->
+              <!--<additionalparam>-license ${ydoc.license} -filter -->
+              <!--ydoc.filters.ExcludeFilter -filterpath -->
+              <!--${ydoc.home}/lib/ydoc.jar -umlautogen -->
+              <!--</additionalparam> -->
+              <author>true</author>
+              <!--<destDir>${project.build.directory}/site/javadoc</destDir> -->
+              <header><![CDATA[<a href="/" target="_top">ehcache</a>]]></header>
+              <minmemory>128m</minmemory>
+              <maxmemory>512</maxmemory>
+              <overview>${basedir}/src/main/java/net/sf/ehcache/overview.html</overview>
+              <use>true</use>
+              <version>true</version>
+              <windowtitle>${project.name} ${project.version} API
+              </windowtitle>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!--plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>1.7.1</version>
+        <configuration>
+          <artifactSet>
+            <includes>
+              <include>net.sf.ehcache:ehcache-rest-agent</include>
+            </includes>
+          </artifactSet>       
+          <filters>
+            <filter>
+              <artifact>*:*</artifact>
+              <excludes>
+                <exclude>**/license.txt</exclude>
+                <exclude>**/thirdpartylicenses.txt</exclude>
+              </excludes>
+            </filter>		  
+          </filters>    
+          <promoteTransitiveDependencies>true</promoteTransitiveDependencies>
+          <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>            
+        </configuration>
+        <executions>
+          <execution>
+            <id>shade-jar</id>
+            <phase>package</phase>
+            <goals>
+              <goal>shade</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin--> 
+      
+      <plugin>
+        <groupId>org.codehaus.gmaven</groupId>
+        <artifactId>gmaven-plugin</artifactId>
+        <version>1.3</version>
+        <executions>
+          <execution>
+            <id>build-revision</id>
+            <phase>generate-resources</phase>
+            <goals>
+              <goal>execute</goal>
+            </goals>
+            <configuration>
+              <source><![CDATA[
+                      def getLastChangedRevision(path) {
+                        fullPath = path.getCanonicalPath()
+                        outProp = "svninfo" + fullPath.hashCode();
+                        ant.exec(executable : 'svn', outputproperty: outProp ,
+                                 dir: fullPath, resultproperty: 'svnexitcode',
+                                 failifexecutionfails: 'false') {
+                          arg(value : 'info')
+                        }
+                        if (ant.antProject.properties['svnexitcode'] == '1') {
+                          println "return unkown because svn exitcode is 1"
+                          return "unknown"
+                        }
+                        svninfo = ant.antProject.properties[outProp]
+                        if (svninfo == null) {
+                          println "return unknown because svninfo is null"
+                          return "unknown"
+                        }
+                        def matcher = ( svninfo =~ /Last Changed Rev: (\d+)/ )
+                        if (matcher[0].size > 1) {
+                          return matcher[0][1]
+                        } else {
+                          println "return unknown because matcher found no match"
+                          return "unknown"
+                        }
+                      }
+                      core_revision = getLastChangedRevision(project.basedir)
+
+                      project.properties.setProperty('build.revision', core_revision)
+                      def proc = "hostname".execute()
+                      proc.waitFor()
+                      def hostname = "unknown"
+                      if (proc.exitValue() == 0)
+                        hostname = proc.text.trim()
+                      project.properties.setProperty('build.hostname', hostname)
+                    ]]></source>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.0.3</version>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>${surefire.version}</version>
+        <configuration>
+          <forkMode>pertest</forkMode>
+          <argLine>${tests.supplemental.args} -Xmx64m</argLine>
+          <childDelegation>false</childDelegation>
+          <disableXmlReport>false</disableXmlReport>
+          <printSummary>true</printSummary>
+          <reportFormat>plain</reportFormat>
+          <redirectTestOutputToFile>false</redirectTestOutputToFile>
+          <systemPropertyVariables>
+            <net.sf.ehcache.skipUpdateCheck>true</net.sf.ehcache.skipUpdateCheck>
+            <java.awt.headless>true</java.awt.headless>
+            <net.sf.ehcache.speedAdjustmentFactor>${net.sf.ehcache.speedAdjustmentFactor}</net.sf.ehcache.speedAdjustmentFactor>
+            <java.io.tmpdir>${project.build.directory}</java.io.tmpdir>
+          </systemPropertyVariables>
+          <classpathDependencyExcludes>
+            <classpathDependencyExclude>net.sf.ehcache:sizeof-agent</classpathDependencyExclude>
+          </classpathDependencyExcludes>
+        </configuration>
+        <executions>
+          <execution>
+            <!-- The default-test execution is automatically bound to the test phase by Surefire -->
+            <id>default-test</id>
+            <configuration>
+              <excludes>
+                <exclude>**/*$*</exclude>
+                <exclude>**/Abstract*Test.java</exclude>
+                <exclude>**/RMICacheReplicatorWithLargePayloadTest.java</exclude>
+                <exclude>**/*Integration*Test.java</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+          <execution>
+            <!-- Run RMICacheReplicatorWithLargePayloadTest with 256 MB heap -->
+            <id>large-heap-test-execution</id>
+            <phase>integration-test</phase>
+            <goals>
+              <goal>test</goal>
+            </goals>
+            <configuration>
+              <excludes>
+                <exclude>**/*$*</exclude>
+              </excludes>
+              <includes>
+                <include>**/RMICacheReplicatorWithLargePayloadTest.java
+                </include>
+                <include>**/TerracottaIntegrationTest.java</include>
+              </includes>
+              <argLine>${tests.supplemental.args} -Xms512m -Xmx512m</argLine>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <version>2.7</version>
+        <executions>
+          <execution>
+            <phase>verify</phase>
+            <goals>
+              <goal>checkstyle</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <configLocation>${basedir}/checkstyle/checkstyle.xml</configLocation>
+          <suppressionsLocation>${basedir}/checkstyle/suppressions.xml</suppressionsLocation>
+          <headerLocation>${basedir}/checkstyle/ClassHeader.txt</headerLocation>
+          <skip>${skipCheckstyle}</skip>
+          <enableRSS>false</enableRSS>
+          <linkXRef>false</linkXRef>
+          <consoleOutput>true</consoleOutput>
+          <failsOnError>true</failsOnError>
+          <failOnViolation>true</failOnViolation>
+          <includeTestSourceDirectory>false</includeTestSourceDirectory>
+          <enableRulesSummary>true</enableRulesSummary>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>xml-maven-plugin</artifactId>
+        <version>1.0</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>transform</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <transformationSets>
+            <transformationSet>
+              <dir>${basedir}/src/changes</dir>
+              <outputDir>${project.build.directory}</outputDir>
+              <stylesheet>${basedir}/src/xslt/changelog.xsl</stylesheet>
+              <fileMappers>
+                <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                  <targetExtension>.txt</targetExtension>
+                </fileMapper>
+              </fileMappers>
+            </transformationSet>
+          </transformationSets>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.3</version>
+        <configuration>
+          <filters>
+            <filter>${basedir}/src/assemble/filter.properties</filter>
+          </filters>
+          <descriptors>
+            <descriptor>${basedir}/src/assemble/distribution.xml</descriptor>
+          </descriptors>
+          <tarLongFileMode>gnu</tarLongFileMode>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attach-distribution</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.2</version>
+        <executions>
+          <execution>
+            <phase>generate-resources</phase>
+            <id>copy-agent-jar-to-resources</id>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
+            <configuration>
+              <excludeArtifactIds>*</excludeArtifactIds>
+              <includeArtifactIds>sizeof-agent</includeArtifactIds>
+              <outputDirectory>${project.build.directory}/generated-resources/net/sf/ehcache/pool/sizeof/</outputDirectory>
+              <stripVersion>true</stripVersion>
+              <excludeTransitive>true</excludeTransitive>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>rmic-maven-plugin</artifactId>
+        <version>1.1</version>
+        <executions>
+          <execution>
+            <id>rmi-compilation</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>rmic</goal>
+            </goals>
+            <configuration>
+              <includes>
+                <include>**/RMICachePeer.class</include>
+              </includes>
+              <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+    <pluginManagement>
+      <plugins>
+        <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>xml-maven-plugin</artifactId>
+                    <versionRange>[1.0,)</versionRange>
+                    <goals>
+                      <goal>transform</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore/>
+                  </action>
+                </pluginExecution>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <versionRange>[1.0,)</versionRange>
+                    <goals>
+                      <goal>copy-dependencies</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore/>
+                  </action>
+                </pluginExecution>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.codehaus.gmaven</groupId>
+                    <artifactId>gmaven-plugin</artifactId>
+                    <versionRange>[1.3,)</versionRange>
+                    <goals>
+                      <goal>execute</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore/>
+                  </action>
+                </pluginExecution>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>rmic-maven-plugin</artifactId>
+                    <versionRange>[1.1,)</versionRange>
+                    <goals>
+                      <goal>rmic</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore/>
+                  </action>
+                </pluginExecution>
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <versionRange>[2.7,)</versionRange>
+                    <goals>
+                      <goal>checkstyle</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore/>
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>staging</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>deploy</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>perfTests</id>
+      <properties>
+        <testDir>src/test/perf</testDir>
+        <testResources>src/test/perfResources</testResources>
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${surefire.version}</version>
+            <configuration>
+              <argLine>${tests.supplemental.args} -Xmx512m</argLine>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <!-- This profile is here for triggering when another scm than svn
+        is used (for example git). Instead of getting the version build number from
+        svn we will use the build date and the user name. -->
+      <id>buildnumber-git</id>
+      <activation>
+        <file>
+          <missing>.svn</missing>
+        </file>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>buildnumber-maven-plugin</artifactId>
+            <version>1.0-beta-3</version>
+            <executions>
+              <execution>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>create</goal>
+                </goals>
+              </execution>
+            </executions>
+            <configuration>
+              <doCheck>false</doCheck>
+              <doUpdate>false</doUpdate>
+              <format>{0,date,yyyy-MM-dd_HH-mm}_{1}</format>
+              <items>
+                <item>timestamp</item>
+                <item>${user.name}</item>
+              </items>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!-- Prevent interruptible IO from being used on Solaris - MNK-1947 -->
+    <profile>
+      <id>no-interruptible-io-solaris</id>
+      <activation>
+        <property>
+          <name>java.vendor</name>
+          <value>Sun Microsystems Inc.</value>
+        </property>
+      </activation>
+      <properties>
+        <tests.supplemental.args>-XX:-UseVMInterruptibleIO</tests.supplemental.args>
+      </properties>
+    </profile>
+    <profile>
+      <id>enable-system-gc-jrockit</id>
+      <activation>
+        <property>
+          <name>java.vm.name</name>
+          <value>Oracle JRockit(R)</value>
+        </property>
+      </activation>
+      <properties>
+        <tests.supplemental.args>-XXfullSystemGC -Xverbose:systemgc</tests.supplemental.args>
+      </properties>
+    </profile>
+
+    <!-- Profile for running only nonstopcache tests -->
+    <profile>
+      <id>test-nonstopcache</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>${surefire.version}</version>
+            <configuration>
+              <includes>
+                <include>**/nonstop/*Test.java</include>
+              </includes>
+              <excludes>
+                <exclude>**/*$*</exclude>
+              </excludes>
+              <systemProperties>
+                <property>
+                  <name>net.sf.ehcache.skipUpdateCheck</name>
+                  <value>true</value>
+                </property>
+                <property>
+                  <name>java.awt.headless</name>
+                  <value>true</value>
+                </property>
+              </systemProperties>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    
+    <!-- Profile for building ehcache skipping javadoc and checkstyle -->
+    <profile>
+      <id>fast</id>
+      <properties>
+        <skipCheckstyle>true</skipCheckstyle>
+        <skipJavadoc>true</skipJavadoc>
+      </properties>
+    </profile>
+  </profiles>
+
+  <!-- The JBoss repository is only here to satisfy the 'provided' dependency
+    on hibernate-core -->
+  <repositories>
+    <repository>
+      <id>terracotta-snapshots</id>
+      <url>http://www.terracotta.org/download/reflector/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+
+    <repository>
+      <id>terracotta-releases</id>
+      <url>http://www.terracotta.org/download/reflector/releases</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+
+    <!--For Hibernate. Test only -->
+    <repository>
+      <id>jboss-releases</id>
+      <url>http://repository.jboss.org/nexus/content/groups/public-jboss</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+
+    <!--For xsom. Test only -->
+    <repository>
+      <id>Java.net Maven 2</id>
+      <url>http://download.java.net/maven/2</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <pluginRepositories>
+    <pluginRepository>
+      <id>terracotta-snapshots</id>
+      <url>http://www.terracotta.org/download/reflector/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+    <pluginRepository>
+      <id>terracotta-releases</id>
+      <url>http://www.terracotta.org/download/reflector/releases</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </pluginRepository>    
+  </pluginRepositories>
+
+  <scm>
+    <connection>scm:svn:http://svn.terracotta.org/svn/ehcache/trunk</connection>
+    <developerConnection>scm:svn:https://svn.terracotta.org/repo/ehcache/trunk</developerConnection>
+    <tag/>
+    <url>http://svn.terracotta.org/svn/ehcache/trunk</url>
+  </scm>
+
+  <issueManagement>
+    <system>JIRA</system>
+    <url>https://jira.terracotta.org/jira/browse/EHC</url>
+  </issueManagement>
+
+</project>

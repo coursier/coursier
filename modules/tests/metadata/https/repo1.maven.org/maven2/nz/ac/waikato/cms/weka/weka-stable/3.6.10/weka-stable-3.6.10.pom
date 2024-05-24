@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>nz.ac.waikato.cms.weka</groupId>
+  <artifactId>weka-stable</artifactId>
+  <version>3.6.10</version><!-- weka-version -->
+  <packaging>jar</packaging>
+
+  <name>weka-stable</name>
+  <description>The Waikato Environment for Knowledge Analysis (WEKA), a machine 
+  learning workbench. This version is tied to the 3rd edition the "Data Mining: 
+  Practical Machine Learning Tools and Techniques" book by Ian H. Witten, Eibe Frank, 
+  Mark A. Hall. Apart from bugfixes, this version does not receive any other updates.
+  </description>
+  <url>http://www.cms.waikato.ac.nz/ml/weka/</url>
+
+  <organization>
+    <name>University of Waikato, Hamilton, NZ</name>
+    <url>http://www.waikato.ac.nz/</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>GNU General Public License 2.0</name>
+      <url>http://www.gnu.org/licenses/gpl-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <id>wekateam</id>
+      <name>The WEKA Team</name>
+      <email>wekalist@list.scms.waikato.ac.nz</email>
+    </developer>
+  </developers>
+
+  <mailingLists>
+    <mailingList>
+      <name>wekalist</name>
+      <subscribe>https://list.scms.waikato.ac.nz/mailman/listinfo/wekalist</subscribe>
+      <unsubscribe>https://list.scms.waikato.ac.nz/mailman/listinfo/wekalist</unsubscribe>
+      <archive>https://list.scms.waikato.ac.nz/mailman/htdig/wekalist/</archive>
+    </mailingList>
+  </mailingLists>
+
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>7</version>
+  </parent>
+
+  <scm>
+    <connection>scm:svn:https://svn.cms.waikato.ac.nz/svn/weka/tags/weka-stable-3.6.10</connection>
+    <developerConnection>scm:svn:https://svn.cms.waikato.ac.nz/svn/weka/tags/weka-stable-3.6.10</developerConnection>
+    <url>https://svn.cms.waikato.ac.nz/svn/weka/tags/weka-stable-3.6.10</url>
+  </scm>
+
+  <profiles>
+    <profile>
+      <id>release-sign-artifacts</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.1</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <!-- used for skipping tests -->
+      <id>no-tests</id>
+      <properties>
+        <skipTests>true</skipTests>
+      </properties>
+    </profile>
+  </profiles>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>3.8.2</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
+      <artifactId>java-cup</artifactId>
+      <version>0.11a</version>
+    </dependency>    
+  </dependencies>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <weka.main.class>weka.gui.GUIChooser</weka.main.class>
+  </properties>
+
+  <build>
+    <directory>dist</directory>
+    <outputDirectory>build/classes</outputDirectory>
+    <testOutputDirectory>build/testcases</testOutputDirectory>
+
+    <resources>
+      <resource>
+        <targetPath>${project.build.outputDirectory}</targetPath>
+        <directory>${project.build.sourceDirectory}</directory>
+        <includes>
+          <include>**/*.arff</include>
+          <include>**/*.cost</include>
+          <include>**/*.cup</include>
+          <include>**/*.default</include>
+          <include>**/*.excludes</include>
+          <include>**/*.flex</include>
+          <include>**/*.gif</include>
+          <include>**/*.icns</include>
+          <include>**/*.ico</include>
+          <include>**/*.jflex</include>
+          <include>**/*.jpeg</include>
+          <include>**/*.jpg</include>
+          <include>**/*.kfml</include>
+          <include>**/*.matrix</include>
+          <include>**/*.png</include>
+          <include>**/*.properties</include>
+          <include>**/*.props</include>
+          <include>**/*.txt</include>
+          <include>**/*.xml</include>
+          <include>**/DatabaseUtils.props.*</include>
+          <include>weka/gui/beans/README</include>
+        </includes>
+      </resource>
+      <resource>
+        <targetPath>${project.build.testOutputDirectory}</targetPath>
+        <directory>${project.build.testSourceDirectory}</directory>
+        <includes>
+          <include>**/*.arff</include>
+          <include>**/*.cost</include>
+          <include>**/*.cup</include>
+          <include>**/*.default</include>
+          <include>**/*.excludes</include>
+          <include>**/*.flex</include>
+          <include>**/*.gif</include>
+          <include>**/*.icns</include>
+          <include>**/*.ico</include>
+          <include>**/*.jflex</include>
+          <include>**/*.jpeg</include>
+          <include>**/*.jpg</include>
+          <include>**/*.kfml</include>
+          <include>**/*.matrix</include>
+          <include>**/*.png</include>
+          <include>**/*.properties</include>
+          <include>**/*.props</include>
+          <include>**/*.txt</include>
+          <include>**/*.xml</include>
+          <include>**/DatabaseUtils.props.*</include>
+          <include>weka/gui/beans/README</include>
+        </includes>
+      </resource>
+    </resources>
+
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>2.0.2</version>
+          <configuration>
+            <source>1.5</source>
+            <target>1.5</target>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.7.2</version>
+          <configuration>
+            <includes>
+              <include>**/*Test.java</include>
+            </includes>
+            <disableXmlReport>true</disableXmlReport>
+            <redirectTestOutputToFile>true</redirectTestOutputToFile>
+            <systemPropertyVariables>
+              <weka.test.Regression.root>src/test/resources/wekarefs</weka.test.Regression.root>
+            </systemPropertyVariables>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.1</version>
+          <configuration>
+            <tagBase>https://svn.cms.waikato.ac.nz/svn/weka/tags</tagBase>
+            <useReleaseProfile>false</useReleaseProfile>
+            <!-- tests are performed with the ant build file, hence skipped here. -->
+            <preparationGoals>clean verify -P no-tests</preparationGoals>
+            <goals>deploy -P no-tests</goals> 
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-clean-plugin</artifactId>
+        <version>2.4.1</version>
+        <configuration>
+          <filesets>
+            <fileset>
+              <directory>.</directory>
+              <includes>
+                <include>**/*~</include>
+                <include>**/.attach_pid*</include>
+                <include>**/hs_err_pid*</include>
+              </includes>
+              <followSymlinks>false</followSymlinks>
+            </fileset>
+          </filesets>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>2.3.2</version>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>${weka.main.class}</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.1.2</version>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+            <configuration>
+              <excludeResources>true</excludeResources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>attach-test-sources</id>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.8.1</version>
+        <configuration>
+          <maxmemory>256m</maxmemory>
+          <subpackages>weka:org</subpackages>
+          <show>public</show>
+          <outputDirectory>${project.basedir}/doc</outputDirectory>
+        </configuration>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

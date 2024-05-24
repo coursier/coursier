@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.mapr</groupId>
+  <artifactId>mapr-root</artifactId>
+  <version>6.1.0-mapr</version>
+  <packaging>pom</packaging>
+  <name>MapR Root POM</name>
+  <description>Root POM for MapR Technologies, Inc.</description>
+  <url>http://www.mapr.com/</url>
+  <organization>
+    <name>Mapr Technologies, Inc.</name>
+    <url>http://www.mapr.com/</url>
+  </organization>
+  <distributionManagement>
+    <repository>
+      <id>mapr-releases</id>
+      <name>MapR Releases</name>
+      <url>${env.MAPR_RELEASES_REPO}</url>
+    </repository>
+    <snapshotRepository>
+      <id>mapr-snapshots</id>
+      <name>MapR Snapshots</name>
+      <url>${env.MAPR_SNAPSHOTS_REPO}</url>
+    </snapshotRepository>
+  </distributionManagement>
+  <repositories>
+    <repository>
+      <id>mapr-releases</id>
+      <name>MapR Releases</name>
+      <url>http://repository.mapr.com/maven</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </repository>
+    <repository>
+      <id>jboss-thirdparty-releases</id>
+      <name>JBoss Third-party Releases</name>
+      <url>https://repository.jboss.org/nexus/content/repositories/thirdparty-releases</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </repository>
+    <repository>
+      <id>confluent-io-packages-maven</id>
+      <name>confluent.io Maven Repository</name>
+      <url>http://packages.confluent.io/maven</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+    </repository>
+  </repositories>
+</project>

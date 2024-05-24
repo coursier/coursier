@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <packaging>jar</packaging>
+    <groupId>org.webjars.npm</groupId>
+    <artifactId>fill-range</artifactId>
+    <version>2.2.4</version>
+    <name>fill-range</name>
+    <description>WebJar for fill-range</description>
+    <url>http://webjars.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <scm>
+        <url>https://github.com/jonschlinkert/fill-range</url>
+        <connection>https://github.com/jonschlinkert/fill-range.git</connection>
+        <developerConnection>https://github.com/jonschlinkert/fill-range.git</developerConnection>
+        <tag>v2.2.4</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>webjars</id>
+            <url>http://webjars.org</url>
+        </developer>
+    </developers>
+
+    <licenses>
+        
+        <license>
+            <name>MIT</name>
+            <url>https://spdx.org/licenses/MIT#licenseText</url>
+            <distribution>repo</distribution>
+        </license>
+        
+    </licenses>
+
+    
+    <issueManagement>
+        <url>https://github.com/jonschlinkert/fill-range/issues</url>
+    </issueManagement>
+    
+
+    <dependencies>
+        
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>isobject</artifactId>
+            <version>[2.0.0,3)</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>repeat-element</artifactId>
+            <version>[1.1.2,2)</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>randomatic</artifactId>
+            <version>[3.0.0,4)</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>repeat-string</artifactId>
+            <version>[1.5.2,2)</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>is-number</artifactId>
+            <version>[2.1.0,3)</version>
+        </dependency>
+        
+        
+    </dependencies>
+
+</project>

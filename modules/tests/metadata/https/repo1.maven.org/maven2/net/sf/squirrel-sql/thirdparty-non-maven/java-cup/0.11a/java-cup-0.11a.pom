@@ -1,0 +1,51 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <groupId>net.sf.squirrel-sql.thirdparty-non-maven</groupId>
+   <artifactId>java-cup</artifactId>
+   <name>Java CUP Parser Generator</name>
+   <version>0.11a</version>
+   <description>
+        CUP is a system for generating LALR parsers from simple specifications. It serves the same role as 
+        the widely used program YACC [1] and in fact offers most of the features of YACC. However, CUP is 
+        written in Java, uses specifications including embedded Java code, and produces parsers which are 
+        implemented in Java.
+   </description>
+   <url>http://www2.cs.tum.edu/projects/cup/</url>
+   <licenses>
+      <license>
+         <name>CUP Parser Generator Copyright Notice, License, and Disclaimer</name>
+         <url>http://www.smlnj.org//license.html</url>
+      </license>
+   </licenses>
+   <developers>
+      <developer>
+         <name>Andrea Flexeder</name>
+      </developer>
+      <developer>
+         <name>Michael Petter</name>
+      </developer>
+      <developer>
+         <name>Scott E. Hudson</name>
+      </developer>
+      <developer>
+         <name>C. Scott Ananian</name>
+      </developer>
+      <developer>
+         <name>Frank Flannery</name>
+      </developer>
+      <developer>
+         <name>Dan Wang</name>
+      </developer>
+      <developer>
+         <name>Andrew W. Appel</name>
+      </developer>      
+   </developers>
+   <!--
+      Source code repository for this version is unavailable at this time. However, the upcoming release 
+      of Java CUP version 2 has a browseable source code repository (svn) at the URL below.
+   -->
+   <scm>
+      <url>http://www2.in.tum.de:8080/cup2/browser</url>
+   </scm>
+</project>

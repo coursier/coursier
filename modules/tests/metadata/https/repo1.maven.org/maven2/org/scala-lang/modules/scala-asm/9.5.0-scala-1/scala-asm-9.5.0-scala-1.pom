@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.scala-lang.modules</groupId>
+    <artifactId>scala-asm</artifactId>
+    <packaging>bundle</packaging>
+    <description>scala-asm</description>
+    <url>http://www.scala-lang.org/</url>
+    <version>9.5.0-scala-1</version>
+    <licenses>
+        <license>
+            <name>BSD 3-clause</name>
+            <url>http://opensource.org/licenses/BSD-3-Clause</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>scala-asm</name>
+    <inceptionYear>2002</inceptionYear>
+    <organization>
+        <name>org.scala-lang.modules</name>
+        <url>http://www.scala-lang.org/</url>
+    </organization>
+    <scm>
+        <url>https://github.com/scala/scala-asm</url>
+        <connection>scm:git:git://github.com/scala/scala-asm.git</connection>
+    </scm>
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/scala/scala-asm/issues</url>
+    </issueManagement>
+    <developers>
+        <developer>
+            <id>lamp</id>
+            <name>LAMP/EPFL</name>
+        </developer>
+        <developer>
+            <id>Lightbend</id>
+            <name>Lightbend, Inc.</name>
+        </developer>
+    </developers>
+</project>

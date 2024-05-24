@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.kie</groupId>
+    <artifactId>kie-parent</artifactId>
+    <version>7.27.0.Final</version>
+    <!-- relativePath causes out-of-date problems on hudson slaves -->
+    <!--<relativePath>../droolsjbpm-build-bootstrap/pom.xml</relativePath>-->
+  </parent>
+
+  <groupId>org.drools</groupId>
+  <artifactId>droolsjbpm-integration</artifactId>
+  <packaging>pom</packaging>
+
+  <name>Drools and jBPM integration multiproject</name>
+  <description>
+    Drools and jBPM integration with seam, spring, camel, ...
+  </description>
+
+  <properties>
+    <spotbugs.failOnViolation>true</spotbugs.failOnViolation>
+  </properties>
+
+  <repositories>
+    <!-- Bootstrap repository to locate the parent pom when the parent pom has not been build locally. -->
+    <repository>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Repository Group</name>
+      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+      <layout>default</layout>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <scm>
+    <connection>scm:git:https://github.com:kiegroup/droolsjbpm-integration.git</connection>
+    <developerConnection>scm:git:git@github.com:kiegroup/droolsjbpm-integration.git</developerConnection>
+    <url>https://github.com/kiegroup/droolsjbpm-integration</url>
+  </scm>
+
+  <modules>
+    <module>kie-swagger-ui</module>
+    <module>kie-identity-session-provider</module>
+    <module>kie-maven-plugin</module>
+    <module>kie-takari-plugin</module>
+    <!-- The example can not be in the build because of the chicken-egg problem with depending on the plugin,
+         that is about to be build in the same Maven reactor build -->
+    <!--<module>kie-maven-plugin-example</module>-->
+    <module>drools-benchmark</module>
+    <!--<module>drools-simulator</module>-->
+    <module>droolsjbpm-integration-examples</module>
+    <module>jbpm-simulation</module>
+    <module>kie-spring</module>
+    <module>kie-aries-blueprint</module>
+    <module>drools-jboss-integration</module>
+    <module>kie-server-parent</module>
+    <module>jbpm-process-svg</module>
+    <module>kie-osgi</module>
+    <module>kie-performance-kit</module>
+    <module>drools-android</module>
+    <module>kie-security</module>
+    <module>kie-camel</module>
+    <module>kie-tomcat-integration</module>
+    <!-- The Android examples require Android SDK to be installed, so they are excluded from the default build -->
+    <!-- <module>drools-examples-android</module> -->
+    <module>kie-integration-test-coverage</module>
+    <module>kie-plugins-testing</module>
+    <module>kie-spring-boot</module>
+    <module>camel-container-tests</module>
+    <module>process-migration-service</module>
+  </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.drools</groupId>
+        <artifactId>drools-bom</artifactId>
+        <version>${version.org.kie}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.optaplanner</groupId>
+        <artifactId>optaplanner-bom</artifactId>
+        <version>${version.org.kie}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.jbpm</groupId>
+        <artifactId>jbpm-bom</artifactId>
+        <version>${version.org.kie}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kie</groupId>
+        <artifactId>kie-dmn-bom</artifactId>
+        <version>${version.org.kie}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.uberfire</groupId>
+        <artifactId>uberfire-bom</artifactId>
+        <version>${version.org.kie}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.soup</groupId>
+        <artifactId>kie-soup-bom</artifactId>
+        <version>${version.org.kie}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>javax.persistence</groupId>
+        <artifactId>javax.persistence-api</artifactId>
+        <version>${version.javax.persistence-api}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.kie</groupId>
+        <artifactId>kie-karaf-itests-domain-model</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <profiles>
+    <profile>
+      <id>fullProfile</id>
+      <activation>
+        <property>
+          <name>full</name>
+        </property>
+      </activation>
+      <modules>
+        <module>droolsjbpm-integration-distribution</module>
+        <module>droolsjbpm-bpms-distribution</module>
+        <module>droolsjbpm-brms-distribution</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>android</id>
+      <!-- Do not active the profile automatically even if the ANDROID_HOME is set.
+           On most CI machines, the ANDROID_HOME is set, but the SDK is outdated and
+           the build then fails.
+
+           One needs to use "-Pandroid" explicitly to get the profile activated.
+      <activation>
+        <file><exists>${env.ANDROID_HOME}</exists></file>
+      </activation>
+      -->
+      <modules>
+        <module>drools-examples-android</module>
+      </modules>
+    </profile>
+    <profile>
+      <id>run-code-coverage</id>
+      <properties>
+        <jacoco.excludes></jacoco.excludes>
+        <jacoco.agent.line>-javaagent:${settings.localRepository}/org/jacoco/org.jacoco.agent/${version.jacoco.plugin}/org.jacoco.agent-${version.jacoco.plugin}-runtime.jar=destfile=${jacoco.exec.file},append=true,excludes=${jacoco.excludes}</jacoco.agent.line>
+        <surefire.argLine>
+          -Dfile.encoding=${project.build.sourceEncoding}
+          ${jacoco.agent.line}
+        </surefire.argLine>
+      </properties>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.codehaus.cargo</groupId>
+              <artifactId>cargo-maven2-plugin</artifactId>
+              <configuration>
+                <configuration>
+                  <properties>
+                    <cargo.start.jvmargs>${jacoco.agent.line}</cargo.start.jvmargs>
+                  </properties>
+                </configuration>
+              </configuration>
+            </plugin>
+            <plugin>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <configuration>
+                <argLine>${surefire.argLine}</argLine>
+              </configuration>
+              <dependencies>
+                <dependency>
+                  <groupId>org.jacoco</groupId>
+                  <artifactId>org.jacoco.agent</artifactId>
+                  <version>${version.jacoco.plugin}</version>
+                  <classifier>runtime</classifier>
+                </dependency>
+              </dependencies>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+  </profiles>
+</project>

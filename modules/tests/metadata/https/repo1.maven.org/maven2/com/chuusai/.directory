@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<title>Central Repository: com/chuusai</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<style>
+body {
+	background: #fff;
+}
+	</style>
+</head>
+
+<body>
+	<header>
+		<h1>com/chuusai</h1>
+	</header>
+	<hr/>
+	<main>
+		<pre id="contents">
+<a href="../">../</a>
+<a href="shapeless_2.10/" title="shapeless_2.10/">shapeless_2.10/</a>                                                  -         -      
+<a href="shapeless_2.10.0/" title="shapeless_2.10.0/">shapeless_2.10.0/</a>                                                -         -      
+<a href="shapeless_2.10.0-M3/" title="shapeless_2.10.0-M3/">shapeless_2.10.0-M3/</a>                                             -         -      
+<a href="shapeless_2.10.0-RC3/" title="shapeless_2.10.0-RC3/">shapeless_2.10.0-RC3/</a>                                            -         -      
+<a href="shapeless_2.10.0-RC5/" title="shapeless_2.10.0-RC5/">shapeless_2.10.0-RC5/</a>                                            -         -      
+<a href="shapeless_2.10.2/" title="shapeless_2.10.2/">shapeless_2.10.2/</a>                                                -         -      
+<a href="shapeless_2.10.3/" title="shapeless_2.10.3/">shapeless_2.10.3/</a>                                                -         -      
+<a href="shapeless_2.10.4/" title="shapeless_2.10.4/">shapeless_2.10.4/</a>                                                -         -      
+<a href="shapeless_2.10.5/" title="shapeless_2.10.5/">shapeless_2.10.5/</a>                                                -         -      
+<a href="shapeless_2.11/" title="shapeless_2.11/">shapeless_2.11/</a>                                                  -         -      
+<a href="shapeless_2.11.0-M4/" title="shapeless_2.11.0-M4/">shapeless_2.11.0-M4/</a>                                             -         -      
+<a href="shapeless_2.11.0-M5/" title="shapeless_2.11.0-M5/">shapeless_2.11.0-M5/</a>                                             -         -      
+<a href="shapeless_2.11.0-M7/" title="shapeless_2.11.0-M7/">shapeless_2.11.0-M7/</a>                                             -         -      
+<a href="shapeless_2.11.0-RC4/" title="shapeless_2.11.0-RC4/">shapeless_2.11.0-RC4/</a>                                            -         -      
+<a href="shapeless_2.12/" title="shapeless_2.12/">shapeless_2.12/</a>                                                  -         -      
+<a href="shapeless_2.12.0-M1/" title="shapeless_2.12.0-M1/">shapeless_2.12.0-M1/</a>                                             -         -      
+<a href="shapeless_2.12.0-M2/" title="shapeless_2.12.0-M2/">shapeless_2.12.0-M2/</a>                                             -         -      
+<a href="shapeless_2.12.0-M3/" title="shapeless_2.12.0-M3/">shapeless_2.12.0-M3/</a>                                             -         -      
+<a href="shapeless_2.12.0-M4/" title="shapeless_2.12.0-M4/">shapeless_2.12.0-M4/</a>                                             -         -      
+<a href="shapeless_2.12.0-M5/" title="shapeless_2.12.0-M5/">shapeless_2.12.0-M5/</a>                                             -         -      
+<a href="shapeless_2.12.0-RC2/" title="shapeless_2.12.0-RC2/">shapeless_2.12.0-RC2/</a>                                            -         -      
+<a href="shapeless_2.13/" title="shapeless_2.13/">shapeless_2.13/</a>                                                  -         -      
+<a href="shapeless_2.13.0-M1/" title="shapeless_2.13.0-M1/">shapeless_2.13.0-M1/</a>                                             -         -      
+<a href="shapeless_2.13.0-M2/" title="shapeless_2.13.0-M2/">shapeless_2.13.0-M2/</a>                                             -         -      
+<a href="shapeless_2.13.0-M3/" title="shapeless_2.13.0-M3/">shapeless_2.13.0-M3/</a>                                             -         -      
+<a href="shapeless_2.13.0-M4/" title="shapeless_2.13.0-M4/">shapeless_2.13.0-M4/</a>                                             -         -      
+<a href="shapeless_2.13.0-M5/" title="shapeless_2.13.0-M5/">shapeless_2.13.0-M5/</a>                                             -         -      
+<a href="shapeless_2.13.0-RC1/" title="shapeless_2.13.0-RC1/">shapeless_2.13.0-RC1/</a>                                            -         -      
+<a href="shapeless_2.13.0-RC2/" title="shapeless_2.13.0-RC2/">shapeless_2.13.0-RC2/</a>                                            -         -      
+<a href="shapeless_2.13.0-RC3/" title="shapeless_2.13.0-RC3/">shapeless_2.13.0-RC3/</a>                                            -         -      
+<a href="shapeless_2.9.1/" title="shapeless_2.9.1/">shapeless_2.9.1/</a>                                                 -         -      
+<a href="shapeless_2.9.1-1/" title="shapeless_2.9.1-1/">shapeless_2.9.1-1/</a>                                               -         -      
+<a href="shapeless_2.9.2/" title="shapeless_2.9.2/">shapeless_2.9.2/</a>                                                 -         -      
+<a href="shapeless_native0.3_2.11/" title="shapeless_native0.3_2.11/">shapeless_native0.3_2.11/</a>                                        -         -      
+<a href="shapeless_native0.4.0-M2_2.11/" title="shapeless_native0.4.0-M2_2.11/">shapeless_native0.4.0-M2_2.11/</a>                                   -         -      
+<a href="shapeless_sjs0.6_2.10/" title="shapeless_sjs0.6_2.10/">shapeless_sjs0.6_2.10/</a>                                           -         -      
+<a href="shapeless_sjs0.6_2.11/" title="shapeless_sjs0.6_2.11/">shapeless_sjs0.6_2.11/</a>                                           -         -      
+<a href="shapeless_sjs0.6_2.12/" title="shapeless_sjs0.6_2.12/">shapeless_sjs0.6_2.12/</a>                                           -         -      
+<a href="shapeless_sjs0.6_2.12.0-M3/" title="shapeless_sjs0.6_2.12.0-M3/">shapeless_sjs0.6_2.12.0-M3/</a>                                      -         -      
+<a href="shapeless_sjs0.6_2.12.0-M4/" title="shapeless_sjs0.6_2.12.0-M4/">shapeless_sjs0.6_2.12.0-M4/</a>                                      -         -      
+<a href="shapeless_sjs0.6_2.12.0-M5/" title="shapeless_sjs0.6_2.12.0-M5/">shapeless_sjs0.6_2.12.0-M5/</a>                                      -         -      
+<a href="shapeless_sjs0.6_2.12.0-RC2/" title="shapeless_sjs0.6_2.12.0-RC2/">shapeless_sjs0.6_2.12.0-RC2/</a>                                     -         -      
+<a href="shapeless_sjs0.6_2.13/" title="shapeless_sjs0.6_2.13/">shapeless_sjs0.6_2.13/</a>                                           -         -      
+<a href="shapeless_sjs0.6_2.13.0-M1/" title="shapeless_sjs0.6_2.13.0-M1/">shapeless_sjs0.6_2.13.0-M1/</a>                                      -         -      
+<a href="shapeless_sjs0.6_2.13.0-M2/" title="shapeless_sjs0.6_2.13.0-M2/">shapeless_sjs0.6_2.13.0-M2/</a>                                      -         -      
+<a href="shapeless_sjs0.6_2.13.0-M3/" title="shapeless_sjs0.6_2.13.0-M3/">shapeless_sjs0.6_2.13.0-M3/</a>                                      -         -      
+<a href="shapeless_sjs0.6_2.13.0-M4/" title="shapeless_sjs0.6_2.13.0-M4/">shapeless_sjs0.6_2.13.0-M4/</a>                                      -         -      
+<a href="shapeless_sjs0.6_2.13.0-M5/" title="shapeless_sjs0.6_2.13.0-M5/">shapeless_sjs0.6_2.13.0-M5/</a>                                      -         -      
+<a href="shapeless_sjs0.6_2.13.0-RC1/" title="shapeless_sjs0.6_2.13.0-RC1/">shapeless_sjs0.6_2.13.0-RC1/</a>                                     -         -      
+<a href="shapeless_sjs0.6_2.13.0-RC2/" title="shapeless_sjs0.6_2.13.0-RC2/">shapeless_sjs0.6_2.13.0-RC2/</a>                                     -         -      
+<a href="shapeless_sjs0.6_2.13.0-RC3/" title="shapeless_sjs0.6_2.13.0-RC3/">shapeless_sjs0.6_2.13.0-RC3/</a>                                     -         -      
+		</pre>
+	</main>
+	<hr/>
+</body>
+
+</html>

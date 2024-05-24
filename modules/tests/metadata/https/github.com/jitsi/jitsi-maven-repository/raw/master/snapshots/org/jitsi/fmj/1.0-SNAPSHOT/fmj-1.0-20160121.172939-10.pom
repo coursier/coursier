@@ -1,0 +1,137 @@
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.jitsi</groupId>
+    <artifactId>jitsi-universe</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>../../../jitsi-universe/pom.xml</relativePath>
+  </parent>
+
+  <artifactId>fmj</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>bundle</packaging>
+
+  <name>fmj</name>
+  <url>http://sourceforge.net/projects/fmj/</url>
+
+  <dependencies>
+    <!-- test -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <sourceDirectory>../../src</sourceDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+          <instructions>
+            <Fragment-Host>org.jitsi.libjitsi</Fragment-Host>
+          </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>**/civil/**</exclude>
+            <exclude>net/sf/fmj/capture/**</exclude>
+            <exclude>net/sf/fmj/ds/**</exclude>
+            <exclude>net/sf/fmj/ejmf/toolkit/gui/**</exclude>
+            <exclude>net/sf/fmj/gui/**</exclude>
+            <exclude>net/sf/fmj/media/cdp/GlobalCaptureDevicePlugger.java</exclude>
+            <exclude>net/sf/fmj/qt/**</exclude>
+            <exclude>net/sf/fmj/test/**</exclude>
+            <exclude>net/sf/jdshow/**</exclude>
+            <!-- src.apps -->
+            <exclude>fi/iki/elonen/nanohttpd/**</exclude>
+            <exclude>net/sf/fmj/apps/**</exclude>
+            <!-- src.ffmpeg-java -->
+            <exclude>net/sf/fmj/ffmpeg_java/**</exclude>
+            <!-- src.fmjstudio -->
+            <exclude>net/sf/fmj/ui/**</exclude>
+            <!-- src.gst -->
+            <exclude>net/sf/fmj/gst/**</exclude>
+            <!-- src.sip-communicator -->
+            <exclude>net/java/**</exclude>
+            <!-- src.theora-java -->
+            <exclude>net/sf/fmj/theora_java/**</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar-no-fork</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>../../src.capture</source>
+                <source>../../src.ejmf</source>
+                <source>../../src.rtp</source>
+                <source>../../src.stubs</source>
+                <source>../../src.sunibm.base</source>
+                <source>../../src.sunibm.replace</source>
+                <source>../../src.t4l</source>
+                <source>../../src.utils</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <repositories>
+    <repository>
+      <id>jitsi-maven-repository-releases</id>
+      <layout>default</layout>
+      <name>Jitsi Maven Repository (Releases)</name>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+      <url>https://github.com/jitsi/jitsi-maven-repository/raw/master/releases/</url>
+    </repository>
+    <repository>
+      <id>jitsi-maven-repository-snapshots</id>
+      <layout>default</layout>
+      <name>Jitsi Maven Repository (Snapshots)</name>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+      <url>https://github.com/jitsi/jitsi-maven-repository/raw/master/snapshots/</url>
+    </repository>
+  </repositories>
+</project>

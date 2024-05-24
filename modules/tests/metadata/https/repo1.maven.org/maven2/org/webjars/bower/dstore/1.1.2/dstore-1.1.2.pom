@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <packaging>jar</packaging>
+    <groupId>org.webjars.bower</groupId>
+    <artifactId>dstore</artifactId>
+    <version>1.1.2</version>
+    <name>dstore</name>
+    <description>WebJar for dstore</description>
+    <url>http://webjars.org</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <scm>
+         <url>https://github.com/SitePen/dstore</url> 
+        <connection>https://github.com/SitePen/dstore.git</connection>
+        <developerConnection>https://github.com/SitePen/dstore.git</developerConnection>
+        <tag>v1.1.2</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>webjars</id>
+            <url>http://webjars.org</url>
+        </developer>
+    </developers>
+
+    <licenses>
+        
+        <license>
+            <name>BSD 3-Clause</name>
+            <url>https://spdx.org/licenses/BSD 3-Clause#licenseText</url>
+            <distribution>repo</distribution>
+        </license>
+        
+    </licenses>
+
+    <dependencies>
+        
+        <dependency>
+            <groupId>org.webjars.bower</groupId>
+            <artifactId>dojo</artifactId>
+            <version>[1.8.1,)</version>
+        </dependency>
+        
+        
+    </dependencies>
+
+</project>

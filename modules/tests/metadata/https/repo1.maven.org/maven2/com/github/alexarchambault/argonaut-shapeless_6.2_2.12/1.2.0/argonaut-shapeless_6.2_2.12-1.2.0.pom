@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.github.alexarchambault</groupId>
+    <artifactId>argonaut-shapeless_6.2_2.12</artifactId>
+    <packaging>jar</packaging>
+    <description>argonaut-shapeless_6.2</description>
+    <url>https://github.com/alexarchambault/argonaut-shapeless</url>
+    <version>1.2.0</version>
+    <licenses>
+        <license>
+            <name>BSD-3-Clause</name>
+            <url>http://www.opensource.org/licenses/BSD-3-Clause</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>argonaut-shapeless_6.2</name>
+    <organization>
+        <name>com.github.alexarchambault</name>
+        <url>https://github.com/alexarchambault/argonaut-shapeless</url>
+    </organization>
+    <scm>
+        <url>https://github.com/alexarchambault/argonaut-shapeless</url>
+        <connection>scm:git:https://github.com/alexarchambault/argonaut-shapeless.git</connection>
+        <developerConnection>scm:git:git@github.com:alexarchambault/argonaut-shapeless.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <id>alexarchambault</id>
+            <name>Alexandre Archambault</name>
+            <url>https://github.com/alexarchambault</url>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.12.11</version>
+        </dependency>
+        <dependency>
+            <groupId>io.argonaut</groupId>
+            <artifactId>argonaut_2.12</artifactId>
+            <version>6.2.5</version>
+        </dependency>
+        <dependency>
+            <groupId>com.chuusai</groupId>
+            <artifactId>shapeless_2.12</artifactId>
+            <version>2.3.3</version>
+        </dependency>
+    </dependencies>
+</project>

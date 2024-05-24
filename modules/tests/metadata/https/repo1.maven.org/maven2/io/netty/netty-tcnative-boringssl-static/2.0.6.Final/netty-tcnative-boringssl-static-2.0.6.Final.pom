@@ -1,0 +1,503 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright 2016 The Netty Project
+  ~
+  ~ The Netty Project licenses this file to you under the Apache License,
+  ~ version 2.0 (the "License"); you may not use this file except in compliance
+  ~ with the License. You may obtain a copy of the License at:
+  ~
+  ~   http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+  ~ WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+  ~ License for the specific language governing permissions and limitations
+  ~ under the License.
+  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.netty</groupId>
+    <artifactId>netty-tcnative-parent</artifactId>
+    <version>2.0.6.Final</version>
+  </parent>
+  <artifactId>netty-tcnative-boringssl-static</artifactId>
+  <packaging>jar</packaging>
+
+  <name>Netty/TomcatNative [BoringSSL - Static]</name>
+  <description>
+    A Mavenized fork of Tomcat Native which incorporates various patches. This artifact is statically linked
+    to BoringSSL and Apache APR.
+  </description>
+
+  <profiles>
+    <!-- Default profile that builds a platform-specific jar -->
+    <profile>
+      <id>boringssl-static-default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+
+      <properties>
+        <boringsslCheckoutDir>${project.build.directory}/boringssl-${boringsslBranch}</boringsslCheckoutDir>
+        <boringsslBuildDir>${boringsslCheckoutDir}/build</boringsslBuildDir>
+        <linkStatic>true</linkStatic>
+        <msvcSslIncludeDirs>${boringsslCheckoutDir}/include</msvcSslIncludeDirs>
+        <msvcSslLibDirs>${boringsslBuildDir}/ssl;${boringsslBuildDir}/crypto;${boringsslBuildDir}/decrepit</msvcSslLibDirs>
+        <msvcSslLibs>ssl.lib;crypto.lib;decrepit.lib</msvcSslLibs>
+      </properties>
+
+      <build>
+        <plugins>
+          <!-- Download the BoringSSL source -->
+          <plugin>
+            <artifactId>maven-scm-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>get-boringssl</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>checkout</goal>
+                </goals>
+                <configuration>
+                  <checkoutDirectory>${boringsslCheckoutDir}</checkoutDirectory>
+                  <connectionType>developerConnection</connectionType>
+                  <developerConnectionUrl>scm:git:https://boringssl.googlesource.com/boringssl</developerConnectionUrl>
+                  <scmVersion>${boringsslBranch}</scmVersion>
+                  <scmVersionType>branch</scmVersionType>
+                  <skipCheckoutIfExists>true</skipCheckoutIfExists>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!-- Determine the commit ID of the source code. -->
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>buildnumber-maven-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>create</goal>
+                </goals>
+                <configuration>
+                  <scmDirectory>${boringsslCheckoutDir}</scmDirectory>
+                  <buildNumberPropertyName>boringsslBuildNumber</buildNumberPropertyName>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!-- Add the commit ID and branch to the manifest. -->
+          <plugin>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>maven-bundle-plugin</artifactId>
+            <configuration>
+              <instructions>
+                <Apr-Version>${aprVersion}</Apr-Version>
+                <BoringSSL-Revision>${boringsslBuildNumber}</BoringSSL-Revision>
+                <BoringSSL-Branch>${boringsslBranch}</BoringSSL-Branch>
+              </instructions>
+            </configuration>
+          </plugin>
+
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+
+              <!-- Only deploy to Maven Central if on centos (fedora). -->
+              <execution>
+                <id>skip-deploy</id>
+                <phase>initialize</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <exportAntProperties>true</exportAntProperties>
+                  <target>
+                    <condition property="maven.deploy.skip" value="false" else="true">
+                      <isset property="os.detected.release.like.fedora" />
+                    </condition>
+                  </target>
+                </configuration>
+              </execution>
+
+              <!-- Build the BoringSSL static libs -->
+              <execution>
+                <id>build-boringssl</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <!-- Add the ant tasks from ant-contrib -->
+                    <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+
+                    <mkdir dir="${boringsslBuildDir}" />
+
+                    <if>
+                      <equals arg1="${os.detected.name}" arg2="windows" />
+                      <then>
+                        <!-- On Windows, build with /MT for static linking -->
+                        <exec executable="cmake" failonerror="true" dir="${boringsslBuildDir}" resolveexecutable="true">
+                          <arg value="-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE" />
+                          <arg value="-DCMAKE_BUILD_TYPE=Release" />
+                          <arg value="-DCMAKE_C_FLAGS_RELEASE=/MT" />
+                          <arg value="-DCMAKE_CXX_FLAGS_RELEASE=/MT" />
+                          <arg value="-GNinja" />
+                          <arg value=".." />
+                        </exec>
+                      </then>
+                      <else>
+                        <!-- On *nix, add ASM flags to disable executable stack -->
+                        <exec executable="cmake" failonerror="true" dir="${boringsslBuildDir}" resolveexecutable="true">
+                          <arg value="-DCMAKE_POSITION_INDEPENDENT_CODE=TRUE" />
+                          <arg value="-DCMAKE_BUILD_TYPE=Release" />
+                          <arg value="-DCMAKE_ASM_FLAGS=-Wa,--noexecstack" />
+                          <arg value="-DCMAKE_C_FLAGS_RELEASE=-std=c99 -O3 -fno-omit-frame-pointer" />
+                          <arg value="-DCMAKE_CXX_FLAGS_RELEASE=-O3 -fno-omit-frame-pointer" />
+                          <arg value="-GNinja" />
+                          <arg value=".." />
+                        </exec>
+                      </else>
+                    </if>
+                    <exec executable="ninja" failonerror="true" dir="${boringsslBuildDir}" resolveexecutable="true" />
+                  </target>
+                </configuration>
+              </execution>
+
+              <!-- Build the additional JAR that contains the native library. -->
+              <execution>
+                <id>native-jar</id>
+                <phase>package</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target>
+                    <!-- Add the ant tasks from ant-contrib -->
+                    <taskdef resource="net/sf/antcontrib/antcontrib.properties" />
+
+                    <!-- Strip on linux. See https://github.com/netty/netty-tcnative/issues/129 -->
+                    <if>
+                      <and>
+                        <equals arg1="${os.detected.name}" arg2="linux" />
+                        <equals arg1="${strip.skip}" arg2="false" />
+                      </and>
+                      <then>
+                        <exec executable="strip" failonerror="true" dir="${nativeLibOnlyDir}/META-INF/native/linux${archBits}/" resolveexecutable="true">
+                          <arg value="libnetty_tcnative.so" />
+                        </exec>
+                      </then>
+                    </if>
+
+                    <copy todir="${nativeJarWorkdir}">
+                      <zipfileset src="${defaultJarFile}" />
+                    </copy>
+                    <copy todir="${nativeJarWorkdir}" includeEmptyDirs="false">
+                      <zipfileset dir="${nativeLibOnlyDir}/META-INF/native" />
+                      <regexpmapper handledirsep="yes" from="^(?:[^/]+/)*([^/]+)$" to="META-INF/native/\1" />
+                    </copy>
+                    <jar destfile="${nativeJarFile}" manifest="${nativeJarWorkdir}/META-INF/MANIFEST.MF" basedir="${nativeJarWorkdir}" index="true" excludes="META-INF/MANIFEST.MF,META-INF/INDEX.LIST" />
+                    <attachartifact file="${nativeJarFile}" classifier="${os.detected.classifier}" type="jar" />
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <!-- Configure the distribution statically linked against OpenSSL and APR -->
+          <plugin>
+            <groupId>org.fusesource.hawtjni</groupId>
+            <artifactId>maven-hawtjni-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>build-native-lib</id>
+                <goals>
+                  <goal>generate</goal>
+                  <goal>build</goal>
+                </goals>
+                <phase>compile</phase>
+                <configuration>
+                  <name>netty_tcnative</name>
+                  <nativeSourceDirectory>${project.basedir}/src/main/c</nativeSourceDirectory>
+                  <libDirectory>${nativeLibOnlyDir}</libDirectory>
+                  <forceAutogen>${forceAutogen}</forceAutogen>
+                  <forceConfigure>${forceConfigure}</forceConfigure>
+                  <windowsBuildTool>msbuild</windowsBuildTool>
+                  <!-- <verbose>true</verbose> -->
+                  <configureArgs>
+                    <configureArg>--with-ssl=no</configureArg>
+                    <configureArg>--with-apr=${aprHome}</configureArg>
+                    <configureArg>CFLAGS=-O3 -Werror -fno-omit-frame-pointer -Wunused-variable</configureArg>
+                    <configureArg>CPPFLAGS=-DHAVE_OPENSSL -I${boringsslCheckoutDir}/include</configureArg>
+                    <configureArg>LDFLAGS=-L${boringsslBuildDir}/ssl -L${boringsslBuildDir}/crypto -L${boringsslBuildDir}/decrepit -ldecrepit -lssl -lcrypto</configureArg>
+                  </configureArgs>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <!--
+      Profile that builds the uber-jar containing native libraries for all platforms. When this
+      is active, it will automatically disable the default profile. This should only be used
+      once the jars for all platforms are available on Maven Central. Installing/deploying this
+      artifact will overwrite the default netty-tcnative-boringssl-static.jar (i.e. the jar
+      without a classifier).
+
+      To build from the top level, run:
+      mvn clean deploy -pl boringssl-static -P uber-staging -DstagingRepositoryId={repoId}
+
+      The repoId is necessary to allow the build to download the platform-specific jars from
+      the nexus staging repository.
+    -->
+    <profile>
+      <id>uber-staging</id>
+
+      <properties>
+        <unpackDir>${project.build.directory}/unpack</unpackDir>
+        <libDir>${project.build.directory}/lib</libDir>
+        <nativeDir>${project.build.outputDirectory}/META-INF/native</nativeDir>
+        <skipTests>true</skipTests>
+      </properties>
+
+      <repositories>
+        <repository>
+          <id>staged-releases</id>
+          <name>Staged Releases</name>
+          <url>https://oss.sonatype.org/service/local/repositories/${stagingRepositoryId}/content/</url>
+        </repository>
+      </repositories>
+
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>unpack</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>unpack</goal>
+                </goals>
+                <configuration>
+                  <artifactItems>
+                    <!-- Unpack just the native libraries -->
+                    <artifactItem>
+                      <groupId>io.netty</groupId>
+                      <artifactId>netty-tcnative-boringssl-static</artifactId>
+                      <version>${project.version}</version>
+                      <classifier>osx-x86_64</classifier>
+                      <type>jar</type>
+                      <outputDirectory>${unpackDir}/osx-x86_64</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>io.netty</groupId>
+                      <artifactId>netty-tcnative-boringssl-static</artifactId>
+                      <version>${project.version}</version>
+                      <classifier>linux-x86_64</classifier>
+                      <type>jar</type>
+                      <outputDirectory>${unpackDir}/linux-x86_64</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>io.netty</groupId>
+                      <artifactId>netty-tcnative-boringssl-static</artifactId>
+                      <version>${project.version}</version>
+                      <classifier>windows-x86_64</classifier>
+                      <type>jar</type>
+                      <outputDirectory>${unpackDir}/windows-x86_64</outputDirectory>
+                    </artifactItem>
+
+                    <!-- Now unpack all of the Java classes and the original MANIFEST.MF -->
+                    <artifactItem>
+                      <groupId>io.netty</groupId>
+                      <artifactId>netty-tcnative-boringssl-static</artifactId>
+                      <version>${project.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                      <includes>**/*.class,**/MANIFEST.MF</includes>
+                    </artifactItem>
+                  </artifactItems>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-jni-libs</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <target name="copy-jni-libs">
+                    <mkdir dir="${nativeDir}" />
+                    <copy todir="${nativeDir}" flatten="true">
+                      <fileset dir="${unpackDir}/osx-x86_64/META-INF/native" />
+                      <globmapper from="libnetty_tcnative.*" to="libnetty_tcnative_osx_x86_64.*" />
+                    </copy>
+                    <copy todir="${nativeDir}" flatten="true">
+                      <fileset dir="${unpackDir}/linux-x86_64/META-INF/native" />
+                      <globmapper from="libnetty_tcnative.*" to="libnetty_tcnative_linux_x86_64.*" />
+                    </copy>
+                    <copy todir="${nativeDir}" flatten="true">
+                      <fileset dir="${unpackDir}/windows-x86_64/META-INF/native" />
+                      <globmapper from="netty_tcnative.*" to="netty_tcnative_windows_x86_64.*" />
+                    </copy>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>maven-bundle-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>generate-manifest</id>
+                <phase>process-classes</phase>
+                <goals>
+                  <goal>manifest</goal>
+                </goals>
+                <configuration>
+                  <supportedProjectTypes>
+                    <supportedProjectType>jar</supportedProjectType>
+                  </supportedProjectTypes>
+                  <instructions>
+                    <Export-Package>io.netty.internal.tcnative.*</Export-Package>
+                    <Bundle-NativeCode>
+                      META-INF/native/libnetty_tcnative_osx_x86_64.jnilib;osname=macos;osname=macosx;processor=x86_64,
+                      META-INF/native/libnetty_tcnative_linux_x86_64.so;osname=linux;processor=x86_64,
+                      META-INF/native/netty_tcnative_windows_x86_64.dll;osname=win32;processor=x86_64
+                    </Bundle-NativeCode>
+                  </instructions>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>uber-snapshot</id>
+
+      <properties>
+        <unpackDir>${project.build.directory}/unpack</unpackDir>
+        <libDir>${project.build.directory}/lib</libDir>
+        <nativeDir>${project.build.outputDirectory}/META-INF/native</nativeDir>
+        <skipTests>true</skipTests>
+      </properties>
+
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-dependency-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>unpack</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>unpack</goal>
+                </goals>
+                <configuration>
+                  <artifactItems>
+                    <!-- Unpack just the native libraries (windows excluded as we not publish snapshots for it yet) -->
+                    <artifactItem>
+                      <groupId>io.netty</groupId>
+                      <artifactId>netty-tcnative-boringssl-static</artifactId>
+                      <version>${project.version}</version>
+                      <classifier>osx-x86_64</classifier>
+                      <type>jar</type>
+                      <outputDirectory>${unpackDir}/osx-x86_64</outputDirectory>
+                    </artifactItem>
+                    <artifactItem>
+                      <groupId>io.netty</groupId>
+                      <artifactId>netty-tcnative-boringssl-static</artifactId>
+                      <version>${project.version}</version>
+                      <classifier>linux-x86_64</classifier>
+                      <type>jar</type>
+                      <outputDirectory>${unpackDir}/linux-x86_64</outputDirectory>
+                    </artifactItem>
+
+                    <!-- Now unpack all of the Java classes and the original MANIFEST.MF -->
+                    <artifactItem>
+                      <groupId>io.netty</groupId>
+                      <artifactId>netty-tcnative-boringssl-static</artifactId>
+                      <version>${project.version}</version>
+                      <type>jar</type>
+                      <outputDirectory>${project.build.outputDirectory}</outputDirectory>
+                      <includes>**/*.class,**/MANIFEST.MF</includes>
+                    </artifactItem>
+                  </artifactItems>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>copy-jni-libs</id>
+                <phase>generate-resources</phase>
+                <goals>
+                  <goal>run</goal>
+                </goals>
+                <configuration>
+                  <!-- Windows excluded as we not publish snapshots for it yet -->
+                  <target name="copy-jni-libs">
+                    <mkdir dir="${nativeDir}" />
+                    <copy todir="${nativeDir}" flatten="true">
+                      <fileset dir="${unpackDir}/osx-x86_64/META-INF/native" />
+                      <globmapper from="libnetty_tcnative.*" to="libnetty_tcnative_osx_x86_64.*" />
+                    </copy>
+                    <copy todir="${nativeDir}" flatten="true">
+                      <fileset dir="${unpackDir}/linux-x86_64/META-INF/native" />
+                      <globmapper from="libnetty_tcnative.*" to="libnetty_tcnative_linux_x86_64.*" />
+                    </copy>
+                  </target>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>maven-bundle-plugin</artifactId>
+            <executions>
+              <execution>
+                <id>generate-manifest</id>
+                <phase>process-classes</phase>
+                <goals>
+                  <goal>manifest</goal>
+                </goals>
+                <configuration>
+                  <supportedProjectTypes>
+                    <supportedProjectType>jar</supportedProjectType>
+                  </supportedProjectTypes>
+                  <instructions>
+                    <Export-Package>io.netty.internal.tcnative.*</Export-Package>
+                    <Bundle-NativeCode>
+                      META-INF/native/libnetty_tcnative_osx_x86_64.jnilib;osname=macos;osname=macosx;processor=x86_64,
+                      META-INF/native/libnetty_tcnative_linux_x86_64.so;osname=linux;processor=x86_64,
+                      META-INF/native/netty_tcnative_windows_x86_64.dll;osname=win32;processor=x86_64
+                    </Bundle-NativeCode>
+                  </instructions>
+                </configuration>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+</project>

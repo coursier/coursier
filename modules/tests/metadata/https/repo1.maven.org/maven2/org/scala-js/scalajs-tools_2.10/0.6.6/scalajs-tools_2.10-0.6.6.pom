@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.scala-js</groupId>
+    <artifactId>scalajs-tools_2.10</artifactId>
+    <packaging>jar</packaging>
+    <description>Scala.js tools</description>
+    <url>http://scala-js.org/</url>
+    <version>0.6.6</version>
+    <licenses>
+        <license>
+            <name>BSD New</name>
+            <url>https://github.com/scala-js/scala-js/blob/master/LICENSE</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>Scala.js tools</name>
+    <organization>
+        <name>org.scala-js</name>
+        <url>http://scala-js.org/</url>
+    </organization>
+    <scm>
+        <url>https://github.com/scala-js/scala-js</url>
+        <connection>scm:git:git@github.com:scala-js/scala-js.git</connection>
+        <developerConnection>scm:git:git@github.com:scala-js/scala-js.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <id>sjrd</id>
+            <name>Sébastien Doeraene</name>
+            <url>https://github.com/sjrd/</url>
+        </developer>
+        <developer>
+            <id>gzm0</id>
+            <name>Tobias Schlatter</name>
+            <url>https://github.com/gzm0/</url>
+        </developer>
+        <developer>
+            <id>nicolasstucki</id>
+            <name>Nicolas Stucki</name>
+            <url>https://github.com/nicolasstucki/</url>
+        </developer>
+    </developers>
+    <properties>
+        <info.apiURL>http://www.scala-js.org/api/scalajs-tools/0.6.6/</info.apiURL>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.10.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-js</groupId>
+            <artifactId>scalajs-ir_2.10</artifactId>
+            <version>0.6.6</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.javascript</groupId>
+            <artifactId>closure-compiler</artifactId>
+            <version>v20130603</version>
+        </dependency>
+        <dependency>
+            <groupId>com.googlecode.json-simple</groupId>
+            <artifactId>json-simple</artifactId>
+            <version>1.1.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.novocode</groupId>
+            <artifactId>junit-interface</artifactId>
+            <version>0.9</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.yandex.android</groupId>
+  <artifactId>speechkit</artifactId>
+  <version>2.5.0</version>
+  <packaging>aar</packaging>
+  <name>Yandex SpeechKit Mobile SDK</name>
+  <description>The SpeechKit SDK allows you to embed Yandex speech recognition and synthesis, as well as voice activation, into your mobile app.</description>
+  <url>https://tech.yandex.com/speechkit/mobilesdk/</url>
+  <organization>
+    <name>Yandex LLC</name>
+    <url>https://company.yandex.com/</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>Yandex SpeechKit Mobile SDK License</name>
+      <url>https://legal.yandex.ru/speechkit/</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Yandex</name>
+      <url>https://tech.yandex.ru/speechkit/mobilesdk/</url>
+      <roles>
+        <role>Developer</role>
+        <role>Contributor</role>
+      </roles>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git://github.com/yandexmobile/yandex-speechkit-android.git</connection>
+    <developerConnection>scm:git:git@github.com/yandexmobile/yandex-speechkit-android.git</developerConnection>
+    <url>https://github.com/yandexmobile/yandex-speechkit-android.git</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>com.android.support</groupId>
+      <artifactId>support-v4</artifactId>
+      <version>23.1.1</version>
+      <type>aar</type>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+</project>

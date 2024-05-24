@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.yuvimasory</groupId>
+    <artifactId>orange-extensions</artifactId>
+    <packaging>jar</packaging>
+    <description>A pluggable jar containing stubs for the Apple Java Extensions, updated for Java 5 &amp; 6</description>
+    <version>1.3.0</version>
+    <name>orange-extensions</name>
+    <organization>
+        <name>com.yuvimasory</name>
+    </organization>
+    <url>http://ymasory.github.com/OrangeExtensions/</url>
+    <licenses>
+        <license>
+            <name>BSD</name>
+            <url>https://github.com/ymasory/OrangeExtensions/blob/master/LICENSE</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <url>git@github.com:ymasory/OrangeExtensions.git</url>
+        <connection>scm:git:git@github.com/ymasory/OrangeExtensions.git</connection>
+    </scm>
+    <developers>
+        <developer>
+            <id>ymasory</id>
+            <name>Yuvi Masory</name>
+            <email>ymasory@gmail.com</email>
+            <url>http://yuvimasory.com</url>
+        </developer>
+    </developers>
+</project>

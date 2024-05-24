@@ -1,0 +1,20 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>mx4j</groupId>
+  <artifactId>mx4j</artifactId>
+  <version>3.0.2</version>
+  <packaging>jar</packaging>
+  <name>MX4J</name>
+  <url>http://mx4j.sourceforge.net</url>
+  <description>MX4J JMX API and implementation</description>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <scm>
+    <url>http://mx4j.cvs.sourceforge.net/mx4j/</url>
+  </scm>
+</project> 

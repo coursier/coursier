@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>sh.almond</groupId>
+    <artifactId>scala-kernel_2.12.7</artifactId>
+    <packaging>jar</packaging>
+    <description>scala-kernel</description>
+    <url>https://github.com/almond-sh/almond</url>
+    <version>0.2.2</version>
+    <licenses>
+        <license>
+            <name>BSD-3-Clause</name>
+            <url>https://opensource.org/licenses/BSD-3-Clause</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>scala-kernel</name>
+    <organization>
+        <name>sh.almond</name>
+        <url>https://github.com/almond-sh/almond</url>
+    </organization>
+    <scm>
+        <url>https://github.com/almond-sh/almond</url>
+        <connection>scm:git:https://github.com/almond-sh/almond.git</connection>
+        <developerConnection>scm:git:git@github.com:almond-sh/almond.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <id>alexarchambault</id>
+            <name>Alexandre Archambault</name>
+            <email>alexandre.archambault@gmail.com</email>
+            <url>https://github.com/alexarchambault</url>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.12.7</version>
+        </dependency>
+        <dependency>
+            <groupId>sh.almond</groupId>
+            <artifactId>kernel_2.12</artifactId>
+            <version>0.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>sh.almond</groupId>
+            <artifactId>scala-interpreter_2.12.7</artifactId>
+            <version>0.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.github.alexarchambault</groupId>
+            <artifactId>case-app_2.12</artifactId>
+            <version>2.0.0-M5</version>
+        </dependency>
+    </dependencies>
+</project>

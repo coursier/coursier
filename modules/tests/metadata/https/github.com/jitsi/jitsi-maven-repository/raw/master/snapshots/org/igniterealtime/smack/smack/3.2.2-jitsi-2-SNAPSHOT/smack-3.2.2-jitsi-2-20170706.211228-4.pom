@@ -1,0 +1,66 @@
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.igniterealtime.smack</groupId>
+    <artifactId>smack-universe</artifactId>
+    <version>3.2.2-jitsi-2-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
+  </parent>
+
+  <artifactId>smack</artifactId>
+  <packaging>jar</packaging>
+
+  <name>smack</name>
+
+  <dependencies>
+    <dependency>
+      <groupId>xpp3</groupId>
+      <artifactId>xpp3</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.github.igniterealtime</groupId>
+      <artifactId>jbosh</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>org/jivesoftware/smack/**/*.java</include>
+          </includes>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Bundle-SymbolicName>org.igniterealtime.smack</Bundle-SymbolicName>
+            </manifestEntries>
+          </archive>
+          <includes>
+            <include>META-INF/smack-config.xml</include>
+            <include>org/jivesoftware/smack/**/*.class</include>
+          </includes>
+        </configuration>
+      </plugin>
+    </plugins>
+    <resources>
+      <resource>
+        <directory>../../resources</directory>
+        <includes>
+          <include>META-INF/smack-config.xml</include>
+        </includes>
+      </resource>
+    </resources>
+  </build>
+</project>

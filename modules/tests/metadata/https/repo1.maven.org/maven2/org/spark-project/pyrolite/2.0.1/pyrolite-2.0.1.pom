@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.spark-project</groupId>
+    <artifactId>pyrolite</artifactId>
+    <packaging>jar</packaging>
+    <description>pyrolite</description>
+    <version>2.0.1</version>
+    <name>pyrolite</name>
+    <organization>
+        <name>org.spark-project</name>
+    </organization>
+    <url>http://pythonhosted.org/Pyro4/</url>
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <url>git@github.com:irmen/Pyrolite.git</url>
+        <connection>scm:git:git@github.com:irmen/Pyrolite.git</connection>
+    </scm>
+    <developers>
+        <developer>
+            <id>irmen</id>
+            <name>Irmen de Jong</name>
+            <url>http://www.razorvine.net/</url>
+        </developer>
+    </developers>
+</project>

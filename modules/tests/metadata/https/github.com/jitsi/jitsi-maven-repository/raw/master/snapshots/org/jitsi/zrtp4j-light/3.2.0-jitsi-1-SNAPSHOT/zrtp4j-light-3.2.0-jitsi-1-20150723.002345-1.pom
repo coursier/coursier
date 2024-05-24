@@ -1,0 +1,65 @@
+<project
+    xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.jitsi</groupId>
+    <artifactId>jitsi-universe</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <relativePath>../../../jitsi-universe/pom.xml</relativePath>
+  </parent>
+
+  <artifactId>zrtp4j-light</artifactId>
+  <version>3.2.0-jitsi-1-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <name>zrtp4j-light</name>
+  <url>https://github.com/jitsi/zrtp4j</url>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bcprov-jdk15on</artifactId>
+    </dependency>
+    <!-- org.jitsi -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>bccontrib</artifactId>
+    </dependency>
+    <!-- test -->
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- org.jitsi -->
+    <dependency>
+      <groupId>${project.groupId}</groupId>
+      <artifactId>fmj</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <sourceDirectory>../../src</sourceDirectory>
+    <testSourceDirectory>../../src</testSourceDirectory>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>gnu/java/bigintcrypto/test/**</exclude>
+            <exclude>gnu/java/zrtp/jmf/**</exclude>
+          </excludes>
+          <includes>
+            <include>gnu/java/**</include>
+            <include>org/bouncycastle/**</include>
+          </includes>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

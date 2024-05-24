@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.get-coursier</groupId>
+    <artifactId>coursier-core_2.12</artifactId>
+    <packaging>jar</packaging>
+    <description>coursier-core</description>
+    <url>https://github.com/coursier/coursier</url>
+    <version>1.1.0-M14-3</version>
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>coursier-core</name>
+    <organization>
+        <name>io.get-coursier</name>
+        <url>https://github.com/coursier/coursier</url>
+    </organization>
+    <scm>
+        <url>https://github.com/coursier/coursier</url>
+        <connection>scm:git:https://github.com/coursier/coursier.git</connection>
+        <developerConnection>scm:git:git@github.com:coursier/coursier.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <id>alexarchambault</id>
+            <name>Alexandre Archambault</name>
+            <email>alexandre.archambault@gmail.com</email>
+            <url>https://github.com/alexarchambault</url>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.12.8</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>utest_2.12</artifactId>
+            <version>0.6.7</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-xml_2.12</artifactId>
+            <version>1.2.0</version>
+        </dependency>
+    </dependencies>
+</project>

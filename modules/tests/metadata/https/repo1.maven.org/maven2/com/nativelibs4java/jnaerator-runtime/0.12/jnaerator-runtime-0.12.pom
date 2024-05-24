@@ -1,0 +1,95 @@
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.nativelibs4java</groupId>
+	<artifactId>jnaerator-runtime</artifactId>
+	<name>JNAerator Runtime</name>
+	<url>http://code.google.com/p/jnaerator/</url>
+	<packaging>jar</packaging>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.nativelibs4java</groupId>
+			<artifactId>ochafik-util</artifactId>
+		</dependency>
+		<dependency>
+             <groupId>net.java.dev.jna</groupId>
+             <artifactId>jna</artifactId>
+		</dependency>
+
+	</dependencies>
+	<parent>
+		<groupId>com.nativelibs4java</groupId>
+		<artifactId>jnaerator-parent</artifactId>
+		<version>0.12</version>
+		<relativePath>..</relativePath>
+	</parent>
+
+	<build>
+		<plugins>
+		
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<executions>
+			
+					<execution>
+						<id>normal-package</id>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<shadedArtifactAttached>true</shadedArtifactAttached>
+					<!--shadedClassifierName>webstart</shadedClassifierName-->
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>META-INF/*.SF</exclude>
+										<exclude>META-INF/*.DSA</exclude>
+										<exclude>META-INF/*.RSA</exclude>
+										<exclude>META-INF/maven/**</exclude>
+									</excludes>
+								</filter>
+							</filters>
+						</configuration>
+					</execution>
+			
+					<execution>
+						<id>webstart-package</id>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<shadedArtifactAttached>true</shadedArtifactAttached>
+							<shadedClassifierName>webstart</shadedClassifierName>
+							<filters>
+								<filter>
+							
+									<artifact>com.jnaerator:jna-jnaerator</artifact>
+							
+									<excludes>
+			
+								<!--exclude>META-INF/**</exclude-->
+								
+										<exclude>**/*.so</exclude>
+										<exclude>**/*.jnilib</exclude>
+										<exclude>**/*.dll</exclude>
+								
+									</excludes>
+						
+								</filter>
+							</filters>
+						</configuration>
+					</execution>
+			
+				</executions>
+			</plugin>
+		
+		</plugins>
+	</build>
+</project>
+
+

@@ -1,0 +1,136 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.scala-lang</groupId>
+    <artifactId>scala3-compiler_3</artifactId>
+    <packaging>jar</packaging>
+    <description>scala3-compiler-bootstrapped</description>
+    <url>https://github.com/lampepfl/dotty</url>
+    <version>3.0.1</version>
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>scala3-compiler-bootstrapped</name>
+    <organization>
+        <name>LAMP/EPFL</name>
+        <url>http://lamp.epfl.ch</url>
+    </organization>
+    <scm>
+        <url>https://github.com/lampepfl/dotty</url>
+        <connection>scm:git:git@github.com:lampepfl/dotty.git</connection>
+    </scm>
+    <developers>
+        <developer>
+            <id>odersky</id>
+            <name>Martin Odersky</name>
+            <url>https://github.com/odersky</url>
+            <email>martin.odersky@epfl.ch</email>
+        </developer>
+        <developer>
+            <id>DarkDimius</id>
+            <name>Dmitry Petrashko</name>
+            <url>https://d-d.me</url>
+            <email>me@d-d.me</email>
+        </developer>
+        <developer>
+            <id>smarter</id>
+            <name>Guillaume Martres</name>
+            <url>http://guillaume.martres.me</url>
+            <email>smarter@ubuntu.com</email>
+        </developer>
+        <developer>
+            <id>felixmulder</id>
+            <name>Felix Mulder</name>
+            <url>http://felixmulder.com</url>
+            <email>felix.mulder@gmail.com</email>
+        </developer>
+        <developer>
+            <id>liufengyun</id>
+            <name>Liu Fengyun</name>
+            <url>https://fengy.me</url>
+            <email>liu@fengy.me</email>
+        </developer>
+        <developer>
+            <id>nicolasstucki</id>
+            <name>Nicolas Stucki</name>
+            <url>https://github.com/nicolasstucki</url>
+            <email>nicolas.stucki@gmail.com</email>
+        </developer>
+        <developer>
+            <id>OlivierBlanvillain</id>
+            <name>Olivier Blanvillain</name>
+            <url>https://github.com/OlivierBlanvillain</url>
+            <email>olivier.blanvillain@gmail.com</email>
+        </developer>
+        <developer>
+            <id>biboudis</id>
+            <name>Aggelos Biboudis</name>
+            <url>http://biboudis.github.io</url>
+            <email>aggelos.biboudis@epfl.ch</email>
+        </developer>
+        <developer>
+            <id>allanrenucci</id>
+            <name>Allan Renucci</name>
+            <url>https://github.com/allanrenucci</url>
+            <email>allan.renucci@gmail.com</email>
+        </developer>
+        <developer>
+            <id>Duhemm</id>
+            <name>Martin Duhem</name>
+            <url>https://github.com/Duhemm</url>
+            <email>martin.duhem@gmail.com</email>
+        </developer>
+    </developers>
+    <dependencies>
+        <!-- <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala3-interfaces</artifactId>
+            <version>3.0.1</version>
+        </dependency> -->
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala3-library_3</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+        <!-- <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>tasty-core_3</artifactId>
+            <version>3.0.1</version>
+        </dependency>
+        <dependency>
+            <groupId>com.novocode</groupId>
+            <artifactId>junit-interface</artifactId>
+            <version>0.11</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-asm</artifactId>
+            <version>9.1.0-scala-1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-sbt</groupId>
+            <artifactId>compiler-interface</artifactId>
+            <version>1.3.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jline</groupId>
+            <artifactId>jline-reader</artifactId>
+            <version>3.19.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jline</groupId>
+            <artifactId>jline-terminal</artifactId>
+            <version>3.19.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jline</groupId>
+            <artifactId>jline-terminal-jna</artifactId>
+            <version>3.19.0</version>
+        </dependency> -->
+    </dependencies>
+</project>

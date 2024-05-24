@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.github.alexarchambault.windows-ansi</groupId>
+    <artifactId>windows-ansi</artifactId>
+    <packaging>jar</packaging>
+    <description>windows-ansi</description>
+    <url>https://github.com/alexarchambault/windows-ansi</url>
+    <version>0.0.3</version>
+    <licenses>
+        <license>
+            <name>GPL-2.0</name>
+            <url>https://opensource.org/licenses/GPL-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>windows-ansi</name>
+    <organization>
+        <name>io.github.alexarchambault.windows-ansi</name>
+        <url>https://github.com/alexarchambault/windows-ansi</url>
+    </organization>
+    <scm>
+        <url>https://github.com/alexarchambault/windows-ansi</url>
+        <connection>scm:git:https://github.com/alexarchambault/windows-ansi.git</connection>
+        <developerConnection>scm:git:git@github.com:alexarchambault/windows-ansi.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <id>alexarchambault</id>
+            <name>Alexandre Archambault</name>
+            <url>https://github.com/alexarchambault</url>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>org.fusesource.jansi</groupId>
+            <artifactId>jansi</artifactId>
+            <version>1.18</version>
+        </dependency>
+        <dependency>
+            <groupId>org.graalvm.nativeimage</groupId>
+            <artifactId>svm</artifactId>
+            <version>19.3.1</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

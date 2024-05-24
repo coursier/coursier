@@ -1,0 +1,13 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.sun.jdmk</groupId>
+  <artifactId>jmxtools</artifactId>
+  <version>1.2.1</version>
+  <name>JMX 1.2.1 Reference Implementation</name>
+  <url>http://java.sun.com/products/JavaManagement/</url>
+
+  <distributionManagement>
+    <downloadUrl>http://java.sun.com/products/JavaManagement/download.html</downloadUrl>
+  </distributionManagement>
+
+</project>

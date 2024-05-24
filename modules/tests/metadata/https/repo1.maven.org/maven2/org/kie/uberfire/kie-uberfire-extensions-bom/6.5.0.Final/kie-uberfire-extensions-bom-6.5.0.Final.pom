@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.kie</groupId>
+    <artifactId>kie-parent-metadata</artifactId>
+    <version>6.5.0.Final</version>
+  </parent>
+
+  <groupId>org.kie.uberfire</groupId>
+  <artifactId>kie-uberfire-extensions-bom</artifactId>
+  <packaging>pom</packaging>
+
+  <name>UberFire Extensions BOM (Bill Of Materials)</name>
+  <description>
+    Import this BOM in your dependencyManagement if you want to depend on multiple UberFire extensions artifacts.
+  </description>
+
+
+  <!-- IMPORTANT: Do not declare any build things here! Declare them in kie-parent-metadata. -->
+  <build/>
+
+  <dependencyManagement>
+    <dependencies>
+      <!--
+        IMPORTANT: Only declare modules of groupId org.kie.uberfire.
+        Do not declare external dependencies.
+        Do not duplicate modules from another bom.
+      -->
+      <!--
+          Declare all dependency versions. Do not declare <scope> or <optional>.
+          Each module should declare it's direct dependencies and possibly overwrite scope/optional.
+          Always declare the sources jar too and optionally the test-jar.
+      -->
+
+      <!-- Social Activities -->
+      <dependency>
+        <groupId>org.kie.uberfire</groupId>
+        <artifactId>kie-uberfire-social-activities-api</artifactId>
+        <version>${version.org.kie.uberfire.extensions}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.uberfire</groupId>
+        <artifactId>kie-uberfire-social-activities-api</artifactId>
+        <version>${version.org.kie.uberfire.extensions}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.uberfire</groupId>
+        <artifactId>kie-uberfire-social-activities-client</artifactId>
+        <version>${version.org.kie.uberfire.extensions}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.uberfire</groupId>
+        <artifactId>kie-uberfire-social-activities-client</artifactId>
+        <version>${version.org.kie.uberfire.extensions}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.uberfire</groupId>
+        <artifactId>kie-uberfire-social-activities-backend</artifactId>
+        <version>${version.org.kie.uberfire.extensions}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.uberfire</groupId>
+        <artifactId>kie-uberfire-social-activities-backend</artifactId>
+        <version>${version.org.kie.uberfire.extensions}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+      <dependency>
+        <groupId>org.kie.uberfire</groupId>
+        <artifactId>i18n-taglib</artifactId>
+        <version>${version.org.kie.uberfire.extensions}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.kie.uberfire</groupId>
+        <artifactId>i18n-taglib</artifactId>
+        <version>${version.org.kie.uberfire.extensions}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+    </dependencies>
+  </dependencyManagement>
+
+</project>
