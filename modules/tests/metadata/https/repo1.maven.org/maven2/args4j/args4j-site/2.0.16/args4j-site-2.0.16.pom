@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>args4j</groupId>
+  <artifactId>args4j-site</artifactId>
+  <name>args4j parent</name>
+  <version>2.0.16</version>
+  <packaging>pom</packaging>
+  <description>args4j : Java command line arguments parser</description>
+  <url>http://args4j.dev.java.net/</url>
+  <issueManagement>
+    <url>https://args4j.dev.java.net/issues</url>
+  </issueManagement>
+  <inceptionYear>2003</inceptionYear>
+  
+  <ciManagement>
+    <notifiers>
+      <notifier>
+        <configuration>
+          <address>kk@kohsuke.org</address>
+        </configuration>
+      </notifier>
+    </notifiers>
+  </ciManagement>
+  <mailingLists>
+    <mailingList>
+      <name>discussion list</name>
+      <subscribe>users-subscribe@args4j.dev.java.net</subscribe>
+      <unsubscribe>users-ubsubscribe@args4j.dev.java.net</unsubscribe>
+      <archive>https://args4j.dev.java.net/servlets/SummarizeList?listName=users</archive>
+    </mailingList>
+  </mailingLists>
+  <developers>
+    <developer>
+      <id>kohsuke</id>
+      <name>Kohsuke Kawaguchi</name>
+      <email>kk@kohsuke.org</email>
+      <organization>Sun Microsystems</organization>
+    </developer>
+    <developer>
+      <id>jhm</id>
+      <name>Jan Materne</name>
+      <email>jhm@apache.org</email>
+    </developer>
+    <developer>
+      <id>marksinke</id>
+      <name>Mark Sinke</name>
+      <email>marksinke@dev.java.net</email>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:cvs:pserver:guest@cvs.dev.java.net:/cvs:args4j</connection>
+    <developerConnection>scm:cvs:pserver:kohsuke@cvs.dev.java.net:/cvs:args4j</developerConnection>
+    <url>https://args4j.dev.java.net/source/browse/args4j/</url>
+    <tag>args4j-site-2_0_16</tag>
+  </scm>
+  <organization>
+    <name>Kohsuke Kawaguchi</name>
+    <url>http://www.kohsuke.org/</url>
+  </organization>
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.5</source>
+          <target>1.5</target>
+        </configuration>
+      </plugin>
+    </plugins>
+    <extensions>
+      <extension>
+        <groupId>org.jvnet.wagon-svn</groupId>
+        <artifactId>wagon-svn</artifactId>
+        <version>1.8</version>
+      </extension>
+    </extensions>
+  </build>
+  <reporting>
+    <plugins>
+      <plugin>
+        <artifactId>maven-changes-plugin</artifactId>
+        <configuration>
+          <issueLinkTemplate>https://args4j.dev.java.net/issues/show_bug.cgi?id=%ISSUE% </issueLinkTemplate>
+          <xmlPath>${basedir}/xdocs/changes.xml</xmlPath>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+  <repositories>
+    <repository>
+      <id>maven2-repository.dev.java.net</id>
+      <name>Java.net Repository for Maven</name>
+      <url>http://download.java.net/maven/2/</url>
+    </repository>
+  </repositories>
+  
+  <distributionManagement>
+    <repository>
+      <uniqueVersion>false</uniqueVersion>
+      <id>java.net-maven2-repository</id>
+      <url>java-net:/maven2-repository/trunk/repository/</url>
+    </repository>
+  </distributionManagement>  
+  
+  <modules>
+    <module>args4j</module>
+    <module>args4j-tools</module>
+  </modules>
+</project>

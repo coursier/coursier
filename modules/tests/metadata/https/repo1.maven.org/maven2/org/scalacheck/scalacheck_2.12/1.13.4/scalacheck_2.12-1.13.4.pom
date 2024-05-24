@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.scalacheck</groupId>
+    <artifactId>scalacheck_2.12</artifactId>
+    <packaging>jar</packaging>
+    <description>scalacheck</description>
+    <url>http://www.scalacheck.org</url>
+    <version>1.13.4</version>
+    <licenses>
+        <license>
+            <name>BSD-style</name>
+            <url>http://www.opensource.org/licenses/bsd-license.php</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>scalacheck</name>
+    <organization>
+        <name>org.scalacheck</name>
+        <url>http://www.scalacheck.org</url>
+    </organization>
+    <scm>
+        <url>https://github.com/rickynils/scalacheck</url>
+        <connection>scm:git:git@github.com:rickynils/scalacheck.git</connection>
+    </scm>
+    <developers>
+        <developer>
+            <id>rickynils</id>
+            <name>Rickard Nilsson</name>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.12.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-sbt</groupId>
+            <artifactId>test-interface</artifactId>
+            <version>1.0</version>
+        </dependency>
+    </dependencies>
+</project>

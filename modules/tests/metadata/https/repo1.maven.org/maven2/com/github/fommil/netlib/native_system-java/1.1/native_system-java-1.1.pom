@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.github.fommil.netlib</groupId>
+        <artifactId>native_system</artifactId>
+        <version>1.1</version>
+    </parent>
+
+    <artifactId>native_system-java</artifactId>
+    <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.github.fommil</groupId>
+            <artifactId>jniloader</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>core</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>com.github.fommil.netlib</groupId>
+                <artifactId>generator</artifactId>
+                <executions>
+                    <execution>
+                        <!--
+                        HACK: these override the parent executions of the same name
+                        and stop it from running.
+                        -->
+                        <id>blas</id>
+                        <goals>
+                            <goal>native-java</goal>
+                        </goals>
+                        <configuration>
+                            <outputName>com/github/fommil/netlib/NativeSystemBLAS.java</outputName>
+                            <scan>org.netlib.blas</scan>
+                            <implementing>com.github.fommil.netlib.BLAS</implementing>
+                            <extending>com.github.fommil.netlib.F2jBLAS</extending>
+                            <unsupported>${prefer.f2j}</unsupported>
+                            <natives>${natives}</natives>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>lapack</id>
+                        <goals>
+                            <goal>native-java</goal>
+                        </goals>
+                        <configuration>
+                            <outputName>com/github/fommil/netlib/NativeSystemLAPACK.java</outputName>
+                            <scan>org.netlib.lapack</scan>
+                            <implementing>com.github.fommil.netlib.LAPACK</implementing>
+                            <extending>com.github.fommil.netlib.F2jLAPACK</extending>
+                            <unsupported>${prefer.f2j}</unsupported>
+                            <natives>${natives}</natives>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>arpack</id>
+                        <goals>
+                            <goal>native-java</goal>
+                        </goals>
+                        <configuration>
+                            <outputName>com/github/fommil/netlib/NativeSystemARPACK.java</outputName>
+                            <scan>org.netlib.arpack</scan>
+                            <implementing>com.github.fommil.netlib.ARPACK</implementing>
+                            <extending>com.github.fommil.netlib.F2jARPACK</extending>
+                            <unsupported>${prefer.f2j}</unsupported>
+                            <natives>${natives}</natives>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

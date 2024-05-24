@@ -1,0 +1,135 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+                        http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>info.bliki.wiki</groupId>
+	<artifactId>bliki</artifactId>
+	<packaging>pom</packaging>
+	<name>Bliki POM</name>
+	<version>3.0.19</version>
+	<url>https://code.google.com/p/gwtwiki/</url>
+	<description>The Bliki API is a Java-based Wiki to HTML renderer
+		with MediaWiki syntax support.</description>
+	<organization>
+		<name>Java Wikipedia API (Bliki engine)</name>
+		<url>http://code.google.com/p/gwtwiki/</url>
+	</organization>
+	<developers>
+		<developer>
+			<name>Axel Kramer</name>
+		</developer>
+	</developers>
+	<scm>
+		<connection>scm:svn:http://gwtwiki.googlecode.com/svn/trunk/</connection>
+		<developerConnection>scm:svn:https://gwtwiki.googlecode.com/svn/trunk/</developerConnection>
+		<tag>HEAD</tag>
+		<url>http://code.google.com/p/gwtwiki/source/browse/</url>
+	</scm>
+	<issueManagement>
+		<system>Google Code</system>
+		<url>http://code.google.com/p/gwtwiki/issues/list</url>
+	</issueManagement>
+	<licenses>
+		<license>
+			<name>Eclipse Public License 1.0</name>
+			<url>http://www.opensource.org/licenses/eclipse-1.0.php</url>
+			<distribution>repo</distribution>
+		</license>
+		<license>
+			<name>GNU Lesser General Public License - v 2.1 or later</name>
+			<url>http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<modules>
+		<module>bliki-core</module>
+		<module>bliki-pdf</module>
+		<module>bliki-addons</module>
+	</modules>
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>info.bliki.wiki</groupId>
+				<artifactId>bliki-core</artifactId>
+				<version>3.0.19</version>
+			</dependency>
+			<dependency>
+				<groupId>info.bliki.wiki</groupId>
+				<artifactId>bliki-pdf</artifactId>
+				<version>3.0.19</version>
+			</dependency>
+			<dependency>
+				<groupId>info.bliki.wiki</groupId>
+				<artifactId>bliki-addons</artifactId>
+				<version>3.0.19</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-httpclient</groupId>
+				<artifactId>commons-httpclient</artifactId>
+				<version>3.1</version>
+			</dependency>
+			<dependency>
+				<groupId>commons-lang</groupId>
+				<artifactId>commons-lang</artifactId>
+				<version>2.4</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-compress</artifactId>
+				<version>1.4.1</version>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.derby</groupId>
+				<artifactId>derby</artifactId>
+				<version>10.4.2.0</version>
+			</dependency>
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>4.5</version>
+				<type>jar</type>
+				<scope>test</scope>
+			</dependency>
+			<!--
+				<dependency> <groupId>commons-codec</groupId>
+				<artifactId>commons-codec</artifactId> <version>1.3</version>
+				</dependency> <dependency> <groupId>commons-logging</groupId>
+				<artifactId>commons-logging</artifactId> <version>1.1.1</version>
+				</dependency> <dependency> <groupId>org.apache.derby</groupId>
+				<artifactId>derby</artifactId> <version>10.4.2.0</version>
+				</dependency>
+			-->
+		</dependencies>
+	</dependencyManagement>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<configuration>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
+					<encoding>UTF-8</encoding>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<distributionManagement>
+		<repository>
+			<id>googlecode.svn.gwtwiki</id>
+			<url>dav:https://gwtwiki.googlecode.com/svn/maven-repository/</url>
+		</repository>
+		<snapshotRepository>
+			<id>googlecode.svn.gwtwiki</id>
+			<url>dav:https://gwtwiki.googlecode.com/svn/maven-snapshot-repository/</url>
+			<uniqueVersion>false</uniqueVersion>
+		</snapshotRepository>
+	</distributionManagement>
+</project>

@@ -1,0 +1,712 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+
+<project xmlns              = "http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi          = "http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation = "http://maven.apache.org/POM/4.0.0
+                               http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>17</version>
+  </parent>
+
+
+
+  <!-- ==============================================================
+         Project description. The <organization> and <licenses>
+         elements are inherited from the parent Apache pom.xml.
+       ============================================================== -->
+  <groupId>org.apache.sis</groupId>
+  <artifactId>parent</artifactId>
+  <version>0.6</version>
+  <packaging>pom</packaging>
+
+  <name>Apache SIS</name>
+  <url>http://sis.apache.org</url>
+  <description>
+  <!-- Left alignment because this description will be copied in META-INF/MANIFEST.MF
+       The leading space after the first line is necessary for proper formatting. -->
+Apache SIS is a free software, Java language library for developing geospatial applications.
+ SIS provides data structures for geographic data and associated metadata along with methods
+ to manipulate those data structures. The SIS metadata module forms the base of the library
+ and enables the creation of metadata objects which comply with the ISO 19115 metadata model
+ and which can be read from or written to ISO 19139 compliant XML documents.
+ The SIS referencing module will enable the construction of geodetic data structures for
+ geospatial referencing based on the ISO 19111 model such as axis, projection and coordinate
+ reference system definitions, along with the associated operations which enable the mathematical
+ conversion of coordinates between different systems of reference.
+ The SIS storage modules will provide a common approach to the reading and writing of grid coverages
+ applicable to simple imagery as to many dimensional data structures.
+  </description>
+  <inceptionYear>2010</inceptionYear>
+
+
+
+  <!-- ==============================================================
+         Source code repository, issue managements and mailing lists.
+       ============================================================== -->
+  <scm>
+    <connection>
+      scm:svn:http://svn.apache.org/repos/asf/sis/tags/0.6
+    </connection>
+    <developerConnection>
+      scm:svn:https://svn.apache.org/repos/asf/sis/tags/0.6
+    </developerConnection>
+    <url>http://svn.apache.org/viewvc/sis/tags/0.6</url>
+  </scm>
+
+  <ciManagement>
+    <system>jenkins</system>
+    <url>https://builds.apache.org/job/sis-trunk</url>
+  </ciManagement>
+
+  <issueManagement>
+    <system>JIRA</system>
+    <url>https://issues.apache.org/jira/browse/SIS</url>
+  </issueManagement>
+
+  <mailingLists>
+    <mailingList>
+      <name>Development mailing list</name>
+      <subscribe>dev-subscribe@sis.apache.org</subscribe>
+      <unsubscribe>dev-unsubscribe@sis.apache.org</unsubscribe>
+      <post>dev@sis.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/sis-dev/</archive>
+    </mailingList>
+    <mailingList>
+      <name>Commit mailing list</name>
+      <subscribe>commits-subscribe@sis.apache.org</subscribe>
+      <unsubscribe>commits-unsubscribe@sis.apache.org</unsubscribe>
+      <post>commits@sis.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/sis-commits/</archive>
+    </mailingList>
+    <mailingList>
+      <name>User mailing list</name>
+      <subscribe>user-subscribe@sis.apache.org</subscribe>
+      <unsubscribe>user-unsubscribe@sis.apache.org</unsubscribe>
+      <post>user@sis.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/sis-user/</archive>
+    </mailingList>
+  </mailingLists>
+
+
+
+  <!-- ==============================================================
+         Developers and Contributors.
+       ============================================================== -->
+  <developers>
+    <developer>
+      <name>Adam Estrada</name>
+      <id>aestrada</id>
+      <roles>
+        <role>chair</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Chris A. Mattmann</name>
+      <id>mattmann</id>
+      <email>mattmann@apache.org</email>
+      <url>http://sunset.usc.edu/~mattmann/</url>
+      <organization>NASA Jet Propulsion Laboratory</organization>
+      <organizationUrl>http://www.jpl.nasa.gov</organizationUrl>
+      <timezone>-8</timezone>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Joseph F. White</name>
+      <id>jwhite</id>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Martin Desruisseaux</name>
+      <id>desruisseaux</id>
+      <email>desruisseaux@apache.org</email>
+      <organization>Geomatys</organization>
+      <organizationUrl>http://www.geomatys.com</organizationUrl>
+      <timezone>+1</timezone>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Patrick O'Leary</name>
+      <id>pjaol</id>
+      <email>pjaol@apache.org</email>
+      <organization>AT&amp;T Interactive</organization>
+      <organizationUrl>http://www.attinteractive.com</organizationUrl>
+      <timezone>-8</timezone>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Paul Michael Ramirez</name>
+      <id>pramirez</id>
+      <email>pramirez@apache.org</email>
+      <url>http://people.apache.org/~pramirez/</url>
+      <organization>NASA Jet Propulsion Laboratory</organization>
+      <organizationUrl>http://www.jpl.nasa.gov</organizationUrl>
+      <timezone>-8</timezone>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Sean McCleese</name>
+      <id>smcclees</id>
+      <email>smcclees@apache.org</email>
+      <organization>NASA Jet Propulsion Laboratory</organization>
+      <organizationUrl>http://www.jpl.nasa.gov</organizationUrl>
+      <timezone>-8</timezone>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Travis L. Pinney</name>
+      <id>tlpinney</id>
+      <email>travis.pinney@gmail.com</email>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Nga Chung</name>
+      <id>nchung</id>
+      <email>nchung@apache.org</email>
+      <organization>NASA Jet Propulsion Laboratory</organization>
+      <organizationUrl>http://www.jpl.nasa.gov</organizationUrl>
+      <timezone>-8</timezone>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+  </developers>
+
+  <contributors>
+    <contributor>
+      <name>Adrian Custer</name>
+      <roles>
+        <role>documentation</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Andrew Hart</name>
+      <!-- id>ahart</id -->
+    </contributor>
+    <contributor>
+      <name>Charitha</name>
+      <!-- id>charithcc</id -->
+    </contributor>
+    <contributor>
+      <name>Cédric Briançon</name>
+      <email>cedric.briancon@geomatys.com</email>
+      <organization>Geomatys</organization>
+      <organizationUrl>http://www.geomatys.com</organizationUrl>
+      <timezone>+1</timezone>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Christina Hough</name>
+      <roles>
+        <role>translator</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Gregory D. Reddin</name>
+      <!-- id>greddin</id -->
+      <roles>
+        <role>mentor</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Guilhem Legal</name>
+      <email>guilhem.legal@geomatys.com</email>
+      <organization>Geomatys</organization>
+      <organizationUrl>http://www.geomatys.com</organizationUrl>
+      <timezone>+1</timezone>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Ian Holsman</name>
+      <!-- id>ianh</id -->
+      <roles>
+        <role>mentor</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Joe Schaefer</name>
+      <!-- id>joes</id -->
+      <roles>
+        <role>mentor</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Johann Sorel</name>
+      <email>johann.sorel@geomatys.com</email>
+      <organization>Geomatys</organization>
+      <organizationUrl>http://www.geomatys.com/</organizationUrl>
+      <timezone>+1</timezone>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Kevan Miller</name>
+      <roles>
+        <role>mentor</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Peter Karich</name>
+      <!-- id>pk</id -->
+    </contributor>
+    <contributor>
+      <name>Ross Laidlaw</name>
+      <!-- id>rlaidlaw</id -->
+    </contributor>
+    <contributor>
+      <name>Touraïvane</name>
+      <organization>Institut de Recherche pour le Développement (IRD)</organization>
+      <organizationUrl>http://www.ird.fr</organizationUrl>
+      <timezone>+11</timezone>
+      <roles>
+        <role>developer</role>
+      </roles>
+    </contributor>
+  </contributors>
+
+
+
+  <!-- ==============================================================
+         Dependency management. If a POM in a child module declares
+         one of those dependencies, then it will use the version
+         specified here. Otherwise, those dependencies are ignored.
+
+         See http://search.maven.org/ for latest version numbers.
+       ============================================================== -->
+  <dependencyManagement>
+    <dependencies>
+      <!-- Import all dependency management used by the GeAPI project.
+           This include JUnit and units of measurement. -->
+      <dependency>
+        <groupId>org.opengis</groupId>
+        <artifactId>geoapi-parent</artifactId>
+        <version>${geoapi.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.opengis</groupId>
+        <artifactId>geoapi</artifactId>
+        <version>${geoapi.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.opengis</groupId>
+        <artifactId>geoapi-conformance</artifactId>
+        <version>${geoapi.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- Libraries (language, XML, network) -->
+      <dependency>
+        <groupId>com.esri.geometry</groupId>
+        <artifactId>esri-geometry-api</artifactId>
+        <version>1.2.1</version>
+      </dependency>
+      <dependency>
+        <groupId>gov.nist.math</groupId>
+        <artifactId>jama</artifactId>
+        <version>1.0.3</version>
+      </dependency>
+      <dependency>
+        <groupId>javax</groupId>
+        <artifactId>javaee-api</artifactId>
+        <version>6.0</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-compress</artifactId>
+        <version>1.9</version>
+      </dependency>
+
+      <!-- Optional dependencies -->
+      <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>org.osgi.core</artifactId>
+        <version>5.0.0</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>edu.ucar</groupId>
+        <artifactId>cdm</artifactId>
+        <version>${netcdf.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-jdk14</artifactId>
+        <version>1.7.5</version> <!-- Must matches the version used by NetCDF. -->
+        <scope>runtime</scope> <!-- Should never be needed at compile time. -->
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+
+
+  <!-- ===========================================================
+           Dependencies to be inherited by all modules.
+       =========================================================== -->
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+
+
+  <!-- ===================================================================
+         Properties used in dependency management and build configuration.
+         The last properties in this list depend on the Apache SIS branch.
+       =================================================================== -->
+  <properties>
+    <netcdf.version>4.4.2</netcdf.version> <!-- Last version compatible with JDK6. -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <website.encoding>UTF-8</website.encoding>
+    <website.locale>en</website.locale>
+
+    <!-- Following properties are branch-specific -->
+    <maven.compile.source>1.6</maven.compile.source>
+    <maven.compile.target>1.6</maven.compile.target>
+    <sis.plugin.version>0.6</sis.plugin.version>
+    <geoapi.version>3.0.0</geoapi.version>
+  </properties>
+
+  <profiles>
+    <profile>
+      <id>apache-release</id>
+      <properties>
+        <maven.compiler.debug>false</maven.compiler.debug> <!-- For smaller JAR files size. -->
+        <maven.compiler.optimize>true</maven.compiler.optimize>
+      </properties>
+    </profile>
+    <profile>
+      <id>jdk8</id>
+      <activation>
+        <jdk>1.8</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <configuration>
+              <additionalparam>
+                -Xdoclint:syntax -Xdoclint:html -Xdoclint:missing -Xdoclint:accessibility
+              </additionalparam>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <activation>
+        <property>
+          <name>bootclasspath</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <compilerArgs>
+                <arg>-bootclasspath</arg>
+                <arg>${bootclasspath}</arg>
+              </compilerArgs>
+            </configuration>
+          </plugin>
+          <plugin>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <configuration>
+              <bootclasspath>${bootclasspath}</bootclasspath>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+
+
+  <!-- ==============================================================
+         Build configuration.
+         See http://maven.apache.org/plugins/ for a plugins list.
+       ============================================================== -->
+  <build>
+    <plugins>
+
+      <!-- Compile -->
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>${maven.compile.source}</source>
+          <target>${maven.compile.target}</target>
+          <encoding>${project.build.sourceEncoding}</encoding>
+          <useIncrementalCompilation>false</useIncrementalCompilation> <!-- https://jira.codehaus.org/browse/MCOMPILER-209 -->
+          <compilerArgs>
+            <arg>-Xlint</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+
+      <!-- Execute test suites instead of individual test cases. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <includes>
+            <include>**/*TestSuite.java</include>
+          </includes>
+        </configuration>
+      </plugin>
+
+      <!-- JAR packaging
+           Note: <index> and <addClasspath> are mutually exclusive: when both are enabled,
+           the META-INF/INDEX.LIST file has precedence over the "Class-Path" entry in the
+           META-INF/MANIFEST.MF file,  thus causing java.lang.NoClassDefFoundError if the
+           INDEX.LIST file is incomplete (which seem to happen in practice). -->
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <addMavenDescriptor>false</addMavenDescriptor>
+            <index>false</index>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+            </manifest>
+            <manifestEntries>
+              <Built-On>${maven.build.timestamp}</Built-On>
+              <Implementation-URL>${project.url}</Implementation-URL>
+              <Specification-Title>GeoAPI</Specification-Title>
+              <Specification-Version>${geoapi.version}</Specification-Version>
+              <Specification-Vendor>Open Geospatial Consortium</Specification-Vendor>
+            </manifestEntries>
+          </archive>
+          <skipIfEmpty>true</skipIfEmpty>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Set "*-source-release.zip" filename prefix to "sis-*" instead of "parent-*" -->
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>source-release-assembly</id>
+            <configuration>
+              <finalName>sis-${project.version}</finalName>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Package as OSGi bundle -->
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>2.5.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <excludeDependencies>true</excludeDependencies>
+          <instructions>
+            <Bundle-DocURL>${project.url}</Bundle-DocURL>
+          </instructions>
+        </configuration>
+      </plugin>
+
+      <!-- Checkstype configuration
+           Omitted from the JDK6 branch because Checkstyle requires a higher JDK version. -->
+
+      <!-- JavaDoc configuration. -->
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.10.3</version>
+        <configuration>
+          <source>${maven.compile.source}</source>              <!-- Enables javadoc to handle language constructs present in target JDK. -->
+          <encoding>${project.build.sourceEncoding}</encoding>  <!-- Encoding of Java source file. -->
+          <docencoding>${website.encoding}</docencoding>        <!-- Encoding of the generated HTML files. -->
+          <charset>${website.encoding}</charset>                <!-- Encoding to declare in the HTML META tag. -->
+          <locale>${website.locale}</locale>                    <!-- Locale for navigation bar, help file contents, etc. -->
+          <author>false</author>                                <!-- Excludes the authors text in the generated docs. -->
+          <version>false</version>                              <!-- Excludes the version text in the generated docs. -->
+          <noqualifier>all</noqualifier>                        <!-- Omit qualifying package name before class names in output. -->
+          <quiet>true</quiet>                                   <!-- Shuts off non-error and non-warning messages. -->
+          <keywords>true</keywords>                             <!-- Adds HTML meta keyword tags to the generated files. -->
+          <breakiterator>true</breakiterator>                   <!-- Better boundary detection when determining the end of the first sentence. -->
+          <validateLinks>true</validateLinks>                   <!-- Validates content of package-list resources. -->
+          <links>
+            <link>http://www.geoapi.org/3.0/javadoc</link>
+          </links>
+
+          <!-- Separates packages on the overview page into the groups specified. -->
+          <groups>
+            <group>
+              <title>Testing tools</title> <!-- Exists in test javadoc only. -->
+              <packages>org.apache.sis.test*</packages>
+            </group>
+            <group>
+              <title>Applications</title>
+              <packages>org.apache.sis.console*:org.apache.sis.services*</packages>
+            </group>
+            <group>
+              <title>Data storage</title>
+              <packages>org.apache.sis.storage*:org.apache.sis.index*</packages>
+            </group>
+            <group>
+              <title>Feature and Geometry</title>
+              <packages>org.apache.sis.feature*:org.apache.sis.geometry*</packages>
+            </group>
+            <group>
+              <title>Referencing</title>
+              <packages>org.apache.sis.referencing*:org.apache.sis.parameter*:org.apache.sis.distance*</packages>
+            </group>
+            <group>
+              <title>Metadata</title>
+              <packages>org.apache.sis.metadata*:org.apache.sis.io.wkt</packages>
+            </group>
+            <group>
+              <title>Utilities</title>
+              <packages>org.apache.sis.math*:org.apache.sis.measure*:org.apache.sis.util*:org.apache.sis.io*:org.apache.sis.xml*:org.apache.sis.setup*</packages>
+            </group>
+            <group>
+              <title>Profiles</title>
+              <packages>org.apache.sis.profile*</packages>
+            </group>
+          </groups>
+
+          <!-- Internal packages to hide from javadoc. -->
+          <excludePackageNames>org.apache.sis.internal:org.apache.sis.util.resources:org.apache.sis.referencing.operation.provider:com:org.opengis</excludePackageNames>
+
+          <!-- Custom taglets, some of them implemented in Java. -->
+          <tags>
+            <tag><placement>t</placement> <name>goal</name>     <head>Maven goal:</head></tag>
+            <tag><placement>t</placement> <name>phase</name>    <head>Maven phase:</head></tag>
+            <tag><placement>X</placement> <name>category</name> <head>Category:</head></tag>
+            <tag><placement>a</placement> <name>todo</name>     <head>TODO:</head></tag>
+          </tags>
+          <taglets>
+            <taglet><tagletClass>org.apache.sis.internal.taglet.Module</tagletClass></taglet>
+            <taglet><tagletClass>org.apache.sis.internal.taglet.Include</tagletClass></taglet>
+            <taglet><tagletClass>org.apache.sis.internal.taglet.Preformat</tagletClass></taglet>
+          </taglets>
+          <doclet>org.apache.sis.internal.doclet.Doclet</doclet>
+          <tagletArtifact>
+            <groupId>org.apache.sis.core</groupId>
+            <artifactId>sis-build-helper</artifactId>
+            <version>${sis.plugin.version}</version>
+          </tagletArtifact>
+          <docletArtifact>
+            <groupId>org.apache.sis.core</groupId>
+            <artifactId>sis-build-helper</artifactId>
+            <version>${sis.plugin.version}</version>
+          </docletArtifact>
+        </configuration>
+      </plugin>
+
+      <!-- Create web site. The Maven generated site is not deployed at the URL
+           declared in this pom.xml (namely http://sis.apache.org). Consequently,
+           we disable links relativization for avoiding confusing behavior. -->
+      <plugin>
+        <artifactId>maven-site-plugin</artifactId>
+        <configuration>
+          <locales>${website.locale}</locales>
+          <inputEncoding>${project.build.sourceEncoding}</inputEncoding>
+          <outputEncoding>${website.encoding}</outputEncoding>
+          <relativizeDecorationLinks>false</relativizeDecorationLinks>
+        </configuration>
+      </plugin>
+
+      <!-- Dependencies requires for the SIS FindBugs configuration file. -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <version>2.5.3</version>
+        <dependencies>
+          <dependency>
+            <groupId>org.apache.sis.core</groupId>
+            <artifactId>sis-build-helper</artifactId>
+            <version>${sis.plugin.version}</version>
+          </dependency>
+        </dependencies>
+      </plugin>
+    </plugins>
+
+    <!-- Following plugins are used only by some specific modules. -->
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>1.9.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.mortbay.jetty</groupId>
+          <artifactId>jetty-maven-plugin</artifactId>
+          <version>8.1.14.v20131031</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
+
+
+
+  <!-- ==============================================================
+         Group of modules to build in approximate dependency order.
+       ============================================================== -->
+  <modules>
+    <module>core</module>
+    <module>storage</module>
+    <module>application</module>
+    <module>profiles</module>
+  </modules>
+
+</project>

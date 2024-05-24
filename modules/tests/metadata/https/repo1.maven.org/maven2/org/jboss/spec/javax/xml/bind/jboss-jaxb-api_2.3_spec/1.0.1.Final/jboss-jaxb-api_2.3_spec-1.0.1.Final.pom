@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.jboss</groupId>
+    <artifactId>jboss-parent</artifactId>
+    <version>25</version>
+  </parent>
+
+  <groupId>org.jboss.spec.javax.xml.bind</groupId>
+  <artifactId>jboss-jaxb-api_2.3_spec</artifactId>
+  <version>1.0.1.Final</version>
+  <packaging>jar</packaging>
+
+  <name>Java Architecture for XML Binding 2.3</name>
+  <description>JSR-000222: Java(TM) Architecture for XML Binding (JAXB) 2.3</description>
+
+  <licenses>
+    <license>
+      <name>CDDL or GPLv2 with exceptions</name>
+      <url>https://glassfish.dev.java.net/public/CDDL+GPL_1_1.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <scm>
+    <connection>scm:git:git@github.com:jboss/jboss-jaxb-api_spec.git</connection>
+    <developerConnection>scm:git:git@github.com:jboss/jboss-jaxb-api_spec.git</developerConnection>
+    <url>https://github.com/jboss/jboss-jaxb-api_spec</url>
+    <tag>jboss-jaxb-api_2.3_spec-1.0.1.Final</tag>
+  </scm>
+  
+  <build>
+    <plugins>
+      <!-- Include LICENSE.txt in the META-INF directory -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>process-resources</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <resources>          
+                <resource>
+                  <directory>${basedir}</directory>
+                  <includes>
+                    <include>LICENSE</include>
+                    <include>README</include>
+                  </includes>
+                </resource>
+              </resources>              
+              <outputDirectory>${project.build.outputDirectory}/META-INF</outputDirectory>
+            </configuration>            
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- Generate the OSGi jar Manifest. -->
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>bundle-manifest</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>manifest</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <archive>
+            <manifest>
+              <addDefaultSpecificationEntries>false</addDefaultSpecificationEntries>
+            </manifest>
+            <manifestEntries>
+              <Automatic-Module-Name>java.xml.bind</Automatic-Module-Name>
+            </manifestEntries>
+          </archive>
+          <instructions>
+            <Specification-Title>JSR-000222: Java(TM) Architecture for XML Binding (JAXB)</Specification-Title>
+            <Specification-Vendor>Oracle</Specification-Vendor>
+            <Specification-Version>2.3</Specification-Version>
+            <!-- Set the package version to match the spec version -->
+            <Export-Package>
+              javax.xml.bind*;version=2.3
+            </Export-Package>
+          </instructions>
+        </configuration>
+      </plugin>
+      <!-- Add the OSGi Manifest to the main jar -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestFile>${project.build.outputDirectory}/META-INF/MANIFEST.MF</manifestFile>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Specification-Title>JSR-000222: Java(TM) Architecture for XML Binding (JAXB)</Specification-Title>
+              <Specification-Vendor>Oracle</Specification-Vendor>
+              <Specification-Version>2.3</Specification-Version>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+
+  </build>
+
+</project>

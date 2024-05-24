@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+
+    <packaging>jar</packaging>
+    <groupId>org.webjars</groupId>
+    <artifactId>esprima</artifactId>
+    <version>13001.1.0-dev-harmony-fb</version>
+    <name>esprima</name>
+    <description>WebJar for esprima</description>
+    <url>http://webjars.org</url>
+
+    <licenses>
+        <license>
+            <name>Apache v2.0</name>
+            <url>https://github.com/facebook/esprima/blob/fb-harmony/LICENSE.BSD</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <scm>
+        <url>http://github.com/webjars/esprima</url>
+        <connection>scm:git:https://github.com/webjars/esprima.git</connection>
+        <developerConnection>scm:git:https://github.com/webjars/esprima.git</developerConnection>
+        <tag>esprima-13001.1.0-dev-harmony-fb</tag>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>ddispaltro</id>
+            <name>Dan Di Spaltro</name>
+            <email>dan.dispaltro@gmail.com</email>
+        </developer>
+        <developer>
+            <id>jamesward</id>
+            <name>James Ward</name>
+            <email>james@jamesward.org</email>
+        </developer>
+        <developer>
+            <id>jroper</id>
+            <name>James Roper</name>
+        </developer>
+        <developer>
+            <id>huntchr</id>
+            <name>Christopher Hunt</name>
+        </developer>
+    </developers>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <upstreamVersion>13001.1.0-dev-harmony-fb</upstreamVersion>
+        <sourceUrl>https://github.com/facebook/esprima/archive</sourceUrl>
+        <destDir>${project.build.outputDirectory}/META-INF/resources/webjars/${project.artifactId}/${upstreamVersion}</destDir>
+        <extractDir>${project.build.directory}/esprima-${upstreamVersion}</extractDir>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>wagon-maven-plugin</artifactId>
+                <version>1.0-beta-4</version>
+                <executions>
+                    <execution>
+                        <id>download-js</id>
+                        <phase>process-resources</phase>
+                        <goals><goal>download-single</goal></goals>
+                        <configuration>
+                            <url>${sourceUrl}</url>
+                            <fromFile>${upstreamVersion}.zip</fromFile>
+                            <toFile>${project.build.directory}/esprima.zip</toFile>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.7</version>
+                <executions>
+                    <execution>
+                        <phase>process-resources</phase>
+                        <id>unzip</id>
+                        <goals><goal>run</goal></goals>
+                        <configuration>
+                            <target>
+                                <echo message="unzip archive" />
+                                <unzip src="${project.build.directory}/esprima.zip" dest="${project.build.directory}" />
+                                <echo message="moving resources" />
+                                <move file="${extractDir}/esprima.js" todir="${destDir}" />
+                                <move file="${extractDir}/package.json" todir="${destDir}" />
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.1</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.5</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>sonatype-nexus-staging</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>

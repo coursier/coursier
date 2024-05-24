@@ -1,0 +1,209 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>nd4j-backends</artifactId>
+        <groupId>org.nd4j</groupId>
+        <version>0.5.0</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>nd4j-backend-impls</artifactId>
+    <packaging>pom</packaging>
+
+    <name>nd4j-backend-impls</name>
+
+    <modules>
+        <module>nd4j-native</module>
+        <module>nd4j-native-platform</module>
+        <module>nd4j-cuda-7.5</module>
+        <module>nd4j-cuda-7.5-platform</module>
+    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <properties>
+        <dependency.groupId>${project.groupId}</dependency.groupId>
+        <dependency.artifactId>${project.artifactId}</dependency.artifactId>
+        <dependency.version>${project.version}</dependency.version>
+        <dependency.packaging>${project.packaging}</dependency.packaging>
+        <dependency.classifier>${javacpp.platform}</dependency.classifier>
+        <javacpp.platform0 />
+        <javacpp.platform1>linux-x86_64</javacpp.platform1>
+        <javacpp.platform2>macosx-x86_64</javacpp.platform2>
+        <javacpp.platform3>windows-x86_64</javacpp.platform3>
+        <javacpp.platform4>linux-ppc64le</javacpp.platform4>
+        <javacpp.platform5 />
+        <javacpp.platform6 />
+        <javacpp.platform7 />
+        <javacpp.platform8 />
+        <javacpp.platform9 />
+    </properties>
+
+
+    <build>
+        <testSourceDirectory>../nd4j-tests/src/test/java</testSourceDirectory>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.19.1</version>
+                    <configuration>
+                        <argLine>-Xmx1024m</argLine>
+                        <environmentVariables>
+                            <LD_LIBRARY_PATH>${env.LD_LIBRARY_PATH}:${user.dir}</LD_LIBRARY_PATH>
+                        </environmentVariables>
+                        <includes>
+                            <include>**/Nd4jTestSuite.java</include>
+                        </includes>
+                        <excludes>
+                            <exclude>**/Test*.java</exclude>
+                            <exclude>**/*Test.java</exclude>
+                            <exclude>**/*TestCase.java</exclude>
+                        </excludes>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>2.3</version>
+                    <configuration>
+                        <createChecksum>true</createChecksum>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>default-jar</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                            <configuration>
+                                <excludes>
+                                    <exclude>org/nd4j/nativeblas/${javacpp.platform}/*</exclude>
+                                </excludes>
+                            </configuration>
+                        </execution>
+                        <execution>
+                            <id>${javacpp.platform}</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                            <configuration>
+                                <classifier>${javacpp.platform}</classifier>
+                                <skipIfEmpty>true</skipIfEmpty>
+                                <includes>
+                                    <include>org/nd4j/nativeblas/${javacpp.platform}/*</include>
+                                </includes>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+
+
+        </pluginManagement>
+    </build>
+
+    <!-- Disable platform dependency when building the artifact for the dependency itself -->
+    <profiles>
+        <profile>
+            <id>no-platform-dependency</id>
+            <activation>
+                <file>
+                    <exists>${basedir}</exists>
+                </file>
+            </activation>
+            <properties>
+                <dependency.groupId>${project.parent.groupId}</dependency.groupId>
+                <dependency.artifactId>${project.artifactId}</dependency.artifactId>
+                <dependency.version>${project.parent.version}</dependency.version>
+                <dependency.packaging>pom</dependency.packaging>
+                <dependency.classifier />
+            </properties>
+        </profile>
+
+        <profile>
+            <id>javacpp-platform-zero</id>
+            <activation>
+                <file>
+                    <exists>${user.dir}</exists>
+                </file>
+            </activation>
+            <properties>
+                <javacpp.platform0>${javacpp.platform}</javacpp.platform0>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>javacpp-platform-one</id>
+            <activation>
+                <property>
+                    <name>javacpp.platform</name>
+                </property>
+            </activation>
+            <properties>
+                <javacpp.platform0>${javacpp.platform}</javacpp.platform0>
+                <javacpp.platform1>${javacpp.platform}</javacpp.platform1>
+                <javacpp.platform2>${javacpp.platform}</javacpp.platform2>
+                <javacpp.platform3>${javacpp.platform}</javacpp.platform3>
+                <javacpp.platform4>${javacpp.platform}</javacpp.platform4>
+                <javacpp.platform5>${javacpp.platform}</javacpp.platform5>
+                <javacpp.platform6>${javacpp.platform}</javacpp.platform6>
+                <javacpp.platform7>${javacpp.platform}</javacpp.platform7>
+                <javacpp.platform8>${javacpp.platform}</javacpp.platform8>
+                <javacpp.platform9>${javacpp.platform}</javacpp.platform9>
+            </properties>
+        </profile>
+
+        <profile>
+            <id>javacpp-platform-none</id>
+            <activation>
+                <property>
+                    <name>javacpp.platform</name>
+                    <value>none</value>
+                </property>
+            </activation>
+            <properties>
+                <javacpp.platform0 />
+                <javacpp.platform1 />
+                <javacpp.platform2 />
+                <javacpp.platform3 />
+                <javacpp.platform4 />
+                <javacpp.platform5 />
+                <javacpp.platform6 />
+                <javacpp.platform7 />
+                <javacpp.platform8 />
+                <javacpp.platform9 />
+            </properties>
+        </profile>
+
+        <profile>
+            <id>javacpp-platform-build</id>
+            <activation>
+                <file>
+                    <exists>${basedir}</exists>
+                </file>
+            </activation>
+            <properties>
+                <javacpp.platform0 />
+                <javacpp.platform1 />
+                <javacpp.platform2 />
+                <javacpp.platform3 />
+                <javacpp.platform4 />
+                <javacpp.platform5 />
+                <javacpp.platform6 />
+                <javacpp.platform7 />
+                <javacpp.platform8 />
+                <javacpp.platform9 />
+            </properties>
+        </profile>
+    </profiles>
+
+</project>

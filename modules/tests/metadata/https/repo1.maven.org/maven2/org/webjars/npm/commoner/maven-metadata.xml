@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <groupId>org.webjars.npm</groupId>
+  <artifactId>commoner</artifactId>
+  <versioning>
+    <latest>0.10.8</latest>
+    <release>0.10.8</release>
+    <versions>
+      <version>0.10.0</version>
+      <version>0.10.1</version>
+      <version>0.10.3</version>
+      <version>0.10.8</version>
+    </versions>
+    <lastUpdated>20171113182401</lastUpdated>
+  </versioning>
+</metadata>

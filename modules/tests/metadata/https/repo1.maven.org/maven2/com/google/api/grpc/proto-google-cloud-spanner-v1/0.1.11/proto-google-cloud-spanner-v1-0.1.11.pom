@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.google.api.grpc</groupId>
+  <artifactId>proto-google-cloud-spanner-v1</artifactId>
+  <version>0.1.11</version>
+  <name>com.google.api.grpc:proto-google-cloud-spanner-v1</name>
+  <description>PROTO library for proto-google-cloud-spanner-v1</description>
+  <url>https://github.com/googleapis/googleapis</url>
+  <licenses>
+    <license>
+      <name>Apache-2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>Google Inc</id>
+      <name>Google Inc</name>
+      <email>googleapis-packages@google.com</email>
+      <url>https://github.com/googleapis/googleapis</url>
+      <organization>org.apache.maven.model.Organization@7a98baca</organization>
+      <organizationUrl>https://www.google.com</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:https://github.com/googleapis/googleapis</connection>
+    <url>https://github.com/googleapis/googleapis</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>com.google.api.grpc</groupId>
+      <artifactId>proto-google-common-protos</artifactId>
+      <version>0.1.11</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.protobuf</groupId>
+      <artifactId>protobuf-java</artifactId>
+      <version>3.2.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.google.api</groupId>
+      <artifactId>api-common</artifactId>
+      <version>1.0.0-rc1</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+</project>

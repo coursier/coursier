@@ -1,0 +1,69 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>4</version>
+  </parent>
+  <groupId>com.almworks.sqlite4java</groupId>
+  <artifactId>libsqlite4java-linux-amd64</artifactId>
+  <packaging>so</packaging>
+  <name>sqlite4java native library (linux-amd64)</name>
+  <version>1.0.392</version>
+  <description>Native library for sqlite4java (linux-amd64), includes SQLite</description>
+  <url>http://code.google.com/p/sqlite4java</url>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>sqlite4java library is distributed on Apache License terms.</comments>
+    </license>
+    <license>
+      <name>Public Domain</name>
+      <url>http://sqlite.org/copyright.html</url>
+      <distribution>repo</distribution>
+      <comments>SQLite database, distributed in binary form with sqlite4java, is in public domain.</comments>
+    </license>
+  </licenses>
+  <organization>
+    <name>ALM Works</name>
+    <url>http://almworks.com</url>
+  </organization>
+  <scm>
+    <connection>scm:svn:http://sqlite4java.googlecode.com/svn/trunk/</connection>
+    <developerConnection>scm:svn:https://sqlite4java.googlecode.com/svn/trunk/</developerConnection>
+    <url>http://sqlite4java.googlecode.com/svn/trunk/</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>[3.8,)</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.almworks.sqlite4java</groupId>
+      <artifactId>sqlite4java</artifactId>
+      <version>1.0.392</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

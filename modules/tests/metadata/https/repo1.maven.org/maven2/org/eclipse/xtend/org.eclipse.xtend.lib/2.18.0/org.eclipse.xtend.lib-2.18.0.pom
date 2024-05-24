@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.eclipse.xtend</groupId>
+  <artifactId>org.eclipse.xtend.lib</artifactId>
+  <version>2.18.0</version>
+  <name>Eclipse Xtend Runtime Library</name>
+  <description>The runtime library for the Xtend programming language.</description>
+  <url>https://www.eclipse.org/Xtext/</url>
+  <licenses>
+    <license>
+      <name>Eclipse Public License, Version 1.0</name>
+      <url>http://www.eclipse.org/legal/epl-v10.html</url>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>Sven Efftinge</name>
+      <email>sven.efftinge@typefox.io</email>
+      <organization>TypeFox</organization>
+      <organizationUrl>http://typefox.io</organizationUrl>
+    </developer>
+    <developer>
+      <name>Sebastian Benz</name>
+    </developer>
+    <developer>
+      <name>Lorenzo Bettini</name>
+      <email>lorenzo.bettini@gmail.com</email>
+      <organization>DISIA, University Firenze</organization>
+    </developer>
+    <developer>
+      <name>Michael Clay</name>
+    </developer>
+    <developer>
+      <name>Arne Deutsch</name>
+      <email>arne.deutsch@itemis.de</email>
+      <organization>itemis</organization>
+      <organizationUrl>http://www.itemis.com</organizationUrl>
+    </developer>
+    <developer>
+      <name>Christian Dietrich</name>
+      <email>christian.dietrich@itemis.de</email>
+      <organization>itemis</organization>
+      <organizationUrl>http://www.itemis.com</organizationUrl>
+    </developer>
+    <developer>
+      <name>Moritz Eysholdt</name>
+      <email>moritz.eysholdt@typefox.io</email>
+      <organization>TypeFox</organization>
+      <organizationUrl>http://typefox.io</organizationUrl>
+    </developer>
+    <developer>
+      <name>Dennis Hübner</name>
+      <email>dennis.huebner@typefox.io</email>
+      <organization>TypeFox</organization>
+      <organizationUrl>http://typefox.io</organizationUrl>
+    </developer>
+    <developer>
+      <name>Jan Köhnlein</name>
+      <email>jan.koehnlein@typefox.io</email>
+      <organization>TypeFox</organization>
+      <organizationUrl>http://typefox.io</organizationUrl>
+    </developer>
+    <developer>
+      <name>Anton Kosyakov</name>
+      <email>anton.kosyakov@typefox.io</email>
+      <organization>TypeFox</organization>
+      <organizationUrl>http://typefox.io</organizationUrl>
+    </developer>
+    <developer>
+      <name>Tamas Miklossy</name>
+      <email>miklossy@itemis.de</email>
+      <organization>itemis</organization>
+      <organizationUrl>http://www.itemis.com</organizationUrl>
+    </developer>
+    <developer>
+      <name>Stefan Oehme</name>
+    </developer>
+    <developer>
+      <name>Holger Schill</name>
+      <email>holger.schill@itemis.de</email>
+      <organization>itemis</organization>
+      <organizationUrl>http://www.itemis.com</organizationUrl>
+    </developer>
+    <developer>
+      <name>Christian Schneider</name>
+      <email>christian.schneider@typefox.io</email>
+      <organization>TypeFox</organization>
+      <organizationUrl>http://typefox.io</organizationUrl>
+    </developer>
+    <developer>
+      <name>Miro Spönemann</name>
+      <email>miro.spoenemann@typefox.io</email>
+      <organization>TypeFox</organization>
+      <organizationUrl>http://typefox.io</organizationUrl>
+    </developer>
+    <developer>
+      <name>Karsten Thoms</name>
+      <email>karsten.thoms@itemis.de</email>
+      <organization>itemis</organization>
+      <organizationUrl>http://www.itemis.com</organizationUrl>
+    </developer>
+    <developer>
+      <name>Knut Wannheden</name>
+    </developer>
+    <developer>
+      <name>Sebastian Zarnekow</name>
+      <email>sebastian.zarnekow@gmail.com</email>
+      <organization>itemis</organization>
+      <organizationUrl>http://www.itemis.com</organizationUrl>
+    </developer>
+    <developer>
+      <name>Titouan Vervack</name>
+      <email>titouan.vervack@sigasi.com</email>
+      <organization>Sigasi</organization>
+      <organizationUrl>https://www.sigasi.com</organizationUrl>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git:git@github.com:eclipse/xtext-lib.git</connection>
+    <developerConnection>scm:git:git@github.com:eclipse/xtext-lib.git</developerConnection>
+    <url>git@github.com:eclipse/xtext-lib.git</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>org.eclipse.xtext</groupId>
+      <artifactId>org.eclipse.xtext.xbase.lib</artifactId>
+      <version>2.18.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.eclipse.xtend</groupId>
+      <artifactId>org.eclipse.xtend.lib.macro</artifactId>
+      <version>2.18.0</version>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.eclipse.xtext</groupId>
+        <artifactId>xtext-dev-bom</artifactId>
+        <version>2.18.0</version>
+        <scope>import</scope>
+        <type>pom</type>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+</project>

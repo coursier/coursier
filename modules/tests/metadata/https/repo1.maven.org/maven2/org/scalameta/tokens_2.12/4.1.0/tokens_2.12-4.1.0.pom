@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.scalameta</groupId>
+    <artifactId>tokens_2.12</artifactId>
+    <packaging>jar</packaging>
+    <description>Scalameta tokens and token-based abstractions (inputs and positions)</description>
+    <version>4.1.0</version>
+    <licenses>
+        <license>
+            <name>BSD</name>
+            <url>https://github.com/scalameta/scalameta/blob/master/LICENSE.md</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>tokens</name>
+    <organization>
+        <name>org.scalameta</name>
+    </organization>
+    <url>https://github.com/scalameta/scalameta</url>
+    <inceptionYear>2014</inceptionYear>
+    <scm>
+        <url>git://github.com/scalameta/scalameta.git</url>
+        <connection>scm:git:git://github.com/scalameta/scalameta.git</connection>
+    </scm>
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/scalameta/scalameta/issues</url>
+    </issueManagement>
+    <developers>
+        <developer>
+            <id>xeno-by</id>
+            <name>Eugene Burmako</name>
+            <url>http://xeno.by</url>
+        </developer>
+        <developer>
+            <id>DavidDudson</id>
+            <name>David Dudson</name>
+            <url>https://daviddudson.github.io/</url>
+        </developer>
+        <developer>
+            <id>olafurpg</id>
+            <name>Ólafur Páll Geirsson</name>
+            <url>https://geirsson.com/</url>
+        </developer>
+        <developer>
+            <id>mutcianm</id>
+            <name>Mikhail Mutcianko</name>
+            <url>https://github.com/mutcianm</url>
+        </developer>
+        <developer>
+            <id>gabro</id>
+            <name>Max Ovsiankin</name>
+            <url>https://github.com/maxov</url>
+        </developer>
+        <developer>
+            <id>gabro</id>
+            <name>Gabriele Petronella</name>
+            <url>http://buildo.io</url>
+        </developer>
+        <developer>
+            <id>densh</id>
+            <name>Denys Shabalin</name>
+            <url>http://den.sh</url>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.12.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scalameta</groupId>
+            <artifactId>common_2.12</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scalameta</groupId>
+            <artifactId>dialects_2.12</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scalameta</groupId>
+            <artifactId>inputs_2.12</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+            <version>2.12.7</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

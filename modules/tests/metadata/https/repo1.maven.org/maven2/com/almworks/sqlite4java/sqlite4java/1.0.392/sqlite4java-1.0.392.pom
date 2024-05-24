@@ -1,0 +1,100 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.sonatype.oss</groupId>
+    <artifactId>oss-parent</artifactId>
+    <version>4</version>
+  </parent>
+  <groupId>com.almworks.sqlite4java</groupId>
+  <artifactId>sqlite4java</artifactId>
+  <packaging>jar</packaging>
+  <name>sqlite4java</name>
+  <version>1.0.392</version>
+  <description>Minimalistic high-performance Java wrapper for SQLite</description>
+  <url>http://code.google.com/p/sqlite4java</url>
+  <developers>
+    <developer>
+      <id>sereda</id>
+      <name>Igor Sereda</name>
+    </developer>
+    <developer>
+      <id>evjava</id>
+      <name>Eugene Vagin</name>
+    </developer>
+    <developer>
+      <id>dyoma</id>
+      <name>Dmitry Peshehonov</name>
+    </developer>
+  </developers>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <organization>
+    <name>ALM Works</name>
+    <url>http://almworks.com</url>
+  </organization>
+  <issueManagement> 
+    <system>Google code</system> 
+    <url>http://code.google.com/p/sqlite4java/issues/list</url> 
+  </issueManagement> 
+  <scm>
+    <connection>scm:svn:http://sqlite4java.googlecode.com/svn/trunk/</connection>
+    <developerConnection>scm:svn:https://sqlite4java.googlecode.com/svn/trunk/</developerConnection>
+    <url>http://sqlite4java.googlecode.com/svn/trunk/</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>[3.8,)</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>sign-artifacts</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>sign</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.3</version>
+        <executions>
+          <execution>
+            <id>add-jar</id>
+            <phase>deploy</phase>
+            <goals>
+              <goal>attach-artifact</goal>
+            </goals>
+            <configuration>
+              <artifacts>
+                <artifact>
+                  <file>sqlite4java-392/sqlite4java-sources.jar</file>
+              	  <type>jar</type>
+		</artifact>
+                <artifact>
+                  <file>sqlite4java-392/sqlite4java-javadoc.jar</file>
+              	  <type>jar</type>
+		</artifact>
+              </artifacts>
+            </configuration>
+          </execution>
+        </executions>
+       </plugin> 
+    </plugins>
+  </build>
+</project>

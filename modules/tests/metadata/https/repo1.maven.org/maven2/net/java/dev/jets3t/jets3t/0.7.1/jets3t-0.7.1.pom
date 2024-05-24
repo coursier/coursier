@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>net.java.dev.jets3t</groupId>
+	<artifactId>jets3t</artifactId>
+	<packaging>jar</packaging>
+	<version>0.7.1</version>
+	<name>An open source Java toolkit for Amazon S3</name>
+	<description>JetS3t is a free, open-source Java toolkit and application suite for the Amazon Simple Storage Service (Amazon S3). The JetS3t toolkit provides Java programmers with a powerful yet simple API for interacting with S3 and managing data stored there.</description>
+	<url>http://jets3t.s3.amazonaws.com/index.html</url>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<scm>
+		<url>https://jets3t.dev.java.net/source/browse/jets3t/</url>
+	</scm>
+	<dependencies>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.3</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-httpclient</groupId>
+			<artifactId>commons-httpclient</artifactId>
+			<version>3.1</version>
+		</dependency>
+	</dependencies>
+</project>

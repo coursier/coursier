@@ -1,0 +1,98 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <parent>
+    <groupId>io.apigee.trireme</groupId>
+    <artifactId>trireme-node10</artifactId>
+    <version>0.8.5</version>
+  </parent>
+
+  <name>trireme-node10src</name>
+  <artifactId>trireme-node10src</artifactId>
+  <version>0.8.5</version>
+
+  <dependencies>
+    <dependency>
+      <groupId>io.apigee.trireme</groupId>
+      <artifactId>rhino-compiler</artifactId>
+      <version>0.8.5</version>
+      <scope>provided</scope>
+    </dependency>
+      <dependency>
+      <groupId>io.apigee.trireme</groupId>
+      <artifactId>trireme-core</artifactId>
+      <version>0.8.5</version>
+    </dependency>
+    <dependency>
+      <groupId>io.apigee</groupId>
+      <artifactId>rhino</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>io.apigee.trireme</groupId>
+        <artifactId>rhino-compiler</artifactId>
+        <version>${project.version}</version>
+        <executions>
+          <execution>
+            <!-- Scripts that we copied straight from node.js. Loaded as modules so we must wrap them as a function -->
+            <id>compile-fromnode</id>
+            <configuration>
+              <optimizationLevel>9</optimizationLevel>
+              <debugInfo>true</debugInfo>
+              <pattern>io/apigee/trireme/node10/node/*.js</pattern>
+              <codePrefix>(function (exports, require, module, __filename, __dirname) { </codePrefix>
+              <codePostfix>});</codePostfix>
+            </configuration>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+          <execution>
+            <!-- Scripts that we adapted from node.js. Must also be wrapped as a function. -->
+            <id>compile-fromtrireme</id>
+            <configuration>
+              <optimizationLevel>9</optimizationLevel>
+              <debugInfo>true</debugInfo>
+              <pattern>io/apigee/trireme/node10/trireme/*.js</pattern>
+              <!-- When precompiling, wrap native module code in a function as the Node code expects. -->
+              <codePrefix>(function (exports, require, module, __filename, __dirname) { </codePrefix>
+              <codePostfix>});</codePostfix>
+            </configuration>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+          <execution>
+            <!-- The main script, adapted from "node.js". Called directly. -->
+            <id>compile-main</id>
+            <configuration>
+              <optimizationLevel>9</optimizationLevel>
+              <debugInfo>true</debugInfo>
+              <pattern>io/apigee/trireme/node10/main/*.js</pattern>
+            </configuration>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

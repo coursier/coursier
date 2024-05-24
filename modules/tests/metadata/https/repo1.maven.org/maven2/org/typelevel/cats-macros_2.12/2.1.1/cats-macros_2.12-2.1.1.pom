@@ -1,0 +1,119 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.typelevel</groupId>
+    <artifactId>cats-macros_2.12</artifactId>
+    <packaging>jar</packaging>
+    <description>Cats macros</description>
+    <url>https://github.com/typelevel/cats</url>
+    <version>2.1.1</version>
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>http://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>Cats macros</name>
+    <organization>
+        <name>org.typelevel</name>
+        <url>https://github.com/typelevel/cats</url>
+    </organization>
+    <scm>
+        <url>https://github.com/typelevel/cats</url>
+        <connection>scm:git:git@github.com:typelevel/cats.git</connection>
+    </scm>
+    <developers>
+        <developer>
+            <id>ceedubs</id>
+            <name>Cody Allen</name>
+            <url>https://github.com/ceedubs/</url>
+        </developer>
+        <developer>
+            <id>rossabaker</id>
+            <name>Ross Baker</name>
+            <url>https://github.com/rossabaker/</url>
+        </developer>
+        <developer>
+            <id>johnynek</id>
+            <name>P. Oscar Boykin</name>
+            <url>https://github.com/johnynek/</url>
+        </developer>
+        <developer>
+            <id>travisbrown</id>
+            <name>Travis Brown</name>
+            <url>https://github.com/travisbrown/</url>
+        </developer>
+        <developer>
+            <id>adelbertc</id>
+            <name>Adelbert Chang</name>
+            <url>https://github.com/adelbertc/</url>
+        </developer>
+        <developer>
+            <id>peterneyens</id>
+            <name>Peter Neyens</name>
+            <url>https://github.com/peterneyens/</url>
+        </developer>
+        <developer>
+            <id>tpolecat</id>
+            <name>Rob Norris</name>
+            <url>https://github.com/tpolecat/</url>
+        </developer>
+        <developer>
+            <id>non</id>
+            <name>Erik Osheim</name>
+            <url>https://github.com/non/</url>
+        </developer>
+        <developer>
+            <id>LukaJCB</id>
+            <name>LukaJCB</name>
+            <url>https://github.com/LukaJCB/</url>
+        </developer>
+        <developer>
+            <id>mpilquist</id>
+            <name>Michael Pilquist</name>
+            <url>https://github.com/mpilquist/</url>
+        </developer>
+        <developer>
+            <id>milessabin</id>
+            <name>Miles Sabin</name>
+            <url>https://github.com/milessabin/</url>
+        </developer>
+        <developer>
+            <id>djspiewak</id>
+            <name>Daniel Spiewak</name>
+            <url>https://github.com/djspiewak/</url>
+        </developer>
+        <developer>
+            <id>fthomas</id>
+            <name>Frank Thomas</name>
+            <url>https://github.com/fthomas/</url>
+        </developer>
+        <developer>
+            <id>julien-truffaut</id>
+            <name>Julien Truffaut</name>
+            <url>https://github.com/julien-truffaut/</url>
+        </developer>
+        <developer>
+            <id>kailuowang</id>
+            <name>Kailuo Wang</name>
+            <url>https://github.com/kailuowang/</url>
+        </developer>
+    </developers>
+    <properties>
+        <info.apiURL>http://typelevel.org/cats/api/</info.apiURL>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.12.10</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+            <version>2.12.10</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

@@ -1,0 +1,43 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.drools</groupId>
+    <artifactId>droolsjbpm-integration</artifactId>
+    <version>7.27.0.Final</version>
+  </parent>
+
+  <groupId>org.kie.server</groupId>
+  <artifactId>kie-server-parent</artifactId>
+  <packaging>pom</packaging>
+
+  <name>KIE :: Execution Server</name>
+  <description>KIE Execution Server</description>
+
+  <modules>
+    <module>kie-server-common</module>
+    <module>kie-server-remote</module>
+    <module>kie-server-services</module>
+    <module>kie-server-api</module>
+    <module>kie-server-router</module>
+    <module>kie-server-controller</module>
+    <module>kie-server-wars</module>
+    <module>kie-server-tests</module>
+    <module>kie-server-maven-plugin</module>
+    <module>kie-server-controller-plugin</module>
+  </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.kie.soup</groupId>
+        <artifactId>kie-soup-bom</artifactId>
+        <version>${version.org.kie}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+</project>

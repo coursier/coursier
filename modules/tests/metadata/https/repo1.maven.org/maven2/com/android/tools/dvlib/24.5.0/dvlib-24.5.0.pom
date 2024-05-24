@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.android.tools</groupId>
+  <artifactId>dvlib</artifactId>
+  <version>24.5.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>com.android.tools</groupId>
+      <artifactId>common</artifactId>
+      <version>24.5.0</version>
+      <scope>runtime</scope>
+    </dependency>
+  </dependencies>
+  <description>A Library to manage the Android device database XML files.</description>
+  <url>http://tools.android.com/</url>
+  <name>com.android.tools.dvlib</name>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <name>The Android Open Source Project</name>
+    </developer>
+  </developers>
+  <scm>
+    <connection>git://android.googlesource.com/platform/tools/base.git</connection>
+    <url>https://android.googlesource.com/platform/tools/base</url>
+  </scm>
+</project>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+ <!-- General information -->
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>org.codehaus.woodstox</groupId>
+  <artifactId>woodstox-core-asl</artifactId>
+  <packaging>jar</packaging>
+  <name>Woodstox</name>
+  <version>4.4.1</version>
+  <description>Woodstox is a high-performance XML processor that
+implements Stax (JSR-173) and SAX2 APIs</description>
+
+  <!-- Contact information -->
+  <url>http://woodstox.codehaus.org</url>
+  <scm>
+    <url>http://xircles.codehaus.org/projects/woodstox/repos/primary/repo</url>
+  </scm>
+  <issueManagement><url>http://jira.codehaus.org/browse/WSTX</url></issueManagement>
+  <developers>
+    <developer>
+      <id>cowtowncoder</id>
+      <name>Tatu Saloranta</name>
+      <email>tatu@fasterxml.com</email>
+    </developer>
+  </developers>
+
+  <!-- Dependency information -->
+  <dependencies>
+    <!-- Stax API jar is needed; 1.0-2 seems to be the last "official"
+         version prior to JDK 6 that bundles API
+      -->
+    <dependency>
+      <groupId>javax.xml.stream</groupId>
+      <artifactId>stax-api</artifactId>
+      <version>1.0-2</version>
+    </dependency>
+    <!-- Stax2 API (and matching RI), too, is required, not included,
+         We need version 3.x of it
+      -->
+    <dependency>
+      <groupId>org.codehaus.woodstox</groupId>
+      <artifactId>stax2-api</artifactId>
+      <version>3.1.4</version>
+    </dependency>
+  </dependencies>
+
+  <!-- Licensing (joy!) -->
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <organization>
+    <name>Codehaus</name>
+    <url>http://www.codehaus.org/</url>
+  </organization>
+
+</project>

@@ -1,0 +1,135 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.igniterealtime</groupId>
+	<artifactId>whack</artifactId>
+	<version>2.0.0</version>
+	<packaging>pom</packaging>
+	<name>Whack</name>
+	<description>Whack is a Java library that easily allows the	creation of external components that follow the XEP-0114: Jabber Component Protocol.</description>
+	<url>http://www.igniterealtime.org/projects/whack/</url>
+	<inceptionYear>2004</inceptionYear>
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<organization>
+		<name>Ignite Realtime</name>
+		<url>http://www.igniterealtime.org</url>
+	</organization>
+	<developers>
+		<developer>
+			<name>Guus der Kinderen</name>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<email>guus.der.kinderen@gmail.com</email>
+			<timezone>+1</timezone>
+			<organization>Ignite Realtime</organization>
+			<organizationUrl>http://www.igniterealtime.org</organizationUrl>
+		</developer>
+		<developer>
+			<name>Gaston Dombiak</name>
+			<roles>
+				<role>Original Author</role>
+			</roles>
+			<email>gato@jivesoftware.com</email>
+			<organization>Jive Software</organization>
+			<organizationUrl>http://www.jivesoftware.com</organizationUrl>
+			<timezone>-8</timezone>
+		</developer>
+	</developers>
+	<issueManagement>
+		<system>jira</system>
+		<url>http://www.igniterealtime.org/issues/browse/WHACK</url>
+	</issueManagement>
+	<scm>
+		<url>https://github.com/igniterealtime/Whack</url>
+		<connection>scm:git:https://github.com/igniterealtime/Whack.git</connection>
+		<developerConnection>scm:git:https://github.com/igniterealtime/Whack.git</developerConnection>
+	</scm>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.3</version>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>	
+	<modules>
+		<module>source</module>
+		<module>sample/weather</module>
+		<module>sample/weatherabstract</module>
+	</modules>
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+
+	<profiles>
+		<profile>
+			<id>release</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-source-plugin</artifactId>
+						<version>2.4</version>
+						<executions>
+							<execution>
+								<id>attach-sources</id>
+								<goals>
+									<goal>jar-no-fork</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-javadoc-plugin</artifactId>
+						<version>2.10.3</version>
+						<executions>
+							<execution>
+								<id>attach-javadocs</id>
+								<goals>
+									<goal>jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-gpg-plugin</artifactId>
+						<version>1.6</version>
+						<executions>
+							<execution>
+								<id>sign-artifacts</id>
+								<phase>verify</phase>
+								<goals>
+									<goal>sign</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+</project>

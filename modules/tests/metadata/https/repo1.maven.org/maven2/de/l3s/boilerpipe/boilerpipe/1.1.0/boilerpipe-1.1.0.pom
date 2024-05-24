@@ -1,0 +1,35 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.l3s.boilerpipe</groupId>
+  <artifactId>boilerpipe</artifactId>
+  <packaging>jar</packaging>
+  <version>1.1.0</version>
+  <url>http://code.google.com/p/boilerpipe/</url>
+  <licenses>
+  	<license>
+  	  <name>Apache License 2.0</name>
+  	</license>
+  </licenses>
+  <name>Boilerpipe -- Boilerplate Removal and Fulltext Extraction from HTML pages</name>
+  <description>The boilerpipe library provides algorithms to detect and remove the surplus "clutter" (boilerplate, templates) around the main textual content of a web page.
+
+The library already provides specific strategies for common tasks (for example: news article extraction) and may also be easily extended for individual problem settings.
+
+Extracting content is very fast (milliseconds), just needs the input document (no global or site-level information required) and is usually quite accurate.
+
+Boilerpipe is a Java library written by Christian Kohlschütter. It is released under the Apache License 2.0.
+
+The algorithms used by the library are based on (and extending) some concepts of the paper "Boilerplate Detection using Shallow Text Features" by Christian Kohlschütter et al., presented at WSDM 2010 -- The Third ACM International Conference on Web Search and Data Mining New York City, NY USA.
+  </description>
+  <scm>
+    <connection>scm:svn:http://boilerpipe.googlecode.com/svn/trunk/</connection>
+    <url>http://code.google.com/p/boilerpipe/source/browse/</url>
+  </scm>
+  <developers>
+    <developer>
+      <name>Christian Kohlschütter</name>
+    </developer>
+  </developers>
+</project>

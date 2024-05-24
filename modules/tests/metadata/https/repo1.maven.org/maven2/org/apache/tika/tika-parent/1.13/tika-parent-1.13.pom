@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The ASF licenses this file
+  to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing,
+  software distributed under the License is distributed on an
+  "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  KIND, either express or implied.  See the License for the
+  specific language governing permissions and limitations
+  under the License.
+-->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.apache</groupId>
+    <artifactId>apache</artifactId>
+    <version>17</version>
+    <relativePath />
+  </parent>
+
+  <groupId>org.apache.tika</groupId>
+  <artifactId>tika-parent</artifactId>
+  <version>1.13</version>
+  <packaging>pom</packaging>
+
+  <name>Apache Tika parent</name>
+  <description>
+    Apache Tika is a toolkit for detecting and extracting metadata and
+    structured text content from various documents using existing parser
+    libraries.
+  </description>
+  <inceptionYear>2007</inceptionYear>
+
+  <url>http://tika.apache.org/</url>
+
+  <issueManagement>
+    <system>JIRA</system>
+    <url>https://issues.apache.org/jira/browse/TIKA</url>
+  </issueManagement>
+
+  <mailingLists>
+    <mailingList>
+      <name>Development mailing list</name>
+      <subscribe>dev-subscribe@tika.apache.org</subscribe>
+      <unsubscribe>dev-unsubscribe@tika.apache.org</unsubscribe>
+      <post>dev@tika.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/tika-dev/</archive>
+      <otherArchives>
+        <otherArchive>http://mail-archives.apache.org/mod_mbox/lucene-tika-dev</otherArchive>
+        <otherArchive>http://www.mail-archive.com/dev@tika.apache.org</otherArchive>
+        <otherArchive>http://www.mail-archive.com/tika-dev@lucene.apache.org/</otherArchive>
+        <otherArchive>http://www.mail-archive.com/tika-dev@incubator.apache.org/</otherArchive>
+        <otherArchive>http://www.nabble.com/Apache-Tika---Development-f20913.html</otherArchive>
+        <otherArchive>http://news.gmane.org/gmane.comp.apache.tika.devel</otherArchive>
+        <otherArchive>http://tika.markmail.org/</otherArchive>
+      </otherArchives>
+    </mailingList>
+    <mailingList>
+      <name>Commit mailing list</name>
+      <subscribe>commits-subscribe@tika.apache.org</subscribe>
+      <unsubscribe>commits-unsubscribe@tika.apache.org</unsubscribe>
+      <post>commits@tika.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/tika-commits/</archive>
+      <otherArchives>
+        <otherArchive>http://mail-archives.apache.org/mod_mbox/lucene-tika-commits/</otherArchive>
+        <otherArchive>http://www.mail-archive.com/tika-commits@lucene.apache.org/</otherArchive>
+        <otherArchive>http://www.mail-archive.com/tika-commits@incubator.apache.org/</otherArchive>
+      </otherArchives>
+    </mailingList>
+    <mailingList>
+      <name>User mailing list</name>
+      <subscribe>user-subscribe@tika.apache.org</subscribe>
+      <unsubscribe>user-unsubscribe@tika.apache.org</unsubscribe>
+      <post>user@tika.apache.org</post>
+      <archive>http://mail-archives.apache.org/mod_mbox/tika-user/</archive>
+      <otherArchives>
+        <otherArchive>http://mail-archives.apache.org/mod_mbox/lucene-tika-user/</otherArchive>
+        <otherArchive>http://www.mail-archive.com/tika-user@lucene.apache.org/</otherArchive>
+      </otherArchives>
+    </mailingList>
+  </mailingLists>
+
+  <developers>
+    <developer>
+      <name>Rida Benjelloun</name>
+      <id>ridabenjelloun</id>
+      <email>ridabenjelloun@apache.org</email>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Keith Bennett</name>
+      <id>kbennett</id>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Mark Harwood</name>
+      <id>mharwood</id>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Ken Krugler</name>
+      <id>kkrugler</id>
+      <email>kkrugler@apache.org</email>
+      <url>http://ken-blog.krugler.org</url>
+      <organization>Scale Unlimited</organization>
+      <organizationUrl>http://www.scaleunlimited.com</organizationUrl>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Chris A. Mattmann</name>
+      <id>mattmann</id>
+      <email>mattmann@apache.org</email>
+      <url>http://people.apache.org/~mattmann/</url>
+      <organization>NASA Jet Propulsion Laboratory</organization>
+      <organizationUrl>http://www.jpl.nasa.gov</organizationUrl>
+      <timezone>-8</timezone>
+      <properties />
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Michael McCandless</name>
+      <id>mikemccand</id>
+      <email>mikemccand@apache.org</email>
+      <organization>IBM</organization>
+      <properties />
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Dave Meikle</name>
+      <id>dmeikle</id>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Sami Siren</name>
+      <id>siren</id>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Jukka Zitting</name>
+      <id>jukka</id>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Nick Burch</name>
+      <id>nick</id>
+      <organization>Alfresco</organization>
+      <organizationUrl>http://alfresco.com</organizationUrl>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Maxim Valyanskiy</name>
+      <id>maxcom</id>
+      <organization>Jet Infosystems</organization>
+      <roles>
+        <role>committer</role>
+      </roles>
+      <timezone>+3</timezone>
+    </developer>
+    <developer>
+      <name>Oleg Tikhonov</name>
+      <id>oleg</id>
+      <roles>
+        <role>committer</role>
+      </roles>
+      <timezone>+2</timezone>
+    </developer>
+    <developer>
+      <name>Ray Gauss II</name>
+      <id>rgauss</id>
+      <organization>Alfresco</organization>
+      <organizationUrl>http://alfresco.com</organizationUrl>
+      <timezone>-5</timezone>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Tyler Palsulich</name>
+      <id>tpalsulich</id>
+      <timezone>-8</timezone>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Tim Allison</name>
+      <id>tallison</id>
+      <timezone>-5</timezone>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>Konstantin Gribov</name>
+      <id>grossws</id>
+      <timezone>+3</timezone>
+      <roles>
+        <role>committer</role>
+      </roles>
+    </developer>
+  </developers>
+  <contributors>
+    <contributor>
+      <name>Doug Cutting</name>
+      <roles>
+        <role>mentor</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Bertrand Delacretaz</name>
+      <roles>
+        <role>mentor</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Niall Pemberton</name>
+      <roles>
+        <role>emeritus</role>
+      </roles>
+    </contributor>
+  </contributors>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>biz.aQute</groupId>
+        <artifactId>bndlib</artifactId>
+        <version>1.43.0</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>org.apache.felix.scr.annotations</artifactId>
+        <version>1.6.0</version>
+      </dependency>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.11</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-log4j12</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>jul-to-slf4j</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>jcl-over-slf4j</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <properties>
+    <maven.compiler.source>1.7</maven.compiler.source>
+    <maven.compiler.target>1.7</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>${project.build.sourceEncoding}</project.reporting.outputEncoding>
+    <!-- NOTE: sync tukaani version with commons-compress in tika-parsers -->
+    <commons.compress.version>1.11</commons.compress.version>
+    <commons.io.version>2.4</commons.io.version>
+    <slf4j.version>1.7.12</slf4j.version>
+  </properties>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.2</version>
+        <configuration>
+          <source>${maven.compiler.source}</source>
+          <target>${maven.compiler.target}</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>de.thetaphi</groupId>
+        <artifactId>forbiddenapis</artifactId>
+        <version>2.0</version>
+        <configuration>
+          <targetVersion>${maven.compiler.target}</targetVersion>
+          <internalRuntimeForbidden>true</internalRuntimeForbidden>
+          <failOnUnresolvableSignatures>false</failOnUnresolvableSignatures>
+          <failOnUnsupportedJava>false</failOnUnsupportedJava>
+          <bundledSignatures>
+            <bundledSignature>jdk-unsafe</bundledSignature>
+            <bundledSignature>jdk-deprecated</bundledSignature>
+            <bundledSignature>commons-io-unsafe-${commons.io.version}</bundledSignature>
+          </bundledSignatures>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+              <goal>testCheck</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>2.3.4</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>2.18.1</version>
+        <configuration>
+          <argLine>-Xmx2048m -Duser.timezone=UTC</argLine>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>2.3</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-release-plugin</artifactId>
+        <version>2.4.2</version>
+        <dependencies>
+         <dependency>
+           <groupId>org.apache.maven.scm</groupId>
+           <artifactId>maven-scm-provider-gitexe</artifactId>
+           <version>1.8.1</version>
+         </dependency>
+       </dependencies>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>pedantic</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.rat</groupId>
+            <artifactId>apache-rat-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>verify</phase>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>sonar</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <configuration>
+              <excludes>
+                <exclude>**/ForkParser*Test.java</exclude>
+              </excludes>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>doclint-java8-disable</id>
+      <activation>
+        <jdk>[1.8,)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <configuration>
+              <additionalparam>-Xdoclint:none</additionalparam>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <scm>
+    <connection>scm:git:https://git-wip-us.apache.org/repos/asf/</connection>
+    <developerConnection>scm:git:https://git-wip-us.apache.org/repos/asf/</developerConnection>
+    <url>https://github.com/apache/tika</url>
+    <tag>1.13-rc1</tag>
+  </scm>
+
+</project>

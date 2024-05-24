@@ -1,0 +1,15 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>bouncycastle</groupId>
+  <artifactId>bctsp-jdk14</artifactId>
+  <version>138</version>
+
+  <distributionManagement>
+    <relocation>
+      <groupId>org.bouncycastle</groupId>
+      <artifactId>bctsp-jdk14</artifactId>
+      <version>1.38</version>
+    </relocation>
+  </distributionManagement>
+
+</project>

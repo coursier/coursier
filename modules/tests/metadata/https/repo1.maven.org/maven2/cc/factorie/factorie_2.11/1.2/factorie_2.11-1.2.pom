@@ -1,0 +1,674 @@
+<!--
+Copyright (C) 2008-2016 University of Massachusetts Amherst.
+This file is part of "FACTORIE" (Factor graphs, Imperative, Extensible)
+http://factorie.cs.umass.edu, http://github.com/factorie
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+   http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <name>Factorie</name>
+  <description>FACTORIE is a toolkit for deployable probabilistic modeling, implemented as a software library in Scala. It provides its users with a succinct language for creating relational factor graphs, estimating parameters and performing inference.</description>
+  <url>http://factorie.cs.umass.edu</url>
+  <groupId>cc.factorie</groupId>
+  <artifactId>factorie_${scala.majorVersion}</artifactId>
+  <version>1.2</version>
+  <packaging>jar</packaging>
+  <inceptionYear>2009</inceptionYear>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <scala.majorVersion>2.11</scala.majorVersion>
+    <scala.minorVersion>.7</scala.minorVersion>
+    <scalatest.version>2.2.5</scalatest.version>
+    <junit.version>4.10</junit.version>
+  </properties>
+
+  <scm>
+    <connection>scm:git:https://github.com/factorie/factorie.git</connection>
+    <developerConnection>scm:git:git@github.com:factorie/factorie.git</developerConnection>
+    <url>https://github.com/factorie/factorie</url>
+    <tag>HEAD</tag>
+  </scm>
+
+  <licenses>
+    <license>
+      <name>Apache 2</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+      <comments>A business-friendly OSS license</comments>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <name>Luke Vilnis</name>
+      <email>luke@cs.umass.edu</email>
+      <organization>UMass Information Extraction and Synthesis Laboratory</organization>
+      <organizationUrl>http://iesl.cs.umass.edu</organizationUrl>
+    </developer>
+    <developer>
+      <name>Andrew McCallum</name>
+      <email>mccallum@cs.umass.edu</email>
+      <organization>UMass Information Extraction and Synthesis Laboratory</organization>
+      <organizationUrl>http://iesl.cs.umass.edu</organizationUrl>
+    </developer>
+  </developers>
+
+  <organization>
+    <name>University of Massachusetts, Amherst</name>
+    <url>http://cs.umass.edu</url>
+  </organization>
+
+  <repositories>
+    <repository>
+      <id>dev-iesl.cs.umass.edu</id>
+      <name>dev-iesl.cs.umass.edu</name>
+      <url>https://dev-iesl.cs.umass.edu/nexus/content/repositories/thirdparty/</url>
+    </repository>
+    <repository>
+      <id>iesl-snapshots</id>
+      <name>iesl-snapshots</name>
+      <url>https://dev-iesl.cs.umass.edu/nexus/content/groups/public-snapshots/</url>
+    </repository>
+
+    <repository>
+      <id>info-bliki-repository</id>
+      <url>http://gwtwiki.googlecode.com/svn/maven-repository/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+
+  </repositories>
+
+  <dependencies>
+
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-library</artifactId>
+      <version>${scala.majorVersion}${scala.minorVersion}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scala-lang</groupId>
+      <artifactId>scala-compiler</artifactId>
+      <version>${scala.majorVersion}${scala.minorVersion}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>${junit.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.scalatest</groupId>
+      <artifactId>scalatest_${scala.majorVersion}</artifactId>
+      <version>${scalatest.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-compress</artifactId>
+      <version>1.8</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.6</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.xerial.snappy</groupId>
+      <artifactId>snappy-java</artifactId>
+      <version>1.1.1.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>info.bliki.wiki</groupId>
+      <artifactId>bliki-core</artifactId>
+      <version>3.0.19</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mongodb</groupId>
+      <artifactId>mongo-java-driver</artifactId>
+      <version>2.12.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.json4s</groupId>
+      <artifactId>json4s-core_${scala.majorVersion}</artifactId>
+      <version>3.2.9</version>
+    </dependency>
+    <dependency>
+      <groupId>org.json4s</groupId>
+      <artifactId>json4s-jackson_${scala.majorVersion}</artifactId>
+      <version>3.2.9</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.jblas</groupId>
+      <artifactId>jblas</artifactId>
+      <version>1.2.3</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>12.0</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.fakemongo</groupId>
+      <artifactId>fongo</artifactId>
+      <version>1.5.10</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.7.7</version>
+      <scope>test</scope>
+    </dependency>
+  
+  </dependencies>
+
+  <distributionManagement>
+
+    <repository>
+      <id>dev-iesl.cs.umass.edu</id>
+      <name>dev-iesl.cs.umass.edu</name>
+      <url>https://dev-iesl.cs.umass.edu/nexus/content/repositories/releases</url>
+    </repository>
+
+    <snapshotRepository>
+      <id>dev-iesl.cs.umass.edu</id>
+      <name>dev-iesl.cs.umass.edu</name>
+      <url>https://dev-iesl.cs.umass.edu/nexus/content/repositories/snapshots</url>
+      <uniqueVersion>false</uniqueVersion>
+    </snapshotRepository>
+
+    <site>
+      <id>ieslwww</id>
+      <name>IESL www repository</name>
+      <url>scp://iesl.cs.umass.edu/m/iesl/data2/www/iesl/maven/factorie</url>
+    </site>
+  </distributionManagement>
+
+  <build>
+    <sourceDirectory>src/main/scala</sourceDirectory>
+    <testSourceDirectory>src/test/scala</testSourceDirectory>
+    <pluginManagement>
+      <plugins>
+        <!--This plugin's configuration is used to store Eclipse
+                    m2e 1.0 settings only. It has no influence on the Maven build itself. -->
+          <plugin>
+            <groupId>org.eclipse.m2e</groupId>
+            <artifactId>lifecycle-mapping</artifactId>
+            <version>1.0.0</version>
+            <configuration>
+              <lifecycleMappingMetadata>
+                <pluginExecutions>
+                  <pluginExecution>
+                    <pluginExecutionFilter>
+                      <groupId>net.alchim31.maven</groupId>
+                      <artifactId>scala-maven-plugin</artifactId>
+                      <versionRange>[1.0,)</versionRange>
+                      <goals>
+                        <goal>testCompile</goal>
+                        <goal>compile</goal>
+                      </goals>
+                    </pluginExecutionFilter>
+                    <action>
+                      <execute />
+                    </action>
+                  </pluginExecution>
+                  <pluginExecution>
+                  	<pluginExecutionFilter>
+                  		<groupId>edu.umass.cs.iesl</groupId>
+                  		<artifactId>
+                  			jflex-scala-maven-plugin
+                  		</artifactId>
+                  		<versionRange>[1.6.1,)</versionRange>
+                  		<goals>
+                  			<goal>generate</goal>
+                  		</goals>
+                  	</pluginExecutionFilter>
+                  	<action>
+                  		<ignore></ignore>
+                  	</action>
+                  </pluginExecution>
+                </pluginExecutions>
+              </lifecycleMappingMetadata>
+            </configuration>
+          </plugin>
+        </plugins>
+      </pluginManagement>
+      <plugins>
+        <!-- Adds support for building Scala -->
+        <plugin>
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>3.2.1</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>compile</goal>
+                <goal>testCompile</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <recompileMode>incremental</recompileMode>
+            <useZincServer>false</useZincServer>
+            <scalaVersion>${scala.majorVersion}${scala.minorVersion}</scalaVersion>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>2.4.1</version>
+          <configuration>
+            <!-- During release:perform, enable the "release" profile -->
+            <releaseProfiles>release</releaseProfiles>
+            <goals>deploy package</goals>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.7</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.scalatest</groupId>
+          <artifactId>scalatest-maven-plugin</artifactId>
+          <version>1.0</version>
+          <configuration>
+            <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+            <junitxml>.</junitxml>
+            <filereports>WDF TestSuite.txt</filereports>
+          </configuration>
+          <executions>
+            <execution>
+              <id>test</id>
+              <goals>
+                <goal>test</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>edu.umass.cs.iesl</groupId>
+          <artifactId>jflex-scala-maven-plugin</artifactId>
+          <version>1.6.1</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>generate</goal>
+              </goals>
+              <configuration>
+                <lexDefinitions>
+                  <lexDefinition>src/main/flex</lexDefinition>
+                </lexDefinitions>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </build>
+
+    <profiles>
+      <profile>
+        <id>default</id>
+        <activation>
+          <activeByDefault>true</activeByDefault>
+        </activation>
+        <properties>
+          <package.type>jar</package.type>
+        </properties>
+      </profile>
+      <profile>
+        <id>bundle</id>
+        <properties>
+          <package.type>bundle</package.type>
+        </properties>
+        <build>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.felix</groupId>
+              <artifactId>maven-bundle-plugin</artifactId>
+              <extensions>true</extensions>
+              <executions>
+                <execution>
+                  <id>bundle-manifest</id>
+                  <phase>process-classes</phase>
+                  <goals>    
+                    <goal>manifest</goal>
+                  </goals>   
+                </execution>
+              </executions>
+              <configuration>
+                <instructions>
+                  <Bundle-SymbolicName>${pom.groupId}</Bundle-SymbolicName>
+                  <Import-Package>
+                    scala,
+                    scala.collection,
+                    scala.collection.concurrent,
+                    scala.collection.convert,
+                    scala.collection.generic,
+                    scala.collection.immutable,
+                    scala.collection.mutable,
+                    scala.collection.parallel,
+                    scala.collection.parallel.immutable,
+                    scala.collection.parallel.mutable,
+                    scala.collection.script,
+                    scala.compat,
+                    scala.concurrent,
+                    scala.concurrent.duration,
+                    scala.io,
+                    scala.math,
+                    scala.runtime,
+                    scala.sys,
+                    scala.sys.process,
+                    scala.util,
+                    scala.util.control,
+                    scala.util.hashing,
+                    scala.util.matching,
+                    scala.util.parsing.combinator,
+                    scala.util.parsing.input,
+                    scala.annotation,
+                    scala.annotation.meta,
+                    scala.annotation.unchecked,
+                    scala.beans,
+                    scala.concurrent.forkjoin,
+                    scala.concurrent.impl,
+                    scala.concurrent.util,
+                    scala.ref,
+                    scala.reflect.macros.internal,
+                    scala.text,
+                    scala.reflect.macros.blackbox,
+                    scala.reflect.api,
+                    scala.reflect,
+                    scala.reflect.internal.util,
+                    scala.reflect.internal,
+                    scala.reflect.internal.pickling,
+                    scala.reflect.internal.settings,
+                    scala.reflect.internal.transform,
+                    scala.reflect.macros,
+                    scala.reflect.io,
+                    scala.reflect.internal.tpe,
+                    scala.reflect.runtime,
+                    scala.reflect.internal.annotations,
+                    scala.reflect.macros.whitebox
+                  </Import-Package>
+                  <Export-Package>
+                    cc.factorie,
+                    cc.factorie.app,
+                    cc.factorie.app.bib,
+                    cc.factorie.app.bib.hcoref,
+                    cc.factorie.app.bib.parser,
+                    cc.factorie.app.chain,
+                    cc.factorie.app.classify,
+                    cc.factorie.app.classify.backend,
+                    cc.factorie.app.mf,
+                    cc.factorie.app.nlp,
+                    cc.factorie.app.nlp.coref,
+                    cc.factorie.app.nlp.embedding,
+                    cc.factorie.app.nlp.embeddings,
+                    cc.factorie.app.nlp.hcoref,
+                    cc.factorie.app.nlp.lemma,
+                    cc.factorie.app.nlp.lexicon,
+                    cc.factorie.app.nlp.load,
+                    cc.factorie.app.nlp.morph,
+                    cc.factorie.app.nlp.ner,
+                    cc.factorie.app.nlp.parse,
+                    cc.factorie.app.nlp.phrase,
+                    cc.factorie.app.nlp.pos,
+                    cc.factorie.app.nlp.relation,
+                    cc.factorie.app.nlp.segment,
+                    cc.factorie.app.nlp.wordnet,
+                    cc.factorie.app.regress,
+                    cc.factorie.app.strings,
+                    cc.factorie.app.topics,
+                    cc.factorie.app.topics.lda,
+                    cc.factorie.db,
+                    cc.factorie.db.mongo,
+                    cc.factorie.directed,
+                    cc.factorie.infer,
+                    cc.factorie.la,
+                    cc.factorie.maths,
+                    cc.factorie.model,
+                    cc.factorie.optimize,
+                    cc.factorie.tutorial,
+                    cc.factorie.util,
+                    cc.factorie.util.namejuggler,
+                    cc.factorie.variable
+                  </Export-Package>
+                </instructions>
+              </configuration>
+            </plugin>
+          </plugins>
+        </build>
+      </profile>
+      <profile>
+        <id>jar-with-dependencies</id>
+        <properties>
+          <package.type>jar</package.type>
+        </properties>
+        <build>
+          <plugins>
+            <!-- Assembles the jar and other release formats (tarball, etc.). -->
+            <plugin>
+              <artifactId>maven-assembly-plugin</artifactId>
+              <version>2.4</version>
+              <executions>
+                <execution>
+                  <id>make-assembly</id>
+                  <phase>package</phase>
+                  <goals>
+                    <goal>attached</goal>
+                  </goals>
+                </execution>
+              </executions>
+              <configuration>
+                <tarLongFileMode>gnu</tarLongFileMode>
+                <descriptorRefs>
+                  <descriptorRef>jar-with-dependencies</descriptorRef>
+                </descriptorRefs>
+              </configuration>
+            </plugin>
+          </plugins>
+        </build>
+      </profile>
+      <profile>
+        <id>nlp-jar-with-dependencies</id>
+        <properties>
+          <package.type>jar</package.type>
+        </properties>
+        <repositories>
+          <repository>
+            <id>dev-iesl.cs.umass.edu-snapshots</id>
+            <name>dev-iesl.cs.umass.edu</name>
+            <url>https://dev-iesl.cs.umass.edu/nexus/content/repositories/snapshots/</url>
+          </repository>
+          <repository>
+            <id>dev-iesl.cs.umass.edu-releases</id>
+            <name>dev-iesl.cs.umass.edu</name>
+            <url>https://dev-iesl.cs.umass.edu/nexus/content/repositories/releases/</url>
+          </repository>
+        </repositories>
+        <dependencies>
+          <dependency>
+            <groupId>cc.factorie.app.nlp</groupId>
+            <artifactId>all-models</artifactId>
+            <version>1.2</version>
+          </dependency>
+        </dependencies>
+        <build>
+          <plugins>
+            <!-- Assembles the jar and other release formats (tarball, etc.). -->
+            <plugin>
+              <artifactId>maven-assembly-plugin</artifactId>
+              <version>2.4</version>
+              <executions>
+                <execution>
+                  <id>make-assembly</id>
+                  <phase>package</phase>
+                  <goals>
+                    <goal>attached</goal>
+                  </goals>
+                </execution>
+              </executions>
+              <configuration>
+                <tarLongFileMode>gnu</tarLongFileMode>
+                <descriptors>
+                  <descriptor>src/main/assembly/nlp-jar-with-dependencies.xml</descriptor>
+                </descriptors>
+              </configuration>
+            </plugin>
+          </plugins>
+        </build>
+      </profile>
+      <profile>
+        <id>coverage-check</id>
+        <properties>
+          <package.type>jar</package.type>
+        </properties>
+        <build>
+          <plugins>
+            <plugin>
+              <groupId>org.scoverage</groupId>
+              <artifactId>scoverage-maven-plugin</artifactId>
+              <version>1.0.0</version>
+              <configuration>
+                <scalaVersion>${scala.majorVersion}${scala.minorVersion}</scalaVersion>
+              </configuration>
+              <executions>
+                <execution>
+                  <goals>
+                    <goal>check</goal>
+                  </goals>
+                </execution>
+              </executions>
+            </plugin>
+          </plugins>
+        </build>
+      </profile>
+        <profile>
+          <id>sonatype-release</id>
+          <properties>
+            <package.type>jar</package.type>
+          </properties>
+          <distributionManagement>
+            <snapshotRepository>
+              <id>ossrh</id>
+              <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+            </snapshotRepository>
+            <repository>
+              <id>ossrh</id>
+              <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            </repository>
+          </distributionManagement>
+
+          <build>
+            <plugins>
+              <plugin>
+                <groupId>net.alchim31.maven</groupId>
+                <artifactId>scala-maven-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                  <execution>
+                    <goals>
+                      <goal>compile</goal>
+                      <goal>testCompile</goal>
+                      <goal>doc</goal>
+                    </goals>
+                  </execution>
+                </executions>
+                <configuration>
+                  <recompileMode>incremental</recompileMode>
+                  <useZincServer>false</useZincServer>
+                  <scalaVersion>${scala.majorVersion}${scala.minorVersion}</scalaVersion>
+                </configuration>
+              </plugin>
+
+
+              <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                  <execution>
+                    <id>attach-sources</id>
+                    <phase>package</phase>
+                    <goals>
+                      <goal>jar-no-fork</goal>
+                    </goals>
+                  </execution>
+                </executions>
+              </plugin>
+
+              <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <executions>
+                  <execution>
+                    <id>attach-javadocs</id>
+                    <goals>
+                      <goal>jar</goal>
+                    </goals>
+                  </execution>
+                </executions>
+              </plugin>
+
+              <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                  <execution>
+                    <id>sign-artifacts</id>
+                    <phase>verify</phase>
+                    <goals>
+                      <goal>sign</goal>
+                    </goals>
+                  </execution>
+                </executions>
+              </plugin>
+
+              <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.3</version>
+                <extensions>true</extensions>
+                <configuration>
+                  <serverId>ossrh</serverId>
+                  <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                  <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                </configuration>
+              </plugin>
+            </plugins>
+        </build>
+      </profile>
+    </profiles>
+
+  </project>

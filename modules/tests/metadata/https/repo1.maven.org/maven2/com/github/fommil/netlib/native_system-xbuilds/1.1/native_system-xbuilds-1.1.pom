@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!--
+    This is an artificial package that facilitates easy cross
+    compiles for various targets from Linux (because OS X
+    cross building doesn't work so well).
+    -->
+
+    <parent>
+        <groupId>com.github.fommil.netlib</groupId>
+        <artifactId>native_system</artifactId>
+        <version>1.1</version>
+    </parent>
+
+    <artifactId>native_system-xbuilds</artifactId>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>linux-x86_64</module>
+        <module>linux-i686</module>
+        <module>linux-armhf</module>
+    </modules>
+
+</project>

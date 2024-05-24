@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================
+         Maven 2 project configuration file
+         http://maven.apache.org/maven2/
+     ==================================================== -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.opengis</groupId>
+    <artifactId>geoapi-parent</artifactId>
+    <version>3.0.0</version>
+  </parent>
+
+
+
+  <!-- ====================================================
+           Project description
+       ==================================================== -->
+  <groupId>org.opengis</groupId>
+  <artifactId>geoapi</artifactId>
+  <packaging>bundle</packaging>
+  <name>GeoAPI</name>
+  <description>
+<!-- Left alignment because this description will be copied in META-INF/MANIFEST.MF
+     The leading space after the first line is necessary for proper formatting. -->
+The development community in building GIS solutions is sustaining an enormous level
+ of effort. The GeoAPI project aims to reduce duplication and increase interoperability
+ by providing neutral, interface-only APIs derived from OGC/ISO Standards.
+  </description>
+
+
+
+  <!-- ====================================================
+           Developers and contributors
+       ==================================================== -->
+  <developers>
+    <developer>
+      <id>desruisseaux</id>
+      <name>Martin Desruisseaux</name>
+      <email>martin.desruisseaux@geomatys.fr</email>
+      <organization>Geomatys</organization>
+      <organizationUrl>http://www.geomatys.com</organizationUrl>
+      <roles>
+        <role>Java developer</role>
+        <role>Maintainer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </developer>
+  </developers>
+
+  <contributors>
+    <contributor>
+      <name>Cédric Briançon</name>
+      <organization>Geomatys</organization>
+      <organizationUrl>http://www.geomatys.fr/</organizationUrl>
+      <roles>
+        <role>Java developer</role>
+      </roles>
+      <timezone>+1</timezone>
+    </contributor>
+    <contributor>
+      <name>Ely Conn</name>
+      <organization>Leica Geosystems Geospatial Imaging</organization>
+      <roles>
+        <role>Java developer</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <!-- <id>avcuster</id> -->
+      <name>Adrian Custer</name>
+      <organization>Geomatys</organization>
+      <organizationUrl>http://www.geomatys.fr/</organizationUrl>
+      <roles>
+        <role>Specification editor</role>
+      </roles>
+      <timezone>+1</timezone>
+    </contributor>
+    <contributor>
+      <!-- <id>crossley</id> -->
+      <name>Jesse Crossley</name>
+      <email>jcrossley@systechnologies.com</email>
+      <organization>SYS Technologies</organization>
+      <organizationUrl>http://www.systechnologies.com</organizationUrl>
+      <roles>
+        <role>Java developer</role>
+      </roles>
+      <timezone>-8</timezone>
+    </contributor>
+    <contributor>
+      <!-- <id>jive</id> -->
+      <name>Jody Garnett</name>
+      <email>jive@users.sourceforge.net</email>
+      <organization>Refractions Research</organization>
+      <roles>
+        <role>Java developer</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <!-- <id>cory2070</id> -->
+      <name>Cory Horner</name>
+      <organization>Refractions Research</organization>
+      <roles>
+        <role>Java developer</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Bryce Nordgren</name>
+      <organization>USDA</organization>
+      <roles>
+        <role>Java developer</role>
+      </roles>
+    </contributor>
+    <contributor>
+      <name>Greg Reynolds</name>
+      <email>gregreynolds@cox.net</email>
+      <roles>
+        <role>Chairman</role>
+        <role>Project manager</role>
+      </roles>
+    </contributor>
+  </contributors>
+
+
+
+  <!-- ====================================================
+           Compilation and Packaging (OSGi bundle)
+       ==================================================== -->
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>src/pending/java</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <extensions>true</extensions>
+        <configuration>
+          <instructions>
+            <Bundle-Name>GeoAPI</Bundle-Name>
+            <Bundle-DocURL>http://www.geoapi.org</Bundle-DocURL>
+          </instructions>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+</project>

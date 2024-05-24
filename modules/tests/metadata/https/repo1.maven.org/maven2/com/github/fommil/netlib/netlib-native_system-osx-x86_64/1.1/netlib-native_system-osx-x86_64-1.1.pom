@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.github.fommil.netlib</groupId>
+        <artifactId>native_system</artifactId>
+        <version>1.1</version>
+    </parent>
+
+    <artifactId>netlib-native_system-osx-x86_64</artifactId>
+    <packaging>jnilib</packaging>
+
+    <properties>
+        <netlib.src>../../netlib</netlib.src>
+    </properties>
+
+    <!--
+    NOTE: OS X does not come with a Fortran compiler.
+    This configuration uses macports' distribution of gcc:
+
+      sudo port install gfortran48
+
+    To get the i5 AVX instructions, CLANG must be used for assembly
+
+      http://stackoverflow.com/questions/9840207
+
+    (although I haven't noticed much difference) with these extra GCC flags
+
+      -Xassembler -w -march=corei7-avx -mtune=corei7-avx
+    -->
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>native_system-java</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.fommil.netlib</groupId>
+                <artifactId>generator</artifactId>
+                <executions>
+                    <execution>
+                        <id>blas</id>
+                    </execution>
+                    <execution>
+                        <id>lapack</id>
+                    </execution>
+                    <execution>
+                        <id>arpack</id>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <javahOS>darwin</javahOS>
+                    <compilerExecutable>gcc-mp-4.8</compilerExecutable>
+                    <linkerExecutable>gcc-mp-4.8</linkerExecutable>
+                    <compilerEndOptions>
+                        <compilerEndOption>-I/System/Library/Frameworks/vecLib.framework/Headers</compilerEndOption>
+                    </compilerEndOptions>
+                    <linkerMiddleOptions>
+                        <linkerMiddleOption>-dynamiclib</linkerMiddleOption>
+                        <linkerMiddleOption>-static-libgfortran</linkerMiddleOption>
+                        <linkerMiddleOption>/opt/local/lib/gcc48/libquadmath.a</linkerMiddleOption>
+                        <linkerMiddleOption>-static-libgcc</linkerMiddleOption>
+                        <linkerMiddleOption>-framework JavaVM</linkerMiddleOption>
+                        <linkerMiddleOption>-framework veclib</linkerMiddleOption>
+                        <linkerMiddleOption>-lgfortran</linkerMiddleOption>
+                        <linkerMiddleOption>-Wl,-dead_strip</linkerMiddleOption>
+                        <linkerMiddleOption>-Wl,-exported_symbol,_Java_*</linkerMiddleOption>
+                        <linkerMiddleOption>-Wl,-x</linkerMiddleOption>
+                    </linkerMiddleOptions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>runtime</id>
+                    </execution>
+                    <execution>
+                        <id>source</id>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

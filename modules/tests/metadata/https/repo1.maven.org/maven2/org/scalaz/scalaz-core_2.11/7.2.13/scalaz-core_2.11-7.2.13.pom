@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.scalaz</groupId>
+    <artifactId>scalaz-core_2.11</artifactId>
+    <packaging>bundle</packaging>
+    <description>scalaz-core</description>
+    <version>7.2.13</version>
+    <name>scalaz-core</name>
+    <organization>
+        <name>org.scalaz</name>
+    </organization>
+    <url>http://scalaz.org</url>
+    <licenses>
+        <license>
+            <name>BSD-style</name>
+            <url>http://opensource.org/licenses/BSD-3-Clause</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <url>git@github.com:scalaz/scalaz.git</url>
+        <connection>scm:git:git@github.com:scalaz/scalaz.git</connection>
+    </scm>
+    <developers>
+        <developer>
+            <id>runarorama</id>
+            <name>Runar Bjarnason</name>
+            <url>http://github.com/runarorama</url>
+        </developer>
+        <developer>
+            <id>pchiusano</id>
+            <name>Paul Chiusano</name>
+            <url>http://github.com/pchiusano</url>
+        </developer>
+        <developer>
+            <id>tonymorris</id>
+            <name>Tony Morris</name>
+            <url>http://github.com/tonymorris</url>
+        </developer>
+        <developer>
+            <id>retronym</id>
+            <name>Jason Zaugg</name>
+            <url>http://github.com/retronym</url>
+        </developer>
+        <developer>
+            <id>ekmett</id>
+            <name>Edward Kmett</name>
+            <url>http://github.com/ekmett</url>
+        </developer>
+        <developer>
+            <id>alexeyr</id>
+            <name>Alexey Romanov</name>
+            <url>http://github.com/alexeyr</url>
+        </developer>
+        <developer>
+            <id>copumpkin</id>
+            <name>Daniel Peebles</name>
+            <url>http://github.com/copumpkin</url>
+        </developer>
+        <developer>
+            <id>rwallace</id>
+            <name>Richard Wallace</name>
+            <url>http://github.com/rwallace</url>
+        </developer>
+        <developer>
+            <id>nuttycom</id>
+            <name>Kris Nuttycombe</name>
+            <url>http://github.com/nuttycom</url>
+        </developer>
+        <developer>
+            <id>larsrh</id>
+            <name>Lars Hupel</name>
+            <url>http://github.com/larsrh</url>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.11.11</version>
+        </dependency>
+    </dependencies>
+</project>

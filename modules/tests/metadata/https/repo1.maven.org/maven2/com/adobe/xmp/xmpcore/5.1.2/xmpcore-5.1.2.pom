@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.adobe.xmp</groupId>
+  <artifactId>xmpcore</artifactId>
+  <version>5.1.2</version>
+
+  <name>XMP Library for Java</name>
+  <description>
+    The XMP Library for Java is based on the C++ XMPCore library
+    and the API is similar.
+  </description>
+  <url>http://www.adobe.com/devnet/xmp.html</url>
+
+  <licenses>
+    <license>
+      <name>The BSD License</name>
+      <url>http://www.adobe.com/devnet/xmp/library/eula-xmp-library-java.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <developers>
+    <developer>
+      <organization>Adobe Systems, Inc.</organization>
+      <organizationUrl>http://www.adobe.com/</organizationUrl>
+    </developer>
+  </developers>
+
+  <scm>
+    <connection>scm:local:/src/xmp:xmpcore</connection>
+    <url>http://www.adobe.com/devnet/xmp.html</url>
+  </scm>
+
+</project>
+

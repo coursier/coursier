@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.github.jupyter</groupId>
+  <artifactId>jvm-repr</artifactId>
+  <version>0.4.0</version>
+  <name>jupyter/jvm-repr</name>
+  <description>API for converting JVM objects to representations by MIME type, for the Jupyter ecosystem.</description>
+  <url>https://github.com/jupyter/jvm-repr</url>
+  <inceptionYear>2017</inceptionYear>
+  <licenses>
+    <license>
+      <name>BSD 3-Clause "New" or "Revised" License</name>
+      <url>https://api.github.com/licenses/bsd-3-clause</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+  <developers>
+    <developer>
+      <id>jupyter</id>
+      <name>Project Jupyter</name>
+      <email>jupyter@googlegroups.com</email>
+    </developer>
+  </developers>
+  <scm>
+    <connection>scm:git://github.com/jupyter/jvm-repr.git</connection>
+    <developerConnection>scm:git://github.com/jupyter/jvm-repr.git</developerConnection>
+    <url>git://github.com/jupyter/jvm-repr.git</url>
+  </scm>
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

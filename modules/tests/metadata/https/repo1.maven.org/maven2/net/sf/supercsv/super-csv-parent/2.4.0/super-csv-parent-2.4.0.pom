@@ -1,0 +1,532 @@
+<?xml version="1.0"?>
+<!-- Copyright 2007 Kasper B. Graversen Licensed under the Apache License,
+	Version 2.0 (the "License"); you may not use this file except in compliance
+	with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+	Unless required by applicable law or agreed to in writing, software distributed
+	under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+	OR CONDITIONS OF ANY KIND, either express or implied. See the License for
+	the specific language governing permissions and limitations under the License. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<!-- Use Sonatype's OSS repo to deploy to Maven central -->
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
+
+	<groupId>net.sf.supercsv</groupId>
+	<artifactId>super-csv-parent</artifactId>
+	<version>2.4.0</version>
+	<packaging>pom</packaging>
+	<url>https://github.com/super-csv/super-csv</url>
+	<name>Super CSV</name>
+	<description>Super CSV parent project</description>
+	<inceptionYear>2007</inceptionYear>
+
+	<modules>
+		<module>super-csv</module>
+		<module>super-csv-dozer</module>
+		<module>super-csv-joda</module>
+		<module>super-csv-java8</module>
+		<module>super-csv-distribution</module>
+		<module>super-csv-benchmark</module>
+	</modules>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<dozer.version>5.4.0</dozer.version>
+		<slf4j.version>1.7.5</slf4j.version>
+
+		<!-- properties ensure reporting plugin versions are same as managed versions -->
+		<cobertura.plugin.version>2.5.2</cobertura.plugin.version>
+		<findbugs-plugin.version>3.0.0</findbugs-plugin.version>
+		<javadoc.plugin.version>2.10.1</javadoc.plugin.version>
+		<jxr.plugin.version>2.5</jxr.plugin.version>
+		<pmd.plugin.version>3.3</pmd.plugin.version>
+		<project.info.reports.plugin.version>2.7</project.info.reports.plugin.version>
+		<surefire.plugin.version>2.18</surefire.plugin.version>
+	</properties>
+
+	<prerequisites>
+		<maven>3.0.4</maven>
+	</prerequisites>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>animal-sniffer-maven-plugin</artifactId>
+					<version>1.12</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.5.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.felix</groupId>
+					<artifactId>maven-bundle-plugin</artifactId>
+					<version>2.5.3</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>cobertura-maven-plugin</artifactId>
+					<version>${cobertura.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-eclipse-plugin</artifactId>
+					<version>2.9</version>
+				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>findbugs-maven-plugin</artifactId>
+					<version>${findbugs-plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>2.5</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<version>${javadoc.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jxr-plugin</artifactId>
+					<version>${jxr.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-pmd-plugin</artifactId>
+					<version>${pmd.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-project-info-reports-plugin</artifactId>
+					<version>${project.info.reports.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-release-plugin</artifactId>
+					<version>2.5.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-scm-publish-plugin</artifactId>
+					<version>1.1</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-source-plugin</artifactId>
+					<version>2.4</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-site-plugin</artifactId>
+					<version>3.4</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>${surefire.plugin.version}</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-report-plugin</artifactId>
+					<version>${surefire.plugin.version}</version>
+				</plugin>
+
+			</plugins>
+		</pluginManagement>
+
+		<plugins>
+			<!-- Compiles the Java source -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.5</source>
+					<target>1.5</target>
+				</configuration>
+			</plugin>
+
+			<!-- Generates the site documentation -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-site-plugin</artifactId>
+				<configuration>
+					<skipDeploy>true</skipDeploy>
+				</configuration>
+			</plugin>
+
+			<!-- Publishes the site to Github -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-scm-publish-plugin</artifactId>
+				<configuration>
+					<scmBranch>gh-pages</scmBranch>
+				</configuration>
+			</plugin>
+
+			<!-- Creates the Eclipse .classpath and .project files -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-eclipse-plugin</artifactId>
+				<configuration>
+					<downloadJavadocs>true</downloadJavadocs>
+					<downloadSources>true</downloadSources>
+					<testSourcesLast>true</testSourcesLast>
+					<classpathContainers>
+						<!-- Use J2SE 1.5 -->
+						<classpathContainer>org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/J2SE-1.5</classpathContainer>
+					</classpathContainers>
+				</configuration>
+			</plugin>
+
+			<!-- Runs the Junit tests -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>${surefireArgs}</argLine>
+				</configuration>
+			</plugin>
+
+			<!-- Generates the cobertura code-coverage report -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
+				<configuration>
+					<formats>
+						<format>xml</format>
+						<format>html</format>
+					</formats>
+				</configuration>
+			</plugin>
+
+			<!-- Creates the sources jar -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Creates the javadoc jar -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Performs the release to git/maven and deploys the site -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-release-plugin</artifactId>
+				<configuration>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+					<preparationGoals>clean verify</preparationGoals>
+					<goals>deploy</goals>
+					<tagNameFormat>v@{project.version}</tagNameFormat>
+				</configuration>
+			</plugin>
+
+			<!-- Ensures Java 1.5 compatability -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>animal-sniffer-maven-plugin</artifactId>
+				<configuration>
+					<signature>
+						<groupId>org.codehaus.mojo.signature</groupId>
+						<artifactId>java15</artifactId>
+						<version>1.0</version>
+					</signature>
+				</configuration>
+				<executions>
+					<execution>
+						<id>check-java15-compatability</id>
+						<phase>test</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<!-- enable this profile to run tests with a German locale -->
+			<id>germanLocale</id>
+			<properties>
+				<surefireArgs>-Duser.country=DE -Duser.language=de</surefireArgs>
+			</properties>
+		</profile>
+		<profile>
+			<!-- enable this profile to run tests with a Turkish locale -->
+			<id>turkishLocale</id>
+			<properties>
+				<surefireArgs>-Duser.country=TR -Duser.language=tr</surefireArgs>
+			</properties>
+		</profile>
+		<profile>
+			<!-- enable this profile to run tests with a UK locale -->
+			<id>englishLocale</id>
+			<properties>
+				<surefireArgs>-Duser.country=GB -Duser.language=en</surefireArgs>
+			</properties>
+		</profile>
+	</profiles>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>net.sf.supercsv</groupId>
+				<artifactId>super-csv</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.sf.supercsv</groupId>
+				<artifactId>super-csv-dozer</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.sf.dozer</groupId>
+				<artifactId>dozer</artifactId>
+				<version>${dozer.version}</version>
+				<exclusions>
+					<!-- this exclusion won't be necessary in the future -->
+					<exclusion>
+						<groupId>org.slf4j</groupId>
+						<artifactId>slf4j-log4j12</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<!-- Developers with commit access (id is SourceForge username) -->
+	<developers>
+		<developer>
+			<name>Kasper Graversen</name>
+			<id>kbg</id>
+			<roles>
+				<role>Project Lead/Founder</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+		<developer>
+			<name>James Bassett</name>
+			<id>jamesbassett</id>
+			<timezone>+10</timezone>
+			<roles>
+				<role>Developer (past)</role>
+			</roles>
+		</developer>
+		<developer>
+			<name>Dominique De Vito</name>
+			<id>ddv36a78</id>
+			<roles>
+				<role>Developer (past)</role>
+			</roles>
+		</developer>
+	</developers>
+
+	<!-- List of contributors is in alphabetical order -->
+	<contributors>
+		<contributor>
+			<name>Adrian Ber (beradrian)</name>
+		</contributor>
+		<contributor>
+			<name>Alf Richter (Haskell2000)</name>
+		</contributor>
+		<contributor>
+			<name>Jan Hartung (egga)</name>
+		</contributor>
+		<contributor>
+			<name>John Gibson (noredshadow)</name>
+		</contributor>
+		<contributor>
+			<name>Lubor Vágenknecht (lubor)</name>
+		</contributor>
+		<contributor>
+			<name>Nick Babcock (nickbabcock)</name>
+		</contributor>
+		<contributor>
+			<name>Nicolas Capponi (ncapponi)</name>
+		</contributor>
+		<contributor>
+			<name>Michał Ziober (ZioberMichal)</name>
+		</contributor>
+		<contributor>
+			<name>Petar Tahchiev (ptahchiev)</name>
+		</contributor>
+		<contributor>
+			<name>Pete Lichten (boneshaker335)</name>
+		</contributor>
+		<contributor>
+			<name>Rolf Wojtech (rwojtech)</name>
+		</contributor>
+		<contributor>
+			<name>Thor Michael Støre (thormick)</name>
+		</contributor>
+		<contributor>
+			<name>Vlad Dinulescu (vladdinulescu)</name>
+		</contributor>
+		<contributor>
+			<name>Vyacheslav Pushkin (singularityfx)</name>
+		</contributor>
+	</contributors>
+
+	<organization>
+		<name>Super CSV</name>
+		<url>https://github.com/super-csv/super-csv</url>
+	</organization>
+
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
+		</license>
+	</licenses>
+
+	<reporting>
+		<!-- Reporting plugins don't inherit version from plugin management, so
+			define them as properties (make sure they are the same!) -->
+		<plugins>
+			<!-- Adds extra project info to the site -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-project-info-reports-plugin</artifactId>
+				<version>${project.info.reports.plugin.version}</version>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>index</report>
+							<report>dependencies</report>
+							<report>project-team</report>
+							<report>issue-tracking</report>
+							<report>license</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+
+			<!-- Adds the cobertura report to the site -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
+				<version>${cobertura.plugin.version}</version>
+			</plugin>
+
+			<!-- Adds the surefire report to the site -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+				<version>${surefire.plugin.version}</version>
+			</plugin>
+
+			<!-- Adds the javadoc to the site -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>${javadoc.plugin.version}</version>
+				<configuration>
+					<aggregate>true</aggregate>
+					<links>
+						<link>http://docs.oracle.com/javase/8/docs/api</link>
+						<link>http://dozer.sourceforge.net/apidocs</link>
+						<link>http://www.joda.org/joda-time/apidocs</link>
+					</links>
+				</configuration>
+				<reportSets>
+					<reportSet>
+						<reports>
+							<report>javadoc</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin>
+
+			<!-- Adds the pmd report to the site -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-pmd-plugin</artifactId>
+				<version>${pmd.plugin.version}</version>
+				<configuration>
+					<targetJdk>1.5</targetJdk>
+				</configuration>
+			</plugin>
+
+			<!-- Adds the findbugs report to the site -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>findbugs-maven-plugin</artifactId>
+				<version>${findbugs-plugin.version}</version>
+			</plugin>
+
+			<!-- Generates a cross-reference of the sources -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jxr-plugin</artifactId>
+				<version>${jxr.plugin.version}</version>
+			</plugin>
+		</plugins>
+	</reporting>
+
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/super-csv/super-csv/issues</url>
+	</issueManagement>
+
+	<distributionManagement>
+		<site>
+			<id>gh-pages</id>
+			<url>scm:git:git@github.com:super-csv/super-csv.git</url>
+		</site>
+	</distributionManagement>
+
+	<scm>
+		<connection>scm:git:git@github.com:super-csv/super-csv.git</connection>
+		<developerConnection>scm:git:git@github.com:super-csv/super-csv.git</developerConnection>
+		<url>https://github.com/super-csv/super-csv</url>
+	  <tag>v2.4.0</tag>
+  </scm>
+
+</project>

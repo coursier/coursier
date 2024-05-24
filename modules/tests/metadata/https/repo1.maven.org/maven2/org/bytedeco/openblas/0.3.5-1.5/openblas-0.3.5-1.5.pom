@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.bytedeco</groupId>
+    <artifactId>javacpp-presets</artifactId>
+    <version>1.5</version>
+  </parent>
+
+  <groupId>org.bytedeco</groupId>
+  <artifactId>openblas</artifactId>
+  <version>${revision}</version>
+  <name>JavaCPP Presets for OpenBLAS</name>
+
+  <properties>
+    <javacpp.compiler.option>-O3</javacpp.compiler.option>
+    <revision>0.3.5-${project.parent.version}</revision>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.bytedeco</groupId>
+      <artifactId>javacpp</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>javacpp-parser-package</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.bytedeco</groupId>
+        <artifactId>javacpp</artifactId>
+        <!-- Execute parser again to get full LAPACK bindings even with Android and iOS -->
+        <executions>
+          <execution>
+            <id>javacpp-parser-package</id>
+            <phase>process-classes</phase>
+            <goals>
+              <goal>build</goal>
+            </goals>
+            <configuration>
+              <properties>${os.name}-${os.arch}</properties>
+              <skip>${javacpp.parser.skip}</skip>
+              <outputDirectory>${project.basedir}/src/gen/java</outputDirectory>
+              <classOrPackageName>org.bytedeco.openblas.presets.*</classOrPackageName>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>javacpp-${javacpp.platform}</id>
+            <phase>package</phase>
+            <configuration>
+              <excludes>
+                <exclude>org/bytedeco/openblas/${javacpp.platform}/*mkl*</exclude>
+                <exclude>org/bytedeco/openblas/${javacpp.platform}/*omp*</exclude>
+                <exclude>org/bytedeco/openblas/${javacpp.platform}/*libopenblas_nolapack*</exclude>
+                <exclude>org/bytedeco/openblas/${javacpp.platform}/bin/*openblas*</exclude>
+                <exclude>org/bytedeco/openblas/${javacpp.platform}/lib/*libopenblas*</exclude>
+                <exclude>${javacpp.platform.library.path}/*libopenblas_nolapack*</exclude>
+                <exclude>${javacpp.platform.library.path}/lib/*openblas*</exclude>
+              </excludes>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.moditect</groupId>
+        <artifactId>moditect-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-source-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-javadoc-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <profile>
+      <id>mingw</id>
+      <activation>
+        <os><family>windows</family></os>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacpp</artifactId>
+            <configuration>
+              <properties>${javacpp.platform}-mingw</properties>
+              <compilerOptions>
+                <compilerOption>${javacpp.compiler.option}</compilerOption>
+                <compilerOption>-static-libgcc</compilerOption>
+                <compilerOption>-static-libstdc++</compilerOption>
+                <compilerOption>-Wl,-Bstatic</compilerOption>
+                <compilerOption>-lstdc++</compilerOption>
+                <compilerOption>-lgcc</compilerOption>
+                <compilerOption>-lgcc_eh</compilerOption>
+                <compilerOption>-lpthread</compilerOption>
+                <compilerOption>-Wl,-Bdynamic</compilerOption>
+              </compilerOptions>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>mingw-x86</id>
+      <activation>
+        <property>
+          <name>javacpp.platform</name>
+          <value>windows-x86</value>
+        </property>
+      </activation>
+      <properties>
+        <!-- Disable optimization for 32-bit builds as GCC runs out of memory -->
+        <javacpp.compiler.option>-O0</javacpp.compiler.option>
+      </properties>
+    </profile>
+  </profiles>
+
+</project>

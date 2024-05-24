@@ -1,0 +1,400 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.apache.ws.commons</groupId>
+    <artifactId>XmlSchema</artifactId>
+    <name>XmlSchema</name>
+    <version>SNAPSHOT</version>
+    <description>Commons XMLSchema is a light weight schema object model that can be used to manipualte or
+        generate a schema. It has a clean, easy to use API and can easily be integrated into an existing project
+        since it has almost no dependancies on third party libraries.</description>
+    <url>http://ws.apache.org/commons/XmlSchema</url>
+    <issueManagement>
+        <system>JIRA</system>
+        <url>http://issues.apache.org/jira/browse/WSCOMMONS</url>
+    </issueManagement>
+    <ciManagement>
+        <system>Continuum</system>
+        <url>unknown</url>
+        <notifiers>
+            <notifier>
+                <configuration>
+                    <address>commons-dev@ws.apache.org</address>
+                </configuration>
+            </notifier>
+        </notifiers>
+    </ciManagement>
+    <mailingLists>
+        <mailingList>
+            <name>WS Commons Developers</name>
+            <subscribe>commons-dev-subscribe@ws.apache.org</subscribe>
+            <unsubscribe>commons-dev-unsubscribe@ws.apache.org</unsubscribe>
+            <post>commons-dev@ws.apache.org</post>
+            <archive>http://mail-archives.apache.org/mod_mbox/ws-commons-dev/</archive>
+        </mailingList>
+    </mailingLists>
+    <inceptionYear>2004</inceptionYear>
+    <developers>
+        <developer>
+            <id>dims</id>
+            <name>Davanum Srinivas</name>
+            <email>dims AT wso2.com</email>
+            <organization>WSO2</organization>
+        </developer>
+        <developer>
+            <id>sanjiva</id>
+            <name>Sanjiva Weerawarana</name>
+            <email>sanjiva AT wso2.com</email>
+            <organization>WSO2</organization>
+        </developer>
+        <developer>
+            <id>gdaniels</id>
+            <name>Glen Daniels</name>
+            <email>gdaniels AT apache.org</email>
+            <organization>Sonic Software</organization>
+        </developer>
+        <developer>
+            <id>alek</id>
+            <name>Aleksander Slominski</name>
+            <email>aslom AT cs.indiana.edu</email>
+            <organization>Indiana University Extreme! Computing Lab</organization>
+        </developer>
+        <developer>
+            <id>hemapani</id>
+            <name>Srinath Perera</name>
+            <email>hemapani AT apache.org</email>
+            <url>http://www.apache.org/~hemapani</url>
+            <organization>Lanka Software Foundation</organization>
+        </developer>
+        <developer>
+            <id>chinthaka</id>
+            <name>Eran Chinthaka</name>
+            <email>chinthaka AT wso2.com</email>
+            <url>http://www.apache.org/~chinthaka</url>
+            <organization>WSO2</organization>
+        </developer>
+        <developer>
+            <id>dasarath</id>
+            <name>Dasarath Weerathunga</name>
+            <email>dasarath AT opensource.lk</email>
+            <organization>Lanka Software Foundation</organization>
+        </developer>
+        <developer>
+            <id>jaliya</id>
+            <name>Jaliya Ekanayake</name>
+            <email>jaliya AT opensource.lk</email>
+            <url>http://www.apache.org/~jaliya</url>
+            <organization>Virtusa / Lanka Software Foundation</organization>
+        </developer>
+        <developer>
+            <id>chathura</id>
+            <name>Chathura Herath</name>
+            <email>chathura AT opensource.lk</email>
+            <url>www.apache.org/~chathura</url>
+            <organization>LSF/MIT</organization>
+        </developer>
+        <developer>
+            <id>deepal</id>
+            <name>Deepal Jayasinghe</name>
+            <email>deepal AT wso2.com</email>
+            <url>http://www.apache.org/~deepal</url>
+            <organization>WSO2</organization>
+        </developer>
+        <developer>
+            <id>ajith</id>
+            <name>Ajith Ranabahu</name>
+            <email>ajith AT wso2.com</email>
+            <url>http://www.apache.org/~ajith</url>
+            <organization>WSO2</organization>
+        </developer>
+        <developer>
+            <id>venkat</id>
+            <name>Venkat Reddy</name>
+            <email>vreddyp AT gmail.com</email>
+            <organization>Computer Associates</organization>
+        </developer>
+        <developer>
+            <id>ashu</id>
+            <name>Ashutosh Shahi</name>
+            <email>Ashutosh.Shahi AT ca.com</email>
+            <organization>Computer Associates</organization>
+        </developer>
+        <developer>
+            <id>jaya</id>
+            <name>Jayachandra Sekhara Rao Sunkara</name>
+            <email>jayachandra AT gmail.com</email>
+            <organization>Computer Associates</organization>
+        </developer>
+        <developer>
+            <id>thilina</id>
+            <name>Thilina Gunarathne</name>
+            <email>thilina AT wso2.com</email>
+            <url>http://www.apache.org/~thilina</url>
+            <organization>WSO2</organization>
+        </developer>
+        <developer>
+            <id>ruchith</id>
+            <name>Ruchith Fernando</name>
+            <email>ruchith AT wso2.com</email>
+            <organization>WSO2</organization>
+        </developer>
+        <developer>
+            <id>saminda</id>
+            <name>Saminda Abeyruwan</name>
+            <email>saminda AT wso2.com</email>
+            <organization>WSO2</organization>
+        </developer>
+        <developer>
+            <id>chamil</id>
+            <name>Chamil Thanthrimudalige</name>
+            <email>chamil AT wso2.com</email>
+            <organization>WSO2</organization>
+        </developer>
+        <developer>
+            <id>dandiep</id>
+            <name>Dan Diephouse</name>
+            <email>dandiep AT apache.org</email>
+            <organization>Envoi Solutions</organization>
+        </developer>
+    </developers>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/webservices/commons/trunk/modules/XmlSchema</connection>
+        <developerConnection>
+            scm:svn:https://svn.apache.org/repos/asf/webservices/commons/trunk/modules/XmlSchema</developerConnection>
+        <url>http://svn.apache.org/viewvc/webservices/commons/trunk/modules/XmlSchema</url>
+    </scm>
+    <organization>
+        <name>Apache Software Foundation</name>
+        <url>http://www.apache.org/</url>
+    </organization>
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>1.1</version>
+                <executions>
+                    <execution>
+                        <id>prepareNistTest</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <tasks>
+                                <ant inheritRefs="true" antfile="${basedir}/build.xml">
+                                    <property value="${basedir}/target" name="build.dir"></property>
+                                    <property value="${maven.test.skip}" name="maven.test.skip"></property>
+                                    <target name="prepareNistTest"></target>
+                                </ant>
+                            </tasks>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>prepareLicenseFiles</id>
+                        <phase>generate-resources</phase>
+                        <configuration>
+                            <tasks>
+                                <copy todir="${project.build.outputDirectory}/META-INF">
+                                    <fileset dir="${basedir}">
+                                        <include name="LICENSE.txt"/>
+                                        <include name="NOTICE.txt"/>
+                                    </fileset>
+                                </copy>
+                            </tasks>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <artifactId>maven-one-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>install-maven-one-repository</goal>
+                            <goal>deploy-maven-one-repository</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <remoteRepositoryId>apache</remoteRepositoryId>
+                    <remoteRepositoryUrl>scp://people.apache.org/www/cvs.apache.org/repository</remoteRepositoryUrl>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-release-plugin</artifactId>
+                <configuration>
+                    <tagBase>https://svn.apache.org/repos/asf/webservices/commons/tags/XmlSchema</tagBase>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.3</source>
+                    <target>1.3</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <!--
+                        Required to run the TestW3CSchemaBucket test
+                        <version>2.3-SNAPSHOT</version>
+                -->
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <!--        Fails in about half of the tests
+                                    <include>tests/w3c/TestW3CSchemaBucket.java</include>
+                        -->
+                    </includes>
+                    <excludes>
+                        <exclude>tests/w3c/SchemaTest.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/assembly/bin.xml</descriptor>
+                        <descriptor>src/main/assembly/src.xml</descriptor>
+                    </descriptors>
+                    <tarLongFileMode>gnu</tarLongFileMode>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <attach>true</attach>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    <profiles>
+        <profile>
+            <id>release</id>
+            <activation>
+                <property>
+                    <name>release</name>
+                    <value></value>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <attach>true</attach>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>snapshot</id>
+            <name>Snapshot repository</name>
+            <url>http://snapshots.maven.codehaus.org/maven2/</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </pluginRepository>
+        <pluginRepository>
+            <id>snapshot-apache</id>
+            <name>Apache Snapshot repository</name>
+            <url>http://people.apache.org/repo/m2-snapshot-repository</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+        </pluginRepository>
+    </pluginRepositories>
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>3.8.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>xmlunit</groupId>
+            <artifactId>xmlunit</artifactId>
+            <version>1.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>stax</groupId>
+            <artifactId>stax-api</artifactId>
+            <version>1.0</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
+    <reporting>
+        <plugins>
+            <!--plugin>
+              <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin-->
+            <plugin>
+                <artifactId>maven-project-info-reports-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>jdepend-maven-plugin</artifactId>
+                <version>2.0-beta-1-SNAPSHOT</version>
+            </plugin>
+            <!--plugin>
+              <groupId>org.codehaus.mojo</groupId>
+              <artifactId>jxr-maven-plugin</artifactId>
+              <version>2.0-beta-2-SNAPSHOT</version>
+            </plugin-->
+        </plugins>
+    </reporting>
+    <distributionManagement>
+        <repository>
+            <id>apache-repo</id>
+            <name>Maven Central Repository</name>
+            <url>scpexe://people.apache.org/www/www.apache.org/dist/maven-repository</url>
+        </repository>
+        <snapshotRepository>
+            <id>apache-snapshots</id>
+            <name>Apache Development Repository</name>
+            <url>scpexe://minotaur.apache.org/www/cvs.apache.org/maven-snapshot-repository</url>
+        </snapshotRepository>
+        <site>
+            <id>website</id>
+            <url>scpexe://people.apache.org/www/ws.apache.org/commons/XmlSchema</url>
+        </site>
+    </distributionManagement>
+</project>

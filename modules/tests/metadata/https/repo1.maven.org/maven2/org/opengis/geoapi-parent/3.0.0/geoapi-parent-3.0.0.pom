@@ -1,0 +1,493 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================
+         Maven 2 project configuration file
+         http://maven.apache.org/maven2/
+     ==================================================== -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <prerequisites>
+    <maven>3.0.2</maven>
+  </prerequisites>
+
+
+
+  <!-- ====================================================
+           Profiles and properties
+       ==================================================== -->
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <profiles>
+    <profile>
+      <id>sign-artifacts</id>
+      <activation>
+        <property>
+          <name>performRelease</name>
+          <value>true</value>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>1.1</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+
+
+  <!-- ====================================================
+           Project description (including license)
+       ==================================================== -->
+  <groupId>org.opengis</groupId>
+  <artifactId>geoapi-parent</artifactId>
+  <packaging>pom</packaging>
+  <version>3.0.0</version>
+  <name>GeoAPI</name>
+  <url>http://www.geoapi.org/</url>
+  <description>
+    The development community in building GIS solutions is sustaining an enormous
+    level of effort. The GeoAPI project aims to reduce duplication and increase
+    interoperability by providing neutral, interface-only APIs derived from OGC/ISO
+    Standards.
+  </description>
+
+  <organization>
+    <name>Open Geospatial Consortium</name>
+    <url>http://www.opengeospatial.org/</url>
+  </organization>
+  <inceptionYear>1994</inceptionYear>
+
+  <licenses>
+    <license>
+      <name>OGC copyright</name>
+      <url>https://geoapi.svn.sourceforge.net/svnroot/geoapi/branches/3.0.x/LICENSE.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+
+
+  <!-- ====================================================
+           Issue managements and mailing lists
+       ==================================================== -->
+  <scm>
+    <connection>scm:svn:https://geoapi.svn.sourceforge.net/svnroot/geoapi/branches/3.0.x</connection>
+    <url>http://geoapi.svn.sourceforge.net/viewvc/geoapi/branches/3.0.x/</url>
+  </scm>
+
+  <ciManagement>
+    <system>hudson</system>
+    <url>http://hudson.geomatys.com/job/GeoAPI/</url>
+  </ciManagement>
+
+  <issueManagement>
+    <system>JIRA</system>
+    <url>http://jira.codehaus.org/browse/GEO</url>
+  </issueManagement>
+
+  <mailingLists>
+    <mailingList>
+      <name>GeoAPI development (public)</name>
+      <subscribe>http://lists.sourceforge.net/lists/listinfo/geoapi-devel</subscribe>
+      <unsubscribe>http://lists.sourceforge.net/lists/listinfo/geoapi-devel</unsubscribe>
+      <post>geoapi-devel@lists.sourceforge.net</post>
+      <archive>http://sourceforge.net/mailarchive/forum.php?forum_name=geoapi-devel</archive>
+    </mailingList>
+    <mailingList>
+      <name>GeoAPI Standard Working Group (OGC)</name>
+      <subscribe>https://lists.opengeospatial.org/mailman/listinfo/geoapi-3.0.swg</subscribe>
+      <unsubscribe>https://lists.opengeospatial.org/mailman/listinfo/geoapi-3.0.swg</unsubscribe>
+      <post>geoapi-3.0.swg@lists.opengeospatial.org</post>
+      <archive>https://lists.opengeospatial.org/mailman/private/geoapi-3.0.swg</archive>
+    </mailingList>
+  </mailingLists>
+
+
+
+  <!-- ====================================================
+           Developers and contributors
+       ==================================================== -->
+  <developers>
+    <developer>
+      <name>GeoAPI contributors</name>
+      <organizationUrl>http://www.geoapi.org/</organizationUrl>
+      <roles>
+        <role>Java developers</role>
+      </roles>
+    </developer>
+    <developer>
+      <name>GeoAPI 3.0 Standard Working Group</name>
+      <organization>Open Geospatial Consortium</organization>
+      <organizationUrl>http://www.opengeospatial.org/</organizationUrl>
+      <roles>
+        <role>Specification editors</role>
+      </roles>
+    </developer>
+  </developers>
+
+
+  <!-- ====================================================
+           Repositories (used for javax.units dependency)
+       ==================================================== -->
+  <repositories>
+    <repository>
+      <id>maven2-repository.dev.java.net</id> <!-- For JSR-275 -->
+      <name>Java.net repository</name>
+      <url>http://download.java.net/maven/2</url>
+    </repository>
+  </repositories>
+
+
+
+  <!-- ====================================================
+           External dependencies
+       ==================================================== -->
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>javax.measure</groupId>
+        <artifactId>jsr-275</artifactId>
+        <version>0.9.3</version>
+      </dependency>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.8.2</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>javax.measure</groupId>
+      <artifactId>jsr-275</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+
+
+  <!-- ====================================================
+           Build management
+       ==================================================== -->
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>2.3.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>2.5</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>2.3.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.8.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>2.1.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>2.5</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-site-plugin</artifactId>
+          <version>3.0-beta-3</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>2.7</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-project-info-reports-plugin</artifactId>
+          <version>2.3.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-report-plugin</artifactId>
+          <version>2.8.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+          <version>2.3.4</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <version>1.5</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>taglist-maven-plugin</artifactId>
+          <version>2.4</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+
+
+    <!-- ====================================================
+             Compilation
+         ==================================================== -->
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-sources</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.5</source>          <!-- The -source argument for the Java compiler.   -->
+          <target>1.5</target>          <!-- The -target argument for the Java compiler.   -->
+          <debug>false</debug>          <!-- Whether to include debugging information.     -->
+          <optimize>true</optimize>     <!-- Use the compiler's optimization methods.      -->
+          <encoding>UTF-8</encoding>    <!-- The -encoding argument for the Java compiler. -->
+        </configuration>
+      </plugin>
+
+
+
+      <!-- =======================================================
+               Resources
+           ======================================================= -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <configuration>
+          <encoding>UTF-8</encoding>
+        </configuration>
+        <!--
+          In addition to Maven standard behavior, also copy HTML files from the
+          source javadoc directory to the root of target javadoc directory. This
+          is different than the default behavior which is to store such files in
+          a "doc-files" subdirectory. This allows shorter permanent URL for top-
+          level pages like "content.html" which may be referenced from external
+          sites.
+        -->
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <resources>
+                <resource>
+                  <directory>${basedir}/src/main/javadoc/</directory>
+                  <includes>
+                    <include>*.html</include>
+                  </includes>
+                  <excludes>
+                    <exclude>overview.html</exclude>
+                  </excludes>
+                </resource>
+              </resources>
+              <outputDirectory>${basedir}/target/apidocs/</outputDirectory>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+
+
+      <!-- ====================================================
+               JAR packaging
+           ==================================================== -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <index>true</index>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+
+
+
+      <!-- ====================================================
+               Javadoc generation
+           ==================================================== -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>attach-javadocs</id>
+            <goals>
+              <goal>jar</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <author>false</author>
+          <version>false</version>
+          <encoding>UTF-8</encoding>
+          <charset>UTF-8</charset>
+          <source>1.5</source>
+          <noqualifier>all</noqualifier>
+          <quiet>true</quiet>
+          <maxmemory>384M</maxmemory>
+          <locale>en</locale>
+          <keywords>true</keywords>
+          <breakiterator>true</breakiterator>
+          <doctitle>${project.name} ${project.version}</doctitle>
+          <windowtitle>${project.name} ${project.version}</windowtitle>
+          <taglets>
+            <taglet><tagletClass>org.opengis.tools.taglet.Note</tagletClass></taglet>
+            <taglet><tagletClass>org.opengis.tools.taglet.Departure</tagletClass></taglet>
+          </taglets>
+          <tagletArtifact>
+            <groupId>org.opengis</groupId>
+            <artifactId>tools</artifactId>
+            <version>${project.version}</version>
+          </tagletArtifact>
+          <tags>
+            <tag><name>category</name>  <placement>X</placement>    <head>Category:</head></tag>
+            <tag><name>condition</name> <placement>tfmc</placement> <head>Condition:</head></tag>
+            <tag><name>todo</name>      <placement>tfmc</placement> <head>TODO:</head></tag>
+            <tag><name>issue</name>     <placement>X</placement>    <head>JIRA:</head></tag>
+            <tag><name>unitof</name>    <placement>fm</placement>   <head>Unit:</head></tag>
+            <tag><name>navassoc</name>  <placement>X</placement>    <head>Associated to:</head></tag>
+          </tags>
+          <links>
+            <link>http://download.oracle.com/javase/6/docs/api/</link>
+            <link>http://download.java.net/media/jai/javadoc/1.1.3/jai-apidocs/</link>
+            <link>http://download.java.net/media/java3d/javadoc/1.5.1/</link>
+            <link>http://jscience.org/api/</link>
+          </links>
+          <groups>
+            <group>
+              <title>Base package</title>
+              <packages>
+                org.opengis.util*:org.opengis.annotation*
+              </packages>
+            </group>
+            <group>
+              <title>Metadata</title>
+              <packages>
+                org.opengis.metadata*
+              </packages>
+            </group>
+            <group>
+              <title>Spatial Referencing by Coordinates</title>
+              <packages>
+                org.opengis.referencing*:org.opengis.temporal*:org.opengis.parameter*
+              </packages>
+            </group>
+
+            <!-- Pending packages. -->
+            <group>
+              <title>Geometry and Topology</title>
+              <packages>
+                org.opengis.geometry*
+              </packages>
+            </group>
+            <group>
+              <title>Feature and Filter</title>
+              <packages>
+                org.opengis.feature*:org.opengis.filter*
+              </packages>
+            </group>
+          </groups>
+        </configuration>
+      </plugin>
+    </plugins>
+
+
+
+    <!-- ====================================================
+             Required for deployment to the repository
+         ==================================================== -->
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-webdav-jackrabbit</artifactId>
+        <version>1.0-beta-7</version>
+      </extension>
+    </extensions>
+  </build>
+
+
+
+  <!-- ====================================================
+           Deployment to public servers
+       ==================================================== -->
+  <distributionManagement>
+    <repository>
+      <id>sonatype-nexus-staging</id>
+      <name>Open Source Geospatial Foundation</name>
+      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+    </repository>
+    <site>
+      <id>geoapi</id>
+      <name>GeoAPI web site</name>
+      <url>dav:http://www.geoapi.org/</url>
+    </site>
+  </distributionManagement>
+
+
+
+  <!-- ====================================================
+           All GeoAPI modules included in the build
+       ==================================================== -->
+  <modules>
+    <module>tools</module>
+    <module>geoapi</module>
+    <module>geoapi-conformance</module>
+  </modules>
+</project>

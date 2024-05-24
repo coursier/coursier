@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project 
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <name>requests_2.12</name>
+    <groupId>com.lihaoyi</groupId>
+    <artifactId>requests_2.12</artifactId>
+    <packaging>jar</packaging>
+    <description>Scala port of the popular Python Requests HTTP client</description>
+    <version>0.6.5</version>
+    <url>https://github.com/lihaoyi/requests</url>
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://spdx.org/licenses/MIT.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:git:git://github.com/lihaoyi/requests-scala.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:lihaoyi/requests-scala.git</developerConnection>
+        <url>https://github.com/lihaoyi/requests-scala</url>
+    </scm>
+    <developers>
+        <developer>
+            <id>lihaoyi</id>
+            <name>Li Haoyi</name>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>geny_2.12</artifactId>
+            <version>0.6.2</version>
+        </dependency>
+    </dependencies>
+</project>

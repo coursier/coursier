@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.kie</groupId>
+    <artifactId>kie-parent-metadata</artifactId>
+    <version>6.5.0.Final</version>
+  </parent>
+
+  <artifactId>kie-parent-with-dependencies</artifactId>
+  <packaging>pom</packaging>
+
+  <name>KIE (Drools, jBPM, OptaPlanner) parent with dependencies</name>
+  <description>
+    The parent with dependencies imports the KIE Platform BOM and adds the default test-scoped dependencies.
+    All modules extend this parent, except for the user-facing BOMs (which are used here).
+  </description>
+
+  <!-- IMPORTANT: Do not declare any build configuration here! Declare it in kie-parent-metadata. -->
+  <build/>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Dependency management should import only the kie-platform-bom.
+           All required dependency versions need to be already there.
+           When adding new dependencies, do it in the kie-platform-bom and
+           not here!-->
+      <dependency>
+        <groupId>org.kie</groupId>
+        <artifactId>kie-platform-bom</artifactId>
+        <type>pom</type>
+        <version>${version.org.kie}</version>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+</project>

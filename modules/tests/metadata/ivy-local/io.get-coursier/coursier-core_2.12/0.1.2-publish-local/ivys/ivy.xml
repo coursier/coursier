@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
+  <info organisation="io.get-coursier" module="coursier-core_2.12" revision="0.1.2-publish-local" status="integration" publication="20190927171832">
+    <description/>
+  </info>
+  <configurations>
+    <conf name="plugin" visibility="public" description=""/>
+    <conf name="pom" visibility="public" description=""/>
+    <conf extends="runtime" name="test" visibility="public" description=""/>
+    <conf name="provided" visibility="public" description=""/>
+    <conf extends="compile,optional,provided" name="compile-internal" visibility="public" description=""/>
+    <conf name="docs" visibility="public" description=""/>
+    <conf name="optional" visibility="public" description=""/>
+    <conf name="compile" visibility="public" description=""/>
+    <conf extends="test,optional,provided" name="test-internal" visibility="public" description=""/>
+    <conf name="scala-tool" visibility="public" description=""/>
+    <conf name="sources" visibility="public" description=""/>
+    <conf extends="compile" name="runtime" visibility="public" description=""/>
+    <conf extends="runtime,optional" name="runtime-internal" visibility="public" description=""/>
+  </configurations>
+  <publications>
+    <artifact e:classifier="javadoc" name="coursier-core_2.12" type="doc" ext="jar" conf="docs"/>
+    <artifact e:classifier="tests-javadoc" name="coursier-core_2.12" type="doc" ext="jar" conf="test"/>
+    <artifact e:classifier="tests-sources" name="coursier-core_2.12" type="src" ext="jar" conf="test"/>
+    <artifact e:classifier="sources" name="coursier-core_2.12" type="src" ext="jar" conf="sources"/>
+    <artifact name="coursier-core_2.12" type="jar" ext="jar" conf="compile"/>
+    <artifact name="coursier-core_2.12" type="pom" ext="pom" conf="pom"/>
+    <artifact e:classifier="tests" name="coursier-core_2.12" type="jar" ext="jar" conf="test"/>
+  </publications>
+  <dependencies>
+    <dependency org="org.scala-lang" name="scala-compiler" rev="2.12.10" conf="scala-tool->default"> </dependency>
+    <dependency org="org.scala-lang" name="scala-compiler" rev="2.12.10" conf="scala-tool->optional(default)"> </dependency>
+    <dependency org="org.scala-lang" name="scala-library" rev="2.12.10" conf="scala-tool->default"> </dependency>
+    <dependency org="org.scala-lang" name="scala-library" rev="2.12.10" conf="scala-tool->optional(default)"> </dependency>
+    <dependency org="io.get-coursier" name="coursier-util_2.12" rev="0.1.2-publish-local" conf="compile->default(compile)"> </dependency>
+    <dependency org="org.scala-lang" name="scala-library" rev="2.12.10" conf="compile->default(compile)"> </dependency>
+    <dependency org="com.lihaoyi" name="utest_2.12" rev="0.6.9" conf="test->default(compile)"> </dependency>
+    <dependency org="org.scala-lang.modules" name="scala-xml_2.12" rev="1.2.0" conf="compile->default(compile)"> </dependency>
+  </dependencies>
+</ivy-module>

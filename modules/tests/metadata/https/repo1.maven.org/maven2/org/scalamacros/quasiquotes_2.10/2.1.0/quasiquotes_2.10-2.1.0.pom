@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.scalamacros</groupId>
+    <artifactId>quasiquotes_2.10</artifactId>
+    <packaging>jar</packaging>
+    <description>Empowers production Scala compiler with latest macro developments</description>
+    <version>2.1.0</version>
+    <name>quasiquotes</name>
+    <organization>
+        <name>org.scalamacros</name>
+    </organization>
+    <url>https://github.com/scalamacros/paradise</url>
+    <inceptionYear>2012</inceptionYear>
+    <licenses>
+        <license>
+            <name>BSD-like</name>
+            <url>http://www.scala-lang.org/downloads/license.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <url>git://github.com/scalamacros/paradise.git</url>
+        <connection>scm:git:git://github.com/scalamacros/paradise.git</connection>
+    </scm>
+    <issueManagement>
+        <system>GitHub</system>
+        <url>https://github.com/scalamacros/paradise/issues</url>
+    </issueManagement>
+    <developers>
+        <developer>
+            <id>xeno-by</id>
+            <name>Eugene Burmako</name>
+            <url>http://xeno.by</url>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.10.4</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+            <version>2.10.4</version>
+        </dependency>
+    </dependencies>
+</project>

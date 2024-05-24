@@ -1,0 +1,330 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.kie</groupId>
+    <artifactId>kie-parent-metadata</artifactId>
+    <version>6.5.0.Final</version>
+  </parent>
+
+  <groupId>org.jboss.dashboard-builder</groupId>
+  <artifactId>dashboard-builder-bom</artifactId>
+  <packaging>pom</packaging>
+
+  <name>Dashboard Builder BOM (Bill Of Materials)</name>
+  <description>
+    Import this BOM in your dependencyManagement if you want to depend on multiple Dashboard Builder artifacts.
+  </description>
+
+
+  <!-- IMPORTANT: Do not declare any build things here! Declare them in kie-parent-metadata. -->
+  <build/>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.kie</groupId>
+        <artifactId>kie-bom</artifactId>
+        <type>pom</type>
+        <version>${project.version}</version>
+        <scope>import</scope>
+      </dependency>
+
+      <!--
+        IMPORTANT: Only declare modules of groupId org.jboss.dashboard-builder.
+        Do not declare external dependencies.
+        Do not duplicate modules from another bom.
+      -->
+      <!--
+          Declare all dependency versions. Do not declare <scope> or <optional>.
+          Each module should declare it's direct dependencies and possibly overwrite scope/optional.
+          Always declare the sources jar too and optionally the test-jar.
+      -->
+
+      <!-- dashboard-commons -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-commons</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-commons</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-commons</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- dashboard-security -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-security</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-security</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+      <!-- dashboard-provider-api -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-provider-api</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-provider-api</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-provider-api</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+
+      <!-- dashboard-provider-core -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-provider-core</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-provider-core</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+      <!-- dashboard-provider-csv -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-provider-csv</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-provider-csv</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+      <!-- dashboard-provider-sql -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-provider-sql</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-provider-sql</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+      <!-- dashboard-displayer-core -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-displayer-core</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-displayer-core</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+
+      <!-- dashboard-displayer-api -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-displayer-api</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-displayer-api</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-displayer-api</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <type>test-jar</type>
+        <scope>test</scope>
+      </dependency>
+      
+
+
+      <!-- dashboard-ui-core -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-core</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>classes</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-core</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-core</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <type>war</type>
+      </dependency>
+
+      <!-- dashboard-ui-panels -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-panels</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <type>war</type>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-panels</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+      <!-- dashboard-ui-resources -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-resources</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <type>war</type>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-resources</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+      <!-- dashboard-ui-nvd3 -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-nvd3</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>classes</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-nvd3</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <type>war</type>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-nvd3</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+      <!-- dashboard-ui-ofc2 -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-ofc2</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>classes</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-ofc2</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <type>war</type>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-ofc2</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+      <!-- dashboard-ui-gauge -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-gauge</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>classes</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-gauge</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <type>war</type>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-gauge</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+      <!-- dashboard-webapp -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-webapp</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>classes</classifier>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-webapp</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <type>war</type>
+      </dependency>
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-webapp</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <classifier>sources</classifier>
+      </dependency>
+
+      <!-- dashboard-ui-google -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-ui-google</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <type>war</type>
+      </dependency>
+
+      <!-- dashboard-samples -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-samples</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <type>war</type>
+      </dependency>
+
+      <!-- dashboard-showcase -->
+      <dependency>
+        <groupId>org.jboss.dashboard-builder</groupId>
+        <artifactId>dashboard-showcase</artifactId>
+        <version>${version.org.jbpm.dashboard-builder}</version>
+        <type>war</type>
+      </dependency>
+
+    </dependencies>
+  </dependencyManagement>
+
+</project>

@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.geirsson</groupId>
+    <artifactId>sbt-ci-release</artifactId>
+    <packaging>jar</packaging>
+    <description>plugin</description>
+    <url>https://github.com/olafurpg/sbt-ci-release</url>
+    <version>1.2.6</version>
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>plugin</name>
+    <organization>
+        <name>com.geirsson</name>
+        <url>https://github.com/olafurpg/sbt-ci-release</url>
+    </organization>
+    <scm>
+        <url>https://github.com/olafurpg/sbt-ci-release</url>
+        <connection>scm:git:https://github.com/olafurpg/sbt-ci-release.git</connection>
+        <developerConnection>scm:git:git@github.com:olafurpg/sbt-ci-release.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <id>olafurpg</id>
+            <name>Ólafur Páll Geirsson</name>
+            <email>olafurpg@gmail.com</email>
+            <url>https://geirsson.com</url>
+        </developer>
+    </developers>
+    <properties>
+        <scalaVersion>2.12</scalaVersion>
+        <sbtVersion>1.0</sbtVersion>
+        <extraDependencyAttributes xml:space="preserve">+e:sbtVersion:#@#:+1.0:#@#:+module:#@#:+sbt-dynver:#@#:+e:scalaVersion:#@#:+2.12:#@#:+organisation:#@#:+com.dwijnand:#@#:+branch:#@#:+@#:NULL:#@:#@#:+revision:#@#:+3.3.0:#@#:
++e:sbtVersion:#@#:+1.0:#@#:+module:#@#:+sbt-git:#@#:+e:scalaVersion:#@#:+2.12:#@#:+organisation:#@#:+com.typesafe.sbt:#@#:+branch:#@#:+@#:NULL:#@:#@#:+revision:#@#:+1.0.0:#@#:
++e:sbtVersion:#@#:+1.0:#@#:+module:#@#:+sbt-sonatype:#@#:+e:scalaVersion:#@#:+2.12:#@#:+organisation:#@#:+org.xerial.sbt:#@#:+branch:#@#:+@#:NULL:#@:#@#:+revision:#@#:+2.3:#@#:
++e:sbtVersion:#@#:+1.0:#@#:+module:#@#:+sbt-pgp:#@#:+e:scalaVersion:#@#:+2.12:#@#:+organisation:#@#:+com.jsuereth:#@#:+branch:#@#:+@#:NULL:#@:#@#:+revision:#@#:+1.1.2:#@#:</extraDependencyAttributes>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.12.8</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-sbt</groupId>
+            <artifactId>sbt</artifactId>
+            <version>1.2.8</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.dwijnand</groupId>
+            <artifactId>sbt-dynver</artifactId>
+            <version>3.3.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.typesafe.sbt</groupId>
+            <artifactId>sbt-git</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.xerial.sbt</groupId>
+            <artifactId>sbt-sonatype</artifactId>
+            <version>2.3</version>
+        </dependency>
+        <dependency>
+            <groupId>com.jsuereth</groupId>
+            <artifactId>sbt-pgp</artifactId>
+            <version>1.1.2</version>
+        </dependency>
+    </dependencies>
+</project>

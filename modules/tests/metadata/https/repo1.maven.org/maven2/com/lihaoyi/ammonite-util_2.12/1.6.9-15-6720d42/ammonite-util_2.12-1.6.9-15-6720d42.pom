@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project 
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <name>ammonite-util_2.12</name>
+    <groupId>com.lihaoyi</groupId>
+    <artifactId>ammonite-util_2.12</artifactId>
+    <packaging>jar</packaging>
+    <description>ammonite-util</description>
+    <version>1.6.9-15-6720d42</version>
+    <url>https://github.com/lihaoyi/Ammonite</url>
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://spdx.org/licenses/MIT.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:git:git://github.com/lihaoyi/ammonite.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:lihaoyi/ammonite.git</developerConnection>
+        <url>https://github.com/lihaoyi/ammonite</url>
+    </scm>
+    <developers>
+        <developer>
+            <id>lihaoyi</id>
+            <name>Li Haoyi</name>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>pprint_2.12</artifactId>
+            <version>0.5.5</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>fansi_2.12</artifactId>
+            <version>0.2.7</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-reflect</artifactId>
+            <version>2.12.8</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>ammonite-ops_2.12</artifactId>
+            <version>1.6.9-15-6720d42</version>
+        </dependency>
+    </dependencies>
+</project>

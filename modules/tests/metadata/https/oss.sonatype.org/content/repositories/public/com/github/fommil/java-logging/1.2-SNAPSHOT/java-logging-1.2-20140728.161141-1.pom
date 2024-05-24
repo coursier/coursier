@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.github.fommil</groupId>
+    <artifactId>java-logging</artifactId>
+    <version>1.2-SNAPSHOT</version>
+
+    <!--
+    RELEASE SNAPSHOT
+    mvn clean deploy -Psonatype-oss-release
+ 
+    RELEASE VERSION
+    mvn release:clean
+    mvn release:prepare
+    mvn release:perform
+    -->
+
+    <parent>
+        <groupId>org.sonatype.oss</groupId>
+        <artifactId>oss-parent</artifactId>
+        <version>7</version>
+    </parent>
+    <packaging>jar</packaging>
+    <name>Suite of Java Logger plugins</name>
+    <description>A variety of java.util.logging formatters, adapters and filters.</description>
+    <url>https://github.com/fommil/java-logging</url>
+    <licenses>
+        <license>
+            <name>LGPL</name>
+            <url>http://www.gnu.org/licenses/lgpl.txt</url>
+        </license>
+    </licenses>
+    <scm>
+        <url>https://github.com/fommil/java-logging</url>
+        <connection>scm:git:git@github.com:fommil/java-logging.git</connection>
+        <developerConnection>scm:git:git@github.com:fommil/java-logging.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <name>Sam Halliday</name>
+            <id>fommil</id>
+            <email>sam.halliday@gmail.com</email>
+        </developer>
+    </developers>
+    <issueManagement>
+        <system>github</system>
+        <url>https://github.com/fommil/java-logging/issues</url>
+    </issueManagement>
+
+    <prerequisites>
+        <maven>3.0.3</maven>
+    </prerequisites>
+
+    <!-- mvn versions:display-dependency-updates -->
+    <dependencies>
+        <!-- Use SLF4J to redirect all other popular logging frameworks to JUL -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.5</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>1.7.5</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+            <version>1.7.5</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>1.7.5</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.11</version>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+    
+    <build>
+        <!-- mvn versions:display-plugin-updates -->
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>1.2</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                     </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

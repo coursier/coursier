@@ -1,0 +1,8 @@
+<project>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>stax</groupId>
+  <artifactId>stax-api</artifactId>
+  <version>1.0</version>
+  <dependencies>
+  </dependencies>
+</project>

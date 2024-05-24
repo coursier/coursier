@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.kie</groupId>
+    <artifactId>kie-api-parent</artifactId>
+    <version>6.5.0.Final</version>
+  </parent>
+
+  <artifactId>kie-api</artifactId>
+  <packaging>bundle</packaging><!-- bundle = jar + OSGi metadata -->
+
+  <name>KIE :: Public API</name>
+  <description>The Drools and jBPM public API which is backwards compatible between releases.</description>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <configuration>
+          <instructions>
+            <Bundle-SymbolicName>org.kie.api</Bundle-SymbolicName>
+            <Import-Package>
+              *;resolution:=optional,
+              org.jbpm.runtime.manager.impl;resolution:=optional,
+              org.drools.compiler.kie.builder.impl,
+              org.drools.core.builder.conf.impl;resolution:=optional,
+            </Import-Package>
+            <Export-Package>
+              org.kie.api.*
+            </Export-Package>
+            <!-- <Bundle-Activator>org.kie.api.osgi.Activator</Bundle-Activator> -->
+          </instructions>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <configuration>
+          <excludePackageNames>org.kie.util*</excludePackageNames>
+          <groups>
+            <group>
+              <title>KIE Base API</title>
+              <packages>org.kie.api</packages>
+            </group>
+            <group>
+              <title>Builder API</title>
+              <packages>org.kie.api.builder*</packages>
+            </group>
+            <group>
+              <title>Definition API</title>
+              <packages>org.kie.api.definition*</packages>
+            </group>
+            <group>
+              <title>Configuration API</title>
+              <packages>org.kie.api.conf*</packages>
+            </group>
+            <group>
+              <title>Runtime API</title>
+              <packages>org.kie.api.runtime*</packages>
+            </group>
+            <group>
+              <title>Commands API</title>
+              <packages>org.kie.api.command*</packages>
+            </group>
+            <group>
+              <title>Event API</title>
+              <packages>org.kie.api.event*</packages>
+            </group>
+            <group>
+              <title>Time API</title>
+              <packages>org.kie.api.time*</packages>
+            </group>
+            <group>
+              <title>Task API</title>
+              <packages>org.kie.api.task*</packages>
+            </group>
+            <group>
+              <title>CDI Support API</title>
+              <packages>org.kie.api.cdi*</packages>
+            </group>
+          </groups>
+          <!-- Important: this doclet requires Graphviz (the 'dot' command) to be installed.
+               It logs warning if it can not find the command. -->
+          <doclet>org.jboss.apiviz.APIviz</doclet>
+          <docletArtifact>
+            <groupId>org.jboss.apiviz</groupId>
+            <artifactId>apiviz</artifactId>
+            <version>1.3.2.GA</version>
+          </docletArtifact>
+          <useStandardDocletOptions>true</useStandardDocletOptions>
+          <additionalparam>-sourceclasspath ${project.build.outputDirectory}</additionalparam>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!-- Checks a backward compatibility of the KIE API. By default, the current build is checked against the last
+         released (non-SNAPSHOT) version. The check can't be added directly to the default builds as it requires Java 8,
+         to run. Once KIE moves to JDK 8 for builds, the check should be moved directly to the default build. -->
+    <profile>
+      <id>api-compatibility-check</id>
+      <properties>
+        <jdk.min.version>1.8.0</jdk.min.version>
+      </properties>
+      <activation>
+        <jdk>[1.8,)</jdk>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.revapi</groupId>
+            <artifactId>revapi-maven-plugin</artifactId>
+            <configuration>
+              <oldArtifacts>
+                <artifact>${project.groupId}:${project.artifactId}:${version.org.kie.latestFinal.release}</artifact>
+              </oldArtifacts>
+              <newArtifacts>
+                <!-- The special 'BUILD' GAV is used to specify artifacts that were produced during the build of the current project. -->
+                <artifact>BUILD</artifact>
+              </newArtifacts>
+              <analysisConfigurationFiles>
+                <configurationFile>
+                  <path>src/build/revapi-config.json</path>
+                </configurationFile>
+              </analysisConfigurationFiles>
+            </configuration>
+            <!-- Running two executions is a workaround to make sure we get a HTML report in case revapi finds
+                 some incompatible changes. The "check" goal will simply fail the whole build before it could get
+                 to the report. To make sure we always get a HTML report, the "report" goal needs to be executed
+                 before the "check" goal.
+                 Once https://github.com/revapi/revapi/issues/11 is fixed it should be possible to use single execution. -->
+            <executions>
+              <execution>
+                <id>check</id>
+                <goals>
+                  <goal>check</goal>
+                </goals>
+                <phase>verify</phase>
+              </execution>
+              <execution>
+                <!-- report can be found in ${build.directory}/site/revapi-report.html -->
+                <id>report</id>
+                <goals>
+                  <goal>report</goal>
+                </goals>
+                <phase>package</phase>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.core</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.compendium</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.xml.bind</groupId>
+      <artifactId>jboss-jaxb-api_2.2_spec</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.xml.stream</groupId>
+      <artifactId>stax-api</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>javax.activation</groupId>
+      <artifactId>activation</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.thoughtworks.xstream</groupId>
+      <artifactId>xstream</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.jboss.spec.javax.jms</groupId>
+      <artifactId>jboss-jms-api_1.1_spec</artifactId>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>javax.enterprise</groupId>
+      <artifactId>cdi-api</artifactId>
+      <scope>provided</scope><!-- HACK for OSGi: should be <optional>true</optional> instead -->
+    </dependency>
+  </dependencies>
+</project>

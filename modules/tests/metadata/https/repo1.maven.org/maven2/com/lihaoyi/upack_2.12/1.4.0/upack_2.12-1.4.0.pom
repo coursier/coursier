@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project 
+xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <modelVersion>4.0.0</modelVersion>
+    <name>upack_2.12</name>
+    <groupId>com.lihaoyi</groupId>
+    <artifactId>upack_2.12</artifactId>
+    <packaging>jar</packaging>
+    <description>upack</description>
+    <version>1.4.0</version>
+    <url>https://github.com/lihaoyi/upickle</url>
+    <licenses>
+        <license>
+            <name>MIT</name>
+            <url>https://spdx.org/licenses/MIT.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <connection>scm:git://github.com/lihaoyi/upickle.git</connection>
+        <url>git://github.com/lihaoyi/upickle.git</url>
+    </scm>
+    <developers>
+        <developer>
+            <id>lihaoyi</id>
+            <name>Li Haoyi</name>
+            <url>https://github.com/lihaoyi</url>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>com.lihaoyi</groupId>
+            <artifactId>upickle-core_2.12</artifactId>
+            <version>1.4.0</version>
+        </dependency>
+    </dependencies>
+</project>

@@ -1,0 +1,1033 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- =======================================================================
+		Parent Maven Configuration File for UCAR NetCDF library
+	======================================================================= -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+  <!-- prerequisites> <maven>2.0.9</maven> </prerequisites -->
+
+  <!-- ====================================================
+       Project description (including license)
+     ==================================================== -->
+  <groupId>edu.ucar</groupId>
+  <artifactId>thredds-parent</artifactId>
+  <packaging>pom</packaging>
+  <version>4.5.5</version>
+  <name>Parent THREDDS and CDM modules</name>
+  <description>
+    The Unidata THREDDS project includes the netCDF-Java library (aka CDM) and
+    the THREDDS Data Server (TDS).
+  </description>
+  <url>http://www.unidata.ucar.edu/software/netcdf-java/</url>
+
+  <organization>
+    <name>UCAR/Unidata</name>
+    <url>http://www.unidata.ucar.edu/</url>
+  </organization>
+  <inceptionYear>1999</inceptionYear>
+
+  <licenses>
+    <license>
+      <name>(MIT-style) netCDF C library license</name>
+      <url>http://www.unidata.ucar.edu/software/netcdf/copyright.html</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <mailingLists>
+    <mailingList>
+      <name>netcdf-java</name>
+      <subscribe>http://www.unidata.ucar.edu/support/mailinglist/mailing-list-form.html</subscribe>
+      <post>netcdf-java@unidata.ucar.edu</post>
+    </mailingList>
+  </mailingLists>
+
+  <scm>
+    <url>https://github.com/Unidata/thredds/</url>
+    <connection>scm:git:https://github.com/Unidata/thredds/</connection>
+    <developerConnection>scm:git:git@github.com:Unidata/thredds.git</developerConnection>
+    <tag>v4.5.5</tag>
+  </scm>
+
+  <!-- ===========================================================
+       Developers and Contributors
+     =========================================================== -->
+  <developers>
+    <developer>
+      <id>caron</id>
+      <name>John Caron</name>
+      <email>caron@unidata.ucar.edu</email>
+      <organization>UCAR/UNIDATA</organization>
+      <organizationUrl>http://www.unidata.ucar.edu/</organizationUrl>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>chastang</id>
+      <name>Julien Chastang</name>
+      <email>chastang@unidata.ucar.edu</email>
+      <organization>UCAR/UNIDATA</organization>
+      <organizationUrl>http://www.unidata.ucar.edu/</organizationUrl>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>edavis</id>
+      <name>Ethan Davis</name>
+      <email>edavis@unidata.ucar.edu</email>
+      <organization>UCAR/UNIDATA</organization>
+      <organizationUrl>http://www.unidata.ucar.edu/</organizationUrl>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>dmh</id>
+      <name>Dennis Heimbigner</name>
+      <email>dmh@unidata.ucar.edu</email>
+      <organization>UCAR/UNIDATA</organization>
+      <organizationUrl>http://www.unidata.ucar.edu/</organizationUrl>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>emmerson</id>
+      <name>Steve Emmerson</name>
+      <email>steve@unidata.ucar.edu</email>
+      <organization>UCAR/UNIDATA</organization>
+      <organizationUrl>http://www.unidata.ucar.edu/</organizationUrl>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>oxelson</id>
+      <name>Jennifer Ganter Oxelson</name>
+      <email>oxelson@unidata.ucar.edu</email>
+      <organization>UCAR/UNIDATA</organization>
+      <organizationUrl>http://www.unidata.ucar.edu/</organizationUrl>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>mhermida</id>
+      <name>Marcos Hermida</name>
+      <email>mhermida@unidata.ucar.edu</email>
+      <organization>UCAR/UNIDATA</organization>
+      <organizationUrl>http://www.unidata.ucar.edu/</organizationUrl>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>russ</id>
+      <name>Russel Rew</name>
+      <email>russ@unidata.ucar.edu</email>
+      <organization>UCAR/UNIDATA</organization>
+      <organizationUrl>http://www.unidata.ucar.edu/</organizationUrl>
+      <roles>
+        <role>C Developer</role>
+      </roles>
+    </developer>
+    <developer>
+      <id>yuanho</id>
+      <name>Ho Yuan</name>
+      <email>yuanho@unidata.ucar.edu</email>
+      <organization>UCAR/UNIDATA</organization>
+      <organizationUrl>http://www.unidata.ucar.edu/</organizationUrl>
+      <roles>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+  </developers>
+
+  <!-- ===========================================================
+       Profiles
+     =========================================================== -->
+  <profiles>
+    <profile>
+      <id>integration-test</id>
+      <modules>
+        <module>it</module>
+      </modules>
+    </profile>
+
+    <!-- profile>
+      <id>tomcat-debug</id>
+      <dependencies>
+        <dependency>
+          <groupId>org.apache.tomcat</groupId>
+          <artifactId>tomcat-catalina</artifactId>
+          <version>${tomcat7.version}</version>
+          <scope>provided</scope>
+        </dependency>
+        <dependency>
+          <groupId>org.apache.tomcat</groupId>
+          <artifactId>tomcat-jasper</artifactId>
+          <version>${tomcat7.version}</version>
+          <scope>provided</scope>
+        </dependency>
+      </dependencies>
+    </profile -->
+  </profiles>
+
+  <distributionManagement>
+    <repository>
+      <id>unidata-releases</id>
+      <name>UNIDATA Releases</name>
+      <url>https://artifacts.unidata.ucar.edu/content/repositories/unidata-releases/</url>
+    </repository>
+    <snapshotRepository>
+      <id>unidata-snapshots</id>
+      <name>UNIDATA Snapshots</name>
+      <url>https://artifacts.unidata.ucar.edu/content/repositories/unidata-snapshots/</url>
+    </snapshotRepository>
+  </distributionManagement>
+
+  <repositories>
+    <repository>
+      <id>unidata</id>
+      <name>THREDDS</name>
+      <url>https://artifacts.unidata.ucar.edu/content/repositories/unidata/</url>
+    </repository>
+    <repository>
+      <id>unidata-3rdparty</id>
+      <url>https://artifacts.unidata.ucar.edu/content/repositories/unidata-3rdparty/</url>
+    </repository>
+ 
+    <!-- json-taglib  ( for ncWMS ) -->
+    <repository>
+      <id>mvmsearch</id>
+      <name>mvmsearch</name>
+      <url>http://www.mvnsearch.org/maven2/</url>
+    </repository>    
+    
+  </repositories>
+
+  <!-- ===========================================================
+       Dependency Management If a POM declares one of those dependencies, then it will use
+       the version specified here. Otherwise, those dependencies are ignored. Reference:
+       http://repo1.maven.org/maven2/
+     =========================================================== -->
+  <dependencyManagement>
+    <dependencies>
+      <!-- To make dependency usage of child modules in other child modules
+           or projects using this POM as a BOM -->
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>bufr</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>cdm</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>clcommon</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>grib</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>netcdf4</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>httpservices</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>opendap</artifactId>
+        <version>${project.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>tdcommon</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>udunits</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>visadCdm</artifactId>
+        <version>${project.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>edu.wisc.ssec</groupId> <!-- replaces visad -->
+            <artifactId>visad</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>d4core</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>d4shared</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>d4client</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>d4cdmshared</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>d4cdmclient</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>d4servletshared</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>d4ts</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>d4tests</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>d4tswar</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>waterml</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+        
+      <!-- logging -->
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-api</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-core</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-slf4j-impl</artifactId>
+        <version>${log4j.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+      <dependency>  <!-- Adapts apache commons to slf4j, and so replaces commons-logging.jar -->
+         <groupId>org.slf4j</groupId>
+         <artifactId>jcl-over-slf4j</artifactId>
+         <version>${org.slf4j.version}</version>
+         <scope>runtime</scope>
+       </dependency>
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${org.slf4j.version}</version>
+      </dependency>
+      <dependency>  <!-- Should never be needed at compile time. -->
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-jdk14</artifactId>
+        <version>${org.slf4j.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+
+      <!-- spring -->
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-core</artifactId>
+        <version>${org.springframework.version}</version>
+        <exclusions>
+          <!-- Replaced with jcl-over-slf4j. -->
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-context</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-beans</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-webmvc</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-test</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+
+      <!-- spring security -->
+      <dependency>
+       <groupId>org.springframework.security</groupId>
+       <artifactId>spring-security-config</artifactId>
+       <version>${org.springframework.security.version}</version>
+      </dependency>
+      <dependency>
+       <groupId>org.springframework.security</groupId>
+       <artifactId>spring-security-core</artifactId>
+       <version>${org.springframework.security.version}</version>
+      </dependency>
+      <dependency>
+       <groupId>org.springframework.security</groupId>
+       <artifactId>spring-security-taglibs</artifactId>
+       <version>${org.springframework.security.version}</version>
+      </dependency>
+      <dependency>
+       <groupId>org.springframework.security</groupId>
+       <artifactId>spring-security-web</artifactId>
+       <version>${org.springframework.security.version}</version>
+      </dependency>
+
+      <!-- see https://github.com/coverity/coverity-security-library -->
+      <dependency>
+          <groupId>com.coverity.security</groupId>
+          <artifactId>coverity-escapers</artifactId>
+          <version>1.1.1</version>
+      </dependency>
+
+            
+      <!-- stuff for wmotables
+      <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-jdbc</artifactId>
+        <version>${org.springframework.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>commons-dbcp</groupId>
+         <artifactId>commons-dbcp</artifactId>
+         <version>${commons-dbcp.version}</version>
+       </dependency>
+      <dependency>
+         <groupId>taglibs</groupId>
+         <artifactId>standard</artifactId>
+         <version>${taglibs.version}</version>
+       </dependency>
+      <dependency>
+         <groupId>org.apache.derby</groupId>
+         <artifactId>derby</artifactId>
+         <version>${derby.version}</version>
+       </dependency>
+      <dependency>
+        <groupId>javax.activation</groupId>
+        <artifactId>activation</artifactId>
+        <version>${javax.activation.version}</version>
+      </dependency>
+      <dependency>
+       <groupId>cglib</groupId>
+       <artifactId>cglib-nodep</artifactId>
+       <version>${cglib.version}</version>
+      </dependency>
+      <dependency>
+       <groupId>org.hibernate</groupId>
+       <artifactId>hibernate-validator</artifactId>
+       <version>${org.hibernate.version}</version>
+      </dependency>  -->
+
+      <!-- client -->
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>${org.apache.httpcomponents.httpclient.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore</artifactId>
+        <version>${org.apache.httpcomponents.httpcore.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpmime</artifactId>
+        <version>${org.apache.httpcomponents.httpmime.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>net.sf.ehcache</groupId>
+        <artifactId>ehcache-core</artifactId>
+        <version>${net.sf.ehcache.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.jcip</groupId>
+        <artifactId>jcip-annotations</artifactId>
+        <version>${net.jcip.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.jdom</groupId>
+         <artifactId>jdom2</artifactId>
+         <version>${org.jdom2.version}</version> 
+       </dependency>
+      <dependency>
+         <groupId>org.jdom</groupId>
+         <artifactId>jdom-legacy</artifactId>
+         <version>${org.jdom-legacy.version}</version> 
+       </dependency>       
+      <dependency>
+        <groupId>com.sleepycat</groupId>
+        <artifactId>je</artifactId>        
+        <version>${com.sleepycat.version}</version>
+      </dependency>
+      <dependency>
+      	<groupId>${jna.groupId}</groupId>
+      	<artifactId>jna</artifactId>
+      	<version>${jna.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>joda-time</groupId>
+        <artifactId>joda-time</artifactId>
+        <version>${joda-time.version}</version>
+      </dependency>
+      <dependency>
+        <!-- jsoup HTML parser library @ http://jsoup.org/ -->
+        <groupId>org.jsoup</groupId>
+        <artifactId>jsoup</artifactId>
+        <version>${org.jsoup.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+      <dependency>
+        <groupId>com.google.protobuf</groupId>
+        <artifactId>protobuf-java</artifactId>
+        <version>${com.google.protobuf.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.quartz-scheduler</groupId>
+        <artifactId>quartz</artifactId>
+        <version>${org.quartz-scheduler.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>edu.wisc.ssec</groupId>
+        <artifactId>visad</artifactId>
+        <version>${visad.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.beust</groupId>
+        <artifactId>jcommander</artifactId>
+        <version>${jcommander.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${org.apache.commons.commons-lang3}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${com.google.guava.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>edu.ucar</groupId>
+        <artifactId>jj2000</artifactId>
+        <version>${edu.ucar.jj2000.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.itadaki</groupId>
+        <artifactId>bzip2</artifactId>
+        <version>${org.itadaki.bzip2.version}</version>
+      </dependency>
+
+        <!-- UI -->
+      <dependency>
+        <groupId>org.jfree</groupId>
+        <artifactId>jcommon</artifactId>
+        <version>${org.jfree.jcommon.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.jfree</groupId>
+        <artifactId>jfreechart</artifactId>
+        <version>${org.jfree.jfreechart.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>com.lowagie</groupId>
+            <artifactId>itext</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>com.jgoodies</groupId>
+        <artifactId>jgoodies-forms</artifactId>
+        <version>${com.jgoodies.version}</version>
+      </dependency>
+
+      <!-- THREDDS - START -->
+      <dependency>
+        <groupId>commons-fileupload</groupId>
+        <artifactId>commons-fileupload</artifactId>
+        <version>${commons-fileupload.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io.version}</version>
+      </dependency>
+      <!-- dependency>
+      	<groupId>org.jasig.cas</groupId>
+      	<artifactId>cas-client-core</artifactId>
+        <version>${cas.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency-->
+      <dependency>
+        <groupId>oro</groupId>
+        <artifactId>oro</artifactId>
+        <version>${oro.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>uk.ac.rdg.resc</groupId>
+        <artifactId>ncwms</artifactId>
+        <version>${uk.ac.rdg.resc.ncwms.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jfree</groupId>
+            <artifactId>jcommon</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.jfree</groupId>
+            <artifactId>jfreechart</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <!-- server -->
+      <dependency>
+      	<groupId>javax.servlet</groupId>
+      	<artifactId>javax.servlet-api</artifactId>
+      	<version>${javax.servlet.version}</version>
+        <scope>provided</scope>
+      </dependency>
+      <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>jstl</artifactId>
+        <version>${javax.servlet.jstl.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+      <dependency>
+        <groupId>json-taglib</groupId>
+        <artifactId>json-taglib</artifactId>
+        <version>${atg.taglib.json.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>jaxen</groupId>
+        <artifactId>jaxen</artifactId>
+        <version>${jaxen.version}</version>
+        <scope>runtime</scope>
+        <exclusions>
+          <exclusion>
+            <artifactId>maven-cobertura-plugin</artifactId>
+            <groupId>maven-plugins</groupId>
+          </exclusion>
+          <exclusion>
+            <artifactId>maven-findbugs-plugin</artifactId>
+            <groupId>maven-plugins</groupId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <!-- THREDDS ISO -->
+      <dependency>
+        <groupId>EDS</groupId>
+        <artifactId>threddsIso</artifactId>
+        <version>${eds.threddsIso.version}</version>
+        <scope>runtime</scope>
+      </dependency>
+      
+      <!-- THREDDS does not use saxon directly. Allow threddsISO to pull it in. TODO Remove this section-->
+      <!-- dependency>
+			<groupId>net.sf.saxon</groupId>
+			<artifactId>saxon</artifactId>
+			<version>${saxon.version}</version>
+	  </dependency>
+      <dependency>
+			<groupId>net.sf.saxon</groupId>
+			<artifactId>saxon-dom</artifactId>
+			<version>${saxon.version}</version>
+	  </dependency-->
+      
+      <!-- THREDDS - END -->
+
+      <!--
+           We build the THREDDS war with the option attachClasses enabled so we have two possible dependencies here:
+            * war ->  edu.ucar.thredds-{project.version}.war
+            * jar ->  edu.ucar.thredds-{project.version}-classes.jar
+          -->
+      <!-- war dependencies -->
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>tds</artifactId>
+        <version>${project.version}</version>
+        <type>war</type>
+        <!-- scope>provided</scope-->
+      </dependency>
+      <!-- dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>remotetest</artifactId>
+        <version>${project.version}</version>
+        <type>war</type>
+      </dependency -->
+
+      <!-- jar dependencies -->
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>tds</artifactId>
+        <version>${project.version}</version>
+        <classifier>classes</classifier>
+        <type>jar</type>
+        <!-- scope>provided</scope-->
+      </dependency>
+
+      <!-- webapps -->
+      <!-- dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>wmotables</artifactId>
+        <version>${project.version}</version>
+        <type>war</type>
+      </dependency>
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>cdmvalidator</artifactId>
+        <version>${project.version}</version>
+        <type>war</type>
+      </dependency -->
+
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dtswar</artifactId>
+        <version>${project.version}</version>
+        <type>war</type>
+      </dependency>
+
+      <!-- test -->
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>cdm</artifactId>
+        <scope>test</scope>
+        <type>test-jar</type>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>${project.groupId}</groupId>
+        <artifactId>dap4tests</artifactId>
+        <scope>test</scope>
+        <type>test-jar</type>
+        <version>${project.version}</version>
+      </dependency>
+
+    </dependencies>
+  </dependencyManagement>
+
+  <!-- All modules use JUnit for their test. -->
+  <dependencies>
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <!-- ===========================================================
+       Build configuration
+     =========================================================== -->
+  <build>
+    <!-- Temporary source directory for test sources -->
+    <!-- testSourceDirectory>src/test_framework/java</testSourceDirectory -->
+    <pluginManagement>
+      <plugins>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>${maven-antrun-plugin.version}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <version>${maven-assembly-plugin.version}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
+          <configuration>
+            <source>1.7</source>
+            <target>1.7</target>
+          </configuration>
+          <!-- Tests compilation -->
+          <executions>
+            <execution>
+              <id>default-testCompile</id>
+              <phase>test-compile</phase>
+              <goals>
+                <goal>testCompile</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>${maven-jar-plugin.version}</version>
+          <configuration>
+            <archive>
+              <index>true</index>
+              <!-- Archive will contain an INDEX.LIST file. -->
+              <manifest>
+                <addClasspath>true</addClasspath>
+                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              </manifest>
+              <manifestEntries>
+                <Built-On>${maven.build.timestamp}</Built-On>
+              </manifestEntries>
+            </archive>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>${maven-deploy-plugin.version}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <version>${maven-javadoc-plugin.version}</version>
+          <configuration>
+            <links>
+              <link>http://docs.oracle.com/javase/6/docs/api/</link>
+            </links>
+            <use>false</use>
+            <quiet>true</quiet>
+            <maxmemory>1024m</maxmemory>
+            <minmemory>512m</minmemory>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <version>${maven-release-plugin.version}</version>
+          <configuration>
+            <tagNameFormat>v@{project.version}</tagNameFormat>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${maven-surefire-plugin.version}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-shade-plugin</artifactId>
+          <version>${maven-shade-plugin.version}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-war-plugin</artifactId>
+          <version>${maven-war-plugin.version}</version>
+        </plugin>
+
+      </plugins>
+    </pluginManagement>
+  </build>
+
+  <!-- ====================================================
+       Deployment to public servers
+     ==================================================== -->
+  <!--distributionManagement>
+     <repository>
+       <id>sonatype-nexus-staging</id>
+       <name>Sonatype OSS Hosting, synced to Maven Central</name>
+       <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+     </repository>
+   </distributionManagement -->
+
+
+  <!-- ===========================================================
+       Modules for the build in approximate dependency order
+     =========================================================== -->
+  <modules>
+    <module>udunits</module>
+    <module>cdm</module>
+    <module>bufr</module>
+    <module>grib</module>
+    <module>opendap</module>
+    <module>opendap/dtswar</module>
+    <module>visad</module>
+    <module>ncIdv</module>
+    <module>ui</module>
+    <module>tdcommon</module>
+    <module>tds</module>
+    <module>tdm</module>
+    <module>cdm-test</module>
+    <module>it</module>
+    <module>netcdf4</module>
+    <module>clcommon</module>
+    <module>httpservices</module>
+    <module>waterml</module>
+
+    <!-- module>wmotables</module -->
+    <!-- module>cdmvalidator</module -->
+
+    <module>dap4/d4core</module>
+    <module>dap4/d4shared</module>
+    <module>dap4/d4client</module>
+    <module>dap4/d4cdmshared</module>
+    <module>dap4/d4cdmclient</module>
+    <module>dap4/d4servletshared</module>
+    <module>dap4/d4ts</module>
+    <module>dap4/d4tests</module>
+    <module>dap4/d4tswar</module>
+  </modules>
+
+  <properties>
+    <!-- default is to skip tests. use mvn test -DskipTests=false to override on command line -->
+    <skipTests>true</skipTests>
+
+    <!-- Source character encoding (different plug-ins use different sourceEncoding properties) -->
+    <sourceEncoding>UTF-8</sourceEncoding>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <!-- Build timestamp -->
+    <maven.build.timestamp.format>yyyyMMdd.HHmm</maven.build.timestamp.format>
+    <build.timestamp>${maven.build.timestamp}</build.timestamp>
+
+	<!-- Dependency versions -->
+    <visad.version>2.0-20130124</visad.version>
+    <edu.wisc.version>2011-08-22</edu.wisc.version>
+	<uk.ac.rdg.resc.ncwms.version>1.2.tds.4.5.5</uk.ac.rdg.resc.ncwms.version>
+
+    <eds.threddsIso.version>2.2.4</eds.threddsIso.version>
+
+    <atg.taglib.json.version>0.4.1</atg.taglib.json.version>
+    <cas.version>3.1.10</cas.version>
+    <cglib.version>2.2</cglib.version>
+    <com.google.guava.version>17.0</com.google.guava.version>
+    <com.google.protobuf.version>2.5.0</com.google.protobuf.version>
+    <com.jgoodies.version>1.6.0</com.jgoodies.version>
+    <com.sleepycat.version>4.0.92</com.sleepycat.version>
+    <commons-dbcp.version>1.4</commons-dbcp.version>
+    <commons-fileupload.version>1.2.2</commons-fileupload.version>
+    <org.apache.commons.commons-lang3>3.3.2</org.apache.commons.commons-lang3>
+    <org.apache.httpcomponents.httpcore.version>4.2.5</org.apache.httpcomponents.httpcore.version>
+    <org.apache.httpcomponents.httpclient.version>4.2.6</org.apache.httpcomponents.httpclient.version>
+    <org.apache.httpcomponents.httpmime.version>4.2.6</org.apache.httpcomponents.httpmime.version>
+    <commons-io.version>2.4</commons-io.version>
+    <derby.version>10.9.1.0</derby.version>
+    <javax.activation.version>1.1.1</javax.activation.version>
+    <javax.servlet.version>3.1.0</javax.servlet.version>
+    <javax.servlet.jstl.version>1.2</javax.servlet.jstl.version>
+    <jaxen.version>1.1.4</jaxen.version>
+    <org.jfree.jcommon.version>1.0.23</org.jfree.jcommon.version>
+    <org.jfree.jfreechart.version>1.0.19</org.jfree.jfreechart.version>
+    <joda-time.version>2.2</joda-time.version>
+    <junit.version>4.12</junit.version>
+    <log4j.version>2.0-rc1</log4j.version>
+    <net.jcip.version>1.0</net.jcip.version>
+    <net.sf.ehcache.version>2.6.2</net.sf.ehcache.version>
+    <!-- org.apache.tomcat.version>7.0.50</org.apache.tomcat.version !-->
+    <org.hibernate.version>4.3.1.Final</org.hibernate.version>
+    <org.jsoup.version>1.7.2</org.jsoup.version>
+    <org.jdom2.version>2.0.4</org.jdom2.version>
+    <org.jdom-legacy.version>1.1.3</org.jdom-legacy.version>
+    <org.quartz-scheduler.version>2.2.0</org.quartz-scheduler.version>
+    <org.slf4j.version>1.7.7</org.slf4j.version>
+    <org.springframework.version>3.2.12.RELEASE</org.springframework.version>
+    <org.springframework.security.version>3.2.5.RELEASE</org.springframework.security.version>
+    <oro.version>2.0.8</oro.version>
+    <taglibs.version>1.1.2</taglibs.version>
+    <!--saxon.version>8.7</saxon.version-->
+    <jna.groupId>net.java.dev.jna</jna.groupId>
+    <jna.version>4.1.0</jna.version>
+    <edu.ucar.jj2000.version>5.2</edu.ucar.jj2000.version>
+    <org.itadaki.bzip2.version>0.9.1</org.itadaki.bzip2.version>
+    <jcommander.version>1.35</jcommander.version>
+
+    <!-- Plugins versions -->
+    <maven-antrun-plugin.version>1.7</maven-antrun-plugin.version>
+    <maven-assembly-plugin.version>2.4</maven-assembly-plugin.version>
+    <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
+    <maven-deploy-plugin.version>2.7</maven-deploy-plugin.version>
+    <maven-javadoc-plugin.version>2.9.1</maven-javadoc-plugin.version>
+    <maven-jar-plugin.version>2.4</maven-jar-plugin.version>
+    <maven-release-plugin.version>2.4.1</maven-release-plugin.version>
+    <maven-shade-plugin.version>2.1</maven-shade-plugin.version>
+    <maven-surefire-plugin.version>2.16</maven-surefire-plugin.version>
+    <maven-war-plugin.version>2.4</maven-war-plugin.version>
+
+    <!-- http://stackoverflow.com/questions/11222982/tomcat-binary-distribution-zip-as-maven-artifact -->
+    <cargo-plugin.version>1.4.5</cargo-plugin.version>
+    <!-- apache.download>http://mirrors.ibiblio.org/apache/</apache.download -->
+    <tomcat7.version>7.0.54</tomcat7.version>
+
+  </properties>
+
+</project>

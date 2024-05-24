@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.github.fommil.netlib</groupId>
+        <artifactId>native_system</artifactId>
+        <version>1.1</version>
+    </parent>
+
+    <artifactId>netlib-native_system-win-x86_64</artifactId>
+    <packaging>dll</packaging>
+
+    <!--
+    This build is cross-compiled from OS X using the official MinGW snapshot
+    downloaded from (I used mingw-w64-bin_x86_64-darwin_20130622)
+
+      http://sourceforge.net/projects/mingw-w64/
+
+    with the Windows 64 bit JDK obtained as per
+
+      http://www.oracle.com/technetwork/java/javase/downloads/jdk7-downloads-1880260.html
+      http://stackoverflow.com/a/14617087/1041691
+
+      mkdir java ; cd java
+      # obtain the JDK via a browser
+      WINEPREFIX=$PWD wine jdk-7u25-windows-x64.exe
+      sudo mkdir -p /opt/win-x86_64
+      sudo mv drive_c/Program\ Files/Java/jdk1.7.0_25 /opt/win-x86_64/jdk7
+       
+    There are no sensible pre-built binaries of BLAS for Windows
+    (they are usually missing the CBLAS API)
+    so we compile our own from the netlib folder
+        
+        x86_64-w64-mingw32-gcc BLAS/*.f CBLAS/*.c CBLAS/*.f -shared -o libblas3.dll -lgfortran -DADD_
+        x86_64-w64-mingw32-gcc LAPACK/*.f -shared -o liblapack3.dll -lgfortran -L. -lblas3
+        sudo mv libblas3.dll liblapack3.dll /opt/win-x86_64/lib
+        sudo cp CBLAS/*.h /opt/win-x86_64/include
+    -->
+    <properties>
+        <netlib.src>../../netlib</netlib.src>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>${project.parent.groupId}</groupId>
+            <artifactId>native_system-java</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.github.fommil.netlib</groupId>
+                <artifactId>generator</artifactId>
+                <executions>
+                    <execution>
+                        <id>blas</id>
+                    </execution>
+                    <execution>
+                        <id>lapack</id>
+                    </execution>
+                    <execution>
+                        <id>arpack</id>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>native-maven-plugin</artifactId>
+                <extensions>true</extensions>
+                <configuration>
+                    <!-- WIN32 is a misnomer -->
+                    <javahOS>win32</javahOS>
+                    <jdkIncludePath>/opt/win-x86_64/jdk7/include</jdkIncludePath>
+                    <compilerExecutable>x86_64-w64-mingw32-gcc</compilerExecutable>
+                    <linkerExecutable>x86_64-w64-mingw32-gcc</linkerExecutable>
+                    <compilerEndOptions>
+                        <!-- silencing warnings because jint* int* are actually safe on this platform -->
+                        <compilerEndOption>-w</compilerEndOption>
+                        <compilerEndOption>-I/opt/win-x86_64/include</compilerEndOption>
+                    </compilerEndOptions>
+                    <linkerMiddleOptions>
+<!-- check binary link with
+  x86_64-w64-mingw32-objdump -p target/netlib-native_system-win-x86_64.dll | grep DLL
+-->
+                        <linkerMiddleOption>-shared</linkerMiddleOption>
+                        <linkerMiddleOption>-L/opt/win-x86_64/lib</linkerMiddleOption>
+                        <linkerMiddleOption>-lblas3</linkerMiddleOption>
+                        <linkerMiddleOption>-llapack3</linkerMiddleOption>
+                        <linkerMiddleOption>/opt/mingw64/mingw/lib/libgfortran.a</linkerMiddleOption>
+                        <linkerMiddleOption>/opt/mingw64/mingw/lib/libquadmath.a</linkerMiddleOption>
+                        <linkerMiddleOption>-static-libgcc</linkerMiddleOption>
+                        <linkerMiddleOption>-Wl,--gc-sections</linkerMiddleOption>
+                        <linkerMiddleOption>-Wl,-s</linkerMiddleOption>
+                        <!-- Ignored, see http://sourceforge.net/p/mingw/bugs/1134/ -->
+                        <linkerMiddleOption>-Wl,--version-script=${netlib.src}/symbol.map</linkerMiddleOption>
+                    </linkerMiddleOptions>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>runtime</id>
+                    </execution>
+                    <execution>
+                        <id>source</id>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

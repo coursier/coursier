@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0" xmlns:e="http://ant.apache.org/ivy/extra">
+  <info organisation="io.get-coursier" module="coursier-cli_2.12" revision="0.1.2-publish-local" status="integration" publication="20190927171938">
+    <description/>
+  </info>
+  <configurations>
+    <conf name="plugin" visibility="public" description=""/>
+    <conf name="pom" visibility="public" description=""/>
+    <conf name="universal-src" visibility="public" description=""/>
+    <conf extends="runtime" name="test" visibility="public" description=""/>
+    <conf name="provided" visibility="public" description=""/>
+    <conf extends="compile,optional,provided" name="compile-internal" visibility="public" description=""/>
+    <conf extends="linux" name="debian" visibility="public" description=""/>
+    <conf name="docs" visibility="public" description=""/>
+    <conf name="optional" visibility="public" description=""/>
+    <conf name="compile" visibility="public" description=""/>
+    <conf name="universal" visibility="public" description=""/>
+    <conf extends="test,optional,provided" name="test-internal" visibility="public" description=""/>
+    <conf name="docker" visibility="public" description=""/>
+    <conf name="scala-tool" visibility="public" description=""/>
+    <conf name="universal-docs" visibility="public" description=""/>
+    <conf name="linux" visibility="public" description=""/>
+    <conf extends="linux" name="rpm" visibility="public" description=""/>
+    <conf name="sources" visibility="public" description=""/>
+    <conf extends="compile" name="runtime" visibility="public" description=""/>
+    <conf name="windows" visibility="public" description=""/>
+    <conf extends="runtime,optional" name="runtime-internal" visibility="public" description=""/>
+  </configurations>
+  <publications>
+    <artifact name="coursier-cli_2.12" type="jar" ext="jar" conf="compile"/>
+    <artifact e:classifier="javadoc" name="coursier-cli_2.12" type="doc" ext="jar" conf="docs"/>
+    <artifact e:classifier="sources" name="coursier-cli_2.12" type="src" ext="jar" conf="sources"/>
+    <artifact e:classifier="tests-javadoc" name="coursier-cli_2.12" type="doc" ext="jar" conf="docs"/>
+    <artifact name="coursier-cli_2.12" type="pom" ext="pom" conf="pom"/>
+    <artifact e:classifier="tests" name="coursier-cli_2.12" type="jar" ext="jar" conf="test"/>
+    <artifact e:classifier="tests-sources" name="coursier-cli_2.12" type="src" ext="jar" conf="sources"/>
+  </publications>
+  <dependencies>
+    <dependency org="org.scala-lang" name="scala-compiler" rev="2.12.10" conf="scala-tool->default"> </dependency>
+    <dependency org="org.scala-lang" name="scala-compiler" rev="2.12.10" conf="scala-tool->optional(default)"> </dependency>
+    <dependency org="org.scala-lang" name="scala-library" rev="2.12.10" conf="scala-tool->default"> </dependency>
+    <dependency org="org.scala-lang" name="scala-library" rev="2.12.10" conf="scala-tool->optional(default)"> </dependency>
+    <dependency org="io.get-coursier" name="coursier-bootstrap_2.12" rev="0.1.2-publish-local" conf="compile->default(compile)"> </dependency>
+    <dependency org="io.get-coursier" name="coursier_2.12" rev="0.1.2-publish-local" conf="compile->default(compile)"> </dependency>
+    <dependency org="io.get-coursier" name="coursier-install_2.12" rev="0.1.2-publish-local" conf="compile->default(compile)"> </dependency>
+    <dependency org="io.get-coursier" name="coursier-publish_2.12" rev="0.1.2-publish-local" conf="compile->default(compile)"> </dependency>
+    <dependency org="org.scala-lang" name="scala-library" rev="2.12.10" conf="compile->default(compile)"> </dependency>
+    <dependency org="com.github.alexarchambault" name="argonaut-shapeless_6.2_2.12" rev="1.2.0-M11" conf="compile->default(compile)"> </dependency>
+    <dependency org="com.github.alexarchambault" name="case-app_2.12" rev="2.0.0-M9" conf="compile->default(compile)"> </dependency>
+    <dependency org="org.typelevel" name="cats-core_2.12" rev="1.6.0" conf="compile->default(compile)"> </dependency>
+    <dependency org="io.monadless" name="monadless-cats_2.12" rev="0.0.13" conf="compile->default(compile)"> </dependency>
+    <dependency org="io.monadless" name="monadless-stdlib_2.12" rev="0.0.13" conf="compile->default(compile)"> </dependency>
+    <dependency org="junit" name="junit" rev="4.12" conf="test->default(compile)"> </dependency>
+    <dependency org="org.scalatest" name="scalatest_2.12" rev="3.0.8" conf="test->default(compile)"> </dependency>
+  </dependencies>
+</ivy-module>

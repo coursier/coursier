@@ -1,0 +1,1125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <!-- That parent extends the org.jboss:jboss-parent -->
+    <groupId>org.jboss.integration-platform</groupId>
+    <artifactId>jboss-integration-platform-parent</artifactId>
+    <!-- Keep in sync with property <version.org.jboss.integration-platform> -->
+    <version>6.0.8.Final</version>
+  </parent>
+
+  <groupId>org.kie</groupId>
+  <artifactId>kie-parent-metadata</artifactId>
+  <packaging>pom</packaging>
+  <!-- On updating the version, also look for these variations for OSGi stuff: "5.3.0.qualifier" and "5.3.0.SNAPSHOT" -->
+  <!-- Important a released version should always follow any of these patterns: -->
+  <!-- major.minor.micro.Alpha[n] -->
+  <!-- major.minor.micro.Beta[n] -->
+  <!-- major.minor.micro.CR[n] -->
+  <!-- major.minor.micro.Final -->
+  <!-- For example: 1.2.3 without the suffix ".Final" corrupts the OSGi eclipse updatesite -->
+  <!-- For example: 1.2.3.M2 corrupts the OSGi eclipse updatesite update order -->
+  <version>6.5.0.Final</version>
+
+  <name>KIE (Drools, jBPM, OptaPlanner) parent metadata</name>
+  <description>
+    The metadata parent contains all parent metadata (including plugins) except for dependency versions.
+    This is to avoid a chicken-and-egg problem with the boms.
+  </description>
+  <url>http://www.jboss.org/drools</url>
+  <inceptionYear>2001</inceptionYear>
+  <organization>
+    <name>JBoss by Red Hat</name>
+    <url>http://www.jboss.org/</url>
+  </organization>
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
+
+  <properties>
+    <!-- Internal dependencies -->
+    <version.org.kie>6.5.0.Final</version.org.kie>
+    <version.org.drools>${version.org.kie}</version.org.drools>
+    <version.org.optaplanner>${version.org.kie}</version.org.optaplanner>
+    <version.org.jbpm>${version.org.kie}</version.org.jbpm>
+    <version.org.jbpm.dashboard-builder>${version.org.kie}</version.org.jbpm.dashboard-builder>
+    <version.org.drools.droolsjbpm-integration>${version.org.drools}</version.org.drools.droolsjbpm-integration>
+    <version.org.uberfire>0.9.0.Final</version.org.uberfire>
+    <version.org.dashbuilder>0.5.0.Final</version.org.dashbuilder>
+    <version.org.guvnor>${version.org.drools}</version.org.guvnor>
+    <version.org.kie.uberfire.extensions>${version.org.drools}</version.org.kie.uberfire.extensions>
+    <version.org.drools.droolsjbpm-tools>${version.org.drools}</version.org.drools.droolsjbpm-tools>
+    <version.org.drools.droolsjbpm-build-distribution>${version.org.drools}</version.org.drools.droolsjbpm-build-distribution>
+    <version.org.jbpm.jbpm-designer>${version.org.jbpm}</version.org.jbpm.jbpm-designer>
+    <version.org.jbpm.jbpm-form-modeler>${version.org.jbpm}</version.org.jbpm.jbpm-form-modeler>
+    <version.org.jbpm.jbpm-console-ng>${version.org.jbpm}</version.org.jbpm.jbpm-console-ng>
+
+    <!-- CONVENTIONS:
+           - A version property must be specified in the format "version.{groupId}", optionally with a suffix to make it unique.
+           - Version properties must be sorted alphabetically (other form of sorting were found to be unclear and ambiguous).
+     -->
+
+    <!-- External dependency versions bom -->
+    <!-- Keep in sync with <parent>'s <version> -->
+    <version.org.jboss.integration-platform>6.0.8.Final</version.org.jboss.integration-platform>
+    <!-- ################################################################################ -->
+    <!-- New and overwritten dependencies -->
+    <!-- ################################################################################ -->
+    <version.avalon-framework>4.1.4</version.avalon-framework>
+    <version.com.ahome-it.lienzo-core>2.0.192-RC1</version.com.ahome-it.lienzo-core>
+    <version.com.android-dx>1.10</version.com.android-dx>
+    <version.com.github.detro>1.2.0</version.com.github.detro>
+    <version.com.github.tomakehurst.wiremock>1.53</version.com.github.tomakehurst.wiremock>
+    <version.com.google.android>4.1.1.4</version.com.google.android>
+    <version.jakarta-regexp>1.4</version.jakarta-regexp>
+    <!-- this version will temporary override the junit version 4.11 in jboss-ip-bom 6.0.8.Final. In next version of jboss-ip-bom
+        this can be removed as it is already in jboss-ip-bom-->
+     <version.junit>4.12</version.junit>
+    <version.link.bek.tools.issue-keeper-junit>4.11.1</version.link.bek.tools.issue-keeper-junit>
+    <version.net.sf.docbook.docbook-xsl>1.76.1</version.net.sf.docbook.docbook-xsl>
+    <!-- this version will override the jboss-ip-bom version 3.6.2. the jboss-ip-bom version has to remain as the 4.0.0 breaks ModeShape nor is Lucene 4.0.0 part of the latest EAP-->
+    <version.org.apache.lucene>4.0.0</version.org.apache.lucene>
+    <version.org.apache.xmlgraphics.batik>1.6.1-1</version.org.apache.xmlgraphics.batik>
+    <version.org.apache.xmlgraphics.commons>1.4</version.org.apache.xmlgraphics.commons>
+    <!-- overwrites the version of org.jboss.xnio defined in jboss-ip-bom because needed by WildFly -->
+    <version.org.jboss.xnio>3.2.0.Final</version.org.jboss.xnio>
+    <!-- version of org.jboss.xnio aligned with WildFly 10 -->
+    <version.org.jboss.xnio.wildfly10>3.3.6.Final</version.org.jboss.xnio.wildfly10>
+    <version.org.apache.xmlbeans>2.3.0</version.org.apache.xmlbeans>
+    <version.org.drools.guvnor-api>5.6.0.Final</version.org.drools.guvnor-api>
+    <version.org.jboss.errai>3.2.4.Final</version.org.jboss.errai>
+    <!-- Version of Errai compatible with CDI 1.0. Few artifacts in this version are used for CDI 1.0 compatible WAR distributions. -->
+    <version.org.jboss.errai.cdi10-compatible>3.0.6.Final</version.org.jboss.errai.cdi10-compatible>
+    <version.org.mortbay.jetty.runner>8.1.7.v20120910</version.org.mortbay.jetty.runner>
+    <version.org.picketlink>2.6.0.Final</version.org.picketlink>
+    <version.com.unboundid>2.3.6</version.com.unboundid>
+    <version.com.wordnik.swagger>1.3.10</version.com.wordnik.swagger>
+    <version.org.jboss.byteman>3.0.1</version.org.jboss.byteman>
+    <version.org.roboguice>3.0.1</version.org.roboguice>
+    <version.org.robolectric>3.1.2</version.org.robolectric>
+    <version.org.simpleframework>6.0.1</version.org.simpleframework>
+    <!-- this version will temporary override the springframework version 3.2.12.RELEASE in jboss-ip-bom 6.0.8.Final. In next version of jboss-ip-bom
+	this can be removed as it is already in jboss-ip-bom -->
+    <version.org.springframework>4.3.2.RELEASE</version.org.springframework>
+    <!-- this version will overwrite jboss-ip-bom version 2.5.1. The version in jboss-ip-bom couldn't be upgraded as it will break ModeShape Web Explorer application which uses GWT 2.5.1 -->
+    <!-- please look at https://github.com/fredsa/gwt-dnd/wiki/GettingStarted -->
+    <version.com.google.gwt>2.7.0</version.com.google.gwt>
+    <!-- this version will overwrite jboss-ip-version 3.1.2. The version in jboss-ip-bom couldn't be upgraded as this version needs GWT 2.7.0 -->
+    <!-- please look at https://github.com/fredsa/gwt-dnd/wiki/GettingStarted -->
+    <version.com.allen-sauer.gwt.dnd>3.3.3</version.com.allen-sauer.gwt.dnd>
+    <!-- temporary because it was removed/rename in jboss-ip-bom and it is needed by droolsjbpm-knowledge/kie-api/pom.xml -->
+    <version.javax.xml.stream.stax>1.0-2</version.javax.xml.stream.stax>
+    <!-- overrides <version.org.jboss.as> 7.4.0.Final used in jboss-ip-bom 6.0.0.CR13 -->
+    <version.org.jboss.as>7.2.0.Final</version.org.jboss.as>
+    <version.org.ops4j.pax.url>2.2.0</version.org.ops4j.pax.url>
+    <version.org.geronimo.atinject>1.0</version.org.geronimo.atinject>
+    <!-- since ironjacamar was removed from the ip-ip-bom but is still needed from dashboard-builder all dependencies are placed here -->
+    <version.org.jboss.ironjacamar>1.0.31.Final</version.org.jboss.ironjacamar>
+    <!-- In community builds productized is false, in product builds it's true to enable branding changes -->
+    <org.kie.productized>false</org.kie.productized>
+
+    <maven.build.timestamp.format>yyyyMMddHHmm</maven.build.timestamp.format>
+    <!-- Make OSGi happy -->
+    <osgi.snapshot.qualifier>${maven.build.timestamp}</osgi.snapshot.qualifier>
+
+    <!-- Plugin version overrides.
+         IMPORTANT: always explain the reason for overriding the plugin version! -->
+    <!-- jboss-parent uses findbugs-plugin version 3.x which is not Java 6 compatible -->
+    <version.findbugs.plugin>2.5.5</version.findbugs.plugin>
+    <!-- Override version 2.5.4 coming from jboss-parent as it forks executions, which is a bug.
+         See https://issues.apache.org/jira/browse/FELIX-4882 for more details.
+         Version 3.x requires Java 7 (not directly, but one of transitive deps does). -->
+    <version.bundle.plugin>2.5.3</version.bundle.plugin>
+    <!-- Override6.1.1 is the last version supporting Java 6. We need to be able to run certain modules
+         (e.g. jbpm-test-coverage) with Java 6. -->
+    <version.checkstyle>6.1.1</version.checkstyle>
+    <!-- TODO: remove this once all repositories comply to the defined checkstyle rules -->
+    <checkstyle.failOnViolation>false</checkstyle.failOnViolation>
+    <!-- org.eclipse.tycho plugin version -->
+    <version.org.eclipse.tycho>0.24.0</version.org.eclipse.tycho>
+    <version.org.jboss.tools.tycho-plugins>0.23.1</version.org.jboss.tools.tycho-plugins>
+    
+    <!-- Used by maven-enforcer-plugin -->
+    <!-- IMPORTANT: JDK8 is needed to build the projects (to support also WildFly 10), but we still do support JDK6/JDK7 for all backend modules. -->
+    <jdk.min.version>1.8</jdk.min.version>
+    <maven.min.version>3.2.3</maven.min.version>
+    <!-- Important: this is one and only place where the supported user agents (browsers) are configured.
+         All webapps/showcases must use this property in their *.gwt.xml files.
+         We only need to support IE11+, but there is no ie11 permutation. IE11 will use the Firefox one (gecko1_8) -->
+    <gwt.user.agent.all>gecko1_8,safari</gwt.user.agent.all>
+    <!-- Number of GWT compiler worker processes. Defined as property so that it can be easily overridden from cmd line.
+         Default value is 1 to enable building on older machines as well (minimum is still about 4GiB of RAM memory). -->
+    <gwt.compiler.localWorkers>1</gwt.compiler.localWorkers>
+    <!-- property for productisation to know the last released version -->
+    <latestReleasedVersionFromThisBranch>6.5.0.Final</latestReleasedVersionFromThisBranch>
+    <!-- Version of the KIE Workbench application. Shown for example in About dialog. Will be usually overridden by productisation. -->
+    <version.org.kie.workbench.app>${version.org.kie}</version.org.kie.workbench.app>
+
+    <!-- Using origin-repository.jboss.org as that is the canonical URL for deployment. repository.jboss.org is just a proxy
+         which should delegate the calls to origin-repository.jboss.org, but that is often buggy. Using the canonical URL
+         directly should help to avoid some of the issues with deploying artifacts. -->
+    <jboss.releases.repo.url>https://origin-repository.jboss.org/nexus/service/local/staging/deploy/maven2/</jboss.releases.repo.url>
+    <jboss.snapshots.repo.url>https://origin-repository.jboss.org/nexus/content/repositories/snapshots/</jboss.snapshots.repo.url>
+
+    <!-- Latest release to be used by api-compatibility-check to check backwards compat of the Kie API. -->
+    <version.org.kie.latestFinal.release>6.4.0.Final</version.org.kie.latestFinal.release>
+  </properties>
+
+  <repositories>
+    <!-- Conventions are described in http://community.jboss.org/wiki/MavenGettingStarted-Developers -->
+    <repository>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Repository Group</name>
+      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>never</updatePolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+      </snapshots>
+    </repository>
+  </repositories>
+  <pluginRepositories>
+    <pluginRepository>
+      <id>jboss-public-repository-group</id>
+      <name>JBoss Public Repository Group</name>
+      <url>https://repository.jboss.org/nexus/content/groups/public/</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </pluginRepository>
+  </pluginRepositories>
+
+  <scm>
+    <connection>scm:git:git@github.com:droolsjbpm/droolsjbpm-build-bootstrap.git</connection>
+    <developerConnection>scm:git:git@github.com:droolsjbpm/droolsjbpm-build-bootstrap.git</developerConnection>
+    <url>https://github.com/droolsjbpm/droolsjbpm-build-bootstrap</url>
+  </scm>
+  <ciManagement>
+    <system>hudson</system>
+    <url>https://hudson.jboss.org/hudson/view/Drools%20jBPM/</url>
+  </ciManagement>
+  <issueManagement>
+    <system>jira</system>
+    <url>https://issues.jboss.org/browse/DROOLS</url>
+  </issueManagement>
+  <developers>
+    <developer>
+      <name>All developers are listed on the team website</name>
+      <url>http://www.drools.org/community/team.html</url>
+    </developer>
+  </developers>
+  <contributors>
+    <contributor>
+      <name>All contributors are listed on the team website</name>
+      <url>http://www.drools.org/community/team.html</url>
+    </contributor>
+  </contributors>
+  <mailingLists>
+    <mailingList>
+      <name>user</name>
+      <subscribe>https://lists.jboss.org/mailman/listinfo/rules-users</subscribe>
+      <unsubscribe>https://lists.jboss.org/mailman/listinfo/rules-users</unsubscribe>
+      <archive>http://dir.gmane.org/gmane.comp.java.drools.user</archive>
+      <otherArchives>
+        <otherArchive>http://drools.46999.n3.nabble.com/Drools-User-forum-f47000.html</otherArchive>
+      </otherArchives>
+    </mailingList>
+    <mailingList>
+      <name>dev</name>
+      <subscribe>https://lists.jboss.org/mailman/listinfo/rules-dev</subscribe>
+      <unsubscribe>https://lists.jboss.org/mailman/listinfo/rules-dev</unsubscribe>
+      <archive>http://dir.gmane.org/gmane.comp.java.drools.devel</archive>
+    </mailingList>
+  </mailingLists>
+
+  <build>
+    <extensions>
+      <extension>
+        <groupId>org.apache.maven.wagon</groupId>
+        <artifactId>wagon-webdav-jackrabbit</artifactId>
+        <version>1.0-beta-6</version>
+      </extension>
+    </extensions>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>enforce-plugin-versions</id>
+              <goals>
+                <goal>enforce</goal>
+              </goals>
+              <configuration>
+                <rules>
+                  <requirePluginVersions>
+                    <unCheckedPluginList>org.kie:kie-maven-plugin</unCheckedPluginList>
+                  </requirePluginVersions>
+                </rules>
+              </configuration>
+            </execution>
+            <execution>
+              <id>enforce-direct-dependencies</id>
+              <goals>
+                <goal>enforce</goal>
+              </goals>
+              <configuration>
+                <rules>
+                  <illegalTransitiveDependencyCheck
+                      implementation="de.is24.maven.enforcer.rules.IllegalTransitiveDependencyCheck">
+                    <regexIgnoredClasses combine.children="append">
+                      <!-- The marshalling classes are generated by Errai during GWT compilation. These classes
+                           usually contain references to other dependencies which are not part of the project
+                           (transitive dependencies), which then results in the dependency check failure.
+                           From the maintenance point of view, ignoring these generated classes seems like the
+                           best option. -->
+                      <regexIgnoredClass>org\.jboss\.errai\.marshalling\.server\.impl\.ServerMarshallingFactory.*
+                      </regexIgnoredClass>
+                    </regexIgnoredClasses>
+                  </illegalTransitiveDependencyCheck>
+                </rules>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-checkstyle-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>validate</id>
+              <phase>validate</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <configuration>
+                <checkstyleRules>
+                  <module name="Checker">
+                    <module name="FileTabCharacter">
+                      <property name="severity" value="error"/>
+                      <property name="eachLine" value="true"/>
+                    </module>
+                  </module>
+                </checkstyleRules>
+                <outputFile>${project.build.directory}/checkstyle.log</outputFile>
+                <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                <includeResources>true</includeResources>
+                <includeTestResources>true</includeTestResources>
+                <consoleOutput>false</consoleOutput>
+                <logViolationsToConsole>false</logViolationsToConsole>
+                <failsOnError>false</failsOnError>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>animal-sniffer-maven-plugin</artifactId>
+          <version>1.13</version>
+          <dependencies>
+            <!-- Upgrade ASM and support Java 8 bytecode -->
+            <!-- This is a workaround as it is already fixed in version 1.14.
+                 However, that one fails with NPE for even simple cases, so it can't be used -->
+            <dependency>
+              <groupId>org.ow2.asm</groupId>
+              <artifactId>asm-all</artifactId>
+              <version>5.0.3</version>
+            </dependency>
+          </dependencies>
+          <executions>
+            <execution>
+              <id>check-java-1.6-compatibility</id>
+              <phase>test-compile</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <configuration>
+                <signature>
+                  <groupId>org.codehaus.mojo.signature</groupId>
+                  <artifactId>java16</artifactId>
+                  <version>1.1</version>
+                </signature>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.revapi</groupId>
+          <artifactId>revapi-maven-plugin</artifactId>
+          <version>0.4.1</version>
+          <dependencies>
+            <dependency>
+              <groupId>org.revapi</groupId>
+              <artifactId>revapi-java</artifactId>
+              <version>0.6.1</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <plugin>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <dependencies>
+            <dependency>
+              <groupId>org.apache.ant</groupId>
+              <artifactId>ant-apache-regexp</artifactId>
+              <version>1.8.2</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.felix</groupId>
+          <artifactId>maven-bundle-plugin</artifactId>
+
+          <extensions>true</extensions>
+          <configuration>
+            <!-- Split packages in combination with <Export-Package> causes bloated jars otherwise -->
+            <excludeDependencies>true</excludeDependencies>
+            <instructions>
+              <_removeheaders>Ignore-Package</_removeheaders>
+              <_nouses>true</_nouses>
+              <_snapshot>${osgi.snapshot.qualifier}</_snapshot>
+              <Bundle-Version>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.${osgi.snapshot.qualifier}</Bundle-Version>
+            </instructions>
+            <obrRepository>NONE</obrRepository>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-resources-plugin</artifactId>
+          <dependencies>
+            <dependency>
+              <groupId>org.apache.maven.shared</groupId>
+              <artifactId>maven-filtering</artifactId>
+              <version>1.3</version>
+            </dependency>
+          </dependencies>
+          <configuration>
+            <encoding>UTF-8</encoding>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+            <fork>true</fork>
+            <meminitial>128m</meminitial>
+            <maxmem>512m</maxmem>
+            <showDeprecation>true</showDeprecation>
+            <showWarnings>true</showWarnings>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <configuration>
+            <includes>
+              <include>**/*Test.java</include>
+            </includes>
+            <excludes>
+              <exclude>**/*IntegrationTest.java</exclude>
+            </excludes>
+            <argLine>-Xmx1024m -XX:MaxPermSize=128m -Dfile.encoding=UTF-8</argLine>
+            <systemPropertyVariables>
+              <apple.awt.UIElement>true</apple.awt.UIElement>
+              <org.uberfire.nio.git.daemon.enabled>false</org.uberfire.nio.git.daemon.enabled>
+              <org.uberfire.nio.git.ssh.enabled>false</org.uberfire.nio.git.ssh.enabled>
+              <org.uberfire.sys.repo.monitor.disabled>true</org.uberfire.sys.repo.monitor.disabled>
+            </systemPropertyVariables>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.cargo</groupId>
+          <artifactId>cargo-maven2-plugin</artifactId>
+          <version>1.5.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <executions>
+            <execution>
+              <goals>
+                <goal>integration-test</goal>
+                <goal>verify</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <includes>
+              <include>**/*IntegrationTest.java</include>
+            </includes>
+            <argLine>-Xmx1024m -XX:MaxPermSize=128m -Dfile.encoding=UTF-8</argLine>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.jacoco</groupId>
+          <artifactId>jacoco-maven-plugin</artifactId>
+          <version>0.7.5.201505241946</version>
+          <executions>
+            <execution>
+              <id>default-prepare-agent</id>
+              <goals>
+                <goal>prepare-agent</goal>
+              </goals>
+              <configuration>
+                <propertyName>surefire.argLine</propertyName>
+              </configuration>
+            </execution>
+            <execution>
+              <id>default-report</id>
+              <phase>prepare-package</phase>
+              <goals>
+                <goal>report</goal>
+              </goals>
+            </execution>
+            <execution>
+              <id>default-check</id>
+              <goals>
+                <goal>check</goal>
+              </goals>
+              <configuration>
+                <!-- Do not fail the build if rules are not met -->
+                <haltOnFailure>false</haltOnFailure>
+                <rules>
+                  <rule>
+                    <element>BUNDLE</element>
+                    <limits>
+                      <limit>
+                        <counter>LINE</counter>
+                        <value>COVEREDRATIO</value>
+                        <minimum>0.9</minimum>
+                      </limit>
+                    </limits>
+                  </rule>
+                </rules>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <!-- Packaging -->
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <executions>
+            <!-- No OSGi manifestEntries for <goal>jar</goal>: if it supported, then felix has already added them -->
+            <execution>
+              <id>test-jar</id>
+              <goals>
+                <goal>test-jar</goal>
+              </goals>
+              <configuration>
+                <excludes>
+                  <exclude>**/logback-test.xml</exclude>
+                  <exclude>**/jndi.properties</exclude>
+                </excludes>
+                <archive>
+                  <manifestEntries>
+                    <Bundle-SymbolicName>${project.artifactId}.tests</Bundle-SymbolicName>
+                    <Bundle-Version>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.${osgi.snapshot.qualifier}</Bundle-Version>
+                    <Bundle-Name>${project.name}</Bundle-Name>
+                    <Bundle-Vendor>${project.organization.name}</Bundle-Vendor>
+                  </manifestEntries>
+                </archive>
+              </configuration>
+            </execution>
+          </executions>
+          <configuration>
+            <archive>
+              <manifest>
+                <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+              </manifest>
+            </archive>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <executions>
+            <execution>
+              <id>attach-sources</id>
+              <goals>
+                <goal>jar-no-fork</goal>
+              </goals>
+              <configuration>
+                <archive>
+                  <manifestEntries>
+                    <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
+                    <Bundle-SymbolicName>${project.artifactId}.source</Bundle-SymbolicName>
+                    <Bundle-Version>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.${osgi.snapshot.qualifier}</Bundle-Version>
+                    <Bundle-Name>${project.name}</Bundle-Name>
+                    <Bundle-Vendor>${project.organization.name}</Bundle-Vendor>
+                    <Eclipse-SourceBundle>${project.artifactId};version="${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.${osgi.snapshot.qualifier}";roots:="."</Eclipse-SourceBundle>
+                  </manifestEntries>
+                </archive>
+              </configuration>
+            </execution>
+            <execution>
+              <id>attach-test-sources</id>
+              <goals>
+                <goal>test-jar-no-fork</goal>
+              </goals>
+              <configuration>
+                <archive>
+                  <manifestEntries>
+                    <Bundle-ManifestVersion>2</Bundle-ManifestVersion>
+                    <Bundle-SymbolicName>${project.artifactId}.tests.source</Bundle-SymbolicName>
+                    <Bundle-Version>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.${osgi.snapshot.qualifier}</Bundle-Version>
+                    <Bundle-Name>${project.name}</Bundle-Name>
+                    <Bundle-Vendor>${project.organization.name}</Bundle-Vendor>
+                    <Eclipse-SourceBundle>${project.artifactId}.tests;version="${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}.${osgi.snapshot.qualifier}";roots:="."</Eclipse-SourceBundle>
+                  </manifestEntries>
+                </archive>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.commonjava.maven.plugins</groupId>
+          <artifactId>project-sources-maven-plugin</artifactId>
+          <version>0.3</version>
+          <executions>
+            <execution>
+              <id>project-sources-archive</id>
+              <phase>initialize</phase>
+              <goals>
+                <goal>archive</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>build-helper-maven-plugin</artifactId>
+          <executions>
+            <execution>
+              <goals>
+                <goal>parse-version</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>jaxb2-maven-plugin</artifactId>
+          <version>1.5</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>xml-maven-plugin</artifactId>
+          <version>1.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.jboss.maven.plugins</groupId>
+          <artifactId>maven-jdocbook-plugin</artifactId>
+          <version>2.3.9</version>
+          <extensions>true</extensions>
+          <dependencies>
+            <dependency>
+              <groupId>org.jboss.pressgang</groupId>
+              <artifactId>pressgang-xslt-ns</artifactId>
+              <version>3.1.3</version>
+            </dependency>
+            <dependency>
+              <groupId>org.jboss.pressgang</groupId>
+              <artifactId>pressgang-jdocbook-style</artifactId>
+              <type>jdocbook-style</type>
+              <version>3.1.3</version>
+            </dependency>
+          </dependencies>
+
+          <configuration>
+            <sourceDocumentName>master.xml</sourceDocumentName>
+            <masterTranslation>en-US</masterTranslation>
+            <imageResource>
+              <directory>${basedir}/src/main/docbook/en-US</directory>
+              <includes>
+                <include>images/</include>
+              </includes>
+            </imageResource>
+            <formats>
+              <format>
+                <formatName>html_single</formatName>
+                <stylesheetResource>classpath:/xslt/org/jboss/pressgang/xhtml-single.xsl</stylesheetResource>
+                <finalName>index.html</finalName>
+                <!-- <profilingTypeName>two_pass</profilingTypeName> -->
+              </format>
+              <format>
+                <formatName>html</formatName>
+                <stylesheetResource>classpath:/xslt/org/jboss/pressgang/xhtml.xsl</stylesheetResource>
+                <finalName>index.html</finalName>
+                <!-- <profilingTypeName>two_pass</profilingTypeName> -->
+              </format>
+              <format>
+                <formatName>pdf</formatName>
+                <stylesheetResource>classpath:/xslt/org/jboss/pressgang/pdf.xsl</stylesheetResource>
+                <finalName>${project.artifactId}.pdf</finalName>
+              </format>
+              <!--<format>-->
+              <!--<formatName>eclipse</formatName>-->
+              <!--<stylesheetResource>classpath:/xslt/org/jboss/eclipse.xsl</stylesheetResource>-->
+              <!--<finalName>${project.artifactId}.html</finalName>-->
+              <!--</format>-->
+            </formats>
+            <injections>
+              <injection>
+                <name>project.version</name>
+                <value>${project.version}</value>
+              </injection>
+            </injections>
+            <options>
+              <xmlTransformerType>saxon</xmlTransformerType>
+              <xincludeSupported>true</xincludeSupported>
+              <useRelativeImageUris>true</useRelativeImageUris>
+            </options>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.asciidoctor</groupId>
+          <artifactId>asciidoctor-maven-plugin</artifactId>
+          <version>1.5.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>native2ascii-maven-plugin</artifactId>
+          <version>1.0-beta-1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-assembly-plugin</artifactId>
+          <dependencies>
+            <dependency>
+              <!-- Entry needed to enable jdocbook unzipping -->
+              <groupId>org.jboss.maven.plugins</groupId>
+              <artifactId>maven-jdocbook-plugin</artifactId>
+              <version>2.3.9</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-invoker-plugin</artifactId>
+          <version>2.0.0</version>
+        </plugin>
+        <plugin>
+          <groupId>org.commonjava.maven.plugins</groupId>
+          <artifactId>build-migration-maven-plugin</artifactId>
+          <version>0.5</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <configuration>
+            <retryFailedDeploymentCount>10</retryFailedDeploymentCount>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>versions-maven-plugin</artifactId>
+          <version>2.1</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-release-plugin</artifactId>
+          <configuration>
+            <!-- Manually push changes (including git tags) after nexus staged repo is successfully closed -->
+            <pushChanges>false</pushChanges>
+            <autoVersionSubmodules>true</autoVersionSubmodules>
+          </configuration>
+        </plugin>
+        <!--Fix translations from Zanata -->
+        <plugin>
+          <groupId>com.google.code.maven-replacer-plugin</groupId>
+          <artifactId>replacer</artifactId>
+          <version>1.5.2</version>
+          <configuration>
+            <includes>
+              <include>**/*Constants_de.properties</include>
+              <include>**/*Constants_es_ES.properties</include>
+              <include>**/*Constants_fr_FR.properties</include>
+              <include>**/*Constants_ja_JP.properties</include>
+              <include>**/*Constants_pt_BR.properties</include>
+              <include>**/*Constants_zh_CN.properties</include>
+            </includes>
+            <excludes>
+              <exclude>**/ErraiApp.properties</exclude>
+            </excludes>
+            <replacements>
+              <replacement>
+                <token>''</token>
+                <value>'</value>
+              </replacement>
+              <replacement>
+                <token>'</token>
+                <value>''</value>
+              </replacement>
+            </replacements>
+          </configuration>
+        </plugin>
+        <!-- Zanata -->
+        <plugin>
+          <groupId>org.zanata</groupId>
+          <artifactId>zanata-maven-plugin</artifactId>
+          <version>2.3.0</version>
+          <configuration>
+            <excludes>**/ErraiApp.properties</excludes>
+            <projectConfig>${session.executionRootDirectory}/src/main/config/zanata.xml</projectConfig>
+            <srcDir>src/main/resources/</srcDir>
+            <transDir>src/main/resources/</transDir>
+            <includes>
+              <include>**/*Constants.properties</include>
+              <include>**/*Constants_en.properties</include>
+            </includes>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>com.mycila.maven-license-plugin</groupId>
+          <artifactId>maven-license-plugin</artifactId>
+          <version>1.8.0</version>
+          <configuration>
+            <!-- TODO this is buggy as it only works for first level modules -->
+            <header>${basedir}/../LICENSE-ASL-2.0-HEADER.txt</header>
+            <includes>
+              <include>**/*.java</include>
+              <include>**/*.drl</include>
+            </includes>
+            <mapping>
+              <drl>JAVADOC_STYLE</drl>
+            </mapping>
+            <encoding>UTF-8</encoding>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-javadoc-plugin</artifactId>
+          <configuration>
+            <links>
+              <link>http://docs.oracle.com/javase/6/docs/api</link>
+            </links>
+            <minmemory>128m</minmemory>
+            <maxmemory>512m</maxmemory>
+            <author>false</author>
+            <breakiterator>true</breakiterator>
+            <quiet>true</quiet>
+            <additionalparam>${javadoc.additional.params}</additionalparam>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>gwt-maven-plugin</artifactId>
+          <version>${version.com.google.gwt}</version>
+          <configuration>
+            <localWorkers>${gwt.compiler.localWorkers}</localWorkers>
+            <strict>true</strict>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>hibernate3-maven-plugin</artifactId>
+          <version>2.2</version>
+        </plugin>
+        <plugin>
+          <groupId>org.codehaus.plexus</groupId>
+          <artifactId>plexus-component-metadata</artifactId>
+          <version>1.5.5</version>
+        </plugin>
+
+        <!-- org.eclipse.tycho -->
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-maven-plugin</artifactId>
+          <version>${version.org.eclipse.tycho}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>target-platform-configuration</artifactId>
+          <version>${version.org.eclipse.tycho}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-surefire-plugin</artifactId>
+          <version>${version.org.eclipse.tycho}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-packaging-plugin</artifactId>
+          <version>${version.org.eclipse.tycho}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-source-plugin</artifactId>
+          <version>${version.org.eclipse.tycho}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-versions-plugin</artifactId>
+          <version>${version.org.eclipse.tycho}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho.extras</groupId>
+          <artifactId>tycho-source-feature-plugin</artifactId>
+          <version>${version.org.eclipse.tycho}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.eclipse.tycho</groupId>
+          <artifactId>tycho-p2-plugin</artifactId>
+          <version>${version.org.eclipse.tycho}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.jboss.tools.tycho-plugins</groupId>
+          <artifactId>repository-utils</artifactId>
+          <version>${version.org.jboss.tools.tycho-plugins}</version>
+        </plugin>
+        <!-- This plugin's configuration is used to store Eclipse m2e settings only.
+             It has no influence on the Maven build itself. -->
+        <plugin>
+          <groupId>org.eclipse.m2e</groupId>
+          <artifactId>lifecycle-mapping</artifactId>
+          <version>1.0.0</version>
+          <configuration>
+            <lifecycleMappingMetadata>
+              <pluginExecutions>
+                <!-- Configure m2e to ignore the maven-checkstyle-plugin. -->
+                <pluginExecution>
+                  <pluginExecutionFilter>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <versionRange>[1.0.0,)</versionRange>
+                    <goals>
+                      <goal>check</goal>
+                    </goals>
+                  </pluginExecutionFilter>
+                  <action>
+                    <ignore/>
+                  </action>
+                </pluginExecution>
+              </pluginExecutions>
+            </lifecycleMappingMetadata>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <artifactId>maven-enforcer-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <!-- Entry needed to provide parsed version properties -->
+        <!-- also adds generated sources to -source artifact -->
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>target/generated-sources/annotations/</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <!-- Entry needed to create test-jars even for packaging types war, bundle, ... -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <!-- Entry needed to create, install and deploy sources jars -->
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <!-- Entry needed to enable jdocbook packaging -->
+        <groupId>org.jboss.maven.plugins</groupId>
+        <artifactId>maven-jdocbook-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+  <reporting>
+    <plugins>
+      <!-- Note: It's not possible to configure reporting plugins in pluginManagement in m2.0.4 -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-project-info-reports-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jxr-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-report-plugin</artifactId>
+        <version>2.6</version>
+        <reportSets>
+          <reportSet>
+            <reports>
+              <report>report-only</report>
+            </reports>
+          </reportSet>
+        </reportSets>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>javancss-maven-plugin</artifactId>
+        <version>2.0</version>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>taglist-maven-plugin</artifactId>
+        <version>2.4</version>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <!-- Keep in sync with <build><plugins> -->
+        <version>2.5.5</version>
+      </plugin>
+    </plugins>
+  </reporting>
+
+  <profiles>
+    <profile>
+      <!-- Code coverage disabled by default (use -Dcode-coverage to activate it) -->
+      <id>code-coverage</id>
+      <activation>
+        <property>
+          <name>code-coverage</name>
+        </property>
+      </activation>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-surefire-plugin</artifactId>
+              <configuration>
+                <!-- Append surefire.argLine property populated by JaCoCo plugin -->
+                <argLine>-Xmx1024m -XX:MaxPermSize=128m -Dfile.encoding=UTF-8 @{surefire.argLine}</argLine>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>fullProfile</id>
+      <activation>
+        <property>
+          <name>full</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>animal-sniffer-maven-plugin</artifactId>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <executions>
+              <execution>
+                <phase>package</phase>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <!-- This profile needs to be triggered during releases. -->
+    <profile>
+      <id>releaseProfile</id>
+      <activation>
+        <property>
+          <name>release</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.commonjava.maven.plugins</groupId>
+            <artifactId>project-sources-maven-plugin</artifactId>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>productizedProfile</id>
+      <activation>
+        <property>
+          <name>productized</name>
+        </property>
+      </activation>
+      <properties>
+        <org.kie.productized>true</org.kie.productized>
+      </properties>
+    </profile>
+    <profile>
+      <id>m2EclipseIsBeingUsed</id>
+      <activation>
+        <property>
+          <name>m2e.version</name>
+        </property>
+      </activation>
+      <properties>
+        <!-- Stop m2eclipse from continuously regenerating the OSGi manifest timestamp every second -->
+        <osgi.snapshot.qualifier>qualifier</osgi.snapshot.qualifier>
+      </properties>
+    </profile>
+  </profiles>
+
+  <modules>
+    <module>kie-bom</module>
+    <module>drools-bom</module>
+    <module>optaplanner-bom</module>
+    <module>jbpm-bom</module>
+    <module>kie-uberfire-extensions-bom</module>
+    <module>guvnor-bom</module>
+    <module>dashboard-builder-bom</module>
+    <module>kie-platform-bom</module>
+    <module>kie-parent-with-dependencies</module>
+  </modules>
+
+  <!-- IMPORTANT: Do not declare any dependencies here! Declare them in kie-parent-with-dependencies. -->
+  <dependencyManagement/>
+  <!-- Intentionally empty -->
+  <dependencies/>
+  <!-- Intentionally empty -->
+
+</project>

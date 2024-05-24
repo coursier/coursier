@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.mvel</groupId>
+    <artifactId>mvel2</artifactId>
+    <packaging>jar</packaging>
+    <version>2.4.4.Final</version>
+
+    <name>mvel</name>
+    <url>http://mvel.codehaus.org/</url>
+    <description>
+        MVEL is a powerful expression language for Java-based applications.
+        It provides a plethora of features and is suited for everything
+        from the smallest property binding and extraction, to full blown scripts.
+    </description>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <inceptionYear>2001</inceptionYear>
+    <organization>
+        <name>JBoss by Red Hat</name>
+        <url>http://www.jboss.org/</url>
+    </organization>
+
+    <scm>
+        <connection>scm:git:git@github.com:mvel/mvel.git</connection>
+        <url>scm:git:git@github.com:mvel/mvel.git</url>
+        <developerConnection>scm:git:git@github.com:mvel/mvel.git</developerConnection>
+        <tag>mvel2-2.4.4.Final</tag>
+    </scm>
+    <issueManagement>
+        <system>jira</system>
+        <url>http://jira.codehaus.org/browse/MVEL</url>
+    </issueManagement>
+    <developers>
+        <developer>
+            <name>All developers are listed on the team website</name>
+            <url>http://www.jboss.org/drools/team</url>
+        </developer>
+    </developers>
+    <contributors>
+        <contributor>
+            <name>All contributors are listed on the team website</name>
+            <url>http://www.jboss.org/drools/team</url>
+        </contributor>
+    </contributors>
+    <mailingLists>
+        <mailingList>
+            <name>user</name>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/rules-users</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/rules-users</unsubscribe>
+            <archive>http://dir.gmane.org/gmane.comp.java.drools.user</archive>
+            <otherArchives>
+                <otherArchive>http://drools.46999.n3.nabble.com/Drools-User-forum-f47000.html</otherArchive>
+            </otherArchives>
+        </mailingList>
+        <mailingList>
+            <name>dev</name>
+            <subscribe>https://lists.jboss.org/mailman/listinfo/rules-dev</subscribe>
+            <unsubscribe>https://lists.jboss.org/mailman/listinfo/rules-dev</unsubscribe>
+            <archive>http://dir.gmane.org/gmane.comp.java.drools.devel</archive>
+        </mailingList>
+    </mailingLists>
+    
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <build>
+        <extensions>
+            <extension>
+                <groupId>org.apache.maven.wagon</groupId>
+                <artifactId>wagon-webdav</artifactId>
+                <version>1.0-beta-2</version>
+            </extension>
+        </extensions>
+
+        <plugins>
+            <plugin>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <inherited>true</inherited>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>[1.6.0,)</version>
+                                </requireJavaVersion>
+                                <!--<requireMavenVersion>-->
+                                <!--<version>[3.0.3,)</version>-->
+                                <!--</requireMavenVersion>-->
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.3.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.3.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <archive>
+                        <manifestFile>META-INF/MANIFEST.MF</manifestFile>
+                        <manifest>
+                            <mainClass>org.mvel2.sh.Main</mainClass>
+                            <packageName>org.mvel2</packageName>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.1.2</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>2.18.1</version>
+                <configuration>
+                    <runOrder>alphabetical</runOrder>
+                    <childDelegation>true</childDelegation>
+                    <systemProperties>
+                        <property>
+                            <name>mvel.disable.jit</name>
+                            <value>true</value>
+                        </property>
+                        <property>
+                            <name>file.encoding</name>
+                            <value>UTF-8</value>
+                        </property>
+                        <property>
+                            <name>mvel.tests.quick</name>
+                            <value>true</value>
+                        </property>
+                    </systemProperties>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*Tests.java</include>
+                        <include>**/UsageDemos.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>**/CompiledUnitTestEx.java</exclude>
+                        <exclude>**/PerfTest.java</exclude>
+                        <exclude>**/DroolsTest.java</exclude>
+                        <exclude>**/FailureTests.java</exclude>
+                        <exclude>**/PerformanceTest.java</exclude>
+                        <exclude>**/CompiledPerformanceTests.java</exclude>
+                        <exclude>**/MVELThreadTest.java</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.1</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
+                <version>2.3.7</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>manifest</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>manifest</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <manifestLocation>META-INF</manifestLocation>
+                    <instructions>
+                        <Bundle-SymbolicName>org.mvel2</Bundle-SymbolicName>
+                        <Bundle-Name>mvel2</Bundle-Name>
+                        <Import-Package>
+                            sun.*;resolution:=optional, *
+                        </Import-Package>
+                        <Export-Package>
+                            org.mvel2.*
+                        </Export-Package>
+                    </instructions>
+                </configuration>
+            </plugin>
+        </plugins>
+
+        <resources>
+            <resource>
+                <directory>.</directory>
+                <includes>
+                    <include>build.properties</include>
+                </includes>
+            </resource>
+            <resource>
+              <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+    </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>2.8.1</version>
+            </plugin>
+        </plugins>
+    </reporting>
+
+    <dependencies>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.8.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>1.3.1</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>jboss-releases-repository</id>
+            <name>JBoss Releases Repository</name>
+            <url>https://repository.jboss.org/nexus/service/local/staging/deploy/maven2/</url>
+        </repository>
+        <snapshotRepository>
+            <id>jboss-snapshots-repository</id>
+            <name>JBoss Snapshot Repository</name>
+            <url>https://repository.jboss.org/nexus/content/repositories/snapshots/</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+</project>

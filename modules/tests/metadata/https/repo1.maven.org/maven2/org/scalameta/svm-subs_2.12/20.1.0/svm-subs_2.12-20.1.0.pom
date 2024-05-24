@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.scalameta</groupId>
+    <artifactId>svm-subs_2.12</artifactId>
+    <packaging>jar</packaging>
+    <description>subs</description>
+    <url>https://github.com/scalameta/svm-subs</url>
+    <version>20.1.0</version>
+    <licenses>
+        <license>
+            <name>Apache-2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <name>subs</name>
+    <organization>
+        <name>org.scalameta</name>
+        <url>https://github.com/scalameta/svm-subs</url>
+    </organization>
+    <scm>
+        <url>https://github.com/scalameta/svm-subs</url>
+        <connection>scm:git:https://github.com/scalameta/svm-subs.git</connection>
+        <developerConnection>scm:git:git@github.com:scalameta/svm-subs.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <id>olafurpg</id>
+            <name>Ólafur Páll Geirsson</name>
+            <url>https://geirsson.com</url>
+            <email>olafurpg@gmail.com</email>
+        </developer>
+    </developers>
+    <dependencies>
+        <dependency>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>2.12.12</version>
+        </dependency>
+    </dependencies>
+</project>
