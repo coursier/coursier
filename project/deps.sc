@@ -60,7 +60,7 @@ object Deps {
 }
 
 object Versions {
-  def cats          = "2.10.0"
+  def cats          = "2.12.0"
   def fastParse     = "3.1.0"
   def http4s        = "0.23.27"
   def jniUtils      = "0.3.3"
