@@ -460,7 +460,8 @@ import scala.util.Properties
           } yield writtenOpt
         else {
           System.err.println(
-            s"""Cannot find installed application '$name' (installation directory is ${launcher.getParent()}).
+            s"""Cannot find installed application '$name' (installation directory is ${launcher
+                .getParent()}).
                |Try running 'cs install $name'.""".stripMargin
           )
           Task.point(Some(false))
