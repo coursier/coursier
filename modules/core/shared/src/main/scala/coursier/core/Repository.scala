@@ -162,31 +162,15 @@ object Repository {
       partial: Boolean
     )(implicit
       F: Monad[F]
-    ): F[Boolean] = {
-
-      val check =
-        F.map(org(orgInput)) { res =>
-          res
-            .toOption
-            .exists { res =>
-              res.completions.contains(orgInput.input) ||
-              (partial && res.completions.exists(_.startsWith(orgInput.input + ".")))
-            }
-        }
-
-      val idx = orgInput.input.lastIndexOf('.')
-      if (idx > 0) {
-        val truncatedInput = Complete.Input.Org(orgInput.input.take(idx))
-        hasOrg(truncatedInput, partial = true).flatMap {
-          case false =>
-            F.point(false)
-          case true =>
-            check
-        }
+    ): F[Boolean] =
+      F.map(org(orgInput)) { res =>
+        res
+          .toOption
+          .exists { res =>
+            res.completions.contains(orgInput.input) ||
+            (partial && res.completions.exists(_.startsWith(orgInput.input + ".")))
+          }
       }
-      else // idx < 0 || idx == 0 (idx == 0 shouldn't happen often though)
-        check
-    }
 
     private def hasName(nameInput: Complete.Input.Name)(implicit F: Monad[F]): F[Boolean] =
       F.map(name(nameInput)) { res =>
