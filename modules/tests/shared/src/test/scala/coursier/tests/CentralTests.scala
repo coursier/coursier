@@ -332,6 +332,16 @@ abstract class CentralTests extends TestSuite {
           Attributes(Type("maven-plugin"), Classifier.empty)
         )
       }
+
+      test("ejb") {
+        // has packaging ejb - ensuring coursier gives its artifact the .jar extension
+        runner.ensureHasArtifactWithExtension(
+          mod"org.ferris:ferris-journal-ejb",
+          "0.0.2",
+          Extension.jar,
+          Attributes(Type("ejb"), Classifier.empty)
+        )
+      }
     }
 
     test("classifier") {
