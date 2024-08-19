@@ -50,7 +50,7 @@ object Deps {
   def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.3.0"
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
   def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
-  def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.13"
+  def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.16"
   def svm                      = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
   def ujson                    = ivy"com.lihaoyi::ujson:3.3.1"
   def utest                    = ivy"com.lihaoyi::utest::0.8.3"
