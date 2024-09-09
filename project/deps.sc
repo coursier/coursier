@@ -26,12 +26,12 @@ object Deps {
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${Versions.jsoniterScala}"
   def jsoniterMacros =
     ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
-  def jsoup          = ivy"org.jsoup:jsoup:1.17.2"
+  def jsoup          = ivy"org.jsoup:jsoup:1.18.1"
   def logbackClassic = ivy"ch.qos.logback:logback-classic:1.2.13"
   def macroParadise  = ivy"org.scalamacros:::paradise:2.1.1"
-  def mdoc           = ivy"org.scalameta::mdoc:2.5.3"
+  def mdoc           = ivy"org.scalameta::mdoc:2.5.4"
   def noCrcZis       = ivy"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
-  def osLib          = ivy"com.lihaoyi::os-lib:0.10.2"
+  def osLib          = ivy"com.lihaoyi::os-lib:0.10.6"
   def plexusArchiver = ivy"org.codehaus.plexus:plexus-archiver:4.9.0"
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
@@ -42,7 +42,7 @@ object Deps {
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
   def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:0.2.1"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.4.0"
-  def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.1"
+  def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.2"
   def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
   def scalaNativeTools040M2    = ivy"org.scala-native::tools:0.4.0-M2"
   def scalaNativeTools040      = ivy"org.scala-native::tools:0.4.17"
@@ -50,7 +50,7 @@ object Deps {
   def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.3.0"
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
   def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
-  def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.13"
+  def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.16"
   def svm                      = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
   def ujson                    = ivy"com.lihaoyi::ujson:3.3.1"
   def utest                    = ivy"com.lihaoyi::utest::0.8.3"
@@ -85,7 +85,7 @@ object ScalaVersions {
   def scala212 = "2.12.18"
   val all      = Seq(scala213, scala212)
 
-  def scalaJs = "1.12.0"
+  def scalaJs = "1.16.0"
 }
 
 object Docker {

@@ -175,7 +175,7 @@ jobs:
     - uses: coursier/cache-action@v6.4
     - uses: coursier/setup-action@v1.3.5
       with:
-        jvm: 8
+        jvm: 17
         apps: scalafmt
         version: "2.1.0"
     - run: scalafmt --check
@@ -370,7 +370,7 @@ jobs:
       with:
         jvm: 8
         version: "2.1.0"
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: launchers
         path: artifacts/
