@@ -3,7 +3,7 @@ package coursier.cache.internal
 import java.io.{Serializable => _, _}
 import java.net.{HttpURLConnection, URLConnection, MalformedURLException}
 import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.{Files, StandardCopyOption}
+import java.nio.file.{AccessDeniedException, Files, StandardCopyOption}
 import java.time.Clock
 import java.util.Locale
 import java.util.concurrent.ExecutorService
@@ -19,7 +19,8 @@ import coursier.util.Monad.ops._
 import dataclass._
 
 import scala.annotation.tailrec
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.util.Properties
 import scala.util.control.NonFatal
 
 // format: off
@@ -36,14 +37,21 @@ import scala.util.control.NonFatal
   followHttpToHttpsRedirections: Boolean = true,
   followHttpsToHttpRedirections: Boolean = false,
   maxRedirections: Option[Int] = CacheDefaults.maxRedirections,
-  sslRetry: Int = CacheDefaults.sslRetryCount,
+  @deprecated("Unused, use retryCount instead", "2.1.11")
+    sslRetry: Int = CacheDefaults.retryCount,
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   bufferSize: Int = CacheDefaults.bufferSize,
   @since("2.0.16")
     classLoaders: Seq[ClassLoader] = Nil,
   @since("2.1.0-RC3")
-    clock: Clock = Clock.systemDefaultZone()
+    clock: Clock = Clock.systemDefaultZone(),
+  @since("2.1.11")
+    retryCount: Int = CacheDefaults.retryCount,
+  @since("2.1.11")
+    retryBackoffInitialDelay: FiniteDuration = CacheDefaults.retryBackoffInitialDelay,
+  @since("2.1.11")
+    retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier
 )(implicit
   S: Sync[F]
 ) {
@@ -131,7 +139,7 @@ import scala.util.control.NonFatal
             s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url",
             Some(e)
           )
-          if (java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions"))
+          if (Downloader.throwExceptions)
             throw ex
           Left(ex)
       }
@@ -404,7 +412,13 @@ import scala.util.control.NonFatal
       var success = false
 
       try {
-        val res = Downloader.downloading(url, file, sslRetry)(
+        val res = Downloader.downloading(
+          url,
+          file,
+          retryCount,
+          retryBackoffInitialDelay,
+          retryBackoffMultiplier
+        )(
           CacheLocks.withLockOr(location, file)(
             if (proceed())
               doDownload(file, url, keepHeaderChecksums, allCredentials0, tmp)
@@ -719,6 +733,8 @@ import scala.util.control.NonFatal
 
 object Downloader {
 
+  private lazy val throwExceptions = java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions")
+
   private val checksumHeader = Seq("MD5", "SHA1", "SHA256")
 
   private def readFullyTo(
@@ -749,14 +765,16 @@ object Downloader {
   private def downloading[T](
     url: String,
     file: File,
-    sslRetry: Int
+    retryCount: Int,
+    retryBackoffInitialDelay: FiniteDuration,
+    retryBackoffMultiplier: Double
   )(
     f: => Either[ArtifactError, T],
     ifLocked: => Option[Either[ArtifactError, T]]
   ): Either[ArtifactError, T] = {
 
     @tailrec
-    def helper(retry: Int): Either[ArtifactError, T] = {
+    def helper(retry: Int, delay: FiniteDuration): Either[ArtifactError, T] = {
 
       val resOpt =
         try {
@@ -771,9 +789,12 @@ object Downloader {
           res0.orElse(ifLocked)
         }
         catch {
-          case _: javax.net.ssl.SSLException if retry >= 1 =>
-            // TODO If Cache is made an (instantiated) class at some point, allow to log that exception.
-            None
+          case NonFatal(e) if throwExceptions =>
+            val ex = new ArtifactError.DownloadError(
+              s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
+              Some(e)
+            )
+            throw ex
 
           case UnknownProtocol(e, msg0) =>
             val docUrl = "https://get-coursier.io/docs/extra.html#extra-protocols"
@@ -787,23 +808,38 @@ object Downloader {
 
             Some(Left(ex))
 
+          case _: AccessDeniedException if Properties.isWin && retry >= 1 =>
+            None
+
+          case _: javax.net.ssl.SSLException if retry >= 1 =>
+            // TODO If Cache is made an (instantiated) class at some point, allow to log that exception.
+            None
+
           case NonFatal(e) =>
             val ex = new ArtifactError.DownloadError(
               s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
               Some(e)
             )
-            if (java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions"))
-              throw ex
             Some(Left(ex))
         }
 
       resOpt match {
         case Some(res) => res
-        case None      => helper(retry - 1)
+        case None =>
+          Thread.sleep(delay.toMillis)
+          helper(
+            retry - 1,
+            retryBackoffMultiplier * delay match {
+              case f: FiniteDuration => f
+              case _                 =>
+                // should not happen
+                delay
+            }
+          )
       }
     }
 
-    helper(sslRetry)
+    helper(retryCount, retryBackoffInitialDelay)
   }
 
   private object UnknownProtocol {
