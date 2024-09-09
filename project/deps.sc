@@ -31,7 +31,7 @@ object Deps {
   def macroParadise  = ivy"org.scalamacros:::paradise:2.1.1"
   def mdoc           = ivy"org.scalameta::mdoc:2.5.4"
   def noCrcZis       = ivy"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
-  def osLib          = ivy"com.lihaoyi::os-lib:0.10.5"
+  def osLib          = ivy"com.lihaoyi::os-lib:0.10.6"
   def plexusArchiver = ivy"org.codehaus.plexus:plexus-archiver:4.9.0"
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
@@ -85,7 +85,7 @@ object ScalaVersions {
   def scala212 = "2.12.20"
   val all      = Seq(scala213, scala212)
 
-  def scalaJs = "1.12.0"
+  def scalaJs = "1.16.0"
 }
 
 object Docker {
