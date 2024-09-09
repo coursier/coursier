@@ -131,7 +131,7 @@ import scala.util.control.NonFatal
             s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url",
             Some(e)
           )
-          if (java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions"))
+          if (Downloader.throwExceptions)
             throw ex
           Left(ex)
       }
@@ -719,6 +719,8 @@ import scala.util.control.NonFatal
 
 object Downloader {
 
+  private lazy val throwExceptions = java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions")
+
   private val checksumHeader = Seq("MD5", "SHA1", "SHA256")
 
   private def readFullyTo(
@@ -771,9 +773,12 @@ object Downloader {
           res0.orElse(ifLocked)
         }
         catch {
-          case _: javax.net.ssl.SSLException if retry >= 1 =>
-            // TODO If Cache is made an (instantiated) class at some point, allow to log that exception.
-            None
+          case NonFatal(e) if throwExceptions =>
+            val ex = new ArtifactError.DownloadError(
+              s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
+              Some(e)
+            )
+            throw ex
 
           case UnknownProtocol(e, msg0) =>
             val docUrl = "https://get-coursier.io/docs/extra.html#extra-protocols"
@@ -787,13 +792,15 @@ object Downloader {
 
             Some(Left(ex))
 
+          case _: javax.net.ssl.SSLException if retry >= 1 =>
+            // TODO If Cache is made an (instantiated) class at some point, allow to log that exception.
+            None
+
           case NonFatal(e) =>
             val ex = new ArtifactError.DownloadError(
               s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
               Some(e)
             )
-            if (java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions"))
-              throw ex
             Some(Left(ex))
         }
 
