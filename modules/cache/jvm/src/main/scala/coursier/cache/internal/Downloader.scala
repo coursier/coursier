@@ -3,7 +3,7 @@ package coursier.cache.internal
 import java.io.{Serializable => _, _}
 import java.net.{HttpURLConnection, URLConnection, MalformedURLException}
 import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.{Files, StandardCopyOption}
+import java.nio.file.{AccessDeniedException, Files, StandardCopyOption}
 import java.time.Clock
 import java.util.Locale
 import java.util.concurrent.ExecutorService
@@ -20,6 +20,7 @@ import dataclass._
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.util.Properties
 import scala.util.control.NonFatal
 
 // format: off
@@ -806,6 +807,9 @@ object Downloader {
             val ex = new ArtifactError.DownloadError(msg, Some(e))
 
             Some(Left(ex))
+
+          case _: AccessDeniedException if Properties.isWin && retry >= 1 =>
+            None
 
           case _: javax.net.ssl.SSLException if retry >= 1 =>
             // TODO If Cache is made an (instantiated) class at some point, allow to log that exception.
