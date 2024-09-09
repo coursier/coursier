@@ -85,7 +85,7 @@ object ScalaVersions {
   def scala212 = "2.12.18"
   val all      = Seq(scala213, scala212)
 
-  def scalaJs = "1.12.0"
+  def scalaJs = "1.16.0"
 }
 
 object Docker {
