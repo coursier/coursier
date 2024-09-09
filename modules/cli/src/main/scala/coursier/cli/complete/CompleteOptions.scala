@@ -7,7 +7,7 @@ import coursier.cli.options.{CacheOptions, OutputOptions, RepositoryOptions}
 @ArgsName("org[:name[:version]]")
 @Help(
   "Auto-complete Maven coordinates.\n" +
-  "\n" + 
+  "\n" +
   "Examples:\n" +
   "$ cs complete-dep com.type\n" +
   "$ cs complete-dep org.scala-lang:\n" +

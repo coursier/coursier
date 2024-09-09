@@ -12,14 +12,14 @@
     "xmldom": "0.1.27"
   },
   "dependencies": {
-    "bootstrap": "3.3.4",
+    "bootstrap": "3.4.1",
     "bootstrap-treeview": "1.2.0",
     "bower": "^1.8.4",
     "browserify": "^16.2.3",
     "graphdracula": "1.2.1",
     "react": "16.13.1",
     "react-dom": "16.13.1",
-    "requirejs": "2.3.6",
+    "requirejs": "2.3.7",
     "sax": "1.2.4"
   },
   "scripts": {

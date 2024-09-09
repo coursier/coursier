@@ -15,6 +15,7 @@ object MavenAttributes {
     Type("doc")            -> Extension.jar,
     Type("src")            -> Extension.jar,
     Type.testJar           -> Extension.jar,
+    Type("ejb")            -> Extension.jar,
     Type("ejb-client")     -> Extension.jar
   )
 
