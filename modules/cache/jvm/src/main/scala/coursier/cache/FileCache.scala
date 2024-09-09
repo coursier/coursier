@@ -18,7 +18,7 @@ import coursier.util.Monad.ops._
 import dataclass.data
 
 import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.control.NonFatal
 
 // format: off
@@ -34,15 +34,20 @@ import scala.util.control.NonFatal
   followHttpToHttpsRedirections: Boolean = true,
   followHttpsToHttpRedirections: Boolean = false,
   maxRedirections: Option[Int] = CacheDefaults.maxRedirections,
-  sslRetry: Int = CacheDefaults.sslRetryCount,
+  @deprecated("Unused, use retry instead", "2.1.11")
+    sslRetry: Int = CacheDefaults.retryCount,
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
-  retry: Int = CacheDefaults.defaultRetryCount,
+  retry: Int = CacheDefaults.retryCount,
   bufferSize: Int = CacheDefaults.bufferSize,
   @since("2.0.16")
     classLoaders: Seq[ClassLoader] = Nil,
   @since("2.1.0-RC3")
-    clock: Clock = Clock.systemDefaultZone()
+    clock: Clock = Clock.systemDefaultZone(),
+  @since("2.1.11")
+    retryBackoffInitialDelay: FiniteDuration = CacheDefaults.retryBackoffInitialDelay,
+  @since("2.1.11")
+    retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier
 )(implicit
   sync: Sync[F]
 ) extends Cache[F] {
@@ -101,7 +106,7 @@ import scala.util.control.NonFatal
       followHttpToHttpsRedirections,
       followHttpsToHttpRedirections,
       maxRedirections,
-      sslRetry,
+      retry,
       sslSocketFactoryOpt,
       hostnameVerifierOpt,
       bufferSize,
