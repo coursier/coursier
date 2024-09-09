@@ -260,6 +260,11 @@ import scala.util.control.NonFatal
           }.flatMap { _ =>
             filePerPolicy0(artifact, policy, retry - 1)
           }
+      case err: ArtifactError.ChecksumNotFound =>
+        if (retry <= 0)
+          EitherT(S.point(Left(err)))
+        else
+          filePerPolicy0(artifact, policy, retry - 1)
       case err =>
         EitherT(S.point(Left(err)))
     }
