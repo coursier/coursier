@@ -1,6 +1,7 @@
 package coursier
 
 import coursier.ivy.IvyRepository
+import coursier.maven.MavenRepository
 
 object Repositories {
   def central: MavenRepository =

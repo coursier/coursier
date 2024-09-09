@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ivy-module version="2.0" xmlns:m="http://ant.apache.org/ivy/maven" xmlns:e="http://ant.apache.org/ivy/extra">
+	<info organisation="com.fasterxml.jackson.core"
+		module="jackson-databind"
+		revision="2.5.4"
+		status="release"
+		publication="20150610034351"
+	>
+		<license name="The Apache Software License, Version 2.0" url="http://www.apache.org/licenses/LICENSE-2.0.txt" />
+		<description homepage="http://github.com/FasterXML/jackson">
+		General data-binding functionality for Jackson: works on core streaming API
+		</description>
+		<m:properties__packageVersion.package>com.fasterxml.jackson.databind.cfg</m:properties__packageVersion.package>
+		<m:properties__packageVersion.template.input>${basedir}/src/main/java/${packageVersion.dir}/PackageVersion.java.in</m:properties__packageVersion.template.input>
+		<m:properties__osgi.export>
+com.fasterxml.jackson.databind,
+com.fasterxml.jackson.databind.annotation,
+com.fasterxml.jackson.databind.cfg,
+com.fasterxml.jackson.databind.deser,
+com.fasterxml.jackson.databind.deser.impl,
+com.fasterxml.jackson.databind.deser.std,
+com.fasterxml.jackson.databind.exc,
+com.fasterxml.jackson.databind.ext,
+com.fasterxml.jackson.databind.introspect,
+com.fasterxml.jackson.databind.jsonschema,
+com.fasterxml.jackson.databind.jsonFormatVisitors,
+com.fasterxml.jackson.databind.jsontype,
+com.fasterxml.jackson.databind.jsontype.impl,
+com.fasterxml.jackson.databind.module,
+com.fasterxml.jackson.databind.node,
+com.fasterxml.jackson.databind.ser,
+com.fasterxml.jackson.databind.ser.impl,
+com.fasterxml.jackson.databind.ser.std,
+com.fasterxml.jackson.databind.type,
+com.fasterxml.jackson.databind.util
+    </m:properties__osgi.export>
+		<m:properties__maven.build.timestamp.format>yyyy-MM-dd HH:mm:ssZ</m:properties__maven.build.timestamp.format>
+		<m:properties__javac.debuglevel>lines,source,vars</m:properties__javac.debuglevel>
+		<m:properties__version.plugin.bundle>2.5.3</m:properties__version.plugin.bundle>
+		<m:properties__javac.src.version>1.6</m:properties__javac.src.version>
+		<m:properties__javadoc.maxmemory>1g</m:properties__javadoc.maxmemory>
+		<m:properties__packageVersion.dir>com/fasterxml/jackson/databind/cfg</m:properties__packageVersion.dir>
+		<m:properties__generatedSourcesDir>${project.build.directory}/generated-sources</m:properties__generatedSourcesDir>
+		<m:properties__version.junit>4.11</m:properties__version.junit>
+		<m:properties__javac.target.version>1.6</m:properties__javac.target.version>
+		<m:properties__packageVersion.template.output>${generatedSourcesDir}/${packageVersion.dir}/PackageVersion.java</m:properties__packageVersion.template.output>
+		<e:sbtTransformHash>12bd2520ece5c53158e35c31779da1bc750a867f</e:sbtTransformHash>
+		<m:properties__osgi.import>
+com.fasterxml.jackson.annotation,
+com.fasterxml.jackson.core,
+com.fasterxml.jackson.core.base,
+com.fasterxml.jackson.core.format,
+com.fasterxml.jackson.core.json,
+com.fasterxml.jackson.core.io,
+com.fasterxml.jackson.core.util,
+com.fasterxml.jackson.core.type,
+org.xml.sax,org.w3c.dom, org.w3c.dom.bootstrap, org.w3c.dom.ls,
+javax.xml.datatype, javax.xml.namespace, javax.xml.parsers
+</m:properties__osgi.import>
+		<m:maven.plugins>org.apache.maven.plugins__maven-enforcer-plugin__1.3.1|org.apache.maven.plugins__maven-compiler-plugin__3.2|org.codehaus.mojo__build-helper-maven-plugin__null|org.apache.maven.plugins__maven-surefire-plugin__2.17|org.apache.felix__maven-bundle-plugin__2.5.3|org.apache.maven.plugins__maven-jar-plugin__2.5|null__maven-site-plugin__null|org.apache.maven.plugins__maven-scm-plugin__1.9.1|org.apache.maven.plugins__maven-enforcer-plugin__1.3.1|org.apache.maven.plugins__maven-compiler-plugin__3.2|org.codehaus.mojo__build-helper-maven-plugin__null|org.apache.maven.plugins__maven-surefire-plugin__2.17|org.apache.felix__maven-bundle-plugin__2.5.3|org.apache.maven.plugins__maven-jar-plugin__2.5|null__maven-site-plugin__null|org.apache.maven.plugins__maven-scm-plugin__1.9.1|org.apache.maven.plugins__maven-enforcer-plugin__1.3.1|org.apache.maven.plugins__maven-compiler-plugin__3.2|org.codehaus.mojo__build-helper-maven-plugin__null|org.apache.maven.plugins__maven-surefire-plugin__2.17|org.apache.felix__maven-bundle-plugin__2.5.3|org.apache.maven.plugins__maven-jar-plugin__2.5|null__maven-site-plugin__null|org.apache.maven.plugins__maven-scm-plugin__1.9.1|org.apache.maven.plugins__maven-enforcer-plugin__1.3.1|org.apache.maven.plugins__maven-compiler-plugin__3.2|org.codehaus.mojo__build-helper-maven-plugin__null|org.apache.maven.plugins__maven-surefire-plugin__2.17|org.apache.felix__maven-bundle-plugin__2.5.3|org.apache.maven.plugins__maven-jar-plugin__2.5|null__maven-site-plugin__null|org.apache.maven.plugins__maven-scm-plugin__1.9.1|org.apache.maven.plugins__maven-surefire-plugin__2.17|org.apache.maven.plugins__maven-javadoc-plugin__2.8.1|com.google.code.maven-replacer-plugin__replacer__null</m:maven.plugins>
+		<m:properties__version.plugin.jar>2.5</m:properties__version.plugin.jar>
+		<m:properties__version.plugin.surefire>2.17</m:properties__version.plugin.surefire>
+		<m:properties__project.reporting.outputEncoding>UTF-8</m:properties__project.reporting.outputEncoding>
+		<m:properties__version.plugin.replacer>1.5.2</m:properties__version.plugin.replacer>
+		<m:properties__project.build.resourceEncoding>UTF-8</m:properties__project.build.resourceEncoding>
+		<m:properties__osgi.versionpolicy>${range;[===,=+);${@}}</m:properties__osgi.versionpolicy>
+		<m:properties__version.plugin.release>2.5.1</m:properties__version.plugin.release>
+		<m:properties__project.build.sourceEncoding>UTF-8</m:properties__project.build.sourceEncoding>
+		<m:properties__version.jackson.annotations>2.5.0</m:properties__version.jackson.annotations>
+		<m:properties__version.plugin.javadoc>2.8.1</m:properties__version.plugin.javadoc>
+	</info>
+	<configurations>
+		<conf name="default" visibility="public" description="runtime dependencies and master artifact can be used with this conf" extends="runtime,master"/>
+		<conf name="master" visibility="public" description="contains only the artifact published by this module itself, with no transitive dependencies"/>
+		<conf name="compile" visibility="public" description="this is the default scope, used if none is specified. Compile dependencies are available in all classpaths."/>
+		<conf name="provided" visibility="public" description="this is much like compile, but indicates you expect the JDK or a container to provide it. It is only available on the compilation classpath, and is not transitive."/>
+		<conf name="runtime" visibility="public" description="this scope indicates that the dependency is not required for compilation, but is for execution. It is in the runtime and test classpaths, but not the compile classpath." extends="compile"/>
+		<conf name="test" visibility="private" description="this scope indicates that the dependency is not required for normal use of the application, and is only available for the test compilation and execution phases." extends="runtime"/>
+		<conf name="system" visibility="public" description="this scope is similar to provided except that you have to provide the JAR which contains it explicitly. The artifact is always available and is not looked up in a repository."/>
+		<conf name="sources" visibility="public" description="this configuration contains the source artifact of this module, if any."/>
+		<conf name="javadoc" visibility="public" description="this configuration contains the javadoc artifact of this module, if any."/>
+		<conf name="optional" visibility="public" description="contains all optional dependencies"/>
+	</configurations>
+	<publications>
+		<artifact name="jackson-databind" type="bundle" ext="jar" conf="master"/>
+	</publications>
+	<dependencies>
+		<dependency org="com.fasterxml.jackson.core" name="jackson-annotations" rev="2.5.0" force="true" conf="compile->compile(*),master(compile);runtime->runtime(*)"/>
+		<dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.5.4" force="true" conf="compile->compile(*),master(compile);runtime->runtime(*)"/>
+		<dependency org="cglib" name="cglib" rev="3.1" force="true" conf="test->runtime(*),master(compile)"/>
+		<dependency org="org.codehaus.groovy" name="groovy" rev="2.4.0" force="true" conf="test->runtime(*),master(compile)"/>
+		<dependency org="javax.measure" name="jsr-275" rev="0.9.2" force="true" conf="test->runtime(*),master(compile)"/>
+		<dependency org="org.hibernate" name="hibernate-cglib-repack" rev="2.1_3" force="true" conf="test->runtime(*),master(compile)"/>
+		<dependency org="junit" name="junit" rev="4.11" force="true" conf="test->runtime(*),master(compile)"/>
+	</dependencies>
+</ivy-module>

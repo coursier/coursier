@@ -1,5 +1,3 @@
-import $ivy.`com.eed3si9n.jarjarabrams::jarjar-abrams-core:0.3.0`
-
 import com.eed3si9n.jarjarabrams.{ShadePattern, Shader}
 import coursier.util.{Gather, Task}
 import mill._, mill.scalalib._
@@ -7,7 +5,7 @@ import mill._, mill.scalalib._
 import java.io._
 import java.util.zip._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait Shading extends JavaModule with PublishModule {
@@ -18,15 +16,16 @@ trait Shading extends JavaModule with PublishModule {
   def shadeRenames: T[Seq[(String, String)]]
 
   def shadedJars = T {
-    val depToDependency = resolveCoursierDependency().apply(_)
-    val depSeq          = transitiveIvyDeps()
-    val (_, resolution) = mill.modules.Jvm.resolveDependenciesMetadata(
+    val depToDependency = (d: Dep) => bindDependency().apply(d).dep
+    val depSeq          = transitiveIvyDeps().map(_.toDep)
+    val (_, resolution) = mill.util.Jvm.resolveDependenciesMetadata(
       repositoriesTask(),
       deps = depSeq.map(depToDependency),
       force = depSeq.filter(_.force).map(depToDependency),
       mapDependencies = Some(mapDependencies()),
       customizer = resolutionCustomizer(),
-      ctx = Some(implicitly[mill.api.Ctx.Log])
+      ctx = Some(implicitly[mill.api.Ctx.Log]),
+      coursierCacheCustomizer = None
     )
     val types = Set(
       coursier.Type.jar,
@@ -42,7 +41,7 @@ trait Shading extends JavaModule with PublishModule {
       val loadedArtifacts = Gather[Task].gather(
         for (a <- artifacts)
           yield coursier.cache.Cache.default.file(a).run.map(a.optional -> _)
-      ).unsafeRun
+      ).unsafeRun()
 
       val errors = loadedArtifacts.collect {
         case (false, Left(x))               => x
@@ -56,8 +55,10 @@ trait Shading extends JavaModule with PublishModule {
     val shadedDepSeq = shadedDependencies()
 
     val allJars = load(resolution)
-    val retainedJars =
-      load(resolution.subset(depSeq.toSeq.filterNot(shadedDepSeq.toSet).map(depToDependency)))
+    val subset = depSeq.iterator.map(depToDependency).toSeq.filterNot(
+      shadedDepSeq.iterator.map(depToDependency).toSet
+    )
+    val retainedJars = load(resolution.subset(subset))
 
     val shadedJars = allJars.filterNot(retainedJars.toSet)
     println(s"${shadedJars.length} JAR(s) to shade")
@@ -78,7 +79,7 @@ trait Shading extends JavaModule with PublishModule {
     val updated     = T.dest / (orig.last.stripSuffix(".jar") + "-shaded.jar")
     val shadedJars0 = shadedJars().map(_.path)
 
-    val shader = Shader.bytecodeShader(shadeRules0, verbose = false)
+    val shader = Shader.bytecodeShader(shadeRules0, verbose = false, skipManifest = true)
 
     val inputFiles = Seq(orig) ++ shadedJars0
 
@@ -180,6 +181,6 @@ trait Shading extends JavaModule with PublishModule {
     val convert = resolvePublishDependency().apply(_)
     val orig    = super.publishXmlDeps()
     val shaded  = shadedDependencies().iterator.map(convert).toSet
-    Agg(orig.toSeq.filterNot(shaded): _*)
+    Agg(orig.iterator.toSeq.filterNot(shaded): _*)
   }
 }

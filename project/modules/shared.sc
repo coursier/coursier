@@ -1,35 +1,37 @@
-import $file.^.mima, mima.Mima
+import com.github.lolgab.mill.mima.Mima
 import $file.^.deps, deps.{Deps, ScalaVersions}
 
 import mill._, mill.scalalib._, mill.scalajslib._
 
 trait CsMima extends Mima {
-  def mimaPreviousVersions = T {
-    Seq.empty[String]
+  override def mimaPreviousVersions: T[Seq[String]] = T {
+    // 2.1.x broke binary compatibility with 2.0.x
+    // 0.to(16).map(v => s"2.0.$v") ++
+    0.to(7).map(v => s"2.1.$v")
   }
 }
 
 def commitHash = T {
-  os.proc("git", "rev-parse", "HEAD").call().out.text.trim
+  os.proc("git", "rev-parse", "HEAD").call().out.text().trim()
 }
 
 lazy val latestTaggedVersion = os.proc("git", "describe", "--abbrev=0", "--tags", "--match", "v*")
   .call().out
-  .trim
+  .trim()
 lazy val buildVersion = {
-  val gitHead = os.proc("git", "rev-parse", "HEAD").call().out.trim
+  val gitHead = os.proc("git", "rev-parse", "HEAD").call().out.trim()
   val maybeExactTag = scala.util.Try {
     os.proc("git", "describe", "--exact-match", "--tags", "--always", gitHead)
       .call().out
-      .trim
+      .trim()
       .stripPrefix("v")
   }
   maybeExactTag.toOption.getOrElse {
     val commitsSinceTaggedVersion =
-      os.proc('git, "rev-list", gitHead, "--not", latestTaggedVersion, "--count")
-        .call().out.trim
+      os.proc("git", "rev-list", gitHead, "--not", latestTaggedVersion, "--count")
+        .call().out.trim()
         .toInt
-    val gitHash = os.proc("git", "rev-parse", "--short", "HEAD").call().out.trim
+    val gitHash = os.proc("git", "rev-parse", "--short", "HEAD").call().out.trim()
     s"${latestTaggedVersion.stripPrefix("v")}-$commitsSinceTaggedVersion-$gitHash-SNAPSHOT"
   }
 }
@@ -100,7 +102,8 @@ trait CsScalaJsModule extends ScalaJSModule {
   def scalaJSVersion = ScalaVersions.scalaJs
 }
 
-trait JvmTests extends TestModule {
+trait JvmTests extends JavaModule with TestModule {
+  def defaultCommandName() = "test"
   def sources = T.sources {
     val shared = Seq(
       millSourcePath / os.up / "shared" / "src" / "test",
@@ -110,8 +113,8 @@ trait JvmTests extends TestModule {
   }
 }
 
-trait JsTests extends TestModule {
-  def sources = T.sources {
+trait JsTests extends JavaModule with TestModule {
+  override def sources = T.sources {
     val shared = Seq(
       millSourcePath / os.up / os.up / "shared" / "src" / "test",
       millSourcePath / os.up / os.up / "js" / "src" / "test"
@@ -139,7 +142,7 @@ trait CsModule extends SbtModule {
     super.scalacPluginIvyDeps() ++ scala212Plugins
   }
   def sources = T.sources {
-    val sbv    = mill.scalalib.api.Util.scalaBinaryVersion(scalaVersion())
+    val sbv    = mill.scalalib.api.ZincWorkerUtil.scalaBinaryVersion(scalaVersion())
     val parent = super.sources()
     val extra = parent.map(_.path).filter(_.last == "scala").flatMap { p =>
       val dirNames = Seq(s"scala-$sbv")

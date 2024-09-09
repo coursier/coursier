@@ -2,11 +2,11 @@ package coursier.interop
 
 import _root_.cats.effect.IO
 import _root_.cats.effect.unsafe.IORuntime
-import coursier.moduleString
 import coursier.interop.cats.{coursierGatherFromCats => _, _}
-import coursier.test.compatibility.executionContext
-import coursier.test.{TestRunner, compatibility}
-import coursier.test.util.ToFuture
+import coursier.tests.compatibility.executionContext
+import coursier.tests.{TestRunner, compatibility}
+import coursier.tests.util.ToFuture
+import coursier.util.StringInterpolators._
 import utest._
 
 import scala.concurrent.{ExecutionContext, Future}

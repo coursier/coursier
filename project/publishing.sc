@@ -48,6 +48,8 @@ def publishSonatype(
     readTimeout = timeout.toMillis.toInt,
     connectTimeout = timeout.toMillis.toInt,
     log = log,
+    workspace = os.pwd,
+    env = sys.env,
     awaitTimeout = timeout.toMillis.toInt,
     stagingRelease = isRelease
   )

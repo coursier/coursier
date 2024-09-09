@@ -12,7 +12,7 @@ import coursier.util.Sync
 
 import scala.cli.config.{ConfigDb, Key, PasswordOption}
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.util.{Failure, Success, Try}
 
 object CacheDefaults {
@@ -61,14 +61,40 @@ object CacheDefaults {
   // Check SHA-1 if available, else be fine with no checksum
   val checksums = Seq(Some("SHA-1"), None)
 
-  private def defaultSslRetryCount = 3
+  def defaultRetryCount                       = 5
+  private def defaultRetryBackoffInitialDelay = 10.milliseconds
+  private def defaultRetryBackoffMultiplier   = 2.0
 
+  lazy val retryCount =
+    sys.props
+      .get("coursier.exception-retry")
+      .flatMap(s => scala.util.Try(s.toInt).toOption)
+      .filter(_ >= 0)
+      .getOrElse(defaultRetryCount)
+
+  lazy val retryBackoffInitialDelay =
+    sys.props
+      .get("coursier.exception-retry-backoff-initial-delay")
+      .flatMap(s => parseDuration(s).toOption)
+      .collect {
+        case f: FiniteDuration => f
+      }
+      .getOrElse(defaultRetryBackoffInitialDelay)
+
+  lazy val retryBackoffMultiplier =
+    sys.props
+      .get("coursier.exception-retry-backoff-multiplier")
+      .flatMap(s => scala.util.Try(s.toDouble).toOption)
+      .filter(_ > 0)
+      .getOrElse(defaultRetryBackoffMultiplier)
+
+  @deprecated("Use retryCount instead", "2.1.11")
   lazy val sslRetryCount =
     sys.props
       .get("coursier.sslexception-retry")
       .flatMap(s => scala.util.Try(s.toInt).toOption)
       .filter(_ >= 0)
-      .getOrElse(defaultSslRetryCount)
+      .getOrElse(retryCount)
 
   private def defaultMaxRedirections = Option(20) // same default as java.net.HttpURLConnection
   lazy val maxRedirections: Option[Int] = {
@@ -81,8 +107,6 @@ object CacheDefaults {
       .orElse(prop("http.maxRedirects")) // same property as java.net.HttpURLConnection
       .orElse(defaultMaxRedirections)
   }
-
-  def defaultRetryCount = 1
 
   val bufferSize = 1024 * 1024
 

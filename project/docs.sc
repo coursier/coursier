@@ -224,6 +224,6 @@ def gitRepoHasChanges(repo: os.Path): Boolean = {
     stderr = os.Pipe,
     mergeErrIntoOut = true
   )
-  val output = res.out.text
+  val output = res.out.text()
   !output.contains("nothing to commit")
 }

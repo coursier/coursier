@@ -1,5 +1,6 @@
 import $file.^.deps, deps.Deps
 import $file.shared, shared.CsCrossJvmJsModule
+import mill._
 
 trait TestsModule extends CsCrossJvmJsModule {
   def ivyDeps = Agg(
@@ -7,7 +8,6 @@ trait TestsModule extends CsCrossJvmJsModule {
     Deps.scalaAsync
   )
   def compileIvyDeps = Agg(
-    Deps.dataClass,
-    Deps.simulacrum
+    Deps.dataClass
   )
 }

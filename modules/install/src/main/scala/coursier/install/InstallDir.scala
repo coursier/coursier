@@ -11,7 +11,7 @@ import java.util.zip.ZipEntry
 
 import coursier.Fetch
 import coursier.cache.{ArchiveCache, ArchiveType, Cache, FileCache}
-import coursier.core.{Dependency, Repository}
+import coursier.core.{Dependency, Module, Repository}
 import coursier.env.EnvironmentUpdate
 import coursier.install.error._
 import coursier.install.internal._
@@ -460,7 +460,8 @@ import scala.util.Properties
           } yield writtenOpt
         else {
           System.err.println(
-            s"""Cannot find installed application '$name' (installation directory is ${launcher.getParent()}).
+            s"""Cannot find installed application '$name' (installation directory is ${launcher
+                .getParent()}).
                |Try running 'cs install $name'.""".stripMargin
           )
           Task.point(Some(false))
@@ -546,15 +547,14 @@ object InstallDir {
       .withRepositories(repositories)
 
     deps =>
-      import coursier.core.ModuleName
-      import coursier.{Dependency, Module, organizationString}
+      import coursier.core.{ModuleName, Organization}
+      import coursier.util.StringInterpolators._
       import coursier.util.Task
-      import coursier.core.Organization
 
       val deps0 = deps.map { dep =>
         dep.split(":", 3) match {
           case Array(org, name, ver) =>
-            Dependency(Module(Organization(org), ModuleName(name)), ver)
+            Dependency(Module(Organization(org), ModuleName(name), Map.empty), ver)
           case _ => ???
         }
       }

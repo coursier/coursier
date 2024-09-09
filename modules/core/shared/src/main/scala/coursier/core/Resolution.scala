@@ -507,7 +507,8 @@ object Resolution {
     from: Dependency,
     project: Project,
     defaultConfiguration: Configuration,
-    projectCache: ((Module, String)) => Option[Project]
+    projectCache: ((Module, String)) => Option[Project],
+    keepProvidedDependencies: Boolean
   ): Seq[Dependency] = {
 
     // section numbers in the comments refer to withDependencyManagement
@@ -528,7 +529,10 @@ object Resolution {
 
     // Vague attempt at making the Maven scope model fit into the Ivy configuration one
 
-    val keepOpt = mavenScopes.get(actualConfig)
+    val withProvidedOpt =
+      if (keepProvidedDependencies) Some(Configuration.provided)
+      else None
+    val keepOpt = mavenScopes.get(actualConfig).map(_ ++ withProvidedOpt)
 
     withExclusions(
       // 2.1 & 2.2
@@ -706,7 +710,9 @@ object Resolution {
   mapDependencies: Option[Dependency => Dependency] = None,
   extraProperties: Seq[(String, String)] = Nil,
   forceProperties: Map[String, String] = Map.empty, // FIXME Make that a seq too?
-  defaultConfiguration: Configuration = Configuration.defaultCompile
+  defaultConfiguration: Configuration = Configuration.defaultCompile,
+  @since("2.1.9")
+  keepProvidedDependencies: Boolean = false
 ) {
 
   lazy val dependencies: Set[Dependency] =
@@ -787,7 +793,8 @@ object Resolution {
               dep,
               proj,
               defaultConfiguration,
-              k => projectCache.get(k).map(_._2)
+              k => projectCache.get(k).map(_._2),
+              keepProvidedDependencies
             ).filter(filter getOrElse defaultFilter)
             val res = mapDependencies.fold(res0)(res0.map(_))
             finalDependenciesCache0.put(dep, res)

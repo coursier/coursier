@@ -2,9 +2,10 @@ package coursier.benchmark
 
 import coursier.cache.Cache
 import coursier.core.{Configuration, ResolutionProcess}
-import coursier.{Repositories, Resolve, dependencyString, moduleString}
+import coursier.{Repositories, Resolve}
 import coursier.internal.InMemoryCachingFetcher
 import coursier.maven.{MavenRepository, Pom}
+import coursier.util.StringInterpolators._
 import coursier.util.Sync
 import org.openjdk.jmh.annotations.{Scope, State}
 

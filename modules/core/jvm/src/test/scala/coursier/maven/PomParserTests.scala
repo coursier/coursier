@@ -1,4 +1,4 @@
-package coursier
+package coursier.maven
 
 import coursier.core.{Classifier, Configuration}
 import coursier.core.compatibility._

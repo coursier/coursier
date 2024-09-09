@@ -6,7 +6,7 @@ ARCHITECTURE=$(uname -m)
 ARTIFACTS_DIR="artifacts/"
 mkdir -p "$ARTIFACTS_DIR"
 
-if [[ "$OSTYPE" == "msys" ]]; then
+if [[ -z "$OSTYPE" ]]; then
   mill="./mill.bat"
 else
   mill="./mill"
@@ -17,7 +17,7 @@ launcher() {
   local launcherMillCommand="cliNativeImageLauncher"
   local launcherName
 
-  if [[ "$OSTYPE" == "msys" ]]; then
+  if [[ "${OS-}" == "Windows_NT" ]]; then
     launcherName="cs.exe"
   else
     launcherName="cs"

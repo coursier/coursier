@@ -19,7 +19,8 @@ class FallbackRefreshDisplay(quiet: Boolean = false) extends RefreshDisplay {
         if (downloadInfo.length.isEmpty && downloadInfo.downloaded == 0L)
           ""
         else
-          s"(${pctOpt.map(pct => f"$pct%.2f %%, ").mkString}${downloadInfo.downloaded}${downloadInfo.length.map(" / " + _).mkString})"
+          s"(${pctOpt.map(pct => f"$pct%.2f %%, ").mkString}${downloadInfo.downloaded}${downloadInfo
+              .length.map(" / " + _).mkString})"
 
       case _: CheckUpdateInfo =>
         "Checking for updates"

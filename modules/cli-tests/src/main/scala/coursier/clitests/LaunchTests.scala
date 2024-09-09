@@ -58,7 +58,7 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
     }
 
     test("java class path in expansion from launch") {
-      import coursier.dependencyString
+      import coursier.util.StringInterpolators._
       val output =
         os.proc(
           launcher,

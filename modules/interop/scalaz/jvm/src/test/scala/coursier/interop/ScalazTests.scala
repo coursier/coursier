@@ -1,11 +1,11 @@
 package coursier.interop
 
-import coursier.moduleString
 import coursier.interop.scalaz.{coursierGatherFromScalaz => _, _}
-import coursier.test.compatibility.executionContext
-import coursier.test.{TestRunner, compatibility}
+import coursier.tests.compatibility.executionContext
+import coursier.tests.{TestRunner, compatibility}
+import coursier.util.StringInterpolators._
 import _root_.scalaz.concurrent.{Task => ScalazTask}
-import coursier.test.util.ToFuture
+import coursier.tests.util.ToFuture
 import utest._
 
 import scala.concurrent.{ExecutionContext, Promise}

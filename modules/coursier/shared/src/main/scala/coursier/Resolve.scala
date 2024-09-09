@@ -3,7 +3,20 @@ package coursier
 import java.util.concurrent.ConcurrentHashMap
 
 import coursier.cache.{Cache, CacheLogger}
-import coursier.core.{Activation, DependencySet, Exclusions, MinimizedExclusions, Reconciliation}
+import coursier.core.{
+  Activation,
+  Dependency,
+  DependencySet,
+  Exclusions,
+  MinimizedExclusions,
+  Module,
+  ModuleName,
+  Organization,
+  Reconciliation,
+  Repository,
+  Resolution,
+  ResolutionProcess
+}
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.graph.ReverseModuleTree
@@ -12,6 +25,7 @@ import coursier.params.{Mirror, MirrorConfFile, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
 import coursier.util.Monad.ops._
+import coursier.util.StringInterpolators._
 import dataclass.{data, since}
 
 import scala.concurrent.duration.Duration
@@ -247,15 +261,27 @@ object Resolve extends PlatformResolve {
       if (params.doForceScalaVersion)
         if (params.selectedScalaVersion.startsWith("3"))
           Seq(
-            Module(scalaOrg, ModuleName("scala3-library_3"))  -> params.selectedScalaVersion,
-            Module(scalaOrg, ModuleName("scala3-compiler_3")) -> params.selectedScalaVersion
+            Module(
+              scalaOrg,
+              ModuleName("scala3-library_3"),
+              Map.empty
+            ) -> params.selectedScalaVersion,
+            Module(
+              scalaOrg,
+              ModuleName("scala3-compiler_3"),
+              Map.empty
+            ) -> params.selectedScalaVersion
           )
         else
           Seq(
-            Module(scalaOrg, ModuleName("scala-library"))  -> params.selectedScalaVersion,
-            Module(scalaOrg, ModuleName("scala-compiler")) -> params.selectedScalaVersion,
-            Module(scalaOrg, ModuleName("scala-reflect"))  -> params.selectedScalaVersion,
-            Module(scalaOrg, ModuleName("scalap"))         -> params.selectedScalaVersion
+            Module(scalaOrg, ModuleName("scala-library"), Map.empty) -> params.selectedScalaVersion,
+            Module(
+              scalaOrg,
+              ModuleName("scala-compiler"),
+              Map.empty
+            )                                                        -> params.selectedScalaVersion,
+            Module(scalaOrg, ModuleName("scala-reflect"), Map.empty) -> params.selectedScalaVersion,
+            Module(scalaOrg, ModuleName("scalap"), Map.empty)        -> params.selectedScalaVersion
           )
       else
         Nil
@@ -333,6 +359,7 @@ object Resolve extends PlatformResolve {
       .withExtraProperties(params.properties)
       .withForceProperties(params.forcedProperties)
       .withDefaultConfiguration(params.defaultConfiguration)
+      .withKeepProvidedDependencies(params.keepProvidedDependencies.getOrElse(false))
   }
 
   private[coursier] def runProcess[F[_]](
@@ -342,9 +369,7 @@ object Resolve extends PlatformResolve {
     loggerOpt: Option[CacheLogger] = None
   )(implicit S: Sync[F]): F[Resolution] = {
 
-    val task = initialResolution
-      .process
-      .run(fetch, maxIterations)
+    val task = ResolutionProcess(initialResolution).run(fetch, maxIterations)
 
     loggerOpt match {
       case None         => task

@@ -1,6 +1,7 @@
 package coursier.paths;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -18,6 +19,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * Cache paths logic, shared by the cache and bootstrap modules
  */
 public class CachePath {
+
+    private static int maxStructureLockAttemptCount = Integer.getInteger("coursier.structure-lock-retry-count", 5);
+    private static long structureLockInitialRetryDelay = Long.getLong("coursier.structure-lock-retry-initial-delay-ms", 10L);
+    private static double structureLockRetryDelayMultiplier = Double.parseDouble(System.getProperty("coursier.structure-lock-retry-multiplier", "2.0"));
+
+    private static boolean throwExceptions = Boolean.getBoolean("coursier.cache.throw-exceptions");
 
     // based on https://stackoverflow.com/questions/4571346/how-to-encode-url-to-avoid-special-characters-in-java/4605848#4605848
     // '/' was removed from the unsafe list
@@ -130,7 +137,34 @@ public class CachePath {
         return lock0;
     }
 
+    private static class StructureLockException extends Exception {
+        public StructureLockException(Exception parent) {
+            super(parent);
+        }
+    }
+
     public static <V> V withStructureLock(File cache, Callable<V> callable) throws Exception {
+
+        int attemptCount = 1;
+        long retryDelay = structureLockInitialRetryDelay;
+        while (attemptCount < maxStructureLockAttemptCount) {
+            attemptCount = attemptCount + 1;
+
+            try {
+                return withStructureLockOnce(cache, callable);
+            }
+            catch (StructureLockException ex) {
+
+            }
+
+            Thread.sleep(retryDelay);
+            retryDelay = (long) (structureLockRetryDelayMultiplier * retryDelay);
+        }
+
+        return withStructureLockOnce(cache, callable);
+    }
+
+    private static <V> V withStructureLockOnce(File cache, Callable<V> callable) throws Exception {
 
         // Should really be
         //   return withStructureLock(cache.toPath(), callable);
@@ -145,11 +179,19 @@ public class CachePath {
             FileOutputStream out = null;
 
             try {
-                out = new FileOutputStream(lockFile);
+                try {
+                    out = new FileOutputStream(lockFile);
+                } catch (FileNotFoundException ex) {
+                    throw throwExceptions ? ex : new StructureLockException(ex);
+                }
 
                 FileLock lock = null;
                 try {
-                    lock = out.getChannel().lock();
+                    try {
+                        lock = out.getChannel().lock();
+                    } catch (FileNotFoundException ex) {
+                        throw throwExceptions ? ex : new StructureLockException(ex);
+                    }
 
                     try {
                         return callable.call();
@@ -173,6 +215,27 @@ public class CachePath {
 
     public static <V> V withStructureLock(Path cache, Callable<V> callable) throws Exception {
 
+        int attemptCount = 1;
+        long retryDelay = structureLockInitialRetryDelay;
+        while (attemptCount < maxStructureLockAttemptCount) {
+            attemptCount = attemptCount + 1;
+
+            try {
+                return withStructureLockOnce(cache, callable);
+            }
+            catch (StructureLockException ex) {
+
+            }
+
+            Thread.sleep(retryDelay);
+            retryDelay = (long) (structureLockRetryDelayMultiplier * retryDelay);
+        }
+
+        return withStructureLockOnce(cache, callable);
+    }
+
+    private static <V> V withStructureLockOnce(Path cache, Callable<V> callable) throws Exception {
+
         Object intraProcessLock = lockFor(cache);
 
         synchronized (intraProcessLock) {
@@ -182,12 +245,16 @@ public class CachePath {
 
             try {
 
-                channel = FileChannel.open(
-                        lockFile,
-                        StandardOpenOption.CREATE,
-                        StandardOpenOption.WRITE,
-                        StandardOpenOption.DELETE_ON_CLOSE
-                );
+                try {
+                    channel = FileChannel.open(
+                            lockFile,
+                            StandardOpenOption.CREATE,
+                            StandardOpenOption.WRITE,
+                            StandardOpenOption.DELETE_ON_CLOSE
+                    );
+                } catch (FileNotFoundException ex) {
+                    throw throwExceptions ? ex : new StructureLockException(ex);
+                }
 
                 FileLock lock = null;
                 try {

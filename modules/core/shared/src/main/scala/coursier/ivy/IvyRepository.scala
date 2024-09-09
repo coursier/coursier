@@ -110,9 +110,10 @@ import dataclass._
                     ).contains(conf)) &&
                     (
                       p.`type` == dependency.attributes.`type` ||
-                      (p.ext == dependency.attributes.`type`.asExtension && project.packagingOpt.toSeq.contains(
-                        p.`type`
-                      )) // wow
+                      (p.ext == dependency.attributes.`type`.asExtension && project.packagingOpt
+                        .toSeq.contains(
+                          p.`type`
+                        )) // wow
                     ) =>
                   p
               }

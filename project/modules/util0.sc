@@ -1,6 +1,8 @@
 import $file.^.deps, deps.Deps
 import $file.^.shading, shading.Shading
 import $file.shared, shared.{CoursierPublishModule, CsCrossJvmJsModule, CsMima, CsModule}
+import mill._
+import com.github.lolgab.mill.mima._
 
 trait Util extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-util"
@@ -8,18 +10,16 @@ trait Util extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
     Deps.collectionCompat
   )
   def compileIvyDeps = Agg(
-    Deps.dataClass,
-    Deps.simulacrum
+    Deps.dataClass
   )
 }
 
 trait UtilJvmBase extends Util with CsMima with Shading {
-  def mimaBinaryIssueFilters = {
-    import com.typesafe.tools.mima.core._
-    super.mimaBinaryIssueFilters ++ Seq((pb: Problem) =>
-      pb.matchName.forall(!_.startsWith("coursier.util.shaded."))
-    )
-  }
+  def mimaBinaryIssueFilters =
+    super.mimaBinaryIssueFilters() ++
+      Seq(
+        ProblemFilter.exclude[Problem]("coursier.util.shaded.*")
+      )
   def shadedDependencies = Agg(
     Deps.jsoup
   )

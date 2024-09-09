@@ -72,10 +72,10 @@ If you prefer a command line-based install, or if you would like to customize th
 ```pwsh
 # PowerShell
 Invoke-WebRequest -Uri "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip" -OutFile "cs-x86_64-pc-win32.zip"
-Expand-Archive -Path "cs-x86_64-pc-win32.zip"
+Expand-Archive -Path "cs-x86_64-pc-win32.zip" -DestinationPath .
 Rename-Item -Path "cs-x86_64-pc-win32.exe" -NewName "cs.exe"
 Remove-Item -Path "cs-x86_64-pc-win32.zip"
-.\cs --help
+.\cs setup
 ```
 
 ```bat
@@ -83,7 +83,7 @@ Remove-Item -Path "cs-x86_64-pc-win32.zip"
 curl -fLo cs-x86_64-pc-win32.zip https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip
 tar -xf cs-x86_64-pc-win32.zip
 move cs-x86_64-pc-win32.exe cs.exe
-.\cs --help
+.\cs setup
 ```
 
 ### Check your setup

@@ -6,13 +6,14 @@ import java.nio.file.Files
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.{Repositories, moduleString}
+import coursier.Repositories
 import coursier.cli.options.RepositoryOptions
 import coursier.core.Repository
 import coursier.install.Channel
 import coursier.ivy.IvyRepository
 import coursier.maven.{MavenRepository, SbtMavenRepository}
 import coursier.parse.RepositoryParser
+import coursier.util.StringInterpolators._
 
 final case class RepositoryParams(
   repositories: Seq[Repository]

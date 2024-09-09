@@ -14,7 +14,7 @@ import scala.io.{Codec, Source}
 import scala.util.Properties
 
 import coursier.clitests.util.TestAuthProxy
-import coursier.dependencyString
+import coursier.util.StringInterpolators._
 import utest._
 
 abstract class BootstrapTests extends TestSuite with LauncherOptions {
