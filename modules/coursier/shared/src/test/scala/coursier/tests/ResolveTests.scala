@@ -1183,5 +1183,31 @@ object ResolveTests extends TestSuite {
         await(validateDependencies(res, resolve0.resolutionParams))
       }
     }
+
+    test("mapDependencies") {
+      async {
+
+        val resolve0 = resolve
+          .addDependencies(dep"com.lihaoyi:pprint_2.12:0.5.4")
+          .withMapDependenciesOpt(
+            Some { dep =>
+              if (dep.module.name.value == "scala-library")
+                dep.withVersion("2.12.12")
+              else
+                dep
+            }
+          )
+
+        val res = await(resolve0.future())
+
+        await {
+          validateDependencies(
+            res,
+            resolve0.resolutionParams,
+            extraKeyPart = "customMapDependencies"
+          )
+        }
+      }
+    }
   }
 }

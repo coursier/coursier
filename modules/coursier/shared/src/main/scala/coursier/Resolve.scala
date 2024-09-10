@@ -46,7 +46,10 @@ import scala.language.higherKinds
     initialResolution: Option[Resolution] = None,
   @since
     confFiles: Seq[Resolve.Path] = Resolve.defaultConfFiles,
-  preferConfFileDefaultRepositories: Boolean = true
+  preferConfFileDefaultRepositories: Boolean = true,
+  @since("2.1.12")
+  @deprecated("Workaround for former uses of Resolution.mapDependencies, prefer relying on ResolutionParams", "2.1.12")
+    mapDependenciesOpt: Option[Dependency => Dependency] = None
 )(implicit
   sync: Sync[F]
 ) {
@@ -141,8 +144,12 @@ import scala.language.higherKinds
   private def ioWithConflicts0(fetch: ResolutionProcess.Fetch[F])
     : F[(Resolution, Seq[UnsatisfiedRule])] = {
 
-    val initialRes =
-      Resolve.initialResolution(finalDependencies, resolutionParams, initialResolution)
+    val initialRes = Resolve.initialResolution(
+      finalDependencies,
+      resolutionParams,
+      initialResolution,
+      mapDependenciesOpt
+    )
 
     def run(res: Resolution): F[Resolution] = {
       val t = Resolve.runProcess(res, fetch, resolutionParams.maxIterations, cache.loggerOpt)(S)
@@ -251,7 +258,8 @@ object Resolve extends PlatformResolve {
   private[coursier] def initialResolution(
     dependencies: Seq[Dependency],
     params: ResolutionParams = ResolutionParams(),
-    initialResolutionOpt: Option[Resolution] = None
+    initialResolutionOpt: Option[Resolution] = None,
+    mapDependenciesOpt: Option[Dependency => Dependency] = None
   ): Resolution = {
     import coursier.core.{Resolution => CoreResolution}
 
@@ -289,7 +297,8 @@ object Resolve extends PlatformResolve {
         Nil
 
     val mapDependencies = {
-      val l = (if (params.typelevel) Seq(Typelevel.swap) else Nil) ++
+      val l = mapDependenciesOpt.toSeq ++
+        (if (params.typelevel) Seq(Typelevel.swap) else Nil) ++
         (if (params.doForceScalaVersion)
            Seq(CoreResolution.overrideScalaModule(params.selectedScalaVersion, scalaOrg))
          else Nil) ++
