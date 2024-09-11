@@ -32,6 +32,7 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.higherKinds
 
+// format: off
 @data class Resolve[F[_]](
   cache: Cache[F],
   dependencies: Seq[Dependency] = Nil,
@@ -42,13 +43,14 @@ import scala.language.higherKinds
   throughOpt: Option[F[Resolution] => F[Resolution]] = None,
   transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]] = None,
   @since
-  initialResolution: Option[Resolution] = None,
+    initialResolution: Option[Resolution] = None,
   @since
-  confFiles: Seq[Resolve.Path] = Resolve.defaultConfFiles,
+    confFiles: Seq[Resolve.Path] = Resolve.defaultConfFiles,
   preferConfFileDefaultRepositories: Boolean = true
 )(implicit
   sync: Sync[F]
 ) {
+  // format: on
 
   private def S = sync
 
