@@ -140,9 +140,10 @@ object TestHelpers extends PlatformTestHelpers {
 
   def validateDependencies(
     res: Resolution,
-    params: ResolutionParams = ResolutionParams()
+    params: ResolutionParams = ResolutionParams(),
+    extraKeyPart: String = ""
   ): Future[Unit] =
-    validate("resolutions", res, params) {
+    validate("resolutions", res, params, extraKeyPart) {
       val elems = dependenciesWithRetainedVersion(res)
         .map { dep =>
           (
