@@ -3,14 +3,20 @@ package coursier.cache
 import java.io.{Serializable => _, _}
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.{FileAlreadyExistsException, Files, NoSuchFileException, StandardCopyOption}
+import java.nio.file.{
+  AccessDeniedException,
+  FileAlreadyExistsException,
+  Files,
+  NoSuchFileException,
+  StandardCopyOption
+}
 import java.security.MessageDigest
 import java.time.Clock
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
-import coursier.cache.internal.{Downloader, DownloadResult, FileUtil}
+import coursier.cache.internal.{Downloader, DownloadResult, FileUtil, Retry}
 import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
@@ -19,6 +25,7 @@ import dataclass.data
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.util.Properties
 import scala.util.control.NonFatal
 
 // format: off

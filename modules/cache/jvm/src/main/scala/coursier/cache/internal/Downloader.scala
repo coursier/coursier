@@ -57,6 +57,8 @@ import scala.util.control.NonFatal
 ) {
   // format: on
 
+  private val retry = Retry(retryCount, retryBackoffInitialDelay, retryBackoffMultiplier)
+
   private def blockingIO[T](f: => T): F[T] =
     S.schedule(pool)(f)
   private def blockingIOE[T](f: => Either[ArtifactError, T]): EitherT[F, ArtifactError, T] =
@@ -412,13 +414,7 @@ import scala.util.control.NonFatal
       var success = false
 
       try {
-        val res = Downloader.downloading(
-          url,
-          file,
-          retryCount,
-          retryBackoffInitialDelay,
-          retryBackoffMultiplier
-        )(
+        val res = Downloader.downloading(url, file, retry)(
           CacheLocks.withLockOr(location, file)(
             if (proceed())
               doDownload(file, url, keepHeaderChecksums, allCredentials0, tmp)
@@ -733,7 +729,8 @@ import scala.util.control.NonFatal
 
 object Downloader {
 
-  private lazy val throwExceptions = java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions")
+  private[cache] lazy val throwExceptions =
+    java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions")
 
   private val checksumHeader = Seq("MD5", "SHA1", "SHA256")
 
@@ -765,82 +762,55 @@ object Downloader {
   private def downloading[T](
     url: String,
     file: File,
-    retryCount: Int,
-    retryBackoffInitialDelay: FiniteDuration,
-    retryBackoffMultiplier: Double
+    retry: Retry
   )(
     f: => Either[ArtifactError, T],
     ifLocked: => Option[Either[ArtifactError, T]]
-  ): Either[ArtifactError, T] = {
-
-    @tailrec
-    def helper(retry: Int, delay: FiniteDuration): Either[ArtifactError, T] = {
-
-      val resOpt =
-        try {
-          val res0 = CacheLocks.withUrlLock(url) {
-            try f
-            catch {
-              case nfe: FileNotFoundException if nfe.getMessage != null =>
-                Left(new ArtifactError.NotFound(nfe.getMessage))
-            }
+  ): Either[ArtifactError, T] =
+    retry.retryOpt {
+      try {
+        val res0 = CacheLocks.withUrlLock(url) {
+          try f
+          catch {
+            case nfe: FileNotFoundException if nfe.getMessage != null =>
+              Left(new ArtifactError.NotFound(nfe.getMessage))
           }
-
-          res0.orElse(ifLocked)
-        }
-        catch {
-          case NonFatal(e) if throwExceptions =>
-            val ex = new ArtifactError.DownloadError(
-              s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
-              Some(e)
-            )
-            throw ex
-
-          case UnknownProtocol(e, msg0) =>
-            val docUrl = "https://get-coursier.io/docs/extra.html#extra-protocols"
-
-            val msg = List(
-              s"Caught ${e.getClass.getName} ($msg0) while downloading $url.",
-              s"Visit $docUrl to learn how to handle custom protocols."
-            ).mkString(" ")
-
-            val ex = new ArtifactError.DownloadError(msg, Some(e))
-
-            Some(Left(ex))
-
-          case _: AccessDeniedException if Properties.isWin && retry >= 1 =>
-            None
-
-          case _: javax.net.ssl.SSLException if retry >= 1 =>
-            // TODO If Cache is made an (instantiated) class at some point, allow to log that exception.
-            None
-
-          case NonFatal(e) =>
-            val ex = new ArtifactError.DownloadError(
-              s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
-              Some(e)
-            )
-            Some(Left(ex))
         }
 
-      resOpt match {
-        case Some(res) => res
-        case None =>
-          Thread.sleep(delay.toMillis)
-          helper(
-            retry - 1,
-            retryBackoffMultiplier * delay match {
-              case f: FiniteDuration => f
-              case _                 =>
-                // should not happen
-                delay
-            }
-          )
+        res0.orElse(ifLocked)
       }
-    }
+      catch {
+        case NonFatal(e) if throwExceptions =>
+          val ex = new ArtifactError.DownloadError(
+            s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
+            Some(e)
+          )
+          throw ex
 
-    helper(retryCount, retryBackoffInitialDelay)
-  }
+        case UnknownProtocol(e, msg0) =>
+          val docUrl = "https://get-coursier.io/docs/extra.html#extra-protocols"
+
+          val msg = List(
+            s"Caught ${e.getClass.getName} ($msg0) while downloading $url.",
+            s"Visit $docUrl to learn how to handle custom protocols."
+          ).mkString(" ")
+
+          val ex = new ArtifactError.DownloadError(msg, Some(e))
+
+          Some(Left(ex))
+
+        case NonFatal(e) =>
+          val ex = new ArtifactError.DownloadError(
+            s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
+            Some(e)
+          )
+          Some(Left(ex))
+      }
+    } {
+      case _: AccessDeniedException if Properties.isWin =>
+      case _: javax.net.ssl.SSLException                =>
+      // TODO Allow to log that exception.
+    }
 
   private object UnknownProtocol {
     def unapply(t: Throwable): Option[(MalformedURLException, String)] = t match {
