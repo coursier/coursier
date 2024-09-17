@@ -3,14 +3,21 @@ package coursier.cache
 import java.io.{Serializable => _, _}
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.{FileAlreadyExistsException, Files, NoSuchFileException, StandardCopyOption}
+import java.nio.file.{
+  AccessDeniedException,
+  FileAlreadyExistsException,
+  Files,
+  NoSuchFileException,
+  Path,
+  StandardCopyOption
+}
 import java.security.MessageDigest
 import java.time.Clock
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
-import coursier.cache.internal.{Downloader, DownloadResult, FileUtil}
+import coursier.cache.internal.{Downloader, DownloadResult, FileUtil, Retry}
 import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
@@ -19,6 +26,7 @@ import dataclass.data
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.util.Properties
 import scala.util.control.NonFatal
 
 // format: off
@@ -54,6 +62,15 @@ import scala.util.control.NonFatal
   // format: on
 
   private def S = sync
+
+  private val retry0 = Retry(retry, retryBackoffInitialDelay, retryBackoffMultiplier)
+
+  private def readAllBytes(path: Path): Array[Byte] =
+    retry0.retry {
+      Files.readAllBytes(path)
+    } {
+      case _: AccessDeniedException if Properties.isWin =>
+    }
 
   private lazy val allCredentials0 =
     credentials.flatMap(_.get())
@@ -130,7 +147,7 @@ import scala.util.control.NonFatal
       S.schedule(pool) {
         (headerSumFile ++ downloadedSumFile.toSeq).find(_.exists()) match {
           case Some(sumFile) =>
-            val sumOpt = CacheChecksum.parseRawChecksum(Files.readAllBytes(sumFile.toPath))
+            val sumOpt = CacheChecksum.parseRawChecksum(readAllBytes(sumFile.toPath))
 
             sumOpt match {
               case None =>
@@ -138,7 +155,12 @@ import scala.util.control.NonFatal
 
               case Some(sum) =>
                 val calculatedSum: BigInteger =
-                  FileCache.persistedDigest(location, sumType, localFile0)
+                  FileCache.persistedDigest(
+                    location,
+                    sumType,
+                    localFile0,
+                    retry0
+                  )
 
                 if (sum == calculatedSum)
                   Right(())
@@ -296,13 +318,15 @@ import scala.util.control.NonFatal
             if (links) {
               val linkFile = auxiliaryFile(f, "links")
               if (f.getName == ".directory" && linkFile.isFile)
-                new String(Files.readAllBytes(linkFile.toPath), UTF_8)
+                new String(readAllBytes(linkFile.toPath), UTF_8)
               else
-                WebPage.listElements(artifact0.url, new String(Files.readAllBytes(f.toPath), UTF_8))
-                  .mkString("\n")
+                WebPage.listElements(
+                  artifact0.url,
+                  new String(readAllBytes(f.toPath), UTF_8)
+                ).mkString("\n")
             }
             else
-              new String(Files.readAllBytes(f.toPath), UTF_8)
+              new String(readAllBytes(f.toPath), UTF_8)
           Right(content)
         }
         catch {
@@ -426,7 +450,12 @@ object FileCache {
     FileCache(CacheDefaults.location)(S)
 
   /* Store computed cache in a file so we don't have to recompute them over and over. */
-  private def persistedDigest(location: File, sumType: String, localFile: File): BigInteger = {
+  private def persistedDigest(
+    location: File,
+    sumType: String,
+    localFile: File,
+    retry: Retry
+  ): BigInteger = {
     // only store computed files within coursier cache folder
     val isInCache: Boolean = {
       val location0 = location.getCanonicalPath.stripSuffix(File.separator) + File.separator
@@ -434,25 +463,36 @@ object FileCache {
     }
 
     val digested: Array[Byte] =
-      if (!isInCache) computeDigest(sumType, localFile)
+      if (!isInCache)
+        computeDigest(sumType, localFile, retry)
       else {
         val cacheFile     = auxiliaryFile(localFile, sumType + ".computed")
         val cacheFilePath = cacheFile.toPath
 
-        try Files.readAllBytes(cacheFilePath)
+        try
+          retry.retry {
+            Files.readAllBytes(cacheFilePath)
+          } {
+            case _: AccessDeniedException if Properties.isWin =>
+          }
         catch {
           case _: NoSuchFileException =>
-            val bytes: Array[Byte] = computeDigest(sumType, localFile)
+            val bytes: Array[Byte] = computeDigest(sumType, localFile, retry)
 
             // Atomically write file by using a temp file in the same directory
             val tmpFile =
               File.createTempFile(cacheFile.getName, ".tmp", cacheFile.getParentFile).toPath
             try {
               Files.write(tmpFile, bytes)
-              try Files.move(tmpFile, cacheFilePath, StandardCopyOption.ATOMIC_MOVE)
-              catch {
-                // In the case of multiple processes/threads which all compute this digest, first thread wins.
-                case _: FileAlreadyExistsException => ()
+
+              retry.retry {
+                try Files.move(tmpFile, cacheFilePath, StandardCopyOption.ATOMIC_MOVE)
+                catch {
+                  // In case of multiple processes/threads which all compute this digest, first thread wins
+                  case _: FileAlreadyExistsException =>
+                }
+              } {
+                case _: AccessDeniedException if Properties.isWin =>
               }
             }
             finally Files.deleteIfExists(tmpFile)
@@ -464,12 +504,24 @@ object FileCache {
     new BigInteger(1, digested)
   }
 
-  private def computeDigest(sumType: String, localFile: File): Array[Byte] = {
+  private def computeDigest(
+    sumType: String,
+    localFile: File,
+    retry: Retry
+  ): Array[Byte] = {
     val md = MessageDigest.getInstance(sumType)
 
     var is: FileInputStream = null
     try {
-      is = new FileInputStream(localFile)
+      retry.retry {
+        is = new FileInputStream(localFile)
+      } {
+        // For freshly created files, we may get a FileNotFoundException with
+        // "(The process cannot access the file because it is being used by another process)"
+        // in the exception message, meaning another process (maybe an antivirus)
+        // is accessing the file in an exclusive fashion
+        case _: FileNotFoundException if Properties.isWin =>
+      }
       FileUtil.withContent(is, new FileUtil.UpdateDigest(md))
     }
     finally if (is != null) is.close()
