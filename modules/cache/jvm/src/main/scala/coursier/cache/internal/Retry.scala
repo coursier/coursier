@@ -9,6 +9,9 @@ final case class Retry(
   delayMultiplier: Double
 ) {
 
+  def retry[T](f: => T)(catchEx: PartialFunction[Throwable, Unit]): T =
+    retryOpt(Some(f))(catchEx)
+
   // This may try more than retry times, if f returns None too many times
   def retryOpt[T](f: => Option[T])(catchEx: PartialFunction[Throwable, Unit]): T = {
 
