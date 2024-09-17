@@ -173,8 +173,17 @@ import scala.util.control.NonFatal
         val succeeded =
           try {
             val content =
-              WebPage.listElements(url, new String(Files.readAllBytes(file.toPath), UTF_8))
-                .mkString("\n")
+              WebPage.listElements(
+                url,
+                new String(
+                  retry.retry {
+                    Files.readAllBytes(file.toPath)
+                  } {
+                    case _: AccessDeniedException if Properties.isWin =>
+                  },
+                  UTF_8
+                )
+              ).mkString("\n")
 
             var fos: FileOutputStream = null
             try {

@@ -8,6 +8,7 @@ import java.nio.file.{
   FileAlreadyExistsException,
   Files,
   NoSuchFileException,
+  Path,
   StandardCopyOption
 }
 import java.security.MessageDigest
@@ -63,6 +64,13 @@ import scala.util.control.NonFatal
   private def S = sync
 
   private val retry0 = Retry(retry, retryBackoffInitialDelay, retryBackoffMultiplier)
+
+  private def readAllBytes(path: Path): Array[Byte] =
+    retry0.retry {
+      Files.readAllBytes(path)
+    } {
+      case _: AccessDeniedException if Properties.isWin =>
+    }
 
   private lazy val allCredentials0 =
     credentials.flatMap(_.get())
@@ -139,7 +147,7 @@ import scala.util.control.NonFatal
       S.schedule(pool) {
         (headerSumFile ++ downloadedSumFile.toSeq).find(_.exists()) match {
           case Some(sumFile) =>
-            val sumOpt = CacheChecksum.parseRawChecksum(Files.readAllBytes(sumFile.toPath))
+            val sumOpt = CacheChecksum.parseRawChecksum(readAllBytes(sumFile.toPath))
 
             sumOpt match {
               case None =>
@@ -310,13 +318,15 @@ import scala.util.control.NonFatal
             if (links) {
               val linkFile = auxiliaryFile(f, "links")
               if (f.getName == ".directory" && linkFile.isFile)
-                new String(Files.readAllBytes(linkFile.toPath), UTF_8)
+                new String(readAllBytes(linkFile.toPath), UTF_8)
               else
-                WebPage.listElements(artifact0.url, new String(Files.readAllBytes(f.toPath), UTF_8))
-                  .mkString("\n")
+                WebPage.listElements(
+                  artifact0.url,
+                  new String(readAllBytes(f.toPath), UTF_8)
+                ).mkString("\n")
             }
             else
-              new String(Files.readAllBytes(f.toPath), UTF_8)
+              new String(readAllBytes(f.toPath), UTF_8)
           Right(content)
         }
         catch {
@@ -459,7 +469,12 @@ object FileCache {
         val cacheFile     = auxiliaryFile(localFile, sumType + ".computed")
         val cacheFilePath = cacheFile.toPath
 
-        try Files.readAllBytes(cacheFilePath)
+        try
+          retry.retry {
+            Files.readAllBytes(cacheFilePath)
+          } {
+            case _: AccessDeniedException if Properties.isWin =>
+          }
         catch {
           case _: NoSuchFileException =>
             val bytes: Array[Byte] = computeDigest(sumType, localFile, retry)
