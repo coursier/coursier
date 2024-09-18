@@ -66,13 +66,13 @@ artifacts via XMLHttpRequests.</p>
 <p>From sbt, one can depend on the core and fetch modules via</p>
 <pre><code class="hljs css language-scala">resolvers += <span class="hljs-type">Resolver</span>.sonatypeRepo(<span class="hljs-string">"snapshots"</span>)
 libraryDependencies ++= <span class="hljs-type">Seq</span>(
-  <span class="hljs-string">"io.get-coursier"</span> %%% <span class="hljs-string">"coursier-core"</span> % <span class="hljs-string">"2.1.13-2-d8c11b2cc-SNAPSHOT"</span>,
-  <span class="hljs-string">"io.get-coursier"</span> %%% <span class="hljs-string">"coursier-fetch-js"</span> % <span class="hljs-string">"2.1.13-2-d8c11b2cc-SNAPSHOT"</span>
+  <span class="hljs-string">"io.get-coursier"</span> %%% <span class="hljs-string">"coursier-core"</span> % <span class="hljs-string">"2.1.13-4-f4f8a718c-SNAPSHOT"</span>,
+  <span class="hljs-string">"io.get-coursier"</span> %%% <span class="hljs-string">"coursier-fetch-js"</span> % <span class="hljs-string">"2.1.13-4-f4f8a718c-SNAPSHOT"</span>
 )
 </code></pre>
 <p>or simply via the <code>coursier</code> module, which aggregates both,</p>
 <pre><code class="hljs css language-scala">resolvers += <span class="hljs-type">Resolver</span>.sonatypeRepo(<span class="hljs-string">"snapshots"</span>)
-libraryDependencies += <span class="hljs-string">"io.get-coursier"</span> %%% <span class="hljs-string">"coursier"</span> % <span class="hljs-string">"2.1.13-2-d8c11b2cc-SNAPSHOT"</span>
+libraryDependencies += <span class="hljs-string">"io.get-coursier"</span> %%% <span class="hljs-string">"coursier"</span> % <span class="hljs-string">"2.1.13-4-f4f8a718c-SNAPSHOT"</span>
 </code></pre>
 <p>As an illustration, coursier has <a href="../demo">an in-browser demo</a>, that allows one
 to run resolutions entirely from the browser.</p>
