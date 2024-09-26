@@ -81,7 +81,7 @@ def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"
 def csDockerVersion = "2.1.0-RC1"
 
 object ScalaVersions {
-  def scala213 = "2.13.14"
+  def scala213 = "2.13.15"
   def scala212 = "2.12.20"
   val all      = Seq(scala213, scala212)
 
