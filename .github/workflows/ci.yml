@@ -65,7 +65,7 @@ jobs:
             SCALA_VERSION: "2.12.20"
             OS: "windows-latest"
           - JDK: "8"
-            SCALA_VERSION: "2.13.14"
+            SCALA_VERSION: "2.13.15"
             OS: "ubuntu-latest"
           - JDK: "17"
             SCALA_VERSION: "2.12.20"
@@ -101,7 +101,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        SCALA_VERSION: ["2.12.20", "2.13.14"]
+        SCALA_VERSION: ["2.12.20", "2.13.15"]
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
