@@ -417,7 +417,7 @@ object ResolutionProcess {
 
     def uniqueModules(modVers: Seq[(Module, String)]): LazyList[Seq[(Module, String)]] = {
 
-      val res = modVers.groupBy(_._1).toSeq.map(_._2).map {
+      val res = modVers.groupBy(_._1.withAttributes(Map.empty)).toSeq.map(_._2).map {
         case Seq(v) => (v, Nil)
         case Seq()  => sys.error("Cannot happen")
         case v      =>

@@ -249,37 +249,37 @@ object Resolution {
       }
     val dependencies0 = dependencies.toVector
     val mergedByModVer = dependencies0
-      .groupBy(dep => dep.module)
+      .groupBy(dep => dep.module.withAttributes(Map.empty))
       .map { case (module, deps) =>
         val anyOrgModule = module.withOrganization(Organization("*"))
         val forcedVersionOpt = forceVersions.get(module)
           .orElse(forceVersions.get(anyOrgModule))
+        def moduleWithAttributes(version: String): Option[Module] =
+          deps.find(_.version == version).map(_.module)
 
-        module -> {
-          val (versionOpt, updatedDeps) = forcedVersionOpt match {
-            case None =>
-              if (deps.lengthCompare(1) == 0) (Some(deps.head.version), Right(deps))
-              else {
-                val versions   = deps.map(_.version)
-                val reconciler = reconcilerByMod(module)
-                val versionOpt = reconciler(versions)
+        forcedVersionOpt match {
+          case None =>
+            if (deps.lengthCompare(1) == 0) deps.head.module -> (Right(deps), Some(deps.head.version))
+            else {
+              val versions   = deps.map(_.version)
+              val reconciler = reconcilerByMod(module)
+              val versionOpt = reconciler(versions)
+              val moduleWithAttrs = versionOpt.flatMap(moduleWithAttributes).getOrElse(deps.head.module)
 
-                (
-                  versionOpt,
-                  versionOpt match {
-                    case Some(version) =>
-                      Right(deps.map(dep => dep.withVersion(version)))
-                    case None =>
-                      Left(deps)
-                  }
-                )
-              }
+              moduleWithAttrs -> (
+                versionOpt match {
+                  case Some(version) =>
+                    Right(deps.map(dep => dep.withVersion(version)))
+                  case None =>
+                    Left(deps)
+                },
+                versionOpt
+              )
+            }
 
-            case Some(forcedVersion) =>
-              (Some(forcedVersion), Right(deps.map(dep => dep.withVersion(forcedVersion))))
-          }
-
-          (updatedDeps, versionOpt)
+          case Some(forcedVersion) =>
+            val moduleWithAttrs = moduleWithAttributes(forcedVersion).getOrElse(deps.head.module)
+            moduleWithAttrs -> (Right(deps.map(dep => dep.withVersion(forcedVersion))), Some(forcedVersion))
         }
       }
 
