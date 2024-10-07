@@ -67,7 +67,8 @@ object SbtMavenRepository {
       attrs = parts
         .grouped(2)
         .collect {
-          case Seq(k, v) if v != "NULL" =>
+          // ignore NULL values and info attributes
+          case Seq(k, v) if v != "NULL" && !k.startsWith("info.") =>
             k.stripPrefix(Pom.extraAttributeDropPrefix) -> v
         }
         .toMap
