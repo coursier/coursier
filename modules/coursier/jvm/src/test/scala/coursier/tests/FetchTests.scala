@@ -36,117 +36,143 @@ object FetchTests extends TestSuite {
   val tests = Tests {
 
     test("artifactTypes") {
-      test("default") - async {
-
-        val res = await {
-          fetch
-            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-            .futureResult()
-        }
-
-        await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
-      }
-
-      test("sources") - async {
-
-        val classifiers = Set(Classifier.sources)
-        val res = await {
-          fetch
-            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-            .withClassifiers(classifiers)
-            .futureResult()
-        }
-
-        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), classifiers = classifiers))
-      }
-
-      test("mainAndSources") - async {
-
-        val classifiers   = Set(Classifier.sources)
-        val mainArtifacts = true
-        val res = await {
-          fetch
-            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-            .withClassifiers(classifiers)
-            .withMainArtifacts(mainArtifacts)
-            .futureResult()
-        }
-
-        await {
-          validateArtifacts(
-            res.resolution,
-            res.artifacts.map(_._1),
-            classifiers = classifiers,
-            mainArtifacts = mainArtifacts
-          )
-        }
-      }
-
-      test("javadoc") - async {
-
-        val classifiers = Set(Classifier.javadoc)
-        val res = await {
-          fetch
-            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-            .withClassifiers(classifiers)
-            .futureResult()
-        }
-
-        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), classifiers = classifiers))
-      }
-
-      test("mainAndJavadoc") - async {
-
-        val classifiers   = Set(Classifier.javadoc)
-        val mainArtifacts = true
-        val res = await {
-          fetch
-            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-            .withClassifiers(classifiers)
-            .withMainArtifacts(mainArtifacts)
-            .futureResult()
-        }
-
-        await {
-          validateArtifacts(
-            res.resolution,
-            res.artifacts.map(_._1),
-            classifiers = classifiers,
-            mainArtifacts = mainArtifacts
-          )
-        }
-      }
-
-      test("sourcesAndJavadoc") - async {
-
-        val classifiers = Set(Classifier.javadoc, Classifier.sources)
-        val res = await {
-          fetch
-            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-            .withClassifiers(classifiers)
-            .futureResult()
-        }
-
-        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), classifiers = classifiers))
-      }
-
-      test("exotic") {
-        test("orbit") - async {
-          // should be in the default artifact types
-          //
+      test("default") {
+        async {
 
           val res = await {
             fetch
-              .addDependencies(dep"org.eclipse.jetty.orbit:javax.servlet:3.0.0.v201112011016")
+              .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
               .futureResult()
           }
 
-          val urls = res.artifacts.map(_._1.url)
-          assert(urls.contains(
-            "https://repo1.maven.org/maven2/org/eclipse/jetty/orbit/javax.servlet/3.0.0.v201112011016/javax.servlet-3.0.0.v201112011016.jar"
-          ))
-
           await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
+        }
+      }
+
+      test("sources") {
+        async {
+
+          val classifiers = Set(Classifier.sources)
+          val res = await {
+            fetch
+              .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+              .withClassifiers(classifiers)
+              .futureResult()
+          }
+
+          await(validateArtifacts(
+            res.resolution,
+            res.artifacts.map(_._1),
+            classifiers = classifiers
+          ))
+        }
+      }
+
+      test("mainAndSources") {
+        async {
+
+          val classifiers   = Set(Classifier.sources)
+          val mainArtifacts = true
+          val res = await {
+            fetch
+              .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+              .withClassifiers(classifiers)
+              .withMainArtifacts(mainArtifacts)
+              .futureResult()
+          }
+
+          await {
+            validateArtifacts(
+              res.resolution,
+              res.artifacts.map(_._1),
+              classifiers = classifiers,
+              mainArtifacts = mainArtifacts
+            )
+          }
+        }
+      }
+
+      test("javadoc") {
+        async {
+
+          val classifiers = Set(Classifier.javadoc)
+          val res = await {
+            fetch
+              .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+              .withClassifiers(classifiers)
+              .futureResult()
+          }
+
+          await(validateArtifacts(
+            res.resolution,
+            res.artifacts.map(_._1),
+            classifiers = classifiers
+          ))
+        }
+      }
+
+      test("mainAndJavadoc") {
+        async {
+
+          val classifiers   = Set(Classifier.javadoc)
+          val mainArtifacts = true
+          val res = await {
+            fetch
+              .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+              .withClassifiers(classifiers)
+              .withMainArtifacts(mainArtifacts)
+              .futureResult()
+          }
+
+          await {
+            validateArtifacts(
+              res.resolution,
+              res.artifacts.map(_._1),
+              classifiers = classifiers,
+              mainArtifacts = mainArtifacts
+            )
+          }
+        }
+      }
+
+      test("sourcesAndJavadoc") {
+        async {
+
+          val classifiers = Set(Classifier.javadoc, Classifier.sources)
+          val res = await {
+            fetch
+              .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+              .withClassifiers(classifiers)
+              .futureResult()
+          }
+
+          await(validateArtifacts(
+            res.resolution,
+            res.artifacts.map(_._1),
+            classifiers = classifiers
+          ))
+        }
+      }
+
+      test("exotic") {
+        test("orbit") {
+          async {
+            // should be in the default artifact types
+            //
+
+            val res = await {
+              fetch
+                .addDependencies(dep"org.eclipse.jetty.orbit:javax.servlet:3.0.0.v201112011016")
+                .futureResult()
+            }
+
+            val urls = res.artifacts.map(_._1.url)
+            assert(urls.contains(
+              "https://repo1.maven.org/maven2/org/eclipse/jetty/orbit/javax.servlet/3.0.0.v201112011016/javax.servlet-3.0.0.v201112011016.jar"
+            ))
+
+            await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
+          }
         }
       }
     }
@@ -164,66 +190,74 @@ object FetchTests extends TestSuite {
       val fetch0 = fetch
         .withRepositories(Seq(Repositories.central))
 
-      test("m2Local") - async {
-        val res = await {
-          fetch0
-            .addRepositories(m2Repo)
-            .addDependencies(
-              dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
-                .withConfiguration(Configuration.test)
-            )
-            .futureResult()
-        }
+      test("m2Local") {
+        async {
+          val res = await {
+            fetch0
+              .addRepositories(m2Repo)
+              .addDependencies(
+                dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
+                  .withConfiguration(Configuration.test)
+              )
+              .futureResult()
+          }
 
-        val urls = res.artifacts.map(_._1.url).toSet
+          val urls = res.artifacts.map(_._1.url).toSet
 
-        assert(urls.exists(_.endsWith("/common_2.12-0.1.0-SNAPSHOT.jar")))
-        assert(urls.exists(_.endsWith("/top_2.12-0.1.0-SNAPSHOT.jar")))
-        assert(urls.exists(_.endsWith("/top_2.12-0.1.0-SNAPSHOT-tests.jar")))
-        assert(urls.contains(
-          "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.9.0/jackson-annotations-2.9.0.jar"
-        ))
+          assert(urls.exists(_.endsWith("/common_2.12-0.1.0-SNAPSHOT.jar")))
+          assert(urls.exists(_.endsWith("/top_2.12-0.1.0-SNAPSHOT.jar")))
+          assert(urls.exists(_.endsWith("/top_2.12-0.1.0-SNAPSHOT-tests.jar")))
+          assert(urls.contains(
+            "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.9.0/jackson-annotations-2.9.0.jar"
+          ))
 
-        // those ones aren't here, unlike in the Ivy case
-        // see below for more details
-        assert(!urls.exists(_.endsWith("/common_2.12-0.1.0-SNAPSHOT-tests.jar")))
-        assert(!urls.contains("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"))
+          // those ones aren't here, unlike in the Ivy case
+          // see below for more details
+          assert(!urls.exists(_.endsWith("/common_2.12-0.1.0-SNAPSHOT-tests.jar")))
+          assert(!urls.contains("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"))
 
-        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), extraKeyPart = "_m2Local"))
-      }
-
-      test("ivy2Local") - async {
-        val res = await {
-          fetch0
-            .addRepositories(ivy2Repo)
-            .addDependencies(
-              dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
-                .withConfiguration(Configuration.test)
-            )
-            .futureResult()
-        }
-
-        val urls = res.artifacts.map(_._1.url).toSet
-
-        assert(urls.exists(_.endsWith("/common_2.12.jar")))
-        assert(urls.exists(_.endsWith("/top_2.12.jar")))
-        assert(urls.exists(_.endsWith("/top_2.12-tests.jar")))
-        assert(urls.contains(
-          "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.9.0/jackson-annotations-2.9.0.jar"
-        ))
-
-        // those ones are here, unlike in the Maven case
-        // brought via a test->test dependency of module top on module common, that can't be represented in a POM
-        assert(urls.exists(_.endsWith("/common_2.12-tests.jar")))
-        // brought via a dependency on the test scope of common, via the same test->test dependency
-        assert(urls.contains("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"))
-
-        await {
-          validateArtifacts(
+          await(validateArtifacts(
             res.resolution,
             res.artifacts.map(_._1),
-            extraKeyPart = "_ivy2Local"
-          )
+            extraKeyPart = "_m2Local"
+          ))
+        }
+      }
+
+      test("ivy2Local") {
+        async {
+          val res = await {
+            fetch0
+              .addRepositories(ivy2Repo)
+              .addDependencies(
+                dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
+                  .withConfiguration(Configuration.test)
+              )
+              .futureResult()
+          }
+
+          val urls = res.artifacts.map(_._1.url).toSet
+
+          assert(urls.exists(_.endsWith("/common_2.12.jar")))
+          assert(urls.exists(_.endsWith("/top_2.12.jar")))
+          assert(urls.exists(_.endsWith("/top_2.12-tests.jar")))
+          assert(urls.contains(
+            "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.9.0/jackson-annotations-2.9.0.jar"
+          ))
+
+          // those ones are here, unlike in the Maven case
+          // brought via a test->test dependency of module top on module common, that can't be represented in a POM
+          assert(urls.exists(_.endsWith("/common_2.12-tests.jar")))
+          // brought via a dependency on the test scope of common, via the same test->test dependency
+          assert(urls.contains("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"))
+
+          await {
+            validateArtifacts(
+              res.resolution,
+              res.artifacts.map(_._1),
+              extraKeyPart = "_ivy2Local"
+            )
+          }
         }
       }
     }
@@ -272,30 +306,32 @@ object FetchTests extends TestSuite {
     }
 
     test("publications") {
-      test("ivy") - async {
-        val artifactTypes = Seq(Type("info"))
+      test("ivy") {
+        async {
+          val artifactTypes = Seq(Type("info"))
 
-        val res = await {
-          fetch
-            .withCache(cacheWithHandmadeMetadata)
-            .withRepositories(Seq(
-              Repositories.central,
-              IvyRepository.parse("http://ivy.abc.com/[defaultPattern]").toOption.get
-            ))
-            .addDependencies(dep"test:a_2.12:1.0.0")
-            .addArtifactTypes(artifactTypes: _*)
-            .futureResult()
-        }
+          val res = await {
+            fetch
+              .withCache(cacheWithHandmadeMetadata)
+              .withRepositories(Seq(
+                Repositories.central,
+                IvyRepository.parse("http://ivy.abc.com/[defaultPattern]").toOption.get
+              ))
+              .addDependencies(dep"test:a_2.12:1.0.0")
+              .addArtifactTypes(artifactTypes: _*)
+              .futureResult()
+          }
 
-        assert(res.artifacts.nonEmpty)
-        assert(res.detailedArtifacts.count(_._2.ext == Extension("csv")) == 1)
+          assert(res.artifacts.nonEmpty)
+          assert(res.detailedArtifacts.count(_._2.ext == Extension("csv")) == 1)
 
-        await {
-          validateArtifacts(
-            res.resolution,
-            res.artifacts.map(_._1),
-            artifactTypes = artifactTypes.toSet
-          )
+          await {
+            validateArtifacts(
+              res.resolution,
+              res.artifacts.map(_._1),
+              artifactTypes = artifactTypes.toSet
+            )
+          }
         }
       }
     }
