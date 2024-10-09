@@ -174,6 +174,28 @@ object FetchTests extends TestSuite {
             await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
           }
         }
+
+        test("klib") {
+          async {
+            // should be in the default artifact types
+
+            val res = await {
+              fetch
+                .addDependencies(dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0")
+                .futureResult()
+            }
+
+            val urls = res.artifacts.map(_._1.url)
+            assert(urls.contains(
+              "https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-html-js/0.11.0/kotlinx-html-js-0.11.0.klib"
+            ))
+            assert(urls.contains(
+              "https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-dom-api-compat/1.9.22/kotlin-dom-api-compat-1.9.22.klib"
+            ))
+
+            await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
+          }
+        }
       }
     }
 

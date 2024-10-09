@@ -122,6 +122,9 @@ object Type {
     val hk2           = Type("hk2-jar")
     val orbit         = Type("orbit")
     val scalaJar      = Type("scala-jar")
+
+    // Kotlin stuff
+    val klib = Type("klib")
   }
 }
 
