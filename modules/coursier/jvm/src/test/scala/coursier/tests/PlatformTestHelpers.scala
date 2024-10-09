@@ -40,7 +40,7 @@ abstract class PlatformTestHelpers {
 
   val cache: Cache[Task] =
     MockCache.create[Task](mockDataLocation, pool = pool, writeMissing = writeMockData)
-      .withDummyArtifact(_.url.endsWith(".jar"))
+      .withDummyArtifact(a => a.url.endsWith(".jar") || a.url.endsWith(".klib"))
 
   val handmadeMetadataCache: Cache[Task] =
     MockCache.create[Task](handmadeMetadataLocation, pool = pool)

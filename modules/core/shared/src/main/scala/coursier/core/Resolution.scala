@@ -600,7 +600,8 @@ object Resolution {
     Type.Exotic.eclipsePlugin,
     Type.Exotic.hk2,
     Type.Exotic.orbit,
-    Type.Exotic.scalaJar
+    Type.Exotic.scalaJar,
+    Type.Exotic.klib
   )
 
   def overrideScalaModule(sv: String): Dependency => Dependency =
