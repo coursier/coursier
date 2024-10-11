@@ -525,7 +525,6 @@ trait Jvm extends CrossSbtModule with CsModule
     Deps.svm
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
-    Deps.argonautShapeless,
     Deps.jsoniterCore
   )
   object test extends CrossSbtModuleTests with CsTests {
