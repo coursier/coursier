@@ -11,7 +11,8 @@ trait Core extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
     Deps.dataClass
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
-    Deps.fastParse
+    Deps.fastParse,
+    Deps.collectionCompat
   )
 
   def constantsFile = T {
