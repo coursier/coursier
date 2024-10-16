@@ -93,26 +93,6 @@ object Resolution {
         b.result()
           .toMap // meh
       }
-
-    def add(
-      dict: Map[DependencyManagement.Key, DependencyManagement.Values],
-      other: Map[DependencyManagement.Key, DependencyManagement.Values]
-    ): Map[DependencyManagement.Key, DependencyManagement.Values] =
-      if (other.isEmpty)
-        dict
-      else {
-        val b = new mutable.HashMap[DependencyManagement.Key, DependencyManagement.Values]()
-        b.sizeHint(dict.size + other.size)
-        b ++= dict
-        val it = other.iterator
-        while (it.hasNext) {
-          val (key0, elem) = it.next()
-          if (!b.contains(key0))
-            b += ((key0, elem))
-        }
-        b.result()
-          .toMap // meh
-      }
   }
 
   def addDependencies(
@@ -375,7 +355,7 @@ object Resolution {
             if (dep.overrides.isEmpty)
               dict
             else
-              DepMgmt.add(dep.overrides, dict)
+              dep.overrides ++ dict // dict values take precedence
           }
 
         (config, dep)
@@ -580,7 +560,7 @@ object Resolution {
       depsWithDependencyManagement(
         // 1.7
         withProperties(project0.dependencies, properties),
-        Map.empty,
+        from.overrides,
         withProperties(project0.dependencyManagement, properties)
       ),
       from.minimizedExclusions.toSet()

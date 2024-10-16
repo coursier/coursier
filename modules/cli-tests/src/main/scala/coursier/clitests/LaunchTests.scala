@@ -352,7 +352,7 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
         "sh/almond/channels_2.12/0.13.6/channels_2.12-0.13.6.jar",
         "com/thesamet/scalapb/scalapb-runtime_2.12/0.11.11/scalapb-runtime_2.12-0.11.11.jar",
         "org/scalameta/scalameta_2.12/4.6.0/scalameta_2.12-4.6.0.jar",
-        "org/jboss/logging/jboss-logging/3.4.0.Final/jboss-logging-3.4.0.Final.jar",
+        "org/jboss/logging/jboss-logging/3.4.1.Final/jboss-logging-3.4.1.Final.jar",
         "org/jboss/xnio/xnio-api/3.8.0.Final/xnio-api-3.8.0.Final.jar",
         "org/scalameta/mtags-interfaces/0.11.9/mtags-interfaces-0.11.9.jar",
         "com/thoughtworks/qdox/qdox/2.0.2/qdox-2.0.2.jar",
