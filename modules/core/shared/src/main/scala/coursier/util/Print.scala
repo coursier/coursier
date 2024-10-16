@@ -21,7 +21,8 @@ object Print {
   def dependency(dep: Dependency, printExclusions: Boolean): String = {
 
     def exclusionsStr = dep
-      .exclusions
+      .minimizedExclusions
+      .toSet()
       .toVector
       .sorted
       .map {

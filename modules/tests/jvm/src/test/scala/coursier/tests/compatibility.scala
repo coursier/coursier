@@ -9,12 +9,13 @@ import coursier.core.Repository
 import coursier.paths.Util
 import coursier.util.{Sync, Task}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 
 object compatibility {
 
-  private val pool              = Sync.fixedThreadPool(6)
-  implicit val executionContext = scala.concurrent.ExecutionContext.fromExecutorService(pool)
+  private val pool = Sync.fixedThreadPool(6)
+  implicit val executionContext: ExecutionContextExecutorService =
+    ExecutionContext.fromExecutorService(pool)
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] = Future {
     val f                    = new File("modules/tests/shared/src/test/resources/" + path)
