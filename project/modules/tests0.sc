@@ -5,6 +5,7 @@ import mill._
 trait TestsModule extends CsCrossJvmJsModule {
   def ivyDeps = Agg(
     Deps.collectionCompat,
+    Deps.pprint,
     Deps.scalaAsync
   )
   def compileIvyDeps = Agg(
