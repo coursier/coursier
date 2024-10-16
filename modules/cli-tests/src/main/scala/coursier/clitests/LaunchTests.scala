@@ -450,8 +450,6 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
         var zf: ZipFile = null
         try {
           zf = new ZipFile(hybridLauncher.toIO)
-          import scala.collection.JavaConverters._
-          pprint.err.log(zf.entries().asScala.map(_.getName).toVector.sorted)
 
           assert(zf.getEntry("coursier/bootstrap/launcher/Launcher.class") != null)
 
@@ -462,7 +460,8 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
             val s = new String(b, StandardCharsets.UTF_8)
             s.linesIterator.filter(_.nonEmpty).toVector
           }
-          pprint.err.log(urls)
+          if (urls != expectedUrls)
+            pprint.err.log(urls)
           assert(urls == expectedUrls)
         }
         finally
