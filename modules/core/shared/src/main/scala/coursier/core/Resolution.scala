@@ -93,6 +93,26 @@ object Resolution {
         b.result()
           .toMap // meh
       }
+
+    def add(
+      dict: Map[DependencyManagement.Key, DependencyManagement.Values],
+      other: Map[DependencyManagement.Key, DependencyManagement.Values]
+    ): Map[DependencyManagement.Key, DependencyManagement.Values] =
+      if (other.isEmpty)
+        dict
+      else {
+        val b = new mutable.HashMap[DependencyManagement.Key, DependencyManagement.Values]()
+        b.sizeHint(dict.size + other.size)
+        b ++= dict
+        val it = other.iterator
+        while (it.hasNext) {
+          val (key0, elem) = it.next()
+          if (!b.contains(key0))
+            b += ((key0, elem))
+        }
+        b.result()
+          .toMap // meh
+      }
   }
 
   def addDependencies(
@@ -317,12 +337,13 @@ object Resolution {
     */
   def depsWithDependencyManagement(
     dependencies: Seq[(Configuration, Dependency)],
+    overrides: Map[DependencyManagement.Key, DependencyManagement.Values],
     dependencyManagement: Seq[(Configuration, Dependency)]
   ): Seq[(Configuration, Dependency)] = {
 
     // See http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Management
 
-    lazy val dict = DepMgmt.addSeq(Map.empty, dependencyManagement)
+    lazy val dict = DepMgmt.addSeq(overrides, dependencyManagement)
 
     dependencies.map {
       case (config0, dep0) =>
@@ -349,9 +370,24 @@ object Resolution {
             dep = dep.withOptional(mgmtValues.optional)
         }
 
+        if (dict.nonEmpty)
+          dep = dep.withOverrides {
+            if (dep.overrides.isEmpty)
+              dict
+            else
+              DepMgmt.add(dep.overrides, dict)
+          }
+
         (config, dep)
     }
   }
+
+  @deprecated("Use the override accepting an override map instead", "2.1.15")
+  def depsWithDependencyManagement(
+    dependencies: Seq[(Configuration, Dependency)],
+    dependencyManagement: Seq[(Configuration, Dependency)]
+  ): Seq[(Configuration, Dependency)] =
+    depsWithDependencyManagement(dependencies, Map.empty, dependencyManagement)
 
   private def withDefaultConfig(dep: Dependency, defaultConfiguration: Configuration): Dependency =
     if (dep.configuration.isEmpty)
@@ -544,6 +580,7 @@ object Resolution {
       depsWithDependencyManagement(
         // 1.7
         withProperties(project0.dependencies, properties),
+        Map.empty,
         withProperties(project0.dependencyManagement, properties)
       ),
       from.minimizedExclusions.toSet()
@@ -1289,23 +1326,24 @@ object Resolution {
       Resolution.fallbackConfigIfNecessary(dep, configsOf(dep))
     }
 
-  def orderedDependencies: Seq[Dependency] = {
+  private def orderedDependencies0(keepOverrides: Boolean): Seq[Dependency] = {
 
     def helper(deps: List[Dependency], done: DependencySet): LazyList[Dependency] =
       deps match {
         case Nil => LazyList.empty
         case h :: t =>
-          if (done.covers(h))
+          val h0 = if (keepOverrides) h else h.clearOverrides
+          if (done.covers(h0))
             helper(t, done)
           else {
-            lazy val done0 = done.add(h)
-            val todo = dependenciesOf(h, withRetainedVersions = true, withFallbackConfig = true)
+            lazy val done0 = done.add(h0)
+            val todo = dependenciesOf(h0, withRetainedVersions = true, withFallbackConfig = true)
               // filtering with done0 rather than done for some cycles (dependencies having themselves as dependency)
               .filter(!done0.covers(_))
             val t0 =
               if (todo.isEmpty) t
               else t ::: todo.toList
-            h #:: helper(t0, done0)
+            h0 #:: helper(t0, done0)
           }
       }
 
@@ -1316,6 +1354,11 @@ object Resolution {
 
     helper(rootDeps, DependencySet.empty).toVector
   }
+
+  def orderedDependencies: Seq[Dependency] =
+    orderedDependencies0(keepOverrides = false)
+  def orderedDependenciesWithOverrides: Seq[Dependency] =
+    orderedDependencies0(keepOverrides = true)
 
   def artifacts(): Seq[Artifact] =
     artifacts(defaultTypes, None)

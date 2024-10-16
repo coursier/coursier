@@ -602,7 +602,7 @@ object ResolutionTests extends TestSuite {
         )
         val res = await(resolve0(
           Seq(dep)
-        )).clearCaches
+        )).clearCaches.clearDependencyOverrides
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
