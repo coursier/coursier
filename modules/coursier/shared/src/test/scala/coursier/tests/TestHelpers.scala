@@ -14,6 +14,11 @@ object TestHelpers extends PlatformTestHelpers {
   implicit def ec: ExecutionContext =
     cache.ec
 
+  private lazy val testDataDir =
+    Option(System.getenv("COURSIER_TEST_DATA_DIR")).getOrElse {
+      sys.error("COURSIER_TEST_DATA_DIR env var not set")
+    }
+
   private def validate(
     name: String,
     res: Resolution,
@@ -86,7 +91,8 @@ object TestHelpers extends PlatformTestHelpers {
       }
 
     val path = Seq(
-      s"modules/tests/shared/src/test/resources/$name",
+      testDataDir,
+      name,
       rootDep.module.organization.value,
       rootDep.module.name.value,
       attrPathPart,
@@ -107,18 +113,25 @@ object TestHelpers extends PlatformTestHelpers {
     val expected =
       await(
         tryRead.recoverWith {
-          case _: Exception if writeMockData =>
+          case _: Exception if updateSnapshots =>
             maybeWriteTextResource(path, result0.mkString("\n"))
             tryRead
         }
       ).split('\n').toSeq.filter(_.nonEmpty)
 
-    if (result0 != expected)
-      println(s"In $path:")
-    for (((e, r), idx) <- expected.zip(result0).zipWithIndex if e != r)
-      println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")
+    if (updateSnapshots) {
+      if (result0 != expected)
+        maybeWriteTextResource(path, result0.mkString("\n"))
+    }
+    else {
+      if (result0 != expected) {
+        println(s"In $path:")
+        for (((e, r), idx) <- expected.zip(result0).zipWithIndex if e != r)
+          println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")
+      }
 
-    assert(result0 == expected)
+      assert(result0 == expected)
+    }
   }
 
   def dependenciesWithRetainedVersion(res: Resolution): Seq[Dependency] =

@@ -9,7 +9,19 @@ import scala.collection.mutable
 final class DependencySet private (
   val set: Set[Dependency],
   grouped: Map[Dependency, Sets[Dependency]]
-) {
+) extends Product {
+
+  def canEqual(that: Any): Boolean =
+    that.isInstanceOf[DependencySet]
+
+  def productArity: Int = 1
+  //   Add that back if / when dropping Scala 2.12 support
+  // override def productElementName(n: Int): String =
+  //   if (n == 0) "set"
+  //   else throw new NoSuchElementException(s"Element at index $n in DependencySet")
+  def productElement(n: Int): Any =
+    if (n == 0) set
+    else throw new NoSuchElementException(s"Element at index $n in DependencySet")
 
   override def equals(obj: Any): Boolean =
     obj match {
@@ -44,7 +56,7 @@ final class DependencySet private (
     val set  = grouped.getOrElse(dep0, Sets.empty[Dependency])
     set.covers(
       dependency,
-      _.minimizedExclusions.size,
+      _.minimizedExclusions.size(),
       (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
     )
   }
@@ -67,13 +79,13 @@ final class DependencySet private (
           case None =>
             m = m + (dep0 -> Sets.empty[Dependency].add(
               dep,
-              _.minimizedExclusions.size,
+              _.minimizedExclusions.size(),
               (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
             ))
           case Some(groupSet) =>
             val groupSet0 = groupSet.add(
               dep,
-              _.minimizedExclusions.size,
+              _.minimizedExclusions.size(),
               (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
             )
             if (groupSet ne groupSet0)
@@ -102,7 +114,7 @@ final class DependencySet private (
             val l = prev
               .remove(
                 dep,
-                _.minimizedExclusions.size,
+                _.minimizedExclusions.size(),
                 (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
               )
             m += ((dep0, l))

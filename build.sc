@@ -16,6 +16,7 @@ import $file.project.modules.shared, shared.{
   buildVersion,
   CoursierPublishModule,
   CsCrossJvmJsModule,
+  CsResourcesTests,
   CsMima,
   CsModule,
   CsScalaJsModule,
@@ -456,7 +457,7 @@ trait ScalazJvm extends Scalaz with CsMima {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.scalazConcurrent
   )
-  object test extends CrossSbtModuleTests with CsTests {
+  object test extends CrossSbtModuleTests with CsTests with CsResourcesTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
@@ -475,7 +476,7 @@ trait CatsJvm extends Cats with CsMima {
   def moduleDeps = Seq(
     cache.jvm()
   )
-  object test extends CrossSbtModuleTests with CsTests {
+  object test extends CrossSbtModuleTests with CsTests with CsResourcesTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )

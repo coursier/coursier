@@ -12,7 +12,13 @@ object compatibility {
 
   implicit val executionContext = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-  lazy val fs = g.require("fs")
+  lazy val fs      = g.require("fs")
+  lazy val process = g.require("process")
+
+  private lazy val testDataDir =
+    process.env.asInstanceOf[js.Dictionary[String]].get("COURSIER_TEST_DATA_DIR").getOrElse {
+      sys.error("COURSIER_TEST_DATA_DIR env var not set")
+    }
 
   private def textResource0(path: String)(implicit ec: ExecutionContext): Future[String] = {
     val p = Promise[String]()
@@ -38,6 +44,8 @@ object compatibility {
 
   val taskArtifact: Repository.Fetch[Task] =
     MockCache(baseRepo).fetch
+
+  def updateSnapshots = false
 
   def tryCreate(path: String, content: String): Unit = {}
 

@@ -102,18 +102,27 @@ trait CsScalaJsModule extends ScalaJSModule {
   def scalaJSVersion = ScalaVersions.scalaJs
 }
 
-trait JvmTests extends JavaModule with TestModule {
+trait CsResourcesTests extends TestModule {
+  def testDataDir = T.source {
+    PathRef(T.workspace / "modules" / "tests" / "shared" / "src" / "test" / "resources")
+  }
+  def forkEnv = super.forkEnv() ++ Seq(
+    "COURSIER_TEST_DATA_DIR" -> testDataDir().path.toString
+  )
+}
+
+trait JvmTests extends JavaModule with CsResourcesTests {
   def defaultCommandName() = "test"
   def sources = T.sources {
     val shared = Seq(
-      millSourcePath / os.up / "shared" / "src" / "test",
-      millSourcePath / os.up / "jvm" / "src" / "test"
+      millSourcePath / os.up / "shared" / "src" / "test" / "scala",
+      millSourcePath / os.up / "jvm" / "src" / "test" / "scala"
     )
     super.sources() ++ shared.map(PathRef(_))
   }
 }
 
-trait JsTests extends JavaModule with TestModule {
+trait JsTests extends JavaModule with CsResourcesTests {
   override def sources = T.sources {
     val shared = Seq(
       millSourcePath / os.up / os.up / "shared" / "src" / "test",

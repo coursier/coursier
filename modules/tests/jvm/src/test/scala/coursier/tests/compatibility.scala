@@ -9,15 +9,21 @@ import coursier.core.Repository
 import coursier.paths.Util
 import coursier.util.{Sync, Task}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
 
 object compatibility {
 
-  private val pool              = Sync.fixedThreadPool(6)
-  implicit val executionContext = scala.concurrent.ExecutionContext.fromExecutorService(pool)
+  private val pool = Sync.fixedThreadPool(6)
+  implicit val executionContext: ExecutionContextExecutorService =
+    ExecutionContext.fromExecutorService(pool)
+
+  private lazy val testDataDir =
+    Option(System.getenv("COURSIER_TEST_DATA_DIR")).getOrElse {
+      sys.error("COURSIER_TEST_DATA_DIR env var not set")
+    }
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] = Future {
-    val f                    = new File("modules/tests/shared/src/test/resources/" + path)
+    val f                    = new File(s"$testDataDir/$path")
     var is0: FileInputStream = null
     try {
       is0 = new FileInputStream(f)
@@ -36,26 +42,26 @@ object compatibility {
     dir
   }
 
-  private val fillChunks = Option(System.getenv("FETCH_MOCK_DATA"))
+  val updateSnapshots = Option(System.getenv("FETCH_MOCK_DATA"))
     .exists(s => s == "1" || s == "true")
 
   def artifact[F[_]: Sync]: Repository.Fetch[F] =
-    MockCache.create[F](baseRepo, writeMissing = fillChunks, pool = pool).fetch
+    MockCache.create[F](baseRepo, writeMissing = updateSnapshots, pool = pool).fetch
   def artifactWithProxy[F[_]: Sync](proxy: java.net.Proxy): Repository.Fetch[F] =
-    MockCache.create[F](baseRepo, writeMissing = fillChunks, pool = pool).withProxy(
+    MockCache.create[F](baseRepo, writeMissing = updateSnapshots, pool = pool).withProxy(
       Some(proxy)
     ).fetch
 
   val taskArtifact = artifact[Task]
 
   private lazy val baseResources = {
-    val dir = Paths.get("modules/tests/shared/src/test/resources")
+    val dir = Paths.get(testDataDir)
     assert(Files.isDirectory(dir))
     dir
   }
 
   def tryCreate(path: String, content: String): Unit =
-    if (fillChunks) {
+    if (updateSnapshots) {
       val path0 = baseResources.resolve(path)
       Util.createDirectories(path0.getParent)
       Files.write(path0, content.getBytes(UTF_8))

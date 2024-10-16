@@ -31,11 +31,11 @@ object InstallTests extends TestSuite {
     dir
   }
 
-  private val writeMockData = Option(System.getenv("FETCH_MOCK_DATA"))
+  private val updateSnapshots = Option(System.getenv("FETCH_MOCK_DATA"))
     .exists(s => s == "1" || s.toLowerCase(Locale.ROOT) == "true")
 
   private val cache: Cache[Task] =
-    MockCache.create[Task](mockDataLocation, writeMissing = writeMockData, pool = pool)
+    MockCache.create[Task](mockDataLocation, writeMissing = updateSnapshots, pool = pool)
 
   private def delete(d: Path): Unit =
     if (Files.isDirectory(d)) {
