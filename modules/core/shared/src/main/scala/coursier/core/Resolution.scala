@@ -58,10 +58,8 @@ object Resolution {
     }
 
   private object DepMgmt {
-    type Key = (Organization, ModuleName, Type, Classifier)
-
-    def key(dep: Dependency): Key =
-      (
+    def key(dep: Dependency): DependencyManagement.Key =
+      DependencyManagement.Key(
         dep.module.organization,
         dep.module.name,
         if (dep.attributes.`type`.isEmpty) Type.jar else dep.attributes.`type`,
@@ -69,21 +67,28 @@ object Resolution {
       )
 
     def addSeq(
-      dict: Map[Key, (Configuration, Dependency)],
+      dict: DependencyManagement.Map,
       deps: Seq[(Configuration, Dependency)]
-    ): Map[Key, (Configuration, Dependency)] =
+    ): DependencyManagement.Map =
       if (deps.isEmpty)
         dict
       else {
-        val b = new mutable.HashMap[Key, (Configuration, Dependency)]()
+        val b = new mutable.HashMap[DependencyManagement.Key, DependencyManagement.Values]
         b.sizeHint(dict.size + deps.length)
         b ++= dict
         val it = deps.iterator
         while (it.hasNext) {
           val elem = it.next()
           val key0 = key(elem._2)
-          if (!b.contains(key0))
-            b += ((key0, elem))
+          if (!b.contains(key0)) {
+            val values = DependencyManagement.Values(
+              elem._1,
+              elem._2.version,
+              elem._2.minimizedExclusions,
+              elem._2.optional
+            )
+            b += ((key0, values))
+          }
         }
         b.result()
           .toMap // meh
@@ -94,7 +99,7 @@ object Resolution {
     deps: Seq[Seq[(Configuration, Dependency)]]
   ): Seq[(Configuration, Dependency)] = {
     val (_, res) =
-      deps.foldRight(Set.empty[DepMgmt.Key], Seq.empty[(Configuration, Dependency)]) {
+      deps.foldRight(Set.empty[DependencyManagement.Key], Seq.empty[(Configuration, Dependency)]) {
         case (deps0, (set, acc)) =>
           val deps = deps0.filter {
             case (_, dep) =>
@@ -324,13 +329,13 @@ object Resolution {
         var config = config0
         var dep    = dep0
 
-        for ((mgmtConfig, mgmtDep) <- dict.get(DepMgmt.key(dep0))) {
+        for (mgmtValues <- dict.get(DepMgmt.key(dep0))) {
 
-          if (mgmtDep.version.nonEmpty)
-            dep = dep.withVersion(mgmtDep.version)
+          if (mgmtValues.version.nonEmpty)
+            dep = dep.withVersion(mgmtValues.version)
 
           if (config.isEmpty)
-            config = mgmtConfig
+            config = mgmtValues.config
 
           // FIXME The version and scope/config from dependency management, if any, are substituted
           // no matter what. The same is not done for the exclusions and optionality, for a lack of
@@ -338,10 +343,10 @@ object Resolution {
           // false from no optional section in the dependency management for now.
 
           if (dep.minimizedExclusions.isEmpty)
-            dep = dep.withMinimizedExclusions(mgmtDep.minimizedExclusions)
+            dep = dep.withMinimizedExclusions(mgmtValues.minimizedExclusions)
 
-          if (mgmtDep.optional)
-            dep = dep.withOptional(mgmtDep.optional)
+          if (mgmtValues.optional)
+            dep = dep.withOptional(mgmtValues.optional)
         }
 
         (config, dep)
@@ -1240,7 +1245,7 @@ object Resolution {
           }
       )
     )
-      .foldLeft(Map.empty[DepMgmt.Key, (Configuration, Dependency)])(DepMgmt.addSeq)
+      .foldLeft(Map.empty[DependencyManagement.Key, DependencyManagement.Values])(DepMgmt.addSeq)
 
     val retainedParentDepsSet = retainedParentDeps.toSet
 
@@ -1255,11 +1260,10 @@ object Resolution {
             .flatMap(projectCache(_)._2.dependencies)
       )
       .withDependencyManagement(
-        depMgmt.values
-          .filterNot { case (config, dep) =>
-            config == Configuration.`import`
-          }
-          .toList
+        depMgmt.toList.collect {
+          case (key, values) if values.config != Configuration.`import` =>
+            (values.config, values.fakeDependency(key))
+        }
       )
   }
 
