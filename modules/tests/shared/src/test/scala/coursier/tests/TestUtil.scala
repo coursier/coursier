@@ -42,6 +42,10 @@ object TestUtil {
         .withProjectCache(Map.empty)
         .withErrorCache(Map.empty)
         .withFinalDependenciesCache(Map.empty)
+    def clearDependencyOverrides: Resolution =
+      underlying.withDependencies(
+        underlying.dependencies.map(_.withOverrides(Map.empty))
+      )
     def clearFilter: Resolution =
       underlying.withFilter(None)
     def clearProjectProperties: Resolution =
