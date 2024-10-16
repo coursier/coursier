@@ -107,7 +107,7 @@ object TestHelpers extends PlatformTestHelpers {
     val expected =
       await(
         tryRead.recoverWith {
-          case _: Exception if writeMockData =>
+          case _: Exception if updateSnapshots =>
             maybeWriteTextResource(path, result0.mkString("\n"))
             tryRead
         }

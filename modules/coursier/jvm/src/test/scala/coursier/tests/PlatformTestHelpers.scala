@@ -35,11 +35,11 @@ abstract class PlatformTestHelpers {
     .toASCIIString
     .stripSuffix("/") + "/"
 
-  val writeMockData = Option(System.getenv("FETCH_MOCK_DATA"))
+  val updateSnapshots = Option(System.getenv("FETCH_MOCK_DATA"))
     .exists(s => s == "1" || s.toLowerCase(Locale.ROOT) == "true")
 
   val cache: Cache[Task] =
-    MockCache.create[Task](mockDataLocation, pool = pool, writeMissing = writeMockData)
+    MockCache.create[Task](mockDataLocation, pool = pool, writeMissing = updateSnapshots)
       .withDummyArtifact(a => a.url.endsWith(".jar") || a.url.endsWith(".klib"))
 
   val handmadeMetadataCache: Cache[Task] =
@@ -50,7 +50,7 @@ abstract class PlatformTestHelpers {
       mockDataLocation,
       pool = pool,
       Seq(handmadeMetadataLocation),
-      writeMissing = writeMockData
+      writeMissing = updateSnapshots
     )
       .withDummyArtifact(_.url.endsWith(".jar"))
 

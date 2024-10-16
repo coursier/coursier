@@ -16,7 +16,7 @@ abstract class PlatformTestHelpers {
   val handmadeMetadataCache: Cache[Task] =
     MockCache(handmadeMetadataBase.stripPrefix("file:"))
 
-  val writeMockData = false
+  val updateSnapshots = false
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =
     Platform.textResource(path)

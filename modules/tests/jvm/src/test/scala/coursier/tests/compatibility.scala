@@ -37,13 +37,13 @@ object compatibility {
     dir
   }
 
-  private val fillChunks = Option(System.getenv("FETCH_MOCK_DATA"))
+  private val updateSnapshots = Option(System.getenv("FETCH_MOCK_DATA"))
     .exists(s => s == "1" || s == "true")
 
   def artifact[F[_]: Sync]: Repository.Fetch[F] =
-    MockCache.create[F](baseRepo, writeMissing = fillChunks, pool = pool).fetch
+    MockCache.create[F](baseRepo, writeMissing = updateSnapshots, pool = pool).fetch
   def artifactWithProxy[F[_]: Sync](proxy: java.net.Proxy): Repository.Fetch[F] =
-    MockCache.create[F](baseRepo, writeMissing = fillChunks, pool = pool).withProxy(
+    MockCache.create[F](baseRepo, writeMissing = updateSnapshots, pool = pool).withProxy(
       Some(proxy)
     ).fetch
 
@@ -56,7 +56,7 @@ object compatibility {
   }
 
   def tryCreate(path: String, content: String): Unit =
-    if (fillChunks) {
+    if (updateSnapshots) {
       val path0 = baseResources.resolve(path)
       Util.createDirectories(path0.getParent)
       Files.write(path0, content.getBytes(UTF_8))
