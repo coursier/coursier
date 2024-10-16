@@ -9,7 +9,19 @@ import scala.collection.mutable
 final class DependencySet private (
   val set: Set[Dependency],
   grouped: Map[Dependency, Sets[Dependency]]
-) {
+) extends Product {
+
+  def canEqual(that: Any): Boolean =
+    that.isInstanceOf[DependencySet]
+
+  def productArity: Int = 1
+  //   Add that back if / when dropping Scala 2.12 support
+  // override def productElementName(n: Int): String =
+  //   if (n == 0) "set"
+  //   else throw new NoSuchElementException(s"Element at index $n in DependencySet")
+  def productElement(n: Int): Any =
+    if (n == 0) set
+    else throw new NoSuchElementException(s"Element at index $n in DependencySet")
 
   override def equals(obj: Any): Boolean =
     obj match {
