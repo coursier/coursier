@@ -330,9 +330,10 @@ object Resolution {
         var config = config0
         var dep    = dep0
 
-        for (mgmtValues <- dict.get(DepMgmt.key(dep0))) {
+        val key = DepMgmt.key(dep0)
+        for (mgmtValues <- dict.get(key)) {
 
-          if (dep.version.isEmpty && mgmtValues.version.nonEmpty)
+          if (mgmtValues.version.nonEmpty && (dep.version.isEmpty || overrides.contains(key)))
             dep = dep.withVersion(mgmtValues.version)
 
           if (config.isEmpty)
