@@ -32,7 +32,7 @@ object JavaHomeTests extends TestSuite {
     poolInitialized.set(true)
     p
   }
-  private implicit val ec = ExecutionContext.fromExecutorService(pool)
+  private implicit val ec: ExecutionContext = ExecutionContext.fromExecutorService(pool)
 
   override def utestAfterAll(): Unit =
     if (poolInitialized.getAndSet(false))

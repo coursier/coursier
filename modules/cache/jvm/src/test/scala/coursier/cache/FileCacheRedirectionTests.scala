@@ -24,13 +24,11 @@ import scala.util.Try
 
 object FileCacheRedirectionTests extends TestSuite {
 
-  private val pool        = Sync.fixedThreadPool(4)
-  private implicit val ec = ExecutionContext.fromExecutorService(pool)
+  private val pool                          = Sync.fixedThreadPool(4)
+  private implicit val ec: ExecutionContext = ExecutionContext.fromExecutorService(pool)
 
-  override def utestAfterAll() = {
-    ec.shutdown()
+  override def utestAfterAll() =
     pool.shutdown()
-  }
 
   private def fileCache0() = FileCache()
     .noCredentials
