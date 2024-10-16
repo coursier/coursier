@@ -6,3 +6,5 @@ com.sun.istack:istack-commons-runtime:3.0.8:default
 org.jvnet.staxex:stax-ex:1.8.1:default
 com.sun.xml.fastinfoset:FastInfoset:1.2.16:default
 jakarta.activation:jakarta.activation-api:1.2.1:default
+junit:junit:4.12:default
+org.hamcrest:hamcrest-core:1.3:default

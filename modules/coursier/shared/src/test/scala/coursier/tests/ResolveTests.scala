@@ -512,45 +512,16 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    test("conflicts") {
-      test {
-        async {
+    test("beam") {
+      async {
 
-          // hopefully, that's a legit conflict (not one that ought to go away after possible fixes in Resolution)
-
-          val res = await {
-            resolve
-              .addDependencies(dep"org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.3.0")
-              .io
-              .attempt
-              .future()
-          }
-
-          val isLeft = res.isLeft
-          assert(isLeft)
-
-          val error = res.swap.toOption.get
-
-          error match {
-            case c: ResolutionError.ConflictingDependencies =>
-              val expectedModules = Set(mod"io.grpc:grpc-core")
-              val modules         = c.dependencies.map(_.module)
-              assert(modules == expectedModules)
-              val expectedVersions = Map(
-                mod"io.grpc:grpc-core" -> Set("1.2.0", "1.6.1", "1.7.0", "[1.2.0]", "[1.7.0]")
-              )
-              val versions = c
-                .dependencies
-                .groupBy(_.module)
-                .view
-                .mapValues(_.map(_.version))
-                .iterator
-                .toMap
-              assert(versions == expectedVersions)
-            case _ =>
-              sys.error(s"Unexpected error: $error")
-          }
+        val res = await {
+          resolve
+            .addDependencies(dep"org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.3.0")
+            .future()
         }
+
+        await(validateDependencies(res))
       }
     }
 
