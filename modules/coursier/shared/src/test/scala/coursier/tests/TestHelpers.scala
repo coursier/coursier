@@ -14,6 +14,11 @@ object TestHelpers extends PlatformTestHelpers {
   implicit def ec: ExecutionContext =
     cache.ec
 
+  private lazy val testDataDir =
+    Option(System.getenv("COURSIER_TEST_DATA_DIR")).getOrElse {
+      sys.error("COURSIER_TEST_DATA_DIR env var not set")
+    }
+
   private def validate(
     name: String,
     res: Resolution,
@@ -86,7 +91,8 @@ object TestHelpers extends PlatformTestHelpers {
       }
 
     val path = Seq(
-      s"modules/tests/shared/src/test/resources/$name",
+      testDataDir,
+      name,
       rootDep.module.organization.value,
       rootDep.module.name.value,
       attrPathPart,

@@ -17,8 +17,13 @@ object compatibility {
   implicit val executionContext: ExecutionContextExecutorService =
     ExecutionContext.fromExecutorService(pool)
 
+  private lazy val testDataDir =
+    Option(System.getenv("COURSIER_TEST_DATA_DIR")).getOrElse {
+      sys.error("COURSIER_TEST_DATA_DIR env var not set")
+    }
+
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] = Future {
-    val f                    = new File("modules/tests/shared/src/test/resources/" + path)
+    val f                    = new File(s"$testDataDir/$path")
     var is0: FileInputStream = null
     try {
       is0 = new FileInputStream(f)
@@ -50,7 +55,7 @@ object compatibility {
   val taskArtifact = artifact[Task]
 
   private lazy val baseResources = {
-    val dir = Paths.get("modules/tests/shared/src/test/resources")
+    val dir = Paths.get(testDataDir)
     assert(Files.isDirectory(dir))
     dir
   }
