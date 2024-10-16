@@ -31,9 +31,9 @@ import coursier.paths.Jep
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
+import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success}
 

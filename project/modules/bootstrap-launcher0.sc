@@ -8,7 +8,7 @@ import mill.modules.Jvm
 import java.io._
 import java.util.zip._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Properties.isWin
 
 trait BootstrapLauncher extends CsModule {

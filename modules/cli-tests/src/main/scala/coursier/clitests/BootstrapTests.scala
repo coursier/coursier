@@ -8,9 +8,9 @@ import java.util.{Locale, UUID}
 import java.util.regex.Pattern
 import java.util.zip.ZipFile
 
-import scala.collection.JavaConverters._
 import scala.concurrent.duration.Duration
 import scala.io.{Codec, Source}
+import scala.jdk.CollectionConverters._
 import scala.util.Properties
 
 import coursier.clitests.util.TestAuthProxy
