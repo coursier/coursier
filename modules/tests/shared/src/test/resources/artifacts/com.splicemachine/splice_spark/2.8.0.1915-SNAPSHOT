@@ -160,7 +160,7 @@ http://repository.splicemachine.com/nexus/content/groups/public/com/splicemachin
 https://repo1.maven.org/maven2/com/yahoo/datasketches/sketches-core/0.8.4/sketches-core-0.8.4.jar
 https://repo1.maven.org/maven2/com/yahoo/datasketches/memory/0.8.4/memory-0.8.4.jar
 http://repository.splicemachine.com/nexus/content/groups/public/com/splicemachine/db-shared/2.8.0.1915-SNAPSHOT/db-shared-2.8.0.1915-20190427.010254-1.jar
-https://repo1.maven.org/maven2/joda-time/joda-time/2.8.2/joda-time-2.8.2.jar
+https://repo1.maven.org/maven2/joda-time/joda-time/2.8.1/joda-time-2.8.1.jar
 https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-s3/1.11.82/aws-java-sdk-s3-1.11.82.jar
 https://repo1.maven.org/maven2/com/typesafe/akka/akka-actor_2.11/2.4.8/akka-actor_2.11-2.4.8.jar
 https://repo1.maven.org/maven2/com/typesafe/akka/akka-protobuf_2.11/2.4.8/akka-protobuf_2.11-2.4.8.jar
