@@ -16,7 +16,7 @@ import coursier.core.{
   ResolutionProcess
 }
 import coursier.maven.MavenRepository
-import coursier.tests.compatibility.{textResource, tryCreate}
+import coursier.tests.compatibility.{textResource, tryCreate, updateSnapshots}
 import coursier.tests.util.ToFuture
 import coursier.util.{Artifact, Gather}
 
@@ -151,10 +151,17 @@ class TestRunner[F[_]: Gather: ToFuture](
           }
         ).split('\n').toSeq
 
-      for (((e, r), idx) <- expected.zip(result).zipWithIndex if e != r)
-        println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")
+      if (updateSnapshots) {
+        if (result != expected)
+          tryCreate(path, result.mkString("\n"))
+      }
+      else {
+        if (result != expected)
+          for (((e, r), idx) <- expected.zip(result).zipWithIndex if e != r)
+            println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")
 
-      assert(result == expected)
+        assert(result == expected)
+      }
 
       res
     }

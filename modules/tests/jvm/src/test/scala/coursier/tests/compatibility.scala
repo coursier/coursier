@@ -37,7 +37,7 @@ object compatibility {
     dir
   }
 
-  private val updateSnapshots = Option(System.getenv("FETCH_MOCK_DATA"))
+  val updateSnapshots = Option(System.getenv("FETCH_MOCK_DATA"))
     .exists(s => s == "1" || s == "true")
 
   def artifact[F[_]: Sync]: Repository.Fetch[F] =

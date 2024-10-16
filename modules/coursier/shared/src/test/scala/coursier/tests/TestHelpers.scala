@@ -113,12 +113,19 @@ object TestHelpers extends PlatformTestHelpers {
         }
       ).split('\n').toSeq.filter(_.nonEmpty)
 
-    if (result0 != expected)
-      println(s"In $path:")
-    for (((e, r), idx) <- expected.zip(result0).zipWithIndex if e != r)
-      println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")
+    if (updateSnapshots) {
+      if (result0 != expected)
+        maybeWriteTextResource(path, result0.mkString("\n"))
+    }
+    else {
+      if (result0 != expected) {
+        println(s"In $path:")
+        for (((e, r), idx) <- expected.zip(result0).zipWithIndex if e != r)
+          println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")
+      }
 
-    assert(result0 == expected)
+      assert(result0 == expected)
+    }
   }
 
   def dependenciesWithRetainedVersion(res: Resolution): Seq[Dependency] =

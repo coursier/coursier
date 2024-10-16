@@ -39,6 +39,8 @@ object compatibility {
   val taskArtifact: Repository.Fetch[Task] =
     MockCache(baseRepo).fetch
 
+  def updateSnapshots = false
+
   def tryCreate(path: String, content: String): Unit = {}
 
 }
