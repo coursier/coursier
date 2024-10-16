@@ -560,7 +560,7 @@ object Resolution {
       depsWithDependencyManagement(
         // 1.7
         withProperties(project0.dependencies, properties),
-        Map.empty,
+        from.overrides,
         withProperties(project0.dependencyManagement, properties)
       ),
       from.minimizedExclusions.toSet()
@@ -1317,7 +1317,7 @@ object Resolution {
             helper(t, done)
           else {
             lazy val done0 = done.add(h0)
-            val todo = dependenciesOf(h0, withRetainedVersions = true, withFallbackConfig = true)
+            val todo = dependenciesOf(h, withRetainedVersions = true, withFallbackConfig = true)
               // filtering with done0 rather than done for some cycles (dependencies having themselves as dependency)
               .filter(!done0.covers(_))
             val t0 =
