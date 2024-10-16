@@ -58,10 +58,8 @@ object Resolution {
     }
 
   private object DepMgmt {
-    type Key = (Organization, ModuleName, Type, Classifier)
-
-    def key(dep: Dependency): Key =
-      (
+    def key(dep: Dependency): DependencyManagement.Key =
+      DependencyManagement.Key(
         dep.module.organization,
         dep.module.name,
         if (dep.attributes.`type`.isEmpty) Type.jar else dep.attributes.`type`,
@@ -69,21 +67,28 @@ object Resolution {
       )
 
     def addSeq(
-      dict: Map[Key, (Configuration, Dependency)],
+      dict: Map[DependencyManagement.Key, DependencyManagement.Values],
       deps: Seq[(Configuration, Dependency)]
-    ): Map[Key, (Configuration, Dependency)] =
+    ): Map[DependencyManagement.Key, DependencyManagement.Values] =
       if (deps.isEmpty)
         dict
       else {
-        val b = new mutable.HashMap[Key, (Configuration, Dependency)]()
+        val b = new mutable.HashMap[DependencyManagement.Key, DependencyManagement.Values]
         b.sizeHint(dict.size + deps.length)
         b ++= dict
         val it = deps.iterator
         while (it.hasNext) {
           val elem = it.next()
           val key0 = key(elem._2)
-          if (!b.contains(key0))
-            b += ((key0, elem))
+          if (!b.contains(key0)) {
+            val values = DependencyManagement.Values(
+              elem._1,
+              elem._2.version,
+              elem._2.minimizedExclusions,
+              elem._2.optional
+            )
+            b += ((key0, values))
+          }
         }
         b.result()
           .toMap // meh
@@ -94,7 +99,7 @@ object Resolution {
     deps: Seq[Seq[(Configuration, Dependency)]]
   ): Seq[(Configuration, Dependency)] = {
     val (_, res) =
-      deps.foldRight(Set.empty[DepMgmt.Key], Seq.empty[(Configuration, Dependency)]) {
+      deps.foldRight(Set.empty[DependencyManagement.Key], Seq.empty[(Configuration, Dependency)]) {
         case (deps0, (set, acc)) =>
           val deps = deps0.filter {
             case (_, dep) =>
@@ -312,25 +317,27 @@ object Resolution {
     */
   def depsWithDependencyManagement(
     dependencies: Seq[(Configuration, Dependency)],
+    overrides: Map[DependencyManagement.Key, DependencyManagement.Values],
     dependencyManagement: Seq[(Configuration, Dependency)]
   ): Seq[(Configuration, Dependency)] = {
 
     // See http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Management
 
-    lazy val dict = DepMgmt.addSeq(Map.empty, dependencyManagement)
+    lazy val dict = DepMgmt.addSeq(overrides, dependencyManagement)
 
     dependencies.map {
       case (config0, dep0) =>
         var config = config0
         var dep    = dep0
 
-        for ((mgmtConfig, mgmtDep) <- dict.get(DepMgmt.key(dep0))) {
+        val key = DepMgmt.key(dep0)
+        for (mgmtValues <- dict.get(key)) {
 
-          if (mgmtDep.version.nonEmpty)
-            dep = dep.withVersion(mgmtDep.version)
+          if (mgmtValues.version.nonEmpty && (dep.version.isEmpty || overrides.contains(key)))
+            dep = dep.withVersion(mgmtValues.version)
 
           if (config.isEmpty)
-            config = mgmtConfig
+            config = mgmtValues.config
 
           // FIXME The version and scope/config from dependency management, if any, are substituted
           // no matter what. The same is not done for the exclusions and optionality, for a lack of
@@ -338,15 +345,30 @@ object Resolution {
           // false from no optional section in the dependency management for now.
 
           if (dep.minimizedExclusions.isEmpty)
-            dep = dep.withMinimizedExclusions(mgmtDep.minimizedExclusions)
+            dep = dep.withMinimizedExclusions(mgmtValues.minimizedExclusions)
 
-          if (mgmtDep.optional)
-            dep = dep.withOptional(mgmtDep.optional)
+          if (mgmtValues.optional)
+            dep = dep.withOptional(mgmtValues.optional)
         }
+
+        if (dict.nonEmpty)
+          dep = dep.withOverrides {
+            if (dep.overrides.isEmpty)
+              dict
+            else
+              dep.overrides ++ dict // dict values take precedence
+          }
 
         (config, dep)
     }
   }
+
+  @deprecated("Use the override accepting an override map instead", "2.1.15")
+  def depsWithDependencyManagement(
+    dependencies: Seq[(Configuration, Dependency)],
+    dependencyManagement: Seq[(Configuration, Dependency)]
+  ): Seq[(Configuration, Dependency)] =
+    depsWithDependencyManagement(dependencies, Map.empty, dependencyManagement)
 
   private def withDefaultConfig(dep: Dependency, defaultConfiguration: Configuration): Dependency =
     if (dep.configuration.isEmpty)
@@ -539,6 +561,7 @@ object Resolution {
       depsWithDependencyManagement(
         // 1.7
         withProperties(project0.dependencies, properties),
+        from.overrides,
         withProperties(project0.dependencyManagement, properties)
       ),
       from.minimizedExclusions.toSet()
@@ -1240,7 +1263,7 @@ object Resolution {
           }
       )
     )
-      .foldLeft(Map.empty[DepMgmt.Key, (Configuration, Dependency)])(DepMgmt.addSeq)
+      .foldLeft(Map.empty[DependencyManagement.Key, DependencyManagement.Values])(DepMgmt.addSeq)
 
     val retainedParentDepsSet = retainedParentDeps.toSet
 
@@ -1255,11 +1278,10 @@ object Resolution {
             .flatMap(projectCache(_)._2.dependencies)
       )
       .withDependencyManagement(
-        depMgmt.values
-          .filterNot { case (config, dep) =>
-            config == Configuration.`import`
-          }
-          .toList
+        depMgmt.toList.collect {
+          case (key, values) if values.config != Configuration.`import` =>
+            (values.config, values.fakeDependency(key))
+        }
       )
   }
 
@@ -1285,23 +1307,24 @@ object Resolution {
       Resolution.fallbackConfigIfNecessary(dep, configsOf(dep))
     }
 
-  def orderedDependencies: Seq[Dependency] = {
+  private def orderedDependencies0(keepOverrides: Boolean): Seq[Dependency] = {
 
     def helper(deps: List[Dependency], done: DependencySet): LazyList[Dependency] =
       deps match {
         case Nil => LazyList.empty
         case h :: t =>
-          if (done.covers(h))
+          val h0 = if (keepOverrides) h else h.clearOverrides
+          if (done.covers(h0))
             helper(t, done)
           else {
-            lazy val done0 = done.add(h)
-            val todo = dependenciesOf(h, withRetainedVersions = true, withFallbackConfig = true)
+            lazy val done0 = done.add(h0)
+            val todo = dependenciesOf(h0, withRetainedVersions = true, withFallbackConfig = true)
               // filtering with done0 rather than done for some cycles (dependencies having themselves as dependency)
               .filter(!done0.covers(_))
             val t0 =
               if (todo.isEmpty) t
               else t ::: todo.toList
-            h #:: helper(t0, done0)
+            h0 #:: helper(t0, done0)
           }
       }
 
@@ -1312,6 +1335,11 @@ object Resolution {
 
     helper(rootDeps, DependencySet.empty).toVector
   }
+
+  def orderedDependencies: Seq[Dependency] =
+    orderedDependencies0(keepOverrides = false)
+  def orderedDependenciesWithOverrides: Seq[Dependency] =
+    orderedDependencies0(keepOverrides = true)
 
   def artifacts(): Seq[Artifact] =
     artifacts(defaultTypes, None)

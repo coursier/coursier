@@ -37,7 +37,7 @@ abstract class CentralTests extends TestSuite {
     test("logback") {
       async {
         val dep = dep"ch.qos.logback:logback-classic:1.1.3"
-        val res = await(runner.resolve(Seq(dep))).clearCaches
+        val res = await(runner.resolve(Seq(dep))).clearCaches.clearDependencyOverrides
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
@@ -56,7 +56,7 @@ abstract class CentralTests extends TestSuite {
     test("asm") {
       async {
         val dep = dep"org.ow2.asm:asm-commons:5.0.2"
-        val res = await(runner.resolve(Seq(dep))).clearCaches
+        val res = await(runner.resolve(Seq(dep))).clearCaches.clearDependencyOverrides
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
