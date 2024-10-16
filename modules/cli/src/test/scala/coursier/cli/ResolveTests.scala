@@ -336,9 +336,9 @@ object ResolveTests extends TestSuite {
           |org.scalaz:scalaz-core_2.12:7.2.24:default
           |org.scalaz:scalaz-effect_2.12:7.2.24:default
           |org.slf4j:slf4j-api:1.7.25:default
-          |org.sonatype.plexus:plexus-cipher:1.4:default
+          |org.sonatype.plexus:plexus-cipher:1.7:default
           |org.sonatype.plexus:plexus-sec-dispatcher:1.3:default
-          |org.sonatype.sisu:sisu-guice:3.1.0:default
+          |org.sonatype.sisu:sisu-guice:3.1.3:default
           |org.spire-math:jawn-parser_2.12:0.10.4:default
           |org.vafer:jdeb:1.3:default
           |""".stripMargin

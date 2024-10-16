@@ -9,5 +9,8 @@ com.thoughtworks.xstream:xstream:1.4.9:default
 com.google.protobuf:protobuf-java:2.6.0:default
 org.slf4j:slf4j-api:1.7.7:default
 commons-codec:commons-codec:1.10:default
+junit:junit:4.12:default
 xmlpull:xmlpull:1.1.3.1:default
 xpp3:xpp3_min:1.1.4c:default
+javax.activation:activation:1.1.1:default
+org.hamcrest:hamcrest-core:1.3:default
