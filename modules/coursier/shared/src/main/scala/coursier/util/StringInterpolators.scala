@@ -139,7 +139,7 @@ object StringInterpolators {
               case (k, v) =>
                 q"_root_.scala.Tuple2($k, $v)"
             }
-            val excls = dep.exclusions.toSeq.map {
+            val excls = dep.minimizedExclusions.toSeq().map {
               case (org, name) =>
                 q"_root_.scala.Tuple2(_root_.coursier.core.Organization(${org.value}), _root_.coursier.core.ModuleName(${name.value}))"
             }

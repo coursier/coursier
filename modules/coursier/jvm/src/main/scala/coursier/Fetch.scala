@@ -61,7 +61,7 @@ import dataclass.data
   def classpathOrder: Boolean =
     artifacts.classpathOrder
 
-  private implicit def S = resolve.sync
+  private implicit def S: Sync[F] = resolve.sync
 
   private def cacheKeyOpt: Option[FetchCache.Key] = {
 
