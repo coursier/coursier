@@ -16,7 +16,8 @@ import coursier.maven.MavenRepositoryLike
 import coursier.util.{Artifact, Task}
 import coursier.util.StringInterpolators._
 import dataclass._
-import scala.collection.JavaConverters._
+
+import scala.jdk.CollectionConverters._
 
 @data class Channels(
   channels: Seq[Channel] = Channels.defaultChannels,
