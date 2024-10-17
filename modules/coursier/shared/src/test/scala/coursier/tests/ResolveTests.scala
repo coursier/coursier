@@ -5,8 +5,10 @@ import coursier.core.{
   Activation,
   Classifier,
   Configuration,
+  Dependency,
   Extension,
   Module,
+  ModuleName,
   Reconciliation,
   Resolution,
   Type
@@ -20,6 +22,7 @@ import utest._
 
 import scala.async.Async.{async, await}
 import scala.collection.compat._
+import scala.concurrent.Future
 
 object ResolveTests extends TestSuite {
 
@@ -1206,6 +1209,110 @@ object ResolveTests extends TestSuite {
             resolve0.resolutionParams,
             extraKeyPart = "customMapDependencies"
           )
+        }
+      }
+    }
+
+    test("spark") {
+
+      def check(
+        sparkVersion: String,
+        scalaBinaryVersion: String,
+        profiles: Set[String] = Set.empty
+      ): Future[Unit] =
+        async {
+          val params0 = ResolutionParams().withJdkVersion("8.0")
+          val params =
+            if (profiles.isEmpty) params0
+            else params0.withProfiles(profiles)
+          val res = await {
+            resolve
+              .addDependencies(
+                Dependency(
+                  Module(
+                    org"org.apache.spark",
+                    ModuleName(s"spark-core_$scalaBinaryVersion"),
+                    Map.empty
+                  ),
+                  sparkVersion
+                )
+              )
+              .withResolutionParams(params)
+              .future()
+          }
+          // await(validateDependencies(res))
+          val found       = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toMap
+          val scalaLibOpt = found.get(mod"org.scala-lang:scala-library")
+          assert(scalaLibOpt.exists(_.startsWith(s"$scalaBinaryVersion.")))
+          // !
+          await(validateDependencies(res, params))
+        }
+
+      test("scala 2_10") {
+        test("spark 1_2_1") {
+          check("1.2.1", "2.10")
+        }
+        test("spark 1_6_3") {
+          check("1.6.3", "2.10")
+        }
+        test("spark 2_1_0") {
+          check("2.1.0", "2.10", profiles = Set("scala-2.10", "!scala-2.11"))
+        }
+        test("spark 2_2_3") {
+          check("2.2.3", "2.10", profiles = Set("scala-2.10", "!scala-2.11"))
+        }
+      }
+
+      test("scala 2_11") {
+        test("spark 1_2_1") {
+          check("1.2.1", "2.11", profiles = Set("!scala-2.10", "scala-2.11"))
+        }
+        test("spark 1_6_3") {
+          check("1.6.3", "2.11", profiles = Set("!scala-2.10", "scala-2.11"))
+        }
+        test("spark 2_1_0") {
+          check("2.1.0", "2.11")
+        }
+        test("spark 2_2_3") {
+          check("2.2.3", "2.11")
+        }
+
+        test("spark 2_3_4") {
+          check("2.3.4", "2.11")
+        }
+
+        test("spark 2_4_8") {
+          check("2.4.8", "2.11")
+        }
+      }
+
+      test("scala 2_12") {
+        test("spark 2_4_8") {
+          check("2.4.8", "2.12")
+        }
+
+        test("spark 3_1_3") {
+          check("3.1.3", "2.12")
+        }
+
+        test("spark 3_2_4") {
+          check("3.2.4", "2.12")
+        }
+        test("spark 3_5_3") {
+          check("3.5.3", "2.12")
+        }
+      }
+
+      test("scala 2_13") {
+        test("spark 3_2_4") {
+          check("3.2.4", "2.13")
+        }
+        test("spark 3_5_3") {
+          check("3.5.3", "2.13")
+        }
+
+        test("spark 4.0.0-preview2") {
+          check("4.0.0-preview2", "2.13")
         }
       }
     }
