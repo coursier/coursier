@@ -42,6 +42,12 @@ object JvmIndex {
     Map[String, Map[String, Map[String, String]]]
   ]](CodecMakerConfig)
 
+  def fromBytes(index: Array[Byte]): Either[Throwable, JvmIndex] =
+    Try(readFromArray(index)(codec)) match {
+      case Success(map) => Right(JvmIndex(map))
+      case Failure(t)   => Left(t)
+    }
+
   def fromString(index: String): Either[Throwable, JvmIndex] =
     Try(readFromString(index)(codec)) match {
       case Success(map) => Right(JvmIndex(map))
@@ -87,8 +93,7 @@ object JvmIndex {
               val path = "index.json"
               Option(zf.getEntry(path)).map { e =>
                 val binaryContent = FileUtil.readFully(zf.getInputStream(e))
-                val strContent    = new String(binaryContent, StandardCharsets.UTF_8)
-                fromString(strContent)
+                fromBytes(binaryContent)
                   .left.map(ex => new Exception(s"Error parsing $f!$path", ex))
               }
             }
@@ -113,17 +118,22 @@ object JvmIndex {
   ): Task[JvmIndex] =
     indexChannel match {
       case f: JvmChannel.FromFile =>
-        Task.delay(new String(Files.readAllBytes(f.path), StandardCharsets.UTF_8)).attempt.flatMap {
+        Task.delay(Files.readAllBytes(f.path)).attempt.flatMap {
           case Left(ex) => Task.fail(new Exception(s"Error while reading ${f.path}", ex))
           case Right(content) =>
-            Task.fromEither(fromString(content))
+            Task.fromEither(fromBytes(content))
         }
       case u: JvmChannel.FromUrl =>
-        cache.fetch(artifact(u.url)).run.flatMap {
+        cache.file(artifact(u.url)).run.flatMap {
           case Left(err) =>
             Task.fail(new Exception(s"Error while getting ${u.url}: $err"))
-          case Right(content) =>
-            Task.fromEither(fromString(content))
+          case Right(file) =>
+            val contentTask = Task.delay {
+              Files.readAllBytes(file.toPath)
+            }
+            contentTask.flatMap { content =>
+              Task.fromEither(fromBytes(content))
+            }
         }
       case m: JvmChannel.FromModule =>
         fromModule(cache, repositories, m).flatMap {
@@ -136,11 +146,16 @@ object JvmIndex {
     cache: Cache[Task],
     indexUrl: String
   ): Task[JvmIndex] =
-    cache.fetch(artifact(indexUrl)).run.flatMap {
+    cache.file(artifact(indexUrl)).run.flatMap {
       case Left(err) =>
         Task.fail(new Exception(s"Error while getting $indexUrl: $err"))
-      case Right(content) =>
-        Task.fromEither(fromString(content))
+      case Right(file) =>
+        val contentTask = Task.delay {
+          Files.readAllBytes(file.toPath)
+        }
+        contentTask.flatMap { content =>
+          Task.fromEither(fromBytes(content))
+        }
     }
 
   def load(
