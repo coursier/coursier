@@ -37,7 +37,7 @@ final case class SharedJavaParams(
         cache0 = cache0.withOs(os0)
       jvmChannelOpt match {
         case None             => cache0.withDefaultIndex
-        case Some(jvmChannel) => cache0.withIndexChannel(repositories, jvmChannel)
+        case Some(jvmChannel) => cache0.withIndexChannel(repositories, jvmChannel, os, architecture)
       }
     }
     val noUpdateJvmCache = jvmCacheOf(noUpdateCache)

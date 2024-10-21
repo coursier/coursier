@@ -22,9 +22,10 @@ object JvmIndex {
 
   def handleAliases(indexName: String): String =
     indexName match {
-      case "cs"       => coursierIndexUrl
-      case "cs-maven" => coursierIndexCoordinates
-      case other      => other
+      case "cs"              => coursierIndexUrl
+      case "cs-maven"        => coursierIndexCoordinates(defaultOs(), defaultArchitecture())
+      case "cs-maven-legacy" => coursierIndexCoordinatesLegacy
+      case other             => other
     }
 
   def defaultIndexUrl: String =
@@ -32,8 +33,13 @@ object JvmIndex {
 
   def coursierIndexUrl: String =
     "https://github.com/coursier/jvm-index/raw/master/index.json"
-  def coursierIndexCoordinates: String =
+  private def coursierIndexCoordinatesLegacy: String =
     "io.get-coursier:jvm-index"
+  @deprecated("Use the override accepting os and arch", "2.1.15")
+  def coursierIndexCoordinates: String =
+    coursierIndexCoordinatesLegacy
+  def coursierIndexCoordinates(os: String, arch: String): String =
+    s"io.get-coursier.jvm.indices:index-$os-$arch"
 
   private def artifact(url: String) = Artifact(url).withChanging(true)
 
@@ -45,6 +51,19 @@ object JvmIndex {
   def fromBytes(index: Array[Byte]): Either[Throwable, JvmIndex] =
     Try(readFromArray(index)(codec)) match {
       case Success(map) => Right(JvmIndex(map))
+      case Failure(t)   => Left(t)
+    }
+
+  private val shortIndexCodec =
+    JsonCodecMaker.make[Map[String, Map[String, String]]](CodecMakerConfig)
+
+  private def shortIndexFromBytes(
+    index: Array[Byte],
+    os: String,
+    arch: String
+  ): Either[Throwable, JvmIndex] =
+    Try(readFromArray(index)(shortIndexCodec)) match {
+      case Success(map) => Right(JvmIndex(Map(os -> Map(arch -> map)), jdkNamePrefix = Some("")))
       case Failure(t)   => Left(t)
     }
 
@@ -67,8 +86,18 @@ object JvmIndex {
   private def fromModule(
     cache: Cache[Task],
     repositories: Seq[Repository],
-    channel: JvmChannel.FromModule
-  ): Task[Option[JvmIndex]] =
+    channel: JvmChannel.FromModule,
+    os: Option[String],
+    arch: Option[String]
+  ): Task[Either[Exception, JvmIndex]] = {
+
+    val os0   = os.getOrElse(defaultOs())
+    val arch0 = arch.getOrElse(defaultArchitecture())
+    val paths = Seq(
+      (s"coursier/jvm/indices/v1/$os0-$arch0.json", true),
+      ("index.json", false)
+    )
+
     for {
       res <- coursier.Fetch(cache)
         .withDependencies(Seq(Dependency(channel.module, channel.version)))
@@ -90,12 +119,21 @@ object JvmIndex {
         .map { f =>
           Task.delay {
             withZipFile(f) { zf =>
-              val path = "index.json"
-              Option(zf.getEntry(path)).map { e =>
-                val binaryContent = FileUtil.readFully(zf.getInputStream(e))
-                fromBytes(binaryContent)
-                  .left.map(ex => new Exception(s"Error parsing $f!$path", ex))
-              }
+              paths
+                .iterator
+                .flatMap {
+                  case (path, isShort) =>
+                    Option(zf.getEntry(path)).iterator.map((path, isShort, _))
+                }
+                .map {
+                  case (path, isShort, e) =>
+                    val binaryContent = FileUtil.readFully(zf.getInputStream(e))
+                    val res =
+                      if (isShort) shortIndexFromBytes(binaryContent, os0, arch0)
+                      else fromBytes(binaryContent)
+                    res.left.map(ex => new Exception(s"Error parsing $f!$path", ex))
+                }
+                .find(_ => true)
             }
           }.flatMap {
             case None             => Task.point(None)
@@ -109,12 +147,17 @@ object JvmIndex {
             case s @ Some(_) => Task.point(s)
           }
         }
-    } yield dataOpt
+    } yield dataOpt.toRight {
+      new Exception(s"${paths.mkString(" or ")} not found in ${res.files.mkString(", ")}")
+    }
+  }
 
   def load(
     cache: Cache[Task],
     repositories: Seq[Repository],
-    indexChannel: JvmChannel
+    indexChannel: JvmChannel,
+    os: Option[String],
+    arch: Option[String]
   ): Task[JvmIndex] =
     indexChannel match {
       case f: JvmChannel.FromFile =>
@@ -136,11 +179,19 @@ object JvmIndex {
             }
         }
       case m: JvmChannel.FromModule =>
-        fromModule(cache, repositories, m).flatMap {
-          case None    => Task.fail(new Exception(s"No index found in ${m.repr}"))
-          case Some(c) => Task.point(c)
+        fromModule(cache, repositories, m, os, arch).flatMap {
+          case Left(ex) => Task.fail(new Exception(s"No index found in ${m.repr}", ex))
+          case Right(c) => Task.point(c)
         }
     }
+
+  @deprecated("Use the override accepting os and arch", "2.1.15")
+  def load(
+    cache: Cache[Task],
+    repositories: Seq[Repository],
+    indexChannel: JvmChannel
+  ): Task[JvmIndex] =
+    load(cache, repositories, indexChannel, None, None)
 
   def load(
     cache: Cache[Task],

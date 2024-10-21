@@ -557,9 +557,14 @@ trait Jvm extends CrossSbtModule with CsModule
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.jsoniterCore
   )
-  object test extends CrossSbtTests with CsTests {
+  object test extends CrossSbtTests with CsTests with CsResourcesTests {
+    def moduleDeps = super.moduleDeps ++ Seq(
+      `test-cache`.jvm()
+    )
     def ivyDeps = super.ivyDeps() ++ Seq(
-      Deps.osLib
+      Deps.osLib,
+      Deps.pprint,
+      Deps.scalaAsync
     )
     def mockCache = T.source {
       PathRef(T.workspace / "modules" / "jvm" / "src" / "test" / "resources" / "mock-cache")
