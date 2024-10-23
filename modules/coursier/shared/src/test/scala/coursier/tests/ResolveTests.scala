@@ -1353,5 +1353,32 @@ object ResolveTests extends TestSuite {
         check(dep"org.springframework.security:spring-security-test:6.3.4")
       }
     }
+
+    test("quarkus") {
+      test("rest") {
+        check(dep"io.quarkus:quarkus-rest:3.15.1")
+      }
+      test("rest-jackson") {
+        check(dep"io.quarkus:quarkus-rest-jackson:3.15.1")
+      }
+      test("hibernate-orm-panache") {
+        check(dep"io.quarkus:quarkus-hibernate-orm-panache:3.15.1")
+      }
+      test("jdbc-postgresql") {
+        check(dep"io.quarkus:quarkus-jdbc-postgresql:3.15.1")
+      }
+      test("arc") {
+        check(dep"io.quarkus:quarkus-arc:3.15.1")
+      }
+      test("hibernate-orm") {
+        check(dep"io.quarkus:quarkus-hibernate-orm:3.15.1")
+      }
+      test("junit5") {
+        check(dep"io.quarkus:quarkus-junit5:3.15.1")
+      }
+      test("rest-assured") {
+        check(dep"io.rest-assured:rest-assured:5.5.0")
+      }
+    }
   }
 }
