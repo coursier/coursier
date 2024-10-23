@@ -1231,10 +1231,9 @@ object ResolveTests extends TestSuite {
         profiles: Set[String] = Set.empty
       ): Future[Unit] =
         async {
-          val params0 = ResolutionParams().withJdkVersion("8.0")
-          val params =
-            if (profiles.isEmpty) params0
-            else params0.withProfiles(profiles)
+          val params = ResolutionParams()
+            .withJdkVersion("8.0")
+            .withProfiles(profiles)
           val res = await {
             resolve
               .addDependencies(
