@@ -1380,5 +1380,32 @@ object ResolveTests extends TestSuite {
         check(dep"io.rest-assured:rest-assured:5.5.0")
       }
     }
+
+    test("android") {
+
+      def androiCheck(dependencies: Dependency*): Future[Unit] =
+        async {
+          val res = await {
+            resolve
+              .addRepositories(Repositories.google)
+              .addDependencies(dependencies: _*)
+              .future()
+          }
+          await(validateDependencies(res))
+        }
+
+      test("activity") {
+        androiCheck(dep"androidx.activity:activity:1.8.2")
+      }
+      test("activity-compose") {
+        androiCheck(dep"androidx.activity:activity-compose:1.8.2")
+      }
+      test("runtime") {
+        androiCheck(dep"androidx.compose.runtime:runtime:1.3.1")
+      }
+      test("material3") {
+        androiCheck(dep"androidx.compose.material3:material3:1.0.1")
+      }
+    }
   }
 }
