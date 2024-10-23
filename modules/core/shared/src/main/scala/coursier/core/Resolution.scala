@@ -318,7 +318,8 @@ object Resolution {
   def depsWithDependencyManagement(
     dependencies: Seq[(Configuration, Dependency)],
     overrides: DependencyManagement.Map,
-    dependencyManagement: Seq[(Configuration, Dependency)]
+    dependencyManagement: Seq[(Configuration, Dependency)],
+    forceDepMgmtVersions: Boolean
   ): Seq[(Configuration, Dependency)] = {
 
     // See http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Management
@@ -330,9 +331,13 @@ object Resolution {
         var config = config0
         var dep    = dep0
 
-        for (mgmtValues <- dict.get(DepMgmt.key(dep0))) {
+        val key = DepMgmt.key(dep0)
+        for (mgmtValues <- dict.get(key)) {
 
-          if (mgmtValues.version.nonEmpty)
+          val useManagedVersion =
+            mgmtValues.version.nonEmpty &&
+            (forceDepMgmtVersions || dep.version.isEmpty || overrides.contains(key))
+          if (useManagedVersion)
             dep = dep.withVersion(mgmtValues.version)
 
           if (config.isEmpty)
@@ -362,12 +367,20 @@ object Resolution {
     }
   }
 
-  @deprecated("Use the override accepting an override map instead", "2.1.15")
+  @deprecated(
+    "Use the override accepting an override map and forceDepMgmtVersions instead",
+    "2.1.15"
+  )
   def depsWithDependencyManagement(
     dependencies: Seq[(Configuration, Dependency)],
     dependencyManagement: Seq[(Configuration, Dependency)]
   ): Seq[(Configuration, Dependency)] =
-    depsWithDependencyManagement(dependencies, Map.empty, dependencyManagement)
+    depsWithDependencyManagement(
+      dependencies,
+      Map.empty,
+      dependencyManagement,
+      forceDepMgmtVersions = false
+    )
 
   private def withDefaultConfig(dep: Dependency, defaultConfiguration: Configuration): Dependency =
     if (dep.configuration.isEmpty)
@@ -529,7 +542,8 @@ object Resolution {
     project: Project,
     defaultConfiguration: Configuration,
     projectCache: ((Module, String)) => Option[Project],
-    keepProvidedDependencies: Boolean
+    keepProvidedDependencies: Boolean,
+    forceDepMgmtVersions: Boolean
   ): Seq[Dependency] = {
 
     // section numbers in the comments refer to withDependencyManagement
@@ -561,7 +575,8 @@ object Resolution {
         // 1.7
         withProperties(project0.dependencies, properties),
         from.overrides,
-        withProperties(project0.dependencyManagement, properties)
+        withProperties(project0.dependencyManagement, properties),
+        forceDepMgmtVersions = forceDepMgmtVersions
       ),
       from.minimizedExclusions.toSet()
     )
@@ -735,7 +750,9 @@ object Resolution {
   forceProperties: Map[String, String] = Map.empty, // FIXME Make that a seq too?
   defaultConfiguration: Configuration = Configuration.defaultCompile,
   @since("2.1.9")
-  keepProvidedDependencies: Boolean = false
+  keepProvidedDependencies: Boolean = false,
+  @since("2.1.15")
+  forceDepMgmtVersions: Boolean = false
 ) {
 
   lazy val dependencies: Set[Dependency] =
@@ -817,7 +834,8 @@ object Resolution {
               proj,
               defaultConfiguration,
               k => projectCache.get(k).map(_._2),
-              keepProvidedDependencies
+              keepProvidedDependencies,
+              forceDepMgmtVersions
             ).filter(filter getOrElse defaultFilter)
             val res = mapDependencies.fold(res0)(res0.map(_))
             finalDependenciesCache0.put(dep, res)
