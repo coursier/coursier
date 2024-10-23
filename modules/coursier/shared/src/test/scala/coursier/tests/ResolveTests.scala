@@ -5,8 +5,10 @@ import coursier.core.{
   Activation,
   Classifier,
   Configuration,
+  Dependency,
   Extension,
   Module,
+  ModuleName,
   Reconciliation,
   Resolution,
   Type
@@ -20,6 +22,7 @@ import utest._
 
 import scala.async.Async.{async, await}
 import scala.collection.compat._
+import scala.concurrent.Future
 
 object ResolveTests extends TestSuite {
 
@@ -47,6 +50,16 @@ object ResolveTests extends TestSuite {
         }
         .withJdkVersion("1.8.0_121")
     )
+
+  def check(dependencies: Dependency*): Future[Unit] =
+    async {
+      val res = await {
+        resolve
+          .addDependencies(dependencies: _*)
+          .future()
+      }
+      await(validateDependencies(res))
+    }
 
   val tests = Tests {
 
@@ -1207,6 +1220,191 @@ object ResolveTests extends TestSuite {
             extraKeyPart = "customMapDependencies"
           )
         }
+      }
+    }
+
+    test("spark") {
+
+      def check(
+        sparkVersion: String,
+        scalaBinaryVersion: String,
+        profiles: Set[String] = Set.empty
+      ): Future[Unit] =
+        async {
+          val params0 = ResolutionParams().withJdkVersion("8.0")
+          val params =
+            if (profiles.isEmpty) params0
+            else params0.withProfiles(profiles)
+          val res = await {
+            resolve
+              .addDependencies(
+                Dependency(
+                  Module(
+                    org"org.apache.spark",
+                    ModuleName(s"spark-core_$scalaBinaryVersion"),
+                    Map.empty
+                  ),
+                  sparkVersion
+                )
+              )
+              .withResolutionParams(params)
+              .future()
+          }
+          // await(validateDependencies(res))
+          val found       = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toMap
+          val scalaLibOpt = found.get(mod"org.scala-lang:scala-library")
+          assert(scalaLibOpt.exists(_.startsWith(s"$scalaBinaryVersion.")))
+          // !
+          await(validateDependencies(res, params))
+        }
+
+      test("scala 2_10") {
+        test("spark 1_2_1") {
+          check("1.2.1", "2.10")
+        }
+        test("spark 1_6_3") {
+          check("1.6.3", "2.10")
+        }
+        test("spark 2_1_0") {
+          check("2.1.0", "2.10", profiles = Set("scala-2.10", "!scala-2.11"))
+        }
+        test("spark 2_2_3") {
+          check("2.2.3", "2.10", profiles = Set("scala-2.10", "!scala-2.11"))
+        }
+      }
+
+      test("scala 2_11") {
+        test("spark 1_2_1") {
+          check("1.2.1", "2.11", profiles = Set("!scala-2.10", "scala-2.11"))
+        }
+        test("spark 1_6_3") {
+          check("1.6.3", "2.11", profiles = Set("!scala-2.10", "scala-2.11"))
+        }
+        test("spark 2_1_0") {
+          check("2.1.0", "2.11")
+        }
+        test("spark 2_2_3") {
+          check("2.2.3", "2.11")
+        }
+
+        test("spark 2_3_4") {
+          check("2.3.4", "2.11")
+        }
+
+        test("spark 2_4_8") {
+          check("2.4.8", "2.11")
+        }
+      }
+
+      test("scala 2_12") {
+        test("spark 2_4_8") {
+          check("2.4.8", "2.12")
+        }
+
+        test("spark 3_1_3") {
+          check("3.1.3", "2.12")
+        }
+
+        test("spark 3_2_4") {
+          check("3.2.4", "2.12")
+        }
+        test("spark 3_5_3") {
+          check("3.5.3", "2.12")
+        }
+      }
+
+      test("scala 2_13") {
+        test("spark 3_2_4") {
+          check("3.2.4", "2.13")
+        }
+        test("spark 3_5_3") {
+          check("3.5.3", "2.13")
+        }
+
+        test("spark 4.0.0-preview2") {
+          check("4.0.0-preview2", "2.13")
+        }
+      }
+    }
+
+    test("spring") {
+      test("data-rest") {
+        check(dep"org.springframework.boot:spring-boot-starter-data-rest:3.3.4")
+      }
+      test("graphql") {
+        check(dep"org.springframework.boot:spring-boot-starter-graphql:3.3.4")
+      }
+      test("integration") {
+        check(dep"org.springframework.boot:spring-boot-starter-integration:3.3.4")
+      }
+      test("oauth2-client") {
+        check(dep"org.springframework.boot:spring-boot-starter-oauth2-client:3.3.4")
+      }
+      test("web") {
+        check(dep"org.springframework.boot:spring-boot-starter-web:3.3.4")
+      }
+      test("web-services") {
+        check(dep"org.springframework.boot:spring-boot-starter-web-services:3.3.4")
+      }
+      test("webflux") {
+        check(dep"org.springframework.boot:spring-boot-starter-webflux:3.3.4")
+      }
+      test("security-test") {
+        check(dep"org.springframework.security:spring-security-test:6.3.4")
+      }
+    }
+
+    test("quarkus") {
+      test("rest") {
+        check(dep"io.quarkus:quarkus-rest:3.15.1")
+      }
+      test("rest-jackson") {
+        check(dep"io.quarkus:quarkus-rest-jackson:3.15.1")
+      }
+      test("hibernate-orm-panache") {
+        check(dep"io.quarkus:quarkus-hibernate-orm-panache:3.15.1")
+      }
+      test("jdbc-postgresql") {
+        check(dep"io.quarkus:quarkus-jdbc-postgresql:3.15.1")
+      }
+      test("arc") {
+        check(dep"io.quarkus:quarkus-arc:3.15.1")
+      }
+      test("hibernate-orm") {
+        check(dep"io.quarkus:quarkus-hibernate-orm:3.15.1")
+      }
+      test("junit5") {
+        check(dep"io.quarkus:quarkus-junit5:3.15.1")
+      }
+      test("rest-assured") {
+        check(dep"io.rest-assured:rest-assured:5.5.0")
+      }
+    }
+
+    test("android") {
+
+      def androiCheck(dependencies: Dependency*): Future[Unit] =
+        async {
+          val res = await {
+            resolve
+              .addRepositories(Repositories.google)
+              .addDependencies(dependencies: _*)
+              .future()
+          }
+          await(validateDependencies(res))
+        }
+
+      test("activity") {
+        androiCheck(dep"androidx.activity:activity:1.8.2")
+      }
+      test("activity-compose") {
+        androiCheck(dep"androidx.activity:activity-compose:1.8.2")
+      }
+      test("runtime") {
+        androiCheck(dep"androidx.compose.runtime:runtime:1.3.1")
+      }
+      test("material3") {
+        androiCheck(dep"androidx.compose.material3:material3:1.0.1")
       }
     }
   }
