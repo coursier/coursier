@@ -51,6 +51,16 @@ object ResolveTests extends TestSuite {
         .withJdkVersion("1.8.0_121")
     )
 
+  def check(dependencies: Dependency*): Future[Unit] =
+    async {
+      val res = await {
+        resolve
+          .addDependencies(dependencies: _*)
+          .future()
+      }
+      await(validateDependencies(res))
+    }
+
   val tests = Tests {
 
     test("simple") {
@@ -1314,6 +1324,33 @@ object ResolveTests extends TestSuite {
         test("spark 4.0.0-preview2") {
           check("4.0.0-preview2", "2.13")
         }
+      }
+    }
+
+    test("spring") {
+      test("data-rest") {
+        check(dep"org.springframework.boot:spring-boot-starter-data-rest:3.3.4")
+      }
+      test("graphql") {
+        check(dep"org.springframework.boot:spring-boot-starter-graphql:3.3.4")
+      }
+      test("integration") {
+        check(dep"org.springframework.boot:spring-boot-starter-integration:3.3.4")
+      }
+      test("oauth2-client") {
+        check(dep"org.springframework.boot:spring-boot-starter-oauth2-client:3.3.4")
+      }
+      test("web") {
+        check(dep"org.springframework.boot:spring-boot-starter-web:3.3.4")
+      }
+      test("web-services") {
+        check(dep"org.springframework.boot:spring-boot-starter-web-services:3.3.4")
+      }
+      test("webflux") {
+        check(dep"org.springframework.boot:spring-boot-starter-webflux:3.3.4")
+      }
+      test("security-test") {
+        check(dep"org.springframework.security:spring-security-test:6.3.4")
       }
     }
   }
