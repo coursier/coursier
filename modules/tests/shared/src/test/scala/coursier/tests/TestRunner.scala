@@ -38,7 +38,8 @@ class TestRunner[F[_]: Gather: ToFuture](
     mapDependencies: Option[Dependency => Dependency] = None,
     forceVersions: Map[Module, String] = Map.empty,
     defaultConfiguration: Configuration = Configuration.defaultCompile,
-    reconciliation: Option[Module => Reconciliation] = None
+    reconciliation: Option[Module => Reconciliation] = None,
+    forceDepMgmtVersions: Option[Boolean] = None
   ): Future[Resolution] = {
 
     val repositories0 = extraRepos ++ repositories
@@ -60,6 +61,7 @@ class TestRunner[F[_]: Gather: ToFuture](
       .withForceVersions(forceVersions)
       .withDefaultConfiguration(defaultConfiguration)
       .withReconciliation(reconciliation)
+      .withForceDepMgmtVersions(forceDepMgmtVersions.getOrElse(false))
     val r = ResolutionProcess(res).run(fetch0)
 
     val t = Gather[F].map(r) { res =>
@@ -84,7 +86,8 @@ class TestRunner[F[_]: Gather: ToFuture](
     configuration: Configuration = Configuration.empty,
     profiles: Option[Set[String]] = None,
     forceVersions: Map[Module, String] = Map.empty,
-    defaultConfiguration: Configuration = Configuration.defaultCompile
+    defaultConfiguration: Configuration = Configuration.defaultCompile,
+    forceDepMgmtVersions: Option[Boolean] = None
   ): Future[Resolution] =
     async {
       val attrPathPart =
@@ -106,7 +109,7 @@ class TestRunner[F[_]: Gather: ToFuture](
           else
             "_" + configuration.value.replace('(', '_').replace(')', '_')
         )
-        // FIXME Take forceVersions into account too
+        // FIXME Take forceVersions, forceDepMgmtVersions into account too
       ).filter(_.nonEmpty).mkString("/")
 
       def tryRead = textResource(path)
@@ -118,7 +121,8 @@ class TestRunner[F[_]: Gather: ToFuture](
           extraRepos = extraRepos,
           profiles = profiles,
           forceVersions = forceVersions,
-          defaultConfiguration = defaultConfiguration
+          defaultConfiguration = defaultConfiguration,
+          forceDepMgmtVersions = forceDepMgmtVersions
         )
       }
 
@@ -172,7 +176,8 @@ class TestRunner[F[_]: Gather: ToFuture](
     extraRepos: Seq[Repository] = Nil,
     configuration: Configuration = Configuration.empty,
     profiles: Option[Set[String]] = None,
-    forceVersions: Map[Module, String] = Map.empty
+    forceVersions: Map[Module, String] = Map.empty,
+    forceDepMgmtVersions: Option[Boolean] = None
   ): Future[Unit] =
     resolution(
       module,
@@ -180,7 +185,8 @@ class TestRunner[F[_]: Gather: ToFuture](
       extraRepos,
       configuration,
       profiles,
-      forceVersions
+      forceVersions,
+      forceDepMgmtVersions = forceDepMgmtVersions
     ).map(_ => ())
 
   def withArtifacts[T](

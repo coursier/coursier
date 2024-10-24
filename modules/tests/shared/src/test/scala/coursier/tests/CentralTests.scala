@@ -37,7 +37,7 @@ abstract class CentralTests extends TestSuite {
     test("logback") {
       async {
         val dep = dep"ch.qos.logback:logback-classic:1.1.3"
-        val res = await(runner.resolve(Seq(dep))).clearCaches
+        val res = await(runner.resolve(Seq(dep))).clearCaches.clearDependencyOverrides
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
@@ -56,7 +56,7 @@ abstract class CentralTests extends TestSuite {
     test("asm") {
       async {
         val dep = dep"org.ow2.asm:asm-commons:5.0.2"
-        val res = await(runner.resolve(Seq(dep))).clearCaches
+        val res = await(runner.resolve(Seq(dep))).clearCaches.clearDependencyOverrides
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
@@ -94,13 +94,15 @@ abstract class CentralTests extends TestSuite {
       test - runner.resolutionCheck(
         mod"org.apache.spark:spark-core_2.11",
         "1.3.1",
-        profiles = Some(Set("hadoop-2.2"))
+        profiles = Some(Set("hadoop-2.2", "!scala-2.10", "scala-2.11")),
+        forceDepMgmtVersions = Some(true)
       )
 
       test("scala210") - runner.resolutionCheck(
         mod"org.apache.spark:spark-core_2.10",
         "2.1.1",
-        profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11"))
+        profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11")),
+        forceDepMgmtVersions = Some(true)
       )
     }
 

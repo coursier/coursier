@@ -19,7 +19,10 @@ import MinimizedExclusions._
   publication: Publication,
   // Maven-specific
   optional: Boolean,
-  transitive: Boolean
+  transitive: Boolean,
+  @since("2.1.15")
+  overrides: DependencyManagement.Map =
+    Map.empty
 ) {
   assertValid(version, "version")
   lazy val moduleVersion = (module, version)
@@ -100,10 +103,12 @@ import MinimizedExclusions._
 
   lazy val clearExclusions: Dependency =
     withMinimizedExclusions(MinimizedExclusions.zero)
+  lazy val clearOverrides: Dependency =
+    withOverrides(Map.empty)
 
   // Overriding toString to be backwards compatible with Set-based exclusion representation
   override def toString(): String = {
-    val fields = Seq(
+    val baseFields = Seq(
       module.toString,
       version.toString,
       configuration.toString,
@@ -111,8 +116,11 @@ import MinimizedExclusions._
       publication.toString,
       optional.toString,
       transitive.toString
-    ).mkString(", ")
-    s"Dependency($fields)"
+    )
+    val fields =
+      if (overrides.isEmpty) baseFields
+      else baseFields :+ overrides.toString
+    s"Dependency(${fields.mkString(", ")})"
   }
 
   override lazy val hashCode: Int =
@@ -131,7 +139,8 @@ object Dependency {
     minimizedExclusions: MinimizedExclusions,
     publication: Publication,
     optional: Boolean,
-    transitive: Boolean
+    transitive: Boolean,
+    overrides: DependencyManagement.Map
   ): Dependency =
     coursier.util.Cache.cacheMethod(instanceCache)(
       new Dependency(
@@ -141,8 +150,29 @@ object Dependency {
         minimizedExclusions,
         publication,
         optional,
-        transitive
+        transitive,
+        overrides
       )
+    )
+
+  def apply(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean
+  ): Dependency =
+    Dependency(
+      module,
+      version,
+      configuration,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      Map.empty
     )
 
   def apply(
