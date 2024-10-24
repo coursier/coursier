@@ -70,6 +70,25 @@ object Resolution {
       dict: DependencyManagement.Map,
       deps: Seq[(Configuration, Dependency)]
     ): DependencyManagement.Map =
+      add(
+        dict,
+        deps.map {
+          case (config, dep) =>
+            val key0 = key(dep)
+            val values = DependencyManagement.Values(
+              config,
+              dep.version,
+              dep.minimizedExclusions,
+              dep.optional
+            )
+            (key0, values)
+        }
+      )
+
+    def add(
+      dict: DependencyManagement.Map,
+      deps: Seq[(DependencyManagement.Key, DependencyManagement.Values)]
+    ): DependencyManagement.Map =
       if (deps.isEmpty)
         dict
       else {
@@ -78,20 +97,16 @@ object Resolution {
         b ++= dict
         val it = deps.iterator
         while (it.hasNext) {
-          val elem = it.next()
-          val key0 = key(elem._2)
-          if (!b.contains(key0)) {
-            val values = DependencyManagement.Values(
-              elem._1,
-              elem._2.version,
-              elem._2.minimizedExclusions,
-              elem._2.optional
-            )
-            b += ((key0, values))
+          val (key0, incomingValues) = it.next()
+          val newValues = b.get(key0) match {
+            case Some(previousValues) =>
+              previousValues.orElse(incomingValues)
+            case None =>
+              incomingValues
           }
+          b += ((key0, newValues))
         }
-        b.result()
-          .toMap // meh
+        b.result().toMap
       }
   }
 
@@ -326,6 +341,27 @@ object Resolution {
 
     lazy val dict = DepMgmt.addSeq(overrides, dependencyManagement)
 
+    lazy val dict0 =
+      if (forceDepMgmtVersions) dict
+      else {
+        val clearDepMgmtVersion = dependencies
+          .map(_._2)
+          .groupBy(DepMgmt.key)
+          .collect {
+            case (k, l) if !overrides.contains(k) && l.forall(_.version.nonEmpty) =>
+              k
+          }
+          .toSet
+        dict
+          .map {
+            case (k, v) =>
+              k -> {
+                if (clearDepMgmtVersion(k)) v.withVersion("")
+                else v
+              }
+          }
+          .filter(!_._2.isEmpty)
+      }
     dependencies.map {
       case (config0, dep0) =>
         var config = config0
@@ -358,9 +394,11 @@ object Resolution {
         if (dict.nonEmpty)
           dep = dep.withOverrides {
             if (dep.overrides.isEmpty)
-              dict
+              dict0
+            else if (dict0.isEmpty)
+              dep.overrides
             else
-              dep.overrides ++ dict // dict values take precedence
+              DepMgmt.add(dict0, dep.overrides.toSeq)
           }
 
         (config, dep)

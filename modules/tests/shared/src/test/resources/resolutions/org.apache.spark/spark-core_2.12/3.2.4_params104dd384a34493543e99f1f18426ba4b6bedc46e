@@ -21,7 +21,7 @@ org.apache.commons:commons-math3:3.4.1:default
 org.apache.commons:commons-text:1.10.0:default
 commons-io:commons-io:2.8.0:default
 commons-collections:commons-collections:3.2.2:default
-com.google.code.findbugs:jsr305:3.0.0:default
+com.google.code.findbugs:jsr305:3.0.2:default
 org.slf4j:slf4j-api:1.7.30:default
 org.slf4j:jul-to-slf4j:1.7.30:default
 org.slf4j:jcl-over-slf4j:1.7.30:default
