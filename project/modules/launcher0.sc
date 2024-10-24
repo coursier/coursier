@@ -1,4 +1,4 @@
-import $file.shared, shared.{CoursierPublishModule, CsMima, CsModule, commitHash}
+import $file.shared, shared.{CoursierPublishModule, CsMima, CsModule}
 
 import mill._, mill.scalalib._
 
@@ -9,6 +9,8 @@ trait LauncherBase extends CsModule with CrossSbtModule with CoursierPublishModu
   def resourceBootstrap: T[PathRef]
   def noProguardBootstrap: T[PathRef]
   def noProguardResourceBootstrap: T[PathRef]
+
+  def commitHash: T[String]
 
   def resources = T.sources {
 

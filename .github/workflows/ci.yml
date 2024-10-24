@@ -89,7 +89,7 @@ jobs:
       if: runner.os == 'Linux'
     # - run: .github/scripts/scala-native-setup.sh
     #   if: runner.os != 'Windows'
-    - run: ./mill -i jvmTests "$SCALA_VERSION"
+    - run: ./mill -i jvmTests --scalaVersion "$SCALA_VERSION"
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
@@ -120,7 +120,7 @@ jobs:
       with:
         jvm: 8
         version: "2.1.0"
-    - run: npm install && ./mill -i jsTests "$SCALA_VERSION"
+    - run: npm install && ./mill -i jsTests --scalaVersion "$SCALA_VERSION"
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
@@ -204,7 +204,7 @@ jobs:
 
       - name: Release
         run: |
-          ./mill -i publishSonatype __.publishArtifacts || (
+          ./mill -i publishSonatype --tasks __.publishArtifacts || (
             echo "Publishing exit with non-zero code, ignoring it" 1>&2
             exit 0
           )
@@ -236,7 +236,7 @@ jobs:
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
         shell: bash
       - name: Copy artifacts
-        run: .github/scripts/maybe-with-graalvm-home.sh copyLauncher artifacts/
+        run: .github/scripts/maybe-with-graalvm-home.sh copyLauncher --directory artifacts/
         shell: bash
       - name: Build OS packages
         run: .github/scripts/generate-os-packages.sh
@@ -266,7 +266,7 @@ jobs:
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeStaticTests
         shell: bash
       - name: Copy artifacts
-        run: .github/scripts/maybe-with-graalvm-home.sh copyStaticLauncher artifacts/
+        run: .github/scripts/maybe-with-graalvm-home.sh copyStaticLauncher --directory artifacts/
         shell: bash
       - uses: actions/upload-artifact@v3
         with:
@@ -293,7 +293,7 @@ jobs:
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeMostlyStaticTests
         shell: bash
       - name: Copy artifacts
-        run: .github/scripts/maybe-with-graalvm-home.sh copyMostlyStaticLauncher artifacts/
+        run: .github/scripts/maybe-with-graalvm-home.sh copyMostlyStaticLauncher --directory artifacts/
         shell: bash
       - uses: actions/upload-artifact@v3
         with:
@@ -320,7 +320,7 @@ jobs:
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeContainerTests
         shell: bash
       - name: Copy artifacts
-        run: .github/scripts/maybe-with-graalvm-home.sh copyContainerLauncher artifacts/
+        run: .github/scripts/maybe-with-graalvm-home.sh copyContainerLauncher --directory artifacts/
         shell: bash
       - uses: actions/upload-artifact@v3
         with:
@@ -374,7 +374,7 @@ jobs:
       with:
         name: launchers
         path: artifacts/
-    - run: ./mill -i uploadLaunchers artifacts/
+    - run: ./mill -i uploadLaunchers --directory artifacts/
       env:
         UPLOAD_GH_TOKEN: ${{ secrets.GH_TOKEN }}
 

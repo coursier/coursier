@@ -110,7 +110,7 @@ $ ./mill jsTests
 ### Run all Scala.JS tests for a specific Scala version
 
 ```text
-$ ./mill jsTests 2.13.3
+$ ./mill jsTests --scalaVersion 2.13.3
 ```
 
 ### Run all JVM-based tests
@@ -122,7 +122,7 @@ $ ./mill jvmTests
 ### Run all JVM-based tests for a specific Scala version
 
 ```text
-$ ./mill jvmTests 2.13.3
+$ ./mill jvmTests --scalaVersion 2.13.3
 ```
 
 ### Validate the documentation markdown files

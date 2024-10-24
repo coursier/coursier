@@ -11,10 +11,6 @@ trait CsMima extends Mima {
   }
 }
 
-def commitHash = T {
-  os.proc("git", "rev-parse", "HEAD").call().out.text().trim()
-}
-
 lazy val latestTaggedVersion = os.proc("git", "describe", "--abbrev=0", "--tags", "--match", "v*")
   .call().out
   .trim()
@@ -59,7 +55,7 @@ trait PublishLocalNoFluff extends PublishModule {
         new LocalIvyPublisher(os.Path(repo.replace("{VERSION}", publishVersion()), os.pwd))
     }
 
-    publisher.publish(
+    publisher.publishLocal(
       jar = jar().path,
       sourcesJar = emptyZip().path,
       docJar = emptyZip().path,

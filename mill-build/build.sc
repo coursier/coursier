@@ -1,8 +1,9 @@
 import mill._
-import mill.main.BuildInfo
+import mill.api.BuildInfo
+import mill.runner.MillBuildRootModule
 import mill.scalalib._
 
-object root extends mill.runner.MillBuildRootModule {
+object `package` extends MillBuildRootModule {
   override def ivyDeps = Agg(
     ivy"com.lihaoyi::mill-contrib-bloop:${BuildInfo.millVersion}",
     ivy"com.github.lolgab::mill-mima::0.1.0",

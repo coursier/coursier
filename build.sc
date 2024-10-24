@@ -146,13 +146,13 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
   def proguardClassPath = T {
     proguard.runClasspath()
   }
-  object test extends SbtModuleTests with CsTests {
+  object test extends SbtTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Seq(
       Deps.collectionCompat,
       Deps.java8Compat
     )
   }
-  object it extends SbtModuleTests with CsTests {
+  object it extends SbtTests with CsTests {
     def sources = T.sources(
       millSourcePath / "src" / "it" / "scala",
       millSourcePath / "src" / "it" / "java"
@@ -161,7 +161,7 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
       self.test
     )
     def forkArgs = T.input {
-      val testRepoServer0 = workers.testRepoServer()
+      val testRepoServer0 = buildWorkers.testRepoServer()
       super.forkArgs() ++ Seq(
         s"-Dtest.repository=${testRepoServer0.url}",
         s"-Dtest.repository.user=${testRepoServer0.user}",
@@ -218,7 +218,8 @@ trait CoreJvm extends CoreJvmBase {
     Deps.concurrentReferenceHashMap,
     Deps.scalaXml
   )
-  object test extends CrossSbtModuleTests with CsTests {
+  def commitHash = `build-util`.commitHash
+  object test extends CrossSbtTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.jol
     )
@@ -231,7 +232,8 @@ trait CoreJs extends Core with CsScalaJsModule {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.scalaJsDom
   )
-  object test extends SbtModuleTests with ScalaJSTests with JsTests with CsTests
+  def commitHash = `build-util`.commitHash
+  object test extends SbtTests with ScalaJSTests with JsTests with CsTests
 }
 
 trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase {
@@ -300,6 +302,7 @@ trait Launcher extends LauncherBase {
   def compileIvyDeps = Agg(
     Deps.dataClass
   )
+  def commitHash = `build-util`.commitHash
 
   def bootstrap                   = `bootstrap-launcher`.proguardedAssembly()
   def resourceBootstrap           = `bootstrap-launcher`.proguardedResourceAssembly()
@@ -320,7 +323,7 @@ trait Env extends CrossSbtModule with CsModule
     Deps.collectionCompat,
     Deps.jniUtils
   )
-  object test extends CrossSbtModuleTests with CsTests {
+  object test extends CrossSbtTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.jimfs
     )
@@ -347,9 +350,9 @@ trait CoursierJvm extends CoursierJvmBase { self =>
     `proxy-setup`
   )
   // Put CoursierTests right after TestModule, and see what happens
-  object test extends TestModule with CrossSbtModuleTests with CoursierTests with CsTests
+  object test extends TestModule with CrossSbtTests with CoursierTests with CsTests
       with JvmTests
-  object it extends TestModule with CrossSbtModuleTests with CoursierTests with CsTests
+  object it extends TestModule with CrossSbtTests with CoursierTests with CsTests
       with JvmTests {
     def sources = T.sources(
       this.millSourcePath / "src" / "it" / "scala",
@@ -359,7 +362,7 @@ trait CoursierJvm extends CoursierJvmBase { self =>
       self.test
     )
     def forkArgs = T.input {
-      val testRepoServer0 = workers.testRepoServer()
+      val testRepoServer0 = buildWorkers.testRepoServer()
       super.forkArgs() ++ Seq(
         s"-Dtest.repository=${testRepoServer0.url}",
         s"-Dtest.repository.user=${testRepoServer0.user}",
@@ -373,7 +376,7 @@ trait CoursierJs extends Coursier with CsScalaJsModule {
     core.js(),
     cache.js()
   )
-  object test extends SbtModuleTests with ScalaJSTests with CsTests with JsTests with CoursierTests
+  object test extends SbtTests with ScalaJSTests with CsTests with JsTests with CoursierTests
 }
 
 trait TestsJvm extends TestsModule { self =>
@@ -384,12 +387,12 @@ trait TestsJvm extends TestsModule { self =>
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.jsoup
   )
-  object test extends CrossSbtModuleTests with CsTests with JvmTests {
+  object test extends CrossSbtTests with CsTests with JvmTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm()
     )
   }
-  object it extends CrossSbtModuleTests with CsTests with JvmTests
+  object it extends CrossSbtTests with CsTests with JvmTests
       with workers.UsesRedirectingServer {
     def redirectingServerCp =
       `redirecting-server`.runClasspath()
@@ -397,7 +400,7 @@ trait TestsJvm extends TestsModule { self =>
       `redirecting-server`.mainClass().getOrElse(sys.error("no main class"))
     def forkArgs = T.input {
       val redirectingServer0 = redirectingServer()
-      val testRepoServer0    = workers.testRepoServer()
+      val testRepoServer0    = buildWorkers.testRepoServer()
       super.forkArgs() ++ Seq(
         s"-Dtest.redirect.repository=${redirectingServer0.url}",
         s"-Dtest.repository=${testRepoServer0.url}",
@@ -421,7 +424,7 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
     `sbt-maven-repository`.js()
   )
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
-  object test extends SbtModuleTests with ScalaJSTests with CsTests with JsTests {
+  object test extends SbtTests with ScalaJSTests with CsTests with JsTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.js()
     )
@@ -437,7 +440,7 @@ trait ProxyTests extends CrossSbtModule with CsModule {
     Deps.scalaAsync,
     Deps.slf4JNop
   )
-  object it extends CrossSbtModuleTests with CsTests {
+  object it extends CrossSbtTests with CsTests {
     def sources = T.sources(
       millSourcePath / "src" / "it" / "scala",
       millSourcePath / "src" / "it" / "java"
@@ -457,7 +460,7 @@ trait ScalazJvm extends Scalaz with CsMima {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.scalazConcurrent
   )
-  object test extends CrossSbtModuleTests with CsTests with CsResourcesTests {
+  object test extends CrossSbtTests with CsTests with CsResourcesTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
@@ -476,7 +479,7 @@ trait CatsJvm extends Cats with CsMima {
   def moduleDeps = Seq(
     cache.jvm()
   )
-  object test extends CrossSbtModuleTests with CsTests with CsResourcesTests {
+  object test extends CrossSbtTests with CsTests with CsResourcesTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
@@ -507,7 +510,7 @@ trait Install extends CrossSbtModule with CsModule
     Deps.argonautShapeless,
     Deps.catsCore
   )
-  object test extends CrossSbtModuleTests with CsTests
+  object test extends CrossSbtTests with CsTests
 }
 
 trait Jvm extends CrossSbtModule with CsModule
@@ -528,7 +531,7 @@ trait Jvm extends CrossSbtModule with CsModule
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.jsoniterCore
   )
-  object test extends CrossSbtModuleTests with CsTests {
+  object test extends CrossSbtTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Seq(
       Deps.osLib
     )
@@ -586,7 +589,7 @@ trait Cli extends CsCrossJvmJsModule
     os.write.over(jar, baos.toByteArray)
     PathRef(jar)
   }
-  object test extends CrossSbtModuleTests with CsTests
+  object test extends CrossSbtTests with CsTests
 }
 
 trait CliTests extends CsCrossJvmJsModule
@@ -605,7 +608,7 @@ trait CliTests extends CsCrossJvmJsModule
   private def sharedTestArgs = Seq(
     s"-Dcoursier-test.scala-cli=${GetCs.scalaCli(scalaCliVersion)}"
   )
-  object test extends CrossSbtModuleTests with CsTests {
+  object test extends CrossSbtTests with CsTests {
     def forkArgs = {
       val launcherTask = cli().launcher.map(_.path)
       val assemblyTask = cli().assembly.map(_.path)
@@ -619,7 +622,7 @@ trait CliTests extends CsCrossJvmJsModule
       }
     }
   }
-  trait NativeTests extends CrossSbtModuleTests with CsTests with Bloop.Module {
+  trait NativeTests extends CrossSbtTests with CsTests with Bloop.Module {
     def cliLauncher: T[PathRef]
     def skipBloop = true
     def sources = T.sources {
@@ -1013,4 +1016,62 @@ object ci extends Module {
     System.err.println(s"New Java home $destJavaHome")
     destJavaHome
   }
+}
+
+object buildWorkers extends Module {
+
+  def testRepoServer = T.worker {
+    val server = new workers.TestRepoServer
+
+    if (server.healthCheck())
+      sys.error("Test repo server already running")
+
+    server.proc = os.proc(
+      "cs",
+      "launch",
+      "io.get-coursier:http-server_2.12:1.0.0",
+      "--",
+      "-d",
+      "modules/tests/handmade-metadata/data/http/abc.com",
+      "-u",
+      server.user,
+      "-P",
+      server.password,
+      "-r",
+      "realm",
+      "-v",
+      "--host",
+      server.host,
+      "--port",
+      server.port.toString
+    ).spawn(
+      stdin = os.Pipe,
+      stdout = os.Inherit,
+      stderr = os.Inherit
+    )
+    server.proc.stdin.close()
+    var serverRunning = false
+    var countDown     = 20
+    while (!serverRunning && server.proc.isAlive() && countDown > 0) {
+      serverRunning = server.healthCheck()
+      if (!serverRunning)
+        Thread.sleep(500L)
+      countDown -= 1
+    }
+    if (serverRunning && server.proc.isAlive()) {
+      T.log.outputStream.println(s"Test repository listening on ${server.url}")
+      server
+    }
+    else
+      sys.error("Cannot run test repo server")
+  }
+
+}
+
+object `build-util` extends Module {
+
+  def commitHash = T {
+    os.proc("git", "rev-parse", "HEAD").call().out.text().trim()
+  }
+
 }
