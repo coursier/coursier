@@ -25,7 +25,7 @@ org.apache.commons:commons-text:1.10.0:default
 commons-io:commons-io:2.16.1:default
 commons-collections:commons-collections:3.2.2:default
 org.apache.commons:commons-collections4:4.4:default
-com.google.code.findbugs:jsr305:3.0.0:default
+com.google.code.findbugs:jsr305:3.0.2:default
 com.ning:compress-lzf:1.1.2:default
 org.xerial.snappy:snappy-java:1.1.10.5:default
 org.lz4:lz4-java:1.8.0:default
@@ -33,7 +33,7 @@ com.github.luben:zstd-jni:1.5.5-4:default
 org.roaringbitmap:RoaringBitmap:0.9.45:default
 org.scala-lang.modules:scala-xml_2.13:2.1.0:default
 org.scala-lang.modules:scala-collection-compat_2.13:2.7.0:default
-org.scala-lang:scala-library:2.13.8:default
+org.scala-lang:scala-library:2.13.10:default
 org.scala-lang:scala-reflect:2.13.8:default
 org.json4s:json4s-jackson_2.13:3.7.0-M11:default
 org.glassfish.jersey.core:jersey-client:2.40:default
