@@ -24,13 +24,19 @@ abstract class PlatformTestHelpers {
   private lazy val pool = Sync.fixedThreadPool(6)
 
   private val mockDataLocation = {
-    val dir = Paths.get("modules/tests/metadata")
+    val dirStr = Option(System.getenv("COURSIER_TESTS_METADATA_DIR")).getOrElse {
+      sys.error("COURSIER_TESTS_METADATA_DIR not set")
+    }
+    val dir = Paths.get(dirStr)
     assert(Files.isDirectory(dir))
     dir
   }
 
   val handmadeMetadataLocation = {
-    val dir = Paths.get("modules/tests/handmade-metadata/data")
+    val dirStr = Option(System.getenv("COURSIER_TESTS_HANDMADE_METADATA_DIR")).getOrElse {
+      sys.error("COURSIER_TESTS_HANDMADE_METADATA_DIR not set")
+    }
+    val dir = Paths.get(dirStr)
     assert(Files.isDirectory(dir))
     dir
   }

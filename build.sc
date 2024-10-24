@@ -113,7 +113,8 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
         Agg(Deps.windowsAnsiPs.exclude("*" -> "*"))
           .map(bindDependency())
       },
-      sources = true
+      sources = true,
+      artifactTypes = None
     )()
     jars.foreach { jar =>
       mill.api.IO.unpackZip(jar.path, os.rel)

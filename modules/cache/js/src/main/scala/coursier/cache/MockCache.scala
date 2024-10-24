@@ -22,11 +22,10 @@ import scala.concurrent.{ExecutionContext, Future}
           (artifact, false)
 
       val path =
-        if (artifact0.url.startsWith("file:")) {
+        if (artifact0.url.startsWith("file:/")) {
           val path = artifact0
             .url
-            .stripPrefix("file:")
-            .dropWhile(_ == '/')
+            .stripPrefix(if (artifact0.url.startsWith("file:///")) "file://" else "file:")
           if (path.endsWith("/"))
             path + ".directory"
           else

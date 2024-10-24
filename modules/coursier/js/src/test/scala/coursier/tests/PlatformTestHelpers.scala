@@ -22,13 +22,27 @@ abstract class PlatformTestHelpers {
         sys.error("COURSIER_TEST_DATA_DIR not set")
       }
 
-  val cache: Cache[Task] =
-    MockCache("modules/tests/metadata")
+  val metadataBase =
+    PlatformTestHelpers.process.env
+      .asInstanceOf[js.Dictionary[String]]
+      .get("COURSIER_TESTS_METADATA_DIR_URI")
+      .getOrElse {
+        sys.error("COURSIER_TESTS_METADATA_DIR_URI not set")
+      }
 
-  val handmadeMetadataBase = "file:modules/tests/handmade-metadata/data/"
+  val cache: Cache[Task] =
+    MockCache(metadataBase.stripPrefix("file://").stripPrefix("file:"))
+
+  val handmadeMetadataBase =
+    PlatformTestHelpers.process.env
+      .asInstanceOf[js.Dictionary[String]]
+      .get("COURSIER_TESTS_HANDMADE_METADATA_DIR_URI")
+      .getOrElse {
+        sys.error("COURSIER_TESTS_HANDMADE_METADATA_DIR_URI not set")
+      }
 
   val handmadeMetadataCache: Cache[Task] =
-    MockCache(handmadeMetadataBase.stripPrefix("file:"))
+    MockCache(handmadeMetadataBase.stripPrefix("file://").stripPrefix("file:"))
 
   val updateSnapshots = false
 

@@ -25,6 +25,16 @@ trait CoursierTests extends TestModule {
       Deps.scalaAsync
     )
   }
+  def forkEnv = super.forkEnv() ++ Seq(
+    "COURSIER_TESTS_METADATA_DIR" ->
+      (T.workspace / "modules" / "tests" / "metadata").toString,
+    "COURSIER_TESTS_HANDMADE_METADATA_DIR" ->
+      (T.workspace / "modules" / "tests" / "handmade-metadata" / "data").toString,
+    "COURSIER_TESTS_METADATA_DIR_URI" ->
+      (T.workspace / "modules" / "tests" / "metadata").toNIO.toUri.toASCIIString,
+    "COURSIER_TESTS_HANDMADE_METADATA_DIR_URI" ->
+      (T.workspace / "modules" / "tests" / "handmade-metadata" / "data").toNIO.toUri.toASCIIString
+  )
 }
 trait CoursierJvmBase extends Coursier with CsMima with Shading {
 
