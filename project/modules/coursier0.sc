@@ -20,6 +20,7 @@ trait Coursier extends CsModule with CsCrossJvmJsModule with CoursierPublishModu
 trait CoursierTests extends TestModule {
   def ivyDeps = T {
     super.ivyDeps() ++ Agg(
+      Deps.diffUtils,
       Deps.pprint,
       Deps.scalaAsync
     )
