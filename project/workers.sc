@@ -29,7 +29,7 @@ final class RedirectingServer(
   }
 
   override def close(): Unit =
-    proc.destroyForcibly()
+    proc.destroy(shutdownGracePeriod = 0)
 }
 
 trait UsesRedirectingServer extends Module {
@@ -101,7 +101,7 @@ final class TestRepoServer(
   }
 
   override def close(): Unit =
-    proc.destroyForcibly()
+    proc.destroy(shutdownGracePeriod = 0)
 }
 
 private def randomPort(): Int = {
