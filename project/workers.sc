@@ -4,11 +4,11 @@ import mill._, scalalib._
 
 import java.io.{File, InputStream, IOException}
 
-final case class RedirectingServer(
-  host: String = "localhost",
-  port: Int = randomPort(),
+final class RedirectingServer(
+  val host: String = "localhost",
+  val port: Int = randomPort(),
   var proc: os.SubProcess = null
-) extends java.io.Closeable {
+) extends AutoCloseable {
   def url = s"http://$host:$port"
 
   def healthCheck(): Boolean = {
@@ -40,7 +40,7 @@ trait UsesRedirectingServer extends Module {
     val cp        = redirectingServerCp().map(_.path)
     val mainClass = redirectingServerMainClass()
 
-    val server = RedirectingServer()
+    val server = new RedirectingServer
 
     if (server.healthCheck())
       sys.error("Server already running")
@@ -74,13 +74,13 @@ trait UsesRedirectingServer extends Module {
   }
 }
 
-final case class TestRepoServer(
-  host: String = "localhost",
-  port: Int = randomPort(),
-  user: String = "user",
-  password: String = "pass",
+final class TestRepoServer(
+  val host: String = "localhost",
+  val port: Int = randomPort(),
+  val user: String = "user",
+  val password: String = "pass",
   var proc: os.SubProcess = null
-) extends java.io.Closeable {
+) extends AutoCloseable {
   def url = s"http://$host:$port"
 
   def healthCheck(): Boolean = {
@@ -105,7 +105,7 @@ final case class TestRepoServer(
 }
 
 def testRepoServer = T.worker {
-  val server = TestRepoServer()
+  val server = new TestRepoServer
 
   if (server.healthCheck())
     sys.error("Test repo server already running")
