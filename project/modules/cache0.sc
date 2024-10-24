@@ -43,7 +43,7 @@ trait CacheJvmBase extends Cache with CsMima with Shading {
       ProblemFilter.exclude[Problem]("coursier.cache.shaded.*")
     )
 
-  trait CacheJvmBaseTests extends CrossSbtModuleTests {
+  trait CacheJvmBaseTests extends CrossSbtTests {
     def sources = T.sources {
       val dest = T.dest / "CustomLoaderClasspath.scala"
       val customLoaderCp0 = customLoaderCp()

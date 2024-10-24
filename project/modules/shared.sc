@@ -59,7 +59,7 @@ trait PublishLocalNoFluff extends PublishModule {
         new LocalIvyPublisher(os.Path(repo.replace("{VERSION}", publishVersion()), os.pwd))
     }
 
-    publisher.publish(
+    publisher.publishLocal(
       jar = jar().path,
       sourcesJar = emptyZip().path,
       docJar = emptyZip().path,

@@ -146,13 +146,13 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
   def proguardClassPath = T {
     proguard.runClasspath()
   }
-  object test extends SbtModuleTests with CsTests {
+  object test extends SbtTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Seq(
       Deps.collectionCompat,
       Deps.java8Compat
     )
   }
-  object it extends SbtModuleTests with CsTests {
+  object it extends SbtTests with CsTests {
     def sources = T.sources(
       millSourcePath / "src" / "it" / "scala",
       millSourcePath / "src" / "it" / "java"
@@ -218,7 +218,7 @@ trait CoreJvm extends CoreJvmBase {
     Deps.concurrentReferenceHashMap,
     Deps.scalaXml
   )
-  object test extends CrossSbtModuleTests with CsTests {
+  object test extends CrossSbtTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.jol
     )
@@ -231,7 +231,7 @@ trait CoreJs extends Core with CsScalaJsModule {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.scalaJsDom
   )
-  object test extends SbtModuleTests with ScalaJSTests with JsTests with CsTests
+  object test extends SbtTests with ScalaJSTests with JsTests with CsTests
 }
 
 trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase {
@@ -320,7 +320,7 @@ trait Env extends CrossSbtModule with CsModule
     Deps.collectionCompat,
     Deps.jniUtils
   )
-  object test extends CrossSbtModuleTests with CsTests {
+  object test extends CrossSbtTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.jimfs
     )
@@ -347,9 +347,9 @@ trait CoursierJvm extends CoursierJvmBase { self =>
     `proxy-setup`
   )
   // Put CoursierTests right after TestModule, and see what happens
-  object test extends TestModule with CrossSbtModuleTests with CoursierTests with CsTests
+  object test extends TestModule with CrossSbtTests with CoursierTests with CsTests
       with JvmTests
-  object it extends TestModule with CrossSbtModuleTests with CoursierTests with CsTests
+  object it extends TestModule with CrossSbtTests with CoursierTests with CsTests
       with JvmTests {
     def sources = T.sources(
       this.millSourcePath / "src" / "it" / "scala",
@@ -373,7 +373,7 @@ trait CoursierJs extends Coursier with CsScalaJsModule {
     core.js(),
     cache.js()
   )
-  object test extends SbtModuleTests with ScalaJSTests with CsTests with JsTests with CoursierTests
+  object test extends SbtTests with ScalaJSTests with CsTests with JsTests with CoursierTests
 }
 
 trait TestsJvm extends TestsModule { self =>
@@ -384,12 +384,12 @@ trait TestsJvm extends TestsModule { self =>
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.jsoup
   )
-  object test extends CrossSbtModuleTests with CsTests with JvmTests {
+  object test extends CrossSbtTests with CsTests with JvmTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm()
     )
   }
-  object it extends CrossSbtModuleTests with CsTests with JvmTests
+  object it extends CrossSbtTests with CsTests with JvmTests
       with workers.UsesRedirectingServer {
     def redirectingServerCp =
       `redirecting-server`.runClasspath()
@@ -421,7 +421,7 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
     `sbt-maven-repository`.js()
   )
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
-  object test extends SbtModuleTests with ScalaJSTests with CsTests with JsTests {
+  object test extends SbtTests with ScalaJSTests with CsTests with JsTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.js()
     )
@@ -437,7 +437,7 @@ trait ProxyTests extends CrossSbtModule with CsModule {
     Deps.scalaAsync,
     Deps.slf4JNop
   )
-  object it extends CrossSbtModuleTests with CsTests {
+  object it extends CrossSbtTests with CsTests {
     def sources = T.sources(
       millSourcePath / "src" / "it" / "scala",
       millSourcePath / "src" / "it" / "java"
@@ -457,7 +457,7 @@ trait ScalazJvm extends Scalaz with CsMima {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.scalazConcurrent
   )
-  object test extends CrossSbtModuleTests with CsTests with CsResourcesTests {
+  object test extends CrossSbtTests with CsTests with CsResourcesTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
@@ -476,7 +476,7 @@ trait CatsJvm extends Cats with CsMima {
   def moduleDeps = Seq(
     cache.jvm()
   )
-  object test extends CrossSbtModuleTests with CsTests with CsResourcesTests {
+  object test extends CrossSbtTests with CsTests with CsResourcesTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
@@ -507,7 +507,7 @@ trait Install extends CrossSbtModule with CsModule
     Deps.argonautShapeless,
     Deps.catsCore
   )
-  object test extends CrossSbtModuleTests with CsTests
+  object test extends CrossSbtTests with CsTests
 }
 
 trait Jvm extends CrossSbtModule with CsModule
@@ -528,7 +528,7 @@ trait Jvm extends CrossSbtModule with CsModule
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.jsoniterCore
   )
-  object test extends CrossSbtModuleTests with CsTests {
+  object test extends CrossSbtTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Seq(
       Deps.osLib
     )
@@ -586,7 +586,7 @@ trait Cli extends CsCrossJvmJsModule
     os.write.over(jar, baos.toByteArray)
     PathRef(jar)
   }
-  object test extends CrossSbtModuleTests with CsTests
+  object test extends CrossSbtTests with CsTests
 }
 
 trait CliTests extends CsCrossJvmJsModule
@@ -605,7 +605,7 @@ trait CliTests extends CsCrossJvmJsModule
   private def sharedTestArgs = Seq(
     s"-Dcoursier-test.scala-cli=${GetCs.scalaCli(scalaCliVersion)}"
   )
-  object test extends CrossSbtModuleTests with CsTests {
+  object test extends CrossSbtTests with CsTests {
     def forkArgs = {
       val launcherTask = cli().launcher.map(_.path)
       val assemblyTask = cli().assembly.map(_.path)
@@ -619,7 +619,7 @@ trait CliTests extends CsCrossJvmJsModule
       }
     }
   }
-  trait NativeTests extends CrossSbtModuleTests with CsTests with Bloop.Module {
+  trait NativeTests extends CrossSbtTests with CsTests with Bloop.Module {
     def cliLauncher: T[PathRef]
     def skipBloop = true
     def sources = T.sources {
