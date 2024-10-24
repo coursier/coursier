@@ -122,13 +122,25 @@ trait JvmTests extends JavaModule with CsResourcesTests {
   }
 }
 
-trait JsTests extends JavaModule with CsResourcesTests {
+trait JsTests extends TestScalaJSModule with CsResourcesTests {
+  import mill.scalajslib.api._
   override def sources = T.sources {
     val shared = Seq(
-      millSourcePath / os.up / os.up / "shared" / "src" / "test",
-      millSourcePath / os.up / os.up / "js" / "src" / "test"
+      millSourcePath / os.up / "shared" / "src" / "test",
+      millSourcePath / os.up / "js" / "src" / "test"
     )
     super.sources() ++ shared.map(PathRef(_))
+  }
+  def jsEnvConfig = T {
+    super.jsEnvConfig() match {
+      case node: JsEnvConfig.NodeJs =>
+        node.copy(
+          env = node.env ++ forkEnv()
+        )
+      case other =>
+        System.err.println(s"Warning: don't know how to add env vars to JsEnvConfig $other")
+        other
+    }
   }
 }
 
