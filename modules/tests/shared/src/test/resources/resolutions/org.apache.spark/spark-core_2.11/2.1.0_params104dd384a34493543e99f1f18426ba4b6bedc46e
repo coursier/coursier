@@ -23,7 +23,7 @@ com.ning:compress-lzf:1.0.3:default
 org.xerial.snappy:snappy-java:1.1.2.6:default
 net.jpountz.lz4:lz4:1.3.0:default
 org.roaringbitmap:RoaringBitmap:0.5.11:default
-commons-net:commons-net:3.1:default
+commons-net:commons-net:2.2:default
 org.scala-lang:scala-library:2.11.8:default
 org.json4s:json4s-jackson_2.11:3.2.11:default
 org.glassfish.jersey.core:jersey-client:2.22.2:default

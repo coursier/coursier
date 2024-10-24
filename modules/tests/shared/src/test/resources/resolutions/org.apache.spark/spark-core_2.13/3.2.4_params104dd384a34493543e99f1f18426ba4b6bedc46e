@@ -13,7 +13,7 @@ org.apache.spark:spark-network-common_2.13:3.2.4:default
 org.apache.spark:spark-network-shuffle_2.13:3.2.4:default
 org.apache.spark:spark-unsafe_2.13:3.2.4:default
 javax.activation:activation:1.1.1:default
-org.apache.curator:curator-recipes:4.2.0:default
+org.apache.curator:curator-recipes:2.13.0:default
 org.apache.zookeeper:zookeeper:3.6.2:default
 jakarta.servlet:jakarta.servlet-api:4.0.3:default
 commons-codec:commons-codec:1.15:default
@@ -22,7 +22,7 @@ org.apache.commons:commons-math3:3.4.1:default
 org.apache.commons:commons-text:1.10.0:default
 commons-io:commons-io:2.8.0:default
 commons-collections:commons-collections:3.2.2:default
-com.google.code.findbugs:jsr305:3.0.2:default
+com.google.code.findbugs:jsr305:3.0.0:default
 org.slf4j:slf4j-api:1.7.30:default
 org.slf4j:jul-to-slf4j:1.7.30:default
 org.slf4j:jcl-over-slf4j:1.7.30:default
@@ -33,9 +33,9 @@ org.xerial.snappy:snappy-java:1.1.8.4:default
 org.lz4:lz4-java:1.7.1:default
 com.github.luben:zstd-jni:1.5.0-4:default
 org.roaringbitmap:RoaringBitmap:0.9.0:default
-commons-net:commons-net:3.6:default
+commons-net:commons-net:3.1:default
 org.scala-lang.modules:scala-xml_2.13:1.2.0:default
-org.scala-lang:scala-library:2.13.6:default
+org.scala-lang:scala-library:2.13.5:default
 org.scala-lang:scala-reflect:2.13.5:default
 org.json4s:json4s-jackson_2.13:3.7.0-M11:default
 org.glassfish.jersey.core:jersey-client:2.34:default
@@ -110,7 +110,7 @@ org.glassfish.hk2:hk2-utils:2.6.1:default
 org.apache.hadoop.thirdparty:hadoop-shaded-protobuf_3_7:1.1.1:default
 org.apache.hadoop:hadoop-annotations:3.3.1:default
 org.apache.hadoop.thirdparty:hadoop-shaded-guava:1.1.1:default
-com.google.guava:guava:27.0.1-jre:default
+com.google.guava:guava:27.0-jre:default
 commons-cli:commons-cli:1.2:default
 org.apache.httpcomponents:httpclient:4.5.13:default
 jakarta.activation:jakarta.activation-api:1.2.1:default
@@ -136,8 +136,8 @@ org.apache.hadoop:hadoop-yarn-client:3.3.1:default
 org.apache.hadoop:hadoop-yarn-common:3.3.1:default
 org.apache.hadoop:hadoop-hdfs-client:3.3.1:default
 org.apache.hadoop:hadoop-mapreduce-client-common:3.3.1:default
-com.google.guava:guava:27.0.1-jre:default
-com.google.guava:failureaccess:1.0.1:default
+com.google.guava:guava:27.0-jre:default
+com.google.guava:failureaccess:1.0:default
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:default
 org.checkerframework:checker-qual:2.5.2:default
 com.google.j2objc:j2objc-annotations:1.1:default
@@ -167,7 +167,7 @@ com.squareup.okhttp:okhttp:2.7.5:default
 org.apache.hadoop:hadoop-yarn-common:3.3.1:default
 org.apache.hadoop:hadoop-yarn-client:3.3.1:default
 org.apache.hadoop:hadoop-mapreduce-client-core:3.3.1:default
-com.google.guava:failureaccess:1.0.1:default
+com.google.guava:failureaccess:1.0:default
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:default
 org.checkerframework:checker-qual:2.5.2:default
 com.google.errorprone:error_prone_annotations:2.2.0:default
@@ -231,7 +231,7 @@ org.apache.curator:curator-framework:2.13.0:default
 org.apache.kerby:kerb-simplekdc:1.0.1:default
 javax.inject:javax.inject:1:default
 aopalliance:aopalliance:1.0:default
-com.google.guava:guava:27.0.1-jre:default
+com.google.guava:guava:27.0-jre:default
 jakarta.xml.bind:jakarta.xml.bind-api:2.3.2:default
 jakarta.activation:jakarta.activation-api:1.2.1:default
 org.glassfish.jaxb:jaxb-runtime:2.3.2:default
@@ -256,7 +256,7 @@ net.minidev:accessors-smart:2.4.2:default
 org.apache.curator:curator-client:2.13.0:default
 org.apache.kerby:kerb-client:1.0.1:default
 org.apache.kerby:kerb-admin:1.0.1:default
-com.google.guava:failureaccess:1.0.1:default
+com.google.guava:failureaccess:1.0:default
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:default
 org.checkerframework:checker-qual:2.5.2:default
 com.google.j2objc:j2objc-annotations:1.1:default

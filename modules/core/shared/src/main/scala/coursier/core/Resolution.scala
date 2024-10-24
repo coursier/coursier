@@ -342,7 +342,7 @@ object Resolution {
     lazy val dict = DepMgmt.addSeq(overrides, dependencyManagement)
 
     lazy val dictForOverrides = {
-      lazy val clearDepMgmtVersion = dependencies
+      lazy val versions = dependencies
         .filter {
           case (config, _) =>
             config.isEmpty ||
@@ -353,10 +353,9 @@ object Resolution {
         .map(_._2)
         .groupBy(DepMgmt.key)
         .collect {
-          case (k, l) if !overrides.contains(k) && l.forall(_.version.nonEmpty) =>
-            k
+          case (k, l) if !overrides.contains(k) && l.exists(_.version.nonEmpty) =>
+            k -> l.map(_.version).filter(_.nonEmpty)
         }
-        .toSet
       DepMgmt.addSeq(
         overrides,
         dependencyManagement
@@ -369,10 +368,10 @@ object Resolution {
           }
           .map {
             case (config, dep) =>
-              if (!forceDepMgmtVersions && clearDepMgmtVersion(DepMgmt.key(dep)))
-                (config, dep.withVersion(""))
-              else
-                (config, dep)
+              val clearVersion = !forceDepMgmtVersions &&
+                versions.get(DepMgmt.key(dep)).getOrElse(Nil).exists(_ != dep.version)
+              val dep0 = if (clearVersion) dep.withVersion("") else dep
+              (config, dep0)
           }
       ).filter(!_._2.isEmpty)
     }
