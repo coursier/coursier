@@ -891,7 +891,7 @@ def updateWebsite(dryRun: Boolean = false) = {
   }
 }
 
-def jvmTests(scalaVersion: String = "*") = {
+def jvmTests(scalaVersion: String = ScalaVersions.scala213) = {
 
   def crossTests(sv: String) = Seq(
     // format: off
