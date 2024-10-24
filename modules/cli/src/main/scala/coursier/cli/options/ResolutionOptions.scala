@@ -98,7 +98,12 @@ final case class ResolutionOptions(
   @Group(OptionGroup.resolution)
   @Hidden
   @Help("Keep provided dependencies")
-    keepProvidedDependencies: Boolean = false
+    keepProvidedDependencies: Boolean = false,
+
+  @Group(OptionGroup.resolution)
+  @Hidden
+  @Help("Set JDK version used during resolution when picking profiles")
+    jdkVersion: Option[String] = None
 
 ) {
   // format: on
@@ -201,6 +206,7 @@ final case class ResolutionOptions(
           .withReconciliation(reconciliation)
           .withDefaultConfiguration(Configuration(defaultConfiguration))
           .withKeepProvidedDependencies(keepProvidedDependencies)
+          .withJdkVersionOpt(jdkVersion.map(_.trim).filter(_.nonEmpty).map(Version(_)))
     }
   }
 }
