@@ -18,6 +18,8 @@ object DependencyManagement {
     minimizedExclusions: MinimizedExclusions,
     optional: Boolean
   ) {
+    def isEmpty: Boolean =
+      config.value.isEmpty && version.isEmpty && minimizedExclusions.isEmpty && !optional
     def fakeDependency(key: Key): Dependency =
       Dependency(
         Module(key.organization, key.name, Map.empty),
@@ -27,6 +29,13 @@ object DependencyManagement {
         Publication("", key.`type`, Extension.empty, key.classifier),
         optional = optional,
         transitive = true
+      )
+    def orElse(other: Values): Values =
+      Values(
+        if (config.value.isEmpty) other.config else config,
+        if (version.isEmpty) other.version else version,
+        other.minimizedExclusions.join(minimizedExclusions),
+        optional || other.optional
       )
   }
 }

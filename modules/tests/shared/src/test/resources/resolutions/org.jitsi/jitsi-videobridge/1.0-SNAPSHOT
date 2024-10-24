@@ -9,7 +9,7 @@ org.igniterealtime.smack:smack:3.2.2-jitsi-1-20151215.185921-3:default
 org.igniterealtime.smack:smackx:3.2.2-jitsi-1-20151215.185922-3:default
 org.igniterealtime.whack:core:2.0.0:default
 org.jitsi:fmj:1.0-20161207.221530-23:default
-org.jitsi:ice4j:2.0.0-20170821.174042-3:default
+org.jitsi:ice4j:2.0-20161221.230043-4:default
 org.jitsi:jicoco:1.0-20170417.175044-39:default
 org.jitsi:jitsi-android-osgi:1.0-20150723.002702-1:default
 org.jitsi:jitsi-configuration:2.9-20150723.181638-1:default
