@@ -29,9 +29,9 @@ org.xerial.snappy:snappy-java:1.1.8.2:default
 org.lz4:lz4-java:1.7.1:default
 com.github.luben:zstd-jni:1.4.8-1:default
 org.roaringbitmap:RoaringBitmap:0.9.0:default
-commons-net:commons-net:3.6:default
+commons-net:commons-net:3.1:default
 org.scala-lang.modules:scala-xml_2.12:1.2.0:default
-org.scala-lang:scala-library:2.12.12:default
+org.scala-lang:scala-library:2.12.10:default
 org.scala-lang:scala-reflect:2.12.10:default
 org.json4s:json4s-jackson_2.12:3.7.0-M5:default
 org.glassfish.jersey.core:jersey-client:2.30:default
