@@ -2,24 +2,17 @@ package coursier.tests
 
 import java.lang.{Boolean => JBoolean}
 
-import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import coursier.core.{Classifier, Dependency, Module, Resolution, Type}
 import coursier.params.ResolutionParams
 import coursier.util.Artifact
 
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
-import scala.jdk.CollectionConverters._
 
 object TestHelpers extends PlatformTestHelpers {
 
   implicit def ec: ExecutionContext =
     cache.ec
-
-  private lazy val testDataDir =
-    Option(System.getenv("COURSIER_TEST_DATA_DIR")).getOrElse {
-      sys.error("COURSIER_TEST_DATA_DIR env var not set")
-    }
 
   private def dependenciesConsistencyCheck(res: Resolution): Unit = {
 
@@ -36,26 +29,9 @@ object TestHelpers extends PlatformTestHelpers {
     val fromMinimized = list(res.minDependencies)
 
     if (fromOrdered != fromMinimized) {
-      val patch = DiffUtils.diff(fromOrdered.asJava, fromMinimized.asJava)
-      val msg   = "Ordered and minimized dependency lists differ"
-      System.err.println(s"$msg:")
-      val diff = UnifiedDiffUtils.generateUnifiedDiff(
-        "ordered-dependencies",
-        "minimized-dependencies",
-        fromOrdered.asJava,
-        patch,
-        3
-      )
-      for (l <- diff.asScala) {
-        val colorOpt =
-          if (l.startsWith("@")) Some(Console.BLUE)
-          else if (l.startsWith("-")) Some(Console.RED)
-          else if (l.startsWith("+")) Some(Console.GREEN)
-          else None
-        System.err.println(
-          colorOpt.getOrElse("") + l + colorOpt.map(_ => Console.RESET).getOrElse("")
-        )
-      }
+      val msg = "Ordered and minimized dependency lists differ"
+      System.err.println(s"$msg")
+      maybePrintConsistencyDiff(fromOrdered, fromMinimized)
       throw new Exception(msg)
     }
   }

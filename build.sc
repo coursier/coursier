@@ -231,7 +231,7 @@ trait CoreJs extends Core with CsScalaJsModule {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.scalaJsDom
   )
-  object test extends SbtModuleTests with ScalaJSTests with CsTests
+  object test extends SbtModuleTests with ScalaJSTests with JsTests with CsTests
 }
 
 trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase {
