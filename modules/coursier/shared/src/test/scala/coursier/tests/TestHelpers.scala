@@ -2,12 +2,14 @@ package coursier.tests
 
 import java.lang.{Boolean => JBoolean}
 
+import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import coursier.core.{Classifier, Dependency, Module, Resolution, Type}
 import coursier.params.ResolutionParams
 import coursier.util.Artifact
 
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.jdk.CollectionConverters._
 
 object TestHelpers extends PlatformTestHelpers {
 
@@ -19,6 +21,45 @@ object TestHelpers extends PlatformTestHelpers {
       sys.error("COURSIER_TEST_DATA_DIR env var not set")
     }
 
+  private def dependenciesConsistencyCheck(res: Resolution): Unit = {
+
+    def list(deps: Iterable[Dependency]): Seq[String] =
+      deps
+        .iterator
+        .map(dep => s"${dep.module.repr}:${dep.version}") // Add config too?
+        .toArray
+        .sorted
+        .distinct
+        .toSeq
+
+    val fromOrdered   = list(res.orderedDependencies)
+    val fromMinimized = list(res.minDependencies)
+
+    if (fromOrdered != fromMinimized) {
+      val patch = DiffUtils.diff(fromOrdered.asJava, fromMinimized.asJava)
+      val msg   = "Ordered and minimized dependency lists differ"
+      System.err.println(s"$msg:")
+      val diff = UnifiedDiffUtils.generateUnifiedDiff(
+        "ordered-dependencies",
+        "minimized-dependencies",
+        fromOrdered.asJava,
+        patch,
+        3
+      )
+      for (l <- diff.asScala) {
+        val colorOpt =
+          if (l.startsWith("@")) Some(Console.BLUE)
+          else if (l.startsWith("-")) Some(Console.RED)
+          else if (l.startsWith("+")) Some(Console.GREEN)
+          else None
+        System.err.println(
+          colorOpt.getOrElse("") + l + colorOpt.map(_ => Console.RESET).getOrElse("")
+        )
+      }
+      throw new Exception(msg)
+    }
+  }
+
   private def validate(
     name: String,
     res: Resolution,
@@ -28,6 +69,8 @@ object TestHelpers extends PlatformTestHelpers {
     result: => Seq[String]
   ): Future[Unit] = async {
     assert(res.rootDependencies.nonEmpty)
+
+    dependenciesConsistencyCheck(res)
 
     val rootDep = res.rootDependencies.head
 
