@@ -281,6 +281,9 @@ trait CacheJvm extends CacheJvmBase {
       Deps.pprint,
       Deps.scalaAsync
     )
+    def forkEnv = super.forkEnv() ++ Seq(
+      "COURSIER_CUSTOMPROTOCOL_BASE" -> T.workspace.toString
+    )
   }
 }
 trait CacheJs extends Cache with CsScalaJsModule {
@@ -510,7 +513,7 @@ trait Install extends CrossSbtModule with CsModule
     Deps.argonautShapeless,
     Deps.catsCore
   )
-  object test extends CrossSbtTests with CsTests
+  object test extends CrossSbtTests with CsTests with CsResourcesTests
 }
 
 trait Jvm extends CrossSbtModule with CsModule
@@ -534,6 +537,12 @@ trait Jvm extends CrossSbtModule with CsModule
   object test extends CrossSbtTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Seq(
       Deps.osLib
+    )
+    def mockCache = T.source {
+      PathRef(T.workspace / "modules" / "jvm" / "src" / "test" / "resources" / "mock-cache")
+    }
+    def forkEnv = super.forkEnv() ++ Seq(
+      "COURSIER_JVM_TESTS_MOCK_CACHE" -> mockCache().path.toString
     )
   }
 }

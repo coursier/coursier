@@ -22,8 +22,7 @@ object IvyLocalTests extends TestSuite {
       val module = mod"io.get-coursier:coursier-core_2.12"
 
       val mockIvy2Local = IvyRepository.fromPattern(
-        new File("modules/tests/metadata/ivy-local").getAbsoluteFile.toURI.toASCIIString +:
-          Pattern.default,
+        baseRepo.resolve("ivy-local").toUri.toASCIIString +: Pattern.default,
         dropInfoAttributes = true
       )
       val extraRepos = Seq(mockIvy2Local)

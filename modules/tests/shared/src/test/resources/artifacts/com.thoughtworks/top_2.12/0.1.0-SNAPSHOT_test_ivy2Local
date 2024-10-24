@@ -1,7 +1,7 @@
-file:///handmade-metadata/http/ivy.abc.com//com.thoughtworks/top_2.12/0.1.0-SNAPSHOT/jars/top_2.12-tests.jar
-file:///handmade-metadata/http/ivy.abc.com//com.thoughtworks/top_2.12/0.1.0-SNAPSHOT/jars/top_2.12.jar
-file:///handmade-metadata/http/ivy.abc.com//com.thoughtworks/common_2.12/0.1.0-SNAPSHOT/jars/common_2.12.jar
-file:///handmade-metadata/http/ivy.abc.com//com.thoughtworks/common_2.12/0.1.0-SNAPSHOT/jars/common_2.12-tests.jar
+file:///handmade-metadata/http/ivy.abc.com/com.thoughtworks/top_2.12/0.1.0-SNAPSHOT/jars/top_2.12-tests.jar
+file:///handmade-metadata/http/ivy.abc.com/com.thoughtworks/top_2.12/0.1.0-SNAPSHOT/jars/top_2.12.jar
+file:///handmade-metadata/http/ivy.abc.com/com.thoughtworks/common_2.12/0.1.0-SNAPSHOT/jars/common_2.12.jar
+file:///handmade-metadata/http/ivy.abc.com/com.thoughtworks/common_2.12/0.1.0-SNAPSHOT/jars/common_2.12-tests.jar
 https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.8/scala-library-2.12.8.jar
 https://repo1.maven.org/maven2/com/typesafe/akka/akka-actor_2.12/2.5.21/akka-actor_2.12-2.5.21.jar
 https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.9.8/jackson-databind-2.9.8.jar

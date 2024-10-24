@@ -103,7 +103,16 @@ trait CsResourcesTests extends TestModule {
     PathRef(T.workspace / "modules" / "tests" / "shared" / "src" / "test" / "resources")
   }
   def forkEnv = super.forkEnv() ++ Seq(
-    "COURSIER_TEST_DATA_DIR" -> testDataDir().path.toString
+    "COURSIER_TEST_DATA_DIR" ->
+      testDataDir().path.toString,
+    "COURSIER_TESTS_METADATA_DIR" ->
+      (T.workspace / "modules" / "tests" / "metadata").toString,
+    "COURSIER_TESTS_HANDMADE_METADATA_DIR" ->
+      (T.workspace / "modules" / "tests" / "handmade-metadata" / "data").toString,
+    "COURSIER_TESTS_METADATA_DIR_URI" ->
+      (T.workspace / "modules" / "tests" / "metadata").toNIO.toUri.toASCIIString,
+    "COURSIER_TESTS_HANDMADE_METADATA_DIR_URI" ->
+      (T.workspace / "modules" / "tests" / "handmade-metadata" / "data").toNIO.toUri.toASCIIString
   )
 }
 

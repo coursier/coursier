@@ -30,9 +30,9 @@ object TestEscape {
       case Array(protocol, remaining) =>
         val remaining0 =
           if (remaining.startsWith("///"))
-            remaining.stripPrefix("///")
+            remaining.stripPrefix("//")
           else if (remaining.startsWith("/"))
-            remaining.stripPrefix("/")
+            remaining
           else
             throw new Exception(s"URL $url doesn't contain an absolute path")
 
@@ -43,7 +43,7 @@ object TestEscape {
           else
             remaining0
 
-        escape(protocol + "/" + remaining1.dropWhile(_ == '/'))
+        escape(protocol + remaining1)
 
       case _ =>
         throw new Exception(s"No protocol found in URL $url")
