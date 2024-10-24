@@ -104,52 +104,6 @@ final class TestRepoServer(
     proc.destroyForcibly()
 }
 
-def testRepoServer = T.worker {
-  val server = new TestRepoServer
-
-  if (server.healthCheck())
-    sys.error("Test repo server already running")
-
-  server.proc = os.proc(
-    "cs",
-    "launch",
-    "io.get-coursier:http-server_2.12:1.0.0",
-    "--",
-    "-d",
-    "modules/tests/handmade-metadata/data/http/abc.com",
-    "-u",
-    server.user,
-    "-P",
-    server.password,
-    "-r",
-    "realm",
-    "-v",
-    "--host",
-    server.host,
-    "--port",
-    server.port.toString
-  ).spawn(
-    stdin = os.Pipe,
-    stdout = os.Inherit,
-    stderr = os.Inherit
-  )
-  server.proc.stdin.close()
-  var serverRunning = false
-  var countDown     = 20
-  while (!serverRunning && server.proc.isAlive() && countDown > 0) {
-    serverRunning = server.healthCheck()
-    if (!serverRunning)
-      Thread.sleep(500L)
-    countDown -= 1
-  }
-  if (serverRunning && server.proc.isAlive()) {
-    T.log.outputStream.println(s"Test repository listening on ${server.url}")
-    server
-  }
-  else
-    sys.error("Cannot run test repo server")
-}
-
 private def randomPort(): Int = {
   val s    = new java.net.ServerSocket(0)
   val port = s.getLocalPort

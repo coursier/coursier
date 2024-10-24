@@ -11,10 +11,6 @@ trait CsMima extends Mima {
   }
 }
 
-def commitHash = T {
-  os.proc("git", "rev-parse", "HEAD").call().out.text().trim()
-}
-
 lazy val latestTaggedVersion = os.proc("git", "describe", "--abbrev=0", "--tags", "--match", "v*")
   .call().out
   .trim()

@@ -161,7 +161,7 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
       self.test
     )
     def forkArgs = T.input {
-      val testRepoServer0 = workers.testRepoServer()
+      val testRepoServer0 = buildWorkers.testRepoServer()
       super.forkArgs() ++ Seq(
         s"-Dtest.repository=${testRepoServer0.url}",
         s"-Dtest.repository.user=${testRepoServer0.user}",
@@ -218,6 +218,7 @@ trait CoreJvm extends CoreJvmBase {
     Deps.concurrentReferenceHashMap,
     Deps.scalaXml
   )
+  def commitHash = `build-util`.commitHash
   object test extends CrossSbtTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.jol
@@ -231,6 +232,7 @@ trait CoreJs extends Core with CsScalaJsModule {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.scalaJsDom
   )
+  def commitHash = `build-util`.commitHash
   object test extends SbtTests with ScalaJSTests with JsTests with CsTests
 }
 
@@ -300,6 +302,7 @@ trait Launcher extends LauncherBase {
   def compileIvyDeps = Agg(
     Deps.dataClass
   )
+  def commitHash = `build-util`.commitHash
 
   def bootstrap                   = `bootstrap-launcher`.proguardedAssembly()
   def resourceBootstrap           = `bootstrap-launcher`.proguardedResourceAssembly()
@@ -359,7 +362,7 @@ trait CoursierJvm extends CoursierJvmBase { self =>
       self.test
     )
     def forkArgs = T.input {
-      val testRepoServer0 = workers.testRepoServer()
+      val testRepoServer0 = buildWorkers.testRepoServer()
       super.forkArgs() ++ Seq(
         s"-Dtest.repository=${testRepoServer0.url}",
         s"-Dtest.repository.user=${testRepoServer0.user}",
@@ -397,7 +400,7 @@ trait TestsJvm extends TestsModule { self =>
       `redirecting-server`.mainClass().getOrElse(sys.error("no main class"))
     def forkArgs = T.input {
       val redirectingServer0 = redirectingServer()
-      val testRepoServer0    = workers.testRepoServer()
+      val testRepoServer0    = buildWorkers.testRepoServer()
       super.forkArgs() ++ Seq(
         s"-Dtest.redirect.repository=${redirectingServer0.url}",
         s"-Dtest.repository=${testRepoServer0.url}",
@@ -1013,4 +1016,62 @@ object ci extends Module {
     System.err.println(s"New Java home $destJavaHome")
     destJavaHome
   }
+}
+
+object buildWorkers extends Module {
+
+  def testRepoServer = T.worker {
+    val server = new workers.TestRepoServer
+
+    if (server.healthCheck())
+      sys.error("Test repo server already running")
+
+    server.proc = os.proc(
+      "cs",
+      "launch",
+      "io.get-coursier:http-server_2.12:1.0.0",
+      "--",
+      "-d",
+      "modules/tests/handmade-metadata/data/http/abc.com",
+      "-u",
+      server.user,
+      "-P",
+      server.password,
+      "-r",
+      "realm",
+      "-v",
+      "--host",
+      server.host,
+      "--port",
+      server.port.toString
+    ).spawn(
+      stdin = os.Pipe,
+      stdout = os.Inherit,
+      stderr = os.Inherit
+    )
+    server.proc.stdin.close()
+    var serverRunning = false
+    var countDown     = 20
+    while (!serverRunning && server.proc.isAlive() && countDown > 0) {
+      serverRunning = server.healthCheck()
+      if (!serverRunning)
+        Thread.sleep(500L)
+      countDown -= 1
+    }
+    if (serverRunning && server.proc.isAlive()) {
+      T.log.outputStream.println(s"Test repository listening on ${server.url}")
+      server
+    }
+    else
+      sys.error("Cannot run test repo server")
+  }
+
+}
+
+object `build-util` extends Module {
+
+  def commitHash = T {
+    os.proc("git", "rev-parse", "HEAD").call().out.text().trim()
+  }
+
 }
