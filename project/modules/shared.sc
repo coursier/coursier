@@ -52,7 +52,7 @@ trait PublishLocalNoFluff extends PublishModule {
     val publisher = localIvyRepo match {
       case null => LocalIvyPublisher
       case repo =>
-        new LocalIvyPublisher(os.Path(repo.replace("{VERSION}", publishVersion()), os.pwd))
+        new LocalIvyPublisher(os.Path(repo.replace("{VERSION}", publishVersion()), T.workspace))
     }
 
     publisher.publishLocal(
