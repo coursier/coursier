@@ -1,6 +1,6 @@
 package coursier.install
 
-import java.io.{ByteArrayOutputStream, File, FileInputStream}
+import java.io.{ByteArrayOutputStream, File}
 import java.lang.ProcessBuilder.Redirect
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, FileSystemException, Path, Paths}
@@ -135,7 +135,7 @@ object InstallTests extends TestSuite {
 
     // https://stackoverflow.com/questions/14799966/detect-an-executable-file-in-java/14800092#14800092
 
-    val fis    = new FileInputStream(file)
+    val fis    = Files.newInputStream(file.toPath)
     val osName = sys.props("os.name").toLowerCase(Locale.ROOT)
     if (osName.contains("mac")) {
       val buf  = Array.fill[Byte](4)(0)

@@ -3,6 +3,7 @@ package coursier.bootstrap.launcher;
 import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.charset.StandardCharsets;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
@@ -83,7 +84,7 @@ class Util {
         BufferedOutputStream bos = null;
 
         try {
-            FileOutputStream fos = new FileOutputStream(file);
+            OutputStream fos = Files.newOutputStream(file.toPath());
             bos = new BufferedOutputStream(fos);
             bos.write(bytes);
         } finally {

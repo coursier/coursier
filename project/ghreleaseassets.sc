@@ -7,6 +7,7 @@ import $file.publishing, publishing.{ghOrg, ghName}
 import java.io._
 import java.nio.ByteBuffer
 import java.nio.charset.{MalformedInputException, StandardCharsets}
+import java.nio.file.Files
 import java.util.zip.{ZipException, ZipFile}
 
 import sttp.client.quick._
@@ -173,13 +174,13 @@ def writeInZip(name: String, file: os.Path, zip: os.Path): Unit = {
 
   os.makeDir.all(zip / os.up)
 
-  var fis: InputStream      = null
-  var fos: FileOutputStream = null
-  var zos: ZipOutputStream  = null
+  var fis: InputStream     = null
+  var fos: OutputStream    = null
+  var zos: ZipOutputStream = null
 
   try {
     fis = os.read.inputStream(file)
-    fos = new FileOutputStream(zip.toIO)
+    fos = Files.newOutputStream(zip.toNIO)
     zos = new ZipOutputStream(new BufferedOutputStream(fos))
 
     val ent = new ZipEntry(name)

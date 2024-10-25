@@ -53,7 +53,7 @@ import scala.util.{Failure, Success, Try}
         .flatMap { f =>
           EitherT {
             MockCache.readFully(
-              new FileInputStream(f),
+              Files.newInputStream(f.toPath),
               if (links) Some(artifact0.url) else None
             )
           }

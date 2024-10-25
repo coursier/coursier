@@ -3,7 +3,7 @@ package coursier.cache.internal
 import java.io.{Serializable => _, _}
 import java.net.{HttpURLConnection, URLConnection, MalformedURLException}
 import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.{AccessDeniedException, Files, StandardCopyOption}
+import java.nio.file.{AccessDeniedException, Files, StandardCopyOption, StandardOpenOption}
 import java.time.Clock
 import java.util.Locale
 import java.util.concurrent.ExecutorService
@@ -160,11 +160,8 @@ import scala.util.control.NonFatal
     def doTouchCheckFile(file: File, url: String, updateLinks: Boolean): Unit = {
       val ts = clock.millis()
       val f  = ttlFile(file)
-      if (!f.exists()) {
-        val fos = new FileOutputStream(f)
-        fos.write(Array.empty[Byte])
-        fos.close()
-      }
+      if (!f.exists())
+        Files.write(f.toPath, Array.emptyByteArray)
       f.setLastModified(ts)
 
       if (updateLinks && file.getName == ".directory") {
@@ -185,13 +182,7 @@ import scala.util.control.NonFatal
                 )
               ).mkString("\n")
 
-            var fos: FileOutputStream = null
-            try {
-              fos = new FileOutputStream(linkFile)
-              fos.write(content.getBytes(UTF_8))
-            }
-            finally if (fos != null)
-                fos.close()
+            Files.write(linkFile.toPath, content.getBytes(UTF_8))
             true
           }
           catch {
@@ -279,8 +270,11 @@ import scala.util.control.NonFatal
           val result =
             try {
               val out = CacheLocks.withStructureLock(location) {
-                Util.createDirectories(tmp.toPath.getParent);
-                new FileOutputStream(tmp, partialDownload)
+                Util.createDirectories(tmp.toPath.getParent)
+                if (partialDownload)
+                  Files.newOutputStream(tmp.toPath, StandardOpenOption.APPEND)
+                else
+                  Files.newOutputStream(tmp.toPath)
               }
               try Downloader.readFullyTo(
                   in,

@@ -1,6 +1,6 @@
 package coursier.tests
 
-import java.io.{File, FileInputStream}
+import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Paths}
 
@@ -22,15 +22,9 @@ object compatibility {
       sys.error("COURSIER_TEST_DATA_DIR env var not set")
     }
 
-  def textResource(path: String)(implicit ec: ExecutionContext): Future[String] = Future {
-    val f                    = new File(s"$testDataDir/$path")
-    var is0: FileInputStream = null
-    try {
-      is0 = new FileInputStream(f)
-      new String(Platform.readFullySync(is0), UTF_8)
-    }
-    finally if (is0 != null)
-        is0.close()
+  def textResource(path: String): Future[String] = Future {
+    val f = new File(s"$testDataDir/$path")
+    new String(Files.readAllBytes(f.toPath), UTF_8)
   }
 
   private val baseRepo = {
