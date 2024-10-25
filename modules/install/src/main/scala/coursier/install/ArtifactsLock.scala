@@ -1,7 +1,8 @@
 package coursier.install
 
-import java.io.{File, FileInputStream}
+import java.io.{File, InputStream}
 import java.math.BigInteger
+import java.nio.file.Files
 import java.security.MessageDigest
 
 import cats.implicits._
@@ -62,9 +63,9 @@ object ArtifactsLock {
   private def sha1(f: File): String = {
     val md = MessageDigest.getInstance("SHA-1")
 
-    var is: FileInputStream = null
+    var is: InputStream = null
     try {
-      is = new FileInputStream(f)
+      is = Files.newInputStream(f.toPath)
       FileUtil.withContent(is, new FileUtil.UpdateDigest(md))
     }
     finally if (is != null)

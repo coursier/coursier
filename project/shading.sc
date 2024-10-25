@@ -3,6 +3,7 @@ import coursier.util.{Gather, Task}
 import mill._, mill.scalalib._
 
 import java.io._
+import java.nio.file.Files
 import java.util.zip._
 
 import scala.jdk.CollectionConverters._
@@ -86,7 +87,7 @@ trait Shading extends JavaModule with PublishModule {
     var fos: OutputStream    = null
     var zos: ZipOutputStream = null
     try {
-      fos = new FileOutputStream(updated.toIO)
+      fos = Files.newOutputStream(updated.toNIO)
       zos = new ZipOutputStream(fos)
 
       var seen = Set.empty[String]

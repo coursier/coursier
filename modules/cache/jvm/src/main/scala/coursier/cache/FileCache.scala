@@ -511,10 +511,10 @@ object FileCache {
   ): Array[Byte] = {
     val md = MessageDigest.getInstance(sumType)
 
-    var is: FileInputStream = null
+    var is: InputStream = null
     try {
       retry.retry {
-        is = new FileInputStream(localFile)
+        is = Files.newInputStream(localFile.toPath)
       } {
         // For freshly created files, we may get a FileNotFoundException with
         // "(The process cannot access the file because it is being used by another process)"

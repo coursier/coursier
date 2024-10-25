@@ -2,6 +2,7 @@ package coursier.cli
 
 import java.io._
 import java.nio.charset.StandardCharsets.UTF_8
+import java.nio.file.Files
 import java.security.MessageDigest
 
 import caseapp.core.{Indexed, RemainingArgs}
@@ -52,7 +53,7 @@ object BootstrapTests extends TestSuite {
 
     var fis: InputStream = null
 
-    val content = coursier.cache.internal.FileUtil.readFully(new FileInputStream(file))
+    val content = coursier.cache.internal.FileUtil.readFully(Files.newInputStream(file.toPath))
 
     val header = Seq[Byte](0x50, 0x4b, 0x03, 0x04)
     val idx    = content.indexOfSlice(header)

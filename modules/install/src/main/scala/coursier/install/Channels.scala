@@ -1,6 +1,6 @@
 package coursier.install
 
-import java.io.{File, FileInputStream}
+import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths, Path}
 import java.util.zip.ZipFile
@@ -179,7 +179,7 @@ import scala.jdk.CollectionConverters._
         e <- task
         f <- Task.fromEither(e.left.map(err => new Exception(s"Error getting ${channel.url}", err)))
         content <- Task.delay {
-          val b = FileUtil.readFully(new FileInputStream(f))
+          val b = Files.readAllBytes(f.toPath)
           new String(b, StandardCharsets.UTF_8)
         }
         m <- Task.fromEither {
@@ -325,7 +325,7 @@ import scala.jdk.CollectionConverters._
         e <- task
         f <- Task.fromEither(e.left.map(err => new Exception(s"Error getting ${channel.url}", err)))
         content <- Task.delay {
-          val b = FileUtil.readFully(new FileInputStream(f))
+          val b = Files.readAllBytes(f.toPath)
           new String(b, StandardCharsets.UTF_8)
         }
         m <- Task.fromEither {
