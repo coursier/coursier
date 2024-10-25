@@ -24,7 +24,7 @@ jobs:
     - uses: coursier/cache-action@v6.4
     - uses: coursier/setup-action@v1.3.6
       with:
-        jvm: "temurin:17"
+        jvm: 17
     - run: ./mill -i __.compile
 
   compile-all-no-package-object:
@@ -43,7 +43,7 @@ jobs:
     - uses: coursier/cache-action@v6.4
     - uses: coursier/setup-action@v1.3.6
       with:
-        jvm: "temurin:17"
+        jvm: 17
     - run: |
         test -e modules/coursier/shared/src/main/scala/coursier/package.scala
         rm -f modules/coursier/shared/src/main/scala/coursier/package.scala
