@@ -22,10 +22,9 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.4
-    - uses: coursier/setup-action@v1.3.6
+    - uses: coursier/setup-action@v1.3
       with:
-        jvm: "temurin:17"
-        version: "2.1.0"
+        jvm: 17
     - run: ./mill -i __.compile
 
   compile-all-no-package-object:
@@ -42,10 +41,9 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.4
-    - uses: coursier/setup-action@v1.3.6
+    - uses: coursier/setup-action@v1.3
       with:
-        jvm: "temurin:17"
-        version: "2.1.0"
+        jvm: 17
     - run: |
         test -e modules/coursier/shared/src/main/scala/coursier/package.scala
         rm -f modules/coursier/shared/src/main/scala/coursier/package.scala
@@ -81,10 +79,9 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.4
-    - uses: coursier/setup-action@v1.3.6
+    - uses: coursier/setup-action@v1.3
       with:
         jvm: ${{ matrix.JDK }}
-        version: "2.1.0"
     - run: sudo apt-get install -y nailgun
       if: runner.os == 'Linux'
     # - run: .github/scripts/scala-native-setup.sh
@@ -116,10 +113,9 @@ jobs:
       with:
         node-version: '12'
     - uses: coursier/cache-action@v6.4
-    - uses: coursier/setup-action@v1.3.6
+    - uses: coursier/setup-action@v1.3
       with:
         jvm: 8
-        version: "2.1.0"
     - run: npm install && ./mill -i jsTests --scalaVersion "$SCALA_VERSION"
       shell: bash
       env:
@@ -134,10 +130,9 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.4
-    - uses: coursier/setup-action@v1.3.6
+    - uses: coursier/setup-action@v1.3
       with:
         jvm: 8
-        version: "2.1.0"
     - run: ./mill -i -k __.mimaReportBinaryIssues
 
   website-check:
@@ -157,10 +152,9 @@ jobs:
       with:
         node-version: '12'
     - uses: coursier/cache-action@v6.4
-    - uses: coursier/setup-action@v1.3.6
+    - uses: coursier/setup-action@v1.3
       with:
         jvm: 17
-        version: "2.1.0"
     - run: ./mill -i doc.generate --npm-install --yarn-run-build
       env:
         COURSIER_JNI: force
@@ -173,11 +167,10 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.4
-    - uses: coursier/setup-action@v1.3.6
+    - uses: coursier/setup-action@v1.3
       with:
         jvm: 17
         apps: scalafmt
-        version: "2.1.0"
     - run: scalafmt --check
 
   publish:
@@ -193,10 +186,9 @@ jobs:
       - run: .github/scripts/gpg-setup.sh
         env:
           PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
-      - uses: coursier/setup-action@v1.3.6
+      - uses: coursier/setup-action@v1.3
         with:
           jvm: 8
-          version: "2.1.0"
       - run: |
           mv .mill-jvm-opts .mill-jvm-opts.bak
           cat .mill-jvm-opts.bak | grep -v -- '-Xmx' > .mill-jvm-opts
@@ -227,10 +219,9 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.4
-      - uses: coursier/setup-action@v1.3.6
+      - uses: coursier/setup-action@v1.3
         with:
           jvm: 8
-          version: "2.1.0"
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
@@ -257,10 +248,9 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.4
-      - uses: coursier/setup-action@v1.3.6
+      - uses: coursier/setup-action@v1.3
         with:
           jvm: 8
-          version: "2.1.0"
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeStaticTests
@@ -284,10 +274,9 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.4
-      - uses: coursier/setup-action@v1.3.6
+      - uses: coursier/setup-action@v1.3
         with:
           jvm: 8
-          version: "2.1.0"
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeMostlyStaticTests
@@ -311,10 +300,9 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.4
-      - uses: coursier/setup-action@v1.3.6
+      - uses: coursier/setup-action@v1.3
         with:
           jvm: 8
-          version: "2.1.0"
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeContainerTests
@@ -340,10 +328,9 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.4
-    - uses: coursier/setup-action@v1.3.6
+    - uses: coursier/setup-action@v1.3
       with:
         jvm: 8
-        version: "2.1.0"
     - name: Wait for sync to Central
       run: ./mill -i waitForSync
     - name: Copy artifacts
@@ -366,10 +353,9 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.4
-    - uses: coursier/setup-action@v1.3.6
+    - uses: coursier/setup-action@v1.3
       with:
         jvm: 8
-        version: "2.1.0"
     - uses: actions/download-artifact@v3
       with:
         name: launchers
@@ -389,10 +375,9 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.4
-      - uses: coursier/setup-action@v1.3.6
+      - uses: coursier/setup-action@v1.3
         with:
           jvm: 8
-          version: "2.1.0"
       - run: .github/scripts/scala-cli.sh .github/scripts/UpdateBrewFormula.scala
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -411,10 +396,9 @@ jobs:
         with:
           node-version: '12'
       - uses: coursier/cache-action@v6.4
-      - uses: coursier/setup-action@v1.3.6
+      - uses: coursier/setup-action@v1.3
         with:
           jvm: 17
-          version: "2.1.0"
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill -i updateWebsite
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -433,10 +417,9 @@ jobs:
         with:
           node-version: '12'
       - uses: coursier/cache-action@v6.4
-      - uses: coursier/setup-action@v1.3.6
+      - uses: coursier/setup-action@v1.3
         with:
           jvm: 17
-          version: "2.1.0"
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill -i updateWebsite
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
