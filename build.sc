@@ -281,6 +281,9 @@ trait CacheJvm extends CacheJvmBase {
       Deps.pprint,
       Deps.scalaAsync
     )
+    def forkEnv = super.forkEnv() ++ Seq(
+      "COURSIER_CUSTOMPROTOCOL_BASE" -> T.workspace.toString
+    )
   }
 }
 trait CacheJs extends Cache with CsScalaJsModule {
@@ -510,7 +513,7 @@ trait Install extends CrossSbtModule with CsModule
     Deps.argonautShapeless,
     Deps.catsCore
   )
-  object test extends CrossSbtTests with CsTests
+  object test extends CrossSbtTests with CsTests with CsResourcesTests
 }
 
 trait Jvm extends CrossSbtModule with CsModule
@@ -534,6 +537,12 @@ trait Jvm extends CrossSbtModule with CsModule
   object test extends CrossSbtTests with CsTests {
     def ivyDeps = super.ivyDeps() ++ Seq(
       Deps.osLib
+    )
+    def mockCache = T.source {
+      PathRef(T.workspace / "modules" / "jvm" / "src" / "test" / "resources" / "mock-cache")
+    }
+    def forkEnv = super.forkEnv() ++ Seq(
+      "COURSIER_JVM_TESTS_MOCK_CACHE" -> mockCache().path.toString
     )
   }
 }
@@ -721,25 +730,25 @@ def copyTo(task: mill.main.Tasks[PathRef], dest: String) = T.command {
   if (task.value.length > 1)
     sys.error("Expected a single task")
   val ref   = task.value.head()
-  val dest1 = os.Path(dest, os.pwd)
+  val dest1 = os.Path(dest, T.workspace)
   os.makeDir.all(dest1 / os.up)
   os.copy.over(ref.path, dest1)
 }
 def copyLauncher(directory: String = "artifacts") = T.command {
   val nativeLauncher = cli(mainCliScalaVersion).nativeImage().path
-  ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, os.pwd))
+  ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, T.workspace))
 }
 
 def copyStaticLauncher(directory: String = "artifacts") = T.command {
   val nativeLauncher = cli(mainCliScalaVersion).`static-image`.nativeImage().path
-  ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, os.pwd), suffix = "-static")
+  ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, T.workspace), suffix = "-static")
 }
 
 def copyMostlyStaticLauncher(directory: String = "artifacts") = T.command {
   val nativeLauncher = cli(mainCliScalaVersion).`mostly-static-image`.nativeImage().path
   ghreleaseassets.copyLauncher(
     nativeLauncher,
-    os.Path(directory, os.pwd),
+    os.Path(directory, T.workspace),
     suffix = "-mostly-static"
   )
 }
@@ -748,14 +757,14 @@ def copyContainerLauncher(directory: String = "artifacts") = T.command {
   val nativeLauncher = cli(mainCliScalaVersion).containerImage().path
   ghreleaseassets.copyLauncher(
     nativeLauncher,
-    os.Path(directory, os.pwd),
+    os.Path(directory, T.workspace),
     suffix = "-container"
   )
 }
 
 def uploadLaunchers(directory: String = "artifacts") = T.command {
   val version = cli(mainCliScalaVersion).publishVersion()
-  ghreleaseassets.uploadLaunchers(version, os.Path(directory, os.pwd))
+  ghreleaseassets.uploadLaunchers(version, os.Path(directory, T.workspace))
 }
 
 def bootstrapLauncher(
@@ -774,7 +783,7 @@ def bootstrapLauncher(
       mainCliScalaVersion
     ) ++ extraArgs)
   })()
-  os.Path(dest, os.pwd)
+  os.Path(dest, T.workspace)
 }
 
 def assemblyLauncher(version: String = buildVersion, dest: String = "coursier.jar") = T.command {
@@ -793,7 +802,7 @@ def assemblyLauncher(version: String = buildVersion, dest: String = "coursier.ja
       ) ++ extraArgs
     )
   })()
-  os.Path(dest, os.pwd)
+  os.Path(dest, T.workspace)
 }
 
 def waitForSync(version: String = buildVersion) = T.command {
@@ -810,7 +819,7 @@ def waitForSync(version: String = buildVersion) = T.command {
 def copyJarLaunchers(version: String = buildVersion, directory: String = "artifacts") = T.command {
   val bootstrap: os.Path = bootstrapLauncher(version = version)()
   val assembly: os.Path  = assemblyLauncher(version = version)()
-  val dir                = os.Path(directory, os.pwd)
+  val dir                = os.Path(directory, T.workspace)
   os.copy(
     bootstrap,
     dir / s"coursier$platformBootstrapExtension",
@@ -826,7 +835,8 @@ def publishSonatype(tasks: mill.main.Tasks[PublishModule.PublishData]) =
 
     publishing.publishSonatype(
       data = data,
-      log = T.ctx().log
+      log = T.ctx().log,
+      workspace = T.workspace
     )
   }
 
@@ -845,9 +855,10 @@ object doc extends Doc {
   def classPath    = `doc-deps`.runClasspath()
 }
 
-def updateWebsite(dryRun: Boolean = false) = {
+def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = T.command {
 
-  val docusaurusDir       = os.pwd / "doc" / "website"
+  val rootDir0            = if (rootDir.isEmpty) T.workspace else os.Path(rootDir, T.workspace)
+  val docusaurusDir       = rootDir0 / "doc" / "website"
   val versionedDocsRepo   = "coursier/versioned-docs"
   val versionedDocsBranch = "master"
 
@@ -865,33 +876,30 @@ def updateWebsite(dryRun: Boolean = false) = {
         sys.error("GH_TOKEN not set")
       }
 
-  T.command {
+  doc.copyVersionedData()()
+  doc.generate("--npm-install", "--yarn-run-build")()
 
-    doc.copyVersionedData()()
-    doc.generate("--npm-install", "--yarn-run-build")()
-
-    for (version <- versionOpt)
-      docs.updateVersionedDocs(
-        docusaurusDir,
-        versionedDocsRepo,
-        versionedDocsBranch,
-        ghTokenOpt = Some(token),
-        newVersion = version,
-        dryRun = dryRun,
-        cloneUnder = T.dest / "repo"
-      )
-
-    // copyDemoFiles()
-
-    docs.updateGhPages(
-      docusaurusDir / "build",
-      token,
-      "coursier/coursier",
-      branch = "gh-pages",
+  for (version <- versionOpt)
+    docs.updateVersionedDocs(
+      docusaurusDir,
+      versionedDocsRepo,
+      versionedDocsBranch,
+      ghTokenOpt = Some(token),
+      newVersion = version,
       dryRun = dryRun,
-      dest = T.dest / "gh-pages"
+      cloneUnder = T.dest / "repo"
     )
-  }
+
+  // copyDemoFiles()
+
+  docs.updateGhPages(
+    docusaurusDir / "build",
+    token,
+    "coursier/coursier",
+    branch = "gh-pages",
+    dryRun = dryRun,
+    dest = T.dest / "gh-pages"
+  )
 }
 
 def jvmTests(scalaVersion: String = ScalaVersions.scala213) = {
@@ -1009,9 +1017,9 @@ object ci extends Module {
       "--ttl",
       "0"
     )
-    val baseJavaHome = os.Path(command.!!.trim, os.pwd)
+    val baseJavaHome = os.Path(command.!!.trim, T.workspace)
     System.err.println(s"Initial Java home $baseJavaHome")
-    val destJavaHome = os.Path(dest, os.pwd)
+    val destJavaHome = os.Path(dest, T.workspace)
     os.copy(baseJavaHome, destJavaHome, createFolders = true)
     System.err.println(s"New Java home $destJavaHome")
     destJavaHome
@@ -1045,6 +1053,7 @@ object buildWorkers extends Module {
       "--port",
       server.port.toString
     ).spawn(
+      cwd = T.workspace,
       stdin = os.Pipe,
       stdout = os.Inherit,
       stderr = os.Inherit

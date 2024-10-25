@@ -201,10 +201,8 @@ object FetchTests extends TestSuite {
 
     test("testScope") {
 
-      val base = new File("modules/tests/handmade-metadata/data").getAbsoluteFile
-
-      val m2Local   = new File(base, "http/abc.com").toURI.toASCIIString
-      val ivy2Local = new File(base, "http/ivy.abc.com").toURI.toASCIIString
+      val m2Local   = handmadeMetadataBase + "http/abc.com"
+      val ivy2Local = handmadeMetadataBase + "http/ivy.abc.com"
 
       val m2Repo   = MavenRepository(m2Local)
       val ivy2Repo = IvyRepository.parse(ivy2Local + "/[defaultPattern]").toOption.get

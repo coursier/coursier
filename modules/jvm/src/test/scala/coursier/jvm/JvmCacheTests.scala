@@ -59,7 +59,11 @@ object JvmCacheTests extends TestSuite {
       pool.shutdown()
 
   val mockDataLocation = {
-    val dir = Paths.get("modules/jvm/src/test/resources/mock-cache")
+    val dir = Option(System.getenv("COURSIER_JVM_TESTS_MOCK_CACHE"))
+      .map(Paths.get(_))
+      .getOrElse {
+        sys.error("COURSIER_JVM_TESTS_MOCK_CACHE not set")
+      }
     assert(Files.isDirectory(dir))
     dir
   }

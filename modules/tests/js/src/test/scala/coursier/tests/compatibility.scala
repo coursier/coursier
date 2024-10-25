@@ -39,12 +39,18 @@ object compatibility {
   }
 
   def textResource(path: String): Future[String] =
-    textResource0("modules/tests/shared/src/test/resources/" + path)
+    textResource0(testDataDir + "/" + path)
 
-  private val baseRepo = "modules/tests/metadata"
+  private lazy val metadataBase =
+    process.env
+      .asInstanceOf[js.Dictionary[String]]
+      .get("COURSIER_TESTS_METADATA_DIR_URI")
+      .getOrElse {
+        sys.error("COURSIER_TESTS_METADATA_DIR_URI not set")
+      }
 
-  val taskArtifact: Repository.Fetch[Task] =
-    MockCache(baseRepo).fetch
+  lazy val taskArtifact: Repository.Fetch[Task] =
+    MockCache(metadataBase.stripPrefix("file://").stripPrefix("file:")).fetch
 
   def updateSnapshots = false
 

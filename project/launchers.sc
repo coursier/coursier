@@ -48,7 +48,7 @@ trait Launchers extends CsModule {
 
     def nativeImageName          = "cs"
     private def staticLibDirName = "native-libs"
-    private def copyCsjniutilTo(destDir: os.Path): Unit = {
+    private def copyCsjniutilTo(destDir: os.Path, workspace: os.Path): Unit = {
       val jniUtilsVersion = Deps.jniUtils.dep.version
       val libRes = os.proc(
         cs.cs,
@@ -58,7 +58,7 @@ trait Launchers extends CsModule {
         "-A",
         "lib"
       ).call()
-      val libPath = os.Path(libRes.out.text().trim(), os.pwd)
+      val libPath = os.Path(libRes.out.text().trim(), workspace)
       os.copy.over(libPath, destDir / "csjniutils.lib")
     }
 
@@ -67,7 +67,7 @@ trait Launchers extends CsModule {
       os.makeDir.all(dir)
 
       if (Properties.isWin)
-        copyCsjniutilTo(dir)
+        copyCsjniutilTo(dir, T.workspace)
 
       PathRef(dir)
     }
@@ -153,7 +153,7 @@ trait Launchers extends CsModule {
     }
     def buildHelperImage = T {
       os.proc("docker", "build", "-t", Docker.customMuslBuilderImageName, ".")
-        .call(cwd = os.pwd / "project" / "musl-image", stdout = os.Inherit)
+        .call(cwd = T.workspace / "project" / "musl-image", stdout = os.Inherit)
       ()
     }
     def writeNativeImageScript(scriptDest: String, imageDest: String = "") = T.command {
@@ -236,7 +236,7 @@ trait Launchers extends CsModule {
       stdout = os.Inherit,
       stderr = os.Inherit
     )
-    T.log.outputStream.println(s"Config generated in ${outputDir.relativeTo(os.pwd)}")
+    T.log.outputStream.println(s"Config generated in ${outputDir.relativeTo(T.workspace)}")
   }
 
   def runFromJars(args: String*) = T.command {
@@ -285,7 +285,7 @@ trait Launchers extends CsModule {
 
   def standaloneLauncher = T {
 
-    val cachePath = os.Path(coursier.cache.FileCache().location, os.pwd)
+    val cachePath = os.Path(coursier.cache.FileCache().location, T.workspace)
     def urlOf(path: os.Path): Option[String] =
       if (path.startsWith(cachePath)) {
         val segments = path.relativeTo(cachePath).segments

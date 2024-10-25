@@ -27,8 +27,12 @@ object compatibility {
     new String(Files.readAllBytes(f.toPath), UTF_8)
   }
 
-  private val baseRepo = {
-    val dir = Paths.get("modules/tests/metadata")
+  lazy val baseRepo = {
+    val dirStr = Option(System.getenv("COURSIER_TESTS_METADATA_DIR")).getOrElse {
+      sys.error("COURSIER_TESTS_METADATA_DIR not set")
+    }
+    val dir = Paths.get(dirStr)
+    assert(Files.isDirectory(dir))
     assert(
       Files.isDirectory(dir),
       s"we're in ${Paths.get(".").toAbsolutePath.normalize}, no $dir here"
