@@ -10,7 +10,8 @@ import js.Dynamic.{global => g}
 
 object compatibility {
 
-  implicit val executionContext = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+  implicit val executionContext: ExecutionContext =
+    scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
   lazy val fs      = g.require("fs")
   lazy val process = g.require("process")
@@ -20,7 +21,7 @@ object compatibility {
       sys.error("COURSIER_TEST_DATA_DIR env var not set")
     }
 
-  private def textResource0(path: String)(implicit ec: ExecutionContext): Future[String] = {
+  private def textResource0(path: String): Future[String] = {
     val p = Promise[String]()
 
     fs.readFile(
@@ -37,7 +38,7 @@ object compatibility {
     p.future
   }
 
-  def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =
+  def textResource(path: String): Future[String] =
     textResource0("modules/tests/shared/src/test/resources/" + path)
 
   private val baseRepo = "modules/tests/metadata"
