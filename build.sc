@@ -200,7 +200,7 @@ object jvm     extends Cross[Jvm](ScalaVersions.all)
 object install extends Cross[Install](ScalaVersions.all)
 
 object cli         extends Cross[Cli](ScalaVersions.all)
-object `cli-tests` extends Cross[CliTests](ScalaVersions.all)
+object `cli-tests` extends CliTests
 
 object web extends Web
 
@@ -606,10 +606,12 @@ trait Cli extends CsCrossJvmJsModule
   object test extends CrossSbtTests with CsTests
 }
 
-trait CliTests extends CsCrossJvmJsModule
+trait CliTests extends CsModule
     with CoursierPublishModule { self =>
+  private def sv   = mainCliScalaVersion
+  def scalaVersion = sv
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm()
+    coursier.jvm(sv)
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.caseApp,
@@ -622,10 +624,10 @@ trait CliTests extends CsCrossJvmJsModule
   private def sharedTestArgs = Seq(
     s"-Dcoursier-test.scala-cli=${GetCs.scalaCli(scalaCliVersion)}"
   )
-  object test extends CrossSbtTests with CsTests {
+  object test extends SbtTests with CsTests {
     def forkArgs = {
-      val launcherTask = cli().launcher.map(_.path)
-      val assemblyTask = cli().assembly.map(_.path)
+      val launcherTask = cli(mainCliScalaVersion).launcher.map(_.path)
+      val assemblyTask = cli(mainCliScalaVersion).assembly.map(_.path)
       T {
         super.forkArgs() ++ sharedTestArgs ++ Seq(
           s"-Dcoursier-test-launcher=${launcherTask()}",
@@ -636,7 +638,7 @@ trait CliTests extends CsCrossJvmJsModule
       }
     }
   }
-  trait NativeTests extends CrossSbtTests with CsTests with Bloop.Module {
+  trait NativeTests extends SbtTests with CsTests with Bloop.Module {
     def cliLauncher: T[PathRef]
     def skipBloop = true
     def sources = T.sources {
@@ -656,16 +658,16 @@ trait CliTests extends CsCrossJvmJsModule
     }
   }
   object `native-tests` extends NativeTests {
-    def cliLauncher = cli().nativeImage
+    def cliLauncher = cli(mainCliScalaVersion).nativeImage
   }
   object `native-static-tests` extends NativeTests {
-    def cliLauncher = cli().`static-image`.nativeImage
+    def cliLauncher = cli(mainCliScalaVersion).`static-image`.nativeImage
   }
   object `native-mostly-static-tests` extends NativeTests {
-    def cliLauncher = cli().`mostly-static-image`.nativeImage
+    def cliLauncher = cli(mainCliScalaVersion).`mostly-static-image`.nativeImage
   }
   object `native-container-tests` extends NativeTests {
-    def cliLauncher = cli().containerImage
+    def cliLauncher = cli(mainCliScalaVersion).containerImage
   }
 }
 
@@ -937,10 +939,10 @@ def jvmTests(scalaVersion: String = ScalaVersions.scala213) = {
 
   val nonCrossTests = Seq(
     // format: off
-    `bootstrap-launcher`      .test .test(),
-    `bootstrap-launcher`      .it   .test(),
-    cli(scalaVersion)         .test .test(),
-    `cli-tests`(scalaVersion) .test .test()
+    `bootstrap-launcher` .test .test(),
+    `bootstrap-launcher` .it   .test(),
+    cli(scalaVersion)    .test .test(),
+    `cli-tests`          .test .test()
     // format: on
   )
 
@@ -990,19 +992,19 @@ def jsTests(scalaVersion: String = "*") = {
 }
 
 def nativeTests() = T.command {
-  `cli-tests`(mainCliScalaVersion).`native-tests`.test()()
+  `cli-tests`.`native-tests`.test()()
 }
 
 def nativeStaticTests() = T.command {
-  `cli-tests`(mainCliScalaVersion).`native-static-tests`.test()()
+  `cli-tests`.`native-static-tests`.test()()
 }
 
 def nativeMostlyStaticTests() = T.command {
-  `cli-tests`(mainCliScalaVersion).`native-mostly-static-tests`.test()()
+  `cli-tests`.`native-mostly-static-tests`.test()()
 }
 
 def nativeContainerTests() = T.command {
-  `cli-tests`(mainCliScalaVersion).`native-container-tests`.test()()
+  `cli-tests`.`native-container-tests`.test()()
 }
 
 def cliNativeImageLauncher() = T.command {
