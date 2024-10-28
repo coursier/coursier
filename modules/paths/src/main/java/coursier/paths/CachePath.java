@@ -2,7 +2,6 @@ package coursier.paths;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -176,11 +175,15 @@ public class CachePath {
         synchronized (intraProcessLock) {
             File lockFile = new File(cache, ".structure.lock");
             Util.createDirectories(lockFile.toPath().getParent());
-            FileOutputStream out = null;
+            FileChannel channel = null;
 
             try {
                 try {
-                    out = new FileOutputStream(lockFile);
+                    channel = FileChannel.open(
+                        lockFile.toPath(),
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.WRITE,
+                        StandardOpenOption.DELETE_ON_CLOSE);
                 } catch (FileNotFoundException ex) {
                     throw throwExceptions ? ex : new StructureLockException(ex);
                 }
@@ -188,7 +191,7 @@ public class CachePath {
                 FileLock lock = null;
                 try {
                     try {
-                        lock = out.getChannel().lock();
+                        lock = channel.lock();
                     } catch (FileNotFoundException ex) {
                         throw throwExceptions ? ex : new StructureLockException(ex);
                     }
@@ -199,16 +202,15 @@ public class CachePath {
                     finally {
                         lock.release();
                         lock = null;
-                        out.close();
-                        out = null;
-                        lockFile.delete();
+                        channel.close();
+                        channel = null;
                     }
                 }
                 finally {
                     if (lock != null) lock.release();
                 }
             } finally {
-                if (out != null) out.close();
+                if (channel != null) channel.close();
             }
         }
     }
