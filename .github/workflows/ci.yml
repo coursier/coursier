@@ -218,7 +218,7 @@ jobs:
           - JDK: "17"
             OS: "windows-latest"
           - JDK: "17"
-            OS: "macos-12"
+            OS: "macos-13"
     steps:
       - uses: actions/checkout@v4
         with:
