@@ -128,10 +128,13 @@ object InstallTests extends TestSuite {
     val retCode = p.waitFor()
     if (retCode == expectedReturnCode)
       new String(baos.toByteArray, StandardCharsets.UTF_8)
-    else
+    else {
+      val output = new String(baos.toByteArray, StandardCharsets.UTF_8)
+      pprint.err.log(output)
       throw new Exception(
         s"Error while running ${command.mkString(" ")} (return code: $retCode, expected: $expectedReturnCode)"
       )
+    }
   }
 
   private def assertNativeExecutable(file: File) = {
@@ -840,6 +843,10 @@ object InstallTests extends TestSuite {
             launcher.toAbsolutePath.toString,
             "-version"
           )
+          if (!output.contains(expectedInOut)) {
+            pprint.err.log(expectedInOut)
+            pprint.err.log(output)
+          }
           assert(output.contains(expectedInOut))
         }
 

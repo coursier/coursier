@@ -514,7 +514,11 @@ trait Install extends CrossSbtModule with CsModule
     Deps.argonautShapeless,
     Deps.catsCore
   )
-  object test extends CrossSbtTests with CsTests with CsResourcesTests
+  object test extends CrossSbtTests with CsTests with CsResourcesTests {
+    def ivyDeps = super.ivyDeps() ++ Agg(
+      Deps.pprint
+    )
+  }
 }
 
 trait Jvm extends CrossSbtModule with CsModule
