@@ -702,7 +702,7 @@ trait Web extends CsScalaJsModule {
 }
 
 object `redirecting-server` extends CsModule {
-  def scalaVersion = ScalaVersions.scala212
+  def scalaVersion = ScalaVersions.scala213
   def ivyDeps = Agg(
     Deps.http4sBlazeServer,
     Deps.http4sDsl,
