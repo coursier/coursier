@@ -22,8 +22,9 @@ object JvmIndex {
 
   def handleAliases(indexName: String): String =
     indexName match {
-      case "cs"              => coursierIndexUrl
-      case "cs-maven"        => coursierIndexCoordinates(defaultOs(), defaultArchitecture())
+      case "cs" | "cs-github" | "cs-github-legacy" => coursierIndexUrl
+      case "cs-maven" | "cs-central" | "cs-central-v1" =>
+        coursierIndexCoordinates(defaultOs(), defaultArchitecture())
       case "cs-maven-legacy" => coursierIndexCoordinatesLegacy
       case other             => other
     }
