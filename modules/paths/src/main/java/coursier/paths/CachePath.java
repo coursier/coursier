@@ -23,7 +23,7 @@ public class CachePath {
     private static long structureLockInitialRetryDelay = Long.getLong("coursier.structure-lock-retry-initial-delay-ms", 10L);
     private static double structureLockRetryDelayMultiplier = Double.parseDouble(System.getProperty("coursier.structure-lock-retry-multiplier", "2.0"));
 
-    private static boolean throwExceptions = Boolean.getBoolean("coursier.cache.throw-exceptions");
+    private static boolean throwExceptions = true;
 
     // based on https://stackoverflow.com/questions/4571346/how-to-encode-url-to-avoid-special-characters-in-java/4605848#4605848
     // '/' was removed from the unsafe list
