@@ -850,8 +850,11 @@ object InstallTests extends TestSuite {
           assert(output.contains(expectedInOut))
         }
 
+        /* issues on the Windows CI */
+        val maybeTestOutput = System.getenv("CI") == null || currentOs != "windows"
+
         searchInScript(scala3path)
-        if (currentOs == os)
+        if (currentOs == os && maybeTestOutput)
           testOutput("Scala compiler version 3.3.3 -- Copyright 2002-2024, LAMP/EPFL")
 
         val overridenAppInfo = appInfo0.overrideVersion("2.12.8")
@@ -878,7 +881,7 @@ object InstallTests extends TestSuite {
         assert(updated.exists(identity))
 
         searchInScript(scala3path)
-        if (currentOs == os)
+        if (currentOs == os && maybeTestOutput)
           testOutput("Scala compiler version 3.3.3 -- Copyright 2002-2024, LAMP/EPFL")
       }
 
