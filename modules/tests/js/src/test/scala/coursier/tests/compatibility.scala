@@ -2,6 +2,7 @@ package coursier.tests
 
 import coursier.cache.MockCache
 import coursier.core.Repository
+import coursier.testcache.TestCache
 import coursier.util.Task
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
@@ -41,18 +42,8 @@ object compatibility {
   def textResource(path: String): Future[String] =
     textResource0(testDataDir + "/" + path)
 
-  private lazy val metadataBase =
-    process.env
-      .asInstanceOf[js.Dictionary[String]]
-      .get("COURSIER_TESTS_METADATA_DIR_URI")
-      .getOrElse {
-        sys.error("COURSIER_TESTS_METADATA_DIR_URI not set")
-      }
-
   lazy val taskArtifact: Repository.Fetch[Task] =
-    MockCache(metadataBase.stripPrefix("file://").stripPrefix("file:")).fetch
-
-  def updateSnapshots = false
+    TestCache.cache.fetch
 
   def tryCreate(path: String, content: String): Unit = {}
 

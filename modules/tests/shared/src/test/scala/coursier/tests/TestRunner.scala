@@ -16,11 +16,12 @@ import coursier.core.{
   ResolutionProcess
 }
 import coursier.maven.MavenRepository
-import coursier.tests.compatibility.{textResource, tryCreate, updateSnapshots}
+import coursier.tests.compatibility.{textResource, tryCreate}
 import coursier.tests.util.ToFuture
 import coursier.util.{Artifact, Gather}
 
 import scala.concurrent.{ExecutionContext, Future}
+import coursier.testcache.TestCache
 
 class TestRunner[F[_]: Gather: ToFuture](
   artifact: Repository.Fetch[F] = compatibility.taskArtifact,
@@ -151,7 +152,7 @@ class TestRunner[F[_]: Gather: ToFuture](
           }
         ).split('\n').toSeq
 
-      if (updateSnapshots) {
+      if (TestCache.updateSnapshots) {
         if (result != expected)
           tryCreate(path, result.mkString("\n"))
       }

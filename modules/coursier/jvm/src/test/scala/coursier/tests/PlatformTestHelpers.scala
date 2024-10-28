@@ -9,7 +9,8 @@ import java.util.Locale
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import coursier.cache.{Cache, MockCache}
 import coursier.paths.Util
-import coursier.util.{Sync, Task}
+import coursier.testcache.TestCache
+import coursier.util.Task
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
@@ -20,17 +21,6 @@ abstract class PlatformTestHelpers {
     Option(System.getenv("COURSIER_TEST_DATA_DIR")).getOrElse {
       sys.error("COURSIER_TEST_DATA_DIR env var not set")
     }
-
-  private lazy val pool = Sync.fixedThreadPool(6)
-
-  private val mockDataLocation = {
-    val dirStr = Option(System.getenv("COURSIER_TESTS_METADATA_DIR")).getOrElse {
-      sys.error("COURSIER_TESTS_METADATA_DIR not set")
-    }
-    val dir = Paths.get(dirStr)
-    assert(Files.isDirectory(dir))
-    dir
-  }
 
   val handmadeMetadataLocation = {
     val dirStr = Option(System.getenv("COURSIER_TESTS_HANDMADE_METADATA_DIR")).getOrElse {
@@ -48,23 +38,17 @@ abstract class PlatformTestHelpers {
     .toASCIIString
     .stripSuffix("/") + "/"
 
-  val updateSnapshots = Option(System.getenv("FETCH_MOCK_DATA"))
-    .exists(s => s == "1" || s.toLowerCase(Locale.ROOT) == "true")
+  private val cache0 = TestCache.cache[Task]
+    .withDummyArtifact(a => a.url.endsWith(".jar") || a.url.endsWith(".klib"))
 
-  val cache: Cache[Task] =
-    MockCache.create[Task](mockDataLocation, pool = pool, writeMissing = updateSnapshots)
-      .withDummyArtifact(a => a.url.endsWith(".jar") || a.url.endsWith(".klib"))
+  def cache: Cache[Task] = cache0
 
   val handmadeMetadataCache: Cache[Task] =
-    MockCache.create[Task](handmadeMetadataLocation, pool = pool)
+    MockCache.create[Task](handmadeMetadataLocation, pool = cache0.pool)
 
   val cacheWithHandmadeMetadata: Cache[Task] =
-    MockCache.create[Task](
-      mockDataLocation,
-      pool = pool,
-      Seq(handmadeMetadataLocation),
-      writeMissing = updateSnapshots
-    )
+    cache0
+      .withExtraData(Seq(handmadeMetadataLocation))
       .withDummyArtifact(_.url.endsWith(".jar"))
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =

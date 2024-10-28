@@ -4,6 +4,7 @@ import java.lang.{Boolean => JBoolean}
 
 import coursier.core.{Classifier, Dependency, Module, Resolution, Type}
 import coursier.params.ResolutionParams
+import coursier.testcache.TestCache
 import coursier.util.Artifact
 
 import scala.async.Async.{async, await}
@@ -132,13 +133,13 @@ object TestHelpers extends PlatformTestHelpers {
     val expected =
       await(
         tryRead.recoverWith {
-          case _: Exception if updateSnapshots =>
+          case _: Exception if TestCache.updateSnapshots =>
             maybeWriteTextResource(path, result0.mkString("\n"))
             tryRead
         }
       ).split('\n').toSeq.filter(_.nonEmpty)
 
-    if (updateSnapshots) {
+    if (TestCache.updateSnapshots) {
       if (result0 != expected)
         maybeWriteTextResource(path, result0.mkString("\n"))
     }
