@@ -30,6 +30,7 @@ org.slf4j:jul-to-slf4j:1.7.7:default
 xpp3:xpp3:1.1.4c:default
 rusv:agafua-syslog:0.4:default
 org.jitsi:jitsi-stats:1.0-20171003.152041-3:default
+junit:junit:4.10:default
 xml-apis:xml-apis:1.0.b2:default
 org.eclipse.jetty:jetty-server:9.2.10.v20150310:default
 org.eclipse.jetty:jetty-client:9.2.10.v20150310:default
@@ -66,6 +67,7 @@ org.bouncycastle:bcprov-jdk15on:1.54:default
 org.jitsi:bccontrib:1.0:default
 org.jitsi:zrtp4j-light:3.2.0-jitsi-1-20150723.002345-1:default
 io.callstats:callstats-java-sdk:4.1.4:default
+org.hamcrest:hamcrest-core:1.1:default
 org.eclipse.jetty:jetty-io:9.2.10.v20150310:default
 org.eclipse.jetty.websocket:websocket-api:9.2.10.v20150310:default
 org.eclipse.jetty:jetty-security:9.2.10.v20150310:default

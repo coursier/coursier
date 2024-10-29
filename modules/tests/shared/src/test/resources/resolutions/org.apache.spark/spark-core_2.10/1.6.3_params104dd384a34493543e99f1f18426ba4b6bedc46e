@@ -63,6 +63,7 @@ commons-codec:commons-codec:1.10:default
 commons-httpclient:commons-httpclient:3.1:default
 org.apache.curator:curator-framework:2.4.0:default
 org.apache.zookeeper:zookeeper:3.4.5:default
+com.google.guava:guava:14.0.1:default
 com.typesafe.akka:akka-actor_2.10:2.3.11:default
 io.netty:netty:3.8.0.Final:default
 com.google.protobuf:protobuf-java:2.5.0:default
@@ -83,7 +84,6 @@ com.esotericsoftware.reflectasm:reflectasm:1.07:default
 com.esotericsoftware.minlog:minlog:1.2:default
 org.objenesis:objenesis:1.2:default
 org.apache.hadoop:hadoop-annotations:2.2.0:default
-com.google.guava:guava:14.0.1:default
 commons-cli:commons-cli:1.2:default
 org.apache.commons:commons-math:2.1:default
 xmlenc:xmlenc:0.52:default
@@ -95,7 +95,6 @@ org.apache.avro:avro:1.7.7:default
 org.apache.hadoop:hadoop-auth:2.2.0:default
 org.apache.zookeeper:zookeeper:3.4.5:default
 org.apache.commons:commons-compress:1.4.1:default
-com.google.guava:guava:14.0.1:default
 org.mortbay.jetty:jetty-util:6.1.26:default
 commons-cli:commons-cli:1.2:default
 commons-io:commons-io:2.4:default
@@ -150,6 +149,7 @@ org.apache.zookeeper:zookeeper:3.4.5:default
 org.scala-lang:scala-reflect:2.10.5:default
 javax.inject:javax.inject:1:default
 aopalliance:aopalliance:1.0:default
+com.sun.jersey.jersey-test-framework:jersey-test-framework-core:1.9:default
 com.sun.jersey:jersey-grizzly2:1.9:default
 org.codehaus.jettison:jettison:1.1:default
 com.sun.xml.bind:jaxb-impl:2.2.3-1:default
@@ -158,6 +158,7 @@ org.codehaus.jackson:jackson-jaxrs:1.9.13:default
 org.codehaus.jackson:jackson-xc:1.9.13:default
 javax.inject:javax.inject:1:default
 aopalliance:aopalliance:1.0:default
+com.sun.jersey.jersey-test-framework:jersey-test-framework-core:1.9:default
 com.sun.jersey:jersey-grizzly2:1.9:default
 org.codehaus.jettison:jettison:1.1:default
 com.sun.xml.bind:jaxb-impl:2.2.3-1:default
@@ -165,11 +166,15 @@ org.codehaus.jackson:jackson-core-asl:1.9.13:default
 org.codehaus.jackson:jackson-jaxrs:1.9.13:default
 org.codehaus.jackson:jackson-xc:1.9.13:default
 jline:jline:0.9.94:default
+com.sun.jersey:jersey-client:1.9:default
+javax.servlet:javax.servlet-api:3.0.1:default
 org.glassfish.grizzly:grizzly-http:2.1.2:default
 org.glassfish.grizzly:grizzly-http-server:2.1.2:default
 org.glassfish.grizzly:grizzly-http-servlet:2.1.2:default
 org.glassfish:javax.servlet:3.1:default
 javax.xml.bind:jaxb-api:2.2.2:default
+com.sun.jersey:jersey-client:1.9:default
+javax.servlet:javax.servlet-api:3.0.1:default
 org.glassfish.grizzly:grizzly-http:2.1.2:default
 org.glassfish.grizzly:grizzly-http-server:2.1.2:default
 org.glassfish.grizzly:grizzly-http-servlet:2.1.2:default
