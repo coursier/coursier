@@ -258,7 +258,11 @@ public class CachePath {
 
                 FileLock lock = null;
                 try {
-                    lock = channel.lock();
+                    try {
+                        lock = channel.lock();
+                    } catch (FileNotFoundException ex) {
+                        throw throwExceptions ? ex : new StructureLockException(ex);
+                    }
 
                     try {
                         return callable.call();
