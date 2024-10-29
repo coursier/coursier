@@ -2,7 +2,7 @@ package coursier.cli.native
 
 import java.nio.file.Paths
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import cats.data.{Validated, ValidatedNel}
 import coursier.cli.options.OptionGroup
 import coursier.launcher.Parameters.ScalaNative.ScalaNativeOptions
@@ -11,12 +11,12 @@ import coursier.launcher.Parameters.ScalaNative.ScalaNativeOptions
 final case class NativeLauncherOptions(
   @Group(OptionGroup.native)
   @Hidden
-  @Value("none|boehm|immix|default")
+  @ValueDescription("none|boehm|immix|default")
     nativeGc: Option[String] = None,
-  
+
   @Group(OptionGroup.native)
   @Hidden
-  @Value("release|debug")
+  @ValueDescription("release|debug")
     nativeMode: Option[String] = None,
 
   @Group(OptionGroup.native)
@@ -62,12 +62,12 @@ final case class NativeLauncherOptions(
 
   @Group(OptionGroup.native)
   @Hidden
-  @Help("Native compilation target directory")
-  @Short("d")
+  @HelpMessage("Native compilation target directory")
+  @ExtraName("d")
     nativeWorkDir: Option[String] = None,
   @Group(OptionGroup.native)
   @Hidden
-  @Help("Don't wipe native compilation target directory (for debug purposes)")
+  @HelpMessage("Don't wipe native compilation target directory (for debug purposes)")
     nativeKeepWorkDir: Boolean = false
 
 ) {

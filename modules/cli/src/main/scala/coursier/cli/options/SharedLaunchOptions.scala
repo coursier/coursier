@@ -1,6 +1,6 @@
 package coursier.cli.options
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import coursier.cli.install.SharedChannelOptions
 import coursier.cli.resolve.SharedResolveOptions
 import coursier.install.RawAppDescriptor
@@ -9,23 +9,23 @@ import coursier.install.RawAppDescriptor
 final case class SharedLaunchOptions(
 
   @Group(OptionGroup.launch)
-  @Short("M")
-  @Short("main")
+  @ExtraName("M")
+  @ExtraName("main")
     mainClass: String = "",
 
   @Group(OptionGroup.launch)
-  @Help("Extra JARs to be added to the classpath of the launched application. Directories accepted too.")
+  @HelpMessage("Extra JARs to be added to the classpath of the launched application. Directories accepted too.")
     extraJars: List[String] = Nil,
 
   @Group(OptionGroup.launch)
-  @Help("Set Java properties before launching the app")
-  @Value("key=value")
-  @Short("D")
+  @HelpMessage("Set Java properties before launching the app")
+  @ValueDescription("key=value")
+  @ExtraName("D")
     property: List[String] = Nil,
 
   @Group(OptionGroup.launch)
-  @Help("Add Java command-line options")
-  @Value("option")
+  @HelpMessage("Add Java command-line options")
+  @ValueDescription("option")
     javaOpt: List[String] = Nil,
 
   @Group(OptionGroup.launch)

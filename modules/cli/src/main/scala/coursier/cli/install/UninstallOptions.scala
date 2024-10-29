@@ -1,11 +1,11 @@
 package coursier.cli.install
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, _}
+import caseapp._
 import coursier.cli.options.OptionGroup
 
 // format: off
 @ArgsName("app-name*")
-@Help(
+@HelpMessage(
   "Uninstall one or more applications.\n" +
   "The given name must be the application executable name, which may differ from the descriptor name.\n" +
   "\n" +
@@ -17,20 +17,20 @@ import coursier.cli.options.OptionGroup
 final case class UninstallOptions(
 
   @Group(OptionGroup.uninstall)
-  @Short("dir")
+  @ExtraName("dir")
     installDir: Option[String] = None,
 
   @Group(OptionGroup.uninstall)
     all: Boolean = false,
 
   @Group(OptionGroup.uninstall)
-  @Help("Quiet output")
-  @Short("q")
+  @HelpMessage("Quiet output")
+  @ExtraName("q")
     quiet: Int @@ Counter = Tag.of(0),
 
   @Group(OptionGroup.uninstall)
-  @Help("Increase verbosity (specify several times to increase more)")
-  @Short("v")
+  @HelpMessage("Increase verbosity (specify several times to increase more)")
+  @ExtraName("v")
     verbose: Int @@ Counter = Tag.of(0)
 
 )

@@ -1,6 +1,6 @@
 package coursier.cli.options
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.core._
@@ -11,70 +11,70 @@ import coursier.parse.{DependencyParser, ModuleParser, ReconciliationParser, Rul
 final case class ResolutionOptions(
   @Group(OptionGroup.resolution)
   @Hidden
-  @Help("Keep optional dependencies (Maven)")
+  @HelpMessage("Keep optional dependencies (Maven)")
     keepOptional: Boolean = false,
 
   @Group(OptionGroup.resolution)
   @Hidden
-  @Help("Maximum number of resolution iterations (specify a negative value for unlimited, default: 100)")
-  @Short("N")
+  @HelpMessage("Maximum number of resolution iterations (specify a negative value for unlimited, default: 100)")
+  @ExtraName("N")
     maxIterations: Int = ResolutionProcess.defaultMaxIterations,
 
   @Group(OptionGroup.resolution)
-  @Help("Force module version")
-  @Value("organization:name:forcedVersion")
-  @Short("V")
+  @HelpMessage("Force module version")
+  @ValueDescription("organization:name:forcedVersion")
+  @ExtraName("V")
     forceVersion: List[String] = Nil,
 
   @Group(OptionGroup.resolution)
   @Hidden
-  @Help("Set property in POM files, if it's not already set")
-  @Value("name=value")
+  @HelpMessage("Set property in POM files, if it's not already set")
+  @ValueDescription("name=value")
     pomProperty: List[String] = Nil,
 
   @Group(OptionGroup.resolution)
   @Hidden
-  @Help("Force property in POM files")
-  @Value("name=value")
+  @HelpMessage("Force property in POM files")
+  @ValueDescription("name=value")
     forcePomProperty: List[String] = Nil,
 
   @Group(OptionGroup.resolution)
   @Hidden
-  @Help("Enable profile")
-  @Value("profile")
+  @HelpMessage("Enable profile")
+  @ValueDescription("profile")
     profile: List[String] = Nil,
 
   @Group(OptionGroup.resolution)
-  @Help("Default scala version")
-  @Short("e")
-  @Short("scala")
+  @HelpMessage("Default scala version")
+  @ExtraName("e")
+  @ExtraName("scala")
     scalaVersion: Option[String] = None,
 
   @Group(OptionGroup.resolution)
   @Hidden
-  @Help("Ensure the scala version used by the scala-library/reflect/compiler JARs is coherent")
+  @HelpMessage("Ensure the scala version used by the scala-library/reflect/compiler JARs is coherent")
     forceScalaVersion: Option[Boolean] = None,
 
   @Group(OptionGroup.resolution)
   @Hidden
-  @Help("Adjust the scala version for fully cross-versioned dependencies")
+  @HelpMessage("Adjust the scala version for fully cross-versioned dependencies")
     overrideFullSuffix: Option[Boolean] = None,
 
   @Group(OptionGroup.resolution)
   @Hidden
-  @Help("Swap the mainline Scala JARs by Typelevel ones")
+  @HelpMessage("Swap the mainline Scala JARs by Typelevel ones")
     typelevel: Boolean = false,
 
   @Group(OptionGroup.resolution)
   @Hidden
-  @Help("Enforce resolution rules")
-  @Short("rule")
+  @HelpMessage("Enforce resolution rules")
+  @ExtraName("rule")
     rules: List[String] = Nil,
 
   @Group(OptionGroup.resolution)
   @Hidden
-  @Help("Choose reconciliation strategy")
-  @Value("organization:name:(basic|relaxed)")
+  @HelpMessage("Choose reconciliation strategy")
+  @ValueDescription("organization:name:(basic|relaxed)")
     reconciliation: List[String] = Nil,
 
   @Group(OptionGroup.resolution)
@@ -90,19 +90,19 @@ final case class ResolutionOptions(
 
   @Group(OptionGroup.resolution)
   @Hidden
-  @Help("Default configuration (default(compile) by default)")
-  @Value("configuration")
-  @Short("c")
+  @HelpMessage("Default configuration (default(compile) by default)")
+  @ValueDescription("configuration")
+  @ExtraName("c")
     defaultConfiguration: String = "default(compile)",
 
   @Group(OptionGroup.resolution)
   @Hidden
-  @Help("Keep provided dependencies")
+  @HelpMessage("Keep provided dependencies")
     keepProvidedDependencies: Boolean = false,
 
   @Group(OptionGroup.resolution)
   @Hidden
-  @Help("Set JDK version used during resolution when picking profiles")
+  @HelpMessage("Set JDK version used during resolution when picking profiles")
     jdkVersion: Option[String] = None
 
 ) {

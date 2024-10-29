@@ -1,6 +1,6 @@
 package coursier.cli.resolve
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import coursier.cli.install.SharedChannelOptions
 import coursier.cli.options.{
   DependencyOptions,
@@ -13,7 +13,7 @@ import coursier.install.RawAppDescriptor
 
 // format: off
 @ArgsName("org:name:version*|app-name[:version]")
-@Help(
+@HelpMessage(
   "Resolve and print the transitive dependencies of one or more dependencies or an application.\n" +
   "Print the maven coordinates, does not download the artifacts.\n" +
   "\n" +
@@ -24,10 +24,10 @@ import coursier.install.RawAppDescriptor
 final case class ResolveOptions(
 
   @Group(OptionGroup.resolution)
-  @Help("Print the duration of each iteration of the resolution (if negative, doesn't print per iteration benchmark -> less overhead)")
+  @HelpMessage("Print the duration of each iteration of the resolution (if negative, doesn't print per iteration benchmark -> less overhead)")
   @Hidden
-  @Short("B")
-  @Value("# warm-up resolutions")
+  @ExtraName("B")
+  @ValueDescription("# warm-up resolutions")
     benchmark: Int = 0,
 
   @Group(OptionGroup.resolution)
@@ -35,24 +35,24 @@ final case class ResolveOptions(
     benchmarkCache: Boolean = false,
 
   @Group(OptionGroup.resolution)
-  @Help("Print dependencies as a tree")
-  @Short("t")
+  @HelpMessage("Print dependencies as a tree")
+  @ExtraName("t")
     tree: Boolean = false,
   @Group(OptionGroup.resolution)
-  @Help("Print dependencies as a reversed tree (dependees as children)")
-  @Short("T")
+  @HelpMessage("Print dependencies as a reversed tree (dependees as children)")
+  @ExtraName("T")
     reverseTree: Boolean = false,
   @Group(OptionGroup.resolution)
-  @Help("Print what depends on the passed modules")
-  @Value("org:name")
+  @HelpMessage("Print what depends on the passed modules")
+  @ValueDescription("org:name")
     whatDependsOn: List[String] = Nil,
   @Group(OptionGroup.resolution)
-  @Help("Print candidate artifact URLs")
+  @HelpMessage("Print candidate artifact URLs")
   @Hidden
     candidateUrls: Boolean = false,
 
   @Group(OptionGroup.resolution)
-  @Help("Print conflicts")
+  @HelpMessage("Print conflicts")
   @Hidden
     conflicts: Boolean = false,
 
@@ -62,8 +62,8 @@ final case class ResolveOptions(
     channelOptions: SharedChannelOptions = SharedChannelOptions(),
 
   @Group(OptionGroup.resolution)
-  @Help("Force printing / generating results, even if errored")
-  @Short("F")
+  @HelpMessage("Force printing / generating results, even if errored")
+  @ExtraName("F")
     forcePrint: Boolean = false,
   @Group(OptionGroup.resolution)
   @Hidden

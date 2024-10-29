@@ -1,6 +1,6 @@
 package coursier.cli.options
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import coursier.install.RawAppDescriptor
 
 
@@ -10,22 +10,22 @@ final case class SharedLoaderOptions(
   // deprecated, use shared instead
   @Group(OptionGroup.launch)
   @Hidden
-  @Value("target:dependency")
-  @Short("I")
-  @Help("(deprecated) dependencies to be put in shared class loaders")
+  @ValueDescription("target:dependency")
+  @ExtraName("I")
+  @HelpMessage("(deprecated) dependencies to be put in shared class loaders")
     isolated: List[String] = Nil,
 
   @Group(OptionGroup.launch)
   @Hidden
-  @Value("dependency[@target]")
-  @Help("Dependencies to be put in shared class loaders")
+  @ValueDescription("dependency[@target]")
+  @HelpMessage("Dependencies to be put in shared class loaders")
     shared: List[String] = Nil,
 
   @Group(OptionGroup.launch)
   @Hidden
-  @Help("Comma-separated isolation targets")
-  @Short("i")
-  @Short("isolateTarget") // former deprecated name
+  @HelpMessage("Comma-separated isolation targets")
+  @ExtraName("i")
+  @ExtraName("isolateTarget") // former deprecated name
     sharedTarget: List[String] = Nil
 
 ) {

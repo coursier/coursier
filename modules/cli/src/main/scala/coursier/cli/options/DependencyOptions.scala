@@ -1,21 +1,21 @@
 package coursier.cli.options
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 
 // format: off
 final case class DependencyOptions(
 
   @Group(OptionGroup.dependency)
   @Hidden
-  @Help("Exclude module")
-  @Value("organization:name")
-  @Short("E")
+  @HelpMessage("Exclude module")
+  @ValueDescription("organization:name")
+  @ExtraName("E")
     exclude: List[String] = Nil,
 
   @Group(OptionGroup.dependency)
   @Hidden
-  @Short("x")
-  @Help("Path to the local exclusion file. " +
+  @ExtraName("x")
+  @HelpMessage("Path to the local exclusion file. " +
     "Syntax: <org:name>--<org:name>. `--` means minus. Example file content:\n\t" +
     "\tcom.twitter.penguin:korean-text--com.twitter:util-tunable-internal_2.11\n\t" +
     "\torg.apache.commons:commons-math--com.twitter.search:core-query-nodes\n\t" +
@@ -25,30 +25,30 @@ final case class DependencyOptions(
 
   @Group(OptionGroup.dependency)
   @Hidden
-  @Help("If --sbt-plugin options are passed: default sbt version  (short version X.Y is enough - note that for sbt 1.x, this should be passed 1.0)")
-  @Value("sbt version")
+  @HelpMessage("If --sbt-plugin options are passed: default sbt version  (short version X.Y is enough - note that for sbt 1.x, this should be passed 1.0)")
+  @ValueDescription("sbt version")
     sbtVersion: String = "1.0",
 
   @Group(OptionGroup.dependency)
   @Hidden
-  @Help("Add intransitive dependencies")
+  @HelpMessage("Add intransitive dependencies")
     intransitive: List[String] = Nil,
 
   @Group(OptionGroup.dependency)
-  @Help("Add sbt plugin dependencies")
+  @HelpMessage("Add sbt plugin dependencies")
     sbtPlugin: List[String] = Nil,
 
   @Group(OptionGroup.dependency)
-  @Help("Enable Scala.js")
+  @HelpMessage("Enable Scala.js")
     scalaJs: Boolean = false,
 
   @Group(OptionGroup.dependency)
-  @Help("Enable scala-native")
-  @Short("S")
+  @HelpMessage("Enable scala-native")
+  @ExtraName("S")
     native: Boolean = false,
 
   @Group(OptionGroup.dependency)
-  @Help("Path to file with dependencies. " +
+  @HelpMessage("Path to file with dependencies. " +
     "Dependencies should be separated with newline character")
     dependencyFile: List[String] = Nil
 

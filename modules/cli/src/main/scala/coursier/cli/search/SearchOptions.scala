@@ -1,12 +1,12 @@
 package coursier.cli.search
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import coursier.cli.install.SharedChannelOptions
 import coursier.cli.options.{CacheOptions, OutputOptions, RepositoryOptions}
 
 // format: off
 @ArgsName("query*")
-@Help(
+@HelpMessage(
   "Search application names from known channels.\n" +
   "\n" +
   "Examples:\n" +

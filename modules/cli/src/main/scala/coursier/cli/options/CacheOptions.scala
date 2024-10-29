@@ -2,7 +2,7 @@ package coursier.cli.options
 
 import java.io.File
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.CacheDefaults
@@ -16,62 +16,62 @@ import scala.concurrent.duration.Duration
 final case class CacheOptions(
 
   @Group(OptionGroup.cache)
-  @Help("Cache directory (defaults to environment variable COURSIER_CACHE, or ~/.cache/coursier/v1 on Linux and ~/Library/Caches/Coursier/v1 on Mac)")
+  @HelpMessage("Cache directory (defaults to environment variable COURSIER_CACHE, or ~/.cache/coursier/v1 on Linux and ~/Library/Caches/Coursier/v1 on Mac)")
     cache: Option[String] = None,
 
   @Group(OptionGroup.cache)
   @Hidden
-  @Help("Download mode (default: missing, that is fetch things missing from cache)")
-  @Value("offline|update-changing|update|missing|force")
-  @Short("m")
+  @HelpMessage("Download mode (default: missing, that is fetch things missing from cache)")
+  @ValueDescription("offline|update-changing|update|missing|force")
+  @ExtraName("m")
     mode: String = "",
 
   @Group(OptionGroup.cache)
-  @Help("TTL duration (e.g. \"24 hours\")")
-  @Value("duration")
-  @Short("l")
+  @HelpMessage("TTL duration (e.g. \"24 hours\")")
+  @ValueDescription("duration")
+  @ExtraName("l")
     ttl: Option[String] = None,
 
   @Group(OptionGroup.cache)
   @Hidden
-  @Help("Maximum number of parallel downloads (default: 6)")
-  @Short("n")
+  @HelpMessage("Maximum number of parallel downloads (default: 6)")
+  @ExtraName("n")
     parallel: Int = 6,
 
   @Group(OptionGroup.cache)
   @Hidden
-  @Help("Checksum types to check - end with none to allow for no checksum validation if no checksum is available, example: SHA-256,SHA-1,none")
-  @Value("checksum1,checksum2,...")
+  @HelpMessage("Checksum types to check - end with none to allow for no checksum validation if no checksum is available, example: SHA-256,SHA-1,none")
+  @ValueDescription("checksum1,checksum2,...")
     checksum: List[String] = Nil,
 
   @Group(OptionGroup.cache)
   @Hidden
-  @Help("Retry limit for Checksum error when fetching a file")
+  @HelpMessage("Retry limit for Checksum error when fetching a file")
     retryCount: Int = 1,
 
   @Group(OptionGroup.cache)
   @Hidden
-  @Help("Flag that specifies if a local artifact should be cached.")
-  @Short("cfa")
+  @HelpMessage("Flag that specifies if a local artifact should be cached.")
+  @ExtraName("cfa")
     cacheFileArtifacts: Boolean = false,
 
   @Group(OptionGroup.cache)
   @Hidden
-  @Help("Whether to follow http to https redirections")
+  @HelpMessage("Whether to follow http to https redirections")
     followHttpToHttpsRedirect: Boolean = true,
 
   @Group(OptionGroup.cache)
-  @Help("Credentials to be used when fetching metadata or artifacts. Specify multiple times to pass multiple credentials. Alternatively, use the COURSIER_CREDENTIALS environment variable")
-  @Value("host(realm) user:pass|host user:pass")
+  @HelpMessage("Credentials to be used when fetching metadata or artifacts. Specify multiple times to pass multiple credentials. Alternatively, use the COURSIER_CREDENTIALS environment variable")
+  @ValueDescription("host(realm) user:pass|host user:pass")
     credentials: List[String] = Nil,
 
   @Group(OptionGroup.cache)
-  @Help("Path to credential files to read credentials from")
+  @HelpMessage("Path to credential files to read credentials from")
     credentialFile: List[String] = Nil,
 
   @Group(OptionGroup.cache)
   @Hidden
-  @Help("Whether to read credentials from COURSIER_CREDENTIALS (env) or coursier.credentials (Java property), along those passed with --credentials and --credential-file")
+  @HelpMessage("Whether to read credentials from COURSIER_CREDENTIALS (env) or coursier.credentials (Java property), along those passed with --credentials and --credential-file")
     useEnvCredentials: Boolean = true
 
 ) {

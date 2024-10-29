@@ -1,35 +1,35 @@
 package coursier.cli.options
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, _}
+import caseapp._
 
 // format: off
 final case class OutputOptions(
 
   @Group(OptionGroup.verbosity)
-  @Help("Quiet output")
-  @Short("q")
+  @HelpMessage("Quiet output")
+  @ExtraName("q")
     quiet: Int @@ Counter = Tag.of(0),
 
   @Group(OptionGroup.verbosity)
-  @Help("Increase verbosity (specify several times to increase more)")
-  @Short("v")
+  @HelpMessage("Increase verbosity (specify several times to increase more)")
+  @ExtraName("v")
     verbose: Int @@ Counter = Tag.of(0),
 
   @Group(OptionGroup.verbosity)
-  @Help("Force display of progress bars")
-  @Short("P")
+  @HelpMessage("Force display of progress bars")
+  @ExtraName("P")
     progress: Boolean = false,
 
   @Group(OptionGroup.verbosity)
   @Hidden
-  @Help("Log changing artifacts")
+  @HelpMessage("Log changing artifacts")
     logChanging: Boolean = false,
 
   @Group(OptionGroup.verbosity)
   @Hidden
-  @Help("Log app channel or JVM index version")
-  @Short("log-index-version")
-  @Short("log-jvm-index-version")
+  @HelpMessage("Log app channel or JVM index version")
+  @ExtraName("log-index-version")
+  @ExtraName("log-jvm-index-version")
     logChannelVersion: Boolean = false
 
 )

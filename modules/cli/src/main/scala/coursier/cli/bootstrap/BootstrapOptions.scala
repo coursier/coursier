@@ -1,6 +1,6 @@
 package coursier.cli.bootstrap
 
-import caseapp.{ArgsName, Group, HelpMessage, Parser, Recurse}
+import caseapp.{ArgsName, Group, Help, HelpMessage, Parser, Recurse}
 import coursier.cli.options.OptionGroup
 import coursier.cli.install.SharedChannelOptions
 import coursier.cli.native.NativeLauncherOptions
@@ -40,5 +40,5 @@ final case class BootstrapOptions(
 
 object BootstrapOptions {
   implicit val parser = Parser[BootstrapOptions]
-  implicit val help   = caseapp.core.help.Help[BootstrapOptions]
+  implicit val help   = Help[BootstrapOptions]
 }
