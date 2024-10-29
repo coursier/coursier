@@ -56,6 +56,6 @@ final case class InstallOptions(
 // format: on
 
 object InstallOptions {
-  implicit val parser = Parser[InstallOptions]
-  implicit val help   = Help[InstallOptions]
+  implicit val parser                          = Parser[InstallOptions]
+  implicit lazy val help: Help[InstallOptions] = Help.derive
 }

@@ -57,6 +57,6 @@ final case class SetupOptions(
 }
 
 object SetupOptions {
-  implicit val parser = Parser[SetupOptions]
-  implicit val help   = Help[SetupOptions]
+  implicit val parser                        = Parser[SetupOptions]
+  implicit lazy val help: Help[SetupOptions] = Help.derive
 }

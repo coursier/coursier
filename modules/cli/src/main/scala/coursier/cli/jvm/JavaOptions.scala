@@ -43,6 +43,6 @@ final case class JavaOptions(
 // format: on
 
 object JavaOptions {
-  implicit val parser = Parser[JavaOptions]
-  implicit val help   = Help[JavaOptions]
+  implicit val parser                       = Parser[JavaOptions]
+  implicit lazy val help: Help[JavaOptions] = Help.derive
 }

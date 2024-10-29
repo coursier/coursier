@@ -107,6 +107,6 @@ final case class SharedLaunchOptions(
 }
 
 object SharedLaunchOptions {
-  implicit val parser = Parser[SharedLaunchOptions]
-  implicit val help   = Help[SharedLaunchOptions]
+  implicit val parser                               = Parser[SharedLaunchOptions]
+  implicit lazy val help: Help[SharedLaunchOptions] = Help.derive
 }

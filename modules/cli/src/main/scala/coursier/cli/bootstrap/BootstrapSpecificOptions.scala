@@ -105,6 +105,6 @@ final case class BootstrapSpecificOptions(
 }
 
 object BootstrapSpecificOptions {
-  implicit val parser = Parser[BootstrapSpecificOptions]
-  implicit val help   = Help[BootstrapSpecificOptions]
+  implicit val parser                                    = Parser[BootstrapSpecificOptions]
+  implicit lazy val help: Help[BootstrapSpecificOptions] = Help.derive
 }

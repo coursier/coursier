@@ -42,6 +42,6 @@ final case class UpdateOptions(
 // format: on
 
 object UpdateOptions {
-  implicit val parser = Parser[UpdateOptions]
-  implicit val help   = Help[UpdateOptions]
+  implicit val parser                         = Parser[UpdateOptions]
+  implicit lazy val help: Help[UpdateOptions] = Help.derive
 }

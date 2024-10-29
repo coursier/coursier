@@ -29,6 +29,6 @@ final case class JavaHomeOptions(
 // format: on
 
 object JavaHomeOptions {
-  implicit val parser = Parser[JavaHomeOptions]
-  implicit val help   = Help[JavaHomeOptions]
+  implicit val parser                           = Parser[JavaHomeOptions]
+  implicit lazy val help: Help[JavaHomeOptions] = Help.derive
 }

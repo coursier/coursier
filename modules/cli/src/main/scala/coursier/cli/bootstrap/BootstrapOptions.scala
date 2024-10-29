@@ -39,6 +39,6 @@ final case class BootstrapOptions(
 // format: on
 
 object BootstrapOptions {
-  implicit val parser = Parser[BootstrapOptions]
-  implicit val help   = Help[BootstrapOptions]
+  implicit val parser                            = Parser[BootstrapOptions]
+  implicit lazy val help: Help[BootstrapOptions] = Help.derive
 }

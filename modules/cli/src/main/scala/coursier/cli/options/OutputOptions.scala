@@ -36,6 +36,6 @@ final case class OutputOptions(
 // format: on
 
 object OutputOptions {
-  implicit val parser = Parser[OutputOptions]
-  implicit val help   = Help[OutputOptions]
+  implicit val parser                         = Parser[OutputOptions]
+  implicit lazy val help: Help[OutputOptions] = Help.derive
 }
