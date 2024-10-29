@@ -241,7 +241,7 @@ jobs:
       - name: Build OS packages
         run: .github/scripts/generate-os-packages.sh
         shell: bash
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: launchers-${{ matrix.OSSHORT }}
           path: artifacts/
@@ -267,7 +267,7 @@ jobs:
       - name: Copy artifacts
         run: .github/scripts/maybe-with-graalvm-home.sh copyStaticLauncher --directory artifacts/
         shell: bash
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: launchers-static
           path: artifacts/
@@ -293,7 +293,7 @@ jobs:
       - name: Copy artifacts
         run: .github/scripts/maybe-with-graalvm-home.sh copyMostlyStaticLauncher --directory artifacts/
         shell: bash
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: launchers-mostly-static
           path: artifacts/
@@ -319,7 +319,7 @@ jobs:
       - name: Copy artifacts
         run: .github/scripts/maybe-with-graalvm-home.sh copyContainerLauncher --directory artifacts/
         shell: bash
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: launchers-container
           path: artifacts/
@@ -344,7 +344,7 @@ jobs:
       run: ./mill -i waitForSync
     - name: Copy artifacts
       run: ./mill -i copyJarLaunchers
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: launchers-jar
         path: artifacts/
