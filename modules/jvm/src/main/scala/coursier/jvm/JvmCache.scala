@@ -13,8 +13,8 @@ import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 
 // format: off
 @data class JvmCache(
-  os: String = JvmIndex.defaultOs(),
-  architecture: String = JvmIndex.defaultArchitecture(),
+  os: String = JvmChannel.defaultOs(),
+  architecture: String = JvmChannel.defaultArchitecture(),
   defaultJdkNameOpt: Option[String] = Some(JvmCache.defaultJdkName),
   defaultVersionOpt: Option[String] = Some(JvmCache.defaultVersion),
 

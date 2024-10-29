@@ -25,7 +25,7 @@ object CentralIndexTests extends TestSuite {
   private implicit def ec: ExecutionContext = cache.ec
 
   private def channel(os: String, arch: String) = JvmChannel.module(
-    ModuleParser.module(JvmIndex.coursierIndexCoordinates(os, arch), "").toOption.get
+    JvmChannel.centralModule(os, arch)
   )
 
   val tests = Tests {

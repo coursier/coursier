@@ -3,7 +3,6 @@ package coursier.jvm
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.util.Locale
 import java.util.zip.ZipFile
 
 import com.github.plokhotnyuk.jsoniter_scala.macros._
@@ -20,27 +19,21 @@ import scala.util.{Failure, Success, Try}
 
 object JvmIndex {
 
+  @deprecated("Use JvmChannel.handleAliases instead", "2.1.15")
   def handleAliases(indexName: String): String =
-    indexName match {
-      case "cs" | "cs-github" | "cs-github-legacy" => coursierIndexUrl
-      case "cs-maven" | "cs-central" | "cs-central-v1" =>
-        coursierIndexCoordinates(defaultOs(), defaultArchitecture())
-      case "cs-maven-legacy" => coursierIndexCoordinatesLegacy
-      case other             => other
-    }
+    JvmChannel.handleAliases(indexName)
 
-  def defaultIndexUrl: String =
-    coursierIndexUrl
-
+  @deprecated("Use JvmChannel.coursierIndexUrl instead", "2.1.15")
   def coursierIndexUrl: String =
-    "https://github.com/coursier/jvm-index/raw/master/index.json"
-  private def coursierIndexCoordinatesLegacy: String =
-    "io.get-coursier:jvm-index"
-  @deprecated("Use the override accepting os and arch", "2.1.15")
+    JvmChannel.gitHubIndexUrl
+
+  @deprecated("Use JvmChannel.coursierIndexUrl instead", "2.1.15")
+  def defaultIndexUrl: String =
+    JvmChannel.gitHubIndexUrl
+
+  @deprecated("Use JvmChannel.centralModule instead", "2.1.15")
   def coursierIndexCoordinates: String =
-    coursierIndexCoordinatesLegacy
-  def coursierIndexCoordinates(os: String, arch: String): String =
-    s"io.get-coursier.jvm.indices:index-$os-$arch"
+    JvmChannel.centralModule().repr
 
   private def artifact(url: String) = Artifact(url).withChanging(true)
 
@@ -92,8 +85,8 @@ object JvmIndex {
     arch: Option[String]
   ): Task[Either[Exception, JvmIndex]] = {
 
-    val os0   = os.getOrElse(defaultOs())
-    val arch0 = arch.getOrElse(defaultArchitecture())
+    val os0   = os.getOrElse(JvmChannel.defaultOs())
+    val arch0 = arch.getOrElse(JvmChannel.defaultArchitecture())
     val paths = Seq(
       (s"coursier/jvm/indices/v1/$os0-$arch0.json", true),
       ("index.json", false)
@@ -213,38 +206,26 @@ object JvmIndex {
   def load(
     cache: Cache[Task]
   ): Task[JvmIndex] =
-    load(cache, defaultIndexUrl)
+    load(cache, coursier.Resolve().repositories, JvmChannel.default(), None, None)
 
   def load(): Task[JvmIndex] =
-    load(FileCache(), defaultIndexUrl)
+    load(FileCache(), coursier.Resolve().repositories, JvmChannel.default(), None, None)
 
-  lazy val currentOs: Either[String, String] =
-    Option(System.getProperty("os.name")).map(_.toLowerCase(Locale.ROOT)) match {
-      case Some(s) if s.contains("windows") => Right("windows")
-      case Some(s) if s.contains("linux")   => Right("linux")
-      case Some(s) if s.contains("mac")     => Right("darwin")
-      case unrecognized => Left(s"Unrecognized OS: ${unrecognized.getOrElse("")}")
-    }
+  @deprecated("Use JvmChannel.currentOs instead", "2.1.15")
+  def currentOs: Either[String, String] =
+    JvmChannel.currentOs
 
-  lazy val currentArchitecture: Either[String, String] =
-    Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
-      case Some("x86_64" | "amd64") => Right("amd64")
-      case Some("aarch64")          => Right("arm64")
-      case Some("arm")              => Right("arm")
-      case unrecognized => Left(s"Unrecognized CPU architecture: ${unrecognized.getOrElse("")}")
-    }
+  @deprecated("Use JvmChannel.currentArchitecture instead", "2.1.15")
+  def currentArchitecture: Either[String, String] =
+    JvmChannel.currentArchitecture
 
+  @deprecated("Use JvmChannel.defaultOs instead", "2.1.15")
   def defaultOs(): String =
-    currentOs match {
-      case Right(os) => os
-      case Left(err) => throw new Exception(err)
-    }
+    JvmChannel.defaultOs()
 
+  @deprecated("Use JvmChannel.defaultArchitecture instead", "2.1.15")
   def defaultArchitecture(): String =
-    currentArchitecture match {
-      case Right(arch) => arch
-      case Left(err)   => throw new Exception(err)
-    }
+    JvmChannel.defaultArchitecture()
 
   private def parseDescriptor(input: String): Either[String, (ArchiveType, String)] = {
     val idx = input.indexOf('+')
@@ -328,8 +309,8 @@ object JvmIndex {
       }
 
     for {
-      os        <- os.map(Right(_)).getOrElse(JvmIndex.currentOs)
-      arch      <- arch.map(Right(_)).getOrElse(JvmIndex.currentArchitecture)
+      os        <- os.map(Right(_)).getOrElse(JvmChannel.currentOs)
+      arch      <- arch.map(Right(_)).getOrElse(JvmChannel.currentArchitecture)
       osIndex   <- content.get(os).toRight(s"No JVM found for OS $os")
       archIndex <- osIndex.get(arch).toRight(s"No JVM found for OS $os and CPU architecture $arch")
       versionIndex <-
@@ -365,8 +346,8 @@ object JvmIndex {
     jdkNamePrefix: Option[String] = Some("jdk@")
   ): Either[String, Map[String, Map[String, String]]] =
     for {
-      os        <- os.map(Right(_)).getOrElse(JvmIndex.currentOs)
-      arch      <- arch.map(Right(_)).getOrElse(JvmIndex.currentArchitecture)
+      os        <- os.map(Right(_)).getOrElse(JvmChannel.currentOs)
+      arch      <- arch.map(Right(_)).getOrElse(JvmChannel.currentArchitecture)
       osIndex   <- content.get(os).toRight(s"No JVM found for OS $os")
       archIndex <- osIndex.get(arch).toRight(s"No JVM found for OS $os and CPU architecture $arch")
     } yield archIndex.map {
