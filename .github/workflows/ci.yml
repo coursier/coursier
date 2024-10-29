@@ -213,12 +213,15 @@ jobs:
       fail-fast: false
       matrix:
         OS: ["ubuntu-latest"]
+        OSSHORT: ["linux"]
         JDK: ["8"]
         include:
           - JDK: "17"
             OS: "windows-latest"
+            OSSHORT: "windows"
           - JDK: "17"
             OS: "macos-13"
+            OSSHORT: "mac"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -240,7 +243,7 @@ jobs:
         shell: bash
       - uses: actions/upload-artifact@v3
         with:
-          name: launchers
+          name: launchers-${{ matrix.OSSHORT }}
           path: artifacts/
           if-no-files-found: error
           retention-days: 2
@@ -266,7 +269,7 @@ jobs:
         shell: bash
       - uses: actions/upload-artifact@v3
         with:
-          name: launchers
+          name: launchers-static
           path: artifacts/
           if-no-files-found: error
           retention-days: 2
@@ -292,7 +295,7 @@ jobs:
         shell: bash
       - uses: actions/upload-artifact@v3
         with:
-          name: launchers
+          name: launchers-mostly-static
           path: artifacts/
           if-no-files-found: error
           retention-days: 2
@@ -318,7 +321,7 @@ jobs:
         shell: bash
       - uses: actions/upload-artifact@v3
         with:
-          name: launchers
+          name: launchers-container
           path: artifacts/
           if-no-files-found: error
           retention-days: 2
@@ -343,7 +346,7 @@ jobs:
       run: ./mill -i copyJarLaunchers
     - uses: actions/upload-artifact@v3
       with:
-        name: launchers
+        name: launchers-jar
         path: artifacts/
         if-no-files-found: error
         retention-days: 2
@@ -364,7 +367,31 @@ jobs:
         jvm: 8
     - uses: actions/download-artifact@v3
       with:
-        name: launchers
+        name: launchers-linux
+        path: artifacts/
+    - uses: actions/download-artifact@v3
+      with:
+        name: launchers-windows
+        path: artifacts/
+    - uses: actions/download-artifact@v3
+      with:
+        name: launchers-mac
+        path: artifacts/
+    - uses: actions/download-artifact@v3
+      with:
+        name: launchers-static
+        path: artifacts/
+    - uses: actions/download-artifact@v3
+      with:
+        name: launchers-mostly-static
+        path: artifacts/
+    - uses: actions/download-artifact@v3
+      with:
+        name: launchers-container
+        path: artifacts/
+    - uses: actions/download-artifact@v3
+      with:
+        name: launchers-jar
         path: artifacts/
     - run: ./mill -i uploadLaunchers --directory artifacts/
       env:
