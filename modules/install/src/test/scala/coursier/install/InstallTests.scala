@@ -8,12 +8,13 @@ import java.time.Instant
 import java.util.Locale
 import java.util.zip.ZipFile
 
+import coursier.cache.Cache
 import coursier.cache.internal.FileUtil
-import coursier.cache.{Cache, MockCache}
 import coursier.install.error.NotAnApplication
 import coursier.launcher.Preamble
 import coursier.launcher.internal.Windows
-import coursier.util.{Sync, Task}
+import coursier.testcache.TestCache
+import coursier.util.Task
 import utest._
 
 import scala.jdk.CollectionConverters._
@@ -23,22 +24,8 @@ import scala.util.{Properties, Using}
 
 object InstallTests extends TestSuite {
 
-  private val pool = Sync.fixedThreadPool(6)
-
-  private val mockDataLocation = {
-    val dirStr = Option(System.getenv("COURSIER_TESTS_METADATA_DIR")).getOrElse {
-      sys.error("COURSIER_TESTS_METADATA_DIR not set")
-    }
-    val dir = Paths.get(dirStr)
-    assert(Files.isDirectory(dir))
-    dir
-  }
-
-  private val updateSnapshots = Option(System.getenv("FETCH_MOCK_DATA"))
-    .exists(s => s == "1" || s.toLowerCase(Locale.ROOT) == "true")
-
-  private val cache: Cache[Task] =
-    MockCache.create[Task](mockDataLocation, writeMissing = updateSnapshots, pool = pool)
+  private def cache: Cache[Task] =
+    TestCache.cache
 
   private def delete(d: Path): Unit =
     if (Files.isDirectory(d)) {
@@ -205,10 +192,6 @@ object InstallTests extends TestSuite {
     else if (os.contains("mac")) "mac"
     else if (os.contains("windows")) "windows"
     else sys.error(s"Unknown OS: '$os'")
-  }
-
-  override def utestAfterAll(): Unit = {
-    pool.shutdown()
   }
 
   val tests = Tests {

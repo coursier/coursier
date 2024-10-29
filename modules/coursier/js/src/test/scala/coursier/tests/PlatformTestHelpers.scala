@@ -2,6 +2,7 @@ package coursier.tests
 
 import coursier.cache.internal.Platform
 import coursier.cache.{Cache, MockCache}
+import coursier.testcache.TestCache
 import coursier.util.Task
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -22,16 +23,7 @@ abstract class PlatformTestHelpers {
         sys.error("COURSIER_TEST_DATA_DIR not set")
       }
 
-  val metadataBase =
-    PlatformTestHelpers.process.env
-      .asInstanceOf[js.Dictionary[String]]
-      .get("COURSIER_TESTS_METADATA_DIR_URI")
-      .getOrElse {
-        sys.error("COURSIER_TESTS_METADATA_DIR_URI not set")
-      }
-
-  val cache: Cache[Task] =
-    MockCache(metadataBase.stripPrefix("file://").stripPrefix("file:"))
+  def cache: Cache[Task] = TestCache.cache
 
   val handmadeMetadataBase =
     PlatformTestHelpers.process.env
@@ -43,8 +35,6 @@ abstract class PlatformTestHelpers {
 
   val handmadeMetadataCache: Cache[Task] =
     MockCache(handmadeMetadataBase.stripPrefix("file://").stripPrefix("file:"))
-
-  val updateSnapshots = false
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =
     Platform.textResource(path)

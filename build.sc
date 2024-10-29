@@ -204,6 +204,11 @@ object `cli-tests` extends CliTests
 
 object web extends Web
 
+object `test-cache` extends Module {
+  object jvm extends Cross[TestCacheJvm](ScalaVersions.all)
+  object js  extends Cross[TestCacheJs](ScalaVersions.all)
+}
+
 trait UtilJvm extends UtilJvmBase {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.jsoup
@@ -357,7 +362,11 @@ trait CoursierJvm extends CoursierJvmBase { self =>
   )
   // Put CoursierTests right after TestModule, and see what happens
   object test extends TestModule with CrossSbtTests with CoursierTests with CsTests
-      with JvmTests
+      with JvmTests {
+    def moduleDeps = super.moduleDeps ++ Seq(
+      `test-cache`.jvm()
+    )
+  }
   object it extends TestModule with CrossSbtTests with CoursierTests with CsTests
       with JvmTests {
     def sources = T.sources(
@@ -382,7 +391,11 @@ trait CoursierJs extends Coursier with CsScalaJsModule {
     core.js(),
     cache.js()
   )
-  object test extends SbtTests with ScalaJSTests with CsTests with JsTests with CoursierTests
+  object test extends SbtTests with ScalaJSTests with CsTests with JsTests with CoursierTests {
+    def moduleDeps = super.moduleDeps ++ Seq(
+      `test-cache`.js()
+    )
+  }
 }
 
 trait TestsJvm extends TestsModule { self =>
@@ -395,7 +408,8 @@ trait TestsJvm extends TestsModule { self =>
   )
   object test extends CrossSbtTests with CsTests with JvmTests {
     def moduleDeps = super.moduleDeps ++ Seq(
-      coursier.jvm()
+      coursier.jvm(),
+      `test-cache`.jvm()
     )
   }
   object it extends CrossSbtTests with CsTests with JvmTests
@@ -432,7 +446,8 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
   object test extends SbtTests with ScalaJSTests with CsTests with JsTests {
     def moduleDeps = super.moduleDeps ++ Seq(
-      coursier.js()
+      coursier.js(),
+      `test-cache`.js()
     )
   }
 }
@@ -517,6 +532,9 @@ trait Install extends CrossSbtModule with CsModule
     Deps.catsCore
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
+    def moduleDeps = super.moduleDeps ++ Seq(
+      `test-cache`.jvm()
+    )
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.pprint
     )
@@ -541,9 +559,14 @@ trait Jvm extends CrossSbtModule with CsModule
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.jsoniterCore
   )
-  object test extends CrossSbtTests with CsTests {
+  object test extends CrossSbtTests with CsTests with CsResourcesTests {
+    def moduleDeps = super.moduleDeps ++ Seq(
+      `test-cache`.jvm()
+    )
     def ivyDeps = super.ivyDeps() ++ Seq(
-      Deps.osLib
+      Deps.osLib,
+      Deps.pprint,
+      Deps.scalaAsync
     )
     def mockCache = T.source {
       PathRef(T.workspace / "modules" / "jvm" / "src" / "test" / "resources" / "mock-cache")
@@ -709,6 +732,19 @@ object `redirecting-server` extends CsModule {
     Deps.http4sServer
   )
   def mainClass = Some("redirectingserver.RedirectingServer")
+}
+
+trait TestCacheJvm extends Cross.Module[String] with CsCrossJvmJsModule {
+  def scalaVersion = crossValue
+  def moduleDeps = Seq(
+    cache.jvm()
+  )
+}
+trait TestCacheJs extends Cross.Module[String] with CsCrossJvmJsModule with CsScalaJsModule {
+  def scalaVersion = crossValue
+  def moduleDeps = Seq(
+    cache.js()
+  )
 }
 
 def simpleNative04CliTest() = T.command {
