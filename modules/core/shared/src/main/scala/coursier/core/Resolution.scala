@@ -356,7 +356,7 @@ object Resolution {
           case (k, l) if !overrides.contains(k) && l.exists(_.version.nonEmpty) =>
             k -> l.map(_.version).filter(_.nonEmpty)
         }
-      DepMgmt.addSeq(
+      DepMgmt.add(
         overrides,
         dependencyManagement
           .filter {
@@ -370,8 +370,13 @@ object Resolution {
             case (config, dep) =>
               val clearVersion = !forceDepMgmtVersions &&
                 versions.get(DepMgmt.key(dep)).getOrElse(Nil).exists(_ != dep.version)
-              val dep0 = if (clearVersion) dep.withVersion("") else dep
-              (config, dep0)
+              val values = DependencyManagement.Values(
+                Configuration.empty,
+                if (clearVersion) "" else dep.version,
+                dep.minimizedExclusions,
+                optional = false
+              )
+              (DepMgmt.key(dep), values)
           }
       ).filter(!_._2.isEmpty)
     }
@@ -390,7 +395,7 @@ object Resolution {
           if (useManagedVersion)
             dep = dep.withVersion(mgmtValues.version)
 
-          if (mgmtValues.config.nonEmpty && (config.isEmpty || overrides.contains(key)))
+          if (mgmtValues.config.nonEmpty && config.isEmpty)
             config = mgmtValues.config
 
           // FIXME The version and scope/config from dependency management, if any, are substituted
