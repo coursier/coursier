@@ -21,7 +21,7 @@ trait Doc extends ScalaModule {
     branch: String = "master",
     docusaurusDir: String = "doc/website"
   ) = T.command {
-    val dir = os.Path(docusaurusDir, os.pwd)
+    val dir = os.Path(docusaurusDir, T.workspace)
     docs.copyDocusaurusVersionedData(repo, branch, dir, T.dest / "repo")
   }
 
@@ -55,13 +55,13 @@ trait Doc extends ScalaModule {
       if (ver.endsWith("SNAPSHOT")) """resolvers += Resolver.sonatypeRepo("snapshots")""" + "\n"
       else ""
 
-    val outputDir = os.pwd / "doc" / "processed-docs"
+    val outputDir = T.workspace / "doc" / "processed-docs"
 
     val allArgs: Seq[String] = Seq(
       "--classpath",
       classPath().map(_.path.toString).mkString(File.pathSeparator),
       "--in",
-      (os.pwd / "doc" / "docs").toString,
+      (T.workspace / "doc" / "docs").toString,
       "--out",
       outputDir.toString,
       "--site.VERSION",
@@ -78,7 +78,7 @@ trait Doc extends ScalaModule {
 
     // TODO Run yarn run thing right after, add --watch mode
 
-    val websiteDir = os.pwd / "doc" / "website"
+    val websiteDir = T.workspace / "doc" / "website"
 
     if (npmInstall)
       os.proc("npm", "install").call(
@@ -90,7 +90,7 @@ trait Doc extends ScalaModule {
 
     def runMdoc(): Unit =
       // adapted from https://github.com/com-lihaoyi/mill/blob/c500ca986ab79af3ce59ba65a093146672092307/scalalib/src/JavaModule.scala#L488-L494
-      mill.modules.Jvm.runSubprocess(
+      mill.util.Jvm.runSubprocess(
         finalMainClass(),
         runClasspath().map(_.path),
         Nil,

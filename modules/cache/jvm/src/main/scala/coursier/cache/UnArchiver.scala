@@ -1,6 +1,7 @@
 package coursier.cache
 
-import java.io.{File, FileInputStream, FileOutputStream}
+import java.io.{File, InputStream, OutputStream}
+import java.nio.file.Files
 import java.util.zip.GZIPInputStream
 
 import org.codehaus.plexus.archiver.tar.{TarBZip2UnArchiver, TarGZipUnArchiver}
@@ -32,13 +33,13 @@ object UnArchiver {
               // TODO Case-insensitive stripSuffix?
               val dest = new File(destDir, archive.getName.stripSuffix(".gz"))
 
-              var fis: FileInputStream  = null
-              var fos: FileOutputStream = null
+              var fis: InputStream      = null
+              var fos: OutputStream     = null
               var gzis: GZIPInputStream = null
               try {
-                fis = new FileInputStream(archive)
+                fis = Files.newInputStream(archive.toPath)
                 gzis = new GZIPInputStream(fis)
-                fos = new FileOutputStream(dest)
+                fos = Files.newOutputStream(dest.toPath)
 
                 val buf  = Array.ofDim[Byte](16 * 1024)
                 var read = -1

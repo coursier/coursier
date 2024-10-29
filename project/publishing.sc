@@ -8,7 +8,8 @@ def mavenOrg = "io.get-coursier"
 
 def publishSonatype(
   data: Seq[PublishModule.PublishData],
-  log: mill.api.Logger
+  log: mill.api.Logger,
+  workspace: os.Path
 ): Unit = {
 
   val credentials = sys.env("SONATYPE_USERNAME") + ":" + sys.env("SONATYPE_PASSWORD")
@@ -48,7 +49,7 @@ def publishSonatype(
     readTimeout = timeout.toMillis.toInt,
     connectTimeout = timeout.toMillis.toInt,
     log = log,
-    workspace = os.pwd,
+    workspace = workspace,
     env = sys.env,
     awaitTimeout = timeout.toMillis.toInt,
     stagingRelease = isRelease

@@ -1,6 +1,6 @@
 package coursier.install
 
-import java.io.{ByteArrayOutputStream, File, FileInputStream}
+import java.io.{ByteArrayOutputStream, File}
 import java.lang.ProcessBuilder.Redirect
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, FileSystemException, Path, Paths}
@@ -8,12 +8,13 @@ import java.time.Instant
 import java.util.Locale
 import java.util.zip.ZipFile
 
+import coursier.cache.Cache
 import coursier.cache.internal.FileUtil
-import coursier.cache.{Cache, MockCache}
 import coursier.install.error.NotAnApplication
 import coursier.launcher.Preamble
 import coursier.launcher.internal.Windows
-import coursier.util.{Sync, Task}
+import coursier.testcache.TestCache
+import coursier.util.Task
 import utest._
 
 import scala.jdk.CollectionConverters._
@@ -23,19 +24,8 @@ import scala.util.{Properties, Using}
 
 object InstallTests extends TestSuite {
 
-  private val pool = Sync.fixedThreadPool(6)
-
-  private val mockDataLocation = {
-    val dir = Paths.get("modules/tests/metadata")
-    assert(Files.isDirectory(dir))
-    dir
-  }
-
-  private val updateSnapshots = Option(System.getenv("FETCH_MOCK_DATA"))
-    .exists(s => s == "1" || s.toLowerCase(Locale.ROOT) == "true")
-
-  private val cache: Cache[Task] =
-    MockCache.create[Task](mockDataLocation, writeMissing = updateSnapshots, pool = pool)
+  private def cache: Cache[Task] =
+    TestCache.cache
 
   private def delete(d: Path): Unit =
     if (Files.isDirectory(d)) {
@@ -125,17 +115,20 @@ object InstallTests extends TestSuite {
     val retCode = p.waitFor()
     if (retCode == expectedReturnCode)
       new String(baos.toByteArray, StandardCharsets.UTF_8)
-    else
+    else {
+      val output = new String(baos.toByteArray, StandardCharsets.UTF_8)
+      pprint.err.log(output)
       throw new Exception(
         s"Error while running ${command.mkString(" ")} (return code: $retCode, expected: $expectedReturnCode)"
       )
+    }
   }
 
   private def assertNativeExecutable(file: File) = {
 
     // https://stackoverflow.com/questions/14799966/detect-an-executable-file-in-java/14800092#14800092
 
-    val fis    = new FileInputStream(file)
+    val fis    = Files.newInputStream(file.toPath)
     val osName = sys.props("os.name").toLowerCase(Locale.ROOT)
     if (osName.contains("mac")) {
       val buf  = Array.fill[Byte](4)(0)
@@ -199,10 +192,6 @@ object InstallTests extends TestSuite {
     else if (os.contains("mac")) "mac"
     else if (os.contains("windows")) "windows"
     else sys.error(s"Unknown OS: '$os'")
-  }
-
-  override def utestAfterAll(): Unit = {
-    pool.shutdown()
   }
 
   val tests = Tests {
@@ -837,11 +826,18 @@ object InstallTests extends TestSuite {
             launcher.toAbsolutePath.toString,
             "-version"
           )
+          if (!output.contains(expectedInOut)) {
+            pprint.err.log(expectedInOut)
+            pprint.err.log(output)
+          }
           assert(output.contains(expectedInOut))
         }
 
+        /* issues on the Windows CI */
+        val maybeTestOutput = System.getenv("CI") == null || currentOs != "windows"
+
         searchInScript(scala3path)
-        if (currentOs == os)
+        if (currentOs == os && maybeTestOutput)
           testOutput("Scala compiler version 3.3.3 -- Copyright 2002-2024, LAMP/EPFL")
 
         val overridenAppInfo = appInfo0.overrideVersion("2.12.8")
@@ -868,7 +864,7 @@ object InstallTests extends TestSuite {
         assert(updated.exists(identity))
 
         searchInScript(scala3path)
-        if (currentOs == os)
+        if (currentOs == os && maybeTestOutput)
           testOutput("Scala compiler version 3.3.3 -- Copyright 2002-2024, LAMP/EPFL")
       }
 

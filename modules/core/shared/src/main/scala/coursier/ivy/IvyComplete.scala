@@ -9,7 +9,7 @@ import dataclass.data
   fetch: Repository.Fetch[F],
   F: Monad[F]
 ) extends Repository.Complete[F] {
-  private implicit def F0 = F
+  private implicit def F0: Monad[F] = F
 
   private lazy val organizationListingPatternOpt: Option[Pattern] =
     repo.patternUpTo(Pattern.Chunk.Var("organisation"))

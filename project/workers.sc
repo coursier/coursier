@@ -4,11 +4,11 @@ import mill._, scalalib._
 
 import java.io.{File, InputStream, IOException}
 
-final case class RedirectingServer(
-  host: String = "localhost",
-  port: Int = randomPort(),
+final class RedirectingServer(
+  val host: String = "localhost",
+  val port: Int = randomPort(),
   var proc: os.SubProcess = null
-) extends java.io.Closeable {
+) extends AutoCloseable {
   def url = s"http://$host:$port"
 
   def healthCheck(): Boolean = {
@@ -29,7 +29,7 @@ final case class RedirectingServer(
   }
 
   override def close(): Unit =
-    proc.destroyForcibly()
+    proc.destroy(shutdownGracePeriod = 0)
 }
 
 trait UsesRedirectingServer extends Module {
@@ -40,7 +40,7 @@ trait UsesRedirectingServer extends Module {
     val cp        = redirectingServerCp().map(_.path)
     val mainClass = redirectingServerMainClass()
 
-    val server = RedirectingServer()
+    val server = new RedirectingServer
 
     if (server.healthCheck())
       sys.error("Server already running")
@@ -74,13 +74,13 @@ trait UsesRedirectingServer extends Module {
   }
 }
 
-final case class TestRepoServer(
-  host: String = "localhost",
-  port: Int = randomPort(),
-  user: String = "user",
-  password: String = "pass",
+final class TestRepoServer(
+  val host: String = "localhost",
+  val port: Int = randomPort(),
+  val user: String = "user",
+  val password: String = "pass",
   var proc: os.SubProcess = null
-) extends java.io.Closeable {
+) extends AutoCloseable {
   def url = s"http://$host:$port"
 
   def healthCheck(): Boolean = {
@@ -101,53 +101,7 @@ final case class TestRepoServer(
   }
 
   override def close(): Unit =
-    proc.destroyForcibly()
-}
-
-def testRepoServer = T.worker {
-  val server = TestRepoServer()
-
-  if (server.healthCheck())
-    sys.error("Test repo server already running")
-
-  server.proc = os.proc(
-    "cs",
-    "launch",
-    "io.get-coursier:http-server_2.12:1.0.0",
-    "--",
-    "-d",
-    "modules/tests/handmade-metadata/data/http/abc.com",
-    "-u",
-    server.user,
-    "-P",
-    server.password,
-    "-r",
-    "realm",
-    "-v",
-    "--host",
-    server.host,
-    "--port",
-    server.port.toString
-  ).spawn(
-    stdin = os.Pipe,
-    stdout = os.Inherit,
-    stderr = os.Inherit
-  )
-  server.proc.stdin.close()
-  var serverRunning = false
-  var countDown     = 20
-  while (!serverRunning && server.proc.isAlive() && countDown > 0) {
-    serverRunning = server.healthCheck()
-    if (!serverRunning)
-      Thread.sleep(500L)
-    countDown -= 1
-  }
-  if (serverRunning && server.proc.isAlive()) {
-    T.log.outputStream.println(s"Test repository listening on ${server.url}")
-    server
-  }
-  else
-    sys.error("Cannot run test repo server")
+    proc.destroy(shutdownGracePeriod = 0)
 }
 
 private def randomPort(): Int = {

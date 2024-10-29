@@ -5,6 +5,7 @@ import java.io.File
 import coursier.LocalRepositories
 import coursier.core.{Classifier, Dependency, Type}
 import coursier.ivy.{IvyRepository, Pattern}
+import coursier.testcache.TestCache
 import coursier.tests.compatibility._
 import coursier.util.StringInterpolators._
 import utest._
@@ -22,8 +23,7 @@ object IvyLocalTests extends TestSuite {
       val module = mod"io.get-coursier:coursier-core_2.12"
 
       val mockIvy2Local = IvyRepository.fromPattern(
-        new File("modules/tests/metadata/ivy-local").getAbsoluteFile.toURI.toASCIIString +:
-          Pattern.default,
+        TestCache.dataDir.resolve("ivy-local").toUri.toASCIIString +: Pattern.default,
         dropInfoAttributes = true
       )
       val extraRepos = Seq(mockIvy2Local)

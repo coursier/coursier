@@ -1037,6 +1037,10 @@ object FileCacheRedirectionTests extends TestSuite {
                 CustomLoaderClasspath.files.map(new URL(_)).toArray
               )
 
+            val customProtocolBase =
+              Option(System.getenv("COURSIER_CUSTOMPROTOCOL_BASE")).getOrElse {
+                sys.error("COURSIER_CUSTOMPROTOCOL_BASE not set")
+              }
             val artifact = Artifact("customprotocol://hostname/README.md")
 
             val res = await {
@@ -1050,8 +1054,9 @@ object FileCacheRedirectionTests extends TestSuite {
 
             res match {
               case Right(file) =>
-                val actual   = new String(Files.readAllBytes(file.toPath))
-                val expected = new String(Files.readAllBytes(Paths.get("README.md")))
+                val actual = new String(Files.readAllBytes(file.toPath))
+                val expected =
+                  new String(Files.readAllBytes(Paths.get(customProtocolBase).resolve("README.md")))
                 assert(actual == expected)
 
               case Left(e) => throw e

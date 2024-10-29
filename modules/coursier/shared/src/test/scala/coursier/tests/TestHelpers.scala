@@ -4,6 +4,7 @@ import java.lang.{Boolean => JBoolean}
 
 import coursier.core.{Classifier, Dependency, Module, Resolution, Type}
 import coursier.params.ResolutionParams
+import coursier.testcache.TestCache
 import coursier.util.Artifact
 
 import scala.async.Async.{async, await}
@@ -14,10 +15,27 @@ object TestHelpers extends PlatformTestHelpers {
   implicit def ec: ExecutionContext =
     cache.ec
 
-  private lazy val testDataDir =
-    Option(System.getenv("COURSIER_TEST_DATA_DIR")).getOrElse {
-      sys.error("COURSIER_TEST_DATA_DIR env var not set")
+  private def dependenciesConsistencyCheck(res: Resolution): Unit = {
+
+    def list(deps: Iterable[Dependency]): Seq[String] =
+      deps
+        .iterator
+        .map(dep => s"${dep.module.repr}:${dep.version}") // Add config too?
+        .toArray
+        .sorted
+        .distinct
+        .toSeq
+
+    val fromOrdered   = list(res.orderedDependencies)
+    val fromMinimized = list(res.minDependencies)
+
+    if (fromOrdered != fromMinimized) {
+      val msg = "Ordered and minimized dependency lists differ"
+      System.err.println(s"$msg")
+      maybePrintConsistencyDiff(fromOrdered, fromMinimized)
+      throw new Exception(msg)
     }
+  }
 
   private def validate(
     name: String,
@@ -28,6 +46,8 @@ object TestHelpers extends PlatformTestHelpers {
     result: => Seq[String]
   ): Future[Unit] = async {
     assert(res.rootDependencies.nonEmpty)
+
+    dependenciesConsistencyCheck(res)
 
     val rootDep = res.rootDependencies.head
 
@@ -113,13 +133,13 @@ object TestHelpers extends PlatformTestHelpers {
     val expected =
       await(
         tryRead.recoverWith {
-          case _: Exception if updateSnapshots =>
+          case _: Exception if TestCache.updateSnapshots =>
             maybeWriteTextResource(path, result0.mkString("\n"))
             tryRead
         }
       ).split('\n').toSeq.filter(_.nonEmpty)
 
-    if (updateSnapshots) {
+    if (TestCache.updateSnapshots) {
       if (result0 != expected)
         maybeWriteTextResource(path, result0.mkString("\n"))
     }

@@ -13,8 +13,8 @@ import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 
 // format: off
 @data class JvmCache(
-  os: String = JvmIndex.defaultOs(),
-  architecture: String = JvmIndex.defaultArchitecture(),
+  os: String = JvmChannel.defaultOs(),
+  architecture: String = JvmChannel.defaultArchitecture(),
   defaultJdkNameOpt: Option[String] = Some(JvmCache.defaultJdkName),
   defaultVersionOpt: Option[String] = Some(JvmCache.defaultVersion),
 
@@ -123,16 +123,25 @@ import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
     withIndex(indexTask)
   }
 
-  def withIndexChannel(repositories: Seq[Repository], indexChannel: JvmChannel): JvmCache = {
+  def withIndexChannel(
+    repositories: Seq[Repository],
+    indexChannel: JvmChannel,
+    os: Option[String],
+    architecture: Option[String]
+  ): JvmCache = {
     val indexTask = archiveCache.cache
       .loggerOpt
       .filter(_ => handleLoggerLifecycle)
       .getOrElse(CacheLogger.nop)
       .using {
-        JvmIndex.load(archiveCache.cache, repositories, indexChannel)
+        JvmIndex.load(archiveCache.cache, repositories, indexChannel, os, architecture)
       }
     withIndex(indexTask)
   }
+
+  @deprecated("Use the override accepting os and architecture", "2.1.15")
+  def withIndexChannel(repositories: Seq[Repository], indexChannel: JvmChannel): JvmCache =
+    withIndexChannel(repositories, indexChannel, None, None)
 
   def withDefaultIndex: JvmCache = {
     val indexTask = archiveCache.cache

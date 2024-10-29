@@ -1,6 +1,6 @@
 package coursier.install
 
-import java.io.FileOutputStream
+import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.attribute.FileTime
 import java.nio.file.{Files, Path}
@@ -196,10 +196,10 @@ object InfoFile {
   ): Unit = {
     val preambleDataOpt = preamble.map(_.value)
 
-    var fos: FileOutputStream = null
-    var zos: ZipOutputStream  = null
+    var fos: OutputStream    = null
+    var zos: ZipOutputStream = null
     try {
-      fos = new FileOutputStream(dest.toFile)
+      fos = Files.newOutputStream(dest)
 
       for (b <- preambleDataOpt)
         fos.write(b)

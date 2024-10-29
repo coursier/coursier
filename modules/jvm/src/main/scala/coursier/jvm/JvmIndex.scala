@@ -3,7 +3,6 @@ package coursier.jvm
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-import java.util.Locale
 import java.util.zip.ZipFile
 
 import com.github.plokhotnyuk.jsoniter_scala.macros._
@@ -20,20 +19,21 @@ import scala.util.{Failure, Success, Try}
 
 object JvmIndex {
 
+  @deprecated("Use JvmChannel.handleAliases instead", "2.1.15")
   def handleAliases(indexName: String): String =
-    indexName match {
-      case "cs"       => coursierIndexUrl
-      case "cs-maven" => coursierIndexCoordinates
-      case other      => other
-    }
+    JvmChannel.handleAliases(indexName)
 
-  def defaultIndexUrl: String =
-    coursierIndexUrl
-
+  @deprecated("Use JvmChannel.coursierIndexUrl instead", "2.1.15")
   def coursierIndexUrl: String =
-    "https://github.com/coursier/jvm-index/raw/master/index.json"
+    JvmChannel.gitHubIndexUrl
+
+  @deprecated("Use JvmChannel.coursierIndexUrl instead", "2.1.15")
+  def defaultIndexUrl: String =
+    JvmChannel.gitHubIndexUrl
+
+  @deprecated("Use JvmChannel.centralModule instead", "2.1.15")
   def coursierIndexCoordinates: String =
-    "io.get-coursier:jvm-index"
+    JvmChannel.centralModule().repr
 
   private def artifact(url: String) = Artifact(url).withChanging(true)
 
@@ -41,6 +41,25 @@ object JvmIndex {
     String,
     Map[String, Map[String, Map[String, String]]]
   ]](CodecMakerConfig)
+
+  def fromBytes(index: Array[Byte]): Either[Throwable, JvmIndex] =
+    Try(readFromArray(index)(codec)) match {
+      case Success(map) => Right(JvmIndex(map))
+      case Failure(t)   => Left(t)
+    }
+
+  private val shortIndexCodec =
+    JsonCodecMaker.make[Map[String, Map[String, String]]](CodecMakerConfig)
+
+  private def shortIndexFromBytes(
+    index: Array[Byte],
+    os: String,
+    arch: String
+  ): Either[Throwable, JvmIndex] =
+    Try(readFromArray(index)(shortIndexCodec)) match {
+      case Success(map) => Right(JvmIndex(Map(os -> Map(arch -> map)), jdkNamePrefix = Some("")))
+      case Failure(t)   => Left(t)
+    }
 
   def fromString(index: String): Either[Throwable, JvmIndex] =
     Try(readFromString(index)(codec)) match {
@@ -61,8 +80,18 @@ object JvmIndex {
   private def fromModule(
     cache: Cache[Task],
     repositories: Seq[Repository],
-    channel: JvmChannel.FromModule
-  ): Task[Option[JvmIndex]] =
+    channel: JvmChannel.FromModule,
+    os: Option[String],
+    arch: Option[String]
+  ): Task[Either[Exception, JvmIndex]] = {
+
+    val os0   = os.getOrElse(JvmChannel.defaultOs())
+    val arch0 = arch.getOrElse(JvmChannel.defaultArchitecture())
+    val paths = Seq(
+      (s"coursier/jvm/indices/v1/$os0-$arch0.json", true),
+      ("index.json", false)
+    )
+
     for {
       res <- coursier.Fetch(cache)
         .withDependencies(Seq(Dependency(channel.module, channel.version)))
@@ -84,13 +113,21 @@ object JvmIndex {
         .map { f =>
           Task.delay {
             withZipFile(f) { zf =>
-              val path = "index.json"
-              Option(zf.getEntry(path)).map { e =>
-                val binaryContent = FileUtil.readFully(zf.getInputStream(e))
-                val strContent    = new String(binaryContent, StandardCharsets.UTF_8)
-                fromString(strContent)
-                  .left.map(ex => new Exception(s"Error parsing $f!$path", ex))
-              }
+              paths
+                .iterator
+                .flatMap {
+                  case (path, isShort) =>
+                    Option(zf.getEntry(path)).iterator.map((path, isShort, _))
+                }
+                .map {
+                  case (path, isShort, e) =>
+                    val binaryContent = FileUtil.readFully(zf.getInputStream(e))
+                    val res =
+                      if (isShort) shortIndexFromBytes(binaryContent, os0, arch0)
+                      else fromBytes(binaryContent)
+                    res.left.map(ex => new Exception(s"Error parsing $f!$path", ex))
+                }
+                .find(_ => true)
             }
           }.flatMap {
             case None             => Task.point(None)
@@ -104,80 +141,91 @@ object JvmIndex {
             case s @ Some(_) => Task.point(s)
           }
         }
-    } yield dataOpt
+    } yield dataOpt.toRight {
+      new Exception(s"${paths.mkString(" or ")} not found in ${res.files.mkString(", ")}")
+    }
+  }
 
+  def load(
+    cache: Cache[Task],
+    repositories: Seq[Repository],
+    indexChannel: JvmChannel,
+    os: Option[String],
+    arch: Option[String]
+  ): Task[JvmIndex] =
+    indexChannel match {
+      case f: JvmChannel.FromFile =>
+        Task.delay(Files.readAllBytes(f.path)).attempt.flatMap {
+          case Left(ex) => Task.fail(new Exception(s"Error while reading ${f.path}", ex))
+          case Right(content) =>
+            Task.fromEither(fromBytes(content))
+        }
+      case u: JvmChannel.FromUrl =>
+        cache.file(artifact(u.url)).run.flatMap {
+          case Left(err) =>
+            Task.fail(new Exception(s"Error while getting ${u.url}: $err"))
+          case Right(file) =>
+            val contentTask = Task.delay {
+              Files.readAllBytes(file.toPath)
+            }
+            contentTask.flatMap { content =>
+              Task.fromEither(fromBytes(content))
+            }
+        }
+      case m: JvmChannel.FromModule =>
+        fromModule(cache, repositories, m, os, arch).flatMap {
+          case Left(ex) => Task.fail(new Exception(s"No index found in ${m.repr}", ex))
+          case Right(c) => Task.point(c)
+        }
+    }
+
+  @deprecated("Use the override accepting os and arch", "2.1.15")
   def load(
     cache: Cache[Task],
     repositories: Seq[Repository],
     indexChannel: JvmChannel
   ): Task[JvmIndex] =
-    indexChannel match {
-      case f: JvmChannel.FromFile =>
-        Task.delay(new String(Files.readAllBytes(f.path), StandardCharsets.UTF_8)).attempt.flatMap {
-          case Left(ex) => Task.fail(new Exception(s"Error while reading ${f.path}", ex))
-          case Right(content) =>
-            Task.fromEither(fromString(content))
-        }
-      case u: JvmChannel.FromUrl =>
-        cache.fetch(artifact(u.url)).run.flatMap {
-          case Left(err) =>
-            Task.fail(new Exception(s"Error while getting ${u.url}: $err"))
-          case Right(content) =>
-            Task.fromEither(fromString(content))
-        }
-      case m: JvmChannel.FromModule =>
-        fromModule(cache, repositories, m).flatMap {
-          case None    => Task.fail(new Exception(s"No index found in ${m.repr}"))
-          case Some(c) => Task.point(c)
-        }
-    }
+    load(cache, repositories, indexChannel, None, None)
 
   def load(
     cache: Cache[Task],
     indexUrl: String
   ): Task[JvmIndex] =
-    cache.fetch(artifact(indexUrl)).run.flatMap {
+    cache.file(artifact(indexUrl)).run.flatMap {
       case Left(err) =>
         Task.fail(new Exception(s"Error while getting $indexUrl: $err"))
-      case Right(content) =>
-        Task.fromEither(fromString(content))
+      case Right(file) =>
+        val contentTask = Task.delay {
+          Files.readAllBytes(file.toPath)
+        }
+        contentTask.flatMap { content =>
+          Task.fromEither(fromBytes(content))
+        }
     }
 
   def load(
     cache: Cache[Task]
   ): Task[JvmIndex] =
-    load(cache, defaultIndexUrl)
+    load(cache, coursier.Resolve().repositories, JvmChannel.default(), None, None)
 
   def load(): Task[JvmIndex] =
-    load(FileCache(), defaultIndexUrl)
+    load(FileCache(), coursier.Resolve().repositories, JvmChannel.default(), None, None)
 
-  lazy val currentOs: Either[String, String] =
-    Option(System.getProperty("os.name")).map(_.toLowerCase(Locale.ROOT)) match {
-      case Some(s) if s.contains("windows") => Right("windows")
-      case Some(s) if s.contains("linux")   => Right("linux")
-      case Some(s) if s.contains("mac")     => Right("darwin")
-      case unrecognized => Left(s"Unrecognized OS: ${unrecognized.getOrElse("")}")
-    }
+  @deprecated("Use JvmChannel.currentOs instead", "2.1.15")
+  def currentOs: Either[String, String] =
+    JvmChannel.currentOs
 
-  lazy val currentArchitecture: Either[String, String] =
-    Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
-      case Some("x86_64" | "amd64") => Right("amd64")
-      case Some("aarch64")          => Right("arm64")
-      case Some("arm")              => Right("arm")
-      case unrecognized => Left(s"Unrecognized CPU architecture: ${unrecognized.getOrElse("")}")
-    }
+  @deprecated("Use JvmChannel.currentArchitecture instead", "2.1.15")
+  def currentArchitecture: Either[String, String] =
+    JvmChannel.currentArchitecture
 
+  @deprecated("Use JvmChannel.defaultOs instead", "2.1.15")
   def defaultOs(): String =
-    currentOs match {
-      case Right(os) => os
-      case Left(err) => throw new Exception(err)
-    }
+    JvmChannel.defaultOs()
 
+  @deprecated("Use JvmChannel.defaultArchitecture instead", "2.1.15")
   def defaultArchitecture(): String =
-    currentArchitecture match {
-      case Right(arch) => arch
-      case Left(err)   => throw new Exception(err)
-    }
+    JvmChannel.defaultArchitecture()
 
   private def parseDescriptor(input: String): Either[String, (ArchiveType, String)] = {
     val idx = input.indexOf('+')
@@ -261,8 +309,8 @@ object JvmIndex {
       }
 
     for {
-      os        <- os.map(Right(_)).getOrElse(JvmIndex.currentOs)
-      arch      <- arch.map(Right(_)).getOrElse(JvmIndex.currentArchitecture)
+      os        <- os.map(Right(_)).getOrElse(JvmChannel.currentOs)
+      arch      <- arch.map(Right(_)).getOrElse(JvmChannel.currentArchitecture)
       osIndex   <- content.get(os).toRight(s"No JVM found for OS $os")
       archIndex <- osIndex.get(arch).toRight(s"No JVM found for OS $os and CPU architecture $arch")
       versionIndex <-
@@ -298,8 +346,8 @@ object JvmIndex {
     jdkNamePrefix: Option[String] = Some("jdk@")
   ): Either[String, Map[String, Map[String, String]]] =
     for {
-      os        <- os.map(Right(_)).getOrElse(JvmIndex.currentOs)
-      arch      <- arch.map(Right(_)).getOrElse(JvmIndex.currentArchitecture)
+      os        <- os.map(Right(_)).getOrElse(JvmChannel.currentOs)
+      arch      <- arch.map(Right(_)).getOrElse(JvmChannel.currentArchitecture)
       osIndex   <- content.get(os).toRight(s"No JVM found for OS $os")
       archIndex <- osIndex.get(arch).toRight(s"No JVM found for OS $os and CPU architecture $arch")
     } yield archIndex.map {

@@ -3,7 +3,7 @@ import $file.shared, shared.CsModule
 
 import coursier.launcher.{AssemblyGenerator, ClassPathEntry, Parameters, Preamble}
 import mill._, mill.scalalib._
-import mill.modules.Jvm
+import mill.util.Jvm
 
 import java.io._
 import java.util.zip._

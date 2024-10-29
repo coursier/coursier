@@ -28,7 +28,7 @@ import scala.util.{Failure, Success, Try}
 ) extends Cache[F] {
 // format: on
 
-  private implicit def S0 = S
+  private implicit def S0: Sync[F] = S
 
   def fetch: Cache.Fetch[F] = { artifact =>
 
@@ -53,7 +53,7 @@ import scala.util.{Failure, Success, Try}
         .flatMap { f =>
           EitherT {
             MockCache.readFully(
-              new FileInputStream(f),
+              Files.newInputStream(f.toPath),
               if (links) Some(artifact0.url) else None
             )
           }

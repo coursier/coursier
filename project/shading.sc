@@ -3,6 +3,7 @@ import coursier.util.{Gather, Task}
 import mill._, mill.scalalib._
 
 import java.io._
+import java.nio.file.Files
 import java.util.zip._
 
 import scala.jdk.CollectionConverters._
@@ -18,7 +19,7 @@ trait Shading extends JavaModule with PublishModule {
   def shadedJars = T {
     val depToDependency = (d: Dep) => bindDependency().apply(d).dep
     val depSeq          = transitiveIvyDeps().map(_.toDep)
-    val (_, resolution) = mill.util.Jvm.resolveDependenciesMetadata(
+    val resolution = mill.util.Jvm.resolveDependenciesMetadataSafe(
       repositoriesTask(),
       deps = depSeq.map(depToDependency),
       force = depSeq.filter(_.force).map(depToDependency),
@@ -26,7 +27,7 @@ trait Shading extends JavaModule with PublishModule {
       customizer = resolutionCustomizer(),
       ctx = Some(implicitly[mill.api.Ctx.Log]),
       coursierCacheCustomizer = None
-    )
+    ).getOrThrow
     val types = Set(
       coursier.Type.jar,
       coursier.Type.testJar,
@@ -86,7 +87,7 @@ trait Shading extends JavaModule with PublishModule {
     var fos: OutputStream    = null
     var zos: ZipOutputStream = null
     try {
-      fos = new FileOutputStream(updated.toIO)
+      fos = Files.newOutputStream(updated.toNIO)
       zos = new ZipOutputStream(fos)
 
       var seen = Set.empty[String]

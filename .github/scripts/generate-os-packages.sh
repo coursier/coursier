@@ -23,7 +23,7 @@ launcher() {
     launcherName="cs"
   fi
 
-  "$mill" -i copyTo "$launcherMillCommand" "$launcherName" 1>&2
+  "$mill" -i copyTo --task "$launcherMillCommand" --dest "$launcherName" 1>&2
   echo "$launcherName"
 }
 

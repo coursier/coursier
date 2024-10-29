@@ -10,7 +10,7 @@ import dataclass.data
 
 @data class InMemoryCache[F[_]](underlying: Cache[F], S: Sync[F]) extends Cache[F] {
 
-  private implicit def S0 = S
+  private implicit def S0: Sync[F] = S
 
   def fetch: Cache.Fetch[F] =
     new InMemoryCachingFetcher(underlying.fetch).fetcher

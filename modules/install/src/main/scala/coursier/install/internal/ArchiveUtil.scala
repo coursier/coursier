@@ -4,7 +4,8 @@ import coursier.cache.ArchiveType
 import org.apache.commons.compress.archivers.{ArchiveEntry, ArchiveStreamFactory}
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 
-import java.io.{BufferedInputStream, File, FileInputStream, InputStream}
+import java.io.{BufferedInputStream, File, InputStream}
+import java.nio.file.Files
 import java.util.zip.{GZIPInputStream, ZipEntry, ZipFile}
 
 import scala.jdk.CollectionConverters._
@@ -24,9 +25,9 @@ object ArchiveUtil {
     }
 
     // https://alexwlchan.net/2019/09/unpacking-compressed-archives-in-scala/
-    var fis: FileInputStream = null
+    var fis: InputStream = null
     try {
-      fis = new FileInputStream(archive)
+      fis = Files.newInputStream(archive.toPath)
       val uncompressedInputStream = new CompressorStreamFactory()
         .createCompressorInputStream(
           method,
@@ -90,10 +91,10 @@ object ArchiveUtil {
     }
 
   def withGzipContent[T](gzFile: File)(f: InputStream => T): T = {
-    var fis: FileInputStream  = null
+    var fis: InputStream      = null
     var gzis: GZIPInputStream = null
     try {
-      fis = new FileInputStream(gzFile)
+      fis = Files.newInputStream(gzFile.toPath)
       gzis = new GZIPInputStream(fis)
       f(gzis)
     }
