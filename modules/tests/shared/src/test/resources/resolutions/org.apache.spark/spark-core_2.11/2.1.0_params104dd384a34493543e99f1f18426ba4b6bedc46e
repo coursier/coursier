@@ -48,6 +48,7 @@ org.apache.spark:spark-tags_2.11:2.1.0:default
 org.apache.commons:commons-crypto:1.0.0:default
 org.spark-project.spark:unused:1.0.0:default
 org.apache.avro:avro-ipc:1.7.7:default
+org.apache.avro:avro-ipc:1.7.7:default
 org.codehaus.jackson:jackson-core-asl:1.9.13:default
 org.codehaus.jackson:jackson-mapper-asl:1.9.13:default
 com.esotericsoftware:kryo-shaded:3.0.3:default
@@ -64,6 +65,7 @@ commons-codec:commons-codec:1.10:default
 commons-httpclient:commons-httpclient:3.1:default
 org.apache.curator:curator-framework:2.4.0:default
 org.apache.zookeeper:zookeeper:3.4.5:default
+com.google.guava:guava:14.0.1:default
 org.json4s:json4s-core_2.11:3.2.11:default
 javax.ws.rs:javax.ws.rs-api:2.0.1:default
 org.glassfish.hk2:hk2-api:2.4.0-b34:default
@@ -82,7 +84,7 @@ org.apache.avro:avro:1.7.7:default
 com.esotericsoftware:minlog:1.3.0:default
 org.objenesis:objenesis:2.1:default
 org.apache.hadoop:hadoop-annotations:2.2.0:default
-com.google.guava:guava:11.0.2:default
+com.google.guava:guava:14.0.1:default
 commons-cli:commons-cli:1.2:default
 org.apache.commons:commons-math:2.1:default
 xmlenc:xmlenc:0.52:default
@@ -95,7 +97,7 @@ com.google.protobuf:protobuf-java:2.5.0:default
 org.apache.hadoop:hadoop-auth:2.2.0:default
 org.apache.zookeeper:zookeeper:3.4.5:default
 org.apache.commons:commons-compress:1.4.1:default
-com.google.guava:guava:11.0.2:default
+com.google.guava:guava:14.0.1:default
 org.mortbay.jetty:jetty-util:6.1.26:default
 commons-cli:commons-cli:1.2:default
 commons-io:commons-io:2.4:default

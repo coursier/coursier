@@ -44,6 +44,7 @@ commons-codec:commons-codec:1.5:default
 commons-httpclient:commons-httpclient:3.1:default
 org.apache.curator:curator-framework:2.4.0:default
 org.apache.zookeeper:zookeeper:3.4.5:default
+com.google.guava:guava:14.0.1:default
 org.eclipse.jetty.orbit:javax.transaction:1.1.1.v201105210645:default
 org.eclipse.jetty:jetty-webapp:8.1.14.v20131031:default
 org.eclipse.jetty:jetty-jndi:8.1.14.v20131031:default
