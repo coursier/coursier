@@ -102,40 +102,16 @@ object ResolveTests extends TestSuite {
         """└─ org.htrace:htrace-core:3.0.4
           |   ├─ org.apache.hadoop:hadoop-common:2.6.5
           |   │  └─ org.apache.hadoop:hadoop-client:2.6.5
-          |   │     ├─ org.apache.avro:avro-mapred:1.8.2
-          |   │     │  └─ org.apache.spark:spark-core_2.12:2.4.0
-          |   │     │     ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
-          |   │     │     │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |   │     │     └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |   │     ├─ org.apache.parquet:parquet-hadoop:1.10.0
-          |   │     │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |   │     ├─ org.apache.spark:spark-core_2.12:2.4.0
-          |   │     │  ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
-          |   │     │  │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |   │     │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |   │     └─ org.apache.spark:spark-launcher_2.12:2.4.0
-          |   │        └─ org.apache.spark:spark-core_2.12:2.4.0
-          |   │           ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
-          |   │           │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |   │           └─ org.apache.spark:spark-sql_2.12:2.4.0
+          |   │     └─ org.apache.spark:spark-core_2.12:2.4.0
+          |   │        ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
+          |   │        │  └─ org.apache.spark:spark-sql_2.12:2.4.0
+          |   │        └─ org.apache.spark:spark-sql_2.12:2.4.0
           |   └─ org.apache.hadoop:hadoop-hdfs:2.6.5
           |      └─ org.apache.hadoop:hadoop-client:2.6.5
-          |         ├─ org.apache.avro:avro-mapred:1.8.2
-          |         │  └─ org.apache.spark:spark-core_2.12:2.4.0
-          |         │     ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
-          |         │     │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |         │     └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |         ├─ org.apache.parquet:parquet-hadoop:1.10.0
-          |         │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |         ├─ org.apache.spark:spark-core_2.12:2.4.0
-          |         │  ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
-          |         │  │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |         │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |         └─ org.apache.spark:spark-launcher_2.12:2.4.0
-          |            └─ org.apache.spark:spark-core_2.12:2.4.0
-          |               ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
-          |               │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |               └─ org.apache.spark:spark-sql_2.12:2.4.0
+          |         └─ org.apache.spark:spark-core_2.12:2.4.0
+          |            ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
+          |            │  └─ org.apache.spark:spark-sql_2.12:2.4.0
+          |            └─ org.apache.spark:spark-sql_2.12:2.4.0
           |""".stripMargin
 
       assert(output.noCrLf == expectedOutput.noCrLf)
@@ -162,40 +138,16 @@ object ResolveTests extends TestSuite {
         """└─ org.htrace:htrace-core:3.0.4
           |   ├─ org.apache.hadoop:hadoop-common:2.6.5
           |   │  └─ org.apache.hadoop:hadoop-client:2.6.5
-          |   │     ├─ org.apache.avro:avro-mapred:1.8.2
-          |   │     │  └─ org.apache.spark:spark-core_2.12:2.4.0
-          |   │     │     ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
-          |   │     │     │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |   │     │     └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |   │     ├─ org.apache.parquet:parquet-hadoop:1.10.0
-          |   │     │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |   │     ├─ org.apache.spark:spark-core_2.12:2.4.0
-          |   │     │  ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
-          |   │     │  │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |   │     │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |   │     └─ org.apache.spark:spark-launcher_2.12:2.4.0
-          |   │        └─ org.apache.spark:spark-core_2.12:2.4.0
-          |   │           ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
-          |   │           │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |   │           └─ org.apache.spark:spark-sql_2.12:2.4.0
+          |   │     └─ org.apache.spark:spark-core_2.12:2.4.0
+          |   │        ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
+          |   │        │  └─ org.apache.spark:spark-sql_2.12:2.4.0
+          |   │        └─ org.apache.spark:spark-sql_2.12:2.4.0
           |   └─ org.apache.hadoop:hadoop-hdfs:2.6.5
           |      └─ org.apache.hadoop:hadoop-client:2.6.5
-          |         ├─ org.apache.avro:avro-mapred:1.8.2
-          |         │  └─ org.apache.spark:spark-core_2.12:2.4.0
-          |         │     ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
-          |         │     │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |         │     └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |         ├─ org.apache.parquet:parquet-hadoop:1.10.0
-          |         │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |         ├─ org.apache.spark:spark-core_2.12:2.4.0
-          |         │  ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
-          |         │  │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |         │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |         └─ org.apache.spark:spark-launcher_2.12:2.4.0
-          |            └─ org.apache.spark:spark-core_2.12:2.4.0
-          |               ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
-          |               │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |               └─ org.apache.spark:spark-sql_2.12:2.4.0
+          |         └─ org.apache.spark:spark-core_2.12:2.4.0
+          |            ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
+          |            │  └─ org.apache.spark:spark-sql_2.12:2.4.0
+          |            └─ org.apache.spark:spark-sql_2.12:2.4.0
           |""".stripMargin
 
       assert(output.noCrLf == expectedOutput.noCrLf)
