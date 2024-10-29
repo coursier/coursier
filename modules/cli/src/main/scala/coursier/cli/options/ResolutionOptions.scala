@@ -213,5 +213,5 @@ final case class ResolutionOptions(
 
 object ResolutionOptions {
   implicit val parser = Parser[ResolutionOptions]
-  implicit val help   = caseapp.core.help.Help[ResolutionOptions]
+  implicit val help   = Help[ResolutionOptions]
 }

@@ -2,7 +2,7 @@ package coursier.cli.jvm
 
 import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions, RepositoryOptions}
 import caseapp.core.parser.Parser
-import caseapp.{HelpMessage, Recurse}
+import caseapp.{Help, HelpMessage, Recurse}
 
 // format: off
 @HelpMessage(
@@ -30,5 +30,5 @@ final case class JavaHomeOptions(
 
 object JavaHomeOptions {
   implicit val parser = Parser[JavaHomeOptions]
-  implicit val help   = caseapp.core.help.Help[JavaHomeOptions]
+  implicit val help   = Help[JavaHomeOptions]
 }

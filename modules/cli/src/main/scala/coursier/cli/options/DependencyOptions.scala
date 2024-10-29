@@ -57,5 +57,5 @@ final case class DependencyOptions(
 
 object DependencyOptions {
   implicit val parser = Parser[DependencyOptions]
-  implicit val help   = caseapp.core.help.Help[DependencyOptions]
+  implicit val help   = Help[DependencyOptions]
 }

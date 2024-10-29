@@ -90,5 +90,5 @@ final case class LaunchOptions(
 
 object LaunchOptions {
   implicit val parser = Parser[LaunchOptions]
-  implicit val help   = caseapp.core.help.Help[LaunchOptions]
+  implicit val help   = Help[LaunchOptions]
 }

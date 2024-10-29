@@ -132,5 +132,5 @@ final case class NativeLauncherOptions(
 
 object NativeLauncherOptions {
   implicit val parser = Parser[NativeLauncherOptions]
-  implicit val help   = caseapp.core.help.Help[NativeLauncherOptions]
+  implicit val help   = Help[NativeLauncherOptions]
 }

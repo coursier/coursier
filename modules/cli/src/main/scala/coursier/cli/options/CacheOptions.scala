@@ -183,5 +183,5 @@ final case class CacheOptions(
 
 object CacheOptions {
   implicit val parser = Parser[CacheOptions]
-  implicit val help   = caseapp.core.help.Help[CacheOptions]
+  implicit val help   = Help[CacheOptions]
 }

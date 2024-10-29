@@ -20,5 +20,5 @@ final case class ListOptions(
 
 object ListOption {
   implicit val parser = Parser[ListOptions]
-  implicit val help   = caseapp.core.help.Help[ListOptions]
+  implicit val help   = Help[ListOptions]
 }

@@ -96,5 +96,5 @@ final case class ArtifactOptions(
 
 object ArtifactOptions {
   implicit val parser = Parser[ArtifactOptions]
-  implicit val help   = caseapp.core.help.Help[ArtifactOptions]
+  implicit val help   = Help[ArtifactOptions]
 }

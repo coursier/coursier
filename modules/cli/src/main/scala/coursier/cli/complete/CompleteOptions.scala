@@ -39,5 +39,5 @@ final case class CompleteOptions(
 
 object CompleteOptions {
   implicit val parser = Parser[CompleteOptions]
-  implicit val help   = caseapp.core.help.Help[CompleteOptions]
+  implicit val help   = Help[CompleteOptions]
 }

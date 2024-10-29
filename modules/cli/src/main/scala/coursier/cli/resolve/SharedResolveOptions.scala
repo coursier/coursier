@@ -69,5 +69,5 @@ final case class SharedResolveOptions(
 
 object SharedResolveOptions {
   implicit val parser = Parser[SharedResolveOptions]
-  implicit val help   = caseapp.core.help.Help[SharedResolveOptions]
+  implicit val help   = Help[SharedResolveOptions]
 }

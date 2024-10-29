@@ -32,5 +32,5 @@ final case class RepositoryOptions(
 
 object RepositoryOptions {
   implicit val parser = Parser[RepositoryOptions]
-  implicit val help   = caseapp.core.help.Help[RepositoryOptions]
+  implicit val help   = Help[RepositoryOptions]
 }

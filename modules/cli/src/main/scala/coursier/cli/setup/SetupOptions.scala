@@ -1,7 +1,7 @@
 package coursier.cli.setup
 
 import caseapp.core.parser.Parser
-import caseapp.{Group, HelpMessage, Hidden, Name, Recurse}
+import caseapp.{Group, Help, HelpMessage, Hidden, Name, Recurse}
 import coursier.cli.install.{SharedChannelOptions, SharedInstallOptions}
 import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.{
@@ -58,5 +58,5 @@ final case class SetupOptions(
 
 object SetupOptions {
   implicit val parser = Parser[SetupOptions]
-  implicit val help   = caseapp.core.help.Help[SetupOptions]
+  implicit val help   = Help[SetupOptions]
 }

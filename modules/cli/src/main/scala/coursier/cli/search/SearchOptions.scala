@@ -31,5 +31,5 @@ final case class SearchOptions(
 
 object SearchOptions {
   implicit val parser = caseapp.core.parser.Parser[SearchOptions]
-  implicit val help   = caseapp.core.help.Help[SearchOptions]
+  implicit val help   = Help[SearchOptions]
 }

@@ -9,7 +9,7 @@ import coursier.cli.options.{
   OutputOptions,
   RepositoryOptions
 }
-import caseapp.Group
+import caseapp.{Group, Help}
 
 // format: off
 @HelpMessage(
@@ -44,5 +44,5 @@ final case class JavaOptions(
 
 object JavaOptions {
   implicit val parser = Parser[JavaOptions]
-  implicit val help   = caseapp.core.help.Help[JavaOptions]
+  implicit val help   = Help[JavaOptions]
 }

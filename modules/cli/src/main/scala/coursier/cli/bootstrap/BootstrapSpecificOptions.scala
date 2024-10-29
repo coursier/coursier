@@ -106,5 +106,5 @@ final case class BootstrapSpecificOptions(
 
 object BootstrapSpecificOptions {
   implicit val parser = Parser[BootstrapSpecificOptions]
-  implicit val help   = caseapp.core.help.Help[BootstrapSpecificOptions]
+  implicit val help   = Help[BootstrapSpecificOptions]
 }

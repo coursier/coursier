@@ -37,5 +37,5 @@ final case class OutputOptions(
 
 object OutputOptions {
   implicit val parser = Parser[OutputOptions]
-  implicit val help   = caseapp.core.help.Help[OutputOptions]
+  implicit val help   = Help[OutputOptions]
 }

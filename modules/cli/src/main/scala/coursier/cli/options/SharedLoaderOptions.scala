@@ -41,5 +41,5 @@ final case class SharedLoaderOptions(
 
 object SharedLoaderOptions {
   implicit val parser = Parser[SharedLoaderOptions]
-  implicit val help   = caseapp.core.help.Help[SharedLoaderOptions]
+  implicit val help   = Help[SharedLoaderOptions]
 }

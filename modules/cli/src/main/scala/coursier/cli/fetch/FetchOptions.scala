@@ -49,5 +49,5 @@ final case class FetchOptions(
 
 object FetchOptions {
   implicit val parser = Parser[FetchOptions]
-  implicit val help   = caseapp.core.help.Help[FetchOptions]
+  implicit val help   = Help[FetchOptions]
 }

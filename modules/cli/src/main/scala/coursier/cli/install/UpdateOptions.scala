@@ -43,5 +43,5 @@ final case class UpdateOptions(
 
 object UpdateOptions {
   implicit val parser = Parser[UpdateOptions]
-  implicit val help   = caseapp.core.help.Help[UpdateOptions]
+  implicit val help   = Help[UpdateOptions]
 }
