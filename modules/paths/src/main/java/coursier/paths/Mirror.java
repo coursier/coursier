@@ -1,8 +1,9 @@
 package coursier.paths;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -78,8 +79,8 @@ public class Mirror {
 
   public static List<Mirror> parse(File file) throws MirrorPropertiesException, IOException {
     Properties props = new Properties();
-    try (FileInputStream fis = new FileInputStream(file)) {
-      props.load(fis);
+    try (InputStream is = Files.newInputStream(file.toPath())) {
+      props.load(is);
     }
 
     List<Mirror> mirrors;
