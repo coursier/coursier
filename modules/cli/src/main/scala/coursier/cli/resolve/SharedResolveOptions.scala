@@ -1,6 +1,6 @@
 package coursier.cli.resolve
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import coursier.cli.options.{
   CacheOptions,
   DependencyOptions,
@@ -16,7 +16,7 @@ import coursier.install.RawAppDescriptor
 final case class SharedResolveOptions(
   @Group(OptionGroup.resolution) // with ResolutionOptions
   @Hidden
-  @Help("Keep dependencies or artifacts in classpath order (that is, dependencies before dependees)")
+  @HelpMessage("Keep dependencies or artifacts in classpath order (that is, dependencies before dependees)")
     classpathOrder: Option[Boolean] = None,
 
   @Recurse
@@ -68,6 +68,7 @@ final case class SharedResolveOptions(
 }
 
 object SharedResolveOptions {
-  implicit val parser = Parser[SharedResolveOptions]
-  implicit val help   = caseapp.core.help.Help[SharedResolveOptions]
+  lazy val parser: Parser[SharedResolveOptions]                           = Parser.derive
+  implicit lazy val parserAux: Parser.Aux[SharedResolveOptions, parser.D] = parser
+  implicit lazy val help: Help[SharedResolveOptions]                      = Help.derive
 }

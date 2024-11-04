@@ -25,6 +25,9 @@ trait CacheJvmBase extends Cache with CsMima with Shading {
 
   def mimaBinaryIssueFilters =
     super.mimaBinaryIssueFilters() ++ Seq(
+      // removed private class
+      ProblemFilter.exclude[MissingClassProblem]("coursier.cache.internal.TmpConfig$AsJson"),
+      ProblemFilter.exclude[MissingClassProblem]("coursier.cache.internal.TmpConfig$AsJson$"),
       // new methods added to sealed trait
       ProblemFilter.exclude[ReversedMissingMethodProblem](
         "coursier.cache.CachePolicy.acceptChanging"

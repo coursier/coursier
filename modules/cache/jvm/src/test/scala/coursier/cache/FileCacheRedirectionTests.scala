@@ -726,7 +726,7 @@ object FileCacheRedirectionTests extends TestSuite {
 
       }
 
-      test("ransomCase") {
+      test("randomCase") {
 
         val httpRealm  = "simple realm"
         val httpsRealm = "secure realm"

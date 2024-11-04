@@ -1,12 +1,12 @@
 package coursier.cli.search
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import coursier.cli.install.SharedChannelOptions
 import coursier.cli.options.{CacheOptions, OutputOptions, RepositoryOptions}
 
 // format: off
 @ArgsName("query*")
-@Help(
+@HelpMessage(
   "Search application names from known channels.\n" +
   "\n" +
   "Examples:\n" +
@@ -30,6 +30,6 @@ final case class SearchOptions(
 // format: on
 
 object SearchOptions {
-  implicit val parser = caseapp.core.parser.Parser[SearchOptions]
-  implicit val help   = caseapp.core.help.Help[SearchOptions]
+  implicit lazy val parser: Parser[SearchOptions] = Parser.derive
+  implicit lazy val help: Help[SearchOptions]     = Help.derive
 }

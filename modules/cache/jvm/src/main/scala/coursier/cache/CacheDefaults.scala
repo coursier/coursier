@@ -4,13 +4,12 @@ import java.io.{File, FilenameFilter}
 import java.net.URI
 import java.nio.file.Path
 
-import coursier.cache.internal.TmpConfig
-import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
+import coursier.credentials.{Credentials, DirectCredentials, FileCredentials, Password}
 import coursier.parse.{CachePolicyParser, CredentialsParser}
 import coursier.paths.{CachePath, CoursierPaths}
 import coursier.util.Sync
 
-import scala.cli.config.{ConfigDb, Key, PasswordOption}
+import scala.cli.config.{ConfigDb, Key, Keys, PasswordOption}
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.util.{Failure, Success, Try}
@@ -165,7 +164,23 @@ object CacheDefaults {
 
   def credentialsFromConfig(configPath: Path): Seq[Credentials] = {
     val configDb = ConfigDb.open(configPath).fold(e => throw new Exception(e), identity)
-    configDb.get(TmpConfig.credentialsKey).fold(e => throw new Exception(e), _.getOrElse(Nil))
+    configDb.get(Keys.repositoryCredentials).fold(
+      e => throw new Exception(e),
+      _.getOrElse(Nil).map { c =>
+        DirectCredentials(
+          c.host,
+          c.user.map(_.get().value),
+          c.password.map(p => Password(p.get().value)),
+          c.realm,
+          c.optional.getOrElse(DirectCredentials.defaultOptional),
+          c.matchHost.getOrElse(DirectCredentials.defaultMatchHost),
+          // not sure about the default value here
+          c.httpsOnly.getOrElse(DirectCredentials.defaultHttpsOnly),
+          // not sure either about this one
+          c.passOnRedirect.getOrElse(DirectCredentials.defaultPassOnRedirect)
+        )
+      }
+    )
   }
 
   val noEnvCachePolicies = Seq(
