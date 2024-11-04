@@ -22,6 +22,6 @@ final case class GetOptions(
 // format: on
 
 object GetOptions {
-  implicit val parser = implicitly[Parser[GetOptions]]
-  implicit val help   = implicitly[Help[GetOptions]]
+  implicit val parser: Parser[GetOptions]  = Parser.derive
+  implicit lazy val help: Help[GetOptions] = Help.derive
 }

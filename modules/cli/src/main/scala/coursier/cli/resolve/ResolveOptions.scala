@@ -79,6 +79,6 @@ final case class ResolveOptions(
 }
 
 object ResolveOptions {
-  implicit val parser                          = Parser[ResolveOptions]
-  implicit lazy val help: Help[ResolveOptions] = Help.derive
+  implicit lazy val parser: Parser[ResolveOptions] = Parser.derive
+  implicit lazy val help: Help[ResolveOptions]     = Help.derive
 }

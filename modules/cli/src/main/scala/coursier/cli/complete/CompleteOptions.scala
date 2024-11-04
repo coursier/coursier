@@ -38,6 +38,6 @@ final case class CompleteOptions(
 }
 
 object CompleteOptions {
-  implicit val parser                           = Parser[CompleteOptions]
-  implicit lazy val help: Help[CompleteOptions] = Help.derive
+  implicit lazy val parser: Parser[CompleteOptions] = Parser.derive
+  implicit lazy val help: Help[CompleteOptions]     = Help.derive
 }

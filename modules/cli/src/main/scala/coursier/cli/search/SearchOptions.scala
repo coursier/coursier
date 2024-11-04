@@ -30,6 +30,6 @@ final case class SearchOptions(
 // format: on
 
 object SearchOptions {
-  implicit val parser                         = caseapp.core.parser.Parser[SearchOptions]
-  implicit lazy val help: Help[SearchOptions] = Help.derive
+  implicit lazy val parser: Parser[SearchOptions] = Parser.derive
+  implicit lazy val help: Help[SearchOptions]     = Help.derive
 }

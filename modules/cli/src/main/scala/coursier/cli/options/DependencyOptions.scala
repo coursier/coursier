@@ -56,6 +56,7 @@ final case class DependencyOptions(
 // format: on
 
 object DependencyOptions {
-  implicit val parser                             = Parser[DependencyOptions]
-  implicit lazy val help: Help[DependencyOptions] = Help.derive
+  lazy val parser: Parser[DependencyOptions]                           = Parser.derive
+  implicit lazy val parserAux: Parser.Aux[DependencyOptions, parser.D] = parser
+  implicit lazy val help: Help[DependencyOptions]                      = Help.derive
 }

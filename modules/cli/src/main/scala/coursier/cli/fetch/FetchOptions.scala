@@ -48,6 +48,6 @@ final case class FetchOptions(
 }
 
 object FetchOptions {
-  implicit val parser                        = Parser[FetchOptions]
-  implicit lazy val help: Help[FetchOptions] = Help.derive
+  implicit lazy val parser: Parser[FetchOptions] = Parser.derive
+  implicit lazy val help: Help[FetchOptions]     = Help.derive
 }

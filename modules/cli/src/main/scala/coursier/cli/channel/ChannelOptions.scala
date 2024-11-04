@@ -25,3 +25,8 @@ final case class ChannelOptions(
     outputOptions: OutputOptions = OutputOptions()
 )
 // format: on
+
+object ChannelOptions {
+  implicit lazy val parser: Parser[ChannelOptions] = Parser.derive
+  implicit lazy val help: Help[ChannelOptions]     = Help.derive
+}

@@ -182,6 +182,7 @@ final case class CacheOptions(
 }
 
 object CacheOptions {
-  implicit val parser                        = Parser[CacheOptions]
-  implicit lazy val help: Help[CacheOptions] = Help.derive
+  lazy val parser: Parser[CacheOptions]                           = Parser.derive
+  implicit lazy val parserAux: Parser.Aux[CacheOptions, parser.D] = parser
+  implicit lazy val help: Help[CacheOptions]                      = Help.derive
 }

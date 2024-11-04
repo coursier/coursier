@@ -68,6 +68,7 @@ final case class SharedResolveOptions(
 }
 
 object SharedResolveOptions {
-  implicit val parser                                = Parser[SharedResolveOptions]
-  implicit lazy val help: Help[SharedResolveOptions] = Help.derive
+  lazy val parser: Parser[SharedResolveOptions]                           = Parser.derive
+  implicit lazy val parserAux: Parser.Aux[SharedResolveOptions, parser.D] = parser
+  implicit lazy val help: Help[SharedResolveOptions]                      = Help.derive
 }

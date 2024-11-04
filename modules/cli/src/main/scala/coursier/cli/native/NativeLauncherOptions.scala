@@ -131,6 +131,7 @@ final case class NativeLauncherOptions(
 }
 
 object NativeLauncherOptions {
-  implicit val parser                                 = Parser[NativeLauncherOptions]
-  implicit lazy val help: Help[NativeLauncherOptions] = Help.derive
+  lazy val parser: Parser[NativeLauncherOptions]                           = Parser.derive
+  implicit lazy val parserAux: Parser.Aux[NativeLauncherOptions, parser.D] = parser
+  implicit lazy val help: Help[NativeLauncherOptions]                      = Help.derive
 }
