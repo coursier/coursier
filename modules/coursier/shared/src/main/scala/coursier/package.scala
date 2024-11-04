@@ -71,7 +71,8 @@ package object coursier {
     def apply(dependencies: Seq[Dependency]): Resolution =
       core.Resolution().withRootDependencies(dependencies)
 
-    def defaultTypes: Set[Type] = coursier.core.Resolution.defaultTypes
+    def defaultTypes: Set[Type]          = coursier.core.Resolution.defaultTypes
+    def enableDependencyOverridesDefault = coursier.core.Resolution.enableDependencyOverridesDefault
   }
 
   type Classifier = core.Classifier

@@ -68,7 +68,8 @@ object Resolution {
 
     def addSeq(
       dict: DependencyManagement.Map,
-      deps: Seq[(Configuration, Dependency)]
+      deps: Seq[(Configuration, Dependency)],
+      composeValues: Boolean
     ): DependencyManagement.Map =
       add(
         dict,
@@ -82,12 +83,14 @@ object Resolution {
               dep.optional
             )
             (key0, values)
-        }
+        },
+        composeValues = composeValues
       )
 
     def add(
       dict: DependencyManagement.Map,
-      deps: Seq[(DependencyManagement.Key, DependencyManagement.Values)]
+      deps: Seq[(DependencyManagement.Key, DependencyManagement.Values)],
+      composeValues: Boolean
     ): DependencyManagement.Map =
       if (deps.isEmpty)
         dict
@@ -100,7 +103,8 @@ object Resolution {
           val (key0, incomingValues) = it.next()
           val newValues = b.get(key0) match {
             case Some(previousValues) =>
-              previousValues.orElse(incomingValues)
+              if (composeValues) previousValues.orElse(incomingValues)
+              else previousValues
             case None =>
               incomingValues
           }
@@ -332,16 +336,20 @@ object Resolution {
     */
   def depsWithDependencyManagement(
     dependencies: Seq[(Configuration, Dependency)],
-    overrides: DependencyManagement.Map,
+    overridesOpt: Option[DependencyManagement.Map],
     dependencyManagement: Seq[(Configuration, Dependency)],
     forceDepMgmtVersions: Boolean
   ): Seq[(Configuration, Dependency)] = {
 
     // See http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Management
 
-    lazy val dict = DepMgmt.addSeq(overrides, dependencyManagement)
+    lazy val dict = DepMgmt.addSeq(
+      overridesOpt.getOrElse(Map.empty),
+      dependencyManagement,
+      composeValues = overridesOpt.isDefined
+    )
 
-    lazy val dictForOverrides = {
+    lazy val dictForOverridesOpt = overridesOpt.map { overrides =>
       lazy val versions = dependencies
         .filter {
           case (config, _) =>
@@ -377,7 +385,8 @@ object Resolution {
                 optional = false
               )
               (DepMgmt.key(dep), values)
-          }
+          },
+        composeValues = true
       ).filter(!_._2.isEmpty)
     }
 
@@ -389,9 +398,12 @@ object Resolution {
         val key = DepMgmt.key(dep0)
         for (mgmtValues <- dict.get(key)) {
 
-          val useManagedVersion =
-            mgmtValues.version.nonEmpty &&
-            (forceDepMgmtVersions || dep.version.isEmpty || overrides.contains(key))
+          val useManagedVersion = mgmtValues.version.nonEmpty && (
+            forceDepMgmtVersions ||
+            overridesOpt.isEmpty ||
+            dep.version.isEmpty ||
+            overridesOpt.exists(_.contains(key))
+          )
           if (useManagedVersion)
             dep = dep.withVersion(mgmtValues.version)
 
@@ -410,14 +422,14 @@ object Resolution {
             dep = dep.withOptional(mgmtValues.optional)
         }
 
-        if (dictForOverrides.nonEmpty)
+        for (dictForOverrides <- dictForOverridesOpt if dictForOverrides.nonEmpty)
           dep = dep.withOverrides {
             if (dep.overrides.isEmpty)
               dictForOverrides
             else if (dictForOverrides.isEmpty)
               dep.overrides
             else
-              DepMgmt.add(dictForOverrides, dep.overrides.toSeq)
+              DepMgmt.add(dictForOverrides, dep.overrides.toSeq, composeValues = true)
           }
 
         (config, dep)
@@ -434,7 +446,7 @@ object Resolution {
   ): Seq[(Configuration, Dependency)] =
     depsWithDependencyManagement(
       dependencies,
-      Map.empty,
+      None,
       dependencyManagement,
       forceDepMgmtVersions = false
     )
@@ -600,7 +612,8 @@ object Resolution {
     defaultConfiguration: Configuration,
     projectCache: ((Module, String)) => Option[Project],
     keepProvidedDependencies: Boolean,
-    forceDepMgmtVersions: Boolean
+    forceDepMgmtVersions: Boolean,
+    enableDependencyOverrides: Boolean
   ): Seq[Dependency] = {
 
     // section numbers in the comments refer to withDependencyManagement
@@ -631,7 +644,7 @@ object Resolution {
       depsWithDependencyManagement(
         // 1.7
         withProperties(project0.dependencies, properties),
-        from.overrides,
+        Option.when(enableDependencyOverrides)(from.overrides),
         withProperties(project0.dependencyManagement, properties),
         forceDepMgmtVersions = forceDepMgmtVersions
       ),
@@ -776,6 +789,7 @@ object Resolution {
   private def withFinalProperties(project: Project): Project =
     project.withProperties(projectProperties(project))
 
+  def enableDependencyOverridesDefault: Boolean = true
 }
 
 /** State of a dependency resolution.
@@ -809,7 +823,8 @@ object Resolution {
   @since("2.1.9")
   keepProvidedDependencies: Boolean = false,
   @since("2.1.15")
-  forceDepMgmtVersions: Boolean = false
+  forceDepMgmtVersions: Boolean = false,
+  enableDependencyOverrides: Boolean = Resolution.enableDependencyOverridesDefault
 ) {
 
   lazy val dependencies: Set[Dependency] =
@@ -892,7 +907,8 @@ object Resolution {
               defaultConfiguration,
               k => projectCache.get(k).map(_._2),
               keepProvidedDependencies,
-              forceDepMgmtVersions
+              forceDepMgmtVersions,
+              enableDependencyOverrides
             ).filter(filter getOrElse defaultFilter)
             val res = mapDependencies.fold(res0)(res0.map(_))
             finalDependenciesCache0.put(dep, res)
@@ -1337,7 +1353,9 @@ object Resolution {
           }
       )
     )
-      .foldLeft(Map.empty[DependencyManagement.Key, DependencyManagement.Values])(DepMgmt.addSeq)
+      .foldLeft(Map.empty[DependencyManagement.Key, DependencyManagement.Values]) { (acc, elem) =>
+        DepMgmt.addSeq(acc, elem, composeValues = enableDependencyOverrides)
+      }
 
     val retainedParentDepsSet = retainedParentDeps.toSet
 
