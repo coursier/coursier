@@ -789,7 +789,7 @@ object Resolution {
   private def withFinalProperties(project: Project): Project =
     project.withProperties(projectProperties(project))
 
-  def enableDependencyOverridesDefault: Boolean = true
+  def enableDependencyOverridesDefault: Boolean = false
 }
 
 /** State of a dependency resolution.

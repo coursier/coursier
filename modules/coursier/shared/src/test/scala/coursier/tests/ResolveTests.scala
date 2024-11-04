@@ -518,6 +518,10 @@ object ResolveTests extends TestSuite {
 
           val res = await {
             resolve
+              .withResolutionParams(
+                resolve.resolutionParams
+                  .withEnableDependencyOverrides(Some(true))
+              )
               .addDependencies(dep"org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.3.0")
               .future()
           }
