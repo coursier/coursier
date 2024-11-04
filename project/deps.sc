@@ -40,7 +40,7 @@ object Deps {
   def pprint                   = ivy"com.lihaoyi::pprint:0.9.0"
   def proguard                 = ivy"com.guardsquare:proguard-base:7.6.0"
   def pythonNativeLibs         = ivy"ai.kien::python-native-libs:0.2.4"
-  def scalaAsync               = ivy"org.scala-lang.modules::scala-async:0.10.0"
+  def scalaAsync               = ivy"org.scala-lang.modules::scala-async::1.0.1"
   def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:1.1.3"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.4.0"
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.2"
