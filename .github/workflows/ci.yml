@@ -26,7 +26,7 @@ jobs:
           PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
       - uses: coursier/setup-action@v1.3
         with:
-          jvm: 8
+          jvm: 11
       - run: |
           mv .mill-jvm-opts .mill-jvm-opts.bak
           cat .mill-jvm-opts.bak | grep -v -- '-Xmx' > .mill-jvm-opts
