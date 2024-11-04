@@ -59,6 +59,7 @@ object `sbt-maven-repository` extends Module {
   object jvm extends Cross[SbtMavenRepositoryJvm](ScalaVersions.all)
   object js  extends Cross[SbtMavenRepositoryJs](ScalaVersions.all)
 }
+object `cache-util` extends CacheUtil
 object cache extends Module {
   object jvm extends Cross[CacheJvm](ScalaVersions.all)
   object js  extends Cross[CacheJs](ScalaVersions.all)
@@ -254,8 +255,29 @@ trait SbtMavenRepositoryJs extends SbtMavenRepository
   )
 }
 
+trait CacheUtil extends CoursierPublishModule with CsMima {
+  def mimaPreviousVersions = T {
+    import _root_.coursier.core.Version
+    val cutOff = Version("2.1.15")
+    super.mimaPreviousVersions()
+      .map(Version(_))
+      .filter(_ >= cutOff)
+      .map(_.repr)
+  }
+  // Remove once 2.1.15 is out
+  def mimaPreviousArtifacts = T {
+    val versions     = mimaPreviousVersions()
+    val organization = pomSettings().organization
+    val artifactId0  = artifactId()
+    Agg.from(
+      versions.map(version => ivy"$organization:$artifactId0:$version")
+    )
+  }
+}
+
 trait CacheJvm extends CacheJvmBase {
   def moduleDeps = Seq(
+    `cache-util`,
     util.jvm()
   )
   def ivyDeps = super.ivyDeps() ++ Agg(

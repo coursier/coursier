@@ -55,22 +55,16 @@ jobs:
 
   test:
     runs-on: ${{ matrix.OS }}
-    name: ${{ matrix.OS }} Scala ${{ matrix.SCALA_VERSION }} JDK ${{ matrix.JDK }}
+    name: ${{ matrix.OS }} Scala ${{ matrix.SCALA_VERSION }}
     strategy:
       fail-fast: false
       matrix:
         OS: ["ubuntu-latest"]
-        JDK: ["8"]
         SCALA_VERSION: ["2.12.20"]
         include:
-          - JDK: "17"
-            SCALA_VERSION: "2.12.20"
+          - SCALA_VERSION: "2.12.20"
             OS: "windows-latest"
-          - JDK: "8"
-            SCALA_VERSION: "2.13.15"
-            OS: "ubuntu-latest"
-          - JDK: "17"
-            SCALA_VERSION: "2.12.20"
+          - SCALA_VERSION: "2.13.15"
             OS: "ubuntu-latest"
     steps:
     - name: Don't convert LF to CRLF during checkout
@@ -85,7 +79,7 @@ jobs:
     - uses: coursier/cache-action@v6.4
     - uses: coursier/setup-action@v1.3
       with:
-        jvm: ${{ matrix.JDK }}
+        jvm: 17
     - run: sudo apt-get install -y nailgun
       if: runner.os == 'Linux'
     # - run: .github/scripts/scala-native-setup.sh
@@ -119,7 +113,7 @@ jobs:
     - uses: coursier/cache-action@v6.4
     - uses: coursier/setup-action@v1.3
       with:
-        jvm: 8
+        jvm: 17
     - run: npm install && ./mill -i jsTests --scalaVersion "$SCALA_VERSION"
       shell: bash
       env:
@@ -136,7 +130,7 @@ jobs:
     - uses: coursier/cache-action@v6.4
     - uses: coursier/setup-action@v1.3
       with:
-        jvm: 8
+        jvm: 17
     - run: ./mill -i -k __.mimaReportBinaryIssues
 
   website-check:
@@ -192,7 +186,7 @@ jobs:
           PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
       - uses: coursier/setup-action@v1.3
         with:
-          jvm: 8
+          jvm: 17
       - run: |
           mv .mill-jvm-opts .mill-jvm-opts.bak
           cat .mill-jvm-opts.bak | grep -v -- '-Xmx' > .mill-jvm-opts
@@ -218,13 +212,10 @@ jobs:
       matrix:
         OS: ["ubuntu-latest"]
         OSSHORT: ["linux"]
-        JDK: ["8"]
         include:
-          - JDK: "17"
-            OS: "windows-latest"
+          - OS: "windows-latest"
             OSSHORT: "windows"
-          - JDK: "17"
-            OS: "macos-13"
+          - OS: "macos-13"
             OSSHORT: "mac"
     steps:
       - uses: actions/checkout@v4
@@ -234,7 +225,7 @@ jobs:
       - uses: coursier/cache-action@v6.4
       - uses: coursier/setup-action@v1.3
         with:
-          jvm: ${{ matrix.JDK }}
+          jvm: 17
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
@@ -267,7 +258,7 @@ jobs:
       - uses: coursier/cache-action@v6.4
       - uses: coursier/setup-action@v1.3
         with:
-          jvm: 8
+          jvm: 17
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeStaticTests
@@ -297,7 +288,7 @@ jobs:
       - uses: coursier/cache-action@v6.4
       - uses: coursier/setup-action@v1.3
         with:
-          jvm: 8
+          jvm: 17
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeMostlyStaticTests
@@ -327,7 +318,7 @@ jobs:
       - uses: coursier/cache-action@v6.4
       - uses: coursier/setup-action@v1.3
         with:
-          jvm: 8
+          jvm: 17
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeContainerTests
@@ -359,7 +350,7 @@ jobs:
     - uses: coursier/cache-action@v6.4
     - uses: coursier/setup-action@v1.3
       with:
-        jvm: 8
+        jvm: 17
     - name: Wait for sync to Central
       run: ./mill -i waitForSync
     - name: Copy artifacts
@@ -388,7 +379,7 @@ jobs:
     - uses: coursier/cache-action@v6.4
     - uses: coursier/setup-action@v1.3
       with:
-        jvm: 8
+        jvm: 17
     - uses: actions/download-artifact@v4
       with:
         name: launchers-linux
@@ -434,7 +425,7 @@ jobs:
       - uses: coursier/cache-action@v6.4
       - uses: coursier/setup-action@v1.3
         with:
-          jvm: 8
+          jvm: 17
       - run: .github/scripts/scala-cli.sh .github/scripts/UpdateBrewFormula.scala
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
