@@ -1,7 +1,11 @@
 package coursier.install.internal
 
 import coursier.cache.ArchiveType
-import org.apache.commons.compress.archivers.{ArchiveEntry, ArchiveStreamFactory}
+import org.apache.commons.compress.archivers.{
+  ArchiveEntry,
+  ArchiveInputStream,
+  ArchiveStreamFactory
+}
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 
 import java.io.{BufferedInputStream, File, InputStream}
@@ -34,10 +38,11 @@ object ArchiveUtil {
           if (fis.markSupported()) fis
           else new BufferedInputStream(fis)
         )
-      val archiveInputStream = new ArchiveStreamFactory().createArchiveInputStream(
-        if (uncompressedInputStream.markSupported()) uncompressedInputStream
-        else new BufferedInputStream(uncompressedInputStream)
-      )
+      val archiveInputStream: ArchiveInputStream[_ <: ArchiveEntry] =
+        new ArchiveStreamFactory().createArchiveInputStream(
+          if (uncompressedInputStream.markSupported()) uncompressedInputStream
+          else new BufferedInputStream(uncompressedInputStream)
+        )
 
       var nextEntryOrNull: ArchiveEntry = null
 
