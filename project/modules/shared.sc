@@ -158,7 +158,7 @@ trait CsModule extends SbtModule {
     val scala213Opts =
       if (sv.startsWith("2.13.")) Seq("-Ymacro-annotations")
       else Nil
-    super.scalacOptions() ++ scala212Opts ++ scala213Opts ++ Seq("-deprecation")
+    super.scalacOptions() ++ scala212Opts ++ scala213Opts ++ Seq("-deprecation", "-release", "8")
   }
   def scalacPluginIvyDeps = T {
     val sv = scalaVersion()
