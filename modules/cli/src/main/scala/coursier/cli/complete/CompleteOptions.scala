@@ -1,11 +1,11 @@
 package coursier.cli.complete
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, _}
+import caseapp._
 import coursier.cli.options.{CacheOptions, OutputOptions, RepositoryOptions}
 
 // format: off
 @ArgsName("org[:name[:version]]")
-@Help(
+@HelpMessage(
   "Auto-complete Maven coordinates.\n" +
   "\n" +
   "Examples:\n" +
@@ -24,8 +24,8 @@ final case class CompleteOptions(
   @Recurse
     outputOptions: OutputOptions = OutputOptions(),
 
-  @Help("Default scala version")
-  @Short("e")
+  @HelpMessage("Default scala version")
+  @ExtraName("e")
     scalaVersion: Option[String] = None
 
 ) {
@@ -38,6 +38,6 @@ final case class CompleteOptions(
 }
 
 object CompleteOptions {
-  implicit val parser = Parser[CompleteOptions]
-  implicit val help   = caseapp.core.help.Help[CompleteOptions]
+  implicit lazy val parser: Parser[CompleteOptions] = Parser.derive
+  implicit lazy val help: Help[CompleteOptions]     = Help.derive
 }

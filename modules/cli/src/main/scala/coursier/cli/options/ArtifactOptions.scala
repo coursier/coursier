@@ -1,6 +1,6 @@
 package coursier.cli.options
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import coursier.core.{Classifier, Resolution, Type}
 import coursier.install.RawAppDescriptor
 
@@ -9,33 +9,33 @@ final case class ArtifactOptions(
 
   @Group(OptionGroup.fetch)
   @Hidden
-  @Help("Classifiers that should be fetched")
-  @Value("classifier1,classifier2,...")
-  @Short("C")
+  @HelpMessage("Classifiers that should be fetched")
+  @ValueDescription("classifier1,classifier2,...")
+  @ExtraName("C")
     classifier: List[String] = Nil,
 
   @Group(OptionGroup.fetch)
-  @Help("Fetch source artifacts")
+  @HelpMessage("Fetch source artifacts")
     sources: Boolean = false,
 
   @Group(OptionGroup.fetch)
-  @Help("Fetch javadoc artifacts")
+  @HelpMessage("Fetch javadoc artifacts")
     javadoc: Boolean = false,
 
   @Group(OptionGroup.fetch)
-  @Help("Fetch default artifacts (default: false if --sources or --javadoc or --classifier are passed, true else)")
+  @HelpMessage("Fetch default artifacts (default: false if --sources or --javadoc or --classifier are passed, true else)")
     default: Option[Boolean] = None,
 
   @Group(OptionGroup.fetch)
   @Hidden
-  @Help("Artifact types that should be retained (e.g. jar, src, doc, etc.) - defaults to jar,bundle")
-  @Value("type1,type2,...")
-  @Short("A")
+  @HelpMessage("Artifact types that should be retained (e.g. jar, src, doc, etc.) - defaults to jar,bundle")
+  @ValueDescription("type1,type2,...")
+  @ExtraName("A")
     artifactType: List[String] = Nil,
 
   @Group(OptionGroup.fetch)
   @Hidden
-  @Help("Fetch artifacts even if the resolution is errored")
+  @HelpMessage("Fetch artifacts even if the resolution is errored")
     forceFetch: Boolean = false
 
 ) {
@@ -95,6 +95,7 @@ final case class ArtifactOptions(
 }
 
 object ArtifactOptions {
-  implicit val parser = Parser[ArtifactOptions]
-  implicit val help   = caseapp.core.help.Help[ArtifactOptions]
+  lazy val parser: Parser[ArtifactOptions]                           = Parser.derive
+  implicit lazy val parserAux: Parser.Aux[ArtifactOptions, parser.D] = parser
+  implicit lazy val help: Help[ArtifactOptions]                      = Help.derive
 }
