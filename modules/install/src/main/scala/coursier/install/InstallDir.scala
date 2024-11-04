@@ -479,7 +479,7 @@ import scala.util.Properties
         s = Files.list(baseDir)
         s.iterator()
           .asScala
-          .filter(p => !p.getFileName.toString.startsWith("."))
+          .filter(p => p.toFile.isFile && !p.getFileName.toString.startsWith("."))
           .filter(InfoFile.isInfoFile)
           .map(actualName)
           .toVector
