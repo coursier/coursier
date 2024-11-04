@@ -393,27 +393,27 @@ jobs:
       with:
         name: launchers-linux
         path: artifacts/
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: launchers-windows
         path: artifacts/
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: launchers-mac
         path: artifacts/
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: launchers-static
         path: artifacts/
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: launchers-mostly-static
         path: artifacts/
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: launchers-container
         path: artifacts/
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: launchers-jar
         path: artifacts/
