@@ -107,7 +107,11 @@ final case class ResolutionOptions(
 
   @Group(OptionGroup.resolution)
   @Hidden
-    forceDepMgmtVersions: Option[Boolean] = None
+    forceDepMgmtVersions: Option[Boolean] = None,
+
+  @Group(OptionGroup.resolution)
+  @Hidden
+    enableDependencyOverrides: Option[Boolean] = None
 
 ) {
   // format: on
@@ -212,6 +216,7 @@ final case class ResolutionOptions(
           .withKeepProvidedDependencies(keepProvidedDependencies)
           .withJdkVersionOpt(jdkVersion.map(_.trim).filter(_.nonEmpty).map(Version(_)))
           .withForceDepMgmtVersions(forceDepMgmtVersions)
+          .withEnableDependencyOverrides(enableDependencyOverrides)
     }
   }
 }

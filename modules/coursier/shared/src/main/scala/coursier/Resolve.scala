@@ -372,6 +372,9 @@ object Resolve extends PlatformResolve {
       .withDefaultConfiguration(params.defaultConfiguration)
       .withKeepProvidedDependencies(params.keepProvidedDependencies.getOrElse(false))
       .withForceDepMgmtVersions(params.forceDepMgmtVersions.getOrElse(false))
+      .withEnableDependencyOverrides(
+        params.enableDependencyOverrides.getOrElse(Resolution.enableDependencyOverridesDefault)
+      )
   }
 
   private[coursier] def runProcess[F[_]](
