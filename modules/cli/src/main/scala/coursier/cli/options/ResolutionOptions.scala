@@ -133,7 +133,7 @@ final case class ResolutionOptions(
           Validated.validNel(
             elems
               .groupBy(_._1)
-              .mapValues(_.map(_._2).last)
+              .view.mapValues(_.map(_._2).last)
               .iterator
               .toMap
           )

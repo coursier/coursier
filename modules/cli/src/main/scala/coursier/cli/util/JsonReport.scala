@@ -200,7 +200,7 @@ final case class JsonElem(
   lazy val reconciledVersionStr = Symbol(s"${dep.mavenPrefix}:$reconciledVersion").name
   val requestedVersionStr       = Symbol(s"${dep.module}:${dep.version}").name
 
-  lazy val exclusions: Set[String] = dep.exclusions.map {
+  lazy val exclusions: Set[String] = dep.exclusions().map {
     case (org, name) =>
       s"${org.value}:${name.value}"
   }
