@@ -1199,12 +1199,14 @@ object ResolveTests extends TestSuite {
       def check(
         sparkVersion: String,
         scalaBinaryVersion: String,
-        profiles: Set[String] = Set.empty
+        profiles: Set[String] = Set.empty,
+        forceDepMgmtVersions: Option[Boolean] = None
       ): Future[Unit] =
         async {
           val params = ResolutionParams()
             .withJdkVersion("8.0")
             .withProfiles(profiles)
+            .withForceDepMgmtVersions(forceDepMgmtVersions)
           val res = await {
             resolve
               .addDependencies(
@@ -1230,7 +1232,7 @@ object ResolveTests extends TestSuite {
 
       test("scala 2_10") {
         test("spark 1_2_1") {
-          check("1.2.1", "2.10")
+          check("1.2.1", "2.10", forceDepMgmtVersions = Some(true))
         }
         test("spark 1_6_3") {
           check("1.6.3", "2.10")
@@ -1245,7 +1247,12 @@ object ResolveTests extends TestSuite {
 
       test("scala 2_11") {
         test("spark 1_2_1") {
-          check("1.2.1", "2.11", profiles = Set("!scala-2.10", "scala-2.11"))
+          check(
+            "1.2.1",
+            "2.11",
+            forceDepMgmtVersions = Some(true),
+            profiles = Set("!scala-2.10", "scala-2.11")
+          )
         }
         test("spark 1_6_3") {
           check("1.6.3", "2.11", profiles = Set("!scala-2.10", "scala-2.11"))
