@@ -12,7 +12,173 @@ permissions:
   attestations: write
 
 jobs:
+  compile-all:
+    runs-on: ubuntu-latest
+    name: Compile everything
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 17
+    - run: ./mill -i __.compile
+
+  compile-all-no-package-object:
+    runs-on: ubuntu-latest
+    name: Compile everything (no package object)
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 17
+    - run: |
+        test -e modules/coursier/shared/src/main/scala/coursier/package.scala
+        rm -f modules/coursier/shared/src/main/scala/coursier/package.scala
+        ./mill -i __.compile
+
+  test:
+    runs-on: ${{ matrix.OS }}
+    name: ${{ matrix.OS }} Scala ${{ matrix.SCALA_VERSION }} JDK ${{ matrix.JDK }}
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest"]
+        JDK: ["8"]
+        SCALA_VERSION: ["2.12.20"]
+        include:
+          - JDK: "17"
+            SCALA_VERSION: "2.12.20"
+            OS: "windows-latest"
+          - JDK: "8"
+            SCALA_VERSION: "2.13.15"
+            OS: "ubuntu-latest"
+          - JDK: "17"
+            SCALA_VERSION: "2.12.20"
+            OS: "ubuntu-latest"
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: ${{ matrix.JDK }}
+    - run: sudo apt-get install -y nailgun
+      if: runner.os == 'Linux'
+    # - run: .github/scripts/scala-native-setup.sh
+    #   if: runner.os != 'Windows'
+    - run: ./mill -i jvmTests --scalaVersion "$SCALA_VERSION"
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        COURSIER_JNI: force
+
+  js-test:
+    runs-on: ubuntu-latest
+    name: Scala.JS Scala ${{ matrix.SCALA_VERSION }}
+    strategy:
+      fail-fast: false
+      matrix:
+        SCALA_VERSION: ["2.12.20", "2.13.15"]
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '12'
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 8
+    - run: npm install && ./mill -i jsTests --scalaVersion "$SCALA_VERSION"
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+
+  bin-compat:
+    runs-on: ubuntu-latest
+    name: Binary compatibility
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 8
+    - run: ./mill -i -k __.mimaReportBinaryIssues
+
+  website-check:
+    runs-on: ubuntu-latest
+    name: Website check
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '12'
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 17
+    - run: ./mill -i doc.generate --npm-install --yarn-run-build
+      env:
+        COURSIER_JNI: force
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 17
+        apps: scalafmt
+    - run: scalafmt --check
+
   publish:
+    needs: ["compile-all", "test", "js-test", "bin-compat", "website-check", "format"]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
