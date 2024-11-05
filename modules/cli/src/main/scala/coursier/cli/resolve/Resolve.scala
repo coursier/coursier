@@ -275,6 +275,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
           .withDependencies(deps)
           .withRepositories(repositories)
           .withResolutionParams(params0.resolution)
+          .withBomDependencies(params0.dependency.bomDependencies)
           .withCache(cache)
           .transformResolution { t =>
             if (benchmark == 0) t

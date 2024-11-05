@@ -29,6 +29,33 @@ abstract class ResolveTests extends TestSuite {
       )
       assert(jacksonOutput == expectedJacksonOutput)
     }
+
+    test("BOM") {
+      val dependency = "ch.epfl.scala:bsp4j:2.2.0-M2"
+      val bom        = "io.quarkus:quarkus-bom:3.16.2"
+      val gsonModule = "com.google.code.gson:gson"
+
+      val noBomRes =
+        os.proc(launcher, "resolve", dependency).call().out.lines()
+      val bomRes =
+        os.proc(launcher, "resolve", dependency, "--bom", bom).call().out.lines()
+
+      def gsonVersion(results: Seq[String]) =
+        results
+          .find(_.startsWith(gsonModule + ":"))
+          .map(_.stripPrefix(gsonModule + ":"))
+          .map(_.split(":").apply(0))
+          .getOrElse(sys.error(s"$gsonModule not found in $results"))
+
+      val noBomGsonVersion = gsonVersion(noBomRes)
+      val bomGsonVersion   = gsonVersion(bomRes)
+
+      val expectedNoBomGsonVersion = "2.10.1"
+      val expectedBomGsonVersion   = "2.11.0"
+
+      assert(noBomGsonVersion == expectedNoBomGsonVersion)
+      assert(bomGsonVersion == expectedBomGsonVersion)
+    }
   }
 
 }

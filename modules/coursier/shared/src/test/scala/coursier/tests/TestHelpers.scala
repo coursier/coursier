@@ -81,6 +81,10 @@ object TestHelpers extends PlatformTestHelpers {
         "_dep" + sha1(repr)
       }
 
+    val bomDependenciesHashPart =
+      if (res.bomDependencies.isEmpty) ""
+      else "_bomDep" + sha1(res.bomDependencies.toString)
+
     val paramsPart =
       if (params == ResolutionParams())
         ""
@@ -121,7 +125,7 @@ object TestHelpers extends PlatformTestHelpers {
           ""
         else
           "_" + rootDep.configuration.value.replace('(', '_').replace(')', '_')
-      ) + dependenciesHashPart + paramsPart + extraKeyPart
+      ) + dependenciesHashPart + bomDependenciesHashPart + paramsPart + extraKeyPart
     ).filter(_.nonEmpty).mkString("/")
 
     def tryRead = textResource(path)
