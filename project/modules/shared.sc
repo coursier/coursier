@@ -3,11 +3,24 @@ import $file.^.deps, deps.{Deps, ScalaVersions}
 
 import mill._, mill.scalalib._, mill.scalajslib._
 
+import java.util.Locale
+
+import scala.util.Properties
+
 trait CsMima extends Mima {
-  override def mimaPreviousVersions: T[Seq[String]] = T {
-    // 2.1.x broke binary compatibility with 2.0.x
-    // 0.to(16).map(v => s"2.0.$v") ++
-    0.to(7).map(v => s"2.1.$v")
+  def mimaPreviousVersions: T[Seq[String]] = T.input {
+    os.proc("git", "tag", "-l")
+      .call()
+      .out.lines()
+      .filter(_.startsWith("v"))
+      .filter(!_.contains("-"))
+      .map(_.stripPrefix("v"))
+      .filter(!_.startsWith("0."))
+      .filter(!_.startsWith("1."))
+      .filter(!_.startsWith("2.0.")) // 2.1.x broke binary compatibility with 2.0.x
+      .map(coursier.core.Version(_))
+      .sorted
+      .map(_.repr)
   }
 }
 
@@ -82,8 +95,40 @@ trait CoursierPublishModule extends PublishModule with PublishLocalNoFluff with 
     )
   )
   def publishVersion = T(buildVersion)
+  private def isArm64 =
+    Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
+      case Some("aarch64" | "arm64") => true
+      case _                         => false
+    }
+  def javacSystemJvmId = T {
+    if (Properties.isMac && isArm64)
+      // no native JDK 8 on Mac ARM, using amd64 one
+      "https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u432-b06/OpenJDK8U-jdk_x64_mac_hotspot_8u432b06.tar.gz"
+    else "adoptium:8"
+  }
+  def javacSystemJvm = T.source {
+    val output = os.proc("cs", "java-home", "--jvm", javacSystemJvmId())
+      .call(cwd = T.workspace)
+      .out.trim()
+    val javaHome = os.Path(output)
+    assert(os.isDir(javaHome))
+    PathRef(javaHome, quick = true)
+  }
+  // adds options equivalent to --release 8 + allowing access to unsupported JDK APIs
+  // (no more straightforward options to achieve that AFAIK)
+  def maybeJdk8JavacOpt = T {
+    val javaHome   = javacSystemJvm().path
+    val rtJar      = javaHome / "jre/lib/rt.jar"
+    val hasModules = os.isDir(javaHome / "jmods")
+    val hasRtJar   = os.isFile(rtJar)
+    assert(hasModules || hasRtJar)
+    if (hasModules)
+      Seq("--system", javaHome.toString)
+    else
+      Seq("-source", "8", "-target", "8", "-bootclasspath", rtJar.toString)
+  }
   def javacOptions = T {
-    super.javacOptions() ++ Seq("-source", "8", "-target", "8")
+    super.javacOptions() ++ maybeJdk8JavacOpt()
   }
 }
 
@@ -158,7 +203,12 @@ trait CsModule extends SbtModule {
     val scala213Opts =
       if (sv.startsWith("2.13.")) Seq("-Ymacro-annotations")
       else Nil
-    super.scalacOptions() ++ scala212Opts ++ scala213Opts ++ Seq("-deprecation", "-release", "8")
+    super.scalacOptions() ++ scala212Opts ++ scala213Opts ++ Seq(
+      "-deprecation",
+      "-Xasync",
+      "--release",
+      "8"
+    )
   }
   def scalacPluginIvyDeps = T {
     val sv = scalaVersion()
