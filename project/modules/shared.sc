@@ -9,9 +9,13 @@ import scala.util.Properties
 
 trait CsMima extends Mima {
   def mimaPreviousVersions: T[Seq[String]] = T.input {
+    val current = os.proc("git", "describe", "--tags", "--match", "v*")
+      .call()
+      .out.trim()
     os.proc("git", "tag", "-l")
       .call()
       .out.lines()
+      .filter(_ != current)
       .filter(_.startsWith("v"))
       .filter(!_.contains("-"))
       .map(_.stripPrefix("v"))
