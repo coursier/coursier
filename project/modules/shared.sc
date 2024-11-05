@@ -4,10 +4,19 @@ import $file.^.deps, deps.{Deps, ScalaVersions}
 import mill._, mill.scalalib._, mill.scalajslib._
 
 trait CsMima extends Mima {
-  override def mimaPreviousVersions: T[Seq[String]] = T {
-    // 2.1.x broke binary compatibility with 2.0.x
-    // 0.to(16).map(v => s"2.0.$v") ++
-    0.to(7).map(v => s"2.1.$v")
+  def mimaPreviousVersions: T[Seq[String]] = T.input {
+    os.proc("git", "tag", "-l")
+      .call()
+      .out.lines()
+      .filter(_.startsWith("v"))
+      .filter(!_.contains("-"))
+      .map(_.stripPrefix("v"))
+      .filter(!_.startsWith("0."))
+      .filter(!_.startsWith("1."))
+      .filter(!_.startsWith("2.0.")) // 2.1.x broke binary compatibility with 2.0.x
+      .map(coursier.core.Version(_))
+      .sorted
+      .map(_.repr)
   }
 }
 
