@@ -41,13 +41,13 @@ object Channel extends CoursierCommand[ChannelOptions] {
     val channelDir = new File(configDir, "channels")
 
     // FIXME May not be fine with concurrency (two process doing this in parallel)
-    val f = Stream
+    val f = Iterator
       .from(1)
       .map { n =>
         new File(channelDir, s"channels-$n")
       }
       .filter(!_.exists())
-      .head
+      .next()
 
     if (output.verbosity >= 1) // todo : add output verbosity in options
       System.err.println(s"Writing $f")

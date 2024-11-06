@@ -75,7 +75,7 @@ object SharedLoaderParams {
         val deps0 = depsFromDeprecatedArgs ++ deps
         SharedLoaderParams(
           targetsOpt.getOrElse(deps0.map(_._1).distinct),
-          deps0.groupBy(_._1).mapValues(_.map(_._2)).iterator.toMap
+          deps0.groupBy(_._1).view.mapValues(_.map(_._2)).iterator.toMap
         )
     }
   }

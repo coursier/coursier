@@ -21,7 +21,7 @@ object JsonOutput {
     val depToArtifacts: Map[Dependency, Vector[(Publication, Artifact)]] =
       artifacts
         .groupBy(_._1)
-        .mapValues(_.map(t => (t._2, t._3)).toVector)
+        .view.mapValues(_.map(t => (t._2, t._3)).toVector)
         .toMap
 
     // TODO(wisechengyi): This is not exactly the root dependencies we are asking for on the command line, but it should be

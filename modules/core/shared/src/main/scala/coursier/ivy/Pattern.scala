@@ -161,7 +161,7 @@ object PropertiesPattern {
     implicit def fromString(s: String): ChunkOrProperty = Const(s)
   }
 
-  private def parser[_: P]: P[Seq[ChunkOrProperty]] = {
+  private def parser[X: P]: P[Seq[ChunkOrProperty]] = {
 
     val notIn         = s"[]{}()$$".toSet
     def chars         = P(CharsWhile(c => !notIn(c)).!)

@@ -103,7 +103,7 @@ object SharedJavaParams {
         .jvmIndex
         .map(_.trim)
         .filter(_ != "default")
-        .map(JvmIndex.handleAliases)
+        .map(JvmChannel.handleAliases)
         .map(s => JvmChannel.parse(s))
       parsed match {
         case None                 => Validated.validNel(None)

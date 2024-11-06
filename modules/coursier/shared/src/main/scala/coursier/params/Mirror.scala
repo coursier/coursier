@@ -2,6 +2,8 @@ package coursier.params
 
 import coursier.core.Repository
 
+import scala.collection.compat._
+
 abstract class Mirror extends Serializable {
   def matches(repo: Repository): Option[Repository]
 }
@@ -23,7 +25,10 @@ object Mirror {
   private def parseMirrorString(input: String): Either[String, (String, Seq[String])] =
     input.split("=", 2) match {
       case Array(dest, froms) =>
-        Right((dest.trim, froms.split(";").map(_.trim).filter(_.nonEmpty)))
+        Right((
+          dest.trim,
+          immutable.ArraySeq.unsafeWrapArray(froms.split(";")).map(_.trim).filter(_.nonEmpty)
+        ))
       case _ =>
         Left(s"Invalid mirror definition '$input', expected 'dest=source1;source2;...'")
     }

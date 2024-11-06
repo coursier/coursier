@@ -49,7 +49,9 @@ import scala.language.higherKinds
   preferConfFileDefaultRepositories: Boolean = true,
   @since("2.1.12")
   @deprecated("Workaround for former uses of Resolution.mapDependencies, prefer relying on ResolutionParams", "2.1.12")
-    mapDependenciesOpt: Option[Dependency => Dependency] = None
+    mapDependenciesOpt: Option[Dependency => Dependency] = None,
+  @since("2.1.16")
+    bomDependencies: Seq[Dependency] = Nil
 )(implicit
   sync: Sync[F]
 ) {

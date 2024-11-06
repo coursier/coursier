@@ -121,7 +121,7 @@ object DependencyParams {
           .map { list =>
             list
               .groupBy(_._1)
-              .mapValues(_.map(_._2).toSet)
+              .view.mapValues(_.map(_._2).toSet)
               .iterator
               .toMap
           }

@@ -46,8 +46,7 @@ object CacheUrl {
           )
           allLoaders
             .flatMap(clsOpt(_).iterator)
-            .toStream
-            .headOption
+            .find(_ => true)
         }
 
         def printError(e: Exception): Unit =

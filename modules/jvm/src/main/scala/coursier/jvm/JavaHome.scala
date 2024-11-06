@@ -15,7 +15,7 @@ import dataclass._
 @data class JavaHome(
   cache: Option[JvmCache] = None,
   getEnv: Option[String => Option[String]] = Some(k => Option(System.getenv(k))),
-  os: String = JvmIndex.defaultOs(),
+  os: String = JvmChannel.defaultOs(),
   commandOutput: CommandOutput = CommandOutput.default(),
   pathExtensions: Option[Seq[String]] = JavaHome.defaultPathExtensions,
   allowSystem: Boolean = true,
@@ -317,7 +317,7 @@ object JavaHome {
   def disableBashScript(
     getEnv: String => Option[String] = k => Option(System.getenv(k)),
     pathSeparator: String = ":",
-    isMacOs: Boolean = JvmIndex.defaultOs() == "darwin"
+    isMacOs: Boolean = JvmChannel.defaultOs() == "darwin"
   ): String =
     getEnv("CS_FORMER_JAVA_HOME") match {
       case None => ""
@@ -332,7 +332,7 @@ object JavaHome {
   def disableFishScript(
     getEnv: String => Option[String] = k => Option(System.getenv(k)),
     pathSeparator: String = ":",
-    isMacOs: Boolean = JvmIndex.defaultOs() == "darwin"
+    isMacOs: Boolean = JvmChannel.defaultOs() == "darwin"
   ): String =
     getEnv("CS_FORMER_JAVA_HOME") match {
       case None => ""

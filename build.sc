@@ -634,13 +634,13 @@ trait Cli extends CsModule
     import java.util.jar.Attributes.Name
     val ver = publishVersion()
     super.manifest().add(
-      Name.IMPLEMENTATION_TITLE.toString     -> "coursier-cli",
-      Name.IMPLEMENTATION_VERSION.toString   -> ver,
-      Name.SPECIFICATION_VENDOR.toString     -> "io.get-coursier",
-      Name.SPECIFICATION_TITLE.toString      -> "coursier-cli",
-      Name.IMPLEMENTATION_VENDOR_ID.toString -> "io.get-coursier",
-      Name.SPECIFICATION_VERSION.toString    -> ver,
-      Name.IMPLEMENTATION_VENDOR.toString    -> "io.get-coursier"
+      Name.IMPLEMENTATION_TITLE.toString   -> "coursier-cli",
+      Name.IMPLEMENTATION_VERSION.toString -> ver,
+      Name.SPECIFICATION_VENDOR.toString   -> "io.get-coursier",
+      Name.SPECIFICATION_TITLE.toString    -> "coursier-cli",
+      "Implementation-Vendor-Id"           -> "io.get-coursier",
+      Name.SPECIFICATION_VERSION.toString  -> ver,
+      Name.IMPLEMENTATION_VENDOR.toString  -> "io.get-coursier"
     )
   }
   def docJar = T {
