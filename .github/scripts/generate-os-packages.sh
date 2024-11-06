@@ -42,6 +42,8 @@ generate_sdk() {
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     if [[ "$ARCHITECTURE" == "x86_64" ]]; then
       sdkDirectory="cs-x86_64-apple-darwin-sdk"
+    elif [[ "$ARCHITECTURE" == "arm64" ]]; then
+      sdkDirectory="cs-aarch64-apple-darwin-sdk"
     else
       echo "cs is not supported on $ARCHITECTURE"
       exit 2

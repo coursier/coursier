@@ -217,6 +217,8 @@ jobs:
             OSSHORT: "windows"
           - OS: "macos-13"
             OSSHORT: "mac"
+          - OS: "macos-14"
+            OSSHORT: "mac-arm"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -391,6 +393,10 @@ jobs:
     - uses: actions/download-artifact@v4
       with:
         name: launchers-mac
+        path: artifacts/
+    - uses: actions/download-artifact@v4
+      with:
+        name: launchers-mac-arm
         path: artifacts/
     - uses: actions/download-artifact@v4
       with:
