@@ -65,6 +65,8 @@ $ cs setup
 
 ### Windows
 
+> For ARM64 Windows users, please follow **JAR-based launcher** section. The Windows installer currently only installs x86_64 build of Coursier.
+
 On Windows, [download and execute the Windows installer](https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip).
 
 If you prefer a command line-based install, or if you would like to customize the setup options, use:
