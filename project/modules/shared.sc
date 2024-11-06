@@ -86,19 +86,7 @@ trait PublishLocalNoFluff extends PublishModule {
   }
 }
 
-trait CoursierPublishModule extends PublishModule with PublishLocalNoFluff with JavaModule {
-  import mill.scalalib.publish._
-  def pomSettings = PomSettings(
-    description = artifactName(),
-    organization = "io.get-coursier",
-    url = "https://github.com/coursier/coursier",
-    licenses = Seq(License.`Apache-2.0`),
-    versionControl = VersionControl.github("coursier", "coursier"),
-    developers = Seq(
-      Developer("alexarchambault", "Alex Archambault", "https://github.com/alexarchambault")
-    )
-  )
-  def publishVersion = T(buildVersion)
+trait CoursierJavaModule extends JavaModule {
   private def isArm64 =
     Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
       case Some("aarch64" | "arm64") => true
@@ -134,6 +122,21 @@ trait CoursierPublishModule extends PublishModule with PublishLocalNoFluff with 
   def javacOptions = T {
     super.javacOptions() ++ maybeJdk8JavacOpt()
   }
+}
+
+trait CoursierPublishModule extends PublishModule with PublishLocalNoFluff with CoursierJavaModule {
+  import mill.scalalib.publish._
+  def pomSettings = PomSettings(
+    description = artifactName(),
+    organization = "io.get-coursier",
+    url = "https://github.com/coursier/coursier",
+    licenses = Seq(License.`Apache-2.0`),
+    versionControl = VersionControl.github("coursier", "coursier"),
+    developers = Seq(
+      Developer("alexarchambault", "Alex Archambault", "https://github.com/alexarchambault")
+    )
+  )
+  def publishVersion = T(buildVersion)
 }
 
 trait CsTests extends TestModule {
@@ -198,7 +201,7 @@ trait JsTests extends TestScalaJSModule with CsResourcesTests {
   }
 }
 
-trait CsModule extends SbtModule {
+trait CsModule extends SbtModule with CoursierJavaModule {
   def scalacOptions = T {
     val sv = scalaVersion()
     val scala212Opts =
