@@ -31,6 +31,7 @@ object Coursier extends CommandsEntryPoint {
 
   val commands = Seq(
     bootstrap.Bootstrap,
+    cat.Cat,
     channel.Channel,
     config.Config,
     coursier.cli.complete.Complete,
