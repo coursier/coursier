@@ -426,8 +426,6 @@ object Resolution {
           dep = dep.withOverrides {
             if (dep.overrides.isEmpty)
               dictForOverrides
-            else if (dictForOverrides.isEmpty)
-              dep.overrides
             else
               DepMgmt.add(dictForOverrides, dep.overrides.toSeq, composeValues = true)
           }
@@ -1356,8 +1354,6 @@ object Resolution {
       .foldLeft(Map.empty[DependencyManagement.Key, DependencyManagement.Values]) { (acc, elem) =>
         DepMgmt.addSeq(acc, elem, composeValues = enableDependencyOverrides)
       }
-
-    val retainedParentDepsSet = retainedParentDeps.toSet
 
     project0
       .withPackagingOpt(project0.packagingOpt.map(_.map(substituteProps(_, propertiesMap0))))
