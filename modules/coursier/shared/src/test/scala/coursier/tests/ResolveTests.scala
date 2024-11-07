@@ -1427,5 +1427,48 @@ object ResolveTests extends TestSuite {
         androiCheck(dep"androidx.compose.material3:material3:1.0.1")
       }
     }
+
+    test("bom") {
+
+      def bomCheck(bomDependencies: Dependency*)(dependencies: Dependency*): Future[Unit] =
+        async {
+          val res = await {
+            resolve
+              .addDependencies(dependencies: _*)
+              .addBomDependencies(bomDependencies: _*)
+              .future()
+          }
+          await(validateDependencies(res))
+        }
+
+      test("spark-parent") {
+        test {
+          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3")(
+            dep"org.apache.commons:commons-lang3:_"
+          )
+        }
+        test {
+          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3")(
+            dep"org.glassfish.jaxb:jaxb-runtime:_"
+          )
+        }
+        test {
+          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3")(
+            dep"org.apache.logging.log4j:log4j-core:_"
+          )
+        }
+      }
+
+      test("quarkus-bom") {
+        test("disabled") {
+          check(dep"ch.epfl.scala:bsp4j:2.2.0-M2")
+        }
+        test("enabled") {
+          bomCheck(dep"io.quarkus:quarkus-bom:3.16.2")(
+            dep"ch.epfl.scala:bsp4j:2.2.0-M2"
+          )
+        }
+      }
+    }
   }
 }

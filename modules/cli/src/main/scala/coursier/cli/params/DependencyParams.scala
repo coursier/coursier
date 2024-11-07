@@ -20,7 +20,8 @@ final case class DependencyParams(
   intransitiveDependencies: Seq[(JavaOrScalaDependency, Map[String, String])],
   sbtPluginDependencies: Seq[(JavaOrScalaDependency, Map[String, String])],
   fromFilesDependencies: Seq[String],
-  platformOpt: Option[ScalaPlatform]
+  platformOpt: Option[ScalaPlatform],
+  bomDependencies: Seq[Dependency]
 ) {
   def native: Boolean =
     platformOpt match {
@@ -205,21 +206,63 @@ object DependencyParams {
       case (true, true)   => Validated.invalidNel("Cannot specify both --scala-js and --native")
     }
 
+    val bomDependenciesV = {
+      val either =
+        DependencyParser.javaOrScalaDependenciesParams(options.bomDependencies).either match {
+          case Left(e) =>
+            Left(
+              NonEmptyList.one(
+                s"Cannot parse BOM dependencies:" + System.lineSeparator() +
+                  e.map("  " + _).mkString(System.lineSeparator())
+              )
+            )
+          case Right(deps) =>
+            // FIXME params are ignored
+            val scalaDeps = deps.zipWithIndex.collect {
+              case ((_: JavaOrScalaDependency.ScalaDependency, _), idx) => idx
+            }
+            if (scalaDeps.isEmpty)
+              // FIXME JavaOrScalaDependency.JavaDependency has an exclude field too, we shouldn't accept a non empty value for it
+              Right(deps.collect { case (j: JavaOrScalaDependency.JavaDependency, _) =>
+                j.dependency
+              })
+            else
+              Left(
+                NonEmptyList.one(
+                  "Scala dependencies not accepted as BOM dependencies:" + System.lineSeparator() +
+                    scalaDeps.map(i => options.bomDependencies(i)).map("  " + _).mkString(
+                      System.lineSeparator()
+                    )
+                )
+              )
+        }
+      either.toValidated
+    }
+
     (
       excludeV,
       perModuleExcludeV,
       intransitiveDependenciesV,
       sbtPluginDependenciesV,
-      platformOptV
+      platformOptV,
+      bomDependenciesV
     ).mapN {
-      (exclude, perModuleExclude, intransitiveDependencies, sbtPluginDependencies, platformOpt) =>
+      (
+        exclude,
+        perModuleExclude,
+        intransitiveDependencies,
+        sbtPluginDependencies,
+        platformOpt,
+        bomDependencies
+      ) =>
         DependencyParams(
           exclude,
           perModuleExclude,
           intransitiveDependencies,
           sbtPluginDependencies,
           fromFilesDependencies,
-          platformOpt
+          platformOpt,
+          bomDependencies
         )
     }
   }

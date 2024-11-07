@@ -72,14 +72,18 @@ object TestHelpers extends PlatformTestHelpers {
             }
             .mkString("_")
 
-    val hashPart =
+    val dependenciesHashPart =
       if (isSimple) ""
       else {
         val repr =
           if (res.rootDependencies.lengthCompare(1) == 0) res.rootDependencies.head.toString
           else res.rootDependencies.toString
-        s"_dep" + sha1(repr)
+        "_dep" + sha1(repr)
       }
+
+    val bomDependenciesHashPart =
+      if (res.bomDependencies.isEmpty) ""
+      else "_bomDep" + sha1(res.bomDependencies.toString)
 
     val paramsPart =
       if (params == ResolutionParams())
@@ -121,7 +125,7 @@ object TestHelpers extends PlatformTestHelpers {
           ""
         else
           "_" + rootDep.configuration.value.replace('(', '_').replace(')', '_')
-      ) + hashPart + paramsPart + extraKeyPart
+      ) + dependenciesHashPart + bomDependenciesHashPart + paramsPart + extraKeyPart
     ).filter(_.nonEmpty).mkString("/")
 
     def tryRead = textResource(path)

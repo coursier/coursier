@@ -97,6 +97,8 @@ import scala.language.higherKinds
 
   def addDependencies(dependencies: Dependency*): Resolve[F] =
     withDependencies(this.dependencies ++ dependencies)
+  def addBomDependencies(bomDependencies: Dependency*): Resolve[F] =
+    withBomDependencies(this.bomDependencies ++ bomDependencies)
 
   def addRepositories(repositories: Repository*): Resolve[F] =
     withRepositories(this.repositories ++ repositories)
@@ -150,7 +152,8 @@ import scala.language.higherKinds
       finalDependencies,
       resolutionParams,
       initialResolution,
-      mapDependenciesOpt
+      mapDependenciesOpt,
+      bomDependencies
     )
 
     def run(res: Resolution): F[Resolution] = {
@@ -261,7 +264,8 @@ object Resolve extends PlatformResolve {
     dependencies: Seq[Dependency],
     params: ResolutionParams = ResolutionParams(),
     initialResolutionOpt: Option[Resolution] = None,
-    mapDependenciesOpt: Option[Dependency => Dependency] = None
+    mapDependenciesOpt: Option[Dependency => Dependency] = None,
+    bomDependencies: Seq[Dependency] = Nil
   ): Resolution = {
     import coursier.core.{Resolution => CoreResolution}
 
@@ -377,6 +381,7 @@ object Resolve extends PlatformResolve {
       .withEnableDependencyOverrides(
         params.enableDependencyOverrides.getOrElse(Resolution.enableDependencyOverridesDefault)
       )
+      .withBomDependencies(bomDependencies)
   }
 
   private[coursier] def runProcess[F[_]](

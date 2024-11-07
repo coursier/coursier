@@ -426,8 +426,6 @@ object Resolution {
           dep = dep.withOverrides {
             if (dep.overrides.isEmpty)
               dictForOverrides
-            else if (dictForOverrides.isEmpty)
-              dep.overrides
             else
               DepMgmt.add(dictForOverrides, dep.overrides.toSeq, composeValues = true)
           }
@@ -824,7 +822,8 @@ object Resolution {
   keepProvidedDependencies: Boolean = false,
   @since("2.1.17")
   forceDepMgmtVersions: Boolean = false,
-  enableDependencyOverrides: Boolean = Resolution.enableDependencyOverridesDefault
+  enableDependencyOverrides: Boolean = Resolution.enableDependencyOverridesDefault,
+  bomDependencies: Seq[Dependency] = Nil
 ) {
 
   lazy val dependencies: Set[Dependency] =
@@ -971,6 +970,41 @@ object Resolution {
       .toVector
       .flatMap(finalDependencies0)
 
+  private lazy val hasAllBoms =
+    bomDependencies.forall { bomDep =>
+      projectCache.contains(bomDep.moduleVersion)
+    }
+  private lazy val processedRootDependencies =
+    if (hasAllBoms) {
+      val bomProjects = bomDependencies
+        .map(_.moduleVersion)
+        .map(projectCache(_)._2)
+      val allDepMgmt = DepMgmt.addSeq(
+        Map.empty,
+        bomProjects.flatMap { bomProject =>
+          withProperties(bomProject.dependencyManagement, projectProperties(bomProject).toMap)
+        },
+        composeValues = true
+      )
+      val rootDependencies0 = rootDependencies.map(withDefaultConfig(_, defaultConfiguration))
+      if (allDepMgmt.isEmpty) rootDependencies0
+      else
+        rootDependencies0.map { rootDep =>
+          val rootDep0 = rootDep.withOverrides(
+            DepMgmt.add(allDepMgmt, rootDep.overrides.toSeq, composeValues = true)
+          )
+          if (rootDep0.version == "_")
+            allDepMgmt.get(DepMgmt.key(rootDep0)) match {
+              case Some(values) => rootDep0.withVersion(values.version)
+              case None         => rootDep0
+            }
+          else
+            rootDep0
+        }
+    }
+    else
+      Nil
+
   /** The "next" dependency set, made of the current dependencies and their transitive dependencies,
     * trying to solve version conflicts. Transitive dependencies are calculated with the current
     * cache.
@@ -984,18 +1018,10 @@ object Resolution {
   lazy val nextDependenciesAndConflicts: (Seq[Dependency], Seq[Dependency], Map[Module, String]) =
     // TODO Provide the modules whose version was forced by dependency overrides too
     merge(
-      rootDependencies.map(withDefaultConfig(_, defaultConfiguration)) ++ transitiveDependencies,
+      processedRootDependencies ++ transitiveDependencies,
       forceVersions,
       reconciliation
     )
-
-  private def updatedRootDependencies =
-    merge(
-      rootDependencies.map(withDefaultConfig(_, defaultConfiguration)),
-      forceVersions,
-      reconciliation,
-      preserveOrder = true
-    )._2
 
   lazy val reconciledVersions: Map[Module, String] =
     nextDependenciesAndConflicts._3.map {
@@ -1009,12 +1035,15 @@ object Resolution {
   /** The modules we miss some info about.
     */
   lazy val missingFromCache: Set[ModuleVersion] = {
+    val boms = bomDependencies
+      .map(_.moduleVersion)
+      .toSet
     val modules = dependencies
       .map(_.moduleVersion)
     val nextModules = nextDependenciesAndConflicts._2
       .map(_.moduleVersion)
 
-    (modules ++ nextModules)
+    (boms ++ modules ++ nextModules)
       .filterNot(mod => projectCache.contains(mod) || errorCache.contains(mod))
   }
 
@@ -1066,10 +1095,7 @@ object Resolution {
     * The versions of all the dependencies returned are erased (emptied).
     */
   lazy val remainingDependencies: Set[Dependency] = {
-    val rootDependencies0 = rootDependencies
-      .map(withDefaultConfig(_, defaultConfiguration))
-      .map(eraseVersion)
-      .toSet
+    val rootDependencies0 = processedRootDependencies.map(eraseVersion).toSet
 
     @tailrec
     def helper(
@@ -1357,8 +1383,6 @@ object Resolution {
         DepMgmt.addSeq(acc, elem, composeValues = enableDependencyOverrides)
       }
 
-    val retainedParentDepsSet = retainedParentDeps.toSet
-
     project0
       .withPackagingOpt(project0.packagingOpt.map(_.map(substituteProps(_, propertiesMap0))))
       .withVersion(substituteProps(project0.version, propertiesMap0))
@@ -1420,6 +1444,12 @@ object Resolution {
           }
       }
 
+    val (_, updatedRootDependencies, _) = merge(
+      processedRootDependencies,
+      forceVersions,
+      reconciliation,
+      preserveOrder = true
+    )
     val rootDeps = updatedRootDependencies
       .map(withDefaultConfig(_, defaultConfiguration))
       .map(dep => updated(dep, withRetainedVersions = true, withFallbackConfig = true))
