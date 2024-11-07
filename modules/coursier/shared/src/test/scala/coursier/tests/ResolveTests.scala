@@ -1171,8 +1171,7 @@ object ResolveTests extends TestSuite {
       async {
         val res = await {
           resolve
-            .addDependencies(dep"com.yahoo.athenz:athenz-zts-java-client-core:1.8.43")
-            .addRepositories(mvn"https://yahoo.bintray.com/maven")
+            .addDependencies(dep"com.yahoo.athenz:athenz-zts-java-client-core:1.10.7")
             .future()
         }
         await(validateDependencies(res))
