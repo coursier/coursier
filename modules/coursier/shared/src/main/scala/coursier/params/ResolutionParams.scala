@@ -35,7 +35,7 @@ import dataclass.data
   overrideFullSuffixOpt: Option[Boolean] = None,
   @since("2.1.9")
   keepProvidedDependencies: Option[Boolean] = None,
-  @since("2.1.15")
+  @since("2.1.17")
   forceDepMgmtVersions: Option[Boolean] = None,
   enableDependencyOverrides: Option[Boolean] = None
 ) {

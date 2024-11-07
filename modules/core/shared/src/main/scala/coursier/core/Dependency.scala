@@ -20,7 +20,7 @@ import MinimizedExclusions._
   // Maven-specific
   optional: Boolean,
   transitive: Boolean,
-  @since("2.1.15")
+  @since("2.1.17")
   overrides: DependencyManagement.Map =
     Map.empty
 ) {
