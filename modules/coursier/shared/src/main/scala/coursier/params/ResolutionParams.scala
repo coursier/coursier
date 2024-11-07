@@ -34,7 +34,10 @@ import dataclass.data
   @since("2.0.17")
   overrideFullSuffixOpt: Option[Boolean] = None,
   @since("2.1.9")
-  keepProvidedDependencies: Option[Boolean] = None
+  keepProvidedDependencies: Option[Boolean] = None,
+  @since("2.1.15")
+  forceDepMgmtVersions: Option[Boolean] = None,
+  enableDependencyOverrides: Option[Boolean] = None
 ) {
 
   def addForceVersion(fv: (Module, String)*): ResolutionParams =

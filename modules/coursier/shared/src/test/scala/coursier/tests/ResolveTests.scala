@@ -512,15 +512,30 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    test("conflicts") {
-      test {
+    test("beam") {
+      test("default") {
         async {
-
-          // hopefully, that's a legit conflict (not one that ought to go away after possible fixes in Resolution)
 
           val res = await {
             resolve
               .addDependencies(dep"org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.3.0")
+              .future()
+          }
+
+          await(validateDependencies(res))
+        }
+      }
+
+      test("conflict") {
+        async {
+
+          val res = await {
+            resolve
+              .addDependencies(dep"org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.3.0")
+              .withResolutionParams(
+                resolve.resolutionParams
+                  .withEnableDependencyOverrides(Some(false))
+              )
               .io
               .attempt
               .future()
@@ -530,7 +545,6 @@ object ResolveTests extends TestSuite {
           assert(isLeft)
 
           val error = res.swap.toOption.get
-
           error match {
             case c: ResolutionError.ConflictingDependencies =>
               val expectedModules = Set(mod"io.grpc:grpc-core")
@@ -1228,13 +1242,14 @@ object ResolveTests extends TestSuite {
       def check(
         sparkVersion: String,
         scalaBinaryVersion: String,
-        profiles: Set[String] = Set.empty
+        profiles: Set[String] = Set.empty,
+        forceDepMgmtVersions: Option[Boolean] = None
       ): Future[Unit] =
         async {
-          val params0 = ResolutionParams().withJdkVersion("8.0")
-          val params =
-            if (profiles.isEmpty) params0
-            else params0.withProfiles(profiles)
+          val params = ResolutionParams()
+            .withJdkVersion("8.0")
+            .withProfiles(profiles)
+            .withForceDepMgmtVersions(forceDepMgmtVersions)
           val res = await {
             resolve
               .addDependencies(
@@ -1260,7 +1275,7 @@ object ResolveTests extends TestSuite {
 
       test("scala 2_10") {
         test("spark 1_2_1") {
-          check("1.2.1", "2.10")
+          check("1.2.1", "2.10", forceDepMgmtVersions = Some(true))
         }
         test("spark 1_6_3") {
           check("1.6.3", "2.10")
@@ -1275,7 +1290,12 @@ object ResolveTests extends TestSuite {
 
       test("scala 2_11") {
         test("spark 1_2_1") {
-          check("1.2.1", "2.11", profiles = Set("!scala-2.10", "scala-2.11"))
+          check(
+            "1.2.1",
+            "2.11",
+            forceDepMgmtVersions = Some(true),
+            profiles = Set("!scala-2.10", "scala-2.11")
+          )
         }
         test("spark 1_6_3") {
           check("1.6.3", "2.11", profiles = Set("!scala-2.10", "scala-2.11"))

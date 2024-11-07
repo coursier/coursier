@@ -103,7 +103,15 @@ final case class ResolutionOptions(
   @Group(OptionGroup.resolution)
   @Hidden
   @HelpMessage("Set JDK version used during resolution when picking profiles")
-    jdkVersion: Option[String] = None
+    jdkVersion: Option[String] = None,
+
+  @Group(OptionGroup.resolution)
+  @Hidden
+    forceDepMgmtVersions: Option[Boolean] = None,
+
+  @Group(OptionGroup.resolution)
+  @Hidden
+    enableDependencyOverrides: Option[Boolean] = None
 
 ) {
   // format: on
@@ -207,6 +215,8 @@ final case class ResolutionOptions(
           .withDefaultConfiguration(Configuration(defaultConfiguration))
           .withKeepProvidedDependencies(keepProvidedDependencies)
           .withJdkVersionOpt(jdkVersion.map(_.trim).filter(_.nonEmpty).map(Version(_)))
+          .withForceDepMgmtVersions(forceDepMgmtVersions)
+          .withEnableDependencyOverrides(enableDependencyOverrides)
     }
   }
 }
