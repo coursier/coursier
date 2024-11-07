@@ -1468,6 +1468,28 @@ object ResolveTests extends TestSuite {
           )
         }
       }
+
+      // this one pulls other BOMs via dependency imports, and
+      // these tend to use the `project.version` Java property fairly often,
+      // so this checks that this property is substituted at the right time
+      test("google-cloud-bom") {
+        test("protobuf-java") {
+          bomCheck(dep"com.google.cloud:libraries-bom:26.50.0")(
+            dep"com.google.protobuf:protobuf-java:_"
+          )
+        }
+
+        test("scalapbc") {
+          test("no-bom") {
+            check(dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8")
+          }
+          test("bom") {
+            bomCheck(dep"com.google.cloud:libraries-bom:26.50.0")(
+              dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
+            )
+          }
+        }
+      }
     }
 
     test("delayed-properties") {
