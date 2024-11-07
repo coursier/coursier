@@ -10,7 +10,15 @@ object DependencyManagement {
     name: ModuleName,
     `type`: Type,
     classifier: Classifier
-  )
+  ) {
+    def map(f: String => String): Key =
+      Key(
+        organization = organization.map(f),
+        name = name.map(f),
+        `type` = `type`.map(f),
+        classifier = classifier.map(f)
+      )
+  }
 
   @data class Values(
     config: Configuration,
@@ -37,5 +45,23 @@ object DependencyManagement {
         other.minimizedExclusions.join(minimizedExclusions),
         optional || other.optional
       )
+    def mapButVersion(f: String => String): Values =
+      Values(
+        config = config.map(f),
+        version = version,
+        minimizedExclusions = minimizedExclusions.map(f),
+        optional = optional // FIXME This might have been a string like "${some-prop}" initially :/
+      )
+    def mapVersion(f: String => String): Values =
+      withVersion(f(version))
+  }
+
+  object Values {
+    val empty = Values(
+      config = Configuration.empty,
+      version = "",
+      minimizedExclusions = MinimizedExclusions.zero,
+      optional = false
+    )
   }
 }

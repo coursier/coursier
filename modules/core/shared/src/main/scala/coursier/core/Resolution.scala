@@ -224,6 +224,41 @@ object Resolution {
   ): Seq[(Configuration, Dependency)] =
     dependencies.map(withProperties(_, properties))
 
+  def withProperties(
+    map: DependencyManagement.Map,
+    properties: Map[String, String]
+  ): DependencyManagement.Map =
+    map
+      .toSeq // FIXME We should preserve some ordering here
+      .map(withProperties(_, properties))
+      .groupBy(_._1) // FIXME We should preserver some ordering here too
+      .view
+      .mapValues { values =>
+        values
+          .map(_._2)
+          // FIXME Things are going to override each other in no particular order :/
+          .foldLeft(DependencyManagement.Values.empty)(_.orElse(_))
+      }
+      .toMap
+
+  private def withProperties(
+    entry: (DependencyManagement.Key, DependencyManagement.Values),
+    properties: Map[String, String]
+  ): (DependencyManagement.Key, DependencyManagement.Values) = {
+
+    def substituteTrimmedProps(s: String) =
+      substituteProps(s, properties, trim = true)
+    def substituteProps0(s: String) =
+      substituteProps(s, properties, trim = false)
+
+    val (key, values) = entry
+
+    (
+      key.map(substituteProps0),
+      values.mapButVersion(substituteProps0).mapVersion(substituteTrimmedProps)
+    )
+  }
+
   /** Substitutes `properties` in `dependencies`.
     */
   private def withProperties(
@@ -335,11 +370,16 @@ object Resolution {
     * Fill empty version / scope / exclusions, for dependencies found in `dependencyManagement`.
     */
   def depsWithDependencyManagement(
-    dependencies: Seq[(Configuration, Dependency)],
-    overridesOpt: Option[DependencyManagement.Map],
-    dependencyManagement: Seq[(Configuration, Dependency)],
+    rawDependencies: Seq[(Configuration, Dependency)],
+    properties: Map[String, String],
+    rawOverridesOpt: Option[DependencyManagement.Map],
+    rawDependencyManagement: Seq[(Configuration, Dependency)],
     forceDepMgmtVersions: Boolean
   ): Seq[(Configuration, Dependency)] = {
+
+    val dependencies         = withProperties(rawDependencies, properties)
+    val overridesOpt         = rawOverridesOpt.map(withProperties(_, properties))
+    val dependencyManagement = withProperties(rawDependencyManagement, properties)
 
     // See http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Management
 
@@ -349,7 +389,7 @@ object Resolution {
       composeValues = overridesOpt.isDefined
     )
 
-    lazy val dictForOverridesOpt = overridesOpt.map { overrides =>
+    lazy val dictForOverridesOpt = rawOverridesOpt.map { rawOverrides =>
       lazy val versions = dependencies
         .filter {
           case (config, _) =>
@@ -361,11 +401,11 @@ object Resolution {
         .map(_._2)
         .groupBy(DepMgmt.key)
         .collect {
-          case (k, l) if !overrides.contains(k) && l.exists(_.version.nonEmpty) =>
+          case (k, l) if !rawOverrides.contains(k) && l.exists(_.version.nonEmpty) =>
             k -> l.map(_.version).filter(_.nonEmpty)
         }
       DepMgmt.add(
-        overrides,
+        rawOverrides,
         dependencyManagement
           .filter {
             case (config, _) =>
@@ -435,7 +475,7 @@ object Resolution {
   }
 
   @deprecated(
-    "Use the override accepting an override map and forceDepMgmtVersions instead",
+    "Use the override accepting an override map, forceDepMgmtVersions, and properties instead",
     "2.1.17"
   )
   def depsWithDependencyManagement(
@@ -444,6 +484,7 @@ object Resolution {
   ): Seq[(Configuration, Dependency)] =
     depsWithDependencyManagement(
       dependencies,
+      Map.empty,
       None,
       dependencyManagement,
       forceDepMgmtVersions = false
@@ -526,12 +567,9 @@ object Resolution {
     )
   }
 
-  def projectProperties(project: Project): Seq[(String, String)] = {
-
-    val packaging = project.packagingOpt.getOrElse(Type.jar)
-
+  private def staticProjectProperties(project: Project): Seq[(String, String)] =
     // FIXME The extra properties should only be added for Maven projects, not Ivy ones
-    val properties0 = project.properties ++ Seq(
+    Seq(
       // some artifacts seem to require these (e.g. org.jmock:jmock-legacy:2.5.1)
       // although I can find no mention of them in any manual / spec
       "pom.groupId"    -> project.module.organization.value,
@@ -544,7 +582,7 @@ object Resolution {
       "project.groupId"    -> project.module.organization.value,
       "project.artifactId" -> project.module.name.value,
       "project.version"    -> project.actualVersion,
-      "project.packaging"  -> packaging.value
+      "project.packaging"  -> project.packagingOpt.getOrElse(Type.jar).value
     ) ++ project.parent.toSeq.flatMap {
       case (parModule, parVersion) =>
         Seq(
@@ -557,11 +595,10 @@ object Resolution {
         )
     }
 
+  def projectProperties(project: Project): Seq[(String, String)] =
     // loose attempt at substituting properties in each others in properties0
     // doesn't try to go recursive for now, but that could be made so if necessary
-
-    substitute(properties0)
-  }
+    substitute(project.properties ++ staticProjectProperties(project))
 
   private def substitute(properties0: Seq[(String, String)]): Seq[(String, String)] = {
 
@@ -641,9 +678,10 @@ object Resolution {
       // 2.1 & 2.2
       depsWithDependencyManagement(
         // 1.7
-        withProperties(project0.dependencies, properties),
+        project0.dependencies,
+        properties,
         Option.when(enableDependencyOverrides)(from.overrides),
-        withProperties(project0.dependencyManagement, properties),
+        project0.dependencyManagement,
         forceDepMgmtVersions = forceDepMgmtVersions
       ),
       from.minimizedExclusions.toSet()
@@ -1356,26 +1394,26 @@ object Resolution {
       }
     }
 
-    val parentDeps =
+    val parentDeps = project0.parent.toSeq // belongs to 1.5 & 1.6
+
+    val allImportDeps =
       importDeps.map(_.moduleVersion) ++
-        importDepsMgmt.map(_.moduleVersion) ++
-        project0.parent // belongs to 1.5 & 1.6
+        importDepsMgmt.map(_.moduleVersion)
 
     val retainedParentDeps = parentDeps.filter(projectCache.contains)
+    val retainedImportDeps = allImportDeps.filter(projectCache.contains)
 
     val retainedParentProjects = retainedParentDeps.map(projectCache(_)._2)
+    val retainedImportProjects = retainedImportDeps.map(projectCache(_)._2)
 
     val depMgmt = (
       project0.dependencyManagement +: (
         profiles0.map(_.dependencyManagement) ++
           retainedParentProjects.map { p =>
-            val parentProperties0 = parents(p, k => projectCache.get(k).map(_._2))
-              .toVector
-              .flatMap(_.properties)
-            val props = withFinalProperties(
-              p.withProperties(parentProperties0 ++ p.properties)
-            ).properties.toMap
-            withProperties(p.dependencyManagement, props)
+            withProperties(p.dependencyManagement, staticProjectProperties(p).toMap)
+          } ++
+          retainedImportProjects.map { p =>
+            withProperties(p.dependencyManagement, projectProperties(p).toMap)
           }
       )
     )
@@ -1398,6 +1436,9 @@ object Resolution {
           case (key, values) if values.config != Configuration.`import` =>
             (values.config, values.fakeDependency(key))
         }
+      )
+      .withProperties(
+        retainedParentProjects.flatMap(_.properties) ++ project0.properties
       )
   }
 
