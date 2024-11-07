@@ -224,7 +224,7 @@ object Resolution {
   ): Seq[(Configuration, Dependency)] =
     dependencies.map(withProperties(_, properties))
 
-  def withProperties(
+  private def withProperties(
     map: DependencyManagement.Map,
     properties: Map[String, String]
   ): DependencyManagement.Map =
