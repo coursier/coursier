@@ -1470,7 +1470,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    test("log4j-slf4j-impl") {
+    test("delayed-properties") {
       check(dep"org.apache.logging.log4j:log4j-slf4j-impl:2.22.0")
     }
   }
