@@ -914,15 +914,14 @@ object Resolution {
       .withProjectCache {
         projectCache ++ projects.map {
           case (modVer, (s, p)) =>
-            val p0 =
-              withDependencyManagement(
-                p.withProperties(
-                  extraProperties ++
-                    p.properties.filter(kv => !forceProperties.contains(kv._1)) ++
-                    forceProperties
-                )
-              )
-            (modVer, (s, p0))
+            var proj = p
+            proj = proj.withProperties(
+              extraProperties ++
+                proj.properties.filter(kv => !forceProperties.contains(kv._1)) ++
+                forceProperties
+            )
+            proj = withDependencyManagement(substituteStaticProperties(proj))
+            (modVer, (s, proj))
         }
       }
   }
@@ -1294,6 +1293,21 @@ object Resolution {
       Set(project.moduleVersion),
       Set.empty
     )
+  }
+
+  private def substituteStaticProperties(project: Project): Project = {
+    val propertiesMap = Resolution.staticProjectProperties(project).toMap
+    project
+      .withProperties {
+        project.properties.map {
+          case (k, v) =>
+            (k, substituteProps(v, propertiesMap))
+        }
+      }
+      .withPackagingOpt(project.packagingOpt.map(_.map(substituteProps(_, propertiesMap))))
+      .withVersion(substituteProps(project.version, propertiesMap))
+      .withDependencies(withProperties(project.dependencies, propertiesMap))
+      .withDependencyManagement(withProperties(project.dependencyManagement, propertiesMap))
   }
 
   /** Add dependency management / inheritance related items to `project`, from what's available in

@@ -154,7 +154,7 @@ abstract class CentralTests extends TestSuite {
     }
 
     test("versionProperty") {
-      // nasty one - in its POM, its version contains "${parent.project.version}"
+      // nasty one - in its POM, its version contains "${project.parent.version}"
       runner.resolutionCheck(
         mod"org.bytedeco.javacpp-presets:opencv",
         "3.0.0-1.1"
