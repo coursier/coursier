@@ -528,12 +528,9 @@ object Resolution {
     )
   }
 
-  def projectProperties(project: Project): Seq[(String, String)] = {
-
-    val packaging = project.packagingOpt.getOrElse(Type.jar)
-
-    // FIXME The extra properties should only be added for Maven projects, not Ivy ones
-    val properties0 = project.properties ++ Seq(
+  def staticProjectProperties(project: Project): Seq[(String, String)] =
+    // FIXME We should only add those for Maven projects, not Ivy ones
+    Seq(
       // some artifacts seem to require these (e.g. org.jmock:jmock-legacy:2.5.1)
       // although I can find no mention of them in any manual / spec
       "pom.groupId"    -> project.module.organization.value,
@@ -546,7 +543,7 @@ object Resolution {
       "project.groupId"    -> project.module.organization.value,
       "project.artifactId" -> project.module.name.value,
       "project.version"    -> project.actualVersion,
-      "project.packaging"  -> packaging.value
+      "project.packaging"  -> project.packagingOpt.getOrElse(Type.jar).value
     ) ++ project.parent.toSeq.flatMap {
       case (parModule, parVersion) =>
         Seq(
@@ -559,11 +556,10 @@ object Resolution {
         )
     }
 
+  def projectProperties(project: Project): Seq[(String, String)] =
     // loose attempt at substituting properties in each others in properties0
     // doesn't try to go recursive for now, but that could be made so if necessary
-
-    substitute(properties0)
-  }
+    substitute(project.properties)
 
   private def substitute(properties0: Seq[(String, String)]): Seq[(String, String)] = {
 
@@ -877,15 +873,14 @@ object Resolution {
       .withProjectCache {
         projectCache ++ projects.map {
           case (modVer, (s, p)) =>
-            val p0 =
-              withDependencyManagement(
-                p.withProperties(
-                  extraProperties ++
-                    p.properties.filter(kv => !forceProperties.contains(kv._1)) ++
-                    forceProperties
-                )
-              )
-            (modVer, (s, p0))
+            var proj = p
+            proj = proj.withProperties(
+              extraProperties ++
+                proj.properties.filter(kv => !forceProperties.contains(kv._1)) ++
+                forceProperties
+            )
+            proj = withDependencyManagement(substituteStaticProperties(proj))
+            (modVer, (s, proj))
         }
       }
   }
@@ -1230,6 +1225,31 @@ object Resolution {
       Set(project.moduleVersion),
       Set.empty
     )
+  }
+
+  private def substituteStaticProperties(project: Project): Project = {
+    val propertiesMap = Resolution.staticProjectProperties(project).toMap
+    project
+      .withProperties {
+        project.properties.map {
+          case (k, v) =>
+            (k, substituteProps(v, propertiesMap))
+        }
+      }
+      .withPackagingOpt(project.packagingOpt.map(_.map(substituteProps(_, propertiesMap))))
+      .withVersion(substituteProps(project.version, propertiesMap))
+      .withDependencies {
+        project.dependencies.map {
+          case (config, dep) =>
+            withProperties((config, dep), propertiesMap)
+        }
+      }
+      .withDependencyManagement {
+        project.dependencyManagement.map {
+          case (config, dep) =>
+            withProperties((config, dep), propertiesMap)
+        }
+      }
   }
 
   /** Add dependency management / inheritance related items to `project`, from what's available in
