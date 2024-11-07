@@ -438,7 +438,7 @@ object Resolution {
 
   @deprecated(
     "Use the override accepting an override map and forceDepMgmtVersions instead",
-    "2.1.15"
+    "2.1.17"
   )
   def depsWithDependencyManagement(
     dependencies: Seq[(Configuration, Dependency)],
@@ -822,7 +822,7 @@ object Resolution {
   defaultConfiguration: Configuration = Configuration.defaultCompile,
   @since("2.1.9")
   keepProvidedDependencies: Boolean = false,
-  @since("2.1.15")
+  @since("2.1.17")
   forceDepMgmtVersions: Boolean = false,
   enableDependencyOverrides: Boolean = Resolution.enableDependencyOverridesDefault
 ) {
