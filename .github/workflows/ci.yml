@@ -193,14 +193,9 @@ jobs:
           echo '-Xmx2g' >> .mill-jvm-opts
 
       - name: Release
-        run: |
-          ./mill -i publishSonatype --tasks __.publishArtifacts || (
-            echo "Publishing exit with non-zero code, ignoring it" 1>&2
-            exit 0
-          )
+        run: ./mill -i publishSonatype --tasks __.publishArtifacts
         env:
           PGP_PASSWORD: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
-          PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
 
