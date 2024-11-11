@@ -85,6 +85,11 @@ import MinimizedExclusions._
   )
   def exclusions(): Set[(Organization, ModuleName)] = minimizedExclusions.toSet()
 
+  def addBom(module: Module, version: String): Dependency =
+    withBoms(boms :+ (module -> version))
+  def addBoms(boms: Seq[(Module, String)]): Dependency =
+    withBoms(this.boms ++ boms)
+
   private[core] def copy(
     module: Module = this.module,
     version: String = this.version,
@@ -100,7 +105,9 @@ import MinimizedExclusions._
     minimizedExclusions,
     Publication("", attributes.`type`, Extension.empty, attributes.classifier),
     optional,
-    transitive
+    transitive,
+    overrides,
+    boms
   )
 
   lazy val clearExclusions: Dependency =

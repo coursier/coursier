@@ -1013,15 +1013,18 @@ object Resolution {
       .toVector
       .flatMap(finalDependencies0)
 
+  private lazy val globalBomModuleVersions =
+    bomDependencies.map(_.moduleVersion) ++
+      bomModuleVersions
   private lazy val allBomModuleVersions =
-    bomDependencies.map(_.moduleVersion) ++ bomModuleVersions
+    globalBomModuleVersions ++ rootDependencies.flatMap(_.boms)
   lazy val hasAllBoms =
     allBomModuleVersions.forall { bomModVer =>
       projectCache.contains(bomModVer)
     }
   lazy val processedRootDependencies =
     if (hasAllBoms) {
-      val bomProjects = allBomModuleVersions.map(projectCache(_)._2)
+      val bomProjects = globalBomModuleVersions.map(projectCache(_)._2)
       val allDepMgmt = DepMgmt.addSeq(
         Map.empty,
         bomProjects.flatMap { bomProject =>
@@ -1029,21 +1032,43 @@ object Resolution {
         },
         composeValues = true
       )
-      val rootDependencies0 = rootDependencies.map(withDefaultConfig(_, defaultConfiguration))
-      if (allDepMgmt.isEmpty) rootDependencies0
-      else
-        rootDependencies0.map { rootDep =>
-          val rootDep0 = rootDep.withOverrides(
-            DepMgmt.add(allDepMgmt, rootDep.overrides.toSeq, composeValues = true)
-          )
-          if (rootDep0.version == "_")
-            allDepMgmt.get(DepMgmt.key(rootDep0)) match {
-              case Some(values) => rootDep0.withVersion(values.version)
-              case None         => rootDep0
-            }
-          else
-            rootDep0
-        }
+      val rootDependenciesWithDefaultConfig =
+        rootDependencies.map(withDefaultConfig(_, defaultConfiguration))
+      val rootDependencies0 =
+        if (allDepMgmt.isEmpty) rootDependenciesWithDefaultConfig
+        else
+          rootDependenciesWithDefaultConfig.map { rootDep =>
+            val rootDep0 = rootDep.withOverrides(
+              DepMgmt.add(allDepMgmt, rootDep.overrides.toSeq, composeValues = true)
+            )
+            if (rootDep0.version == "_")
+              allDepMgmt.get(DepMgmt.key(rootDep0)) match {
+                case Some(values) => rootDep0.withVersion(values.version)
+                case None         => rootDep0
+              }
+            else
+              rootDep0
+          }
+      rootDependencies0.map { rootDep =>
+        val depBomProjects = rootDep.boms.map(projectCache(_)._2)
+        val depBomDepMgmt = DepMgmt.addSeq(
+          Map.empty,
+          depBomProjects.flatMap { bomProject =>
+            withProperties(bomProject.dependencyManagement, projectProperties(bomProject).toMap)
+          },
+          composeValues = true
+        )
+        val rootDep0 = rootDep.withOverrides(
+          DepMgmt.add(depBomDepMgmt, rootDep.overrides.toSeq, composeValues = true)
+        )
+        if (rootDep0.version == "_")
+          depBomDepMgmt.get(DepMgmt.key(rootDep0)) match {
+            case Some(values) => rootDep0.withVersion(values.version)
+            case None         => rootDep0
+          }
+        else
+          rootDep0
+      }
     }
     else
       Nil

@@ -1488,6 +1488,30 @@ object ResolveTests extends TestSuite {
               dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
             )
           }
+          test("bom-via-dep") {
+            check(
+              dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
+                .addBom(mod"com.google.cloud:libraries-bom", "26.50.0")
+            )
+          }
+        }
+      }
+
+      test("bom-dep") {
+        test {
+          // The BOM shouldn't apply to scalapbc in that case
+          check(
+            dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8",
+            dep"com.lihaoyi:pprint_2.13:0.9.0"
+              .addBom(mod"com.google.cloud:libraries-bom", "26.50.0")
+          )
+        }
+        test {
+          check(
+            dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
+              .addBom(mod"com.google.cloud:libraries-bom", "26.50.0"),
+            dep"com.lihaoyi:pprint_2.13:0.9.0"
+          )
         }
       }
     }

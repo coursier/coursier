@@ -12,6 +12,7 @@ import coursier.core.{
   Type
 }
 import dataclass.data
+import dependency.{CovariantSet, DependencyLike, ModuleLike}
 
 import scala.collection.mutable
 
@@ -139,11 +140,13 @@ object JavaOrScalaDependency {
   private def classifierKey   = "classifier"
   private def extKey          = "ext"
   private def typeKey         = "type"
+  private def bomKey          = "bom"
   private lazy val readKeys = Set(
     inlineConfigKey,
     classifierKey,
     extKey,
-    typeKey
+    typeKey,
+    bomKey
   )
   def leftOverUserParams(dep: dependency.AnyDependency): Seq[(String, Option[String])] =
     dep.userParams.filter {
@@ -219,6 +222,49 @@ object JavaOrScalaDependency {
         case None =>
           errors += "Invalid empty classifier attribute"
       }
+    val bomValues = userParams.get(bomKey).getOrElse(Nil)
+    if (bomValues.exists(_.isEmpty))
+      errors += "Invalid empty bom parameter"
+    val bomOrErrors = bomValues.flatten.map { v =>
+      dependency.parser.DependencyParser.parse(v.replace('%', ':')) match {
+        case Left(error) => Left(error)
+        case Right(bomDep) =>
+          val expectedShape = DependencyLike(
+            ModuleLike(
+              bomDep.module.organization,
+              bomDep.module.name,
+              dependency.NoAttributes,
+              Map.empty
+            ),
+            bomDep.version,
+            CovariantSet.empty,
+            Nil
+          )
+          if (bomDep == expectedShape)
+            Right(
+              (
+                Module(
+                  Organization(bomDep.module.organization),
+                  ModuleName(bomDep.module.name),
+                  Map.empty
+                ),
+                bomDep.version
+              )
+            )
+          else
+            Left(s"Invalid BOM value '$v' (expected org%name%version)")
+      }
+    }
+    val bomErrors = bomOrErrors.collect {
+      case Left(e) => e
+    }
+    errors ++= bomErrors
+
+    val boms = bomOrErrors.collect {
+      case Right(modVer) => modVer
+    }
+
+    csDep = csDep.addBoms(boms)
 
     if (errors.isEmpty)
       Right {
