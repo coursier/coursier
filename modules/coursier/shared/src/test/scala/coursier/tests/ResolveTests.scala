@@ -1429,12 +1429,12 @@ object ResolveTests extends TestSuite {
 
     test("bom") {
 
-      def bomCheck(bomDependencies: Dependency*)(dependencies: Dependency*): Future[Unit] =
+      def bomCheck(boms: (Module, String)*)(dependencies: Dependency*): Future[Unit] =
         async {
           val res = await {
             resolve
               .addDependencies(dependencies: _*)
-              .addBomDependencies(bomDependencies: _*)
+              .addBoms(boms: _*)
               .future()
           }
           await(validateDependencies(res))
@@ -1442,17 +1442,17 @@ object ResolveTests extends TestSuite {
 
       test("spark-parent") {
         test {
-          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3")(
+          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".moduleVersion)(
             dep"org.apache.commons:commons-lang3:_"
           )
         }
         test {
-          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3")(
+          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".moduleVersion)(
             dep"org.glassfish.jaxb:jaxb-runtime:_"
           )
         }
         test {
-          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3")(
+          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".moduleVersion)(
             dep"org.apache.logging.log4j:log4j-core:_"
           )
         }
@@ -1463,7 +1463,7 @@ object ResolveTests extends TestSuite {
           check(dep"ch.epfl.scala:bsp4j:2.2.0-M2")
         }
         test("enabled") {
-          bomCheck(dep"io.quarkus:quarkus-bom:3.16.2")(
+          bomCheck(dep"io.quarkus:quarkus-bom:3.16.2".moduleVersion)(
             dep"ch.epfl.scala:bsp4j:2.2.0-M2"
           )
         }
@@ -1474,7 +1474,7 @@ object ResolveTests extends TestSuite {
       // so this checks that this property is substituted at the right time
       test("google-cloud-bom") {
         test("protobuf-java") {
-          bomCheck(dep"com.google.cloud:libraries-bom:26.50.0")(
+          bomCheck(dep"com.google.cloud:libraries-bom:26.50.0".moduleVersion)(
             dep"com.google.protobuf:protobuf-java:_"
           )
         }
@@ -1484,7 +1484,7 @@ object ResolveTests extends TestSuite {
             check(dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8")
           }
           test("bom") {
-            bomCheck(dep"com.google.cloud:libraries-bom:26.50.0")(
+            bomCheck(dep"com.google.cloud:libraries-bom:26.50.0".moduleVersion)(
               dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
             )
           }

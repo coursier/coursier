@@ -51,7 +51,10 @@ import scala.language.higherKinds
   @deprecated("Workaround for former uses of Resolution.mapDependencies, prefer relying on ResolutionParams", "2.1.12")
     mapDependenciesOpt: Option[Dependency => Dependency] = None,
   @since("2.1.16")
-    bomDependencies: Seq[Dependency] = Nil
+  @deprecated("Use bomModuleVersions instead", "2.1.18")
+    bomDependencies: Seq[Dependency] = Nil,
+  @since("2.1.18")
+    bomModuleVersions: Seq[(Module, String)] = Nil
 )(implicit
   sync: Sync[F]
 ) {
@@ -97,8 +100,13 @@ import scala.language.higherKinds
 
   def addDependencies(dependencies: Dependency*): Resolve[F] =
     withDependencies(this.dependencies ++ dependencies)
+  @deprecated("Use addBom or addBoms instead", "2.1.18")
   def addBomDependencies(bomDependencies: Dependency*): Resolve[F] =
     withBomDependencies(this.bomDependencies ++ bomDependencies)
+  def addBom(bomModule: Module, bomVersion: String): Resolve[F] =
+    withBomModuleVersions(this.bomModuleVersions :+ (bomModule, bomVersion))
+  def addBoms(bomModuleVersions: (Module, String)*): Resolve[F] =
+    withBomModuleVersions(this.bomModuleVersions ++ bomModuleVersions)
 
   def addRepositories(repositories: Repository*): Resolve[F] =
     withRepositories(this.repositories ++ repositories)
@@ -153,7 +161,7 @@ import scala.language.higherKinds
       resolutionParams,
       initialResolution,
       mapDependenciesOpt,
-      bomDependencies
+      bomDependencies.map(_.moduleVersion) ++ bomModuleVersions
     )
 
     def run(res: Resolution): F[Resolution] = {
@@ -265,7 +273,7 @@ object Resolve extends PlatformResolve {
     params: ResolutionParams = ResolutionParams(),
     initialResolutionOpt: Option[Resolution] = None,
     mapDependenciesOpt: Option[Dependency => Dependency] = None,
-    bomDependencies: Seq[Dependency] = Nil
+    bomModuleVersions: Seq[(Module, String)] = Nil
   ): Resolution = {
     import coursier.core.{Resolution => CoreResolution}
 
@@ -381,7 +389,7 @@ object Resolve extends PlatformResolve {
       .withEnableDependencyOverrides(
         params.enableDependencyOverrides.getOrElse(Resolution.enableDependencyOverridesDefault)
       )
-      .withBomDependencies(bomDependencies)
+      .withBomModuleVersions(bomModuleVersions)
   }
 
   private[coursier] def runProcess[F[_]](
