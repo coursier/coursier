@@ -1,7 +1,19 @@
 package coursier.parse
 
-import coursier.core.{Dependency, ModuleName}
+import coursier.core.{
+  Classifier,
+  Configuration,
+  Dependency,
+  Extension,
+  MinimizedExclusions,
+  Module,
+  ModuleName,
+  Organization,
+  Type
+}
 import dataclass.data
+
+import scala.collection.mutable
 
 sealed abstract class JavaOrScalaDependency extends Product with Serializable {
   def module: JavaOrScalaModule
@@ -46,7 +58,15 @@ object JavaOrScalaDependency {
       scalaVersion: String,
       platformName: String
     ): Dependency =
-      dependency
+      dependency.withMinimizedExclusions(
+        dependency.minimizedExclusions.join(
+          MinimizedExclusions(
+            exclude.map(_.module(scalaBinaryVersion, scalaVersion)).map { mod =>
+              (mod.organization, mod.name)
+            }
+          )
+        )
+      )
 
     def withPlatform(platformSuffix: String): JavaDependency =
       this
@@ -84,7 +104,17 @@ object JavaOrScalaDependency {
 
       val newName = baseDependency.module.name.value + platformSuffix + scalaSuffix
 
-      baseDependency.withModule(baseDependency.module.withName(ModuleName(newName)))
+      baseDependency
+        .withModule(baseDependency.module.withName(ModuleName(newName)))
+        .withMinimizedExclusions(
+          baseDependency.minimizedExclusions.join(
+            MinimizedExclusions(
+              exclude.map(_.module(scalaBinaryVersion, scalaVersion)).map { mod =>
+                (mod.organization, mod.name)
+              }
+            )
+          )
+        )
     }
 
     def withPlatform(platformSuffix: String): ScalaDependency =
@@ -103,5 +133,108 @@ object JavaOrScalaDependency {
       withExclude(exclude ++ excl)
     def withUnderlyingDependency(f: Dependency => Dependency): ScalaDependency =
       withBaseDependency(f(baseDependency))
+  }
+
+  private def inlineConfigKey = "$inlineConfiguration"
+  private def classifierKey   = "classifier"
+  private def extKey          = "ext"
+  private def typeKey         = "type"
+  private lazy val readKeys = Set(
+    inlineConfigKey,
+    classifierKey,
+    extKey,
+    typeKey
+  )
+  def leftOverUserParams(dep: dependency.AnyDependency): Seq[(String, Option[String])] =
+    dep.userParams.filter {
+      case (key, _) =>
+        !readKeys.contains(key)
+    }
+  def from(dep: dependency.AnyDependency): Either[String, JavaOrScalaDependency] = {
+    var csDep = Dependency(
+      Module(
+        Organization(dep.module.organization),
+        ModuleName(dep.module.name),
+        dep.module.attributes
+      ),
+      dep.version
+    )
+    val (userParams, configOpt) =
+      dep.userParamsMap.get(inlineConfigKey).flatMap(_.headOption) match {
+        case Some(configOpt0) =>
+          (dep.userParamsMap - inlineConfigKey, configOpt0: Option[String])
+        case None =>
+          (dep.userParamsMap, None)
+      }
+    for (config <- configOpt)
+      csDep = csDep.withConfiguration(Configuration(config))
+
+    val excludes = dep.exclude.map { mod =>
+      mod.nameAttributes match {
+        case dependency.NoAttributes =>
+          JavaOrScalaModule.JavaModule(
+            Module(
+              Organization(mod.organization),
+              ModuleName(mod.name),
+              mod.attributes
+            )
+          )
+        case scalaAttr: dependency.ScalaNameAttributes =>
+          if (scalaAttr.platform.nonEmpty)
+            ???
+          else
+            JavaOrScalaModule.ScalaModule(
+              Module(Organization(mod.organization), ModuleName(mod.name), mod.attributes),
+              fullCrossVersion = scalaAttr.fullCrossVersion.getOrElse(false)
+            )
+      }
+    }
+
+    val errors = new mutable.ListBuffer[String]
+
+    for (classifierOpt <- userParams.get(classifierKey).flatMap(_.headOption))
+      classifierOpt match {
+        case Some(classifier) =>
+          csDep = csDep.withPublication(
+            csDep.publication.withClassifier(Classifier(classifier))
+          )
+        case None =>
+          errors += "Invalid empty classifier attribute"
+      }
+    for (extOpt <- userParams.get(extKey).flatMap(_.headOption))
+      extOpt match {
+        case Some(ext) =>
+          csDep = csDep.withPublication(
+            csDep.publication.withExt(Extension(ext))
+          )
+        case None =>
+          errors += "Invalid empty classifier attribute"
+      }
+    for (typeOpt <- userParams.get(typeKey).flatMap(_.headOption))
+      typeOpt match {
+        case Some(tpe) =>
+          csDep = csDep.withPublication(
+            csDep.publication.withType(Type(tpe))
+          )
+        case None =>
+          errors += "Invalid empty classifier attribute"
+      }
+
+    if (errors.isEmpty)
+      Right {
+        dep.module.nameAttributes match {
+          case dependency.NoAttributes =>
+            JavaOrScalaDependency.JavaDependency(csDep, excludes.toSet)
+          case scalaAttr: dependency.ScalaNameAttributes =>
+            JavaOrScalaDependency.ScalaDependency(
+              csDep,
+              fullCrossVersion = scalaAttr.fullCrossVersion.getOrElse(false),
+              withPlatformSuffix = scalaAttr.platform.getOrElse(false),
+              exclude = excludes.toSet
+            )
+        }
+      }
+    else
+      Left(errors.mkString(", "))
   }
 }
