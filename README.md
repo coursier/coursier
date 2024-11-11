@@ -3,7 +3,7 @@
 [![Build status](https://github.com/coursier/coursier/workflows/CI/badge.svg)](https://github.com/coursier/coursier/actions?query=workflow%3ACI)
 [![Join the chat at https://gitter.im/coursier/coursier](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/coursier/coursier?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Maven Central](https://img.shields.io/maven-central/v/io.get-coursier/coursier_2.12.svg)](https://maven-badges.herokuapp.com/maven-central/io.get-coursier/coursier_2.12)
-[![Scaladoc](https://javadoc-badge.appspot.com/io.get-coursier/coursier-core_2.12.svg?label=scaladoc)](https://javadoc-badge.appspot.com/io.get-coursier/coursier-core_2.12)
+[![javadoc](https://javadoc.io/badge2/io.get-coursier/coursier_2.13/javadoc.svg)](https://javadoc.io/doc/io.get-coursier/coursier_2.13)
 
 ## Documentation
 
