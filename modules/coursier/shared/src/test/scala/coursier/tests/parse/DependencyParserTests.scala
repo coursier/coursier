@@ -208,7 +208,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
           assert(extraParams.isDefinedAt("url"))
           assert(extraParams.getOrElse("url", "") == url)
-          assert(dep.exclusions == Set((org"org", name"nme")))
+          assert(dep.minimizedExclusions.toSet() == Set((org"org", name"nme")))
       }
     }
 
@@ -254,7 +254,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.name.value.contains("sandbox_native0.3"))
           assert(dep.version == "[0.3.0,0.4.0)")
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
-          assert(dep.exclusions == Set((org"foo", name"bar")))
+          assert(dep.minimizedExclusions.toSet() == Set((org"foo", name"bar")))
       }
     }
 
@@ -278,7 +278,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"com.lihaoyi")
           assert(dep.module.name.value == "ammonite_2.12.8")
           assert(dep.version == "1.6.7")
-          assert(dep.exclusions == Set((org"aa", name"*")))
+          assert(dep.minimizedExclusions.toSet() == Set((org"aa", name"*")))
       }
     }
 
