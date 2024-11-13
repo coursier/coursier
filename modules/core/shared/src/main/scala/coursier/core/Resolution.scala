@@ -1018,31 +1018,33 @@ object Resolution {
       bomModuleVersions
   private lazy val allBomModuleVersions =
     globalBomModuleVersions ++ rootDependencies.flatMap(_.boms)
+  lazy val bomDepMgmt = {
+    val bomProjects = globalBomModuleVersions.flatMap(projectCache.get(_).toSeq).map(_._2)
+    DepMgmt.addSeq(
+      Map.empty,
+      bomProjects.flatMap { bomProject =>
+        withProperties(bomProject.dependencyManagement, projectProperties(bomProject).toMap)
+      },
+      composeValues = true
+    )
+  }
   lazy val hasAllBoms =
     allBomModuleVersions.forall { bomModVer =>
       projectCache.contains(bomModVer)
     }
   lazy val processedRootDependencies =
     if (hasAllBoms) {
-      val bomProjects = globalBomModuleVersions.map(projectCache(_)._2)
-      val allDepMgmt = DepMgmt.addSeq(
-        Map.empty,
-        bomProjects.flatMap { bomProject =>
-          withProperties(bomProject.dependencyManagement, projectProperties(bomProject).toMap)
-        },
-        composeValues = true
-      )
       val rootDependenciesWithDefaultConfig =
         rootDependencies.map(withDefaultConfig(_, defaultConfiguration))
       val rootDependencies0 =
-        if (allDepMgmt.isEmpty) rootDependenciesWithDefaultConfig
+        if (bomDepMgmt.isEmpty) rootDependenciesWithDefaultConfig
         else
           rootDependenciesWithDefaultConfig.map { rootDep =>
             val rootDep0 = rootDep.withOverrides(
-              DepMgmt.add(allDepMgmt, rootDep.overrides.toSeq, composeValues = true)
+              DepMgmt.add(bomDepMgmt, rootDep.overrides.toSeq, composeValues = true)
             )
             if (rootDep0.version == "_")
-              allDepMgmt.get(DepMgmt.key(rootDep0)) match {
+              bomDepMgmt.get(DepMgmt.key(rootDep0)) match {
                 case Some(values) => rootDep0.withVersion(values.version)
                 case None         => rootDep0
               }
