@@ -4,6 +4,7 @@ import coursier.core.{Module, ModuleName, Organization}
 import coursier.util.Traverse._
 import coursier.util.ValidationNel
 import coursier.core.Validation._
+import dependency.{NoAttributes, ScalaNameAttributes}
 
 object ModuleParser {
 
@@ -12,38 +13,25 @@ object ModuleParser {
     * Two semi-columns after the org part is interpreted as a scala module. E.g. if the scala
     * version is 2.11., org::name is equivalent to org:name_2.11.
     */
-  def javaOrScalaModule(s: String): Either[String, JavaOrScalaModule] = {
-
-    val parts = s.split(":", -1)
-
-    val values = parts match {
-      case Array(org, rawName)         => Right((org, rawName, None))
-      case Array(org, "", rawName)     => Right((org, rawName, Some(false)))
-      case Array(org, "", "", rawName) => Right((org, rawName, Some(true)))
-      case _                           => Left(s"malformed module: $s")
-    }
-
-    for {
-      values <- values
-      (rawOrg, rawName, scalaFullVerOpt) = values
-      org <- validateCoordinate(rawOrg, "organization")
-      splitName = rawName.split(';')
-      name <-
-        if (splitName.tail.exists(!_.contains("="))) Left(s"malformed attribute(s) in $s")
-        else validateCoordinate(splitName.head, "module name")
-    } yield {
-      val attributes = splitName.tail.map(_.split("=", 2)).map {
-        case Array(key, value) => key -> value
-      }.toMap
-
-      val baseModule = Module(Organization(org), ModuleName(name), attributes)
-
-      scalaFullVerOpt match {
-        case None               => JavaOrScalaModule.JavaModule(baseModule)
-        case Some(scalaFullVer) => JavaOrScalaModule.ScalaModule(baseModule, scalaFullVer)
+  def javaOrScalaModule(s: String): Either[String, JavaOrScalaModule] =
+    dependency.parser.ModuleParser.parse(s).flatMap { anyMod =>
+      (
+        validateCoordinate(anyMod.organization, "organization"),
+        validateCoordinate(anyMod.name, "module name")
+      ) match {
+        case (Right(org), Right(name)) =>
+          var csMod = Module(Organization(org), ModuleName(name), anyMod.attributes)
+          val res = anyMod.nameAttributes match {
+            case NoAttributes =>
+              JavaOrScalaModule.JavaModule(csMod)
+            case scalaAttr: ScalaNameAttributes =>
+              JavaOrScalaModule.ScalaModule(csMod, scalaAttr.fullCrossVersion.getOrElse(false))
+          }
+          Right(res)
+        case (a, b) =>
+          Left(Seq(a, b).collect { case Left(v) => v }.mkString(", "))
       }
     }
-  }
 
   /** Parses a module like org:name possibly with attributes, like org:name;attr1=val1;attr2=val2
     *

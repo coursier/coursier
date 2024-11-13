@@ -13,6 +13,7 @@ trait Coursier extends CsModule with CsCrossJvmJsModule with CoursierPublishModu
     Deps.scalaReflect(scalaVersion()) // ???
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
+    Deps.dependency,
     Deps.fastParse,
     Deps.jsoniterCore
   )

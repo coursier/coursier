@@ -11,6 +11,7 @@ object Deps {
   def concurrentReferenceHashMap =
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
   def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.6"
+  def dependency        = ivy"io.get-coursier::dependency::0.3.1"
   def diffUtils         = ivy"io.github.java-diff-utils:java-diff-utils:4.12"
   def dockerClient      = ivy"com.spotify:docker-client:8.16.0"
   def fastParse         = ivy"com.lihaoyi::fastparse::${Versions.fastParse}"
@@ -37,7 +38,7 @@ object Deps {
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
-  def pprint                   = ivy"com.lihaoyi::pprint:0.9.0"
+  def pprint                   = ivy"com.lihaoyi::pprint::0.9.0"
   def proguard                 = ivy"com.guardsquare:proguard-base:7.6.0"
   def pythonNativeLibs         = ivy"ai.kien::python-native-libs:0.2.4"
   def scalaAsync               = ivy"org.scala-lang.modules::scala-async::1.0.1"

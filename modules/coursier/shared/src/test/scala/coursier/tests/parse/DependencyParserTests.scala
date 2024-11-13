@@ -194,7 +194,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    test("multiple attrs with interval, url, and exclusions") {
+    test("multiple attrs with interval url and exclusions") {
       DependencyParser.dependencyParams(
         "org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests,url=" + url + ",exclude=org%nme",
         "2.11.11"
@@ -208,7 +208,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
           assert(extraParams.isDefinedAt("url"))
           assert(extraParams.getOrElse("url", "") == url)
-          assert(dep.exclusions == Set((org"org", name"nme")))
+          assert(dep.minimizedExclusions.toSet() == Set((org"org", name"nme")))
       }
     }
 
@@ -221,7 +221,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, _)) =>
           assert(dep.module.organization == org"io.get-coursier.scala-native")
           // use `contains` to be scala version agnostic
-          assert(dep.module.name.value.contains("sandbox_native0.3"))
+          assert(dep.module.name.value.contains("sandbox_native0.3_"))
           assert(dep.version == "0.3.0-coursier-1")
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
@@ -254,7 +254,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.name.value.contains("sandbox_native0.3"))
           assert(dep.version == "[0.3.0,0.4.0)")
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
-          assert(dep.exclusions == Set((org"foo", name"bar")))
+          assert(dep.minimizedExclusions.toSet() == Set((org"foo", name"bar")))
       }
     }
 
@@ -278,13 +278,13 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"com.lihaoyi")
           assert(dep.module.name.value == "ammonite_2.12.8")
           assert(dep.version == "1.6.7")
-          assert(dep.exclusions == Set((org"aa", name"*")))
+          assert(dep.minimizedExclusions.toSet() == Set((org"aa", name"*")))
       }
     }
 
     test("illegal 1") {
-      DependencyParser.dependencyParams("junit:junit:4.12,attr", "2.11.11") match {
-        case Left(err)  => assert(err.contains("Failed to parse attribute"))
+      DependencyParser.dependencyParams("junit:junit:4.12,classifier", "2.11.11") match {
+        case Left(err)  => assert(err.contains("Invalid empty classifier attribute"))
         case Right(dep) => assert(false)
       }
     }
@@ -296,9 +296,9 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
-    test("illegal 3, malformed exclude") {
+    test("illegal 3 malformed exclude") {
       DependencyParser.dependencyParams("a:b:c,exclude=aaa", "2.11.11") match {
-        case Left(err)  => assert(err.contains("Malformed exclusion:"))
+        case Left(err)  => assert(err.contains("Unrecognized excluded module"))
         case Right(dep) => assert(false)
       }
     }

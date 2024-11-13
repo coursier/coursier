@@ -1,5 +1,6 @@
 package coursier.tests.util
 
+import coursier.core.Module
 import coursier.util._
 import coursier.util.StringInterpolators._
 import utest._
@@ -75,9 +76,9 @@ object ModuleMatcherTests extends TestSuite {
         mod"io.foo:foo-core_2.11",
         mod"io.foo:foo-core",
         mod"io.fooo:foo-core_2.12",
-        mod":",
-        mod"io.fooo:",
-        mod":foo-core_2.12"
+        Module(org"", name"", Map.empty),
+        Module(org"io.fooo", name"", Map.empty),
+        Module(org"", name"foo-core_2.12", Map.empty)
       )
 
       for (m <- shouldMatch)
