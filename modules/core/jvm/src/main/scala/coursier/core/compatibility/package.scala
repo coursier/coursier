@@ -23,6 +23,8 @@ package object compatibility {
 
   private val utf8Bom = "\ufeff"
 
+  private lazy val throwExceptions = java.lang.Boolean.getBoolean("coursier.core.throw-exceptions")
+
   private def entityIdx(s: String, fromIdx: Int = 0): Option[(Int, Int)] = {
 
     var i     = fromIdx
@@ -155,7 +157,8 @@ package object compatibility {
     val parse =
       try Right(scala.xml.XML.loadString(content))
       catch {
-        case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")"))
+        case e: Exception if !throwExceptions =>
+          Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")"))
       }
 
     parse.map(xmlFromElem)
@@ -203,7 +206,8 @@ package object compatibility {
     val parse =
       try Right(scala.xml.XML.loadString(content))
       catch {
-        case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")"))
+        case e: Exception if !throwExceptions =>
+          Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")"))
       }
 
     parse.map(xmlFromElem)
