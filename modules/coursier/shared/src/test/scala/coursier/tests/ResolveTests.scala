@@ -689,6 +689,47 @@ object ResolveTests extends TestSuite {
           assert(urls == expectedUrls)
         }
       }
+
+      test("global overrides") {
+        async {
+
+          val resolve0 = resolve
+            .withRepositories(Seq(
+              Repositories.central,
+              IvyRepository.parse(handmadeMetadataBase + "fake-ivy/[defaultPattern]")
+                .fold(sys.error, identity)
+            ))
+
+          val res = await {
+            resolve0
+              .addDependencies(
+                dep"io.get-coursier.test:sbt-coursier-override-dependencies-2_2.12:0.1.0-SNAPSHOT"
+              )
+              .future()
+          }
+
+          await(validateDependencies(res))
+
+          val urls = res.dependencyArtifacts()
+            .map(_._3.url.replace(handmadeMetadataBase, "file:///handmade-metadata/"))
+            .toSet
+          val expectedUrls = Set(
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.12.6/scala-reflect-2.12.6.jar",
+            "file:///handmade-metadata/fake-ivy/io.get-coursier.test/sbt-coursier-override-dependencies-2_2.12/0.1.0-SNAPSHOT/jars/sbt-coursier-override-dependencies-2_2.12.jar",
+            "https://repo1.maven.org/maven2/com/chuusai/shapeless_2.12/2.3.9/shapeless_2.12-2.3.9.jar",
+            "https://repo1.maven.org/maven2/io/argonaut/argonaut_2.12/6.2.2/argonaut_2.12-6.2.2.jar",
+            "https://repo1.maven.org/maven2/com/github/alexarchambault/argonaut-shapeless_6.2_2.12/1.2.0-M11/argonaut-shapeless_6.2_2.12-1.2.0-M11.jar",
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.15/scala-library-2.12.15.jar"
+          )
+
+          if (urls != expectedUrls) {
+            pprint.err.log(expectedUrls)
+            pprint.err.log(urls)
+          }
+
+          assert(urls == expectedUrls)
+        }
+      }
     }
 
     test("version intervals") {
