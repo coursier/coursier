@@ -179,7 +179,6 @@ object JvmIndex {
         }
     }
 
-  @deprecated("Use the override accepting os and arch", "2.1.15")
   def load(
     cache: Cache[Task],
     repositories: Seq[Repository],
