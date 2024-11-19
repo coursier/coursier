@@ -118,6 +118,7 @@ com.google.protobuf:protobuf-java:2.5.0:default
 org.apache.hadoop:hadoop-yarn-client:3.2.0:default
 org.apache.hadoop:hadoop-yarn-common:3.2.0:default
 org.apache.hadoop:hadoop-hdfs-client:3.2.0:default
+com.google.protobuf:protobuf-java:2.5.0:default
 org.apache.hadoop:hadoop-mapreduce-client-common:3.2.0:default
 com.google.protobuf:protobuf-java:2.5.0:default
 com.google.protobuf:protobuf-java:2.5.0:default
@@ -137,8 +138,10 @@ org.apache.curator:curator-framework:2.13.0:default
 org.apache.kerby:kerb-client:1.0.1:default
 org.apache.kerby:kerb-admin:1.0.1:default
 com.squareup.okio:okio:1.6.0:default
+com.google.guava:guava:16.0.1:default
 commons-cli:commons-cli:1.2:default
 org.apache.hadoop:hadoop-auth:3.2.0:default
+javax.xml.bind:jaxb-api:2.2.11:default
 commons-codec:commons-codec:1.10:default
 org.eclipse.jetty:jetty-util:9.3.24.v20180605:default
 commons-io:commons-io:2.5:default
