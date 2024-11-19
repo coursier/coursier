@@ -863,7 +863,10 @@ object Resolution {
   @since("2.1.17")
   forceDepMgmtVersions: Boolean = false,
   enableDependencyOverrides: Boolean = Resolution.enableDependencyOverridesDefault,
-  bomDependencies: Seq[Dependency] = Nil
+  @deprecated("Use bomModuleVersions instead", "2.1.18")
+  bomDependencies: Seq[Dependency] = Nil,
+  @since("2.1.18")
+  bomModuleVersions: Seq[(Module, String)] = Nil
 ) {
 
   lazy val dependencies: Set[Dependency] =
@@ -1010,37 +1013,64 @@ object Resolution {
       .toVector
       .flatMap(finalDependencies0)
 
-  private lazy val hasAllBoms =
-    bomDependencies.forall { bomDep =>
-      projectCache.contains(bomDep.moduleVersion)
+  private lazy val globalBomModuleVersions =
+    bomDependencies.map(_.moduleVersion) ++
+      bomModuleVersions
+  private lazy val allBomModuleVersions =
+    globalBomModuleVersions ++ rootDependencies.flatMap(_.boms)
+  lazy val bomDepMgmt = {
+    val bomProjects = globalBomModuleVersions.flatMap(projectCache.get(_).toSeq).map(_._2)
+    DepMgmt.addSeq(
+      Map.empty,
+      bomProjects.flatMap { bomProject =>
+        withProperties(bomProject.dependencyManagement, projectProperties(bomProject).toMap)
+      },
+      composeValues = true
+    )
+  }
+  lazy val hasAllBoms =
+    allBomModuleVersions.forall { bomModVer =>
+      projectCache.contains(bomModVer)
     }
-  private lazy val processedRootDependencies =
+  lazy val processedRootDependencies =
     if (hasAllBoms) {
-      val bomProjects = bomDependencies
-        .map(_.moduleVersion)
-        .map(projectCache(_)._2)
-      val allDepMgmt = DepMgmt.addSeq(
-        Map.empty,
-        bomProjects.flatMap { bomProject =>
-          withProperties(bomProject.dependencyManagement, projectProperties(bomProject).toMap)
-        },
-        composeValues = true
-      )
-      val rootDependencies0 = rootDependencies.map(withDefaultConfig(_, defaultConfiguration))
-      if (allDepMgmt.isEmpty) rootDependencies0
-      else
-        rootDependencies0.map { rootDep =>
-          val rootDep0 = rootDep.withOverrides(
-            DepMgmt.add(allDepMgmt, rootDep.overrides.toSeq, composeValues = true)
-          )
-          if (rootDep0.version == "_")
-            allDepMgmt.get(DepMgmt.key(rootDep0)) match {
-              case Some(values) => rootDep0.withVersion(values.version)
-              case None         => rootDep0
-            }
-          else
-            rootDep0
-        }
+      val rootDependenciesWithDefaultConfig =
+        rootDependencies.map(withDefaultConfig(_, defaultConfiguration))
+      val rootDependencies0 =
+        if (bomDepMgmt.isEmpty) rootDependenciesWithDefaultConfig
+        else
+          rootDependenciesWithDefaultConfig.map { rootDep =>
+            val rootDep0 = rootDep.withOverrides(
+              DepMgmt.add(bomDepMgmt, rootDep.overrides.toSeq, composeValues = true)
+            )
+            if (rootDep0.version == "_")
+              bomDepMgmt.get(DepMgmt.key(rootDep0)) match {
+                case Some(values) => rootDep0.withVersion(values.version)
+                case None         => rootDep0
+              }
+            else
+              rootDep0
+          }
+      rootDependencies0.map { rootDep =>
+        val depBomProjects = rootDep.boms.map(projectCache(_)._2)
+        val depBomDepMgmt = DepMgmt.addSeq(
+          Map.empty,
+          depBomProjects.flatMap { bomProject =>
+            withProperties(bomProject.dependencyManagement, projectProperties(bomProject).toMap)
+          },
+          composeValues = true
+        )
+        val rootDep0 = rootDep.withOverrides(
+          DepMgmt.add(depBomDepMgmt, rootDep.overrides.toSeq, composeValues = true)
+        )
+        if (rootDep0.version == "_")
+          depBomDepMgmt.get(DepMgmt.key(rootDep0)) match {
+            case Some(values) => rootDep0.withVersion(values.version)
+            case None         => rootDep0
+          }
+        else
+          rootDep0
+      }
     }
     else
       Nil
@@ -1075,9 +1105,7 @@ object Resolution {
   /** The modules we miss some info about.
     */
   lazy val missingFromCache: Set[ModuleVersion] = {
-    val boms = bomDependencies
-      .map(_.moduleVersion)
-      .toSet
+    val boms = allBomModuleVersions.toSet
     val modules = dependencies
       .map(_.moduleVersion)
     val nextModules = nextDependenciesAndConflicts._2

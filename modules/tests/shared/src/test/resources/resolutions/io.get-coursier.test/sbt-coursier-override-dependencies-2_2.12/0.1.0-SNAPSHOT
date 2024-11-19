@@ -1,0 +1,6 @@
+io.get-coursier.test:sbt-coursier-override-dependencies-2_2.12:0.1.0-SNAPSHOT:compile
+org.scala-lang:scala-library:2.12.15:default
+com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M11:default
+io.argonaut:argonaut_2.12:6.2.2:default
+com.chuusai:shapeless_2.12:2.3.9:default
+org.scala-lang:scala-reflect:2.12.6:default

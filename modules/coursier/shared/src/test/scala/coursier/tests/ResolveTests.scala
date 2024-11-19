@@ -689,6 +689,47 @@ object ResolveTests extends TestSuite {
           assert(urls == expectedUrls)
         }
       }
+
+      test("global overrides") {
+        async {
+
+          val resolve0 = resolve
+            .withRepositories(Seq(
+              Repositories.central,
+              IvyRepository.parse(handmadeMetadataBase + "fake-ivy/[defaultPattern]")
+                .fold(sys.error, identity)
+            ))
+
+          val res = await {
+            resolve0
+              .addDependencies(
+                dep"io.get-coursier.test:sbt-coursier-override-dependencies-2_2.12:0.1.0-SNAPSHOT"
+              )
+              .future()
+          }
+
+          await(validateDependencies(res))
+
+          val urls = res.dependencyArtifacts()
+            .map(_._3.url.replace(handmadeMetadataBase, "file:///handmade-metadata/"))
+            .toSet
+          val expectedUrls = Set(
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-reflect/2.12.6/scala-reflect-2.12.6.jar",
+            "file:///handmade-metadata/fake-ivy/io.get-coursier.test/sbt-coursier-override-dependencies-2_2.12/0.1.0-SNAPSHOT/jars/sbt-coursier-override-dependencies-2_2.12.jar",
+            "https://repo1.maven.org/maven2/com/chuusai/shapeless_2.12/2.3.9/shapeless_2.12-2.3.9.jar",
+            "https://repo1.maven.org/maven2/io/argonaut/argonaut_2.12/6.2.2/argonaut_2.12-6.2.2.jar",
+            "https://repo1.maven.org/maven2/com/github/alexarchambault/argonaut-shapeless_6.2_2.12/1.2.0-M11/argonaut-shapeless_6.2_2.12-1.2.0-M11.jar",
+            "https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.12.15/scala-library-2.12.15.jar"
+          )
+
+          if (urls != expectedUrls) {
+            pprint.err.log(expectedUrls)
+            pprint.err.log(urls)
+          }
+
+          assert(urls == expectedUrls)
+        }
+      }
     }
 
     test("version intervals") {
@@ -1429,12 +1470,12 @@ object ResolveTests extends TestSuite {
 
     test("bom") {
 
-      def bomCheck(bomDependencies: Dependency*)(dependencies: Dependency*): Future[Unit] =
+      def bomCheck(boms: (Module, String)*)(dependencies: Dependency*): Future[Unit] =
         async {
           val res = await {
             resolve
               .addDependencies(dependencies: _*)
-              .addBomDependencies(bomDependencies: _*)
+              .addBoms(boms: _*)
               .future()
           }
           await(validateDependencies(res))
@@ -1442,17 +1483,17 @@ object ResolveTests extends TestSuite {
 
       test("spark-parent") {
         test {
-          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3")(
+          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".moduleVersion)(
             dep"org.apache.commons:commons-lang3:_"
           )
         }
         test {
-          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3")(
+          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".moduleVersion)(
             dep"org.glassfish.jaxb:jaxb-runtime:_"
           )
         }
         test {
-          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3")(
+          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".moduleVersion)(
             dep"org.apache.logging.log4j:log4j-core:_"
           )
         }
@@ -1463,7 +1504,7 @@ object ResolveTests extends TestSuite {
           check(dep"ch.epfl.scala:bsp4j:2.2.0-M2")
         }
         test("enabled") {
-          bomCheck(dep"io.quarkus:quarkus-bom:3.16.2")(
+          bomCheck(dep"io.quarkus:quarkus-bom:3.16.2".moduleVersion)(
             dep"ch.epfl.scala:bsp4j:2.2.0-M2"
           )
         }
@@ -1474,7 +1515,7 @@ object ResolveTests extends TestSuite {
       // so this checks that this property is substituted at the right time
       test("google-cloud-bom") {
         test("protobuf-java") {
-          bomCheck(dep"com.google.cloud:libraries-bom:26.50.0")(
+          bomCheck(dep"com.google.cloud:libraries-bom:26.50.0".moduleVersion)(
             dep"com.google.protobuf:protobuf-java:_"
           )
         }
@@ -1484,10 +1525,34 @@ object ResolveTests extends TestSuite {
             check(dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8")
           }
           test("bom") {
-            bomCheck(dep"com.google.cloud:libraries-bom:26.50.0")(
+            bomCheck(dep"com.google.cloud:libraries-bom:26.50.0".moduleVersion)(
               dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
             )
           }
+          test("bom-via-dep") {
+            check(
+              dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
+                .addBom(mod"com.google.cloud:libraries-bom", "26.50.0")
+            )
+          }
+        }
+      }
+
+      test("bom-dep") {
+        test {
+          // The BOM shouldn't apply to scalapbc in that case
+          check(
+            dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8",
+            dep"com.lihaoyi:pprint_2.13:0.9.0"
+              .addBom(mod"com.google.cloud:libraries-bom", "26.50.0")
+          )
+        }
+        test {
+          check(
+            dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
+              .addBom(mod"com.google.cloud:libraries-bom", "26.50.0"),
+            dep"com.lihaoyi:pprint_2.13:0.9.0"
+          )
         }
       }
     }

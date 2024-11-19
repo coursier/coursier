@@ -31,7 +31,7 @@ trait CsMima extends Mima {
 lazy val latestTaggedVersion = os.proc("git", "describe", "--abbrev=0", "--tags", "--match", "v*")
   .call().out
   .trim()
-lazy val buildVersion = {
+def computeBuildVersion() = {
   val gitHead = os.proc("git", "rev-parse", "HEAD").call().out.trim()
   val maybeExactTag = scala.util.Try {
     os.proc("git", "describe", "--exact-match", "--tags", "--always", gitHead)
@@ -48,6 +48,7 @@ lazy val buildVersion = {
     s"${latestTaggedVersion.stripPrefix("v")}-$commitsSinceTaggedVersion-$gitHash-SNAPSHOT"
   }
 }
+lazy val buildVersion = computeBuildVersion()
 
 trait PublishLocalNoFluff extends PublishModule {
   def emptyZip = T {
@@ -136,7 +137,7 @@ trait CoursierPublishModule extends PublishModule with PublishLocalNoFluff with 
       Developer("alexarchambault", "Alex Archambault", "https://github.com/alexarchambault")
     )
   )
-  def publishVersion = T(buildVersion)
+  def publishVersion = T.input(computeBuildVersion())
 }
 
 trait CsTests extends TestModule {

@@ -157,7 +157,7 @@ object DependencyParser {
             (k, v.getOrElse(""))
         }
         .toMap
-      _ <- validateAttributes(map.keySet, input, Set("url", "bom")).toLeft(())
+      _ <- validateAttributes(map.keySet, input, Set("url")).toLeft(())
     } yield (
       dep,
       JavaOrScalaDependency.leftOverUserParams(anyDep).map { case (k, v) => (k, v.getOrElse("")) }.toMap

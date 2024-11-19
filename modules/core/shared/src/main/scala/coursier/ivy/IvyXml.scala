@@ -72,11 +72,28 @@ object IvyXml {
     confs.map(_ -> (org, name))
   }
 
+  private def override0(node0: Node): Option[(Organization, ModuleName, String)] = {
+    val versionOpt = node0
+      .attribute("rev")
+      .toOption
+      .filter(_.nonEmpty)
+    versionOpt.map { version =>
+      val org = Organization(node0.attribute("org").getOrElse("*"))
+      val name = ModuleName(
+        node0.attribute("module").toOption
+          .orElse(node0.attribute("name").toOption)
+          .getOrElse("*")
+      )
+      (org, name, version)
+    }
+  }
+
   // FIXME Errors ignored as above - warnings should be reported at least for anything suspicious
   private def dependencies(
     node: Node,
     globalExcludes: Map[Configuration, Set[(Organization, ModuleName)]],
-    globalExcludesFilter: (Configuration, Organization, ModuleName) => Boolean
+    globalExcludesFilter: (Configuration, Organization, ModuleName) => Boolean,
+    globalOverrides: DependencyManagement.Map
   ): Seq[(Configuration, Dependency)] =
     node.children
       .filter(_.label == "dependency")
@@ -144,7 +161,7 @@ object IvyXml {
           pub, // should come from possible artifact nodes
           optional = false,
           transitive = transitive
-        )
+        ).withOverrides(globalOverrides)
       }
 
   private def publication(node: Node): Publication = {
@@ -205,8 +222,27 @@ object IvyXml {
             confFilter.forall(_(org, name))
           }
       }
-      val dependencies0 =
-        dependenciesNodeOpt.map(dependencies(_, globalExcludes, filter)).getOrElse(Nil)
+
+      // https://ant.apache.org/ivy/history/2.5.0-rc1/ivyfile/override.html
+      val globalOverrides = dependenciesNodeOpt
+        .map(_.children)
+        .getOrElse(Nil)
+        .filter(_.label == "override")
+        .flatMap(override0)
+        .map {
+          case (org, name, ver) =>
+            DependencyManagement.Key(org, name, Type.jar, Classifier.empty) ->
+              DependencyManagement.Values(
+                Configuration.empty,
+                ver,
+                MinimizedExclusions.zero,
+                optional = false
+              )
+        }
+        .toMap
+      val dependencies0 = dependenciesNodeOpt
+        .map(dependencies(_, globalExcludes, filter, globalOverrides))
+        .getOrElse(Nil)
 
       val configurationsNodeOpt = node.children
         .find(_.label == "configurations")

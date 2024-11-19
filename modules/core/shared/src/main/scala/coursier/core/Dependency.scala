@@ -22,7 +22,9 @@ import MinimizedExclusions._
   transitive: Boolean,
   @since("2.1.17")
   overrides: DependencyManagement.Map =
-    Map.empty
+    Map.empty,
+  @since("2.1.18")
+  boms: Seq[(Module, String)] = Nil
 ) {
   assertValid(version, "version")
   lazy val moduleVersion = (module, version)
@@ -83,6 +85,11 @@ import MinimizedExclusions._
   )
   def exclusions(): Set[(Organization, ModuleName)] = minimizedExclusions.toSet()
 
+  def addBom(module: Module, version: String): Dependency =
+    withBoms(boms :+ (module -> version))
+  def addBoms(boms: Seq[(Module, String)]): Dependency =
+    withBoms(this.boms ++ boms)
+
   private[core] def copy(
     module: Module = this.module,
     version: String = this.version,
@@ -98,7 +105,9 @@ import MinimizedExclusions._
     minimizedExclusions,
     Publication("", attributes.`type`, Extension.empty, attributes.classifier),
     optional,
-    transitive
+    transitive,
+    overrides,
+    boms
   )
 
   lazy val clearExclusions: Dependency =
@@ -117,9 +126,12 @@ import MinimizedExclusions._
       optional.toString,
       transitive.toString
     )
-    val fields =
+    val fields0 =
       if (overrides.isEmpty) baseFields
       else baseFields :+ overrides.toString
+    val fields =
+      if (boms.isEmpty) fields0
+      else fields0 :+ boms.toString
     s"Dependency(${fields.mkString(", ")})"
   }
 
@@ -140,7 +152,8 @@ object Dependency {
     publication: Publication,
     optional: Boolean,
     transitive: Boolean,
-    overrides: DependencyManagement.Map
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)]
   ): Dependency =
     coursier.util.Cache.cacheMethod(instanceCache)(
       new Dependency(
@@ -151,8 +164,31 @@ object Dependency {
         publication,
         optional,
         transitive,
-        overrides
+        overrides,
+        boms
       )
+    )
+
+  def apply(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map
+  ): Dependency =
+    Dependency(
+      module,
+      version,
+      configuration,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      Map.empty,
+      Nil
     )
 
   def apply(
@@ -172,7 +208,8 @@ object Dependency {
       publication,
       optional,
       transitive,
-      Map.empty
+      Map.empty,
+      Nil
     )
 
   def apply(

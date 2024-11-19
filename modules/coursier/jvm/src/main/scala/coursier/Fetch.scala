@@ -111,6 +111,11 @@ import dataclass.data
   def addDependencies(dependencies: Dependency*): Fetch[F] =
     withResolve(resolve.withDependencies(resolve.dependencies ++ dependencies))
 
+  def withBomDependencies(bomDependencies: Seq[Dependency]): Fetch[F] =
+    withResolve(resolve.withBomDependencies(bomDependencies))
+  def addBomDependencies(bomDependencies: Dependency*): Fetch[F] =
+    withResolve(resolve.withBomDependencies(resolve.bomDependencies ++ bomDependencies))
+
   def withRepositories(repositories: Seq[Repository]): Fetch[F] =
     withResolve(resolve.withRepositories(repositories))
   def addRepositories(repositories: Repository*): Fetch[F] =
