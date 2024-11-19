@@ -79,7 +79,6 @@ com.google.api.grpc:grpc-google-cloud-spanner-admin-database-v1:0.1.11:default
 com.google.api.grpc:grpc-google-cloud-spanner-admin-instance-v1:0.1.11:default
 com.google.api.grpc:grpc-google-longrunning-v1:0.1.11:default
 junit:junit:4.12:default
-com.google.api.grpc:grpc-google-common-protos:0.1.9:default
 commons-logging:commons-logging:1.2:default
 com.google.auth:google-auth-library-appengine:0.7.0:default
 io.opencensus:opencensus-contrib-grpc-util:0.7.0:default

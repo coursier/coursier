@@ -62,7 +62,6 @@ com.esotericsoftware.reflectasm:reflectasm:1.07:default
 com.esotericsoftware.minlog:minlog:1.2:default
 org.objenesis:objenesis:1.2:default
 xmlenc:xmlenc:0.52:default
-commons-codec:commons-codec:1.5:default
 org.apache.commons:commons-math:2.1:default
 commons-configuration:commons-configuration:1.6:default
 commons-el:commons-el:1.0:default
@@ -84,7 +83,6 @@ com.fasterxml.jackson.core:jackson-core:2.3.1:default
 commons-io:commons-io:2.4:default
 commons-collections:commons-collections:3.2.1:default
 commons-lang:commons-lang:2.4:default
-commons-logging:commons-logging:1.1.1:default
 commons-digester:commons-digester:1.8:default
 commons-beanutils:commons-beanutils-core:1.8.0:default
 org.codehaus.jackson:jackson-core-asl:1.8.8:default

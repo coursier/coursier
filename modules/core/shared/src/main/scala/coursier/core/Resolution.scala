@@ -455,8 +455,10 @@ object Resolution {
           // way of distinguishing empty exclusions from no exclusion section and optional set to
           // false from no optional section in the dependency management for now.
 
-          if (dep.minimizedExclusions.isEmpty)
-            dep = dep.withMinimizedExclusions(mgmtValues.minimizedExclusions)
+          if (mgmtValues.minimizedExclusions.nonEmpty)
+            dep = dep.withMinimizedExclusions(
+              dep.minimizedExclusions.join(mgmtValues.minimizedExclusions)
+            )
 
           if (mgmtValues.optional)
             dep = dep.withOptional(mgmtValues.optional)
