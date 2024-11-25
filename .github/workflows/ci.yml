@@ -168,7 +168,7 @@ jobs:
     - uses: coursier/setup-action@v1.3
       with:
         jvm: 17
-        apps: scalafmt
+        apps: scalafmt:3.8.3
     - run: scalafmt --check
 
   publish:
