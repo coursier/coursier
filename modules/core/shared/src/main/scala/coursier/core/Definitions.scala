@@ -125,6 +125,9 @@ object Type {
 
     // Kotlin stuff
     val klib = Type("klib")
+
+    // Android thing
+    val aar = Type("aar")
   }
 }
 
