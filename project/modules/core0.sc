@@ -57,12 +57,14 @@ trait CoreJvmBase extends Core with CsMima with Shading {
     )
 
   def shadedDependencies = Agg(
-    Deps.fastParse
+    Deps.fastParse,
+    Deps.pprint
   )
   def validNamespaces = Seq("coursier")
   def shadeRenames = Seq(
     "fastparse.**"  -> "coursier.core.shaded.fastparse.@1",
     "geny.**"       -> "coursier.core.shaded.geny.@1",
-    "sourcecode.**" -> "coursier.core.shaded.sourcecode.@1"
+    "sourcecode.**" -> "coursier.core.shaded.sourcecode.@1",
+    "pprint.**"     -> "coursier.core.shaded.pprint.@1"
   )
 }

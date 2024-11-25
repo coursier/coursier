@@ -40,12 +40,14 @@ trait CoursierJvmBase extends Coursier with CsMima with Shading {
     )
 
   def shadedDependencies = Agg(
-    Deps.fastParse
+    Deps.fastParse,
+    Deps.pprint
   )
   def validNamespaces = Seq("coursier")
   def shadeRenames = Seq(
     "fastparse.**"  -> "coursier.internal.shaded.fastparse.@1",
     "geny.**"       -> "coursier.internal.shaded.geny.@1",
-    "sourcecode.**" -> "coursier.internal.shaded.sourcecode.@1"
+    "sourcecode.**" -> "coursier.internal.shaded.sourcecode.@1",
+    "pprint.**"     -> "coursier.internal.shaded.pprint.@1"
   )
 }
