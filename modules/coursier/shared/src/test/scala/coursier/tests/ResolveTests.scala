@@ -10,6 +10,7 @@ import coursier.core.{
   Module,
   ModuleName,
   Reconciliation,
+  Repository,
   Resolution,
   Type
 }
@@ -59,6 +60,23 @@ object ResolveTests extends TestSuite {
           .future()
       }
       await(validateDependencies(res))
+    }
+
+  def scopeCheck(
+    defaultConfiguration: Configuration,
+    extraRepositories: Seq[Repository]
+  )(
+    dependencies: Dependency*
+  ): Future[Unit] =
+    async {
+      val resolve0 = resolve
+        .addDependencies(dependencies: _*)
+        .addRepositories(extraRepositories: _*)
+        .mapResolutionParams(_.withDefaultConfiguration(defaultConfiguration))
+      val res = await {
+        resolve0.future()
+      }
+      await(validateDependencies(res, resolve0.resolutionParams))
     }
 
   val tests = Tests {
@@ -1569,6 +1587,22 @@ object ResolveTests extends TestSuite {
 
     test("scalatest-play") {
       check(dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1")
+    }
+
+    test("scope") {
+      test("compile") {
+        scopeCheck(Configuration.compile, Seq(Repositories.google))(
+          dep"androidx.compose.animation:animation-core:1.1.1",
+          dep"androidx.compose.ui:ui:1.1.1"
+        )
+      }
+
+      test("defaultCompile") {
+        scopeCheck(Configuration.defaultCompile, Seq(Repositories.google))(
+          dep"androidx.compose.animation:animation-core:1.1.1",
+          dep"androidx.compose.ui:ui:1.1.1"
+        )
+      }
     }
   }
 }
