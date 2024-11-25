@@ -1538,6 +1538,12 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      test("scalatest-play") {
+        bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".moduleVersion)(
+          dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
+        )
+      }
+
       test("bom-dep") {
         test {
           // The BOM shouldn't apply to scalapbc in that case
@@ -1559,6 +1565,10 @@ object ResolveTests extends TestSuite {
 
     test("delayed-properties") {
       check(dep"org.apache.logging.log4j:log4j-slf4j-impl:2.22.0")
+    }
+
+    test("scalatest-play") {
+      check(dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1")
     }
   }
 }

@@ -389,6 +389,12 @@ object Resolution {
       composeValues = overridesOpt.isDefined
     )
 
+    lazy val dictNoOverrides = DepMgmt.addSeq(
+      Map.empty,
+      dependencyManagement,
+      composeValues = overridesOpt.isDefined
+    )
+
     lazy val dictForOverridesOpt = rawOverridesOpt.map { rawOverrides =>
       lazy val versions = dependencies
         .filter {
@@ -447,9 +453,6 @@ object Resolution {
           if (useManagedVersion)
             dep = dep.withVersion(mgmtValues.version)
 
-          if (mgmtValues.config.nonEmpty && config.isEmpty)
-            config = mgmtValues.config
-
           // FIXME The version and scope/config from dependency management, if any, are substituted
           // no matter what. The same is not done for the exclusions and optionality, for a lack of
           // way of distinguishing empty exclusions from no exclusion section and optional set to
@@ -459,6 +462,12 @@ object Resolution {
             dep = dep.withMinimizedExclusions(
               dep.minimizedExclusions.join(mgmtValues.minimizedExclusions)
             )
+        }
+
+        for (mgmtValues <- dictNoOverrides.get(key)) {
+
+          if (mgmtValues.config.nonEmpty && config.isEmpty)
+            config = mgmtValues.config
 
           if (mgmtValues.optional)
             dep = dep.withOptional(mgmtValues.optional)
