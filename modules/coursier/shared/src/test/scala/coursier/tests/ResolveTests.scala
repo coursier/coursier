@@ -1574,6 +1574,27 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      test("provided") {
+        test {
+          bomCheck(
+            dep"org.apache.spark:spark-parent_2.13:3.5.3"
+              .withConfiguration(Configuration.provided)
+              .asBomDependency
+          )(
+            dep"com.google.protobuf:protobuf-java:_"
+          )
+        }
+        test {
+          bomCheck(
+            dep"org.apache.spark:spark-parent_2.13:3.5.3"
+              .withConfiguration(Configuration.provided)
+              .asBomDependency
+          )(
+            dep"com.google.protobuf:protobuf-java-util:_"
+          )
+        }
+      }
+
       test("bom-dep") {
         test {
           // The BOM shouldn't apply to scalapbc in that case
