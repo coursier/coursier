@@ -521,10 +521,25 @@ object Resolution {
       }
   }
 
-  def withParentConfigurations(
+  def actualConfiguration(
     config: Configuration,
     configurations: Map[Configuration, Seq[Configuration]]
-  ): (Configuration, Set[Configuration]) = {
+  ): Configuration =
+    Parse.withFallbackConfig(config) match {
+      case Some((main, fallback)) =>
+        if (configurations.contains(main))
+          main
+        else if (configurations.contains(fallback))
+          fallback
+        else
+          main
+      case None => config
+    }
+
+  def parentConfigurations(
+    actualConfig: Configuration,
+    configurations: Map[Configuration, Seq[Configuration]]
+  ): Set[Configuration] = {
     @tailrec
     def helper(configs: Set[Configuration], acc: Set[Configuration]): Set[Configuration] =
       if (configs.isEmpty)
@@ -540,18 +555,15 @@ object Resolution {
         helper(extraConfigs, acc ++ configs)
       }
 
-    val config0 = Parse.withFallbackConfig(config) match {
-      case Some((main, fallback)) =>
-        if (configurations.contains(main))
-          main
-        else if (configurations.contains(fallback))
-          fallback
-        else
-          main
-      case None => config
-    }
+    helper(Set(actualConfig), Set.empty)
+  }
 
-    (config0, helper(Set(config0), Set.empty))
+  def withParentConfigurations(
+    config: Configuration,
+    configurations: Map[Configuration, Seq[Configuration]]
+  ): (Configuration, Set[Configuration]) = {
+    val config0 = actualConfiguration(config, configurations)
+    (config0, parentConfigurations(config0, configurations))
   }
 
   private val mavenScopes = {
@@ -668,10 +680,11 @@ object Resolution {
     )
     val properties = project0.properties.toMap
 
-    val (actualConfig, configurations) = withParentConfigurations(
+    val actualConfig = actualConfiguration(
       if (from.configuration.isEmpty) defaultConfiguration else from.configuration,
       project0.configurations
     )
+    val configurations = parentConfigurations(actualConfig, project0.configurations)
 
     // Vague attempt at making the Maven scope model fit into the Ivy configuration one
 
@@ -867,10 +880,13 @@ object Resolution {
   @since("2.1.17")
   forceDepMgmtVersions: Boolean = false,
   enableDependencyOverrides: Boolean = Resolution.enableDependencyOverridesDefault,
-  @deprecated("Use bomModuleVersions instead", "2.1.18")
+  @deprecated("Use boms instead", "2.1.18")
   bomDependencies: Seq[Dependency] = Nil,
   @since("2.1.18")
-  bomModuleVersions: Seq[(Module, String)] = Nil
+  @deprecated("Use boms instead", "2.1.19")
+  bomModuleVersions: Seq[(Module, String)] = Nil,
+  @since("2.1.19")
+  boms: Seq[BomDependency] = Nil
 ) {
 
   lazy val dependencies: Set[Dependency] =
@@ -1018,23 +1034,37 @@ object Resolution {
       .flatMap(finalDependencies0)
 
   private lazy val globalBomModuleVersions =
-    bomDependencies.map(_.moduleVersion) ++
-      bomModuleVersions
+    bomDependencies
+      .map(_.moduleVersion)
+      .map { case (m, v) =>
+        BomDependency(m, v, defaultConfiguration)
+      } ++
+      bomModuleVersions.map { case (m, v) => BomDependency(m, v, defaultConfiguration) } ++
+      boms
   private lazy val allBomModuleVersions =
-    globalBomModuleVersions ++ rootDependencies.flatMap(_.boms)
+    globalBomModuleVersions ++ rootDependencies.flatMap(_.bomDependencies)
   lazy val bomDepMgmt = {
-    val bomProjects = globalBomModuleVersions.flatMap(projectCache.get(_).toSeq).map(_._2)
-    DepMgmt.addSeq(
-      Map.empty,
-      bomProjects.flatMap { bomProject =>
-        withProperties(bomProject.dependencyManagement, projectProperties(bomProject).toMap)
-      },
-      composeValues = true
-    )
+    val bomDepMgmtData = for {
+      bomDep          <- globalBomModuleVersions
+      (_, bomProject) <- projectCache.get(bomDep.moduleVersion).toSeq
+      bomConfig0 = actualConfiguration(
+        if (bomDep.config.isEmpty) defaultConfiguration else bomDep.config,
+        bomProject.configurations
+      )
+      keepConfigs = mavenScopes.getOrElse(bomConfig0, Set(bomConfig0))
+      entry <- withProperties(
+        bomProject.dependencyManagement.filter {
+          case (config, _) =>
+            config.isEmpty || keepConfigs.contains(config)
+        },
+        projectProperties(bomProject).toMap
+      )
+    } yield entry
+    DepMgmt.addSeq(Map.empty, bomDepMgmtData, composeValues = true)
   }
   lazy val hasAllBoms =
-    allBomModuleVersions.forall { bomModVer =>
-      projectCache.contains(bomModVer)
+    allBomModuleVersions.forall { bomDep =>
+      projectCache.contains(bomDep.moduleVersion)
     }
   lazy val processedRootDependencies =
     if (hasAllBoms) {
@@ -1056,7 +1086,9 @@ object Resolution {
               rootDep0
           }
       rootDependencies0.map { rootDep =>
-        val depBomProjects = rootDep.boms.map(projectCache(_)._2)
+        val depBomProjects = rootDep.bomDependencies
+          .map(_.moduleVersion)
+          .map(projectCache(_)._2)
         val depBomDepMgmt = DepMgmt.addSeq(
           Map.empty,
           depBomProjects.flatMap { bomProject =>
@@ -1109,7 +1141,9 @@ object Resolution {
   /** The modules we miss some info about.
     */
   lazy val missingFromCache: Set[ModuleVersion] = {
-    val boms = allBomModuleVersions.toSet
+    val boms = allBomModuleVersions
+      .map(_.moduleVersion)
+      .toSet
     val modules = dependencies
       .map(_.moduleVersion)
     val nextModules = nextDependenciesAndConflicts._2

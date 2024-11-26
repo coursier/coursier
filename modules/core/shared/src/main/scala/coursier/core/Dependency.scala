@@ -24,10 +24,16 @@ import MinimizedExclusions._
   overrides: DependencyManagement.Map =
     Map.empty,
   @since("2.1.18")
-  boms: Seq[(Module, String)] = Nil
+  @deprecated("Use bomDependencies instead", "2.1.19")
+  boms: Seq[(Module, String)] = Nil,
+  @since("2.1.19")
+  bomDependencies: Seq[BomDependency] = Nil
 ) {
   assertValid(version, "version")
   lazy val moduleVersion = (module, version)
+
+  def asBomDependency: BomDependency =
+    BomDependency(module, version, configuration)
 
   def this(
     module: Module,
@@ -86,9 +92,16 @@ import MinimizedExclusions._
   def exclusions(): Set[(Organization, ModuleName)] = minimizedExclusions.toSet()
 
   def addBom(module: Module, version: String): Dependency =
-    withBoms(boms :+ (module -> version))
+    withBomDependencies(bomDependencies :+ BomDependency(module, version, Configuration.empty))
+  def addBom(module: Module, version: String, config: Configuration): Dependency =
+    withBomDependencies(bomDependencies :+ BomDependency(module, version, config))
   def addBoms(boms: Seq[(Module, String)]): Dependency =
-    withBoms(this.boms ++ boms)
+    withBomDependencies(
+      this.bomDependencies ++
+        boms.map(t => BomDependency(t._1, t._2, Configuration.empty))
+    )
+  def addBomDependencies(bomDependencies: Seq[BomDependency]): Dependency =
+    withBomDependencies(this.bomDependencies ++ bomDependencies)
 
   private[core] def copy(
     module: Module = this.module,
@@ -107,7 +120,8 @@ import MinimizedExclusions._
     optional,
     transitive,
     overrides,
-    boms
+    boms,
+    bomDependencies
   )
 
   lazy val clearExclusions: Dependency =
@@ -117,7 +131,7 @@ import MinimizedExclusions._
 
   // Overriding toString to be backwards compatible with Set-based exclusion representation
   override def toString(): String = {
-    val baseFields = Seq(
+    var fields = Seq(
       module.toString,
       version.toString,
       configuration.toString,
@@ -126,12 +140,15 @@ import MinimizedExclusions._
       optional.toString,
       transitive.toString
     )
-    val fields0 =
-      if (overrides.isEmpty) baseFields
-      else baseFields :+ overrides.toString
-    val fields =
-      if (boms.isEmpty) fields0
-      else fields0 :+ boms.toString
+    fields =
+      if (overrides.isEmpty) fields
+      else fields :+ overrides.toString
+    fields =
+      if (boms.isEmpty) fields
+      else fields :+ boms.toString
+    fields =
+      if (bomDependencies.isEmpty) fields
+      else fields :+ bomDependencies.toString
     s"Dependency(${fields.mkString(", ")})"
   }
 
@@ -153,7 +170,8 @@ object Dependency {
     optional: Boolean,
     transitive: Boolean,
     overrides: DependencyManagement.Map,
-    boms: Seq[(Module, String)]
+    boms: Seq[(Module, String)],
+    bomDependencies: Seq[BomDependency]
   ): Dependency =
     coursier.util.Cache.cacheMethod(instanceCache)(
       new Dependency(
@@ -165,8 +183,33 @@ object Dependency {
         optional,
         transitive,
         overrides,
-        boms
+        boms,
+        bomDependencies
       )
+    )
+
+  def apply(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)]
+  ): Dependency =
+    Dependency(
+      module,
+      version,
+      configuration,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      overrides,
+      boms,
+      Nil
     )
 
   def apply(
@@ -187,7 +230,8 @@ object Dependency {
       publication,
       optional,
       transitive,
-      Map.empty,
+      overrides,
+      Nil,
       Nil
     )
 
@@ -209,6 +253,7 @@ object Dependency {
       optional,
       transitive,
       Map.empty,
+      Nil,
       Nil
     )
 
