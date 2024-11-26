@@ -2,12 +2,15 @@ package coursier.cache
 
 import java.io.{File, IOException}
 import java.nio.channels.{FileChannel, FileLock, OverlappingFileLockException}
-import java.nio.file.{Files, Path, StandardOpenOption}
+import java.nio.file.{AccessDeniedException, Files, Path, StandardOpenOption}
 import java.util.concurrent.{Callable, ConcurrentHashMap}
 
+import coursier.cache.internal.Retry
 import coursier.paths.{CachePath, Util}
 
 import scala.annotation.tailrec
+import scala.concurrent.duration.DurationInt
+import scala.util.Properties
 
 object CacheLocks {
 
@@ -28,6 +31,20 @@ object CacheLocks {
   )(
     f: => T,
     ifLocked: => Option[T]
+  ): T =
+    withLockOr(
+      cache,
+      file,
+      Retry(4, 100.milliseconds, 2.0)
+    )(f, ifLocked)
+
+  def withLockOr[T](
+    cache: File,
+    file: File,
+    retry: Retry
+  )(
+    f: => T,
+    ifLocked: => Option[T]
   ): T = {
 
     val lockFile = CachePath.lockFile(file).toPath
@@ -36,11 +53,15 @@ object CacheLocks {
 
     withStructureLock(cache) {
       Util.createDirectories(lockFile.getParent)
-      channel = FileChannel.open(
-        lockFile,
-        StandardOpenOption.CREATE,
-        StandardOpenOption.WRITE
-      )
+      channel = retry.retry {
+        FileChannel.open(
+          lockFile,
+          StandardOpenOption.CREATE,
+          StandardOpenOption.WRITE
+        )
+      } {
+        case _: AccessDeniedException if Properties.isWin =>
+      }
     }
 
     @tailrec
@@ -76,7 +97,10 @@ object CacheLocks {
               lock = null
               channel.close()
               channel = null
-              Files.deleteIfExists(lockFile)
+              try Files.deleteIfExists(lockFile)
+              catch {
+                case _: AccessDeniedException if Properties.isWin =>
+              }
             }
         }
         finally if (lock != null)
