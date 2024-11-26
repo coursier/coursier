@@ -187,7 +187,7 @@ object Dependency {
       publication,
       optional,
       transitive,
-      Map.empty,
+      overrides,
       Nil
     )
 
