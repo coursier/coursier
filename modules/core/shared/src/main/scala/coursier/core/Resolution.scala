@@ -1051,7 +1051,8 @@ object Resolution {
         if (bomDep.config.isEmpty) defaultConfiguration else bomDep.config,
         bomProject.configurations
       )
-      keepConfigs = mavenScopes.getOrElse(bomConfig0, Set(bomConfig0))
+      // adding the initial config too in case it's the "provided" config
+      keepConfigs = mavenScopes.getOrElse(bomConfig0, Set()) + bomConfig0
       entry <- withProperties(
         bomProject.dependencyManagement.filter {
           case (config, _) =>
