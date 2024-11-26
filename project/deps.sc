@@ -75,7 +75,7 @@ def sbtCoursierVersion = "2.1.4"
 def graalVmVersion = "22.3.0"
 def graalVmJvmId   = s"graalvm-java17:$graalVmVersion"
 
-def scalaCliVersion = "1.0.0-RC1"
+def scalaCliVersion = "1.5.1"
 
 // should be the default index in the upcoming coursier release (> 2.0.16)
 def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"
