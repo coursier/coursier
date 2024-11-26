@@ -521,10 +521,25 @@ object Resolution {
       }
   }
 
-  def withParentConfigurations(
+  def actualConfiguration(
     config: Configuration,
     configurations: Map[Configuration, Seq[Configuration]]
-  ): (Configuration, Set[Configuration]) = {
+  ): Configuration =
+    Parse.withFallbackConfig(config) match {
+      case Some((main, fallback)) =>
+        if (configurations.contains(main))
+          main
+        else if (configurations.contains(fallback))
+          fallback
+        else
+          main
+      case None => config
+    }
+
+  def parentConfigurations(
+    actualConfig: Configuration,
+    configurations: Map[Configuration, Seq[Configuration]]
+  ): Set[Configuration] = {
     @tailrec
     def helper(configs: Set[Configuration], acc: Set[Configuration]): Set[Configuration] =
       if (configs.isEmpty)
@@ -540,18 +555,15 @@ object Resolution {
         helper(extraConfigs, acc ++ configs)
       }
 
-    val config0 = Parse.withFallbackConfig(config) match {
-      case Some((main, fallback)) =>
-        if (configurations.contains(main))
-          main
-        else if (configurations.contains(fallback))
-          fallback
-        else
-          main
-      case None => config
-    }
+    helper(Set(actualConfig), Set.empty)
+  }
 
-    (config0, helper(Set(config0), Set.empty))
+  def withParentConfigurations(
+    config: Configuration,
+    configurations: Map[Configuration, Seq[Configuration]]
+  ): (Configuration, Set[Configuration]) = {
+    val config0 = actualConfiguration(config, configurations)
+    (config0, parentConfigurations(config0, configurations))
   }
 
   private val mavenScopes = {
@@ -668,10 +680,11 @@ object Resolution {
     )
     val properties = project0.properties.toMap
 
-    val (actualConfig, configurations) = withParentConfigurations(
+    val actualConfig = actualConfiguration(
       if (from.configuration.isEmpty) defaultConfiguration else from.configuration,
       project0.configurations
     )
+    val configurations = parentConfigurations(actualConfig, project0.configurations)
 
     // Vague attempt at making the Maven scope model fit into the Ivy configuration one
 
