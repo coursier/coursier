@@ -1558,9 +1558,20 @@ object ResolveTests extends TestSuite {
       }
 
       test("scalatest-play") {
-        bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency)(
-          dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
-        )
+        test("default") {
+          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency)(
+            dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
+          )
+        }
+        test("test") {
+          bomCheck(
+            dep"org.apache.spark:spark-parent_2.13:3.5.3"
+              .withConfiguration(Configuration.test)
+              .asBomDependency
+          )(
+            dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
+          )
+        }
       }
 
       test("bom-dep") {

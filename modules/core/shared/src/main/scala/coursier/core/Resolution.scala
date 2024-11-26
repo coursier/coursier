@@ -1044,17 +1044,23 @@ object Resolution {
   private lazy val allBomModuleVersions =
     globalBomModuleVersions ++ rootDependencies.flatMap(_.bomDependencies)
   lazy val bomDepMgmt = {
-    val bomProjects = globalBomModuleVersions
-      .map(_.moduleVersion)
-      .flatMap(projectCache.get(_).toSeq)
-      .map(_._2)
-    DepMgmt.addSeq(
-      Map.empty,
-      bomProjects.flatMap { bomProject =>
-        withProperties(bomProject.dependencyManagement, projectProperties(bomProject).toMap)
-      },
-      composeValues = true
-    )
+    val bomDepMgmtData = for {
+      bomDep          <- globalBomModuleVersions
+      (_, bomProject) <- projectCache.get(bomDep.moduleVersion).toSeq
+      bomConfig0 = actualConfiguration(
+        if (bomDep.config.isEmpty) defaultConfiguration else bomDep.config,
+        bomProject.configurations
+      )
+      keepConfigs = mavenScopes.getOrElse(bomConfig0, Set(bomConfig0))
+      entry <- withProperties(
+        bomProject.dependencyManagement.filter {
+          case (config, _) =>
+            config.isEmpty || keepConfigs.contains(config)
+        },
+        projectProperties(bomProject).toMap
+      )
+    } yield entry
+    DepMgmt.addSeq(Map.empty, bomDepMgmtData, composeValues = true)
   }
   lazy val hasAllBoms =
     allBomModuleVersions.forall { bomDep =>
