@@ -2,7 +2,15 @@ package coursier.tests
 
 import java.lang.{Boolean => JBoolean}
 
-import coursier.core.{Classifier, Dependency, Module, Resolution, Type}
+import coursier.core.{
+  BomDependency,
+  Classifier,
+  Configuration,
+  Dependency,
+  Module,
+  Resolution,
+  Type
+}
 import coursier.params.ResolutionParams
 import coursier.testcache.TestCache
 import coursier.util.Artifact
@@ -82,8 +90,19 @@ object TestHelpers extends PlatformTestHelpers {
       }
 
     val bomModVerHashPart =
-      if (res.bomModuleVersions.isEmpty) ""
-      else "_boms" + sha1(res.bomModuleVersions.toString)
+      if (res.boms.isEmpty) ""
+      else
+        "_boms" + sha1(
+          res.boms
+            // quick hack to recycle former sha-1 values when config is empty
+            .map {
+              case emptyConfigBomDep if emptyConfigBomDep.config.isEmpty =>
+                emptyConfigBomDep.moduleVersion
+              case other =>
+                other
+            }
+            .toString
+        )
 
     val paramsPart =
       if (params == ResolutionParams())

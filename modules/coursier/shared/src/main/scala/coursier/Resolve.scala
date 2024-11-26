@@ -5,6 +5,8 @@ import java.util.concurrent.ConcurrentHashMap
 import coursier.cache.{Cache, CacheLogger}
 import coursier.core.{
   Activation,
+  BomDependency,
+  Configuration,
   Dependency,
   DependencySet,
   Exclusions,
@@ -51,10 +53,13 @@ import scala.language.higherKinds
   @deprecated("Workaround for former uses of Resolution.mapDependencies, prefer relying on ResolutionParams", "2.1.12")
     mapDependenciesOpt: Option[Dependency => Dependency] = None,
   @since("2.1.16")
-  @deprecated("Use bomModuleVersions instead", "2.1.18")
+  @deprecated("Use boms instead", "2.1.18")
     bomDependencies: Seq[Dependency] = Nil,
   @since("2.1.18")
-    bomModuleVersions: Seq[(Module, String)] = Nil
+  @deprecated("Use boms instead", "2.1.19")
+    bomModuleVersions: Seq[(Module, String)] = Nil,
+  @since("2.1.19")
+    boms: Seq[BomDependency] = Nil
 )(implicit
   sync: Sync[F]
 ) {
@@ -100,13 +105,20 @@ import scala.language.higherKinds
 
   def addDependencies(dependencies: Dependency*): Resolve[F] =
     withDependencies(this.dependencies ++ dependencies)
-  @deprecated("Use addBom or addBoms instead", "2.1.18")
+  @deprecated("Use addBom or addBomConfigs instead", "2.1.18")
   def addBomDependencies(bomDependencies: Dependency*): Resolve[F] =
     withBomDependencies(this.bomDependencies ++ bomDependencies)
   def addBom(bomModule: Module, bomVersion: String): Resolve[F] =
-    withBomModuleVersions(this.bomModuleVersions :+ (bomModule, bomVersion))
+    withBoms(this.boms :+ BomDependency(bomModule, bomVersion, Configuration.empty))
+  def addBom(bomModule: Module, bomVersion: String, bomConfig: Configuration): Resolve[F] =
+    withBoms(this.boms :+ BomDependency(bomModule, bomVersion, bomConfig))
   def addBoms(bomModuleVersions: (Module, String)*): Resolve[F] =
-    withBomModuleVersions(this.bomModuleVersions ++ bomModuleVersions)
+    withBoms(
+      this.boms ++
+        bomModuleVersions.map(t => BomDependency(t._1, t._2, Configuration.empty))
+    )
+  def addBomConfigs(boms: BomDependency*): Resolve[F] =
+    withBoms(this.boms ++ boms)
 
   def addRepositories(repositories: Repository*): Resolve[F] =
     withRepositories(this.repositories ++ repositories)
@@ -161,7 +173,9 @@ import scala.language.higherKinds
       resolutionParams,
       initialResolution,
       mapDependenciesOpt,
-      bomDependencies.map(_.moduleVersion) ++ bomModuleVersions
+      bomDependencies.map(_.asBomDependency) ++
+        bomModuleVersions.map(t => BomDependency(t._1, t._2, Configuration.empty)) ++
+        boms
     )
 
     def run(res: Resolution): F[Resolution] = {
@@ -273,7 +287,7 @@ object Resolve extends PlatformResolve {
     params: ResolutionParams = ResolutionParams(),
     initialResolutionOpt: Option[Resolution] = None,
     mapDependenciesOpt: Option[Dependency => Dependency] = None,
-    bomModuleVersions: Seq[(Module, String)] = Nil
+    boms: Seq[BomDependency] = Nil
   ): Resolution = {
     import coursier.core.{Resolution => CoreResolution}
 
@@ -389,7 +403,7 @@ object Resolve extends PlatformResolve {
       .withEnableDependencyOverrides(
         params.enableDependencyOverrides.getOrElse(Resolution.enableDependencyOverridesDefault)
       )
-      .withBomModuleVersions(bomModuleVersions)
+      .withBoms(boms)
   }
 
   private[coursier] def runProcess[F[_]](
