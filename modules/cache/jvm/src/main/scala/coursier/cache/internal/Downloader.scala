@@ -418,7 +418,7 @@ import scala.util.control.NonFatal
 
       try {
         val res = Downloader.downloading(url, file, retry)(
-          CacheLocks.withLockOr(location, file)(
+          CacheLocks.withLockOr(location, file, retry)(
             if (proceed())
               doDownload(file, url, keepHeaderChecksums, allCredentials0, tmp)
             else
