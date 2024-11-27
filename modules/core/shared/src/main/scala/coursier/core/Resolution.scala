@@ -1043,9 +1043,9 @@ object Resolution {
       boms
   private lazy val allBomModuleVersions =
     globalBomModuleVersions ++ rootDependencies.flatMap(_.bomDependencies)
-  lazy val bomDepMgmt = {
-    val bomDepMgmtData = for {
-      bomDep          <- globalBomModuleVersions
+  private def bomEntries(bomDeps: Seq[BomDependency]): Seq[(Configuration, Dependency)] =
+    for {
+      bomDep          <- bomDeps
       (_, bomProject) <- projectCache.get(bomDep.moduleVersion).toSeq
       bomConfig0 = actualConfiguration(
         if (bomDep.config.isEmpty) defaultConfiguration else bomDep.config,
@@ -1061,8 +1061,11 @@ object Resolution {
         projectProperties(bomProject).toMap
       )
     } yield entry
-    DepMgmt.addSeq(Map.empty, bomDepMgmtData, composeValues = true)
-  }
+  lazy val bomDepMgmt = DepMgmt.addSeq(
+    Map.empty,
+    bomEntries(globalBomModuleVersions),
+    composeValues = true
+  )
   lazy val hasAllBoms =
     allBomModuleVersions.forall { bomDep =>
       projectCache.contains(bomDep.moduleVersion)
@@ -1087,26 +1090,32 @@ object Resolution {
               rootDep0
           }
       rootDependencies0.map { rootDep =>
-        val depBomProjects = rootDep.bomDependencies
-          .map(_.moduleVersion)
-          .map(projectCache(_)._2)
         val depBomDepMgmt = DepMgmt.addSeq(
           Map.empty,
-          depBomProjects.flatMap { bomProject =>
-            withProperties(bomProject.dependencyManagement, projectProperties(bomProject).toMap)
-          },
+          bomEntries(rootDep.bomDependencies),
+          composeValues = true
+        )
+        val overrideDepBomDepMgmt = DepMgmt.addSeq(
+          Map.empty,
+          bomEntries(rootDep.bomDependencies.filter(_.forceOverrideVersions)),
           composeValues = true
         )
         val rootDep0 = rootDep.withOverrides(
           DepMgmt.add(depBomDepMgmt, rootDep.overrides.toSeq, composeValues = true)
         )
-        if (rootDep0.version == "_")
-          depBomDepMgmt.get(DepMgmt.key(rootDep0)) match {
-            case Some(values) => rootDep0.withVersion(values.version)
-            case None         => rootDep0
-          }
-        else
-          rootDep0
+        val key = DepMgmt.key(rootDep0)
+        overrideDepBomDepMgmt.get(key) match {
+          case Some(overrideValues) =>
+            rootDep0.withVersion(overrideValues.version)
+          case None =>
+            if (rootDep0.version == "_")
+              depBomDepMgmt.get(key) match {
+                case Some(values) => rootDep0.withVersion(values.version)
+                case None         => rootDep0
+              }
+            else
+              rootDep0
+        }
       }
     }
     else

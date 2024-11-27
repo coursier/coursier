@@ -91,6 +91,8 @@ import MinimizedExclusions._
   )
   def exclusions(): Set[(Organization, ModuleName)] = minimizedExclusions.toSet()
 
+  def addBom(bomDep: BomDependency): Dependency =
+    withBomDependencies(bomDependencies :+ bomDep)
   def addBom(module: Module, version: String): Dependency =
     withBomDependencies(bomDependencies :+ BomDependency(module, version, Configuration.empty))
   def addBom(module: Module, version: String, config: Configuration): Dependency =
