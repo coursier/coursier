@@ -1549,6 +1549,7 @@ object ResolveTests extends TestSuite {
             )
           }
           test("bom-via-dep") {
+            // BOM should bump protobuf-java to 4.28.3
             check(
               dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
                 .addBom(mod"com.google.cloud:libraries-bom", "26.50.0")
@@ -1564,6 +1565,8 @@ object ResolveTests extends TestSuite {
           )
         }
         test("test") {
+          // BOM should override org.scalatest:scalatest_2.13 version,
+          // as we pull the test entries too
           bomCheck(
             dep"org.apache.spark:spark-parent_2.13:3.5.3"
               .withConfiguration(Configuration.test)
@@ -1572,10 +1575,37 @@ object ResolveTests extends TestSuite {
             dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
           )
         }
+        test("testViaBomDep") {
+          test {
+            // BOM should force org.scalatest:scalatest_2.13 version to 3.2.16
+            // (because we take into account dep mgmt with test scope here)
+            check(
+              dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .withConfiguration(Configuration.test)
+                  .asBomDependency
+              )
+            )
+          }
+          test {
+            // BOM shouldn't force org.scalatest:scalatest_2.13 version to 3.2.16,
+            // leaving it to 3.2.17
+            // (because we don't take into account dep mgmt with test scope here)
+            check(
+              dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .withConfiguration(Configuration.defaultCompile)
+                  .asBomDependency
+              )
+            )
+          }
+        }
       }
 
       test("provided") {
         test {
+          // BOM should fill the version, even though
+          // protobuf-java is marked as provided there
           bomCheck(
             dep"org.apache.spark:spark-parent_2.13:3.5.3"
               .withConfiguration(Configuration.provided)
@@ -1585,6 +1615,8 @@ object ResolveTests extends TestSuite {
           )
         }
         test {
+          // BOM should fill the version, even though
+          // protobuf-java is marked as provided there
           bomCheck(
             dep"org.apache.spark:spark-parent_2.13:3.5.3"
               .withConfiguration(Configuration.provided)
@@ -1593,11 +1625,118 @@ object ResolveTests extends TestSuite {
             dep"com.google.protobuf:protobuf-java-util:_"
           )
         }
+        test("check") {
+          async {
+
+            val res = await {
+              resolve
+                .addDependencies(dep"com.google.protobuf:protobuf-java:_")
+                .addBom(
+                  dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                    .withConfiguration(Configuration.compile)
+                    .asBomDependency
+                )
+                .io
+                .attempt
+                .future()
+            }
+
+            val isLeft = res.isLeft
+            assert(isLeft)
+
+            val error = res.swap.toOption.get
+
+            error match {
+              case e: ResolutionError.CantDownloadModule =>
+                assert(e.module == mod"com.google.protobuf:protobuf-java")
+              case _ =>
+                throw error
+            }
+          }
+        }
+
+        test("bom-dep") {
+          test {
+            // BOM should have no effect, no empty version to fill
+            // and no transitive dependency
+            check(
+              dep"com.google.protobuf:protobuf-java:3.7.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .withConfiguration(Configuration.provided)
+                  .asBomDependency
+              )
+            )
+          }
+          test {
+            // BOM should override transitive dependency versions,
+            // com.google.protobuf:protobuf-java in particular, but not
+            // com.google.protobuf:protobuf-java-util
+            check(
+              dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .withConfiguration(Configuration.provided)
+                  .asBomDependency
+              )
+            )
+          }
+          test("check") {
+            // BOM shouldn't override com.google.protobuf:protobuf-java
+            // version, as it's marked as provided there
+            check(
+              dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .withConfiguration(Configuration.defaultCompile)
+                  .asBomDependency
+              )
+            )
+          }
+        }
+
+        test("bom-dep-force-ver") {
+          test {
+            // BOM should override root dependency version (forceOverrideVersions is true)
+            // and transitive dependencies' versions
+            check(
+              dep"com.google.protobuf:protobuf-java:3.7.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .withConfiguration(Configuration.provided)
+                  .asBomDependency
+                  .withForceOverrideVersions(true)
+              )
+            )
+          }
+          test {
+            // BOM should override root dependency version (forceOverrideVersions is true)
+            // and transitive dependencies' versions
+            check(
+              dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .withConfiguration(Configuration.provided)
+                  .asBomDependency
+                  .withForceOverrideVersions(true)
+              )
+            )
+          }
+          test("check") {
+            // BOM shouldn't override root dependency version (even though
+            // forceOverrideVersions is true) or transitive dep
+            // com.google.protobuf:protobuf-java version, as these are marked
+            // as provided in the BOM, and we don't ask for this config here
+            check(
+              dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .asBomDependency
+                  .withForceOverrideVersions(true)
+              )
+            )
+          }
+        }
       }
 
       test("bom-dep") {
         test {
-          // The BOM shouldn't apply to scalapbc in that case
+          // The BOM shouldn't apply to scalapbc in that case,
+          // protobuf-java should stay on 3.7.1
           check(
             dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8",
             dep"com.lihaoyi:pprint_2.13:0.9.0"
@@ -1605,6 +1744,8 @@ object ResolveTests extends TestSuite {
           )
         }
         test {
+          // The BOM should apply to scalapbc in that case,
+          // protobuf-java should switch to 4.28.3
           check(
             dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
               .addBom(mod"com.google.cloud:libraries-bom", "26.50.0"),

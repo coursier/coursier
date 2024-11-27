@@ -112,6 +112,8 @@ import scala.language.higherKinds
     withBoms(this.boms :+ BomDependency(bomModule, bomVersion, Configuration.empty))
   def addBom(bomModule: Module, bomVersion: String, bomConfig: Configuration): Resolve[F] =
     withBoms(this.boms :+ BomDependency(bomModule, bomVersion, bomConfig))
+  def addBom(bomDep: BomDependency): Resolve[F] =
+    withBoms(this.boms :+ bomDep)
   def addBoms(bomModuleVersions: (Module, String)*): Resolve[F] =
     withBoms(
       this.boms ++
