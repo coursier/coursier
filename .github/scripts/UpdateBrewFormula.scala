@@ -1,4 +1,4 @@
-// using com.lihaoyi::os-lib:0.7.8
+//> using dep com.lihaoyi::os-lib:0.11.3
 
 object UpdateBrewFormula {
   def gitUsername = "Github Actions"
