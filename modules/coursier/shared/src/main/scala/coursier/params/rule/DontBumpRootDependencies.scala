@@ -17,13 +17,12 @@ import dataclass.data
     val bumped = res
       .rootDependencies
       .iterator
+      .filter { rootDep =>
+        rootDep.version != "_" && matchers.matches(rootDep.module) // "any" version substitution is not a bump
+      }
       .map { rootDep =>
         val selected = Version(res.reconciledVersions.getOrElse(rootDep.module, rootDep.version))
         rootDep -> selected
-      }
-      .filter {
-        case (dep, _) =>
-          matchers.matches(dep.module)
       }
       .filter {
         case (dep, selectedVer) =>
