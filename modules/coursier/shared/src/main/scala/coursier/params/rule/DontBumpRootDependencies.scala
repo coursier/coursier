@@ -18,7 +18,9 @@ import dataclass.data
       .rootDependencies
       .iterator
       .filter { rootDep =>
-        rootDep.version != "_" && matchers.matches(rootDep.module) // "any" version substitution is not a bump
+        // "any" version substitution is not a bump
+        rootDep.version != "_" &&
+        matchers.matches(rootDep.module)
       }
       .map { rootDep =>
         val selected = Version(res.reconciledVersions.getOrElse(rootDep.module, rootDep.version))
