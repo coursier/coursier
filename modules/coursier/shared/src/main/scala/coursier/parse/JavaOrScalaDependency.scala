@@ -4,6 +4,7 @@ import coursier.core.{
   Classifier,
   Configuration,
   Dependency,
+  DependencyManagement,
   Extension,
   MinimizedExclusions,
   Module,
@@ -141,12 +142,14 @@ object JavaOrScalaDependency {
   private def extKey          = "ext"
   private def typeKey         = "type"
   private def bomKey          = "bom"
+  private def overrideKey     = "override"
   private lazy val readKeys = Set(
     inlineConfigKey,
     classifierKey,
     extKey,
     typeKey,
-    bomKey
+    bomKey,
+    overrideKey
   )
   def leftOverUserParams(dep: dependency.AnyDependency): Seq[(String, Option[String])] =
     dep.userParams.filter {
@@ -265,6 +268,54 @@ object JavaOrScalaDependency {
     }
 
     csDep = csDep.addBoms(boms)
+
+    val overrideValues = userParams.get(overrideKey).getOrElse(Nil)
+    if (overrideValues.exists(_.isEmpty))
+      errors += "Invalid empty override parameter"
+    val overrideOrErrors = overrideValues.flatten.map { v =>
+      dependency.parser.DependencyParser.parse(v.replace('%', ':')) match {
+        case Left(error) => Left(error)
+        case Right(overrideDep) =>
+          val expectedShape = DependencyLike(
+            ModuleLike(
+              overrideDep.module.organization,
+              overrideDep.module.name,
+              dependency.NoAttributes,
+              Map.empty
+            ),
+            overrideDep.version,
+            CovariantSet.empty,
+            Nil
+          )
+          if (overrideDep == expectedShape)
+            Right((
+              DependencyManagement.Key(
+                Organization(overrideDep.module.organization),
+                ModuleName(overrideDep.module.name),
+                Type.jar,
+                Classifier.empty
+              ),
+              DependencyManagement.Values(
+                Configuration.empty,
+                overrideDep.version,
+                MinimizedExclusions.zero,
+                optional = false
+              )
+            ))
+          else
+            Left(s"Invalid override value '$v' (expected org%name%version)")
+      }
+    }
+    val overrideErrors = overrideOrErrors.collect {
+      case Left(e) => e
+    }
+    errors ++= overrideErrors
+
+    val overrides = overrideOrErrors.collect {
+      case Right(entry) => entry
+    }
+
+    csDep = csDep.addOverrides(overrides)
 
     if (errors.isEmpty)
       Right {

@@ -143,6 +143,26 @@ object StringInterpolators {
               case (org, name) =>
                 q"_root_.scala.Tuple2(_root_.coursier.core.Organization(${org.value}), _root_.coursier.core.ModuleName(${name.value}))"
             }
+            val overrides = dep.overrides.toSeq.sortBy(_._1.repr).map {
+              case (key, values) =>
+                val key0 = q"""_root_.coursier.core.DependencyManagement.Key(
+                  _root_.coursier.core.Organization(${key.organization.value}),
+                  _root_.coursier.core.ModuleName(${key.name.value}),
+                  _root_.coursier.core.Type(${key.`type`.value}),
+                  _root_.coursier.core.Classifier(${key.classifier.value})
+                )"""
+                val excls = values.minimizedExclusions.toSeq().map {
+                  case (org, name) =>
+                    q"_root_.scala.Tuple2(_root_.coursier.core.Organization(${org.value}), _root_.coursier.core.ModuleName(${name.value}))"
+                }
+                val values0 = q"""_root_.coursier.core.DependencyManagement.Values(
+                  _root_.coursier.core.Configuration(${values.config.value}),
+                  ${values.version},
+                  _root_.coursier.core.MinimizedExclusions(_root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$excls)),
+                  ${values.optional}
+                )"""
+                q"_root_.scala.Tuple2($key0, $values0)"
+            }
             val boms = dep.bomDependencies.map { bomDep =>
               val attrs = bomDep.module.attributes.toSeq.map {
                 case (k, v) =>
@@ -177,7 +197,7 @@ object StringInterpolators {
                 ),
                 ${dep.optional},
                 ${dep.transitive},
-                _root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.Values](),
+                _root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.Values](..$overrides),
                 _root_.scala.collection.immutable.Nil,
                 _root_.scala.collection.immutable.Seq(..$boms)
               )

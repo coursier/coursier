@@ -20,6 +20,10 @@ object DependencyManagement {
         `type` = `type`.map(f),
         classifier = classifier.map(f)
       )
+
+    // Mainly there for sorting purposes
+    def repr: String =
+      s"${organization.value}:${name.value}:${`type`.value}:${classifier.value}"
   }
 
   object Key {
