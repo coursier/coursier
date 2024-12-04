@@ -152,7 +152,7 @@ object StringInterpolators {
                 ),
                 ${dep.version},
                 _root_.coursier.core.Configuration(${dep.configuration.value}),
-                _root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$excls),
+                _root_.coursier.core.MinimizedExclusions(_root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$excls)),
                 _root_.coursier.core.Publication(
                   ${dep.publication.name},
                   _root_.coursier.core.Type(${dep.publication.`type`.value}),
