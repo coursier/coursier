@@ -143,6 +143,22 @@ object StringInterpolators {
               case (org, name) =>
                 q"_root_.scala.Tuple2(_root_.coursier.core.Organization(${org.value}), _root_.coursier.core.ModuleName(${name.value}))"
             }
+            val boms = dep.bomDependencies.map { bomDep =>
+              val attrs = bomDep.module.attributes.toSeq.map {
+                case (k, v) =>
+                  q"_root_.scala.Tuple2($k, $v)"
+              }
+              q"""_root_.coursier.core.BomDependency(
+                _root_.coursier.core.Module(
+                  _root_.coursier.core.Organization(${bomDep.module.organization.value}),
+                  _root_.coursier.core.ModuleName(${bomDep.module.name.value}),
+                  _root_.scala.collection.immutable.Map(..$attrs)
+                ),
+                ${bomDep.version},
+                _root_.coursier.core.Configuration(${bomDep.config.value}),
+                ${bomDep.forceOverrideVersions}
+              )"""
+            }
             c.Expr(q"""
               _root_.coursier.core.Dependency(
                 _root_.coursier.core.Module(
@@ -160,7 +176,10 @@ object StringInterpolators {
                   _root_.coursier.core.Classifier(${dep.publication.classifier.value})
                 ),
                 ${dep.optional},
-                ${dep.transitive}
+                ${dep.transitive},
+                _root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.Values](),
+                _root_.scala.collection.immutable.Nil,
+                _root_.scala.collection.immutable.Seq(..$boms)
               )
             """)
         }

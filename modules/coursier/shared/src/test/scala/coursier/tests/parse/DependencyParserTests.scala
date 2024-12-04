@@ -263,40 +263,42 @@ object DependencyParserTests extends TestSuite {
     }
 
     test("single bom") {
-      val expectedDep = Right {
-        Dependency(
-          module = Module(
-            organization = Organization(value = "io.get-coursier.scala-native"),
-            name = ModuleName(value = "sandbox_native0.3_2.13"),
-            attributes = Map()
-          ),
-          version = "0.4.0"
-        ).addBom(mod"org.apache.spark:spark-parent_2.13", "3.5.4")
-      }
+      val expectedDep = Dependency(
+        module = Module(
+          organization = Organization(value = "io.get-coursier.scala-native"),
+          name = ModuleName(value = "sandbox_native0.3_2.13"),
+          attributes = Map()
+        ),
+        version = "0.4.0"
+      ).addBom(mod"org.apache.spark:spark-parent_2.13", "3.5.4")
       val res = DependencyParser.dependencyParams(
         "io.get-coursier.scala-native::sandbox_native0.3:0.4.0,bom=org.apache.spark%spark-parent_2.13%3.5.4",
         "2.13.15"
       )
-      assert(res.map(_._1) == expectedDep)
+      assert(res.map(_._1) == Right(expectedDep))
+      val fromMacro =
+        dep"io.get-coursier.scala-native:sandbox_native0.3_2.13:0.4.0,bom=org.apache.spark%spark-parent_2.13%3.5.4"
+      assert(fromMacro == expectedDep)
     }
 
     test("multiple boms") {
-      val expectedDep = Right {
-        Dependency(
-          module = Module(
-            organization = Organization(value = "io.get-coursier.scala-native"),
-            name = ModuleName(value = "sandbox_native0.3_2.13"),
-            attributes = Map()
-          ),
-          version = "0.4.0"
-        ).addBom(mod"org.apache.spark:spark-parent_2.13", "3.5.4")
-          .addBom(mod"io.quarkus:quarkus-bom", "3.16.2")
-      }
+      val expectedDep = Dependency(
+        module = Module(
+          organization = Organization(value = "io.get-coursier.scala-native"),
+          name = ModuleName(value = "sandbox_native0.3_2.13"),
+          attributes = Map()
+        ),
+        version = "0.4.0"
+      ).addBom(mod"org.apache.spark:spark-parent_2.13", "3.5.4")
+        .addBom(mod"io.quarkus:quarkus-bom", "3.16.2")
       val res = DependencyParser.dependencyParams(
         "io.get-coursier.scala-native::sandbox_native0.3:0.4.0,bom=org.apache.spark%spark-parent_2.13%3.5.4,bom=io.quarkus%quarkus-bom%3.16.2",
         "2.13.15"
       )
-      assert(res.map(_._1) == expectedDep)
+      assert(res.map(_._1) == Right(expectedDep))
+      val fromMacro =
+        dep"io.get-coursier.scala-native:sandbox_native0.3_2.13:0.4.0,bom=org.apache.spark%spark-parent_2.13%3.5.4,bom=io.quarkus%quarkus-bom%3.16.2"
+      assert(fromMacro == expectedDep)
     }
 
     test("full cross versioned org:::name:version") {
