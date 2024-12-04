@@ -2,6 +2,8 @@ package coursier.core
 
 import dataclass.data
 
+import scala.collection.mutable
+
 object DependencyManagement {
   type Map = scala.Predef.Map[Key, Values]
 
@@ -17,6 +19,16 @@ object DependencyManagement {
         name = name.map(f),
         `type` = `type`.map(f),
         classifier = classifier.map(f)
+      )
+  }
+
+  object Key {
+    def from(dep: Dependency): Key =
+      Key(
+        dep.module.organization,
+        dep.module.name,
+        if (dep.attributes.`type`.isEmpty) Type.jar else dep.attributes.`type`,
+        dep.attributes.classifier
       )
   }
 
@@ -63,5 +75,65 @@ object DependencyManagement {
       minimizedExclusions = MinimizedExclusions.zero,
       optional = false
     )
+
+    def from(config: Configuration, dep: Dependency): Values =
+      Values(
+        config,
+        dep.version,
+        dep.minimizedExclusions,
+        dep.optional
+      )
   }
+
+  def entry(config: Configuration, dep: Dependency): (Key, Values) =
+    (Key.from(dep), Values.from(config, dep))
+
+  /** Converts a sequence of dependency management entries to a dependency management map
+    *
+    * The map having at most one value per key, rather than possibly several in the sequence
+    *
+    * This composes the values together, keeping the version of the first one, and adding their
+    * exclusions if `composeValues` is true (the default). In particular, this respects the order of
+    * values in the incoming sequence, and makes sure the values in the initial map go before those
+    * of the sequence.
+    */
+  def add(
+    initialMap: Map,
+    entries: Seq[(Key, Values)],
+    composeValues: Boolean = true
+  ): Map =
+    if (entries.isEmpty)
+      initialMap
+    else {
+      val b = new mutable.HashMap[Key, Values]
+      b.sizeHint(initialMap.size + entries.length)
+      b ++= initialMap
+      val it = entries.iterator
+      while (it.hasNext) {
+        val (key0, incomingValues) = it.next()
+        val newValues = b.get(key0) match {
+          case Some(previousValues) =>
+            if (composeValues) previousValues.orElse(incomingValues)
+            else previousValues
+          case None =>
+            incomingValues
+        }
+        b += ((key0, newValues))
+      }
+      b.result().toMap
+    }
+
+  def addDependencies(
+    map: Map,
+    deps: Seq[(Configuration, Dependency)],
+    composeValues: Boolean = true
+  ): Map =
+    add(
+      map,
+      deps.map {
+        case (config, dep) =>
+          entry(config, dep)
+      },
+      composeValues = composeValues
+    )
 }
