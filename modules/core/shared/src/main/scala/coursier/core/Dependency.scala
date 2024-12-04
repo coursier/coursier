@@ -105,6 +105,13 @@ import MinimizedExclusions._
   def addBomDependencies(bomDependencies: Seq[BomDependency]): Dependency =
     withBomDependencies(this.bomDependencies ++ bomDependencies)
 
+  def addOverride(key: DependencyManagement.Key, values: DependencyManagement.Values): Dependency =
+    withOverrides(DependencyManagement.add(overrides, Seq(key -> values)))
+  def addOverrides(
+    entries: Seq[(DependencyManagement.Key, DependencyManagement.Values)]
+  ): Dependency =
+    withOverrides(DependencyManagement.add(overrides, entries))
+
   private[core] def copy(
     module: Module = this.module,
     version: String = this.version,
