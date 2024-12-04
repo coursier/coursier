@@ -1753,6 +1753,80 @@ object ResolveTests extends TestSuite {
           )
         }
       }
+
+      test("precedence") {
+        test("bomOverride") {
+          test {
+            // protobuf-java 4.28.1 (override)
+            // protobuf-java-util 4.28.3 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.3,bom=com.google.protobuf%protobuf-bom%4.28.0,override=com.google.protobuf%protobuf-java%4.28.1"
+            )
+          }
+          test {
+            // protobuf-java 4.28.3 (override)
+            // protobuf-java-util 4.28.0 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.0,bom=com.google.protobuf%protobuf-bom%4.28.1,override=com.google.protobuf%protobuf-java%4.28.3"
+            )
+          }
+          test {
+            // protobuf-java 4.28.0 (override)
+            // protobuf-java-util 4.28.1 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.1,bom=com.google.protobuf%protobuf-bom%4.28.3,override=com.google.protobuf%protobuf-java%4.28.0"
+            )
+          }
+        }
+
+        test("bomBom") {
+          test {
+            // protobuf-java 4.28.1 (first bom)
+            // protobuf-java-util 4.28.3 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.3,bom=com.google.protobuf%protobuf-bom%4.28.1,bom=com.google.protobuf%protobuf-bom%4.28.0"
+            )
+          }
+          test {
+            // protobuf-java 4.28.3 (first bom)
+            // protobuf-java-util 4.28.0 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.0,bom=com.google.protobuf%protobuf-bom%4.28.3,bom=com.google.protobuf%protobuf-bom%4.28.1"
+            )
+          }
+          test {
+            // protobuf-java 4.28.0 (first bom)
+            // protobuf-java-util 4.28.1 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.1,bom=com.google.protobuf%protobuf-bom%4.28.0,bom=com.google.protobuf%protobuf-bom%4.28.3"
+            )
+          }
+        }
+
+        test("overrideOverride") {
+          test {
+            // protobuf-java 4.28.1 (first override)
+            // protobuf-java-util 4.28.3 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.3,override=com.google.protobuf%protobuf-java%4.28.1,override=com.google.protobuf%protobuf-java%4.28.0"
+            )
+          }
+          test {
+            // protobuf-java 4.28.3 (first override)
+            // protobuf-java-util 4.28.0 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.0,override=com.google.protobuf%protobuf-java%4.28.3,override=com.google.protobuf%protobuf-java%4.28.1"
+            )
+          }
+          test {
+            // protobuf-java 4.28.0 (first override)
+            // protobuf-java-util 4.28.1 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.1,override=com.google.protobuf%protobuf-java%4.28.0,override=com.google.protobuf%protobuf-java%4.28.3"
+            )
+          }
+        }
+      }
     }
 
     test("delayed-properties") {
