@@ -1,6 +1,5 @@
 package coursier.install
 
-import java.nio.file.{Files, Path, Paths}
 import coursier.cache.{ArtifactError, FileCache}
 import coursier.install.internal.PrebuiltApp
 import coursier.launcher.Parameters
@@ -8,6 +7,7 @@ import coursier.util.Artifact
 import utest._
 
 import java.io.FileOutputStream
+import java.nio.file.{Files, Path}
 import java.util.Comparator
 import java.util.zip.{ZipEntry, ZipOutputStream}
 
