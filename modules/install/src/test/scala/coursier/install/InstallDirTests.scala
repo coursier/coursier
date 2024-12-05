@@ -1,13 +1,15 @@
 package coursier.install
 
-import java.nio.file.Paths
-
-import coursier.cache.ArtifactError
+import coursier.cache.{ArtifactError, FileCache}
 import coursier.install.internal.PrebuiltApp
 import coursier.launcher.Parameters
 import coursier.util.Artifact
-
 import utest._
+
+import java.io.FileOutputStream
+import java.nio.file.{Files, Path}
+import java.util.Comparator
+import java.util.zip.{ZipEntry, ZipOutputStream}
 
 object InstallDirTests extends TestSuite {
 
@@ -41,6 +43,33 @@ object InstallDirTests extends TestSuite {
         ),
         verbosity = 0
       )
+    }
+
+    test("list should return the list of installed apps and skip directories") {
+      def createApp(dir: Path, name: String): Unit = {
+        val app = dir.resolve(name)
+        val out = new ZipOutputStream(new FileOutputStream(app.toFile))
+        try {
+          val entry = new ZipEntry("META-INF/coursier/info.json")
+          out.putNextEntry(entry)
+        }
+        finally
+          out.close()
+      }
+
+      val tempDir = Files.createTempDirectory("installDirTests")
+      try {
+        val dir = tempDir.resolve("directory-should-be-ignored")
+        Files.createDirectories(dir)
+
+        createApp(tempDir, ".dot-app-should-be-ignored")
+        createApp(tempDir, "app1")
+
+        val installedApps = new InstallDir(tempDir, FileCache()).list()
+        assert(installedApps == Seq("app1"))
+      }
+      finally
+        Files.walk(tempDir).sorted(Comparator.reverseOrder()).forEach(Files.delete(_))
     }
   }
 
