@@ -101,7 +101,7 @@ object Conflict {
       val version = resolution
         .reconciledVersions
         .getOrElse(dep.module, dep.version)
-      val matches = dep.version == "_" || compatible(dep.version, version)
+      val matches = dep.version.isEmpty || compatible(dep.version, version)
       if (matches)
         Nil
       else {

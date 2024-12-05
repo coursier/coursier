@@ -399,7 +399,7 @@ object ResolveRulesTests extends TestSuite {
             .addDependencies(
               dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0-M11",
               dep"io.argonaut:argonaut_2.11:6.1",
-              dep"org.apache.logging.log4j:log4j-api:_" // "any" version must not be reconciled
+              dep"org.apache.logging.log4j:log4j-api" // "any" version must not be reconciled
             )
             .withResolutionParams(params)
             .withCache(cache)
@@ -435,7 +435,7 @@ object ResolveRulesTests extends TestSuite {
             .addDependencies(
               dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0-M11",
               dep"io.argonaut:argonaut_2.11:6.1",
-              dep"org.apache.logging.log4j:log4j-api:_" // "any" version must not introduce conficts
+              dep"org.apache.logging.log4j:log4j-api" // "any" version must not introduce conficts
             )
             .withResolutionParams(params)
             .withCache(cache)
@@ -475,7 +475,7 @@ object ResolveRulesTests extends TestSuite {
             .addDependencies(
               dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0-M11",
               dep"io.argonaut:argonaut_2.11:6.2",
-              dep"org.apache.logging.log4j:log4j-api:_" // "any" version must not introduce conficts
+              dep"org.apache.logging.log4j:log4j-api" // "any" version must not introduce conficts
             )
             .withResolutionParams(params)
             .withCache(cache)
@@ -499,7 +499,7 @@ object ResolveRulesTests extends TestSuite {
             .addDependencies(
               dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M9",
               dep"com.chuusai:shapeless_2.12:2.3.2",
-              dep"org.apache.logging.log4j:log4j-api:_" // "any" version substitution is not a bump
+              dep"org.apache.logging.log4j:log4j-api" // "any" version substitution is not a bump
             )
             .withResolutionParams(params)
             .withCache(cache)

@@ -367,7 +367,7 @@ object FetchTests extends TestSuite {
 
       await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
 
-      val subsetRes = res.resolution.subset(Seq(dep"sh.almond:scala-kernel-api_2.12.8:_"))
+      val subsetRes = res.resolution.subset(Seq(dep"sh.almond:scala-kernel-api_2.12.8"))
 
       val subsetArtifacts = await {
         Artifacts()
