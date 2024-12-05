@@ -1,0 +1,17 @@
+org.mvnpm.at.hpcc-js:wasm:2.15.3:default
+org.mvnpm:yargs:17.7.2:default
+org.mvnpm:cliui:8.0.1:default
+org.mvnpm:escalade:3.1.2:default
+org.mvnpm:get-caller-file:2.0.5:default
+org.mvnpm:require-directory:2.1.1:default
+org.mvnpm:string-width:4.2.3:default
+org.mvnpm:y18n:5.0.8:default
+org.mvnpm:yargs-parser:21.1.1:default
+org.mvnpm:strip-ansi:6.0.1:default
+org.mvnpm:wrap-ansi:7.0.0:default
+org.mvnpm:emoji-regex:8.0.0:default
+org.mvnpm:is-fullwidth-code-point:3.0.0:default
+org.mvnpm:ansi-regex:5.0.1:default
+org.mvnpm:ansi-styles:4.3.0:default
+org.mvnpm:color-convert:2.0.1:default
+org.mvnpm:color-name:1.1.4:default

@@ -1503,17 +1503,17 @@ object ResolveTests extends TestSuite {
       test("spark-parent") {
         test {
           bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency)(
-            dep"org.apache.commons:commons-lang3:_"
+            dep"org.apache.commons:commons-lang3"
           )
         }
         test {
           bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency)(
-            dep"org.glassfish.jaxb:jaxb-runtime:_"
+            dep"org.glassfish.jaxb:jaxb-runtime"
           )
         }
         test {
           bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency)(
-            dep"org.apache.logging.log4j:log4j-core:_"
+            dep"org.apache.logging.log4j:log4j-core"
           )
         }
       }
@@ -1535,7 +1535,7 @@ object ResolveTests extends TestSuite {
       test("google-cloud-bom") {
         test("protobuf-java") {
           bomCheck(dep"com.google.cloud:libraries-bom:26.50.0".asBomDependency)(
-            dep"com.google.protobuf:protobuf-java:_"
+            dep"com.google.protobuf:protobuf-java"
           )
         }
 
@@ -1602,6 +1602,18 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      test("runtime") {
+        test {
+          bomCheck(
+            dep"io.quarkus:quarkus-bom:3.15.1"
+              .withConfiguration(Configuration.runtime)
+              .asBomDependency
+          )(
+            dep"org.mvnpm.at.hpcc-js:wasm"
+          )
+        }
+      }
+
       test("provided") {
         test {
           // BOM should fill the version, even though
@@ -1611,7 +1623,7 @@ object ResolveTests extends TestSuite {
               .withConfiguration(Configuration.provided)
               .asBomDependency
           )(
-            dep"com.google.protobuf:protobuf-java:_"
+            dep"com.google.protobuf:protobuf-java"
           )
         }
         test {
@@ -1622,7 +1634,7 @@ object ResolveTests extends TestSuite {
               .withConfiguration(Configuration.provided)
               .asBomDependency
           )(
-            dep"com.google.protobuf:protobuf-java-util:_"
+            dep"com.google.protobuf:protobuf-java-util"
           )
         }
         test("check") {
@@ -1630,7 +1642,7 @@ object ResolveTests extends TestSuite {
 
             val res = await {
               resolve
-                .addDependencies(dep"com.google.protobuf:protobuf-java:_")
+                .addDependencies(dep"com.google.protobuf:protobuf-java")
                 .addBom(
                   dep"org.apache.spark:spark-parent_2.13:3.5.3"
                     .withConfiguration(Configuration.compile)

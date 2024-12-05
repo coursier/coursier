@@ -19,7 +19,7 @@ import dataclass.data
       .iterator
       .filter { rootDep =>
         // "any" version substitution is not a bump
-        rootDep.version != "_" &&
+        rootDep.version.nonEmpty &&
         matchers.matches(rootDep.module)
       }
       .map { rootDep =>
