@@ -1602,6 +1602,18 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      test("runtime") {
+        test {
+          bomCheck(
+            dep"io.quarkus:quarkus-bom:3.15.1"
+              .withConfiguration(Configuration.runtime)
+              .asBomDependency
+          )(
+            dep"org.mvnpm.at.hpcc-js:wasm"
+          )
+        }
+      }
+
       test("provided") {
         test {
           // BOM should fill the version, even though
