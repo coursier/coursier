@@ -1024,7 +1024,7 @@ object Resolution {
         else
           rootDependenciesWithDefaultConfig.map { rootDep =>
             val rootDep0 = rootDep.addOverrides(bomDepMgmt.toSeq)
-            if (rootDep0.version == "_")
+            if (rootDep0.version == "_" || rootDep0.version.isEmpty)
               bomDepMgmt.get(DependencyManagement.Key.from(rootDep0)) match {
                 case Some(values) => rootDep0.withVersion(values.version)
                 case None         => rootDep0
@@ -1049,7 +1049,7 @@ object Resolution {
           case Some(overrideValues) =>
             rootDep0.withVersion(overrideValues.version)
           case None =>
-            if (rootDep0.version == "_")
+            if (rootDep0.version == "_" || rootDep0.version.isEmpty)
               depBomDepMgmt.get(key) match {
                 case Some(values) => rootDep0.withVersion(values.version)
                 case None         => rootDep0
