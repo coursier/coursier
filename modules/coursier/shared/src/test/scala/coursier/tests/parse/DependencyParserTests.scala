@@ -24,7 +24,6 @@ object DependencyParserTests extends TestSuite {
 
     val url = "file%3A%2F%2Fsome%2Fencoded%2Furl"
 
-    // Module parsing tests
     test("org:name:version") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4", "2.11.11") match {
         case Left(err) => assert(false)
