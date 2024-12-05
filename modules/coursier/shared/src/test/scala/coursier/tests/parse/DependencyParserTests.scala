@@ -24,7 +24,6 @@ object DependencyParserTests extends TestSuite {
 
     val url = "file%3A%2F%2Fsome%2Fencoded%2Furl"
 
-    // Module parsing tests
     test("org:name:version") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4", "2.11.11") match {
         case Left(err) => assert(false)
@@ -37,6 +36,18 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    test("org:name") {
+      DependencyParser.dependencyParams("org.apache.avro:avro", "2.11.11") match {
+        case Left(err) => assert(false)
+        case Right((dep, _)) =>
+          assert(dep.module.organization == org"org.apache.avro")
+          assert(dep.module.name == name"avro")
+          assert(dep.version.isEmpty)
+          assert(dep.configuration == Configuration.empty)
+          assert(dep.attributes == Attributes.empty)
+      }
+    }
+
     test("org:name:version:config") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime", "2.11.11") match {
         case Left(err) => assert(false)
@@ -44,6 +55,18 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
+          assert(dep.configuration == Configuration.runtime)
+          assert(dep.attributes == Attributes.empty)
+      }
+    }
+
+    test("org:name: :config") {
+      DependencyParser.dependencyParams("org.apache.avro:avro: :runtime", "2.11.11") match {
+        case Left(err) => assert(false)
+        case Right((dep, _)) =>
+          assert(dep.module.organization == org"org.apache.avro")
+          assert(dep.module.name == name"avro")
+          assert(dep.version.isEmpty)
           assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes.empty)
       }
@@ -71,6 +94,21 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.version == "1.7.4")
+          assert(dep.configuration == Configuration.runtime)
+          assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
+      }
+    }
+
+    test("single attr empty version") {
+      DependencyParser.dependencyParams(
+        "org.apache.avro:avro: :runtime,classifier=tests",
+        "2.11.11"
+      ) match {
+        case Left(err) => assert(false)
+        case Right((dep, _)) =>
+          assert(dep.module.organization == org"org.apache.avro")
+          assert(dep.module.name == name"avro")
+          assert(dep.version.isEmpty)
           assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
@@ -444,6 +482,21 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    test("scala module empty version") {
+      DependencyParser.javaOrScalaDependencyParams("org::name") match {
+        case Left(err) => sys.error(err)
+        case Right((dep, params)) =>
+          assert(params.isEmpty)
+          val expected = JavaOrScalaDependency.ScalaDependency(
+            Dependency(mod"org:name", "").withConfiguration(Configuration.empty),
+            fullCrossVersion = false,
+            withPlatformSuffix = false,
+            exclude = Set.empty
+          )
+          assert(dep == expected)
+      }
+    }
+
     test("full cross versioned scala module") {
       DependencyParser.javaOrScalaDependencyParams("org:::name:ver") match {
         case Left(err) => sys.error(err)
@@ -459,6 +512,21 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    test("full cross versioned scala module empty version") {
+      DependencyParser.javaOrScalaDependencyParams("org:::name") match {
+        case Left(err) => sys.error(err)
+        case Right((dep, params)) =>
+          assert(params.isEmpty)
+          val expected = JavaOrScalaDependency.ScalaDependency(
+            Dependency(mod"org:name", "").withConfiguration(Configuration.empty),
+            fullCrossVersion = true,
+            withPlatformSuffix = false,
+            exclude = Set.empty
+          )
+          assert(dep == expected)
+      }
+    }
+
     test("full cross versioned scala module with config") {
       DependencyParser.javaOrScalaDependencyParams("org:::name:ver:conf") match {
         case Left(err) => sys.error(err)
@@ -466,6 +534,21 @@ object DependencyParserTests extends TestSuite {
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
             Dependency(mod"org:name", "ver").withConfiguration(Configuration("conf")),
+            fullCrossVersion = true,
+            withPlatformSuffix = false,
+            exclude = Set.empty
+          )
+          assert(dep == expected)
+      }
+    }
+
+    test("full cross versioned scala module with config and empty version") {
+      DependencyParser.javaOrScalaDependencyParams("org:::name: :conf") match {
+        case Left(err) => sys.error(err)
+        case Right((dep, params)) =>
+          assert(params.isEmpty)
+          val expected = JavaOrScalaDependency.ScalaDependency(
+            Dependency(mod"org:name", "").withConfiguration(Configuration("conf")),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty
