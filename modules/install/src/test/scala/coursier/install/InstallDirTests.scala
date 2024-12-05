@@ -52,9 +52,8 @@ object InstallDirTests extends TestSuite {
         try {
           val entry = new ZipEntry("META-INF/coursier/info.json")
           out.putNextEntry(entry)
-        } finally {
+        } finally
           out.close()
-        }
       }
 
       val tempDir = Files.createTempDirectory("installDirTests")
@@ -67,9 +66,8 @@ object InstallDirTests extends TestSuite {
 
         val installedApps = new InstallDir(tempDir, FileCache()).list()
         assert(installedApps == Seq("app1"))
-      } finally {
+      } finally
         Files.walk(tempDir).sorted(Comparator.reverseOrder()).forEach(Files.delete(_))
-      }
     }
   }
 
