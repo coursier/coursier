@@ -59,12 +59,6 @@ object TestHelpers extends PlatformTestHelpers {
 
     val rootDep = res.rootDependencies.head
 
-    val simpleRootDependencies = Seq(
-      Dependency(rootDep.module, rootDep.version)
-        .withConfiguration(rootDep.configuration)
-    )
-    val isSimple = res.rootDependencies == simpleRootDependencies
-
     val attrPathPart =
       if (rootDep.module.attributes.isEmpty)
         ""
@@ -80,29 +74,39 @@ object TestHelpers extends PlatformTestHelpers {
             }
             .mkString("_")
 
-    val dependenciesHashPart =
-      if (isSimple) ""
-      else {
-        val repr =
-          if (res.rootDependencies.lengthCompare(1) == 0) res.rootDependencies.head.toString
-          else res.rootDependencies.toString
-        "_dep" + sha1(repr)
+    val (dependenciesHashPart, bomModVerHashPart) = {
+      def isSimpleDependencies(ds: Seq[Dependency]) = {
+        val simpleDeps = Seq(
+          Dependency(rootDep.module, rootDep.version).withConfiguration(rootDep.configuration)
+        )
+        ds == simpleDeps
       }
 
-    val bomModVerHashPart =
-      if (res.boms.isEmpty) ""
-      else
-        "_boms" + sha1(
-          res.boms
+      val dependencyElements = res.rootDependencies match {
+        case ds if isSimpleDependencies(ds) => ""
+        case ds if ds.lengthCompare(1) == 0 => ds.head
+        case ds                             => ds
+      }
+
+      val bomElements = res.boms match {
+        case boms if boms.isEmpty => ""
+        case boms => boms.map {
             // quick hack to recycle former sha-1 values when config is empty
-            .map {
-              case emptyConfigBomDep if emptyConfigBomDep.config.isEmpty =>
-                emptyConfigBomDep.moduleVersion
-              case other =>
-                other
-            }
-            .toString
-        )
+            case emptyConfigBomDep if emptyConfigBomDep.config.isEmpty =>
+              emptyConfigBomDep.moduleVersion
+            case other =>
+              other
+          }
+      }
+
+      (dependencyElements.toString(), bomElements.toString()) match {
+        case ("", "")       => ("", "")
+        case (dStr @ _, "") => ("_dep" + sha1(dStr), "")
+        case ("", bStr @ _) => ("", "_boms" + sha1(bStr))
+        // Combine dependencies and BOMs into a single hash to avoid overly long file names.
+        case (dStr @ _, bStr @ _) => ("_dep" + sha1(dStr + bStr), "")
+      }
+    }
 
     val paramsPart =
       if (params == ResolutionParams())
