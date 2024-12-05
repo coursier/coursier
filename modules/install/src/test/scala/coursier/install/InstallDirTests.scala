@@ -65,7 +65,6 @@ object InstallDirTests extends TestSuite {
         createApp(tempDir, ".dot-app-should-be-ignored")
         createApp(tempDir, "app1")
 
-
         val installedApps = new InstallDir(tempDir, FileCache()).list()
         assert(installedApps == Seq("app1"))
       } finally {
