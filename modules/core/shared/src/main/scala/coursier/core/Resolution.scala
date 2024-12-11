@@ -511,25 +511,6 @@ object Resolution {
     (config0, parentConfigurations(config0, configurations))
   }
 
-  private val mavenScopes = {
-
-    val base = Map[Configuration, Set[Configuration]](
-      Configuration.compile -> Set(Configuration.compile),
-      Configuration.optional -> Set(
-        Configuration.compile,
-        Configuration.optional,
-        Configuration.runtime
-      ),
-      Configuration.provided -> Set(),
-      Configuration.runtime  -> Set(Configuration.compile, Configuration.runtime),
-      Configuration.test -> Set(Configuration.compile, Configuration.runtime, Configuration.test)
-    )
-
-    base ++ Seq(
-      Configuration.default -> base(Configuration.runtime)
-    )
-  }
-
   private def staticProjectProperties(project: Project): Seq[(String, String)] =
     // FIXME The extra properties should only be added for Maven projects, not Ivy ones
     Seq(
@@ -636,7 +617,7 @@ object Resolution {
     val withProvidedOpt =
       if (keepProvidedDependencies) Some(Configuration.provided)
       else None
-    val keepOpt = mavenScopes.get(actualConfig).map(_ ++ withProvidedOpt)
+    val keepOpt = project0.allConfigurations.get(actualConfig).map(_ ++ withProvidedOpt)
 
     withExclusions(
       // 2.1 & 2.2
@@ -997,7 +978,7 @@ object Resolution {
         bomProject.configurations
       )
       // adding the initial config too in case it's the "provided" config
-      keepConfigs = mavenScopes.getOrElse(bomConfig0, Set()) + bomConfig0
+      keepConfigs = bomProject.allConfigurations.getOrElse(bomConfig0, Set()) + bomConfig0
       entry <- withProperties(
         bomProject.dependencyManagement.filter {
           case (config, _) =>
