@@ -301,7 +301,7 @@ object Pom {
         finalProjModule,
         version,
         relocationDependencyOpt.toSeq ++ deps,
-        Map.empty,
+        Map.empty, // this is customized later on in MavenRepositoryInternal
         parentModuleOpt.map((_, parentVersionOpt.getOrElse(""))),
         depMgmts,
         properties,
