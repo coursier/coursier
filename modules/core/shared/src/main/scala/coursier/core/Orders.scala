@@ -41,7 +41,7 @@ object Orders {
     configurations
       .keys
       .toList
-      .map(config => config -> (allParents(config) - config))
+      .map(config => config -> allParents(config))
       .toMap
   }
 
