@@ -143,9 +143,14 @@ import MinimizedExclusions._
   )
 
   lazy val clearExclusions: Dependency =
-    withMinimizedExclusions(MinimizedExclusions.zero)
+    if (minimizedExclusions.isEmpty) this
+    else withMinimizedExclusions(MinimizedExclusions.zero)
   lazy val clearOverrides: Dependency =
-    withOverrides(Overrides.empty)
+    if (overrides.isEmpty) this
+    else withOverrides(Overrides.empty)
+  lazy val clearVersion: Dependency =
+    if (version.isEmpty) this
+    else withVersion("")
 
   // Overriding toString to be backwards compatible with Set-based exclusion representation
   override def toString(): String = {

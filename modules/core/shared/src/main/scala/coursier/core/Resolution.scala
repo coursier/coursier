@@ -1082,9 +1082,6 @@ object Resolution {
     missingFromCache.isEmpty && isFixPoint
   }
 
-  private def eraseVersion(dep: Dependency) =
-    dep.withVersion("")
-
   /** Returns a map giving the dependencies that brought each of the dependency of the "next"
     * dependency set.
     *
@@ -1097,10 +1094,10 @@ object Resolution {
       for {
         dep   <- updatedDeps
         trDep <- finalDependencies0(dep)
-      } yield eraseVersion(trDep) -> eraseVersion(dep)
+      } yield trDep.clearVersion -> dep.clearVersion
 
     val knownDeps = (updatedDeps ++ updatedConflicts)
-      .map(eraseVersion)
+      .map(_.clearVersion)
       .toSet
 
     trDepsSeq
@@ -1117,7 +1114,7 @@ object Resolution {
     * The versions of all the dependencies returned are erased (emptied).
     */
   lazy val remainingDependencies: Set[Dependency] = {
-    val rootDependencies0 = processedRootDependencies.map(eraseVersion).toSet
+    val rootDependencies0 = processedRootDependencies.map(_.clearVersion).toSet
 
     @tailrec
     def helper(
@@ -1153,7 +1150,7 @@ object Resolution {
     val remainingDependencies0 = remainingDependencies
 
     nextDependenciesAndConflicts._2
-      .filter(dep => remainingDependencies0(eraseVersion(dep)))
+      .filter(dep => remainingDependencies0(dep.clearVersion))
       .toSet
   }
 
