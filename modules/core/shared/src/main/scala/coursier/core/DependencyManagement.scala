@@ -2,10 +2,12 @@ package coursier.core
 
 import dataclass.data
 
+import java.util.concurrent.ConcurrentMap
+
 import scala.collection.mutable
 
 object DependencyManagement {
-  type Map = scala.Predef.Map[Key, Values]
+  type Map = scala.collection.Map[Key, Values]
 
   @data class Key(
     organization: Organization,
@@ -13,6 +15,10 @@ object DependencyManagement {
     `type`: Type,
     classifier: Classifier
   ) {
+
+    override lazy val hashCode: Int =
+      tuple.hashCode()
+
     def map(f: String => String): Key =
       Key(
         organization = organization.map(f),
@@ -42,6 +48,10 @@ object DependencyManagement {
     minimizedExclusions: MinimizedExclusions,
     optional: Boolean
   ) {
+
+    override lazy val hashCode: Int =
+      tuple.hashCode()
+
     def isEmpty: Boolean =
       config.value.isEmpty && version.isEmpty && minimizedExclusions.isEmpty && !optional
     def fakeDependency(key: Key): Dependency =
@@ -110,21 +120,57 @@ object DependencyManagement {
       initialMap
     else {
       val b = new mutable.HashMap[Key, Values]
-      b.sizeHint(initialMap.size + entries.length)
-      b ++= initialMap
+      b.sizeHint(entries.length)
       val it = entries.iterator
       while (it.hasNext) {
         val (key0, incomingValues) = it.next()
-        val newValues = b.get(key0) match {
+        val newValuesOpt = b.get(key0).orElse(initialMap.get(key0)) match {
           case Some(previousValues) =>
-            if (composeValues) previousValues.orElse(incomingValues)
-            else previousValues
+            if (composeValues)
+              Some(previousValues.orElse(incomingValues))
+                .filter(_ != previousValues)
+            else
+              None
           case None =>
-            incomingValues
+            Some(incomingValues)
         }
-        b += ((key0, newValues))
+        for (newValues <- newValuesOpt)
+          b += ((key0, newValues))
       }
-      b.result().toMap
+      if (b.isEmpty) initialMap
+      else if (initialMap.isEmpty) b
+      else initialMap ++ b
+    }
+
+  def addAll(
+    initialMap: Map,
+    entries: Seq[Map],
+    composeValues: Boolean = true
+  ): Map =
+    if (entries.forall(_.isEmpty))
+      initialMap
+    else {
+      val b = new mutable.HashMap[Key, Values]
+      b.sizeHint(entries.iterator.map(_.size).sum)
+      val it = entries.iterator.flatMap(_.iterator)
+      while (it.hasNext) {
+        val (key0, incomingValues) = it.next()
+        val newValuesOpt = b.get(key0).orElse(initialMap.get(key0)) match {
+          case Some(previousValues) =>
+            if (composeValues)
+              Some(previousValues.orElse(incomingValues))
+                .filter(_ != previousValues)
+            else
+              None
+          case None =>
+            Some(incomingValues)
+        }
+        for (newValues <- newValuesOpt)
+          b += ((key0, newValues))
+      }
+      if (b.isEmpty) initialMap
+      else if (initialMap.isEmpty) b
+      else initialMap ++ b
     }
 
   def addDependencies(

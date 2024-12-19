@@ -143,7 +143,7 @@ object StringInterpolators {
               case (org, name) =>
                 q"_root_.scala.Tuple2(_root_.coursier.core.Organization(${org.value}), _root_.coursier.core.ModuleName(${name.value}))"
             }
-            val overrides = dep.overrides.toSeq.sortBy(_._1.repr).map {
+            val overrides = dep.overrides.flatten.toSeq.sortBy(_._1.repr).map {
               case (key, values) =>
                 val key0 = q"""_root_.coursier.core.DependencyManagement.Key(
                   _root_.coursier.core.Organization(${key.organization.value}),
@@ -197,7 +197,9 @@ object StringInterpolators {
                 ),
                 ${dep.optional},
                 ${dep.transitive},
-                _root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.Values](..$overrides),
+                _root_.coursier.core.Overrides(
+                  _root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.Values](..$overrides)
+                ),
                 _root_.scala.collection.immutable.Nil,
                 _root_.scala.collection.immutable.Seq(..$boms)
               )

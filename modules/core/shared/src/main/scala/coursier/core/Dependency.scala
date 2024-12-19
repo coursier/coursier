@@ -21,8 +21,8 @@ import MinimizedExclusions._
   optional: Boolean,
   transitive: Boolean,
   @since("2.1.17")
-  overrides: DependencyManagement.Map =
-    Map.empty,
+  overrides: Overrides =
+    Overrides.empty,
   @since("2.1.18")
   @deprecated("Use bomDependencies instead", "2.1.19")
   boms: Seq[(Module, String)] = Nil,
@@ -106,11 +106,20 @@ import MinimizedExclusions._
     withBomDependencies(this.bomDependencies ++ bomDependencies)
 
   def addOverride(key: DependencyManagement.Key, values: DependencyManagement.Values): Dependency =
-    withOverrides(DependencyManagement.add(overrides, Seq(key -> values)))
+    withOverrides(
+      Overrides.add(overrides, Overrides(Map(key -> values)))
+    )
   def addOverrides(
     entries: Seq[(DependencyManagement.Key, DependencyManagement.Values)]
   ): Dependency =
-    withOverrides(DependencyManagement.add(overrides, entries))
+    withOverrides(
+      Overrides.add(
+        overrides,
+        Overrides(DependencyManagement.add(Map.empty, entries))
+      )
+    )
+  def addOverrides(newOverrides: Overrides): Dependency =
+    withOverrides(Overrides.add(overrides, newOverrides))
 
   private[core] def copy(
     module: Module = this.module,
@@ -134,9 +143,14 @@ import MinimizedExclusions._
   )
 
   lazy val clearExclusions: Dependency =
-    withMinimizedExclusions(MinimizedExclusions.zero)
+    if (minimizedExclusions.isEmpty) this
+    else withMinimizedExclusions(MinimizedExclusions.zero)
   lazy val clearOverrides: Dependency =
-    withOverrides(Map.empty)
+    if (overrides.isEmpty) this
+    else withOverrides(Overrides.empty)
+  lazy val clearVersion: Dependency =
+    if (version.isEmpty) this
+    else withVersion("")
 
   // Overriding toString to be backwards compatible with Set-based exclusion representation
   override def toString(): String = {
@@ -151,7 +165,7 @@ import MinimizedExclusions._
     )
     fields =
       if (overrides.isEmpty) fields
-      else fields :+ overrides.toString
+      else fields :+ overrides.flatten.toMap.toString
     fields =
       if (boms.isEmpty) fields
       else fields :+ boms.toString
@@ -178,7 +192,7 @@ object Dependency {
     publication: Publication,
     optional: Boolean,
     transitive: Boolean,
-    overrides: DependencyManagement.Map,
+    overrides: Overrides,
     boms: Seq[(Module, String)],
     bomDependencies: Seq[BomDependency]
   ): Dependency =
@@ -205,7 +219,7 @@ object Dependency {
     publication: Publication,
     optional: Boolean,
     transitive: Boolean,
-    overrides: DependencyManagement.Map,
+    overrides: Overrides,
     boms: Seq[(Module, String)]
   ): Dependency =
     Dependency(
@@ -229,7 +243,7 @@ object Dependency {
     publication: Publication,
     optional: Boolean,
     transitive: Boolean,
-    overrides: DependencyManagement.Map
+    overrides: Overrides
   ): Dependency =
     Dependency(
       module,
@@ -261,7 +275,7 @@ object Dependency {
       publication,
       optional,
       transitive,
-      Map.empty,
+      Overrides.empty,
       Nil,
       Nil
     )
