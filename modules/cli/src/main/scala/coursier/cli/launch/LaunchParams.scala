@@ -23,7 +23,9 @@ final case class LaunchParams(
   hybrid: Boolean,
   useBootstrap: Boolean,
   assemblyRules: Seq[MergeRule],
-  workDir: Option[Path]
+  workDir: Option[Path],
+  asyncProfilerVersion: Option[String],
+  asyncProfilerOptions: Seq[String]
 ) {
   def javaPath(cache: Cache[Task]): Task[(String, EnvironmentUpdate)] = {
     val id     = sharedJava.id
@@ -71,32 +73,72 @@ object LaunchParams {
 
     val prependRules = if (options.defaultAssemblyRules) MergeRule.default else Nil
 
-    (sharedV, sharedJavaV, channelV, rulesV).mapN { (shared, sharedJava, channel, rules) =>
-      val fork: Boolean =
-        options.fork.getOrElse(
-          options.jep ||
-          shared.pythonJep ||
-          shared.python ||
-          shared.javaOptions.nonEmpty ||
-          sharedJava.jvm.nonEmpty ||
-          SharedLaunchParams.defaultFork
-        )
+    val asyncProfilerVersion = options.asyncProfilerVersion
+      .map(_.trim)
+      .filter(_.nonEmpty)
+      .getOrElse("3.0")
 
-      LaunchParams(
-        shared,
-        sharedJava,
-        channel,
-        fork,
-        options.jep,
-        options.fetchCacheIKnowWhatImDoing,
-        options.execve,
-        options.hybrid,
-        options.useBootstrap,
-        prependRules ++ rules,
-        options.workDir
-          .filter(_.trim.nonEmpty)
-          .map(Paths.get(_))
-      )
+    val asyncProfilerOptionsV = options.flameGraph.filter(_.trim.nonEmpty) match {
+      case Some(dest) =>
+        if (options.asyncProfiler.getOrElse(true))
+          Validated.validNel(
+            Some(Seq("start", "event=cpu", "flamegraph", s"file=$dest") ++ options.asyncProfilerOpt)
+          )
+        else
+          Validated.invalidNel("Cannot pass both --async-profiler=false and --flame-graph")
+      case None =>
+        Validated.validNel {
+          Option.when(options.asyncProfiler.getOrElse(false)) {
+            options.asyncProfilerOpt
+          }
+        }
+    }
+
+    val asyncProfilerForkCheck =
+      if (options.fork.contains(false)) {
+        val enableAsyncProfiler =
+          options.flameGraph.filter(_.trim.nonEmpty).nonEmpty ||
+          options.asyncProfiler.getOrElse(false)
+        if (enableAsyncProfiler)
+          Validated.invalidNel(
+            "Cannot pass --fork=false alongside --async-profiler or --flame-graph"
+          )
+        else
+          Validated.validNel(())
+      }
+      else
+        Validated.validNel(())
+
+    (sharedV, sharedJavaV, channelV, rulesV, asyncProfilerOptionsV, asyncProfilerForkCheck).mapN {
+      (shared, sharedJava, channel, rules, asyncProfilerOptions, _) =>
+        val fork: Boolean =
+          options.fork.getOrElse(
+            options.jep ||
+            shared.pythonJep ||
+            shared.python ||
+            shared.javaOptions.nonEmpty ||
+            sharedJava.jvm.nonEmpty ||
+            SharedLaunchParams.defaultFork ||
+            asyncProfilerOptions.nonEmpty
+          )
+
+        LaunchParams(
+          shared,
+          sharedJava,
+          channel,
+          fork,
+          options.jep,
+          options.fetchCacheIKnowWhatImDoing,
+          options.execve,
+          options.hybrid,
+          options.useBootstrap,
+          prependRules ++ rules,
+          options.workDir
+            .filter(_.trim.nonEmpty)
+            .map(Paths.get(_)),
+          asyncProfilerOptions.map(_ => asyncProfilerVersion),
+          asyncProfilerOptions.getOrElse(Nil)
+        )
     }
   }
 }

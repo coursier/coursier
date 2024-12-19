@@ -75,7 +75,24 @@ final case class LaunchOptions(
   @Group(OptionGroup.launch)
   @Hidden
   @HelpMessage("When launching an app with a shared loader, generate launchers in the passed directory rather than a temporary one. This also disables automatic removal of the generated launcher.")
-    workDir: Option[String] = None
+    workDir: Option[String] = None,
+
+  @Group(OptionGroup.launch)
+  @HelpMessage("Enable profiling with async-profiler")
+    asyncProfiler: Option[Boolean] = None,
+
+  @Group(OptionGroup.launch)
+  @HelpMessage("async-profiler options")
+    asyncProfilerOpt: List[String] = Nil,
+
+  @Group(OptionGroup.launch)
+  @HelpMessage("async-profiler version")
+    asyncProfilerVersion: Option[String] = None,
+
+  @Group(OptionGroup.launch)
+  @HelpMessage("Generate flamegraph with async-profiler")
+  @ValueDescription("file")
+    flameGraph: Option[String] = None
 ) {
   // format: on
 

@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService
 import ai.kien.python.Python
 import caseapp.core.RemainingArgs
 import cats.data.Validated
+import coursier.cache.{ArchiveCache, FileCache}
 import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.fetch.Fetch
 import coursier.cli.params.{ArtifactParams, SharedLaunchParams, SharedLoaderParams}
@@ -35,7 +36,7 @@ import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Properties, Success}
 
 object Launch extends CoursierCommand[LaunchOptions] {
 
@@ -327,7 +328,8 @@ object Launch extends CoursierCommand[LaunchOptions] {
     hierarchy: Seq[(Option[String], Array[(Option[Artifact], File)])],
     props: Seq[(String, String)],
     extraEnv: EnvironmentUpdate,
-    userArgs: Seq[String]
+    userArgs: Seq[String],
+    cache: FileCache[Task]
   ) = {
 
     val (jlp, jepExtraJar) =
@@ -420,13 +422,52 @@ object Launch extends CoursierCommand[LaunchOptions] {
       b.result()
     }
 
+    val asyncProfilerOptions = params.asyncProfilerVersion match {
+      case Some(asyncProfilerVersion) =>
+        val archiveCache = ArchiveCache().withCache(cache)
+        val (url, pathInArchive) =
+          if (Properties.isMac)
+            (
+              s"https://github.com/async-profiler/async-profiler/releases/download/v$asyncProfilerVersion/async-profiler-$asyncProfilerVersion-macos.zip",
+              s"async-profiler-$asyncProfilerVersion-macos/lib/libasyncProfiler.dylib"
+            )
+          else if (Properties.isLinux)
+            sys.props.get("os.arch") match {
+              case Some("amd64" | "x86_64") =>
+                (
+                  s"https://github.com/async-profiler/async-profiler/releases/download/v$asyncProfilerVersion/async-profiler-$asyncProfilerVersion-linux-x64.tar.gz",
+                  s"async-profiler-$asyncProfilerVersion-linux-x64/lib/libasyncProfiler.so"
+                )
+              case Some("arm64" | "aarch64") =>
+                (
+                  s"https://github.com/async-profiler/async-profiler/releases/download/v$asyncProfilerVersion/async-profiler-$asyncProfilerVersion-linux-arm64.tar.gz",
+                  s"async-profiler-$asyncProfilerVersion-linux-arm64/lib/libasyncProfiler.so"
+                )
+              case Some(other) =>
+                sys.error(s"Async-profiler not supported on current CPU ($other)")
+              case None =>
+                sys.error("Cannot get CPU for async-profiler")
+            }
+          else
+            sys.error(s"Async-profiler not supported on current OS (${sys.props("os.name")})")
+
+        val dir = archiveCache.get(Artifact(url)).unsafeRun()(cache.ec) match {
+          case Left(err)  => throw new Exception(err)
+          case Right(res) => res
+        }
+        val agentFile = new File(dir, pathInArchive)
+        Seq(s"-agentpath:$agentFile=${params.asyncProfilerOptions.mkString(",")}")
+      case None =>
+        Nil
+    }
+
     if (params.fork || params.hybrid || params.useBootstrap)
       launchFork(
         hierarchy0,
         mainClass0,
         userArgs,
         javaPath,
-        params.shared.javaOptions,
+        asyncProfilerOptions ++ params.shared.javaOptions,
         properties0,
         pythonJepEnv + extraEnv,
         params.shared.resolve.output.verbosity,
@@ -494,7 +535,8 @@ object Launch extends CoursierCommand[LaunchOptions] {
           Seq((None, files.map { case (a, f) => (Option(a), f) }.toArray)),
           params.shared.properties,
           envUpdate,
-          userArgs
+          userArgs,
+          cache
         )
       }
     } yield (mainClass0, f)
@@ -551,10 +593,11 @@ object Launch extends CoursierCommand[LaunchOptions] {
       (res, scalaVersionOpt, platformOpt, files) = t
       mainClass0 <- mainClass(params.shared, files.map(_._2), res.rootDependencies.headOption)
       props = extraVersionProperty(res, dependencyArgs).toSeq ++ params.shared.properties
-      javaPathEnvUpdate <- params.javaPath(params.shared.resolve.cache.cache(
+      cache = params.shared.resolve.cache.cache(
         pool,
         params.shared.resolve.output.logger()
-      ))
+      )
+      javaPathEnvUpdate <- params.javaPath(cache)
       (javaPath, envUpdate) = javaPathEnvUpdate
       f <- Task.fromEither {
         launchCall(
@@ -574,7 +617,8 @@ object Launch extends CoursierCommand[LaunchOptions] {
           ),
           props,
           envUpdate,
-          userArgs
+          userArgs,
+          cache
         )
       }
     } yield (mainClass0, f)
