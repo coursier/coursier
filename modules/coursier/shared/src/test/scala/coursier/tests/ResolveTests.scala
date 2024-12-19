@@ -1881,5 +1881,9 @@ object ResolveTests extends TestSuite {
         )
       }
     }
+
+    test("large resolution") {
+      check(dep"io.trino:trino-hive:467")
+    }
   }
 }
