@@ -144,7 +144,7 @@ abstract class CentralTests extends TestSuite {
           MavenRepository("https://jitpack.io")
         )
 
-        test - runner.resolutionCheck(
+        runner.resolutionCheck(
           mod,
           version,
           extraRepos = extraRepos,

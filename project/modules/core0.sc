@@ -35,6 +35,11 @@ trait CoreJvmBase extends Core with CsMima with Shading {
 
   def mimaBinaryIssueFilters =
     super.mimaBinaryIssueFilters() ++ Seq(
+      // added abstract method to sealed abstract class, should be safe
+      ProblemFilter.exclude[ReversedMissingMethodProblem](
+        "coursier.core.MinimizedExclusions#ExclusionData.hasProperties"
+      ),
+
       // false positives, coursier.core.Resolution#DepMgmt is private
       ProblemFilter.exclude[MissingClassProblem]("coursier.core.Resolution$DepMgmt$"),
       ProblemFilter.exclude[Problem]("coursier.core.Resolution#DepMgmt.*"),

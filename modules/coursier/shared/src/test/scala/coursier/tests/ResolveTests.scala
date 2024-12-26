@@ -1123,7 +1123,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    test("default value for pom project.packaging property") {
+    test("default value for pom project_packaging property") {
       async {
         val dep = dep"org.nd4j:nd4j-native-platform:1.0.0-beta4"
         val res = await {
@@ -1622,15 +1622,13 @@ object ResolveTests extends TestSuite {
       }
 
       test("runtime") {
-        test {
-          bomCheck(
-            dep"io.quarkus:quarkus-bom:3.15.1"
-              .withConfiguration(Configuration.runtime)
-              .asBomDependency
-          )(
-            dep"org.mvnpm.at.hpcc-js:wasm"
-          )
-        }
+        bomCheck(
+          dep"io.quarkus:quarkus-bom:3.15.1"
+            .withConfiguration(Configuration.runtime)
+            .asBomDependency
+        )(
+          dep"org.mvnpm.at.hpcc-js:wasm"
+        )
       }
 
       test("provided") {
@@ -1882,6 +1880,10 @@ object ResolveTests extends TestSuite {
           dep"androidx.compose.ui:ui:1.1.1"
         )
       }
+    }
+
+    test("large resolution") {
+      check(dep"io.trino:trino-hive:467")
     }
   }
 }
