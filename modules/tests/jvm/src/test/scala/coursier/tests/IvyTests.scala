@@ -27,7 +27,7 @@ object IvyTests extends TestSuite {
         ),
         version = "0.6.6",
         extraRepos = Seq(sbtRepo),
-        configuration = Configuration.defaultCompile
+        configuration = Configuration.defaultRuntime
       )
     }
 

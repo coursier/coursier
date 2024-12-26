@@ -30,7 +30,7 @@ import dataclass.data
   jdkVersionOpt: Option[Version] = None,
   useSystemOsInfo: Boolean = true,
   useSystemJdkVersion: Boolean = true,
-  defaultConfiguration: Configuration = Configuration.defaultCompile,
+  defaultConfiguration: Configuration = Configuration.defaultRuntime,
   @since("2.0.17")
   overrideFullSuffixOpt: Option[Boolean] = None,
   @since("2.1.9")

@@ -115,7 +115,7 @@ object TestHelpers extends PlatformTestHelpers {
         import coursier.core.Configuration
         // hack not to have to edit / review lots of test fixtures
         val params0 =
-          if (params.defaultConfiguration == Configuration.defaultCompile)
+          if (params.defaultConfiguration == Configuration.defaultRuntime)
             params.withDefaultConfiguration(Configuration.compile)
           else if (params.defaultConfiguration == Configuration.compile)
             params.withDefaultConfiguration(Configuration("really-compile"))
