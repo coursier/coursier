@@ -60,18 +60,22 @@ object Resolution {
   def addDependencies(
     deps: Seq[Seq[(Configuration, Dependency)]]
   ): Seq[(Configuration, Dependency)] = {
-    val (_, res) =
-      deps.foldRight(Set.empty[DependencyManagement.Key], Seq.empty[(Configuration, Dependency)]) {
-        case (deps0, (set, acc)) =>
-          val deps = deps0.filter {
-            case (_, dep) =>
-              !set(DependencyManagement.Key.from(dep))
-          }
 
-          (set ++ deps.map { case (_, dep) => DependencyManagement.Key.from(dep) }, acc ++ deps)
+    val it  = deps.reverseIterator
+    var set = Set.empty[DependencyManagement.Key]
+    var acc = Seq.empty[(Configuration, Dependency)]
+    while (it.hasNext) {
+      val deps0 = it.next()
+      val deps = deps0.filter {
+        case (_, dep) =>
+          !set(DependencyManagement.Key.from(dep))
       }
+      acc = if (acc.isEmpty) deps else acc ++ deps
+      if (it.hasNext)
+        set = set ++ deps.map { case (_, dep) => DependencyManagement.Key.from(dep) }
+    }
 
-    res
+    acc
   }
 
   def hasProps(s: String): Boolean = {
