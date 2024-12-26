@@ -43,9 +43,9 @@ abstract class CentralTests extends TestSuite {
           .withRootDependencies(Seq(dep))
           .withDependencies(
             Set(
-              dep.withCompileScope,
-              dep"ch.qos.logback:logback-core:1.1.3".withCompileScope,
-              dep"org.slf4j:slf4j-api:1.7.7".withCompileScope
+              dep.withDefaultScope,
+              dep"ch.qos.logback:logback-core:1.1.3".withDefaultScope,
+              dep"org.slf4j:slf4j-api:1.7.7".withDefaultScope
             )
           )
 
@@ -62,9 +62,9 @@ abstract class CentralTests extends TestSuite {
           .withRootDependencies(Seq(dep))
           .withDependencies(
             Set(
-              dep.withCompileScope,
-              dep"org.ow2.asm:asm-tree:5.0.2".withCompileScope,
-              dep"org.ow2.asm:asm:5.0.2".withCompileScope
+              dep.withDefaultScope,
+              dep"org.ow2.asm:asm-tree:5.0.2".withDefaultScope,
+              dep"org.ow2.asm:asm:5.0.2".withDefaultScope
             )
           )
 
@@ -80,7 +80,7 @@ abstract class CentralTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope))
 
         assert(res == expected)
         assert(res0.projectCache.contains(dep.moduleVersion))

@@ -191,7 +191,7 @@ object ResolveTests extends TestSuite {
            |  not found: https://repo1.maven.org/maven2/ioi/get-coursier/coursier-core_2.12/1.1.0-M9/coursier-core_2.12-1.1.0-M9.pom
            |io.get-coursier:coursier-cache_2.12:1.1.0-M9:default
            |io.get-coursier:coursier-core_2.12:1.1.0-M9:default
-           |ioi.get-coursier:coursier-core_2.12:1.1.0-M9:default(compile)
+           |ioi.get-coursier:coursier-core_2.12:1.1.0-M9:default(runtime)
            |org.scala-lang:scala-library:2.12.7:default
            |org.scala-lang.modules:scala-xml_2.12:1.1.0:default
            |""".stripMargin
@@ -251,7 +251,7 @@ object ResolveTests extends TestSuite {
           |com.squareup.okio:okio:1.12.0:default
           |com.typesafe:config:1.2.0:default
           |com.typesafe:ssl-config-core_2.12:0.2.2:default
-          |com.typesafe.sbt:sbt-native-packager;sbtVersion=1.0;scalaVersion=2.12:1.3.3:compile
+          |com.typesafe.sbt:sbt-native-packager;sbtVersion=1.0;scalaVersion=2.12:1.3.3:runtime
           |commons-codec:commons-codec:1.9:default
           |commons-io:commons-io:2.5:default
           |commons-lang:commons-lang:2.6:default

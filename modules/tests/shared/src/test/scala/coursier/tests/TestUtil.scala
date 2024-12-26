@@ -7,7 +7,7 @@ import scala.collection.compat._
 object TestUtil {
 
   implicit class DependencyOps(val underlying: Dependency) extends AnyVal {
-    def withCompileScope: Dependency = underlying.withConfiguration(Configuration.defaultCompile)
+    def withDefaultScope: Dependency = underlying.withConfiguration(Configuration.defaultRuntime)
   }
 
   private val projectProperties = Set(

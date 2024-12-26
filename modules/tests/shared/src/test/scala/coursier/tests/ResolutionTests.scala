@@ -453,7 +453,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope))
           .withErrorCache(Map(dep.moduleVersion -> Seq("Not found")))
 
         assert(res == expected)
@@ -492,7 +492,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope))
           .withProjectCache(Map(
             dep.moduleVersion -> (testRepository, projectsMap(dep.moduleVersion))
           ))
@@ -510,7 +510,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope, trDep.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope, trDep.withDefaultScope))
           .withProjectCache(
             Map(
               projectsMap(dep.moduleVersion).kv,
@@ -534,7 +534,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
       }
@@ -554,7 +554,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
       }
@@ -574,7 +574,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
       }
@@ -588,7 +588,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope))
 
         assert(res == expected)
       }
@@ -606,7 +606,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
       }
@@ -624,7 +624,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
       }
@@ -644,7 +644,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
       }
@@ -658,7 +658,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope))
 
         assert(res == expected)
       }
@@ -675,7 +675,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
       }
@@ -693,7 +693,7 @@ object ResolutionTests extends TestSuite {
 
           val expected = Resolution()
             .withRootDependencies(Seq(dep))
-            .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
+            .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
           assert(res == expected)
         }
@@ -718,7 +718,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope))
 
         assert(res == expected)
       }
@@ -736,7 +736,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
       }
@@ -760,7 +760,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
       }
@@ -787,7 +787,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(deps)
-          .withDependencies((deps ++ trDeps).map(_.withCompileScope).toSet)
+          .withDependencies((deps ++ trDeps).map(_.withDefaultScope).toSet)
 
         assert(res == expected)
       }
@@ -813,7 +813,7 @@ object ResolutionTests extends TestSuite {
             .withDependencies(
               Set(
                 Dependency(mod"an-org:a-name", "1.0")
-              ).map(_.withCompileScope)
+              ).map(_.withDefaultScope)
             )
             .withForceVersions(depOverrides)
 
@@ -841,7 +841,7 @@ object ResolutionTests extends TestSuite {
               Dependency(mod"an-org:an-app", "1.1"),
               Dependency(mod"an-org:a-lib", "1.0"),
               Dependency(mod"an-org:a-name", "1.0")
-            ).map(_.withCompileScope)
+            ).map(_.withDefaultScope)
           )
           .withForceVersions(depOverrides)
 
@@ -868,7 +868,7 @@ object ResolutionTests extends TestSuite {
               Dependency(mod"an-org:an-app", "1.1"),
               Dependency(mod"an-org:a-lib", "1.0"),
               Dependency(mod"an-org:a-name", "1.0")
-            ).map(_.withCompileScope)
+            ).map(_.withDefaultScope)
           )
           .withForceVersions(depOverrides)
 
@@ -895,7 +895,7 @@ object ResolutionTests extends TestSuite {
               Set(
                 Dependency(mod"an-org:an-app", "1.2"),
                 Dependency(mod"an-org:a-lib", "1.1")
-              ).map(_.withCompileScope)
+              ).map(_.withDefaultScope)
             )
             .withForceVersions(depOverrides)
 
@@ -940,7 +940,7 @@ object ResolutionTests extends TestSuite {
           .withDependencies(
             Set(
               Dependency(mod"com.github.dummy:libb", "0.5.4")
-            ).map(_.withCompileScope)
+            ).map(_.withDefaultScope)
           )
           .withForceProperties(forceProperties)
 
@@ -962,7 +962,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
       }
@@ -980,7 +980,7 @@ object ResolutionTests extends TestSuite {
 
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
-          .withDependencies(Set(dep.withCompileScope) ++ trDeps.map(_.withCompileScope))
+          .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
       }

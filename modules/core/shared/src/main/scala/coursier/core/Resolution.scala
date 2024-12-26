@@ -439,8 +439,10 @@ object Resolution {
       forceDepMgmtVersions,
       keepConfiguration = config =>
         config == Configuration.compile ||
+        config == Configuration.runtime ||
         config == Configuration.default ||
-        config == Configuration.defaultCompile
+        config == Configuration.defaultCompile ||
+        config == Configuration.defaultRuntime
     )
 
   @deprecated(
@@ -823,7 +825,7 @@ object Resolution {
   mapDependencies: Option[Dependency => Dependency] = None,
   extraProperties: Seq[(String, String)] = Nil,
   forceProperties: Map[String, String] = Map.empty, // FIXME Make that a seq too?
-  defaultConfiguration: Configuration = Configuration.defaultCompile,
+  defaultConfiguration: Configuration = Configuration.defaultRuntime,
   @since("2.1.9")
   keepProvidedDependencies: Boolean = false,
   @since("2.1.17")

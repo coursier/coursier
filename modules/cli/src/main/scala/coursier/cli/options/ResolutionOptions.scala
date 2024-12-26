@@ -90,10 +90,10 @@ final case class ResolutionOptions(
 
   @Group(OptionGroup.resolution)
   @Hidden
-  @HelpMessage("Default configuration (default(compile) by default)")
+  @HelpMessage("Default configuration (default(runtime) by default)")
   @ValueDescription("configuration")
   @ExtraName("c")
-    defaultConfiguration: String = "default(compile)",
+    defaultConfiguration: String = "default(runtime)",
 
   @Group(OptionGroup.resolution)
   @Hidden

@@ -1,4 +1,4 @@
-com.github.ddispaltro:sbt-reactjs;sbtVersion=0.13;scalaVersion=2.10:0.6.8:compile
+com.github.ddispaltro:sbt-reactjs;sbtVersion=0.13;scalaVersion=2.10:0.6.8:runtime
 org.webjars:react:0.14.8:default
 org.webjars.npm:react-tools:0.13.3:default
 org.webjars:jstransform:10.1.0:default
