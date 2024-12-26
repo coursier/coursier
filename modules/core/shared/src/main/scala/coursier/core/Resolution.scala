@@ -266,9 +266,8 @@ object Resolution {
     val mergedByModVer = dependencies0
       .groupBy(dep => dep.module)
       .map { case (module, deps) =>
-        val anyOrgModule = module.withOrganization(Organization("*"))
         val forcedVersionOpt = forceVersions.get(module)
-          .orElse(forceVersions.get(anyOrgModule))
+          .orElse(forceVersions.get(module.withOrganization(Organization("*"))))
 
         module -> {
           val (versionOpt, updatedDeps) = forcedVersionOpt match {
@@ -283,7 +282,12 @@ object Resolution {
                   versionOpt,
                   versionOpt match {
                     case Some(version) =>
-                      Right(deps.map(dep => dep.withVersion(version)))
+                      Right(
+                        deps.map { dep =>
+                          if (version == dep.version) dep
+                          else dep.withVersion(version)
+                        }
+                      )
                     case None =>
                       Left(deps)
                   }
@@ -291,7 +295,15 @@ object Resolution {
               }
 
             case Some(forcedVersion) =>
-              (Some(forcedVersion), Right(deps.map(dep => dep.withVersion(forcedVersion))))
+              (
+                Some(forcedVersion),
+                Right(
+                  deps.map { dep =>
+                    if (forcedVersion == dep.version) dep
+                    else dep.withVersion(forcedVersion)
+                  }
+                )
+              )
           }
 
           (updatedDeps, versionOpt)
@@ -338,11 +350,6 @@ object Resolution {
     val overridesOpt         = rawOverridesOpt.map(withProperties(_, properties))
     val dependencyManagement = withProperties(rawDependencyManagement, properties)
 
-    val dependencies0 = dependencies.map {
-      case (config, dep) =>
-        (config, dep, DependencyManagement.Key.from(dep))
-    }
-
     // See http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Management
 
     lazy val dict = Overrides.add(
@@ -351,12 +358,12 @@ object Resolution {
     )
 
     lazy val dictForOverridesOpt = rawOverridesOpt.map { rawOverrides =>
-      lazy val versions = dependencies0
+      lazy val versions = dependencies
         .filter {
-          case (config, _, _) =>
+          case (config, _) =>
             config.isEmpty || keepConfiguration(config)
         }
-        .groupBy(_._3)
+        .groupBy(_._2.depManagementKey)
         .collect {
           case (k, l) if !rawOverrides.contains(k) && l.exists(_._2.version.nonEmpty) =>
             k -> l.map(_._2.version).filter(_.nonEmpty)
@@ -393,34 +400,35 @@ object Resolution {
       )
     }
 
-    dependencies0.map {
-      case (config0, dep0, key) =>
+    dependencies.map {
+      case (config0, dep0) =>
         var config = config0
         var dep    = dep0
 
-        for (mgmtValues <- dict.get(key)) {
+        for (mgmtValues <- dict.get(dep0.depManagementKey)) {
 
           val useManagedVersion = mgmtValues.version.nonEmpty && (
             forceDepMgmtVersions ||
             overridesOpt.isEmpty ||
             dep.version.isEmpty ||
-            overridesOpt.exists(_.contains(key))
+            overridesOpt.exists(_.contains(dep0.depManagementKey))
           )
-          if (useManagedVersion)
+          if (useManagedVersion && dep.version != mgmtValues.version)
             dep = dep.withVersion(mgmtValues.version)
 
-          if (mgmtValues.minimizedExclusions.nonEmpty)
-            dep = dep.withMinimizedExclusions(
-              dep.minimizedExclusions.join(mgmtValues.minimizedExclusions)
-            )
+          if (mgmtValues.minimizedExclusions.nonEmpty) {
+            val newExcl = dep.minimizedExclusions.join(mgmtValues.minimizedExclusions)
+            if (dep.minimizedExclusions != newExcl)
+              dep = dep.withMinimizedExclusions(newExcl)
+          }
         }
 
-        for (mgmtValues <- dependencyManagement.get(key)) {
+        for (mgmtValues <- dependencyManagement.get(dep0.depManagementKey)) {
 
           if (mgmtValues.config.nonEmpty && config.isEmpty)
             config = mgmtValues.config
 
-          if (mgmtValues.optional)
+          if (mgmtValues.optional && !dep.optional)
             dep = dep.withOptional(mgmtValues.optional)
         }
 
@@ -499,8 +507,10 @@ object Resolution {
           minimizedExclusions(dep.module.organization, dep.module.name)
       }
       .map {
-        case (config, dep) =>
-          config -> dep.withMinimizedExclusions(dep.minimizedExclusions.join(minimizedExclusions))
+        case configDep @ (config, dep) =>
+          val newExcl = dep.minimizedExclusions.join(minimizedExclusions)
+          if (dep.minimizedExclusions == newExcl) configDep
+          else config -> dep.withMinimizedExclusions(newExcl)
       }
   }
 
@@ -677,7 +687,7 @@ object Resolution {
           // and expect dep.configuration to be filled here
 
           val dep =
-            if (from.optional)
+            if (from.optional && !dep0.optional)
               dep0.withOptional(true)
             else
               dep0
@@ -793,15 +803,12 @@ object Resolution {
   private def fallbackConfigIfNecessary(dep: Dependency, configs: Set[Configuration]): Dependency =
     Parse.withFallbackConfig(dep.configuration) match {
       case Some((main, fallback)) =>
-        val config0 =
-          if (configs(main))
-            main
-          else if (configs(fallback))
-            fallback
-          else
-            dep.configuration
-
-        dep.withConfiguration(config0)
+        if (configs(main))
+          dep.withConfiguration(main)
+        else if (configs(fallback))
+          dep.withConfiguration(fallback)
+        else
+          dep
       case _ =>
         dep
     }
@@ -966,8 +973,11 @@ object Resolution {
     withFallbackConfig: Boolean
   ): Dependency = {
     val dep0 =
-      if (withRetainedVersions)
-        dep.withVersion(retainedVersions.getOrElse(dep.module, dep.version))
+      if (withRetainedVersions) {
+        val newVersion = retainedVersions.getOrElse(dep.module, dep.version)
+        if (newVersion == dep.version) dep
+        else dep.withVersion(newVersion)
+      }
       else
         dep
     if (withFallbackConfig)
@@ -1059,7 +1069,8 @@ object Resolution {
         val key      = DependencyManagement.Key.from(rootDep0)
         overrideDepBomDepMgmt.get(key) match {
           case Some(overrideValues) =>
-            rootDep0.withVersion(overrideValues.version)
+            if (rootDep0.version == overrideValues.version) rootDep0
+            else rootDep0.withVersion(overrideValues.version)
           case None =>
             if (rootDep0.version.isEmpty)
               depBomDepMgmt.get(key) match {
@@ -1129,9 +1140,6 @@ object Resolution {
     missingFromCache.isEmpty && isFixPoint
   }
 
-  private def eraseVersion(dep: Dependency) =
-    dep.withVersion("")
-
   /** Returns a map giving the dependencies that brought each of the dependency of the "next"
     * dependency set.
     *
@@ -1144,10 +1152,10 @@ object Resolution {
       for {
         dep   <- updatedDeps
         trDep <- finalDependencies0(dep)
-      } yield eraseVersion(trDep) -> eraseVersion(dep)
+      } yield trDep.clearVersion -> dep.clearVersion
 
     val knownDeps = (updatedDeps ++ updatedConflicts)
-      .map(eraseVersion)
+      .map(_.clearVersion)
       .toSet
 
     trDepsSeq
@@ -1164,7 +1172,7 @@ object Resolution {
     * The versions of all the dependencies returned are erased (emptied).
     */
   lazy val remainingDependencies: Set[Dependency] = {
-    val rootDependencies0 = processedRootDependencies.map(eraseVersion).toSet
+    val rootDependencies0 = processedRootDependencies.map(_.clearVersion).toSet
 
     @tailrec
     def helper(
@@ -1200,7 +1208,7 @@ object Resolution {
     val remainingDependencies0 = remainingDependencies
 
     nextDependenciesAndConflicts._2
-      .filter(dep => remainingDependencies0(eraseVersion(dep)))
+      .filter(dep => remainingDependencies0(dep.clearVersion))
       .toSet
   }
 
@@ -1617,7 +1625,8 @@ object Resolution {
   def dependenciesWithRetainedVersions: Set[Dependency] =
     dependencies.map { dep =>
       retainedVersions.get(dep.module).fold(dep) { v =>
-        dep.withVersion(v)
+        if (dep.version == v) dep
+        else dep.withVersion(v)
       }
     }
 
@@ -1632,8 +1641,11 @@ object Resolution {
     */
   def subset(dependencies: Seq[Dependency]): Resolution = {
 
-    def updateVersion(dep: Dependency): Dependency =
-      dep.withVersion(retainedVersions.getOrElse(dep.module, dep.version))
+    def updateVersion(dep: Dependency): Dependency = {
+      val newVersion = retainedVersions.getOrElse(dep.module, dep.version)
+      if (dep.version == newVersion) dep
+      else dep.withVersion(newVersion)
+    }
 
     @tailrec def helper(current: Set[Dependency]): Set[Dependency] = {
       val newDeps = current ++ current

@@ -148,10 +148,21 @@ import MinimizedExclusions._
   )
 
   lazy val clearExclusions: Dependency =
-    withMinimizedExclusions(MinimizedExclusions.zero)
+    if (minimizedExclusions.isEmpty) this
+    else withMinimizedExclusions(MinimizedExclusions.zero)
   lazy val clearOverrides: Dependency =
     if (overridesMap.isEmpty) this
     else withOverridesMap(Overrides.empty)
+  lazy val clearVersion: Dependency =
+    if (version.isEmpty) this
+    else withVersion("")
+  lazy val depManagementKey: DependencyManagement.Key =
+    DependencyManagement.Key(
+      module.organization,
+      module.name,
+      if (publication.`type`.isEmpty) Type.jar else publication.`type`,
+      publication.classifier
+    )
   lazy val hasProperties =
     module.hasProperties ||
     version.contains("$") ||

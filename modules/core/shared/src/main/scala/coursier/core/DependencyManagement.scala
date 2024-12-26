@@ -2,6 +2,8 @@ package coursier.core
 
 import dataclass.data
 
+import java.util.concurrent.ConcurrentMap
+
 import scala.collection.mutable
 
 object DependencyManagement {
@@ -14,13 +16,23 @@ object DependencyManagement {
     `type`: Type,
     classifier: Classifier
   ) {
-    def map(f: String => String): Key =
-      Key(
-        organization = organization.map(f),
-        name = name.map(f),
-        `type` = `type`.map(f),
-        classifier = classifier.map(f)
+    def map(f: String => String): Key = {
+      val newOrg        = organization.map(f)
+      val newName       = name.map(f)
+      val newType       = `type`.map(f)
+      val newClassifier = classifier.map(f)
+      if (
+        organization != newOrg || name != newName || `type` != newType || classifier != newClassifier
       )
+        Key(
+          organization = newOrg,
+          name = newName,
+          `type` = newType,
+          classifier = newClassifier
+        )
+      else
+        this
+    }
 
     // Mainly there for sorting purposes
     def repr: String =
@@ -29,12 +41,7 @@ object DependencyManagement {
 
   object Key {
     def from(dep: Dependency): Key =
-      Key(
-        dep.module.organization,
-        dep.module.name,
-        if (dep.attributes.`type`.isEmpty) Type.jar else dep.attributes.`type`,
-        dep.attributes.classifier
-      )
+      dep.depManagementKey
   }
 
   @data class Values(
@@ -55,22 +62,42 @@ object DependencyManagement {
         optional = optional,
         transitive = true
       )
-    def orElse(other: Values): Values =
-      Values(
-        if (config.value.isEmpty) other.config else config,
-        if (version.isEmpty) other.version else version,
-        other.minimizedExclusions.join(minimizedExclusions),
-        optional || other.optional
+    def orElse(other: Values): Values = {
+      val newConfig   = if (config.value.isEmpty) other.config else config
+      val newVersion  = if (version.isEmpty) other.version else version
+      val newExcl     = other.minimizedExclusions.join(minimizedExclusions)
+      val newOptional = optional || other.optional
+      if (
+        config != newConfig || version != newVersion || minimizedExclusions != newExcl || optional != newOptional
       )
-    def mapButVersion(f: String => String): Values =
-      Values(
-        config = config.map(f),
-        version = version,
-        minimizedExclusions = minimizedExclusions.map(f),
-        optional = optional // FIXME This might have been a string like "${some-prop}" initially :/
-      )
-    def mapVersion(f: String => String): Values =
-      withVersion(f(version))
+        Values(
+          newConfig,
+          newVersion,
+          newExcl,
+          newOptional
+        )
+      else
+        this
+    }
+    def mapButVersion(f: String => String): Values = {
+      val newConfig = config.map(f)
+      val newExcl   = minimizedExclusions.map(f)
+      if (config != newConfig || minimizedExclusions != newExcl)
+        Values(
+          config = newConfig,
+          version = version,
+          minimizedExclusions = newExcl,
+          // FIXME This might have been a string like "${some-prop}" initially :/
+          optional = optional
+        )
+      else
+        this
+    }
+    def mapVersion(f: String => String): Values = {
+      val newVersion = f(version)
+      if (version == newVersion) this
+      else withVersion(newVersion)
+    }
   }
 
   object Values {
