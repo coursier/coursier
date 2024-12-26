@@ -63,6 +63,14 @@ object ModuleName {
   def orgName: String =
     s"${organization.value}:${name.value}"
 
+  lazy val hasProperties =
+    organization.value.contains("$") ||
+    name.value.contains("$") ||
+    attributes.exists {
+      case (k, v) =>
+        k.contains("$") || v.contains("$")
+    }
+
   final override lazy val hashCode = tuple.hashCode()
 
   private[core] def copy(
@@ -259,7 +267,9 @@ object Attributes {
   publications: Seq[(Configuration, Publication)],
 
   // Extra infos, not used during resolution
-  info: Info
+  info: Info,
+  @since("2.1.23")
+  overrides: Overrides = Overrides.empty
 ) {
   lazy val moduleVersion = (module, version)
 
@@ -395,6 +405,10 @@ object Info {
   def attributes: Attributes = Attributes(`type`, classifier)
   def isEmpty: Boolean =
     name.isEmpty && `type`.isEmpty && ext.isEmpty && classifier.isEmpty
+
+  lazy val attributesHaveProperties =
+    `type`.value.contains("$") ||
+    classifier.value.contains("$")
 
   final override lazy val hashCode = tuple.hashCode
 }

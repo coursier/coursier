@@ -29,6 +29,8 @@ object MinimizedExclusions {
     def subsetOf(other: ExclusionData): Boolean
 
     def toSet(): Set[(Organization, ModuleName)]
+
+    def hasProperties: Boolean
   }
 
   case object ExcludeNone extends ExclusionData {
@@ -44,6 +46,8 @@ object MinimizedExclusions {
     override def size(): Int                              = 0
     override def subsetOf(other: ExclusionData): Boolean  = true
     override def toSet(): Set[(Organization, ModuleName)] = Set.empty
+
+    def hasProperties: Boolean = false
   }
 
   case object ExcludeAll extends ExclusionData {
@@ -60,6 +64,8 @@ object MinimizedExclusions {
     override def size(): Int                              = 1
     override def subsetOf(other: ExclusionData): Boolean  = other == ExcludeAll
     override def toSet(): Set[(Organization, ModuleName)] = Set((allOrganizations, allNames))
+
+    def hasProperties: Boolean = false
   }
 
   @data class ExcludeSpecific(
@@ -140,6 +146,11 @@ object MinimizedExclusions {
 
     override def toSet(): Set[(Organization, ModuleName)] =
       byOrg.map(_ -> allNames) ++ byModule.map(allOrganizations -> _) ++ specific
+
+    lazy val hasProperties: Boolean =
+      byOrg.exists(_.value.contains("$")) ||
+      byModule.exists(_.value.contains("$")) ||
+      specific.exists(t => t._1.value.contains("$") || t._2.value.contains("$"))
   }
 
   def apply(exclusions: Set[(Organization, ModuleName)]): MinimizedExclusions =
@@ -230,4 +241,7 @@ object MinimizedExclusions {
   def toSeq(): Seq[(Organization, ModuleName)] = data.toSet().toSeq
 
   final override lazy val hashCode = data.hashCode()
+
+  def hasProperties: Boolean =
+    data.hasProperties
 }

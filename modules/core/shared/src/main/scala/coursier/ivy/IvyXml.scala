@@ -93,7 +93,7 @@ object IvyXml {
     node: Node,
     globalExcludes: Map[Configuration, Set[(Organization, ModuleName)]],
     globalExcludesFilter: (Configuration, Organization, ModuleName) => Boolean,
-    globalOverrides: DependencyManagement.Map
+    globalOverrides: Overrides
   ): Seq[(Configuration, Dependency)] =
     node.children
       .filter(_.label == "dependency")
@@ -161,7 +161,7 @@ object IvyXml {
           pub, // should come from possible artifact nodes
           optional = false,
           transitive = transitive
-        ).withOverrides(globalOverrides)
+        ).withOverridesMap(globalOverrides)
       }
 
   private def publication(node: Node): Publication = {
@@ -224,22 +224,24 @@ object IvyXml {
       }
 
       // https://ant.apache.org/ivy/history/2.5.0-rc1/ivyfile/override.html
-      val globalOverrides = dependenciesNodeOpt
-        .map(_.children)
-        .getOrElse(Nil)
-        .filter(_.label == "override")
-        .flatMap(override0)
-        .map {
-          case (org, name, ver) =>
-            DependencyManagement.Key(org, name, Type.jar, Classifier.empty) ->
-              DependencyManagement.Values(
-                Configuration.empty,
-                ver,
-                MinimizedExclusions.zero,
-                optional = false
-              )
-        }
-        .toMap
+      val globalOverrides = Overrides {
+        dependenciesNodeOpt
+          .map(_.children)
+          .getOrElse(Nil)
+          .filter(_.label == "override")
+          .flatMap(override0)
+          .map {
+            case (org, name, ver) =>
+              DependencyManagement.Key(org, name, Type.jar, Classifier.empty) ->
+                DependencyManagement.Values(
+                  Configuration.empty,
+                  ver,
+                  MinimizedExclusions.zero,
+                  optional = false
+                )
+          }
+          .toMap
+      }
       val dependencies0 = dependenciesNodeOpt
         .map(dependencies(_, globalExcludes, filter, globalOverrides))
         .getOrElse(Nil)
