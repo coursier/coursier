@@ -13,6 +13,10 @@ object DependencyManagement {
     `type`: Type,
     classifier: Classifier
   ) {
+
+    override lazy val hashCode: Int =
+      tuple.hashCode()
+
     def map(f: String => String): Key =
       Key(
         organization = organization.map(f),
