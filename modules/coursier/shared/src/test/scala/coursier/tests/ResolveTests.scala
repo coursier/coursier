@@ -545,6 +545,25 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      test("compile") {
+        async {
+
+          val resolve0 = resolve
+            .withResolutionParams(
+              resolve.resolutionParams
+                .withDefaultConfiguration(Configuration.compile)
+            )
+
+          val res = await {
+            resolve0
+              .addDependencies(dep"org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.3.0")
+              .future()
+          }
+
+          await(validateDependencies(res, resolve0.resolutionParams))
+        }
+      }
+
       test("conflict") {
         async {
 
