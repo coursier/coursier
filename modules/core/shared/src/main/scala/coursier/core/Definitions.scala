@@ -267,7 +267,9 @@ object Attributes {
   publications: Seq[(Configuration, Publication)],
 
   // Extra infos, not used during resolution
-  info: Info
+  info: Info,
+  @since("2.1.23")
+  overrides: Overrides = Overrides.empty
 ) {
   lazy val moduleVersion = (module, version)
 

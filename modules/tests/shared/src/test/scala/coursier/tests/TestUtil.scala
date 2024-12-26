@@ -1,6 +1,6 @@
 package coursier.tests
 
-import coursier.core.{Configuration, Dependency, Info, Module, Profile, Resolution, Type}
+import coursier.core.{Configuration, Dependency, Info, Module, Overrides, Profile, Resolution, Type}
 
 import scala.collection.compat._
 
@@ -44,7 +44,7 @@ object TestUtil {
         .withFinalDependenciesCache(Map.empty)
     def clearDependencyOverrides: Resolution =
       underlying.withDependencies(
-        underlying.dependencies.map(_.withOverrides(Map.empty))
+        underlying.dependencies.map(_.withOverridesMap(Overrides.empty))
       )
     def clearFilter: Resolution =
       underlying.withFilter(None)

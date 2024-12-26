@@ -7,6 +7,7 @@ import coursier.util.Artifact
 import scala.annotation.tailrec
 import scala.collection.compat._
 import scala.collection.compat.immutable.LazyList
+import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 import dataclass.data
 import MinimizedExclusions._
@@ -167,21 +168,29 @@ object Resolution {
     dependencies.map(withProperties(_, properties))
 
   private def withProperties(
-    map: DependencyManagement.Map,
+    map: DependencyManagement.GenericMap,
     properties: Map[String, String]
-  ): DependencyManagement.Map =
-    map
-      .toSeq // FIXME We should preserve some ordering here
-      .map(withProperties(_, properties))
-      .groupBy(_._1) // FIXME We should preserver some ordering here too
-      .view
-      .mapValues { values =>
-        values
-          .map(_._2)
-          // FIXME Things are going to override each other in no particular order :/
-          .foldLeft(DependencyManagement.Values.empty)(_.orElse(_))
-      }
-      .toMap
+  ): Option[DependencyManagement.Map] = {
+    val b       = new mutable.HashMap[DependencyManagement.Key, DependencyManagement.Values]
+    var changed = false
+    for (kv <- map) {
+      val (k0, v0) = withProperties(kv, properties)
+      if (!changed && (k0 != kv._1 || v0 != kv._2))
+        changed = true
+      b(k0) = b.get(k0).fold(v0)(_.orElse(v0))
+    }
+    if (changed) Some(b.toMap)
+    else None
+  }
+
+  private def withProperties(
+    overrides: Overrides,
+    properties: Map[String, String]
+  ): Overrides =
+    if (overrides.hasProperties)
+      overrides.mapMap(withProperties(_, properties))
+    else
+      overrides
 
   private def withProperties(
     entry: (DependencyManagement.Key, DependencyManagement.Values),
@@ -319,8 +328,8 @@ object Resolution {
   def depsWithDependencyManagement(
     rawDependencies: Seq[(Configuration, Dependency)],
     properties: Map[String, String],
-    rawOverridesOpt: Option[DependencyManagement.Map],
-    rawDependencyManagement: Seq[(Configuration, Dependency)],
+    rawOverridesOpt: Option[Overrides],
+    rawDependencyManagement: Overrides,
     forceDepMgmtVersions: Boolean,
     keepConfiguration: Configuration => Boolean
   ): Seq[(Configuration, Dependency)] = {
@@ -329,64 +338,66 @@ object Resolution {
     val overridesOpt         = rawOverridesOpt.map(withProperties(_, properties))
     val dependencyManagement = withProperties(rawDependencyManagement, properties)
 
+    val dependencies0 = dependencies.map {
+      case (config, dep) =>
+        (config, dep, DependencyManagement.Key.from(dep))
+    }
+
     // See http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Management
 
-    lazy val dict = DependencyManagement.addDependencies(
-      overridesOpt.getOrElse(Map.empty),
-      dependencyManagement,
-      composeValues = overridesOpt.isDefined
-    )
-
-    lazy val dictNoOverrides = DependencyManagement.addDependencies(
-      Map.empty,
-      dependencyManagement,
-      composeValues = overridesOpt.isDefined
+    lazy val dict = Overrides.add(
+      overridesOpt.getOrElse(Overrides.empty),
+      dependencyManagement
     )
 
     lazy val dictForOverridesOpt = rawOverridesOpt.map { rawOverrides =>
-      lazy val versions = dependencies
+      lazy val versions = dependencies0
         .filter {
-          case (config, _) =>
+          case (config, _, _) =>
             config.isEmpty || keepConfiguration(config)
         }
-        .map(_._2)
-        .groupBy(DependencyManagement.Key.from)
+        .groupBy(_._3)
         .collect {
-          case (k, l) if !rawOverrides.contains(k) && l.exists(_.version.nonEmpty) =>
-            k -> l.map(_.version).filter(_.nonEmpty)
+          case (k, l) if !rawOverrides.contains(k) && l.exists(_._2.version.nonEmpty) =>
+            k -> l.map(_._2.version).filter(_.nonEmpty)
         }
-      DependencyManagement.add(
+      val map = dependencyManagement
+        .filter {
+          case (k, v) =>
+            v.config.isEmpty || keepConfiguration(v.config)
+        }
+        .map {
+          case (k, v) =>
+            val clearVersion = !forceDepMgmtVersions &&
+              versions
+                .get(k)
+                .getOrElse(Nil)
+                .exists(_ != v.version)
+            val newConfig  = Configuration.empty
+            val newVersion = if (clearVersion) "" else v.version
+            val values =
+              if (v.config != newConfig || v.version != newVersion || v.optional)
+                DependencyManagement.Values(
+                  newConfig,
+                  newVersion,
+                  v.minimizedExclusions,
+                  optional = false
+                )
+              else
+                v
+            (k, values)
+        }
+      Overrides.add(
         rawOverrides,
-        dependencyManagement
-          .filter {
-            case (config, _) =>
-              config.isEmpty || keepConfiguration(config)
-          }
-          .map {
-            case (config, dep) =>
-              val clearVersion = !forceDepMgmtVersions &&
-                versions
-                  .get(DependencyManagement.Key.from(dep))
-                  .getOrElse(Nil)
-                  .exists(_ != dep.version)
-              val values = DependencyManagement.Values(
-                Configuration.empty,
-                if (clearVersion) "" else dep.version,
-                dep.minimizedExclusions,
-                optional = false
-              )
-              (DependencyManagement.Key.from(dep), values)
-          },
-        composeValues = true
-      ).filter(!_._2.isEmpty)
+        map
+      )
     }
 
-    dependencies.map {
-      case (config0, dep0) =>
+    dependencies0.map {
+      case (config0, dep0, key) =>
         var config = config0
         var dep    = dep0
 
-        val key = DependencyManagement.Key.from(dep0)
         for (mgmtValues <- dict.get(key)) {
 
           val useManagedVersion = mgmtValues.version.nonEmpty && (
@@ -404,7 +415,7 @@ object Resolution {
             )
         }
 
-        for (mgmtValues <- dictNoOverrides.get(key)) {
+        for (mgmtValues <- dependencyManagement.get(key)) {
 
           if (mgmtValues.config.nonEmpty && config.isEmpty)
             config = mgmtValues.config
@@ -413,20 +424,18 @@ object Resolution {
             dep = dep.withOptional(mgmtValues.optional)
         }
 
-        for (dictForOverrides <- dictForOverridesOpt if dictForOverrides.nonEmpty)
-          dep = dep.withOverrides {
-            if (dep.overrides.isEmpty)
-              dictForOverrides
-            else
-              DependencyManagement.add(dictForOverrides, dep.overrides.toSeq, composeValues = true)
-          }
+        for (dictForOverrides <- dictForOverridesOpt if dictForOverrides.nonEmpty) {
+          val newOverrides = Overrides.add(dictForOverrides, dep.overridesMap)
+          if (dep.overridesMap != newOverrides)
+            dep = dep.withOverridesMap(newOverrides)
+        }
 
         (config, dep)
     }
   }
 
   @deprecated(
-    "Use the override accepting keepConfiguration instead",
+    "Use the override accepting Overrides and keepConfiguration instead",
     "2.1.23"
   )
   def depsWithDependencyManagement(
@@ -439,8 +448,8 @@ object Resolution {
     depsWithDependencyManagement(
       rawDependencies,
       properties,
-      rawOverridesOpt,
-      rawDependencyManagement,
+      rawOverridesOpt.map(Overrides(_)),
+      Overrides(DependencyManagement.addDependencies(Map.empty, rawDependencyManagement)),
       forceDepMgmtVersions,
       keepConfiguration = config =>
         config == Configuration.compile ||
@@ -460,9 +469,9 @@ object Resolution {
   ): Seq[(Configuration, Dependency)] =
     depsWithDependencyManagement(
       dependencies,
-      Map.empty,
-      None,
-      dependencyManagement,
+      Map.empty[String, String],
+      Option.empty[Overrides],
+      Overrides(DependencyManagement.addDependencies(Map.empty, dependencyManagement)),
       forceDepMgmtVersions = false,
       keepConfiguration = config =>
         config == Configuration.compile ||
@@ -654,8 +663,8 @@ object Resolution {
         // 1.7
         project0.dependencies,
         properties,
-        Option.when(enableDependencyOverrides)(from.overrides),
-        project0.dependencyManagement,
+        Option.when(enableDependencyOverrides)(from.overridesMap),
+        project0.overrides,
         forceDepMgmtVersions = forceDepMgmtVersions,
         keepConfiguration = keepOpt.getOrElse(_ == actualConfig)
       ),
@@ -999,29 +1008,28 @@ object Resolution {
       boms
   private lazy val allBomModuleVersions =
     globalBomModuleVersions ++ rootDependencies.flatMap(_.bomDependencies)
-  private def bomEntries(bomDeps: Seq[BomDependency]): Seq[(Configuration, Dependency)] =
-    for {
-      bomDep          <- bomDeps
-      (_, bomProject) <- projectCache.get(bomDep.moduleVersion).toSeq
-      bomConfig0 = actualConfiguration(
-        if (bomDep.config.isEmpty) defaultConfiguration else bomDep.config,
-        bomProject.configurations
-      )
-      // adding the initial config too in case it's the "provided" config
-      keepConfigs = bomProject.allConfigurations.getOrElse(bomConfig0, Set()) + bomConfig0
-      entry <- withProperties(
-        bomProject.dependencyManagement.filter {
-          case (config, _) =>
-            config.isEmpty || keepConfigs.contains(config)
-        },
-        projectProperties(bomProject).toMap
-      )
-    } yield entry
-  lazy val bomDepMgmt = DependencyManagement.addDependencies(
-    Map.empty,
-    bomEntries(globalBomModuleVersions),
-    composeValues = true
-  )
+  private def bomEntries(bomDeps: Seq[BomDependency]): Overrides =
+    Overrides.add {
+      (for {
+        bomDep          <- bomDeps
+        (_, bomProject) <- projectCache.get(bomDep.moduleVersion).toSeq
+        bomConfig0 = actualConfiguration(
+          if (bomDep.config.isEmpty) defaultConfiguration else bomDep.config,
+          bomProject.configurations
+        )
+        // adding the initial config too in case it's the "provided" config
+        keepConfigs = bomProject.allConfigurations.getOrElse(bomConfig0, Set()) + bomConfig0
+      } yield {
+        val retainedEntries = bomProject.overrides.filter {
+          (k, v) =>
+            v.config.isEmpty || keepConfigs.contains(v.config)
+        }
+        withProperties(retainedEntries, projectProperties(bomProject).toMap)
+      }): _*
+    }
+  lazy val bomDepMgmtOverrides = bomEntries(globalBomModuleVersions)
+  @deprecated("Use bomDepMgmtOverrides.flatten instead", "2.1.23")
+  def bomDepMgmt = bomDepMgmtOverrides.flatten.toMap
   lazy val hasAllBoms =
     allBomModuleVersions.forall { bomDep =>
       projectCache.contains(bomDep.moduleVersion)
@@ -1031,12 +1039,12 @@ object Resolution {
       val rootDependenciesWithDefaultConfig =
         rootDependencies.map(withDefaultConfig(_, defaultConfiguration))
       val rootDependencies0 =
-        if (bomDepMgmt.isEmpty) rootDependenciesWithDefaultConfig
+        if (bomDepMgmtOverrides.isEmpty) rootDependenciesWithDefaultConfig
         else
           rootDependenciesWithDefaultConfig.map { rootDep =>
-            val rootDep0 = rootDep.addOverrides(bomDepMgmt.toSeq)
+            val rootDep0 = rootDep.addOverrides(bomDepMgmtOverrides)
             if (rootDep0.version.isEmpty)
-              bomDepMgmt.get(DependencyManagement.Key.from(rootDep0)) match {
+              bomDepMgmtOverrides.get(DependencyManagement.Key.from(rootDep0)) match {
                 case Some(values) => rootDep0.withVersion(values.version)
                 case None         => rootDep0
               }
@@ -1044,17 +1052,10 @@ object Resolution {
               rootDep0
           }
       rootDependencies0.map { rootDep =>
-        val depBomDepMgmt = DependencyManagement.addDependencies(
-          Map.empty,
-          bomEntries(rootDep.bomDependencies),
-          composeValues = true
-        )
-        val overrideDepBomDepMgmt = DependencyManagement.addDependencies(
-          Map.empty,
-          bomEntries(rootDep.bomDependencies.filter(_.forceOverrideVersions)),
-          composeValues = true
-        )
-        val rootDep0 = rootDep.addOverrides(depBomDepMgmt.toSeq)
+        val depBomDepMgmt = bomEntries(rootDep.bomDependencies)
+        val overrideDepBomDepMgmt =
+          bomEntries(rootDep.bomDependencies.filter(_.forceOverrideVersions))
+        val rootDep0 = rootDep.addOverrides(depBomDepMgmt)
         val key      = DependencyManagement.Key.from(rootDep0)
         overrideDepBomDepMgmt.get(key) match {
           case Some(overrideValues) =>
@@ -1436,20 +1437,29 @@ object Resolution {
     val retainedParentProjects = retainedParentDeps.map(projectCache(_)._2)
     val retainedImportProjects = retainedImportDeps.map(projectCache(_)._2)
 
-    val depMgmt = (
-      project0.dependencyManagement +: (
-        profiles0.map(_.dependencyManagement) ++
-          retainedParentProjects.map { p =>
-            withProperties(p.dependencyManagement, staticProjectProperties(p).toMap)
-          } ++
-          retainedImportProjects.map { p =>
-            withProperties(p.dependencyManagement, projectProperties(p).toMap)
-          }
-      )
+    val depMgmtInputs =
+      (project0.dependencyManagement +: profiles0.map(_.dependencyManagement))
+        .map(_.filter(_._1 != Configuration.`import`))
+        .filter(_.nonEmpty)
+        .map { input =>
+          Overrides(
+            DependencyManagement.addDependencies(
+              Map.empty,
+              input,
+              composeValues = enableDependencyOverrides
+            )
+          )
+        }
+
+    val depMgmt = Overrides.add(
+      depMgmtInputs ++
+        retainedParentProjects.map { p =>
+          withProperties(p.overrides, staticProjectProperties(p).toMap)
+        } ++
+        retainedImportProjects.map { p =>
+          withProperties(p.overrides, projectProperties(p).toMap)
+        }: _*
     )
-      .foldLeft(Map.empty[DependencyManagement.Key, DependencyManagement.Values]) { (acc, elem) =>
-        DependencyManagement.addDependencies(acc, elem, composeValues = enableDependencyOverrides)
-      }
 
     project0
       .withPackagingOpt(project0.packagingOpt.map(_.map(substituteProps(_, propertiesMap0))))
@@ -1461,12 +1471,8 @@ object Resolution {
             .toSeq
             .flatMap(projectCache(_)._2.dependencies)
       )
-      .withDependencyManagement(
-        depMgmt.toList.collect {
-          case (key, values) if values.config != Configuration.`import` =>
-            (values.config, values.fakeDependency(key))
-        }
-      )
+      .withDependencyManagement(Nil)
+      .withOverrides(depMgmt)
       .withProperties(
         retainedParentProjects.flatMap(_.properties) ++ project0.properties
       )

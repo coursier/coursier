@@ -21,13 +21,17 @@ import MinimizedExclusions._
   optional: Boolean,
   transitive: Boolean,
   @since("2.1.17")
+  @deprecated("Use overridesMap instead", "2.1.23")
   overrides: DependencyManagement.Map =
     Map.empty,
   @since("2.1.18")
   @deprecated("Use bomDependencies instead", "2.1.19")
   boms: Seq[(Module, String)] = Nil,
   @since("2.1.19")
-  bomDependencies: Seq[BomDependency] = Nil
+  bomDependencies: Seq[BomDependency] = Nil,
+  @since("2.1.23")
+  overridesMap: Overrides =
+    Overrides.empty
 ) {
   assertValid(version, "version")
   lazy val moduleVersion = (module, version)
@@ -106,11 +110,20 @@ import MinimizedExclusions._
     withBomDependencies(this.bomDependencies ++ bomDependencies)
 
   def addOverride(key: DependencyManagement.Key, values: DependencyManagement.Values): Dependency =
-    withOverrides(DependencyManagement.add(overrides, Seq(key -> values)))
+    withOverridesMap(
+      Overrides.add(overridesMap, Overrides(Map(key -> values)))
+    )
   def addOverrides(
     entries: Seq[(DependencyManagement.Key, DependencyManagement.Values)]
   ): Dependency =
-    withOverrides(DependencyManagement.add(overrides, entries))
+    withOverridesMap(
+      Overrides.add(
+        overridesMap,
+        Overrides(DependencyManagement.add(Map.empty, entries))
+      )
+    )
+  def addOverrides(newOverrides: Overrides): Dependency =
+    withOverridesMap(Overrides.add(overridesMap, newOverrides))
 
   private[core] def copy(
     module: Module = this.module,
@@ -128,15 +141,17 @@ import MinimizedExclusions._
     Publication("", attributes.`type`, Extension.empty, attributes.classifier),
     optional,
     transitive,
-    overrides,
+    Map.empty,
     boms,
-    bomDependencies
+    bomDependencies,
+    overridesMap
   )
 
   lazy val clearExclusions: Dependency =
     withMinimizedExclusions(MinimizedExclusions.zero)
   lazy val clearOverrides: Dependency =
-    withOverrides(Map.empty)
+    if (overridesMap.isEmpty) this
+    else withOverridesMap(Overrides.empty)
   lazy val hasProperties =
     module.hasProperties ||
     version.contains("$") ||
@@ -156,8 +171,8 @@ import MinimizedExclusions._
       transitive.toString
     )
     fields =
-      if (overrides.isEmpty) fields
-      else fields :+ overrides.toString
+      if (overridesMap.isEmpty) fields
+      else fields :+ overridesMap.flatten.toMap.toString
     fields =
       if (boms.isEmpty) fields
       else fields :+ boms.toString
@@ -186,7 +201,8 @@ object Dependency {
     transitive: Boolean,
     overrides: DependencyManagement.Map,
     boms: Seq[(Module, String)],
-    bomDependencies: Seq[BomDependency]
+    bomDependencies: Seq[BomDependency],
+    overridesMap: Overrides
   ): Dependency =
     coursier.util.Cache.cacheMethod(instanceCache)(
       new Dependency(
@@ -199,8 +215,35 @@ object Dependency {
         transitive,
         overrides,
         boms,
-        bomDependencies
+        bomDependencies,
+        overridesMap
       )
+    )
+
+  def apply(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)],
+    bomDependencies: Seq[BomDependency]
+  ): Dependency =
+    Dependency(
+      module,
+      version,
+      configuration,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      Map.empty,
+      boms,
+      bomDependencies,
+      Overrides(overrides)
     )
 
   def apply(
@@ -222,9 +265,10 @@ object Dependency {
       publication,
       optional,
       transitive,
-      overrides,
+      Map.empty,
       boms,
-      Nil
+      Nil,
+      Overrides(overrides)
     )
 
   def apply(
@@ -245,9 +289,10 @@ object Dependency {
       publication,
       optional,
       transitive,
-      overrides,
+      Map.empty,
       Nil,
-      Nil
+      Nil,
+      Overrides(overrides)
     )
 
   def apply(
@@ -269,7 +314,8 @@ object Dependency {
       transitive,
       Map.empty,
       Nil,
-      Nil
+      Nil,
+      Overrides.empty
     )
 
   def apply(

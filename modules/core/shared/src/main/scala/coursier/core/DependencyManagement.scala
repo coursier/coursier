@@ -5,7 +5,8 @@ import dataclass.data
 import scala.collection.mutable
 
 object DependencyManagement {
-  type Map = scala.Predef.Map[Key, Values]
+  type Map        = scala.collection.immutable.Map[Key, Values]
+  type GenericMap = scala.collection.Map[Key, Values]
 
   @data class Key(
     organization: Organization,
@@ -125,6 +126,37 @@ object DependencyManagement {
         b += ((key0, newValues))
       }
       b.result().toMap
+    }
+
+  def addAll(
+    initialMap: Map,
+    entries: Seq[GenericMap],
+    composeValues: Boolean = true
+  ): GenericMap =
+    if (entries.forall(_.isEmpty))
+      initialMap
+    else {
+      val b = new mutable.HashMap[Key, Values]
+      b.sizeHint(entries.iterator.map(_.size).sum)
+      val it = entries.iterator.flatMap(_.iterator)
+      while (it.hasNext) {
+        val (key0, incomingValues) = it.next()
+        val newValuesOpt = b.get(key0).orElse(initialMap.get(key0)) match {
+          case Some(previousValues) =>
+            if (composeValues)
+              Some(previousValues.orElse(incomingValues))
+                .filter(_ != previousValues)
+            else
+              None
+          case None =>
+            Some(incomingValues)
+        }
+        for (newValues <- newValuesOpt)
+          b += ((key0, newValues))
+      }
+      if (b.isEmpty) initialMap
+      else if (initialMap.isEmpty) b
+      else initialMap ++ b
     }
 
   def addDependencies(
