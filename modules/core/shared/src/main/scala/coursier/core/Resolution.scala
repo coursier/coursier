@@ -316,7 +316,8 @@ object Resolution {
     properties: Map[String, String],
     rawOverridesOpt: Option[DependencyManagement.Map],
     rawDependencyManagement: Seq[(Configuration, Dependency)],
-    forceDepMgmtVersions: Boolean
+    forceDepMgmtVersions: Boolean,
+    keepConfiguration: Configuration => Boolean
   ): Seq[(Configuration, Dependency)] = {
 
     val dependencies         = withProperties(rawDependencies, properties)
@@ -341,10 +342,7 @@ object Resolution {
       lazy val versions = dependencies
         .filter {
           case (config, _) =>
-            config.isEmpty ||
-            config == Configuration.compile ||
-            config == Configuration.default ||
-            config == Configuration.defaultCompile
+            config.isEmpty || keepConfiguration(config)
         }
         .map(_._2)
         .groupBy(DependencyManagement.Key.from)
@@ -357,10 +355,7 @@ object Resolution {
         dependencyManagement
           .filter {
             case (config, _) =>
-              config.isEmpty ||
-              config == Configuration.compile ||
-              config == Configuration.default ||
-              config == Configuration.defaultCompile
+              config.isEmpty || keepConfiguration(config)
           }
           .map {
             case (config, dep) =>
@@ -426,6 +421,29 @@ object Resolution {
   }
 
   @deprecated(
+    "Use the override accepting keepConfiguration instead",
+    "2.1.23"
+  )
+  def depsWithDependencyManagement(
+    rawDependencies: Seq[(Configuration, Dependency)],
+    properties: Map[String, String],
+    rawOverridesOpt: Option[DependencyManagement.Map],
+    rawDependencyManagement: Seq[(Configuration, Dependency)],
+    forceDepMgmtVersions: Boolean
+  ): Seq[(Configuration, Dependency)] =
+    depsWithDependencyManagement(
+      rawDependencies,
+      properties,
+      rawOverridesOpt,
+      rawDependencyManagement,
+      forceDepMgmtVersions,
+      keepConfiguration = config =>
+        config == Configuration.compile ||
+        config == Configuration.default ||
+        config == Configuration.defaultCompile
+    )
+
+  @deprecated(
     "Use the override accepting an override map, forceDepMgmtVersions, and properties instead",
     "2.1.17"
   )
@@ -438,7 +456,11 @@ object Resolution {
       Map.empty,
       None,
       dependencyManagement,
-      forceDepMgmtVersions = false
+      forceDepMgmtVersions = false,
+      keepConfiguration = config =>
+        config == Configuration.compile ||
+        config == Configuration.default ||
+        config == Configuration.defaultCompile
     )
 
   private def withDefaultConfig(dep: Dependency, defaultConfiguration: Configuration): Dependency =
@@ -627,7 +649,8 @@ object Resolution {
         properties,
         Option.when(enableDependencyOverrides)(from.overrides),
         project0.dependencyManagement,
-        forceDepMgmtVersions = forceDepMgmtVersions
+        forceDepMgmtVersions = forceDepMgmtVersions,
+        keepConfiguration = keepOpt.getOrElse(_ == actualConfig)
       ),
       from.minimizedExclusions.toSet()
     )

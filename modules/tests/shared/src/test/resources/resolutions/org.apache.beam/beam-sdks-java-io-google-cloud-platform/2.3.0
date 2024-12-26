@@ -32,7 +32,7 @@ org.slf4j:slf4j-api:1.7.25:default
 com.google.guava:guava:20.0:default
 com.google.protobuf:protobuf-java:3.2.0:default
 com.google.code.findbugs:jsr305:3.0.1:default
-io.netty:netty-tcnative-boringssl-static:2.0.6.Final:default
+io.netty:netty-tcnative-boringssl-static:1.1.33.Fork26:default
 org.apache.avro:avro:1.8.2:default
 com.google.api.grpc:proto-google-cloud-spanner-admin-database-v1:0.1.9:default
 com.google.api.grpc:proto-google-common-protos:0.1.9:default
