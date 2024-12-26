@@ -137,6 +137,12 @@ import MinimizedExclusions._
     withMinimizedExclusions(MinimizedExclusions.zero)
   lazy val clearOverrides: Dependency =
     withOverrides(Map.empty)
+  lazy val hasProperties =
+    module.hasProperties ||
+    version.contains("$") ||
+    publication.attributesHaveProperties ||
+    configuration.value.contains("$") ||
+    minimizedExclusions.hasProperties
 
   // Overriding toString to be backwards compatible with Set-based exclusion representation
   override def toString(): String = {

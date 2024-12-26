@@ -63,6 +63,14 @@ object ModuleName {
   def orgName: String =
     s"${organization.value}:${name.value}"
 
+  lazy val hasProperties =
+    organization.value.contains("$") ||
+    name.value.contains("$") ||
+    attributes.exists {
+      case (k, v) =>
+        k.contains("$") || v.contains("$")
+    }
+
   final override lazy val hashCode = tuple.hashCode()
 
   private[core] def copy(
@@ -395,6 +403,10 @@ object Info {
   def attributes: Attributes = Attributes(`type`, classifier)
   def isEmpty: Boolean =
     name.isEmpty && `type`.isEmpty && ext.isEmpty && classifier.isEmpty
+
+  lazy val attributesHaveProperties =
+    `type`.value.contains("$") ||
+    classifier.value.contains("$")
 
   final override lazy val hashCode = tuple.hashCode
 }

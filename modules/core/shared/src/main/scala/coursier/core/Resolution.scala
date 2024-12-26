@@ -210,27 +210,32 @@ object Resolution {
 
     val (config, dep) = configDep
 
-    def substituteTrimmedProps(s: String) =
-      substituteProps(s, properties, trim = true)
-    def substituteProps0(s: String) =
-      substituteProps(s, properties, trim = false)
+    if (config.value.contains("$") || dep.hasProperties) {
 
-    val dep0 = dep.copy(
-      module = dep.module.copy(
-        organization = dep.module.organization.map(substituteProps0),
-        name = dep.module.name.map(substituteProps0)
-      ),
-      version = substituteTrimmedProps(dep.version),
-      attributes = dep.attributes
-        .withType(dep.attributes.`type`.map(substituteProps0))
-        .withClassifier(dep.attributes.classifier.map(substituteProps0)),
-      configuration = dep.configuration.map(substituteProps0),
-      minimizedExclusions = dep.minimizedExclusions.map(substituteProps0)
-    )
+      def substituteTrimmedProps(s: String) =
+        substituteProps(s, properties, trim = true)
+      def substituteProps0(s: String) =
+        substituteProps(s, properties, trim = false)
 
-    // FIXME The content of the optional tag may also be a property in
-    // the original POM. Maybe not parse it that earlier?
-    config.map(substituteProps0) -> dep0
+      val dep0 = dep.copy(
+        module = dep.module.copy(
+          organization = dep.module.organization.map(substituteProps0),
+          name = dep.module.name.map(substituteProps0)
+        ),
+        version = substituteTrimmedProps(dep.version),
+        attributes = dep.attributes
+          .withType(dep.attributes.`type`.map(substituteProps0))
+          .withClassifier(dep.attributes.classifier.map(substituteProps0)),
+        configuration = dep.configuration.map(substituteProps0),
+        minimizedExclusions = dep.minimizedExclusions.map(substituteProps0)
+      )
+
+      // FIXME The content of the optional tag may also be a property in
+      // the original POM. Maybe not parse it that earlier?
+      config.map(substituteProps0) -> dep0
+    }
+    else
+      configDep
   }
 
   /** Merge several dependencies, solving version constraints of duplicated modules.
