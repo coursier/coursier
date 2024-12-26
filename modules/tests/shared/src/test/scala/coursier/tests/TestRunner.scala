@@ -38,7 +38,7 @@ class TestRunner[F[_]: Gather: ToFuture](
     profiles: Option[Set[String]] = None,
     mapDependencies: Option[Dependency => Dependency] = None,
     forceVersions: Map[Module, String] = Map.empty,
-    defaultConfiguration: Configuration = Configuration.defaultCompile,
+    defaultConfiguration: Configuration = Configuration.defaultRuntime,
     reconciliation: Option[Module => Reconciliation] = None,
     forceDepMgmtVersions: Option[Boolean] = None
   ): Future[Resolution] = {
@@ -87,7 +87,7 @@ class TestRunner[F[_]: Gather: ToFuture](
     configuration: Configuration = Configuration.empty,
     profiles: Option[Set[String]] = None,
     forceVersions: Map[Module, String] = Map.empty,
-    defaultConfiguration: Configuration = Configuration.defaultCompile,
+    defaultConfiguration: Configuration = Configuration.defaultRuntime,
     forceDepMgmtVersions: Option[Boolean] = None
   ): Future[Resolution] =
     async {

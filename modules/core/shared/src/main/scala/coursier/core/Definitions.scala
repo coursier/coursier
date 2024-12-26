@@ -194,6 +194,7 @@ object Configuration {
 
   val default        = Configuration("default")
   val defaultCompile = Configuration("default(compile)")
+  val defaultRuntime = Configuration("default(runtime)")
 
   val provided = Configuration("provided")
   val `import` = Configuration("import")

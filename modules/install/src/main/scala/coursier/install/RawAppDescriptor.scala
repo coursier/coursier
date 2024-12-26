@@ -333,7 +333,7 @@ object RawAppDescriptor {
   private def parseDependenices(dependencies: Seq[String])
     : ValidatedNel[String, Seq[JavaOrScalaDependency]] =
     validationNelToCats(
-      DependencyParser.javaOrScalaDependencies(dependencies, Configuration.defaultCompile)
+      DependencyParser.javaOrScalaDependencies(dependencies, Configuration.defaultRuntime)
     )
 
   private def parseRepositories(repositories: Seq[String]): ValidatedNel[String, Seq[Repository]] =

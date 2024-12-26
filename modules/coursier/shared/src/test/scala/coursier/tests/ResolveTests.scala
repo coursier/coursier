@@ -521,7 +521,7 @@ object ResolveTests extends TestSuite {
             resolve
               .addDependencies(
                 dep"com.netflix.karyon:karyon-eureka:1.0.28"
-                  .withConfiguration(Configuration.defaultCompile)
+                  .withConfiguration(Configuration.defaultRuntime)
               )
               .future()
           }
@@ -939,7 +939,7 @@ object ResolveTests extends TestSuite {
     test("runtime dependencies") {
       async {
 
-        // default configuration "default(compile)" should fetch runtime JARs too ("default" scope pulls the runtime one)
+        // default configuration "default(runtime)" should fetch runtime JARs too
 
         val res: coursier.core.Resolution = await {
           resolve
@@ -1613,7 +1613,7 @@ object ResolveTests extends TestSuite {
             check(
               dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withConfiguration(Configuration.defaultCompile)
+                  .withConfiguration(Configuration.defaultRuntime)
                   .asBomDependency
               )
             )
@@ -1716,7 +1716,7 @@ object ResolveTests extends TestSuite {
             check(
               dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withConfiguration(Configuration.defaultCompile)
+                  .withConfiguration(Configuration.defaultRuntime)
                   .asBomDependency
               )
             )

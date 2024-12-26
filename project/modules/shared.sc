@@ -142,6 +142,7 @@ trait CoursierPublishModule extends PublishModule with PublishLocalNoFluff with 
 
 trait CsTests extends TestModule {
   def ivyDeps = super.ivyDeps() ++ Seq(
+    Deps.pprint,
     Deps.utest
   )
   def testFramework = "utest.runner.Framework"

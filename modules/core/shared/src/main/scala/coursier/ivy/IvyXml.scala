@@ -43,11 +43,11 @@ object IvyXml {
           )
       }
 
-  // FIXME "default(compile)" likely not to be always the default
+  // FIXME "default(runtime)" likely not to be always the default
   def mappings(mapping: String): Seq[(Configuration, Configuration)] =
     mapping.split(';').toSeq.flatMap { m =>
       val (froms, tos) = m.split("->", 2) match {
-        case Array(from)     => (from, Configuration.defaultCompile.value)
+        case Array(from)     => (from, Configuration.defaultRuntime.value)
         case Array(from, to) => (from, to)
       }
 
