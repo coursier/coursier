@@ -15,7 +15,7 @@ object Deps {
   def diffUtils         = ivy"io.github.java-diff-utils:java-diff-utils:4.12"
   def dockerClient      = ivy"com.spotify:docker-client:8.16.0"
   def fastParse         = ivy"com.lihaoyi::fastparse::${Versions.fastParse}"
-  def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:0.23.15"
+  def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:0.23.17"
   def http4sDsl         = ivy"org.http4s::http4s-dsl:${Versions.http4s}"
   def http4sServer      = ivy"org.http4s::http4s-server:${Versions.http4s}"
   def java8Compat       = ivy"org.scala-lang.modules::scala-java8-compat:1.0.2"
