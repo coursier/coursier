@@ -11,7 +11,7 @@ object `package` extends MillBuildRootModule {
     ivy"com.softwaremill.sttp.client::core:2.3.0",
     ivy"io.get-coursier::coursier-launcher:2.1.7",
     ivy"io.github.alexarchambault.mill::mill-native-image::0.1.26",
-    ivy"org.jsoup:jsoup:1.18.1",
+    ivy"org.jsoup:jsoup:1.18.3",
     ivy"com.eed3si9n.jarjarabrams::jarjar-abrams-core:1.14.0"
   )
 }
