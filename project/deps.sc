@@ -12,7 +12,7 @@ object Deps {
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
   def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.6"
   def dependency        = ivy"io.get-coursier::dependency::0.3.2"
-  def diffUtils         = ivy"io.github.java-diff-utils:java-diff-utils:4.12"
+  def diffUtils         = ivy"io.github.java-diff-utils:java-diff-utils:4.15"
   def dockerClient      = ivy"com.spotify:docker-client:8.16.0"
   def fastParse         = ivy"com.lihaoyi::fastparse::${Versions.fastParse}"
   def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:0.23.17"
