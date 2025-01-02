@@ -56,7 +56,7 @@ object Deps {
   def svm                      = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
   def ujson                    = ivy"com.lihaoyi::ujson:4.0.2"
   def utest                    = ivy"com.lihaoyi::utest::0.8.4"
-  def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.5"
+  def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
   def windowsAnsiPs =
     ivy"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
 }
