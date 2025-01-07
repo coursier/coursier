@@ -1,5 +1,5 @@
 import $file.cs
-import $file.deps, deps.{Deps, Docker, graalVmJvmId, jvmIndex}
+import $file.deps, deps.{Deps, Docker, graalVmJvmId}
 import $file.modules.shared, shared.CsModule
 
 import io.github.alexarchambault.millnativeimage.NativeImage
@@ -218,9 +218,7 @@ trait Launchers extends CsModule {
         cs.cs,
         "java-home",
         "--jvm",
-        `base-image`.nativeImageGraalVmJvmId(),
-        "--jvm-index",
-        jvmIndex
+        `base-image`.nativeImageGraalVmJvmId()
       ).!!.trim
     }
     val outputDir = T.dest / "config"
