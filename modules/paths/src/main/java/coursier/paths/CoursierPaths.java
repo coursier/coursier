@@ -5,9 +5,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Supplier;
 
-import dev.dirs.GetWinDirs;
 import dev.dirs.ProjectDirectories;
+import dev.dirs.impl.Windows;
+import dev.dirs.jni.WindowsJni;
 
 /**
  * Computes Coursier's directories according to the standard
@@ -103,18 +105,12 @@ public final class CoursierPaths {
     }
 
     public static ProjectDirectories directoriesInstance(String name) {
-        GetWinDirs getWinDirs;
+        Supplier<Windows> windows;
         if (coursier.paths.Util.useJni())
-            getWinDirs = guids -> {
-                String[] dirs = new String[guids.length];
-                for (int i = 0; i < guids.length; i++) {
-                    dirs[i] = coursier.jniutils.WindowsKnownFolders.knownFolderPath("{" + guids[i] + "}");
-                }
-                return dirs;
-            };
+            windows = WindowsJni.getJdkAwareSupplier();
         else
-            getWinDirs = GetWinDirs.powerShellBased;
-        return ProjectDirectories.from(null, null, name, getWinDirs);
+            windows = Windows.getDefaultSupplier();
+        return ProjectDirectories.from(null, null, name, windows);
     }
 
     private static ProjectDirectories coursierDirectories() throws IOException {
