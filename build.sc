@@ -8,7 +8,6 @@ import $file.project.modules.`bootstrap-launcher0`, `bootstrap-launcher0`.Bootst
 import $file.project.modules.cache0, cache0.{Cache, CacheJvmBase}
 import $file.project.modules.core0, core0.{Core, CoreJvmBase}
 import $file.project.modules.coursier0, coursier0.{Coursier, CoursierJvmBase, CoursierTests}
-import $file.project.modules.directories0, directories0.Directories
 import $file.project.modules.doc0, doc0.Doc
 import $file.project.modules.interop0, interop0.{Cats, Scalaz}
 import $file.project.modules.launcher0, launcher0.LauncherBase
@@ -73,17 +72,13 @@ object coursier extends Module {
   object js  extends Cross[CoursierJs](ScalaVersions.all)
 }
 
-object directories extends Directories
-
 object `proxy-setup` extends JavaModule with CoursierPublishModule {
   def artifactName = "coursier-proxy-setup"
 }
 
 object paths extends JavaModule {
-  def moduleDeps = Seq(
-    directories
-  )
   def ivyDeps = Agg(
+    Deps.directories,
     Deps.jniUtils
   )
 }
@@ -124,13 +119,12 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
   }
   def sources = T {
     super.sources() ++
-      directories.sources() ++
       paths.sources() ++
       proxySources() ++
       windowsAnsiPsSources()
   }
   def resources = T.sources {
-    (super.resources() ++ directories.resources()).flatMap { ref =>
+    super.resources().flatMap { ref =>
       val dir = ref.path
       if (os.exists(dir) && os.isDir(dir)) {
         val nonIgnoredFiles = os.walk(dir)
@@ -281,6 +275,7 @@ trait CacheJvm extends CacheJvmBase {
     util.jvm()
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
+    Deps.directories,
     Deps.jniUtils,
     Deps.plexusArchiver,
     Deps.plexusContainerDefault,
@@ -292,10 +287,7 @@ trait CacheJvm extends CacheJvmBase {
     Deps.svm
   )
   def sources = T.sources {
-    super.sources() ++ directories.sources() ++ paths.sources()
-  }
-  def resources = T.sources {
-    super.resources() ++ directories.resources()
+    super.sources() ++ paths.sources()
   }
   def customLoaderCp = T {
     `custom-protocol-for-test`.runClasspath()
