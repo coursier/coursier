@@ -17,6 +17,7 @@ trait BootstrapLauncher extends CsModule {
 
   def scalaVersion = ScalaVersions.scala213
   def ivyDeps = super.ivyDeps() ++ Seq(
+    Deps.directories,
     Deps.jniUtilsBootstrap
   )
   def mainClass = Some("coursier.bootstrap.launcher.Launcher")

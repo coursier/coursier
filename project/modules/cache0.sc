@@ -13,7 +13,9 @@ trait Cache extends CsModule with CsCrossJvmJsModule with CoursierPublishModule 
 trait CacheJvmBase extends Cache with CsMima with Shading {
   def customLoaderCp: T[Seq[PathRef]]
 
-  def shadedDependencies = Agg.empty[mill.scalalib.Dep]
+  def shadedDependencies = Agg(
+    Deps.directories
+  )
   def validNamespaces = Seq(
     "coursier.cache",
     "coursier.paths",
