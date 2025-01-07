@@ -68,8 +68,13 @@ trait BootstrapLauncher extends CsModule {
        |""".stripMargin
   }
 
-  def upstreamAssemblyClasspath = T {
-    val cp = super.upstreamAssemblyClasspath()
+  def transitiveRunJars: T[Seq[PathRef]] = Task {
+    T.traverse(transitiveModuleRunModuleDeps)(_.jar)()
+  }
+  def upstreamAssemblyClasspath: T[Agg[PathRef]] = Task {
+    // use JARs instead of directories of upstream deps, to make assembly generation below happy
+    val cp = resolvedRunIvyDeps() ++ transitiveRunJars()
+    // drop Scala JARs (need refactoring of build so that these are not around here)
     cp.filter(!_.path.last.startsWith("scala-"))
   }
 
@@ -85,7 +90,7 @@ trait BootstrapLauncher extends CsModule {
 
   def assembly = T {
     val baseJar    = jar().path
-    val cp         = upstreamAssemblyClasspath().iterator.toSeq.map(_.path)
+    val cp         = upstreamAssemblyClasspath().iterator.toSeq.map(_.path).filter(os.exists)
     val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
     val dest = T.dest / "bootstrap-orig.jar"

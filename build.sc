@@ -13,6 +13,7 @@ import $file.project.modules.interop0, interop0.{Cats, Scalaz}
 import $file.project.modules.launcher0, launcher0.LauncherBase
 import $file.project.modules.shared, shared.{
   buildVersion,
+  CoursierJavaModule,
   CoursierPublishModule,
   CsCrossJvmJsModule,
   CsResourcesTests,
@@ -76,7 +77,7 @@ object `proxy-setup` extends JavaModule with CoursierPublishModule {
   def artifactName = "coursier-proxy-setup"
 }
 
-object paths extends JavaModule {
+object paths extends CoursierJavaModule {
   def ivyDeps = Agg(
     Deps.directories,
     Deps.jniUtils
@@ -88,6 +89,9 @@ object `custom-protocol-for-test` extends CsModule {
 }
 
 object `bootstrap-launcher` extends BootstrapLauncher { self =>
+  def moduleDeps = Seq(
+    paths
+  )
   def proxySources = T.sources {
     val dest = T.dest / "sources"
     val orig = `proxy-setup`.sources()
@@ -119,7 +123,6 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
   }
   def sources = T {
     super.sources() ++
-      paths.sources() ++
       proxySources() ++
       windowsAnsiPsSources()
   }
