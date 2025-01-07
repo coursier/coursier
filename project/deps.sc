@@ -19,6 +19,7 @@ object Deps {
   def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:0.23.17"
   def http4sDsl         = ivy"org.http4s::http4s-dsl:${Versions.http4s}"
   def http4sServer      = ivy"org.http4s::http4s-server:${Versions.http4s}"
+  def isTerminal        = ivy"io.github.alexarchambault:is-terminal:0.1.1"
   def java8Compat       = ivy"org.scala-lang.modules::scala-java8-compat:1.0.2"
   def jimfs             = ivy"com.google.jimfs:jimfs:1.3.0"
   def jniUtils          = ivy"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"

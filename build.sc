@@ -80,6 +80,7 @@ object `proxy-setup` extends JavaModule with CoursierPublishModule {
 object paths extends CoursierJavaModule {
   def ivyDeps = Agg(
     Deps.directories,
+    Deps.isTerminal,
     Deps.jniUtils
   )
 }
@@ -279,6 +280,7 @@ trait CacheJvm extends CacheJvmBase {
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.directories,
+    Deps.isTerminal,
     Deps.jniUtils,
     Deps.plexusArchiver,
     Deps.plexusContainerDefault,
@@ -746,7 +748,8 @@ object `redirecting-server` extends CsModule {
   def ivyDeps = Agg(
     Deps.http4sBlazeServer,
     Deps.http4sDsl,
-    Deps.http4sServer
+    Deps.http4sServer,
+    Deps.isTerminal
   )
   def mainClass = Some("redirectingserver.RedirectingServer")
 }

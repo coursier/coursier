@@ -2,6 +2,7 @@ package redirectingserver
 
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global // ???
+import io.github.alexarchambault.isterminal.IsTerminal
 import org.http4s._
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.dsl.io._
@@ -40,11 +41,11 @@ object RedirectingServer {
 
     println(s"Listening on http://$host:$port")
 
-    if (System.console() == null)
-      while (true) Thread.sleep(60000L)
-    else {
+    if (IsTerminal.isTerminal()) {
       println("Press Ctrl+D to exit")
       while (System.in.read() != -1) {}
     }
+    else
+      while (true) Thread.sleep(60000L)
   }
 }
