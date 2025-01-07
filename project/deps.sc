@@ -82,7 +82,7 @@ def scalaCliVersion = "1.5.1"
 // should be the default index in the upcoming coursier release (> 2.0.16)
 def jvmIndex = "https://github.com/coursier/jvm-index/raw/master/index.json"
 
-def csDockerVersion = "2.1.0-RC1"
+def csDockerVersion = "2.1.23"
 
 object ScalaVersions {
   def scala213 = "2.13.15"
