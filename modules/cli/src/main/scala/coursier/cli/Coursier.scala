@@ -10,6 +10,7 @@ import coursier.install.InstallDir
 import coursier.jniutils.ModuleFileName
 import coursier.paths.CoursierPaths
 import coursier.proxy.SetupProxy
+import io.github.alexarchambault.isterminal.IsTerminal
 
 import java.nio.file.Paths
 import java.util.Scanner
@@ -75,7 +76,7 @@ object Coursier extends CommandsEntryPoint {
       // the coursier native image, no need to manually load it.
       coursier.jniutils.LoadWindowsLibrary.assumeInitialized()
 
-    if (System.console() != null && Properties.isWin) {
+    if (IsTerminal.isTerminal() && Properties.isWin) {
       val useJni = coursier.paths.Util.useJni()
       try if (useJni)
           coursier.jniutils.WindowsAnsiTerminal.enableAnsiOutput()

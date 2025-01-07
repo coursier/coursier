@@ -231,7 +231,10 @@ package object compatibility {
         System.getenv("COURSIER_NO_TERM") == null
       }
 
-  @deprecated("Unused internally, likely to be removed in the future", "2.0.0-RC6-19")
+  @deprecated(
+    "Unused internally, returns incorrect result on JDK >= 22, likely to be removed in the future",
+    "2.0.0-RC6-19"
+  )
   def hasConsole: Boolean =
     System.console() != null
 
