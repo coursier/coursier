@@ -69,7 +69,7 @@ trait BootstrapLauncher extends CsModule {
   }
 
   def transitiveRunJars: T[Seq[PathRef]] = Task {
-    T.traverse(transitiveModuleRunModuleDeps)(_.jar)()
+    T.traverse(transitiveModuleDeps)(_.jar)()
   }
   def upstreamAssemblyClasspath: T[Agg[PathRef]] = Task {
     // use JARs instead of directories of upstream deps, to make assembly generation below happy
