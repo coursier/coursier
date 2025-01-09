@@ -1464,12 +1464,15 @@ object Resolution {
         }
 
     val depMgmt = Overrides.add(
+      // our dep management
+      // takes precedence over dep imports
+      // that takes precedence over parents
       depMgmtInputs ++
-        retainedParentProjects.map { p =>
-          withProperties(p.overrides, staticProjectProperties(p).toMap)
-        } ++
         retainedImportProjects.map { p =>
           withProperties(p.overrides, projectProperties(p).toMap)
+        } ++
+        retainedParentProjects.map { p =>
+          withProperties(p.overrides, staticProjectProperties(p).toMap)
         }: _*
     )
 
