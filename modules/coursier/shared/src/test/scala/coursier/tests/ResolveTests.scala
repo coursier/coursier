@@ -80,6 +80,17 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res, resolve0.resolutionParams))
     }
 
+  def bomCheck(boms: BomDependency*)(dependencies: Dependency*): Future[Unit] =
+    async {
+      val res = await {
+        resolve
+          .addDependencies(dependencies: _*)
+          .addBomConfigs(boms: _*)
+          .future()
+      }
+      await(validateDependencies(res))
+    }
+
   val tests = Tests {
 
     test("simple") {
@@ -1508,17 +1519,6 @@ object ResolveTests extends TestSuite {
 
     test("bom") {
 
-      def bomCheck(boms: BomDependency*)(dependencies: Dependency*): Future[Unit] =
-        async {
-          val res = await {
-            resolve
-              .addDependencies(dependencies: _*)
-              .addBomConfigs(boms: _*)
-              .future()
-          }
-          await(validateDependencies(res))
-        }
-
       test("spark-parent") {
         test {
           bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency)(
@@ -1884,6 +1884,15 @@ object ResolveTests extends TestSuite {
 
     test("large resolution") {
       check(dep"io.trino:trino-hive:467")
+    }
+
+    test("dep import and parent precedence") {
+      // bom has a dep import of a BOM pulling protobuf-java 3.x
+      // and has parents pulling protobuf-java 4.x
+      // The former should have precedence over the latter
+      bomCheck(dep"com.google.cloud:libraries-bom-protobuf3:26.51.0".asBomDependency)(
+        dep"com.google.protobuf:protobuf-java:"
+      )
     }
   }
 }
