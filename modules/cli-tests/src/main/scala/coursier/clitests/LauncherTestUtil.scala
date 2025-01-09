@@ -39,8 +39,7 @@ object LauncherTestUtil {
         .map(ext => new File(directory, name + ext))
         .filter(_.canExecute())
         .map(_.getCanonicalPath)
-        .toStream
-        .headOption
+        .find(_ => true)
         .getOrElse(name)
     else
       name
