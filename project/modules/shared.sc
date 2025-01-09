@@ -94,9 +94,7 @@ trait CoursierJavaModule extends JavaModule {
       case _                         => false
     }
   def javacSystemJvmId = T {
-    if (Properties.isMac && isArm64)
-      // no native JDK 8 on Mac ARM, using amd64 one
-      "https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u432-b06/OpenJDK8U-jdk_x64_mac_hotspot_8u432b06.tar.gz"
+    if (Properties.isMac && isArm64) "zulu:8"
     else "adoptium:8"
   }
   def javacSystemJvm = T.source {
