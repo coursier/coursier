@@ -184,7 +184,7 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
     }
 
     test("extra jars with properties") {
-      if (acceptsJOptions)
+      if (!Properties.isWin && acceptsJOptions)
         extraJarsWithProperties()
       else
         "Disabled"

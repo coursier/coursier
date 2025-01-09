@@ -679,7 +679,7 @@ trait CliTests extends CsModule
           s"-Dcoursier-test-launcher=${launcherTask()}",
           s"-Dcoursier-test-assembly=${assemblyTask()}",
           "-Dcoursier-test-launcher-accepts-D=false",
-          "-Dcoursier-test-launcher-accepts-J=false",
+          "-Dcoursier-test-launcher-accepts-J=true",
           "-Dcoursier-test-is-native=false",
           "-Dcoursier-test-is-native-static=false"
         )
