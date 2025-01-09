@@ -46,6 +46,15 @@ object Run extends CaseApp[RunOptions] {
       def acceptsDOptions = true
       def acceptsJOptions = true
     }
+    val aboutTests = new AboutTests {
+      val launcher       = options.launcher
+      val assembly       = options.assembly
+      def isNative       = false
+      def isNativeStatic = false
+
+      def acceptsDOptions = true
+      def acceptsJOptions = true
+    }
     val bootstrapTests = new BootstrapTests {
       val launcher = options.launcher
       val assembly = options.assembly
@@ -61,6 +70,11 @@ object Run extends CaseApp[RunOptions] {
       "LaunchTests",
       executor = launchTests
     )
+    val aboutResults = TestRunner.runAndPrint(
+      aboutTests.tests,
+      "AboutTests",
+      executor = aboutTests
+    )
     val bootstrapResults = TestRunner.runAndPrint(
       bootstrapTests.tests,
       "BootstrapTests",
@@ -75,6 +89,7 @@ object Run extends CaseApp[RunOptions] {
     var anyError = false
 
     anyError = processResults("LaunchTests.", launchResults.leaves) || anyError
+    anyError = processResults("AboutTests.", aboutResults.leaves) || anyError
     anyError = processResults("BootstrapTests.", bootstrapResults.leaves) || anyError
     anyError = processResults("FetchTests.", fetchResults.leaves) || anyError
 
