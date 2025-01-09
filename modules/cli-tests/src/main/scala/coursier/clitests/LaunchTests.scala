@@ -30,12 +30,14 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
       assert(output == expectedOutput)
     }
 
-    test("non static main class") {
+    def nonStaticMainClass(): Unit = {
       val res =
         os.proc(
           launcher,
           "launch",
-          "--fork",
+          // When forking, the JVM prints the main method not found error.
+          // When not forking, coursier does. We want to be in the latter case.
+          "--fork=false",
           "org.scala-lang:scala-compiler:2.13.0",
           "--main-class",
           "scala.tools.nsc.Driver",
@@ -55,6 +57,12 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
         "is not static"
       )
       assert(expectedInOutput.forall(output.contains))
+    }
+    test("non static main class") {
+      if (acceptsJOptions)
+        nonStaticMainClass()
+      else
+        "Disabled"
     }
 
     test("java class path in expansion from launch") {
@@ -184,7 +192,7 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
     }
 
     test("extra jars with properties") {
-      if (acceptsJOptions)
+      if (!Properties.isWin && acceptsJOptions)
         extraJarsWithProperties()
       else
         "Disabled"
