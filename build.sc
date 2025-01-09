@@ -680,7 +680,8 @@ trait CliTests extends CsModule
           s"-Dcoursier-test-assembly=${assemblyTask()}",
           "-Dcoursier-test-launcher-accepts-D=false",
           "-Dcoursier-test-launcher-accepts-J=false",
-          "-Dcoursier-test-is-native=false"
+          "-Dcoursier-test-is-native=false",
+          "-Dcoursier-test-is-native-static=false"
         )
       }
     }
@@ -691,6 +692,7 @@ trait CliTests extends CsModule
     def sources = T.sources {
       super.sources() ++ self.test.sources()
     }
+    def isStatic: Boolean = false
     def forkArgs = {
       val launcherTask = cliLauncher.map(_.path)
       T {
@@ -700,7 +702,8 @@ trait CliTests extends CsModule
           s"-Dcoursier-test-assembly=$launcher",
           "-Dcoursier-test-launcher-accepts-D=false",
           "-Dcoursier-test-launcher-accepts-J=false",
-          "-Dcoursier-test-is-native=true"
+          "-Dcoursier-test-is-native=true",
+          s"-Dcoursier-test-is-native-static=$isStatic"
         )
       }
     }
@@ -710,6 +713,7 @@ trait CliTests extends CsModule
   }
   object `native-static-tests` extends NativeTests {
     def cliLauncher = cli.`static-image`.nativeImage
+    def isStatic    = true
   }
   object `native-mostly-static-tests` extends NativeTests {
     def cliLauncher = cli.`mostly-static-image`.nativeImage

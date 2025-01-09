@@ -47,8 +47,10 @@ object Run extends CaseApp[RunOptions] {
       def acceptsJOptions = true
     }
     val aboutTests = new AboutTests {
-      val launcher = options.launcher
-      def isNative = false
+      val launcher       = options.launcher
+      val assembly       = options.assembly
+      def isNative       = false
+      def isNativeStatic = false
 
       def acceptsDOptions = true
       def acceptsJOptions = true

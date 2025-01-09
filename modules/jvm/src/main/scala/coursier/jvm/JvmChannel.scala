@@ -1,9 +1,14 @@
 package coursier.jvm
 
-import java.nio.file.{FileSystem, FileSystems, Path}
+import java.io.IOException
+import java.nio.charset.Charset
+import java.nio.file.{FileSystem, FileSystems, Files, Path, Paths}
 import java.util.Locale
 import java.util.regex.Pattern.quote
 
+import scala.jdk.CollectionConverters._
+
+import coursier.cache.internal.FileUtil
 import coursier.core.{Module, ModuleName, Organization}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
 import coursier.util.StringInterpolators._
@@ -40,12 +45,67 @@ object JvmChannel {
   def module(module: Module, version: String): FromModule =
     FromModule(module, version)
 
+  // adapted from https://github.com/VirtusLab/scala-cli/blob/51bebb087f9adaf1f1f4760374feb1a212b63bc9/modules/core/src/main/scala/scala/build/internals/OsLibc.scala#L14-L54
+  lazy val isMusl: Option[Boolean] = {
+
+    def tryRun(cmd: String*): Option[(Array[Byte], Int)] =
+      try {
+        val proc = new ProcessBuilder(cmd: _*)
+          .redirectErrorStream(true)
+          .redirectInput(ProcessBuilder.Redirect.PIPE)
+          .redirectOutput(ProcessBuilder.Redirect.PIPE)
+          .start()
+        val output = FileUtil.readFully(proc.getInputStream)
+        Some((output, proc.waitFor()))
+      }
+      catch {
+        case _: IOException =>
+          None
+      }
+
+    val getconfResOpt = tryRun("getconf", "GNU_LIBC_VERSION")
+    if (getconfResOpt.exists(_._2 == 0)) Some(false)
+    else {
+
+      val lddResOpt = tryRun("ldd", "--version")
+
+      val foundMusl = lddResOpt.exists {
+        case (lddOutput, lddExitCode) =>
+          (lddExitCode == 0 || lddExitCode == 1) &&
+          new String(lddOutput, Charset.defaultCharset()).contains("musl")
+      }
+
+      if (foundMusl)
+        Some(true)
+      else {
+        val inLib = Files.list(Paths.get("/lib"))
+          .iterator()
+          .asScala
+          .map(_.getFileName.toString)
+          .toVector
+        if (inLib.exists(_.contains("-linux-gnu"))) Some(false)
+        else if (inLib.exists(name => name.contains("libc.musl-") || name.contains("ld-musl-")))
+          Some(true)
+        else {
+          val inUsrSbinIt = Files.list(Paths.get("/usr/sbin"))
+            .iterator()
+            .asScala
+            .map(_.getFileName.toString)
+          if (inUsrSbinIt.exists(_.contains("glibc"))) Some(false)
+          else None
+        }
+      }
+    }
+  }
+
   lazy val currentOs: Either[String, String] =
     Option(System.getProperty("os.name")).map(_.toLowerCase(Locale.ROOT)) match {
       case Some(s) if s.contains("windows") => Right("windows")
-      case Some(s) if s.contains("linux")   => Right("linux")
-      case Some(s) if s.contains("mac")     => Right("darwin")
-      case unrecognized => Left(s"Unrecognized OS: ${unrecognized.getOrElse("")}")
+      case Some(s) if s.contains("linux") =>
+        if (isMusl.getOrElse(false)) Right("linux-musl")
+        else Right("linux")
+      case Some(s) if s.contains("mac") => Right("darwin")
+      case unrecognized                 => Left(s"Unrecognized OS: ${unrecognized.getOrElse("")}")
     }
 
   lazy val currentArchitecture: Either[String, String] =
