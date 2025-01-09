@@ -193,20 +193,8 @@ trait Launchers extends CsModule {
     else
       `container-image`.nativeImage
 
-  def transitiveJars: T[Agg[PathRef]] = {
-
-    def allModuleDeps(todo: List[JavaModule]): List[JavaModule] =
-      todo match {
-        case Nil => Nil
-        case h :: t =>
-          h :: allModuleDeps(h.moduleDeps.toList ::: t)
-      }
-
-    T {
-      mill.define.Target.traverse(allModuleDeps(this :: Nil).distinct)(m =>
-        T.task(m.jar())
-      )()
-    }
+  def transitiveRunJars: T[Seq[PathRef]] = Task {
+    T.traverse(transitiveModuleDeps)(_.jar)()
   }
 
   def runWithAssistedConfig(args: String*) = T.command {
@@ -249,7 +237,7 @@ trait Launchers extends CsModule {
   }
 
   def jarClassPath = T {
-    val cp = runClasspath() ++ transitiveJars()
+    val cp = runClasspath() ++ transitiveRunJars()
     cp.filter(ref => os.exists(ref.path) && !os.isDir(ref.path))
   }
 
