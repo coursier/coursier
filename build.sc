@@ -679,7 +679,8 @@ trait CliTests extends CsModule
           s"-Dcoursier-test-launcher=${launcherTask()}",
           s"-Dcoursier-test-assembly=${assemblyTask()}",
           "-Dcoursier-test-launcher-accepts-D=false",
-          "-Dcoursier-test-launcher-accepts-J=false"
+          "-Dcoursier-test-launcher-accepts-J=false",
+          "-Dcoursier-test-is-native=false"
         )
       }
     }
@@ -698,7 +699,8 @@ trait CliTests extends CsModule
           s"-Dcoursier-test-launcher=$launcher",
           s"-Dcoursier-test-assembly=$launcher",
           "-Dcoursier-test-launcher-accepts-D=false",
-          "-Dcoursier-test-launcher-accepts-J=false"
+          "-Dcoursier-test-launcher-accepts-J=false",
+          "-Dcoursier-test-is-native=true"
         )
       }
     }

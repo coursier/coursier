@@ -29,6 +29,14 @@ object LauncherTestUtil {
       path
   }
 
+  lazy val isNative = {
+    val value = sys.props.getOrElse(
+      "coursier-test-is-native",
+      sys.error("Java property coursier-test-is-native not set")
+    )
+    java.lang.Boolean.parseBoolean(value)
+  }
+
   private lazy val pathExt = Option(System.getenv("pathext"))
     .toSeq
     .flatMap(_.split(File.pathSeparator))

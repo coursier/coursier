@@ -31,6 +31,7 @@ object Coursier extends CommandsEntryPoint {
        |It can also download and cache artifacts from the web.""".stripMargin
 
   val commands = Seq(
+    about.About,
     bootstrap.Bootstrap,
     cat.Cat,
     channel.Channel,
