@@ -48,7 +48,7 @@ On macOS, download and run the coursier installer with
 
 ```bash
 # On Apple Silicon (M1, M2, ...):
-$ curl -fL https://github.com/VirtusLab/coursier-m1/releases/latest/download/cs-aarch64-apple-darwin.gz | gzip -d > cs
+$ curl -fL https://github.com/coursier/coursier/releases/latest/download/cs-aarch64-apple-darwin.gz | gzip -d > cs
 # Otherwise:
 $ curl -fL https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin.gz | gzip -d > cs
 $ chmod +x cs
