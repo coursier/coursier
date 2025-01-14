@@ -106,7 +106,9 @@ object DontBumpRootDependencies {
         rule,
         conflict,
         // FIXME More detailed message? (say why it can't be forced)
-        s"Can't force version of modules ${cantBump.toVector.map { case (k, v) => s"$k ($v)" }.sorted.mkString(", ")}"
+        s"Can't force version of modules ${cantBump.toVector.map { case (k, v) =>
+            s"$k ($v)"
+          }.sorted.mkString(", ")}"
       ) {
     assert(cantBump.nonEmpty)
   }
