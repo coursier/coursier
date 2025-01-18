@@ -117,7 +117,9 @@ object DependencyParser {
 
     if (attrs.size > validAttrsKeys.size || extraAttributes.nonEmpty)
       Some(
-        s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")}. ${if (extraAttributes.nonEmpty) s"The following are invalid: " +
+        s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")}. ${if (
+            extraAttributes.nonEmpty
+          ) s"The following are invalid: " +
             s"${extraAttributes.map(_ + s" in " + dep).mkString(", ")}"}"
       )
     else None
@@ -160,7 +162,9 @@ object DependencyParser {
       _ <- validateAttributes(map.keySet, input, Set("url")).toLeft(())
     } yield (
       dep,
-      JavaOrScalaDependency.leftOverUserParams(anyDep).map { case (k, v) => (k, v.getOrElse("")) }.toMap
+      JavaOrScalaDependency.leftOverUserParams(anyDep).map { case (k, v) =>
+        (k, v.getOrElse(""))
+      }.toMap
     )
 
   /** Parses coordinates like org:name:version with attributes, like
