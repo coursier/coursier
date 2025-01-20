@@ -69,7 +69,7 @@ import dataclass._
         b ++= ", "
       else
         anyElem = true
-      b ++= "ignoreIfForcedVersion=true"
+      b ++= "includeByDefault=true"
     }
     if (!ignoreIfForcedVersion) {
       if (anyElem)
