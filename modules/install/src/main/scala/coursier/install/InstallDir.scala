@@ -300,7 +300,6 @@ import scala.util.Properties
       }
 
       (tmpDest, tmpAux) =>
-
         lazy val infoEntries =
           InfoFile.extraEntries(lock0, sharedLockOpt, descRepr, sourceReprOpt0, currentTime)
 
