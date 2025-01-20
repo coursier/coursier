@@ -14,9 +14,8 @@ import java.util.zip.{ZipEntry, ZipOutputStream}
 object InstallDirTests extends TestSuite {
 
   val tests = Tests {
-    test(
-      "fallback to JVM when pass the GraalVM params"
-    ) { // https://github.com/coursier/coursier/pull/2652
+    test("fallback to JVM when pass the GraalVM params") {
+      // https://github.com/coursier/coursier/pull/2652
 
       val mainClass = "main.class"
       val params = InstallDir().params(

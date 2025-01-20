@@ -389,9 +389,8 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
-        test(
-          "rfc7617WithCharset"
-        ) { // current (2020/2021) Sonatype Nexus Repository Manager implements this
+        test("rfc7617WithCharset") {
+          // current (2020/2021) Sonatype Nexus Repository Manager implements this
           val challengeParams = Map("charset" -> "UTF-8") // RFC 7617 only allows UTF-8
 
           test("enabled") {
@@ -408,9 +407,8 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
-        test(
-          "beyondRfc7617"
-        ) { // this tests that the underlying challenge-parsing code is robust enough
+        test("beyondRfc7617") {
+          // this tests that the underlying challenge-parsing code is robust enough
           val challengeParams = Map(
             "schtroumpf" -> "salsepareille",
             "charset"    -> "iso-8859-15", // out of RFC 7617
