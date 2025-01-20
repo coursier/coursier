@@ -157,7 +157,9 @@ object StringInterpolators {
                 }
                 val values0 = q"""_root_.coursier.core.DependencyManagement.Values(
                   _root_.coursier.core.Configuration(${values.config.value}),
-                  ${values.version},
+                  _root_.coursier.version.VersionConstraint( // FIXME could be parsed eagerly at compile-time
+                    ${values.versionConstraint.asString}
+                  ),
                   _root_.coursier.core.MinimizedExclusions(_root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$excls)),
                   ${values.optional}
                 )"""
@@ -174,7 +176,9 @@ object StringInterpolators {
                   _root_.coursier.core.ModuleName(${bomDep.module.name.value}),
                   _root_.scala.collection.immutable.Map(..$attrs)
                 ),
-                ${bomDep.version},
+                _root_.coursier.version.VersionConstraint( // FIXME could be parsed eagerly at compile-time
+                  ${bomDep.versionConstraint.asString}
+                ),
                 _root_.coursier.core.Configuration(${bomDep.config.value}),
                 ${bomDep.forceOverrideVersions}
               )"""
@@ -186,7 +190,9 @@ object StringInterpolators {
                   _root_.coursier.core.ModuleName(${dep.module.name.value}),
                   _root_.scala.collection.immutable.Map(..$attrs)
                 ),
-                ${dep.version},
+                _root_.coursier.version.VersionConstraint(
+                  ${dep.versionConstraint.asString}
+                ),
                 _root_.coursier.core.Configuration(${dep.configuration.value}),
                 _root_.coursier.core.MinimizedExclusions(_root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$excls)),
                 _root_.coursier.core.Publication(
@@ -197,7 +203,7 @@ object StringInterpolators {
                 ),
                 ${dep.optional},
                 ${dep.transitive},
-                _root_.scala.collection.immutable.Map(),
+                _root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.Values](),
                 _root_.scala.collection.immutable.Nil,
                 _root_.scala.collection.immutable.Seq(..$boms),
                 _root_.coursier.core.Overrides(

@@ -9,16 +9,44 @@ object VersionsTests extends TestSuite {
     test("latest_stable") {
       test("should ignore alpha versions") {
         val v =
-          Versions("1.1-a1", "1.1-alpha1", List("1.1-alpha1", "1.0.2", "1.0.1", "1.0.0"), None)
-        val candidates = v.candidates(Latest.Stable).toSeq
-        val expected   = Seq("1.0.2", "1.0.1", "1.0.0")
+          Versions(
+            coursier.version.Version("1.1-a1"),
+            coursier.version.Version("1.1-alpha1"),
+            List(
+              coursier.version.Version("1.1-alpha1"),
+              coursier.version.Version("1.0.2"),
+              coursier.version.Version("1.0.1"),
+              coursier.version.Version("1.0.0")
+            ),
+            None
+          )
+        val candidates = v.candidates0(Latest.Stable).toSeq
+        val expected = Seq(
+          coursier.version.Version("1.0.2"),
+          coursier.version.Version("1.0.1"),
+          coursier.version.Version("1.0.0")
+        )
         assert(candidates == expected)
       }
 
       test("should ignore milestones") {
-        val v = Versions("1.1-M1", "1.1-M1", List("1.1-M1", "1.0.2", "1.0.1", "1.0.0"), None)
-        val candidates = v.candidates(Latest.Stable).toSeq
-        val expected   = Seq("1.0.2", "1.0.1", "1.0.0")
+        val v = Versions(
+          coursier.version.Version("1.1-M1"),
+          coursier.version.Version("1.1-M1"),
+          List(
+            coursier.version.Version("1.1-M1"),
+            coursier.version.Version("1.0.2"),
+            coursier.version.Version("1.0.1"),
+            coursier.version.Version("1.0.0")
+          ),
+          None
+        )
+        val candidates = v.candidates0(Latest.Stable).toSeq
+        val expected = Seq(
+          coursier.version.Version("1.0.2"),
+          coursier.version.Version("1.0.1"),
+          coursier.version.Version("1.0.0")
+        )
         assert(candidates == expected)
       }
     }

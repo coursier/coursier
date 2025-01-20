@@ -9,9 +9,11 @@ import coursier.params.ResolutionParams
 import coursier.ivy.IvyRepository
 import coursier.util.StringInterpolators._
 import coursier.util.Task
+import coursier.version.Version
 import utest._
 
 import scala.async.Async.{async, await}
+import coursier.version.VersionConstraint
 
 object FetchTests extends TestSuite {
 
@@ -30,7 +32,7 @@ object FetchTests extends TestSuite {
             Some("10.15.1")
           )
         }
-        .withJdkVersion("1.8.0_121")
+        .withJdkVersion(Version("1.8.0_121"))
     )
 
   val tests = Tests {
@@ -294,8 +296,8 @@ object FetchTests extends TestSuite {
           dep"com.splicemachine:splice_spark:2.8.0.1915-SNAPSHOT"
         )
         .mapResolutionParams(
-          _.addForceVersion(
-            mod"org.apache.hadoop:hadoop-common" -> "2.7.3"
+          _.addForceVersion0(
+            mod"org.apache.hadoop:hadoop-common" -> VersionConstraint("2.7.3")
           )
         )
 

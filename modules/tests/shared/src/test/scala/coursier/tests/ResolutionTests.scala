@@ -15,6 +15,7 @@ import coursier.maven.MavenRepository
 import coursier.tests.TestUtil._
 import coursier.tests.compatibility._
 import coursier.util.StringInterpolators._
+import coursier.version.VersionConstraint
 import utest._
 
 import scala.async.Async.{async, await}
@@ -24,13 +25,13 @@ object ResolutionTests extends TestSuite {
   def resolve0(
     deps: Seq[Dependency],
     filter: Option[Dependency => Boolean] = None,
-    forceVersions: Map[Module, String] = Map.empty,
+    forceVersions: Map[Module, VersionConstraint] = Map.empty,
     forceProperties: Map[String, String] = Map.empty
   ) = {
     val res = Resolution()
       .withRootDependencies(deps)
       .withFilter(filter)
-      .withForceVersions(forceVersions)
+      .withForceVersions0(forceVersions)
       .withForceProperties(forceProperties)
       .withOsInfo(Activation.Os.empty)
     ResolutionProcess(res)
@@ -39,7 +40,8 @@ object ResolutionTests extends TestSuite {
   }
 
   implicit class ProjectOps(val p: Project) extends AnyVal {
-    def kv: ((Module, String), (ArtifactSource, Project)) = p.moduleVersion -> (testRepository, p)
+    def kv: ((Module, VersionConstraint), (ArtifactSource, Project)) =
+      ((p.module, VersionConstraint.fromVersion(p.version0)), (testRepository, p))
   }
 
   val projects = Seq(
@@ -56,14 +58,8 @@ object ResolutionTests extends TestSuite {
       mod"acme:play",
       "2.4.1",
       dependencies = Seq(
-        Configuration.empty -> Dependency(
-          mod"acme:play-json",
-          "${play_json_version}"
-        ),
-        Configuration.empty -> Dependency(
-          mod"$${project.groupId}:$${WithSpecialChar©}",
-          "1.3.0"
-        )
+        Configuration.empty -> dep"acme:play-json:$${play_json_version}",
+        Configuration.empty -> dep"$${project.groupId}:$${WithSpecialChar©}:1.3.0"
       ),
       properties = Seq(
         "play_json_version" -> "2.4.0",
@@ -90,17 +86,14 @@ object ResolutionTests extends TestSuite {
       mod"acme:module-with-missing-pom",
       "1.0.0",
       dependencyManagement = Seq(
-        Configuration.`import` -> Dependency(mod"acme:missing-pom", "1.0.0")
+        Configuration.`import` -> dep"acme:missing-pom:1.0.0"
       )
     ),
     Project(
       mod"hudsucker:mail",
       "10.0",
       Seq(
-        Configuration.test -> Dependency(
-          mod"$${project.groupId}:test-util",
-          "${project.version}"
-        )
+        Configuration.test -> dep"$${project.groupId}:test-util:$${project.version}"
       )
     ),
     Project(mod"hudsucker:test-util", "10.0"),
@@ -116,33 +109,30 @@ object ResolutionTests extends TestSuite {
       mod"se.ikea:billy",
       "18.0",
       dependencies = Seq(
-        Configuration.empty -> Dependency(mod"acme:play", "")
+        Configuration.empty -> dep"acme:play:"
       ),
-      parent = Some(mod"se.ikea:parent", "18.0")
+      parent0 = Some((mod"se.ikea:parent", "18.0"))
     ),
     Project(
       mod"org.gnome:parent",
       "7.0",
       Seq(
-        Configuration.empty -> Dependency(mod"org.gnu:glib", "13.4")
+        Configuration.empty -> dep"org.gnu:glib:13.4"
       )
     ),
     Project(
       mod"org.gnome:panel-legacy",
       "7.0",
       dependencies = Seq(
-        Configuration.empty -> Dependency(
-          mod"org.gnome:desktop",
-          "${project.version}"
-        )
+        Configuration.empty -> dep"org.gnome:desktop:$${project.version}"
       ),
-      parent = Some(mod"org.gnome:parent", "7.0")
+      parent0 = Some(mod"org.gnome:parent", "7.0")
     ),
     Project(
       mod"gov.nsa:secure-pgp",
       "10.0",
       Seq(
-        Configuration.empty -> Dependency(mod"gov.nsa:crypto", "536.89")
+        Configuration.empty -> dep"gov.nsa:crypto:536.89"
       )
     ),
     Project(
@@ -158,16 +148,16 @@ object ResolutionTests extends TestSuite {
       mod"com.thoughtworks.paranamer:paranamer-parent",
       "2.6",
       dependencies = Seq(
-        Configuration.empty -> Dependency(mod"junit:junit", "")
+        Configuration.empty -> dep"junit:junit:"
       ),
       dependencyManagement = Seq(
-        Configuration.test -> Dependency(mod"junit:junit", "4.11")
+        Configuration.test -> dep"junit:junit:4.11"
       )
     ),
     Project(
       mod"com.thoughtworks.paranamer:paranamer",
       "2.6",
-      parent = Some(mod"com.thoughtworks.paranamer:paranamer-parent", "2.6")
+      parent0 = Some(mod"com.thoughtworks.paranamer:paranamer-parent", "2.6")
     ),
     Project(
       mod"com.github.dummy:libb",
@@ -177,10 +167,7 @@ object ResolutionTests extends TestSuite {
           "default",
           activeByDefault = Some(true),
           dependencies = Seq(
-            Configuration.empty -> Dependency(
-              mod"org.escalier:librairie-standard",
-              "2.11.6"
-            )
+            Configuration.empty -> dep"org.escalier:librairie-standard:2.11.6"
           )
         )
       )
@@ -189,24 +176,15 @@ object ResolutionTests extends TestSuite {
       mod"com.github.dummy:libb",
       "0.4.2",
       dependencies = Seq(
-        Configuration.empty -> Dependency(
-          mod"org.scalaverification:scala-verification",
-          "1.12.4"
-        )
+        Configuration.empty -> dep"org.scalaverification:scala-verification:1.12.4"
       ),
       profiles = Seq(
         Profile(
           "default",
           activeByDefault = Some(true),
           dependencies = Seq(
-            Configuration.empty -> Dependency(
-              mod"org.escalier:librairie-standard",
-              "2.11.6"
-            ),
-            Configuration.test -> Dependency(
-              mod"org.scalaverification:scala-verification",
-              "1.12.4"
-            )
+            Configuration.empty -> dep"org.escalier:librairie-standard:2.11.6",
+            Configuration.test  -> dep"org.scalaverification:scala-verification:1.12.4"
           )
         )
       )
@@ -220,10 +198,7 @@ object ResolutionTests extends TestSuite {
           "default",
           activation = Profile.Activation(properties = Seq("special" -> None)),
           dependencies = Seq(
-            Configuration.empty -> Dependency(
-              mod"org.escalier:librairie-standard",
-              "2.11.6"
-            )
+            Configuration.empty -> dep"org.escalier:librairie-standard:2.11.6"
           )
         )
       )
@@ -237,10 +212,7 @@ object ResolutionTests extends TestSuite {
           "default",
           activation = Profile.Activation(properties = Seq("special" -> Some("true"))),
           dependencies = Seq(
-            Configuration.empty -> Dependency(
-              mod"org.escalier:librairie-standard",
-              "2.11.6"
-            )
+            Configuration.empty -> dep"org.escalier:librairie-standard:2.11.6"
           )
         )
       )
@@ -254,10 +226,7 @@ object ResolutionTests extends TestSuite {
           "default",
           activation = Profile.Activation(properties = Seq("special" -> Some("!false"))),
           dependencies = Seq(
-            Configuration.empty -> Dependency(
-              mod"org.escalier:librairie-standard",
-              "2.11.6"
-            )
+            Configuration.empty -> dep"org.escalier:librairie-standard:2.11.6"
           )
         )
       )
@@ -270,17 +239,14 @@ object ResolutionTests extends TestSuite {
     Project(
       mod"com.github.dummy:libb",
       "0.5.6",
-      parent = Some(mod"com.github.dummy:libb-parent", "0.5.6"),
+      parent0 = Some(mod"com.github.dummy:libb-parent", "0.5.6"),
       properties = Seq("special" -> "true"),
       profiles = Seq(
         Profile(
           "default",
           activation = Profile.Activation(properties = Seq("special" -> Some("!false"))),
           dependencies = Seq(
-            Configuration.empty -> Dependency(
-              mod"org.escalier:librairie-standard",
-              "2.11.6"
-            )
+            Configuration.empty -> dep"org.escalier:librairie-standard:2.11.6"
           )
         )
       )
@@ -303,10 +269,7 @@ object ResolutionTests extends TestSuite {
           "default",
           activation = Profile.Activation(properties = Seq("!special" -> None)),
           dependencies = Seq(
-            Configuration.empty -> Dependency(
-              mod"org.escalier:librairie-standard",
-              "2.11.6"
-            )
+            Configuration.empty -> dep"org.escalier:librairie-standard:2.11.6"
           )
         )
       )
@@ -329,10 +292,7 @@ object ResolutionTests extends TestSuite {
           "default",
           activation = Profile.Activation(properties = Seq("!special" -> None)),
           dependencies = Seq(
-            Configuration.empty -> Dependency(
-              mod"org.escalier:librairie-standard",
-              "2.11.6"
-            )
+            Configuration.empty -> dep"org.escalier:librairie-standard:2.11.6"
           )
         )
       )
@@ -342,18 +302,18 @@ object ResolutionTests extends TestSuite {
     Project(
       mod"an-org:a-lib",
       "1.0",
-      Seq(Configuration.empty -> Dependency(mod"an-org:a-name", "1.0"))
+      Seq(Configuration.empty -> dep"an-org:a-name:1.0")
     ),
     Project(mod"an-org:a-lib", "1.1"),
     Project(
       mod"an-org:a-lib",
       "1.2",
-      Seq(Configuration.empty -> Dependency(mod"an-org:a-name", "1.2"))
+      Seq(Configuration.empty -> dep"an-org:a-name:1.2")
     ),
     Project(
       mod"an-org:another-lib",
       "1.0",
-      Seq(Configuration.empty -> Dependency(mod"an-org:a-name", "1.0"))
+      Seq(Configuration.empty -> dep"an-org:a-name:1.0")
     ),
 
     // Must bring transitively an-org:a-name, as an optional dependency
@@ -370,14 +330,14 @@ object ResolutionTests extends TestSuite {
       mod"an-org:an-app",
       "1.1",
       Seq(
-        Configuration.empty -> Dependency(mod"an-org:a-lib", "1.1")
+        Configuration.empty -> dep"an-org:a-lib:1.1"
       )
     ),
     Project(
       mod"an-org:an-app",
       "1.2",
       Seq(
-        Configuration.empty -> Dependency(mod"an-org:a-lib", "1.2")
+        Configuration.empty -> dep"an-org:a-lib:1.2"
       )
     ),
     Project(mod"an-org:my-lib-1", "1.0.0+build.027", Seq()),
@@ -387,43 +347,48 @@ object ResolutionTests extends TestSuite {
       mod"an-org:my-lib-2",
       "1.0",
       Seq(
-        Configuration.empty -> Dependency(mod"an-org:my-lib-1", "1.0.0+build.027")
+        Configuration.empty -> dep"an-org:my-lib-1:1.0.0+build.027"
       )
     ),
     Project(
       mod"an-org:my-lib-3",
       "1.0",
       Seq(
-        Configuration.empty -> Dependency(mod"an-org:my-lib-1", "1.1.0+build.018")
+        Configuration.empty -> dep"an-org:my-lib-1:1.1.0+build.018"
       )
     ),
     Project(
       mod"an-org:my-lib-3",
       "1.1",
       Seq(
-        Configuration.empty -> Dependency(mod"an-org:my-lib-1", "1.2.0")
+        Configuration.empty -> dep"an-org:my-lib-1:1.2.0"
       )
     ),
     Project(
       mod"an-org:my-app",
       "1.0",
       Seq(
-        Configuration.empty -> Dependency(mod"an-org:my-lib-2", "1.0"),
-        Configuration.empty -> Dependency(mod"an-org:my-lib-3", "1.0")
+        Configuration.empty -> dep"an-org:my-lib-2:1.0",
+        Configuration.empty -> dep"an-org:my-lib-3:1.0"
       )
     ),
     Project(
       mod"an-org:my-app",
       "1.1",
       Seq(
-        Configuration.empty -> Dependency(mod"an-org:my-lib-2", "1.0"),
-        Configuration.empty -> Dependency(mod"an-org:my-lib-3", "1.1")
+        Configuration.empty -> dep"an-org:my-lib-2:1.0",
+        Configuration.empty -> dep"an-org:my-lib-3:1.1"
       )
     )
   )
 
   val projectsMap = projects
-    .map(p => p.moduleVersion -> p.withConfigurations(MavenRepository.defaultConfigurations))
+    .map { p =>
+      (
+        (p.module, VersionConstraint.fromVersion(p.version0)),
+        p.withConfigurations(MavenRepository.defaultConfigurations)
+      )
+    }
     .toMap
   val testRepository = TestRepository(projectsMap)
 
@@ -443,7 +408,7 @@ object ResolutionTests extends TestSuite {
     }
     test("notFound") {
       async {
-        val dep = Dependency(mod"acme:playy", "2.4.0")
+        val dep = dep"acme:playy:2.4.0"
         val res = await(resolve0(
           Seq(dep)
         ))
@@ -451,14 +416,14 @@ object ResolutionTests extends TestSuite {
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
           .withDependencies(Set(dep.withDefaultScope))
-          .withErrorCache(Map(dep.moduleVersion -> Seq("Not found")))
+          .withErrorCache(Map(dep.moduleVersionConstraint -> Seq("Not found")))
 
         assert(res == expected)
       }
     }
     test("missingPom") {
       async {
-        val dep = Dependency(mod"acme:module-with-missing-pom", "1.0.0")
+        val dep = dep"acme:module-with-missing-pom:1.0.0"
         val res = await(resolve0(
           Seq(dep)
         ))
@@ -467,22 +432,24 @@ object ResolutionTests extends TestSuite {
           for {
             dep <- res.dependencies.toSeq
             err <- res.errorCache
-              .get(dep.moduleVersion)
+              .get(dep.moduleVersionConstraint)
               .toSeq
           } yield (dep, err)
+
+        val errors = res.errors0
 
         // Error originates from a dependency import, not directly from a dependency
         assert(directDependencyErrors.isEmpty)
 
         // metadataErrors have that
         assert(
-          res.errors == Seq((mod"acme:missing-pom", "1.0.0") -> List("Not found"))
+          errors == Seq((mod"acme:missing-pom", VersionConstraint("1.0.0")) -> List("Not found"))
         )
       }
     }
     test("single") {
       async {
-        val dep = Dependency(mod"acme:config", "1.3.0")
+        val dep = dep"acme:config:1.3.0"
         val res = await(resolve0(
           Seq(dep)
         )).clearFinalDependenciesCache.clearProjectProperties
@@ -490,8 +457,11 @@ object ResolutionTests extends TestSuite {
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
           .withDependencies(Set(dep.withDefaultScope))
-          .withProjectCache(Map(
-            dep.moduleVersion -> (testRepository, projectsMap(dep.moduleVersion))
+          .withProjectCache0(Map(
+            dep.moduleVersionConstraint -> (
+              testRepository,
+              projectsMap(dep.moduleVersionConstraint)
+            )
           ))
 
         assert(res == expected)
@@ -499,8 +469,8 @@ object ResolutionTests extends TestSuite {
     }
     test("oneTransitiveDependency") {
       async {
-        val dep   = Dependency(mod"acme:play", "2.4.0")
-        val trDep = Dependency(mod"acme:play-json", "2.4.0")
+        val dep   = dep"acme:play:2.4.0"
+        val trDep = dep"acme:play-json:2.4.0"
         val res = await(resolve0(
           Seq(dep)
         )).clearFinalDependenciesCache.clearProjectProperties
@@ -508,10 +478,10 @@ object ResolutionTests extends TestSuite {
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
           .withDependencies(Set(dep.withDefaultScope, trDep.withDefaultScope))
-          .withProjectCache(
+          .withProjectCache0(
             Map(
-              projectsMap(dep.moduleVersion).kv,
-              projectsMap(trDep.moduleVersion).kv
+              projectsMap(dep.moduleVersionConstraint).kv,
+              projectsMap(trDep.moduleVersionConstraint).kv
             )
           )
 
@@ -520,10 +490,10 @@ object ResolutionTests extends TestSuite {
     }
     test("twoTransitiveDependencyWithProps") {
       async {
-        val dep = Dependency(mod"acme:play", "2.4.1")
+        val dep = dep"acme:play:2.4.1"
         val trDeps = Seq(
-          Dependency(mod"acme:play-json", "2.4.0"),
-          Dependency(mod"acme:config", "1.3.0")
+          dep"acme:play-json:2.4.0",
+          dep"acme:config:1.3.0"
         )
         val res = await(resolve0(
           Seq(dep)
@@ -538,7 +508,7 @@ object ResolutionTests extends TestSuite {
     }
     test("exclude") {
       async {
-        val dep = Dependency(mod"acme:play-extra-no-config", "2.4.1")
+        val dep = dep"acme:play-extra-no-config:2.4.1"
         val trDeps = Seq(
           dep"acme:play:2.4.1"
             .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"config")))),
@@ -558,7 +528,7 @@ object ResolutionTests extends TestSuite {
     }
     test("excludeOrgWildcard") {
       async {
-        val dep = Dependency(mod"acme:play-extra-no-config-no", "2.4.1")
+        val dep = dep"acme:play-extra-no-config-no:2.4.1"
         val trDeps = Seq(
           dep"acme:play:2.4.1"
             .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"config")))),
@@ -578,7 +548,7 @@ object ResolutionTests extends TestSuite {
     }
     test("filter") {
       async {
-        val dep = Dependency(mod"hudsucker:mail", "10.0")
+        val dep = dep"hudsucker:mail:10.0"
         val res = await(resolve0(
           Seq(dep)
         )).clearCaches
@@ -592,7 +562,7 @@ object ResolutionTests extends TestSuite {
     }
     test("parentDepMgmt") {
       async {
-        val dep = Dependency(mod"se.ikea:billy", "18.0")
+        val dep = dep"se.ikea:billy:18.0"
         val trDeps = Seq(
           dep"acme:play:2.4.0"
             .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"play-json"))))
@@ -610,10 +580,10 @@ object ResolutionTests extends TestSuite {
     }
     test("parentDependencies") {
       async {
-        val dep = Dependency(mod"org.gnome:panel-legacy", "7.0")
+        val dep = dep"org.gnome:panel-legacy:7.0"
         val trDeps = Seq(
-          Dependency(mod"org.gnu:glib", "13.4"),
-          Dependency(mod"org.gnome:desktop", "7.0")
+          dep"org.gnu:glib:13.4",
+          dep"org.gnome:desktop:7.0"
         )
         val res = await(resolve0(
           Seq(dep)
@@ -628,7 +598,7 @@ object ResolutionTests extends TestSuite {
     }
     test("propertiesInExclusions") {
       async {
-        val dep = Dependency(mod"com.mailapp:mail-client", "2.1")
+        val dep = dep"com.mailapp:mail-client:2.1"
         val trDeps = Seq(
           dep"gov.nsa:secure-pgp:10.0"
             .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"crypto"))))
@@ -646,7 +616,7 @@ object ResolutionTests extends TestSuite {
     }
     test("depMgmtInParentDeps") {
       async {
-        val dep = Dependency(mod"com.thoughtworks.paranamer:paranamer", "2.6")
+        val dep = dep"com.thoughtworks.paranamer:paranamer:2.6"
         val res = await(resolve0(
           Seq(dep)
         )).clearCaches
@@ -660,9 +630,9 @@ object ResolutionTests extends TestSuite {
     }
     test("depsFromDefaultProfile") {
       async {
-        val dep = Dependency(mod"com.github.dummy:libb", "0.3.3")
+        val dep = dep"com.github.dummy:libb:0.3.3"
         val trDeps = Seq(
-          Dependency(mod"org.escalier:librairie-standard", "2.11.6")
+          dep"org.escalier:librairie-standard:2.11.6"
         )
         val res = await(resolve0(
           Seq(dep)
@@ -678,9 +648,9 @@ object ResolutionTests extends TestSuite {
     test("depsFromPropertyActivatedProfile") {
       val f =
         for (version <- Seq("0.5.3", "0.5.4", "0.5.5", "0.5.6", "0.5.8")) yield async {
-          val dep = Dependency(mod"com.github.dummy:libb", version)
+          val dep = Dependency(mod"com.github.dummy:libb", VersionConstraint(version))
           val trDeps = Seq(
-            Dependency(mod"org.escalier:librairie-standard", "2.11.6")
+            dep"org.escalier:librairie-standard:2.11.6"
           )
           val res = await(resolve0(
             Seq(dep)
@@ -706,7 +676,7 @@ object ResolutionTests extends TestSuite {
       // the "special" attribute set to "true", the transitive dependency
       // should not appear.
       async {
-        val dep = Dependency(mod"com.github.dummy:libb", "0.5.7")
+        val dep = dep"com.github.dummy:libb:0.5.7"
         val res = await(resolve0(
           Seq(dep)
         )).clearCaches
@@ -721,9 +691,9 @@ object ResolutionTests extends TestSuite {
     test("depsScopeOverrideFromProfile") {
       async {
         // Like com.google.inject:guice:3.0 with org.sonatype.sisu.inject:cglib
-        val dep = Dependency(mod"com.github.dummy:libb", "0.4.2")
+        val dep = dep"com.github.dummy:libb:0.4.2"
         val trDeps = Seq(
-          Dependency(mod"org.escalier:librairie-standard", "2.11.6")
+          dep"org.escalier:librairie-standard:2.11.6"
         )
         val res = await(resolve0(
           Seq(dep)
@@ -739,7 +709,7 @@ object ResolutionTests extends TestSuite {
 
     test("exclusionsAndOptionalShouldGoAlong") {
       async {
-        val dep = Dependency(mod"an-org:an-app", "1.0")
+        val dep = dep"an-org:an-app:1.0"
         val trDeps = Seq(
           dep"an-org:a-lib:1.0"
             .withMinimizedExclusions(MinimizedExclusions(Set((org"an-org", name"a-name")))),
@@ -762,8 +732,8 @@ object ResolutionTests extends TestSuite {
     test("exclusionsOfDependenciesFromDifferentPathsShouldNotCollide") {
       async {
         val deps = Seq(
-          Dependency(mod"an-org:an-app", "1.0"),
-          Dependency(mod"an-org:a-lib", "1.0").withOptional(true)
+          dep"an-org:an-app:1.0",
+          dep"an-org:a-lib:1.0".withOptional(true)
         )
         val trDeps = Seq(
           dep"an-org:a-lib:1.0"
@@ -788,10 +758,10 @@ object ResolutionTests extends TestSuite {
       test {
         async {
           val deps = Seq(
-            Dependency(mod"an-org:a-name", "1.1")
+            dep"an-org:a-name:1.1"
           )
           val depOverrides = Map(
-            mod"an-org:a-name" -> "1.0"
+            mod"an-org:a-name" -> VersionConstraint("1.0")
           )
 
           val res = await(resolve0(
@@ -803,10 +773,10 @@ object ResolutionTests extends TestSuite {
             .withRootDependencies(deps)
             .withDependencies(
               Set(
-                Dependency(mod"an-org:a-name", "1.0")
+                dep"an-org:a-name:1.0"
               ).map(_.withDefaultScope)
             )
-            .withForceVersions(depOverrides)
+            .withForceVersions0(depOverrides)
 
           assert(res == expected)
         }
@@ -814,10 +784,10 @@ object ResolutionTests extends TestSuite {
 
       test - async {
         val deps = Seq(
-          Dependency(mod"an-org:an-app", "1.1")
+          dep"an-org:an-app:1.1"
         )
         val depOverrides = Map(
-          mod"an-org:a-lib" -> "1.0"
+          mod"an-org:a-lib" -> VersionConstraint("1.0")
         )
 
         val res = await(resolve0(
@@ -829,22 +799,22 @@ object ResolutionTests extends TestSuite {
           .withRootDependencies(deps)
           .withDependencies(
             Set(
-              Dependency(mod"an-org:an-app", "1.1"),
-              Dependency(mod"an-org:a-lib", "1.0"),
-              Dependency(mod"an-org:a-name", "1.0")
+              dep"an-org:an-app:1.1",
+              dep"an-org:a-lib:1.0",
+              dep"an-org:a-name:1.0"
             ).map(_.withDefaultScope)
           )
-          .withForceVersions(depOverrides)
+          .withForceVersions0(depOverrides)
 
         assert(res == expected)
       }
 
       test - async {
         val deps = Seq(
-          Dependency(mod"an-org:an-app", "1.1")
+          dep"an-org:an-app:1.1"
         )
         val depOverrides = Map(
-          mod"*:a-lib" -> "1.0"
+          mod"*:a-lib" -> VersionConstraint("1.0")
         )
 
         val res = await(resolve0(
@@ -856,12 +826,12 @@ object ResolutionTests extends TestSuite {
           .withRootDependencies(deps)
           .withDependencies(
             Set(
-              Dependency(mod"an-org:an-app", "1.1"),
-              Dependency(mod"an-org:a-lib", "1.0"),
-              Dependency(mod"an-org:a-name", "1.0")
+              dep"an-org:an-app:1.1",
+              dep"an-org:a-lib:1.0",
+              dep"an-org:a-name:1.0"
             ).map(_.withDefaultScope)
           )
-          .withForceVersions(depOverrides)
+          .withForceVersions0(depOverrides)
 
         assert(res == expected)
       }
@@ -869,10 +839,10 @@ object ResolutionTests extends TestSuite {
       test {
         async {
           val deps = Seq(
-            Dependency(mod"an-org:an-app", "1.2")
+            dep"an-org:an-app:1.2"
           )
           val depOverrides = Map(
-            mod"an-org:a-lib" -> "1.1"
+            mod"an-org:a-lib" -> VersionConstraint("1.1")
           )
 
           val res = await(resolve0(
@@ -884,11 +854,11 @@ object ResolutionTests extends TestSuite {
             .withRootDependencies(deps)
             .withDependencies(
               Set(
-                Dependency(mod"an-org:an-app", "1.2"),
-                Dependency(mod"an-org:a-lib", "1.1")
+                dep"an-org:an-app:1.2",
+                dep"an-org:a-lib:1.1"
               ).map(_.withDefaultScope)
             )
-            .withForceVersions(depOverrides)
+            .withForceVersions0(depOverrides)
 
           assert(res == expected)
         }
@@ -899,14 +869,11 @@ object ResolutionTests extends TestSuite {
       test("propertySubstitution") {
         val res =
           Resolution.withProperties(
-            Seq(Configuration.empty -> Dependency(
-              mod"a-company:a-name",
-              "${a.property}"
-            )),
-            Map("a.property" -> "a-version")
+            Seq(Configuration.empty -> dep"a-company:a-name:$${a.property}"),
+            Map("a.property"        -> "a-version")
           )
         val expected =
-          Seq(Configuration.empty -> Dependency(mod"a-company:a-name", "a-version"))
+          Seq(Configuration.empty -> dep"a-company:a-name:a-version")
 
         assert(res == expected)
       }
@@ -915,7 +882,7 @@ object ResolutionTests extends TestSuite {
     test("forcedProperties") {
       async {
         val deps = Seq(
-          Dependency(mod"com.github.dummy:libb", "0.5.4")
+          dep"com.github.dummy:libb:0.5.4"
         )
 
         val forceProperties = Map(
@@ -930,7 +897,7 @@ object ResolutionTests extends TestSuite {
           .withRootDependencies(deps)
           .withDependencies(
             Set(
-              Dependency(mod"com.github.dummy:libb", "0.5.4")
+              dep"com.github.dummy:libb:0.5.4"
             ).map(_.withDefaultScope)
           )
           .withForceProperties(forceProperties)
@@ -941,11 +908,11 @@ object ResolutionTests extends TestSuite {
 
     test("mergingTransitiveDeps") {
       test - async {
-        val dep = Dependency(mod"an-org:my-app", "1.0")
+        val dep = dep"an-org:my-app:1.0"
         val trDeps = Seq(
-          Dependency(mod"an-org:my-lib-1", "1.1.0+build.018"),
-          Dependency(mod"an-org:my-lib-2", "1.0"),
-          Dependency(mod"an-org:my-lib-3", "1.0")
+          dep"an-org:my-lib-1:1.1.0+build.018",
+          dep"an-org:my-lib-2:1.0",
+          dep"an-org:my-lib-3:1.0"
         )
         val res = await(resolve0(
           Seq(dep)
@@ -959,11 +926,11 @@ object ResolutionTests extends TestSuite {
       }
 
       test - async {
-        val dep = Dependency(mod"an-org:my-app", "1.1")
+        val dep = dep"an-org:my-app:1.1"
         val trDeps = Seq(
-          Dependency(mod"an-org:my-lib-1", "1.2.0"),
-          Dependency(mod"an-org:my-lib-2", "1.0"),
-          Dependency(mod"an-org:my-lib-3", "1.1")
+          dep"an-org:my-lib-1:1.2.0",
+          dep"an-org:my-lib-2:1.0",
+          dep"an-org:my-lib-3:1.1"
         )
         val res = await(resolve0(
           Seq(dep)

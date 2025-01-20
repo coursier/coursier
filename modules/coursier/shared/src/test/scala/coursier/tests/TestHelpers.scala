@@ -14,6 +14,7 @@ import coursier.core.{
 import coursier.params.ResolutionParams
 import coursier.testcache.TestCache
 import coursier.util.Artifact
+import coursier.version.VersionConstraint
 
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
@@ -28,7 +29,7 @@ object TestHelpers extends PlatformTestHelpers {
     def list(deps: Iterable[Dependency]): Seq[String] =
       deps
         .iterator
-        .map(dep => s"${dep.module.repr}:${dep.version}") // Add config too?
+        .map(dep => s"${dep.module.repr}:${dep.versionConstraint.asString}") // Add config too?
         .toArray
         .sorted
         .distinct
@@ -54,95 +55,104 @@ object TestHelpers extends PlatformTestHelpers {
 
     val rootDep = res.rootDependencies.head
 
-    val attrPathPart =
-      if (rootDep.module.attributes.isEmpty)
-        ""
-      else
-        "/" +
-          rootDep
-            .module
-            .attributes
-            .toVector
-            .sorted
-            .map {
-              case (k, v) => k + "_" + v
-            }
-            .mkString("_")
+    VersionConstraint.parsedValueAsToString.set(true)
+    try {
 
-    val (dependenciesHashPart, bomModVerHashPart) = {
-      def isSimpleDependencies(ds: Seq[Dependency]) = {
-        val simpleDeps = Seq(
-          Dependency(rootDep.module, rootDep.version).withConfiguration(rootDep.configuration)
-        )
-        ds == simpleDeps
-      }
-
-      val dependencyElements = res.rootDependencies match {
-        case ds if isSimpleDependencies(ds) => ""
-        case ds if ds.lengthCompare(1) == 0 => ds.head
-        case ds                             => ds
-      }
-
-      val bomElements = res.boms match {
-        case boms if boms.isEmpty => ""
-        case boms => boms.map {
-            // quick hack to recycle former sha-1 values when config is empty
-            case emptyConfigBomDep if emptyConfigBomDep.config.isEmpty =>
-              emptyConfigBomDep.moduleVersion
-            case other =>
-              other
-          }
-      }
-
-      (dependencyElements.toString(), bomElements.toString()) match {
-        case ("", "")       => ("", "")
-        case (dStr @ _, "") => ("_dep" + sha1(dStr), "")
-        case ("", bStr @ _) => ("", "_boms" + sha1(bStr))
-        // Combine dependencies and BOMs into a single hash to avoid overly long file names.
-        case (dStr @ _, bStr @ _) => ("_dep" + sha1(dStr + bStr), "")
-      }
-    }
-
-    val paramsPart =
-      if (params == ResolutionParams())
-        ""
-      else {
-        import coursier.core.Configuration
-        // hack not to have to edit / review lots of test fixtures
-        val params0 =
-          if (params.defaultConfiguration == Configuration.defaultRuntime)
-            params.withDefaultConfiguration(Configuration.compile)
-          else if (params.defaultConfiguration == Configuration.compile)
-            params.withDefaultConfiguration(Configuration("really-compile"))
-          else
-            params
-        // This avoids some sha1 changes
-        def normalize(s: String): String = {
-          val noComma = s.replace(", ", "||")
-          val remove  = Seq("None", "List()", "Map()", "Set()")
-          var value   = noComma.replace("HashSet", "Set")
-          for (r <- remove) {
-            value = value.replace("|" + r + "|", "")
-            if (value.endsWith("||" + r + ")"))
-              value = value.stripSuffix("||" + r + ")") + ")"
-          }
-          value
-        }
-        val n = normalize(params0.toString)
-        "_params" + sha1(n)
-      }
-
-    Seq(
-      rootDep.module.organization.value,
-      rootDep.module.name.value,
-      attrPathPart,
-      rootDep.version + (
-        if (rootDep.configuration.isEmpty)
+      val attrPathPart =
+        if (rootDep.module.attributes.isEmpty)
           ""
         else
-          "_" + rootDep.configuration.value.replace('(', '_').replace(')', '_')
-      ) + dependenciesHashPart + bomModVerHashPart + paramsPart + extraKeyPart
-    ).filter(_.nonEmpty).mkString("/")
+          "/" +
+            rootDep
+              .module
+              .attributes
+              .toVector
+              .sorted
+              .map {
+                case (k, v) => k + "_" + v
+              }
+              .mkString("_")
+
+      val (dependenciesHashPart, bomModVerHashPart) = {
+        def isSimpleDependencies(ds: Seq[Dependency]) = {
+          val simpleDeps = Seq(
+            Dependency(
+              rootDep.module,
+              rootDep.versionConstraint
+            ).withConfiguration(rootDep.configuration)
+          )
+          ds == simpleDeps
+        }
+
+        val dependencyElements = res.rootDependencies match {
+          case ds if isSimpleDependencies(ds) => ""
+          case ds if ds.lengthCompare(1) == 0 => ds.head
+          case ds                             => ds
+        }
+
+        val bomElements = res.boms match {
+          case boms if boms.isEmpty => ""
+          case boms => boms.map {
+              // quick hack to recycle former sha-1 values when config is empty
+              case emptyConfigBomDep if emptyConfigBomDep.config.isEmpty =>
+                emptyConfigBomDep.moduleVersionConstraint
+              case other =>
+                other
+            }
+        }
+
+        (dependencyElements.toString(), bomElements.toString()) match {
+          case ("", "")       => ("", "")
+          case (dStr @ _, "") => ("_dep" + sha1(dStr), "")
+          case ("", bStr @ _) => ("", "_boms" + sha1(bStr))
+          // Combine dependencies and BOMs into a single hash to avoid overly long file names.
+          case (dStr @ _, bStr @ _) => ("_dep" + sha1(dStr + bStr), "")
+        }
+      }
+
+      val paramsPart =
+        if (params == ResolutionParams())
+          ""
+        else {
+          import coursier.core.Configuration
+          // hack not to have to edit / review lots of test fixtures
+          val params0 =
+            if (params.defaultConfiguration == Configuration.defaultRuntime)
+              params.withDefaultConfiguration(Configuration.compile)
+            else if (params.defaultConfiguration == Configuration.compile)
+              params.withDefaultConfiguration(Configuration("really-compile"))
+            else
+              params
+          // This avoids some sha1 changes
+          def normalize(s: String): String = {
+            val noComma = s.replace(", ", "||")
+            val remove  = Seq("None", "List()", "Map()", "Set()")
+            var value   = noComma.replace("HashSet", "Set")
+            for (r <- remove) {
+              value = value.replace("|" + r + "|", "")
+              if (value.endsWith("||" + r + ")"))
+                value = value.stripSuffix("||" + r + ")") + ")"
+            }
+            value
+          }
+          val n = normalize(params0.toString)
+          "_params" + sha1(n)
+        }
+
+      Seq(
+        rootDep.module.organization.value,
+        rootDep.module.name.value,
+        attrPathPart,
+        rootDep.versionConstraint.asString + (
+          if (rootDep.configuration.isEmpty)
+            ""
+          else
+            "_" + rootDep.configuration.value.replace('(', '_').replace(')', '_')
+        ) + dependenciesHashPart + bomModVerHashPart + paramsPart + extraKeyPart
+      ).filter(_.nonEmpty).mkString("/")
+    }
+    finally
+      VersionConstraint.parsedValueAsToString.remove()
   }
 
   def validate(
@@ -199,44 +209,20 @@ object TestHelpers extends PlatformTestHelpers {
     }
   }
 
-  def dependenciesWithRetainedVersion(res: Resolution): Seq[Dependency] =
-    res.orderedDependencies.map { dep =>
-      val version = res.projectCache
-        .get(dep.moduleVersion)
-        .map(_._2.actualVersion)
-        .orElse {
-          res.reconciledVersions.get(dep.module)
-        }
-        .getOrElse {
-          System.err.println(s"Project not found for ${dep.module.repr}:${dep.version}")
-          for ((mod, v) <- res.projectCache.keys.toVector.sortBy(_.toString()))
-            System.err.println(s"  ${mod.repr}:$v")
-          dep.version
-        }
-      dep.withVersion(version)
-    }
-
   def validateDependencies(
     res: Resolution,
     params: ResolutionParams = ResolutionParams(),
     extraKeyPart: String = ""
   ): Future[Unit] =
     validate("resolutions", res, params, extraKeyPart) {
-      val elems = dependenciesWithRetainedVersion(res)
-        .map { dep =>
-          (
-            dep.module.organization.value,
-            dep.module.nameWithAttributes,
-            dep.version,
-            dep.configuration.value
-          )
-        }
-
-      elems
-        .map {
-          case (org, name, ver, cfg) =>
-            Seq(org, name, ver, cfg).mkString(":")
-        }
+      res.orderedDependencies.map { dep =>
+        Seq(
+          dep.module.organization.value,
+          dep.module.nameWithAttributes,
+          dep.versionConstraint.asString,
+          dep.configuration.value
+        ).mkString(":")
+      }
     }
 
   def versionOf(res: Resolution, mod: Module): Option[String] =
@@ -245,9 +231,9 @@ object TestHelpers extends PlatformTestHelpers {
       .collectFirst {
         case dep if dep.module == mod =>
           res
-            .projectCache
-            .get(dep.moduleVersion)
-            .fold(dep.version)(_._2.actualVersion)
+            .projectCache0
+            .get(dep.moduleVersionConstraint)
+            .fold(dep.versionConstraint.asString)(_._2.actualVersion0.asString)
       }
 
   def validateArtifacts(

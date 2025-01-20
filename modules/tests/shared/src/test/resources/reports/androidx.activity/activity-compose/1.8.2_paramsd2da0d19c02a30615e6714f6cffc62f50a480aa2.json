@@ -606,6 +606,8 @@
         "androidx.lifecycle:lifecycle-viewmodel:aar:2.6.1",
         "androidx.savedstate:savedstate:aar:1.2.1",
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
         "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
@@ -665,10 +667,7 @@
         "androidx.annotation:annotation:1.2.0",
         "androidx.arch.core:core-common:2.2.0",
         "androidx.lifecycle:lifecycle-common:2.6.1",
-        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
-        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
       ]
     },
     {

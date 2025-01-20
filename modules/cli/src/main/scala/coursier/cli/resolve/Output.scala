@@ -25,22 +25,22 @@ object Output {
     if (outputParams.verbosity >= 1) {
       stderr.println(
         s"  Dependencies:$nl" +
-          Print.dependenciesUnknownConfigs(
+          Print.dependenciesUnknownConfigs0(
             deps,
             Map.empty,
             printExclusions = outputParams.verbosity >= 2
           )
       )
 
-      if (resolutionParams.forceVersion.nonEmpty) {
+      if (resolutionParams.forceVersion0.nonEmpty) {
         stderr.println("  Force versions:")
-        val ordered = resolutionParams.forceVersion
+        val ordered = resolutionParams.forceVersion0
           .toVector
           .sortBy { case (mod, _) =>
             mod.toString
           }
         for ((mod, ver) <- ordered)
-          stderr.println(s"$mod:$ver")
+          stderr.println(s"$mod:${ver.asString}")
       }
     }
 
@@ -107,9 +107,16 @@ object Output {
         }
         else {
           val classpathOrder = params.classpathOrder.getOrElse(false)
-          Print.dependenciesUnknownConfigs(
-            if (classpathOrder) res.orderedDependencies else res.minDependencies.toVector,
-            res.projectCache.map { case (k, (_, p)) => k -> p },
+          Print.dependenciesUnknownConfigs0(
+            if (classpathOrder)
+              res.orderedDependencies
+            else {
+              val set =
+                if (res.errors0.nonEmpty || !res.isDone) res.minimizedDependenciesLoose()
+                else res.minDependencies
+              set.toVector
+            },
+            res.projectCache0.map { case ((m, v), (_, p)) => ((m, v), p) },
             printExclusions = withExclusions,
             reorder = !classpathOrder
           )

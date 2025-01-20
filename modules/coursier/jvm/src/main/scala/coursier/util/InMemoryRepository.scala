@@ -5,6 +5,7 @@ import java.net.{URL, URLConnection}
 
 import coursier.cache.{CacheUrl, ConnectionBuilder, FileCache}
 import coursier.core._
+import coursier.version.VersionConstraint
 import dataclass.data
 
 object InMemoryRepository {
@@ -97,10 +98,15 @@ object InMemoryRepository {
   def apply(
     fallbacks: Map[(Module, String), (URL, Boolean)]
   ): InMemoryRepository =
-    privateApply(fallbacks)
+    privateApply(
+      fallbacks.map {
+        case ((m, v), (url, thing)) =>
+          ((m, VersionConstraint(v)), (url, thing))
+      }
+    )
 
   private[coursier] def privateApply(
-    fallbacks: Map[(Module, String), (URL, Boolean)]
+    fallbacks: Map[(Module, VersionConstraint), (URL, Boolean)]
   ): InMemoryRepository =
     new InMemoryRepository(fallbacks, localArtifactsShouldBeCached = false, None)
 
@@ -109,16 +115,22 @@ object InMemoryRepository {
     fallbacks: Map[(Module, String), (URL, Boolean)],
     localArtifactsShouldBeCached: Boolean
   ): InMemoryRepository =
-    privateApply(fallbacks, localArtifactsShouldBeCached)
+    privateApply(
+      fallbacks.map {
+        case ((m, v), (url, thing)) =>
+          ((m, VersionConstraint(v)), (url, thing))
+      },
+      localArtifactsShouldBeCached
+    )
 
   private[coursier] def privateApply(
-    fallbacks: Map[(Module, String), (URL, Boolean)],
+    fallbacks: Map[(Module, VersionConstraint), (URL, Boolean)],
     localArtifactsShouldBeCached: Boolean
   ): InMemoryRepository =
     new InMemoryRepository(fallbacks, localArtifactsShouldBeCached, None)
 
-  def apply[F[_]](
-    fallbacks: Map[(Module, String), (URL, Boolean)],
+  def create[F[_]](
+    fallbacks: Map[(Module, VersionConstraint), (URL, Boolean)],
     cache: FileCache[F]
   ): InMemoryRepository =
     new InMemoryRepository(
@@ -130,20 +142,20 @@ object InMemoryRepository {
 }
 
 @data class InMemoryRepository(
-  fallbacks: Map[(Module, String), (URL, Boolean)],
+  fallbacks0: Map[(Module, VersionConstraint), (URL, Boolean)],
   localArtifactsShouldBeCached: Boolean,
   cacheOpt: Option[FileCache[Nothing]]
 ) extends Repository {
 
-  def find[F[_]](
+  def find0[F[_]](
     module: Module,
-    version: String,
+    version: VersionConstraint,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, (ArtifactSource, Project)] = {
 
-    val res = fallbacks
+    val res = fallbacks0
       .get((module, version))
       .fold[Either[String, (ArtifactSource, Project)]](Left("No fallback URL found")) {
         case (url, _) =>
@@ -158,9 +170,12 @@ object InMemoryRepository {
             if (InMemoryRepository.exists(url, localArtifactsShouldBeCached, cacheOpt)) {
               val proj = Project(
                 module,
-                version,
+                // meh
+                version.preferred.headOption.getOrElse {
+                  coursier.version.Version(version.asString)
+                },
                 Nil,
-                Map.empty,
+                Map.empty[Configuration, Seq[Configuration]],
                 None,
                 Nil,
                 Nil,
@@ -189,8 +204,8 @@ object InMemoryRepository {
     project: Project,
     overrideClassifiers: Option[Seq[Classifier]]
   ): Seq[(Publication, Artifact)] =
-    fallbacks
-      .get(dependency.moduleVersion)
+    fallbacks0
+      .get(dependency.moduleVersionConstraint)
       .toSeq
       .map {
         case (url, changing) =>

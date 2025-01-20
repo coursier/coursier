@@ -3,23 +3,13 @@ package coursier.install
 import java.io.File
 
 import coursier.cache.{Cache, CacheLogger}
-import coursier.core.{
-  Classifier,
-  Dependency,
-  Latest,
-  Module,
-  Parse,
-  Repository,
-  Resolution,
-  Type,
-  Version,
-  VersionConstraint
-}
+import coursier.core.{Classifier, Dependency, Latest, Module, Repository, Resolution, Type}
 import coursier.Fetch
 import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Task}
 import coursier.util.StringInterpolators._
+import coursier.version.{Version, VersionConstraint, VersionParse}
 import dataclass._
 
 @data class AppDescriptor(
@@ -49,9 +39,9 @@ import dataclass._
   versionOverrides: Seq[VersionOverride] = Nil
 ) {
   def overrideVersion(ver: String): AppDescriptor = {
-    val overriddenDesc = Parse.version(ver)
+    val overriddenDesc = VersionParse.version(ver)
       .flatMap { version =>
-        versionOverrides.find(_.versionRange.contains(version))
+        versionOverrides.find(_.versionRange0.contains(version))
       }
       .map { versionOverride =>
         withRepositories(versionOverride.repositories.getOrElse(repositories))
@@ -87,14 +77,15 @@ import dataclass._
       if (deps.isEmpty)
         deps
       else {
-        val dep = deps.head.withUnderlyingDependency(_.withVersion(ver))
+        val dep =
+          deps.head.withUnderlyingDependency(_.withVersionConstraint(VersionConstraint(ver)))
         dep +: deps.tail
       }
     }
   }
 
-  def mainVersionOpt: Option[String] =
-    dependencies.headOption.map(_.version)
+  def mainVersionOpt: Option[VersionConstraint] =
+    dependencies.headOption.map(_.versionConstraint)
 
   def artifacts(
     cache: Cache[Task],
@@ -118,7 +109,7 @@ import dataclass._
 
     val scalaVersion = scalaVersionOpt.getOrElse {
       // shouldn't matter, we should only have Java dependencies in that case
-      scala.util.Properties.versionNumberString
+      VersionConstraint(scala.util.Properties.versionNumberString)
     }
 
     val hasFullCrossVersionDeps = dependencies.exists {
@@ -127,7 +118,7 @@ import dataclass._
     }
 
     val resolutionParams = ResolutionParams()
-      .withScalaVersionOpt(scalaVersionOpt.filter(_ => hasFullCrossVersionDeps))
+      .withScalaVersionOpt0(scalaVersionOpt.filter(_ => hasFullCrossVersionDeps))
 
     val res: Fetch.Result = Fetch()
       .withDependencies(deps)
@@ -157,8 +148,11 @@ import dataclass._
         val artifactMap = res.artifacts.toMap
         val subRes = res.resolution.subset(
           sharedDependencies.map { m =>
-            val module = m.module(scalaVersion)
-            val ver    = res.resolution.retainedVersions.getOrElse(module, "_")
+            val module = m.module(scalaVersion.asString)
+            val ver = res.resolution.retainedVersions
+              .get(module)
+              .map(VersionConstraint.fromVersion(_))
+              .getOrElse(AppDescriptor.placeholder)
             Dependency(module, ver)
           }
         )
@@ -188,10 +182,10 @@ import dataclass._
     verbosity: Int
   ): Either[
     AppArtifacts.AppArtifactsException,
-    (Option[String], Option[String], Seq[Dependency])
+    (Option[VersionConstraint], Option[String], Seq[Dependency])
   ] = {
 
-    val constraintOpt = scalaVersionOpt.map(coursier.core.Parse.versionConstraint)
+    val constraintOpt = scalaVersionOpt.map(VersionParse.versionConstraint)
 
     val t = {
       val onlyJavaDeps = dependencies.forall {
@@ -251,7 +245,7 @@ import dataclass._
           // if scalaVersionOpt is empty, we should only have Java dependencies
           .map(_.dependency(scalaVersionOpt.getOrElse("")))
 
-        (scalaVersionOpt, pfVerOpt, l)
+        (scalaVersionOpt.map(VersionConstraint(_)), pfVerOpt, l)
     }
   }
 
@@ -259,7 +253,7 @@ import dataclass._
   def candidateMainVersions(
     cache: Cache[Task],
     verbosity: Int
-  ): Iterator[String] = {
+  ): Iterator[Version] = {
 
     // FIXME A bit of duplication with apply below
     val platformOpt = launcherType match {
@@ -288,13 +282,12 @@ import dataclass._
         .unsafeRun()(cache.ec)
         .versions
 
-      Latest(deps.head.version) match {
+      Latest(deps.head.versionConstraint.asString) match {
         case Some(kind) =>
-          versions().candidates(kind)
+          versions().candidates0(kind)
         case None =>
-          val c = Parse.versionConstraint(deps.head.version)
-          if (c.preferred.isEmpty)
-            versions().candidatesInInterval(c.interval)
+          if (deps.head.versionConstraint.preferred.isEmpty)
+            versions().candidatesInInterval(deps.head.versionConstraint.interval)
           else {
             val hasFullCrossVersionDeps = dependencies.exists {
               case s: JavaOrScalaDependency.ScalaDependency => s.fullCrossVersion
@@ -302,7 +295,7 @@ import dataclass._
             }
 
             val resolutionParams = ResolutionParams()
-              .withScalaVersionOpt(scalaVersionOpt.filter(_ => hasFullCrossVersionDeps))
+              .withScalaVersionOpt0(scalaVersionOpt.filter(_ => hasFullCrossVersionDeps))
 
             val res = coursier.Resolve()
               .withDependencies(deps.take(1).map(_.withTransitive(false)))
@@ -312,8 +305,10 @@ import dataclass._
               .run()
 
             res.retainedVersions.get(deps.head.module)
-              .flatMap(v => res.projectCache.get((deps.head.module, v)))
-              .map(_._2.version)
+              .flatMap { v =>
+                res.projectCache0.get((deps.head.module, VersionConstraint.fromVersion(v)))
+              }
+              .map(_._2.version0)
               .iterator
           }
       }
@@ -329,10 +324,10 @@ import dataclass._
       .headOption
       .map { dep =>
         res
-          .projectCache
-          .get(dep.moduleVersion)
-          .map(_._2.actualVersion)
-          .getOrElse(dep.version)
+          .projectCache0
+          .get(dep.moduleVersionConstraint)
+          .map(_._2.actualVersion0.asString)
+          .getOrElse(dep.versionConstraint.asString)
       }
 
     val opt = for {
@@ -387,12 +382,11 @@ object AppDescriptor {
           s"Versions for ${dep0.module}: ${depVersions.toVector.sorted.mkString(", ")}"
         )
 
-      latestVersions(dep.version) || {
-        val constraint   = coursier.core.Parse.versionConstraint(dep.version)
-        val preferredSet = constraint.preferred.toSet
+      latestVersions(dep.versionConstraint.asString) || {
+        val preferredSet = dep.versionConstraint.preferred.toSet
         if (preferredSet.isEmpty)
           depVersions.exists { v =>
-            constraint.interval.contains(Version(v))
+            dep.versionConstraint.interval.contains(Version(v))
           }
         else
           depVersions.exists { v =>
@@ -554,7 +548,7 @@ object AppDescriptor {
           // FIXME Trapped error
           Set.empty
         case Right((v, _)) =>
-          v.available.toSet
+          v.available0.map(_.repr).toSet
       }
     }
 
@@ -563,4 +557,5 @@ object AppDescriptor {
 
   private val latestVersions = Set("latest.release", "latest.integration", "latest.stable")
 
+  private val placeholder = VersionConstraint("_")
 }

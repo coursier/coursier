@@ -557,14 +557,14 @@ object Launch extends CoursierCommand[LaunchOptions] {
       .map(_._1)
       .flatMap {
         case j: JavaOrScalaDependency.JavaDependency =>
-          Some((j.module.module.name.value, j.dependency.moduleVersion))
+          Some((j.module.module.name.value, j.dependency.moduleVersionConstraint))
         case s: JavaOrScalaDependency.ScalaDependency =>
           res.rootDependencies.headOption.filter(dep =>
             dep.module.organization == s.baseDependency.module.organization &&
             dep.module.name.value.startsWith(s.baseDependency.module.name.value) &&
-            dep.version == s.baseDependency.version
+            dep.versionConstraint == s.baseDependency.versionConstraint
           ).map { dep =>
-            (s.baseDependency.module.name.value, dep.moduleVersion)
+            (s.baseDependency.module.name.value, dep.moduleVersionConstraint)
           }
       }
 
@@ -572,10 +572,10 @@ object Launch extends CoursierCommand[LaunchOptions] {
       (name, modVer) <- nameModVerOpt
     } yield {
       val v = res
-        .projectCache
+        .projectCache0
         .get(modVer)
-        .map(_._2.actualVersion)
-        .getOrElse(modVer._2)
+        .map(_._2.actualVersion0.asString)
+        .getOrElse(modVer._2.asString)
       s"$name.version" -> v
     }
   }

@@ -2,6 +2,7 @@ package coursier.core
 
 import dataclass.data
 
+@deprecated("Use coursier.version.VersionInterval instead", "2.1.25")
 @data class VersionInterval(
   from: Option[Version],
   to: Option[Version],
@@ -87,6 +88,7 @@ import dataclass.data
   ).mkString
 }
 
+@deprecated("Use coursier.version.VersionInterval instead", "2.1.25")
 object VersionInterval {
   val zero = VersionInterval(None, None, fromIncluded = false, toIncluded = false)
 }

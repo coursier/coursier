@@ -19,7 +19,6 @@ import utest._
 
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
-import coursier.core.Version
 import scala.util.{Properties, Using}
 
 object InstallTests extends TestSuite {

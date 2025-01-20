@@ -217,7 +217,12 @@ object Orders {
       .groupBy(
         _.withConfiguration(Configuration.empty).withExclusions(Set.empty).withOptional(false)
       )
-      .mapValues(deps => minDependenciesUnsafe(deps, configs(deps.head.moduleVersion)))
+      .mapValues { deps =>
+        minDependenciesUnsafe(
+          deps,
+          configs(deps.head.moduleVersionConstraint match { case (m, v) => (m, v.asString) })
+        )
+      }
       .valuesIterator
       .fold(Set.empty)(_ ++ _)
 

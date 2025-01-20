@@ -20,7 +20,7 @@ object DummyJsonReportTests extends TestSuite {
         jsonLines {
           JsonReport[String](Vector.empty, ListMap())(
             children = _ => Vector.empty,
-            reconciledVersionStr = _ => "",
+            retainedVersionStr = _ => "",
             requestedVersionStr = _ => "",
             getFile = _ => Option(""),
             exclusions = _ => Nil
@@ -39,7 +39,7 @@ object DummyJsonReportTests extends TestSuite {
             conflictResolutionForRoots = ListMap()
           )(
             children = children(_).toVector,
-            reconciledVersionStr = s => s"$s:reconciled",
+            retainedVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
             getFile = _ => Option(""),
             exclusions = _ => Nil
@@ -60,7 +60,7 @@ object DummyJsonReportTests extends TestSuite {
             conflictResolutionForRoots = ListMap()
           )(
             children = children(_).toVector,
-            reconciledVersionStr = s => s"$s:reconciled",
+            retainedVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
             getFile = _ => Option(""),
             exclusions = _ => Nil
@@ -79,7 +79,7 @@ object DummyJsonReportTests extends TestSuite {
             conflictResolutionForRoots = ListMap.empty
           )(
             children = children(_),
-            reconciledVersionStr = s => s"$s:reconciled",
+            retainedVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
             getFile = _ => Option(""),
             exclusions = _ => Nil
@@ -99,7 +99,7 @@ object DummyJsonReportTests extends TestSuite {
             conflictResolutionForRoots = ListMap.empty
           )(
             children = children(_),
-            reconciledVersionStr = s => s"$s:reconciled",
+            retainedVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
             getFile = _ => Option(""),
             exclusions = _ => Nil

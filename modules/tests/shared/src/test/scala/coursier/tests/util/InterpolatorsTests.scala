@@ -5,6 +5,7 @@ import coursier.ivy.{IvyRepository, Pattern}
 import coursier.maven.MavenRepository
 import coursier.util.StringInterpolators._
 import utest._
+import coursier.version.VersionConstraint
 
 object InterpolatorsTests extends TestSuite {
 
@@ -27,15 +28,18 @@ object InterpolatorsTests extends TestSuite {
     test("dependency") {
       test {
         val dep = dep"ch.qos.logback:logback-classic:1.1.3"
-        val expected =
-          Dependency(Module(org"ch.qos.logback", name"logback-classic", Map.empty), "1.1.3")
+        val expected = Dependency(
+          Module(org"ch.qos.logback", name"logback-classic", Map.empty),
+          VersionConstraint("1.1.3")
+        )
         assert(dep == expected)
       }
       test {
         val dep = dep"org.scalatest:scalatest_2.12:3.0.1:test"
-        val expected =
-          Dependency(Module(org"org.scalatest", name"scalatest_2.12", Map.empty), "3.0.1")
-            .withConfiguration(Configuration.test)
+        val expected = Dependency(
+          Module(org"org.scalatest", name"scalatest_2.12", Map.empty),
+          VersionConstraint("3.0.1")
+        ).withConfiguration(Configuration.test)
         assert(dep == expected)
       }
     }

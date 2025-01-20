@@ -5,19 +5,20 @@ import coursier.core.{Dependency, Module, Repository, Resolution, ResolutionProc
 import coursier.maven.MavenRepository
 import coursier.util.{Artifact, EitherT, Gather, Task}
 import coursier.util.StringInterpolators._
+import coursier.version.VersionConstraint
 import japgolly.scalajs.react._
 import org.scalajs.dom
 
 import scala.scalajs.js
+import scala.scalajs.js.Dynamic.{global => g}
 import scala.util.{Failure, Success}
-import js.Dynamic.{global => g}
 
 final class Backend($ : BackendScope[_, State]) {
 
   def fetch(
     repositories: Seq[Repository],
     fetch: Repository.Fetch[Task]
-  ): ResolutionProcess.Fetch[Task] = {
+  ): ResolutionProcess.Fetch0[Task] = {
 
     val fetch0: Repository.Fetch[Task] = { a =>
       if (a.url.endsWith("/"))
@@ -247,7 +248,8 @@ final class Backend($ : BackendScope[_, State]) {
   def addModule(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState { state =>
-      val modules = state.modules :+ Dependency(Module(org"", name"", Map.empty), "")
+      val modules =
+        state.modules :+ Dependency(Module(org"", name"", Map.empty), VersionConstraint(""))
       println(s"Modules:\n${modules.mkString("\n")}")
       state.copy(
         modules = modules,

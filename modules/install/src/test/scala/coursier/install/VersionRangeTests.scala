@@ -1,8 +1,7 @@
 package coursier.install
 
+import coursier.version.{Version, VersionParse}
 import utest._
-import coursier.core.Parse
-import coursier.core.Version
 
 /** This test class is a copy of
   * https://github.com/sbt/librarymanagement/blob/develop/core/src/test/scala/sbt/librarymanagement/SemanticSelectorSpec.scala
@@ -295,7 +294,7 @@ object VersionRangeTests extends TestSuite {
   }
 
   def checkRange(interval: String, contains: Seq[String], notContain: Seq[String]) = {
-    val vi = Parse.versionInterval(interval).get
+    val vi = VersionParse.versionInterval(interval).get
     contains.map(Version.apply).foreach(v => assert(vi.contains(v)))
     notContain.map(Version.apply).foreach(v => assert(!vi.contains(v)))
 

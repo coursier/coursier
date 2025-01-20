@@ -1,8 +1,22 @@
 package coursier.maven
 
-import coursier.core._
+import coursier.core.{
+  Authentication,
+  Classifier,
+  Configuration,
+  Dependency,
+  Extension,
+  Module,
+  Project,
+  Publication,
+  Repository,
+  SnapshotVersioning,
+  Versions,
+  Type
+}
 import coursier.util.{Artifact, EitherT, Monad, WebPage, Xml}
 import coursier.util.Monad.ops._
+import coursier.version.{Version, VersionConstraint}
 
 import scala.collection.compat._
 
@@ -23,7 +37,7 @@ private[coursier] class MavenRepositoryInternal(
   private def modulePath(module: Module): Seq[String] =
     module.organization.value.split('.').toSeq :+ moduleDirectory(module)
 
-  def moduleVersionPath(module: Module, version: String): Seq[String] =
+  def moduleVersionPath(module: Module, version: Version): Seq[String] =
     modulePath(module) :+ toBaseVersion(version)
 
   def urlFor(path: Seq[String], isDir: Boolean = false): String = {
@@ -46,7 +60,7 @@ private[coursier] class MavenRepositoryInternal(
     b.result()
   }
 
-  def projectArtifact(path: Seq[String], version: String): Artifact =
+  def projectArtifact(path: Seq[String], version: Version): Artifact =
     Artifact(
       urlFor(path),
       Map.empty,
@@ -86,7 +100,7 @@ private[coursier] class MavenRepositoryInternal(
 
   private def actualSnapshotVersioningArtifact(
     module: Module,
-    version: String
+    version: Version
   ): Artifact = {
     val path = moduleVersionPath(module, version) :+ "maven-metadata.xml"
 
@@ -134,9 +148,9 @@ private[coursier] class MavenRepositoryInternal(
           val latest  = parsedVersions.max
           val release = if (nonPreVersions.nonEmpty) nonPreVersions.max else latest
           Right(Versions(
-            latest.repr,
-            release.repr,
-            parsedVersions.map(_.repr).toList,
+            latest,
+            release,
+            parsedVersions.toList,
             None
           ))
         }
@@ -162,7 +176,7 @@ private[coursier] class MavenRepositoryInternal(
       fetch(artifact).run.map { eitherStr =>
         for {
           str      <- eitherStr
-          xml      <- compatibility.xmlParseDom(str)
+          xml      <- coursier.core.compatibility.xmlParseDom(str)
           _        <- if (xml.label == "metadata") Right(()) else Left("Metadata not found")
           versions <- Pom.versions(xml)
         } yield (versions, artifact.url)
@@ -176,16 +190,16 @@ private[coursier] class MavenRepositoryInternal(
 
   private def snapshotVersioning[F[_]](
     module: Module,
-    version: String,
+    version: Version,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, SnapshotVersioning] = {
     val artifact = actualSnapshotVersioningArtifact(module, version)
-    val task = fetch(artifact).run.map { eitherStr =>
+    val task: F[Either[String, SnapshotVersioning]] = fetch(artifact).run.map { eitherStr =>
       for {
         str                <- eitherStr
-        xml                <- compatibility.xmlParseDom(str)
+        xml                <- coursier.core.compatibility.xmlParseDom(str)
         _                  <- if (xml.label == "metadata") Right(()) else Left("Metadata not found")
         snapshotVersioning <- Pom.snapshotVersioning(xml)
       } yield snapshotVersioning
@@ -195,14 +209,17 @@ private[coursier] class MavenRepositoryInternal(
 
   def find[F[_]](
     module: Module,
-    version: String,
+    version: VersionConstraint,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, Project] =
     EitherT {
+      val asVersion = version.preferred.headOption.getOrElse {
+        Version(version.asString) /* meh */
+      }
       def withSnapshotVersioning =
-        snapshotVersioning(module, version, fetch).flatMap { snapshotVersioning =>
+        snapshotVersioning(module, asVersion, fetch).flatMap { snapshotVersioning =>
           val versioningOption =
             mavenVersioning(snapshotVersioning, Classifier.empty, Extension.jar)
               .orElse(mavenVersioning(snapshotVersioning, Classifier.empty, Extension.pom))
@@ -214,13 +231,13 @@ private[coursier] class MavenRepositoryInternal(
                 F.point(Left("No snapshot versioning value found"))
               )
             case versioning @ Some(_) =>
-              findVersioning(module, version, versioning, fetch)
+              findVersioning(module, asVersion, versioning, fetch)
                 .map(_.withSnapshotVersioning(Some(snapshotVersioning)))
           }
         }
 
-      val res = findVersioning(module, version, None, fetch).run.flatMap { eitherProj =>
-        if (eitherProj.isLeft && isSnapshot(version))
+      val res = findVersioning(module, asVersion, None, fetch).run.flatMap { eitherProj =>
+        if (eitherProj.isLeft && isSnapshot(asVersion))
           withSnapshotVersioning.run.map(eitherProj0 =>
             if (eitherProj0.isLeft)
               eitherProj
@@ -232,7 +249,7 @@ private[coursier] class MavenRepositoryInternal(
       }
 
       // keep exact version used to get metadata, in case the one inside the metadata is wrong
-      res.map(_.map(proj => proj.withActualVersionOpt(Some(version))))
+      res.map(_.map(proj => proj.withActualVersionOpt0(Some(asVersion))))
     }
 
   def artifactFor(url: String, changing: Boolean): Artifact =
@@ -247,14 +264,14 @@ private[coursier] class MavenRepositoryInternal(
 
   def fetchArtifact[F[_]](
     module: Module,
-    version: String,
-    versioningValue: Option[String],
+    version: Version,
+    versioningValue: Option[Version],
     fetch: Repository.Fetch[F]
   )(implicit F: Monad[F]): EitherT[F, String, Project] = {
     val directoryPath = moduleVersionPath(module, version)
     val moduleName    = module.name.value
-    val path          = directoryPath :+ s"$moduleName-${versioningValue.getOrElse(version)}.pom"
-    val artifact      = projectArtifact(path, version)
+    val path = directoryPath :+ s"$moduleName-${versioningValue.getOrElse(version).asString}.pom"
+    val artifact = projectArtifact(path, version)
     fetch(artifact).flatMap(parsePom(_))
   }
 
@@ -265,7 +282,7 @@ private[coursier] class MavenRepositoryInternal(
           coursier.core.compatibility.xmlParseSax(str, new PomParser).project
         else
           for {
-            xml  <- compatibility.xmlParseDom(str)
+            xml  <- coursier.core.compatibility.xmlParseDom(str)
             _    <- if (xml.label == "project") Right(()) else Left("Project definition not found")
             proj <- Pom.project(xml)
           } yield proj
@@ -278,8 +295,8 @@ private[coursier] class MavenRepositoryInternal(
 
   private def findVersioning[F[_]](
     module: Module,
-    version: String,
-    versioningValue: Option[String],
+    version: Version,
+    versioningValue: Option[Version],
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
@@ -288,7 +305,7 @@ private[coursier] class MavenRepositoryInternal(
       .map { proj0 =>
         Pom.addOptionalDependenciesInConfig(
           proj0
-            .withActualVersionOpt(Some(version))
+            .withActualVersionOpt0(Some(version))
             .withConfigurations(defaultConfigurations),
           Set(Configuration.empty, Configuration.default),
           Configuration.optional
@@ -323,15 +340,15 @@ private[coursier] class MavenRepositoryInternal(
         )
 
       val path =
-        moduleVersionPath(dependency.module, project.actualVersion) :+
+        moduleVersionPath(dependency.module, project.actualVersion0) :+
           project.module.name.value +
           "-" +
-          versioning.getOrElse(project.actualVersion) +
+          versioning.getOrElse(project.actualVersion0).asString +
           Some(publication.classifier.value).filter(_.nonEmpty).map("-" + _).mkString +
           "." +
           publication.ext.value
 
-      val changing0 = changing.getOrElse(isSnapshot(project.actualVersion))
+      val changing0 = changing.getOrElse(isSnapshot(project.actualVersion0))
 
       Artifact(
         root + path.mkString("/", "/", ""),
@@ -479,14 +496,14 @@ private[coursier] class MavenRepositoryInternal(
 private[coursier] object MavenRepositoryInternal {
   val SnapshotTimestamp = "(.*-)?[0-9]{8}\\.[0-9]{6}-[0-9]+".r
 
-  def isSnapshot(version: String): Boolean =
-    version.endsWith("SNAPSHOT") || SnapshotTimestamp.pattern.matcher(version).matches()
+  def isSnapshot(version: Version): Boolean =
+    version.repr.endsWith("SNAPSHOT") || SnapshotTimestamp.pattern.matcher(version.repr).matches()
 
-  def toBaseVersion(version: String): String =
-    version match {
+  def toBaseVersion(version: Version): String =
+    version.repr match {
       case SnapshotTimestamp(null) => "SNAPSHOT"
       case SnapshotTimestamp(base) => base + "SNAPSHOT"
-      case _                       => version
+      case _                       => version.repr
     }
 
   def ivyLikePath(
@@ -510,15 +527,15 @@ private[coursier] object MavenRepositoryInternal {
     snapshotVersioning: SnapshotVersioning,
     classifier: Classifier,
     extension: Extension
-  ): Option[String] =
+  ): Option[Version] =
     snapshotVersioning
       .snapshotVersions
       .find { v =>
         (v.classifier == classifier || v.classifier == Classifier("*")) &&
         (v.extension == extension || v.extension == Extension("*"))
       }
-      .map(_.value)
-      .filter(_.nonEmpty)
+      .map(_.value0)
+      .filter(_.asString.nonEmpty)
 
   val defaultConfigurations = Map(
     Configuration.compile -> Seq.empty,

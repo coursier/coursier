@@ -1182,10 +1182,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.annotation:javax.annotation-api",
-        "javax.enterprise:cdi-api",
-        "org.osgi:org.osgi.annotation.versioning",
-        "org.ow2.asm:asm"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1198,8 +1196,10 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.eclipse.parsson:jakarta.json",
-        "org.jboss.modules:jboss-modules"
+        "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
+        "org.osgi:org.osgi.annotation.versioning",
+        "org.ow2.asm:asm"
       ]
     },
     {
@@ -1260,8 +1260,10 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.eclipse.parsson:jakarta.json",
-        "org.jboss.modules:jboss-modules"
+        "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
+        "org.osgi:org.osgi.annotation.versioning",
+        "org.ow2.asm:asm"
       ]
     },
     {
@@ -1276,10 +1278,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.annotation:javax.annotation-api",
-        "javax.enterprise:cdi-api",
-        "org.osgi:org.osgi.annotation.versioning",
-        "org.ow2.asm:asm"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1475,9 +1475,6 @@
       ],
       "dependencies": [
         "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3"
-      ],
-      "exclusions": [
-        "javax.enterprise:cdi-api"
       ]
     },
     {
@@ -1488,6 +1485,9 @@
       ],
       "dependencies": [
         "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3"
+      ],
+      "exclusions": [
+        "javax.enterprise:cdi-api"
       ]
     },
     {
@@ -1534,9 +1534,6 @@
         "org.eclipse.microprofile.config:microprofile-config-api:3.1",
         "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3",
         "org.jboss.threads:jboss-threads:3.6.1.Final"
-      ],
-      "exclusions": [
-        "javax.enterprise:cdi-api"
       ]
     },
     {
@@ -1555,6 +1552,9 @@
         "org.eclipse.microprofile.config:microprofile-config-api:3.1",
         "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3",
         "org.jboss.threads:jboss-threads:3.6.1.Final"
+      ],
+      "exclusions": [
+        "javax.enterprise:cdi-api"
       ]
     },
     {
@@ -1635,21 +1635,6 @@
       "coord": "jakarta.resource:jakarta.resource-api:2.1.0",
       "file": "${CACHE}/https/repo1.maven.org/maven2/jakarta/resource/jakarta.resource-api/2.1.0/jakarta.resource-api-2.1.0.jar",
       "directDependencies": [
-        "jakarta.transaction:jakarta.transaction-api:2.0.1"
-      ],
-      "dependencies": [
-        "jakarta.transaction:jakarta.transaction-api:2.0.1"
-      ],
-      "exclusions": [
-        "jakarta.annotation:jakarta.annotation-api",
-        "jakarta.ejb:jakarta.ejb-api",
-        "jakarta.enterprise:jakarta.enterprise.lang-model"
-      ]
-    },
-    {
-      "coord": "jakarta.resource:jakarta.resource-api:2.1.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/jakarta/resource/jakarta.resource-api/2.1.0/jakarta.resource-api-2.1.0.jar",
-      "directDependencies": [
         "jakarta.annotation:jakarta.annotation-api:3.0.0",
         "jakarta.transaction:jakarta.transaction-api:2.0.1"
       ],
@@ -1679,6 +1664,21 @@
       ]
     },
     {
+      "coord": "jakarta.resource:jakarta.resource-api:2.1.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/jakarta/resource/jakarta.resource-api/2.1.0/jakarta.resource-api-2.1.0.jar",
+      "directDependencies": [
+        "jakarta.transaction:jakarta.transaction-api:2.0.1"
+      ],
+      "dependencies": [
+        "jakarta.transaction:jakarta.transaction-api:2.0.1"
+      ],
+      "exclusions": [
+        "jakarta.annotation:jakarta.annotation-api",
+        "jakarta.ejb:jakarta.ejb-api",
+        "jakarta.enterprise:jakarta.enterprise.lang-model"
+      ]
+    },
+    {
       "coord": "jakarta.transaction:jakarta.transaction-api:2.0.1",
       "file": "${CACHE}/https/repo1.maven.org/maven2/jakarta/transaction/jakarta.transaction-api/2.0.1/jakarta.transaction-api-2.0.1.jar",
       "directDependencies": [],
@@ -1704,17 +1704,17 @@
       "coord": "org.antlr:antlr4-runtime:4.13.0",
       "file": "${CACHE}/https/repo1.maven.org/maven2/org/antlr/antlr4-runtime/4.13.0/antlr4-runtime-4.13.0.jar",
       "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "io.smallrye:jandex",
-        "xml-apis:xml-apis"
-      ]
+      "dependencies": []
     },
     {
       "coord": "org.antlr:antlr4-runtime:4.13.0",
       "file": "${CACHE}/https/repo1.maven.org/maven2/org/antlr/antlr4-runtime/4.13.0/antlr4-runtime-4.13.0.jar",
       "directDependencies": [],
-      "dependencies": []
+      "dependencies": [],
+      "exclusions": [
+        "io.smallrye:jandex",
+        "xml-apis:xml-apis"
+      ]
     },
     {
       "coord": "org.eclipse.angus:angus-activation:2.0.2",
@@ -1732,29 +1732,29 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
+        "javax.enterprise:cdi-api",
+        "org.osgi:org.osgi.annotation.versioning"
+      ]
+    },
+    {
+      "coord": "org.eclipse.microprofile.config:microprofile-config-api:3.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/eclipse/microprofile/config/microprofile-config-api/3.1/microprofile-config-api-3.1.jar",
+      "directDependencies": [],
+      "dependencies": [],
+      "exclusions": [
+        "org.osgi:org.osgi.annotation.versioning"
+      ]
+    },
+    {
+      "coord": "org.eclipse.microprofile.config:microprofile-config-api:3.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/eclipse/microprofile/config/microprofile-config-api/3.1/microprofile-config-api-3.1.jar",
+      "directDependencies": [],
+      "dependencies": [],
+      "exclusions": [
         "javax.annotation:javax.annotation-api",
         "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
-      ]
-    },
-    {
-      "coord": "org.eclipse.microprofile.config:microprofile-config-api:3.1",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/eclipse/microprofile/config/microprofile-config-api/3.1/microprofile-config-api-3.1.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "javax.enterprise:cdi-api",
-        "org.osgi:org.osgi.annotation.versioning"
-      ]
-    },
-    {
-      "coord": "org.eclipse.microprofile.config:microprofile-config-api:3.1",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/eclipse/microprofile/config/microprofile-config-api/3.1/microprofile-config-api-3.1.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "org.osgi:org.osgi.annotation.versioning"
       ]
     },
     {

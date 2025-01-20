@@ -10,7 +10,6 @@ import coursier.core.{
   Extension,
   Module,
   ModuleName,
-  Reconciliation,
   Repository,
   Resolution,
   Type
@@ -20,6 +19,7 @@ import coursier.ivy.IvyRepository
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
 import coursier.util.ModuleMatchers
 import coursier.util.StringInterpolators._
+import coursier.version.{ConstraintReconciliation, Version, VersionConstraint}
 import utest._
 
 import scala.async.Async.{async, await}
@@ -28,14 +28,7 @@ import scala.concurrent.Future
 
 object ResolveTests extends TestSuite {
 
-  import TestHelpers.{
-    ec,
-    cache,
-    dependenciesWithRetainedVersion,
-    handmadeMetadataBase,
-    validateDependencies,
-    versionOf
-  }
+  import TestHelpers.{ec, cache, handmadeMetadataBase, validateDependencies, versionOf}
 
   private val resolve = Resolve()
     .noMirrors
@@ -50,7 +43,7 @@ object ResolveTests extends TestSuite {
             Some("10.15.1")
           )
         }
-        .withJdkVersion("1.8.0_121")
+        .withJdkVersion(Version("1.8.0_121"))
     )
 
   def check(dependencies: Dependency*): Future[Unit] =
@@ -172,8 +165,8 @@ object ResolveTests extends TestSuite {
           .mapResolutionParams { params =>
             params
               .withScalaVersion("2.12.8")
-              .addForceVersion(mod"com.lihaoyi:upickle_2.12" -> "0.7.0")
-              .addForceVersion(mod"io.get-coursier:coursier_2.12" -> "1.1.0-M6")
+              .addForceVersion0(mod"com.lihaoyi:upickle_2.12" -> VersionConstraint("0.7.0"))
+              .addForceVersion0(mod"io.get-coursier:coursier_2.12" -> VersionConstraint("1.1.0-M6"))
           }
 
         val res = await {
@@ -317,8 +310,8 @@ object ResolveTests extends TestSuite {
                 .future()
             }
 
-            val found         = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toMap
-            val ammVersionOpt = found.get(mod"com.lihaoyi:ammonite_2.12.8")
+            val found         = res.orderedDependencies.map(_.moduleVersionConstraint).toMap
+            val ammVersionOpt = found.get(mod"com.lihaoyi:ammonite_2.12.8").map(_.asString)
             assert(ammVersionOpt.exists(_.split('.').length == 3))
             assert(ammVersionOpt.exists(!_.contains("-")))
 
@@ -391,12 +384,16 @@ object ResolveTests extends TestSuite {
                 .future()
             }
 
-            val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
+            val found = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
             val expected = Set(
-              mod"org.scala-lang:scala-library" -> "2.12.8",
-              mod"test:a_2.12"                  -> "1.0.2-SNAPSHOT"
+              mod"org.scala-lang:scala-library" -> VersionConstraint("2.12.8"),
+              mod"test:a_2.12"                  -> VersionConstraint("1.0.2-SNAPSHOT")
             )
 
+            if (found != expected) {
+              pprint.err.log(expected)
+              pprint.err.log(found)
+            }
             assert(found == expected)
           }
         }
@@ -410,10 +407,10 @@ object ResolveTests extends TestSuite {
                 .future()
             }
 
-            val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
+            val found = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
             val expected = Set(
-              mod"org.scala-lang:scala-library" -> "2.12.8",
-              mod"test:a_2.12"                  -> "1.0.1"
+              mod"org.scala-lang:scala-library" -> VersionConstraint("2.12.8"),
+              mod"test:a_2.12"                  -> VersionConstraint("1.0.1")
             )
 
             assert(found == expected)
@@ -480,10 +477,10 @@ object ResolveTests extends TestSuite {
               .future()
           }
 
-          val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
+          val found = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
           val expected = Set(
-            mod"org.scala-lang:scala-library" -> "2.12.8",
-            mod"test:b_2.12"                  -> "1.0.2+20190524-1"
+            mod"org.scala-lang:scala-library" -> VersionConstraint("2.12.8"),
+            mod"test:b_2.12"                  -> VersionConstraint("1.0.2+20190524-1")
           )
 
           assert(found == expected)
@@ -606,7 +603,7 @@ object ResolveTests extends TestSuite {
                 .dependencies
                 .groupBy(_.module)
                 .view
-                .mapValues(_.map(_.version))
+                .mapValues(_.map(_.versionConstraint.asString))
                 .iterator
                 .toMap
               assert(versions == expectedVersions)
@@ -678,10 +675,10 @@ object ResolveTests extends TestSuite {
               .future()
           }
 
-          val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
+          val found = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
           val expected = Set(
-            mod"org.scala-lang:scala-library" -> "2.12.8",
-            mod"test:b_2.12"                  -> "1.0.1"
+            mod"org.scala-lang:scala-library" -> VersionConstraint("2.12.8"),
+            mod"test:b_2.12"                  -> VersionConstraint("1.0.1")
           )
 
           assert(found == expected)
@@ -821,10 +818,10 @@ object ResolveTests extends TestSuite {
                 val modules         = c.dependencies.map(_.module)
                 assert(modules == expectedModules)
                 val expectedVersions = Set("2.12+", "2.13.0")
-                val versions         = c.dependencies.map(_.version)
+                val versions         = c.dependencies.map(_.versionConstraint.asString)
                 assert(versions == expectedVersions)
               case _ =>
-                ???
+                throw new Exception(error)
             }
           }
         }
@@ -854,7 +851,7 @@ object ResolveTests extends TestSuite {
                 val modules         = c.dependencies.map(_.module)
                 assert(modules == expectedModules)
                 val expectedVersions = Set("[2.3.0,2.3.3)", "2.3.3")
-                val versions         = c.dependencies.map(_.version)
+                val versions         = c.dependencies.map(_.versionConstraint.asString)
                 assert(versions == expectedVersions)
               case _ =>
                 throw error
@@ -978,7 +975,7 @@ object ResolveTests extends TestSuite {
         async {
           val params = ResolutionParams()
             .withScalaVersion("2.12.8")
-            .withReconciliation(Seq(ModuleMatchers.all -> Reconciliation.Relaxed))
+            .withReconciliation0(Seq(ModuleMatchers.all -> ConstraintReconciliation.Relaxed))
 
           val res = await {
             resolve
@@ -992,10 +989,13 @@ object ResolveTests extends TestSuite {
 
           await(validateDependencies(res))
 
-          val deps = res.minDependencies
+          val deps = res.minimizedDependencies(
+            withRetainedVersions = false,
+            withReconciledVersions = true
+          )
           val isNumberVersions = deps.collect {
             case dep if dep.module == mod"org.webjars.npm:is-number" =>
-              dep.version
+              dep.versionConstraint.asString
           }
           val expectedIsNumberVersions = Set("[4.0.0,5)")
           assert(isNumberVersions == expectedIsNumberVersions)
@@ -1043,16 +1043,30 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res0))
 
-        assert(res1.projectCache.contains((mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M8")))
-        assert(res1.projectCache.contains((mod"io.get-coursier:coursier-cli_2.12", "2.0.0-RC6-16")))
+        assert(
+          res1.projectCache0.contains(
+            (
+              mod"io.get-coursier:coursier-cli_2.12",
+              VersionConstraint("1.1.0-M8")
+            )
+          )
+        )
+        assert(
+          res1.projectCache0.contains(
+            (
+              mod"io.get-coursier:coursier-cli_2.12",
+              VersionConstraint("2.0.0-RC6-16")
+            )
+          )
+        )
         assert {
           res1.finalDependenciesCache.keys.exists(dep =>
-            dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.version == "1.1.0-M8"
+            dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.versionConstraint.asString == "1.1.0-M8"
           )
         }
         assert {
           res1.finalDependenciesCache.keys.exists(dep =>
-            dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.version == "2.0.0-RC6-16"
+            dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.versionConstraint.asString == "2.0.0-RC6-16"
           )
         }
       }
@@ -1233,7 +1247,7 @@ object ResolveTests extends TestSuite {
       val dep = dep"com.helger:ph-jaxb-pom:1.0.3"
       test("JDK 1.8") {
         async {
-          val params = resolve.resolutionParams.withJdkVersion("1.8.0_121")
+          val params = resolve.resolutionParams.withJdkVersion(Version("1.8.0_121"))
           val res = await {
             resolve
               .withResolutionParams(params)
@@ -1245,7 +1259,7 @@ object ResolveTests extends TestSuite {
       }
       test("JDK 11") {
         async {
-          val params = resolve.resolutionParams.withJdkVersion("11.0.5")
+          val params = resolve.resolutionParams.withJdkVersion(Version("11.0.5"))
           val res = await {
             resolve
               .withResolutionParams(params)
@@ -1308,7 +1322,7 @@ object ResolveTests extends TestSuite {
           .withMapDependenciesOpt(
             Some { dep =>
               if (dep.module.name.value == "scala-library")
-                dep.withVersion("2.12.12")
+                dep.withVersionConstraint(VersionConstraint("2.12.12"))
               else
                 dep
             }
@@ -1336,7 +1350,7 @@ object ResolveTests extends TestSuite {
       ): Future[Unit] =
         async {
           val params = ResolutionParams()
-            .withJdkVersion("8.0")
+            .withJdkVersion(Version("8.0"))
             .withProfiles(profiles)
             .withForceDepMgmtVersions(forceDepMgmtVersions)
           val res = await {
@@ -1348,15 +1362,15 @@ object ResolveTests extends TestSuite {
                     ModuleName(s"spark-core_$scalaBinaryVersion"),
                     Map.empty
                   ),
-                  sparkVersion
+                  VersionConstraint(sparkVersion)
                 )
               )
               .withResolutionParams(params)
               .future()
           }
           // await(validateDependencies(res))
-          val found       = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toMap
-          val scalaLibOpt = found.get(mod"org.scala-lang:scala-library")
+          val found       = res.orderedDependencies.map(_.moduleVersionConstraint).toMap
+          val scalaLibOpt = found.get(mod"org.scala-lang:scala-library").map(_.asString)
           assert(scalaLibOpt.exists(_.startsWith(s"$scalaBinaryVersion.")))
           // !
           await(validateDependencies(res, params))
@@ -1571,7 +1585,7 @@ object ResolveTests extends TestSuite {
             // BOM should bump protobuf-java to 4.28.3
             check(
               dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
-                .addBom(mod"com.google.cloud:libraries-bom", "26.50.0")
+                .addBom(mod"com.google.cloud:libraries-bom", VersionConstraint("26.50.0"))
             )
           }
         }
@@ -1769,7 +1783,7 @@ object ResolveTests extends TestSuite {
           check(
             dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8",
             dep"com.lihaoyi:pprint_2.13:0.9.0"
-              .addBom(mod"com.google.cloud:libraries-bom", "26.50.0")
+              .addBom(mod"com.google.cloud:libraries-bom", VersionConstraint("26.50.0"))
           )
         }
         test {
@@ -1777,7 +1791,7 @@ object ResolveTests extends TestSuite {
           // protobuf-java should switch to 4.28.3
           check(
             dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
-              .addBom(mod"com.google.cloud:libraries-bom", "26.50.0"),
+              .addBom(mod"com.google.cloud:libraries-bom", VersionConstraint("26.50.0")),
             dep"com.lihaoyi:pprint_2.13:0.9.0"
           )
         }

@@ -41,7 +41,7 @@ class TestState {
 
   val inMemoryCache = {
     val c     = new InMemoryCachingFetcher(Cache.default.fetch)
-    val fetch = ResolutionProcess.fetch(repositories, c.fetcher)
+    val fetch = ResolutionProcess.fetch0(repositories, c.fetcher)
 
     for (initialRes <- Seq(initialSparkSqlRes, initialCoursierCliRes)) {
       val t = Resolve.runProcess(initialRes, fetch)
@@ -54,8 +54,8 @@ class TestState {
 
   val fetcher = inMemoryCache.fetcher
 
-  val fetch    = ResolutionProcess.fetch(repositories, fetcher)
-  val fetchDom = ResolutionProcess.fetch(repositoriesDom, fetcher)
+  val fetch    = ResolutionProcess.fetch0(repositories, fetcher)
+  val fetchDom = ResolutionProcess.fetch0(repositoriesDom, fetcher)
 
   val forProjectCache = {
 
@@ -73,7 +73,7 @@ class TestState {
         val str  = inMemoryCache.fromCache(url)
         val p    = MavenRepository.parseRawPomDom(str).toOption.get
         val p0 = Pom.addOptionalDependenciesInConfig(
-          p.withActualVersionOpt(Some(v))
+          p.withActualVersionOpt0(Some(v))
             .withConfigurations(MavenRepository.defaultConfigurations),
           Set(Configuration.empty, Configuration.default),
           Configuration.optional

@@ -22,7 +22,7 @@ object PomParsingTests extends TestSuite {
                    """
 
       val expected = Right(
-        Configuration.empty -> Dependency(mod"comp:lib", "2.1").withAttributes(
+        Configuration.empty -> dep"comp:lib:2.1".withAttributes(
           Attributes(Type.empty, Classifier("extra"))
         )
       )
@@ -149,7 +149,7 @@ object PomParsingTests extends TestSuite {
           None,
           Profile.Activation(Nil),
           Seq(
-            Configuration.empty -> Dependency(mod"comp:lib", "0.2")
+            Configuration.empty -> dep"comp:lib:0.2"
           ),
           Nil,
           Map.empty
@@ -184,7 +184,7 @@ object PomParsingTests extends TestSuite {
           Profile.Activation(Nil),
           Nil,
           Seq(
-            Configuration.test -> Dependency(mod"comp:lib", "0.2")
+            Configuration.test -> dep"comp:lib:0.2"
           ),
           Map.empty
         )

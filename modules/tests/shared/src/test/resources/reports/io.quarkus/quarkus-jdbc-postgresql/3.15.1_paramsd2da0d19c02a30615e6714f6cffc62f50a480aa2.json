@@ -355,8 +355,10 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.eclipse.parsson:jakarta.json",
-        "org.jboss.modules:jboss-modules"
+        "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
+        "org.osgi:org.osgi.annotation.versioning",
+        "org.ow2.asm:asm"
       ]
     },
     {
@@ -371,10 +373,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.annotation:javax.annotation-api",
-        "javax.enterprise:cdi-api",
-        "org.osgi:org.osgi.annotation.versioning",
-        "org.ow2.asm:asm"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {

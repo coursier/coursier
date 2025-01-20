@@ -13,6 +13,7 @@ import coursier.core.{
   Organization
 }
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
+import coursier.version.VersionConstraint
 
 object Dependencies {
 
@@ -33,7 +34,10 @@ object Dependencies {
   def withExtraRepo(
     rawDependencies: Seq[String],
     extraDependencies: Seq[(JavaOrScalaDependency, Map[String, String])]
-  ): Either[Throwable, (List[JavaOrScalaDependency], Map[(JavaOrScalaModule, String), URL])] =
+  ): Either[
+    Throwable,
+    (List[JavaOrScalaDependency], Map[(JavaOrScalaModule, VersionConstraint), URL])
+  ] =
     handleDependencies(rawDependencies) match {
       case Validated.Valid(l) =>
         val l0 = l ++ extraDependencies
@@ -47,7 +51,7 @@ object Dependencies {
           l0.flatMap {
             case (dep, extraParams) =>
               extraParams.get("url").map { url =>
-                (dep.module, dep.version) -> new URL(URLDecoder.decode(url, "UTF-8"))
+                (dep.module, dep.versionConstraint) -> new URL(URLDecoder.decode(url, "UTF-8"))
               }
           }.toMap
 

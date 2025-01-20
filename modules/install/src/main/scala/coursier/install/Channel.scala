@@ -6,6 +6,7 @@ import java.util.regex.Pattern.quote
 
 import coursier.core.Module
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
+import coursier.version.VersionConstraint
 import dataclass.data
 
 sealed abstract class Channel extends Product with Serializable {
@@ -16,7 +17,7 @@ object Channel {
 
   @data class FromModule(
     module: Module,
-    version: String = "latest.release"
+    versionConstraint: VersionConstraint = VersionConstraint("latest.release")
   ) extends Channel {
     def repr: String =
       module.repr
@@ -39,7 +40,7 @@ object Channel {
 
   def module(module: Module): FromModule =
     FromModule(module)
-  def module(module: Module, version: String): FromModule =
+  def module(module: Module, version: VersionConstraint): FromModule =
     FromModule(module, version)
 
   private lazy val ghUrlMatcher = (
@@ -122,7 +123,7 @@ object Channel {
       if (hasVersion)
         DependencyParser.javaOrScalaDependencyParams(s).flatMap {
           case (j: JavaOrScalaDependency.JavaDependency, _) =>
-            Right(Channel.module(j.module.module, j.version))
+            Right(Channel.module(j.module.module, j.versionConstraint))
           case (s: JavaOrScalaDependency.ScalaDependency, _) =>
             Left(s"Scala dependencies ($s) not accepted as channels")
         }

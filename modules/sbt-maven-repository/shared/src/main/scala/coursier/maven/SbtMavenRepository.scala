@@ -2,6 +2,7 @@ package coursier.maven
 
 import coursier.core._
 import coursier.util.{Artifact, EitherT, Monad, Xml}
+import coursier.version.VersionConstraint
 import dataclass._
 
 import scala.collection.compat._
@@ -24,10 +25,12 @@ object SbtMavenRepository {
     )
 
   private def extraAttributes(s: String)
-    : Either[String, Map[(Module, String), Map[String, String]]] = {
+    : Either[String, Map[(Module, VersionConstraint), Map[String, String]]] = {
     val lines = s.split('\n').toSeq.map(_.trim).filter(_.nonEmpty)
 
-    lines.foldLeft[Either[String, Map[(Module, String), Map[String, String]]]](Right(Map.empty)) {
+    lines.foldLeft[Either[String, Map[(Module, VersionConstraint), Map[String, String]]]](
+      Right(Map.empty)
+    ) {
       case (acc, line) =>
         for {
           modVers <- acc
@@ -36,7 +39,8 @@ object SbtMavenRepository {
     }
   }
 
-  private def extraAttribute(s: String): Either[String, ((Module, String), Map[String, String])] = {
+  private def extraAttribute(s: String)
+    : Either[String, ((Module, VersionConstraint), Map[String, String])] = {
     // vaguely does the same as:
     // https://github.com/apache/ant-ivy/blob/2.2.0/src/java/org/apache/ivy/core/module/id/ModuleRevisionId.java#L291
 
@@ -77,7 +81,7 @@ object SbtMavenRepository {
       version <- attrFrom(attrs, Pom.extraAttributeVersion)
     } yield {
       val remainingAttrs = attrs.view.filterKeys(!Pom.extraAttributeBase(_)).toMap
-      ((Module(org, name, Map.empty), version), remainingAttrs)
+      ((Module(org, name, Map.empty), VersionConstraint(version)), remainingAttrs)
     }
   }
 
@@ -91,12 +95,12 @@ object SbtMavenRepository {
     for {
       extraAttrs <- project.properties
         .collectFirst { case ("extraDependencyAttributes", s) => extraAttributes(s) }
-        .getOrElse(Right(Map.empty[(Module, String), Map[String, String]]))
+        .getOrElse(Right(Map.empty[(Module, VersionConstraint), Map[String, String]]))
     } yield {
 
       val adaptedDependencies = project.dependencies.map {
         case (config, dep0) =>
-          val dep = extraAttrs.get(dep0.moduleVersion).fold(dep0) { attrs =>
+          val dep = extraAttrs.get(dep0.moduleVersionConstraint).fold(dep0) { attrs =>
             // For an sbt plugin, we remove the suffix from the name and we add the sbtVersion
             // and scalaVersion attributes.
             val moduleWithAttrs = getSbtCrossVersion(attrs)
@@ -133,14 +137,15 @@ object SbtMavenRepository {
 
       override def fetchArtifact[F[_]](
         module: Module,
-        version: String,
-        versioningValue: Option[String],
+        version: coursier.version.Version,
+        versioningValue: Option[coursier.version.Version],
         fetch: Repository.Fetch[F]
       )(implicit F: Monad[F]): EitherT[F, String, Project] = {
         val directoryPath = moduleVersionPath(module, version)
 
         def tryFetch(artifactName: String): EitherT[F, String, Project] = {
-          val path     = directoryPath :+ s"$artifactName-${versioningValue.getOrElse(version)}.pom"
+          val path =
+            directoryPath :+ s"$artifactName-${versioningValue.getOrElse(version).asString}.pom"
           val artifact = projectArtifact(path, version)
           fetch(artifact).flatMap(parsePom(_))
         }
@@ -168,9 +173,9 @@ object SbtMavenRepository {
   ): Seq[(Publication, Artifact)] =
     internal.artifacts(dependency, project, overrideClassifiers)
 
-  def find[F[_]](
+  def find0[F[_]](
     module: Module,
-    version: String,
+    version: VersionConstraint,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]

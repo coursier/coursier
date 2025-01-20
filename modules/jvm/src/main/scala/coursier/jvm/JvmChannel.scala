@@ -13,6 +13,7 @@ import coursier.core.{Module, ModuleName, Organization}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
 import coursier.util.StringInterpolators._
 import dataclass.data
+import coursier.version.VersionConstraint
 
 // FIXME Initially copied from coursier.install.Channel, there's some duplication with it…
 
@@ -24,7 +25,7 @@ object JvmChannel {
 
   @data class FromModule(
     module: Module,
-    version: String = "latest.release"
+    versionConstraint: VersionConstraint = VersionConstraint("latest.release")
   ) extends JvmChannel {
     def repr: String =
       module.repr
@@ -42,7 +43,7 @@ object JvmChannel {
 
   def module(module: Module): FromModule =
     FromModule(module)
-  def module(module: Module, version: String): FromModule =
+  def module(module: Module, version: VersionConstraint): FromModule =
     FromModule(module, version)
 
   // adapted from https://github.com/VirtusLab/scala-cli/blob/51bebb087f9adaf1f1f4760374feb1a212b63bc9/modules/core/src/main/scala/scala/build/internals/OsLibc.scala#L14-L54
@@ -247,7 +248,7 @@ object JvmChannel {
       if (hasVersion)
         DependencyParser.javaOrScalaDependencyParams(s).flatMap {
           case (j: JavaOrScalaDependency.JavaDependency, _) =>
-            Right(JvmChannel.module(j.module.module, j.version))
+            Right(JvmChannel.module(j.module.module, j.versionConstraint))
           case (s: JavaOrScalaDependency.ScalaDependency, _) =>
             Left(s"Scala dependencies ($s) not accepted as JVM channels")
         }

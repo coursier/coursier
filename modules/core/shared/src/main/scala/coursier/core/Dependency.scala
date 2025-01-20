@@ -1,6 +1,7 @@
 package coursier.core
 
 import coursier.core.Validation._
+import coursier.version.{VersionConstraint => VersionConstraint0}
 import dataclass.data
 import MinimizedExclusions._
 
@@ -15,7 +16,7 @@ import scala.annotation.nowarn
   */
 @data(apply = false, settersCallApply = true) class Dependency(
   module: Module,
-  version: String,
+  versionConstraint: VersionConstraint0,
   configuration: Configuration,
   minimizedExclusions: MinimizedExclusions,
   publication: Publication,
@@ -25,7 +26,7 @@ import scala.annotation.nowarn
   @since("2.1.17")
   @deprecated("Use overridesMap instead", "2.1.23")
   overrides: DependencyManagement.Map =
-    Map.empty,
+    Map.empty[DependencyManagement.Key, DependencyManagement.Values],
   @since("2.1.18")
   @deprecated("Use bomDependencies instead", "2.1.19")
   boms: Seq[(Module, String)] = Nil,
@@ -35,15 +36,15 @@ import scala.annotation.nowarn
   overridesMap: Overrides =
     Overrides.empty
 ) {
-  assertValid(version, "version")
-  lazy val moduleVersion = (module, version)
+  assertValid(versionConstraint.asString, "version")
+  def moduleVersionConstraint: (Module, VersionConstraint0) = (module, versionConstraint)
 
   def asBomDependency: BomDependency =
-    BomDependency(module, version, configuration)
+    BomDependency(module, versionConstraint, configuration)
 
   def this(
     module: Module,
-    version: String,
+    version: VersionConstraint0,
     configuration: Configuration,
     minimizedExclusions: Set[(Organization, ModuleName)],
     publication: Publication,
@@ -108,11 +109,11 @@ import scala.annotation.nowarn
 
   def addBom(bomDep: BomDependency): Dependency =
     withBomDependencies(bomDependencies :+ bomDep)
-  def addBom(module: Module, version: String): Dependency =
+  def addBom(module: Module, version: VersionConstraint0): Dependency =
     withBomDependencies(bomDependencies :+ BomDependency(module, version, Configuration.empty))
-  def addBom(module: Module, version: String, config: Configuration): Dependency =
+  def addBom(module: Module, version: VersionConstraint0, config: Configuration): Dependency =
     withBomDependencies(bomDependencies :+ BomDependency(module, version, config))
-  def addBoms(boms: Seq[(Module, String)]): Dependency =
+  def addBoms0(boms: Seq[(Module, VersionConstraint0)]): Dependency =
     withBomDependencies(
       this.bomDependencies ++
         boms.map(t => BomDependency(t._1, t._2, Configuration.empty))
@@ -124,7 +125,7 @@ import scala.annotation.nowarn
     withOverridesMap(
       Overrides.add(overridesMap, Overrides(Map(key -> values)))
     )
-  def addOverride(org: Organization, name: ModuleName, version: String): Dependency = {
+  def addOverride(org: Organization, name: ModuleName, version: VersionConstraint0): Dependency = {
     val key = DependencyManagement.Key(org, name, Type.empty, Classifier.empty)
     val values = DependencyManagement.Values(
       Configuration.empty,
@@ -137,7 +138,7 @@ import scala.annotation.nowarn
   def addOverride(
     org: Organization,
     name: ModuleName,
-    version: String,
+    version: VersionConstraint0,
     exclusions: Set[(Organization, ModuleName)]
   ): Dependency = {
     val key = DependencyManagement.Key(org, name, Type.empty, Classifier.empty)
@@ -163,7 +164,7 @@ import scala.annotation.nowarn
 
   private[core] def copy(
     module: Module = this.module,
-    version: String = this.version,
+    version: VersionConstraint0 = this.versionConstraint,
     configuration: Configuration = this.configuration,
     minimizedExclusions: MinimizedExclusions = this.minimizedExclusions,
     attributes: Attributes = this.attributes,
@@ -177,7 +178,7 @@ import scala.annotation.nowarn
     Publication("", attributes.`type`, Extension.empty, attributes.classifier),
     optional,
     transitive,
-    Map.empty,
+    Map.empty[DependencyManagement.Key, DependencyManagement.Values],
     deprecatedBoms,
     bomDependencies,
     overridesMap
@@ -190,8 +191,8 @@ import scala.annotation.nowarn
     if (overridesMap.isEmpty) this
     else withOverridesMap(Overrides.empty)
   lazy val clearVersion: Dependency =
-    if (version.isEmpty) this
-    else withVersion("")
+    if (versionConstraint.asString.isEmpty) this
+    else withVersionConstraint(VersionConstraint0.empty)
   lazy val depManagementKey: DependencyManagement.Key =
     DependencyManagement.Key(
       module.organization,
@@ -201,7 +202,7 @@ import scala.annotation.nowarn
     )
   lazy val hasProperties =
     module.hasProperties ||
-    version.contains("$") ||
+    versionConstraint.asString.contains("$") ||
     publication.attributesHaveProperties ||
     configuration.value.contains("$") ||
     minimizedExclusions.hasProperties
@@ -210,7 +211,7 @@ import scala.annotation.nowarn
   override def toString(): String = {
     var fields = Seq(
       module.toString,
-      version.toString,
+      versionConstraint.asString,
       configuration.toString,
       minimizedExclusions.toSet().toString,
       publication.toString,
@@ -225,7 +226,14 @@ import scala.annotation.nowarn
       else fields :+ deprecatedBoms.toString
     fields =
       if (bomDependencies.isEmpty) fields
-      else fields :+ bomDependencies.toString
+      else fields :+ bomDependencies.map { bomDep =>
+        Seq(
+          bomDep.module,
+          bomDep.versionConstraint.asString,
+          bomDep.config,
+          bomDep.forceOverrideVersions
+        ).mkString("BomDependency(", ", ", ")")
+      }.toString
     s"Dependency(${fields.mkString(", ")})"
   }
 
@@ -240,7 +248,7 @@ object Dependency {
 
   def apply(
     module: Module,
-    version: String,
+    versionConstraint: VersionConstraint0,
     configuration: Configuration,
     minimizedExclusions: MinimizedExclusions,
     publication: Publication,
@@ -254,7 +262,7 @@ object Dependency {
     coursier.util.Cache.cacheMethod(instanceCache)(
       new Dependency(
         module,
-        version,
+        versionConstraint,
         configuration,
         minimizedExclusions,
         publication,
@@ -269,7 +277,7 @@ object Dependency {
 
   def apply(
     module: Module,
-    version: String,
+    version: VersionConstraint0,
     configuration: Configuration,
     minimizedExclusions: MinimizedExclusions,
     publication: Publication,
@@ -287,7 +295,7 @@ object Dependency {
       publication,
       optional,
       transitive,
-      Map.empty,
+      Map.empty[DependencyManagement.Key, DependencyManagement.Values],
       boms,
       bomDependencies,
       Overrides(overrides)
@@ -295,7 +303,7 @@ object Dependency {
 
   def apply(
     module: Module,
-    version: String,
+    version: VersionConstraint0,
     configuration: Configuration,
     minimizedExclusions: MinimizedExclusions,
     publication: Publication,
@@ -312,7 +320,7 @@ object Dependency {
       publication,
       optional,
       transitive,
-      Map.empty,
+      Map.empty[DependencyManagement.Key, DependencyManagement.Values],
       boms,
       Nil,
       Overrides(overrides)
@@ -320,7 +328,7 @@ object Dependency {
 
   def apply(
     module: Module,
-    version: String,
+    version: VersionConstraint0,
     configuration: Configuration,
     minimizedExclusions: MinimizedExclusions,
     publication: Publication,
@@ -336,7 +344,7 @@ object Dependency {
       publication,
       optional,
       transitive,
-      Map.empty,
+      Map.empty[DependencyManagement.Key, DependencyManagement.Values],
       Nil,
       Nil,
       Overrides(overrides)
@@ -344,7 +352,7 @@ object Dependency {
 
   def apply(
     module: Module,
-    version: String,
+    version: VersionConstraint0,
     configuration: Configuration,
     minimizedExclusions: MinimizedExclusions,
     publication: Publication,
@@ -359,7 +367,7 @@ object Dependency {
       publication,
       optional,
       transitive,
-      Map.empty,
+      Map.empty[DependencyManagement.Key, DependencyManagement.Values],
       Nil,
       Nil,
       Overrides.empty
@@ -367,7 +375,7 @@ object Dependency {
 
   def apply(
     module: Module,
-    version: String,
+    versionConstraint: VersionConstraint0,
     configuration: Configuration,
     exclusions: Set[(Organization, ModuleName)],
     publication: Publication,
@@ -376,7 +384,7 @@ object Dependency {
   ): Dependency =
     Dependency(
       module,
-      version,
+      versionConstraint,
       configuration,
       MinimizedExclusions(exclusions),
       publication,
@@ -386,7 +394,7 @@ object Dependency {
 
   def apply(
     module: Module,
-    version: String
+    version: VersionConstraint0
   ): Dependency =
     Dependency(
       module,
@@ -400,7 +408,7 @@ object Dependency {
 
   def apply(
     module: Module,
-    version: String,
+    version: VersionConstraint0,
     configuration: Configuration,
     exclusions: Set[(Organization, ModuleName)],
     attributes: Attributes,
@@ -416,5 +424,4 @@ object Dependency {
       optional,
       transitive
     )
-
 }

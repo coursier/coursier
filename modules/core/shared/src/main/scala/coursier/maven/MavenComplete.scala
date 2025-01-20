@@ -2,6 +2,7 @@ package coursier.maven
 
 import coursier.core.{Module, Organization, Repository}
 import coursier.util.Monad
+import coursier.version.Version
 import dataclass.data
 
 @data class MavenComplete[F[_]](
@@ -43,12 +44,12 @@ import dataclass.data
   override protected def moduleDirectory(module: Module): String =
     repo.moduleDirectory(module)
 
-  def versions(module: Module, prefix: String): F[Either[Throwable, Seq[String]]] =
+  def versions(module: Module, prefix: String): F[Either[Throwable, Seq[Version]]] =
     F.map(repo.versions(module, fetch)(F).run) {
       case Left(e) =>
         Left(new Exception(e))
       case Right((v, _)) =>
-        Right(v.available.filter(_.startsWith(prefix)))
+        Right(v.available0.filter(_.repr.startsWith(prefix)))
     }
 }
 

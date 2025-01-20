@@ -1,8 +1,24 @@
 package coursier.ivy
 
-import coursier.core._
+import coursier.core.{
+  ArtifactSource,
+  Authentication,
+  Classifier,
+  Configuration,
+  Dependency,
+  Extension,
+  Module,
+  Organization,
+  Parse,
+  Project,
+  Publication,
+  Repository,
+  Type,
+  Versions
+}
 import coursier.maven.{MavenAttributes, MavenComplete}
 import coursier.util.{Artifact, EitherT, Monad}
+import coursier.version.{Version, VersionConstraint, VersionParse}
 import dataclass._
 
 @data class IvyRepository(
@@ -55,7 +71,7 @@ import dataclass._
   // Some are missing (branch, conf, originalName).
   private def variables(
     module: Module,
-    versionOpt: Option[String],
+    versionOpt: Option[Version],
     `type`: Type,
     artifact: String,
     ext: Extension,
@@ -70,7 +86,7 @@ import dataclass._
       ) ++
       module.attributes ++
       classifierOpt.map("classifier" -> _.value).toSeq ++
-      versionOpt.map("revision" -> _).toSeq
+      versionOpt.map("revision" -> _.asString).toSeq
 
   def artifacts(
     dependency: Dependency,
@@ -139,7 +155,7 @@ import dataclass._
       val retainedWithUrl = retained.distinct.flatMap { p =>
         pattern.substituteVariables(variables(
           dependency.module,
-          Some(project.actualVersion),
+          Some(project.actualVersion0),
           p.`type`,
           p.name,
           p.ext,
@@ -151,7 +167,7 @@ import dataclass._
         case (p, url) =>
           var artifact = artifactFor(
             url,
-            changing = changingOpt.getOrElse(IvyRepository.isSnapshot(project.version))
+            changing = changingOpt.getOrElse(IvyRepository.isSnapshot(project.version0.asString))
           )
 
           if (withChecksums)
@@ -226,7 +242,7 @@ import dataclass._
       variables(module, None, Type.ivy, "ivy", Extension("xml"), None),
       fetch,
       prefix
-    ).map(_.map(t => t._1 -> t._2.map(Parse.version).collect { case Some(v) => v }))
+    ).map(_.map(t => t._1 -> t._2.map(VersionParse.version).collect { case Some(v) => v }))
 
   override protected def fetchVersions[F[_]](
     module: Module,
@@ -236,18 +252,16 @@ import dataclass._
   ): EitherT[F, String, (Versions, String)] =
     availableVersions(module, fetch, "").map {
       case Some((listingUrl, l)) if l.nonEmpty =>
-        val latest = l.max.repr
+        val latest = l.max
         val release = {
           val l0 = l.filter(!_.repr.endsWith("SNAPSHOT"))
-          if (l0.isEmpty)
-            ""
-          else
-            l0.max.repr
+          if (l0.isEmpty) Version.zero
+          else l0.max
         }
         val v = Versions(
           latest,
           release,
-          l.map(_.repr).toList,
+          l.toList,
           None
         )
         (v, listingUrl)
@@ -257,23 +271,24 @@ import dataclass._
         (Versions.empty, "")
     }
 
-  def find[F[_]](
+  def find0[F[_]](
     module: Module,
-    version: String,
+    version: VersionConstraint,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, (ArtifactSource, Project)] = {
 
+    val version0 = version.preferred.headOption.getOrElse(Version(version.asString) /* meh */ )
     val eitherArtifact: Either[String, Artifact] =
       for {
         url <- metadataPattern.substituteVariables(
-          variables(module, Some(version), Type.ivy, "ivy", Extension("xml"), None)
+          variables(module, Some(version0), Type.ivy, "ivy", Extension("xml"), None)
         )
       } yield {
         var artifact = artifactFor(
           url,
-          changing = changingOpt.getOrElse(IvyRepository.isSnapshot(version))
+          changing = changingOpt.getOrElse(IvyRepository.isSnapshot(version.asString))
         )
 
         if (withChecksums)
@@ -290,7 +305,7 @@ import dataclass._
       proj0 <- EitherT(
         F.point {
           for {
-            xml <- compatibility.xmlParseDom(ivy)
+            xml <- coursier.core.compatibility.xmlParseDom(ivy)
             _   <- if (xml.label == "ivy-module") Right(()) else Left("Module definition not found")
             proj <- IvyXml.project(xml)
           } yield proj
@@ -324,7 +339,7 @@ import dataclass._
         else
           proj0
 
-      this -> proj.withActualVersionOpt(Some(version))
+      this -> proj.withActualVersionOpt0(Some(version0))
     }
   }
 

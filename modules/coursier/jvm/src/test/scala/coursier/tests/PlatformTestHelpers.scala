@@ -61,6 +61,7 @@ abstract class PlatformTestHelpers {
 
   def maybeWriteTextResource(path: String, content: String): Unit = {
     val p = Paths.get(path)
+    System.err.println(s"Writing $p")
     Util.createDirectories(p.getParent)
     Files.write(p, content.getBytes(StandardCharsets.UTF_8))
   }

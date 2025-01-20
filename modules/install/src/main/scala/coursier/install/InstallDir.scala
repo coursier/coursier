@@ -30,6 +30,7 @@ import coursier.launcher.internal.FileUtil
 import coursier.launcher.native.NativeBuilder
 import coursier.launcher.Parameters.ScalaNative
 import coursier.util.{Artifact, Task}
+import coursier.version.VersionConstraint
 import dataclass._
 
 import scala.jdk.CollectionConverters._
@@ -553,7 +554,10 @@ object InstallDir {
       val deps0 = deps.map { dep =>
         dep.split(":", 3) match {
           case Array(org, name, ver) =>
-            Dependency(Module(Organization(org), ModuleName(name), Map.empty), ver)
+            Dependency(
+              Module(Organization(org), ModuleName(name), Map.empty),
+              VersionConstraint(ver)
+            )
           case _ => ???
         }
       }

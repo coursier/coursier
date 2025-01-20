@@ -1,7 +1,8 @@
 package coursier.util
 
-import coursier.core._
+import coursier.core.{Attributes, Configuration, Dependency, Module, Project, Resolution}
 import coursier.graph.{Conflict, DependencyTree, ReverseModuleTree}
+import coursier.version.{Version, VersionConstraint, VersionInterval}
 import dataclass.data
 
 object Print {
@@ -31,19 +32,19 @@ object Print {
       }
       .mkString
 
-    s"${dep.module}:${dep.version}:${dep.configuration.value}" +
+    s"${dep.module}:${dep.versionConstraint.asString}:${dep.configuration.value}" +
       (if (printExclusions) exclusionsStr else "")
   }
 
-  def dependenciesUnknownConfigs(
+  def dependenciesUnknownConfigs0(
     deps: Seq[Dependency],
-    projects: Map[(Module, String), Project]
+    projects: Map[(Module, VersionConstraint), Project]
   ): String =
-    dependenciesUnknownConfigs(deps, projects, printExclusions = false)
+    dependenciesUnknownConfigs0(deps, projects, printExclusions = false)
 
-  def dependenciesUnknownConfigs(
+  def dependenciesUnknownConfigs0(
     deps: Seq[Dependency],
-    projects: Map[(Module, String), Project],
+    projects: Map[(Module, VersionConstraint), Project],
     printExclusions: Boolean,
     useFinalVersions: Boolean = true,
     reorder: Boolean = false
@@ -52,10 +53,10 @@ object Print {
     val deps0 =
       if (useFinalVersions)
         deps.map { dep =>
-          dep.withVersion(
+          dep.withVersionConstraint(
             projects
-              .get(dep.moduleVersion)
-              .fold(dep.version)(_.version)
+              .get(dep.moduleVersionConstraint)
+              .fold(dep.versionConstraint)(proj => VersionConstraint.fromVersion(proj.version0))
           )
         }
       else
@@ -71,7 +72,7 @@ object Print {
             k.withConfiguration(conf)
           }
           .sortBy { dep =>
-            (dep.module.organization, dep.module.name, dep.module.toString, dep.version)
+            (dep.module.organization, dep.module.name, dep.module.toString, dep.versionConstraint)
           }
       else
         deps0
@@ -81,17 +82,16 @@ object Print {
     l0.mkString(System.lineSeparator())
   }
 
-  def compatibleVersions(compatibleWith: String, selected: String): Boolean = {
+  def compatibleVersions(compatibleWith: VersionConstraint, selected: Version): Boolean =
     // too loose for now
     // e.g. RCs and milestones should not be considered compatible with subsequent non-RC or
     // milestone versions - possibly not with each other either
-
-    val c = Parse.versionConstraint(compatibleWith)
-    if (c.interval == VersionInterval.zero)
-      compatibleWith.split('.').take(2).toSeq == selected.split('.').take(2).toSeq
+    if (compatibleWith.interval == VersionInterval.zero)
+      compatibleWith.preferred.exists { v =>
+        v.repr.split('.').take(2).toSeq == selected.repr.split('.').take(2).toSeq
+      }
     else
-      c.interval.contains(Version(selected))
-  }
+      compatibleWith.interval.contains(selected)
 
   def dependencyTree(
     resolution: Resolution,
@@ -118,16 +118,18 @@ object Print {
       )(_.dependees)
       tree0.render { node =>
         if (node.excludedDependsOn)
-          s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.reconciledVersion}"
-        else if (node.dependsOnVersion == node.dependsOnReconciledVersion)
-          s"${node.module}:${node.reconciledVersion}"
+          s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.retainedVersion0.asString}"
+        else if (
+          node.dependsOnVersionConstraint.asString == node.dependsOnRetainedVersion0.asString
+        )
+          s"${node.module}:${node.retainedVersion0.asString}"
         else {
           val assumeCompatibleVersions =
-            compatibleVersions(node.dependsOnVersion, node.dependsOnReconciledVersion)
+            compatibleVersions(node.dependsOnVersionConstraint, node.dependsOnRetainedVersion0)
 
-          s"${node.module}:${node.reconciledVersion} " +
+          s"${node.module}:${node.retainedVersion0.asString} " +
             (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
-            s"${node.dependsOnModule}:${node.dependsOnVersion} -> ${node.dependsOnReconciledVersion}" +
+            s"${node.dependsOnModule}:${node.dependsOnVersionConstraint.asString} -> ${node.dependsOnRetainedVersion0.asString}" +
             colors0.reset
         }
       }
@@ -139,9 +141,9 @@ object Print {
         .render { t =>
           render(
             t.dependency.module,
-            t.dependency.version,
+            t.dependency.versionConstraint,
             t.excluded,
-            resolution.reconciledVersions.get(t.dependency.module),
+            resolution.retainedVersions.get(t.dependency.module),
             colors0
           )
         }
@@ -150,36 +152,40 @@ object Print {
 
   private def render(
     module: Module,
-    version: String,
+    version: VersionConstraint,
     excluded: Boolean,
-    reconciledVersionOpt: Option[String],
+    retainedVersionOpt: Option[Version],
     colors: Colors
   ): String =
     if (excluded)
-      reconciledVersionOpt match {
+      retainedVersionOpt match {
         case None =>
-          s"${colors.yellow}(excluded)${colors.reset} $module:$version"
+          s"${colors.yellow}(excluded)${colors.reset} $module:${version.asString}"
         case Some(version0) =>
           val versionMsg =
-            if (version0 == version)
+            if (version0.asString == version.asString)
               "this version"
             else
-              s"version $version0"
+              s"version ${version0.asString}"
 
           s"$module:$version " +
             s"${colors.red}(excluded, $versionMsg present anyway)${colors.reset}"
       }
     else {
+      assert(
+        retainedVersionOpt.nonEmpty,
+        s"No retained version found for non-excluded dependency $module"
+      )
+      val retainedVersion = retainedVersionOpt.get
       val versionStr =
-        if (reconciledVersionOpt.forall(_ == version))
-          version
+        if (retainedVersionOpt.forall(_.asString == version.asString))
+          version.asString
         else {
-          val reconciledVersion = reconciledVersionOpt.getOrElse(version)
           val assumeCompatibleVersions =
-            compatibleVersions(version, reconciledVersionOpt.getOrElse(version))
+            compatibleVersions(version, retainedVersion)
 
           (if (assumeCompatibleVersions) colors.yellow else colors.red) +
-            s"$version -> $reconciledVersion" +
+            s"$version -> ${retainedVersion.asString}" +
             (if (assumeCompatibleVersions) "" else " (possible incompatibility)") +
             colors.reset
         }
@@ -216,7 +222,7 @@ object Print {
       }
       .map {
         case (mod, l) =>
-          assert(l.map(_.version).distinct.size == 1)
+          assert(l.map(_.version0).distinct.size == 1)
 
           val messages = l.map { c =>
             val extra =
@@ -225,12 +231,12 @@ object Print {
               else
                 ""
             (
-              s"${c.dependeeModule}:${c.dependeeVersion}",
-              s"wanted version ${c.wantedVersion}" + extra
+              s"${c.dependeeModule}:${c.dependeeVersionConstraint.asString}",
+              s"wanted version ${c.wantedVersionConstraint.asString}" + extra
             )
           }
 
-          s"$mod:${l.head.version} was selected, but" + System.lineSeparator() +
+          s"$mod:${l.head.version0.asString} was selected, but" + System.lineSeparator() +
             aligned(messages).map("  " + _ + System.lineSeparator()).mkString
       }
   }

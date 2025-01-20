@@ -19,6 +19,7 @@ import coursier.tests.compatibility._
 import coursier.tests.TestUtil._
 import coursier.util.{Artifact, Print, Tree}
 import coursier.util.StringInterpolators._
+import coursier.version.{Version, VersionConstraint}
 
 import scala.concurrent.Future
 
@@ -83,10 +84,10 @@ abstract class CentralTests extends TestSuite {
           .withDependencies(Set(dep.withDefaultScope))
 
         assert(res == expected)
-        assert(res0.projectCache.contains(dep.moduleVersion))
+        assert(res0.projectCache0.contains(dep.moduleVersionConstraint))
 
-        val proj = res0.projectCache(dep.moduleVersion)._2
-        assert(proj.version == "2.8")
+        val proj = res0.projectCache0(dep.moduleVersionConstraint)._2
+        assert(proj.version0.asString == "2.8")
       }
     }
 
@@ -150,7 +151,7 @@ abstract class CentralTests extends TestSuite {
           mod,
           version,
           extraRepos = extraRepos,
-          forceVersions = Map(mod"commons-codec:commons-codec" -> "1.6")
+          forceVersions = Map(mod"commons-codec:commons-codec" -> VersionConstraint("1.6"))
         )
       }
     }
@@ -402,7 +403,7 @@ abstract class CentralTests extends TestSuite {
 
           val res = await(runner.resolve(deps))
 
-          val metadataErrors = res.errors
+          val metadataErrors = res.errors0
           val conflicts      = res.conflicts
           val isDone         = res.isDone
           assert(metadataErrors.isEmpty)
@@ -435,7 +436,7 @@ abstract class CentralTests extends TestSuite {
 
           val res = await(runner.resolve(deps))
 
-          val metadataErrors = res.errors
+          val metadataErrors = res.errors0
           val conflicts      = res.conflicts
           val isDone         = res.isDone
           assert(metadataErrors.isEmpty)
@@ -632,13 +633,13 @@ abstract class CentralTests extends TestSuite {
 
     test("signaturesOfSignatures") {
       val mod = mod"org.yaml:snakeyaml"
-      val ver = "1.17"
+      val ver = VersionConstraint("1.17")
 
       def hasSha1(a: Artifact) = a.checksumUrls.contains("SHA-1")
       def hasMd5(a: Artifact)  = a.checksumUrls.contains("MD5")
       def hasSig(a: Artifact)  = a.extra.contains("sig")
 
-      test - runner.resolutionCheck(mod, ver)
+      test - runner.resolutionCheck(mod, ver.asString)
 
       test - runner.withDetailedArtifacts(
         Seq(Dependency(mod, ver).withAttributes(Attributes(Type.bundle, Classifier.empty))),
@@ -815,7 +816,7 @@ abstract class CentralTests extends TestSuite {
         async {
           val res = await(runner.resolution(
             mod"edu.illinois.cs.cogcomp:illinois-pos",
-            "2.0.2",
+            VersionConstraint("2.0.2"),
             Seq(mvn"https://cogcomp.seas.upenn.edu/m2repo"),
             configuration = Configuration.compile
           ))
@@ -837,7 +838,12 @@ abstract class CentralTests extends TestSuite {
 
       test("reverse") {
         async {
-          val res = await(runner.resolution(mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M10"))
+          val res = await {
+            runner.resolution(
+              mod"io.get-coursier:coursier-cli_2.12",
+              VersionConstraint("1.1.0-M10")
+            )
+          }
           // not sure the leftmost '├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10' should be there…
           val expectedTree =
             """├─ com.chuusai:shapeless_2.12:2.3.3
@@ -997,10 +1003,15 @@ abstract class CentralTests extends TestSuite {
 
       test("module") {
         async {
-          val res  = await(runner.resolution(mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M10"))
+          val res = await(
+            runner.resolution(
+              mod"io.get-coursier:coursier-cli_2.12",
+              VersionConstraint("1.1.0-M10")
+            )
+          )
           val tree = ModuleTree(res)
           val str = Tree(tree.toVector)(_.children).render { t =>
-            s"${t.module}:${t.reconciledVersion}"
+            s"${t.module}:${t.retainedVersion0.asString}"
           }
           val expectedStr =
             """└─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
@@ -1068,112 +1079,117 @@ abstract class CentralTests extends TestSuite {
 
       test("conflicts") {
         async {
-          val res = await(runner.resolution(mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M10"))
+          val res = await {
+            runner.resolution(
+              mod"io.get-coursier:coursier-cli_2.12",
+              VersionConstraint("1.1.0-M10")
+            )
+          }
           val conflicts = Conflict(res).toSet
           val expectedConflicts = Set(
             Conflict(
               mod"org.scala-lang:scala-library",
-              "2.12.8",
-              "2.12.4",
+              Version("2.12.8"),
+              VersionConstraint("2.12.4"),
               wasExcluded = false,
               mod"com.chuusai:shapeless_2.12",
-              "2.3.3"
+              VersionConstraint("2.3.3")
             ),
             Conflict(
               mod"org.scala-lang:scala-library",
-              "2.12.8",
-              "2.12.4",
+              Version("2.12.8"),
+              VersionConstraint("2.12.4"),
               wasExcluded = false,
               mod"com.github.alexarchambault:argonaut-shapeless_6.2_2.12",
-              "1.2.0-M8"
+              VersionConstraint("1.2.0-M8")
             ),
             Conflict(
               mod"org.scala-lang:scala-library",
-              "2.12.8",
-              "2.12.7",
+              Version("2.12.8"),
+              VersionConstraint("2.12.7"),
               wasExcluded = false,
               mod"com.github.alexarchambault:case-app-annotations_2.12",
-              "2.0.0-M5"
+              VersionConstraint("2.0.0-M5")
             ),
             Conflict(
               mod"org.scala-lang:scala-library",
-              "2.12.8",
-              "2.12.7",
+              Version("2.12.8"),
+              VersionConstraint("2.12.7"),
               wasExcluded = false,
               mod"com.github.alexarchambault:case-app-util_2.12",
-              "2.0.0-M5"
+              VersionConstraint("2.0.0-M5")
             ),
             Conflict(
               mod"org.scala-lang:scala-library",
-              "2.12.8",
-              "2.12.7",
+              Version("2.12.8"),
+              VersionConstraint("2.12.7"),
               wasExcluded = false,
               mod"com.github.alexarchambault:case-app_2.12",
-              "2.0.0-M5"
+              VersionConstraint("2.0.0-M5")
             ),
             Conflict(
               mod"org.scala-lang:scala-library",
-              "2.12.8",
-              "2.12.6",
+              Version("2.12.8"),
+              VersionConstraint("2.12.6"),
               wasExcluded = false,
               mod"org.scala-lang:scala-reflect",
-              "2.12.6"
+              VersionConstraint("2.12.6")
             ),
             Conflict(
               mod"org.scala-lang:scala-library",
-              "2.12.8",
-              "2.12.6",
+              Version("2.12.8"),
+              VersionConstraint("2.12.6"),
               wasExcluded = false,
               mod"org.scala-lang.modules:scala-xml_2.12",
-              "1.1.1"
+              VersionConstraint("1.1.1")
             ),
             Conflict(
               mod"org.scala-lang:scala-library",
-              "2.12.8",
-              "2.12.7",
+              Version("2.12.8"),
+              VersionConstraint("2.12.7"),
               wasExcluded = false,
               mod"org.typelevel:cats-core_2.12",
-              "1.5.0"
+              VersionConstraint("1.5.0")
             ),
             Conflict(
               mod"org.scala-lang:scala-library",
-              "2.12.8",
-              "2.12.7",
+              Version("2.12.8"),
+              VersionConstraint("2.12.7"),
               wasExcluded = false,
               mod"org.typelevel:cats-kernel_2.12",
-              "1.5.0"
+              VersionConstraint("1.5.0")
             ),
             Conflict(
               mod"org.scala-lang:scala-library",
-              "2.12.8",
-              "2.12.7",
+              Version("2.12.8"),
+              VersionConstraint("2.12.7"),
               wasExcluded = false,
               mod"org.typelevel:cats-macros_2.12",
-              "1.5.0"
+              VersionConstraint("1.5.0")
             ),
             Conflict(
               mod"org.scala-lang:scala-library",
-              "2.12.8",
-              "2.12.6",
+              Version("2.12.8"),
+              VersionConstraint("2.12.6"),
               wasExcluded = false,
               mod"org.typelevel:machinist_2.12",
-              "0.6.6"
+              VersionConstraint("0.6.6")
             ),
             Conflict(
               mod"org.scala-lang:scala-library",
-              "2.12.8",
-              "2.12.0",
+              Version("2.12.8"),
+              VersionConstraint("2.12.0"),
               wasExcluded = false,
               mod"org.typelevel:macro-compat_2.12",
-              "1.1.1"
+              VersionConstraint("1.1.1")
             ),
             Conflict(
               mod"org.scala-lang:scala-reflect",
-              "2.12.6",
-              "2.12.4",
+              Version("2.12.6"),
+              VersionConstraint("2.12.4"),
               wasExcluded = false,
               mod"io.argonaut:argonaut_2.12",
-              "6.2.1"
+              VersionConstraint("6.2.1")
             )
           )
           assert(conflicts == expectedConflicts)
@@ -1305,12 +1321,13 @@ abstract class CentralTests extends TestSuite {
                 dep"org.scalameta:interactive_2.12.7:4.1.4"
               ),
               extraRepos = Seq(Repositories.jitpack),
-              mapDependencies = Some(coursier.core.Resolution.overrideScalaModule("2.12.7"))
+              mapDependencies =
+                Some(coursier.core.Resolution.overrideScalaModule(VersionConstraint("2.12.7")))
             )
           )
 
           val deps = res.dependencies.map { dep =>
-            s"${dep.module}:${dep.version}"
+            s"${dep.module}:${dep.versionConstraint.asString}"
           }
 
           val expectedDeps = sharedDeps ++ Seq(
@@ -1345,7 +1362,7 @@ abstract class CentralTests extends TestSuite {
           )
 
           val deps = res.dependencies.map { dep =>
-            s"${dep.module}:${dep.version}"
+            s"${dep.module}:${dep.versionConstraint.asString}"
           }
 
           val expectedDeps = sharedDeps ++ Seq(
@@ -1381,7 +1398,7 @@ abstract class CentralTests extends TestSuite {
           )
 
           val deps = res.dependencies.map { dep =>
-            s"${dep.module}:${dep.version}"
+            s"${dep.module}:${dep.versionConstraint.asString}"
           }
 
           val expectedDeps = sharedDeps ++ Seq(
@@ -1416,7 +1433,7 @@ abstract class CentralTests extends TestSuite {
           )
 
           val deps = res.dependencies.map { dep =>
-            s"${dep.module}:${dep.version}"
+            s"${dep.module}:${dep.versionConstraint.asString}"
           }
 
           val expectedDeps = sharedDeps ++ Seq(

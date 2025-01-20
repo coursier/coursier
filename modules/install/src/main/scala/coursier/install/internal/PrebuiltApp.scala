@@ -154,8 +154,8 @@ object PrebuiltApp {
     def mainVersionsIterator(): Iterator[String] = {
       val it0 = desc.candidateMainVersions(cache, verbosity)
       val it =
-        if (it0.hasNext) it0
-        else desc.mainVersionOpt.iterator
+        if (it0.hasNext) it0.map(_.asString)
+        else desc.mainVersionOpt.iterator.map(_.asString)
       // check the latest 5 versions if preferPrebuilt is true
       // FIXME Don't hardcode that number?
       it.take(if (preferPrebuilt) 5 else 1)

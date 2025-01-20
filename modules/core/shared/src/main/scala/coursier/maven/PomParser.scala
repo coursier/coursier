@@ -3,6 +3,7 @@ package coursier.maven
 import coursier.core._
 import coursier.core.Validation._
 import coursier.util.SaxHandler
+import coursier.version.{VersionConstraint, VersionParse}
 
 import scala.collection.mutable.ListBuffer
 
@@ -117,7 +118,7 @@ object PomParser {
 
     var relocationGroupIdOpt    = Option.empty[Organization]
     var relocationArtifactIdOpt = Option.empty[ModuleName]
-    var relocationVersionOpt    = Option.empty[String]
+    var relocationVersionOpt    = Option.empty[VersionConstraint]
 
     var dependencyGroupIdOpt    = Option.empty[Organization]
     var dependencyArtifactIdOpt = Option.empty[ModuleName]
@@ -145,7 +146,8 @@ object PomParser {
     var profileActivationOsFamilyOpt  = Option.empty[String]
     var profileActivationOsNameOpt    = Option.empty[String]
     var profileActivationOsVersionOpt = Option.empty[String]
-    var profileActivationJdkOpt       = Option.empty[Either[VersionInterval, Seq[Version]]]
+    var profileActivationJdkOpt =
+      Option.empty[Either[coursier.version.VersionInterval, Seq[coursier.version.Version]]]
 
     val profiles = new ListBuffer[Profile]
 
@@ -179,6 +181,7 @@ object PomParser {
         finalVersion <- versionOpt
           .toRight("No version found")
           .flatMap(validateCoordinate(_, "version"))
+          .map(coursier.version.Version(_))
 
         _ <- {
           if (parentModuleOpt.exists(_.organization.value.isEmpty))
@@ -199,7 +202,7 @@ object PomParser {
         val parentOpt = for {
           parentModule  <- parentModuleOpt
           parentVersion <- validateCoordinate(parentVersion, "parent version")
-        } yield (parentModule, parentVersion)
+        } yield (parentModule, coursier.version.Version(parentVersion))
 
         val projModule = Module(Organization(finalGroupId), ModuleName(artifactId), Map.empty)
 
@@ -215,7 +218,7 @@ object PomParser {
                   name = relocationArtifactIdOpt.getOrElse(projModule.name),
                   attributes = projModule.attributes
                 ),
-                relocationVersionOpt.getOrElse(finalVersion),
+                relocationVersionOpt.getOrElse(VersionConstraint.fromVersion(finalVersion)),
                 Configuration.empty,
                 Set.empty[(Organization, ModuleName)],
                 Attributes.empty,
@@ -231,7 +234,7 @@ object PomParser {
           projModule,
           finalVersion,
           relocationDependencyOpt.toList ::: dependencies.toList,
-          Map.empty,
+          Map.empty[Configuration, Seq[Configuration]],
           parentOpt.toOption,
           dependencyManagement.toList,
           properties0,
@@ -324,7 +327,7 @@ object PomParser {
     },
     content("version" :: "relocation" :: "distributionManagement" :: "project" :: Nil) {
       (state, content) =>
-        state.relocationVersionOpt = Some(content)
+        state.relocationVersionOpt = Some(VersionConstraint(content))
     }
   ) ++ dependencyHandlers(
     "dependency" :: "dependencies" :: "project" :: Nil,
@@ -438,10 +441,10 @@ object PomParser {
         (state, content) =>
           val s = content
           state.profileActivationJdkOpt =
-            Parse.versionInterval(s)
-              .orElse(Parse.multiVersionInterval(s))
+            VersionParse.versionInterval(s)
+              .orElse(VersionParse.multiVersionInterval(s))
               .map(Left(_))
-              .orElse(Parse.version(s).map(v => Right(Seq(v))))
+              .orElse(VersionParse.version(s).map(v => Right(Seq(v))))
       }
     ) ++ dependencyHandlers(
       "dependency" :: "dependencies" :: prefix,
@@ -476,7 +479,7 @@ object PomParser {
         def end(state: State) = {
           val d = Dependency(
             Module(state.dependencyGroupIdOpt.get, state.dependencyArtifactIdOpt.get, Map.empty),
-            state.dependencyVersion,
+            VersionConstraint(state.dependencyVersion),
             Configuration.empty,
             state.dependencyExclusions,
             Attributes(state.dependencyType, state.dependencyClassifier),

@@ -1,5 +1,6 @@
 import coursier.core._
 import coursier.util.StringInterpolators._
+import coursier.version.{VersionConstraint => VersionConstraint0}
 
 import scala.language.implicitConversions
 
@@ -19,7 +20,7 @@ package object coursier {
   object Dependency {
     def apply(
       module: Module,
-      version: String
+      version: VersionConstraint0
     ): Dependency =
       core.Dependency(module, version)
   }

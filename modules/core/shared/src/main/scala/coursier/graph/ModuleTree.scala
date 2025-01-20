@@ -1,15 +1,16 @@
 package coursier.graph
 
 import coursier.core.{Dependency, Module, Resolution}
+import coursier.version.{Version, VersionConstraint}
 
 /** Simple [[Module]] tree. */
 sealed abstract class ModuleTree {
   def module: Module
 
-  def reconciledVersion: String
+  def reconciledVersionConstraint: VersionConstraint
 
   /** The final version of this dependency. */
-  def retainedVersion: String
+  def retainedVersion0: Version
 
   /** The dependencies of this module. */
   def children: Seq[ModuleTree]
@@ -54,8 +55,8 @@ object ModuleTree {
 
   private final case class Node(
     module: Module,
-    reconciledVersion: String,
-    retainedVersion: String,
+    reconciledVersionConstraint: VersionConstraint,
+    retainedVersion0: Version,
     dependencyTrees: Seq[DependencyTree]
   ) extends ModuleTree {
     def children: Seq[ModuleTree] =
@@ -69,8 +70,8 @@ object ModuleTree {
     ): Node =
       new Node(
         dependencyTree.dependency.module,
-        dependencyTree.reconciledVersion,
-        dependencyTree.retainedVersion,
+        dependencyTree.reconciledVersionConstraint,
+        dependencyTree.retainedVersion0,
         dependencyTree +: others
       )
   }

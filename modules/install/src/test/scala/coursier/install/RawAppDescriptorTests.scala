@@ -1,10 +1,9 @@
 package coursier.install
 
-import utest._
-import coursier.core.VersionInterval
-import coursier.core.Version
 import cats.data.Validated
 import coursier.core.Parse
+import coursier.version.{Version, VersionInterval}
+import utest._
 
 object RawAppDescriptorTests extends TestSuite {
   val it1 = VersionInterval(Some(Version("2.0.1")), Some(Version("2.1.0")), true, true)

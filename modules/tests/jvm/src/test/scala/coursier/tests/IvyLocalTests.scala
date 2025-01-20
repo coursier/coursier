@@ -11,12 +11,13 @@ import coursier.util.StringInterpolators._
 import utest._
 
 import scala.async.Async.{async, await}
+import coursier.version.VersionConstraint
 
 object IvyLocalTests extends TestSuite {
 
   private val runner = new TestRunner
 
-  def localVersion = "0.1.2-publish-local"
+  lazy val localVersion = VersionConstraint("0.1.2-publish-local")
 
   val tests = TestSuite {
     test("coursier") {
@@ -30,7 +31,7 @@ object IvyLocalTests extends TestSuite {
 
       // Assuming this module (and the sub-projects it depends on) is published locally
       test("resolution") {
-        runner.resolutionCheck(
+        runner.resolutionCheck0(
           module,
           localVersion,
           extraRepos

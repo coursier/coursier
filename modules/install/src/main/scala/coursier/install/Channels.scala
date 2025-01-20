@@ -110,7 +110,7 @@ import scala.jdk.CollectionConverters._
     def fromModule(channel: Channel.FromModule): Task[Option[ChannelData]] =
       for {
         res <- Fetch(cache)
-          .withDependencies(Seq(Dependency(channel.module, channel.version)))
+          .withDependencies(Seq(Dependency(channel.module, channel.versionConstraint)))
           .withRepositories(repositories)
           .ioResult
 
@@ -118,7 +118,10 @@ import scala.jdk.CollectionConverters._
           for (logger <- cache.loggerOpt)
             logger.use {
               val retainedVersion =
-                res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
+                res.resolution.reconciledVersions
+                  .get(channel.module)
+                  .map(_.asString)
+                  .getOrElse("[unknown]")
               logger.pickedModuleVersion(channel.module.repr, retainedVersion)
             }
         }
@@ -257,7 +260,7 @@ import scala.jdk.CollectionConverters._
     def fromModule(channel: Channel.FromModule): Task[List[String]] =
       for {
         res <- Fetch(cache)
-          .withDependencies(Seq(Dependency(channel.module, channel.version)))
+          .withDependencies(Seq(Dependency(channel.module, channel.versionConstraint)))
           .withRepositories(repositories)
           .ioResult
 
@@ -265,7 +268,10 @@ import scala.jdk.CollectionConverters._
           for (logger <- cache.loggerOpt)
             logger.use {
               val retainedVersion =
-                res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
+                res.resolution.reconciledVersions
+                  .get(channel.module)
+                  .map(_.asString)
+                  .getOrElse("[unknown]")
               logger.pickedModuleVersion(channel.module.repr, retainedVersion)
             }
         }

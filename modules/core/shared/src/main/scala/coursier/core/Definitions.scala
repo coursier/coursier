@@ -4,6 +4,7 @@ import java.util.concurrent.ConcurrentMap
 
 import coursier.core.Validation._
 import coursier.util.Artifact
+import coursier.version.{Version => Version0}
 import dataclass.data
 
 final case class Organization(value: String) extends AnyVal {
@@ -245,14 +246,14 @@ object Attributes {
 
 @data class Project(
   module: Module,
-  version: String,
+  version0: Version0,
   // First String is configuration (scope for Maven)
   dependencies: Seq[(Configuration, Dependency)],
   // For Maven, this is the standard scopes as an Ivy configuration
   configurations: Map[Configuration, Seq[Configuration]],
 
   // Maven-specific
-  parent: Option[(Module, String)],
+  parent0: Option[(Module, Version0)],
   dependencyManagement: Seq[(Configuration, Dependency)],
   properties: Seq[(String, String)],
   profiles: Seq[Profile],
@@ -263,7 +264,7 @@ object Attributes {
   /** Optional exact version used to get this project metadata. May not match `version` for projects
     * having a wrong version in their metadata.
     */
-  actualVersionOpt: Option[String],
+  actualVersionOpt0: Option[Version0],
   publications: Seq[(Configuration, Publication)],
 
   // Extra infos, not used during resolution
@@ -271,7 +272,8 @@ object Attributes {
   @since("2.1.23")
   overrides: Overrides = Overrides.empty
 ) {
-  lazy val moduleVersion = (module, version)
+
+  lazy val moduleVersion0: (Module, Version0) = (module, version0)
 
   /** All configurations that each configuration extends, including the ones it extends transitively
     */
@@ -282,7 +284,7 @@ object Attributes {
     * not match `version` for projects having a wrong version in their metadata, if the actual
     * version was kept around.
     */
-  def actualVersion: String = actualVersionOpt.getOrElse(version)
+  def actualVersion0: Version0 = actualVersionOpt0.getOrElse(version0)
 
   final override lazy val hashCode = tuple.hashCode
 }
@@ -379,16 +381,16 @@ object Info {
 @data class SnapshotVersion(
   classifier: Classifier,
   extension: Extension,
-  value: String,
+  value0: Version0,
   updated: Option[Versions.DateTime]
 )
 
 // Maven-specific
 @data class SnapshotVersioning(
   module: Module,
-  version: String,
-  latest: String,
-  release: String,
+  version0: Version0,
+  latest0: Version0,
+  release0: Version0,
   timestamp: String,
   buildNumber: Option[Int],
   localCopy: Option[Boolean],

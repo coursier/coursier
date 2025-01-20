@@ -1,7 +1,6 @@
 package coursier.tests
 
 import coursier.{Repositories, Resolve}
-import coursier.core.Reconciliation
 import coursier.error.conflict.{StrictRule, UnsatisfiedRule}
 import coursier.graph.Conflict
 import coursier.params.ResolutionParams
@@ -14,6 +13,7 @@ import coursier.params.rule.{
 }
 import coursier.util.{ModuleMatcher, ModuleMatchers}
 import coursier.util.StringInterpolators._
+import coursier.version.{ConstraintReconciliation, Version, VersionConstraint}
 import utest._
 
 import scala.async.Async.{async, await}
@@ -224,11 +224,11 @@ object ResolveRulesTests extends TestSuite {
           val expectedEvicted = Seq(
             Conflict(
               mod"org.typelevel:cats-core_2.11",
-              "1.6.0",
-              "1.5.0",
+              Version("1.6.0"),
+              VersionConstraint("1.5.0"),
               wasExcluded = false,
               mod"org.typelevel:cats-core_2.11",
-              "1.5.0"
+              VersionConstraint("1.5.0")
             )
           )
           val evicted = ex match {
@@ -275,11 +275,11 @@ object ResolveRulesTests extends TestSuite {
           val expectedEvicted = Seq(
             Conflict(
               mod"com.chuusai:shapeless_2.12",
-              "2.3.4-M1",
-              "2.3.2",
+              Version("2.3.4-M1"),
+              VersionConstraint("2.3.2"),
               wasExcluded = false,
               mod"com.github.alexarchambault:argonaut-shapeless_6.2_2.12",
-              "1.2.0-M4"
+              VersionConstraint("1.2.0-M4")
             )
           )
           val evicted = ex match {
@@ -310,7 +310,7 @@ object ResolveRulesTests extends TestSuite {
 
             val params = ResolutionParams()
               .addRule(rule, ruleRes)
-              .addForceVersion(mod"com.chuusai:shapeless_2.12" -> "2.3.3")
+              .addForceVersion0(mod"com.chuusai:shapeless_2.12" -> VersionConstraint("2.3.3"))
 
             val res = await {
               Resolve()
@@ -340,7 +340,7 @@ object ResolveRulesTests extends TestSuite {
 
             val params = ResolutionParams()
               .addRule(rule, ruleRes)
-              .addForceVersion(mod"com.chuusai:shapeless_2.12" -> "2.3.3")
+              .addForceVersion0(mod"com.chuusai:shapeless_2.12" -> VersionConstraint("2.3.3"))
 
             val ex = await {
               Resolve()
@@ -358,11 +358,11 @@ object ResolveRulesTests extends TestSuite {
             val expectedEvicted = Seq(
               Conflict(
                 mod"com.chuusai:shapeless_2.12",
-                "2.3.3",
-                "2.3.2",
+                Version("2.3.3"),
+                VersionConstraint("2.3.2"),
                 wasExcluded = false,
                 mod"com.github.alexarchambault:argonaut-shapeless_6.2_2.12",
-                "1.2.0-M4"
+                VersionConstraint("1.2.0-M4")
               )
             )
             val evicted = ex match {
@@ -386,7 +386,7 @@ object ResolveRulesTests extends TestSuite {
         async {
 
           val params = ResolutionParams()
-            .addReconciliation(ModuleMatchers.all -> Reconciliation.Strict)
+            .addReconciliation(ModuleMatchers.all -> ConstraintReconciliation.Strict)
 
           val ex = await {
             Resolve()
@@ -413,12 +413,12 @@ object ResolveRulesTests extends TestSuite {
         async {
 
           val params = ResolutionParams()
-            .addReconciliation(ModuleMatchers.all -> Reconciliation.Strict)
+            .addReconciliation(ModuleMatchers.all -> ConstraintReconciliation.Strict)
 
           val ex = await {
             Resolve()
               .noMirrors
-              .addBoms(dep"org.apache.logging.log4j:log4j-bom:2.23.1".moduleVersion)
+              .addBoms0(dep"org.apache.logging.log4j:log4j-bom:2.23.1".moduleVersionConstraint)
               .addDependencies(
                 dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0-M11",
                 dep"io.argonaut:argonaut_2.11:6.1",
@@ -451,12 +451,12 @@ object ResolveRulesTests extends TestSuite {
         async {
 
           val params = ResolutionParams()
-            .addReconciliation(ModuleMatchers.all -> Reconciliation.SemVer)
+            .addReconciliation(ModuleMatchers.all -> ConstraintReconciliation.SemVer)
 
           val ex = await {
             Resolve()
               .noMirrors
-              .addBoms(dep"org.apache.logging.log4j:log4j-bom:2.23.1".moduleVersion)
+              .addBoms0(dep"org.apache.logging.log4j:log4j-bom:2.23.1".moduleVersionConstraint)
               .addDependencies(
                 dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0-M11",
                 dep"io.argonaut:argonaut_2.11:6.1",
@@ -476,11 +476,11 @@ object ResolveRulesTests extends TestSuite {
               val conflict = evicted.evicted.head.conflict
               val expectedConflict = Conflict(
                 mod"io.argonaut:argonaut_2.11",
-                "6.2.3",
-                "6.1",
+                Version("6.2.3"),
+                VersionConstraint("6.1"),
                 wasExcluded = false,
                 mod"io.argonaut:argonaut_2.11",
-                "6.1"
+                VersionConstraint("6.1")
               )
               assert(conflict == expectedConflict)
             case _ =>
@@ -493,12 +493,12 @@ object ResolveRulesTests extends TestSuite {
         async {
 
           val params = ResolutionParams()
-            .addReconciliation(ModuleMatchers.all -> Reconciliation.SemVer)
+            .addReconciliation(ModuleMatchers.all -> ConstraintReconciliation.SemVer)
 
           val res = await {
             Resolve()
               .noMirrors
-              .addBoms(dep"org.apache.logging.log4j:log4j-bom:2.23.1".moduleVersion)
+              .addBoms0(dep"org.apache.logging.log4j:log4j-bom:2.23.1".moduleVersionConstraint)
               .addDependencies(
                 dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.11:1.2.0-M11",
                 dep"io.argonaut:argonaut_2.11:6.2",
@@ -524,7 +524,7 @@ object ResolveRulesTests extends TestSuite {
           val res = await {
             Resolve()
               .noMirrors
-              .addBoms(dep"org.apache.logging.log4j:log4j-bom:2.23.1".moduleVersion)
+              .addBoms0(dep"org.apache.logging.log4j:log4j-bom:2.23.1".moduleVersionConstraint)
               .addDependencies(
                 dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M9",
                 dep"com.chuusai:shapeless_2.12:2.3.2",
@@ -539,9 +539,9 @@ object ResolveRulesTests extends TestSuite {
 
           val shapelessVersions = deps.collect {
             case dep if dep.module == mod"com.chuusai:shapeless_2.12" =>
-              dep.version
+              dep.versionConstraint
           }
-          val expectedShapelessVersions = Set("2.3.2")
+          val expectedShapelessVersions = Set(VersionConstraint("2.3.2"))
 
           assert(shapelessVersions == expectedShapelessVersions)
         }
@@ -573,17 +573,17 @@ object ResolveRulesTests extends TestSuite {
 
           val shapelessVersions = deps.collect {
             case dep if dep.module == mod"com.chuusai:shapeless_2.12" =>
-              dep.version
+              dep.versionConstraint
           }
-          val expectedShapelessVersions = Set("2.3.2")
+          val expectedShapelessVersions = Set(VersionConstraint("2.3.2"))
 
           assert(shapelessVersions == expectedShapelessVersions)
 
           val scalaLibraryVersions = deps.collect {
             case dep if dep.module == mod"org.scala-lang:scala-library" =>
-              dep.version
+              dep.versionConstraint
           }
-          val expectedScalaLibraryVersions = Set("2.12.6")
+          val expectedScalaLibraryVersions = Set(VersionConstraint("2.12.6"))
 
           assert(scalaLibraryVersions == expectedScalaLibraryVersions)
         }

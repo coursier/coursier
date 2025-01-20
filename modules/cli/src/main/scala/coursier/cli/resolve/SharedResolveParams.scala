@@ -5,6 +5,7 @@ import cats.implicits._
 import coursier.cli.params.{CacheParams, DependencyParams, OutputParams, RepositoryParams}
 import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaModule, ModuleParser}
+import coursier.version.VersionConstraint
 
 final case class SharedResolveParams(
   cache: CacheParams,
@@ -14,13 +15,13 @@ final case class SharedResolveParams(
   resolution: ResolutionParams,
   classpathOrder: Option[Boolean]
 ) {
-  def updatedResolution(scalaVersionOpt: Option[String]): ResolutionParams =
+  def updatedResolution(scalaVersionOpt: Option[VersionConstraint]): ResolutionParams =
     resolution
-      .withScalaVersionOpt(resolution.scalaVersionOpt.flatMap(_ => scalaVersionOpt))
+      .withScalaVersionOpt0(resolution.scalaVersionOpt0.flatMap(_ => scalaVersionOpt))
       .withExclusions(
         dependency.exclude
           .map { m =>
-            val m0 = m.module(scalaVersionOpt.getOrElse(""))
+            val m0 = m.module(scalaVersionOpt.getOrElse(VersionConstraint.empty).asString)
             (m0.organization, m0.name)
           }
       )
@@ -35,7 +36,10 @@ object SharedResolveParams {
       RepositoryParams(options.repositoryOptions, options.dependencyOptions.sbtPlugin.nonEmpty)
     val resolutionV = options.resolutionOptions.params
     val dependencyV =
-      DependencyParams(options.dependencyOptions, resolutionV.toOption.flatMap(_.scalaVersionOpt))
+      DependencyParams(
+        options.dependencyOptions,
+        resolutionV.toOption.flatMap(_.scalaVersionOpt0).map(_.asString)
+      )
 
     val classpathOrder = options.classpathOrder
 
