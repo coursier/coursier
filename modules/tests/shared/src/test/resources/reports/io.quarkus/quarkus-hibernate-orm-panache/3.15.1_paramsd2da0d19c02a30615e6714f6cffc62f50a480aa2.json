@@ -7,8 +7,8 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "xml-apis:xml-apis",
-        "io.smallrye:jandex"
+        "io.smallrye:jandex",
+        "xml-apis:xml-apis"
       ]
     },
     {
@@ -30,8 +30,8 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.codehaus.mojo:animal-sniffer-annotations",
-        "org.checkerframework:checker-qual"
+        "org.checkerframework:checker-qual",
+        "org.codehaus.mojo:animal-sniffer-annotations"
       ]
     },
     {
@@ -1166,8 +1166,8 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -1182,8 +1182,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -1198,8 +1198,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1208,8 +1208,8 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1225,8 +1225,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1242,8 +1242,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -1260,8 +1260,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1276,8 +1276,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -1300,8 +1300,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1321,8 +1321,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1339,8 +1339,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -1369,8 +1369,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -1394,8 +1394,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -1621,8 +1621,8 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1642,8 +1642,8 @@
       ],
       "exclusions": [
         "jakarta.annotation:jakarta.annotation-api",
-        "jakarta.enterprise:jakarta.enterprise.lang-model",
-        "jakarta.ejb:jakarta.ejb-api"
+        "jakarta.ejb:jakarta.ejb-api",
+        "jakarta.enterprise:jakarta.enterprise.lang-model"
       ]
     },
     {
@@ -1658,9 +1658,9 @@
         "jakarta.transaction:jakarta.transaction-api:2.0.1"
       ],
       "exclusions": [
-        "org.jboss.logging:jboss-logging-spi",
+        "jakarta.ejb:jakarta.ejb-api",
         "jakarta.enterprise:jakarta.enterprise.lang-model",
-        "jakarta.ejb:jakarta.ejb-api"
+        "org.jboss.logging:jboss-logging-spi"
       ]
     },
     {
@@ -1706,8 +1706,8 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "xml-apis:xml-apis",
-        "io.smallrye:jandex"
+        "io.smallrye:jandex",
+        "xml-apis:xml-apis"
       ]
     },
     {
@@ -1732,9 +1732,9 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.osgi:org.osgi.annotation.versioning",
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
+        "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
     },
@@ -1744,8 +1744,8 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.osgi:org.osgi.annotation.versioning",
-        "javax.enterprise:cdi-api"
+        "javax.enterprise:cdi-api",
+        "org.osgi:org.osgi.annotation.versioning"
       ]
     },
     {
@@ -1773,9 +1773,9 @@
         "org.reactivestreams:reactive-streams:1.0.4"
       ],
       "exclusions": [
-        "org.osgi:org.osgi.annotation.versioning",
+        "jakarta.ejb:jakarta.ejb-api",
         "jakarta.enterprise:jakarta.enterprise.lang-model",
-        "jakarta.ejb:jakarta.ejb-api"
+        "org.osgi:org.osgi.annotation.versioning"
       ]
     },
     {
@@ -1788,8 +1788,8 @@
         "jakarta.json:jakarta.json-api:2.1.3"
       ],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1893,8 +1893,8 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "jakarta.enterprise:jakarta.enterprise.lang-model",
-        "jakarta.ejb:jakarta.ejb-api"
+        "jakarta.ejb:jakarta.ejb-api",
+        "jakarta.enterprise:jakarta.enterprise.lang-model"
       ]
     },
     {
@@ -1935,8 +1935,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1967,8 +1967,8 @@
         "org.reactivestreams:reactive-streams:1.0.4"
       ],
       "exclusions": [
-        "jakarta.enterprise:jakarta.enterprise.lang-model",
-        "jakarta.ejb:jakarta.ejb-api"
+        "jakarta.ejb:jakarta.ejb-api",
+        "jakarta.enterprise:jakarta.enterprise.lang-model"
       ]
     },
     {
@@ -2022,9 +2022,9 @@
         "jakarta.transaction:jakarta.transaction-api:2.0.1"
       ],
       "exclusions": [
-        "org.jboss.logging:jboss-logging-spi",
+        "jakarta.ejb:jakarta.ejb-api",
         "jakarta.enterprise:jakarta.enterprise.lang-model",
-        "jakarta.ejb:jakarta.ejb-api"
+        "org.jboss.logging:jboss-logging-spi"
       ]
     },
     {

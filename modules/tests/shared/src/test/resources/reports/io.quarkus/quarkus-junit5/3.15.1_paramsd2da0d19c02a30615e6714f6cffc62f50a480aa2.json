@@ -8,9 +8,9 @@
       "dependencies": [],
       "exclusions": [
         "com.google.guava:guava",
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -19,9 +19,9 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -30,14 +30,14 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.codehaus.plexus:plexus-utils",
         "com.google.code.findbugs:jsr305",
-        "org.slf4j:slf4j-api",
+        "com.google.errorprone:error_prone_annotations",
         "com.google.guava:failureaccess",
         "com.google.guava:listenablefuture",
         "com.google.j2objc:j2objc-annotations",
-        "com.google.errorprone:error_prone_annotations",
-        "org.checkerframework:checker-qual"
+        "org.checkerframework:checker-qual",
+        "org.codehaus.plexus:plexus-utils",
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -53,9 +53,9 @@
       ],
       "exclusions": [
         "com.google.guava:guava",
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -64,9 +64,9 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -75,12 +75,12 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.codehaus.plexus:plexus-utils",
-        "commons-logging:*",
-        "org.slf4j:slf4j-api",
         "commons-io:commons-io",
-        "org.slf4j:slf4j-simple",
-        "org.slf4j:jcl-over-slf4j"
+        "commons-logging:*",
+        "org.codehaus.plexus:plexus-utils",
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:slf4j-api",
+        "org.slf4j:slf4j-simple"
       ]
     },
     {
@@ -939,8 +939,8 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -951,8 +951,8 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -982,8 +982,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -998,8 +998,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1008,8 +1008,8 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1025,8 +1025,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1042,8 +1042,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -1060,8 +1060,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1076,8 +1076,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -1109,8 +1109,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1130,8 +1130,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1148,8 +1148,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -1178,8 +1178,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -1203,8 +1203,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -1273,8 +1273,8 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1283,9 +1283,9 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -1314,9 +1314,9 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -1367,8 +1367,8 @@
         "org.apache.httpcomponents:httpcore:4.4.16"
       ],
       "exclusions": [
-        "commons-logging:*",
         "commons-io:commons-io",
+        "commons-logging:*",
         "org.jsoup:jsoup",
         "org.slf4j:jcl-over-slf4j"
       ]
@@ -1385,12 +1385,12 @@
         "org.apache.httpcomponents:httpcore:4.4.16"
       ],
       "exclusions": [
-        "org.codehaus.plexus:plexus-utils",
-        "commons-logging:*",
-        "org.slf4j:slf4j-api",
         "commons-io:commons-io",
-        "org.slf4j:slf4j-simple",
-        "org.slf4j:jcl-over-slf4j"
+        "commons-logging:*",
+        "org.codehaus.plexus:plexus-utils",
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:slf4j-api",
+        "org.slf4j:slf4j-simple"
       ]
     },
     {
@@ -1399,11 +1399,11 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.codehaus.plexus:plexus-utils",
-        "org.slf4j:slf4j-api",
         "commons-io:commons-io",
-        "org.slf4j:slf4j-simple",
-        "org.slf4j:jcl-over-slf4j"
+        "org.codehaus.plexus:plexus-utils",
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:slf4j-api",
+        "org.slf4j:slf4j-simple"
       ]
     },
     {
@@ -1443,9 +1443,9 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -1603,10 +1603,10 @@
         "org.codehaus.plexus:plexus-utils:3.5.1"
       ],
       "exclusions": [
-        "org.slf4j:slf4j-api",
         "commons-io:commons-io",
         "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -1637,9 +1637,9 @@
         "org.apache.maven.resolver:maven-resolver-api:1.9.22"
       ],
       "exclusions": [
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -1677,9 +1677,9 @@
       "dependencies": [],
       "exclusions": [
         "commons-io:commons-io",
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -1692,8 +1692,8 @@
         "org.apache.maven.wagon:wagon-provider-api:3.5.3"
       ],
       "exclusions": [
-        "org.codehaus.plexus:plexus-utils",
         "commons-io:commons-io",
+        "org.codehaus.plexus:plexus-utils",
         "org.jsoup:jsoup",
         "org.slf4j:jcl-over-slf4j"
       ]
@@ -1708,8 +1708,8 @@
         "org.apache.maven.wagon:wagon-provider-api:3.5.3"
       ],
       "exclusions": [
-        "org.slf4j:slf4j-simple",
-        "org.codehaus.plexus:plexus-utils"
+        "org.codehaus.plexus:plexus-utils",
+        "org.slf4j:slf4j-simple"
       ]
     },
     {
@@ -1727,12 +1727,12 @@
         "org.apache.maven.wagon:wagon-provider-api:3.5.3"
       ],
       "exclusions": [
-        "org.jsoup:jsoup",
-        "org.codehaus.plexus:plexus-utils",
-        "org.slf4j:slf4j-api",
         "commons-io:commons-io",
-        "org.slf4j:slf4j-simple",
-        "org.slf4j:jcl-over-slf4j"
+        "org.codehaus.plexus:plexus-utils",
+        "org.jsoup:jsoup",
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:slf4j-api",
+        "org.slf4j:slf4j-simple"
       ]
     },
     {
@@ -1750,11 +1750,11 @@
         "org.apache.maven.wagon:wagon-provider-api:3.5.3"
       ],
       "exclusions": [
-        "org.codehaus.plexus:plexus-utils",
-        "org.slf4j:slf4j-api",
         "commons-io:commons-io",
-        "org.slf4j:slf4j-simple",
-        "org.slf4j:jcl-over-slf4j"
+        "org.codehaus.plexus:plexus-utils",
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:slf4j-api",
+        "org.slf4j:slf4j-simple"
       ]
     },
     {
@@ -1773,11 +1773,11 @@
         "org.apache.maven.wagon:wagon-provider-api:3.5.3"
       ],
       "exclusions": [
-        "org.codehaus.plexus:plexus-utils",
-        "org.slf4j:slf4j-api",
         "commons-io:commons-io",
-        "org.slf4j:slf4j-simple",
-        "org.slf4j:jcl-over-slf4j"
+        "org.codehaus.plexus:plexus-utils",
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:slf4j-api",
+        "org.slf4j:slf4j-simple"
       ]
     },
     {
@@ -1786,8 +1786,8 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.slf4j:slf4j-simple",
-        "org.codehaus.plexus:plexus-utils"
+        "org.codehaus.plexus:plexus-utils",
+        "org.slf4j:slf4j-simple"
       ]
     },
     {
@@ -1811,11 +1811,11 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.codehaus.plexus:plexus-utils",
-        "org.slf4j:slf4j-api",
         "commons-io:commons-io",
-        "org.slf4j:slf4j-simple",
-        "org.slf4j:jcl-over-slf4j"
+        "org.codehaus.plexus:plexus-utils",
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:slf4j-api",
+        "org.slf4j:slf4j-simple"
       ]
     },
     {
@@ -1851,8 +1851,8 @@
       "dependencies": [],
       "exclusions": [
         "org.checkerframework:checker-qual",
-        "org.slf4j:slf4j-api",
-        "org.codehaus.plexus:plexus-utils"
+        "org.codehaus.plexus:plexus-utils",
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -1901,9 +1901,9 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -1984,8 +1984,8 @@
       ],
       "exclusions": [
         "org.checkerframework:checker-qual",
-        "org.slf4j:slf4j-api",
-        "org.codehaus.plexus:plexus-utils"
+        "org.codehaus.plexus:plexus-utils",
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -2047,9 +2047,9 @@
         "org.eclipse.sisu:org.eclipse.sisu.plexus:0.9.0.M3"
       ],
       "exclusions": [
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -2071,8 +2071,8 @@
         "org.eclipse.sisu:org.eclipse.sisu.inject:0.9.0.M3"
       ],
       "exclusions": [
-        "javax.inject:javax.inject",
         "commons-io:commons-io",
+        "javax.inject:javax.inject",
         "org.jsoup:jsoup",
         "org.slf4j:jcl-over-slf4j"
       ]
@@ -2096,9 +2096,9 @@
       ],
       "exclusions": [
         "javax.inject:javax.inject",
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -2145,9 +2145,9 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -2182,9 +2182,9 @@
         "org.eclipse.sisu:org.eclipse.sisu.plexus:0.9.0.M3"
       ],
       "exclusions": [
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -2285,9 +2285,9 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -2354,9 +2354,9 @@
         "javax.inject:javax.inject:1"
       ],
       "exclusions": [
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -2389,8 +2389,8 @@
       "exclusions": [
         "junit:junit",
         "org.checkerframework:checker-qual",
-        "org.slf4j:slf4j-api",
-        "org.codehaus.plexus:plexus-utils"
+        "org.codehaus.plexus:plexus-utils",
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -2409,9 +2409,9 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -2446,9 +2446,9 @@
         "org.codehaus.plexus:plexus-cipher:2.0"
       ],
       "exclusions": [
-        "org.slf4j:slf4j-api",
+        "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.checkerframework:checker-qual"
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -2529,9 +2529,9 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.osgi:org.osgi.annotation.versioning",
-        "javax.enterprise:cdi-api",
         "javax.annotation:javax.annotation-api",
+        "javax.enterprise:cdi-api",
+        "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
     },
@@ -2545,8 +2545,8 @@
         "jakarta.json:jakarta.json-api:2.1.3"
       ],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -2634,8 +2634,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.jboss.modules:jboss-modules",
-        "org.eclipse.parsson:jakarta.json"
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules"
       ]
     },
     {
