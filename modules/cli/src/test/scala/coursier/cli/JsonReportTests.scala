@@ -54,20 +54,22 @@ object JsonReportTests extends TestSuite {
       }
       await(TestHelpers.validateDependencies(res.resolution))
 
-      TestHelpers.validateResult(
-        s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams)}.json"
-      ) {
-        jsonLines {
-          JsonOutput.report(
-            res.resolution,
-            res.detailedArtifacts.map {
-              case (dep, pub, art, _) =>
-                (dep, pub, art)
-            },
-            res.artifacts,
-            Set.empty,
-            printExclusions = false
-          )
+      await {
+        TestHelpers.validateResult(
+          s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams)}.json"
+        ) {
+          jsonLines {
+            JsonOutput.report(
+              res.resolution,
+              res.detailedArtifacts.map {
+                case (dep, pub, art, _) =>
+                  (dep, pub, art)
+              },
+              res.artifacts,
+              Set.empty,
+              printExclusions = false
+            )
+          }
         }
       }
     }
@@ -79,32 +81,7 @@ object JsonReportTests extends TestSuite {
     test("android") {
 
       def androidCheck(dependencies: Dependency*): Future[Unit] =
-        async {
-          val res = await {
-            fetch
-              .addRepositories(Repositories.google)
-              .addDependencies(dependencies: _*)
-              .futureResult()
-          }
-          await(TestHelpers.validateDependencies(res.resolution))
-
-          TestHelpers.validateResult(
-            s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams)}.json"
-          ) {
-            jsonLines {
-              JsonOutput.report(
-                res.resolution,
-                res.detailedArtifacts.map {
-                  case (dep, pub, art, _) =>
-                    (dep, pub, art)
-                },
-                res.artifacts,
-                Set.empty,
-                printExclusions = false
-              )
-            }
-          }
-        }
+        doCheck(fetch.addRepositories(Repositories.google), dependencies)
 
       test("activity") {
         androidCheck(dep"androidx.activity:activity:1.8.2")

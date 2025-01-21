@@ -419,8 +419,8 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "javax.inject:javax.inject",
-        "javax.enterprise:cdi-api"
+        "javax.enterprise:cdi-api",
+        "javax.inject:javax.inject"
       ]
     },
     {
