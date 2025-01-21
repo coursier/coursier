@@ -1,0 +1,477 @@
+{
+  "conflict_resolution": {},
+  "dependencies": [
+    {
+      "coord": "ch.qos.logback:logback-classic:1.5.8",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/ch/qos/logback/logback-classic/1.5.8/logback-classic-1.5.8.jar",
+      "directDependencies": [
+        "ch.qos.logback:logback-core:1.5.8",
+        "org.slf4j:slf4j-api:2.0.16"
+      ],
+      "dependencies": [
+        "ch.qos.logback:logback-core:1.5.8",
+        "org.slf4j:slf4j-api:2.0.16"
+      ]
+    },
+    {
+      "coord": "ch.qos.logback:logback-core:1.5.8",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/ch/qos/logback/logback-core/1.5.8/logback-core-1.5.8.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "com.fasterxml.jackson.core:jackson-annotations:2.17.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.17.2/jackson-annotations-2.17.2.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "com.fasterxml.jackson.core:jackson-core:2.17.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.17.2/jackson-core-2.17.2.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "com.fasterxml.jackson.core:jackson-databind:2.17.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.17.2/jackson-databind-2.17.2.jar",
+      "directDependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.17.2",
+        "com.fasterxml.jackson.core:jackson-core:2.17.2"
+      ],
+      "dependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.17.2",
+        "com.fasterxml.jackson.core:jackson-core:2.17.2"
+      ]
+    },
+    {
+      "coord": "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.17.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/fasterxml/jackson/datatype/jackson-datatype-jdk8/2.17.2/jackson-datatype-jdk8-2.17.2.jar",
+      "directDependencies": [
+        "com.fasterxml.jackson.core:jackson-core:2.17.2",
+        "com.fasterxml.jackson.core:jackson-databind:2.17.2"
+      ],
+      "dependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.17.2",
+        "com.fasterxml.jackson.core:jackson-core:2.17.2",
+        "com.fasterxml.jackson.core:jackson-databind:2.17.2"
+      ]
+    },
+    {
+      "coord": "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/fasterxml/jackson/datatype/jackson-datatype-jsr310/2.17.2/jackson-datatype-jsr310-2.17.2.jar",
+      "directDependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.17.2",
+        "com.fasterxml.jackson.core:jackson-core:2.17.2",
+        "com.fasterxml.jackson.core:jackson-databind:2.17.2"
+      ],
+      "dependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.17.2",
+        "com.fasterxml.jackson.core:jackson-core:2.17.2",
+        "com.fasterxml.jackson.core:jackson-databind:2.17.2"
+      ]
+    },
+    {
+      "coord": "com.fasterxml.jackson.module:jackson-module-parameter-names:2.17.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/fasterxml/jackson/module/jackson-module-parameter-names/2.17.2/jackson-module-parameter-names-2.17.2.jar",
+      "directDependencies": [
+        "com.fasterxml.jackson.core:jackson-core:2.17.2",
+        "com.fasterxml.jackson.core:jackson-databind:2.17.2"
+      ],
+      "dependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.17.2",
+        "com.fasterxml.jackson.core:jackson-core:2.17.2",
+        "com.fasterxml.jackson.core:jackson-databind:2.17.2"
+      ]
+    },
+    {
+      "coord": "io.micrometer:micrometer-commons:1.12.10",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/io/micrometer/micrometer-commons/1.12.10/micrometer-commons-1.12.10.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "io.micrometer:micrometer-observation:1.12.10",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/io/micrometer/micrometer-observation/1.12.10/micrometer-observation-1.12.10.jar",
+      "directDependencies": [
+        "io.micrometer:micrometer-commons:1.12.10"
+      ],
+      "dependencies": [
+        "io.micrometer:micrometer-commons:1.12.10"
+      ]
+    },
+    {
+      "coord": "jakarta.annotation:jakarta.annotation-api:2.1.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/jakarta/annotation/jakarta.annotation-api/2.1.1/jakarta.annotation-api-2.1.1.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.apache.logging.log4j:log4j-api:2.23.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/logging/log4j/log4j-api/2.23.1/log4j-api-2.23.1.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.apache.logging.log4j:log4j-to-slf4j:2.23.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/logging/log4j/log4j-to-slf4j/2.23.1/log4j-to-slf4j-2.23.1.jar",
+      "directDependencies": [
+        "org.apache.logging.log4j:log4j-api:2.23.1",
+        "org.slf4j:slf4j-api:2.0.16"
+      ],
+      "dependencies": [
+        "org.apache.logging.log4j:log4j-api:2.23.1",
+        "org.slf4j:slf4j-api:2.0.16"
+      ]
+    },
+    {
+      "coord": "org.apache.tomcat.embed:tomcat-embed-core:10.1.30",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/tomcat/embed/tomcat-embed-core/10.1.30/tomcat-embed-core-10.1.30.jar",
+      "directDependencies": [],
+      "dependencies": [],
+      "exclusions": [
+        "org.apache.tomcat:tomcat-annotations-api"
+      ]
+    },
+    {
+      "coord": "org.apache.tomcat.embed:tomcat-embed-el:10.1.30",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/tomcat/embed/tomcat-embed-el/10.1.30/tomcat-embed-el-10.1.30.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.apache.tomcat.embed:tomcat-embed-websocket:10.1.30",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/tomcat/embed/tomcat-embed-websocket/10.1.30/tomcat-embed-websocket-10.1.30.jar",
+      "directDependencies": [
+        "org.apache.tomcat.embed:tomcat-embed-core:10.1.30"
+      ],
+      "dependencies": [
+        "org.apache.tomcat.embed:tomcat-embed-core:10.1.30"
+      ],
+      "exclusions": [
+        "org.apache.tomcat:tomcat-annotations-api"
+      ]
+    },
+    {
+      "coord": "org.slf4j:jul-to-slf4j:2.0.16",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/slf4j/jul-to-slf4j/2.0.16/jul-to-slf4j-2.0.16.jar",
+      "directDependencies": [
+        "org.slf4j:slf4j-api:2.0.16"
+      ],
+      "dependencies": [
+        "org.slf4j:slf4j-api:2.0.16"
+      ]
+    },
+    {
+      "coord": "org.slf4j:slf4j-api:2.0.16",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/2.0.16/slf4j-api-2.0.16.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.springframework.boot:spring-boot-autoconfigure:3.3.4",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/boot/spring-boot-autoconfigure/3.3.4/spring-boot-autoconfigure-3.3.4.jar",
+      "directDependencies": [
+        "org.springframework.boot:spring-boot:3.3.4"
+      ],
+      "dependencies": [
+        "io.micrometer:micrometer-commons:1.12.10",
+        "io.micrometer:micrometer-observation:1.12.10",
+        "org.springframework.boot:spring-boot:3.3.4",
+        "org.springframework:spring-aop:6.1.13",
+        "org.springframework:spring-beans:6.1.13",
+        "org.springframework:spring-context:6.1.13",
+        "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-expression:6.1.13",
+        "org.springframework:spring-jcl:6.1.13"
+      ]
+    },
+    {
+      "coord": "org.springframework.boot:spring-boot-starter-json:3.3.4",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/boot/spring-boot-starter-json/3.3.4/spring-boot-starter-json-3.3.4.jar",
+      "directDependencies": [
+        "com.fasterxml.jackson.core:jackson-databind:2.17.2",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.17.2",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2",
+        "com.fasterxml.jackson.module:jackson-module-parameter-names:2.17.2",
+        "org.springframework.boot:spring-boot-starter:3.3.4",
+        "org.springframework:spring-web:6.1.13"
+      ],
+      "dependencies": [
+        "ch.qos.logback:logback-classic:1.5.8",
+        "ch.qos.logback:logback-core:1.5.8",
+        "com.fasterxml.jackson.core:jackson-annotations:2.17.2",
+        "com.fasterxml.jackson.core:jackson-core:2.17.2",
+        "com.fasterxml.jackson.core:jackson-databind:2.17.2",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.17.2",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2",
+        "com.fasterxml.jackson.module:jackson-module-parameter-names:2.17.2",
+        "io.micrometer:micrometer-commons:1.12.10",
+        "io.micrometer:micrometer-observation:1.12.10",
+        "jakarta.annotation:jakarta.annotation-api:2.1.1",
+        "org.apache.logging.log4j:log4j-api:2.23.1",
+        "org.apache.logging.log4j:log4j-to-slf4j:2.23.1",
+        "org.slf4j:jul-to-slf4j:2.0.16",
+        "org.slf4j:slf4j-api:2.0.16",
+        "org.springframework.boot:spring-boot-autoconfigure:3.3.4",
+        "org.springframework.boot:spring-boot-starter-logging:3.3.4",
+        "org.springframework.boot:spring-boot-starter:3.3.4",
+        "org.springframework.boot:spring-boot:3.3.4",
+        "org.springframework:spring-aop:6.1.13",
+        "org.springframework:spring-beans:6.1.13",
+        "org.springframework:spring-context:6.1.13",
+        "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-expression:6.1.13",
+        "org.springframework:spring-jcl:6.1.13",
+        "org.springframework:spring-web:6.1.13",
+        "org.yaml:snakeyaml:2.2"
+      ]
+    },
+    {
+      "coord": "org.springframework.boot:spring-boot-starter-logging:3.3.4",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/boot/spring-boot-starter-logging/3.3.4/spring-boot-starter-logging-3.3.4.jar",
+      "directDependencies": [
+        "ch.qos.logback:logback-classic:1.5.8",
+        "org.apache.logging.log4j:log4j-to-slf4j:2.23.1",
+        "org.slf4j:jul-to-slf4j:2.0.16"
+      ],
+      "dependencies": [
+        "ch.qos.logback:logback-classic:1.5.8",
+        "ch.qos.logback:logback-core:1.5.8",
+        "org.apache.logging.log4j:log4j-api:2.23.1",
+        "org.apache.logging.log4j:log4j-to-slf4j:2.23.1",
+        "org.slf4j:jul-to-slf4j:2.0.16",
+        "org.slf4j:slf4j-api:2.0.16"
+      ]
+    },
+    {
+      "coord": "org.springframework.boot:spring-boot-starter-tomcat:3.3.4",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/boot/spring-boot-starter-tomcat/3.3.4/spring-boot-starter-tomcat-3.3.4.jar",
+      "directDependencies": [
+        "jakarta.annotation:jakarta.annotation-api:2.1.1",
+        "org.apache.tomcat.embed:tomcat-embed-core:10.1.30",
+        "org.apache.tomcat.embed:tomcat-embed-el:10.1.30",
+        "org.apache.tomcat.embed:tomcat-embed-websocket:10.1.30"
+      ],
+      "dependencies": [
+        "jakarta.annotation:jakarta.annotation-api:2.1.1",
+        "org.apache.tomcat.embed:tomcat-embed-core:10.1.30",
+        "org.apache.tomcat.embed:tomcat-embed-el:10.1.30",
+        "org.apache.tomcat.embed:tomcat-embed-websocket:10.1.30"
+      ]
+    },
+    {
+      "coord": "org.springframework.boot:spring-boot-starter-web:3.3.4",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/boot/spring-boot-starter-web/3.3.4/spring-boot-starter-web-3.3.4.jar",
+      "directDependencies": [
+        "org.springframework.boot:spring-boot-starter-json:3.3.4",
+        "org.springframework.boot:spring-boot-starter-tomcat:3.3.4",
+        "org.springframework.boot:spring-boot-starter:3.3.4",
+        "org.springframework:spring-web:6.1.13",
+        "org.springframework:spring-webmvc:6.1.13"
+      ],
+      "dependencies": [
+        "ch.qos.logback:logback-classic:1.5.8",
+        "ch.qos.logback:logback-core:1.5.8",
+        "com.fasterxml.jackson.core:jackson-annotations:2.17.2",
+        "com.fasterxml.jackson.core:jackson-core:2.17.2",
+        "com.fasterxml.jackson.core:jackson-databind:2.17.2",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.17.2",
+        "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.2",
+        "com.fasterxml.jackson.module:jackson-module-parameter-names:2.17.2",
+        "io.micrometer:micrometer-commons:1.12.10",
+        "io.micrometer:micrometer-observation:1.12.10",
+        "jakarta.annotation:jakarta.annotation-api:2.1.1",
+        "org.apache.logging.log4j:log4j-api:2.23.1",
+        "org.apache.logging.log4j:log4j-to-slf4j:2.23.1",
+        "org.apache.tomcat.embed:tomcat-embed-core:10.1.30",
+        "org.apache.tomcat.embed:tomcat-embed-el:10.1.30",
+        "org.apache.tomcat.embed:tomcat-embed-websocket:10.1.30",
+        "org.slf4j:jul-to-slf4j:2.0.16",
+        "org.slf4j:slf4j-api:2.0.16",
+        "org.springframework.boot:spring-boot-autoconfigure:3.3.4",
+        "org.springframework.boot:spring-boot-starter-json:3.3.4",
+        "org.springframework.boot:spring-boot-starter-logging:3.3.4",
+        "org.springframework.boot:spring-boot-starter-tomcat:3.3.4",
+        "org.springframework.boot:spring-boot-starter:3.3.4",
+        "org.springframework.boot:spring-boot:3.3.4",
+        "org.springframework:spring-aop:6.1.13",
+        "org.springframework:spring-beans:6.1.13",
+        "org.springframework:spring-context:6.1.13",
+        "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-expression:6.1.13",
+        "org.springframework:spring-jcl:6.1.13",
+        "org.springframework:spring-web:6.1.13",
+        "org.springframework:spring-webmvc:6.1.13",
+        "org.yaml:snakeyaml:2.2"
+      ]
+    },
+    {
+      "coord": "org.springframework.boot:spring-boot-starter:3.3.4",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/boot/spring-boot-starter/3.3.4/spring-boot-starter-3.3.4.jar",
+      "directDependencies": [
+        "jakarta.annotation:jakarta.annotation-api:2.1.1",
+        "org.springframework.boot:spring-boot-autoconfigure:3.3.4",
+        "org.springframework.boot:spring-boot-starter-logging:3.3.4",
+        "org.springframework.boot:spring-boot:3.3.4",
+        "org.springframework:spring-core:6.1.13",
+        "org.yaml:snakeyaml:2.2"
+      ],
+      "dependencies": [
+        "ch.qos.logback:logback-classic:1.5.8",
+        "ch.qos.logback:logback-core:1.5.8",
+        "io.micrometer:micrometer-commons:1.12.10",
+        "io.micrometer:micrometer-observation:1.12.10",
+        "jakarta.annotation:jakarta.annotation-api:2.1.1",
+        "org.apache.logging.log4j:log4j-api:2.23.1",
+        "org.apache.logging.log4j:log4j-to-slf4j:2.23.1",
+        "org.slf4j:jul-to-slf4j:2.0.16",
+        "org.slf4j:slf4j-api:2.0.16",
+        "org.springframework.boot:spring-boot-autoconfigure:3.3.4",
+        "org.springframework.boot:spring-boot-starter-logging:3.3.4",
+        "org.springframework.boot:spring-boot:3.3.4",
+        "org.springframework:spring-aop:6.1.13",
+        "org.springframework:spring-beans:6.1.13",
+        "org.springframework:spring-context:6.1.13",
+        "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-expression:6.1.13",
+        "org.springframework:spring-jcl:6.1.13",
+        "org.yaml:snakeyaml:2.2"
+      ]
+    },
+    {
+      "coord": "org.springframework.boot:spring-boot:3.3.4",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/boot/spring-boot/3.3.4/spring-boot-3.3.4.jar",
+      "directDependencies": [
+        "org.springframework:spring-context:6.1.13",
+        "org.springframework:spring-core:6.1.13"
+      ],
+      "dependencies": [
+        "io.micrometer:micrometer-commons:1.12.10",
+        "io.micrometer:micrometer-observation:1.12.10",
+        "org.springframework:spring-aop:6.1.13",
+        "org.springframework:spring-beans:6.1.13",
+        "org.springframework:spring-context:6.1.13",
+        "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-expression:6.1.13",
+        "org.springframework:spring-jcl:6.1.13"
+      ]
+    },
+    {
+      "coord": "org.springframework:spring-aop:6.1.13",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-aop/6.1.13/spring-aop-6.1.13.jar",
+      "directDependencies": [
+        "org.springframework:spring-beans:6.1.13",
+        "org.springframework:spring-core:6.1.13"
+      ],
+      "dependencies": [
+        "org.springframework:spring-beans:6.1.13",
+        "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-jcl:6.1.13"
+      ]
+    },
+    {
+      "coord": "org.springframework:spring-beans:6.1.13",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-beans/6.1.13/spring-beans-6.1.13.jar",
+      "directDependencies": [
+        "org.springframework:spring-core:6.1.13"
+      ],
+      "dependencies": [
+        "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-jcl:6.1.13"
+      ]
+    },
+    {
+      "coord": "org.springframework:spring-context:6.1.13",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-context/6.1.13/spring-context-6.1.13.jar",
+      "directDependencies": [
+        "io.micrometer:micrometer-observation:1.12.10",
+        "org.springframework:spring-aop:6.1.13",
+        "org.springframework:spring-beans:6.1.13",
+        "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-expression:6.1.13"
+      ],
+      "dependencies": [
+        "io.micrometer:micrometer-commons:1.12.10",
+        "io.micrometer:micrometer-observation:1.12.10",
+        "org.springframework:spring-aop:6.1.13",
+        "org.springframework:spring-beans:6.1.13",
+        "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-expression:6.1.13",
+        "org.springframework:spring-jcl:6.1.13"
+      ]
+    },
+    {
+      "coord": "org.springframework:spring-core:6.1.13",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-core/6.1.13/spring-core-6.1.13.jar",
+      "directDependencies": [
+        "org.springframework:spring-jcl:6.1.13"
+      ],
+      "dependencies": [
+        "org.springframework:spring-jcl:6.1.13"
+      ]
+    },
+    {
+      "coord": "org.springframework:spring-expression:6.1.13",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-expression/6.1.13/spring-expression-6.1.13.jar",
+      "directDependencies": [
+        "org.springframework:spring-core:6.1.13"
+      ],
+      "dependencies": [
+        "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-jcl:6.1.13"
+      ]
+    },
+    {
+      "coord": "org.springframework:spring-jcl:6.1.13",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-jcl/6.1.13/spring-jcl-6.1.13.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.springframework:spring-web:6.1.13",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-web/6.1.13/spring-web-6.1.13.jar",
+      "directDependencies": [
+        "io.micrometer:micrometer-observation:1.12.10",
+        "org.springframework:spring-beans:6.1.13",
+        "org.springframework:spring-core:6.1.13"
+      ],
+      "dependencies": [
+        "io.micrometer:micrometer-commons:1.12.10",
+        "io.micrometer:micrometer-observation:1.12.10",
+        "org.springframework:spring-beans:6.1.13",
+        "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-jcl:6.1.13"
+      ]
+    },
+    {
+      "coord": "org.springframework:spring-webmvc:6.1.13",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-webmvc/6.1.13/spring-webmvc-6.1.13.jar",
+      "directDependencies": [
+        "org.springframework:spring-aop:6.1.13",
+        "org.springframework:spring-beans:6.1.13",
+        "org.springframework:spring-context:6.1.13",
+        "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-expression:6.1.13",
+        "org.springframework:spring-web:6.1.13"
+      ],
+      "dependencies": [
+        "io.micrometer:micrometer-commons:1.12.10",
+        "io.micrometer:micrometer-observation:1.12.10",
+        "org.springframework:spring-aop:6.1.13",
+        "org.springframework:spring-beans:6.1.13",
+        "org.springframework:spring-context:6.1.13",
+        "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-expression:6.1.13",
+        "org.springframework:spring-jcl:6.1.13",
+        "org.springframework:spring-web:6.1.13"
+      ]
+    },
+    {
+      "coord": "org.yaml:snakeyaml:2.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/yaml/snakeyaml/2.2/snakeyaml-2.2.jar",
+      "directDependencies": [],
+      "dependencies": []
+    }
+  ],
+  "version": "0.1.0"
+}

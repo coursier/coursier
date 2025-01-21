@@ -45,17 +45,12 @@ object TestHelpers extends PlatformTestHelpers {
     }
   }
 
-  private def validate(
-    name: String,
+  def pathFor(
     res: Resolution,
     params: ResolutionParams,
     extraKeyPart: String = ""
-  )(
-    result: => Seq[String]
-  ): Future[Unit] = async {
+  ): String = {
     assert(res.rootDependencies.nonEmpty)
-
-    dependenciesConsistencyCheck(res)
 
     val rootDep = res.rootDependencies.head
 
@@ -137,9 +132,7 @@ object TestHelpers extends PlatformTestHelpers {
         "_params" + sha1(n)
       }
 
-    val path = Seq(
-      testDataDir,
-      name,
+    Seq(
       rootDep.module.organization.value,
       rootDep.module.name.value,
       attrPathPart,
@@ -150,6 +143,31 @@ object TestHelpers extends PlatformTestHelpers {
           "_" + rootDep.configuration.value.replace('(', '_').replace(')', '_')
       ) + dependenciesHashPart + bomModVerHashPart + paramsPart + extraKeyPart
     ).filter(_.nonEmpty).mkString("/")
+  }
+
+  def validate(
+    name: String,
+    res: Resolution,
+    params: ResolutionParams,
+    extraKeyPart: String = ""
+  )(
+    result: => Seq[String]
+  ): Future[Unit] = async {
+
+    dependenciesConsistencyCheck(res)
+
+    val path = Seq(
+      testDataDir,
+      name,
+      pathFor(res, params, extraKeyPart)
+    ).filter(_.nonEmpty).mkString("/")
+
+    await(validateResult(path)(result))
+  }
+
+  def validateResult(path: String)(
+    result: => Seq[String]
+  ): Future[Unit] = async {
 
     def tryRead = textResource(path)
 

@@ -1,0 +1,201 @@
+{
+  "conflict_resolution": {},
+  "dependencies": [
+    {
+      "coord": "io.micrometer:micrometer-commons:1.12.11",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/io/micrometer/micrometer-commons/1.12.11/micrometer-commons-1.12.11.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "io.micrometer:micrometer-observation:1.12.11",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/io/micrometer/micrometer-observation/1.12.11/micrometer-observation-1.12.11.jar",
+      "directDependencies": [
+        "io.micrometer:micrometer-commons:1.12.11"
+      ],
+      "dependencies": [
+        "io.micrometer:micrometer-commons:1.12.11"
+      ]
+    },
+    {
+      "coord": "org.springframework.security:spring-security-core:6.3.4",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/security/spring-security-core/6.3.4/spring-security-core-6.3.4.jar",
+      "directDependencies": [
+        "io.micrometer:micrometer-observation:1.12.11",
+        "org.springframework.security:spring-security-crypto:6.3.4",
+        "org.springframework:spring-aop:6.1.14",
+        "org.springframework:spring-beans:6.1.14",
+        "org.springframework:spring-context:6.1.14",
+        "org.springframework:spring-core:6.1.14",
+        "org.springframework:spring-expression:6.1.14"
+      ],
+      "dependencies": [
+        "io.micrometer:micrometer-commons:1.12.11",
+        "io.micrometer:micrometer-observation:1.12.11",
+        "org.springframework.security:spring-security-crypto:6.3.4",
+        "org.springframework:spring-aop:6.1.14",
+        "org.springframework:spring-beans:6.1.14",
+        "org.springframework:spring-context:6.1.14",
+        "org.springframework:spring-core:6.1.14",
+        "org.springframework:spring-expression:6.1.14",
+        "org.springframework:spring-jcl:6.1.14"
+      ]
+    },
+    {
+      "coord": "org.springframework.security:spring-security-crypto:6.3.4",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/security/spring-security-crypto/6.3.4/spring-security-crypto-6.3.4.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.springframework.security:spring-security-test:6.3.4",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/security/spring-security-test/6.3.4/spring-security-test-6.3.4.jar",
+      "directDependencies": [
+        "org.springframework.security:spring-security-core:6.3.4",
+        "org.springframework.security:spring-security-web:6.3.4",
+        "org.springframework:spring-core:6.1.14",
+        "org.springframework:spring-test:6.1.14"
+      ],
+      "dependencies": [
+        "io.micrometer:micrometer-commons:1.12.11",
+        "io.micrometer:micrometer-observation:1.12.11",
+        "org.springframework.security:spring-security-core:6.3.4",
+        "org.springframework.security:spring-security-crypto:6.3.4",
+        "org.springframework.security:spring-security-web:6.3.4",
+        "org.springframework:spring-aop:6.1.14",
+        "org.springframework:spring-beans:6.1.14",
+        "org.springframework:spring-context:6.1.14",
+        "org.springframework:spring-core:6.1.14",
+        "org.springframework:spring-expression:6.1.14",
+        "org.springframework:spring-jcl:6.1.14",
+        "org.springframework:spring-test:6.1.14",
+        "org.springframework:spring-web:6.1.14"
+      ]
+    },
+    {
+      "coord": "org.springframework.security:spring-security-web:6.3.4",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/security/spring-security-web/6.3.4/spring-security-web-6.3.4.jar",
+      "directDependencies": [
+        "org.springframework.security:spring-security-core:6.3.4",
+        "org.springframework:spring-aop:6.1.14",
+        "org.springframework:spring-beans:6.1.14",
+        "org.springframework:spring-context:6.1.14",
+        "org.springframework:spring-core:6.1.14",
+        "org.springframework:spring-expression:6.1.14",
+        "org.springframework:spring-web:6.1.14"
+      ],
+      "dependencies": [
+        "io.micrometer:micrometer-commons:1.12.11",
+        "io.micrometer:micrometer-observation:1.12.11",
+        "org.springframework.security:spring-security-core:6.3.4",
+        "org.springframework.security:spring-security-crypto:6.3.4",
+        "org.springframework:spring-aop:6.1.14",
+        "org.springframework:spring-beans:6.1.14",
+        "org.springframework:spring-context:6.1.14",
+        "org.springframework:spring-core:6.1.14",
+        "org.springframework:spring-expression:6.1.14",
+        "org.springframework:spring-jcl:6.1.14",
+        "org.springframework:spring-web:6.1.14"
+      ]
+    },
+    {
+      "coord": "org.springframework:spring-aop:6.1.14",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-aop/6.1.14/spring-aop-6.1.14.jar",
+      "directDependencies": [
+        "org.springframework:spring-beans:6.1.14",
+        "org.springframework:spring-core:6.1.14"
+      ],
+      "dependencies": [
+        "org.springframework:spring-beans:6.1.14",
+        "org.springframework:spring-core:6.1.14",
+        "org.springframework:spring-jcl:6.1.14"
+      ]
+    },
+    {
+      "coord": "org.springframework:spring-beans:6.1.14",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-beans/6.1.14/spring-beans-6.1.14.jar",
+      "directDependencies": [
+        "org.springframework:spring-core:6.1.14"
+      ],
+      "dependencies": [
+        "org.springframework:spring-core:6.1.14",
+        "org.springframework:spring-jcl:6.1.14"
+      ]
+    },
+    {
+      "coord": "org.springframework:spring-context:6.1.14",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-context/6.1.14/spring-context-6.1.14.jar",
+      "directDependencies": [
+        "io.micrometer:micrometer-observation:1.12.11",
+        "org.springframework:spring-aop:6.1.14",
+        "org.springframework:spring-beans:6.1.14",
+        "org.springframework:spring-core:6.1.14",
+        "org.springframework:spring-expression:6.1.14"
+      ],
+      "dependencies": [
+        "io.micrometer:micrometer-commons:1.12.11",
+        "io.micrometer:micrometer-observation:1.12.11",
+        "org.springframework:spring-aop:6.1.14",
+        "org.springframework:spring-beans:6.1.14",
+        "org.springframework:spring-core:6.1.14",
+        "org.springframework:spring-expression:6.1.14",
+        "org.springframework:spring-jcl:6.1.14"
+      ]
+    },
+    {
+      "coord": "org.springframework:spring-core:6.1.14",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-core/6.1.14/spring-core-6.1.14.jar",
+      "directDependencies": [
+        "org.springframework:spring-jcl:6.1.14"
+      ],
+      "dependencies": [
+        "org.springframework:spring-jcl:6.1.14"
+      ]
+    },
+    {
+      "coord": "org.springframework:spring-expression:6.1.14",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-expression/6.1.14/spring-expression-6.1.14.jar",
+      "directDependencies": [
+        "org.springframework:spring-core:6.1.14"
+      ],
+      "dependencies": [
+        "org.springframework:spring-core:6.1.14",
+        "org.springframework:spring-jcl:6.1.14"
+      ]
+    },
+    {
+      "coord": "org.springframework:spring-jcl:6.1.14",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-jcl/6.1.14/spring-jcl-6.1.14.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.springframework:spring-test:6.1.14",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-test/6.1.14/spring-test-6.1.14.jar",
+      "directDependencies": [
+        "org.springframework:spring-core:6.1.14"
+      ],
+      "dependencies": [
+        "org.springframework:spring-core:6.1.14",
+        "org.springframework:spring-jcl:6.1.14"
+      ]
+    },
+    {
+      "coord": "org.springframework:spring-web:6.1.14",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/spring-web/6.1.14/spring-web-6.1.14.jar",
+      "directDependencies": [
+        "io.micrometer:micrometer-observation:1.12.11",
+        "org.springframework:spring-beans:6.1.14",
+        "org.springframework:spring-core:6.1.14"
+      ],
+      "dependencies": [
+        "io.micrometer:micrometer-commons:1.12.11",
+        "io.micrometer:micrometer-observation:1.12.11",
+        "org.springframework:spring-beans:6.1.14",
+        "org.springframework:spring-core:6.1.14",
+        "org.springframework:spring-jcl:6.1.14"
+      ]
+    }
+  ],
+  "version": "0.1.0"
+}

@@ -198,7 +198,16 @@ object interop extends Module {
 object jvm     extends Cross[Jvm](ScalaVersions.all)
 object install extends Cross[Install](ScalaVersions.all)
 
-object cli         extends Cli
+object cli extends Cli {
+  object test extends SbtTests with CsTests with CsResourcesTests {
+    def moduleDeps = super.moduleDeps ++ Seq(
+      coursier.jvm(sv).test
+    )
+    def ivyDeps = super.ivyDeps() ++ Agg(
+      Deps.ujson
+    )
+  }
+}
 object `cli-tests` extends CliTests
 
 object web extends Web
@@ -598,7 +607,7 @@ trait Jvm extends CrossSbtModule with CsModule
 
 trait Cli extends CsModule
     with CoursierPublishModule with Launchers {
-  private def sv   = cliScalaVersion
+  protected def sv = cliScalaVersion
   def scalaVersion = sv
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(sv),
@@ -649,7 +658,6 @@ trait Cli extends CsModule
     os.write.over(jar, baos.toByteArray)
     PathRef(jar)
   }
-  object test extends SbtTests with CsTests
 }
 
 trait CliTests extends CsModule

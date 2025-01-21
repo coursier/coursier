@@ -80,6 +80,62 @@ class TestRunner[F[_]: Gather: ToFuture](
     ToFuture[F].toFuture(ec, t)
   }
 
+  def pathFor(
+    module: Module,
+    version: String,
+    configuration: Configuration
+  ): String = {
+
+    val attrPathPart =
+      if (module.attributes.isEmpty)
+        ""
+      else
+        "/" + module.attributes.toVector.sorted.map {
+          case (k, v) => k + "_" + v
+        }.mkString("_")
+
+    Seq(
+      "resolutions",
+      module.organization.value,
+      module.name.value,
+      attrPathPart,
+      version + (
+        if (configuration.isEmpty)
+          ""
+        else
+          "_" + configuration.value.replace('(', '_').replace(')', '_')
+      )
+      // FIXME Take forceVersions, forceDepMgmtVersions into account too
+    ).filter(_.nonEmpty).mkString("/")
+  }
+
+  def validateSnapshot(
+    path: String,
+    result: Seq[String]
+  ): Future[Unit] = async {
+    def tryRead = textResource(path)
+    val expected =
+      await(
+        tryRead.recoverWith {
+          case _: Exception =>
+            tryCreate(path, result.mkString("\n"))
+            tryRead
+        }
+      ).split('\n').toSeq
+
+    if (TestCache.updateSnapshots) {
+      if (result != expected)
+        tryCreate(path, result.mkString("\n"))
+    }
+    else {
+      if (result != expected)
+        for (((e, r), idx) <- expected.zip(result).zipWithIndex if e != r)
+          println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")
+
+      assert(result == expected)
+    }
+  }
+
   def resolution(
     module: Module,
     version: String,
@@ -91,29 +147,6 @@ class TestRunner[F[_]: Gather: ToFuture](
     forceDepMgmtVersions: Option[Boolean] = None
   ): Future[Resolution] =
     async {
-      val attrPathPart =
-        if (module.attributes.isEmpty)
-          ""
-        else
-          "/" + module.attributes.toVector.sorted.map {
-            case (k, v) => k + "_" + v
-          }.mkString("_")
-
-      val path = Seq(
-        "resolutions",
-        module.organization.value,
-        module.name.value,
-        attrPathPart,
-        version + (
-          if (configuration.isEmpty)
-            ""
-          else
-            "_" + configuration.value.replace('(', '_').replace(')', '_')
-        )
-        // FIXME Take forceVersions, forceDepMgmtVersions into account too
-      ).filter(_.nonEmpty).mkString("/")
-
-      def tryRead = textResource(path)
 
       val dep = Dependency(module, version).withConfiguration(configuration)
       val res = await {
@@ -147,26 +180,10 @@ class TestRunner[F[_]: Gather: ToFuture](
             Seq(org, name, ver, cfg).mkString(":")
         }
 
-      val expected =
-        await(
-          tryRead.recoverWith {
-            case _: Exception =>
-              tryCreate(path, result.mkString("\n"))
-              tryRead
-          }
-        ).split('\n').toSeq
-
-      if (TestCache.updateSnapshots) {
-        if (result != expected)
-          tryCreate(path, result.mkString("\n"))
-      }
-      else {
-        if (result != expected)
-          for (((e, r), idx) <- expected.zip(result).zipWithIndex if e != r)
-            println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")
-
-        assert(result == expected)
-      }
+      validateSnapshot(
+        pathFor(module, version, configuration),
+        result
+      )
 
       res
     }
