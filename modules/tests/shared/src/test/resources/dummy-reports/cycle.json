@@ -1,0 +1,43 @@
+{
+  "conflict_resolution": {},
+  "dependencies": [
+    {
+      "coord": "a:reconciled",
+      "file": "",
+      "directDependencies": [
+        "b:reconciled"
+      ],
+      "dependencies": [
+        "b:reconciled",
+        "c:reconciled",
+        "d:reconciled"
+      ]
+    },
+    {
+      "coord": "b:reconciled",
+      "file": "",
+      "directDependencies": [
+        "c:reconciled"
+      ],
+      "dependencies": [
+        "a:reconciled",
+        "c:reconciled",
+        "d:reconciled"
+      ]
+    },
+    {
+      "coord": "c:reconciled",
+      "file": "",
+      "directDependencies": [
+        "a:reconciled",
+        "d:reconciled"
+      ],
+      "dependencies": [
+        "a:reconciled",
+        "b:reconciled",
+        "d:reconciled"
+      ]
+    }
+  ],
+  "version": "0.1.0"
+}

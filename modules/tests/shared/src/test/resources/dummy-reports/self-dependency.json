@@ -1,0 +1,22 @@
+{
+  "conflict_resolution": {},
+  "dependencies": [
+    {
+      "coord": "a:reconciled",
+      "file": "",
+      "directDependencies": [
+        "b:reconciled"
+      ],
+      "dependencies": [
+        "b:reconciled"
+      ]
+    },
+    {
+      "coord": "b:reconciled",
+      "file": "",
+      "directDependencies": [],
+      "dependencies": []
+    }
+  ],
+  "version": "0.1.0"
+}
