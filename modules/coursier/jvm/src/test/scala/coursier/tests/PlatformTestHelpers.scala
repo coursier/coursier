@@ -39,7 +39,9 @@ abstract class PlatformTestHelpers {
     .stripSuffix("/") + "/"
 
   private lazy val cache0 = TestCache.cache[Task]
-    .withDummyArtifact(a => a.url.endsWith(".jar") || a.url.endsWith(".klib"))
+    .withDummyArtifact { a =>
+      a.url.endsWith(".jar") || a.url.endsWith(".klib") || a.url.endsWith(".aar")
+    }
 
   def cache: Cache[Task] = cache0
 
@@ -49,7 +51,6 @@ abstract class PlatformTestHelpers {
   lazy val cacheWithHandmadeMetadata: Cache[Task] =
     cache0
       .withExtraData(Seq(handmadeMetadataLocation))
-      .withDummyArtifact(_.url.endsWith(".jar"))
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =
     Future {
