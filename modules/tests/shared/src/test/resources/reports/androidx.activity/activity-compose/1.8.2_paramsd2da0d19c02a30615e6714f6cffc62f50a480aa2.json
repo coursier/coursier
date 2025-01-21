@@ -3,7 +3,10 @@
   "dependencies": [
     {
       "coord": "androidx.activity:activity-compose:1.8.2",
-      "file": "${CACHE}/https/maven.google.com/androidx/activity/activity-compose/1.8.2/activity-compose-1.8.2.aar",
+      "files": [
+        "${CACHE}/https/maven.google.com/androidx/activity/activity-compose/1.8.2/activity-compose-1.8.2.aar",
+        "${CACHE}/https/maven.google.com/androidx/activity/activity-compose/1.8.2/activity-compose-1.8.2.jar"
+      ],
       "directDependencies": [
         "androidx.activity:activity-ktx:aar:1.8.2",
         "androidx.compose.runtime:runtime-saveable:1.0.1",
@@ -198,7 +201,10 @@
     },
     {
       "coord": "androidx.compose.runtime:runtime-saveable:1.0.1",
-      "file": "${CACHE}/https/maven.google.com/androidx/compose/runtime/runtime-saveable/1.0.1/runtime-saveable-1.0.1.aar",
+      "files": [
+        "${CACHE}/https/maven.google.com/androidx/compose/runtime/runtime-saveable/1.0.1/runtime-saveable-1.0.1.aar",
+        "${CACHE}/https/maven.google.com/androidx/compose/runtime/runtime-saveable/1.0.1/runtime-saveable-1.0.1.jar"
+      ],
       "directDependencies": [
         "androidx.annotation:annotation:1.2.0",
         "androidx.compose.runtime:runtime:aar:1.0.1",
@@ -226,7 +232,10 @@
     },
     {
       "coord": "androidx.compose.runtime:runtime:1.0.1",
-      "file": "${CACHE}/https/maven.google.com/androidx/compose/runtime/runtime/1.0.1/runtime-1.0.1.aar",
+      "files": [
+        "${CACHE}/https/maven.google.com/androidx/compose/runtime/runtime/1.0.1/runtime-1.0.1.aar",
+        "${CACHE}/https/maven.google.com/androidx/compose/runtime/runtime/1.0.1/runtime-1.0.1.jar"
+      ],
       "directDependencies": [
         "androidx.annotation:annotation:1.2.0",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
@@ -373,7 +382,10 @@
     },
     {
       "coord": "androidx.compose.ui:ui:1.0.1",
-      "file": "${CACHE}/https/maven.google.com/androidx/compose/ui/ui/1.0.1/ui-1.0.1.aar",
+      "files": [
+        "${CACHE}/https/maven.google.com/androidx/compose/ui/ui/1.0.1/ui-1.0.1.aar",
+        "${CACHE}/https/maven.google.com/androidx/compose/ui/ui/1.0.1/ui-1.0.1.jar"
+      ],
       "directDependencies": [
         "androidx.annotation:annotation:1.2.0",
         "androidx.autofill:autofill:aar:1.0.0",

@@ -36,11 +36,15 @@ final case class JsonPrintRequirement(
   */
 final case class DepNode(
   coord: String,
-  file: Option[String],
+  file: Option[String] = None,
+  files: List[String] = Nil,
   directDependencies: List[String],
   dependencies: List[String],
   exclusions: List[String] = Nil
-)
+) {
+  def firstFile: Option[String] =
+    file.orElse(files.headOption)
+}
 
 final case class ReportNode(
   conflict_resolution: ListMap[String, String],
@@ -164,7 +168,7 @@ object JsonReport {
     children: T => Seq[T],
     reconciledVersionStr: T => String,
     requestedVersionStr: T => String,
-    getFile: T => Option[String],
+    getFiles: T => List[String],
     exclusions: T => List[String]
   ): String = {
 
@@ -182,9 +186,16 @@ object JsonReport {
       depToTransitiveDeps.getOrElse(elem, Nil)
 
     val rootDeps: Vector[DepNode] = roots.map { r =>
+      val files = getFiles(r)
+      val (fileValue, filesValue) = files match {
+        case Nil      => (None, Nil)
+        case f :: Nil => (Some(f), Nil)
+        case _        => (None, files)
+      }
       DepNode(
         reconciledVersionStr(r),
-        getFile(r),
+        fileValue,
+        filesValue,
         childrenOrEmpty(r).iterator.map(reconciledVersionStr(_)).to(List).distinct.sorted,
         flattenedDeps(r).distinct.sorted,
         exclusions(r)
@@ -214,16 +225,22 @@ final case class JsonElem(
 
   // This is used to printing json output
   // Option of the file path
-  lazy val downloadedFile: Option[String] =
-    jsonPrintRequirement.flatMap(req =>
-      req.depToArtifacts.getOrElse(dep, Seq()).view
-        .filter(_._1.classifier == dep.attributes.classifier)
-        .map(x => req.fileByArtifact.get(x._2.url))
-        .filter(_.isDefined)
-        .filter(_.nonEmpty)
-        .map(_.get.getPath)
-        .headOption
-    )
+  lazy val downloadedFiles: List[String] =
+    jsonPrintRequirement
+      .map { req =>
+        req
+          .depToArtifacts
+          .getOrElse(dep, Seq())
+          .iterator
+          .collect {
+            case (pub, art) if pub.classifier == dep.attributes.classifier =>
+              req.fileByArtifact.get(art.url)
+          }
+          .flatMap(_.iterator)
+          .map(_.getPath)
+          .toList
+      }
+      .getOrElse(Nil)
 
   // `reconciledVersion`, `reconciledVersionStr`, `requestedVersionStr` are fields
   // whose values are frequently duplicated across instances of `JsonElem` and their
@@ -317,5 +334,5 @@ final case class JsonElem(
     * `children`.
     */
   override def hashCode(): Int =
-    Objects.hash(dep, requestedVersionStr, reconciledVersion, downloadedFile)
+    Objects.hash(dep, requestedVersionStr, reconciledVersion, downloadedFiles)
 }

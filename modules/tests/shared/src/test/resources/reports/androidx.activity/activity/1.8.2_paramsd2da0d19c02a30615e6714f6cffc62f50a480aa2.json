@@ -3,7 +3,10 @@
   "dependencies": [
     {
       "coord": "androidx.activity:activity:1.8.2",
-      "file": "${CACHE}/https/maven.google.com/androidx/activity/activity/1.8.2/activity-1.8.2.aar",
+      "files": [
+        "${CACHE}/https/maven.google.com/androidx/activity/activity/1.8.2/activity-1.8.2.aar",
+        "${CACHE}/https/maven.google.com/androidx/activity/activity/1.8.2/activity-1.8.2.jar"
+      ],
       "directDependencies": [
         "androidx.annotation:annotation:1.2.0",
         "androidx.collection:collection:1.0.0",

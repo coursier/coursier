@@ -249,7 +249,10 @@
     },
     {
       "coord": "androidx.compose.material3:material3:1.0.1",
-      "file": "${CACHE}/https/maven.google.com/androidx/compose/material3/material3/1.0.1/material3-1.0.1.aar",
+      "files": [
+        "${CACHE}/https/maven.google.com/androidx/compose/material3/material3/1.0.1/material3-1.0.1.aar",
+        "${CACHE}/https/maven.google.com/androidx/compose/material3/material3/1.0.1/material3-1.0.1.jar"
+      ],
       "directDependencies": [
         "androidx.compose.animation:animation-core:aar:1.1.1",
         "androidx.compose.foundation:foundation-layout:aar:1.2.0",
