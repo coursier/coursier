@@ -107,20 +107,24 @@ trait Launchers extends CsModule {
   object `linux-docker-image` extends CliNativeImage {
     def nativeImageDockerParams = Some(
       NativeImage.DockerParams(
-        imageName = "ubuntu:18.04",
+        imageName = "ubuntu:20.04",
         prepareCommand =
           """apt-get update -q -y &&\
-            |apt-get install -q -y build-essential libz-dev locales
-            |locale-gen en_US.UTF-8
+            |apt-get install -q -y build-essential libz-dev zlib1g-dev git python3-pip curl zip
             |export LANG=en_US.UTF-8
             |export LANGUAGE=en_US:en
             |export LC_ALL=en_US.UTF-8""".stripMargin,
-        csUrl =
-          s"https://github.com/coursier/coursier/releases/download/v${deps.csDockerVersion}/cs-x86_64-pc-linux.gz",
+        csUrl = linuxCsLauncher,
         extraNativeImageArgs = Nil
       )
     )
   }
+
+  private def linuxCsLauncher =
+    if (arch == "aarch64")
+      s"https://github.com/VirtusLab/coursier-m1/releases/download/v${deps.csDockerVersion}/cs-aarch64-pc-linux.gz"
+    else
+      s"https://github.com/coursier/coursier/releases/download/v${deps.csDockerVersion}/cs-x86_64-pc-linux.gz"
 
   private def setupLocaleAndOptions(params: NativeImage.DockerParams): NativeImage.DockerParams =
     params.copy(
@@ -129,7 +133,6 @@ trait Launchers extends CsModule {
           |set -v
           |apt-get update
           |apt-get install -q -y locales
-          |locale-gen en_US.UTF-8
           |export LANG=en_US.UTF-8
           |export LANGUAGE=en_US:en
           |export LC_ALL=en_US.UTF-8""".stripMargin
@@ -139,15 +142,16 @@ trait Launchers extends CsModule {
     def nativeImageDockerParams = T {
       val baseDockerParams = NativeImage.linuxStaticParams(
         Docker.muslBuilder,
-        s"https://github.com/coursier/coursier/releases/download/v${deps.csDockerVersion}/cs-x86_64-pc-linux.gz"
+        linuxCsLauncher
       )
       val dockerParams = setupLocaleAndOptions(baseDockerParams)
       buildHelperImage()
       Some(dockerParams)
     }
     def buildHelperImage = T {
+      val imageDirName = if (arch == "aarch64") "musl-image-arm64" else "musl-image"
       os.proc("docker", "build", "-t", Docker.customMuslBuilderImageName, ".")
-        .call(cwd = T.workspace / "project" / "musl-image", stdout = os.Inherit)
+        .call(cwd = T.workspace / "project" / imageDirName, stdout = os.Inherit)
       ()
     }
     def writeNativeImageScript(scriptDest: String, imageDest: String = "") = T.command {
@@ -159,8 +163,8 @@ trait Launchers extends CsModule {
   object `mostly-static-image` extends CliNativeImage {
     def nativeImageDockerParams = T {
       val baseDockerParams = NativeImage.linuxMostlyStaticParams(
-        "ubuntu:18.04", // TODO Pin that
-        s"https://github.com/coursier/coursier/releases/download/v${deps.csDockerVersion}/cs-x86_64-pc-linux.gz"
+        if (arch == "aarch64") "ubuntu:20.04" else "ubuntu:18.04", // TODO Pin that
+        linuxCsLauncher
       )
       val dockerParams = setupLocaleAndOptions(baseDockerParams)
       Some(dockerParams)
