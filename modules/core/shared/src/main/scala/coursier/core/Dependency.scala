@@ -95,6 +95,13 @@ import MinimizedExclusions._
   )
   def exclusions(): Set[(Organization, ModuleName)] = minimizedExclusions.toSet()
 
+  def addExclusion(org: Organization, name: ModuleName): Dependency =
+    withMinimizedExclusions(
+      minimizedExclusions.join(
+        MinimizedExclusions(Set((org, name)))
+      )
+    )
+
   def addBom(bomDep: BomDependency): Dependency =
     withBomDependencies(bomDependencies :+ bomDep)
   def addBom(module: Module, version: String): Dependency =
@@ -113,6 +120,31 @@ import MinimizedExclusions._
     withOverridesMap(
       Overrides.add(overridesMap, Overrides(Map(key -> values)))
     )
+  def addOverride(org: Organization, name: ModuleName, version: String): Dependency = {
+    val key = DependencyManagement.Key(org, name, Type.empty, Classifier.empty)
+    val values = DependencyManagement.Values(
+      Configuration.empty,
+      version,
+      MinimizedExclusions.zero,
+      optional = false
+    )
+    addOverride(key, values)
+  }
+  def addOverride(
+    org: Organization,
+    name: ModuleName,
+    version: String,
+    exclusions: Set[(Organization, ModuleName)]
+  ): Dependency = {
+    val key = DependencyManagement.Key(org, name, Type.empty, Classifier.empty)
+    val values = DependencyManagement.Values(
+      Configuration.empty,
+      version,
+      MinimizedExclusions(exclusions),
+      optional = false
+    )
+    addOverride(key, values)
+  }
   def addOverrides(
     entries: Seq[(DependencyManagement.Key, DependencyManagement.Values)]
   ): Dependency =
