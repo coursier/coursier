@@ -340,7 +340,7 @@ object FetchTests extends TestSuite {
      * |│ └─ org.tukaani:xz:1.0 -> 1.1
      * |└─ org.tukaani:xz:1.1
      */
-    test("requested xz:1.1 should not have conflicts") - withFile() {
+    test("requested xz:1_1 should not have conflicts") - withFile() {
       (excludeFile, writer) =>
         withFile() {
           (jsonFile, _) =>
@@ -389,7 +389,7 @@ object FetchTests extends TestSuite {
      * |└─ org.apache.commons:commons-compress:1.5
      * | └─ org.tukaani:xz:1.2
      */
-    test("classifier tests should have tests.jar") - withFile() {
+    test("classifier tests should have tests jar") - withFile() {
       (excludeFile, _) =>
         withFile() {
           (jsonFile, _) =>
@@ -425,7 +425,7 @@ object FetchTests extends TestSuite {
      * |└─ org.apache.commons:commons-compress:1.5
      * | └─ org.tukaani:xz:1.2
      */
-    test("mixed vanilla and classifier  should have tests.jar and .jar") - withFile() {
+    test("mixed vanilla and classifier should have tests jar and main jar") - withFile() {
       (excludeFile, _) =>
         withFile() {
           (jsonFile, _) =>
