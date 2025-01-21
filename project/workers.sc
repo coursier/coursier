@@ -60,7 +60,7 @@ trait UsesRedirectingServer extends Module {
     )
     server.proc.stdin.close()
     var serverRunning = false
-    var countDown     = 20
+    var countDown     = 30
     while (!serverRunning && server.proc.isAlive() && countDown > 0) {
       serverRunning = server.healthCheck()
       if (!serverRunning)
