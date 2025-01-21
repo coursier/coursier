@@ -2,7 +2,16 @@ package coursier.cli
 
 import coursier.{Fetch, Repositories, Resolve}
 import coursier.cli.fetch.JsonOutput
-import coursier.core.{Activation, Dependency, Resolution, Type}
+import coursier.core.{
+  Activation,
+  Classifier,
+  Configuration,
+  Dependency,
+  DependencyManagement,
+  MinimizedExclusions,
+  Resolution,
+  Type
+}
 import coursier.params.ResolutionParams
 import coursier.testcache.TestCache
 import coursier.tests.TestHelpers
@@ -157,6 +166,57 @@ object JsonReportTests extends TestSuite {
       test("rest-assured") {
         check(dep"io.rest-assured:rest-assured:5.5.0")
       }
+    }
+
+    test("Module level should exclude correctly") {
+      check(
+        dep"junit:junit:4.12"
+          .addExclusion(org"org.hamcrest", name"hamcrest-core")
+      )
+    }
+
+    test("avro exclude xz should not fetch xz") {
+      check(
+        dep"org.apache.avro:avro:1.7.4"
+          .addExclusion(org"org.tukaani", name"xz")
+      )
+    }
+
+    test("avro excluding xz + commons-compress should still fetch xz") {
+      check(
+        dep"org.apache.avro:avro:1.7.4"
+          .addExclusion(org"org.tukaani", name"xz")
+          .addOverride(org"org.apache.avro", name"avro", "", Set(org"org.tukaani" -> name"xz")),
+        dep"org.apache.commons:commons-compress:1.4.1"
+          .addOverride(org"org.apache.avro", name"avro", "", Set(org"org.tukaani" -> name"xz"))
+      )
+    }
+
+    test("requested xz:1_1 should not have conflicts") {
+      check(
+        dep"org.apache.commons:commons-compress:1.4.1",
+        dep"org.tukaani:xz:1.1"
+      )
+    }
+
+    test("should have conflicts") {
+      check(
+        dep"org.apache.commons:commons-compress:1.5",
+        dep"org.tukaani:xz:1.1"
+      )
+    }
+
+    test("classifier tests should have tests jar") {
+      check(
+        dep"org.apache.commons:commons-compress:1.5,classifier=tests"
+      )
+    }
+
+    test("mixed vanilla and classifier should have tests jar and main jar") {
+      check(
+        dep"org.apache.commons:commons-compress:1.5,classifier=tests",
+        dep"org.apache.commons:commons-compress:1.5"
+      )
     }
   }
 

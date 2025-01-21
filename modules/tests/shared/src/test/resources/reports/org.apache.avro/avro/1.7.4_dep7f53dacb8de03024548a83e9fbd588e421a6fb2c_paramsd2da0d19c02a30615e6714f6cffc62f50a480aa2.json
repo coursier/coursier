@@ -1,0 +1,87 @@
+{
+  "conflict_resolution": {},
+  "dependencies": [
+    {
+      "coord": "com.thoughtworks.paranamer:paranamer:2.3",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/thoughtworks/paranamer/paranamer/2.3/paranamer-2.3.jar",
+      "directDependencies": [],
+      "dependencies": [],
+      "exclusions": [
+        "org.tukaani:xz"
+      ]
+    },
+    {
+      "coord": "org.apache.avro:avro:1.7.4",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/avro/avro/1.7.4/avro-1.7.4.jar",
+      "directDependencies": [
+        "com.thoughtworks.paranamer:paranamer:2.3",
+        "org.apache.commons:commons-compress:1.4.1",
+        "org.codehaus.jackson:jackson-core-asl:1.8.8",
+        "org.codehaus.jackson:jackson-mapper-asl:1.8.8",
+        "org.slf4j:slf4j-api:1.6.4",
+        "org.xerial.snappy:snappy-java:1.0.4.1"
+      ],
+      "dependencies": [
+        "com.thoughtworks.paranamer:paranamer:2.3",
+        "org.apache.commons:commons-compress:1.4.1",
+        "org.codehaus.jackson:jackson-core-asl:1.8.8",
+        "org.codehaus.jackson:jackson-mapper-asl:1.8.8",
+        "org.slf4j:slf4j-api:1.6.4",
+        "org.xerial.snappy:snappy-java:1.0.4.1"
+      ],
+      "exclusions": [
+        "org.tukaani:xz"
+      ]
+    },
+    {
+      "coord": "org.apache.commons:commons-compress:1.4.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/commons/commons-compress/1.4.1/commons-compress-1.4.1.jar",
+      "directDependencies": [],
+      "dependencies": [],
+      "exclusions": [
+        "org.tukaani:xz"
+      ]
+    },
+    {
+      "coord": "org.codehaus.jackson:jackson-core-asl:1.8.8",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/codehaus/jackson/jackson-core-asl/1.8.8/jackson-core-asl-1.8.8.jar",
+      "directDependencies": [],
+      "dependencies": [],
+      "exclusions": [
+        "org.tukaani:xz"
+      ]
+    },
+    {
+      "coord": "org.codehaus.jackson:jackson-mapper-asl:1.8.8",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/codehaus/jackson/jackson-mapper-asl/1.8.8/jackson-mapper-asl-1.8.8.jar",
+      "directDependencies": [
+        "org.codehaus.jackson:jackson-core-asl:1.8.8"
+      ],
+      "dependencies": [
+        "org.codehaus.jackson:jackson-core-asl:1.8.8"
+      ],
+      "exclusions": [
+        "org.tukaani:xz"
+      ]
+    },
+    {
+      "coord": "org.slf4j:slf4j-api:1.6.4",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/1.6.4/slf4j-api-1.6.4.jar",
+      "directDependencies": [],
+      "dependencies": [],
+      "exclusions": [
+        "org.tukaani:xz"
+      ]
+    },
+    {
+      "coord": "org.xerial.snappy:snappy-java:1.0.4.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/xerial/snappy/snappy-java/1.0.4.1/snappy-java-1.0.4.1.jar",
+      "directDependencies": [],
+      "dependencies": [],
+      "exclusions": [
+        "org.tukaani:xz"
+      ]
+    }
+  ],
+  "version": "0.1.0"
+}

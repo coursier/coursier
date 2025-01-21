@@ -1,0 +1,7 @@
+org.apache.avro:avro:1.7.4:default
+org.codehaus.jackson:jackson-core-asl:1.8.8:default
+org.codehaus.jackson:jackson-mapper-asl:1.8.8:default
+com.thoughtworks.paranamer:paranamer:2.3:default
+org.xerial.snappy:snappy-java:1.0.4.1:default
+org.apache.commons:commons-compress:1.4.1:default
+org.slf4j:slf4j-api:1.6.4:default

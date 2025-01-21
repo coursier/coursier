@@ -212,6 +212,7 @@ object FetchTests extends TestSuite {
       ))
     }
 
+    // TODO Has an equivalent in JsonReportTests, this test should be removed
     test("Module level should exclude correctly") {
       withFile("junit:junit--org.hamcrest:hamcrest-core") { (file, _) =>
         withFile() { (jsonFile, _) =>
@@ -248,6 +249,7 @@ object FetchTests extends TestSuite {
      * |├─ org.slf4j:slf4j-api:1.6.4
      * |└─ org.xerial.snappy:snappy-java:1.0.4.1
      */
+    // TODO Has an equivalent in JsonReportTests, this test should be removed
     test("avro exclude xz should not fetch xz") - withFile(
       "org.apache.avro:avro--org.tukaani:xz"
     ) { (file, writer) =>
@@ -297,6 +299,7 @@ object FetchTests extends TestSuite {
      * |└─ org.apache.commons:commons-compress:1.4.1
      * | └─ org.tukaani:xz:1.0
      */
+    // TODO Has an equivalent in JsonReportTests, this test should be removed
     test("avro excluding xz + commons-compress should still fetch xz") - withFile(
       "org.apache.avro:avro--org.tukaani:xz"
     ) {
@@ -340,6 +343,7 @@ object FetchTests extends TestSuite {
      * |│ └─ org.tukaani:xz:1.0 -> 1.1
      * |└─ org.tukaani:xz:1.1
      */
+    // TODO Has an equivalent in JsonReportTests, this test should be removed
     test("requested xz:1_1 should not have conflicts") - withFile() {
       (excludeFile, writer) =>
         withFile() {
@@ -364,9 +368,8 @@ object FetchTests extends TestSuite {
      * |│ └─ org.tukaani:xz:1.2
      * |└─ org.tukaani:xz:1.1 -> 1.2
      */
-    test(
-      "org.apache.commons:commons-compress:1.5 org.tukaani:xz:1.1 should have conflicts"
-    ) - withFile() {
+    // TODO Has an equivalent in JsonReportTests, this test should be removed
+    test("should have conflicts") - withFile() {
       (excludeFile, _) =>
         withFile() {
           (jsonFile, _) =>
@@ -389,6 +392,7 @@ object FetchTests extends TestSuite {
      * |└─ org.apache.commons:commons-compress:1.5
      * | └─ org.tukaani:xz:1.2
      */
+    // TODO Has an equivalent in JsonReportTests, this test should be removed
     test("classifier tests should have tests jar") - withFile() {
       (excludeFile, _) =>
         withFile() {
@@ -425,6 +429,7 @@ object FetchTests extends TestSuite {
      * |└─ org.apache.commons:commons-compress:1.5
      * | └─ org.tukaani:xz:1.2
      */
+    // TODO Has an equivalent in JsonReportTests, this test should be removed
     test("mixed vanilla and classifier should have tests jar and main jar") - withFile() {
       (excludeFile, _) =>
         withFile() {
