@@ -22,7 +22,7 @@ abstract class PlatformTestHelpers {
       sys.error("COURSIER_TEST_DATA_DIR env var not set")
     }
 
-  val handmadeMetadataLocation = {
+  lazy val handmadeMetadataLocation = {
     val dirStr = Option(System.getenv("COURSIER_TESTS_HANDMADE_METADATA_DIR")).getOrElse {
       sys.error("COURSIER_TESTS_HANDMADE_METADATA_DIR not set")
     }
@@ -31,22 +31,22 @@ abstract class PlatformTestHelpers {
     dir
   }
 
-  val handmadeMetadataBase = handmadeMetadataLocation
+  lazy val handmadeMetadataBase = handmadeMetadataLocation
     .toAbsolutePath
     .toFile // .toFile.toURI gives file:/ URIs, whereas .toUri gives file:/// (the former appears in some test fixtures now)
     .toURI
     .toASCIIString
     .stripSuffix("/") + "/"
 
-  private val cache0 = TestCache.cache[Task]
+  private lazy val cache0 = TestCache.cache[Task]
     .withDummyArtifact(a => a.url.endsWith(".jar") || a.url.endsWith(".klib"))
 
   def cache: Cache[Task] = cache0
 
-  val handmadeMetadataCache: Cache[Task] =
+  lazy val handmadeMetadataCache: Cache[Task] =
     MockCache.create[Task](handmadeMetadataLocation, pool = cache0.pool)
 
-  val cacheWithHandmadeMetadata: Cache[Task] =
+  lazy val cacheWithHandmadeMetadata: Cache[Task] =
     cache0
       .withExtraData(Seq(handmadeMetadataLocation))
       .withDummyArtifact(_.url.endsWith(".jar"))
