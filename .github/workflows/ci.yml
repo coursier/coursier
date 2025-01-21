@@ -60,11 +60,11 @@ jobs:
       fail-fast: false
       matrix:
         OS: ["ubuntu-latest"]
-        SCALA_VERSION: ["2.12.20"]
+        SCALA_VERSION: ["2.13.16"]
         include:
-          - SCALA_VERSION: "2.12.20"
-            OS: "windows-latest"
           - SCALA_VERSION: "2.13.16"
+            OS: "windows-latest"
+          - SCALA_VERSION: "2.12.20"
             OS: "ubuntu-latest"
     steps:
     - name: Don't convert LF to CRLF during checkout
