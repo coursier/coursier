@@ -694,7 +694,7 @@ object FetchTests extends TestSuite {
             assert(urlInJsonFile1.contains(testFileName))
 
             // open jar and inspect contents
-            val fileContents1 = Source.fromFile(urlInJsonFile1).getLines.mkString
+            val fileContents1 = Source.fromFile(urlInJsonFile1).getLines().mkString
             assert(fileContents1 == "tada")
 
             testFile.delete()
@@ -1572,7 +1572,7 @@ object FetchTests extends TestSuite {
     //   mixing old and new Maven paths.
     test("sbt-plugin-example-diamond") {
 
-      def checkResolveDiamond(version: String)(expectedJars: String*) {
+      def checkResolveDiamond(version: String)(expectedJars: String*): Unit = {
         val options = FetchOptions(
           resolveOptions = SharedResolveOptions(
             dependencyOptions = DependencyOptions(
