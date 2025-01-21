@@ -16,7 +16,8 @@ object JsonOutput {
     artifacts: Seq[(Dependency, Publication, Artifact)],
     files: Seq[(Artifact, File)],
     classifiers: Set[Classifier],
-    printExclusions: Boolean // common.verbosityLevel >= 1
+    printExclusions: Boolean, // common.verbosityLevel >= 1
+    useSlashSeparator: Boolean = false
   ): String = {
 
     val depToArtifacts: Map[Dependency, Vector[(Publication, Artifact)]] =
@@ -71,7 +72,13 @@ object JsonOutput {
       _.children,
       _.reconciledVersionStr,
       _.requestedVersionStr,
-      _.downloadedFile,
+      elem => {
+        val file = elem.downloadedFile
+        if (useSlashSeparator)
+          file.map(_.replace("\\", "/"))
+        else
+          file
+      },
       _.exclusions
     )
   }

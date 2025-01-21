@@ -12,16 +12,23 @@ import utest._
 
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Properties
 
 object JsonReportTests extends TestSuite {
 
   implicit def ec: ExecutionContext = TestHelpers.cache.ec
 
+  private lazy val dataDirStr = {
+    val dir =
+      if (Properties.isWin) TestCache.dataDir.toString.replace("\\", "/")
+      else TestCache.dataDir.toString
+    dir + "/"
+  }
   def jsonLines(jsonStr: String): Seq[String] =
     ujson.read(jsonStr)
       .render(indent = 2)
       .linesIterator
-      .map(_.replace(TestCache.dataDir.toString + "/", "${CACHE}/"))
+      .map(_.replace(dataDirStr, "${CACHE}/"))
       .toVector
 
   private val resolve = Resolve()
@@ -67,7 +74,8 @@ object JsonReportTests extends TestSuite {
               },
               res.artifacts,
               Set.empty,
-              printExclusions = false
+              printExclusions = false,
+              useSlashSeparator = Properties.isWin
             )
           }
         }
