@@ -30,13 +30,10 @@ import scala.io.Source
 
 object FetchTests extends TestSuite {
 
-  def checkPath(file: Option[String], path: String): Unit =
-    file match {
-      case Some(f) =>
-        assert(f.contains(path.replace("/", File.separator)))
-      case None =>
-        sys.error("Not Defined")
-    }
+  def checkPath(file: Option[String], path: String) =
+    file
+      .map(f => assert(f.contains(path.replace("/", File.separator))))
+      .orElse(sys.error("Not Defined"))
 
   val pool = Sync.fixedThreadPool(6)
   val ec   = ExecutionContext.fromExecutorService(pool)
@@ -65,7 +62,7 @@ object FetchTests extends TestSuite {
     }
   }
 
-  private val fileNameLength: DepNode => Int = _.firstFile.getOrElse("").length
+  private val fileNameLength: DepNode => Int = _.file.getOrElse("").length
 
   val tests = Tests {
     test("get all files") {
@@ -409,12 +406,9 @@ object FetchTests extends TestSuite {
             )
 
             assert(compressNode.isDefined)
-            compressNode.get.firstFile match {
-              case Some(f) =>
-                assert(f.contains("commons-compress-1.5-tests.jar"))
-              case None =>
-                sys.error("Not Defined")
-            }
+            compressNode.get.file.map(f =>
+              assert(f.contains("commons-compress-1.5-tests.jar"))
+            ).orElse(sys.error("Not Defined"))
             assert(compressNode.get.dependencies.contains("org.tukaani:xz:1.2"))
         }
     }
@@ -449,14 +443,14 @@ object FetchTests extends TestSuite {
 
             assert(compressNodes.length == 2)
             assert(compressNodes.head.coord == "org.apache.commons:commons-compress:1.5")
-            compressNodes.head.firstFile.map(f =>
+            compressNodes.head.file.map(f =>
               assert(f.contains("commons-compress-1.5.jar"))
             ).orElse(sys.error("Not Defined"))
 
             assert(
               compressNodes.last.coord == "org.apache.commons:commons-compress:jar:tests:1.5"
             )
-            compressNodes.last.firstFile.map(f =>
+            compressNodes.last.file.map(f =>
               assert(f.contains("commons-compress-1.5-tests.jar"))
             ).orElse(sys.error("Not Defined"))
         }
@@ -484,12 +478,9 @@ object FetchTests extends TestSuite {
             val compressNode =
               node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
             assert(compressNode.isDefined)
-            compressNode.get.firstFile match {
-              case Some(f) =>
-                assert(f.contains("commons-compress-1.5.jar"))
-              case None =>
-                sys.error("Not Defined")
-            }
+            compressNode.get.file.map(f => assert(f.contains("commons-compress-1.5.jar"))).orElse(
+              sys.error("Not Defined")
+            )
 
             assert(compressNode.get.dependencies.isEmpty)
         }
@@ -520,12 +511,9 @@ object FetchTests extends TestSuite {
               _.coord == "org.apache.commons:commons-compress:jar:tests:1.5"
             )
             assert(compressNode.isDefined)
-            compressNode.get.firstFile match {
-              case Some(f) =>
-                assert(f.contains("commons-compress-1.5-tests.jar"))
-              case None =>
-                sys.error("Not Defined")
-            }
+            compressNode.get.file.map(f =>
+              assert(f.contains("commons-compress-1.5-tests.jar"))
+            ).orElse(sys.error("Not Defined"))
 
             assert(compressNode.get.dependencies.isEmpty)
         }
@@ -563,12 +551,9 @@ object FetchTests extends TestSuite {
             )
 
             assert(compressNode.isDefined)
-            compressNode.get.firstFile match {
-              case Some(f) =>
-                assert(f.contains("commons-compress-1.4.1-tests.jar"))
-              case None =>
-                sys.error("Not Defined")
-            }
+            compressNode.get.file.map(f =>
+              assert(f.contains("commons-compress-1.4.1-tests.jar"))
+            ).orElse(sys.error("Not Defined"))
 
             assert(compressNode.get.dependencies.size == 1)
             assert(compressNode.get.dependencies.head == "org.tukaani:xz:1.0")
@@ -611,12 +596,9 @@ object FetchTests extends TestSuite {
             )
 
             assert(compressNode.isDefined)
-            compressNode.get.firstFile match {
-              case Some(f) =>
-                assert(f.contains("commons-compress-1.4.1-tests.jar"))
-              case None =>
-                sys.error("Not Defined")
-            }
+            compressNode.get.file.map(f =>
+              assert(f.contains("commons-compress-1.4.1-tests.jar"))
+            ).orElse(sys.error("Not Defined"))
 
             assert(compressNode.get.dependencies.isEmpty)
         }
@@ -707,7 +689,7 @@ object FetchTests extends TestSuite {
               .sortBy(fileNameLength)
             assert(depNodes1.length == 1)
 
-            val urlInJsonFile1 = depNodes1.head.firstFile.get
+            val urlInJsonFile1 = depNodes1.head.file.get
             val testFileName   = testFile.getName
             assert(urlInJsonFile1.contains(testFileName))
 
@@ -726,7 +708,7 @@ object FetchTests extends TestSuite {
               .sortBy(fileNameLength)
             assert(depNodes2.length == 1)
 
-            val urlInJsonFile2 = depNodes2.head.firstFile.get
+            val urlInJsonFile2 = depNodes2.head.file.get
             val inCoursierCache =
               urlInJsonFile2.contains("/coursier/") || // Linux
               urlInJsonFile2.contains("/Coursier/") || // macOS
@@ -762,7 +744,7 @@ object FetchTests extends TestSuite {
           .filter(_.coord == "org.apache.commons:commons-compress:1.5")
           .sortBy(fileNameLength)
         assert(depNodes.length == 1)
-        checkPath(depNodes.head.firstFile, "junit/junit/4.12/junit-4.12.jar")
+        checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
     }
 
     /* Result:
@@ -792,7 +774,7 @@ object FetchTests extends TestSuite {
           .filter(_.coord == "h:i:j")
           .sortBy(fileNameLength)
         assert(depNodes.length == 1)
-        checkPath(depNodes.head.firstFile, "junit/junit/4.12/junit-4.12.jar")
+        checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
     }
 
     /* Result:
@@ -829,7 +811,7 @@ object FetchTests extends TestSuite {
 
         assert(depNodes.length == 1)
         // classifier doesn't matter when we have a url so it is not listed
-        checkPath(depNodes.head.firstFile, "junit/junit/4.12/junit-4.12.jar")
+        checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
     }
 
     /* Result:
@@ -865,8 +847,8 @@ object FetchTests extends TestSuite {
 
         assert(coords == Seq("org.apache.commons:commons-compress:1.5", "org.tukaani:xz:1.2"))
         assert(depNodes.length == 1)
-        assert(depNodes.last.firstFile.isDefined)
-        checkPath(depNodes.last.firstFile, "junit/junit/4.12/junit-4.12.jar")
+        assert(depNodes.last.file.isDefined)
+        checkPath(depNodes.last.file, "junit/junit/4.12/junit-4.12.jar")
     }
 
     /* Result:
@@ -896,8 +878,8 @@ object FetchTests extends TestSuite {
           .sortBy(fileNameLength)
 
         assert(depNodes.length == 1)
-        assert(depNodes.head.firstFile.isDefined)
-        checkPath(depNodes.head.firstFile, "1.5-sources.jar")
+        assert(depNodes.head.file.isDefined)
+        checkPath(depNodes.head.file, "1.5-sources.jar")
         depNodes.head.dependencies.foreach { d =>
           assert(d.contains(":sources:"))
         }
@@ -941,14 +923,14 @@ object FetchTests extends TestSuite {
           .filter(_.coord == "org.apache.commons:commons-compress:1.5")
           .sortBy(fileNameLength)
         assert(compressNodes.length == 1)
-        checkPath(compressNodes.head.firstFile, "junit/junit/4.12/junit-4.12.jar")
+        checkPath(compressNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
 
         val jacksonMapperNodes = depNodes
           .filter(_.coord == "org.codehaus.jackson:jackson-mapper-asl:1.8.8")
           .sortBy(fileNameLength)
         assert(jacksonMapperNodes.length == 1)
         checkPath(
-          jacksonMapperNodes.head.firstFile,
+          jacksonMapperNodes.head.file,
           "org/codehaus/jackson/jackson-mapper-asl/1.8.8/jackson-mapper-asl-1.8.8.jar"
         )
         assert(jacksonMapperNodes.head.dependencies.size == 1)
@@ -961,7 +943,7 @@ object FetchTests extends TestSuite {
           .sortBy(fileNameLength)
         assert(jacksonCoreNodes.length == 1)
         checkPath(
-          jacksonCoreNodes.head.firstFile,
+          jacksonCoreNodes.head.file,
           "org/codehaus/jackson/jackson-core-asl/1.8.8/jackson-core-asl-1.8.8.jar"
         )
     }
@@ -1027,7 +1009,7 @@ object FetchTests extends TestSuite {
 
         val depNodes: Seq[DepNode] = node.dependencies
         assert(depNodes.length == 1)
-        checkPath(depNodes.head.firstFile, "junit/junit/4.12/junit-4.12.jar")
+        checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
     }
 
     /* Result:
@@ -1057,7 +1039,7 @@ object FetchTests extends TestSuite {
           .filter(_.coord == "org.apache.commons:commons-compress:1.5")
           .sortBy(fileNameLength)
         assert(depNodes.length == 1)
-        checkPath(depNodes.head.firstFile, "junit/junit/4.12/junit-4.12.jar")
+        checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
     }
 
     /* Result:
@@ -1086,7 +1068,7 @@ object FetchTests extends TestSuite {
 
         val depNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
         assert(depNode.isDefined)
-        checkPath(depNode.get.firstFile, "commons-compress-1.5.jar")
+        checkPath(depNode.get.file, "commons-compress-1.5.jar")
 
         assert(depNode.get.dependencies.size == 1)
         assert(depNode.get.dependencies.head.contains("org.tukaani:xz:1.2"))

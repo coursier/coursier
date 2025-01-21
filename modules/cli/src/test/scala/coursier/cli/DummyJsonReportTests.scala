@@ -22,7 +22,7 @@ object DummyJsonReportTests extends TestSuite {
             children = _ => Vector.empty,
             reconciledVersionStr = _ => "",
             requestedVersionStr = _ => "",
-            getFiles = _ => List(""),
+            getFile = _ => Option(""),
             exclusions = _ => Nil
           )
         }
@@ -41,7 +41,7 @@ object DummyJsonReportTests extends TestSuite {
             children = children(_).toVector,
             reconciledVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
-            getFiles = _ => List(""),
+            getFile = _ => Option(""),
             exclusions = _ => Nil
           )
         }
@@ -62,7 +62,7 @@ object DummyJsonReportTests extends TestSuite {
             children = children(_).toVector,
             reconciledVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
-            getFiles = _ => List(""),
+            getFile = _ => Option(""),
             exclusions = _ => Nil
           )
         }
@@ -81,7 +81,7 @@ object DummyJsonReportTests extends TestSuite {
             children = children(_),
             reconciledVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
-            getFiles = _ => List(""),
+            getFile = _ => Option(""),
             exclusions = _ => Nil
           )
         }
@@ -101,7 +101,7 @@ object DummyJsonReportTests extends TestSuite {
             children = children(_),
             reconciledVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
-            getFiles = _ => List(""),
+            getFile = _ => Option(""),
             exclusions = _ => Nil
           )
         }

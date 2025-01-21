@@ -73,11 +73,11 @@ object JsonOutput {
       _.reconciledVersionStr,
       _.requestedVersionStr,
       elem => {
-        val files = elem.downloadedFiles
+        val file = elem.downloadedFile
         if (useSlashSeparator)
-          files.map(_.replace("\\", "/"))
+          file.map(_.replace("\\", "/"))
         else
-          files
+          file
       },
       _.exclusions
     )
