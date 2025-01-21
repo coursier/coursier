@@ -820,7 +820,7 @@ object FetchTests extends TestSuite {
      * |└─ org.tukaani:xz:1.2 // with the file from the URL
      */
     test(
-      "external dep url with classifier that is a transitive dep should fetch junit-4.12.jar and classifier gets thrown away"
+      "external dep url with classifier that is a transitive dep should fetch junit-4_12_jar and classifier gets thrown away"
     ) - withFile() {
       (jsonFile, _) =>
         val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
