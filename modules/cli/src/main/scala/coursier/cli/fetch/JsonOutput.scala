@@ -1,11 +1,12 @@
 package coursier.cli.fetch
 
-import java.io.File
-
 import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
 import coursier.core.{Classifier, Dependency, Publication, Resolution}
 import coursier.util.Artifact
 
+import java.io.File
+
+import scala.collection.immutable.ListMap
 import scala.collection.mutable
 
 object JsonOutput {
@@ -15,7 +16,8 @@ object JsonOutput {
     artifacts: Seq[(Dependency, Publication, Artifact)],
     files: Seq[(Artifact, File)],
     classifiers: Set[Classifier],
-    printExclusions: Boolean // common.verbosityLevel >= 1
+    printExclusions: Boolean, // common.verbosityLevel >= 1
+    useSlashSeparator: Boolean = false
   ): String = {
 
     val depToArtifacts: Map[Dependency, Vector[(Publication, Artifact)]] =
@@ -30,15 +32,15 @@ object JsonOutput {
 
     // A map from requested org:name:version to reconciled org:name:version
     val conflictResolutionForRoots = {
-      val mutableMap = mutable.Map.empty[String, String]
-      val it         = resolution.rootDependencies.iterator
+      val builder = ListMap.newBuilder[String, String]
+      val it      = resolution.rootDependencies.iterator
       while (it.hasNext) {
         val dep               = it.next()
         val reconciledVersion = resolution.reconciledVersions.getOrElse(dep.module, dep.version)
         if (reconciledVersion != dep.version)
-          mutableMap += s"${dep.module}:${dep.version}" -> s"${dep.module}:$reconciledVersion"
+          builder += s"${dep.module}:${dep.version}" -> s"${dep.module}:$reconciledVersion"
       }
-      mutableMap.toMap
+      builder.result()
     }
 
     val artifacts0 = artifacts.map {
@@ -70,7 +72,13 @@ object JsonOutput {
       _.children,
       _.reconciledVersionStr,
       _.requestedVersionStr,
-      _.downloadedFile,
+      elem => {
+        val files = elem.downloadedFiles
+        if (useSlashSeparator)
+          files.map(_.replace("\\", "/"))
+        else
+          files
+      },
       _.exclusions
     )
   }

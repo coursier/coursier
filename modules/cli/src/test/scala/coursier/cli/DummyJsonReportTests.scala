@@ -4,6 +4,8 @@ import coursier.cli.util.JsonReport
 import coursier.tests.TestHelpers
 import utest._
 
+import scala.collection.immutable.ListMap
+
 object DummyJsonReportTests extends TestSuite {
 
   def jsonLines(jsonStr: String): Seq[String] =
@@ -16,12 +18,12 @@ object DummyJsonReportTests extends TestSuite {
     test("empty JsonReport should be empty") {
       TestHelpers.validateResult(s"${TestHelpers.testDataDir}/dummy-reports/empty.json") {
         jsonLines {
-          JsonReport[String](Vector.empty, Map())(
+          JsonReport[String](Vector.empty, ListMap())(
             children = _ => Vector.empty,
             reconciledVersionStr = _ => "",
             requestedVersionStr = _ => "",
-            getFile = _ => Option(""),
-            exclusions = _ => Set.empty
+            getFiles = _ => List(""),
+            exclusions = _ => Nil
           )
         }
       }
@@ -34,13 +36,13 @@ object DummyJsonReportTests extends TestSuite {
         jsonLines {
           JsonReport[String](
             roots = Vector("a", "b"),
-            conflictResolutionForRoots = Map()
+            conflictResolutionForRoots = ListMap()
           )(
             children = children(_).toVector,
             reconciledVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
-            getFile = _ => Option(""),
-            exclusions = _ => Set.empty
+            getFiles = _ => List(""),
+            exclusions = _ => Nil
           )
         }
       }
@@ -55,13 +57,13 @@ object DummyJsonReportTests extends TestSuite {
         jsonLines {
           JsonReport[String](
             roots = Vector("b", "a"),
-            conflictResolutionForRoots = Map()
+            conflictResolutionForRoots = ListMap()
           )(
             children = children(_).toVector,
             reconciledVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
-            getFile = _ => Option(""),
-            exclusions = _ => Set.empty
+            getFiles = _ => List(""),
+            exclusions = _ => Nil
           )
         }
       }
@@ -74,13 +76,13 @@ object DummyJsonReportTests extends TestSuite {
         jsonLines {
           JsonReport[String](
             roots = Vector("a", "b"),
-            conflictResolutionForRoots = Map.empty
+            conflictResolutionForRoots = ListMap.empty
           )(
             children = children(_),
             reconciledVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
-            getFile = _ => Option(""),
-            exclusions = _ => Set.empty
+            getFiles = _ => List(""),
+            exclusions = _ => Nil
           )
         }
       }
@@ -94,13 +96,13 @@ object DummyJsonReportTests extends TestSuite {
         jsonLines {
           JsonReport[String](
             roots = Vector("a", "b", "c"),
-            conflictResolutionForRoots = Map.empty
+            conflictResolutionForRoots = ListMap.empty
           )(
             children = children(_),
             reconciledVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
-            getFile = _ => Option(""),
-            exclusions = _ => Set.empty
+            getFiles = _ => List(""),
+            exclusions = _ => Nil
           )
         }
       }

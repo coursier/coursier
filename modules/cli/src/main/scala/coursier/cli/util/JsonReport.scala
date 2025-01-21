@@ -1,24 +1,23 @@
 package coursier.cli.util
 
-import java.io.File
-import java.util.Objects
-
+import argonaut._
+import argonaut.Argonaut._
 import cats.{Eq, Eval, Show}
 import cats.data.Chain
 import cats.free.Cofree
 import cats.syntax.foldable._
 import cats.syntax.traverse._
 import cats.syntax.show._
-
 import coursier.core._
 import coursier.util.Artifact
 
-import scala.collection.compat._
-import scala.collection.mutable
-import scala.collection.immutable.SortedSet
+import java.io.File
+import java.util.Objects
 
-import argonaut._
-import Argonaut._
+import scala.annotation.tailrec
+import scala.collection.compat._
+import scala.collection.immutable.ListMap
+import scala.collection.mutable
 
 /** Lookup table for files and artifacts to print in the JsonReport.
   */
@@ -37,14 +36,18 @@ final case class JsonPrintRequirement(
   */
 final case class DepNode(
   coord: String,
-  file: Option[String],
-  directDependencies: Set[String],
-  dependencies: Set[String],
-  exclusions: Set[String] = Set.empty
-)
+  file: Option[String] = None,
+  files: List[String] = Nil,
+  directDependencies: List[String],
+  dependencies: List[String],
+  exclusions: List[String] = Nil
+) {
+  def firstFile: Option[String] =
+    file.orElse(files.headOption)
+}
 
 final case class ReportNode(
-  conflict_resolution: Map[String, String],
+  conflict_resolution: ListMap[String, String],
   dependencies: Vector[DepNode],
   version: String
 )
@@ -61,6 +64,41 @@ final case class ReportNode(
   */
 object ReportNode {
   import argonaut.ArgonautShapeless._
+
+  implicit def encodeListMap[K: EncodeJsonKey, V: EncodeJson]: EncodeJson[ListMap[K, V]] =
+    EncodeJson { listMap =>
+      val keyEncoder   = EncodeJsonKey[K]
+      val valueEncoder = EncodeJson.of[V]
+      jObjectAssocList {
+        listMap.toList.map {
+          case (k, v) => (keyEncoder.toJsonKey(k), valueEncoder(v))
+        }
+      }
+    }
+
+  implicit def decodeListMap[K: DecodeJson, V: DecodeJson]: DecodeJson[ListMap[K, V]] =
+    DecodeJson { json =>
+      val dk = DecodeJson.of[K]
+      @tailrec
+      def spin(x: List[JsonField], m: DecodeResult[ListMap[K, V]]): DecodeResult[ListMap[K, V]] =
+        x match {
+          case Nil => m
+          case h :: t =>
+            spin(
+              t,
+              for {
+                mm <- m
+                k  <- dk.decodeJson(jString(h))
+                v  <- json.get[V](h)
+              } yield mm + (k -> v)
+            )
+        }
+      json.fields match {
+        case None    => DecodeResult.fail("[K, V]ListMap[K, V]", json.history)
+        case Some(s) => spin(s, DecodeResult.ok(ListMap.empty[K, V]))
+      }
+    }
+
   implicit val encodeJson = EncodeJson.of[ReportNode]
   implicit val decodeJson = DecodeJson.of[ReportNode]
   val version             = "0.1.0"
@@ -82,29 +120,32 @@ object JsonReport {
     private def transitiveOf[A: Eq: Show](
       elem: A,
       fetchChildren: A => Seq[A]
-    ): Eval[Map[A, Set[String]]] = {
-      val knownElems = new mutable.HashMap[String, mutable.Set[String]]
+    ): Eval[Map[A, List[String]]] = {
+      val knownElems = new mutable.HashMap[String, mutable.ListBuffer[String]]
       def collectDeps(
         elem: A,
-        seen: mutable.Set[String]
-      ): mutable.Set[String] = {
+        buffer: mutable.ListBuffer[String],
+        seen: mutable.HashSet[String]
+      ): mutable.ListBuffer[String] = {
         val key = elem.show
         if (seen.contains(key))
-          seen
+          buffer
         else {
           seen.add(key)
+          buffer += key
           knownElems.get(key).getOrElse {
-            val deps = new mutable.HashSet[String]
+            val deps = new mutable.ListBuffer[String]
             knownElems.put(key, deps)
             for (child <- fetchChildren(elem) if !seen.contains(child.show)) {
               deps += child.show
-              deps ++= collectDeps(child, seen)
+              deps ++= collectDeps(child, buffer, seen)
             }
             deps
           }
         }
       }
-      val result = collectDeps(elem, new mutable.HashSet[String]).toSet[String]
+      val result =
+        collectDeps(elem, new mutable.ListBuffer[String], new mutable.HashSet[String]).toList
       Eval.now(Map(elem -> result))
     }
 
@@ -112,7 +153,7 @@ object JsonReport {
       roots: Vector[A],
       fetchChildren: A => Seq[A],
       reconciledVersionStr: A => String
-    ): Map[A, Set[String]] = {
+    ): Map[A, List[String]] = {
       implicit val nodeShow: Show[A] = Show.show(reconciledVersionStr)
       implicit val nodeEq: Eq[A]     = Eq.by(_.show)
 
@@ -120,16 +161,15 @@ object JsonReport {
         .traverse(transitiveOf(_, fetchChildren))
         .value
         .fold
-        .map { case (k, v) => k -> v.iterator.to(SortedSet) }
     }
   }
 
-  def apply[T](roots: Vector[T], conflictResolutionForRoots: Map[String, String])(
+  def apply[T](roots: Vector[T], conflictResolutionForRoots: ListMap[String, String])(
     children: T => Seq[T],
     reconciledVersionStr: T => String,
     requestedVersionStr: T => String,
-    getFile: T => Option[String],
-    exclusions: T => Set[String]
+    getFiles: T => List[String],
+    exclusions: T => List[String]
   ): String = {
 
     // Addresses the corner case in which any given library may list itself among its dependencies
@@ -142,15 +182,22 @@ object JsonReport {
     val depToTransitiveDeps =
       DependencyTree.flatten(roots, children, reconciledVersionStr)
 
-    def flattenedDeps(elem: T): Set[String] =
-      depToTransitiveDeps.getOrElse(elem, Set.empty[String])
+    def flattenedDeps(elem: T): List[String] =
+      depToTransitiveDeps.getOrElse(elem, Nil)
 
     val rootDeps: Vector[DepNode] = roots.map { r =>
+      val files = getFiles(r)
+      val (fileValue, filesValue) = files match {
+        case Nil      => (None, Nil)
+        case f :: Nil => (Some(f), Nil)
+        case _        => (None, files)
+      }
       DepNode(
         reconciledVersionStr(r),
-        getFile(r),
-        childrenOrEmpty(r).iterator.map(reconciledVersionStr(_)).to(SortedSet),
-        flattenedDeps(r),
+        fileValue,
+        filesValue,
+        childrenOrEmpty(r).iterator.map(reconciledVersionStr(_)).to(List).distinct.sorted,
+        flattenedDeps(r).distinct.sorted,
         exclusions(r)
       )
     }
@@ -178,16 +225,22 @@ final case class JsonElem(
 
   // This is used to printing json output
   // Option of the file path
-  lazy val downloadedFile: Option[String] =
-    jsonPrintRequirement.flatMap(req =>
-      req.depToArtifacts.getOrElse(dep, Seq()).view
-        .filter(_._1.classifier == dep.attributes.classifier)
-        .map(x => req.fileByArtifact.get(x._2.url))
-        .filter(_.isDefined)
-        .filter(_.nonEmpty)
-        .map(_.get.getPath)
-        .headOption
-    )
+  lazy val downloadedFiles: List[String] =
+    jsonPrintRequirement
+      .map { req =>
+        req
+          .depToArtifacts
+          .getOrElse(dep, Seq())
+          .iterator
+          .collect {
+            case (pub, art) if pub.classifier == dep.attributes.classifier =>
+              req.fileByArtifact.get(art.url)
+          }
+          .flatMap(_.iterator)
+          .map(_.getPath)
+          .toList
+      }
+      .getOrElse(Nil)
 
   // `reconciledVersion`, `reconciledVersionStr`, `requestedVersionStr` are fields
   // whose values are frequently duplicated across instances of `JsonElem` and their
@@ -200,10 +253,16 @@ final case class JsonElem(
   lazy val reconciledVersionStr = Symbol(s"${dep.mavenPrefix}:$reconciledVersion").name
   val requestedVersionStr       = Symbol(s"${dep.module}:${dep.version}").name
 
-  lazy val exclusions: Set[String] = dep.exclusions().map {
-    case (org, name) =>
-      s"${org.value}:${name.value}"
-  }
+  lazy val exclusions: List[String] = dep.exclusions()
+    .toList
+    .sortBy {
+      case (org, name) =>
+        (org.value, name.value)
+    }
+    .map {
+      case (org, name) =>
+        s"${org.value}:${name.value}"
+    }
 
   lazy val children: Vector[JsonElem] =
     if (excluded) Vector.empty
@@ -275,5 +334,5 @@ final case class JsonElem(
     * `children`.
     */
   override def hashCode(): Int =
-    Objects.hash(dep, requestedVersionStr, reconciledVersion, downloadedFile)
+    Objects.hash(dep, requestedVersionStr, reconciledVersion, downloadedFiles)
 }

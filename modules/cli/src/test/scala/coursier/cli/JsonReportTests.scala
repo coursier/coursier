@@ -12,16 +12,23 @@ import utest._
 
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Properties
 
 object JsonReportTests extends TestSuite {
 
   implicit def ec: ExecutionContext = TestHelpers.cache.ec
 
+  private lazy val dataDirStr = {
+    val dir =
+      if (Properties.isWin) TestCache.dataDir.toString.replace("\\", "/")
+      else TestCache.dataDir.toString
+    dir + "/"
+  }
   def jsonLines(jsonStr: String): Seq[String] =
     ujson.read(jsonStr)
       .render(indent = 2)
       .linesIterator
-      .map(_.replace(TestCache.dataDir.toString + "/", "${CACHE}/"))
+      .map(_.replace(dataDirStr, "${CACHE}/"))
       .toVector
 
   private val resolve = Resolve()
@@ -54,20 +61,23 @@ object JsonReportTests extends TestSuite {
       }
       await(TestHelpers.validateDependencies(res.resolution))
 
-      TestHelpers.validateResult(
-        s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams)}.json"
-      ) {
-        jsonLines {
-          JsonOutput.report(
-            res.resolution,
-            res.detailedArtifacts.map {
-              case (dep, pub, art, _) =>
-                (dep, pub, art)
-            },
-            res.artifacts,
-            Set.empty,
-            printExclusions = false
-          )
+      await {
+        TestHelpers.validateResult(
+          s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams)}.json"
+        ) {
+          jsonLines {
+            JsonOutput.report(
+              res.resolution,
+              res.detailedArtifacts.map {
+                case (dep, pub, art, _) =>
+                  (dep, pub, art)
+              },
+              res.artifacts,
+              Set.empty,
+              printExclusions = false,
+              useSlashSeparator = Properties.isWin
+            )
+          }
         }
       }
     }
@@ -79,32 +89,7 @@ object JsonReportTests extends TestSuite {
     test("android") {
 
       def androidCheck(dependencies: Dependency*): Future[Unit] =
-        async {
-          val res = await {
-            fetch
-              .addRepositories(Repositories.google)
-              .addDependencies(dependencies: _*)
-              .futureResult()
-          }
-          await(TestHelpers.validateDependencies(res.resolution))
-
-          TestHelpers.validateResult(
-            s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams)}.json"
-          ) {
-            jsonLines {
-              JsonOutput.report(
-                res.resolution,
-                res.detailedArtifacts.map {
-                  case (dep, pub, art, _) =>
-                    (dep, pub, art)
-                },
-                res.artifacts,
-                Set.empty,
-                printExclusions = false
-              )
-            }
-          }
-        }
+        doCheck(fetch.addRepositories(Repositories.google), dependencies)
 
       test("activity") {
         androidCheck(dep"androidx.activity:activity:1.8.2")
