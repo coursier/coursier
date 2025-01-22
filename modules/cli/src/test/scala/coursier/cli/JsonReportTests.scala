@@ -218,6 +218,13 @@ object JsonReportTests extends TestSuite {
         dep"org.apache.commons:commons-compress:1.5"
       )
     }
+
+    test("bouncy-castle") {
+      // if you broke that test, maybe you fixed coursier/coursier#3236
+      check(
+        dep"org.apache.pulsar:bouncy-castle-bc:4.0.1"
+      )
+    }
   }
 
 }

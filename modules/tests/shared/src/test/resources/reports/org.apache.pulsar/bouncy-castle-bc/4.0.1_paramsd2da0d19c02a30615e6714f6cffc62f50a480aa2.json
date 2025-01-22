@@ -1,0 +1,55 @@
+{
+  "conflict_resolution": {},
+  "dependencies": [
+    {
+      "coord": "org.apache.pulsar:bouncy-castle-bc:4.0.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/pulsar/bouncy-castle-bc/4.0.1/bouncy-castle-bc-4.0.1.jar",
+      "directDependencies": [
+        "org.bouncycastle:bcpkix-jdk18on:1.78.1",
+        "org.bouncycastle:bcprov-ext-jdk18on:1.78.1"
+      ],
+      "dependencies": [
+        "org.bouncycastle:bcpkix-jdk18on:1.78.1",
+        "org.bouncycastle:bcprov-ext-jdk18on:1.78.1",
+        "org.bouncycastle:bcprov-jdk18on:1.78.1",
+        "org.bouncycastle:bcprov-jdk18on:jar:1.78.1",
+        "org.bouncycastle:bcutil-jdk18on:jar:1.78.1"
+      ]
+    },
+    {
+      "coord": "org.bouncycastle:bcpkix-jdk18on:1.78.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/bouncycastle/bcpkix-jdk18on/1.78.1/bcpkix-jdk18on-1.78.1.jar",
+      "directDependencies": [
+        "org.bouncycastle:bcprov-jdk18on:jar:1.78.1",
+        "org.bouncycastle:bcutil-jdk18on:jar:1.78.1"
+      ],
+      "dependencies": [
+        "org.bouncycastle:bcprov-jdk18on:jar:1.78.1",
+        "org.bouncycastle:bcutil-jdk18on:jar:1.78.1"
+      ]
+    },
+    {
+      "coord": "org.bouncycastle:bcprov-jdk18on:1.78.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/bouncycastle/bcprov-jdk18on/1.78.1/bcprov-jdk18on-1.78.1.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.bouncycastle:bcprov-jdk18on:jar:1.78.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/bouncycastle/bcprov-jdk18on/1.78.1/bcprov-jdk18on-1.78.1.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.bouncycastle:bcutil-jdk18on:jar:1.78.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/bouncycastle/bcutil-jdk18on/1.78.1/bcutil-jdk18on-1.78.1.jar",
+      "directDependencies": [
+        "org.bouncycastle:bcprov-jdk18on:jar:1.78.1"
+      ],
+      "dependencies": [
+        "org.bouncycastle:bcprov-jdk18on:jar:1.78.1"
+      ]
+    }
+  ],
+  "version": "0.1.0"
+}
