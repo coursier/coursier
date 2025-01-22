@@ -55,7 +55,7 @@ object Deps {
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
   def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
   def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.16"
-  def svm                      = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
+  def svm                      = ivy"org.graalvm.nativeimage:svm:22.3.5"
   def ujson                    = ivy"com.lihaoyi::ujson:4.1.0"
   def utest                    = ivy"com.lihaoyi::utest::0.8.5"
   def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
