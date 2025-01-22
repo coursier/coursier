@@ -10,7 +10,7 @@ object Deps {
   def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.12.0"
   def concurrentReferenceHashMap =
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
-  def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.6"
+  def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.7"
   def dependency        = ivy"io.get-coursier::dependency::0.3.2"
   def directories       = ivy"io.get-coursier.util:directories-jni:0.1.3"
   def diffUtils         = ivy"io.github.java-diff-utils:java-diff-utils:4.15"
