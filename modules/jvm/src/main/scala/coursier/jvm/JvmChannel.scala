@@ -78,19 +78,31 @@ object JvmChannel {
       if (foundMusl)
         Some(true)
       else {
-        val inLib = Files.list(Paths.get("/lib"))
-          .iterator()
-          .asScala
-          .map(_.getFileName.toString)
-          .toVector
+        val inLib = {
+          val libPath = Paths.get("/lib")
+          if (Files.isDirectory(libPath))
+            Files.list(libPath)
+              .iterator()
+              .asScala
+              .map(_.getFileName.toString)
+              .toVector
+          else
+            Vector()
+        }
         if (inLib.exists(_.contains("-linux-gnu"))) Some(false)
         else if (inLib.exists(name => name.contains("libc.musl-") || name.contains("ld-musl-")))
           Some(true)
         else {
-          val inUsrSbinIt = Files.list(Paths.get("/usr/sbin"))
-            .iterator()
-            .asScala
-            .map(_.getFileName.toString)
+          val inUsrSbinIt = {
+            val usrSbinPath = Paths.get("/usr/sbin")
+            if (Files.isDirectory(usrSbinPath))
+              Files.list(usrSbinPath)
+                .iterator()
+                .asScala
+                .map(_.getFileName.toString)
+            else
+              Iterator.empty
+          }
           if (inUsrSbinIt.exists(_.contains("glibc"))) Some(false)
           else None
         }
