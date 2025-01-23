@@ -4,7 +4,7 @@ import java.io._
 import java.net.{ServerSocket, URI}
 import java.nio.charset.Charset
 import java.nio.file.Files
-import java.util.{Locale, UUID}
+import java.util.Locale
 import java.util.regex.Pattern
 import java.util.zip.ZipFile
 
@@ -28,8 +28,9 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
   def enableNailgunTest: Boolean =
     true
 
+  private def isCI = System.getenv("CI") != null
   def hasDocker: Boolean =
-    Properties.isLinux
+    Properties.isLinux || (Properties.isMac && !isCI)
 
   private val extraOptions =
     overrideProguarded match {
@@ -710,48 +711,6 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       else "Docker test disabled"
     }
 
-    def withAuthProxy[T](f: (String, String, Int) => T): T = {
-      val networkName = "cs-test-" + UUID.randomUUID().toString
-      var containerId = ""
-      try {
-        os.proc("docker", "network", "create", networkName)
-          .call(stdin = os.Inherit, stdout = os.Inherit)
-        val host = {
-          val res  = os.proc("docker", "network", "inspect", networkName).call(stdin = os.Inherit)
-          val resp = ujson.read(res.out.trim())
-          resp.arr(0).apply("IPAM").apply("Config").arr(0).apply("Gateway").str
-        }
-        val port = {
-          val s = new ServerSocket(0)
-          try s.getLocalPort
-          finally s.close()
-        }
-        val res = os.proc(
-          "docker",
-          "run",
-          "-d",
-          "--rm",
-          "-p",
-          s"$port:80",
-          "--network",
-          networkName,
-          "bahamat/authenticated-proxy@sha256:568c759ac687f93d606866fbb397f39fe1350187b95e648376b971e9d7596e75"
-        )
-          .call(stdin = os.Inherit)
-        containerId = res.out.trim()
-        f(networkName, host, port)
-      }
-      finally {
-        if (containerId.nonEmpty) {
-          System.err.println(s"Removing container $containerId")
-          os.proc("docker", "rm", "-f", containerId)
-            .call(stdin = os.Inherit, stdout = os.Inherit)
-        }
-        os.proc("docker", "network", "rm", networkName)
-          .call(stdin = os.Inherit, stdout = os.Inherit)
-      }
-    }
-
     def configFileAuthenticatedProxyTest(): Unit =
       TestUtil.withTempDir { tmpDir0 =>
         val tmpDir = os.Path(tmpDir0, os.pwd)
@@ -765,7 +724,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         val expectedOutput = "foo" + System.lineSeparator()
         assert(output == expectedOutput)
 
-        withAuthProxy { (networkName, proxyHost, proxyPort) =>
+        TestAuthProxy.withAuthProxy0 { (networkName, proxyHost, proxyPort) =>
           val configContent =
             s"""{
                |  "httpProxy": {

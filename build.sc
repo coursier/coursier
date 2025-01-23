@@ -689,7 +689,9 @@ trait CliTests extends CsModule
           "-Dcoursier-test-launcher-accepts-D=false",
           "-Dcoursier-test-launcher-accepts-J=true",
           "-Dcoursier-test-is-native=false",
-          "-Dcoursier-test-is-native-static=false"
+          "-Dcoursier-test-is-native-static=false",
+          s"-Dcoursier.test.auth-proxy-data-dir=${T.workspace / "project/authenticated-proxy"}",
+          s"-Dcoursier.test.auth-proxy-image=${deps.Docker.authProxyBase}"
         )
       }
     }
@@ -711,7 +713,9 @@ trait CliTests extends CsModule
           "-Dcoursier-test-launcher-accepts-D=false",
           "-Dcoursier-test-launcher-accepts-J=false",
           "-Dcoursier-test-is-native=true",
-          s"-Dcoursier-test-is-native-static=$isStatic"
+          s"-Dcoursier-test-is-native-static=$isStatic",
+          s"-Dcoursier.test.auth-proxy-data-dir=${T.workspace / "project/authenticated-proxy"}",
+          s"-Dcoursier.test.auth-proxy-image=${deps.Docker.authProxyBase}"
         )
       }
     }
