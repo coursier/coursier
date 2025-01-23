@@ -91,4 +91,5 @@ object ScalaVersions {
 object Docker {
   def customMuslBuilderImageName = "scala-cli-base-musl"
   def muslBuilder                = s"$customMuslBuilderImageName:latest"
+  def authProxyBase              = "alpine:3.21.2"
 }
