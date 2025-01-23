@@ -12,8 +12,9 @@ abstract class GetTests extends TestSuite {
 
   def launcher: String
 
+  private def isCI = System.getenv("CI") != null
   def hasDocker: Boolean =
-    Properties.isLinux
+    Properties.isLinux || (Properties.isMac && !isCI)
 
   private def pomAscUrl =
     "https://repo1.maven.org/maven2/io/get-coursier/coursier_2.13/2.0.2/coursier_2.13-2.0.2.pom.asc"

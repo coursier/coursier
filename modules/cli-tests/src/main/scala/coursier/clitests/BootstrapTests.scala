@@ -28,8 +28,9 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
   def enableNailgunTest: Boolean =
     true
 
+  private def isCI = System.getenv("CI") != null
   def hasDocker: Boolean =
-    Properties.isLinux
+    Properties.isLinux || (Properties.isMac && !isCI)
 
   private val extraOptions =
     overrideProguarded match {
