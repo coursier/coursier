@@ -14,8 +14,16 @@ abstract class AboutTests extends TestSuite with LauncherOptions {
   def hasDocker: Boolean =
     Properties.isLinux
 
-  def alpineJavaImage = "eclipse-temurin:21-jre-alpine"
-  def alpineImage     = "alpine:3.21"
+  def alpineJavaImage =
+    sys.props.getOrElse(
+      "coursier.test.alpine-java-image",
+      sys.error("coursier.test.alpine-java-image Java property not set")
+    )
+  def alpineImage =
+    sys.props.getOrElse(
+      "coursier.test.alpine-image",
+      sys.error("coursier.test.alpine-image Java property not set")
+    )
 
   val tests = Tests {
     test("simple") {
