@@ -13,7 +13,7 @@ object VersionConstraintTests extends TestSuite {
       }
       test("basicVersion") {
         val c0 = VersionParse.versionConstraint("1.2")
-        assert(c0 == VersionConstraint.from(VersionInterval.zero, Seq(Version("1.2"))))
+        assert(c0 == VersionConstraint.from(VersionInterval.zero, Some(Version("1.2")), None))
       }
       test("basicVersionInterval") {
         val c0 = VersionParse.versionConstraint("(,1.2]")
@@ -23,7 +23,7 @@ object VersionConstraintTests extends TestSuite {
           false,
           true
         )
-        assert(c0 == VersionConstraint.from(expectedInterval, Nil))
+        assert(c0 == VersionConstraint.from(expectedInterval, None, None))
       }
       test("latestSubRevision") {
         val c0 = VersionParse.versionConstraint("1.2.3-+")
@@ -33,7 +33,11 @@ object VersionConstraintTests extends TestSuite {
           true,
           true
         )
-        assert(c0.generateString == VersionConstraint.from(expectedInterval, Nil).generateString)
+        assert(c0.generateString == VersionConstraint.from(
+          expectedInterval,
+          None,
+          None
+        ).generateString)
       }
       test("latestSubRevisionWithLiteral") {
         val c0 = VersionParse.versionConstraint("1.2.3-rc-+")
@@ -43,7 +47,11 @@ object VersionConstraintTests extends TestSuite {
           true,
           true
         )
-        assert(c0.generateString == VersionConstraint.from(expectedInterval, Nil).generateString)
+        assert(c0.generateString == VersionConstraint.from(
+          expectedInterval,
+          None,
+          None
+        ).generateString)
       }
       test("latestSubRevisionWithZero") {
         val c0 = VersionParse.versionConstraint("1.0.+")
@@ -53,7 +61,11 @@ object VersionConstraintTests extends TestSuite {
           true,
           true
         )
-        assert(c0.generateString == VersionConstraint.from(expectedInterval, Nil).generateString)
+        assert(c0.generateString == VersionConstraint.from(
+          expectedInterval,
+          None,
+          None
+        ).generateString)
       }
     }
 
@@ -82,14 +94,15 @@ object VersionConstraintTests extends TestSuite {
         assert(s0 == "")
       }
       test("preferred") {
-        val s0 = VersionConstraint.from(VersionInterval.zero, Seq(Version("2.1"))).asString
+        val s0 = VersionConstraint.from(VersionInterval.zero, Some(Version("2.1")), None).asString
         assert(s0 == "2.1")
       }
       test("interval") {
         val s0 =
           VersionConstraint.from(
             VersionInterval(None, Some(Version("2.1")), false, true),
-            Nil
+            None,
+            None
           ).asString
         assert(s0 == "(,2.1]")
       }
@@ -100,7 +113,7 @@ object VersionConstraintTests extends TestSuite {
         val s0 = VersionConstraint.merge(
           VersionParse.versionConstraint("[1.0,3.2]"),
           VersionParse.versionConstraint("[3.0,4.0)")
-        ).get.uniquePreferred.asString
+        ).get.asString
         assert(s0.contains("[3.0,3.2]"))
       }
 
@@ -136,8 +149,8 @@ object VersionConstraintTests extends TestSuite {
           VersionParse.versionConstraint("[1.0,2.0)"),
           VersionParse.versionConstraint("[3.0,4.0)"),
           VersionParse.versionConstraint("2.8")
-        ).preferred.head.repr
-        assert(s0 == "2.8")
+        ).asString
+        assert(s0 == "[3.0,4.0)")
       }
     }
   }

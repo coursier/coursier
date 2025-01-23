@@ -3,13 +3,13 @@ package coursier.install
 import java.io.File
 
 import coursier.cache.{Cache, CacheLogger}
-import coursier.core.{Classifier, Dependency, Latest, Module, Repository, Resolution, Type}
+import coursier.core.{Classifier, Dependency, Module, Repository, Resolution, Type}
 import coursier.Fetch
 import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Task}
 import coursier.util.StringInterpolators._
-import coursier.version.{Version, VersionConstraint, VersionParse}
+import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
 import dataclass._
 
 @data class AppDescriptor(
@@ -284,7 +284,7 @@ import dataclass._
 
       Latest(deps.head.versionConstraint.asString) match {
         case Some(kind) =>
-          versions().candidates0(kind)
+          versions().candidates(kind)
         case None =>
           if (deps.head.versionConstraint.preferred.isEmpty)
             versions().candidatesInInterval(deps.head.versionConstraint.interval)

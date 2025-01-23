@@ -358,6 +358,8 @@ object ResolveTests extends TestSuite {
               error match {
                 case e: ResolutionError.CantDownloadModule =>
                   assert(e.module == mod"com.chuusai:shapeless_2.10")
+                  val lines = e.getMessage.linesIterator.toVector.map(_.trim)
+                  assert(lines.contains("No version for latest.release available in [2.3.0,2.3.3)"))
                 case _ =>
                   throw error
               }

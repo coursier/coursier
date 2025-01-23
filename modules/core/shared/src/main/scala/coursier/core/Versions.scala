@@ -1,6 +1,10 @@
 package coursier.core
 
-import coursier.version.{Version => Version0, VersionInterval => VersionInterval0}
+import coursier.version.{
+  Latest => Latest0,
+  Version => Version0,
+  VersionInterval => VersionInterval0
+}
 import dataclass.data
 
 @data class Versions(
@@ -95,28 +99,28 @@ import dataclass.data
     releaseOpt.iterator ++ latestOpt.iterator ++ latestFromAvailable
   }
 
-  def candidates0(kind: Latest): Iterator[Version0] =
+  def candidates(kind: Latest0): Iterator[Version0] =
     kind match {
-      case Latest.Integration => latestIntegrationCandidates()
-      case Latest.Release     => latestReleaseCandidates()
-      case Latest.Stable      => latestStableCandidates()
+      case Latest0.Integration => latestIntegrationCandidates()
+      case Latest0.Release     => latestReleaseCandidates()
+      case Latest0.Stable      => latestStableCandidates()
     }
 
-  @deprecated("Use candidates0 instead", "2.1.25")
+  @deprecated("Use the override accepting a coursier.version.Latest instead", "2.1.25")
   def candidates(kind: Latest): Iterator[String] =
-    candidates0(kind).map(_.asString)
+    candidates(Latest0(kind.name).get).map(_.asString)
 
-  def latest0(kind: Latest): Option[Version0] = {
-    val it = candidates0(kind)
+  def latest(kind: Latest0): Option[Version0] = {
+    val it = candidates(kind)
     if (it.hasNext)
       Some(it.next())
     else
       None
   }
 
-  @deprecated("Use latest0 instead", "2.1.25")
+  @deprecated("Use the override accepting a coursier.version.Latest instead", "2.1.25")
   def latest(kind: Latest): Option[String] =
-    latest0(kind).map(_.asString)
+    latest(Latest0(kind.name).get).map(_.asString)
 
   def candidatesInInterval(itv: VersionInterval0)
     : Iterator[Version0] = {

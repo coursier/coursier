@@ -9,10 +9,10 @@ import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import coursier.cache.{ArchiveType, Cache, FileCache}
 import coursier.cache.internal.FileUtil
-import coursier.core.{Dependency, Latest, Repository}
+import coursier.core.{Dependency, Repository}
 import coursier.util.{Artifact, Task}
 import coursier.util.Traverse.TraverseOps
-import coursier.version.{Version, VersionParse}
+import coursier.version.{Latest, Version, VersionParse}
 import dataclass.data
 
 import scala.collection.compat._
