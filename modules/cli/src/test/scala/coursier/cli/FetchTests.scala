@@ -4,6 +4,7 @@ import java.io._
 import java.net.URLEncoder.encode
 
 import argonaut.Argonaut._
+import argonaut.DecodeJson
 import caseapp.core.RemainingArgs
 import coursier.cli.options._
 import coursier.cli.options._
@@ -52,6 +53,8 @@ object FetchTests extends TestSuite {
     val str =
       try source.mkString
       finally source.close()
+
+    implicit val reportDecoder: DecodeJson[ReportNode] = ReportNode.decodeJson
 
     str.decodeEither[ReportNode] match {
       case Left(error) =>

@@ -1,5 +1,7 @@
 package coursier.core
 
+import scala.annotation.nowarn
+
 object Orders {
 
   @deprecated("Will likely be removed at some point in future versions", "2.0.0-RC3")
@@ -56,6 +58,7 @@ object Orders {
   ): PartialOrdering[Configuration] =
     configurationPartialOrder0(configurations)
 
+  @nowarn
   private def configurationPartialOrder0(
     configurations: Map[Configuration, Seq[Configuration]]
   ): PartialOrdering[Configuration] =

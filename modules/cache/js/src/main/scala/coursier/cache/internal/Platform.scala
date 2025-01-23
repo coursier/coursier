@@ -1,11 +1,11 @@
 package coursier.cache.internal
 
 import coursier.util.WebPage
-import org.scalajs.dom.raw.{Event, XMLHttpRequest}
+import org.scalajs.dom.{Event, XMLHttpRequest}
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.scalajs.js
-import js.Dynamic.{global => g}
+import scala.scalajs.js.Dynamic.{global => g}
 import scala.scalajs.js.timers._
 
 object Platform {

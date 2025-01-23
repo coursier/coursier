@@ -27,6 +27,7 @@ import org.http4s.{BasicCredentials, Challenge, HttpRoutes, Request, Uri}
 import org.typelevel.ci.CIString
 
 import scala.concurrent.ExecutionContext
+import scala.language.implicitConversions
 
 object TestUtil {
 
@@ -104,7 +105,9 @@ object TestUtil {
         case t: org.http4s.Credentials.Token => t
       }
       if token.authScheme == CIString("Basic")
-      c = BasicCredentials(token.token)
+      c = BasicCredentials.fromString(token.token).getOrElse {
+        throw new Exception("Error parsing token in HTTP response")
+      }
       if (c.username, c.password) == userPass
     } yield ()
 

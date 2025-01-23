@@ -95,9 +95,9 @@ object ReportNode {
       }
     }
 
-  implicit val encodeJson = EncodeJson.of[ReportNode]
-  implicit val decodeJson = DecodeJson.of[ReportNode]
-  val version             = "0.1.0"
+  lazy val encodeJson = EncodeJson.of[ReportNode]
+  lazy val decodeJson = DecodeJson.of[ReportNode]
+  val version         = "0.1.0"
 }
 
 object JsonReport {
@@ -196,7 +196,7 @@ object JsonReport {
       rootDeps.sortBy(_.coord),
       ReportNode.version
     )
-    printer.pretty(report.asJson)
+    printer.pretty(report.asJson(ReportNode.encodeJson))
   }
 
 }
@@ -236,7 +236,8 @@ final case class JsonElem(
   lazy val reconciledVersionStr = Symbol(s"${dep.mavenPrefix}:$reconciledVersion").name
   val requestedVersionStr       = Symbol(s"${dep.module}:${dep.version}").name
 
-  lazy val exclusions: List[String] = dep.exclusions()
+  lazy val exclusions: List[String] = dep.minimizedExclusions
+    .toSeq()
     .toList
     .sortBy {
       case (org, name) =>
@@ -264,7 +265,7 @@ final case class JsonElem(
 
       def calculateExclusions = resolution
         .dependenciesOf(
-          dep.withExclusions(Set.empty),
+          dep.clearExclusions,
           withRetainedVersions = false
         )
         .view
@@ -277,7 +278,7 @@ final case class JsonElem(
             JsonElem(
               Dependency(mod, ver)
                 .withConfiguration(Configuration.empty)
-                .withExclusions(Set.empty[(Organization, ModuleName)])
+                .clearExclusions
                 .withAttributes(Attributes.empty)
                 .withOptional(false)
                 .withTransitive(false),

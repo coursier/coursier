@@ -230,7 +230,7 @@ final class Backend($ : BackendScope[_, State]) {
   def updateModule(
     moduleIdx: Int,
     update: (Dependency, String) => Dependency
-  )(e: facade.SyntheticEvent[dom.raw.HTMLInputElement]) =
+  )(e: facade.SyntheticEvent[dom.HTMLInputElement]) =
     if (moduleIdx >= 0) {
       e.persist()
       $.modState { state =>
@@ -297,7 +297,7 @@ final class Backend($ : BackendScope[_, State]) {
   def updateRepo(
     repoIdx: Int,
     update: ((String, MavenRepository), String) => (String, MavenRepository)
-  )(e: facade.SyntheticEvent[dom.raw.HTMLInputElement]) =
+  )(e: facade.SyntheticEvent[dom.HTMLInputElement]) =
     if (repoIdx >= 0)
       $.modState { state =>
         val repo = state.repositories(repoIdx)

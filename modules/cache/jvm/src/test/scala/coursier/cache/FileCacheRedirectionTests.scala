@@ -1013,7 +1013,7 @@ object FileCacheRedirectionTests extends TestSuite {
           FileCache()
             .file(artifact)
             .run
-            .future
+            .future()
         }
 
         val expectedReason =
@@ -1051,7 +1051,7 @@ object FileCacheRedirectionTests extends TestSuite {
                 .withLocation(dir.toFile)
                 .file(artifact)
                 .run
-                .future
+                .future()
             }
 
             res match {
