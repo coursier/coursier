@@ -456,12 +456,11 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    test("ignoreUtf8Bom") - {
+    test("ignoreUtf8Bom") -
       runner.resolutionCheck(
         mod"dk.brics.automaton:automaton",
         "1.11-8"
       )
-    }
 
     test("ignoreWhitespaces") {
       runner.resolutionCheck(
@@ -470,7 +469,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
-    test("nd4jNative") - {
+    test("nd4jNative") -
       // In particular:
       // - uses OS-based activation,
       // - requires converting a "x86-64" to "x86_64" in it, and
@@ -479,7 +478,6 @@ abstract class CentralTests extends TestSuite {
         mod"org.nd4j:nd4j-native",
         "0.5.0"
       )
-    }
 
     test("scalaCompilerJLine") {
 
@@ -497,12 +495,11 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
-    test("deepLearning4j") - {
+    test("deepLearning4j") -
       runner.resolutionCheck(
         mod"org.deeplearning4j:deeplearning4j-core",
         "0.8.0"
       )
-    }
 
     test("tarGzZipArtifacts") {
       val mod     = mod"org.apache.maven:apache-maven"
