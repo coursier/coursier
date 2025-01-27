@@ -3,7 +3,7 @@ package coursier.core
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 
-import dataclass.data
+import dataclass.{data, since}
 
 @data class Authentication(
   userOpt: Option[String],
@@ -12,7 +12,9 @@ import dataclass.data
   optional: Boolean,
   realmOpt: Option[String],
   httpsOnly: Boolean,
-  passOnRedirect: Boolean
+  passOnRedirect: Boolean,
+  @since
+  byNameHttpHeaders: Seq[() => Seq[(String, String)]] = Nil
 ) {
 
   @deprecated("Use the override accepting an Option[String] as user", "2.1.25")
@@ -49,7 +51,10 @@ import dataclass.data
       case (k, v) =>
         (k, "****")
     }
-    s"Authentication($userOpt, ****, $headersStr, $optional, $realmOpt, $httpsOnly, $passOnRedirect)"
+    val byNameHeadersStr = byNameHttpHeaders.map { _ =>
+      "[lazy]"
+    }
+    s"Authentication($userOpt, ****, $headersStr, $byNameHeadersStr, $optional, $realmOpt, $httpsOnly, $passOnRedirect)"
   }
 
   def withPassword(password: String): Authentication =
@@ -68,7 +73,7 @@ import dataclass.data
         user     <- userOpt
         password <- passwordOpt
       } yield ("Authorization", "Basic " + Authentication.basicAuthenticationEncode(user, password))
-    basicAuthHeader.toSeq ++ httpHeaders
+    basicAuthHeader.toSeq ++ httpHeaders ++ byNameHttpHeaders.flatMap(_())
   }
 
 }
@@ -159,6 +164,35 @@ object Authentication {
   private[coursier] def basicAuthenticationEncode(user: String, password: String): String =
     Base64.getEncoder.encodeToString(
       s"$user:$password".getBytes(StandardCharsets.UTF_8)
+    )
+
+  def bearerToken(token: String): Authentication =
+    Authentication(
+      None,
+      None,
+      Seq(
+        "Authorization" -> s"Bearer $token"
+      ),
+      optional = false,
+      None,
+      httpsOnly = true,
+      passOnRedirect = false
+    )
+
+  def byNameBearerToken(token: => String): Authentication =
+    Authentication(
+      None,
+      None,
+      Nil,
+      optional = false,
+      None,
+      httpsOnly = true,
+      passOnRedirect = false,
+      byNameHttpHeaders = Seq(() =>
+        Seq(
+          "Authorization" -> s"Bearer $token"
+        )
+      )
     )
 
 }
