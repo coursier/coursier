@@ -139,7 +139,6 @@ import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
     withIndex(indexTask)
   }
 
-  @deprecated("Use the override accepting os and architecture", "2.1.15")
   def withIndexChannel(repositories: Seq[Repository], indexChannel: JvmChannel): JvmCache =
     withIndexChannel(repositories, indexChannel, None, None)
 
