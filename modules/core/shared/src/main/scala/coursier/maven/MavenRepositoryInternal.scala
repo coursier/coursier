@@ -209,17 +209,14 @@ private[coursier] class MavenRepositoryInternal(
 
   def find[F[_]](
     module: Module,
-    version: VersionConstraint,
+    version: Version,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, Project] =
     EitherT {
-      val asVersion = version.preferred.headOption.getOrElse {
-        Version(version.asString) /* meh */
-      }
       def withSnapshotVersioning =
-        snapshotVersioning(module, asVersion, fetch).flatMap { snapshotVersioning =>
+        snapshotVersioning(module, version, fetch).flatMap { snapshotVersioning =>
           val versioningOption =
             mavenVersioning(snapshotVersioning, Classifier.empty, Extension.jar)
               .orElse(mavenVersioning(snapshotVersioning, Classifier.empty, Extension.pom))
@@ -231,13 +228,13 @@ private[coursier] class MavenRepositoryInternal(
                 F.point(Left("No snapshot versioning value found"))
               )
             case versioning @ Some(_) =>
-              findVersioning(module, asVersion, versioning, fetch)
+              findVersioning(module, version, versioning, fetch)
                 .map(_.withSnapshotVersioning(Some(snapshotVersioning)))
           }
         }
 
-      val res = findVersioning(module, asVersion, None, fetch).run.flatMap { eitherProj =>
-        if (eitherProj.isLeft && isSnapshot(asVersion))
+      val res = findVersioning(module, version, None, fetch).run.flatMap { eitherProj =>
+        if (eitherProj.isLeft && isSnapshot(version))
           withSnapshotVersioning.run.map(eitherProj0 =>
             if (eitherProj0.isLeft)
               eitherProj
@@ -249,7 +246,7 @@ private[coursier] class MavenRepositoryInternal(
       }
 
       // keep exact version used to get metadata, in case the one inside the metadata is wrong
-      res.map(_.map(proj => proj.withActualVersionOpt0(Some(asVersion))))
+      res.map(_.map(proj => proj.withActualVersionOpt0(Some(version))))
     }
 
   def artifactFor(url: String, changing: Boolean): Artifact =

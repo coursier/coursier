@@ -273,17 +273,16 @@ import dataclass._
 
   override def find0[F[_]](
     module: Module,
-    version: VersionConstraint,
+    version: Version,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, (ArtifactSource, Project)] = {
 
-    val version0 = version.preferred.headOption.getOrElse(Version(version.asString) /* meh */ )
     val eitherArtifact: Either[String, Artifact] =
       for {
         url <- metadataPattern.substituteVariables(
-          variables(module, Some(version0), Type.ivy, "ivy", Extension("xml"), None)
+          variables(module, Some(version), Type.ivy, "ivy", Extension("xml"), None)
         )
       } yield {
         var artifact = artifactFor(
@@ -339,7 +338,7 @@ import dataclass._
         else
           proj0
 
-      this -> proj.withActualVersionOpt0(Some(version0))
+      this -> proj.withActualVersionOpt0(Some(version))
     }
   }
 

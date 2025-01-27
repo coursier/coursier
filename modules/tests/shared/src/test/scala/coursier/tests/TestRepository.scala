@@ -2,21 +2,24 @@ package coursier.tests
 
 import coursier.core._
 import coursier.util.{EitherT, Monad}
-import coursier.version.VersionConstraint
+import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
 
-final case class TestRepository(projects: Map[(Module, VersionConstraint), Project])
+final case class TestRepository(projects: Map[(Module, VersionConstraint0), Project])
     extends Repository with Repository.VersionApi {
 
   override def find0[F[_]](
     module: Module,
-    version: VersionConstraint,
+    version: Version0,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ) =
     EitherT(
       F.point(
-        projects.get((module, version)).map((this, _)).toRight("Not found")
+        projects
+          .get((module, VersionConstraint0.fromVersion(version)))
+          .map((this, _))
+          .toRight("Not found")
       )
     )
 

@@ -14,10 +14,10 @@ import coursier.error.ResolutionError
 import coursier.install.{AppArtifacts, AppDescriptor, Channel, Channels, RawAppDescriptor}
 import coursier.parse.JavaOrScalaModule
 import coursier.util._
+import coursier.version.{Version, VersionConstraint, VersionInterval}
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
-import coursier.version.VersionConstraint
 
 object Resolve extends CoursierCommand[ResolveOptions] {
 
@@ -102,7 +102,14 @@ object Resolve extends CoursierCommand[ResolveOptions] {
       val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
         val m0 = m.map {
           case ((mod, v), url) =>
-            ((mod.module(scalaVersion.asString), v), (url, true))
+            val version = v.preferred match {
+              case Some(v0) if v.latest.isEmpty && v.interval == VersionInterval.zero =>
+                v0
+              case _ =>
+                Version(v.asString) // meh
+            }
+
+            ((mod.module(scalaVersion.asString), version), (url, true))
         }
         InMemoryRepository.privateApply(
           m0,
@@ -132,7 +139,9 @@ object Resolve extends CoursierCommand[ResolveOptions] {
           .getOrElse(Nil)
           .collect {
             case ((mod, version), _)
-                if params.resolution.forceVersion0.get(mod).exists(_ != version) =>
+                if params.resolution.forceVersion0
+                  .get(mod)
+                  .exists(_ != VersionConstraint.fromVersion(version)) =>
               (mod, version)
           }
         if (invalidForced.isEmpty)
@@ -140,8 +149,14 @@ object Resolve extends CoursierCommand[ResolveOptions] {
         else
           Left(
             new ResolveException(
-              s"Cannot force a version that is different from the one specified " +
-                s"for modules ${invalidForced.map { case (mod, ver) => s"$mod:$ver" }.mkString(", ")} with url"
+              s"Cannot force a version that is different from the one specified for modules " +
+                invalidForced
+                  .map {
+                    case (mod, ver) =>
+                      s"${mod.repr}:${ver.asString}"
+                  }
+                  .mkString(", ") +
+                " with url"
             )
           )
       }

@@ -276,7 +276,7 @@ object ResolutionProcess {
 
         def getLatest(v: Version0, repo: Repository, fetch: Repository.Fetch[F]) =
           repo
-            .find0(module, VersionConstraint0.fromVersion(v), fetch)
+            .find0(module, v, fetch)
             .leftMap(err => repositories.map(r => if (r == repo) err else "")) // kind of meh
 
         EitherT[F, Seq[String], (ArtifactSource, Project)] {

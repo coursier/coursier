@@ -2,7 +2,7 @@ package coursier.maven
 
 import coursier.core._
 import coursier.util.{Artifact, EitherT, Monad}
-import coursier.version.VersionConstraint
+import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
 import dataclass._
 
 object MavenRepository {
@@ -42,7 +42,7 @@ object MavenRepository {
 
   override def find0[F[_]](
     module: Module,
-    version: VersionConstraint,
+    version: Version0,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
