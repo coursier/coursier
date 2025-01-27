@@ -27,7 +27,7 @@ import scala.util.Using
     CachePath.localFile(
       artifact.url,
       location,
-      artifact.authentication.map(_.user).orNull,
+      artifact.authentication.flatMap(_.userOpt).orNull,
       true
     )
 
