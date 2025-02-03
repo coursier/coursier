@@ -126,6 +126,25 @@ import scala.language.higherKinds
   def addBomConfigs(boms: BomDependency*): Resolve[F] =
     withBoms(this.boms ++ boms)
 
+  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+  def addBom(bomModule: Module, bomVersion: String): Resolve[F] =
+    addBom(bomModule, VersionConstraint(bomVersion))
+  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+  def addBom(
+    bomModule: Module,
+    bomVersion: String,
+    bomConfig: Configuration
+  ): Resolve[F] =
+    addBom(bomModule, VersionConstraint(bomVersion), bomConfig)
+  @deprecated("Use addBoms0 instead", "2.1.25")
+  def addBoms(bomModuleVersions: (Module, String)*): Resolve[F] =
+    addBoms0(
+      bomModuleVersions.map {
+        case (m, v) =>
+          (m, VersionConstraint(v))
+      }: _*
+    )
+
   def addRepositories(repositories: Repository*): Resolve[F] =
     withRepositories(this.repositories ++ repositories)
 

@@ -39,8 +39,142 @@ import scala.annotation.nowarn
   assertValid(versionConstraint.asString, "version")
   def moduleVersionConstraint: (Module, VersionConstraint0) = (module, versionConstraint)
 
+  @deprecated("Prefer moduleVersionConstraint instead", "2.1.25")
+  def moduleVersion: (Module, String) = (module, versionConstraint.asString)
+
   def asBomDependency: BomDependency =
     BomDependency(module, versionConstraint, configuration)
+
+  @deprecated(
+    "Prefer using versionConstraint instead (versionConstraint.asString to get a printable string)",
+    "2.1.25"
+  )
+  def version: String =
+    versionConstraint.asString
+  @deprecated("Prefer withVersionConstraint instead", "2.1.25")
+  def withVersion(newVersion: String): Dependency =
+    if (newVersion == version) this
+    else withVersionConstraint(VersionConstraint0(newVersion))
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean
+  ) =
+    this(
+      module,
+      VersionConstraint0(version),
+      configuration,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map
+  ) =
+    this(
+      module,
+      VersionConstraint0(version),
+      configuration,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      overrides
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)]
+  ) =
+    this(
+      module,
+      VersionConstraint0(version),
+      configuration,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      overrides,
+      boms
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)],
+    bomDependencies: Seq[BomDependency]
+  ) =
+    this(
+      module,
+      VersionConstraint0(version),
+      configuration,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      overrides,
+      boms,
+      bomDependencies
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)],
+    bomDependencies: Seq[BomDependency],
+    overridesMap: Overrides
+  ) =
+    this(
+      module,
+      VersionConstraint0(version),
+      configuration,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      overrides,
+      boms,
+      bomDependencies,
+      overridesMap
+    )
 
   def this(
     module: Module,
@@ -53,6 +187,25 @@ import scala.annotation.nowarn
   ) = this(
     module,
     version,
+    configuration,
+    MinimizedExclusions(minimizedExclusions),
+    publication,
+    optional,
+    transitive
+  )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: Set[(Organization, ModuleName)],
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean
+  ) = this(
+    module,
+    VersionConstraint0(version),
     configuration,
     MinimizedExclusions(minimizedExclusions),
     publication,
@@ -111,12 +264,32 @@ import scala.annotation.nowarn
     withBomDependencies(bomDependencies :+ bomDep)
   def addBom(module: Module, version: VersionConstraint0): Dependency =
     withBomDependencies(bomDependencies :+ BomDependency(module, version, Configuration.empty))
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def addBom(module: Module, version: String): Dependency =
+    withBomDependencies(bomDependencies :+ BomDependency(
+      module,
+      VersionConstraint0(version),
+      Configuration.empty
+    ))
   def addBom(module: Module, version: VersionConstraint0, config: Configuration): Dependency =
     withBomDependencies(bomDependencies :+ BomDependency(module, version, config))
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def addBom(module: Module, version: String, config: Configuration): Dependency =
+    withBomDependencies(bomDependencies :+ BomDependency(
+      module,
+      VersionConstraint0(version),
+      config
+    ))
   def addBoms0(boms: Seq[(Module, VersionConstraint0)]): Dependency =
     withBomDependencies(
       this.bomDependencies ++
         boms.map(t => BomDependency(t._1, t._2, Configuration.empty))
+    )
+  @deprecated("Prefer addBoms0 instead, that accepts a VersionConstraint", "2.1.25")
+  def addBoms(boms: Seq[(Module, String)]): Dependency =
+    withBomDependencies(
+      this.bomDependencies ++
+        boms.map(t => BomDependency(t._1, VersionConstraint0(t._2), Configuration.empty))
     )
   def addBomDependencies(bomDependencies: Seq[BomDependency]): Dependency =
     withBomDependencies(this.bomDependencies ++ bomDependencies)
@@ -135,6 +308,9 @@ import scala.annotation.nowarn
     )
     addOverride(key, values)
   }
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def addOverride(org: Organization, name: ModuleName, version: String): Dependency =
+    addOverride(org, name, VersionConstraint0(version))
   def addOverride(
     org: Organization,
     name: ModuleName,
@@ -150,6 +326,14 @@ import scala.annotation.nowarn
     )
     addOverride(key, values)
   }
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def addOverride(
+    org: Organization,
+    name: ModuleName,
+    version: String,
+    exclusions: Set[(Organization, ModuleName)]
+  ): Dependency =
+    addOverride(org, name, VersionConstraint0(version), exclusions)
   def addOverrides(
     entries: Seq[(DependencyManagement.Key, DependencyManagement.Values)]
   ): Dependency =
@@ -275,6 +459,34 @@ object Dependency {
       )
     )
 
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def apply(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)],
+    bomDependencies: Seq[BomDependency],
+    overridesMap: Overrides
+  ): Dependency =
+    apply(
+      module,
+      VersionConstraint0(version),
+      configuration,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      overrides,
+      boms,
+      bomDependencies,
+      overridesMap
+    )
+
   def apply(
     module: Module,
     version: VersionConstraint0,
@@ -299,6 +511,32 @@ object Dependency {
       boms,
       bomDependencies,
       Overrides(overrides)
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def apply(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)],
+    bomDependencies: Seq[BomDependency]
+  ): Dependency =
+    apply(
+      module,
+      VersionConstraint0(version),
+      configuration,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      overrides,
+      boms,
+      bomDependencies
     )
 
   def apply(
@@ -326,6 +564,30 @@ object Dependency {
       Overrides(overrides)
     )
 
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def apply(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)]
+  ): Dependency =
+    apply(
+      module,
+      VersionConstraint0(version),
+      configuration,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      overrides,
+      boms
+    )
+
   def apply(
     module: Module,
     version: VersionConstraint0,
@@ -348,6 +610,28 @@ object Dependency {
       Nil,
       Nil,
       Overrides(overrides)
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def apply(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map
+  ): Dependency =
+    apply(
+      module,
+      VersionConstraint0(version),
+      configuration,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      overrides
     )
 
   def apply(
@@ -373,6 +657,26 @@ object Dependency {
       Overrides.empty
     )
 
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def apply(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean
+  ): Dependency =
+    apply(
+      module,
+      VersionConstraint0(version),
+      configuration,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive
+    )
+
   def apply(
     module: Module,
     versionConstraint: VersionConstraint0,
@@ -392,6 +696,26 @@ object Dependency {
       transitive
     )
 
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def apply(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    exclusions: Set[(Organization, ModuleName)],
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean
+  ): Dependency =
+    apply(
+      module,
+      VersionConstraint0(version),
+      configuration,
+      exclusions,
+      publication,
+      optional,
+      transitive
+    )
+
   def apply(
     module: Module,
     version: VersionConstraint0
@@ -404,6 +728,16 @@ object Dependency {
       Publication("", Type.empty, Extension.empty, Classifier.empty),
       optional = false,
       transitive = true
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def apply(
+    module: Module,
+    version: String
+  ): Dependency =
+    apply(
+      module,
+      VersionConstraint0(version)
     )
 
   def apply(
@@ -421,6 +755,26 @@ object Dependency {
       configuration,
       MinimizedExclusions(exclusions),
       Publication("", attributes.`type`, Extension.empty, attributes.classifier),
+      optional,
+      transitive
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def apply(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    exclusions: Set[(Organization, ModuleName)],
+    attributes: Attributes,
+    optional: Boolean,
+    transitive: Boolean
+  ): Dependency =
+    apply(
+      module,
+      VersionConstraint0(version),
+      configuration,
+      exclusions,
+      attributes,
       optional,
       transitive
     )

@@ -5,7 +5,6 @@ import coursier.core.{
   ArtifactSource,
   Configuration,
   Dependency,
-  MinimizedExclusions,
   Module,
   Repository,
   Resolution,
@@ -19,6 +18,7 @@ import coursier.version.VersionConstraint
 import utest._
 
 import scala.async.Async.{async, await}
+import coursier.core.MinimizedExclusions
 
 object ResolutionTests extends TestSuite {
 

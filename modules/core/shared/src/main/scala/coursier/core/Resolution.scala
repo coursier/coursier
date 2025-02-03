@@ -43,6 +43,22 @@ object Resolution {
     fromUserOrDefault.getOrElse(fromActivation)
   }
 
+  @deprecated("Use profileIsActive0 instead", "2.1.25")
+  def profileIsActive(
+    profile: Profile,
+    properties: Map[String, String],
+    osInfo: Activation.Os,
+    jdkVersion: Option[String],
+    userActivations: Option[Map[String, Boolean]]
+  ): Boolean =
+    profileIsActive0(
+      profile,
+      properties,
+      osInfo,
+      jdkVersion.map(Version0(_)),
+      userActivations
+    )
+
   /** Get the active profiles of `project`, using the current properties `properties`, and
     * `profileActivations` stating if a profile is active.
     */
@@ -62,6 +78,22 @@ object Resolution {
         userActivations
       )
     }
+
+  @deprecated("Use profiles0 instead", "2.1.25")
+  def profiles(
+    project: Project,
+    properties: Map[String, String],
+    osInfo: Activation.Os,
+    jdkVersion: Option[String],
+    userActivations: Option[Map[String, Boolean]]
+  ): Seq[Profile] =
+    profiles0(
+      project,
+      properties,
+      osInfo,
+      jdkVersion.map(Version0(_)),
+      userActivations
+    )
 
   def addDependencies(
     deps: Seq[Seq[(Configuration, Dependency)]]
@@ -329,6 +361,36 @@ object Resolution {
         .flatten,
       mergedByModVer
         .collect { case (mod, (_, Some(ver))) => mod -> ver }
+    )
+  }
+
+  @deprecated("", "2.1.25")
+  def merge(
+    dependencies: Seq[Dependency],
+    forceVersions: Map[Module, String],
+    reconciliation: Option[Module => coursier.core.Reconciliation],
+    preserveOrder: Boolean = false
+  ): (Seq[Dependency], Seq[Dependency], Map[Module, String]) = {
+    val (a, b, c) = merge0(
+      dependencies,
+      forceVersions.map {
+        case (mod, ver) =>
+          (mod, VersionConstraint0(ver))
+      },
+      reconciliation.map { f => mod =>
+        ConstraintReconciliation(f(mod).id).getOrElse {
+          sys.error("Cannot happen")
+        }
+      },
+      preserveOrder
+    )
+    (
+      a,
+      b,
+      c.map {
+        case (mod, ver) =>
+          (mod, ver.asString)
+      }
     )
   }
 
@@ -749,6 +811,10 @@ object Resolution {
   def overrideScalaModule(sv: VersionConstraint0): Dependency => Dependency =
     overrideScalaModule(sv, Organization("org.scala-lang"))
 
+  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+  def overrideScalaModule(sv: String): Dependency => Dependency =
+    overrideScalaModule(VersionConstraint0(sv))
+
   def overrideScalaModule(
     sv: VersionConstraint0,
     scalaOrg: Organization
@@ -774,6 +840,16 @@ object Resolution {
       else
         dep
   }
+
+  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+  def overrideScalaModule(
+    sv: String,
+    scalaOrg: Organization
+  ): Dependency => Dependency =
+    overrideScalaModule(
+      VersionConstraint0(sv),
+      scalaOrg
+    )
 
   /** Replaces the full suffix _2.12.8 with the given Scala version.
     */
@@ -878,6 +954,65 @@ object Resolution {
     37 * code
   }
 
+  @deprecated("Use forceVersions0 instead", "2.1.25")
+  def forceVersions: Map[Module, String] =
+    forceVersions0.map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    }
+  @deprecated("Use withForceVersions0 instead", "2.1.25")
+  def withForceVersions(newForceVersions: Map[Module, String]): Resolution =
+    withForceVersions0(
+      newForceVersions.map {
+        case (mod, ver) =>
+          (mod, VersionConstraint0(ver))
+      }
+    )
+
+  @deprecated("Use projectCache0 instead", "2.1.25")
+  def projectCache: Map[(Module, String), (ArtifactSource, Project)] =
+    projectCache0.map {
+      case ((mod, ver), value) =>
+        ((mod, ver.asString), value)
+    }
+  @deprecated("Use withProjectCache0 instead", "2.1.25")
+  def withProjectCache(newProjectCache: Map[(Module, String), (ArtifactSource, Project)])
+    : Resolution =
+    withProjectCache0(
+      newProjectCache.map {
+        case ((mod, ver), value) =>
+          ((mod, VersionConstraint0(ver)), value)
+      }
+    )
+
+  @deprecated("Use reconciliation0 instead", "2.1.25")
+  def reconciliation: Option[Module => Reconciliation] =
+    reconciliation0.map { f => mod =>
+      f(mod) match {
+        case ConstraintReconciliation.Default => Reconciliation.Default
+        case ConstraintReconciliation.Relaxed => Reconciliation.Relaxed
+        case ConstraintReconciliation.Strict  => Reconciliation.Strict
+        case ConstraintReconciliation.SemVer  => Reconciliation.SemVer
+        case _                                => sys.error("Cannot happen")
+      }
+    }
+  @deprecated("Use withReconciliation0 instead", "2.1.25")
+  def withReconciliation(newReconciliation: Option[Module => Reconciliation]): Resolution =
+    withReconciliation0(
+      newReconciliation.map { f => mod =>
+        ConstraintReconciliation(f(mod).id).getOrElse {
+          sys.error("Cannot happen")
+        }
+      }
+    )
+
+  @deprecated("Use jdkVersion0 instead", "2.1.25")
+  def jdkVersion: Option[String] =
+    jdkVersion0.map(_.asString)
+  @deprecated("Use withJdkVersion0 instead", "2.1.25")
+  def withJdkVersion(newJdkVersion: Option[String]): Resolution =
+    withJdkVersion0(newJdkVersion.map(Version0(_)))
+
   def withDependencies(dependencies: Set[Dependency]): Resolution =
     withDependencySet(dependencySet.setValues(dependencies))
 
@@ -885,6 +1020,16 @@ object Resolution {
     : Resolution =
     copyWithCache(
       errorCache = errorCache ++ entries
+    )
+
+  @deprecated("Use addToErrorCache0 instead", "2.1.25")
+  def addToErrorCache(entries: Iterable[((Module, String), Seq[String])])
+    : Resolution =
+    addToErrorCache0(
+      entries.map {
+        case ((mod, ver), value) =>
+          ((mod, VersionConstraint0(ver)), value)
+      }
     )
 
   private def copyWithCache(
@@ -932,6 +1077,17 @@ object Resolution {
         }
       }
   }
+
+  @deprecated("Use addToProjectCache0 instead", "2.1.25")
+  def addToProjectCache(
+    projects: ((Module, String), (ArtifactSource, Project))*
+  ): Resolution =
+    addToProjectCache0(
+      projects.map {
+        case ((mod, ver), value) =>
+          ((mod, VersionConstraint0(ver)), value)
+      }: _*
+    )
 
   import Resolution._
 
@@ -1363,6 +1519,15 @@ object Resolution {
     }
   }
 
+  @deprecated("Use dependencyManagementRequirements0 instead", "2.1.25")
+  def dependencyManagementRequirements(
+    project: Project
+  ): Set[(Module, String)] =
+    dependencyManagementRequirements0(project).map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    }
+
   /** Missing modules in cache, to get the full list of dependencies of `project`, taking dependency
     * management / inheritance into account.
     *
@@ -1404,6 +1569,13 @@ object Resolution {
       Set.empty
     )
   }
+
+  @deprecated("Use dependencyManagementMissing0 instead", "2.1.25")
+  def dependencyManagementMissing(project: Project): Set[(Module, String)] =
+    dependencyManagementMissing0(project).map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    }
 
   /** Add dependency management / inheritance related items to `project`, from what's available in
     * cache.
@@ -1774,6 +1946,13 @@ object Resolution {
     *   errors
     */
   def errors0: Seq[(ModuleVersionConstraint, Seq[String])] = errorCache.toSeq
+
+  @deprecated("Use errors0 instead", "2.1.25")
+  def errors: Seq[((Module, String), Seq[String])] =
+    errors0.map {
+      case ((mod, ver), value) =>
+        ((mod, ver.asString), value)
+    }
 
   @deprecated("Use errors0 instead", "1.1.0")
   def metadataErrors: Seq[((Module, String), Seq[String])] =

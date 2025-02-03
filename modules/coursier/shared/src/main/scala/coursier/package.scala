@@ -23,6 +23,12 @@ package object coursier {
       version: VersionConstraint0
     ): Dependency =
       core.Dependency(module, version)
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def apply(
+      module: Module,
+      version: String
+    ): Dependency =
+      core.Dependency(module, VersionConstraint0(version))
   }
 
   type Attributes = core.Attributes

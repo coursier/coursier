@@ -123,7 +123,7 @@ object SbtMavenRepository {
   val authentication: Option[Authentication] = None,
   val changing: Option[Boolean] = None,
   override val versionsCheckHasModule: Boolean = true
-) extends MavenRepositoryLike { self =>
+) extends MavenRepositoryLike with Repository.VersionApi { self =>
   import SbtMavenRepository._
 
   private val internal =
@@ -173,7 +173,7 @@ object SbtMavenRepository {
   ): Seq[(Publication, Artifact)] =
     internal.artifacts(dependency, project, overrideClassifiers)
 
-  def find0[F[_]](
+  override def find0[F[_]](
     module: Module,
     version: VersionConstraint,
     fetch: Repository.Fetch[F]

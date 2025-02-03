@@ -33,7 +33,7 @@ import dataclass._
   authentication: Option[Authentication] = None,
   @since
   override val versionsCheckHasModule: Boolean = true
-) extends Repository {
+) extends Repository with Repository.VersionApi {
 
   def withMetadataPattern(metadataPattern: Pattern): IvyRepository =
     withMetadataPatternOpt(Some(metadataPattern))
@@ -271,7 +271,7 @@ import dataclass._
         (Versions.empty, "")
     }
 
-  def find0[F[_]](
+  override def find0[F[_]](
     module: Module,
     version: VersionConstraint,
     fetch: Repository.Fetch[F]

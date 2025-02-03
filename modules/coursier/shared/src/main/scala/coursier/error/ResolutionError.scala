@@ -39,7 +39,23 @@ object ResolutionError {
           "  " + err.replace(System.lineSeparator(), "  " + System.lineSeparator())
         }
         .mkString(System.lineSeparator())
-  )
+  ) {
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def this(
+      resolution: Resolution,
+      module: Module,
+      version: String,
+      perRepositoryErrors: Seq[String]
+    ) = this(
+      resolution,
+      module,
+      VersionConstraint(version),
+      perRepositoryErrors
+    )
+
+    @deprecated("Use version0 instead", "2.1.25")
+    def version: String = versionConstraint.asString
+  }
   // format: on
 
   private def conflictingDependenciesErrorMessage(resolution: Resolution): String =
@@ -99,7 +115,7 @@ object ResolutionError {
           }
           .sortBy(_._1)
           .map(_._2)
-        s"${t.module.repr}:${dependeesWantVersions.map(_.asString).mkString(" or ")} wanted by" +
+        s"${t.module.repr}:${dependeesWantVersions.mkString(" or ")} wanted by" +
           System.lineSeparator() +
           System.lineSeparator() +
           rendered + System.lineSeparator()

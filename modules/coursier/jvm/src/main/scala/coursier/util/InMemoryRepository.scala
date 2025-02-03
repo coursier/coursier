@@ -108,7 +108,7 @@ object InMemoryRepository {
   private[coursier] def privateApply(
     fallbacks: Map[(Module, VersionConstraint), (URL, Boolean)]
   ): InMemoryRepository =
-    new InMemoryRepository(fallbacks, localArtifactsShouldBeCached = false, None)
+    new InMemoryRepository(fallbacks, None, localArtifactsShouldBeCached = false)
 
   @deprecated("Use the override accepting a cache", "2.0.0-RC3")
   def apply(
@@ -127,7 +127,7 @@ object InMemoryRepository {
     fallbacks: Map[(Module, VersionConstraint), (URL, Boolean)],
     localArtifactsShouldBeCached: Boolean
   ): InMemoryRepository =
-    new InMemoryRepository(fallbacks, localArtifactsShouldBeCached, None)
+    new InMemoryRepository(fallbacks, None, localArtifactsShouldBeCached)
 
   def create[F[_]](
     fallbacks: Map[(Module, VersionConstraint), (URL, Boolean)],
@@ -135,19 +135,74 @@ object InMemoryRepository {
   ): InMemoryRepository =
     new InMemoryRepository(
       fallbacks,
-      localArtifactsShouldBeCached = cache.localArtifactsShouldBeCached,
-      Some(cache.asInstanceOf[FileCache[Nothing]])
+      Some(cache.asInstanceOf[FileCache[Nothing]]),
+      localArtifactsShouldBeCached = cache.localArtifactsShouldBeCached
+    )
+
+  @deprecated("Use create instead", "2.1.25")
+  def apply[F[_]](
+    fallbacks: Map[(Module, String), (URL, Boolean)],
+    cache: FileCache[F]
+  ): InMemoryRepository =
+    create(
+      fallbacks.map {
+        case ((mod, ver), value) =>
+          ((mod, VersionConstraint(ver)), value)
+      },
+      cache
+    )
+
+  def apply(
+    fallbacks0: Map[(Module, String), (URL, Boolean)],
+    localArtifactsShouldBeCached: Boolean,
+    cacheOpt: Option[FileCache[Nothing]]
+  ): InMemoryRepository =
+    InMemoryRepository(
+      fallbacks0.map {
+        case ((mod, ver), value) =>
+          ((mod, VersionConstraint(ver)), value)
+      },
+      cacheOpt,
+      localArtifactsShouldBeCached
     )
 
 }
 
 @data class InMemoryRepository(
   fallbacks0: Map[(Module, VersionConstraint), (URL, Boolean)],
-  localArtifactsShouldBeCached: Boolean,
-  cacheOpt: Option[FileCache[Nothing]]
-) extends Repository {
+  cacheOpt: Option[FileCache[Nothing]],
+  localArtifactsShouldBeCached: Boolean
+) extends Repository with Repository.VersionApi {
 
-  def find0[F[_]](
+  def this(
+    fallbacks0: Map[(Module, String), (URL, Boolean)],
+    localArtifactsShouldBeCached: Boolean,
+    cacheOpt: Option[FileCache[Nothing]]
+  ) = this(
+    fallbacks0.map {
+      case ((mod, ver), value) =>
+        ((mod, VersionConstraint(ver)), value)
+    },
+    cacheOpt,
+    localArtifactsShouldBeCached
+  )
+
+  @deprecated("Use fallbacks0 instead", "2.1.25")
+  def fallbacks: Map[(Module, String), (URL, Boolean)] =
+    fallbacks0.map {
+      case ((mod, ver), value) =>
+        ((mod, ver.asString), value)
+    }
+  @deprecated("Use withFallbacks0 instead", "2.1.25")
+  def withFallbacks(newFallbacks: Map[(Module, String), (URL, Boolean)]): InMemoryRepository =
+    withFallbacks0(
+      newFallbacks.map {
+        case ((mod, ver), value) =>
+          ((mod, VersionConstraint(ver)), value)
+      }
+    )
+
+  override def find0[F[_]](
     module: Module,
     version: VersionConstraint,
     fetch: Repository.Fetch[F]

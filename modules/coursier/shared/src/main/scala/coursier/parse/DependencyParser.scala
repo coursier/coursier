@@ -89,6 +89,16 @@ object DependencyParser {
     }
   }
 
+  @deprecated("Use moduleVersion0 instead", "2.1.25")
+  def moduleVersion(
+    input: String,
+    defaultScalaVersion: String
+  ): Either[String, (Module, String)] =
+    moduleVersion0(input, defaultScalaVersion).map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    }
+
   def moduleVersions0(
     inputs: Seq[String],
     defaultScalaVersion: String
@@ -97,6 +107,16 @@ object DependencyParser {
       val e = moduleVersion0(input, defaultScalaVersion)
       ValidationNel.fromEither(e)
     }
+
+  @deprecated("Use moduleVersions0 instead", "2.1.25")
+  def moduleVersions(
+    inputs: Seq[String],
+    defaultScalaVersion: String
+  ): ValidationNel[String, Seq[(Module, String)]] =
+    moduleVersions0(inputs, defaultScalaVersion).map(_.map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    })
 
   /*
    * Validates the parsed attributes.

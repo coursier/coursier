@@ -13,7 +13,15 @@ sealed abstract class ReverseModuleTree {
   /** The final version of this dependency. */
   def reconciledVersionConstraint: VersionConstraint
 
+  @deprecated("Use retainedVersion0 instead", "2.1.25")
+  def reconciledVersion: String =
+    reconciledVersionConstraint.asString
+
   def retainedVersion0: Version
+
+  @deprecated("Use retainedVersion0 instead", "2.1.25")
+  def retainedVersion: String =
+    retainedVersion0.asString
 
   // some info about what we depend on, our "parent" in this inverse tree
 
@@ -31,6 +39,10 @@ sealed abstract class ReverseModuleTree {
     */
   def dependsOnVersionConstraint: VersionConstraint
 
+  @deprecated("Use retainedVersion0 instead", "2.1.25")
+  def dependsOnVersion: String =
+    dependsOnVersionConstraint.asString
+
   /** Final version of the parent dependency of to this node.
     *
     * This node is a dependee. This method corresponds to what we depend on.
@@ -38,6 +50,13 @@ sealed abstract class ReverseModuleTree {
     * This is the version that was selected during resolution.
     */
   def dependsOnRetainedVersion0: Version
+
+  @deprecated(
+    "Use retainedVersion0 instead - this actually returns a \"retained\" version",
+    "2.1.25"
+  )
+  def dependsOnReconciledVersion: String =
+    dependsOnRetainedVersion0.asString
 
   /** Whether the parent dependency was excluded by us, but landed anyway in the classpath.
     *

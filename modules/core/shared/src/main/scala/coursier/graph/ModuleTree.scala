@@ -9,8 +9,16 @@ sealed abstract class ModuleTree {
 
   def reconciledVersionConstraint: VersionConstraint
 
+  @deprecated("Use reconciledVersion0 instead", "2.1.25")
+  def reconciledVersion: String =
+    reconciledVersionConstraint.asString
+
   /** The final version of this dependency. */
   def retainedVersion0: Version
+
+  @deprecated("Use reconciledVersion0 instead", "2.1.25")
+  def retainedVersion: String =
+    retainedVersion0.asString
 
   /** The dependencies of this module. */
   def children: Seq[ModuleTree]

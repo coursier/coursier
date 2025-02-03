@@ -14,8 +14,16 @@ sealed abstract class DependencyTree {
 
   def reconciledVersionConstraint: VersionConstraint
 
+  @deprecated("Use reconciledVersion0 instead", "2.1.25")
+  def reconciledVersion: String =
+    reconciledVersionConstraint.asString
+
   /** The final version of this dependency. */
   def retainedVersion0: Version
+
+  @deprecated("Use retainedVersion0 instead", "2.1.25")
+  def retainedVersion: String =
+    retainedVersion0.asString
 
   /** Dependencies of this node. */
   def children: Seq[DependencyTree]

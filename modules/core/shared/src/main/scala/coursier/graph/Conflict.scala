@@ -18,6 +18,44 @@ import dataclass.data
   dependeeModule: Module,
   dependeeVersionConstraint: VersionConstraint0
 ) {
+  @deprecated("Use the override acception a Version and VersionConstraint-s instead", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    wantedVersion: String,
+    wasExcluded: Boolean,
+    dependeeModule: Module,
+    dependeeVersion: String
+  ) =
+    this(
+      module,
+      Version0(version),
+      VersionConstraint0(wantedVersion),
+      wasExcluded,
+      dependeeModule,
+      VersionConstraint0(dependeeVersion)
+    )
+
+  @deprecated("Use version0 instead", "2.1.25")
+  def version: String = version0.asString
+  @deprecated("Use wantedVersionConstraint instead", "2.1.25")
+  def wantedVersion: String = wantedVersionConstraint.asString
+  @deprecated("Use dependeeVersionConstraint instead", "2.1.25")
+  def dependeeVersion: String = dependeeVersionConstraint.asString
+
+  @deprecated("Use withVersion0 instead", "2.1.25")
+  def withVersion(newVersion: String): Conflict =
+    if (newVersion == version) this
+    else withVersion0(Version0(newVersion))
+  @deprecated("Use withWantedVersionConstraint instead", "2.1.25")
+  def withWantedVersion(newWantedVersion: String): Conflict =
+    if (newWantedVersion == wantedVersion) this
+    else withWantedVersionConstraint(VersionConstraint0(newWantedVersion))
+  @deprecated("Use withDependeeVersionConstraint instead", "2.1.25")
+  def withDependeeVersion(newDependeeVersion: String): Conflict =
+    if (newDependeeVersion == dependeeVersion) this
+    else withDependeeVersionConstraint(VersionConstraint0(newDependeeVersion))
+
   def repr: String =
     // FIXME Say something about wasExcluded?
     s"$module:${version0.asString} selected, but $dependeeModule:${dependeeVersionConstraint.asString} wanted ${wantedVersionConstraint.asString}"
@@ -133,4 +171,22 @@ object Conflict {
   ): Seq[Conflict] =
     conflicted(resolution, withExclusions, semVer)
       .map(_.conflict)
+
+  @deprecated("Use the override acception a Version and VersionConstraint-s instead", "2.1.25")
+  def apply(
+    module: Module,
+    version: String,
+    wantedVersion: String,
+    wasExcluded: Boolean,
+    dependeeModule: Module,
+    dependeeVersion: String
+  ): Conflict =
+    apply(
+      module,
+      Version0(version),
+      VersionConstraint0(wantedVersion),
+      wasExcluded,
+      dependeeModule,
+      VersionConstraint0(dependeeVersion)
+    )
 }

@@ -33,6 +33,9 @@ sealed abstract class JavaOrScalaDependency extends Product with Serializable {
     val sbv = JavaOrScalaModule.scalaBinaryVersion(scalaVersion)
     dependency(sbv, scalaVersion, "")
   }
+
+  @deprecated("Use versionConstraint instead", "2.1.25")
+  def version: String = versionConstraint.asString
 }
 
 object JavaOrScalaDependency {

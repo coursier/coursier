@@ -17,6 +17,22 @@ object ReconciliationParser {
       }
     }
 
+  @deprecated("Use reconciliation0 instead", "2.1.25")
+  def reconciliation(
+    input: Seq[String],
+    scalaVersionOrDefault: String
+  ): ValidationNel[String, Seq[(ModuleMatchers, coursier.core.Reconciliation)]] =
+    reconciliation0(input, scalaVersionOrDefault).map(_.map {
+      case (m, ConstraintReconciliation.Default) =>
+        (m, coursier.core.Reconciliation.Default)
+      case (m, ConstraintReconciliation.Relaxed) =>
+        (m, coursier.core.Reconciliation.Relaxed)
+      case (m, ConstraintReconciliation.Strict) =>
+        (m, coursier.core.Reconciliation.Strict)
+      case (m, ConstraintReconciliation.SemVer) =>
+        (m, coursier.core.Reconciliation.SemVer)
+    })
+
   private def reconciliation(
     module: Module,
     v: VersionConstraint

@@ -51,6 +51,28 @@ object DependencyManagement {
     minimizedExclusions: MinimizedExclusions,
     optional: Boolean
   ) {
+
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def this(
+      config: Configuration,
+      version: String,
+      minimizedExclusions: MinimizedExclusions,
+      optional: Boolean
+    ) = this(
+      config,
+      VersionConstraint0(version),
+      minimizedExclusions,
+      optional
+    )
+
+    @deprecated("Use versionConstraint instead", "2.1.25")
+    def version: String =
+      versionConstraint.asString
+    @deprecated("Use withVersionConstraint instead", "2.1.25")
+    def withVersion(newVersion: String): Values =
+      if (newVersion == version) this
+      else withVersionConstraint(VersionConstraint0(newVersion))
+
     def isEmpty: Boolean =
       config.value.isEmpty && versionConstraint.asString.isEmpty && minimizedExclusions.isEmpty && !optional
     def fakeDependency(key: Key): Dependency =
@@ -117,6 +139,19 @@ object DependencyManagement {
         dep.minimizedExclusions,
         dep.optional
       )
+
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def apply(
+      config: Configuration,
+      version: String,
+      minimizedExclusions: MinimizedExclusions,
+      optional: Boolean
+    ): Values = apply(
+      config,
+      VersionConstraint0(version),
+      minimizedExclusions,
+      optional
+    )
   }
 
   def entry(config: Configuration, dep: Dependency): (Key, Values) =

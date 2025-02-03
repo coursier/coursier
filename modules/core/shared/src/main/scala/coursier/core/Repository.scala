@@ -10,6 +10,8 @@ import coursier.util.{Artifact, EitherT, Monad}
 import coursier.util.Monad.ops._
 import dataclass.data
 
+import scala.annotation.nowarn
+
 trait Repository extends Serializable with ArtifactSource {
 
   def repr: String =
@@ -18,6 +20,19 @@ trait Repository extends Serializable with ArtifactSource {
   def find0[F[_]](
     module: Module,
     version: VersionConstraint0,
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, (ArtifactSource, Project)] =
+    find(module, version.asString, fetch)(F): @nowarn
+
+  @deprecated(
+    "Use find0 instead - if overriding this method, override the other, and call it from here",
+    "2.1.25"
+  )
+  def find[F[_]](
+    module: Module,
+    version: String,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
@@ -50,6 +65,16 @@ trait Repository extends Serializable with ArtifactSource {
             }
         }
     }
+
+  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+  def findMaybeInterval[F[_]](
+    module: Module,
+    version: String,
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, (ArtifactSource, Project)] =
+    findMaybeInterval(module, VersionConstraint0(version), fetch)(F)
 
   def completeOpt[F[_]: Monad](fetch: Repository.Fetch[F]): Option[Repository.Complete[F]] =
     None
@@ -380,5 +405,22 @@ object Repository {
     ) extends Exception(s"Completing version '${input.drop(from)}' for module $module", cause)
     final class MalformedInput(input: String)
         extends Exception(s"Malformed input '$input'")
+  }
+
+  trait VersionApi extends Repository {
+
+    @deprecated(
+      "Use find0 instead - if overriding this method, override the other, and call it from here",
+      "2.1.25"
+    )
+    def find[F[_]](
+      module: Module,
+      version: String,
+      fetch: Repository.Fetch[F]
+    )(implicit
+      F: Monad[F]
+    ): EitherT[F, String, (ArtifactSource, Project)] =
+      find0(module, VersionConstraint0(version), fetch)(F)
+
   }
 }

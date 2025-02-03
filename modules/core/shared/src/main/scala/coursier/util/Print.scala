@@ -42,6 +42,19 @@ object Print {
   ): String =
     dependenciesUnknownConfigs0(deps, projects, printExclusions = false)
 
+  @deprecated("Use dependenciesUnknownConfigs0 instead", "2.1.25")
+  def dependenciesUnknownConfigs(
+    deps: Seq[Dependency],
+    projects: Map[(Module, String), Project]
+  ): String =
+    dependenciesUnknownConfigs0(
+      deps,
+      projects.map {
+        case ((mod, ver), value) =>
+          ((mod, VersionConstraint(ver)), value)
+      }
+    )
+
   def dependenciesUnknownConfigs0(
     deps: Seq[Dependency],
     projects: Map[(Module, VersionConstraint), Project],
@@ -82,6 +95,25 @@ object Print {
     l0.mkString(System.lineSeparator())
   }
 
+  @deprecated("Use dependenciesUnknownConfigs0 instead", "2.1.25")
+  def dependenciesUnknownConfigs(
+    deps: Seq[Dependency],
+    projects: Map[(Module, String), Project],
+    printExclusions: Boolean,
+    useFinalVersions: Boolean = true,
+    reorder: Boolean = false
+  ): String =
+    dependenciesUnknownConfigs0(
+      deps,
+      projects.map {
+        case ((mod, ver), value) =>
+          ((mod, VersionConstraint(ver)), value)
+      },
+      printExclusions,
+      useFinalVersions,
+      reorder
+    )
+
   def compatibleVersions(compatibleWith: VersionConstraint, selected: Version): Boolean =
     // too loose for now
     // e.g. RCs and milestones should not be considered compatible with subsequent non-RC or
@@ -92,6 +124,10 @@ object Print {
       }
     else
       compatibleWith.interval.contains(selected)
+
+  @deprecated("Use the override accepting a VersionConstraint and a Version instead", "2.1.25")
+  def compatibleVersions(compatibleWith: String, selected: String): Boolean =
+    compatibleVersions(VersionConstraint(compatibleWith), Version(selected))
 
   def dependencyTree(
     resolution: Resolution,

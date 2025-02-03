@@ -19,8 +19,36 @@ object Channel {
     module: Module,
     versionConstraint: VersionConstraint = VersionConstraint("latest.release")
   ) extends Channel {
+
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def this(
+      module: Module,
+      version: String
+    ) = this(
+      module,
+      VersionConstraint(version)
+    )
+
+    @deprecated("Use versionConstraint instead", "2.1.25")
+    def version: String =
+      versionConstraint.asString
+    @deprecated("Use withVersionConstraint instead", "2.1.25")
+    def withVersion(newVersion: String): FromModule =
+      withVersionConstraint(VersionConstraint(newVersion))
+
     def repr: String =
       module.repr
+  }
+
+  object FromModule {
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def apply(
+      module: Module,
+      version: String
+    ): FromModule = apply(
+      module,
+      VersionConstraint(version)
+    )
   }
 
   @data class FromUrl(url: String) extends Channel {
@@ -42,6 +70,9 @@ object Channel {
     FromModule(module)
   def module(module: Module, version: VersionConstraint): FromModule =
     FromModule(module, version)
+  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+  def module(module0: Module, version: String): FromModule =
+    module(module0, VersionConstraint(version))
 
   private lazy val ghUrlMatcher = (
     quote("https://github.com/") +

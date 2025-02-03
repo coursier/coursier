@@ -10,6 +10,40 @@ import dataclass.data
   lastUpdated: Option[Versions.DateTime]
 ) {
 
+  @deprecated("Use the override accepting Version-s instead", "2.1.25")
+  def this(
+    latest: String,
+    release: String,
+    available: List[String],
+    lastUpdated: Option[Versions.DateTime]
+  ) =
+    this(
+      Version0(latest),
+      Version0(release),
+      available.map(Version0(_)),
+      lastUpdated
+    )
+
+  @deprecated("Use latest0 instead", "2.1.25")
+  def latest: String = latest0.asString
+  @deprecated("Use release0 instead", "2.1.25")
+  def release: String = release0.asString
+  @deprecated("Use available0 instead", "2.1.25")
+  def available: List[String] = available0.map(_.asString)
+
+  @deprecated("Use withLatest0 instead", "2.1.25")
+  def withLatest(newLatest: String): Versions =
+    if (newLatest == latest) this
+    else withLatest0(Version0(newLatest))
+  @deprecated("Use withRelease0 instead", "2.1.25")
+  def withRelease(newRelease: String): Versions =
+    if (newRelease == release) this
+    else withRelease0(Version0(newRelease))
+  @deprecated("Use withAvailable0 instead", "2.1.25")
+  def withAvailable(newAvailable: List[String]): Versions =
+    if (newAvailable == available) this
+    else withAvailable0(newAvailable.map(Version0(_)))
+
   private def latestIntegrationCandidates(): Iterator[Version0] = {
 
     val latestOpt  = Some(latest0).filter(_.repr.nonEmpty)
@@ -68,6 +102,10 @@ import dataclass.data
       case Latest.Stable      => latestStableCandidates()
     }
 
+  @deprecated("Use candidates0 instead", "2.1.25")
+  def candidates(kind: Latest): Iterator[String] =
+    candidates0(kind).map(_.asString)
+
   def latest0(kind: Latest): Option[Version0] = {
     val it = candidates0(kind)
     if (it.hasNext)
@@ -75,6 +113,10 @@ import dataclass.data
     else
       None
   }
+
+  @deprecated("Use latest0 instead", "2.1.25")
+  def latest(kind: Latest): Option[String] =
+    latest0(kind).map(_.asString)
 
   def candidatesInInterval(itv: VersionInterval0)
     : Iterator[Version0] = {
@@ -89,6 +131,17 @@ import dataclass.data
     fromRelease.iterator ++ fromAvailable
   }
 
+  @deprecated("Use the override accepting coursier.version.VersionInterval instead", "2.1.25")
+  def candidatesInInterval(itv: VersionInterval): Iterator[String] =
+    candidatesInInterval(
+      VersionInterval0(
+        itv.from.map(_.repr).map(Version0(_)),
+        itv.to.map(_.repr).map(Version0(_)),
+        itv.fromIncluded,
+        itv.toIncluded
+      )
+    ).map(_.asString)
+
   def inInterval(itv: VersionInterval0): Option[Version0] = {
     val it = candidatesInInterval(itv)
     if (it.hasNext)
@@ -96,6 +149,17 @@ import dataclass.data
     else
       None
   }
+
+  @deprecated("Use the override accepting coursier.version.VersionInterval instead", "2.1.25")
+  def inInterval(itv: VersionInterval): Option[String] =
+    inInterval(
+      VersionInterval0(
+        itv.from.map(_.repr).map(Version0(_)),
+        itv.to.map(_.repr).map(Version0(_)),
+        itv.fromIncluded,
+        itv.toIncluded
+      )
+    ).map(_.asString)
 }
 
 object Versions {
@@ -116,4 +180,18 @@ object Versions {
   }
 
   val empty = Versions(Version0.zero, Version0.zero, Nil, None)
+
+  @deprecated("Use the override accepting Version-s instead", "2.1.25")
+  def apply(
+    latest: String,
+    release: String,
+    available: List[String],
+    lastUpdated: Option[Versions.DateTime]
+  ): Versions =
+    apply(
+      Version0(latest),
+      Version0(release),
+      available.map(Version0(_)),
+      lastUpdated
+    )
 }

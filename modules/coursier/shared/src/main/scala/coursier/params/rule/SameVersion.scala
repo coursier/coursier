@@ -114,6 +114,22 @@ object SameVersion {
         // FIXME More detailed message? (say why it can't be forced)
         s"Can't force version ${version.asString} for modules ${modules.toVector.map(_.toString).mkString(", ")}"
       ) {
+
+    @deprecated("Use the override accepting a coursier.version.Version instead", "2.1.25")
+    def this(
+      resolution: Resolution,
+      rule: SameVersion,
+      modules: Set[Module],
+      version: String,
+      conflict: SameVersionConflict
+    ) = this(
+      resolution,
+      rule,
+      modules,
+      Version(version),
+      conflict
+    )
+
     assert(modules.nonEmpty)
     assert(modules.forall(conflict.modules))
   }

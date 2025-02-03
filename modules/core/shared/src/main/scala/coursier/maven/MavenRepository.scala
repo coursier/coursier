@@ -29,7 +29,7 @@ object MavenRepository {
   changing: Option[Boolean] = None,
   @since
   override val versionsCheckHasModule: Boolean = true
-) extends MavenRepositoryLike {
+) extends MavenRepositoryLike with Repository.VersionApi {
 
   private val internal = new MavenRepositoryInternal(root, authentication, changing)
 
@@ -40,7 +40,7 @@ object MavenRepository {
   ): Seq[(Publication, Artifact)] =
     internal.artifacts(dependency, project, overrideClassifiers)
 
-  def find0[F[_]](
+  override def find0[F[_]](
     module: Module,
     version: VersionConstraint,
     fetch: Repository.Fetch[F]

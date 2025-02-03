@@ -33,8 +33,73 @@ import dataclass.data
   enableDependencyOverrides: Option[Boolean] = None
 ) {
 
+  @deprecated("Use forceVersion0 instead", "2.1.25")
+  def forceVersion: Map[Module, String] =
+    forceVersion0.map {
+      case (k, v) =>
+        (k, v.asString)
+    }
+  @deprecated("Use withForceVersion0 instead", "2.1.25")
+  def withForceVersion(newForceVersion: Map[Module, String]): ResolutionParams =
+    withForceVersion0(
+      newForceVersion.map {
+        case (k, v) =>
+          (k, VersionConstraint(v))
+      }
+    )
+  @deprecated("Use scalaVersionOpt0 instead", "2.1.25")
+  def scalaVersionOpt: Option[String] =
+    scalaVersionOpt0.map(_.asString)
+  @deprecated("Use withScalaVersionOpt0 instead", "2.1.25")
+  def withScalaVersionOpt(newScalaVersionOpt: Option[String]): ResolutionParams =
+    withScalaVersionOpt0(newScalaVersionOpt.map(VersionConstraint(_)))
+
+  @deprecated("Use reconciliation0 instead", "2.1.25")
+  def reconciliation: Seq[(ModuleMatchers, Reconciliation)] =
+    reconciliation0.map {
+      case (m, ConstraintReconciliation.Default) =>
+        (m, Reconciliation.Default)
+      case (m, ConstraintReconciliation.Relaxed) =>
+        (m, Reconciliation.Relaxed)
+      case (m, ConstraintReconciliation.Strict) =>
+        (m, Reconciliation.Strict)
+      case (m, ConstraintReconciliation.SemVer) =>
+        (m, Reconciliation.SemVer)
+    }
+  @deprecated("Use withReconciliation0 instead", "2.1.25")
+  def withReconciliation(newReconciliation: Seq[(ModuleMatchers, Reconciliation)])
+    : ResolutionParams =
+    withReconciliation0(
+      newReconciliation.map {
+        case (m, Reconciliation.Default) =>
+          (m, ConstraintReconciliation.Default)
+        case (m, Reconciliation.Relaxed) =>
+          (m, ConstraintReconciliation.Relaxed)
+        case (m, Reconciliation.Strict) =>
+          (m, ConstraintReconciliation.Strict)
+        case (m, Reconciliation.SemVer) =>
+          (m, ConstraintReconciliation.SemVer)
+      }
+    )
+
+  @deprecated("Use jdkVersionOpt0 instead", "2.1.25")
+  def jdkVersionOpt: Option[String] =
+    jdkVersionOpt0.map(_.repr)
+  @deprecated("Use withJdkVersionOpt0 instead", "2.1.25")
+  def withJdkVersionOpt(newJdkVersionOpt: Option[String]): ResolutionParams =
+    withJdkVersionOpt0(newJdkVersionOpt.map(Version(_)))
+
   def addForceVersion0(fv: (Module, VersionConstraint)*): ResolutionParams =
     withForceVersion0(forceVersion0 ++ fv)
+
+  @deprecated("Use addForceVersion0 instead", "2.1.25")
+  def addForceVersion(fv: (Module, String)*): ResolutionParams =
+    addForceVersion0(
+      fv.map {
+        case (m, v) =>
+          (m, VersionConstraint(v))
+      }: _*
+    )
 
   def doForceScalaVersion: Boolean =
     forceScalaVersionOpt.getOrElse {
@@ -46,6 +111,10 @@ import dataclass.data
     scalaVersionOpt0.getOrElse {
       coursier.internal.Defaults.scalaVersionConstraint
     }
+
+  @deprecated("Use selectedScalaVersionConstraint instead", "2.1.25")
+  def selectedScalaVersion: String =
+    selectedScalaVersionConstraint.asString
 
   def addProfile(profile: String*): ResolutionParams =
     withProfiles(profiles ++ profile)
@@ -66,6 +135,12 @@ import dataclass.data
     withForceScalaVersionOpt(Option(forceScalaVersion))
   def withOsInfo(osInfo: Activation.Os): ResolutionParams =
     withOsInfoOpt(Some(osInfo))
+  @deprecated("Use the override accepting a coursier.version.Version instead", "2.1.25")
+  def withJdkVersion(version: String): ResolutionParams =
+    withJdkVersionOpt0(Some(Version(version)))
+  @deprecated("Use the override accepting a coursier.version.Version instead", "2.1.25")
+  def withJdkVersion(version: coursier.core.Version): ResolutionParams =
+    withJdkVersionOpt0(Some(Version(version.repr)))
   def withJdkVersion(version: Version): ResolutionParams =
     withJdkVersionOpt0(Some(version))
 

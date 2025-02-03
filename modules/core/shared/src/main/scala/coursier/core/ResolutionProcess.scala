@@ -5,7 +5,7 @@ import coursier.util.{EitherT, Gather, Monad}
 import coursier.util.Monad.ops._
 import dataclass.data
 
-import scala.annotation.{nowarn, tailrec}
+import scala.annotation.tailrec
 import scala.collection.compat.immutable.LazyList
 
 sealed abstract class ResolutionProcess extends Product with Serializable {
@@ -62,6 +62,21 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
   current: Resolution,
   cont: Resolution => ResolutionProcess
 ) extends ResolutionProcess {
+
+  @deprecated("Use missing0 instead", "2.1.25")
+  def missing: Seq[(Module, String)] =
+    missing0.map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    }
+  @deprecated("Use missing0 instead", "2.1.25")
+  def withMissing(newMissing: Seq[(Module, String)]): Missing =
+    withMissing0(
+      newMissing.map {
+        case (mod, ver) =>
+          (mod, VersionConstraint0(ver))
+      }
+    )
 
   @deprecated("Use next0_ instead", "2.1.25")
   def next0(results: ResolutionProcess.MD): ResolutionProcess =
@@ -174,7 +189,6 @@ object ResolutionProcess {
   )]
 
   @deprecated("Use ResolutionProcess.Fetch0 instead", "2.1.25")
-  @nowarn
   type Fetch[F[_]] = Seq[(Module, String)] => F[MD]
 
   type MD0 = Seq[(
@@ -451,6 +465,28 @@ object ResolutionProcess {
             )
         }
       }.map(_.toSeq)
+
+  @deprecated("Use fetch0 instead", "2.1.25")
+  def fetch[F[_]](
+    repositories: Seq[Repository],
+    fetch: Repository.Fetch[F],
+    fetchs: Seq[Repository.Fetch[F]] = Nil
+  )(implicit
+    F: Gather[F]
+  ): Fetch[F] = {
+    val f = fetch0(repositories, fetch, fetchs)
+    modVers =>
+      val modVers0 = modVers.map {
+        case (mod, ver) =>
+          (mod, VersionConstraint0(ver))
+      }
+      F.map(f(modVers0)) { l =>
+        l.map {
+          case ((mod, ver), value) =>
+            ((mod, ver.asString), value)
+        }
+      }
+  }
 
   def defaultMaxIterations: Int = 100
 

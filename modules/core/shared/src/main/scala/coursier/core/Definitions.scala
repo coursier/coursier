@@ -273,7 +273,113 @@ object Attributes {
   overrides: Overrides = Overrides.empty
 ) {
 
+  @deprecated("Use the override accepting Version-s instead", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    dependencies: Seq[(Configuration, Dependency)],
+    configurations: Map[Configuration, Seq[Configuration]],
+    parent: Option[(Module, String)],
+    dependencyManagement: Seq[(Configuration, Dependency)],
+    properties: Seq[(String, String)],
+    profiles: Seq[Profile],
+    versions: Option[Versions],
+    snapshotVersioning: Option[SnapshotVersioning],
+    packagingOpt: Option[Type],
+    relocated: Boolean,
+    actualVersionOpt: Option[String],
+    publications: Seq[(Configuration, Publication)],
+    info: Info,
+    overrides: Overrides
+  ) =
+    this(
+      module,
+      Version0(version),
+      dependencies,
+      configurations,
+      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      dependencyManagement,
+      properties,
+      profiles,
+      versions,
+      snapshotVersioning,
+      packagingOpt,
+      relocated,
+      actualVersionOpt.map(Version0(_)),
+      publications,
+      info,
+      overrides
+    )
+
+  @deprecated("Use the override accepting Version-s instead", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    dependencies: Seq[(Configuration, Dependency)],
+    configurations: Map[Configuration, Seq[Configuration]],
+    parent: Option[(Module, String)],
+    dependencyManagement: Seq[(Configuration, Dependency)],
+    properties: Seq[(String, String)],
+    profiles: Seq[Profile],
+    versions: Option[Versions],
+    snapshotVersioning: Option[SnapshotVersioning],
+    packagingOpt: Option[Type],
+    relocated: Boolean,
+    actualVersionOpt: Option[String],
+    publications: Seq[(Configuration, Publication)],
+    info: Info
+  ) =
+    this(
+      module,
+      Version0(version),
+      dependencies,
+      configurations,
+      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      dependencyManagement,
+      properties,
+      profiles,
+      versions,
+      snapshotVersioning,
+      packagingOpt,
+      relocated,
+      actualVersionOpt.map(Version0(_)),
+      publications,
+      info
+    )
+
+  @deprecated("Use moduleVersion0 instead", "2.1.25")
+  lazy val moduleVersion: (Module, String) = (module, version)
+
   lazy val moduleVersion0: (Module, Version0) = (module, version0)
+
+  @deprecated("Use version0 instead", "2.1.25")
+  def version: String = version0.repr
+  @deprecated("Use withVersion0 instead", "2.1.25")
+  def withVersion(newVersion: String): Project =
+    if (version == newVersion) this
+    else withVersion0(Version0(newVersion))
+
+  @deprecated("Use parent0 instead", "2.1.25")
+  def parent: Option[(Module, String)] =
+    parent0.map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    }
+  @deprecated("Use withParent0 instead", "2.1.25")
+  def withParent(newParent: Option[(Module, String)]): Project =
+    withParent0(
+      newParent.map {
+        case (mod, ver) =>
+          (mod, Version0(ver))
+      }
+    )
+
+  @deprecated("Use actualVersionOpt0 instead", "2.1.25")
+  def actualVersionOpt: Option[String] =
+    actualVersionOpt0.map(_.asString)
+  @deprecated("Use withActualVersionOpt0 instead", "2.1.25")
+  def withActualVersionOpt(newParent: Option[String]): Project =
+    withActualVersionOpt0(newParent.map(Version0(_)))
 
   /** All configurations that each configuration extends, including the ones it extends transitively
     */
@@ -286,7 +392,86 @@ object Attributes {
     */
   def actualVersion0: Version0 = actualVersionOpt0.getOrElse(version0)
 
+  @deprecated("Use actualVersion0 instead", "2.1.25")
+  def actualVersion: String = actualVersion0.asString
+
   final override lazy val hashCode = tuple.hashCode
+}
+
+object Project {
+
+  @deprecated("Use the override accepting Version-s instead", "2.1.25")
+  def apply(
+    module: Module,
+    version: String,
+    dependencies: Seq[(Configuration, Dependency)],
+    configurations: Map[Configuration, Seq[Configuration]],
+    parent: Option[(Module, String)],
+    dependencyManagement: Seq[(Configuration, Dependency)],
+    properties: Seq[(String, String)],
+    profiles: Seq[Profile],
+    versions: Option[Versions],
+    snapshotVersioning: Option[SnapshotVersioning],
+    packagingOpt: Option[Type],
+    relocated: Boolean,
+    actualVersionOpt: Option[String],
+    publications: Seq[(Configuration, Publication)],
+    info: Info
+  ): Project =
+    apply(
+      module,
+      Version0(version),
+      dependencies,
+      configurations,
+      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      dependencyManagement,
+      properties,
+      profiles,
+      versions,
+      snapshotVersioning,
+      packagingOpt,
+      relocated,
+      actualVersionOpt.map(Version0(_)),
+      publications,
+      info
+    )
+  @deprecated("Use the override accepting Version-s instead", "2.1.25")
+  def apply(
+    module: Module,
+    version: String,
+    dependencies: Seq[(Configuration, Dependency)],
+    configurations: Map[Configuration, Seq[Configuration]],
+    parent: Option[(Module, String)],
+    dependencyManagement: Seq[(Configuration, Dependency)],
+    properties: Seq[(String, String)],
+    profiles: Seq[Profile],
+    versions: Option[Versions],
+    snapshotVersioning: Option[SnapshotVersioning],
+    packagingOpt: Option[Type],
+    relocated: Boolean,
+    actualVersionOpt: Option[String],
+    publications: Seq[(Configuration, Publication)],
+    info: Info,
+    overrides: Overrides
+  ): Project =
+    apply(
+      module,
+      Version0(version),
+      dependencies,
+      configurations,
+      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      dependencyManagement,
+      properties,
+      profiles,
+      versions,
+      snapshotVersioning,
+      packagingOpt,
+      relocated,
+      actualVersionOpt.map(Version0(_)),
+      publications,
+      info,
+      overrides
+    )
 }
 
 /** Extra project info, not used during resolution */
@@ -383,7 +568,45 @@ object Info {
   extension: Extension,
   value0: Version0,
   updated: Option[Versions.DateTime]
-)
+) {
+  @deprecated("Use the override accepting a Version instead", "2.1.25")
+  def this(
+    classifier: Classifier,
+    extension: Extension,
+    value: String,
+    updated: Option[Versions.DateTime]
+  ) =
+    this(
+      classifier,
+      extension,
+      Version0(value),
+      updated
+    )
+
+  @deprecated("Use value0 instead", "2.1.25")
+  def value: String =
+    value0.asString
+  @deprecated("Use withValue0 instead", "2.1.25")
+  def withValue(newValue: String): SnapshotVersion =
+    if (newValue == value) this
+    else withValue0(Version0(newValue))
+}
+
+object SnapshotVersion {
+  @deprecated("Use the override accepting a Version instead", "2.1.25")
+  def apply(
+    classifier: Classifier,
+    extension: Extension,
+    value: String,
+    updated: Option[Versions.DateTime]
+  ): SnapshotVersion =
+    SnapshotVersion(
+      classifier,
+      extension,
+      Version0(value),
+      updated
+    )
+}
 
 // Maven-specific
 @data class SnapshotVersioning(
@@ -396,7 +619,77 @@ object Info {
   localCopy: Option[Boolean],
   lastUpdated: Option[Versions.DateTime],
   snapshotVersions: Seq[SnapshotVersion]
-)
+) {
+  @deprecated("Use the override accepting Version-s instead", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    latest: String,
+    release: String,
+    timestamp: String,
+    buildNumber: Option[Int],
+    localCopy: Option[Boolean],
+    lastUpdated: Option[Versions.DateTime],
+    snapshotVersions: Seq[SnapshotVersion]
+  ) =
+    this(
+      module,
+      Version0(version),
+      Version0(latest),
+      Version0(release),
+      timestamp,
+      buildNumber,
+      localCopy,
+      lastUpdated,
+      snapshotVersions
+    )
+
+  @deprecated("Use version0 instead", "2.1.25")
+  def version: String = version0.asString
+  @deprecated("Use latest0 instead", "2.1.25")
+  def latest: String = latest0.asString
+  @deprecated("Use release0 instead", "2.1.25")
+  def release: String = release0.asString
+
+  @deprecated("Use withVersion0 instead", "2.1.25")
+  def withVersion(newVersion: String): SnapshotVersioning =
+    if (newVersion == version) this
+    else withVersion0(Version0(newVersion))
+  @deprecated("Use withLatest0 instead", "2.1.25")
+  def withLatest(newLatest: String): SnapshotVersioning =
+    if (newLatest == latest) this
+    else withLatest0(Version0(newLatest))
+  @deprecated("Use withRelease0 instead", "2.1.25")
+  def withRelease(newRelease: String): SnapshotVersioning =
+    if (newRelease == release) this
+    else withRelease0(Version0(newRelease))
+}
+
+object SnapshotVersioning {
+  @deprecated("Use the override accepting Version-s instead", "2.1.25")
+  def apply(
+    module: Module,
+    version: String,
+    latest: String,
+    release: String,
+    timestamp: String,
+    buildNumber: Option[Int],
+    localCopy: Option[Boolean],
+    lastUpdated: Option[Versions.DateTime],
+    snapshotVersions: Seq[SnapshotVersion]
+  ): SnapshotVersioning =
+    apply(
+      module,
+      Version0(version),
+      Version0(latest),
+      Version0(release),
+      timestamp,
+      buildNumber,
+      localCopy,
+      lastUpdated,
+      snapshotVersions
+    )
+}
 
 @data(apply = false, settersCallApply = true) class Publication(
   name: String,

@@ -6,11 +6,98 @@ import coursier.core.compatibility._
 
 object Parse {
 
+  @deprecated("Use coursier.version.VersionParse.version instead", "2.1.25")
+  def version(s: String): Option[Version] = {
+    val trimmed = s.trim
+    val notAVersion = trimmed.isEmpty || trimmed.exists(c =>
+      c != '.' && c != '-' && c != '_' && c != '+' && !c.letterOrDigit
+    )
+    if (notAVersion) None
+    else Some(Version(trimmed))
+  }
+
   // matches revisions with a '+' appended, e.g. "1.2.+", "1.2+" or "1.2.3-+"
   private val latestSubRevision = "(.*[^.-])([.-]?)[+]".r
 
+  @deprecated("Unused by coursier", "2.1.25")
+  def ivyLatestSubRevisionInterval(s: String): Option[VersionInterval] =
+    s match {
+      case latestSubRevision(prefix, delim) =>
+        for {
+          from <- version(prefix)
+          if from.items.nonEmpty
+          max = (if (delim.isEmpty) "." else delim) + "max"
+          to <- version(prefix + max)
+          // the contrary would mean something went wrong in the loose substitution above
+          if from.items.init == to.items.dropRight(1).init
+        } yield VersionInterval(Some(from), Some(to), fromIncluded = true, toIncluded = true)
+      case _ =>
+        None
+    }
+
+  @deprecated("Use coursier.version.VersionParse.versionInterval instead", "2.1.25")
+  def versionInterval(s: String): Option[VersionInterval] = {
+
+    def parseBounds(fromIncluded: Boolean, toIncluded: Boolean, s: String) = {
+
+      val commaIdx = s.indexOf(',')
+
+      if (commaIdx >= 0) {
+        val strFrom = s.take(commaIdx)
+        val strTo   = s.drop(commaIdx + 1)
+
+        for {
+          from <- if (strFrom.isEmpty) Some(None) else version(strFrom).map(Some(_))
+          to   <- if (strTo.isEmpty) Some(None) else version(strTo).map(Some(_))
+        } yield VersionInterval(
+          from.filterNot(_.isEmpty),
+          to.filterNot(_.isEmpty),
+          from.forall(!_.isEmpty) && fromIncluded,
+          toIncluded
+        )
+      }
+      else if (s.nonEmpty && fromIncluded && toIncluded)
+        for (v <- version(s) if !v.isEmpty)
+          yield VersionInterval(Some(v), Some(v), fromIncluded, toIncluded)
+      else
+        None
+    }
+
+    for {
+      fromIncluded <-
+        if (s.startsWith("[")) Some(true) else if (s.startsWith("(")) Some(false) else None
+      toIncluded <- if (s.endsWith("]")) Some(true) else if (s.endsWith(")")) Some(false) else None
+      s0 = s.drop(1).dropRight(1)
+      itv <- parseBounds(fromIncluded, toIncluded, s0)
+    } yield itv
+  }
+
   private val multiVersionIntervalSplit =
     ("(?" + regexLookbehind + "[" + quote("])") + "]),(?=[" + quote("([") + "])").r
+
+  @deprecated("Unused by coursier", "2.1.25")
+  def multiVersionInterval(s: String): Option[VersionInterval] = {
+
+    // TODO Use a full-fledged (fastparsed-based) parser for this and versionInterval above
+
+    val openCount  = s.count(c => c == '[' || c == '(')
+    val closeCount = s.count(c => c == ']' || c == ')')
+
+    if (openCount == closeCount && openCount >= 1)
+      versionInterval(multiVersionIntervalSplit.split(s).last)
+    else
+      None
+  }
+
+  @deprecated("Use coursier.version.VersionParse.versionConstraint instead", "2.1.25")
+  def versionConstraint(s: String): VersionConstraint = {
+    def noConstraint = if (s.isEmpty) Some(VersionConstraint.all) else None
+
+    noConstraint
+      .orElse(ivyLatestSubRevisionInterval(s).map(VersionConstraint.interval))
+      .orElse(versionInterval(s).orElse(multiVersionInterval(s)).map(VersionConstraint.interval))
+      .getOrElse(VersionConstraint.preferred(Version(s)))
+  }
 
   val fallbackConfigRegex = {
     val noPar = "([^" + quote("()") + "]*)"
