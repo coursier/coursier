@@ -199,27 +199,6 @@ object JsonReport {
         key -> allDeps(new ListBuffer, Set.empty, trees.toList).filter(_ != key)
     }
 
-    def allDependenciesHelper(
-      done: Map[(Module, Attributes), Seq[(Module, Attributes)]],
-      remainingDirectDependencies: Map[(Module, Attributes), Seq[(Module, Attributes)]]
-    ): Map[(Module, Attributes), Seq[(Module, Attributes)]] =
-      if (remainingDirectDependencies.isEmpty) done
-      else {
-        val todo = remainingDirectDependencies.find(_._2.forall(done.contains)).map(_._1).getOrElse {
-          sys.error("Cannot happen")
-        }
-        val allDeps =
-          remainingDirectDependencies(todo) ++
-            remainingDirectDependencies(todo).flatMap(done)
-        val sortedAllDeps = allDeps.distinct.sortBy(sortKey)
-        allDependenciesHelper(
-          done + (todo -> sortedAllDeps),
-          remainingDirectDependencies - todo
-        )
-      }
-
-    lazy val allDependencies = allDependenciesHelper(Map.empty, directDependenciesMap)
-
     def coords(key: (Module, Attributes)): String = {
       val version = resolution.retainedVersions.getOrElse(
         key._1,
@@ -250,7 +229,13 @@ object JsonReport {
                   path
               },
               directDependenciesMap(key).map(coords).sorted,
-              fromDepTrees.get(key).getOrElse(allDependencies(key)).map(coords).sorted,
+              fromDepTrees
+                .get(key)
+                .getOrElse {
+                  sys.error(s"${key._1.repr} ${key._2} not found in report trees")
+                }
+                .map(coords)
+                .sorted,
               exclusionsMap(key)
             )
           )
@@ -278,7 +263,13 @@ object JsonReport {
                   f
               },
               directDependenciesMap(key).map(coords).sorted,
-              fromDepTrees.get(key).getOrElse(allDependencies(key)).map(coords).sorted,
+              fromDepTrees
+                .get(key)
+                .getOrElse {
+                  sys.error(s"${key._1.repr} ${key._2} not found in report trees")
+                }
+                .map(coords)
+                .sorted,
               exclusionsMap(key)
             )
           }
