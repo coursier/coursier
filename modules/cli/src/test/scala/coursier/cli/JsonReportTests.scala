@@ -59,7 +59,6 @@ object JsonReportTests extends TestSuite {
   private val fetch = Fetch()
     .withResolve(resolve)
     .withCache(TestHelpers.cache)
-    .withArtifactTypes(Resolution.defaultTypes ++ Seq(Type.Exotic.aar))
 
   def doCheck(fetch: Fetch[Task], dependencies: Seq[Dependency]): Future[Unit] =
     async {
@@ -98,7 +97,12 @@ object JsonReportTests extends TestSuite {
     test("android") {
 
       def androidCheck(dependencies: Dependency*): Future[Unit] =
-        doCheck(fetch.addRepositories(Repositories.google), dependencies)
+        doCheck(
+          fetch
+            .addRepositories(Repositories.google)
+            .withArtifactTypes(Resolution.defaultTypes ++ Seq(Type.Exotic.aar)),
+          dependencies
+        )
 
       test("activity") {
         androidCheck(dep"androidx.activity:activity:1.8.2")
@@ -223,6 +227,27 @@ object JsonReportTests extends TestSuite {
       // if you broke that test, maybe you fixed coursier/coursier#3236
       check(
         dep"org.apache.pulsar:bouncy-castle-bc:4.0.1"
+      )
+    }
+
+    test("intransitive") {
+      check(
+        dep"org.apache.commons:commons-compress:1.5"
+          .withTransitive(false)
+      )
+    }
+
+    test("external dep url with classifier") {
+      check(
+        dep"org.apache.commons:commons-compress:1.5",
+        dep"org.tukaani:xz:1.2,classifier=tests,url=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fjunit%2Fjunit%2F4.12%2Fjunit-4.12.jar"
+      )
+    }
+
+    test("sources") {
+      doCheck(
+        fetch.withClassifiers(Set(Classifier.sources)),
+        Seq(dep"org.apache.commons:commons-compress:1.5")
       )
     }
   }
