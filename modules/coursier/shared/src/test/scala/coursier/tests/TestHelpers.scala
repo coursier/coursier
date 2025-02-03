@@ -171,7 +171,7 @@ object TestHelpers extends PlatformTestHelpers {
 
     def tryRead = textResource(path)
 
-    val result0 = result.map { r =>
+    val result0 = result.filter(_.nonEmpty).map { r =>
       r.replace(handmadeMetadataBase, "file:///handmade-metadata/")
     }
 
@@ -182,7 +182,7 @@ object TestHelpers extends PlatformTestHelpers {
             maybeWriteTextResource(path, result0.mkString("\n"))
             tryRead
         }
-      ).split('\n').toSeq.filter(_.nonEmpty)
+      ).split('\n').toSeq
 
     if (TestCache.updateSnapshots) {
       if (result0 != expected)
