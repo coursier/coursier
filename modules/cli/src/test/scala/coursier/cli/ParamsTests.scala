@@ -10,7 +10,7 @@ import utest._
 
 object ParamsTests extends TestSuite {
 
-  def withFile(content: String)(testCode: (File, FileWriter) => Any) {
+  def withFile(content: String)(testCode: (File, FileWriter) => Any): Unit = {
     val file   = File.createTempFile("hello", "world") // create the fixture
     val writer = new FileWriter(file)
     writer.write(content)

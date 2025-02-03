@@ -1,10 +1,12 @@
 package coursier.core
 
-import java.util.concurrent.ConcurrentMap
-
 import coursier.core.Validation._
 import dataclass.data
 import MinimizedExclusions._
+
+import java.util.concurrent.ConcurrentMap
+
+import scala.annotation.nowarn
 
 /** Dependencies with the same @module will typically see their @version-s merged.
   *
@@ -56,6 +58,8 @@ import MinimizedExclusions._
     optional,
     transitive
   )
+
+  private def deprecatedBoms = DependencyInternals.deprecatedBoms(this)
 
   def mavenPrefix: String =
     if (attributes.isEmpty)
@@ -174,7 +178,7 @@ import MinimizedExclusions._
     optional,
     transitive,
     Map.empty,
-    boms,
+    deprecatedBoms,
     bomDependencies,
     overridesMap
   )
@@ -217,8 +221,8 @@ import MinimizedExclusions._
       if (overridesMap.isEmpty) fields
       else fields :+ overridesMap.flatten.toMap.toString
     fields =
-      if (boms.isEmpty) fields
-      else fields :+ boms.toString
+      if (deprecatedBoms.isEmpty) fields
+      else fields :+ deprecatedBoms.toString
     fields =
       if (bomDependencies.isEmpty) fields
       else fields :+ bomDependencies.toString

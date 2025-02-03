@@ -55,7 +55,7 @@ object ArchiveUtil {
           }
           def next(): (ArchiveEntry, InputStream) = {
             assert(hasNext)
-            val value = (nextEntryOrNull, archiveInputStream)
+            val value: (ArchiveEntry, InputStream) = (nextEntryOrNull, archiveInputStream)
             nextEntryOrNull = null
             value
           }

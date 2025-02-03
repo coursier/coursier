@@ -12,7 +12,7 @@ object TestUtil {
     content: String = "",
     fileName: String = "hello",
     suffix: String = "world"
-  )(testCode: (File, FileWriter) => Any) {
+  )(testCode: (File, FileWriter) => Any): Unit = {
     val file   = File.createTempFile(fileName, suffix) // create the fixture
     val writer = new FileWriter(file)
     writer.write(content)

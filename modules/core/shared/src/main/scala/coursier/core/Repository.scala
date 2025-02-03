@@ -5,6 +5,8 @@ import coursier.util.{Artifact, EitherT, Monad}
 import coursier.util.Monad.ops._
 import dataclass.data
 
+import scala.annotation.nowarn
+
 trait Repository extends Serializable with ArtifactSource {
 
   def repr: String =

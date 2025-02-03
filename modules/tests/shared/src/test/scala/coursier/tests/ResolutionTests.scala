@@ -5,18 +5,19 @@ import coursier.core.{
   ArtifactSource,
   Configuration,
   Dependency,
+  MinimizedExclusions,
   Module,
   Repository,
   Resolution,
   ResolutionProcess
 }
 import coursier.maven.MavenRepository
+import coursier.tests.TestUtil._
+import coursier.tests.compatibility._
 import coursier.util.StringInterpolators._
 import utest._
 
 import scala.async.Async.{async, await}
-import coursier.tests.TestUtil._
-import coursier.tests.compatibility._
 
 object ResolutionTests extends TestSuite {
 
@@ -73,16 +74,16 @@ object ResolutionTests extends TestSuite {
       mod"acme:play-extra-no-config",
       "2.4.1",
       Seq(
-        Configuration.empty -> Dependency(mod"acme:play", "2.4.1")
-          .withExclusions(Set((org"acme", name"config")))
+        Configuration.empty -> dep"acme:play:2.4.1"
+          .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"config"))))
       )
     ),
     Project(
       mod"acme:play-extra-no-config-no",
       "2.4.1",
       Seq(
-        Configuration.empty -> Dependency(mod"acme:play", "2.4.1")
-          .withExclusions(Set((org"*", name"config")))
+        Configuration.empty -> dep"acme:play:2.4.1"
+          .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"config"))))
       )
     ),
     Project(
@@ -107,8 +108,8 @@ object ResolutionTests extends TestSuite {
       mod"se.ikea:parent",
       "18.0",
       dependencyManagement = Seq(
-        Configuration.empty -> Dependency(mod"acme:play", "2.4.0")
-          .withExclusions(Set((org"acme", name"play-json")))
+        Configuration.empty -> dep"acme:play:2.4.0"
+          .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"play-json"))))
       )
     ),
     Project(
@@ -148,8 +149,8 @@ object ResolutionTests extends TestSuite {
       mod"com.mailapp:mail-client",
       "2.1",
       dependencies = Seq(
-        Configuration.empty -> Dependency(mod"gov.nsa:secure-pgp", "10.0")
-          .withExclusions(Set((org"*", name"$${crypto.name}")))
+        Configuration.empty -> dep"gov.nsa:secure-pgp:10.0"
+          .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"$${crypto.name}"))))
       ),
       properties = Seq("crypto.name" -> "crypto", "dummy" -> "2")
     ),
@@ -360,13 +361,9 @@ object ResolutionTests extends TestSuite {
       mod"an-org:an-app",
       "1.0",
       Seq(
-        Configuration.empty -> Dependency(mod"an-org:a-lib", "1.0").withExclusions(
-          Set((org"an-org", name"a-name"))
-        ),
-        Configuration.empty -> Dependency(
-          mod"an-org:another-lib",
-          "1.0"
-        ).withOptional(true)
+        Configuration.empty -> dep"an-org:a-lib:1.0"
+          .withMinimizedExclusions(MinimizedExclusions(Set((org"an-org", name"a-name")))),
+        Configuration.empty -> dep"an-org:another-lib:1.0".withOptional(true)
       )
     ),
     Project(
@@ -543,10 +540,10 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(mod"acme:play-extra-no-config", "2.4.1")
         val trDeps = Seq(
-          Dependency(mod"acme:play", "2.4.1")
-            .withExclusions(Set((org"acme", name"config"))),
-          Dependency(mod"acme:play-json", "2.4.0")
-            .withExclusions(Set((org"acme", name"config")))
+          dep"acme:play:2.4.1"
+            .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"config")))),
+          dep"acme:play-json:2.4.0"
+            .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"config"))))
         )
         val res = await(resolve0(
           Seq(dep)
@@ -563,10 +560,10 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(mod"acme:play-extra-no-config-no", "2.4.1")
         val trDeps = Seq(
-          Dependency(mod"acme:play", "2.4.1")
-            .withExclusions(Set((org"*", name"config"))),
-          Dependency(mod"acme:play-json", "2.4.0")
-            .withExclusions(Set((org"*", name"config")))
+          dep"acme:play:2.4.1"
+            .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"config")))),
+          dep"acme:play-json:2.4.0"
+            .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"config"))))
         )
         val res = await(resolve0(
           Seq(dep)
@@ -597,8 +594,8 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(mod"se.ikea:billy", "18.0")
         val trDeps = Seq(
-          Dependency(mod"acme:play", "2.4.0")
-            .withExclusions(Set((org"acme", name"play-json")))
+          dep"acme:play:2.4.0"
+            .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"play-json"))))
         )
         val res = await(resolve0(
           Seq(dep)
@@ -633,10 +630,8 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(mod"com.mailapp:mail-client", "2.1")
         val trDeps = Seq(
-          Dependency(mod"gov.nsa:secure-pgp", "10.0").withExclusions(Set((
-            org"*",
-            name"crypto"
-          )))
+          dep"gov.nsa:secure-pgp:10.0"
+            .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"crypto"))))
         )
         val res = await(resolve0(
           Seq(dep)
@@ -746,12 +741,10 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = Dependency(mod"an-org:an-app", "1.0")
         val trDeps = Seq(
-          Dependency(mod"an-org:a-lib", "1.0").withExclusions(Set((
-            org"an-org",
-            name"a-name"
-          ))),
-          Dependency(mod"an-org:another-lib", "1.0").withOptional(true),
-          Dependency(mod"an-org:a-name", "1.0").withOptional(true)
+          dep"an-org:a-lib:1.0"
+            .withMinimizedExclusions(MinimizedExclusions(Set((org"an-org", name"a-name")))),
+          dep"an-org:another-lib:1.0".withOptional(true),
+          dep"an-org:a-name:1.0".withOptional(true)
         )
         val res = await(resolve0(
           Seq(dep),
@@ -773,12 +766,10 @@ object ResolutionTests extends TestSuite {
           Dependency(mod"an-org:a-lib", "1.0").withOptional(true)
         )
         val trDeps = Seq(
-          Dependency(mod"an-org:a-lib", "1.0").withExclusions(Set((
-            org"an-org",
-            name"a-name"
-          ))),
-          Dependency(mod"an-org:another-lib", "1.0").withOptional(true),
-          Dependency(mod"an-org:a-name", "1.0").withOptional(true)
+          dep"an-org:a-lib:1.0"
+            .withMinimizedExclusions(MinimizedExclusions(Set((org"an-org", name"a-name")))),
+          dep"an-org:another-lib:1.0".withOptional(true),
+          dep"an-org:a-name:1.0".withOptional(true)
         )
         val res = await(resolve0(
           deps,

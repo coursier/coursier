@@ -4,6 +4,7 @@ import java.io._
 import java.net.URLEncoder.encode
 
 import argonaut.Argonaut._
+import argonaut.DecodeJson
 import caseapp.core.RemainingArgs
 import coursier.cli.options._
 import coursier.cli.options._
@@ -30,10 +31,8 @@ import scala.io.Source
 
 object FetchTests extends TestSuite {
 
-  def checkPath(file: Option[String], path: String) =
-    file
-      .map(f => assert(f.contains(path.replace("/", File.separator))))
-      .orElse(sys.error("Not Defined"))
+  def checkPath(file: Option[String], path: String): Unit =
+    assert(file.exists(_.contains(path.replace("/", File.separator))))
 
   val pool = Sync.fixedThreadPool(6)
   val ec   = ExecutionContext.fromExecutorService(pool)
@@ -54,6 +53,8 @@ object FetchTests extends TestSuite {
     val str =
       try source.mkString
       finally source.close()
+
+    implicit val reportDecoder: DecodeJson[ReportNode] = ReportNode.decodeJson
 
     str.decodeEither[ReportNode] match {
       case Left(error) =>
@@ -324,13 +325,11 @@ object FetchTests extends TestSuite {
             // Root level org.apache.commons:commons-compress:1.4.1 should have org.tukaani:xz:1.0 underneath it.
             val compressNode =
               node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
-            assert(compressNode.isDefined)
-            assert(compressNode.get.dependencies.contains("org.tukaani:xz:1.0"))
+            assert(compressNode.exists(_.dependencies.contains("org.tukaani:xz:1.0")))
 
             val innerCompressNode =
               node.dependencies.find(_.coord == "org.apache.avro:avro:1.7.4")
-            assert(innerCompressNode.isDefined)
-            assert(!innerCompressNode.get.dependencies.contains("org.tukaani:xz:1.0"))
+            assert(innerCompressNode.exists(!_.dependencies.contains("org.tukaani:xz:1.0")))
         }
 
     }
@@ -409,11 +408,8 @@ object FetchTests extends TestSuite {
               _.coord == "org.apache.commons:commons-compress:jar:tests:1.5"
             )
 
-            assert(compressNode.isDefined)
-            compressNode.get.file.map(f =>
-              assert(f.contains("commons-compress-1.5-tests.jar"))
-            ).orElse(sys.error("Not Defined"))
-            assert(compressNode.get.dependencies.contains("org.tukaani:xz:1.2"))
+            assert(compressNode.exists(_.file.exists(_.contains("commons-compress-1.5-tests.jar"))))
+            assert(compressNode.exists(_.dependencies.contains("org.tukaani:xz:1.2")))
         }
     }
 
@@ -482,12 +478,8 @@ object FetchTests extends TestSuite {
             val node: ReportNode = getReportFromJson(jsonFile)
             val compressNode =
               node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
-            assert(compressNode.isDefined)
-            compressNode.get.file.map(f => assert(f.contains("commons-compress-1.5.jar"))).orElse(
-              sys.error("Not Defined")
-            )
-
-            assert(compressNode.get.dependencies.isEmpty)
+            assert(compressNode.exists(_.file.exists(_.contains("commons-compress-1.5.jar"))))
+            assert(compressNode.exists(_.dependencies.isEmpty))
         }
     }
 
@@ -515,12 +507,8 @@ object FetchTests extends TestSuite {
             val compressNode = node.dependencies.find(
               _.coord == "org.apache.commons:commons-compress:jar:tests:1.5"
             )
-            assert(compressNode.isDefined)
-            compressNode.get.file.map(f =>
-              assert(f.contains("commons-compress-1.5-tests.jar"))
-            ).orElse(sys.error("Not Defined"))
-
-            assert(compressNode.get.dependencies.isEmpty)
+            assert(compressNode.exists(_.file.exists(_.contains("commons-compress-1.5-tests.jar"))))
+            assert(compressNode.exists(_.dependencies.isEmpty))
         }
     }
 
@@ -555,13 +543,10 @@ object FetchTests extends TestSuite {
               _.coord == "org.apache.commons:commons-compress:jar:tests:1.4.1"
             )
 
-            assert(compressNode.isDefined)
-            compressNode.get.file.map(f =>
-              assert(f.contains("commons-compress-1.4.1-tests.jar"))
-            ).orElse(sys.error("Not Defined"))
-
-            assert(compressNode.get.dependencies.size == 1)
-            assert(compressNode.get.dependencies.head == "org.tukaani:xz:1.0")
+            assert(
+              compressNode.exists(_.file.exists(_.contains("commons-compress-1.4.1-tests.jar")))
+            )
+            assert(compressNode.exists(_.dependencies == Seq("org.tukaani:xz:1.0")))
         }
     }
 
@@ -600,12 +585,10 @@ object FetchTests extends TestSuite {
               _.coord == "org.apache.commons:commons-compress:jar:tests:1.4.1"
             )
 
-            assert(compressNode.isDefined)
-            compressNode.get.file.map(f =>
-              assert(f.contains("commons-compress-1.4.1-tests.jar"))
-            ).orElse(sys.error("Not Defined"))
-
-            assert(compressNode.get.dependencies.isEmpty)
+            assert(
+              compressNode.exists(_.file.exists(_.contains("commons-compress-1.4.1-tests.jar")))
+            )
+            assert(compressNode.exists(_.dependencies.isEmpty))
         }
     }
 
@@ -885,9 +868,7 @@ object FetchTests extends TestSuite {
         assert(depNodes.length == 1)
         assert(depNodes.head.file.isDefined)
         checkPath(depNodes.head.file, "1.5-sources.jar")
-        depNodes.head.dependencies.foreach { d =>
-          assert(d.contains(":sources:"))
-        }
+        assert(depNodes.head.dependencies.forall(_.contains(":sources:")))
 
         assert(coords == Seq(
           "org.apache.commons:commons-compress:jar:sources:1.5",

@@ -1013,12 +1013,13 @@ object Resolution {
       .flatMap(finalDependencies0)
 
   private lazy val globalBomModuleVersions =
-    bomDependencies
+    ResolutionInternals.deprecatedBomDependencies(this)
       .map(_.moduleVersion)
       .map { case (m, v) =>
         BomDependency(m, v, defaultConfiguration)
       } ++
-      bomModuleVersions.map { case (m, v) => BomDependency(m, v, defaultConfiguration) } ++
+      ResolutionInternals.deprecatedBomModuleVersions(this)
+        .map { case (m, v) => BomDependency(m, v, defaultConfiguration) } ++
       boms
   private lazy val allBomModuleVersions =
     globalBomModuleVersions ++ rootDependencies.flatMap(_.bomDependencies)

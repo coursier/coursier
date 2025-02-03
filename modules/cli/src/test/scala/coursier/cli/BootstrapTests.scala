@@ -455,7 +455,7 @@ object BootstrapTests extends TestSuite {
 
     test("put everything under the coursier/bootstrap directory in proguarded bootstrap") - {
       if (!isJava9Plus)
-        namespaceTest
+        namespaceTest()
     }
   }
 }

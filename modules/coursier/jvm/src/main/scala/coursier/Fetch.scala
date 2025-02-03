@@ -5,6 +5,7 @@ import java.lang.{Boolean => JBoolean}
 
 import coursier.cache.{Cache, FileCache}
 import coursier.core.{
+  BomDependency,
   Classifier,
   Dependency,
   Publication,
@@ -18,10 +19,10 @@ import coursier.internal.FetchCache
 import coursier.params.{Mirror, ResolutionParams}
 import coursier.util.{Artifact, Sync, Task}
 import coursier.util.Monad.ops._
+import dataclass.data
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
-import dataclass.data
 
 @data class Fetch[F[_]](
   private val resolve: Resolve[F],
@@ -113,8 +114,11 @@ import dataclass.data
 
   def withBomDependencies(bomDependencies: Seq[Dependency]): Fetch[F] =
     withResolve(resolve.withBomDependencies(bomDependencies))
+  @deprecated("Use addBoms instead", "2.1.18")
   def addBomDependencies(bomDependencies: Dependency*): Fetch[F] =
     withResolve(resolve.withBomDependencies(resolve.bomDependencies ++ bomDependencies))
+  def addBoms(bomDependencies: BomDependency*): Fetch[F] =
+    withResolve(resolve.withBoms(resolve.boms ++ bomDependencies))
 
   def withRepositories(repositories: Seq[Repository]): Fetch[F] =
     withResolve(resolve.withRepositories(repositories))
