@@ -11,7 +11,6 @@ import scala.collection.compat.immutable.LazyList
   * Same kind of ordering as
   * aether-util/src/main/java/org/eclipse/aether/util/version/GenericVersion.java
   */
-@deprecated("Use coursier.version.Version instead", "2.1.25")
 @data class Version(repr: String) extends Ordered[Version] {
   lazy val items: Vector[Version.Item] = Version.items(repr)
   def compare(other: Version)          = Version.listCompare(items, other.items)
