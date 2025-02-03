@@ -915,7 +915,8 @@ object FetchTests extends TestSuite {
           assert(depNodes.length == 1)
           assert(depNodes.head.file.isDefined)
           checkPath(depNodes.head.file, "1.5-sources.jar")
-          assert(depNodes.head.dependencies.forall(_.contains(":sources:")))
+          // dependencies don't contain a classifier
+          assert(depNodes.head.dependencies.forall(!_.contains(":sources:")))
 
           assert(coords == Seq(
             "org.apache.commons:commons-compress:jar:sources:1.5",
