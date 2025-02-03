@@ -254,7 +254,7 @@ final case class JsonElem(
         dep,
         withRetainedVersions = false
       ).sortBy { trDep =>
-        (trDep.module.organization, trDep.module.name, trDep.version)
+        (trDep.module.organization, trDep.module.name, trDep.version, trDep.hashCode)
       }.map { d =>
         if (overrideClassifiers.contains(dep.attributes.classifier))
           d.withAttributes(d.attributes.withClassifier(dep.attributes.classifier))
@@ -269,7 +269,7 @@ final case class JsonElem(
         )
         .view
         .sortBy { trDep =>
-          (trDep.module.organization, trDep.module.name, trDep.version)
+          (trDep.module.organization, trDep.module.name, trDep.version, trDep.hashCode)
         }
         .map(_.moduleVersion)
         .filterNot(dependencies.map(_.moduleVersion).toSet).map {
