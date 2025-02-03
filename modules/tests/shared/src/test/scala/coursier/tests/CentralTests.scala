@@ -98,12 +98,14 @@ abstract class CentralTests extends TestSuite {
         forceDepMgmtVersions = Some(true)
       )
 
-      test("scala210") - runner.resolutionCheck(
-        mod"org.apache.spark:spark-core_2.10",
-        "2.1.1",
-        profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11")),
-        forceDepMgmtVersions = Some(true)
-      )
+      test("scala210") {
+        runner.resolutionCheck(
+          mod"org.apache.spark:spark-core_2.10",
+          "2.1.1",
+          profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11")),
+          forceDepMgmtVersions = Some(true)
+        )
+      }
     }
 
     test("argonautShapeless") {
@@ -258,8 +260,12 @@ abstract class CentralTests extends TestSuite {
         configuration = config
       )
 
-      test("compile") - check(Configuration.compile)
-      test("runtime") - check(Configuration.runtime)
+      test("compile") {
+        check(Configuration.compile)
+      }
+      test("runtime") {
+        check(Configuration.runtime)
+      }
     }
 
     test("optionalScope") {
@@ -456,7 +462,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
-    test("ignoreUtf8Bom") - {
+    test("ignoreUtf8Bom") {
       runner.resolutionCheck(
         mod"dk.brics.automaton:automaton",
         "1.11-8"
@@ -470,7 +476,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
-    test("nd4jNative") - {
+    test("nd4jNative") {
       // In particular:
       // - uses OS-based activation,
       // - requires converting a "x86-64" to "x86_64" in it, and
@@ -497,7 +503,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
-    test("deepLearning4j") - {
+    test("deepLearning4j") {
       runner.resolutionCheck(
         mod"org.deeplearning4j:deeplearning4j-core",
         "0.8.0"
@@ -600,10 +606,12 @@ abstract class CentralTests extends TestSuite {
     }
 
     test("entities") {
-      test("odash") - runner.resolutionCheck(
-        mod"org.codehaus.plexus:plexus",
-        "1.0.4"
-      )
+      test("odash") {
+        runner.resolutionCheck(
+          mod"org.codehaus.plexus:plexus",
+          "1.0.4"
+        )
+      }
     }
 
     test("parentVersionInPom") {
@@ -987,73 +995,75 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
-      test("module") - async {
-        val res  = await(runner.resolution(mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M10"))
-        val tree = ModuleTree(res)
-        val str = Tree(tree.toVector)(_.children).render { t =>
-          s"${t.module}:${t.reconciledVersion}"
+      test("module") {
+        async {
+          val res  = await(runner.resolution(mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M10"))
+          val tree = ModuleTree(res)
+          val str = Tree(tree.toVector)(_.children).render { t =>
+            s"${t.module}:${t.reconciledVersion}"
+          }
+          val expectedStr =
+            """└─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |   ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
+              |   │  ├─ com.chuusai:shapeless_2.12:2.3.3
+              |   │  │  ├─ org.scala-lang:scala-library:2.12.8
+              |   │  │  └─ org.typelevel:macro-compat_2.12:1.1.1
+              |   │  │     └─ org.scala-lang:scala-library:2.12.8
+              |   │  ├─ io.argonaut:argonaut_2.12:6.2.1
+              |   │  │  └─ org.scala-lang:scala-reflect:2.12.6
+              |   │  │     └─ org.scala-lang:scala-library:2.12.8
+              |   │  └─ org.scala-lang:scala-library:2.12.8
+              |   ├─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
+              |   │  ├─ com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M5
+              |   │  │  └─ org.scala-lang:scala-library:2.12.8
+              |   │  ├─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
+              |   │  │  ├─ com.chuusai:shapeless_2.12:2.3.3
+              |   │  │  │  ├─ org.scala-lang:scala-library:2.12.8
+              |   │  │  │  └─ org.typelevel:macro-compat_2.12:1.1.1
+              |   │  │  │     └─ org.scala-lang:scala-library:2.12.8
+              |   │  │  └─ org.scala-lang:scala-library:2.12.8
+              |   │  └─ org.scala-lang:scala-library:2.12.8
+              |   ├─ io.get-coursier:coursier-bootstrap_2.12:1.1.0-M10
+              |   │  └─ org.scala-lang:scala-library:2.12.8
+              |   ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
+              |   │  ├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
+              |   │  │  ├─ org.scala-lang:scala-library:2.12.8
+              |   │  │  └─ org.scala-lang.modules:scala-xml_2.12:1.1.1
+              |   │  │     └─ org.scala-lang:scala-library:2.12.8
+              |   │  └─ org.scala-lang:scala-library:2.12.8
+              |   ├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
+              |   │  ├─ org.scala-lang:scala-library:2.12.8
+              |   │  └─ org.scala-lang.modules:scala-xml_2.12:1.1.1
+              |   │     └─ org.scala-lang:scala-library:2.12.8
+              |   ├─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
+              |   │  ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
+              |   │  │  ├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
+              |   │  │  │  ├─ org.scala-lang:scala-library:2.12.8
+              |   │  │  │  └─ org.scala-lang.modules:scala-xml_2.12:1.1.1
+              |   │  │  │     └─ org.scala-lang:scala-library:2.12.8
+              |   │  │  └─ org.scala-lang:scala-library:2.12.8
+              |   │  ├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
+              |   │  │  ├─ org.scala-lang:scala-library:2.12.8
+              |   │  │  └─ org.scala-lang.modules:scala-xml_2.12:1.1.1
+              |   │  │     └─ org.scala-lang:scala-library:2.12.8
+              |   │  └─ org.scala-lang:scala-library:2.12.8
+              |   ├─ org.scala-lang:scala-library:2.12.8
+              |   └─ org.typelevel:cats-core_2.12:1.5.0
+              |      ├─ org.scala-lang:scala-library:2.12.8
+              |      ├─ org.typelevel:cats-kernel_2.12:1.5.0
+              |      │  └─ org.scala-lang:scala-library:2.12.8
+              |      ├─ org.typelevel:cats-macros_2.12:1.5.0
+              |      │  ├─ org.scala-lang:scala-library:2.12.8
+              |      │  └─ org.typelevel:machinist_2.12:0.6.6
+              |      │     ├─ org.scala-lang:scala-library:2.12.8
+              |      │     └─ org.scala-lang:scala-reflect:2.12.6
+              |      │        └─ org.scala-lang:scala-library:2.12.8
+              |      └─ org.typelevel:machinist_2.12:0.6.6
+              |         ├─ org.scala-lang:scala-library:2.12.8
+              |         └─ org.scala-lang:scala-reflect:2.12.6
+              |            └─ org.scala-lang:scala-library:2.12.8""".stripMargin
+          assert(str.replace("\r\n", "\n") == expectedStr)
         }
-        val expectedStr =
-          """└─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-            |   ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
-            |   │  ├─ com.chuusai:shapeless_2.12:2.3.3
-            |   │  │  ├─ org.scala-lang:scala-library:2.12.8
-            |   │  │  └─ org.typelevel:macro-compat_2.12:1.1.1
-            |   │  │     └─ org.scala-lang:scala-library:2.12.8
-            |   │  ├─ io.argonaut:argonaut_2.12:6.2.1
-            |   │  │  └─ org.scala-lang:scala-reflect:2.12.6
-            |   │  │     └─ org.scala-lang:scala-library:2.12.8
-            |   │  └─ org.scala-lang:scala-library:2.12.8
-            |   ├─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
-            |   │  ├─ com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M5
-            |   │  │  └─ org.scala-lang:scala-library:2.12.8
-            |   │  ├─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
-            |   │  │  ├─ com.chuusai:shapeless_2.12:2.3.3
-            |   │  │  │  ├─ org.scala-lang:scala-library:2.12.8
-            |   │  │  │  └─ org.typelevel:macro-compat_2.12:1.1.1
-            |   │  │  │     └─ org.scala-lang:scala-library:2.12.8
-            |   │  │  └─ org.scala-lang:scala-library:2.12.8
-            |   │  └─ org.scala-lang:scala-library:2.12.8
-            |   ├─ io.get-coursier:coursier-bootstrap_2.12:1.1.0-M10
-            |   │  └─ org.scala-lang:scala-library:2.12.8
-            |   ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
-            |   │  ├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
-            |   │  │  ├─ org.scala-lang:scala-library:2.12.8
-            |   │  │  └─ org.scala-lang.modules:scala-xml_2.12:1.1.1
-            |   │  │     └─ org.scala-lang:scala-library:2.12.8
-            |   │  └─ org.scala-lang:scala-library:2.12.8
-            |   ├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
-            |   │  ├─ org.scala-lang:scala-library:2.12.8
-            |   │  └─ org.scala-lang.modules:scala-xml_2.12:1.1.1
-            |   │     └─ org.scala-lang:scala-library:2.12.8
-            |   ├─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
-            |   │  ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
-            |   │  │  ├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
-            |   │  │  │  ├─ org.scala-lang:scala-library:2.12.8
-            |   │  │  │  └─ org.scala-lang.modules:scala-xml_2.12:1.1.1
-            |   │  │  │     └─ org.scala-lang:scala-library:2.12.8
-            |   │  │  └─ org.scala-lang:scala-library:2.12.8
-            |   │  ├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
-            |   │  │  ├─ org.scala-lang:scala-library:2.12.8
-            |   │  │  └─ org.scala-lang.modules:scala-xml_2.12:1.1.1
-            |   │  │     └─ org.scala-lang:scala-library:2.12.8
-            |   │  └─ org.scala-lang:scala-library:2.12.8
-            |   ├─ org.scala-lang:scala-library:2.12.8
-            |   └─ org.typelevel:cats-core_2.12:1.5.0
-            |      ├─ org.scala-lang:scala-library:2.12.8
-            |      ├─ org.typelevel:cats-kernel_2.12:1.5.0
-            |      │  └─ org.scala-lang:scala-library:2.12.8
-            |      ├─ org.typelevel:cats-macros_2.12:1.5.0
-            |      │  ├─ org.scala-lang:scala-library:2.12.8
-            |      │  └─ org.typelevel:machinist_2.12:0.6.6
-            |      │     ├─ org.scala-lang:scala-library:2.12.8
-            |      │     └─ org.scala-lang:scala-reflect:2.12.6
-            |      │        └─ org.scala-lang:scala-library:2.12.8
-            |      └─ org.typelevel:machinist_2.12:0.6.6
-            |         ├─ org.scala-lang:scala-library:2.12.8
-            |         └─ org.scala-lang:scala-reflect:2.12.6
-            |            └─ org.scala-lang:scala-library:2.12.8""".stripMargin
-        assert(str.replace("\r\n", "\n") == expectedStr)
       }
 
       test("conflicts") {

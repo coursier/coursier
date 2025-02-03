@@ -29,43 +29,49 @@ object IvyLocalTests extends TestSuite {
       val extraRepos = Seq(mockIvy2Local)
 
       // Assuming this module (and the sub-projects it depends on) is published locally
-      test("resolution") - runner.resolutionCheck(
-        module,
-        localVersion,
-        extraRepos
-      )
-
-      test("uniqueArtifacts") - async {
-
-        val res = await(runner.resolve(
-          Seq(
-            Dependency(mod"io.get-coursier:coursier-cli_2.12", localVersion).withTransitive(false)
-          ),
-          extraRepos = extraRepos
-        ))
-
-        val artifacts = res.dependencyArtifacts()
-          .filter(t => t._2.`type` == Type.jar && !t._3.optional)
-          .map(_._3)
-          .map(_.url)
-          .groupBy(s => s)
-
-        assert(artifacts.nonEmpty)
-        assert(artifacts.forall(_._2.length == 1))
+      test("resolution") {
+        runner.resolutionCheck(
+          module,
+          localVersion,
+          extraRepos
+        )
       }
 
-      test("javadocSources") - async {
-        val res = await(runner.resolve(
-          Seq(Dependency(module, localVersion)),
-          extraRepos = extraRepos
-        ))
+      test("uniqueArtifacts") {
+        async {
 
-        val artifacts  = res.dependencyArtifacts().filter(_._2.`type` == Type.jar).map(_._3.url)
-        val anyJavadoc = artifacts.exists(_.contains("-javadoc"))
-        val anySources = artifacts.exists(_.contains("-sources"))
+          val res = await(runner.resolve(
+            Seq(
+              Dependency(mod"io.get-coursier:coursier-cli_2.12", localVersion).withTransitive(false)
+            ),
+            extraRepos = extraRepos
+          ))
 
-        assert(!anyJavadoc)
-        assert(!anySources)
+          val artifacts = res.dependencyArtifacts()
+            .filter(t => t._2.`type` == Type.jar && !t._3.optional)
+            .map(_._3)
+            .map(_.url)
+            .groupBy(s => s)
+
+          assert(artifacts.nonEmpty)
+          assert(artifacts.forall(_._2.length == 1))
+        }
+      }
+
+      test("javadocSources") {
+        async {
+          val res = await(runner.resolve(
+            Seq(Dependency(module, localVersion)),
+            extraRepos = extraRepos
+          ))
+
+          val artifacts  = res.dependencyArtifacts().filter(_._2.`type` == Type.jar).map(_._3.url)
+          val anyJavadoc = artifacts.exists(_.contains("-javadoc"))
+          val anySources = artifacts.exists(_.contains("-sources"))
+
+          assert(!anyJavadoc)
+          assert(!anySources)
+        }
       }
     }
   }

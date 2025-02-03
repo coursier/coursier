@@ -64,170 +64,176 @@ object BootstrapTests extends TestSuite {
   }
 
   val tests = Tests {
-    test("not add POMs to the classpath") - withFile() {
+    test("not add POMs to the classpath") {
+      withFile() {
 
-      (bootstrapFile, _) =>
-        val artifactOptions = ArtifactOptions()
-        val sharedLoaderOptions = SharedLoaderOptions(
-          sharedTarget = List("foo"),
-          isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
-        )
-        val bootstrapSpecificOptions = BootstrapSpecificOptions(
-          output = Some(bootstrapFile.getPath),
-          force = true
-        )
-        val sharedLaunchOptions = SharedLaunchOptions(
-          artifactOptions = artifactOptions,
-          sharedLoaderOptions = sharedLoaderOptions
-        )
-        val bootstrapOptions = BootstrapOptions(
-          sharedLaunchOptions = sharedLaunchOptions,
-          options = bootstrapSpecificOptions
-        )
-
-        Bootstrap.run(
-          bootstrapOptions,
-          RemainingArgs(
-            Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
-            Seq()
+        (bootstrapFile, _) =>
+          val artifactOptions = ArtifactOptions()
+          val sharedLoaderOptions = SharedLoaderOptions(
+            sharedTarget = List("foo"),
+            isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
           )
-        )
+          val bootstrapSpecificOptions = BootstrapSpecificOptions(
+            output = Some(bootstrapFile.getPath),
+            force = true
+          )
+          val sharedLaunchOptions = SharedLaunchOptions(
+            artifactOptions = artifactOptions,
+            sharedLoaderOptions = sharedLoaderOptions
+          )
+          val bootstrapOptions = BootstrapOptions(
+            sharedLaunchOptions = sharedLaunchOptions,
+            options = bootstrapSpecificOptions
+          )
 
-        def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
+          Bootstrap.run(
+            bootstrapOptions,
+            RemainingArgs(
+              Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
+              Seq()
+            )
+          )
 
-        val fooLines = new String(
-          zipEntryContent(zis, resourceDir + "bootstrap-jar-urls-1"),
-          UTF_8
-        ).linesIterator.toVector
-        val lines = new String(
-          zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"),
-          UTF_8
-        ).linesIterator.toVector
+          def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-        assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
-        assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
+          val fooLines = new String(
+            zipEntryContent(zis, resourceDir + "bootstrap-jar-urls-1"),
+            UTF_8
+          ).linesIterator.toVector
+          val lines = new String(
+            zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"),
+            UTF_8
+          ).linesIterator.toVector
 
-        assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
-        assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
+          assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
+          assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
 
-        // checking that there are no sources just in case…
-        assert(!fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
-        assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
-        assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
-        assert(!lines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
+          assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
+          assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
 
-        val extensions = fooLines
-          .map { l =>
-            val idx = l.lastIndexOf('.')
-            if (idx < 0)
-              l
-            else
-              l.drop(idx + 1)
-          }
-          .toSet
+          // checking that there are no sources just in case…
+          assert(!fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
+          assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
+          assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
+          assert(!lines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
 
-        assert(extensions == Set("jar"))
+          val extensions = fooLines
+            .map { l =>
+              val idx = l.lastIndexOf('.')
+              if (idx < 0)
+                l
+              else
+                l.drop(idx + 1)
+            }
+            .toSet
+
+          assert(extensions == Set("jar"))
+      }
     }
 
-    test("accept simple modules via --shared") - withFile() {
+    test("accept simple modules via --shared") {
+      withFile() {
 
-      (bootstrapFile, _) =>
-        val artifactOptions = ArtifactOptions()
-        val sharedLoaderOptions = SharedLoaderOptions(
-          shared = List("org.scalameta:trees_2.12")
-        )
-        val bootstrapSpecificOptions = BootstrapSpecificOptions(
-          output = Some(bootstrapFile.getPath),
-          force = true
-        )
-        val sharedLaunchOptions = SharedLaunchOptions(
-          artifactOptions = artifactOptions,
-          sharedLoaderOptions = sharedLoaderOptions
-        )
-        val bootstrapOptions = BootstrapOptions(
-          sharedLaunchOptions = sharedLaunchOptions,
-          options = bootstrapSpecificOptions
-        )
-
-        Bootstrap.run(
-          bootstrapOptions,
-          RemainingArgs(
-            Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
-            Seq()
+        (bootstrapFile, _) =>
+          val artifactOptions = ArtifactOptions()
+          val sharedLoaderOptions = SharedLoaderOptions(
+            shared = List("org.scalameta:trees_2.12")
           )
-        )
+          val bootstrapSpecificOptions = BootstrapSpecificOptions(
+            output = Some(bootstrapFile.getPath),
+            force = true
+          )
+          val sharedLaunchOptions = SharedLaunchOptions(
+            artifactOptions = artifactOptions,
+            sharedLoaderOptions = sharedLoaderOptions
+          )
+          val bootstrapOptions = BootstrapOptions(
+            sharedLaunchOptions = sharedLaunchOptions,
+            options = bootstrapSpecificOptions
+          )
 
-        def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
+          Bootstrap.run(
+            bootstrapOptions,
+            RemainingArgs(
+              Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
+              Seq()
+            )
+          )
 
-        val fooLines = new String(
-          zipEntryContent(zis, resourceDir + "bootstrap-jar-urls-1"),
-          UTF_8
-        ).linesIterator.toVector
-        val lines = new String(
-          zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"),
-          UTF_8
-        ).linesIterator.toVector
+          def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-        assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
-        assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
+          val fooLines = new String(
+            zipEntryContent(zis, resourceDir + "bootstrap-jar-urls-1"),
+            UTF_8
+          ).linesIterator.toVector
+          val lines = new String(
+            zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"),
+            UTF_8
+          ).linesIterator.toVector
 
-        assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
-        assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
+          assert(fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
+          assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
 
-        // checking that there are no sources just in case…
-        assert(!fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
-        assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
-        assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
-        assert(!lines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
+          assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
+          assert(lines.exists(_.endsWith("/scalameta_2.12-1.7.0.jar")))
 
-        val extensions = fooLines
-          .map { l =>
-            val idx = l.lastIndexOf('.')
-            if (idx < 0)
-              l
-            else
-              l.drop(idx + 1)
-          }
-          .toSet
+          // checking that there are no sources just in case…
+          assert(!fooLines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
+          assert(!lines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
+          assert(!fooLines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
+          assert(!lines.exists(_.endsWith("/scalameta_2.12-1.7.0-sources.jar")))
 
-        assert(extensions == Set("jar"))
+          val extensions = fooLines
+            .map { l =>
+              val idx = l.lastIndexOf('.')
+              if (idx < 0)
+                l
+              else
+                l.drop(idx + 1)
+            }
+            .toSet
+
+          assert(extensions == Set("jar"))
+      }
     }
 
-    test("add standard and source JARs to the classpath") - withFile() {
+    test("add standard and source JARs to the classpath") {
+      withFile() {
 
-      (bootstrapFile, _) =>
-        val artifactOptions = ArtifactOptions(
-          sources = true,
-          default = Some(true)
-        )
-        val bootstrapSpecificOptions = BootstrapSpecificOptions(
-          output = Some(bootstrapFile.getPath),
-          force = true
-        )
-        val sharedLaunchOptions = SharedLaunchOptions(
-          artifactOptions = artifactOptions
-        )
-        val bootstrapOptions = BootstrapOptions(
-          sharedLaunchOptions = sharedLaunchOptions,
-          options = bootstrapSpecificOptions
-        )
-
-        Bootstrap.run(
-          bootstrapOptions,
-          RemainingArgs(
-            Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
-            Seq()
+        (bootstrapFile, _) =>
+          val artifactOptions = ArtifactOptions(
+            sources = true,
+            default = Some(true)
           )
-        )
+          val bootstrapSpecificOptions = BootstrapSpecificOptions(
+            output = Some(bootstrapFile.getPath),
+            force = true
+          )
+          val sharedLaunchOptions = SharedLaunchOptions(
+            artifactOptions = artifactOptions
+          )
+          val bootstrapOptions = BootstrapOptions(
+            sharedLaunchOptions = sharedLaunchOptions,
+            options = bootstrapSpecificOptions
+          )
 
-        val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
+          Bootstrap.run(
+            bootstrapOptions,
+            RemainingArgs(
+              Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
+              Seq()
+            )
+          )
 
-        val lines = new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8)
-          .linesIterator
-          .toVector
+          val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-        assert(lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
-        assert(lines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
+          val lines = new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-urls"), UTF_8)
+            .linesIterator
+            .toVector
+
+          assert(lines.exists(_.endsWith("/scalaparse_2.12-0.4.2.jar")))
+          assert(lines.exists(_.endsWith("/scalaparse_2.12-0.4.2-sources.jar")))
+      }
     }
 
     def isolationTest(standalone: Option[Boolean] = None): Unit =
@@ -299,114 +305,119 @@ object BootstrapTests extends TestSuite {
       isolationTest(standalone = Some(true))
     }
 
-    test("be deterministic when deterministic option is specified") - withFile() {
-      (bootstrapFile, _) =>
-        withFile() { (bootstrapFile2, _) =>
-          val artifactOptions = ArtifactOptions(
-            sources = true,
-            default = Some(true)
+    test("be deterministic when deterministic option is specified") {
+      withFile() {
+        (bootstrapFile, _) =>
+          withFile() { (bootstrapFile2, _) =>
+            val artifactOptions = ArtifactOptions(
+              sources = true,
+              default = Some(true)
+            )
+            val sharedLoaderOptions = SharedLoaderOptions(
+              sharedTarget = List("foo"),
+              isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
+            )
+            val bootstrapSpecificOptions = BootstrapSpecificOptions(
+              output = Some(bootstrapFile.getPath),
+              force = true,
+              deterministic = true
+            )
+            val sharedLaunchOptions = SharedLaunchOptions(
+              artifactOptions = artifactOptions,
+              sharedLoaderOptions = sharedLoaderOptions
+            )
+            val bootstrapOptions = BootstrapOptions(
+              sharedLaunchOptions = sharedLaunchOptions,
+              options = bootstrapSpecificOptions
+            )
+            Bootstrap.run(
+              bootstrapOptions,
+              RemainingArgs(
+                Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
+                Seq()
+              )
+            )
+
+            // We need to wait between two runs to ensure we don't accidentally get the same hash
+            Thread.sleep(2000)
+
+            val bootstrapSpecificOptions2 = bootstrapSpecificOptions.copy(
+              output = Some(bootstrapFile2.getPath)
+            )
+            val bootstrapOptions2 = bootstrapOptions.copy(
+              options = bootstrapSpecificOptions2
+            )
+            Bootstrap.run(
+              bootstrapOptions2,
+              RemainingArgs(
+                Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
+                Seq()
+              )
+            )
+
+            val bootstrap1SHA256 = MessageDigest.getInstance("SHA-256")
+              .digest(actualContent(bootstrapFile))
+              .toSeq
+              .map(b => "%02x".format(b))
+              .mkString
+
+            val bootstrap2SHA256 = MessageDigest.getInstance("SHA-256")
+              .digest(actualContent(bootstrapFile2))
+              .toSeq
+              .map(b => "%02x".format(b))
+              .mkString
+
+            assert(bootstrap1SHA256 == bootstrap2SHA256)
+          }
+      }
+    }
+
+    test("rename JAR with the same file name") {
+      withFile() {
+
+        (bootstrapFile, _) =>
+          val dependencyOptions = DependencyOptions(
+            exclude = List("ch.epfl.scala:bsp4j")
           )
-          val sharedLoaderOptions = SharedLoaderOptions(
-            sharedTarget = List("foo"),
-            isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
+          val resolveOptions = SharedResolveOptions(
+            dependencyOptions = dependencyOptions
           )
           val bootstrapSpecificOptions = BootstrapSpecificOptions(
             output = Some(bootstrapFile.getPath),
             force = true,
-            deterministic = true
+            standalone = Some(true)
           )
           val sharedLaunchOptions = SharedLaunchOptions(
-            artifactOptions = artifactOptions,
-            sharedLoaderOptions = sharedLoaderOptions
+            resolveOptions = resolveOptions
           )
           val bootstrapOptions = BootstrapOptions(
             sharedLaunchOptions = sharedLaunchOptions,
             options = bootstrapSpecificOptions
           )
+
           Bootstrap.run(
             bootstrapOptions,
             RemainingArgs(
-              Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
+              Seq(Indexed("org.scalameta:metals_2.12:0.2.0")),
               Seq()
             )
           )
 
-          // We need to wait between two runs to ensure we don't accidentally get the same hash
-          Thread.sleep(2000)
+          val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-          val bootstrapSpecificOptions2 = bootstrapSpecificOptions.copy(
-            output = Some(bootstrapFile2.getPath)
-          )
-          val bootstrapOptions2 = bootstrapOptions.copy(
-            options = bootstrapSpecificOptions2
-          )
-          Bootstrap.run(
-            bootstrapOptions2,
-            RemainingArgs(
-              Seq(Indexed("com.geirsson:scalafmt-cli_2.12:1.4.0")),
-              Seq()
-            )
-          )
+          val lines =
+            new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-resources"), UTF_8)
+              .linesIterator
+              .toVector
 
-          val bootstrap1SHA256 = MessageDigest.getInstance("SHA-256")
-            .digest(actualContent(bootstrapFile))
-            .toSeq
-            .map(b => "%02x".format(b))
-            .mkString
+          val fastparseLines      = lines.filter(_.startsWith("fastparse_2.12-1.0.0"))
+          val fastparseUtilsLines = lines.filter(_.startsWith("fastparse-utils_2.12-1.0.0"))
 
-          val bootstrap2SHA256 = MessageDigest.getInstance("SHA-256")
-            .digest(actualContent(bootstrapFile2))
-            .toSeq
-            .map(b => "%02x".format(b))
-            .mkString
-
-          assert(bootstrap1SHA256 == bootstrap2SHA256)
-        }
-    }
-
-    test("rename JAR with the same file name") - withFile() {
-
-      (bootstrapFile, _) =>
-        val dependencyOptions = DependencyOptions(
-          exclude = List("ch.epfl.scala:bsp4j")
-        )
-        val resolveOptions = SharedResolveOptions(
-          dependencyOptions = dependencyOptions
-        )
-        val bootstrapSpecificOptions = BootstrapSpecificOptions(
-          output = Some(bootstrapFile.getPath),
-          force = true,
-          standalone = Some(true)
-        )
-        val sharedLaunchOptions = SharedLaunchOptions(
-          resolveOptions = resolveOptions
-        )
-        val bootstrapOptions = BootstrapOptions(
-          sharedLaunchOptions = sharedLaunchOptions,
-          options = bootstrapSpecificOptions
-        )
-
-        Bootstrap.run(
-          bootstrapOptions,
-          RemainingArgs(
-            Seq(Indexed("org.scalameta:metals_2.12:0.2.0")),
-            Seq()
-          )
-        )
-
-        val zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
-
-        val lines = new String(zipEntryContent(zis, resourceDir + "bootstrap-jar-resources"), UTF_8)
-          .linesIterator
-          .toVector
-
-        val fastparseLines      = lines.filter(_.startsWith("fastparse_2.12-1.0.0"))
-        val fastparseUtilsLines = lines.filter(_.startsWith("fastparse-utils_2.12-1.0.0"))
-
-        assert(fastparseLines.length == 2)
-        assert(fastparseLines.distinct.length == 2)
-        assert(fastparseUtilsLines.length == 2)
-        assert(fastparseUtilsLines.distinct.length == 2)
+          assert(fastparseLines.length == 2)
+          assert(fastparseLines.distinct.length == 2)
+          assert(fastparseUtilsLines.length == 2)
+          assert(fastparseUtilsLines.distinct.length == 2)
+      }
     }
 
     def namespaceTest(): Unit = withFile() {
@@ -453,7 +464,7 @@ object BootstrapTests extends TestSuite {
         assert(unexpected.isEmpty)
     }
 
-    test("put everything under the coursier/bootstrap directory in proguarded bootstrap") - {
+    test("put everything under the coursier/bootstrap directory in proguarded bootstrap") {
       if (!isJava9Plus)
         namespaceTest()
     }
