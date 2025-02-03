@@ -369,6 +369,7 @@
         "com.graphql-java:graphql-java:22.1",
         "com.graphql-java:java-dataloader:3.3.0",
         "io.micrometer:context-propagation:1.1.1",
+        "io.micrometer:micrometer-commons:1.12.10",
         "io.micrometer:micrometer-observation:1.12.10",
         "io.projectreactor:reactor-core:3.6.8",
         "org.reactivestreams:reactive-streams:1.0.4",
@@ -377,7 +378,8 @@
         "org.springframework:spring-beans:6.1.13",
         "org.springframework:spring-context:6.1.13",
         "org.springframework:spring-core:6.1.13",
-        "org.springframework:spring-expression:6.1.13"
+        "org.springframework:spring-expression:6.1.13",
+        "org.springframework:spring-jcl:6.1.13"
       ]
     },
     {

@@ -59,7 +59,7 @@ object Fetch extends CoursierCommand[FetchOptions] {
         params.jsonOutputOpt match {
           case Some(output) =>
             Task.delay {
-              val report = JsonOutput.report(
+              val report = LegacyJsonOutput.report(
                 res,
                 artifacts,
                 artifactFiles.collect { case (a, Some(f)) => a -> f },

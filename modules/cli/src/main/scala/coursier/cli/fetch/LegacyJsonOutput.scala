@@ -1,15 +1,14 @@
 package coursier.cli.fetch
 
-import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
+import coursier.cli.util.{JsonElem, JsonPrintRequirement, LegacyJsonReport}
 import coursier.core.{Classifier, Dependency, Publication, Resolution}
 import coursier.util.Artifact
 
 import java.io.File
 
 import scala.collection.immutable.ListMap
-import scala.collection.mutable
 
-object JsonOutput {
+object LegacyJsonOutput {
 
   def report(
     resolution: Resolution,
@@ -66,7 +65,7 @@ object JsonOutput {
       )
     }
 
-    JsonReport(
+    LegacyJsonReport(
       roots,
       conflictResolutionForRoots
     )(

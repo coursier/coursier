@@ -849,6 +849,7 @@ object FetchTests extends TestSuite {
      * | └─ org.tukaani:xz:1.2
      * |└─ org.tukaani:xz:1.2 // with the file from the URL
      */
+    // TODO Has an equivalent in JsonReportTests, this test should be removed
     test(
       "external dep url with classifier that is a transitive dep should fetch junit-4_12_jar and classifier gets thrown away"
     ) {
@@ -887,6 +888,7 @@ object FetchTests extends TestSuite {
      * |└─ org.apache.commons:commons-compress:1.5,classifier=sources └─
      * org.tukaani:xz:1.2,classifier=sources
      */
+    // TODO Has an equivalent in JsonReportTests, this test should be removed
     test("classifier sources should fetch sources jar") {
       withFile() {
         (jsonFile, _) =>
@@ -901,7 +903,7 @@ object FetchTests extends TestSuite {
             params,
             pool,
             Seq(
-              "org.apache.commons:commons-compress:1.5,classifier=sources"
+              "org.apache.commons:commons-compress:1.5"
             )
           ).unsafeRun()(ec)
           val node: ReportNode    = getReportFromJson(jsonFile)

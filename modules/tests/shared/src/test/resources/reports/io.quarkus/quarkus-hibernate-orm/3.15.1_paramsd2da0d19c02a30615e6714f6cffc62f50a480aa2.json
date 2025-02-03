@@ -55,6 +55,7 @@
       ],
       "dependencies": [
         "io.agroal:agroal-api:2.5",
+        "jakarta.annotation:jakarta.annotation-api:3.0.0",
         "jakarta.resource:jakarta.resource-api:2.1.0",
         "jakarta.transaction:jakarta.transaction-api:2.0.1",
         "org.jboss:jboss-transaction-spi:8.0.0.Final"
@@ -844,12 +845,6 @@
       ]
     },
     {
-      "coord": "io.smallrye.common:smallrye-common-annotation:2.6.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-annotation/2.6.0/smallrye-common-annotation-2.6.0.jar",
-      "directDependencies": [],
-      "dependencies": []
-    },
-    {
       "coord": "io.smallrye.common:smallrye-common-classloader:2.6.0",
       "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-classloader/2.6.0/smallrye-common-classloader-2.6.0.jar",
       "directDependencies": [],
@@ -871,22 +866,10 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.eclipse.parsson:jakarta.json",
-        "org.jboss.modules:jboss-modules"
-      ]
-    },
-    {
-      "coord": "io.smallrye.common:smallrye-common-constraint:2.6.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-constraint/2.6.0/smallrye-common-constraint-2.6.0.jar",
-      "directDependencies": [
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "dependencies": [
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "exclusions": [
         "javax.annotation:javax.annotation-api",
         "javax.enterprise:cdi-api",
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -914,25 +897,10 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.eclipse.parsson:jakarta.json",
-        "org.jboss.modules:jboss-modules"
-      ]
-    },
-    {
-      "coord": "io.smallrye.common:smallrye-common-expression:2.6.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-expression/2.6.0/smallrye-common-expression-2.6.0.jar",
-      "directDependencies": [
-        "io.smallrye.common:smallrye-common-function:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "dependencies": [
-        "io.smallrye.common:smallrye-common-constraint:2.6.0",
-        "io.smallrye.common:smallrye-common-function:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "exclusions": [
         "javax.annotation:javax.annotation-api",
         "javax.enterprise:cdi-api",
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -951,24 +919,10 @@
       "exclusions": [
         "javax.annotation:javax.annotation-api",
         "javax.enterprise:cdi-api",
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
-      ]
-    },
-    {
-      "coord": "io.smallrye.common:smallrye-common-function:2.6.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-function/2.6.0/smallrye-common-function-2.6.0.jar",
-      "directDependencies": [
-        "io.smallrye.common:smallrye-common-constraint:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "dependencies": [
-        "io.smallrye.common:smallrye-common-constraint:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "exclusions": [
-        "org.eclipse.parsson:jakarta.json",
-        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1052,6 +1006,7 @@
         "io.smallrye.common:smallrye-common-classloader:2.6.0",
         "io.smallrye.common:smallrye-common-constraint:2.6.0",
         "io.smallrye.common:smallrye-common-expression:2.6.0",
+        "io.smallrye.common:smallrye-common-function:2.6.0",
         "io.smallrye.config:smallrye-config-common:3.9.1",
         "jakarta.annotation:jakarta.annotation-api:3.0.0",
         "org.eclipse.microprofile.config:microprofile-config-api:3.1",
@@ -1076,6 +1031,7 @@
         "io.smallrye.common:smallrye-common-classloader:2.6.0",
         "io.smallrye.common:smallrye-common-constraint:2.6.0",
         "io.smallrye.common:smallrye-common-expression:2.6.0",
+        "io.smallrye.common:smallrye-common-function:2.6.0",
         "io.smallrye.config:smallrye-config-common:3.9.1",
         "io.smallrye.config:smallrye-config-core:3.9.1",
         "jakarta.annotation:jakarta.annotation-api:3.0.0",
@@ -1105,8 +1061,10 @@
         "io.smallrye:smallrye-context-propagation:2.1.2",
         "org.eclipse.microprofile.config:microprofile-config-api:3.1",
         "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3",
+        "org.jboss.logging:jboss-logging:3.6.0.Final",
         "org.jboss.threads:jboss-threads:3.6.1.Final",
-        "org.jctools:jctools-core:4.0.5"
+        "org.jctools:jctools-core:4.0.5",
+        "org.wildfly.common:wildfly-common:1.7.0.Final"
       ]
     },
     {
@@ -1150,20 +1108,12 @@
         "io.smallrye.reactive:smallrye-reactive-converter-api:3.0.1"
       ],
       "dependencies": [
+        "io.smallrye.common:smallrye-common-annotation:2.6.0",
         "io.smallrye.reactive:mutiny-zero-flow-adapters:1.1.0",
         "io.smallrye.reactive:mutiny:2.6.2",
         "io.smallrye.reactive:smallrye-reactive-converter-api:3.0.1",
+        "org.jctools:jctools-core:4.0.5",
         "org.reactivestreams:reactive-streams:1.0.4"
-      ]
-    },
-    {
-      "coord": "io.smallrye:smallrye-context-propagation-api:2.1.2",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/smallrye-context-propagation-api/2.1.2/smallrye-context-propagation-api-2.1.2.jar",
-      "directDependencies": [
-        "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3"
-      ],
-      "dependencies": [
-        "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3"
       ]
     },
     {
@@ -1196,12 +1146,6 @@
       "coord": "io.smallrye:smallrye-context-propagation-storage:2.1.2",
       "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/smallrye-context-propagation-storage/2.1.2/smallrye-context-propagation-storage-2.1.2.jar",
       "directDependencies": [],
-      "dependencies": []
-    },
-    {
-      "coord": "io.smallrye:smallrye-context-propagation-storage:2.1.2",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/smallrye-context-propagation-storage/2.1.2/smallrye-context-propagation-storage-2.1.2.jar",
-      "directDependencies": [],
       "dependencies": [],
       "exclusions": [
         "javax.enterprise:cdi-api"
@@ -1222,25 +1166,9 @@
         "io.smallrye:smallrye-context-propagation-storage:2.1.2",
         "org.eclipse.microprofile.config:microprofile-config-api:3.1",
         "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3",
-        "org.jboss.threads:jboss-threads:3.6.1.Final"
-      ]
-    },
-    {
-      "coord": "io.smallrye:smallrye-context-propagation:2.1.2",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/smallrye-context-propagation/2.1.2/smallrye-context-propagation-2.1.2.jar",
-      "directDependencies": [
-        "io.smallrye:smallrye-context-propagation-api:2.1.2",
-        "io.smallrye:smallrye-context-propagation-storage:2.1.2",
-        "org.eclipse.microprofile.config:microprofile-config-api:3.1",
-        "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3",
-        "org.jboss.threads:jboss-threads:3.6.1.Final"
-      ],
-      "dependencies": [
-        "io.smallrye:smallrye-context-propagation-api:2.1.2",
-        "io.smallrye:smallrye-context-propagation-storage:2.1.2",
-        "org.eclipse.microprofile.config:microprofile-config-api:3.1",
-        "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3",
-        "org.jboss.threads:jboss-threads:3.6.1.Final"
+        "org.jboss.logging:jboss-logging:3.6.0.Final",
+        "org.jboss.threads:jboss-threads:3.6.1.Final",
+        "org.wildfly.common:wildfly-common:1.7.0.Final"
       ],
       "exclusions": [
         "javax.enterprise:cdi-api"
@@ -1332,39 +1260,11 @@
         "jakarta.transaction:jakarta.transaction-api:2.0.1"
       ],
       "exclusions": [
-        "jakarta.ejb:jakarta.ejb-api",
-        "jakarta.enterprise:jakarta.enterprise.lang-model",
-        "org.jboss.logging:jboss-logging-spi"
-      ]
-    },
-    {
-      "coord": "jakarta.resource:jakarta.resource-api:2.1.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/jakarta/resource/jakarta.resource-api/2.1.0/jakarta.resource-api-2.1.0.jar",
-      "directDependencies": [
-        "jakarta.annotation:jakarta.annotation-api:3.0.0",
-        "jakarta.transaction:jakarta.transaction-api:2.0.1"
-      ],
-      "dependencies": [
-        "jakarta.annotation:jakarta.annotation-api:3.0.0",
-        "jakarta.transaction:jakarta.transaction-api:2.0.1"
-      ],
-      "exclusions": [
-        "org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec"
-      ]
-    },
-    {
-      "coord": "jakarta.resource:jakarta.resource-api:2.1.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/jakarta/resource/jakarta.resource-api/2.1.0/jakarta.resource-api-2.1.0.jar",
-      "directDependencies": [
-        "jakarta.transaction:jakarta.transaction-api:2.0.1"
-      ],
-      "dependencies": [
-        "jakarta.transaction:jakarta.transaction-api:2.0.1"
-      ],
-      "exclusions": [
         "jakarta.annotation:jakarta.annotation-api",
         "jakarta.ejb:jakarta.ejb-api",
-        "jakarta.enterprise:jakarta.enterprise.lang-model"
+        "jakarta.enterprise:jakarta.enterprise.lang-model",
+        "org.jboss.logging:jboss-logging-spi",
+        "org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec"
       ]
     },
     {
@@ -1407,25 +1307,6 @@
       ],
       "dependencies": [
         "jakarta.activation:jakarta.activation-api:2.1.3"
-      ]
-    },
-    {
-      "coord": "org.eclipse.microprofile.config:microprofile-config-api:3.1",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/eclipse/microprofile/config/microprofile-config-api/3.1/microprofile-config-api-3.1.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "javax.enterprise:cdi-api",
-        "org.osgi:org.osgi.annotation.versioning"
-      ]
-    },
-    {
-      "coord": "org.eclipse.microprofile.config:microprofile-config-api:3.1",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/eclipse/microprofile/config/microprofile-config-api/3.1/microprofile-config-api-3.1.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "org.osgi:org.osgi.annotation.versioning"
       ]
     },
     {
@@ -1537,13 +1418,18 @@
       ],
       "dependencies": [
         "com.fasterxml:classmate:1.7.0",
+        "com.sun.istack:istack-commons-runtime:4.1.2",
+        "jakarta.activation:jakarta.activation-api:2.1.3",
         "jakarta.inject:jakarta.inject-api:2.0.1",
         "jakarta.persistence:jakarta.persistence-api:3.1.0",
         "jakarta.transaction:jakarta.transaction-api:2.0.1",
         "jakarta.xml.bind:jakarta.xml.bind-api:4.0.2",
         "net.bytebuddy:byte-buddy:1.14.18",
         "org.antlr:antlr4-runtime:4.13.0",
+        "org.eclipse.angus:angus-activation:2.0.2",
+        "org.glassfish.jaxb:jaxb-core:4.0.5",
         "org.glassfish.jaxb:jaxb-runtime:4.0.5",
+        "org.glassfish.jaxb:txw2:4.0.5",
         "org.hibernate.common:hibernate-commons-annotations:7.0.1.Final",
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
@@ -1610,6 +1496,7 @@
         "io.smallrye.common:smallrye-common-constraint:2.6.0",
         "io.smallrye.common:smallrye-common-cpu:2.6.0",
         "io.smallrye.common:smallrye-common-expression:2.6.0",
+        "io.smallrye.common:smallrye-common-function:2.6.0",
         "io.smallrye.common:smallrye-common-net:2.6.0",
         "io.smallrye.common:smallrye-common-os:2.6.0",
         "io.smallrye.common:smallrye-common-ref:2.6.0",
@@ -1638,6 +1525,7 @@
         "org.reactivestreams:reactive-streams:1.0.4"
       ],
       "dependencies": [
+        "jakarta.annotation:jakarta.annotation-api:3.0.0",
         "jakarta.el:jakarta.el-api:5.0.1",
         "jakarta.enterprise:jakarta.enterprise.cdi-api:4.1.0",
         "jakarta.inject:jakarta.inject-api:2.0.1",
@@ -1686,28 +1574,15 @@
         "jakarta.transaction:jakarta.transaction-api:2.0.1"
       ],
       "dependencies": [
-        "jakarta.resource:jakarta.resource-api:2.1.0",
-        "jakarta.transaction:jakarta.transaction-api:2.0.1"
-      ],
-      "exclusions": [
-        "org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec"
-      ]
-    },
-    {
-      "coord": "org.jboss:jboss-transaction-spi:8.0.0.Final",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/jboss/jboss-transaction-spi/8.0.0.Final/jboss-transaction-spi-8.0.0.Final.jar",
-      "directDependencies": [
-        "jakarta.resource:jakarta.resource-api:2.1.0",
-        "jakarta.transaction:jakarta.transaction-api:2.0.1"
-      ],
-      "dependencies": [
+        "jakarta.annotation:jakarta.annotation-api:3.0.0",
         "jakarta.resource:jakarta.resource-api:2.1.0",
         "jakarta.transaction:jakarta.transaction-api:2.0.1"
       ],
       "exclusions": [
         "jakarta.ejb:jakarta.ejb-api",
         "jakarta.enterprise:jakarta.enterprise.lang-model",
-        "org.jboss.logging:jboss-logging-spi"
+        "org.jboss.logging:jboss-logging-spi",
+        "org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec"
       ]
     },
     {

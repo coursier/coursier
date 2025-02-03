@@ -349,6 +349,20 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "dependencies": [
+        "com.fasterxml.jackson.core:jackson-core:2.17.2",
+        "io.netty:netty-buffer:4.1.111.Final",
+        "io.netty:netty-codec-dns:4.1.111.Final",
+        "io.netty:netty-codec-http2:4.1.111.Final",
+        "io.netty:netty-codec-http:4.1.111.Final",
+        "io.netty:netty-codec-socks:4.1.111.Final",
+        "io.netty:netty-codec:4.1.111.Final",
+        "io.netty:netty-common:4.1.111.Final",
+        "io.netty:netty-handler-proxy:4.1.111.Final",
+        "io.netty:netty-handler:4.1.111.Final",
+        "io.netty:netty-resolver-dns:4.1.111.Final",
+        "io.netty:netty-resolver:4.1.111.Final",
+        "io.netty:netty-transport-native-unix-common:4.1.111.Final",
+        "io.netty:netty-transport:4.1.111.Final",
         "io.quarkus.resteasy.reactive:resteasy-reactive-common-types:3.15.1",
         "io.quarkus.resteasy.reactive:resteasy-reactive-common:3.15.1",
         "io.quarkus.resteasy.reactive:resteasy-reactive:3.15.1",
@@ -357,6 +371,13 @@
         "io.smallrye.reactive:mutiny-zero-flow-adapters:1.1.0",
         "io.smallrye.reactive:mutiny:2.6.2",
         "io.smallrye.reactive:smallrye-mutiny-vertx-core:3.15.0",
+        "io.smallrye.reactive:smallrye-mutiny-vertx-runtime:3.15.0",
+        "io.smallrye.reactive:vertx-mutiny-generator:3.15.0",
+        "io.vertx:vertx-auth-common:4.5.10",
+        "io.vertx:vertx-bridge-common:4.5.10",
+        "io.vertx:vertx-codegen:4.5.10",
+        "io.vertx:vertx-core:4.5.10",
+        "io.vertx:vertx-web-common:4.5.10",
         "io.vertx:vertx-web:4.5.10",
         "jakarta.activation:jakarta.activation-api:2.1.3",
         "jakarta.annotation:jakarta.annotation-api:3.0.0",
@@ -414,9 +435,16 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "dependencies": [
+        "io.smallrye.common:smallrye-common-annotation:2.6.0",
         "io.smallrye.reactive:mutiny:2.6.2",
+        "jakarta.annotation:jakarta.annotation-api:3.0.0",
+        "jakarta.el:jakarta.el-api:5.0.1",
         "jakarta.enterprise:jakarta.enterprise.cdi-api:4.1.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
+        "jakarta.enterprise:jakarta.enterprise.lang-model:4.1.0",
+        "jakarta.inject:jakarta.inject-api:2.0.1",
+        "jakarta.interceptor:jakarta.interceptor-api:2.2.0",
+        "org.jboss.logging:jboss-logging:3.6.0.Final",
+        "org.jctools:jctools-core:4.0.5"
       ],
       "exclusions": [
         "javax.enterprise:cdi-api",
@@ -431,6 +459,24 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "dependencies": [
+        "com.fasterxml.jackson.core:jackson-core:2.17.2",
+        "io.netty:netty-buffer:4.1.111.Final",
+        "io.netty:netty-codec-dns:4.1.111.Final",
+        "io.netty:netty-codec-http2:4.1.111.Final",
+        "io.netty:netty-codec-http:4.1.111.Final",
+        "io.netty:netty-codec-socks:4.1.111.Final",
+        "io.netty:netty-codec:4.1.111.Final",
+        "io.netty:netty-common:4.1.111.Final",
+        "io.netty:netty-handler-proxy:4.1.111.Final",
+        "io.netty:netty-handler:4.1.111.Final",
+        "io.netty:netty-resolver-dns:4.1.111.Final",
+        "io.netty:netty-resolver:4.1.111.Final",
+        "io.netty:netty-transport-native-unix-common:4.1.111.Final",
+        "io.netty:netty-transport:4.1.111.Final",
+        "io.vertx:vertx-auth-common:4.5.10",
+        "io.vertx:vertx-bridge-common:4.5.10",
+        "io.vertx:vertx-core:4.5.10",
+        "io.vertx:vertx-web-common:4.5.10",
         "io.vertx:vertx-web:4.5.10",
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ]
@@ -1546,25 +1592,10 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.eclipse.parsson:jakarta.json",
-        "org.jboss.modules:jboss-modules"
-      ]
-    },
-    {
-      "coord": "io.smallrye.common:smallrye-common-expression:2.6.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-expression/2.6.0/smallrye-common-expression-2.6.0.jar",
-      "directDependencies": [
-        "io.smallrye.common:smallrye-common-function:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "dependencies": [
-        "io.smallrye.common:smallrye-common-constraint:2.6.0",
-        "io.smallrye.common:smallrye-common-function:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "exclusions": [
         "javax.annotation:javax.annotation-api",
         "javax.enterprise:cdi-api",
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -1583,24 +1614,10 @@
       "exclusions": [
         "javax.annotation:javax.annotation-api",
         "javax.enterprise:cdi-api",
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
-      ]
-    },
-    {
-      "coord": "io.smallrye.common:smallrye-common-function:2.6.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-function/2.6.0/smallrye-common-function-2.6.0.jar",
-      "directDependencies": [
-        "io.smallrye.common:smallrye-common-constraint:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "dependencies": [
-        "io.smallrye.common:smallrye-common-constraint:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "exclusions": [
-        "org.eclipse.parsson:jakarta.json",
-        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -1654,6 +1671,20 @@
         "io.vertx:vertx-core:4.5.10"
       ],
       "dependencies": [
+        "com.fasterxml.jackson.core:jackson-core:2.17.2",
+        "io.netty:netty-buffer:4.1.111.Final",
+        "io.netty:netty-codec-dns:4.1.111.Final",
+        "io.netty:netty-codec-http2:4.1.111.Final",
+        "io.netty:netty-codec-http:4.1.111.Final",
+        "io.netty:netty-codec-socks:4.1.111.Final",
+        "io.netty:netty-codec:4.1.111.Final",
+        "io.netty:netty-common:4.1.111.Final",
+        "io.netty:netty-handler-proxy:4.1.111.Final",
+        "io.netty:netty-handler:4.1.111.Final",
+        "io.netty:netty-resolver-dns:4.1.111.Final",
+        "io.netty:netty-resolver:4.1.111.Final",
+        "io.netty:netty-transport-native-unix-common:4.1.111.Final",
+        "io.netty:netty-transport:4.1.111.Final",
         "io.smallrye.common:smallrye-common-constraint:2.6.0",
         "io.vertx:vertx-core:4.5.10",
         "org.jboss.logging:jboss-logging:3.6.0.Final"
@@ -1697,6 +1728,7 @@
         "io.smallrye.common:smallrye-common-classloader:2.6.0",
         "io.smallrye.common:smallrye-common-constraint:2.6.0",
         "io.smallrye.common:smallrye-common-expression:2.6.0",
+        "io.smallrye.common:smallrye-common-function:2.6.0",
         "io.smallrye.config:smallrye-config-common:3.9.1",
         "jakarta.annotation:jakarta.annotation-api:3.0.0",
         "org.eclipse.microprofile.config:microprofile-config-api:3.1",
@@ -1721,6 +1753,7 @@
         "io.smallrye.common:smallrye-common-classloader:2.6.0",
         "io.smallrye.common:smallrye-common-constraint:2.6.0",
         "io.smallrye.common:smallrye-common-expression:2.6.0",
+        "io.smallrye.common:smallrye-common-function:2.6.0",
         "io.smallrye.config:smallrye-config-common:3.9.1",
         "io.smallrye.config:smallrye-config-core:3.9.1",
         "jakarta.annotation:jakarta.annotation-api:3.0.0",
@@ -1750,8 +1783,10 @@
         "io.smallrye:smallrye-context-propagation:2.1.2",
         "org.eclipse.microprofile.config:microprofile-config-api:3.1",
         "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3",
+        "org.jboss.logging:jboss-logging:3.6.0.Final",
         "org.jboss.threads:jboss-threads:3.6.1.Final",
-        "org.jctools:jctools-core:4.0.5"
+        "org.jctools:jctools-core:4.0.5",
+        "org.wildfly.common:wildfly-common:1.7.0.Final"
       ]
     },
     {
@@ -2062,26 +2097,10 @@
       ],
       "dependencies": [
         "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3"
-      ]
-    },
-    {
-      "coord": "io.smallrye:smallrye-context-propagation-api:2.1.2",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/smallrye-context-propagation-api/2.1.2/smallrye-context-propagation-api-2.1.2.jar",
-      "directDependencies": [
-        "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3"
-      ],
-      "dependencies": [
-        "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3"
       ],
       "exclusions": [
         "javax.enterprise:cdi-api"
       ]
-    },
-    {
-      "coord": "io.smallrye:smallrye-context-propagation-storage:2.1.2",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/smallrye-context-propagation-storage/2.1.2/smallrye-context-propagation-storage-2.1.2.jar",
-      "directDependencies": [],
-      "dependencies": []
     },
     {
       "coord": "io.smallrye:smallrye-context-propagation-storage:2.1.2",
@@ -2107,25 +2126,9 @@
         "io.smallrye:smallrye-context-propagation-storage:2.1.2",
         "org.eclipse.microprofile.config:microprofile-config-api:3.1",
         "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3",
-        "org.jboss.threads:jboss-threads:3.6.1.Final"
-      ]
-    },
-    {
-      "coord": "io.smallrye:smallrye-context-propagation:2.1.2",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/smallrye-context-propagation/2.1.2/smallrye-context-propagation-2.1.2.jar",
-      "directDependencies": [
-        "io.smallrye:smallrye-context-propagation-api:2.1.2",
-        "io.smallrye:smallrye-context-propagation-storage:2.1.2",
-        "org.eclipse.microprofile.config:microprofile-config-api:3.1",
-        "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3",
-        "org.jboss.threads:jboss-threads:3.6.1.Final"
-      ],
-      "dependencies": [
-        "io.smallrye:smallrye-context-propagation-api:2.1.2",
-        "io.smallrye:smallrye-context-propagation-storage:2.1.2",
-        "org.eclipse.microprofile.config:microprofile-config-api:3.1",
-        "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3",
-        "org.jboss.threads:jboss-threads:3.6.1.Final"
+        "org.jboss.logging:jboss-logging:3.6.0.Final",
+        "org.jboss.threads:jboss-threads:3.6.1.Final",
+        "org.wildfly.common:wildfly-common:1.7.0.Final"
       ],
       "exclusions": [
         "javax.enterprise:cdi-api"
@@ -2408,15 +2411,6 @@
       ]
     },
     {
-      "coord": "org.eclipse.microprofile.config:microprofile-config-api:3.1",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/eclipse/microprofile/config/microprofile-config-api/3.1/microprofile-config-api-3.1.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "org.osgi:org.osgi.annotation.versioning"
-      ]
-    },
-    {
       "coord": "org.eclipse.microprofile.context-propagation:microprofile-context-propagation-api:1.3",
       "file": "${CACHE}/https/repo1.maven.org/maven2/org/eclipse/microprofile/context-propagation/microprofile-context-propagation-api/1.3/microprofile-context-propagation-api-1.3.jar",
       "directDependencies": [],
@@ -2472,6 +2466,7 @@
         "io.smallrye.common:smallrye-common-constraint:2.6.0",
         "io.smallrye.common:smallrye-common-cpu:2.6.0",
         "io.smallrye.common:smallrye-common-expression:2.6.0",
+        "io.smallrye.common:smallrye-common-function:2.6.0",
         "io.smallrye.common:smallrye-common-net:2.6.0",
         "io.smallrye.common:smallrye-common-os:2.6.0",
         "io.smallrye.common:smallrye-common-ref:2.6.0",

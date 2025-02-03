@@ -216,10 +216,7 @@ import scala.annotation.nowarn
   private def deprecatedBoms = DependencyInternals.deprecatedBoms(this)
 
   def mavenPrefix: String =
-    if (attributes.isEmpty)
-      module.orgName
-    else
-      s"${module.orgName}:${attributes.packagingAndClassifier}"
+    Dependency.mavenPrefix(module, attributes)
 
   def attributes: Attributes =
     publication.attributes
@@ -778,4 +775,10 @@ object Dependency {
       optional,
       transitive
     )
+
+  def mavenPrefix(module: Module, attributes: Attributes): String =
+    if (attributes.isEmpty)
+      module.orgName
+    else
+      s"${module.orgName}:${attributes.packagingAndClassifier}"
 }

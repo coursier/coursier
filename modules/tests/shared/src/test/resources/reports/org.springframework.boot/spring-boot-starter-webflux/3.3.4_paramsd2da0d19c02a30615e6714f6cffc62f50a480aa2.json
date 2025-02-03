@@ -465,7 +465,8 @@
         "io.netty:netty-transport-native-epoll:jar:linux-x86_64:4.1.112.Final",
         "io.netty:netty-transport-native-unix-common:4.1.112.Final",
         "io.netty:netty-transport:4.1.112.Final",
-        "io.projectreactor:reactor-core:3.6.10"
+        "io.projectreactor:reactor-core:3.6.10",
+        "org.reactivestreams:reactive-streams:1.0.4"
       ],
       "exclusions": [
         "commons-logging:commons-logging"
@@ -502,7 +503,8 @@
         "io.netty:netty-transport-native-unix-common:4.1.112.Final",
         "io.netty:netty-transport:4.1.112.Final",
         "io.projectreactor.netty:reactor-netty-core:1.1.22",
-        "io.projectreactor:reactor-core:3.6.10"
+        "io.projectreactor:reactor-core:3.6.10",
+        "org.reactivestreams:reactive-streams:1.0.4"
       ]
     },
     {
@@ -663,7 +665,8 @@
         "io.netty:netty-transport:4.1.112.Final",
         "io.projectreactor.netty:reactor-netty-core:1.1.22",
         "io.projectreactor.netty:reactor-netty-http:1.1.22",
-        "io.projectreactor:reactor-core:3.6.10"
+        "io.projectreactor:reactor-core:3.6.10",
+        "org.reactivestreams:reactive-streams:1.0.4"
       ]
     },
     {

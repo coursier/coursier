@@ -100,7 +100,7 @@ object ReportNode {
   val version         = "0.1.0"
 }
 
-object JsonReport {
+object LegacyJsonReport {
 
   private val printer = PrettyParams.nospace.copy(preserveOrder = true)
 

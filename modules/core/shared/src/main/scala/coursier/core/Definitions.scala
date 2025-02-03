@@ -238,6 +238,10 @@ object Configuration {
 
   def isEmpty: Boolean =
     `type`.isEmpty && classifier.isEmpty
+
+  def normalize: Attributes =
+    if (`type` == Type.jar) withType(Type.empty)
+    else this
 }
 
 object Attributes {

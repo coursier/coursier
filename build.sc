@@ -630,6 +630,7 @@ trait Cli extends CsModule
     Deps.slf4JNop
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+    Deps.jsoniterMacros,
     Deps.svm
   )
   def mainClass = Some("coursier.cli.Coursier")
