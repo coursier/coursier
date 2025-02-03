@@ -1020,7 +1020,7 @@ object FetchTests extends TestSuite {
     /* Result:
      * |└─ org.apache.commons:commons-compress:1.5
      */
-    test("external dep url with the same forced version should fetch junit-4.12.jar") {
+    test("external dep url with the same forced version should fetch junit-4_12_jar") {
       withFile() {
         (jsonFile, _) =>
           val resolutionOpt =
