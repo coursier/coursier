@@ -60,11 +60,11 @@
 <p>Add to your <code>build.sbt</code></p>
 <pre><code class="hljs css language-scala">resolvers += <span class="hljs-type">Resolver</span>.sonatypeRepo(<span class="hljs-string">"snapshots"</span>)
 libraryDependencies ++= <span class="hljs-type">Seq</span>(
-  <span class="hljs-string">"io.get-coursier"</span> %% <span class="hljs-string">"coursier-core"</span> % <span class="hljs-string">"2.1.24-60-03863e6c7-SNAPSHOT"</span>,
-  <span class="hljs-string">"io.get-coursier"</span> %% <span class="hljs-string">"coursier-cache"</span> % <span class="hljs-string">"2.1.24-60-03863e6c7-SNAPSHOT"</span>
+  <span class="hljs-string">"io.get-coursier"</span> %% <span class="hljs-string">"coursier-core"</span> % <span class="hljs-string">"2.1.24-67-e5c234787-SNAPSHOT"</span>,
+  <span class="hljs-string">"io.get-coursier"</span> %% <span class="hljs-string">"coursier-cache"</span> % <span class="hljs-string">"2.1.24-67-e5c234787-SNAPSHOT"</span>
 )
 </code></pre>
-<p>The first module, <code>&quot;io.get-coursier&quot; %% &quot;coursier-core&quot; % &quot;2.1.24-60-03863e6c7-SNAPSHOT&quot;</code>, contains among others,
+<p>The first module, <code>&quot;io.get-coursier&quot; %% &quot;coursier-core&quot; % &quot;2.1.24-67-e5c234787-SNAPSHOT&quot;</code>, contains among others,
 definitions,
 mainly in <a href="https://github.com/coursier/coursier/blob/master/core/shared/src/main/scala/coursier/core/Definitions.scala"><code>Definitions.scala</code></a>,
 <a href="https://github.com/coursier/coursier/blob/master/core/shared/src/main/scala/coursier/core/Resolution.scala"><code>Resolution</code></a>, representing a particular state of the resolution,
@@ -72,20 +72,21 @@ and <a href="https://github.com/coursier/coursier/blob/master/core/shared/src/ma
 that expects to be given metadata, wrapped in any <code>Monad</code>, then feeds these to <code>Resolution</code>, and at the end gives
 you the final <code>Resolution</code>, wrapped in the same <code>Monad</code> it was given input. This final <code>Resolution</code> has all the dependencies,
 including the transitive ones.</p>
-<p>The second module, <code>&quot;io.get-coursier&quot; %% &quot;coursier-cache&quot; % &quot;2.1.24-60-03863e6c7-SNAPSHOT&quot;</code>, is precisely in charge of fetching
+<p>The second module, <code>&quot;io.get-coursier&quot; %% &quot;coursier-cache&quot; % &quot;2.1.24-67-e5c234787-SNAPSHOT&quot;</code>, is precisely in charge of fetching
 these input metadata. It uses its own <code>coursier.util.Task</code> as a <code>Monad</code> to wrap them. It also fetches artifacts (JARs, etc.).
 It caches all of these (metadata and artifacts) on disk, and validates checksums too.</p>
 <p>In the code below, we'll assume some imports are around,</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+<span class="hljs-keyword">import</span> coursier.version.{<span class="hljs-type">Version</span>, <span class="hljs-type">VersionConstraint</span>}
 </code></pre>
 <p>Resolving dependencies involves create an initial resolution state, with all the initial dependencies in it, like</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">val</span> start = <span class="hljs-type">Resolution</span>(
   <span class="hljs-type">Seq</span>(
     <span class="hljs-type">Dependency</span>(
-      <span class="hljs-type">Module</span>(<span class="hljs-string">org"org.typelevel"</span>, <span class="hljs-string">name"cats-core_2.11"</span>), <span class="hljs-string">"0.6.0"</span>
+      <span class="hljs-type">Module</span>(<span class="hljs-string">org"org.typelevel"</span>, <span class="hljs-string">name"cats-core_2.11"</span>), <span class="hljs-type">VersionConstraint</span>(<span class="hljs-string">"0.6.0"</span>)
     ),
     <span class="hljs-type">Dependency</span>(
-      <span class="hljs-type">Module</span>(<span class="hljs-string">org"org.scalaz"</span>, <span class="hljs-string">name"scalaz-core_2.11"</span>), <span class="hljs-string">"7.2.3"</span>
+      <span class="hljs-type">Module</span>(<span class="hljs-string">org"org.scalaz"</span>, <span class="hljs-string">name"scalaz-core_2.11"</span>), <span class="hljs-type">VersionConstraint</span>(<span class="hljs-string">"7.2.3"</span>)
     )
   )
 )
@@ -131,7 +132,7 @@ and version (just a <code>String</code>), it gives either errors (<code>Seq[Stri
 wrapping the whole in a monad <code>F</code>.</p>
 <pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier.cache.<span class="hljs-type">Cache</span>
 
-<span class="hljs-keyword">val</span> fetch = <span class="hljs-type">ResolutionProcess</span>.fetch(repositories, <span class="hljs-type">Cache</span>.<span class="hljs-keyword">default</span>.fetch)
+<span class="hljs-keyword">val</span> fetch = <span class="hljs-type">ResolutionProcess</span>.fetch0(repositories, <span class="hljs-type">Cache</span>.<span class="hljs-keyword">default</span>.fetch)
 </code></pre>
 <p>The monad used by <code>Fetch.from</code> is <code>coursier.util.Task</code>, but the resolution process is not tied to a particular
 monad - any stack-safe monad would do.</p>
@@ -159,7 +160,7 @@ a <a href="https://github.com/coursier/coursier/blob/cf269c6895e19f2d590f0881140
 <p>By default, downloads happen in a global fixed thread pool (with 6 threads, allowing for 6 parallel downloads), but
 you can supply your own thread pool to <code>Cache.fetch</code>.</p>
 <p>Now that the resolution is done, we can check for errors in</p>
-<pre><code class="hljs css language-scala"><span class="hljs-keyword">val</span> errors: <span class="hljs-type">Seq</span>[((<span class="hljs-type">Module</span>, <span class="hljs-type">String</span>), <span class="hljs-type">Seq</span>[<span class="hljs-type">String</span>])] = resolution.errors
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">val</span> errors: <span class="hljs-type">Seq</span>[((<span class="hljs-type">Module</span>, <span class="hljs-type">VersionConstraint</span>), <span class="hljs-type">Seq</span>[<span class="hljs-type">String</span>])] = resolution.errors0
 </code></pre>
 <p>These would mean that the resolution wasn't able to get metadata about some dependencies.</p>
 <p>We can also check for version conflicts, in</p>
