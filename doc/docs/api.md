@@ -133,12 +133,13 @@ A number of resolution parameters can be adjusted by passing a custom
 import coursier._
 import coursier.params._
 import coursier.params.rule._
+import coursier.version.VersionConstraint
 
 val params = ResolutionParams()
   .withMaxIterations(50)
   .withScalaVersion("2.12.8")
-  .addForceVersion(
-    mod"joda-time:joda-time" -> "2.10.1"
+  .addForceVersion0(
+    mod"joda-time:joda-time" -> VersionConstraint("2.10.1")
   )
   .addRule(
     SameVersion(mod"com.fasterxml.jackson.*:jackson-*")
@@ -234,6 +235,7 @@ Use it like
 
 ```scala mdoc:silent:reset
 import coursier._
+import coursier.version.Version
 
 val versions = Versions()
   .withModule(mod"org.typelevel:cats-kernel_2.12")
@@ -241,11 +243,11 @@ val versions = Versions()
 ```
 
 ```scala mdoc
-versions.latest
+versions.latest0
 ```
 
 ```scala mdoc:passthrough
-versions.latest: String
+versions.latest0: Version
 ```
 
 One can

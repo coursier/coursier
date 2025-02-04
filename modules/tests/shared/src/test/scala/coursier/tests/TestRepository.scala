@@ -2,12 +2,14 @@ package coursier.tests
 
 import coursier.core._
 import coursier.util.{EitherT, Monad}
+import coursier.version.VersionConstraint
 
-final case class TestRepository(projects: Map[(Module, String), Project]) extends Repository {
+final case class TestRepository(projects: Map[(Module, VersionConstraint), Project])
+    extends Repository with Repository.VersionApi {
 
-  def find[F[_]](
+  override def find0[F[_]](
     module: Module,
-    version: String,
+    version: VersionConstraint,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]

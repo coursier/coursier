@@ -1,13 +1,14 @@
 package coursier.tests
 
 import coursier.{Artifacts, Repositories, Resolve}
+import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 import coursier.util.InMemoryRepository
 import coursier.util.StringInterpolators._
+import coursier.version.VersionConstraint
 import utest._
 
 import scala.async.Async.{async, await}
-import coursier.ivy.IvyRepository
 
 object ArtifactsTests extends TestSuite {
 
@@ -221,7 +222,7 @@ object ArtifactsTests extends TestSuite {
         val wrongShapelessJarUrl =
           "https://repo1.maven.org/maven2/com/chuusai/shapeless_2.11/2.3.242/shapeless_2.11-2.3.242.jar"
         val inMemoryRepo = InMemoryRepository.privateApply(Map(
-          (mod"com.chuusai:shapeless_2.11", "2.3.3") ->
+          (mod"com.chuusai:shapeless_2.11", VersionConstraint("2.3.3")) ->
             (new java.net.URL(wrongShapelessJarUrl), false)
         ))
 

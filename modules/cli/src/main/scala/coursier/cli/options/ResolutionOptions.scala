@@ -3,9 +3,11 @@ package coursier.cli.options
 import caseapp._
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.core._
+import coursier.core.{Configuration, ResolutionProcess}
 import coursier.params.ResolutionParams
 import coursier.parse.{DependencyParser, ModuleParser, ReconciliationParser, RuleParser}
+import coursier.version.Version
+import coursier.version.VersionConstraint
 
 // format: off
 final case class ResolutionOptions(
@@ -117,7 +119,7 @@ final case class ResolutionOptions(
   // format: on
 
   def scalaVersionOrDefault: String =
-    scalaVersion.getOrElse(ResolutionParams().selectedScalaVersion)
+    scalaVersion.getOrElse(ResolutionParams().selectedScalaVersionConstraint.asString)
 
   def params: ValidatedNel[String, ResolutionParams] = {
 
@@ -127,8 +129,9 @@ final case class ResolutionOptions(
       else
         Validated.invalidNel(s"Max iteration must be > 0 (got $maxIterations")
 
-    val forceVersionV =
-      DependencyParser.moduleVersions(
+    val forceVersionV
+      : ValidatedNel[String, Map[coursier.core.Module, coursier.version.VersionConstraint]] =
+      DependencyParser.moduleVersions0(
         forceVersion,
         scalaVersionOrDefault
       ).either match {
@@ -143,7 +146,7 @@ final case class ResolutionOptions(
               .groupBy(_._1)
               .view.mapValues(_.map(_._2).last)
               .iterator
-              .toMap
+              .toMap: Map[coursier.core.Module, coursier.version.VersionConstraint]
           )
       }
 
@@ -185,7 +188,7 @@ final case class ResolutionOptions(
       .map(_.flatten)
 
     val reconciliationV =
-      ReconciliationParser.reconciliation(reconciliation, scalaVersionOrDefault).either match {
+      ReconciliationParser.reconciliation0(reconciliation, scalaVersionOrDefault).either match {
         case Left(e)      => Validated.invalidNel(e.mkString(System.lineSeparator()))
         case Right(elems) => Validated.validNel(elems)
       }
@@ -198,23 +201,35 @@ final case class ResolutionOptions(
       rulesV,
       reconciliationV
     ).mapN {
-      (maxIterations, forceVersion, extraProperties, forcedProperties, rules, reconciliation) =>
+      (
+        maxIterations,
+        forceVersion: Map[coursier.core.Module, coursier.version.VersionConstraint],
+        extraProperties,
+        forcedProperties,
+        rules,
+        reconciliation
+      ) =>
         ResolutionParams()
           .withKeepOptionalDependencies(keepOptional)
           .withMaxIterations(maxIterations)
-          .withForceVersion(forceVersion)
+          .withForceVersion0(forceVersion)
           .withProperties(extraProperties)
           .withForcedProperties(forcedProperties)
           .withProfiles(profiles)
-          .withScalaVersionOpt(scalaVersion.map(_.trim).filter(_.nonEmpty))
+          .withScalaVersionOpt0(
+            scalaVersion
+              .map(_.trim)
+              .filter(_.nonEmpty)
+              .map(VersionConstraint(_))
+          )
           .withForceScalaVersionOpt(forceScalaVersion)
           .withOverrideFullSuffixOpt(overrideFullSuffix)
           .withTypelevel(typelevel)
           .withRules(rules)
-          .withReconciliation(reconciliation)
+          .withReconciliation0(reconciliation)
           .withDefaultConfiguration(Configuration(defaultConfiguration))
           .withKeepProvidedDependencies(keepProvidedDependencies)
-          .withJdkVersionOpt(jdkVersion.map(_.trim).filter(_.nonEmpty).map(Version(_)))
+          .withJdkVersionOpt0(jdkVersion.map(_.trim).filter(_.nonEmpty).map(Version(_)))
           .withForceDepMgmtVersions(forceDepMgmtVersions)
           .withEnableDependencyOverrides(enableDependencyOverrides)
     }

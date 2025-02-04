@@ -12,6 +12,7 @@ import coursier.core.{
   Organization,
   Type
 }
+import coursier.version.VersionConstraint
 import dataclass.data
 import dependency.{CovariantSet, DependencyLike, ModuleLike}
 
@@ -19,7 +20,7 @@ import scala.collection.mutable
 
 sealed abstract class JavaOrScalaDependency extends Product with Serializable {
   def module: JavaOrScalaModule
-  def version: String
+  def versionConstraint: VersionConstraint
   def exclude: Set[JavaOrScalaModule]
   def addExclude(excl: JavaOrScalaModule*): JavaOrScalaDependency
   def dependency(scalaBinaryVersion: String, scalaVersion: String, platformName: String): Dependency
@@ -32,6 +33,9 @@ sealed abstract class JavaOrScalaDependency extends Product with Serializable {
     val sbv = JavaOrScalaModule.scalaBinaryVersion(scalaVersion)
     dependency(sbv, scalaVersion, "")
   }
+
+  @deprecated("Use versionConstraint instead", "2.1.25")
+  def version: String = versionConstraint.asString
 }
 
 object JavaOrScalaDependency {
@@ -53,8 +57,8 @@ object JavaOrScalaDependency {
       extends JavaOrScalaDependency {
     def module: JavaOrScalaModule.JavaModule =
       JavaOrScalaModule.JavaModule(dependency.module)
-    def version: String =
-      dependency.version
+    def versionConstraint: VersionConstraint =
+      dependency.versionConstraint
     def dependency(
       scalaBinaryVersion: String,
       scalaVersion: String,
@@ -88,9 +92,9 @@ object JavaOrScalaDependency {
       // FIXME withPlatformSuffix not supported in JavaOrScalaModule.ScalaModule
       JavaOrScalaModule.ScalaModule(baseDependency.module, fullCrossVersion)
     def repr: String =
-      s"$module:${if (withPlatformSuffix) ":" else ""}${baseDependency.version}"
-    def version: String =
-      baseDependency.version
+      s"$module:${if (withPlatformSuffix) ":" else ""}${baseDependency.versionConstraint.asString}"
+    def versionConstraint: VersionConstraint =
+      baseDependency.versionConstraint
     def dependency(
       scalaBinaryVersion: String,
       scalaVersion: String,
@@ -163,7 +167,7 @@ object JavaOrScalaDependency {
         ModuleName(dep.module.name),
         dep.module.attributes
       ),
-      dep.version
+      VersionConstraint(dep.version)
     )
     val (userParams, configOpt) =
       dep.userParamsMap.get(inlineConfigKey).flatMap(_.headOption) match {
@@ -251,7 +255,7 @@ object JavaOrScalaDependency {
                   ModuleName(bomDep.module.name),
                   Map.empty
                 ),
-                bomDep.version
+                VersionConstraint(bomDep.version)
               )
             )
           else
@@ -267,7 +271,7 @@ object JavaOrScalaDependency {
       case Right(modVer) => modVer
     }
 
-    csDep = csDep.addBoms(boms)
+    csDep = csDep.addBoms0(boms)
 
     val overrideValues = userParams.get(overrideKey).getOrElse(Nil)
     if (overrideValues.exists(_.isEmpty))
@@ -297,7 +301,7 @@ object JavaOrScalaDependency {
               ),
               DependencyManagement.Values(
                 Configuration.empty,
-                overrideDep.version,
+                VersionConstraint(overrideDep.version),
                 MinimizedExclusions.zero,
                 optional = false
               )

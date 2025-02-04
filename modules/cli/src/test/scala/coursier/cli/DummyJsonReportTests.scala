@@ -1,6 +1,6 @@
 package coursier.cli
 
-import coursier.cli.util.JsonReport
+import coursier.cli.util.LegacyJsonReport
 import coursier.tests.TestHelpers
 import utest._
 
@@ -18,9 +18,9 @@ object DummyJsonReportTests extends TestSuite {
     test("empty JsonReport should be empty") {
       TestHelpers.validateResult(s"${TestHelpers.testDataDir}/dummy-reports/empty.json") {
         jsonLines {
-          JsonReport[String](Vector.empty, ListMap())(
+          LegacyJsonReport[String](Vector.empty, ListMap())(
             children = _ => Vector.empty,
-            reconciledVersionStr = _ => "",
+            retainedVersionStr = _ => "",
             requestedVersionStr = _ => "",
             getFile = _ => Option(""),
             exclusions = _ => Nil
@@ -34,12 +34,12 @@ object DummyJsonReportTests extends TestSuite {
 
       TestHelpers.validateResult(s"${TestHelpers.testDataDir}/dummy-reports/two-deps.json") {
         jsonLines {
-          JsonReport[String](
+          LegacyJsonReport[String](
             roots = Vector("a", "b"),
             conflictResolutionForRoots = ListMap()
           )(
             children = children(_).toVector,
-            reconciledVersionStr = s => s"$s:reconciled",
+            retainedVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
             getFile = _ => Option(""),
             exclusions = _ => Nil
@@ -55,12 +55,12 @@ object DummyJsonReportTests extends TestSuite {
 
       TestHelpers.validateResult(s"${TestHelpers.testDataDir}/dummy-reports/two-deps-order.json") {
         jsonLines {
-          JsonReport[String](
+          LegacyJsonReport[String](
             roots = Vector("b", "a"),
             conflictResolutionForRoots = ListMap()
           )(
             children = children(_).toVector,
-            reconciledVersionStr = s => s"$s:reconciled",
+            retainedVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
             getFile = _ => Option(""),
             exclusions = _ => Nil
@@ -74,12 +74,12 @@ object DummyJsonReportTests extends TestSuite {
 
       TestHelpers.validateResult(s"${TestHelpers.testDataDir}/dummy-reports/self-dependency.json") {
         jsonLines {
-          JsonReport[String](
+          LegacyJsonReport[String](
             roots = Vector("a", "b"),
             conflictResolutionForRoots = ListMap.empty
           )(
             children = children(_),
-            reconciledVersionStr = s => s"$s:reconciled",
+            retainedVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
             getFile = _ => Option(""),
             exclusions = _ => Nil
@@ -94,12 +94,12 @@ object DummyJsonReportTests extends TestSuite {
 
       TestHelpers.validateResult(s"${TestHelpers.testDataDir}/dummy-reports/cycle.json") {
         jsonLines {
-          JsonReport[String](
+          LegacyJsonReport[String](
             roots = Vector("a", "b", "c"),
             conflictResolutionForRoots = ListMap.empty
           )(
             children = children(_),
-            reconciledVersionStr = s => s"$s:reconciled",
+            retainedVersionStr = s => s"$s:reconciled",
             requestedVersionStr = s => s"$s:requested",
             getFile = _ => Option(""),
             exclusions = _ => Nil

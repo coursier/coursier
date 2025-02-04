@@ -2,6 +2,7 @@ package coursier.maven
 
 import coursier.core._
 import coursier.util.{Artifact, EitherT, Monad}
+import coursier.version.VersionConstraint
 import dataclass._
 
 object MavenRepository {
@@ -28,7 +29,7 @@ object MavenRepository {
   changing: Option[Boolean] = None,
   @since
   override val versionsCheckHasModule: Boolean = true
-) extends MavenRepositoryLike {
+) extends MavenRepositoryLike with Repository.VersionApi {
 
   private val internal = new MavenRepositoryInternal(root, authentication, changing)
 
@@ -39,9 +40,9 @@ object MavenRepository {
   ): Seq[(Publication, Artifact)] =
     internal.artifacts(dependency, project, overrideClassifiers)
 
-  def find[F[_]](
+  override def find0[F[_]](
     module: Module,
-    version: String,
+    version: VersionConstraint,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]

@@ -1,16 +1,33 @@
 package coursier.ivy
 
-import coursier.core._
-import coursier.util.Xml._
 import coursier.core.Validation._
+import coursier.core.{
+  Classifier,
+  Configuration,
+  Dependency,
+  DependencyManagement,
+  Extension,
+  Info,
+  MinimizedExclusions,
+  Module,
+  ModuleName,
+  Organization,
+  Overrides,
+  Project,
+  Publication,
+  Type
+}
+import coursier.util.Xml._
+import coursier.version.Version
 
 import scala.collection.compat._
+import coursier.version.VersionConstraint
 
 object IvyXml {
 
   val attributesNamespace = "http://ant.apache.org/ivy/extra"
 
-  private def info(node: Node): Either[String, (Module, String)] =
+  private def info(node: Node): Either[String, (Module, Version)] =
     for {
       org <- node
         .attribute("organisation")
@@ -25,7 +42,7 @@ object IvyXml {
         .flatMap(validateCoordinate(_, "revision"))
     } yield {
       val attr = node.attributesFromNamespace(attributesNamespace)
-      (Module(org, name, attr.toMap), version)
+      (Module(org, name, attr.toMap), Version(version))
     }
 
   // FIXME Errors are ignored here
@@ -72,7 +89,7 @@ object IvyXml {
     confs.map(_ -> (org, name))
   }
 
-  private def override0(node0: Node): Option[(Organization, ModuleName, String)] = {
+  private def override0(node0: Node): Option[(Organization, ModuleName, VersionConstraint)] = {
     val versionOpt = node0
       .attribute("rev")
       .toOption
@@ -84,7 +101,7 @@ object IvyXml {
           .orElse(node0.attribute("name").toOption)
           .getOrElse("*")
       )
-      (org, name, version)
+      (org, name, VersionConstraint(version))
     }
   }
 
@@ -152,7 +169,7 @@ object IvyXml {
           pub <- publications
         } yield fromConf -> Dependency(
           Module(org, name, attr.toMap),
-          version,
+          VersionConstraint(version),
           toConf,
           globalExcludes.getOrElse(Configuration.all, Set.empty) ++
             globalExcludes.getOrElse(fromConf, Set.empty) ++
@@ -282,7 +299,7 @@ object IvyXml {
         version,
         dependencies0,
         configurations0.toMap,
-        parent = None,
+        parent0 = None,
         dependencyManagement = Nil,
         properties = extraInfo.toSeq,
         profiles = Nil,
@@ -290,7 +307,7 @@ object IvyXml {
         snapshotVersioning = None,
         packagingOpt = None,
         relocated = false,
-        actualVersionOpt = None,
+        actualVersionOpt0 = None,
         if (publicationsOpt.isEmpty)
           // no publications node -> default JAR artifact
           Seq(Configuration.all -> Publication(

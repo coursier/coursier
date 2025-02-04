@@ -6,6 +6,7 @@ import java.util.regex.Pattern.quote
 
 import coursier.core.Module
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
+import coursier.version.VersionConstraint
 import dataclass.data
 
 sealed abstract class Channel extends Product with Serializable {
@@ -16,10 +17,38 @@ object Channel {
 
   @data class FromModule(
     module: Module,
-    version: String = "latest.release"
+    versionConstraint: VersionConstraint = VersionConstraint("latest.release")
   ) extends Channel {
+
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def this(
+      module: Module,
+      version: String
+    ) = this(
+      module,
+      VersionConstraint(version)
+    )
+
+    @deprecated("Use versionConstraint instead", "2.1.25")
+    def version: String =
+      versionConstraint.asString
+    @deprecated("Use withVersionConstraint instead", "2.1.25")
+    def withVersion(newVersion: String): FromModule =
+      withVersionConstraint(VersionConstraint(newVersion))
+
     def repr: String =
       module.repr
+  }
+
+  object FromModule {
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def apply(
+      module: Module,
+      version: String
+    ): FromModule = apply(
+      module,
+      VersionConstraint(version)
+    )
   }
 
   @data class FromUrl(url: String) extends Channel {
@@ -39,8 +68,11 @@ object Channel {
 
   def module(module: Module): FromModule =
     FromModule(module)
-  def module(module: Module, version: String): FromModule =
+  def module(module: Module, version: VersionConstraint): FromModule =
     FromModule(module, version)
+  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+  def module(module0: Module, version: String): FromModule =
+    module(module0, VersionConstraint(version))
 
   private lazy val ghUrlMatcher = (
     quote("https://github.com/") +
@@ -122,7 +154,7 @@ object Channel {
       if (hasVersion)
         DependencyParser.javaOrScalaDependencyParams(s).flatMap {
           case (j: JavaOrScalaDependency.JavaDependency, _) =>
-            Right(Channel.module(j.module.module, j.version))
+            Right(Channel.module(j.module.module, j.versionConstraint))
           case (s: JavaOrScalaDependency.ScalaDependency, _) =>
             Left(s"Scala dependencies ($s) not accepted as channels")
         }

@@ -1,6 +1,7 @@
 package coursier.graph
 
-import coursier.core._
+import coursier.core.{Dependency, MinimizedExclusions, Resolution}
+import coursier.version.{Version, VersionConstraint}
 
 /** Simple dependency tree. */
 sealed abstract class DependencyTree {
@@ -11,10 +12,18 @@ sealed abstract class DependencyTree {
     */
   def excluded: Boolean
 
-  def reconciledVersion: String
+  def reconciledVersionConstraint: VersionConstraint
+
+  @deprecated("Use reconciledVersion0 instead", "2.1.25")
+  def reconciledVersion: String =
+    reconciledVersionConstraint.asString
 
   /** The final version of this dependency. */
-  def retainedVersion: String
+  def retainedVersion0: Version
+
+  @deprecated("Use retainedVersion0 instead", "2.1.25")
+  def retainedVersion: String =
+    retainedVersion0.asString
 
   /** Dependencies of this node. */
   def children: Seq[DependencyTree]
@@ -50,15 +59,19 @@ object DependencyTree {
     withExclusions: Boolean
   ) extends DependencyTree {
 
-    def reconciledVersion: String =
+    def reconciledVersionConstraint: VersionConstraint =
       resolution
         .reconciledVersions
-        .getOrElse(dependency.module, dependency.version)
+        .getOrElse(dependency.module, dependency.versionConstraint)
 
-    def retainedVersion: String =
+    def retainedVersion0: Version =
       resolution
         .retainedVersions
-        .getOrElse(dependency.module, dependency.version)
+        .getOrElse(
+          dependency.module,
+          Version.zero
+          // sys.error(s"${dependency.module} not found in retained versions (got ${resolution.retainedVersions.keys.toVector.map(_.repr).sorted})")
+        )
 
     // don't make that a val!! issues with cyclic dependencies
     // (see e.g. edu.illinois.cs.cogcomp:illinois-pos in the tests)
@@ -66,7 +79,7 @@ object DependencyTree {
       if (excluded)
         Nil
       else {
-        val dep0 = dependency.withVersion(retainedVersion)
+        val dep0 = dependency.withVersionConstraint(reconciledVersionConstraint)
 
         val dependencies = resolution
           .dependenciesOf(
@@ -74,10 +87,10 @@ object DependencyTree {
             withRetainedVersions = false
           )
           .sortBy { trDep =>
-            (trDep.module.organization, trDep.module.name, trDep.version)
+            (trDep.module.organization, trDep.module.name, trDep.versionConstraint)
           }
 
-        val dependencies0 = dependencies.map(_.moduleVersion).toSet
+        val dependencies0 = dependencies.map(_.moduleVersionConstraint).toSet
 
         def excluded = resolution
           .dependenciesOf(
@@ -85,10 +98,10 @@ object DependencyTree {
             withRetainedVersions = false
           )
           .sortBy { trDep =>
-            (trDep.module.organization, trDep.module.name, trDep.version)
+            (trDep.module.organization, trDep.module.name, trDep.versionConstraint)
           }
           .collect {
-            case trDep if !dependencies0(trDep.moduleVersion) =>
+            case trDep if !dependencies0(trDep.moduleVersionConstraint) =>
               Node(
                 trDep,
                 excluded = true,

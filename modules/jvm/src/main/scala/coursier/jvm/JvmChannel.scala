@@ -13,6 +13,7 @@ import coursier.core.{Module, ModuleName, Organization}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
 import coursier.util.StringInterpolators._
 import dataclass.data
+import coursier.version.VersionConstraint
 
 // FIXME Initially copied from coursier.install.Channel, there's some duplication with it…
 
@@ -24,10 +25,37 @@ object JvmChannel {
 
   @data class FromModule(
     module: Module,
-    version: String = "latest.release"
+    versionConstraint: VersionConstraint = VersionConstraint("latest.release")
   ) extends JvmChannel {
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def this(
+      module: Module,
+      version: String
+    ) = this(
+      module,
+      VersionConstraint(version)
+    )
+
     def repr: String =
       module.repr
+
+    @deprecated("Use versionConstraint instead", "2.1.25")
+    def version: String = versionConstraint.asString
+    @deprecated("Use withVersionConstraint instead", "2.1.25")
+    def withVersion(newVersion: String): FromModule =
+      if (newVersion == versionConstraint.asString) this
+      else withVersionConstraint(VersionConstraint(newVersion))
+  }
+
+  object FromModule {
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def apply(
+      module: Module,
+      version: String
+    ): FromModule = apply(
+      module,
+      VersionConstraint(version)
+    )
   }
 
   @data class FromUrl(url: String) extends JvmChannel {
@@ -42,8 +70,12 @@ object JvmChannel {
 
   def module(module: Module): FromModule =
     FromModule(module)
-  def module(module: Module, version: String): FromModule =
+  def module(module: Module, version: VersionConstraint): FromModule =
     FromModule(module, version)
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def module(module: Module, version: String): FromModule =
+    FromModule(module, VersionConstraint(version))
 
   // adapted from https://github.com/VirtusLab/scala-cli/blob/51bebb087f9adaf1f1f4760374feb1a212b63bc9/modules/core/src/main/scala/scala/build/internals/OsLibc.scala#L14-L54
   lazy val isMusl: Option[Boolean] = {
@@ -247,7 +279,7 @@ object JvmChannel {
       if (hasVersion)
         DependencyParser.javaOrScalaDependencyParams(s).flatMap {
           case (j: JavaOrScalaDependency.JavaDependency, _) =>
-            Right(JvmChannel.module(j.module.module, j.version))
+            Right(JvmChannel.module(j.module.module, j.versionConstraint))
           case (s: JavaOrScalaDependency.ScalaDependency, _) =>
             Left(s"Scala dependencies ($s) not accepted as JVM channels")
         }

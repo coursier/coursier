@@ -16,6 +16,7 @@ import coursier.core.{
   Type
 }
 import coursier.util.StringInterpolators._
+import coursier.version.VersionConstraint
 import utest._
 
 object DependencyParserTests extends TestSuite {
@@ -30,7 +31,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version == "1.7.4")
+          assert(dep.versionConstraint.asString == "1.7.4")
           assert(dep.configuration == Configuration.empty)
           assert(dep.attributes == Attributes.empty)
       }
@@ -42,7 +43,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version.isEmpty)
+          assert(dep.versionConstraint.asString.isEmpty)
           assert(dep.configuration == Configuration.empty)
           assert(dep.attributes == Attributes.empty)
       }
@@ -54,7 +55,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version == "1.7.4")
+          assert(dep.versionConstraint.asString == "1.7.4")
           assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes.empty)
       }
@@ -66,7 +67,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version.isEmpty)
+          assert(dep.versionConstraint.asString.isEmpty)
           assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes.empty)
       }
@@ -78,7 +79,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version == "[1.7,1.8)")
+          assert(dep.versionConstraint.asString == "[1.7,1.8)")
           assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes.empty)
       }
@@ -93,7 +94,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version == "1.7.4")
+          assert(dep.versionConstraint.asString == "1.7.4")
           assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
@@ -108,7 +109,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version.isEmpty)
+          assert(dep.versionConstraint.asString.isEmpty)
           assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
@@ -123,7 +124,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version == "1.7.4")
+          assert(dep.versionConstraint.asString == "1.7.4")
           assert(dep.configuration == Configuration.runtime)
           assert(dep.publication == Publication("", Type.empty, Extension("exe"), Classifier.empty))
       }
@@ -138,7 +139,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version == "1.7.4")
+          assert(dep.versionConstraint.asString == "1.7.4")
           assert(dep.configuration == Configuration.runtime)
           val expectedPublication = Publication(
             "",
@@ -159,7 +160,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version == "1.7.4")
+          assert(dep.versionConstraint.asString == "1.7.4")
           assert(dep.configuration == Configuration.runtime)
           val expectedPublication = Publication(
             "",
@@ -180,7 +181,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version == "[1.7,1.8)")
+          assert(dep.versionConstraint.asString == "[1.7,1.8)")
           assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
@@ -195,7 +196,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version == "1.7.4")
+          assert(dep.versionConstraint.asString == "1.7.4")
           assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes.empty)
           assert(extraParams.isDefinedAt("url"))
@@ -212,7 +213,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version == "1.7.4")
+          assert(dep.versionConstraint.asString == "1.7.4")
           assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
           assert(extraParams.isDefinedAt("url"))
@@ -229,7 +230,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version == "[1.7,1.8)")
+          assert(dep.versionConstraint.asString == "[1.7,1.8)")
           assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
           assert(extraParams.isDefinedAt("url"))
@@ -246,7 +247,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
-          assert(dep.version == "[1.7,1.8)")
+          assert(dep.versionConstraint.asString == "[1.7,1.8)")
           assert(dep.configuration == Configuration.runtime)
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
           assert(extraParams.isDefinedAt("url"))
@@ -265,7 +266,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"io.get-coursier.scala-native")
           // use `contains` to be scala version agnostic
           assert(dep.module.name.value.contains("sandbox_native0.3_"))
-          assert(dep.version == "0.3.0-coursier-1")
+          assert(dep.versionConstraint.asString == "0.3.0-coursier-1")
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
     }
@@ -280,7 +281,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"io.get-coursier.scala-native")
           // use `contains` to be scala version agnostic
           assert(dep.module.name.value.contains("sandbox_native0.3"))
-          assert(dep.version == "[0.3.0,0.4.0)")
+          assert(dep.versionConstraint.asString == "[0.3.0,0.4.0)")
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
     }
@@ -295,7 +296,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"io.get-coursier.scala-native")
           // use `contains` to be scala version agnostic
           assert(dep.module.name.value.contains("sandbox_native0.3"))
-          assert(dep.version == "[0.3.0,0.4.0)")
+          assert(dep.versionConstraint.asString == "[0.3.0,0.4.0)")
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
           assert(dep.minimizedExclusions.toSet() == Set((org"foo", name"bar")))
       }
@@ -308,8 +309,8 @@ object DependencyParserTests extends TestSuite {
           name = ModuleName(value = "sandbox_native0.3_2.13"),
           attributes = Map()
         ),
-        version = "0.4.0"
-      ).addBom(mod"org.apache.spark:spark-parent_2.13", "3.5.4")
+        version = VersionConstraint("0.4.0")
+      ).addBom(mod"org.apache.spark:spark-parent_2.13", VersionConstraint("3.5.4"))
       val res = DependencyParser.dependencyParams(
         "io.get-coursier.scala-native::sandbox_native0.3:0.4.0,bom=org.apache.spark%spark-parent_2.13%3.5.4",
         "2.13.15"
@@ -327,9 +328,9 @@ object DependencyParserTests extends TestSuite {
           name = ModuleName(value = "sandbox_native0.3_2.13"),
           attributes = Map()
         ),
-        version = "0.4.0"
-      ).addBom(mod"org.apache.spark:spark-parent_2.13", "3.5.4")
-        .addBom(mod"io.quarkus:quarkus-bom", "3.16.2")
+        version = VersionConstraint("0.4.0")
+      ).addBom(mod"org.apache.spark:spark-parent_2.13", VersionConstraint("3.5.4"))
+        .addBom(mod"io.quarkus:quarkus-bom", VersionConstraint("3.16.2"))
       val res = DependencyParser.dependencyParams(
         "io.get-coursier.scala-native::sandbox_native0.3:0.4.0,bom=org.apache.spark%spark-parent_2.13%3.5.4,bom=io.quarkus%quarkus-bom%3.16.2",
         "2.13.15"
@@ -347,7 +348,7 @@ object DependencyParserTests extends TestSuite {
           name = ModuleName(value = "sandbox_native0.3_2.13"),
           attributes = Map()
         ),
-        version = "0.4.0"
+        version = VersionConstraint("0.4.0")
       ).addOverride(
         DependencyManagement.Key(
           Organization("io.get-coursier"),
@@ -357,7 +358,7 @@ object DependencyParserTests extends TestSuite {
         ),
         DependencyManagement.Values(
           Configuration.empty,
-          "1.2",
+          VersionConstraint("1.2"),
           MinimizedExclusions.zero,
           optional = false
         )
@@ -379,7 +380,7 @@ object DependencyParserTests extends TestSuite {
           name = ModuleName(value = "sandbox_native0.3_2.13"),
           attributes = Map()
         ),
-        version = "0.4.0"
+        version = VersionConstraint("0.4.0")
       ).addOverrides(
         Seq(
           (
@@ -391,7 +392,7 @@ object DependencyParserTests extends TestSuite {
             ),
             DependencyManagement.Values(
               Configuration.empty,
-              "1.2",
+              VersionConstraint("1.2"),
               MinimizedExclusions.zero,
               optional = false
             )
@@ -405,7 +406,7 @@ object DependencyParserTests extends TestSuite {
             ),
             DependencyManagement.Values(
               Configuration.empty,
-              "2.1",
+              VersionConstraint("2.1"),
               MinimizedExclusions.zero,
               optional = false
             )
@@ -428,7 +429,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, _)) =>
           assert(dep.module.organization == org"com.lihaoyi")
           assert(dep.module.name.value == "ammonite_2.12.8")
-          assert(dep.version == "1.6.7")
+          assert(dep.versionConstraint.asString == "1.6.7")
       }
     }
 
@@ -441,7 +442,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, _)) =>
           assert(dep.module.organization == org"com.lihaoyi")
           assert(dep.module.name.value == "ammonite_2.12.8")
-          assert(dep.version == "1.6.7")
+          assert(dep.versionConstraint.asString == "1.6.7")
           assert(dep.minimizedExclusions.toSet() == Set((org"aa", name"*")))
       }
     }
@@ -473,7 +474,8 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", "ver").withConfiguration(Configuration.empty),
+            Dependency(mod"org:name", VersionConstraint("ver"))
+              .withConfiguration(Configuration.empty),
             fullCrossVersion = false,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -488,7 +490,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", "").withConfiguration(Configuration.empty),
+            Dependency(mod"org:name", VersionConstraint("")).withConfiguration(Configuration.empty),
             fullCrossVersion = false,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -503,7 +505,8 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", "ver").withConfiguration(Configuration.empty),
+            Dependency(mod"org:name", VersionConstraint("ver"))
+              .withConfiguration(Configuration.empty),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -518,7 +521,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", "").withConfiguration(Configuration.empty),
+            Dependency(mod"org:name", VersionConstraint("")).withConfiguration(Configuration.empty),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -533,7 +536,8 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", "ver").withConfiguration(Configuration("conf")),
+            Dependency(mod"org:name", VersionConstraint("ver"))
+              .withConfiguration(Configuration("conf")),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -548,7 +552,8 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", "").withConfiguration(Configuration("conf")),
+            Dependency(mod"org:name", VersionConstraint(""))
+              .withConfiguration(Configuration("conf")),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty

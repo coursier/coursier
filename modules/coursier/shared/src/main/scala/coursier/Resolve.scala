@@ -14,7 +14,6 @@ import coursier.core.{
   Module,
   ModuleName,
   Organization,
-  Reconciliation,
   Repository,
   Resolution,
   ResolutionProcess
@@ -28,6 +27,7 @@ import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
 import coursier.util.Monad.ops._
 import coursier.util.StringInterpolators._
+import coursier.version.{ConstraintReconciliation, VersionConstraint, VersionParse}
 import dataclass.{data, since}
 
 import scala.concurrent.duration.Duration
@@ -43,7 +43,7 @@ import scala.language.higherKinds
   mirrors: Seq[Mirror] = Nil,
   resolutionParams: ResolutionParams = ResolutionParams(),
   throughOpt: Option[F[Resolution] => F[Resolution]] = None,
-  transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]] = None,
+  transformFetcherOpt: Option[ResolutionProcess.Fetch0[F] => ResolutionProcess.Fetch0[F]] = None,
   @since
     initialResolution: Option[Resolution] = None,
   @since
@@ -69,8 +69,8 @@ import scala.language.higherKinds
 
   private def through: F[Resolution] => F[Resolution] =
     throughOpt.getOrElse(identity[F[Resolution]])
-  private def transformFetcher: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F] =
-    transformFetcherOpt.getOrElse(identity[ResolutionProcess.Fetch[F]])
+  private def transformFetcher: ResolutionProcess.Fetch0[F] => ResolutionProcess.Fetch0[F] =
+    transformFetcherOpt.getOrElse(identity[ResolutionProcess.Fetch0[F]])
 
   def finalDependencies: Seq[Dependency] = {
 
@@ -108,19 +108,42 @@ import scala.language.higherKinds
   @deprecated("Use addBom or addBomConfigs instead", "2.1.18")
   def addBomDependencies(bomDependencies: Dependency*): Resolve[F] =
     withBoms(this.boms ++ bomDependencies.map(_.asBomDependency))
-  def addBom(bomModule: Module, bomVersion: String): Resolve[F] =
+  def addBom(bomModule: Module, bomVersion: VersionConstraint): Resolve[F] =
     withBoms(this.boms :+ BomDependency(bomModule, bomVersion, Configuration.empty))
-  def addBom(bomModule: Module, bomVersion: String, bomConfig: Configuration): Resolve[F] =
+  def addBom(
+    bomModule: Module,
+    bomVersion: VersionConstraint,
+    bomConfig: Configuration
+  ): Resolve[F] =
     withBoms(this.boms :+ BomDependency(bomModule, bomVersion, bomConfig))
   def addBom(bomDep: BomDependency): Resolve[F] =
     withBoms(this.boms :+ bomDep)
-  def addBoms(bomModuleVersions: (Module, String)*): Resolve[F] =
+  def addBoms0(bomModuleVersions: (Module, VersionConstraint)*): Resolve[F] =
     withBoms(
       this.boms ++
         bomModuleVersions.map(t => BomDependency(t._1, t._2, Configuration.empty))
     )
   def addBomConfigs(boms: BomDependency*): Resolve[F] =
     withBoms(this.boms ++ boms)
+
+  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+  def addBom(bomModule: Module, bomVersion: String): Resolve[F] =
+    addBom(bomModule, VersionConstraint(bomVersion))
+  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+  def addBom(
+    bomModule: Module,
+    bomVersion: String,
+    bomConfig: Configuration
+  ): Resolve[F] =
+    addBom(bomModule, VersionConstraint(bomVersion), bomConfig)
+  @deprecated("Use addBoms0 instead", "2.1.25")
+  def addBoms(bomModuleVersions: (Module, String)*): Resolve[F] =
+    addBoms0(
+      bomModuleVersions.map {
+        case (m, v) =>
+          (m, VersionConstraint(v))
+      }: _*
+    )
 
   def addRepositories(repositories: Repository*): Resolve[F] =
     withRepositories(this.repositories ++ repositories)
@@ -146,11 +169,11 @@ import scala.language.higherKinds
   def withTransformResolution(fOpt: Option[F[Resolution] => F[Resolution]]): Resolve[F] =
     withThroughOpt(fOpt)
 
-  def transformFetcher(f: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]): Resolve[F] =
+  def transformFetcher(f: ResolutionProcess.Fetch0[F] => ResolutionProcess.Fetch0[F]): Resolve[F] =
     withTransformFetcherOpt(Some(transformFetcherOpt.fold(f)(_ andThen f)))
   def noTransformFetcher(): Resolve[F] =
     withTransformFetcherOpt(None)
-  def withTransformFetcher(fOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]])
+  def withTransformFetcher(fOpt: Option[ResolutionProcess.Fetch0[F] => ResolutionProcess.Fetch0[F]])
     : Resolve[F] =
     withTransformFetcherOpt(fOpt)
 
@@ -162,12 +185,12 @@ import scala.language.higherKinds
   def allMirrors: F[Seq[Mirror]] =
     S.delay(allMirrors0)
 
-  private def fetchVia: F[ResolutionProcess.Fetch[F]] = {
+  private def fetchVia: F[ResolutionProcess.Fetch0[F]] = {
     val fetchs = cache.fetchs
-    finalRepositories.map(r => ResolutionProcess.fetch(r, fetchs.head, fetchs.tail)(S))
+    finalRepositories.map(r => ResolutionProcess.fetch0(r, fetchs.head, fetchs.tail)(S))
   }
 
-  private def ioWithConflicts0(fetch: ResolutionProcess.Fetch[F])
+  private def ioWithConflicts0(fetch: ResolutionProcess.Fetch0[F])
     : F[(Resolution, Seq[UnsatisfiedRule])] = {
 
     val initialRes = Resolve.initialResolution(
@@ -177,7 +200,7 @@ import scala.language.higherKinds
       ResolveInternals.deprecatedMapDependenciesOpt(this),
       ResolveInternals.deprecatedBomDependencies(this).map(_.asBomDependency) ++
         ResolveInternals.deprecatedBomModuleVersions(this)
-          .map(t => BomDependency(t._1, t._2, Configuration.empty)) ++
+          .map(t => BomDependency(t._1, VersionConstraint(t._2), Configuration.empty)) ++
         boms
     )
 
@@ -300,29 +323,29 @@ object Resolve extends PlatformResolve {
 
     val forceScalaVersions =
       if (params.doForceScalaVersion)
-        if (params.selectedScalaVersion.startsWith("3"))
+        if (params.selectedScalaVersionConstraint.asString.startsWith("3"))
           Seq(
             Module(
               scalaOrg,
               ModuleName("scala3-library_3"),
               Map.empty
-            ) -> params.selectedScalaVersion,
+            ) -> params.selectedScalaVersionConstraint,
             Module(
               scalaOrg,
               ModuleName("scala3-compiler_3"),
               Map.empty
-            ) -> params.selectedScalaVersion
+            ) -> params.selectedScalaVersionConstraint
           )
         else
           Seq(
-            Module(scalaOrg, ModuleName("scala-library"), Map.empty) -> params.selectedScalaVersion,
-            Module(
-              scalaOrg,
-              ModuleName("scala-compiler"),
-              Map.empty
-            )                                                        -> params.selectedScalaVersion,
-            Module(scalaOrg, ModuleName("scala-reflect"), Map.empty) -> params.selectedScalaVersion,
-            Module(scalaOrg, ModuleName("scalap"), Map.empty)        -> params.selectedScalaVersion
+            Module(scalaOrg, ModuleName("scala-library"), Map.empty) ->
+              params.selectedScalaVersionConstraint,
+            Module(scalaOrg, ModuleName("scala-compiler"), Map.empty) ->
+              params.selectedScalaVersionConstraint,
+            Module(scalaOrg, ModuleName("scala-reflect"), Map.empty) ->
+              params.selectedScalaVersionConstraint,
+            Module(scalaOrg, ModuleName("scalap"), Map.empty) ->
+              params.selectedScalaVersionConstraint
           )
       else
         Nil
@@ -331,27 +354,27 @@ object Resolve extends PlatformResolve {
       val l = mapDependenciesOpt.toSeq ++
         (if (params.typelevel) Seq(Typelevel.swap) else Nil) ++
         (if (params.doForceScalaVersion)
-           Seq(CoreResolution.overrideScalaModule(params.selectedScalaVersion, scalaOrg))
+           Seq(CoreResolution.overrideScalaModule(params.selectedScalaVersionConstraint, scalaOrg))
          else Nil) ++
         (if (params.doOverrideFullSuffix)
-           Seq(CoreResolution.overrideFullSuffix(params.selectedScalaVersion))
+           Seq(CoreResolution.overrideFullSuffix(params.selectedScalaVersionConstraint.asString))
          else Nil)
 
       l.reduceOption((f, g) => dep => f(g(dep)))
     }
 
-    val reconciliation: Option[Module => Reconciliation] = {
+    val reconciliation: Option[Module => ConstraintReconciliation] = {
       val actualReconciliation = params.actualReconciliation
       if (actualReconciliation.isEmpty) None
       else
         Some {
-          val cache = new ConcurrentHashMap[Module, Reconciliation]
+          val cache = new ConcurrentHashMap[Module, ConstraintReconciliation]
           m =>
             val reconciliation = cache.get(m)
             if (reconciliation == null) {
               val rec = actualReconciliation.find(_._1.matches(m)) match {
                 case Some((_, r)) => r
-                case None         => Reconciliation.Default
+                case None         => ConstraintReconciliation.Default
               }
               val prev = cache.putIfAbsent(m, rec)
               if (prev == null)
@@ -369,10 +392,10 @@ object Resolve extends PlatformResolve {
     baseRes
       .withRootDependencies(dependencies)
       .withDependencySet(DependencySet.empty)
-      .withForceVersions(params.forceVersion ++ forceScalaVersions)
+      .withForceVersions0(params.forceVersion0 ++ forceScalaVersions)
       .withConflicts(Set.empty)
       .withFilter(Some((dep: Dependency) => params.keepOptionalDependencies || !dep.optional))
-      .withReconciliation(reconciliation)
+      .withReconciliation0(reconciliation)
       .withOsInfo(
         params.osInfoOpt.getOrElse {
           if (params.useSystemOsInfo)
@@ -382,11 +405,11 @@ object Resolve extends PlatformResolve {
             Activation.Os.empty
         }
       )
-      .withJdkVersion(
-        params.jdkVersionOpt.orElse {
+      .withJdkVersion0(
+        params.jdkVersionOpt0.orElse {
           if (params.useSystemJdkVersion)
             // call from Sync[F].delay?
-            sys.props.get("java.version").flatMap(coursier.core.Parse.version)
+            sys.props.get("java.version").flatMap(VersionParse.version)
           else
             None
         }
@@ -411,7 +434,7 @@ object Resolve extends PlatformResolve {
 
   private[coursier] def runProcess[F[_]](
     initialResolution: Resolution,
-    fetch: ResolutionProcess.Fetch[F],
+    fetch: ResolutionProcess.Fetch0[F],
     maxIterations: Int = 200,
     loggerOpt: Option[CacheLogger] = None
   )(implicit S: Sync[F]): F[Resolution] = {
@@ -433,7 +456,7 @@ object Resolve extends PlatformResolve {
         ValidationNel.failure(new ResolutionError.MaximumIterationReached(res))
 
     val checkErrors: ValidationNel[ResolutionError, Unit] = res
-      .errors
+      .errors0
       .map {
         case ((module, version), errors) =>
           new ResolutionError.CantDownloadModule(res, module, version, errors)

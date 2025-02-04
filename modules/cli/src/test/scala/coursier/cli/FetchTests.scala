@@ -849,6 +849,7 @@ object FetchTests extends TestSuite {
      * | └─ org.tukaani:xz:1.2
      * |└─ org.tukaani:xz:1.2 // with the file from the URL
      */
+    // TODO Has an equivalent in JsonReportTests, this test should be removed
     test(
       "external dep url with classifier that is a transitive dep should fetch junit-4_12_jar and classifier gets thrown away"
     ) {
@@ -887,6 +888,7 @@ object FetchTests extends TestSuite {
      * |└─ org.apache.commons:commons-compress:1.5,classifier=sources └─
      * org.tukaani:xz:1.2,classifier=sources
      */
+    // TODO Has an equivalent in JsonReportTests, this test should be removed
     test("classifier sources should fetch sources jar") {
       withFile() {
         (jsonFile, _) =>
@@ -901,7 +903,7 @@ object FetchTests extends TestSuite {
             params,
             pool,
             Seq(
-              "org.apache.commons:commons-compress:1.5,classifier=sources"
+              "org.apache.commons:commons-compress:1.5"
             )
           ).unsafeRun()(ec)
           val node: ReportNode    = getReportFromJson(jsonFile)
@@ -913,7 +915,8 @@ object FetchTests extends TestSuite {
           assert(depNodes.length == 1)
           assert(depNodes.head.file.isDefined)
           checkPath(depNodes.head.file, "1.5-sources.jar")
-          assert(depNodes.head.dependencies.forall(_.contains(":sources:")))
+          // dependencies don't contain a classifier
+          assert(depNodes.head.dependencies.forall(!_.contains(":sources:")))
 
           assert(coords == Seq(
             "org.apache.commons:commons-compress:jar:sources:1.5",
@@ -1020,7 +1023,7 @@ object FetchTests extends TestSuite {
     /* Result:
      * |└─ org.apache.commons:commons-compress:1.5
      */
-    test("external dep url with the same forced version should fetch junit-4.12.jar") {
+    test("external dep url with the same forced version should fetch junit-4_12_jar") {
       withFile() {
         (jsonFile, _) =>
           val resolutionOpt =

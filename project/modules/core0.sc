@@ -10,7 +10,8 @@ trait Core extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
     Deps.dataClass
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
-    Deps.fastParse
+    Deps.fastParse,
+    Deps.versions
   )
 
   def commitHash: T[String]
@@ -35,6 +36,15 @@ trait CoreJvmBase extends Core with CsMima with Shading {
 
   def mimaBinaryIssueFilters =
     super.mimaBinaryIssueFilters() ++ Seq(
+      // new abstract methods added on sealed class, ought to be fine
+      ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.graph.DependencyTree.*"),
+      ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.graph.ModuleTree.*"),
+      ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.graph.ReverseModuleTree.*"),
+      ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.core.Reconciliation.*"),
+
+      // private case class
+      ProblemFilter.exclude[Problem]("coursier.graph.ModuleTree#Node.*"),
+
       // added abstract method to sealed abstract class, should be safe
       ProblemFilter.exclude[ReversedMissingMethodProblem](
         "coursier.core.MinimizedExclusions#ExclusionData.hasProperties"

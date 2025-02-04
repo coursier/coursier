@@ -226,22 +226,10 @@
       "exclusions": [
         "javax.annotation:javax.annotation-api",
         "javax.enterprise:cdi-api",
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
-      ]
-    },
-    {
-      "coord": "io.smallrye.common:smallrye-common-constraint:2.6.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-constraint/2.6.0/smallrye-common-constraint-2.6.0.jar",
-      "directDependencies": [
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "dependencies": [
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "exclusions": [
-        "org.eclipse.parsson:jakarta.json",
-        "org.jboss.modules:jboss-modules"
       ]
     },
     {
@@ -267,25 +255,10 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.eclipse.parsson:jakarta.json",
-        "org.jboss.modules:jboss-modules"
-      ]
-    },
-    {
-      "coord": "io.smallrye.common:smallrye-common-expression:2.6.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-expression/2.6.0/smallrye-common-expression-2.6.0.jar",
-      "directDependencies": [
-        "io.smallrye.common:smallrye-common-function:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "dependencies": [
-        "io.smallrye.common:smallrye-common-constraint:2.6.0",
-        "io.smallrye.common:smallrye-common-function:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "exclusions": [
         "javax.annotation:javax.annotation-api",
         "javax.enterprise:cdi-api",
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -302,24 +275,10 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.eclipse.parsson:jakarta.json",
-        "org.jboss.modules:jboss-modules"
-      ]
-    },
-    {
-      "coord": "io.smallrye.common:smallrye-common-function:2.6.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-function/2.6.0/smallrye-common-function-2.6.0.jar",
-      "directDependencies": [
-        "io.smallrye.common:smallrye-common-constraint:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "dependencies": [
-        "io.smallrye.common:smallrye-common-constraint:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "exclusions": [
         "javax.annotation:javax.annotation-api",
         "javax.enterprise:cdi-api",
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -405,6 +364,7 @@
         "io.smallrye.common:smallrye-common-classloader:2.6.0",
         "io.smallrye.common:smallrye-common-constraint:2.6.0",
         "io.smallrye.common:smallrye-common-expression:2.6.0",
+        "io.smallrye.common:smallrye-common-function:2.6.0",
         "io.smallrye.config:smallrye-config-common:3.9.1",
         "jakarta.annotation:jakarta.annotation-api:3.0.0",
         "org.eclipse.microprofile.config:microprofile-config-api:3.1",
@@ -429,6 +389,7 @@
         "io.smallrye.common:smallrye-common-classloader:2.6.0",
         "io.smallrye.common:smallrye-common-constraint:2.6.0",
         "io.smallrye.common:smallrye-common-expression:2.6.0",
+        "io.smallrye.common:smallrye-common-function:2.6.0",
         "io.smallrye.config:smallrye-config-common:3.9.1",
         "io.smallrye.config:smallrye-config-core:3.9.1",
         "jakarta.annotation:jakarta.annotation-api:3.0.0",
@@ -584,6 +545,7 @@
         "io.smallrye.common:smallrye-common-constraint:2.6.0",
         "io.smallrye.common:smallrye-common-cpu:2.6.0",
         "io.smallrye.common:smallrye-common-expression:2.6.0",
+        "io.smallrye.common:smallrye-common-function:2.6.0",
         "io.smallrye.common:smallrye-common-net:2.6.0",
         "io.smallrye.common:smallrye-common-os:2.6.0",
         "io.smallrye.common:smallrye-common-ref:2.6.0",

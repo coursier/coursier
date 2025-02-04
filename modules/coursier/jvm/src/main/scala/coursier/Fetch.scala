@@ -42,7 +42,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
     resolve.cache
   def throughOpt: Option[F[Resolution] => F[Resolution]] =
     resolve.throughOpt
-  def transformFetcherOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]] =
+  def transformFetcherOpt: Option[ResolutionProcess.Fetch0[F] => ResolutionProcess.Fetch0[F]] =
     resolve.transformFetcherOpt
   def sync: Sync[F] =
     resolve.sync
@@ -83,11 +83,21 @@ import scala.concurrent.{Await, ExecutionContext, Future}
               // taken into account in resolve.finalDependencies
               .withExclusions(Set())
               // these are taken into account below
-              .withForceVersion(Map())
+              .withForceVersion0(Map())
               .withProperties(Nil)
               .withForcedProperties(Map())
               .withProfiles(Set()),
-            resolve.resolutionParams.forceVersion.toVector.sortBy { case (m, v) => s"$m:$v" },
+            resolve.resolutionParams
+              .forceVersion0
+              .toVector
+              .map {
+                case (k, v) =>
+                  (k, v.asString)
+              }
+              .sortBy {
+                case (m, v) =>
+                  s"$m:$v"
+              },
             resolve.resolutionParams.properties.toVector.sortBy { case (k, v) => s"$k=$v" },
             resolve.resolutionParams.forcedProperties.toVector.sortBy { case (k, v) => s"$k=$v" },
             resolve.resolutionParams.profiles.toVector.sorted,
@@ -162,14 +172,14 @@ import scala.concurrent.{Await, ExecutionContext, Future}
   def withTransformResolution(fOpt: Option[F[Resolution] => F[Resolution]]): Fetch[F] =
     withResolve(resolve.withThroughOpt(fOpt))
 
-  def transformFetcher(f: ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]): Fetch[F] =
+  def transformFetcher(f: ResolutionProcess.Fetch0[F] => ResolutionProcess.Fetch0[F]): Fetch[F] =
     withResolve(
       resolve.withTransformFetcherOpt(Some(resolve.transformFetcherOpt.fold(f)(_ andThen f)))
     )
   def noTransformFetcher(): Fetch[F] =
     withResolve(resolve.withTransformFetcherOpt(None))
   def withTransformFetcher(
-    fOpt: Option[ResolutionProcess.Fetch[F] => ResolutionProcess.Fetch[F]]
+    fOpt: Option[ResolutionProcess.Fetch0[F] => ResolutionProcess.Fetch0[F]]
   ): Fetch[F] =
     withResolve(resolve.withTransformFetcherOpt(fOpt))
 

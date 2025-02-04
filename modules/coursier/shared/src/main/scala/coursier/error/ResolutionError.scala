@@ -1,13 +1,12 @@
 package coursier.error
 
-import coursier.core.{Dependency, Module, Resolution}
+import coursier.core.{Dependency, Module, Parse, Resolution}
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.graph.ReverseModuleTree
 import coursier.params.rule.Rule
-import coursier.util.{Print, Tree}
 import coursier.util.Print.{Colors, compatibleVersions}
-import coursier.core.Parse
-import coursier.core.Version
+import coursier.util.{Print, Tree}
+import coursier.version.{Version, VersionConstraint}
 
 sealed abstract class ResolutionError(
   val resolution: Resolution,
@@ -30,17 +29,33 @@ object ResolutionError {
   final class CantDownloadModule(
     resolution: Resolution,
     val module: Module,
-    val version: String,
+    val versionConstraint: VersionConstraint,
     val perRepositoryErrors: Seq[String]
   ) extends Simple(
     resolution,
-    s"Error downloading $module:$version" + System.lineSeparator() +
+    s"Error downloading $module:${versionConstraint.asString}" + System.lineSeparator() +
       perRepositoryErrors
         .map { err =>
           "  " + err.replace(System.lineSeparator(), "  " + System.lineSeparator())
         }
         .mkString(System.lineSeparator())
-  )
+  ) {
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def this(
+      resolution: Resolution,
+      module: Module,
+      version: String,
+      perRepositoryErrors: Seq[String]
+    ) = this(
+      resolution,
+      module,
+      VersionConstraint(version),
+      perRepositoryErrors
+    )
+
+    @deprecated("Use version0 instead", "2.1.25")
+    def version: String = versionConstraint.asString
+  }
   // format: on
 
   private def conflictingDependenciesErrorMessage(resolution: Resolution): String =
@@ -58,38 +73,45 @@ object ResolutionError {
           .customRender(assumeTopRoot = false, extraPrefix = "  ", extraSeparator = Some("")) {
             node =>
               if (node.excludedDependsOn)
-                s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.reconciledVersion}"
+                s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.retainedVersion0.asString}"
               else if (node.dependsOnModule == t.module) {
                 val assumeCompatibleVersions =
-                  compatibleVersions(node.dependsOnVersion, node.dependsOnReconciledVersion)
+                  compatibleVersions(
+                    node.dependsOnVersionConstraint,
+                    node.dependsOnRetainedVersion0
+                  )
 
-                s"${node.module}:${node.reconciledVersion} " +
+                s"${node.module}:${node.retainedVersion0.asString} " +
                   (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
-                  s"wants ${node.dependsOnVersion}" +
+                  s"wants ${node.dependsOnVersionConstraint.asString}" +
                   colors0.reset
               }
-              else if (node.dependsOnVersion != node.dependsOnReconciledVersion) {
+              else if (
+                node.dependsOnVersionConstraint.asString != node.dependsOnRetainedVersion0.asString
+              ) {
                 val assumeCompatibleVersions =
-                  compatibleVersions(node.dependsOnVersion, node.dependsOnReconciledVersion)
+                  compatibleVersions(
+                    node.dependsOnVersionConstraint,
+                    node.dependsOnRetainedVersion0
+                  )
 
-                s"${node.module}:${node.reconciledVersion} " +
+                s"${node.module}:${node.retainedVersion0.asString} " +
                   (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
-                  s"wants ${node.dependsOnModule}:${node.dependsOnVersion}" +
+                  s"wants ${node.dependsOnModule}:${node.dependsOnVersionConstraint}" +
                   colors0.reset
               }
               else
-                s"${node.module}:${node.reconciledVersion}"
+                s"${node.module}:${node.retainedVersion0.asString}"
           }
 
         val dependeesWantVersions = t.dependees
-          .map(_.dependsOnVersion)
+          .map(_.dependsOnVersionConstraint)
           .distinct
           .map { ver =>
-            val constraint = Parse.versionConstraint(ver)
-            val sortWith = constraint.preferred.headOption
-              .orElse(constraint.interval.from)
-              .getOrElse(Version(""))
-            ((constraint.preferred.isEmpty, sortWith), ver)
+            val sortWith = ver.preferred.headOption
+              .orElse(ver.interval.from)
+              .getOrElse(Version.zero)
+            ((ver.preferred.isEmpty, sortWith), ver)
           }
           .sortBy(_._1)
           .map(_._2)

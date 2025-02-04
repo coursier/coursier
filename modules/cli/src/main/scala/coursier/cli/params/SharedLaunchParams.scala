@@ -27,7 +27,8 @@ final case class SharedLaunchParams(
       jsonOutputOpt = None,
       resolve = resolve,
       artifact = artifact,
-      channel = channel
+      channel = channel,
+      legacyReport = false
     )
 
   def python    = pythonOpt.getOrElse(false)

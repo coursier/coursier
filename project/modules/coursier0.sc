@@ -31,6 +31,8 @@ trait CoursierJvmBase extends Coursier with CsMima with Shading {
 
   def mimaBinaryIssueFilters =
     super.mimaBinaryIssueFilters() ++ Seq(
+      // added new abstract method to sealed class, should be safe
+      ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.parse.JavaOrScalaDependency.*"),
       // changed private[coursier] method
       ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.Resolve.initialResolution"),
       // removed private[coursier] method

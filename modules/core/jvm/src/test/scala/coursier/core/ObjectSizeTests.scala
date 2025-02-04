@@ -1,6 +1,7 @@
 package coursier.core
 
 import concurrentrefhashmap.ConcurrentReferenceHashMap
+import coursier.version.{VersionConstraint => VersionConstraint0}
 import utest._
 import utest.asserts.{RetryInterval, RetryMax}
 
@@ -14,7 +15,7 @@ object ObjectSizeTests extends TestSuite {
       test("should be the same for same dependency") {
         def d = Dependency(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
-          "0.6.0"
+          VersionConstraint0("0.6.0")
         )
         assert(d == d)
         assert(d eq d)
@@ -25,11 +26,11 @@ object ObjectSizeTests extends TestSuite {
       test("should be the different for different dependency") {
         def d1 = Dependency(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
-          "0.6.0"
+          VersionConstraint0("0.6.0")
         )
         def d2 = Dependency(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
-          "0.7.0"
+          VersionConstraint0("0.7.0")
         )
         assert(size(Array(d1)) <= size(Array(d1, d2)))
       }
@@ -80,11 +81,11 @@ object ObjectSizeTests extends TestSuite {
         Dependency.instanceCache.clear()
         def d1 = Dependency(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
-          "0.6.0"
+          VersionConstraint0("0.6.0")
         )
         def d2 = Dependency(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
-          "0.7.0"
+          VersionConstraint0("0.7.0")
         )
         var ad1 = d1
         // d1 is in cache

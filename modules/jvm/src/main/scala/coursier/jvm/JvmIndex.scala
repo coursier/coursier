@@ -9,9 +9,10 @@ import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import coursier.cache.{ArchiveType, Cache, FileCache}
 import coursier.cache.internal.FileUtil
-import coursier.core.{Dependency, Latest, Parse, Repository, Version}
+import coursier.core.{Dependency, Latest, Repository}
 import coursier.util.{Artifact, Task}
 import coursier.util.Traverse.TraverseOps
+import coursier.version.{Version, VersionParse}
 import dataclass.data
 
 import scala.collection.compat._
@@ -94,7 +95,7 @@ object JvmIndex {
 
     for {
       res <- coursier.Fetch(cache)
-        .withDependencies(Seq(Dependency(channel.module, channel.version)))
+        .withDependencies(Seq(Dependency(channel.module, channel.versionConstraint)))
         .withRepositories(repositories)
         .ioResult
 
@@ -102,7 +103,10 @@ object JvmIndex {
         for (logger <- cache.loggerOpt)
           logger.use {
             val retainedVersion =
-              res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
+              res.resolution.reconciledVersions
+                .get(channel.module)
+                .map(_.asString)
+                .getOrElse("[unknown]")
             logger.pickedModuleVersion(channel.module.repr, retainedVersion)
           }
       }
@@ -282,10 +286,10 @@ object JvmIndex {
           // TODO Filter versions depending on latest kind
           Right(versionIndex.toVector.sortBy { case (v, _) => Version(v) })
         case None =>
-          val maybeConstraint = Some(Parse.versionConstraint(version))
+          val maybeConstraint = Some(VersionParse.versionConstraint(version))
             .filter(c => c.isValid && c.preferred.isEmpty)
             .orElse(
-              Some(Parse.versionConstraint(version + "+"))
+              Some(VersionParse.versionConstraint(version + "+"))
                 .filter(c => c.isValid && c.preferred.isEmpty)
             )
             .toRight(s"Invalid version constraint '$version'")

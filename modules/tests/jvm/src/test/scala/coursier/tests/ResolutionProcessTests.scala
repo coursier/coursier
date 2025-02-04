@@ -5,6 +5,7 @@ import java.util.concurrent.{ConcurrentHashMap, Executors}
 import coursier.core.{Module, ResolutionProcess}
 import coursier.util.StringInterpolators._
 import coursier.util.Task
+import coursier.version.VersionConstraint
 import utest._
 
 import scala.jdk.CollectionConverters._
@@ -31,13 +32,14 @@ object ResolutionProcessTests extends TestSuite {
         val mod = mod"org:name"
         val modVers = (1 to (9 + extra))
           .map(_.toString)
+          .map(VersionConstraint(_))
           .map((mod, _))
 
         val called = new ConcurrentHashMap[String, Unit]
 
-        val fetch: ResolutionProcess.Fetch[Task] = {
+        val fetch: ResolutionProcess.Fetch0[Task] = {
 
-          case Seq((`mod`, "9")) =>
+          case Seq((`mod`, v)) if v.asString == "9" =>
             val save = Task.delay {
               called.put("9", ())
             }
@@ -46,7 +48,7 @@ object ResolutionProcessTests extends TestSuite {
 
           case Seq(mv @ (`mod`, v)) =>
             val save = Task.delay {
-              called.put(v, ())
+              called.put(v.asString, ())
             }
 
             save.map(_ => Seq((mv, Left(Seq("w/e")))))

@@ -2,6 +2,7 @@ package coursier.ivy
 
 import coursier.core.{Module, Organization, Repository}
 import coursier.util.Monad
+import coursier.version.Version
 import dataclass.data
 
 @data class IvyComplete[F[_]](
@@ -51,10 +52,10 @@ import dataclass.data
   override protected def moduleDirectory(module: Module): String =
     module.name.value
 
-  def versions(module: Module, prefix: String): F[Either[Throwable, Seq[String]]] =
+  def versions(module: Module, prefix: String): F[Either[Throwable, Seq[Version]]] =
     F.map(repo.availableVersions(module, fetch, prefix).run) {
       case Left(e)     => Left(new Exception(e))
       case Right(None) => Left(new Exception("Version listing not available on this repository"))
-      case Right(Some((_, l))) => Right(l.map(_.repr))
+      case Right(Some((_, l))) => Right(l)
     }
 }

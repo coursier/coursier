@@ -17,6 +17,7 @@ import coursier.util._
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
+import coursier.version.VersionConstraint
 
 object Resolve extends CoursierCommand[ResolveOptions] {
 
@@ -80,7 +81,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
           .withDependencies(javaOrScalaDeps)
           .withRepositories(params.repositories.repositories)
           .withScalaVersionOpt(
-            params.resolution.scalaVersionOpt.map { s =>
+            params.resolution.scalaVersionOpt0.map(_.asString).map { s =>
               // add a "+" to partial Scala version numbers such as "2.13", "2.12", "3"
               if (s.count(_ == '.') < 2 && s.forall(c => c.isDigit || c == '.')) s + "+"
               else s
@@ -95,13 +96,13 @@ object Resolve extends CoursierCommand[ResolveOptions] {
       val scalaVersion = scalaVersionOpt
         .getOrElse {
           // we should only have Java dependencies in that case
-          ""
+          VersionConstraint.empty
         }
 
       val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
         val m0 = m.map {
           case ((mod, v), url) =>
-            ((mod.module(scalaVersion), v), (url, true))
+            ((mod.module(scalaVersion.asString), v), (url, true))
         }
         InMemoryRepository.privateApply(
           m0,
@@ -111,13 +112,13 @@ object Resolve extends CoursierCommand[ResolveOptions] {
 
       val deps0 = Dependencies.addExclusions(
         deps ++ sbtPluginJavaOrScalaDeps.map(_.dependency(
-          JavaOrScalaModule.scalaBinaryVersion(scalaVersion),
-          scalaVersion,
+          JavaOrScalaModule.scalaBinaryVersion(scalaVersion.asString),
+          scalaVersion.asString,
           platformOpt.getOrElse("")
         )),
         params.dependency.perModuleExclude.map {
           case (k, s) =>
-            k.module(scalaVersion) -> s.map(_.module(scalaVersion))
+            k.module(scalaVersion.asString) -> s.map(_.module(scalaVersion.asString))
         }
       )
 
@@ -127,11 +128,11 @@ object Resolve extends CoursierCommand[ResolveOptions] {
 
       unlift {
         val invalidForced = extraRepoOpt
-          .map(_.fallbacks.toSeq)
+          .map(_.fallbacks0.toSeq)
           .getOrElse(Nil)
           .collect {
             case ((mod, version), _)
-                if params.resolution.forceVersion.get(mod).exists(_ != version) =>
+                if params.resolution.forceVersion0.get(mod).exists(_ != version) =>
               (mod, version)
           }
         if (invalidForced.isEmpty)
@@ -283,7 +284,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
           }
           .transformFetcher { f =>
             if (params0.output.verbosity >= 2) {
-              modVers: Seq[(Module, String)] =>
+              modVers =>
                 val print = Task.delay {
                   Output.errPrintln(s"Getting ${modVers.length} project definition(s)")
                 }
@@ -314,7 +315,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
           stderr.println(err.getMessage)
       }
 
-    } yield (res, scalaVersionOpt, platformOpt, errorOpt)
+    } yield (res, scalaVersionOpt.map(_.asString), platformOpt, errorOpt)
 
   }
 

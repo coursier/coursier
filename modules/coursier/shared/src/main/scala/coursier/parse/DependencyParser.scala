@@ -15,6 +15,7 @@ import coursier.core.{
 import coursier.core.Validation._
 import coursier.util.ValidationNel
 import coursier.util.Traverse._
+import coursier.version.VersionConstraint
 import dependency.{NoAttributes, ScalaNameAttributes}
 import dependency.parser.{DependencyParser => DepParser}
 
@@ -67,35 +68,55 @@ object DependencyParser {
   /** Parses coordinates like org:name:version possibly with attributes, like
     * org:name;attr1=val1;attr2=val2:version
     */
-  def moduleVersion(
+  def moduleVersion0(
     input: String,
     defaultScalaVersion: String
-  ): Either[String, (Module, String)] = {
+  ): Either[String, (Module, VersionConstraint)] = {
 
     val parts = input.split(":", 4)
 
     parts match {
       case Array(org, rawName, version) =>
         ModuleParser.module(s"$org:$rawName", defaultScalaVersion)
-          .map((_, version))
+          .map((_, VersionConstraint(version)))
 
       case Array(org, "", rawName, version) =>
         ModuleParser.module(s"$org::$rawName", defaultScalaVersion)
-          .map((_, version))
+          .map((_, VersionConstraint(version)))
 
       case _ =>
         Left(s"Malformed dependency: $input")
     }
   }
 
+  @deprecated("Use moduleVersion0 instead", "2.1.25")
+  def moduleVersion(
+    input: String,
+    defaultScalaVersion: String
+  ): Either[String, (Module, String)] =
+    moduleVersion0(input, defaultScalaVersion).map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    }
+
+  def moduleVersions0(
+    inputs: Seq[String],
+    defaultScalaVersion: String
+  ): ValidationNel[String, Seq[(Module, VersionConstraint)]] =
+    inputs.validationNelTraverse { input =>
+      val e = moduleVersion0(input, defaultScalaVersion)
+      ValidationNel.fromEither(e)
+    }
+
+  @deprecated("Use moduleVersions0 instead", "2.1.25")
   def moduleVersions(
     inputs: Seq[String],
     defaultScalaVersion: String
   ): ValidationNel[String, Seq[(Module, String)]] =
-    inputs.validationNelTraverse { input =>
-      val e = moduleVersion(input, defaultScalaVersion)
-      ValidationNel.fromEither(e)
-    }
+    moduleVersions0(inputs, defaultScalaVersion).map(_.map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    })
 
   /*
    * Validates the parsed attributes.

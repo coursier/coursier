@@ -1,6 +1,7 @@
 package coursier.tests
 
 import coursier.core.{Configuration, Dependency, Info, Module, Overrides, Profile, Resolution, Type}
+import coursier.version.{Version, VersionConstraint}
 
 import scala.collection.compat._
 
@@ -39,7 +40,7 @@ object TestUtil {
       underlying.withFinalDependenciesCache(Map.empty)
     def clearCaches: Resolution =
       underlying
-        .withProjectCache(Map.empty)
+        .withProjectCache0(Map.empty)
         .withErrorCache(Map.empty)
         .withFinalDependenciesCache(Map.empty)
     def clearDependencyOverrides: Resolution =
@@ -49,9 +50,9 @@ object TestUtil {
     def clearFilter: Resolution =
       underlying.withFilter(None)
     def clearProjectProperties: Resolution =
-      underlying.withProjectCache(
+      underlying.withProjectCache0(
         underlying
-          .projectCache
+          .projectCache0
           .view
           .mapValues {
             case (s, p) =>
@@ -93,7 +94,7 @@ object TestUtil {
       module: Module,
       version: String,
       dependencies: Seq[(Configuration, Dependency)] = Seq.empty,
-      parent: Option[(Module, String)] = None,
+      parent0: Option[(Module, String)] = None,
       dependencyManagement: Seq[(Configuration, Dependency)] = Seq.empty,
       configurations: Map[Configuration, Seq[Configuration]] = Map.empty,
       properties: Seq[(String, String)] = Seq.empty,
@@ -106,10 +107,13 @@ object TestUtil {
     ): Project =
       coursier.core.Project(
         module,
-        version,
+        Version(version),
         dependencies,
         configurations,
-        parent,
+        parent0.map {
+          case (mod, ver) =>
+            (mod, Version(ver))
+        },
         dependencyManagement,
         properties,
         profiles,

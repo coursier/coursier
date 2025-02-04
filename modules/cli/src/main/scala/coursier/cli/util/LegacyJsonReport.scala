@@ -100,7 +100,7 @@ object ReportNode {
   val version         = "0.1.0"
 }
 
-object JsonReport {
+object LegacyJsonReport {
 
   private val printer = PrettyParams.nospace.copy(preserveOrder = true)
 
@@ -148,9 +148,9 @@ object JsonReport {
     def flatten[A](
       roots: Vector[A],
       fetchChildren: A => Seq[A],
-      reconciledVersionStr: A => String
+      retainedVersionStr: A => String
     ): Map[A, List[String]] = {
-      implicit val nodeShow: Show[A] = Show.show(reconciledVersionStr)
+      implicit val nodeShow: Show[A] = Show.show(retainedVersionStr)
       implicit val nodeEq: Eq[A]     = Eq.by(_.show)
 
       Chain.fromSeq(roots)
@@ -162,7 +162,7 @@ object JsonReport {
 
   def apply[T](roots: Vector[T], conflictResolutionForRoots: ListMap[String, String])(
     children: T => Seq[T],
-    reconciledVersionStr: T => String,
+    retainedVersionStr: T => String,
     requestedVersionStr: T => String,
     getFile: T => Option[String],
     exclusions: T => List[String]
@@ -171,21 +171,21 @@ object JsonReport {
     // Addresses the corner case in which any given library may list itself among its dependencies
     // See: https://github.com/coursier/coursier/issues/2316
     def childrenOrEmpty(elem: T): Chain[T] = {
-      val elemId = reconciledVersionStr(elem)
-      Chain.fromSeq(children(elem).filterNot(i => reconciledVersionStr(i) == elemId))
+      val elemId = retainedVersionStr(elem)
+      Chain.fromSeq(children(elem).filterNot(i => retainedVersionStr(i) == elemId))
     }
 
     val depToTransitiveDeps =
-      DependencyTree.flatten(roots, children, reconciledVersionStr)
+      DependencyTree.flatten(roots, children, retainedVersionStr)
 
     def flattenedDeps(elem: T): List[String] =
       depToTransitiveDeps.getOrElse(elem, Nil)
 
     val rootDeps: Vector[DepNode] = roots.map { r =>
       DepNode(
-        reconciledVersionStr(r),
+        retainedVersionStr(r),
         getFile(r),
-        childrenOrEmpty(r).iterator.map(reconciledVersionStr(_)).to(List).distinct.sorted,
+        childrenOrEmpty(r).iterator.map(retainedVersionStr).to(List).distinct.sorted,
         flattenedDeps(r).distinct.sorted,
         exclusions(r)
       )
@@ -225,16 +225,20 @@ final case class JsonElem(
         .headOption
     )
 
-  // `reconciledVersion`, `reconciledVersionStr`, `requestedVersionStr` are fields
+  // `retainedVersion`, `retainedVersionStr`, `requestedVersionStr` are fields
   // whose values are frequently duplicated across instances of `JsonElem` and their
   // transitive `Dependencies`. Here we cast these values to `Symbol`, which is an
   // interned collection, effectively deduping the string values in memory.
-  lazy val reconciledVersion: String =
-    Symbol(resolution.reconciledVersions.getOrElse(dep.module, dep.version)).name
-
+  lazy val retainedVersion: String = {
+    val ver = resolution.retainedVersions.getOrElse(
+      dep.module,
+      sys.error(s"${dep.module.repr} not found in retained versions")
+    )
+    Symbol(ver.asString).name
+  }
   // These are used to printing json output
-  lazy val reconciledVersionStr = Symbol(s"${dep.mavenPrefix}:$reconciledVersion").name
-  val requestedVersionStr       = Symbol(s"${dep.module}:${dep.version}").name
+  lazy val retainedVersionStr = Symbol(s"${dep.mavenPrefix}:$retainedVersion").name
+  val requestedVersionStr     = Symbol(s"${dep.module}:${dep.versionConstraint.asString}").name
 
   lazy val exclusions: List[String] = dep.minimizedExclusions
     .toSeq()
@@ -255,7 +259,7 @@ final case class JsonElem(
         dep,
         withRetainedVersions = false
       ).sortBy { trDep =>
-        (trDep.module.organization, trDep.module.name, trDep.version, trDep.hashCode)
+        (trDep.module.organization, trDep.module.name, trDep.versionConstraint, trDep.hashCode)
       }.map { d =>
         if (overrideClassifiers.contains(dep.attributes.classifier))
           d.withAttributes(d.attributes.withClassifier(dep.attributes.classifier))
@@ -270,10 +274,10 @@ final case class JsonElem(
         )
         .view
         .sortBy { trDep =>
-          (trDep.module.organization, trDep.module.name, trDep.version, trDep.hashCode)
+          (trDep.module.organization, trDep.module.name, trDep.versionConstraint, trDep.hashCode)
         }
-        .map(_.moduleVersion)
-        .filterNot(dependencies.map(_.moduleVersion).toSet).map {
+        .map(_.moduleVersionConstraint)
+        .filterNot(dependencies.map(_.moduleVersionConstraint).toSet).map {
           case (mod, ver) =>
             JsonElem(
               Dependency(mod, ver)
@@ -318,5 +322,5 @@ final case class JsonElem(
     * `children`.
     */
   override def hashCode(): Int =
-    Objects.hash(dep, requestedVersionStr, reconciledVersion, downloadedFile)
+    Objects.hash(dep, requestedVersionStr, retainedVersion, downloadedFile)
 }

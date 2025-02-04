@@ -78,20 +78,10 @@
         "commons-io:commons-io",
         "commons-logging:*",
         "org.codehaus.plexus:plexus-utils",
+        "org.jsoup:jsoup",
         "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api",
         "org.slf4j:slf4j-simple"
-      ]
-    },
-    {
-      "coord": "commons-codec:commons-codec:1.17.1",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/commons-codec/commons-codec/1.17.1/commons-codec-1.17.1.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "commons-io:commons-io",
-        "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
       ]
     },
     {
@@ -116,22 +106,10 @@
       ],
       "dependencies": [
         "io.smallrye:jandex:3.2.2",
+        "org.ow2.asm:asm-analysis:9.7",
+        "org.ow2.asm:asm-tree:9.7",
         "org.ow2.asm:asm-util:9.7",
         "org.ow2.asm:asm:9.7"
-      ]
-    },
-    {
-      "coord": "io.quarkus:quarkus-bootstrap-app-model:3.15.1",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/quarkus/quarkus-bootstrap-app-model/3.15.1/quarkus-bootstrap-app-model-3.15.1.jar",
-      "directDependencies": [
-        "io.quarkus:quarkus-fs-util:0.0.10",
-        "org.jboss.logging:commons-logging-jboss-logging:1.0.0.Final",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "dependencies": [
-        "io.quarkus:quarkus-fs-util:0.0.10",
-        "org.jboss.logging:commons-logging-jboss-logging:1.0.0.Final",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
       ]
     },
     {
@@ -333,12 +311,6 @@
       "exclusions": [
         "org.eclipse.sisu:org.eclipse.sisu.inject"
       ]
-    },
-    {
-      "coord": "io.quarkus:quarkus-classloader-commons:3.15.1",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/quarkus/quarkus-classloader-commons/3.15.1/quarkus-classloader-commons-3.15.1.jar",
-      "directDependencies": [],
-      "dependencies": []
     },
     {
       "coord": "io.quarkus:quarkus-core-deployment:3.15.1",
@@ -860,6 +832,7 @@
         "org.apache.maven.resolver:maven-resolver-api:1.9.22",
         "org.apache.maven.resolver:maven-resolver-connector-basic:1.9.22",
         "org.apache.maven.resolver:maven-resolver-impl:1.9.22",
+        "org.apache.maven.resolver:maven-resolver-named-locks:1.9.22",
         "org.apache.maven.resolver:maven-resolver-spi:1.9.22",
         "org.apache.maven.resolver:maven-resolver-transport-http:1.9.20",
         "org.apache.maven.resolver:maven-resolver-transport-wagon:1.9.22",
@@ -880,6 +853,8 @@
         "org.apache.maven:maven-settings:3.9.8",
         "org.apache.maven:maven-xml-impl:4.0.0-alpha-5",
         "org.codehaus.plexus:plexus-cipher:2.0",
+        "org.codehaus.plexus:plexus-classworlds:2.6.0",
+        "org.codehaus.plexus:plexus-component-annotations:2.1.0",
         "org.codehaus.plexus:plexus-interpolation:1.26",
         "org.codehaus.plexus:plexus-sec-dispatcher:2.0",
         "org.codehaus.plexus:plexus-utils:3.5.1",
@@ -968,38 +943,14 @@
       ],
       "exclusions": [
         "commons-io:commons-io",
-        "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "io.smallrye.common:smallrye-common-constraint:2.6.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-constraint/2.6.0/smallrye-common-constraint-2.6.0.jar",
-      "directDependencies": [
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "dependencies": [
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "exclusions": [
         "javax.annotation:javax.annotation-api",
         "javax.enterprise:cdi-api",
-        "org.osgi:org.osgi.annotation.versioning",
-        "org.ow2.asm:asm"
-      ]
-    },
-    {
-      "coord": "io.smallrye.common:smallrye-common-constraint:2.6.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-constraint/2.6.0/smallrye-common-constraint-2.6.0.jar",
-      "directDependencies": [
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "dependencies": [
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "exclusions": [
         "org.eclipse.parsson:jakarta.json",
-        "org.jboss.modules:jboss-modules"
+        "org.jboss.modules:jboss-modules",
+        "org.jsoup:jsoup",
+        "org.osgi:org.osgi.annotation.versioning",
+        "org.ow2.asm:asm",
+        "org.slf4j:jcl-over-slf4j"
       ]
     },
     {
@@ -1025,25 +976,10 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.eclipse.parsson:jakarta.json",
-        "org.jboss.modules:jboss-modules"
-      ]
-    },
-    {
-      "coord": "io.smallrye.common:smallrye-common-expression:2.6.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-expression/2.6.0/smallrye-common-expression-2.6.0.jar",
-      "directDependencies": [
-        "io.smallrye.common:smallrye-common-function:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "dependencies": [
-        "io.smallrye.common:smallrye-common-constraint:2.6.0",
-        "io.smallrye.common:smallrye-common-function:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "exclusions": [
         "javax.annotation:javax.annotation-api",
         "javax.enterprise:cdi-api",
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
@@ -1060,33 +996,13 @@
         "org.jboss.logging:jboss-logging:3.6.0.Final"
       ],
       "exclusions": [
-        "org.eclipse.parsson:jakarta.json",
-        "org.jboss.modules:jboss-modules"
-      ]
-    },
-    {
-      "coord": "io.smallrye.common:smallrye-common-function:2.6.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-function/2.6.0/smallrye-common-function-2.6.0.jar",
-      "directDependencies": [
-        "io.smallrye.common:smallrye-common-constraint:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "dependencies": [
-        "io.smallrye.common:smallrye-common-constraint:2.6.0",
-        "org.jboss.logging:jboss-logging:3.6.0.Final"
-      ],
-      "exclusions": [
         "javax.annotation:javax.annotation-api",
         "javax.enterprise:cdi-api",
+        "org.eclipse.parsson:jakarta.json",
+        "org.jboss.modules:jboss-modules",
         "org.osgi:org.osgi.annotation.versioning",
         "org.ow2.asm:asm"
       ]
-    },
-    {
-      "coord": "io.smallrye.common:smallrye-common-io:2.6.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/io/smallrye/common/smallrye-common-io/2.6.0/smallrye-common-io-2.6.0.jar",
-      "directDependencies": [],
-      "dependencies": []
     },
     {
       "coord": "io.smallrye.common:smallrye-common-io:2.6.0",
@@ -1172,6 +1088,7 @@
         "io.smallrye.common:smallrye-common-classloader:2.6.0",
         "io.smallrye.common:smallrye-common-constraint:2.6.0",
         "io.smallrye.common:smallrye-common-expression:2.6.0",
+        "io.smallrye.common:smallrye-common-function:2.6.0",
         "io.smallrye.config:smallrye-config-common:3.9.1",
         "jakarta.annotation:jakarta.annotation-api:3.0.0",
         "org.eclipse.microprofile.config:microprofile-config-api:3.1",
@@ -1196,6 +1113,7 @@
         "io.smallrye.common:smallrye-common-classloader:2.6.0",
         "io.smallrye.common:smallrye-common-constraint:2.6.0",
         "io.smallrye.common:smallrye-common-expression:2.6.0",
+        "io.smallrye.common:smallrye-common-function:2.6.0",
         "io.smallrye.config:smallrye-config-common:3.9.1",
         "io.smallrye.config:smallrye-config-core:3.9.1",
         "jakarta.annotation:jakarta.annotation-api:3.0.0",
@@ -1294,37 +1212,11 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
-        "org.codehaus.plexus:plexus-utils"
-      ]
-    },
-    {
-      "coord": "javax.inject:javax.inject:1",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/javax/inject/javax.inject/1/javax.inject-1.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
         "commons-io:commons-io",
-        "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "javax.inject:javax.inject:1",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/javax/inject/javax.inject/1/javax.inject-1.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
         "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "javax.inject:javax.inject:1",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/javax/inject/javax.inject/1/javax.inject-1.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
+        "org.jsoup:jsoup",
+        "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api"
       ]
     },
@@ -1369,25 +1261,8 @@
       "exclusions": [
         "commons-io:commons-io",
         "commons-logging:*",
-        "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "org.apache.httpcomponents:httpclient:4.5.14",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.14/httpclient-4.5.14.jar",
-      "directDependencies": [
-        "commons-codec:commons-codec:1.17.1",
-        "org.apache.httpcomponents:httpcore:4.4.16"
-      ],
-      "dependencies": [
-        "commons-codec:commons-codec:1.17.1",
-        "org.apache.httpcomponents:httpcore:4.4.16"
-      ],
-      "exclusions": [
-        "commons-io:commons-io",
-        "commons-logging:*",
         "org.codehaus.plexus:plexus-utils",
+        "org.jsoup:jsoup",
         "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api",
         "org.slf4j:slf4j-simple"
@@ -1401,50 +1276,23 @@
       "exclusions": [
         "commons-io:commons-io",
         "org.codehaus.plexus:plexus-utils",
+        "org.jsoup:jsoup",
         "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api",
         "org.slf4j:slf4j-simple"
       ]
     },
     {
-      "coord": "org.apache.httpcomponents:httpcore:4.4.16",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/httpcomponents/httpcore/4.4.16/httpcore-4.4.16.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "commons-io:commons-io",
-        "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "org.apache.maven.resolver:maven-resolver-api:1.9.22",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/resolver/maven-resolver-api/1.9.22/maven-resolver-api-1.9.22.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
       "coord": "org.apache.maven.resolver:maven-resolver-api:1.9.22",
       "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/resolver/maven-resolver-api/1.9.22/maven-resolver-api-1.9.22.jar",
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
         "commons-io:commons-io",
-        "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "org.apache.maven.resolver:maven-resolver-api:1.9.22",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/resolver/maven-resolver-api/1.9.22/maven-resolver-api-1.9.22.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
         "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
+        "org.jsoup:jsoup",
+        "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api"
       ]
     },
@@ -1472,25 +1320,6 @@
         "org.apache.maven.resolver:maven-resolver-api:1.9.22",
         "org.apache.maven.resolver:maven-resolver-named-locks:1.9.22",
         "org.apache.maven.resolver:maven-resolver-spi:1.9.22",
-        "org.apache.maven.resolver:maven-resolver-util:1.9.22"
-      ],
-      "dependencies": [
-        "org.apache.maven.resolver:maven-resolver-api:1.9.22",
-        "org.apache.maven.resolver:maven-resolver-named-locks:1.9.22",
-        "org.apache.maven.resolver:maven-resolver-spi:1.9.22",
-        "org.apache.maven.resolver:maven-resolver-util:1.9.22"
-      ],
-      "exclusions": [
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.apache.maven.resolver:maven-resolver-impl:1.9.22",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/resolver/maven-resolver-impl/1.9.22/maven-resolver-impl-1.9.22.jar",
-      "directDependencies": [
-        "org.apache.maven.resolver:maven-resolver-api:1.9.22",
-        "org.apache.maven.resolver:maven-resolver-named-locks:1.9.22",
-        "org.apache.maven.resolver:maven-resolver-spi:1.9.22",
         "org.apache.maven.resolver:maven-resolver-util:1.9.22",
         "org.slf4j:slf4j-api:2.0.6"
       ],
@@ -1504,15 +1333,7 @@
       "exclusions": [
         "commons-io:commons-io",
         "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "org.apache.maven.resolver:maven-resolver-named-locks:1.9.22",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/resolver/maven-resolver-named-locks/1.9.22/maven-resolver-named-locks-1.9.22.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
+        "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api"
       ]
     },
@@ -1528,19 +1349,7 @@
       "exclusions": [
         "commons-io:commons-io",
         "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "org.apache.maven.resolver:maven-resolver-spi:1.9.22",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/resolver/maven-resolver-spi/1.9.22/maven-resolver-spi-1.9.22.jar",
-      "directDependencies": [
-        "org.apache.maven.resolver:maven-resolver-api:1.9.22"
-      ],
-      "dependencies": [
-        "org.apache.maven.resolver:maven-resolver-api:1.9.22"
-      ],
-      "exclusions": [
+        "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api"
       ]
     },
@@ -1556,7 +1365,8 @@
       "exclusions": [
         "commons-io:commons-io",
         "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -1604,54 +1414,9 @@
       ],
       "exclusions": [
         "commons-io:commons-io",
+        "org.apache.maven.wagon:wagon-provider-api",
         "org.jsoup:jsoup",
         "org.slf4j:jcl-over-slf4j",
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.apache.maven.resolver:maven-resolver-transport-wagon:1.9.22",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/resolver/maven-resolver-transport-wagon/1.9.22/maven-resolver-transport-wagon-1.9.22.jar",
-      "directDependencies": [
-        "org.apache.maven.resolver:maven-resolver-api:1.9.22",
-        "org.apache.maven.resolver:maven-resolver-spi:1.9.22",
-        "org.apache.maven.resolver:maven-resolver-util:1.9.22"
-      ],
-      "dependencies": [
-        "org.apache.maven.resolver:maven-resolver-api:1.9.22",
-        "org.apache.maven.resolver:maven-resolver-spi:1.9.22",
-        "org.apache.maven.resolver:maven-resolver-util:1.9.22"
-      ],
-      "exclusions": [
-        "org.apache.maven.wagon:wagon-provider-api",
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.apache.maven.resolver:maven-resolver-util:1.9.22",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/resolver/maven-resolver-util/1.9.22/maven-resolver-util-1.9.22.jar",
-      "directDependencies": [
-        "org.apache.maven.resolver:maven-resolver-api:1.9.22"
-      ],
-      "dependencies": [
-        "org.apache.maven.resolver:maven-resolver-api:1.9.22"
-      ],
-      "exclusions": [
-        "org.checkerframework:checker-qual",
-        "org.codehaus.plexus:plexus-utils",
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.apache.maven.resolver:maven-resolver-util:1.9.22",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/resolver/maven-resolver-util/1.9.22/maven-resolver-util-1.9.22.jar",
-      "directDependencies": [
-        "org.apache.maven.resolver:maven-resolver-api:1.9.22"
-      ],
-      "dependencies": [
-        "org.apache.maven.resolver:maven-resolver-api:1.9.22"
-      ],
-      "exclusions": [
         "org.slf4j:slf4j-api"
       ]
     },
@@ -1666,8 +1431,11 @@
       ],
       "exclusions": [
         "commons-io:commons-io",
+        "org.checkerframework:checker-qual",
+        "org.codehaus.plexus:plexus-utils",
         "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -1695,20 +1463,7 @@
         "commons-io:commons-io",
         "org.codehaus.plexus:plexus-utils",
         "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "org.apache.maven.wagon:wagon-file:3.5.3",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/wagon/wagon-file/3.5.3/wagon-file-3.5.3.jar",
-      "directDependencies": [
-        "org.apache.maven.wagon:wagon-provider-api:3.5.3"
-      ],
-      "dependencies": [
-        "org.apache.maven.wagon:wagon-provider-api:3.5.3"
-      ],
-      "exclusions": [
-        "org.codehaus.plexus:plexus-utils",
+        "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-simple"
       ]
     },
@@ -1730,28 +1485,6 @@
         "commons-io:commons-io",
         "org.codehaus.plexus:plexus-utils",
         "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j",
-        "org.slf4j:slf4j-api",
-        "org.slf4j:slf4j-simple"
-      ]
-    },
-    {
-      "coord": "org.apache.maven.wagon:wagon-http-shared:3.5.3",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/wagon/wagon-http-shared/3.5.3/wagon-http-shared-3.5.3.jar",
-      "directDependencies": [
-        "org.apache.httpcomponents:httpclient:4.5.14",
-        "org.apache.httpcomponents:httpcore:4.4.16",
-        "org.apache.maven.wagon:wagon-provider-api:3.5.3"
-      ],
-      "dependencies": [
-        "commons-codec:commons-codec:1.17.1",
-        "org.apache.httpcomponents:httpclient:4.5.14",
-        "org.apache.httpcomponents:httpcore:4.4.16",
-        "org.apache.maven.wagon:wagon-provider-api:3.5.3"
-      ],
-      "exclusions": [
-        "commons-io:commons-io",
-        "org.codehaus.plexus:plexus-utils",
         "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api",
         "org.slf4j:slf4j-simple"
@@ -1783,16 +1516,6 @@
     {
       "coord": "org.apache.maven.wagon:wagon-provider-api:3.5.3",
       "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/wagon/wagon-provider-api/3.5.3/wagon-provider-api-3.5.3.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "org.codehaus.plexus:plexus-utils",
-        "org.slf4j:slf4j-simple"
-      ]
-    },
-    {
-      "coord": "org.apache.maven.wagon:wagon-provider-api:3.5.3",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/wagon/wagon-provider-api/3.5.3/wagon-provider-api-3.5.3.jar",
       "directDependencies": [
         "org.codehaus.plexus:plexus-utils:3.5.1"
       ],
@@ -1801,18 +1524,8 @@
       ],
       "exclusions": [
         "commons-io:commons-io",
-        "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "org.apache.maven.wagon:wagon-provider-api:3.5.3",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/wagon/wagon-provider-api/3.5.3/wagon-provider-api-3.5.3.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "commons-io:commons-io",
         "org.codehaus.plexus:plexus-utils",
+        "org.jsoup:jsoup",
         "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api",
         "org.slf4j:slf4j-simple"
@@ -1847,31 +1560,6 @@
     {
       "coord": "org.apache.maven:maven-artifact:3.9.8",
       "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/maven-artifact/3.9.8/maven-artifact-3.9.8.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "org.checkerframework:checker-qual",
-        "org.codehaus.plexus:plexus-utils",
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.apache.maven:maven-artifact:3.9.8",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/maven-artifact/3.9.8/maven-artifact-3.9.8.jar",
-      "directDependencies": [
-        "org.codehaus.plexus:plexus-utils:3.5.1"
-      ],
-      "dependencies": [
-        "org.codehaus.plexus:plexus-utils:3.5.1"
-      ],
-      "exclusions": [
-        "javax.inject:javax.inject",
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.apache.maven:maven-artifact:3.9.8",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/maven-artifact/3.9.8/maven-artifact-3.9.8.jar",
       "directDependencies": [
         "org.codehaus.plexus:plexus-utils:3.5.1"
       ],
@@ -1880,8 +1568,12 @@
       ],
       "exclusions": [
         "commons-io:commons-io",
+        "javax.inject:javax.inject",
+        "org.checkerframework:checker-qual",
+        "org.codehaus.plexus:plexus-utils",
         "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -1891,37 +1583,11 @@
       "dependencies": [],
       "exclusions": [
         "commons-io:commons-io",
-        "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "org.apache.maven:maven-builder-support:3.9.8",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/maven-builder-support/3.9.8/maven-builder-support-3.9.8.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
+        "javax.inject:javax.inject",
         "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.apache.maven:maven-builder-support:3.9.8",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/maven-builder-support/3.9.8/maven-builder-support-3.9.8.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "org.codehaus.plexus:plexus-utils"
-      ]
-    },
-    {
-      "coord": "org.apache.maven:maven-builder-support:3.9.8",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/maven-builder-support/3.9.8/maven-builder-support-3.9.8.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "javax.inject:javax.inject",
+        "org.jsoup:jsoup",
+        "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api"
       ]
     },
@@ -1961,9 +1627,12 @@
         "javax.inject:javax.inject:1",
         "org.apache.maven.resolver:maven-resolver-api:1.9.22",
         "org.apache.maven.resolver:maven-resolver-impl:1.9.22",
+        "org.apache.maven.resolver:maven-resolver-named-locks:1.9.22",
         "org.apache.maven.resolver:maven-resolver-spi:1.9.22",
         "org.apache.maven.resolver:maven-resolver-util:1.9.22",
         "org.apache.maven.shared:maven-shared-utils:3.4.2",
+        "org.apache.maven:maven-api-meta:4.0.0-alpha-5",
+        "org.apache.maven:maven-api-xml:4.0.0-alpha-5",
         "org.apache.maven:maven-artifact:3.9.8",
         "org.apache.maven:maven-builder-support:3.9.8",
         "org.apache.maven:maven-model-builder:3.9.8",
@@ -1973,6 +1642,7 @@
         "org.apache.maven:maven-resolver-provider:3.9.8",
         "org.apache.maven:maven-settings-builder:3.9.8",
         "org.apache.maven:maven-settings:3.9.8",
+        "org.apache.maven:maven-xml-impl:4.0.0-alpha-5",
         "org.codehaus.plexus:plexus-cipher:2.0",
         "org.codehaus.plexus:plexus-classworlds:2.6.0",
         "org.codehaus.plexus:plexus-component-annotations:2.1.0",
@@ -2024,9 +1694,12 @@
         "javax.inject:javax.inject:1",
         "org.apache.maven.resolver:maven-resolver-api:1.9.22",
         "org.apache.maven.resolver:maven-resolver-impl:1.9.22",
+        "org.apache.maven.resolver:maven-resolver-named-locks:1.9.22",
         "org.apache.maven.resolver:maven-resolver-spi:1.9.22",
         "org.apache.maven.resolver:maven-resolver-util:1.9.22",
         "org.apache.maven.shared:maven-shared-utils:3.4.2",
+        "org.apache.maven:maven-api-meta:4.0.0-alpha-5",
+        "org.apache.maven:maven-api-xml:4.0.0-alpha-5",
         "org.apache.maven:maven-artifact:3.9.8",
         "org.apache.maven:maven-builder-support:3.9.8",
         "org.apache.maven:maven-core:3.9.8",
@@ -2037,6 +1710,7 @@
         "org.apache.maven:maven-resolver-provider:3.9.8",
         "org.apache.maven:maven-settings-builder:3.9.8",
         "org.apache.maven:maven-settings:3.9.8",
+        "org.apache.maven:maven-xml-impl:4.0.0-alpha-5",
         "org.codehaus.plexus:plexus-cipher:2.0",
         "org.codehaus.plexus:plexus-classworlds:2.6.0",
         "org.codehaus.plexus:plexus-component-annotations:2.1.0",
@@ -2073,54 +1747,10 @@
       "exclusions": [
         "commons-io:commons-io",
         "javax.inject:javax.inject",
-        "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "org.apache.maven:maven-model-builder:3.9.8",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/maven-model-builder/3.9.8/maven-model-builder-3.9.8.jar",
-      "directDependencies": [
-        "org.apache.maven:maven-artifact:3.9.8",
-        "org.apache.maven:maven-builder-support:3.9.8",
-        "org.apache.maven:maven-model:3.9.8",
-        "org.codehaus.plexus:plexus-interpolation:1.26",
-        "org.eclipse.sisu:org.eclipse.sisu.inject:0.9.0.M3"
-      ],
-      "dependencies": [
-        "org.apache.maven:maven-artifact:3.9.8",
-        "org.apache.maven:maven-builder-support:3.9.8",
-        "org.apache.maven:maven-model:3.9.8",
-        "org.codehaus.plexus:plexus-interpolation:1.26",
-        "org.eclipse.sisu:org.eclipse.sisu.inject:0.9.0.M3"
-      ],
-      "exclusions": [
-        "javax.inject:javax.inject",
         "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.apache.maven:maven-model-builder:3.9.8",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/maven-model-builder/3.9.8/maven-model-builder-3.9.8.jar",
-      "directDependencies": [
-        "org.apache.maven:maven-artifact:3.9.8",
-        "org.apache.maven:maven-builder-support:3.9.8",
-        "org.apache.maven:maven-model:3.9.8",
-        "org.codehaus.plexus:plexus-interpolation:1.26",
-        "org.eclipse.sisu:org.eclipse.sisu.inject:0.9.0.M3"
-      ],
-      "dependencies": [
-        "org.apache.maven:maven-artifact:3.9.8",
-        "org.apache.maven:maven-builder-support:3.9.8",
-        "org.apache.maven:maven-model:3.9.8",
-        "org.codehaus.plexus:plexus-interpolation:1.26",
-        "org.codehaus.plexus:plexus-utils:3.5.1",
-        "org.eclipse.sisu:org.eclipse.sisu.inject:0.9.0.M3"
-      ],
-      "exclusions": [
-        "javax.inject:javax.inject",
+        "org.jsoup:jsoup",
+        "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api"
       ]
     },
@@ -2135,31 +1765,10 @@
       ],
       "exclusions": [
         "commons-io:commons-io",
-        "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "org.apache.maven:maven-model:3.9.8",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/maven-model/3.9.8/maven-model-3.9.8.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
         "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.apache.maven:maven-model:3.9.8",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/maven-model/3.9.8/maven-model-3.9.8.jar",
-      "directDependencies": [
-        "org.codehaus.plexus:plexus-utils:3.5.1"
-      ],
-      "dependencies": [
-        "org.codehaus.plexus:plexus-utils:3.5.1"
-      ],
-      "exclusions": [
+        "org.jsoup:jsoup",
+        "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api"
       ]
     },
@@ -2173,8 +1782,11 @@
         "org.eclipse.sisu:org.eclipse.sisu.plexus:0.9.0.M3"
       ],
       "dependencies": [
+        "org.apache.maven:maven-api-meta:4.0.0-alpha-5",
+        "org.apache.maven:maven-api-xml:4.0.0-alpha-5",
         "org.apache.maven:maven-artifact:3.9.8",
         "org.apache.maven:maven-model:3.9.8",
+        "org.apache.maven:maven-xml-impl:4.0.0-alpha-5",
         "org.codehaus.plexus:plexus-classworlds:2.6.0",
         "org.codehaus.plexus:plexus-component-annotations:2.1.0",
         "org.codehaus.plexus:plexus-xml:4.0.1",
@@ -2197,22 +1809,10 @@
         "org.codehaus.plexus:plexus-utils:3.5.1"
       ],
       "exclusions": [
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.apache.maven:maven-repository-metadata:3.9.8",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/maven-repository-metadata/3.9.8/maven-repository-metadata-3.9.8.jar",
-      "directDependencies": [
-        "org.codehaus.plexus:plexus-utils:3.5.1"
-      ],
-      "dependencies": [
-        "org.codehaus.plexus:plexus-utils:3.5.1"
-      ],
-      "exclusions": [
         "commons-io:commons-io",
         "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -2233,6 +1833,7 @@
         "javax.inject:javax.inject:1",
         "org.apache.maven.resolver:maven-resolver-api:1.9.22",
         "org.apache.maven.resolver:maven-resolver-impl:1.9.22",
+        "org.apache.maven.resolver:maven-resolver-named-locks:1.9.22",
         "org.apache.maven.resolver:maven-resolver-spi:1.9.22",
         "org.apache.maven.resolver:maven-resolver-util:1.9.22",
         "org.apache.maven:maven-artifact:3.9.8",
@@ -2273,26 +1874,6 @@
     {
       "coord": "org.apache.maven:maven-settings:3.9.8",
       "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/maven-settings/3.9.8/maven-settings-3.9.8.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "org.codehaus.plexus:plexus-utils"
-      ]
-    },
-    {
-      "coord": "org.apache.maven:maven-settings:3.9.8",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/maven-settings/3.9.8/maven-settings-3.9.8.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "org.checkerframework:checker-qual",
-        "org.codehaus.plexus:plexus-utils",
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.apache.maven:maven-settings:3.9.8",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/maven/maven-settings/3.9.8/maven-settings-3.9.8.jar",
       "directDependencies": [
         "org.codehaus.plexus:plexus-utils:3.5.1"
       ],
@@ -2301,8 +1882,11 @@
       ],
       "exclusions": [
         "commons-io:commons-io",
+        "org.checkerframework:checker-qual",
+        "org.codehaus.plexus:plexus-utils",
         "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -2315,6 +1899,11 @@
       "dependencies": [
         "org.apache.maven:maven-api-meta:4.0.0-alpha-5",
         "org.apache.maven:maven-api-xml:4.0.0-alpha-5",
+        "org.codehaus.plexus:plexus-classworlds:2.6.0",
+        "org.codehaus.plexus:plexus-component-annotations:2.1.0",
+        "org.codehaus.plexus:plexus-utils:3.5.1",
+        "org.codehaus.plexus:plexus-xml:4.0.1",
+        "org.eclipse.sisu:org.eclipse.sisu.inject:0.9.0.M3",
         "org.eclipse.sisu:org.eclipse.sisu.plexus:0.9.0.M3"
       ],
       "exclusions": [
@@ -2340,36 +1929,11 @@
       ],
       "exclusions": [
         "commons-io:commons-io",
-        "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "org.codehaus.plexus:plexus-cipher:2.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/codehaus/plexus/plexus-cipher/2.0/plexus-cipher-2.0.jar",
-      "directDependencies": [
-        "javax.inject:javax.inject:1"
-      ],
-      "dependencies": [
-        "javax.inject:javax.inject:1"
-      ],
-      "exclusions": [
         "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
+        "org.jsoup:jsoup",
+        "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.codehaus.plexus:plexus-cipher:2.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/codehaus/plexus/plexus-cipher/2.0/plexus-cipher-2.0.jar",
-      "directDependencies": [
-        "javax.inject:javax.inject:1"
-      ],
-      "dependencies": [
-        "javax.inject:javax.inject:1"
-      ],
-      "exclusions": [
-        "org.codehaus.plexus:plexus-utils"
       ]
     },
     {
@@ -2399,71 +1963,13 @@
       "directDependencies": [],
       "dependencies": [],
       "exclusions": [
+        "commons-io:commons-io",
         "javax.inject:javax.inject",
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.codehaus.plexus:plexus-interpolation:1.26",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/codehaus/plexus/plexus-interpolation/1.26/plexus-interpolation-1.26.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
         "org.checkerframework:checker-qual",
         "org.codehaus.plexus:plexus-utils",
-        "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.codehaus.plexus:plexus-interpolation:1.26",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/codehaus/plexus/plexus-interpolation/1.26/plexus-interpolation-1.26.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "org.codehaus.plexus:plexus-utils"
-      ]
-    },
-    {
-      "coord": "org.codehaus.plexus:plexus-interpolation:1.26",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/codehaus/plexus/plexus-interpolation/1.26/plexus-interpolation-1.26.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "commons-io:commons-io",
         "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "org.codehaus.plexus:plexus-sec-dispatcher:2.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/codehaus/plexus/plexus-sec-dispatcher/2.0/plexus-sec-dispatcher-2.0.jar",
-      "directDependencies": [
-        "javax.inject:javax.inject:1",
-        "org.codehaus.plexus:plexus-cipher:2.0"
-      ],
-      "dependencies": [
-        "javax.inject:javax.inject:1",
-        "org.codehaus.plexus:plexus-cipher:2.0"
-      ],
-      "exclusions": [
-        "org.checkerframework:checker-qual",
-        "org.codehaus.plexus:plexus-utils",
+        "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api"
-      ]
-    },
-    {
-      "coord": "org.codehaus.plexus:plexus-sec-dispatcher:2.0",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/codehaus/plexus/plexus-sec-dispatcher/2.0/plexus-sec-dispatcher-2.0.jar",
-      "directDependencies": [
-        "javax.inject:javax.inject:1",
-        "org.codehaus.plexus:plexus-cipher:2.0"
-      ],
-      "dependencies": [
-        "javax.inject:javax.inject:1",
-        "org.codehaus.plexus:plexus-cipher:2.0"
-      ],
-      "exclusions": [
-        "org.codehaus.plexus:plexus-utils"
       ]
     },
     {
@@ -2481,8 +1987,11 @@
       ],
       "exclusions": [
         "commons-io:commons-io",
+        "org.checkerframework:checker-qual",
+        "org.codehaus.plexus:plexus-utils",
         "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
+        "org.slf4j:jcl-over-slf4j",
+        "org.slf4j:slf4j-api"
       ]
     },
     {
@@ -2493,15 +2002,7 @@
       "exclusions": [
         "commons-io:commons-io",
         "org.jsoup:jsoup",
-        "org.slf4j:jcl-over-slf4j"
-      ]
-    },
-    {
-      "coord": "org.codehaus.plexus:plexus-utils:3.5.1",
-      "file": "${CACHE}/https/repo1.maven.org/maven2/org/codehaus/plexus/plexus-utils/3.5.1/plexus-utils-3.5.1.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
+        "org.slf4j:jcl-over-slf4j",
         "org.slf4j:slf4j-api"
       ]
     },
@@ -2515,6 +2016,10 @@
         "org.apache.maven:maven-api-meta:4.0.0-alpha-5",
         "org.apache.maven:maven-api-xml:4.0.0-alpha-5",
         "org.apache.maven:maven-xml-impl:4.0.0-alpha-5",
+        "org.codehaus.plexus:plexus-classworlds:2.6.0",
+        "org.codehaus.plexus:plexus-component-annotations:2.1.0",
+        "org.codehaus.plexus:plexus-utils:3.5.1",
+        "org.eclipse.sisu:org.eclipse.sisu.inject:0.9.0.M3",
         "org.eclipse.sisu:org.eclipse.sisu.plexus:0.9.0.M3"
       ],
       "exclusions": [
@@ -2626,6 +2131,7 @@
         "io.smallrye.common:smallrye-common-constraint:2.6.0",
         "io.smallrye.common:smallrye-common-cpu:2.6.0",
         "io.smallrye.common:smallrye-common-expression:2.6.0",
+        "io.smallrye.common:smallrye-common-function:2.6.0",
         "io.smallrye.common:smallrye-common-net:2.6.0",
         "io.smallrye.common:smallrye-common-os:2.6.0",
         "io.smallrye.common:smallrye-common-ref:2.6.0",

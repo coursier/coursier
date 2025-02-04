@@ -1,6 +1,11 @@
 package coursier.core
 
 import coursier.core.compatibility.encodeURIComponent
+import coursier.version.{
+  Version => Version0,
+  VersionConstraint => VersionConstraint0,
+  VersionInterval => VersionInterval0
+}
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.util.Monad.ops._
 import dataclass.data
@@ -12,6 +17,19 @@ trait Repository extends Serializable with ArtifactSource {
   def repr: String =
     toString
 
+  def find0[F[_]](
+    module: Module,
+    version: VersionConstraint0,
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, (ArtifactSource, Project)] =
+    find(module, version.asString, fetch)(F): @nowarn
+
+  @deprecated(
+    "Use find0 instead - if overriding this method, override the other, and call it from here",
+    "2.1.25"
+  )
   def find[F[_]](
     module: Module,
     version: String,
@@ -22,17 +40,18 @@ trait Repository extends Serializable with ArtifactSource {
 
   def findMaybeInterval[F[_]](
     module: Module,
-    version: String,
+    version: VersionConstraint0,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, (ArtifactSource, Project)] =
-    Parse.versionInterval(version)
-      .orElse(Parse.multiVersionInterval(version))
-      .orElse(Parse.ivyLatestSubRevisionInterval(version))
-      .filter(_.isValid) match {
+    // Parse.versionInterval(version)
+    //   .orElse(Parse.multiVersionInterval(version))
+    //   .orElse(Parse.ivyLatestSubRevisionInterval(version))
+    //   .filter(_.isValid)
+    Some(version.interval).filter(_ != VersionInterval0.zero) match {
       case None =>
-        find(module, version, fetch)
+        find0(module, version, fetch)
       case Some(itv) =>
         versions(module, fetch).flatMap {
           case (versions0, versionsUrl) =>
@@ -41,11 +60,21 @@ trait Repository extends Serializable with ArtifactSource {
                 val reason = s"No version found for $version in $versionsUrl"
                 EitherT[F, String, (ArtifactSource, Project)](F.point(Left(reason)))
               case Some(version0) =>
-                find(module, version0, fetch)
+                find0(module, VersionConstraint0.fromVersion(version0), fetch)
                   .map(t => t._1 -> t._2.withVersions(Some(versions0)))
             }
         }
     }
+
+  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+  def findMaybeInterval[F[_]](
+    module: Module,
+    version: String,
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, (ArtifactSource, Project)] =
+    findMaybeInterval(module, VersionConstraint0(version), fetch)(F)
 
   def completeOpt[F[_]: Monad](fetch: Repository.Fetch[F]): Option[Repository.Complete[F]] =
     None
@@ -123,7 +152,10 @@ object Repository {
     def organization(prefix: String): F[Either[Throwable, Seq[String]]]
     def moduleName(organization: Organization, prefix: String): F[Either[Throwable, Seq[String]]]
     protected def moduleDirectory(module: Module): String
-    def versions(module: Module, prefix: String): F[Either[Throwable, Seq[String]]]
+    def versions(
+      module: Module,
+      prefix: String
+    ): F[Either[Throwable, Seq[Version0]]]
 
     private def org(
       orgInput: Complete.Input.Org
@@ -239,7 +271,7 @@ object Repository {
               )
             )
           case Right(l) =>
-            Right(Complete.Result(input, l))
+            Right(Complete.Result(input, l.map(_.repr)))
         }
 
       def empty: F[Either[Throwable, Complete.Result]] = F.point(Right(Complete.Result(input, Nil)))
@@ -373,5 +405,22 @@ object Repository {
     ) extends Exception(s"Completing version '${input.drop(from)}' for module $module", cause)
     final class MalformedInput(input: String)
         extends Exception(s"Malformed input '$input'")
+  }
+
+  trait VersionApi extends Repository {
+
+    @deprecated(
+      "Use find0 instead - if overriding this method, override the other, and call it from here",
+      "2.1.25"
+    )
+    def find[F[_]](
+      module: Module,
+      version: String,
+      fetch: Repository.Fetch[F]
+    )(implicit
+      F: Monad[F]
+    ): EitherT[F, String, (ArtifactSource, Project)] =
+      find0(module, VersionConstraint0(version), fetch)(F)
+
   }
 }

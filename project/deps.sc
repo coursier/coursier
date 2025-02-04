@@ -15,7 +15,7 @@ object Deps {
   def directories       = ivy"io.get-coursier.util:directories-jni:0.1.3"
   def diffUtils         = ivy"io.github.java-diff-utils:java-diff-utils:4.15"
   def dockerClient      = ivy"com.spotify:docker-client:8.16.0"
-  def fastParse         = ivy"com.lihaoyi::fastparse::${Versions.fastParse}"
+  def fastParse         = ivy"com.lihaoyi::fastparse::3.1.1"
   def http4sBlazeServer = ivy"org.http4s::http4s-blaze-server:0.23.17"
   def http4sDsl         = ivy"org.http4s::http4s-dsl:${Versions.http4s}"
   def http4sServer      = ivy"org.http4s::http4s-server:${Versions.http4s}"
@@ -59,6 +59,7 @@ object Deps {
   def svm                      = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
   def ujson                    = ivy"com.lihaoyi::ujson:4.1.0"
   def utest                    = ivy"com.lihaoyi::utest::0.8.5"
+  def versions                 = ivy"io.get-coursier::versions::0.4.0"
   def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
   def windowsAnsiPs =
     ivy"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
@@ -66,7 +67,6 @@ object Deps {
 
 object Versions {
   def cats          = "2.13.0"
-  def fastParse     = "3.1.1"
   def http4s        = "0.23.30"
   def jniUtils      = "0.3.3"
   def jsoniterScala = "2.13.5"

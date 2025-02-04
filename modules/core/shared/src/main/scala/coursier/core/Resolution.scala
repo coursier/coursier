@@ -1,26 +1,32 @@
 package coursier.core
 
-import java.util.concurrent.ConcurrentHashMap
-
+import coursier.core.MinimizedExclusions._
 import coursier.util.Artifact
+import coursier.version.{
+  ConstraintReconciliation,
+  Version => Version0,
+  VersionConstraint => VersionConstraint0
+}
+import dataclass.data
+
+import java.util.concurrent.ConcurrentHashMap
 
 import scala.annotation.tailrec
 import scala.collection.compat._
 import scala.collection.compat.immutable.LazyList
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
-import dataclass.data
-import MinimizedExclusions._
 
 object Resolution {
 
-  type ModuleVersion = (Module, String)
+  type ModuleVersion           = (Module, String)
+  type ModuleVersionConstraint = (Module, VersionConstraint0)
 
-  def profileIsActive(
+  def profileIsActive0(
     profile: Profile,
     properties: Map[String, String],
     osInfo: Activation.Os,
-    jdkVersion: Option[Version],
+    jdkVersion: Option[Version0],
     userActivations: Option[Map[String, Boolean]]
   ): Boolean = {
 
@@ -37,18 +43,34 @@ object Resolution {
     fromUserOrDefault.getOrElse(fromActivation)
   }
 
+  @deprecated("Use profileIsActive0 instead", "2.1.25")
+  def profileIsActive(
+    profile: Profile,
+    properties: Map[String, String],
+    osInfo: Activation.Os,
+    jdkVersion: Option[String],
+    userActivations: Option[Map[String, Boolean]]
+  ): Boolean =
+    profileIsActive0(
+      profile,
+      properties,
+      osInfo,
+      jdkVersion.map(Version0(_)),
+      userActivations
+    )
+
   /** Get the active profiles of `project`, using the current properties `properties`, and
     * `profileActivations` stating if a profile is active.
     */
-  def profiles(
+  def profiles0(
     project: Project,
     properties: Map[String, String],
     osInfo: Activation.Os,
-    jdkVersion: Option[Version],
+    jdkVersion: Option[Version0],
     userActivations: Option[Map[String, Boolean]]
   ): Seq[Profile] =
     project.profiles.filter { profile =>
-      profileIsActive(
+      profileIsActive0(
         profile,
         properties,
         osInfo,
@@ -56,6 +78,22 @@ object Resolution {
         userActivations
       )
     }
+
+  @deprecated("Use profiles0 instead", "2.1.25")
+  def profiles(
+    project: Project,
+    properties: Map[String, String],
+    osInfo: Activation.Os,
+    jdkVersion: Option[String],
+    userActivations: Option[Map[String, Boolean]]
+  ): Seq[Profile] =
+    profiles0(
+      project,
+      properties,
+      osInfo,
+      jdkVersion.map(Version0(_)),
+      userActivations
+    )
 
   def addDependencies(
     deps: Seq[Seq[(Configuration, Dependency)]]
@@ -230,18 +268,24 @@ object Resolution {
       def substituteProps0(s: String) =
         substituteProps(s, properties, trim = false)
 
-      val dep0 = dep.copy(
-        module = dep.module.copy(
-          organization = dep.module.organization.map(substituteProps0),
-          name = dep.module.name.map(substituteProps0)
-        ),
-        version = substituteTrimmedProps(dep.version),
-        attributes = dep.attributes
-          .withType(dep.attributes.`type`.map(substituteProps0))
-          .withClassifier(dep.attributes.classifier.map(substituteProps0)),
-        configuration = dep.configuration.map(substituteProps0),
-        minimizedExclusions = dep.minimizedExclusions.map(substituteProps0)
-      )
+      val dep0 = dep
+        .withVersionConstraint(
+          if (dep.versionConstraint.asString.contains("$"))
+            VersionConstraint0(substituteTrimmedProps(dep.versionConstraint.asString))
+          else
+            dep.versionConstraint
+        )
+        .copy(
+          module = dep.module.copy(
+            organization = dep.module.organization.map(substituteProps0),
+            name = dep.module.name.map(substituteProps0)
+          ),
+          attributes = dep.attributes
+            .withType(dep.attributes.`type`.map(substituteProps0))
+            .withClassifier(dep.attributes.classifier.map(substituteProps0)),
+          configuration = dep.configuration.map(substituteProps0),
+          minimizedExclusions = dep.minimizedExclusions.map(substituteProps0)
+        )
 
       // FIXME The content of the optional tag may also be a property in
       // the original POM. Maybe not parse it that earlier?
@@ -255,16 +299,16 @@ object Resolution {
     *
     * Returns the conflicted dependencies, and the merged others.
     */
-  def merge(
+  def merge0(
     dependencies: Seq[Dependency],
-    forceVersions: Map[Module, String],
-    reconciliation: Option[Module => Reconciliation],
+    forceVersions: Map[Module, VersionConstraint0],
+    reconciliation: Option[Module => ConstraintReconciliation],
     preserveOrder: Boolean = false
-  ): (Seq[Dependency], Seq[Dependency], Map[Module, String]) = {
-    def reconcilerByMod(mod: Module): Reconciliation =
+  ): (Seq[Dependency], Seq[Dependency], Map[Module, VersionConstraint0]) = {
+    def reconcilerByMod(mod: Module): ConstraintReconciliation =
       reconciliation match {
         case Some(f) => f(mod)
-        case _       => Reconciliation.Default
+        case _       => ConstraintReconciliation.Default
       }
     val dependencies0 = dependencies.toVector
     val mergedByModVer = dependencies0
@@ -274,43 +318,26 @@ object Resolution {
           .orElse(forceVersions.get(module.withOrganization(Organization("*"))))
 
         module -> {
-          val (versionOpt, updatedDeps) = forcedVersionOpt match {
+          forcedVersionOpt match {
             case None =>
-              if (deps.lengthCompare(1) == 0) (Some(deps.head.version), Right(deps))
+              if (deps.lengthCompare(1) == 0) (Right(deps), Some(deps.head.versionConstraint))
               else {
-                val versions   = deps.map(_.version)
+                val versions0  = deps.map(_.versionConstraint)
                 val reconciler = reconcilerByMod(module)
-                val versionOpt = reconciler(versions)
+                val versionOpt = reconciler.reconcile(versions0)
 
                 (
-                  versionOpt,
                   versionOpt match {
-                    case Some(version) =>
-                      Right(
-                        deps.map { dep =>
-                          if (version == dep.version) dep
-                          else dep.withVersion(version)
-                        }
-                      )
-                    case None =>
-                      Left(deps)
-                  }
+                    case Some(version) => Right(deps.map(_.withVersionConstraint(version)))
+                    case None          => Left(deps)
+                  },
+                  versionOpt
                 )
               }
 
             case Some(forcedVersion) =>
-              (
-                Some(forcedVersion),
-                Right(
-                  deps.map { dep =>
-                    if (forcedVersion == dep.version) dep
-                    else dep.withVersion(forcedVersion)
-                  }
-                )
-              )
+              (Right(deps.map(_.withVersionConstraint(forcedVersion))), Some(forcedVersion))
           }
-
-          (updatedDeps, versionOpt)
         }
       }
 
@@ -334,6 +361,36 @@ object Resolution {
         .flatten,
       mergedByModVer
         .collect { case (mod, (_, Some(ver))) => mod -> ver }
+    )
+  }
+
+  @deprecated("", "2.1.25")
+  def merge(
+    dependencies: Seq[Dependency],
+    forceVersions: Map[Module, String],
+    reconciliation: Option[Module => coursier.core.Reconciliation],
+    preserveOrder: Boolean = false
+  ): (Seq[Dependency], Seq[Dependency], Map[Module, String]) = {
+    val (a, b, c) = merge0(
+      dependencies,
+      forceVersions.map {
+        case (mod, ver) =>
+          (mod, VersionConstraint0(ver))
+      },
+      reconciliation.map { f => mod =>
+        ConstraintReconciliation(f(mod).id).getOrElse {
+          sys.error("Cannot happen")
+        }
+      },
+      preserveOrder
+    )
+    (
+      a,
+      b,
+      c.map {
+        case (mod, ver) =>
+          (mod, ver.asString)
+      }
     )
   }
 
@@ -369,8 +426,9 @@ object Resolution {
         }
         .groupBy(_._2.depManagementKey)
         .collect {
-          case (k, l) if !rawOverrides.contains(k) && l.exists(_._2.version.nonEmpty) =>
-            k -> l.map(_._2.version).filter(_.nonEmpty)
+          case (k, l)
+              if !rawOverrides.contains(k) && l.exists(_._2.versionConstraint.asString.nonEmpty) =>
+            k -> l.map(_._2.versionConstraint.asString).filter(_.nonEmpty)
         }
       val map = dependencyManagement
         .filter {
@@ -383,11 +441,11 @@ object Resolution {
               versions
                 .get(k)
                 .getOrElse(Nil)
-                .exists(_ != v.version)
+                .exists(_ != v.versionConstraint.asString)
             val newConfig  = Configuration.empty
-            val newVersion = if (clearVersion) "" else v.version
+            val newVersion = if (clearVersion) VersionConstraint0.empty else v.versionConstraint
             val values =
-              if (v.config != newConfig || v.version != newVersion || v.optional)
+              if (v.config != newConfig || v.versionConstraint != newVersion || v.optional)
                 DependencyManagement.Values(
                   newConfig,
                   newVersion,
@@ -411,14 +469,14 @@ object Resolution {
 
         for (mgmtValues <- dict.get(dep0.depManagementKey)) {
 
-          val useManagedVersion = mgmtValues.version.nonEmpty && (
+          val useManagedVersion = mgmtValues.versionConstraint.asString.nonEmpty && (
             forceDepMgmtVersions ||
             overridesOpt.isEmpty ||
-            dep.version.isEmpty ||
+            dep.versionConstraint.asString.isEmpty ||
             overridesOpt.exists(_.contains(dep0.depManagementKey))
           )
-          if (useManagedVersion && dep.version != mgmtValues.version)
-            dep = dep.withVersion(mgmtValues.version)
+          if (useManagedVersion)
+            dep = dep.withVersionConstraint(mgmtValues.versionConstraint)
 
           if (mgmtValues.minimizedExclusions.nonEmpty) {
             val newExcl = dep.minimizedExclusions.join(mgmtValues.minimizedExclusions)
@@ -570,24 +628,24 @@ object Resolution {
       // although I can find no mention of them in any manual / spec
       "pom.groupId"    -> project.module.organization.value,
       "pom.artifactId" -> project.module.name.value,
-      "pom.version"    -> project.actualVersion,
+      "pom.version"    -> project.actualVersion0.repr,
       // Required by some dependencies too (org.apache.directory.shared:shared-ldap:0.9.19 in particular)
       "groupId"            -> project.module.organization.value,
       "artifactId"         -> project.module.name.value,
-      "version"            -> project.actualVersion,
+      "version"            -> project.actualVersion0.asString,
       "project.groupId"    -> project.module.organization.value,
       "project.artifactId" -> project.module.name.value,
-      "project.version"    -> project.actualVersion,
+      "project.version"    -> project.actualVersion0.asString,
       "project.packaging"  -> project.packagingOpt.getOrElse(Type.jar).value
-    ) ++ project.parent.toSeq.flatMap {
+    ) ++ project.parent0.toSeq.flatMap {
       case (parModule, parVersion) =>
         Seq(
           "project.parent.groupId"    -> parModule.organization.value,
           "project.parent.artifactId" -> parModule.name.value,
-          "project.parent.version"    -> parVersion,
+          "project.parent.version"    -> parVersion.asString,
           "parent.groupId"            -> parModule.organization.value,
           "parent.artifactId"         -> parModule.name.value,
-          "parent.version"            -> parVersion
+          "parent.version"            -> parVersion.asString
         )
     }
 
@@ -624,9 +682,14 @@ object Resolution {
 
   private def parents(
     project: Project,
-    projectCache: ((Module, String)) => Option[Project]
+    projectCache: ((Module, VersionConstraint0)) => Option[Project]
   ): LazyList[Project] =
-    project.parent.flatMap(projectCache) match {
+    project.parent0
+      .map {
+        case (m, v) =>
+          (m, VersionConstraint0.fromVersion(v))
+      }
+      .flatMap(projectCache) match {
       case None         => LazyList.empty
       case Some(parent) => parent #:: parents(parent, projectCache)
     }
@@ -641,7 +704,7 @@ object Resolution {
     from: Dependency,
     project: Project,
     defaultConfiguration: Configuration,
-    projectCache: ((Module, String)) => Option[Project],
+    projectCache: ((Module, VersionConstraint0)) => Option[Project],
     keepProvidedDependencies: Boolean,
     forceDepMgmtVersions: Boolean,
     enableDependencyOverrides: Boolean
@@ -745,11 +808,18 @@ object Resolution {
     Type.Exotic.klib
   )
 
-  def overrideScalaModule(sv: String): Dependency => Dependency =
+  def overrideScalaModule(sv: VersionConstraint0): Dependency => Dependency =
     overrideScalaModule(sv, Organization("org.scala-lang"))
 
-  def overrideScalaModule(sv: String, scalaOrg: Organization): Dependency => Dependency = {
-    val sbv = sv.split('.').take(2).mkString(".")
+  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+  def overrideScalaModule(sv: String): Dependency => Dependency =
+    overrideScalaModule(VersionConstraint0(sv))
+
+  def overrideScalaModule(
+    sv: VersionConstraint0,
+    scalaOrg: Organization
+  ): Dependency => Dependency = {
+    val sbv = sv.asString.split('.').take(2).mkString(".")
     val scalaModules =
       if (sbv.startsWith("3"))
         Set(
@@ -766,10 +836,20 @@ object Resolution {
 
     dep =>
       if (dep.module.organization == scalaOrg && scalaModules.contains(dep.module.name))
-        dep.withVersion(sv)
+        dep.withVersionConstraint(sv)
       else
         dep
   }
+
+  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+  def overrideScalaModule(
+    sv: String,
+    scalaOrg: Organization
+  ): Dependency => Dependency =
+    overrideScalaModule(
+      VersionConstraint0(sv),
+      scalaOrg
+    )
 
   /** Replaces the full suffix _2.12.8 with the given Scala version.
     */
@@ -802,7 +882,7 @@ object Resolution {
 
   @deprecated("Use overrideScalaModule and overrideFullSuffix instead", "2.0.17")
   def forceScalaVersion(sv: String): Dependency => Dependency =
-    overrideScalaModule(sv) andThen overrideFullSuffix(sv)
+    overrideScalaModule(VersionConstraint0(sv)) andThen overrideFullSuffix(sv)
 
   private def fallbackConfigIfNecessary(dep: Dependency, configs: Set[Configuration]): Dependency =
     Parse.withFallbackConfig(dep.configuration) match {
@@ -829,7 +909,7 @@ object Resolution {
   *
   * @param conflicts:
   *   conflicting dependencies
-  * @param projectCache:
+  * @param projectCache0:
   *   cache of known projects
   * @param errorCache:
   *   keeps track of the modules whose project definition could not be found
@@ -837,15 +917,15 @@ object Resolution {
 @data class Resolution(
   rootDependencies: Seq[Dependency] = Nil,
   dependencySet: DependencySet = DependencySet.empty,
-  forceVersions: Map[Module, String] = Map.empty,
+  forceVersions0: Map[Module, VersionConstraint0] = Map.empty,
   conflicts: Set[Dependency] = Set.empty,
-  projectCache: Map[Resolution.ModuleVersion, (ArtifactSource, Project)] = Map.empty,
-  errorCache: Map[Resolution.ModuleVersion, Seq[String]] = Map.empty,
+  projectCache0: Map[Resolution.ModuleVersionConstraint, (ArtifactSource, Project)] = Map.empty,
+  errorCache: Map[Resolution.ModuleVersionConstraint, Seq[String]] = Map.empty,
   finalDependenciesCache: Map[Dependency, Seq[Dependency]] = Map.empty,
   filter: Option[Dependency => Boolean] = None,
-  reconciliation: Option[Module => Reconciliation] = None,
+  reconciliation0: Option[Module => ConstraintReconciliation] = None,
   osInfo: Activation.Os = Activation.Os.empty,
-  jdkVersion: Option[Version] = None,
+  jdkVersion0: Option[Version0] = None,
   userActivations: Option[Map[String, Boolean]] = None,
   mapDependencies: Option[Dependency => Dependency] = None,
   extraProperties: Seq[(String, String)] = Nil,
@@ -874,21 +954,91 @@ object Resolution {
     37 * code
   }
 
+  @deprecated("Use forceVersions0 instead", "2.1.25")
+  def forceVersions: Map[Module, String] =
+    forceVersions0.map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    }
+  @deprecated("Use withForceVersions0 instead", "2.1.25")
+  def withForceVersions(newForceVersions: Map[Module, String]): Resolution =
+    withForceVersions0(
+      newForceVersions.map {
+        case (mod, ver) =>
+          (mod, VersionConstraint0(ver))
+      }
+    )
+
+  @deprecated("Use projectCache0 instead", "2.1.25")
+  def projectCache: Map[(Module, String), (ArtifactSource, Project)] =
+    projectCache0.map {
+      case ((mod, ver), value) =>
+        ((mod, ver.asString), value)
+    }
+  @deprecated("Use withProjectCache0 instead", "2.1.25")
+  def withProjectCache(newProjectCache: Map[(Module, String), (ArtifactSource, Project)])
+    : Resolution =
+    withProjectCache0(
+      newProjectCache.map {
+        case ((mod, ver), value) =>
+          ((mod, VersionConstraint0(ver)), value)
+      }
+    )
+
+  @deprecated("Use reconciliation0 instead", "2.1.25")
+  def reconciliation: Option[Module => Reconciliation] =
+    reconciliation0.map { f => mod =>
+      f(mod) match {
+        case ConstraintReconciliation.Default => Reconciliation.Default
+        case ConstraintReconciliation.Relaxed => Reconciliation.Relaxed
+        case ConstraintReconciliation.Strict  => Reconciliation.Strict
+        case ConstraintReconciliation.SemVer  => Reconciliation.SemVer
+        case _                                => sys.error("Cannot happen")
+      }
+    }
+  @deprecated("Use withReconciliation0 instead", "2.1.25")
+  def withReconciliation(newReconciliation: Option[Module => Reconciliation]): Resolution =
+    withReconciliation0(
+      newReconciliation.map { f => mod =>
+        ConstraintReconciliation(f(mod).id).getOrElse {
+          sys.error("Cannot happen")
+        }
+      }
+    )
+
+  @deprecated("Use jdkVersion0 instead", "2.1.25")
+  def jdkVersion: Option[String] =
+    jdkVersion0.map(_.asString)
+  @deprecated("Use withJdkVersion0 instead", "2.1.25")
+  def withJdkVersion(newJdkVersion: Option[String]): Resolution =
+    withJdkVersion0(newJdkVersion.map(Version0(_)))
+
   def withDependencies(dependencies: Set[Dependency]): Resolution =
     withDependencySet(dependencySet.setValues(dependencies))
 
-  def addToErrorCache(entries: Iterable[(Resolution.ModuleVersion, Seq[String])]): Resolution =
+  def addToErrorCache0(entries: Iterable[(Resolution.ModuleVersionConstraint, Seq[String])])
+    : Resolution =
     copyWithCache(
       errorCache = errorCache ++ entries
+    )
+
+  @deprecated("Use addToErrorCache0 instead", "2.1.25")
+  def addToErrorCache(entries: Iterable[((Module, String), Seq[String])])
+    : Resolution =
+    addToErrorCache0(
+      entries.map {
+        case ((mod, ver), value) =>
+          ((mod, VersionConstraint0(ver)), value)
+      }
     )
 
   private def copyWithCache(
     rootDependencies: Seq[Dependency] = rootDependencies,
     dependencySet: DependencySet = dependencySet,
     conflicts: Set[Dependency] = conflicts,
-    errorCache: Map[Resolution.ModuleVersion, Seq[String]] = errorCache
+    errorCache: Map[Resolution.ModuleVersionConstraint, Seq[String]] = errorCache
     // don't allow changing mapDependencies here - that would invalidate finalDependenciesCache
-    // don't allow changing projectCache here - use addToProjectCache that takes forceProperties into account
+    // don't allow changing projectCache0 here - use addToProjectCache0 that takes forceProperties into account
   ): Resolution =
     withRootDependencies(rootDependencies)
       .withDependencySet(dependencySet)
@@ -896,13 +1046,13 @@ object Resolution {
       .withErrorCache(errorCache)
       .withFinalDependenciesCache(finalDependenciesCache ++ finalDependenciesCache0.asScala)
 
-  def addToProjectCache(
-    projects: (Resolution.ModuleVersion, (ArtifactSource, Project))*
+  def addToProjectCache0(
+    projects: (Resolution.ModuleVersionConstraint, (ArtifactSource, Project))*
   ): Resolution = {
 
     val duplicates = projects
       .collect {
-        case (modVer, _) if projectCache.contains(modVer) =>
+        case (modVer, _) if projectCache0.contains(modVer) =>
           modVer
       }
 
@@ -912,8 +1062,8 @@ object Resolution {
     )
 
     withFinalDependenciesCache(finalDependenciesCache ++ finalDependenciesCache0.asScala)
-      .withProjectCache {
-        projectCache ++ projects.map {
+      .withProjectCache0 {
+        projectCache0 ++ projects.map {
           case (modVer, (s, p)) =>
             val p0 =
               withDependencyManagement(
@@ -928,6 +1078,17 @@ object Resolution {
       }
   }
 
+  @deprecated("Use addToProjectCache0 instead", "2.1.25")
+  def addToProjectCache(
+    projects: ((Module, String), (ArtifactSource, Project))*
+  ): Resolution =
+    addToProjectCache0(
+      projects.map {
+        case ((mod, ver), value) =>
+          ((mod, VersionConstraint0(ver)), value)
+      }: _*
+    )
+
   import Resolution._
 
   private[core] val finalDependenciesCache0 = new ConcurrentHashMap[Dependency, Seq[Dependency]]
@@ -937,13 +1098,13 @@ object Resolution {
       val deps = finalDependenciesCache.getOrElse(dep, finalDependenciesCache0.get(dep))
 
       if (deps == null)
-        projectCache.get(dep.moduleVersion) match {
+        projectCache0.get(dep.moduleVersionConstraint) match {
           case Some((_, proj)) =>
             val res0 = finalDependencies(
               dep,
               proj,
               defaultConfiguration,
-              k => projectCache.get(k).map(_._2),
+              k => projectCache0.get(k).map(_._2),
               keepProvidedDependencies,
               forceDepMgmtVersions,
               enableDependencyOverrides
@@ -963,44 +1124,74 @@ object Resolution {
     dependenciesOf(dep, withRetainedVersions = false)
 
   def dependenciesOf(dep: Dependency, withRetainedVersions: Boolean): Seq[Dependency] =
-    dependenciesOf(dep, withRetainedVersions = withRetainedVersions, withFallbackConfig = false)
+    dependenciesOf(
+      dep,
+      withRetainedVersions = withRetainedVersions,
+      withReconciledVersions = false,
+      withFallbackConfig = false
+    )
 
-  private def configsOf(dep: Dependency): Set[Configuration] =
-    projectCache
-      .get(dep.moduleVersion)
+  private def configsOf(dep: Dependency): Set[Configuration] = {
+    val reconciledVersion = reconciledVersions.getOrElse(
+      dep.module,
+      sys.error(s"No reconciled version found for ${dep.module}")
+    )
+    projectCache0
+      .get((dep.module, reconciledVersion))
       .map(_._2.configurations.keySet)
       .getOrElse(Set.empty)
+  }
 
   private def updated(
     dep: Dependency,
     withRetainedVersions: Boolean,
-    withFallbackConfig: Boolean
+    withReconciledVersions: Boolean,
+    withFallbackConfig: Boolean,
+    loose: Boolean = false
   ): Dependency = {
-    val dep0 =
-      if (withRetainedVersions) {
-        val newVersion = retainedVersions.getOrElse(dep.module, dep.version)
-        if (newVersion == dep.version) dep
-        else dep.withVersion(newVersion)
-      }
-      else
-        dep
+    var dep0 = dep
+    if (withRetainedVersions)
+      dep0 = dep0.withVersionConstraint(
+        (if (loose) retainedVersionsLoose else retainedVersions)
+          .get(dep0.module)
+          .map(v => VersionConstraint0.fromVersion(v))
+          .getOrElse(dep0.versionConstraint)
+      )
+    else if (withReconciledVersions)
+      dep0 = dep0.withVersionConstraint(
+        reconciledVersions
+          .get(dep0.module)
+          .getOrElse(dep0.versionConstraint)
+      )
     if (withFallbackConfig)
-      Resolution.fallbackConfigIfNecessary(dep0, configsOf(dep0))
+      dep0 = Resolution.fallbackConfigIfNecessary(dep0, configsOf(dep0))
+    dep0
+  }
+
+  def dependenciesOf(
+    dep: Dependency,
+    withRetainedVersions: Boolean,
+    withReconciledVersions: Boolean,
+    withFallbackConfig: Boolean
+  ): Seq[Dependency] = {
+    val deps = finalDependencies0(dep)
+    if (withRetainedVersions || withFallbackConfig)
+      deps.map(updated(_, withRetainedVersions, withReconciledVersions, withFallbackConfig))
     else
-      dep0
+      deps
   }
 
   def dependenciesOf(
     dep: Dependency,
     withRetainedVersions: Boolean,
     withFallbackConfig: Boolean
-  ): Seq[Dependency] = {
-    val deps = finalDependencies0(dep)
-    if (withRetainedVersions || withFallbackConfig)
-      deps.map(updated(_, withRetainedVersions, withFallbackConfig))
-    else
-      deps
-  }
+  ): Seq[Dependency] =
+    dependenciesOf(
+      dep,
+      withRetainedVersions,
+      withReconciledVersions = !withRetainedVersions,
+      withFallbackConfig
+    )
 
   /** Transitive dependencies of the current dependencies, according to what there currently is in
     * cache.
@@ -1014,12 +1205,12 @@ object Resolution {
 
   private lazy val globalBomModuleVersions =
     ResolutionInternals.deprecatedBomDependencies(this)
-      .map(_.moduleVersion)
+      .map(_.moduleVersionConstraint)
       .map { case (m, v) =>
         BomDependency(m, v, defaultConfiguration)
       } ++
       ResolutionInternals.deprecatedBomModuleVersions(this)
-        .map { case (m, v) => BomDependency(m, v, defaultConfiguration) } ++
+        .map { case (m, v) => BomDependency(m, VersionConstraint0(v), defaultConfiguration) } ++
       boms
   private lazy val allBomModuleVersions =
     globalBomModuleVersions ++ rootDependencies.flatMap(_.bomDependencies)
@@ -1027,7 +1218,7 @@ object Resolution {
     Overrides.add {
       (for {
         bomDep          <- bomDeps
-        (_, bomProject) <- projectCache.get(bomDep.moduleVersion).toSeq
+        (_, bomProject) <- projectCache0.get(bomDep.moduleVersionConstraint).toSeq
         bomConfig0 = actualConfiguration(
           if (bomDep.config.isEmpty) defaultConfiguration else bomDep.config,
           bomProject.configurations
@@ -1047,7 +1238,7 @@ object Resolution {
   def bomDepMgmt = bomDepMgmtOverrides.flatten.toMap
   lazy val hasAllBoms =
     allBomModuleVersions.forall { bomDep =>
-      projectCache.contains(bomDep.moduleVersion)
+      projectCache0.contains(bomDep.moduleVersionConstraint)
     }
   lazy val processedRootDependencies =
     if (hasAllBoms) {
@@ -1058,9 +1249,9 @@ object Resolution {
         else
           rootDependenciesWithDefaultConfig.map { rootDep =>
             val rootDep0 = rootDep.addOverrides(bomDepMgmtOverrides)
-            if (rootDep0.version.isEmpty)
+            if (rootDep0.versionConstraint.asString.isEmpty)
               bomDepMgmtOverrides.get(DependencyManagement.Key.from(rootDep0)) match {
-                case Some(values) => rootDep0.withVersion(values.version)
+                case Some(values) => rootDep0.withVersionConstraint(values.versionConstraint)
                 case None         => rootDep0
               }
             else
@@ -1074,12 +1265,11 @@ object Resolution {
         val key      = DependencyManagement.Key.from(rootDep0)
         overrideDepBomDepMgmt.get(key) match {
           case Some(overrideValues) =>
-            if (rootDep0.version == overrideValues.version) rootDep0
-            else rootDep0.withVersion(overrideValues.version)
+            rootDep0.withVersionConstraint(overrideValues.versionConstraint)
           case None =>
-            if (rootDep0.version.isEmpty)
+            if (rootDep0.versionConstraint.asString.isEmpty)
               depBomDepMgmt.get(key) match {
-                case Some(values) => rootDep0.withVersion(values.version)
+                case Some(values) => rootDep0.withVersionConstraint(values.versionConstraint)
                 case None         => rootDep0
               }
             else
@@ -1100,36 +1290,60 @@ object Resolution {
     * Returns a tuple made of the conflicting dependencies, all the dependencies, and the retained
     * version of each module.
     */
-  lazy val nextDependenciesAndConflicts: (Seq[Dependency], Seq[Dependency], Map[Module, String]) =
+  lazy val nextDependenciesAndConflicts
+    : (Seq[Dependency], Seq[Dependency], Map[Module, VersionConstraint0]) =
     // TODO Provide the modules whose version was forced by dependency overrides too
-    merge(
+    merge0(
       processedRootDependencies ++ transitiveDependencies,
-      forceVersions,
-      reconciliation
+      forceVersions0,
+      reconciliation0
     )
 
-  lazy val reconciledVersions: Map[Module, String] =
+  lazy val retainedVersions: Map[Module, Version0] =
     nextDependenciesAndConflicts._3.map {
       case k @ (m, v) =>
-        m -> projectCache.get(k).fold(v)(_._2.version)
+        projectCache0.get(k)
+          .map {
+            case (_, proj) =>
+              m -> proj.actualVersion0
+          }
+          .getOrElse {
+            sys.error(s"Cannot find $m:${v.asString} in projectCache")
+          }
     }
 
-  def retainedVersions: Map[Module, String] =
+  // same as retainedVersions, but doesn't throw if a module isn't found
+  // useful for failed resolutions
+  private lazy val retainedVersionsLoose: Map[Module, Version0] =
+    nextDependenciesAndConflicts._3.map {
+      case k @ (m, v) =>
+        val finalVersion = projectCache0.get(k)
+          .map {
+            case (_, proj) =>
+              proj.actualVersion0
+          }
+          .getOrElse {
+            Version0(v.generateString)
+          }
+        m -> finalVersion
+    }
+
+  def reconciledVersions: Map[Module, VersionConstraint0] =
     nextDependenciesAndConflicts._3
 
   /** The modules we miss some info about.
     */
-  lazy val missingFromCache: Set[ModuleVersion] = {
+  lazy val missingFromCache: Set[ModuleVersionConstraint] = {
     val boms = allBomModuleVersions
-      .map(_.moduleVersion)
+      .map(_.moduleVersionConstraint)
       .toSet
     val modules = dependencies
-      .map(_.moduleVersion)
+      .map(_.moduleVersionConstraint)
     val nextModules = nextDependenciesAndConflicts._2
-      .map(_.moduleVersion)
+      .map(_.moduleVersionConstraint)
 
     (boms ++ modules ++ nextModules)
-      .filterNot(mod => projectCache.contains(mod) || errorCache.contains(mod))
+      .filterNot(mod => projectCache0.contains(mod) || errorCache.contains(mod))
   }
 
   /** Whether the resolution is done.
@@ -1247,40 +1461,47 @@ object Resolution {
 
   /** Required modules for the dependency management of `project`.
     */
-  def dependencyManagementRequirements(
+  def dependencyManagementRequirements0(
     project: Project
-  ): Set[ModuleVersion] = {
+  ): Set[ModuleVersionConstraint] = {
 
     val needsParent =
-      project.parent.exists { par =>
-        val parentFound = projectCache.contains(par) || errorCache.contains(par)
-        !parentFound
+      project.parent0.exists {
+        case (parMod, parVer) =>
+          val par0        = (parMod, VersionConstraint0.fromVersion(parVer))
+          val parentFound = projectCache0.contains(par0) || errorCache.contains(par0)
+          !parentFound
       }
 
     if (needsParent)
-      project.parent.toSet
+      project.parent0
+        .map {
+          case (parMod, parVer) =>
+            (parMod, VersionConstraint0.fromVersion(parVer))
+        }
+        .toSet
     else {
 
-      val parentProperties0 = parents(project, k => projectCache.get(k).map(_._2))
+      val parentProperties0 = parents(project, k => projectCache0.get(k).map(_._2))
         .toVector
         .flatMap(_.properties)
 
       // 1.1 (see above)
       val approxProperties = parentProperties0.toMap ++ projectProperties(project)
 
-      val profiles0 = profiles(
+      val profiles = profiles0(
         project,
         approxProperties,
         osInfo,
-        jdkVersion,
+        jdkVersion0,
         userActivations
       )
 
-      val profileDependencies = profiles0.flatMap(p => p.dependencies ++ p.dependencyManagement)
+      val profileDependencies = profiles.flatMap(p => p.dependencies ++ p.dependencyManagement)
 
       val project0 =
         project.withProperties(
-          project.properties ++ profiles0.flatMap(_.properties)
+          project.properties ++ profiles.flatMap(_.properties)
         ) // belongs to 1.5 & 1.6
 
       val propertiesMap0 = withFinalProperties(
@@ -1291,38 +1512,47 @@ object Resolution {
         project0.dependencies ++ project0.dependencyManagement ++ profileDependencies,
         propertiesMap0
       ).collect {
-        case (Configuration.`import`, dep) => dep.moduleVersion
+        case (Configuration.`import`, dep) => dep.moduleVersionConstraint
       }
 
       modules.toSet
     }
   }
 
+  @deprecated("Use dependencyManagementRequirements0 instead", "2.1.25")
+  def dependencyManagementRequirements(
+    project: Project
+  ): Set[(Module, String)] =
+    dependencyManagementRequirements0(project).map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    }
+
   /** Missing modules in cache, to get the full list of dependencies of `project`, taking dependency
     * management / inheritance into account.
     *
     * Note that adding the missing modules to the cache may unveil other missing modules, so these
-    * modules should be added to the cache, and `dependencyManagementMissing` checked again for new
+    * modules should be added to the cache, and `dependencyManagementMissing0` checked again for new
     * missing modules.
     */
-  def dependencyManagementMissing(project: Project): Set[ModuleVersion] = {
+  def dependencyManagementMissing0(project: Project): Set[ModuleVersionConstraint] = {
 
     @tailrec
     def helper(
-      toCheck: Set[ModuleVersion],
-      done: Set[ModuleVersion],
-      missing: Set[ModuleVersion]
-    ): Set[ModuleVersion] =
+      toCheck: Set[ModuleVersionConstraint],
+      done: Set[ModuleVersionConstraint],
+      missing: Set[ModuleVersionConstraint]
+    ): Set[ModuleVersionConstraint] =
       if (toCheck.isEmpty)
         missing
       else if (toCheck.exists(done))
         helper(toCheck -- done, done, missing)
       else if (toCheck.exists(missing))
         helper(toCheck -- missing, done, missing)
-      else if (toCheck.exists(projectCache.contains)) {
-        val (checking, remaining) = toCheck.partition(projectCache.contains)
+      else if (toCheck.exists(projectCache0.contains)) {
+        val (checking, remaining) = toCheck.partition(projectCache0.contains)
         val directRequirements = checking
-          .flatMap(mod => dependencyManagementRequirements(projectCache(mod)._2))
+          .flatMap(mod => dependencyManagementRequirements0(projectCache0(mod)._2))
 
         helper(remaining ++ directRequirements, done ++ checking, missing)
       }
@@ -1334,17 +1564,24 @@ object Resolution {
         helper(Set.empty, done, missing ++ toCheck)
 
     helper(
-      dependencyManagementRequirements(project),
-      Set(project.moduleVersion),
+      dependencyManagementRequirements0(project),
+      Set((project.module, VersionConstraint0.fromVersion(project.version0))),
       Set.empty
     )
   }
 
+  @deprecated("Use dependencyManagementMissing0 instead", "2.1.25")
+  def dependencyManagementMissing(project: Project): Set[(Module, String)] =
+    dependencyManagementMissing0(project).map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    }
+
   /** Add dependency management / inheritance related items to `project`, from what's available in
     * cache.
     *
-    * It is recommended to have fetched what `dependencyManagementMissing` returned prior to calling
-    * this.
+    * It is recommended to have fetched what `dependencyManagementMissing0` returned prior to
+    * calling this.
     */
   def withDependencyManagement(project: Project): Project = {
 
@@ -1380,18 +1617,18 @@ object Resolution {
 
     // A bit fragile, but seems to work
 
-    val parentProperties0 = parents(project, k => projectCache.get(k).map(_._2))
+    val parentProperties0 = parents(project, k => projectCache0.get(k).map(_._2))
       .toVector
       .flatMap(_.properties)
 
     // 1.1 (see above)
     val approxProperties = parentProperties0.toMap ++ projectProperties(project)
 
-    val profiles0 = profiles(
+    val profiles = profiles0(
       project,
       approxProperties,
       osInfo,
-      jdkVersion,
+      jdkVersion0,
       userActivations
     )
 
@@ -1400,7 +1637,7 @@ object Resolution {
     // 1.3 & 1.4 (if only vaguely so)
     val project0 =
       project.withProperties(
-        project.properties ++ profiles0.flatMap(_.properties)
+        project.properties ++ profiles.flatMap(_.properties)
       ) // belongs to 1.5 & 1.6
 
     val propertiesMap0 = withFinalProperties(
@@ -1409,7 +1646,7 @@ object Resolution {
 
     val (importDeps, standardDeps) = {
 
-      val dependencies0 = addDependencies(project0.dependencies +: profiles0.map(_.dependencies))
+      val dependencies0 = addDependencies(project0.dependencies +: profiles.map(_.dependencies))
 
       val (importDeps0, standardDeps0) = dependencies0
         .map { dep =>
@@ -1427,7 +1664,7 @@ object Resolution {
     val importDepsMgmt = {
 
       val dependenciesMgmt0 =
-        addDependencies(project0.dependencyManagement +: profiles0.map(_.dependencyManagement))
+        addDependencies(project0.dependencyManagement +: profiles.map(_.dependencyManagement))
 
       dependenciesMgmt0.flatMap { dep =>
         val (conf0, dep0) = withProperties(dep, propertiesMap0)
@@ -1438,20 +1675,25 @@ object Resolution {
       }
     }
 
-    val parentDeps = project0.parent.toSeq // belongs to 1.5 & 1.6
+    val parentDeps = project0.parent0
+      .map {
+        case (parMod, parVer) =>
+          (parMod, VersionConstraint0.fromVersion(parVer))
+      }
+      .toSeq // belongs to 1.5 & 1.6
 
     val allImportDeps =
-      importDeps.map(_.moduleVersion) ++
-        importDepsMgmt.map(_.moduleVersion)
+      importDeps.map(_.moduleVersionConstraint) ++
+        importDepsMgmt.map(_.moduleVersionConstraint)
 
-    val retainedParentDeps = parentDeps.filter(projectCache.contains)
-    val retainedImportDeps = allImportDeps.filter(projectCache.contains)
+    val retainedParentDeps = parentDeps.filter(projectCache0.contains)
+    val retainedImportDeps = allImportDeps.filter(projectCache0.contains)
 
-    val retainedParentProjects = retainedParentDeps.map(projectCache(_)._2)
-    val retainedImportProjects = retainedImportDeps.map(projectCache(_)._2)
+    val retainedParentProjects = retainedParentDeps.map(projectCache0(_)._2)
+    val retainedImportProjects = retainedImportDeps.map(projectCache0(_)._2)
 
     val depMgmtInputs =
-      (project0.dependencyManagement +: profiles0.map(_.dependencyManagement))
+      (project0.dependencyManagement +: profiles.map(_.dependencyManagement))
         .map(_.filter(_._1 != Configuration.`import`))
         .filter(_.nonEmpty)
         .map { input =>
@@ -1479,13 +1721,17 @@ object Resolution {
 
     project0
       .withPackagingOpt(project0.packagingOpt.map(_.map(substituteProps(_, propertiesMap0))))
-      .withVersion(substituteProps(project0.version, propertiesMap0))
+      .withVersion0(Version0(substituteProps(project0.version0.asString, propertiesMap0)))
       .withDependencies(
         standardDeps ++
-          project0.parent // belongs to 1.5 & 1.6
-            .filter(projectCache.contains)
+          project0.parent0 // belongs to 1.5 & 1.6
+            .map {
+              case (parMod, parVer) =>
+                (parMod, VersionConstraint0.fromVersion(parVer))
+            }
+            .filter(projectCache0.contains)
             .toSeq
-            .flatMap(projectCache(_)._2.dependencies)
+            .flatMap(projectCache0(_)._2.dependencies)
       )
       .withDependencyManagement(Nil)
       .withOverrides(depMgmt)
@@ -1512,11 +1758,54 @@ object Resolution {
     *   A minimized `dependencies`, applying this kind of substitutions.
     */
   def minDependencies: Set[Dependency] =
+    minimizedDependencies(
+      withRetainedVersions = true,
+      withReconciledVersions = false,
+      withFallbackConfig = true
+    )
+
+  def minimizedDependencies(
+    withRetainedVersions: Boolean = true,
+    withReconciledVersions: Boolean = false,
+    withFallbackConfig: Boolean = true
+  ): Set[Dependency] =
     dependencySet.minimizedSet.map { dep =>
-      Resolution.fallbackConfigIfNecessary(dep, configsOf(dep))
+      updated(
+        dep,
+        withRetainedVersions = withRetainedVersions,
+        withReconciledVersions = withReconciledVersions,
+        withFallbackConfig = withFallbackConfig
+      )
     }
 
-  private def orderedDependencies0(keepOverrides: Boolean): Seq[Dependency] = {
+  /** Same as minimizedDependencies, but doesn't throw upon internal inconsistency
+    *
+    * Such inconsistencies can happen with failed resolutions in particular.
+    *
+    * @param withRetainedVersions
+    * @param withReconciledVersions
+    * @param withFallbackConfig
+    * @return
+    */
+  def minimizedDependenciesLoose(
+    withRetainedVersions: Boolean = true,
+    withReconciledVersions: Boolean = false,
+    withFallbackConfig: Boolean = true
+  ): Set[Dependency] =
+    dependencySet.minimizedSet.map { dep =>
+      updated(
+        dep,
+        withRetainedVersions = withRetainedVersions,
+        withReconciledVersions = withReconciledVersions,
+        withFallbackConfig = withFallbackConfig,
+        loose = true
+      )
+    }
+
+  private def orderedDependencies0(
+    keepOverrides: Boolean,
+    keepReconciledVersions: Boolean
+  ): Seq[Dependency] = {
 
     def helper(deps: List[Dependency], done: DependencySet): LazyList[Dependency] =
       deps match {
@@ -1527,7 +1816,12 @@ object Resolution {
             helper(t, done)
           else {
             lazy val done0 = done.add(h0)
-            val todo = dependenciesOf(h, withRetainedVersions = true, withFallbackConfig = true)
+            val todo = dependenciesOf(
+              h,
+              withRetainedVersions = false,
+              withReconciledVersions = true,
+              withFallbackConfig = true
+            )
               // filtering with done0 rather than done for some cycles (dependencies having themselves as dependency)
               .filter(!done0.covers(_))
             val t0 =
@@ -1537,24 +1831,45 @@ object Resolution {
           }
       }
 
-    val (_, updatedRootDependencies, _) = merge(
+    val (_, updatedRootDependencies, _) = merge0(
       processedRootDependencies,
-      forceVersions,
-      reconciliation,
+      forceVersions0,
+      reconciliation0,
       preserveOrder = true
     )
     val rootDeps = updatedRootDependencies
       .map(withDefaultConfig(_, defaultConfiguration))
-      .map(dep => updated(dep, withRetainedVersions = true, withFallbackConfig = true))
+      .map(dep =>
+        updated(
+          dep,
+          withRetainedVersions = false,
+          withReconciledVersions = true,
+          withFallbackConfig = true
+        )
+      )
       .toList
 
-    helper(rootDeps, DependencySet.empty).toVector
+    helper(rootDeps, DependencySet.empty)
+      .map { dep =>
+        updated(
+          dep,
+          withRetainedVersions = !keepReconciledVersions,
+          withReconciledVersions = keepReconciledVersions,
+          withFallbackConfig = false
+        )
+      }
+      .toVector
   }
 
   def orderedDependencies: Seq[Dependency] =
-    orderedDependencies0(keepOverrides = false)
+    orderedDependencies(keepReconciledVersions = false)
   def orderedDependenciesWithOverrides: Seq[Dependency] =
-    orderedDependencies0(keepOverrides = true)
+    orderedDependenciesWithOverrides(keepReconciledVersions = false)
+
+  def orderedDependencies(keepReconciledVersions: Boolean): Seq[Dependency] =
+    orderedDependencies0(keepOverrides = false, keepReconciledVersions = keepReconciledVersions)
+  def orderedDependenciesWithOverrides(keepReconciledVersions: Boolean): Seq[Dependency] =
+    orderedDependencies0(keepOverrides = true, keepReconciledVersions = keepReconciledVersions)
 
   def artifacts(): Seq[Artifact] =
     artifacts(defaultTypes, None)
@@ -1591,9 +1906,14 @@ object Resolution {
     classpathOrder: Boolean
   ): Seq[(Dependency, Publication, Artifact)] =
     for {
-      dep <- if (classpathOrder) orderedDependencies else minDependencies.toSeq
-      (source, proj) <- projectCache
-        .get(dep.moduleVersion)
+      dep <- {
+        // need to keep reconciled versions to later on use projectCache0 when listing artifacts
+        if (classpathOrder) orderedDependencies(keepReconciledVersions = true)
+        else
+          minimizedDependencies(withRetainedVersions = false, withReconciledVersions = true).toSeq
+      }
+      (source, proj) <- projectCache0
+        .get(dep.moduleVersionConstraint)
         .toSeq
 
       classifiers0 =
@@ -1625,16 +1945,26 @@ object Resolution {
     * @return
     *   errors
     */
-  def errors: Seq[(ModuleVersion, Seq[String])] = errorCache.toSeq
+  def errors0: Seq[(ModuleVersionConstraint, Seq[String])] = errorCache.toSeq
 
-  @deprecated("Use errors instead", "1.1.0")
-  def metadataErrors: Seq[(ModuleVersion, Seq[String])] = errors
+  @deprecated("Use errors0 instead", "2.1.25")
+  def errors: Seq[((Module, String), Seq[String])] =
+    errors0.map {
+      case ((mod, ver), value) =>
+        ((mod, ver.asString), value)
+    }
+
+  @deprecated("Use errors0 instead", "1.1.0")
+  def metadataErrors: Seq[((Module, String), Seq[String])] =
+    errors0.map {
+      case ((mod, v), messages) =>
+        ((mod, v.asString), messages)
+    }
 
   def dependenciesWithRetainedVersions: Set[Dependency] =
     dependencies.map { dep =>
       retainedVersions.get(dep.module).fold(dep) { v =>
-        if (dep.version == v) dep
-        else dep.withVersion(v)
+        dep.withVersionConstraint(VersionConstraint0.fromVersion(v))
       }
     }
 
@@ -1649,11 +1979,13 @@ object Resolution {
     */
   def subset(dependencies: Seq[Dependency]): Resolution = {
 
-    def updateVersion(dep: Dependency): Dependency = {
-      val newVersion = retainedVersions.getOrElse(dep.module, dep.version)
-      if (dep.version == newVersion) dep
-      else dep.withVersion(newVersion)
-    }
+    def updateVersion(dep: Dependency): Dependency =
+      updated(
+        dep,
+        withRetainedVersions = false,
+        withReconciledVersions = true,
+        withFallbackConfig = false
+      )
 
     @tailrec def helper(current: Set[Dependency]): Set[Dependency] = {
       val newDeps = current ++ current
@@ -1670,15 +2002,15 @@ object Resolution {
 
     val dependencies0 = dependencies
       .map(withDefaultConfig(_, defaultConfiguration))
-      .map(dep => updated(dep, withRetainedVersions = true, withFallbackConfig = true))
+      .map(updateVersion)
 
     val allDependencies     = helper(dependencies0.toSet)
-    val subsetForceVersions = allDependencies.map(_.moduleVersion).toMap
+    val subsetForceVersions = allDependencies.map(_.moduleVersionConstraint).toMap
 
     copyWithCache(
       rootDependencies = dependencies0,
       dependencySet = dependencySet.setValues(allDependencies)
       // don't know if something should be done about conflicts
-    ).withForceVersions(subsetForceVersions ++ forceVersions)
+    ).withForceVersions0(subsetForceVersions ++ forceVersions0)
   }
 }

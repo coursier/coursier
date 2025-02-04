@@ -1,15 +1,14 @@
 package coursier.cli.fetch
 
-import coursier.cli.util.{JsonElem, JsonPrintRequirement, JsonReport}
+import coursier.cli.util.{JsonElem, JsonPrintRequirement, LegacyJsonReport}
 import coursier.core.{Classifier, Dependency, Publication, Resolution}
 import coursier.util.Artifact
 
 import java.io.File
 
 import scala.collection.immutable.ListMap
-import scala.collection.mutable
 
-object JsonOutput {
+object LegacyJsonOutput {
 
   def report(
     resolution: Resolution,
@@ -35,10 +34,11 @@ object JsonOutput {
       val builder = ListMap.newBuilder[String, String]
       val it      = resolution.rootDependencies.iterator
       while (it.hasNext) {
-        val dep               = it.next()
-        val reconciledVersion = resolution.reconciledVersions.getOrElse(dep.module, dep.version)
-        if (reconciledVersion != dep.version)
-          builder += s"${dep.module}:${dep.version}" -> s"${dep.module}:$reconciledVersion"
+        val dep = it.next()
+        val reconciledVersion =
+          resolution.reconciledVersions.getOrElse(dep.module, dep.versionConstraint)
+        if (reconciledVersion != dep.versionConstraint)
+          builder += s"${dep.module}:${dep.versionConstraint.asString}" -> s"${dep.module}:${reconciledVersion.asString}"
       }
       builder.result()
     }
@@ -65,12 +65,12 @@ object JsonOutput {
       )
     }
 
-    JsonReport(
+    LegacyJsonReport(
       roots,
       conflictResolutionForRoots
     )(
       _.children,
-      _.reconciledVersionStr,
+      _.retainedVersionStr,
       _.requestedVersionStr,
       elem => {
         val file = elem.downloadedFile

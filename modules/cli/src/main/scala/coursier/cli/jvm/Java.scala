@@ -7,11 +7,11 @@ import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.params.EnvParams
 import coursier.cli.setup.MaybeInstallJvm
 import coursier.cli.Util.ValidatedExitOnError
-import coursier.core.Version
 import coursier.env.{Shell, ShellUtil}
 import coursier.jvm.{Execve, JvmCache, JvmCacheLogger}
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
+import coursier.version.Version
 
 import scala.concurrent.duration.Duration
 import scala.util.Properties

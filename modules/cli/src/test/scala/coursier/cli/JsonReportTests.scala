@@ -1,7 +1,7 @@
 package coursier.cli
 
 import coursier.{Fetch, Repositories, Resolve}
-import coursier.cli.fetch.JsonOutput
+import coursier.cli.fetch.JsonReport
 import coursier.core.{
   Activation,
   Classifier,
@@ -17,6 +17,7 @@ import coursier.testcache.TestCache
 import coursier.tests.TestHelpers
 import coursier.util.StringInterpolators._
 import coursier.util.Task
+import coursier.version.{Version, VersionConstraint}
 import utest._
 
 import scala.async.Async.{async, await}
@@ -40,7 +41,7 @@ object JsonReportTests extends TestSuite {
       .map(_.replace(dataDirStr, "${CACHE}/"))
       .toVector
 
-  private val resolve = Resolve()
+  private def resolve = Resolve()
     .noMirrors
     .withCache(TestHelpers.cache)
     .withResolutionParams(
@@ -53,10 +54,10 @@ object JsonReportTests extends TestSuite {
             Some("10.15.1")
           )
         }
-        .withJdkVersion("1.8.0_121")
+        .withJdkVersion(Version("1.8.0_121"))
     )
 
-  private val fetch = Fetch()
+  private def fetch = Fetch()
     .withResolve(resolve)
     .withCache(TestHelpers.cache)
 
@@ -74,15 +75,9 @@ object JsonReportTests extends TestSuite {
           s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams)}.json"
         ) {
           jsonLines {
-            JsonOutput.report(
+            JsonReport.report(
               res.resolution,
-              res.detailedArtifacts.map {
-                case (dep, pub, art, _) =>
-                  (dep, pub, art)
-              },
-              res.artifacts,
-              Set.empty,
-              printExclusions = false,
+              res.fullDetailedArtifacts,
               useSlashSeparator = Properties.isWin
             )
           }
@@ -190,9 +185,19 @@ object JsonReportTests extends TestSuite {
       check(
         dep"org.apache.avro:avro:1.7.4"
           .addExclusion(org"org.tukaani", name"xz")
-          .addOverride(org"org.apache.avro", name"avro", "", Set(org"org.tukaani" -> name"xz")),
+          .addOverride(
+            org"org.apache.avro",
+            name"avro",
+            VersionConstraint(""),
+            Set(org"org.tukaani" -> name"xz")
+          ),
         dep"org.apache.commons:commons-compress:1.4.1"
-          .addOverride(org"org.apache.avro", name"avro", "", Set(org"org.tukaani" -> name"xz"))
+          .addOverride(
+            org"org.apache.avro",
+            name"avro",
+            VersionConstraint(""),
+            Set(org"org.tukaani" -> name"xz")
+          )
       )
     }
 
@@ -224,7 +229,6 @@ object JsonReportTests extends TestSuite {
     }
 
     test("bouncy-castle") {
-      // if you broke that test, maybe you fixed coursier/coursier#3236
       check(
         dep"org.apache.pulsar:bouncy-castle-bc:4.0.1"
       )

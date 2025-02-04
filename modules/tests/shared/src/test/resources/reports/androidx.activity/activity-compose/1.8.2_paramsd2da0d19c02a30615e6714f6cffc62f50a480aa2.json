@@ -3,7 +3,7 @@
   "dependencies": [
     {
       "coord": "androidx.activity:activity-compose:1.8.2",
-      "file": "${CACHE}/https/maven.google.com/androidx/activity/activity-compose/1.8.2/activity-compose-1.8.2.aar",
+      "file": "${CACHE}/https/maven.google.com/androidx/activity/activity-compose/1.8.2/activity-compose-1.8.2.jar",
       "directDependencies": [
         "androidx.activity:activity-ktx:aar:1.8.2",
         "androidx.compose.runtime:runtime-saveable:1.0.1",
@@ -15,6 +15,7 @@
       "dependencies": [
         "androidx.activity:activity-ktx:aar:1.8.2",
         "androidx.activity:activity:aar:1.8.2",
+        "androidx.annotation:annotation-experimental:aar:1.3.0",
         "androidx.annotation:annotation:1.2.0",
         "androidx.arch.core:core-common:2.2.0",
         "androidx.arch.core:core-runtime:aar:2.2.0",
@@ -46,6 +47,7 @@
         "androidx.savedstate:savedstate:aar:1.2.1",
         "androidx.startup:startup-runtime:aar:1.1.1",
         "androidx.tracing:tracing:aar:1.0.0",
+        "androidx.versionedparcelable:versionedparcelable:aar:1.1.1",
         "com.google.guava:listenablefuture:1.0",
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
@@ -53,7 +55,66 @@
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
         "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0",
+        "org.jetbrains:annotations:13.0"
+      ]
+    },
+    {
+      "coord": "androidx.activity:activity-compose:aar:1.8.2",
+      "file": "${CACHE}/https/maven.google.com/androidx/activity/activity-compose/1.8.2/activity-compose-1.8.2.aar",
+      "directDependencies": [
+        "androidx.activity:activity-ktx:aar:1.8.2",
+        "androidx.compose.runtime:runtime-saveable:1.0.1",
+        "androidx.compose.runtime:runtime:1.0.1",
+        "androidx.compose.ui:ui:1.0.1",
+        "androidx.lifecycle:lifecycle-viewmodel:aar:2.6.1",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+      ],
+      "dependencies": [
+        "androidx.activity:activity-ktx:aar:1.8.2",
+        "androidx.activity:activity:aar:1.8.2",
+        "androidx.annotation:annotation-experimental:aar:1.3.0",
+        "androidx.annotation:annotation:1.2.0",
+        "androidx.arch.core:core-common:2.2.0",
+        "androidx.arch.core:core-runtime:aar:2.2.0",
+        "androidx.autofill:autofill:aar:1.0.0",
+        "androidx.collection:collection:1.1.0",
+        "androidx.compose.runtime:runtime-saveable:1.0.1",
+        "androidx.compose.runtime:runtime-saveable:aar:1.0.1",
+        "androidx.compose.runtime:runtime:1.0.1",
+        "androidx.compose.runtime:runtime:aar:1.0.1",
+        "androidx.compose.ui:ui-geometry:aar:1.0.1",
+        "androidx.compose.ui:ui-graphics:aar:1.0.1",
+        "androidx.compose.ui:ui-text:aar:1.0.1",
+        "androidx.compose.ui:ui-unit:aar:1.0.1",
+        "androidx.compose.ui:ui-util:aar:1.0.1",
+        "androidx.compose.ui:ui:1.0.1",
+        "androidx.concurrent:concurrent-futures:1.1.0",
+        "androidx.core:core-ktx:aar:1.9.0",
+        "androidx.core:core:aar:1.9.0",
+        "androidx.lifecycle:lifecycle-common-java8:2.3.0",
+        "androidx.lifecycle:lifecycle-common:2.6.1",
+        "androidx.lifecycle:lifecycle-livedata-core:aar:2.6.1",
+        "androidx.lifecycle:lifecycle-runtime-ktx:aar:2.6.1",
+        "androidx.lifecycle:lifecycle-runtime:aar:2.6.1",
+        "androidx.lifecycle:lifecycle-viewmodel-ktx:aar:2.6.1",
+        "androidx.lifecycle:lifecycle-viewmodel-savedstate:aar:2.6.1",
+        "androidx.lifecycle:lifecycle-viewmodel:aar:2.6.1",
+        "androidx.profileinstaller:profileinstaller:aar:1.3.0",
+        "androidx.savedstate:savedstate-ktx:aar:1.2.1",
+        "androidx.savedstate:savedstate:aar:1.2.1",
+        "androidx.startup:startup-runtime:aar:1.1.1",
+        "androidx.tracing:tracing:aar:1.0.0",
+        "androidx.versionedparcelable:versionedparcelable:aar:1.1.1",
+        "com.google.guava:listenablefuture:1.0",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -69,6 +130,7 @@
       ],
       "dependencies": [
         "androidx.activity:activity:aar:1.8.2",
+        "androidx.annotation:annotation-experimental:aar:1.3.0",
         "androidx.annotation:annotation:1.2.0",
         "androidx.arch.core:core-common:2.2.0",
         "androidx.arch.core:core-runtime:aar:2.2.0",
@@ -88,13 +150,15 @@
         "androidx.savedstate:savedstate:aar:1.2.1",
         "androidx.startup:startup-runtime:aar:1.1.1",
         "androidx.tracing:tracing:aar:1.0.0",
+        "androidx.versionedparcelable:versionedparcelable:aar:1.1.1",
         "com.google.guava:listenablefuture:1.0",
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -113,6 +177,7 @@
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
       ],
       "dependencies": [
+        "androidx.annotation:annotation-experimental:aar:1.3.0",
         "androidx.annotation:annotation:1.2.0",
         "androidx.arch.core:core-common:2.2.0",
         "androidx.arch.core:core-runtime:aar:2.2.0",
@@ -129,13 +194,15 @@
         "androidx.savedstate:savedstate:aar:1.2.1",
         "androidx.startup:startup-runtime:aar:1.1.1",
         "androidx.tracing:tracing:aar:1.0.0",
+        "androidx.versionedparcelable:versionedparcelable:aar:1.1.1",
         "com.google.guava:listenablefuture:1.0",
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -145,7 +212,9 @@
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
       ],
       "dependencies": [
-        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -183,7 +252,25 @@
         "androidx.core:core:aar:1.9.0"
       ],
       "dependencies": [
-        "androidx.core:core:aar:1.9.0"
+        "androidx.annotation:annotation-experimental:aar:1.3.0",
+        "androidx.annotation:annotation:1.2.0",
+        "androidx.arch.core:core-common:2.2.0",
+        "androidx.arch.core:core-runtime:aar:2.2.0",
+        "androidx.collection:collection:1.1.0",
+        "androidx.concurrent:concurrent-futures:1.1.0",
+        "androidx.core:core:aar:1.9.0",
+        "androidx.lifecycle:lifecycle-common:2.6.1",
+        "androidx.lifecycle:lifecycle-runtime:aar:2.6.1",
+        "androidx.profileinstaller:profileinstaller:aar:1.3.0",
+        "androidx.startup:startup-runtime:aar:1.1.1",
+        "androidx.tracing:tracing:aar:1.0.0",
+        "androidx.versionedparcelable:versionedparcelable:aar:1.1.1",
+        "com.google.guava:listenablefuture:1.0",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -198,7 +285,7 @@
     },
     {
       "coord": "androidx.compose.runtime:runtime-saveable:1.0.1",
-      "file": "${CACHE}/https/maven.google.com/androidx/compose/runtime/runtime-saveable/1.0.1/runtime-saveable-1.0.1.aar",
+      "file": "${CACHE}/https/maven.google.com/androidx/compose/runtime/runtime-saveable/1.0.1/runtime-saveable-1.0.1.jar",
       "directDependencies": [
         "androidx.annotation:annotation:1.2.0",
         "androidx.compose.runtime:runtime:aar:1.0.1",
@@ -207,7 +294,13 @@
       "dependencies": [
         "androidx.annotation:annotation:1.2.0",
         "androidx.compose.runtime:runtime:aar:1.0.1",
-        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -221,12 +314,38 @@
       "dependencies": [
         "androidx.annotation:annotation:1.2.0",
         "androidx.compose.runtime:runtime:aar:1.0.1",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
+      ]
+    },
+    {
+      "coord": "androidx.compose.runtime:runtime-saveable:aar:1.0.1",
+      "file": "${CACHE}/https/maven.google.com/androidx/compose/runtime/runtime-saveable/1.0.1/runtime-saveable-1.0.1.aar",
+      "directDependencies": [
+        "androidx.annotation:annotation:1.2.0",
+        "androidx.compose.runtime:runtime:aar:1.0.1",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+      ],
+      "dependencies": [
+        "androidx.annotation:annotation:1.2.0",
+        "androidx.compose.runtime:runtime:aar:1.0.1",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
       "coord": "androidx.compose.runtime:runtime:1.0.1",
-      "file": "${CACHE}/https/maven.google.com/androidx/compose/runtime/runtime/1.0.1/runtime-1.0.1.aar",
+      "file": "${CACHE}/https/maven.google.com/androidx/compose/runtime/runtime/1.0.1/runtime-1.0.1.jar",
       "directDependencies": [
         "androidx.annotation:annotation:1.2.0",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
@@ -239,7 +358,8 @@
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -257,7 +377,27 @@
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
+      ]
+    },
+    {
+      "coord": "androidx.compose.runtime:runtime:aar:1.0.1",
+      "file": "${CACHE}/https/maven.google.com/androidx/compose/runtime/runtime/1.0.1/runtime-1.0.1.aar",
+      "directDependencies": [
+        "androidx.annotation:annotation:1.2.0",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
+      ],
+      "dependencies": [
+        "androidx.annotation:annotation:1.2.0",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -278,7 +418,8 @@
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -302,7 +443,8 @@
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -321,7 +463,10 @@
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
       ],
       "dependencies": [
+        "androidx.annotation:annotation-experimental:aar:1.3.0",
         "androidx.annotation:annotation:1.2.0",
+        "androidx.arch.core:core-common:2.2.0",
+        "androidx.arch.core:core-runtime:aar:2.2.0",
         "androidx.collection:collection:1.1.0",
         "androidx.compose.runtime:runtime-saveable:aar:1.0.1",
         "androidx.compose.runtime:runtime:aar:1.0.1",
@@ -329,13 +474,22 @@
         "androidx.compose.ui:ui-graphics:aar:1.0.1",
         "androidx.compose.ui:ui-unit:aar:1.0.1",
         "androidx.compose.ui:ui-util:aar:1.0.1",
+        "androidx.concurrent:concurrent-futures:1.1.0",
         "androidx.core:core:aar:1.9.0",
+        "androidx.lifecycle:lifecycle-common:2.6.1",
+        "androidx.lifecycle:lifecycle-runtime:aar:2.6.1",
+        "androidx.profileinstaller:profileinstaller:aar:1.3.0",
+        "androidx.startup:startup-runtime:aar:1.1.1",
+        "androidx.tracing:tracing:aar:1.0.0",
+        "androidx.versionedparcelable:versionedparcelable:aar:1.1.1",
+        "com.google.guava:listenablefuture:1.0",
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -358,7 +512,8 @@
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -368,11 +523,72 @@
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
       ],
       "dependencies": [
-        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
       "coord": "androidx.compose.ui:ui:1.0.1",
+      "file": "${CACHE}/https/maven.google.com/androidx/compose/ui/ui/1.0.1/ui-1.0.1.jar",
+      "directDependencies": [
+        "androidx.annotation:annotation:1.2.0",
+        "androidx.autofill:autofill:aar:1.0.0",
+        "androidx.compose.runtime:runtime-saveable:aar:1.0.1",
+        "androidx.compose.runtime:runtime:aar:1.0.1",
+        "androidx.compose.ui:ui-geometry:aar:1.0.1",
+        "androidx.compose.ui:ui-graphics:aar:1.0.1",
+        "androidx.compose.ui:ui-text:aar:1.0.1",
+        "androidx.compose.ui:ui-unit:aar:1.0.1",
+        "androidx.compose.ui:ui-util:aar:1.0.1",
+        "androidx.lifecycle:lifecycle-common-java8:2.3.0",
+        "androidx.lifecycle:lifecycle-runtime:aar:2.6.1",
+        "androidx.lifecycle:lifecycle-viewmodel:aar:2.6.1",
+        "androidx.profileinstaller:profileinstaller:aar:1.3.0",
+        "androidx.savedstate:savedstate:aar:1.2.1",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0"
+      ],
+      "dependencies": [
+        "androidx.annotation:annotation-experimental:aar:1.3.0",
+        "androidx.annotation:annotation:1.2.0",
+        "androidx.arch.core:core-common:2.2.0",
+        "androidx.arch.core:core-runtime:aar:2.2.0",
+        "androidx.autofill:autofill:aar:1.0.0",
+        "androidx.collection:collection:1.1.0",
+        "androidx.compose.runtime:runtime-saveable:aar:1.0.1",
+        "androidx.compose.runtime:runtime:aar:1.0.1",
+        "androidx.compose.ui:ui-geometry:aar:1.0.1",
+        "androidx.compose.ui:ui-graphics:aar:1.0.1",
+        "androidx.compose.ui:ui-text:aar:1.0.1",
+        "androidx.compose.ui:ui-unit:aar:1.0.1",
+        "androidx.compose.ui:ui-util:aar:1.0.1",
+        "androidx.concurrent:concurrent-futures:1.1.0",
+        "androidx.core:core:aar:1.9.0",
+        "androidx.lifecycle:lifecycle-common-java8:2.3.0",
+        "androidx.lifecycle:lifecycle-common:2.6.1",
+        "androidx.lifecycle:lifecycle-runtime:aar:2.6.1",
+        "androidx.lifecycle:lifecycle-viewmodel:aar:2.6.1",
+        "androidx.profileinstaller:profileinstaller:aar:1.3.0",
+        "androidx.savedstate:savedstate:aar:1.2.1",
+        "androidx.startup:startup-runtime:aar:1.1.1",
+        "androidx.tracing:tracing:aar:1.0.0",
+        "androidx.versionedparcelable:versionedparcelable:aar:1.1.1",
+        "com.google.guava:listenablefuture:1.0",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0",
+        "org.jetbrains:annotations:13.0"
+      ]
+    },
+    {
+      "coord": "androidx.compose.ui:ui:aar:1.0.1",
       "file": "${CACHE}/https/maven.google.com/androidx/compose/ui/ui/1.0.1/ui-1.0.1.aar",
       "directDependencies": [
         "androidx.annotation:annotation:1.2.0",
@@ -395,6 +611,7 @@
         "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0"
       ],
       "dependencies": [
+        "androidx.annotation:annotation-experimental:aar:1.3.0",
         "androidx.annotation:annotation:1.2.0",
         "androidx.arch.core:core-common:2.2.0",
         "androidx.arch.core:core-runtime:aar:2.2.0",
@@ -407,6 +624,7 @@
         "androidx.compose.ui:ui-text:aar:1.0.1",
         "androidx.compose.ui:ui-unit:aar:1.0.1",
         "androidx.compose.ui:ui-util:aar:1.0.1",
+        "androidx.concurrent:concurrent-futures:1.1.0",
         "androidx.core:core:aar:1.9.0",
         "androidx.lifecycle:lifecycle-common-java8:2.3.0",
         "androidx.lifecycle:lifecycle-common:2.6.1",
@@ -416,13 +634,16 @@
         "androidx.savedstate:savedstate:aar:1.2.1",
         "androidx.startup:startup-runtime:aar:1.1.1",
         "androidx.tracing:tracing:aar:1.0.0",
+        "androidx.versionedparcelable:versionedparcelable:aar:1.1.1",
+        "com.google.guava:listenablefuture:1.0",
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
         "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.0",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -448,12 +669,23 @@
       "dependencies": [
         "androidx.annotation:annotation-experimental:aar:1.3.0",
         "androidx.annotation:annotation:1.2.0",
+        "androidx.arch.core:core-common:2.2.0",
+        "androidx.arch.core:core-runtime:aar:2.2.0",
         "androidx.collection:collection:1.1.0",
         "androidx.concurrent:concurrent-futures:1.1.0",
         "androidx.core:core:aar:1.9.0",
+        "androidx.lifecycle:lifecycle-common:2.6.1",
         "androidx.lifecycle:lifecycle-runtime:aar:2.6.1",
+        "androidx.profileinstaller:profileinstaller:aar:1.3.0",
+        "androidx.startup:startup-runtime:aar:1.1.1",
+        "androidx.tracing:tracing:aar:1.0.0",
         "androidx.versionedparcelable:versionedparcelable:aar:1.1.1",
-        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+        "com.google.guava:listenablefuture:1.0",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -470,11 +702,22 @@
       "dependencies": [
         "androidx.annotation:annotation-experimental:aar:1.3.0",
         "androidx.annotation:annotation:1.2.0",
+        "androidx.arch.core:core-common:2.2.0",
+        "androidx.arch.core:core-runtime:aar:2.2.0",
         "androidx.collection:collection:1.1.0",
         "androidx.concurrent:concurrent-futures:1.1.0",
+        "androidx.lifecycle:lifecycle-common:2.6.1",
         "androidx.lifecycle:lifecycle-runtime:aar:2.6.1",
+        "androidx.profileinstaller:profileinstaller:aar:1.3.0",
+        "androidx.startup:startup-runtime:aar:1.1.1",
+        "androidx.tracing:tracing:aar:1.0.0",
         "androidx.versionedparcelable:versionedparcelable:aar:1.1.1",
-        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+        "com.google.guava:listenablefuture:1.0",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -486,7 +729,12 @@
       ],
       "dependencies": [
         "androidx.annotation:annotation:1.2.0",
-        "androidx.lifecycle:lifecycle-common:2.6.1"
+        "androidx.lifecycle:lifecycle-common:2.6.1",
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -502,7 +750,8 @@
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -519,7 +768,11 @@
         "androidx.arch.core:core-common:2.2.0",
         "androidx.arch.core:core-runtime:aar:2.2.0",
         "androidx.lifecycle:lifecycle-common:2.6.1",
-        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -533,13 +786,22 @@
       ],
       "dependencies": [
         "androidx.annotation:annotation:1.2.0",
+        "androidx.arch.core:core-common:2.2.0",
+        "androidx.arch.core:core-runtime:aar:2.2.0",
+        "androidx.concurrent:concurrent-futures:1.1.0",
+        "androidx.lifecycle:lifecycle-common:2.6.1",
         "androidx.lifecycle:lifecycle-runtime:aar:2.6.1",
+        "androidx.profileinstaller:profileinstaller:aar:1.3.0",
+        "androidx.startup:startup-runtime:aar:1.1.1",
+        "androidx.tracing:tracing:aar:1.0.0",
+        "com.google.guava:listenablefuture:1.0",
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -563,7 +825,11 @@
         "androidx.startup:startup-runtime:aar:1.1.1",
         "androidx.tracing:tracing:aar:1.0.0",
         "com.google.guava:listenablefuture:1.0",
-        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -575,13 +841,15 @@
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
       ],
       "dependencies": [
+        "androidx.annotation:annotation:1.2.0",
         "androidx.lifecycle:lifecycle-viewmodel:aar:2.6.1",
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -597,18 +865,31 @@
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
       ],
       "dependencies": [
+        "androidx.annotation:annotation-experimental:aar:1.3.0",
         "androidx.annotation:annotation:1.2.0",
         "androidx.arch.core:core-common:2.2.0",
         "androidx.arch.core:core-runtime:aar:2.2.0",
+        "androidx.collection:collection:1.1.0",
+        "androidx.concurrent:concurrent-futures:1.1.0",
         "androidx.core:core-ktx:aar:1.9.0",
+        "androidx.core:core:aar:1.9.0",
         "androidx.lifecycle:lifecycle-common:2.6.1",
         "androidx.lifecycle:lifecycle-livedata-core:aar:2.6.1",
+        "androidx.lifecycle:lifecycle-runtime:aar:2.6.1",
         "androidx.lifecycle:lifecycle-viewmodel:aar:2.6.1",
+        "androidx.profileinstaller:profileinstaller:aar:1.3.0",
         "androidx.savedstate:savedstate:aar:1.2.1",
+        "androidx.startup:startup-runtime:aar:1.1.1",
+        "androidx.tracing:tracing:aar:1.0.0",
+        "androidx.versionedparcelable:versionedparcelable:aar:1.1.1",
+        "com.google.guava:listenablefuture:1.0",
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
+        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -620,7 +901,9 @@
       ],
       "dependencies": [
         "androidx.annotation:annotation:1.2.0",
-        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -648,8 +931,15 @@
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
       ],
       "dependencies": [
+        "androidx.annotation:annotation:1.2.0",
+        "androidx.arch.core:core-common:2.2.0",
+        "androidx.lifecycle:lifecycle-common:2.6.1",
         "androidx.savedstate:savedstate:aar:1.2.1",
-        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -668,7 +958,8 @@
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
         "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -724,7 +1015,9 @@
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
       ],
       "dependencies": [
-        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -735,8 +1028,10 @@
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
       ],
       "dependencies": [
+        "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
-        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -763,7 +1058,8 @@
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -777,7 +1073,8 @@
         "org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
-        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22"
+        "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {
@@ -791,7 +1088,8 @@
         "org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21",
         "org.jetbrains.kotlin:kotlin-stdlib:1.8.22",
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4"
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4",
+        "org.jetbrains:annotations:13.0"
       ]
     },
     {

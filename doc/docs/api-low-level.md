@@ -28,6 +28,7 @@ It caches all of these (metadata and artifacts) on disk, and validates checksums
 In the code below, we'll assume some imports are around,
 ```scala mdoc:silent
 import coursier._
+import coursier.version.{Version, VersionConstraint}
 ```
 
 
@@ -36,10 +37,10 @@ Resolving dependencies involves create an initial resolution state, with all the
 val start = Resolution(
   Seq(
     Dependency(
-      Module(org"org.typelevel", name"cats-core_2.11"), "0.6.0"
+      Module(org"org.typelevel", name"cats-core_2.11"), VersionConstraint("0.6.0")
     ),
     Dependency(
-      Module(org"org.scalaz", name"scalaz-core_2.11"), "7.2.3"
+      Module(org"org.scalaz", name"scalaz-core_2.11"), VersionConstraint("7.2.3")
     )
   )
 )
@@ -99,7 +100,7 @@ wrapping the whole in a monad `F`.
 ```scala mdoc:silent
 import coursier.cache.Cache
 
-val fetch = ResolutionProcess.fetch(repositories, Cache.default.fetch)
+val fetch = ResolutionProcess.fetch0(repositories, Cache.default.fetch)
 ```
 
 The monad used by `Fetch.from` is `coursier.util.Task`, but the resolution process is not tied to a particular
@@ -138,7 +139,7 @@ you can supply your own thread pool to `Cache.fetch`.
 
 Now that the resolution is done, we can check for errors in
 ```scala mdoc:silent
-val errors: Seq[((Module, String), Seq[String])] = resolution.errors
+val errors: Seq[((Module, VersionConstraint), Seq[String])] = resolution.errors0
 ```
 These would mean that the resolution wasn't able to get metadata about some dependencies.
 

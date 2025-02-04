@@ -12,10 +12,10 @@ object WritePom {
         <groupId>{dep.module.organization}</groupId>
         <artifactId>{dep.module.name}</artifactId>
         {
-          if (dep.version.isEmpty)
+          if (dep.versionConstraint.asString.isEmpty)
             Nil
           else
-            Seq(<version>{dep.version}</version>)
+            Seq(<version>{dep.versionConstraint.asString}</version>)
         }
         {
           if (config.isEmpty)
@@ -37,7 +37,7 @@ object WritePom {
         }
       <description>{proj.info.description}</description>
       <url>{proj.info.homePage}</url>
-      <version>{proj.version}</version>
+      <version>{proj.version0.asString}</version>
       // licenses
       <name>{proj.module.name}</name>
       <organization>

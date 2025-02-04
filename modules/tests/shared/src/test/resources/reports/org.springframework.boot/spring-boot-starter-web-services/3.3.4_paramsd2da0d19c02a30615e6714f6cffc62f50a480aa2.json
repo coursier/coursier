@@ -566,6 +566,8 @@
       "dependencies": [
         "com.sun.istack:istack-commons-runtime:4.1.1",
         "com.sun.xml.messaging.saaj:saaj-impl:3.0.4",
+        "io.micrometer:micrometer-commons:1.12.10",
+        "io.micrometer:micrometer-observation:1.12.10",
         "jakarta.activation:jakarta.activation-api:2.1.3",
         "jakarta.xml.bind:jakarta.xml.bind-api:4.0.2",
         "jakarta.xml.soap:jakarta.xml.soap-api:3.0.2",
@@ -579,6 +581,8 @@
         "org.springframework:spring-beans:6.1.13",
         "org.springframework:spring-context:6.1.13",
         "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-expression:6.1.13",
+        "org.springframework:spring-jcl:6.1.13",
         "org.springframework:spring-oxm:6.1.13",
         "org.springframework:spring-web:6.1.13",
         "org.springframework:spring-webmvc:6.1.13"
@@ -596,10 +600,17 @@
       ],
       "dependencies": [
         "com.sun.xml.messaging.saaj:saaj-impl:3.0.4",
+        "io.micrometer:micrometer-commons:1.12.10",
+        "io.micrometer:micrometer-observation:1.12.10",
+        "jakarta.activation:jakarta.activation-api:2.1.3",
+        "org.eclipse.angus:angus-activation:2.0.2",
         "org.jvnet.staxex:stax-ex:2.1.0",
+        "org.springframework:spring-aop:6.1.13",
         "org.springframework:spring-beans:6.1.13",
         "org.springframework:spring-context:6.1.13",
-        "org.springframework:spring-core:6.1.13"
+        "org.springframework:spring-core:6.1.13",
+        "org.springframework:spring-expression:6.1.13",
+        "org.springframework:spring-jcl:6.1.13"
       ]
     },
     {
@@ -682,6 +693,7 @@
         "org.springframework:spring-core:6.1.13"
       ],
       "dependencies": [
+        "jakarta.activation:jakarta.activation-api:2.1.3",
         "jakarta.xml.bind:jakarta.xml.bind-api:4.0.2",
         "org.springframework:spring-beans:6.1.13",
         "org.springframework:spring-core:6.1.13",

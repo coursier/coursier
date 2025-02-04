@@ -1,22 +1,35 @@
 package coursier.core
 
+import coursier.version.{
+  VersionConstraint => VersionConstraint0,
+  VersionInterval => VersionInterval0
+}
+
 /** Represents a reconciliation strategy given a dependency conflict.
   */
+@deprecated("Use coursier.version.ConstraintReconciliation instead", "2.1.25")
 sealed abstract class Reconciliation {
 
   /** Reconcile multiple version candidate.
     *
     * Returns `None` in case of conflict.
     */
-  def apply(versions: Seq[String]): Option[String]
+  def apply(versions: Seq[VersionConstraint0]): Option[VersionConstraint0]
+
+  def reconcile(versions: Seq[VersionConstraint0]): Option[VersionConstraint0] =
+    apply(versions)
+
+  def id: String
 }
 
+@deprecated("Use coursier.version.ConstraintReconciliation instead", "2.1.25")
 object Reconciliation {
-  private final val LatestIntegration = "latest.integration"
-  private final val LatestRelease     = "latest.release"
-  private final val LatestStable      = "latest.stable"
+  private final val LatestIntegration = VersionConstraint0("latest.integration")
+  private final val LatestRelease     = VersionConstraint0("latest.release")
+  private final val LatestStable      = VersionConstraint0("latest.stable")
 
-  private def splitStandard(versions: Seq[String]): (Seq[String], Seq[String]) =
+  private def splitStandard(versions: Seq[VersionConstraint0])
+    : (Seq[VersionConstraint0], Seq[VersionConstraint0]) =
     versions.distinct.partition {
       case LatestIntegration => false
       case LatestRelease     => false
@@ -24,7 +37,7 @@ object Reconciliation {
       case _                 => true
     }
 
-  private def retainLatestOpt(latests: Seq[String]): Option[String] =
+  private def retainLatestOpt(latests: Seq[VersionConstraint0]): Option[VersionConstraint0] =
     if (latests.isEmpty) None
     else if (latests.lengthCompare(1) == 0) latests.headOption
     else {
@@ -43,7 +56,7 @@ object Reconciliation {
     }
 
   case object Default extends Reconciliation {
-    def apply(versions: Seq[String]): Option[String] =
+    def apply(versions: Seq[VersionConstraint0]): Option[VersionConstraint0] =
       if (versions.isEmpty)
         None
       else if (versions.lengthCompare(1) == 0)
@@ -53,11 +66,8 @@ object Reconciliation {
         val retainedStandard =
           if (standard.isEmpty) None
           else if (standard.lengthCompare(1) == 0) standard.headOption
-          else {
-            val parsedConstraints = standard.map(Parse.versionConstraint)
-            VersionConstraint.merge(parsedConstraints: _*)
-              .flatMap(_.repr)
-          }
+          else
+            VersionConstraint0.merge(standard: _*).map(_.uniquePreferred.removeUnusedPreferred)
         val retainedLatestOpt = retainLatestOpt(latests)
 
         if (standard.isEmpty)
@@ -65,22 +75,23 @@ object Reconciliation {
         else if (latests.isEmpty)
           retainedStandard
         else {
-          val parsedIntervals = standard.map(Parse.versionConstraint)
-            .filter(_.preferred.isEmpty)                // only keep intervals
-            .filter(_.interval != VersionInterval.zero) // not interval matching any version
+          val parsedIntervals = standard
+            .filter(_.preferred.isEmpty)                 // only keep intervals
+            .filter(_.interval != VersionInterval0.zero) // not interval matching any version
 
           if (parsedIntervals.isEmpty)
             retainedLatestOpt
           else
-            VersionConstraint.merge(parsedIntervals: _*)
-              .flatMap(_.repr)
-              .map(itv => (itv +: retainedLatestOpt.toSeq).mkString("&"))
+            VersionConstraint0.merge(parsedIntervals: _*)
+              .map(_.uniquePreferred.removeUnusedPreferred)
         }
       }
+
+    def id: String = "default"
   }
 
   case object Relaxed extends Reconciliation {
-    def apply(versions: Seq[String]): Option[String] =
+    def apply(versions: Seq[VersionConstraint0]): Option[VersionConstraint0] =
       if (versions.isEmpty)
         None
       else if (versions.lengthCompare(1) == 0)
@@ -90,18 +101,19 @@ object Reconciliation {
         val retainedStandard =
           if (standard.isEmpty) None
           else if (standard.lengthCompare(1) == 0) standard.headOption
-          else {
-            val parsedConstraints = standard.map(Parse.versionConstraint)
-            VersionConstraint.merge(parsedConstraints: _*)
-              .getOrElse(VersionConstraint.relaxedMerge(parsedConstraints: _*))
-              .repr
-          }
+          else
+            Some(
+              VersionConstraint0.merge(standard: _*)
+                .getOrElse(VersionConstraint0.relaxedMerge(standard: _*))
+                .uniquePreferred
+                .removeUnusedPreferred
+            )
         val retainedLatestOpt = retainLatestOpt(latests)
-        if (latests.isEmpty)
-          retainedStandard
-        else
-          retainedLatestOpt
+        if (latests.isEmpty) retainedStandard
+        else retainedLatestOpt
       }
+
+    def id: String = "relaxed"
   }
 
   /** Strict version reconciliation.
@@ -112,8 +124,10 @@ object Reconciliation {
     * reconciliation is added to it.
     */
   case object Strict extends Reconciliation {
-    def apply(versions: Seq[String]): Option[String] =
+    def apply(versions: Seq[VersionConstraint0]): Option[VersionConstraint0] =
       Default(versions)
+
+    def id: String = "strict"
   }
 
   /** Semantic versioning version reconciliation.
@@ -124,9 +138,14 @@ object Reconciliation {
     * `coursier.Resolve` when a SemVer reconciliation is added to it.
     */
   case object SemVer extends Reconciliation {
-    def apply(versions: Seq[String]): Option[String] =
+    def apply(versions: Seq[VersionConstraint0]): Option[VersionConstraint0] =
       Default(versions)
+
+    def id: String = "semver"
   }
+
+  def apply(input: VersionConstraint0): Option[Reconciliation] =
+    apply(input.asString)
 
   def apply(input: String): Option[Reconciliation] =
     input match {

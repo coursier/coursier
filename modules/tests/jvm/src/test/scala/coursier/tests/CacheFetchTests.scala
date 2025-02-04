@@ -13,6 +13,7 @@ import utest._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.Duration
 import scala.util.Try
+import coursier.version.VersionConstraint
 
 object CacheFetchTests extends TestSuite {
 
@@ -20,7 +21,12 @@ object CacheFetchTests extends TestSuite {
     extraRepo: Repository,
     followHttpToHttpsRedirections: Boolean = false,
     deps: Seq[Dependency] =
-      Seq(Dependency(mod"com.github.alexarchambault:coursier_2.11", "1.0.0-M9-test")),
+      Seq(
+        Dependency(
+          mod"com.github.alexarchambault:coursier_2.11",
+          VersionConstraint("1.0.0-M9-test")
+        )
+      ),
     addCentral: Boolean = true
   ): Unit = {
 
@@ -47,7 +53,7 @@ object CacheFetchTests extends TestSuite {
       .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
       .fetchs
 
-    val processFetch = ResolutionProcess.fetch(
+    val processFetch = ResolutionProcess.fetch0(
       Seq(
         extraRepo
       ) ++ {
@@ -71,7 +77,7 @@ object CacheFetchTests extends TestSuite {
       try Await.result(f, Duration.Inf)
       finally cleanTmpDir()
 
-    val errors = res.errors
+    val errors = res.errors0
 
     assert(errors.isEmpty)
   }

@@ -35,6 +35,7 @@ import coursier.launcher.{
 import coursier.launcher.native.NativeBuilder
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Sync, Task}
+import coursier.version.VersionConstraint
 
 import scala.concurrent.ExecutionContext
 import caseapp.core.help.HelpFormat
@@ -180,7 +181,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
       .map(_.stripPrefix("native"))
       .toSet
       .toVector
-      .map(coursier.core.Version(_))
+      .map(coursier.version.Version(_))
       .sorted
       .lastOption
       .map(_.repr)
@@ -197,7 +198,10 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
       val deps0 = deps.map { dep =>
         dep.split(":", 3) match {
           case Array(org, name, ver) =>
-            Dependency(Module(Organization(org), ModuleName(name), Map.empty), ver)
+            Dependency(
+              Module(Organization(org), ModuleName(name), Map.empty),
+              VersionConstraint(ver)
+            )
           case _ => ???
         }
       }

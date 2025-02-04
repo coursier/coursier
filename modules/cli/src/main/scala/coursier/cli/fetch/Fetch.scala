@@ -59,13 +59,26 @@ object Fetch extends CoursierCommand[FetchOptions] {
         params.jsonOutputOpt match {
           case Some(output) =>
             Task.delay {
-              val report = JsonOutput.report(
-                res,
-                artifacts,
-                artifactFiles.collect { case (a, Some(f)) => a -> f },
-                params.artifact.classifiers,
-                printExclusions = false
-              )
+              val report =
+                if (params.legacyReport)
+                  LegacyJsonOutput.report(
+                    res,
+                    artifacts,
+                    artifactFiles.collect { case (a, Some(f)) => a -> f },
+                    params.artifact.classifiers,
+                    printExclusions = false
+                  )
+                else {
+                  val byArtifacts = artifacts.groupMap(_._3) { case (dep, pub, _) => (dep, pub) }
+                  JsonReport.report(
+                    res,
+                    for {
+                      (art, fileOpt) <- artifactFiles
+                      depPubs        <- byArtifacts.get(art).toSeq
+                      (dep, pub)     <- depPubs
+                    } yield (dep, pub, art, fileOpt)
+                  )
+                }
 
               Files.write(output, report.getBytes(StandardCharsets.UTF_8))
             }

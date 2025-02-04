@@ -4,6 +4,7 @@ import coursier.core.{Dependency, Module, Parse, Resolution, Version}
 import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.util.ModuleMatchers
+import coursier.version.VersionConstraint
 import dataclass.data
 
 @data class DontBumpRootDependencies(matchers: ModuleMatchers) extends Rule {
@@ -19,20 +20,20 @@ import dataclass.data
       .iterator
       .filter { rootDep =>
         // "any" version substitution is not a bump
-        rootDep.version.nonEmpty &&
+        rootDep.versionConstraint.asString.nonEmpty &&
         matchers.matches(rootDep.module)
       }
       .map { rootDep =>
-        val selected = Version(res.reconciledVersions.getOrElse(rootDep.module, rootDep.version))
+        val selected = res.retainedVersions
+          .getOrElse(rootDep.module, sys.error(s"${rootDep.module} not found in retained versions"))
         rootDep -> selected
       }
       .filter {
         case (dep, selectedVer) =>
-          val wanted = Parse.versionConstraint(dep.version)
-          if (wanted.preferred.nonEmpty)
-            !wanted.preferred.contains(selectedVer)
+          if (dep.versionConstraint.preferred.nonEmpty)
+            !dep.versionConstraint.preferred.contains(selectedVer)
           else
-            !wanted.interval.contains(selectedVer)
+            !dep.versionConstraint.interval.contains(selectedVer)
       }
       .map {
         case (dep, selectedVer) =>
@@ -55,18 +56,18 @@ import dataclass.data
       .bumpedRootDependencies
       .map {
         case (dep, _) =>
-          dep.module -> dep.version
+          dep.module -> dep.versionConstraint
       }
       .toMap
     val cantForce = res
-      .forceVersions
+      .forceVersions0
       .filter {
         case (mod, ver) =>
           modules.get(mod).exists(_ != ver)
       }
 
     if (cantForce.isEmpty) {
-      val res0 = res.withForceVersions(res.forceVersions ++ modules)
+      val res0 = res.withForceVersions0(res.forceVersions0 ++ modules)
       Right(res0)
     }
     else {
@@ -88,7 +89,7 @@ object DontBumpRootDependencies {
   ) extends UnsatisfiedRule(
         rule,
         s"Some root dependency versions were bumped: " +
-          bumpedRootDependencies.map(d => s"${d._1.module}:${d._1.version}")
+          bumpedRootDependencies.map(d => s"${d._1.module}:${d._1.versionConstraint.asString}")
             .toVector
             .sorted
             .mkString(", ")
@@ -98,7 +99,7 @@ object DontBumpRootDependencies {
 
   final class CantForceRootDependencyVersions(
     resolution: Resolution,
-    cantBump: Map[Module, String],
+    cantBump: Map[Module, VersionConstraint],
     conflict: BumpedRootDependencies,
     override val rule: DontBumpRootDependencies
   ) extends UnsatisfiableRule(

@@ -3,6 +3,7 @@ package coursier.web
 import coursier.core.{Configuration, Dependency, Module, ModuleName, Organization, Resolution, Type}
 import coursier.maven.{MavenRepository, MavenRepositoryLike}
 import coursier.util.StringInterpolators._
+import coursier.version.{Version, VersionConstraint}
 import japgolly.scalajs.react.vdom.{Attr, TagMod}
 import japgolly.scalajs.react.vdom.HtmlAttrs.dangerouslySetInnerHtml
 import japgolly.scalajs.react._
@@ -37,13 +38,16 @@ object App {
             label
           )
 
-        def depItem(dep: Dependency, finalVersionOpt: Option[String]) =
+        def depItem(dep: Dependency, finalVersionOpt: Option[Version]) =
           <.tr(
-            ^.`class` := (if (res.errorCache.contains(dep.moduleVersion)) "danger" else ""),
+            ^.`class` := (
+              if (res.errorCache.contains(dep.moduleVersionConstraint)) "danger"
+              else ""
+            ),
             <.td(dep.module.organization.value),
             <.td(dep.module.name.value),
-            <.td(finalVersionOpt.fold(dep.version)(finalVersion =>
-              s"$finalVersion (for ${dep.version})"
+            <.td(finalVersionOpt.fold(dep.versionConstraint.asString)(finalVersion =>
+              s"${finalVersion.asString} (for ${dep.versionConstraint.asString})"
             )),
             <.td(TagMod(
               if (dep.configuration == Configuration.compile) TagMod()
@@ -65,16 +69,17 @@ object App {
               if (dep.optional) TagMod(infoLabel("optional")) else TagMod(),
               res
                 .errorCache
-                .get(dep.moduleVersion)
+                .get(dep.moduleVersionConstraint)
                 .map(errs => errorPopOver("Error", errs.mkString("; ")))
                 .toSeq
                 .toTagMod
             )),
             <.td(TagMod(
-              res.projectCache.get(dep.moduleVersion) match {
+              res.projectCache0.get(dep.moduleVersionConstraint) match {
                 case Some((source: MavenRepositoryLike, proj)) =>
                   // FIXME Maven specific, generalize with source.artifacts
-                  val version0 = finalVersionOpt getOrElse dep.version
+                  val version0 =
+                    finalVersionOpt.map(_.asString) getOrElse dep.versionConstraint.asString
                   val relPath =
                     dep.module.organization.value.split('.').toSeq ++ Seq(
                       dep.module.name.value,
@@ -122,10 +127,10 @@ object App {
                 depItem(
                   dep,
                   res
-                    .projectCache
-                    .get(dep.moduleVersion)
-                    .map(_._2.version)
-                    .filter(_ != dep.version)
+                    .projectCache0
+                    .get(dep.moduleVersionConstraint)
+                    .map(_._2.version0)
+                    .filter(_ != dep.versionConstraint)
                 )
               )
               .toTagMod
@@ -143,91 +148,92 @@ object App {
     def down              = apply("arrow-down")
   }
 
-  val moduleEditModal = ScalaComponent.builder[((Module, String), Int, Backend)]("EditModule")
-    .render_P {
-      case ((module, version), moduleIdx, backend) =>
-        <.div(
-          ^.`class`         := "modal fade",
-          ^.id              := "moduleEdit",
-          ^.role            := "dialog",
-          ^.aria.labelledBy := "moduleEditTitle",
+  val moduleEditModal =
+    ScalaComponent.builder[((Module, VersionConstraint), Int, Backend)]("EditModule")
+      .render_P {
+        case ((module, version), moduleIdx, backend) =>
           <.div(
-            ^.`class` := "modal-dialog",
+            ^.`class`         := "modal fade",
+            ^.id              := "moduleEdit",
+            ^.role            := "dialog",
+            ^.aria.labelledBy := "moduleEditTitle",
             <.div(
-              ^.`class` := "modal-content",
+              ^.`class` := "modal-dialog",
               <.div(
-                ^.`class` := "modal-header",
-                <.button(
-                  ^.`type`             := "button",
-                  ^.`class`            := "close",
-                  Attr("data-dismiss") := "modal",
-                  ^.aria.label         := "Close",
-                  <.span(^.aria.hidden := true, dangerouslySetInnerHtml := "&times;")
+                ^.`class` := "modal-content",
+                <.div(
+                  ^.`class` := "modal-header",
+                  <.button(
+                    ^.`type`             := "button",
+                    ^.`class`            := "close",
+                    Attr("data-dismiss") := "modal",
+                    ^.aria.label         := "Close",
+                    <.span(^.aria.hidden := true, dangerouslySetInnerHtml := "&times;")
+                  ),
+                  <.h4(^.`class` := "modal-title", ^.id := "moduleEditTitle", "Dependency")
                 ),
-                <.h4(^.`class` := "modal-title", ^.id := "moduleEditTitle", "Dependency")
-              ),
-              <.div(
-                ^.`class` := "modal-body",
-                <.form(
-                  <.div(
-                    ^.`class` := "form-group",
-                    <.label(^.`for` := "inputOrganization", "Organization"),
-                    <.input(
-                      ^.`class`     := "form-control",
-                      ^.id          := "inputOrganization",
-                      ^.placeholder := "Organization",
-                      ^.onChange ==> backend.updateModule(
-                        moduleIdx,
-                        (dep, value) =>
-                          dep.withModule(dep.module.withOrganization(Organization(value)))
-                      ),
-                      ^.value := module.organization.value
-                    )
-                  ),
-                  <.div(
-                    ^.`class` := "form-group",
-                    <.label(^.`for` := "inputName", "Name"),
-                    <.input(
-                      ^.`class`     := "form-control",
-                      ^.id          := "inputName",
-                      ^.placeholder := "Name",
-                      ^.onChange ==> backend.updateModule(
-                        moduleIdx,
-                        (dep, value) => dep.withModule(dep.module.withName(ModuleName(value)))
-                      ),
-                      ^.value := module.name.value
-                    )
-                  ),
-                  <.div(
-                    ^.`class` := "form-group",
-                    <.label(^.`for` := "inputVersion", "Version"),
-                    <.input(
-                      ^.`class`     := "form-control",
-                      ^.id          := "inputVersion",
-                      ^.placeholder := "Version",
-                      ^.onChange ==> backend.updateModule(
-                        moduleIdx,
-                        (dep, value) => dep.withVersion(value)
-                      ),
-                      ^.value := version
-                    )
-                  ),
-                  <.div(
-                    ^.`class` := "modal-footer",
-                    <.button(
-                      ^.`type`             := "submit",
-                      ^.`class`            := "btn btn-primary",
-                      Attr("data-dismiss") := "modal",
-                      "Done"
+                <.div(
+                  ^.`class` := "modal-body",
+                  <.form(
+                    <.div(
+                      ^.`class` := "form-group",
+                      <.label(^.`for` := "inputOrganization", "Organization"),
+                      <.input(
+                        ^.`class`     := "form-control",
+                        ^.id          := "inputOrganization",
+                        ^.placeholder := "Organization",
+                        ^.onChange ==> backend.updateModule(
+                          moduleIdx,
+                          (dep, value) =>
+                            dep.withModule(dep.module.withOrganization(Organization(value)))
+                        ),
+                        ^.value := module.organization.value
+                      )
+                    ),
+                    <.div(
+                      ^.`class` := "form-group",
+                      <.label(^.`for` := "inputName", "Name"),
+                      <.input(
+                        ^.`class`     := "form-control",
+                        ^.id          := "inputName",
+                        ^.placeholder := "Name",
+                        ^.onChange ==> backend.updateModule(
+                          moduleIdx,
+                          (dep, value) => dep.withModule(dep.module.withName(ModuleName(value)))
+                        ),
+                        ^.value := module.name.value
+                      )
+                    ),
+                    <.div(
+                      ^.`class` := "form-group",
+                      <.label(^.`for` := "inputVersion", "Version"),
+                      <.input(
+                        ^.`class`     := "form-control",
+                        ^.id          := "inputVersion",
+                        ^.placeholder := "Version",
+                        ^.onChange ==> backend.updateModule(
+                          moduleIdx,
+                          (dep, value) => dep.withVersionConstraint(VersionConstraint(value))
+                        ),
+                        ^.value := version.asString
+                      )
+                    ),
+                    <.div(
+                      ^.`class` := "modal-footer",
+                      <.button(
+                        ^.`type`             := "submit",
+                        ^.`class`            := "btn btn-primary",
+                        Attr("data-dismiss") := "modal",
+                        "Done"
+                      )
                     )
                   )
                 )
               )
             )
           )
-        )
-    }
-    .build
+      }
+      .build
 
   val modules = ScalaComponent.builder[(Seq[Dependency], Int, Backend)]("Dependencies")
     .render_P {
@@ -236,7 +242,7 @@ object App {
           <.tr(
             <.td(dep.module.organization.value),
             <.td(dep.module.name.value),
-            <.td(dep.version),
+            <.td(dep.versionConstraint.asString),
             <.td(
               <.a(
                 Attr("data-toggle") := "modal",
@@ -289,7 +295,9 @@ object App {
           moduleEditModal((
             deps
               .lift(editModuleIdx)
-              .fold(Module(org"", name"", Map.empty) -> "")(_.moduleVersion),
+              .fold(
+                Module(org"", name"", Map.empty) -> VersionConstraint.empty
+              )(_.moduleVersionConstraint),
             editModuleIdx,
             backend
           ))
@@ -497,7 +505,7 @@ object App {
 
   val initialState = State(
     List(
-      Dependency(mod"io.get-coursier:coursier_2.13", "2.0.0-RC6-15") // DEBUG
+      dep"io.get-coursier:coursier_2.13:2.0.0-RC6-15" // DEBUG
     ),
     Seq("central" -> MavenRepository("https://repo1.maven.org/maven2")),
     ResolutionOptions(),
