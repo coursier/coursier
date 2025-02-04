@@ -13,7 +13,8 @@ import coursier.core.{
   ModuleName,
   Organization,
   Publication,
-  Type
+  Type,
+  VariantSelector
 }
 import coursier.util.StringInterpolators._
 import coursier.version.VersionConstraint
@@ -32,7 +33,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString == "1.7.4")
-          assert(dep.configuration == Configuration.empty)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.empty))
           assert(dep.attributes == Attributes.empty)
       }
     }
@@ -44,7 +45,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString.isEmpty)
-          assert(dep.configuration == Configuration.empty)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.empty))
           assert(dep.attributes == Attributes.empty)
       }
     }
@@ -56,7 +57,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString == "1.7.4")
-          assert(dep.configuration == Configuration.runtime)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.runtime))
           assert(dep.attributes == Attributes.empty)
       }
     }
@@ -68,7 +69,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString.isEmpty)
-          assert(dep.configuration == Configuration.runtime)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.runtime))
           assert(dep.attributes == Attributes.empty)
       }
     }
@@ -80,7 +81,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString == "[1.7,1.8)")
-          assert(dep.configuration == Configuration.runtime)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.runtime))
           assert(dep.attributes == Attributes.empty)
       }
     }
@@ -95,7 +96,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString == "1.7.4")
-          assert(dep.configuration == Configuration.runtime)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.runtime))
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
     }
@@ -110,7 +111,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString.isEmpty)
-          assert(dep.configuration == Configuration.runtime)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.runtime))
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
     }
@@ -125,7 +126,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString == "1.7.4")
-          assert(dep.configuration == Configuration.runtime)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.runtime))
           assert(dep.publication == Publication("", Type.empty, Extension("exe"), Classifier.empty))
       }
     }
@@ -140,7 +141,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString == "1.7.4")
-          assert(dep.configuration == Configuration.runtime)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.runtime))
           val expectedPublication = Publication(
             "",
             Type("typetype"),
@@ -161,7 +162,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString == "1.7.4")
-          assert(dep.configuration == Configuration.runtime)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.runtime))
           val expectedPublication = Publication(
             "",
             Type("typetype"),
@@ -182,7 +183,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString == "[1.7,1.8)")
-          assert(dep.configuration == Configuration.runtime)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.runtime))
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
       }
     }
@@ -197,7 +198,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString == "1.7.4")
-          assert(dep.configuration == Configuration.runtime)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.runtime))
           assert(dep.attributes == Attributes.empty)
           assert(extraParams.isDefinedAt("url"))
           assert(extraParams.getOrElse("url", "") == url)
@@ -214,7 +215,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString == "1.7.4")
-          assert(dep.configuration == Configuration.runtime)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.runtime))
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
           assert(extraParams.isDefinedAt("url"))
           assert(extraParams.getOrElse("url", "") == url)
@@ -231,7 +232,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString == "[1.7,1.8)")
-          assert(dep.configuration == Configuration.runtime)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.runtime))
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
           assert(extraParams.isDefinedAt("url"))
           assert(extraParams.getOrElse("url", "") == url)
@@ -248,7 +249,7 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
           assert(dep.versionConstraint.asString == "[1.7,1.8)")
-          assert(dep.configuration == Configuration.runtime)
+          assert(dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.runtime))
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
           assert(extraParams.isDefinedAt("url"))
           assert(extraParams.getOrElse("url", "") == url)
@@ -475,7 +476,7 @@ object DependencyParserTests extends TestSuite {
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
             Dependency(mod"org:name", VersionConstraint("ver"))
-              .withConfiguration(Configuration.empty),
+              .withVariantSelector(VariantSelector.emptyConfiguration),
             fullCrossVersion = false,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -490,7 +491,8 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", VersionConstraint("")).withConfiguration(Configuration.empty),
+            Dependency(mod"org:name", VersionConstraint(""))
+              .withVariantSelector(VariantSelector.emptyConfiguration),
             fullCrossVersion = false,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -506,7 +508,7 @@ object DependencyParserTests extends TestSuite {
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
             Dependency(mod"org:name", VersionConstraint("ver"))
-              .withConfiguration(Configuration.empty),
+              .withVariantSelector(VariantSelector.emptyConfiguration),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -521,7 +523,8 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", VersionConstraint("")).withConfiguration(Configuration.empty),
+            Dependency(mod"org:name", VersionConstraint(""))
+              .withVariantSelector(VariantSelector.emptyConfiguration),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -537,7 +540,7 @@ object DependencyParserTests extends TestSuite {
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
             Dependency(mod"org:name", VersionConstraint("ver"))
-              .withConfiguration(Configuration("conf")),
+              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration("conf"))),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -553,7 +556,7 @@ object DependencyParserTests extends TestSuite {
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
             Dependency(mod"org:name", VersionConstraint(""))
-              .withConfiguration(Configuration("conf")),
+              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration("conf"))),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty

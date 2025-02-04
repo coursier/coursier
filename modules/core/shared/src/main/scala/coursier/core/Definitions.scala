@@ -251,8 +251,7 @@ object Attributes {
 @data class Project(
   module: Module,
   version0: Version0,
-  // First String is configuration (scope for Maven)
-  dependencies: Seq[(Configuration, Dependency)],
+  dependencies0: Seq[(Variant, Dependency)],
   // For Maven, this is the standard scopes as an Ivy configuration
   configurations: Map[Configuration, Seq[Configuration]],
 
@@ -269,13 +268,43 @@ object Attributes {
     * having a wrong version in their metadata.
     */
   actualVersionOpt0: Option[Version0],
-  publications: Seq[(Configuration, Publication)],
+  publications0: Seq[(Variant, Publication)],
 
   // Extra infos, not used during resolution
   info: Info,
   @since("2.1.23")
   overrides: Overrides = Overrides.empty
 ) {
+
+  @deprecated("Use dependencies0 instead", "2.1.25")
+  def dependencies: Seq[(Configuration, Dependency)] =
+    dependencies0.map {
+      case (c: Variant.Configuration, dep) =>
+        (c.configuration, dep)
+    }
+  @deprecated("Use withDependencies0 instead", "2.1.25")
+  def withDependencies(newDependencies: Seq[(Configuration, Dependency)]): Project =
+    withDependencies0(
+      newDependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      }
+    )
+
+  @deprecated("Use publications0 instead", "2.1.25")
+  def publications: Seq[(Configuration, Publication)] =
+    publications0.map {
+      case (c: Variant.Configuration, pub) =>
+        (c.configuration, pub)
+    }
+  @deprecated("Use withPublications0 instead", "2.1.25")
+  def withPublications(newPublications: Seq[(Configuration, Publication)]): Project =
+    withPublications0(
+      newPublications.map {
+        case (config, pub) =>
+          (Variant.Configuration(config), pub)
+      }
+    )
 
   @deprecated("Use the override accepting Version-s instead", "2.1.25")
   def this(
@@ -299,7 +328,10 @@ object Attributes {
     this(
       module,
       Version0(version),
-      dependencies,
+      dependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
       configurations,
       parent.map { case (mod, ver) => (mod, Version0(ver)) },
       dependencyManagement,
@@ -310,7 +342,10 @@ object Attributes {
       packagingOpt,
       relocated,
       actualVersionOpt.map(Version0(_)),
-      publications,
+      publications.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
       info,
       overrides
     )
@@ -336,7 +371,10 @@ object Attributes {
     this(
       module,
       Version0(version),
-      dependencies,
+      dependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
       configurations,
       parent.map { case (mod, ver) => (mod, Version0(ver)) },
       dependencyManagement,
@@ -347,7 +385,10 @@ object Attributes {
       packagingOpt,
       relocated,
       actualVersionOpt.map(Version0(_)),
-      publications,
+      publications.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
       info
     )
 
@@ -425,7 +466,10 @@ object Project {
     apply(
       module,
       Version0(version),
-      dependencies,
+      dependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
       configurations,
       parent.map { case (mod, ver) => (mod, Version0(ver)) },
       dependencyManagement,
@@ -436,7 +480,10 @@ object Project {
       packagingOpt,
       relocated,
       actualVersionOpt.map(Version0(_)),
-      publications,
+      publications.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
       info
     )
   @deprecated("Use the override accepting Version-s instead", "2.1.25")
@@ -461,7 +508,10 @@ object Project {
     apply(
       module,
       Version0(version),
-      dependencies,
+      dependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
       configurations,
       parent.map { case (mod, ver) => (mod, Version0(ver)) },
       dependencyManagement,
@@ -472,7 +522,10 @@ object Project {
       packagingOpt,
       relocated,
       actualVersionOpt.map(Version0(_)),
-      publications,
+      publications.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
       info,
       overrides
     )

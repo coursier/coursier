@@ -1,6 +1,6 @@
 package coursier.maven
 
-import coursier.core.{Configuration, Dependency, Project}
+import coursier.core.{Configuration, Dependency, Project, Variant}
 
 object WritePom {
 
@@ -47,13 +47,16 @@ object WritePom {
       // SCM
       // developers
         {
-          if (proj.dependencies.isEmpty)
+          if (proj.dependencies0.isEmpty)
             Nil
           else
             <dependencies>
               {
-                proj.dependencies.map {
-                  case (config, dep) =>
+                proj.dependencies0.map {
+                  case (variant, dep) =>
+                    val config = variant match {
+                      case c: Variant.Configuration => c.configuration
+                    }
                     dependencyNode(config, dep)
                 }
               }

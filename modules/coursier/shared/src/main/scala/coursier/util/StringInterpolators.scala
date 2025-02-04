@@ -183,6 +183,12 @@ object StringInterpolators {
                 ${bomDep.forceOverrideVersions}
               )"""
             }
+            val variantSelector = dep.variantSelector match {
+              case c: VariantSelector.ConfigurationBased =>
+                q"""_root_.coursier.core.VariantSelector.ConfigurationBased(
+                  _root_.coursier.core.Configuration(${c.configuration.value})
+                )"""
+            }
             c.Expr(q"""
               _root_.coursier.core.Dependency(
                 _root_.coursier.core.Module(
@@ -193,7 +199,7 @@ object StringInterpolators {
                 _root_.coursier.version.VersionConstraint(
                   ${dep.versionConstraint.asString}
                 ),
-                _root_.coursier.core.Configuration(${dep.configuration.value}),
+                $variantSelector,
                 _root_.coursier.core.MinimizedExclusions(_root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$excls)),
                 _root_.coursier.core.Publication(
                   ${dep.publication.name},

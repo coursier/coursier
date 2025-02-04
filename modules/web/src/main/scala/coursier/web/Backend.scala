@@ -54,7 +54,7 @@ final class Backend($ : BackendScope[_, State]) {
       Seq(
         dep.module.organization,
         dep.module.name,
-        dep.configuration
+        dep.variantSelector.repr
       ).mkString(":")
 
     for {

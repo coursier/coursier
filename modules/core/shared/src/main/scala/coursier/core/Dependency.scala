@@ -17,7 +17,7 @@ import scala.annotation.nowarn
 @data(apply = false, settersCallApply = true) class Dependency(
   module: Module,
   versionConstraint: VersionConstraint0,
-  configuration: Configuration,
+  variantSelector: VariantSelector,
   minimizedExclusions: MinimizedExclusions,
   publication: Publication,
   // Maven-specific
@@ -42,8 +42,12 @@ import scala.annotation.nowarn
   @deprecated("Prefer moduleVersionConstraint instead", "2.1.25")
   def moduleVersion: (Module, String) = (module, versionConstraint.asString)
 
-  def asBomDependency: BomDependency =
-    BomDependency(module, versionConstraint, configuration)
+  def asBomDependency: BomDependency = {
+    val config = variantSelector match {
+      case c: VariantSelector.ConfigurationBased => c.configuration
+    }
+    BomDependency(module, versionConstraint, config)
+  }
 
   @deprecated(
     "Prefer using versionConstraint instead (versionConstraint.asString to get a printable string)",
@@ -55,6 +59,16 @@ import scala.annotation.nowarn
   def withVersion(newVersion: String): Dependency =
     if (newVersion == version) this
     else withVersionConstraint(VersionConstraint0(newVersion))
+
+  @deprecated("Use variantSelector instead", "2.1.25")
+  def configuration: Configuration =
+    variantSelector match {
+      case c: VariantSelector.ConfigurationBased => c.configuration
+    }
+  @deprecated("Use withVariantSelector instead", "2.1.25")
+  def withConfiguration(newConfiguration: Configuration): Dependency =
+    if (variantSelector.asConfiguration.contains(newConfiguration)) this
+    else withVariantSelector(VariantSelector.ConfigurationBased(newConfiguration))
 
   @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
   def this(
@@ -69,7 +83,7 @@ import scala.annotation.nowarn
     this(
       module,
       VersionConstraint0(version),
-      configuration,
+      VariantSelector.ConfigurationBased(configuration),
       minimizedExclusions,
       publication,
       optional,
@@ -90,7 +104,7 @@ import scala.annotation.nowarn
     this(
       module,
       VersionConstraint0(version),
-      configuration,
+      VariantSelector.ConfigurationBased(configuration),
       minimizedExclusions,
       publication,
       optional,
@@ -113,7 +127,7 @@ import scala.annotation.nowarn
     this(
       module,
       VersionConstraint0(version),
-      configuration,
+      VariantSelector.ConfigurationBased(configuration),
       minimizedExclusions,
       publication,
       optional,
@@ -138,7 +152,7 @@ import scala.annotation.nowarn
     this(
       module,
       VersionConstraint0(version),
-      configuration,
+      VariantSelector.ConfigurationBased(configuration),
       minimizedExclusions,
       publication,
       optional,
@@ -165,7 +179,7 @@ import scala.annotation.nowarn
     this(
       module,
       VersionConstraint0(version),
-      configuration,
+      VariantSelector.ConfigurationBased(configuration),
       minimizedExclusions,
       publication,
       optional,
@@ -187,7 +201,7 @@ import scala.annotation.nowarn
   ) = this(
     module,
     version,
-    configuration,
+    VariantSelector.ConfigurationBased(configuration),
     MinimizedExclusions(minimizedExclusions),
     publication,
     optional,
@@ -206,7 +220,7 @@ import scala.annotation.nowarn
   ) = this(
     module,
     VersionConstraint0(version),
-    configuration,
+    VariantSelector.ConfigurationBased(configuration),
     MinimizedExclusions(minimizedExclusions),
     publication,
     optional,
@@ -346,7 +360,7 @@ import scala.annotation.nowarn
   private[core] def copy(
     module: Module = this.module,
     version: VersionConstraint0 = this.versionConstraint,
-    configuration: Configuration = this.configuration,
+    variantSelector: VariantSelector = this.variantSelector,
     minimizedExclusions: MinimizedExclusions = this.minimizedExclusions,
     attributes: Attributes = this.attributes,
     optional: Boolean = this.optional,
@@ -354,7 +368,7 @@ import scala.annotation.nowarn
   ) = Dependency(
     module,
     version,
-    configuration,
+    variantSelector,
     minimizedExclusions,
     Publication("", attributes.`type`, Extension.empty, attributes.classifier),
     optional,
@@ -385,7 +399,7 @@ import scala.annotation.nowarn
     module.hasProperties ||
     versionConstraint.asString.contains("$") ||
     publication.attributesHaveProperties ||
-    configuration.value.contains("$") ||
+    variantSelector.asConfiguration.exists(_.value.contains("$")) ||
     minimizedExclusions.hasProperties
 
   // Overriding toString to be backwards compatible with Set-based exclusion representation
@@ -393,7 +407,7 @@ import scala.annotation.nowarn
     var fields = Seq(
       module.toString,
       versionConstraint.asString,
-      configuration.toString,
+      variantSelector.asConfiguration.map(_.toString).getOrElse(variantSelector.toString),
       minimizedExclusions.toSet().toString,
       publication.toString,
       optional.toString,
@@ -430,7 +444,7 @@ object Dependency {
   def apply(
     module: Module,
     versionConstraint: VersionConstraint0,
-    configuration: Configuration,
+    variantSelector: VariantSelector,
     minimizedExclusions: MinimizedExclusions,
     publication: Publication,
     optional: Boolean,
@@ -444,7 +458,7 @@ object Dependency {
       new Dependency(
         module,
         versionConstraint,
-        configuration,
+        variantSelector,
         minimizedExclusions,
         publication,
         optional,
@@ -473,7 +487,7 @@ object Dependency {
     apply(
       module,
       VersionConstraint0(version),
-      configuration,
+      VariantSelector.ConfigurationBased(configuration),
       minimizedExclusions,
       publication,
       optional,
@@ -487,7 +501,7 @@ object Dependency {
   def apply(
     module: Module,
     version: VersionConstraint0,
-    configuration: Configuration,
+    variantSelector: VariantSelector,
     minimizedExclusions: MinimizedExclusions,
     publication: Publication,
     optional: Boolean,
@@ -499,7 +513,7 @@ object Dependency {
     Dependency(
       module,
       version,
-      configuration,
+      variantSelector,
       minimizedExclusions,
       publication,
       optional,
@@ -526,7 +540,7 @@ object Dependency {
     apply(
       module,
       VersionConstraint0(version),
-      configuration,
+      VariantSelector.ConfigurationBased(configuration),
       minimizedExclusions,
       publication,
       optional,
@@ -539,7 +553,7 @@ object Dependency {
   def apply(
     module: Module,
     version: VersionConstraint0,
-    configuration: Configuration,
+    variantSelector: VariantSelector,
     minimizedExclusions: MinimizedExclusions,
     publication: Publication,
     optional: Boolean,
@@ -550,7 +564,7 @@ object Dependency {
     Dependency(
       module,
       version,
-      configuration,
+      variantSelector,
       minimizedExclusions,
       publication,
       optional,
@@ -576,7 +590,7 @@ object Dependency {
     apply(
       module,
       VersionConstraint0(version),
-      configuration,
+      VariantSelector.ConfigurationBased(configuration),
       minimizedExclusions,
       publication,
       optional,
@@ -588,7 +602,7 @@ object Dependency {
   def apply(
     module: Module,
     version: VersionConstraint0,
-    configuration: Configuration,
+    variantSelector: VariantSelector,
     minimizedExclusions: MinimizedExclusions,
     publication: Publication,
     optional: Boolean,
@@ -598,7 +612,7 @@ object Dependency {
     Dependency(
       module,
       version,
-      configuration,
+      variantSelector,
       minimizedExclusions,
       publication,
       optional,
@@ -623,7 +637,7 @@ object Dependency {
     apply(
       module,
       VersionConstraint0(version),
-      configuration,
+      VariantSelector.ConfigurationBased(configuration),
       minimizedExclusions,
       publication,
       optional,
@@ -634,7 +648,7 @@ object Dependency {
   def apply(
     module: Module,
     version: VersionConstraint0,
-    configuration: Configuration,
+    variantSelector: VariantSelector,
     minimizedExclusions: MinimizedExclusions,
     publication: Publication,
     optional: Boolean,
@@ -643,7 +657,7 @@ object Dependency {
     Dependency(
       module,
       version,
-      configuration,
+      variantSelector,
       minimizedExclusions,
       publication,
       optional,
@@ -667,7 +681,7 @@ object Dependency {
     apply(
       module,
       VersionConstraint0(version),
-      configuration,
+      VariantSelector.ConfigurationBased(configuration),
       minimizedExclusions,
       publication,
       optional,
@@ -677,7 +691,7 @@ object Dependency {
   def apply(
     module: Module,
     versionConstraint: VersionConstraint0,
-    configuration: Configuration,
+    variantSelector: VariantSelector,
     exclusions: Set[(Organization, ModuleName)],
     publication: Publication,
     optional: Boolean,
@@ -686,7 +700,7 @@ object Dependency {
     Dependency(
       module,
       versionConstraint,
-      configuration,
+      variantSelector,
       MinimizedExclusions(exclusions),
       publication,
       optional,
@@ -706,7 +720,7 @@ object Dependency {
     apply(
       module,
       VersionConstraint0(version),
-      configuration,
+      VariantSelector.ConfigurationBased(configuration),
       exclusions,
       publication,
       optional,
@@ -720,7 +734,7 @@ object Dependency {
     Dependency(
       module,
       version,
-      Configuration.empty,
+      VariantSelector.emptyConfiguration,
       MinimizedExclusions.zero,
       Publication("", Type.empty, Extension.empty, Classifier.empty),
       optional = false,
@@ -740,7 +754,7 @@ object Dependency {
   def apply(
     module: Module,
     version: VersionConstraint0,
-    configuration: Configuration,
+    variantSelector: VariantSelector,
     exclusions: Set[(Organization, ModuleName)],
     attributes: Attributes,
     optional: Boolean,
@@ -749,7 +763,7 @@ object Dependency {
     Dependency(
       module,
       version,
-      configuration,
+      variantSelector,
       MinimizedExclusions(exclusions),
       Publication("", attributes.`type`, Extension.empty, attributes.classifier),
       optional,
@@ -769,7 +783,7 @@ object Dependency {
     apply(
       module,
       VersionConstraint0(version),
-      configuration,
+      VariantSelector.ConfigurationBased(configuration),
       exclusions,
       attributes,
       optional,

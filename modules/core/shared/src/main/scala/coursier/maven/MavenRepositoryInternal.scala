@@ -402,7 +402,7 @@ private[coursier] class MavenRepositoryInternal(
       val types =
         // this ignores publication.ext if publication.`type` is empty… should we?
         if (dependency.publication.`type`.isEmpty)
-          if (dependency.configuration == Configuration.test)
+          if (dependency.variantSelector.asConfiguration.exists(_ == Configuration.test))
             Seq((Type.jar, Extension.empty), (Type.testJar, Extension.empty))
           else
             Seq((Type.jar, Extension.empty))

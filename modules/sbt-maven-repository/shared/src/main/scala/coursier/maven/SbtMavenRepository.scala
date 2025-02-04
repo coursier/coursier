@@ -98,7 +98,7 @@ object SbtMavenRepository {
         .getOrElse(Right(Map.empty[(Module, VersionConstraint), Map[String, String]]))
     } yield {
 
-      val adaptedDependencies = project.dependencies.map {
+      val adaptedDependencies = project.dependencies0.map {
         case (config, dep0) =>
           val dep = extraAttrs.get(dep0.moduleVersionConstraint).fold(dep0) { attrs =>
             // For an sbt plugin, we remove the suffix from the name and we add the sbtVersion
@@ -114,7 +114,7 @@ object SbtMavenRepository {
           config -> dep
       }
 
-      project.withDependencies(adaptedDependencies)
+      project.withDependencies0(adaptedDependencies)
     }
 }
 

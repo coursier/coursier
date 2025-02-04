@@ -82,7 +82,7 @@ object JsonReport {
           )
         )
         if (proj.relocated)
-          Iterator(dep.module -> proj.dependencies.head._2)
+          Iterator(dep.module -> proj.dependencies0.head._2)
         else
           Iterator.empty
       }

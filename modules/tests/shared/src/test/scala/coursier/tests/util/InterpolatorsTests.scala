@@ -1,11 +1,11 @@
 package coursier.tests.util
 
-import coursier.core.{Configuration, Dependency, Module}
+import coursier.core.{Configuration, Dependency, Module, VariantSelector}
 import coursier.ivy.{IvyRepository, Pattern}
 import coursier.maven.MavenRepository
 import coursier.util.StringInterpolators._
-import utest._
 import coursier.version.VersionConstraint
+import utest._
 
 object InterpolatorsTests extends TestSuite {
 
@@ -39,7 +39,7 @@ object InterpolatorsTests extends TestSuite {
         val expected = Dependency(
           Module(org"org.scalatest", name"scalatest_2.12", Map.empty),
           VersionConstraint("3.0.1")
-        ).withConfiguration(Configuration.test)
+        ).withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
         assert(dep == expected)
       }
     }

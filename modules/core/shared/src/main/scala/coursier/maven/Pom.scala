@@ -17,6 +17,8 @@ import coursier.core.{
   SnapshotVersion,
   SnapshotVersioning,
   Type,
+  Variant,
+  VariantSelector,
   Versions
 }
 import coursier.core.Validation._
@@ -99,7 +101,7 @@ object Pom {
         scopeOpt.getOrElse(Configuration.empty) -> Dependency(
           mod,
           version0,
-          Configuration.empty,
+          VariantSelector.emptyConfiguration,
           exclusions.map(mod => (mod.organization, mod.name)).toSet,
           Attributes(typeOpt.getOrElse(Type.empty), classifierOpt.getOrElse(Classifier.empty)),
           optional,
@@ -306,12 +308,12 @@ object Pom {
             .getOrElse(finalProjModule.name)
           val relocatedVersion = text(n, "version", "").map(Version(_)).getOrElse(version)
 
-          Configuration.empty -> Dependency(
+          Variant.emptyConfiguration -> Dependency(
             finalProjModule
               .withOrganization(relocatedGroupId)
               .withName(relocatedArtifactId),
             VersionConstraint.fromVersion(relocatedVersion),
-            Configuration.empty,
+            VariantSelector.emptyConfiguration,
             Set.empty[(Organization, ModuleName)],
             Attributes.empty,
             optional = false,
@@ -322,7 +324,10 @@ object Pom {
       Project(
         finalProjModule,
         version,
-        relocationDependencyOpt.toSeq ++ deps,
+        relocationDependencyOpt.toSeq ++ deps.map {
+          case (conf, dep) =>
+            (Variant.Configuration(conf), dep)
+        },
         // this is customized later on in MavenRepositoryInternal
         Map.empty[Configuration, Seq[Configuration]],
         parentModuleOpt.map((_, parentVersionOpt.getOrElse(Version.zero))),
@@ -511,9 +516,9 @@ object Pom {
     optionalConfig: Configuration
   ): Project = {
 
-    val optionalDeps = proj.dependencies.collect {
-      case (conf, dep) if dep.optional && fromConfigs(conf) =>
-        optionalConfig -> dep.withOptional(false)
+    val optionalDeps = proj.dependencies0.collect {
+      case (c: Variant.Configuration, dep) if dep.optional && fromConfigs(c.configuration) =>
+        Variant.Configuration(optionalConfig) -> dep.withOptional(false)
     }
 
     val optConfigThing = proj.configurations.getOrElse(optionalConfig, Nil) ++
@@ -522,6 +527,6 @@ object Pom {
 
     proj
       .withConfigurations(configurations)
-      .withDependencies(proj.dependencies ++ optionalDeps)
+      .withDependencies0(proj.dependencies0 ++ optionalDeps)
   }
 }

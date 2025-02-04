@@ -1,6 +1,6 @@
 package coursier.util
 
-import coursier.core.{Configuration, Dependency, Resolution}
+import coursier.core.{Configuration, Dependency, Resolution, VariantSelector}
 
 object Config {
 
@@ -29,6 +29,10 @@ object Config {
     filteredAllDepsByConfig
   }
 
+  @deprecated(
+    "Unused, behavior uncertain since the introduction of Variant and VariantSelector",
+    "2.1.25"
+  )
   def dependenciesWithConfig(
     res: Resolution,
     depsByConfig: Map[Configuration, Set[Dependency]],
@@ -37,14 +41,33 @@ object Config {
     allDependenciesByConfig(res, depsByConfig, configs)
       .flatMap {
         case (config, deps) =>
-          deps.map(dep => dep.withConfiguration(config --> dep.configuration))
+          deps.map { dep =>
+            dep.variantSelector match {
+              case c: VariantSelector.ConfigurationBased =>
+                dep.withVariantSelector(
+                  VariantSelector.ConfigurationBased(config --> c.configuration)
+                )
+            }
+          }
       }
-      .groupBy(_.withConfiguration(Configuration.empty))
-      .map {
+      .groupBy(_.withVariantSelector(VariantSelector.emptyConfiguration))
+      .flatMap {
         case (dep, l) =>
-          dep.withConfiguration(
-            Configuration.join(l.map(_.configuration).toSeq.distinct.sorted: _*)
-          )
+          val configBased = l.map { dep0 =>
+            dep0.variantSelector match {
+              case c: VariantSelector.ConfigurationBased =>
+                c.configuration
+            }
+          }
+          if (configBased.isEmpty) Nil
+          else
+            Seq(
+              dep.withVariantSelector(
+                VariantSelector.ConfigurationBased(
+                  Configuration.join(configBased.toVector.distinct.sorted: _*)
+                )
+              )
+            )
       }
       .toSet
 

@@ -96,12 +96,12 @@ object Resolution {
     )
 
   def addDependencies(
-    deps: Seq[Seq[(Configuration, Dependency)]]
-  ): Seq[(Configuration, Dependency)] = {
+    deps: Seq[Seq[(Variant, Dependency)]]
+  ): Seq[(Variant, Dependency)] = {
 
     val it  = deps.reverseIterator
     var set = Set.empty[DependencyManagement.Key]
-    var acc = Seq.empty[(Configuration, Dependency)]
+    var acc = Seq.empty[(Variant, Dependency)]
     while (it.hasNext) {
       val deps0 = it.next()
       val deps = deps0.filter {
@@ -203,11 +203,27 @@ object Resolution {
       b.toString
   }
 
+  def withProperties0(
+    dependencies: Seq[(Variant, Dependency)],
+    properties: Map[String, String]
+  ): Seq[(Variant, Dependency)] =
+    dependencies.map(withProperties(_, properties))
+
+  @deprecated("Use withProperties0 instead", "2.1.25")
   def withProperties(
     dependencies: Seq[(Configuration, Dependency)],
     properties: Map[String, String]
   ): Seq[(Configuration, Dependency)] =
-    dependencies.map(withProperties(_, properties))
+    withProperties0(
+      dependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      properties
+    ).map {
+      case (c: Variant.Configuration, dep) =>
+        (c.configuration, dep)
+    }
 
   private def withProperties(
     map: DependencyManagement.GenericMap,
@@ -255,13 +271,13 @@ object Resolution {
   /** Substitutes `properties` in `dependencies`.
     */
   private def withProperties(
-    configDep: (Configuration, Dependency),
+    variantDep: (Variant, Dependency),
     properties: Map[String, String]
-  ): (Configuration, Dependency) = {
+  ): (Variant, Dependency) = {
 
-    val (config, dep) = configDep
+    val (variant, dep) = variantDep
 
-    if (config.value.contains("$") || dep.hasProperties) {
+    if (variant.asConfiguration.exists(_.value.contains("$")) || dep.hasProperties) {
 
       def substituteTrimmedProps(s: String) =
         substituteProps(s, properties, trim = true)
@@ -283,16 +299,26 @@ object Resolution {
           attributes = dep.attributes
             .withType(dep.attributes.`type`.map(substituteProps0))
             .withClassifier(dep.attributes.classifier.map(substituteProps0)),
-          configuration = dep.configuration.map(substituteProps0),
+          variantSelector = dep.variantSelector
+            .asConfiguration
+            .map(_.map(substituteProps0))
+            .map(VariantSelector.ConfigurationBased(_))
+            .getOrElse(dep.variantSelector),
           minimizedExclusions = dep.minimizedExclusions.map(substituteProps0)
         )
 
+      val finalVariant = variant
+        .asConfiguration
+        .map(_.map(substituteProps0))
+        .map(Variant.Configuration(_))
+        .getOrElse(variant)
+
       // FIXME The content of the optional tag may also be a property in
       // the original POM. Maybe not parse it that earlier?
-      config.map(substituteProps0) -> dep0
+      finalVariant -> dep0
     }
     else
-      configDep
+      variantDep
   }
 
   /** Merge several dependencies, solving version constraints of duplicated modules.
@@ -398,16 +424,16 @@ object Resolution {
     *
     * Fill empty version / scope / exclusions, for dependencies found in `dependencyManagement`.
     */
-  def depsWithDependencyManagement(
-    rawDependencies: Seq[(Configuration, Dependency)],
+  def depsWithDependencyManagement0(
+    rawDependencies: Seq[(Variant, Dependency)],
     properties: Map[String, String],
     rawOverridesOpt: Option[Overrides],
     rawDependencyManagement: Overrides,
     forceDepMgmtVersions: Boolean,
-    keepConfiguration: Configuration => Boolean
-  ): Seq[(Configuration, Dependency)] = {
+    keepVariant: Variant => Boolean
+  ): Seq[(Variant, Dependency)] = {
 
-    val dependencies         = withProperties(rawDependencies, properties)
+    val dependencies         = withProperties0(rawDependencies, properties)
     val overridesOpt         = rawOverridesOpt.map(withProperties(_, properties))
     val dependencyManagement = withProperties(rawDependencyManagement, properties)
 
@@ -421,8 +447,8 @@ object Resolution {
     lazy val dictForOverridesOpt = rawOverridesOpt.map { rawOverrides =>
       lazy val versions = dependencies
         .filter {
-          case (config, _) =>
-            config.isEmpty || keepConfiguration(config)
+          case (variant, _) =>
+            variant.isEmpty || keepVariant(variant)
         }
         .groupBy(_._2.depManagementKey)
         .collect {
@@ -433,7 +459,7 @@ object Resolution {
       val map = dependencyManagement
         .filter {
           case (k, v) =>
-            v.config.isEmpty || keepConfiguration(v.config)
+            v.config.isEmpty || keepVariant(Variant.Configuration(v.config))
         }
         .map {
           case (k, v) =>
@@ -463,9 +489,9 @@ object Resolution {
     }
 
     dependencies.map {
-      case (config0, dep0) =>
-        var config = config0
-        var dep    = dep0
+      case (variant0, dep0) =>
+        var variant = variant0
+        var dep     = dep0
 
         for (mgmtValues <- dict.get(dep0.depManagementKey)) {
 
@@ -487,8 +513,8 @@ object Resolution {
 
         for (mgmtValues <- dependencyManagement.get(dep0.depManagementKey)) {
 
-          if (mgmtValues.config.nonEmpty && config.isEmpty)
-            config = mgmtValues.config
+          if (mgmtValues.config.nonEmpty && variant.isEmpty)
+            variant = Variant.Configuration(mgmtValues.config)
 
           if (mgmtValues.optional && !dep.optional)
             dep = dep.withOptional(mgmtValues.optional)
@@ -500,9 +526,33 @@ object Resolution {
             dep = dep.withOverridesMap(newOverrides)
         }
 
-        (config, dep)
+        (variant, dep)
     }
   }
+
+  @deprecated("Use depsWithDependencyManagement0 instead", "2.1.25")
+  def depsWithDependencyManagement(
+    rawDependencies: Seq[(Configuration, Dependency)],
+    properties: Map[String, String],
+    rawOverridesOpt: Option[Overrides],
+    rawDependencyManagement: Overrides,
+    forceDepMgmtVersions: Boolean,
+    keepVariant: Variant => Boolean
+  ): Seq[(Configuration, Dependency)] =
+    depsWithDependencyManagement0(
+      rawDependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      properties,
+      rawOverridesOpt,
+      rawDependencyManagement,
+      forceDepMgmtVersions,
+      keepVariant
+    ).map {
+      case (c: Variant.Configuration, dep) =>
+        (c.configuration, dep)
+    }
 
   @deprecated(
     "Use the override accepting Overrides and keepConfiguration instead",
@@ -515,19 +565,29 @@ object Resolution {
     rawDependencyManagement: Seq[(Configuration, Dependency)],
     forceDepMgmtVersions: Boolean
   ): Seq[(Configuration, Dependency)] =
-    depsWithDependencyManagement(
-      rawDependencies,
+    depsWithDependencyManagement0(
+      rawDependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
       properties,
       rawOverridesOpt.map(Overrides(_)),
       Overrides(DependencyManagement.addDependencies(Map.empty, rawDependencyManagement)),
       forceDepMgmtVersions,
-      keepConfiguration = config =>
-        config == Configuration.compile ||
-        config == Configuration.runtime ||
-        config == Configuration.default ||
-        config == Configuration.defaultCompile ||
-        config == Configuration.defaultRuntime
-    )
+      keepVariant = (variant: Variant) =>
+        variant.asConfiguration.exists { config =>
+          config == Configuration.compile ||
+          config == Configuration.runtime ||
+          config == Configuration.default ||
+          config == Configuration.defaultCompile ||
+          config == Configuration.defaultRuntime
+        }
+    ).map {
+      case (variant: Variant.Configuration, dep) =>
+        (variant.configuration, dep)
+      case (other, _) =>
+        sys.error("Deprecated method doesn't handle generic variants")
+    }
 
   @deprecated(
     "Use the override accepting an override map, forceDepMgmtVersions, and properties instead",
@@ -537,30 +597,40 @@ object Resolution {
     dependencies: Seq[(Configuration, Dependency)],
     dependencyManagement: Seq[(Configuration, Dependency)]
   ): Seq[(Configuration, Dependency)] =
-    depsWithDependencyManagement(
-      dependencies,
+    depsWithDependencyManagement0(
+      dependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
       Map.empty[String, String],
       Option.empty[Overrides],
       Overrides(DependencyManagement.addDependencies(Map.empty, dependencyManagement)),
       forceDepMgmtVersions = false,
-      keepConfiguration = config =>
-        config == Configuration.compile ||
-        config == Configuration.default ||
-        config == Configuration.defaultCompile
-    )
+      keepVariant = (variant: Variant) =>
+        variant.asConfiguration.exists { config =>
+          config == Configuration.compile ||
+          config == Configuration.default ||
+          config == Configuration.defaultCompile
+        }
+    ).map {
+      case (variant: Variant.Configuration, dep) =>
+        (variant.configuration, dep)
+      case (other, dep) =>
+        sys.error("Deprecated method doesn't handle generic variants")
+    }
 
   private def withDefaultConfig(dep: Dependency, defaultConfiguration: Configuration): Dependency =
-    if (dep.configuration.isEmpty)
-      dep.withConfiguration(defaultConfiguration)
+    if (dep.variantSelector.asConfiguration.exists(_.isEmpty))
+      dep.withVariantSelector(VariantSelector.ConfigurationBased(defaultConfiguration))
     else
       dep
 
   /** Filters `dependencies` with `exclusions`.
     */
-  def withExclusions(
-    dependencies: Seq[(Configuration, Dependency)],
+  def withExclusions0(
+    dependencies: Seq[(Variant, Dependency)],
     exclusions: Set[(Organization, ModuleName)]
-  ): Seq[(Configuration, Dependency)] = {
+  ): Seq[(Variant, Dependency)] = {
     val minimizedExclusions = MinimizedExclusions(exclusions)
 
     dependencies
@@ -575,6 +645,22 @@ object Resolution {
           else config -> dep.withMinimizedExclusions(newExcl)
       }
   }
+
+  @deprecated("Use withExclusions0 instead", "2.1.25")
+  def withExclusions(
+    dependencies: Seq[(Configuration, Dependency)],
+    exclusions: Set[(Organization, ModuleName)]
+  ): Seq[(Configuration, Dependency)] =
+    withExclusions0(
+      dependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      exclusions
+    ).map {
+      case (c: Variant.Configuration, dep) =>
+        (c.configuration, dep)
+    }
 
   def actualConfiguration(
     config: Configuration,
@@ -613,6 +699,7 @@ object Resolution {
     helper(Set(actualConfig), Set.empty)
   }
 
+  @deprecated("Unused by coursier, should be removed in the future", "2.1.25")
   def withParentConfigurations(
     config: Configuration,
     configurations: Map[Configuration, Seq[Configuration]]
@@ -721,34 +808,56 @@ object Resolution {
     )
     val properties = project0.properties.toMap
 
-    val actualConfig = actualConfiguration(
-      if (from.configuration.isEmpty) defaultConfiguration else from.configuration,
-      project0.configurations
-    )
-    val configurations = parentConfigurations(actualConfig, project0.configurations)
+    val actualConfig0: VariantSelector = from.variantSelector match {
+      case c: VariantSelector.ConfigurationBased =>
+        val config = actualConfiguration(
+          if (c.configuration.isEmpty) defaultConfiguration
+          else c.configuration,
+          project0.configurations
+        )
+        VariantSelector.ConfigurationBased(config)
+    }
 
-    // Vague attempt at making the Maven scope model fit into the Ivy configuration one
+    val configurationsOrVariant = actualConfig0 match {
+      case c: VariantSelector.ConfigurationBased =>
+        Right(parentConfigurations(c.configuration, project0.configurations))
+    }
 
     val withProvidedOpt =
       if (keepProvidedDependencies) Some(Configuration.provided)
       else None
-    val keepOpt = project0.allConfigurations.get(actualConfig).map(_ ++ withProvidedOpt)
+    val keepConfigOpt = actualConfig0 match {
+      case c: VariantSelector.ConfigurationBased =>
+        (
+          c.configuration,
+          project0.allConfigurations.get(c.configuration).map(_ ++ withProvidedOpt)
+        )
+    }
 
-    withExclusions(
+    withExclusions0(
       // 2.1 & 2.2
-      depsWithDependencyManagement(
+      depsWithDependencyManagement0(
         // 1.7
-        project0.dependencies,
+        project0.dependencies0,
         properties,
         Option.when(enableDependencyOverrides)(from.overridesMap),
         project0.overrides,
         forceDepMgmtVersions = forceDepMgmtVersions,
-        keepConfiguration = keepOpt.getOrElse(_ == actualConfig)
+        keepVariant = {
+          val (actualConfig, keepConfigOpt0) = keepConfigOpt
+          (variant: Variant) =>
+            variant.asConfiguration.exists { config =>
+              keepConfigOpt0 match {
+                case Some(keep) => keep.contains(config)
+                case None       => config == actualConfig
+              }
+            }
+        }
       ),
       from.minimizedExclusions.toSet()
     )
       .flatMap {
-        case (config0, dep0) =>
+        case (variant0, dep0) =>
           // Dependencies from Maven verify
           //   dep.configuration.isEmpty
           // and expect dep.configuration to be filled here
@@ -759,30 +868,35 @@ object Resolution {
             else
               dep0
 
-          val config = if (config0.isEmpty) Configuration.compile else config0
+          val variant: Variant =
+            if (variant0.isEmpty)
+              Variant.Configuration(Configuration.compile)
+            else variant0
 
-          def default =
-            if (configurations(config))
-              Seq(dep)
-            else
-              Nil
+          def default = variant match {
+            case c: Variant.Configuration =>
+              if (configurationsOrVariant.exists(_.contains(c.configuration))) Seq(dep)
+              else Nil
+          }
 
-          if (dep.configuration.nonEmpty)
+          if (dep.variantSelector.nonEmpty)
             default
-          else
-            keepOpt.fold(default) { keep =>
-              if (keep(config)) {
+          else {
+            val (actualConfig, keepConfigOpt0) = keepConfigOpt
+            keepConfigOpt0.fold(default) { keep =>
+              if (variant.asConfiguration.exists(keep)) {
                 val depConfig =
                   if (actualConfig == Configuration.test || actualConfig == Configuration.runtime)
                     Configuration.runtime
                   else
                     defaultConfiguration
 
-                Seq(dep.withConfiguration(depConfig))
+                Seq(dep.withVariantSelector(VariantSelector.ConfigurationBased(depConfig)))
               }
               else
                 Nil
             }
+          }
       }
   }
 
@@ -885,16 +999,19 @@ object Resolution {
     overrideScalaModule(VersionConstraint0(sv)) andThen overrideFullSuffix(sv)
 
   private def fallbackConfigIfNecessary(dep: Dependency, configs: Set[Configuration]): Dependency =
-    Parse.withFallbackConfig(dep.configuration) match {
-      case Some((main, fallback)) =>
-        if (configs(main))
-          dep.withConfiguration(main)
-        else if (configs(fallback))
-          dep.withConfiguration(fallback)
-        else
-          dep
-      case _ =>
-        dep
+    dep.variantSelector match {
+      case c: VariantSelector.ConfigurationBased =>
+        Parse.withFallbackConfig(c.configuration) match {
+          case Some((main, fallback)) =>
+            if (configs(main))
+              dep.withVariantSelector(VariantSelector.ConfigurationBased(main))
+            else if (configs(fallback))
+              dep.withVariantSelector(VariantSelector.ConfigurationBased(fallback))
+            else
+              dep
+          case _ =>
+            dep
+        }
     }
 
   private def withFinalProperties(project: Project): Project =
@@ -1220,7 +1337,8 @@ object Resolution {
         bomDep          <- bomDeps
         (_, bomProject) <- projectCache0.get(bomDep.moduleVersionConstraint).toSeq
         bomConfig0 = actualConfiguration(
-          if (bomDep.config.isEmpty) defaultConfiguration else bomDep.config,
+          if (bomDep.config.isEmpty) defaultConfiguration
+          else bomDep.config,
           bomProject.configurations
         )
         // adding the initial config too in case it's the "provided" config
@@ -1508,11 +1626,14 @@ object Resolution {
         project0.withProperties(parentProperties0 ++ project0.properties)
       ).properties.toMap
 
-      val modules = withProperties(
-        project0.dependencies ++ project0.dependencyManagement ++ profileDependencies,
+      val modules = withProperties0(
+        project0.dependencies0 ++
+          project0.dependencyManagement.map { case (c, d) => (Variant.Configuration(c), d) } ++
+          profileDependencies.map { case (c, d) => (Variant.Configuration(c), d) },
         propertiesMap0
       ).collect {
-        case (Configuration.`import`, dep) => dep.moduleVersionConstraint
+        case (v: Variant.Configuration, dep) if v.configuration == Configuration.`import` =>
+          dep.moduleVersionConstraint
       }
 
       modules.toSet
@@ -1646,12 +1767,15 @@ object Resolution {
 
     val (importDeps, standardDeps) = {
 
-      val dependencies0 = addDependencies(project0.dependencies +: profiles.map(_.dependencies))
+      val dependencies0 = addDependencies(
+        project0.dependencies0 +:
+          profiles.map(_.dependencies.map { case (c, d) => (Variant.Configuration(c), d) })
+      )
 
       val (importDeps0, standardDeps0) = dependencies0
         .map { dep =>
           val dep0 = withProperties(dep, propertiesMap0)
-          if (dep0._1 == Configuration.`import`)
+          if (dep0._1.asConfiguration.exists(_ == Configuration.`import`))
             (dep0._2 :: Nil, Nil)
           else
             (Nil, dep :: Nil) // not dep0 (properties with be substituted later)
@@ -1663,12 +1787,14 @@ object Resolution {
 
     val importDepsMgmt = {
 
-      val dependenciesMgmt0 =
-        addDependencies(project0.dependencyManagement +: profiles.map(_.dependencyManagement))
+      val dependenciesMgmt0 = addDependencies(
+        (project0.dependencyManagement +: profiles.map(_.dependencyManagement))
+          .map(_.map { case (c, d) => (Variant.Configuration(c), d) })
+      )
 
       dependenciesMgmt0.flatMap { dep =>
         val (conf0, dep0) = withProperties(dep, propertiesMap0)
-        if (conf0 == Configuration.`import`)
+        if (conf0.asConfiguration.exists(_ == Configuration.`import`))
           dep0 :: Nil
         else
           Nil
@@ -1722,7 +1848,7 @@ object Resolution {
     project0
       .withPackagingOpt(project0.packagingOpt.map(_.map(substituteProps(_, propertiesMap0))))
       .withVersion0(Version0(substituteProps(project0.version0.asString, propertiesMap0)))
-      .withDependencies(
+      .withDependencies0(
         standardDeps ++
           project0.parent0 // belongs to 1.5 & 1.6
             .map {
@@ -1731,7 +1857,7 @@ object Resolution {
             }
             .filter(projectCache0.contains)
             .toSeq
-            .flatMap(projectCache0(_)._2.dependencies)
+            .flatMap(projectCache0(_)._2.dependencies0)
       )
       .withDependencyManagement(Nil)
       .withOverrides(depMgmt)

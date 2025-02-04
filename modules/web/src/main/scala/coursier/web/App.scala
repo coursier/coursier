@@ -1,6 +1,15 @@
 package coursier.web
 
-import coursier.core.{Configuration, Dependency, Module, ModuleName, Organization, Resolution, Type}
+import coursier.core.{
+  Configuration,
+  Dependency,
+  Module,
+  ModuleName,
+  Organization,
+  Resolution,
+  Type,
+  VariantSelector
+}
 import coursier.maven.{MavenRepository, MavenRepositoryLike}
 import coursier.util.StringInterpolators._
 import coursier.version.{Version, VersionConstraint}
@@ -10,7 +19,7 @@ import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 
 import scala.scalajs.js
-import js.Dynamic.{global => g}
+import scala.scalajs.js.Dynamic.{global => g}
 
 object App {
 
@@ -50,8 +59,9 @@ object App {
               s"${finalVersion.asString} (for ${dep.versionConstraint.asString})"
             )),
             <.td(TagMod(
-              if (dep.configuration == Configuration.compile) TagMod()
-              else TagMod(infoLabel(dep.configuration.value)),
+              if (dep.variantSelector == VariantSelector.ConfigurationBased(Configuration.compile))
+                TagMod()
+              else TagMod(infoLabel(dep.variantSelector.repr)),
               if (dep.attributes.`type`.isEmpty || dep.attributes.`type` == Type.jar) TagMod()
               else TagMod(infoLabel(dep.attributes.`type`.value)),
               if (dep.attributes.classifier.isEmpty) TagMod()

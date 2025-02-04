@@ -10,7 +10,8 @@ import coursier.core.{
   Module,
   ModuleName,
   Organization,
-  Type
+  Type,
+  VariantSelector
 }
 import coursier.version.VersionConstraint
 import dataclass.data
@@ -177,7 +178,7 @@ object JavaOrScalaDependency {
           (dep.userParamsMap, None)
       }
     for (config <- configOpt)
-      csDep = csDep.withConfiguration(Configuration(config))
+      csDep = csDep.withVariantSelector(VariantSelector.ConfigurationBased(Configuration(config)))
 
     val excludes = dep.exclude.map { mod =>
       mod.nameAttributes match {

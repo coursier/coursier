@@ -1,6 +1,17 @@
 package coursier.tests
 
-import coursier.core.{Configuration, Dependency, Info, Module, Overrides, Profile, Resolution, Type}
+import coursier.core.{
+  Configuration,
+  Dependency,
+  Info,
+  Module,
+  Overrides,
+  Profile,
+  Resolution,
+  Type,
+  Variant,
+  VariantSelector
+}
 import coursier.version.{Version, VersionConstraint}
 
 import scala.collection.compat._
@@ -8,7 +19,9 @@ import scala.collection.compat._
 object TestUtil {
 
   implicit class DependencyOps(val underlying: Dependency) extends AnyVal {
-    def withDefaultScope: Dependency = underlying.withConfiguration(Configuration.defaultRuntime)
+    def withDefaultScope: Dependency = underlying.withVariantSelector(
+      VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
+    )
   }
 
   private val projectProperties = Set(
@@ -93,7 +106,7 @@ object TestUtil {
     def apply(
       module: Module,
       version: String,
-      dependencies: Seq[(Configuration, Dependency)] = Seq.empty,
+      dependencies: Seq[(Variant, Dependency)] = Seq.empty,
       parent0: Option[(Module, String)] = None,
       dependencyManagement: Seq[(Configuration, Dependency)] = Seq.empty,
       configurations: Map[Configuration, Seq[Configuration]] = Map.empty,
@@ -103,7 +116,7 @@ object TestUtil {
       snapshotVersioning: Option[coursier.core.SnapshotVersioning] = None,
       packaging: Option[Type] = None,
       relocated: Boolean = false,
-      publications: Seq[(Configuration, coursier.core.Publication)] = Nil
+      publications: Seq[(Variant, coursier.core.Publication)] = Nil
     ): Project =
       coursier.core.Project(
         module,

@@ -134,9 +134,10 @@ object DependencyParser {
     dep: String,
     validAttrsKeys: Set[String]
   ): Option[String] = {
-    val extraAttributes = attrs.diff(validAttrsKeys)
+    val attrs0          = attrs.filter(!_.startsWith("variant."))
+    val extraAttributes = attrs0.diff(validAttrsKeys)
 
-    if (attrs.size > validAttrsKeys.size || extraAttributes.nonEmpty)
+    if (attrs0.size > validAttrsKeys.size || extraAttributes.nonEmpty)
       Some {
         val invalidMsg =
           if (extraAttributes.nonEmpty)
@@ -144,7 +145,7 @@ object DependencyParser {
               s"${extraAttributes.map(_ + s" in " + dep).mkString(", ")}"
           else
             ""
-        s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")}.$invalidMsg"
+        s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")} and variant.* .$invalidMsg"
       }
     else None
   }

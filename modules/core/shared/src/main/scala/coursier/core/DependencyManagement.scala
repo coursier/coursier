@@ -79,7 +79,7 @@ object DependencyManagement {
       Dependency(
         Module(key.organization, key.name, Map.empty),
         versionConstraint,
-        config,
+        VariantSelector.ConfigurationBased(config),
         minimizedExclusions,
         Publication("", key.`type`, Extension.empty, key.classifier),
         optional = optional,

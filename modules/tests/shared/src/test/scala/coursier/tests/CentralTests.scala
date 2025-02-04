@@ -11,7 +11,8 @@ import coursier.core.{
   Dependency,
   Extension,
   Resolution,
-  Type
+  Type,
+  VariantSelector
 }
 import coursier.graph.{Conflict, ModuleTree}
 import coursier.maven.{MavenRepository, MavenRepositoryLike}
@@ -273,7 +274,7 @@ abstract class CentralTests extends TestSuite {
 
       def intransitiveCompiler(config: Configuration) =
         dep"org.scala-lang:scala-compiler:2.11.8"
-          .withConfiguration(config)
+          .withVariantSelector(VariantSelector.ConfigurationBased(config))
           .withAttributes(Attributes(Type.jar, Classifier.empty))
           .withTransitive(false)
 
