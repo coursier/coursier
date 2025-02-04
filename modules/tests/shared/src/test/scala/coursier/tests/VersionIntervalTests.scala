@@ -391,7 +391,8 @@ object VersionIntervalTests extends TestSuite {
         assert(
           c1 == Some(VersionConstraint.from(
             VersionInterval.zero,
-            Seq(VersionParse.version("1.3").get)
+            Some(VersionParse.version("1.3").get),
+            None
           ))
         )
       }
@@ -406,7 +407,8 @@ object VersionIntervalTests extends TestSuite {
               true,
               false
             ),
-            Nil
+            None,
+            None
           ))
         )
       }

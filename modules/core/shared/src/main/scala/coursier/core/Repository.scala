@@ -1,13 +1,14 @@
 package coursier.core
 
 import coursier.core.compatibility.encodeURIComponent
+import coursier.util.{Artifact, EitherT, Monad}
+import coursier.util.Monad.ops._
 import coursier.version.{
+  Latest => Latest0,
   Version => Version0,
   VersionConstraint => VersionConstraint0,
   VersionInterval => VersionInterval0
 }
-import coursier.util.{Artifact, EitherT, Monad}
-import coursier.util.Monad.ops._
 import dataclass.data
 
 import scala.annotation.nowarn
@@ -38,6 +39,7 @@ trait Repository extends Serializable with ArtifactSource {
     F: Monad[F]
   ): EitherT[F, String, (ArtifactSource, Project)]
 
+  @deprecated("Unused by coursier", "2.1.25")
   def findMaybeInterval[F[_]](
     module: Module,
     version: VersionConstraint0,
@@ -66,7 +68,7 @@ trait Repository extends Serializable with ArtifactSource {
         }
     }
 
-  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+  @deprecated("Unused by coursier", "2.1.25")
   def findMaybeInterval[F[_]](
     module: Module,
     version: String,
@@ -75,6 +77,71 @@ trait Repository extends Serializable with ArtifactSource {
     F: Monad[F]
   ): EitherT[F, String, (ArtifactSource, Project)] =
     findMaybeInterval(module, VersionConstraint0(version), fetch)(F)
+
+  def findFromVersionConstraint[F[_]](
+    module: Module,
+    versionConstraint: VersionConstraint0,
+    fetch: Repository.Fetch[F]
+  )(implicit
+    F: Monad[F]
+  ): EitherT[F, String, (ArtifactSource, Project)] = {
+
+    def checkVersion(version: Version0): F[Either[String, (ArtifactSource, Project)]] =
+      find0(module, VersionConstraint0.fromVersion(version), fetch)
+        .run
+
+    def fromInterval = {
+      def checkVersions(versions: Iterator[Version0])
+        : F[Either[String, (ArtifactSource, Project)]] =
+        if (versions.hasNext)
+          versions
+            .foldLeft[F[Either[Seq[String], (ArtifactSource, Project)]]](F.point(Left(Nil))) {
+              case (acc, version) =>
+                acc.flatMap {
+                  case Left(errors) =>
+                    checkVersion(version)
+                      .map(_.left.map(error => error +: errors))
+                  case res @ Right(_) =>
+                    F.point(res)
+                }
+            }
+            .map(_.left.map(errors => errors.mkString(System.lineSeparator())))
+        else
+          F.point(Left(s"No version available in ${versionConstraint.interval.repr}"))
+
+      versions(module, fetch).flatMap {
+        case (versions, _) =>
+          EitherT(checkVersions(versions.candidatesInInterval(versionConstraint.interval)))
+      }
+    }
+
+    def fromLatest(latest: Latest0): EitherT[F, String, (ArtifactSource, Project)] =
+      versions(module, fetch).flatMap {
+        case (versions, _) =>
+          val candidates = versions
+            .latest(latest)
+            .filter(versionConstraint.interval.contains)
+          EitherT {
+            candidates match {
+              case None =>
+                F.point(Left(
+                  s"No version for ${latest.asString} available in ${versionConstraint.interval.repr}"
+                ))
+              case Some(candidate) =>
+                checkVersion(candidate)
+            }
+          }
+      }
+
+    versionConstraint.latest match {
+      case Some(latest) => fromLatest(latest)
+      case None =>
+        versionConstraint.preferred match {
+          case Some(preferred) => EitherT(checkVersion(preferred))
+          case None            => fromInterval
+        }
+    }
+  }
 
   def completeOpt[F[_]: Monad](fetch: Repository.Fetch[F]): Option[Repository.Complete[F]] =
     None
