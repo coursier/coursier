@@ -49,65 +49,67 @@ object FetchCacheTests extends TestSuite {
 
     import TestHelpers.ec
 
-    test("simple") - async {
+    test("simple") {
+      async {
 
-      val tmpCache      = Files.createTempDirectory("coursier-cache-tests")
-      val tmpFetchCache = Files.createTempDirectory("coursier-fetch-cache-tests")
+        val tmpCache      = Files.createTempDirectory("coursier-cache-tests")
+        val tmpFetchCache = Files.createTempDirectory("coursier-fetch-cache-tests")
 
-      val shutdownHook: Thread =
-        new Thread("cleanup") {
-          override def run() = {
-            delete(tmpCache)
-            delete(tmpFetchCache)
+        val shutdownHook: Thread =
+          new Thread("cleanup") {
+            override def run() = {
+              delete(tmpCache)
+              delete(tmpFetchCache)
+            }
           }
+        Runtime.getRuntime.addShutdownHook(shutdownHook)
+
+        def cleanup(): Unit = {
+          delete(tmpCache)
+          delete(tmpFetchCache)
+          Runtime.getRuntime.removeShutdownHook(shutdownHook)
         }
-      Runtime.getRuntime.addShutdownHook(shutdownHook)
 
-      def cleanup(): Unit = {
-        delete(tmpCache)
-        delete(tmpFetchCache)
-        Runtime.getRuntime.removeShutdownHook(shutdownHook)
+        def artifacts() =
+          Fetch()
+            .noMirrors
+            .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
+            .withCache(
+              FileCache()
+                .noCredentials
+                .withLocation(tmpCache.toFile)
+            )
+            .withFetchCache(tmpFetchCache.toFile)
+            .future()
+
+        val artifacts0 = await(artifacts())
+
+        val pomCount         = remove(tmpCache)(_.endsWith(".pom"))
+        val expectedPomCount = 18
+        assert(pomCount == expectedPomCount)
+
+        val artifacts1 = await(artifacts())
+
+        assert(artifacts0 == artifacts1)
+
+        val pomCount1 = remove(tmpCache)(_.endsWith(".pom"))
+        // no POM must have been downloaded, artifact list read directly from the fetch cache
+        val expectedPomCount1 = 0
+        assert(pomCount1 == expectedPomCount1)
+
+        artifacts1(10).delete()
+
+        val artifacts2 = await(artifacts())
+
+        assert(artifacts0 == artifacts2)
+
+        val pomCount2 = remove(tmpCache)(_.endsWith(".pom"))
+        // POM must have been downloaded again, as the artifact list in cache was invalid
+        val expectedPomCount2 = 18
+        assert(pomCount2 == expectedPomCount2)
+
+        cleanup()
       }
-
-      def artifacts() =
-        Fetch()
-          .noMirrors
-          .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-          .withCache(
-            FileCache()
-              .noCredentials
-              .withLocation(tmpCache.toFile)
-          )
-          .withFetchCache(tmpFetchCache.toFile)
-          .future()
-
-      val artifacts0 = await(artifacts())
-
-      val pomCount         = remove(tmpCache)(_.endsWith(".pom"))
-      val expectedPomCount = 18
-      assert(pomCount == expectedPomCount)
-
-      val artifacts1 = await(artifacts())
-
-      assert(artifacts0 == artifacts1)
-
-      val pomCount1 = remove(tmpCache)(_.endsWith(".pom"))
-      // no POM must have been downloaded, artifact list read directly from the fetch cache
-      val expectedPomCount1 = 0
-      assert(pomCount1 == expectedPomCount1)
-
-      artifacts1(10).delete()
-
-      val artifacts2 = await(artifacts())
-
-      assert(artifacts0 == artifacts2)
-
-      val pomCount2 = remove(tmpCache)(_.endsWith(".pom"))
-      // POM must have been downloaded again, as the artifact list in cache was invalid
-      val expectedPomCount2 = 18
-      assert(pomCount2 == expectedPomCount2)
-
-      cleanup()
     }
 
     // TODO Find a way to add a test that changing stuff (snapshots) aren't cached

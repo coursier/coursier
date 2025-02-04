@@ -356,40 +356,42 @@ object FetchTests extends TestSuite {
       }
     }
 
-    test("subset") - async {
+    test("subset") {
+      async {
 
-      val res = await {
-        fetch
-          .addDependencies(dep"sh.almond:scala-kernel_2.12.8:0.7.0")
-          .addRepositories(Repositories.jitpack)
-          .futureResult()
-      }
+        val res = await {
+          fetch
+            .addDependencies(dep"sh.almond:scala-kernel_2.12.8:0.7.0")
+            .addRepositories(Repositories.jitpack)
+            .futureResult()
+        }
 
-      await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
 
-      val subsetRes = res.resolution.subset(Seq(dep"sh.almond:scala-kernel-api_2.12.8"))
+        val subsetRes = res.resolution.subset(Seq(dep"sh.almond:scala-kernel-api_2.12.8"))
 
-      val subsetArtifacts = await {
-        Artifacts()
-          .withResolution(subsetRes)
-          .future()
-      }
+        val subsetArtifacts = await {
+          Artifacts()
+            .withResolution(subsetRes)
+            .future()
+        }
 
-      await(validateArtifacts(subsetRes, subsetArtifacts.map(_._1)))
+        await(validateArtifacts(subsetRes, subsetArtifacts.map(_._1)))
 
-      val subsetSourcesArtifacts = await {
-        Artifacts()
-          .withResolution(subsetRes)
-          .withClassifiers(Set(Classifier.sources))
-          .future()
-      }
+        val subsetSourcesArtifacts = await {
+          Artifacts()
+            .withResolution(subsetRes)
+            .withClassifiers(Set(Classifier.sources))
+            .future()
+        }
 
-      await {
-        validateArtifacts(
-          subsetRes,
-          subsetSourcesArtifacts.map(_._1),
-          classifiers = Set(Classifier.sources)
-        )
+        await {
+          validateArtifacts(
+            subsetRes,
+            subsetSourcesArtifacts.map(_._1),
+            classifiers = Set(Classifier.sources)
+          )
+        }
       }
     }
 
@@ -410,15 +412,17 @@ object FetchTests extends TestSuite {
         catch { case _: coursier.error.FetchError.DownloadingArtifacts => () }
       }
 
-      test("ok") - async {
-        val res = await {
-          val osgeo = MavenRepository("https://repo.osgeo.org/repository/release")
-          fetch
-            .withRepositories(Seq(osgeo, Repositories.central))
-            .addDependencies(dep"javax.media:jai_core:1.1.3")
-            .future()
+      test("ok") {
+        async {
+          val res = await {
+            val osgeo = MavenRepository("https://repo.osgeo.org/repository/release")
+            fetch
+              .withRepositories(Seq(osgeo, Repositories.central))
+              .addDependencies(dep"javax.media:jai_core:1.1.3")
+              .future()
+          }
+          assert(res(0) != null)
         }
-        assert(res(0) != null)
       }
     }
   }
