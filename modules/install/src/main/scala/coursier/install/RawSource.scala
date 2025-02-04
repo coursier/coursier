@@ -45,8 +45,8 @@ object RawSource {
 
   import argonaut.ArgonautShapeless._
 
-  implicit val encoder = EncodeJson.of[RawSource]
-  implicit val decoder = DecodeJson.of[RawSource]
+  lazy val encoder = EncodeJson.of[RawSource]
+  lazy val decoder = DecodeJson.of[RawSource]
 
   def parse(input: String): Either[String, RawSource] =
     Parse.decodeEither(input)(decoder)

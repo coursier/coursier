@@ -52,12 +52,12 @@ object App {
               else TagMod(infoLabel(dep.attributes.`type`.value)),
               if (dep.attributes.classifier.isEmpty) TagMod()
               else TagMod(infoLabel(dep.attributes.classifier.value)),
-              Some(dep.exclusions)
+              Some(dep.minimizedExclusions.toSeq())
                 .filter(_.nonEmpty)
                 .map { excls =>
                   infoPopOver(
                     "Exclusions",
-                    excls.toList.sorted.map { case (org, name) => s"$org:$name" }.mkString("; ")
+                    excls.sorted.map { case (org, name) => s"$org:$name" }.mkString("; ")
                   )
                 }
                 .toSeq

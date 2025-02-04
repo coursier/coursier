@@ -107,7 +107,7 @@ import scala.language.higherKinds
     withDependencies(this.dependencies ++ dependencies)
   @deprecated("Use addBom or addBomConfigs instead", "2.1.18")
   def addBomDependencies(bomDependencies: Dependency*): Resolve[F] =
-    withBomDependencies(this.bomDependencies ++ bomDependencies)
+    withBoms(this.boms ++ bomDependencies.map(_.asBomDependency))
   def addBom(bomModule: Module, bomVersion: String): Resolve[F] =
     withBoms(this.boms :+ BomDependency(bomModule, bomVersion, Configuration.empty))
   def addBom(bomModule: Module, bomVersion: String, bomConfig: Configuration): Resolve[F] =
@@ -174,9 +174,10 @@ import scala.language.higherKinds
       finalDependencies,
       resolutionParams,
       initialResolution,
-      mapDependenciesOpt,
-      bomDependencies.map(_.asBomDependency) ++
-        bomModuleVersions.map(t => BomDependency(t._1, t._2, Configuration.empty)) ++
+      ResolveInternals.deprecatedMapDependenciesOpt(this),
+      ResolveInternals.deprecatedBomDependencies(this).map(_.asBomDependency) ++
+        ResolveInternals.deprecatedBomModuleVersions(this)
+          .map(t => BomDependency(t._1, t._2, Configuration.empty)) ++
         boms
     )
 

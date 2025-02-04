@@ -10,7 +10,7 @@ object ExclusionsTests extends TestSuite {
     e1: Set[(Organization, ModuleName)],
     e2: Set[(Organization, ModuleName)]
   ): Set[(Organization, ModuleName)] =
-    MinimizedExclusions(e1).join(MinimizedExclusions(e2)).toSet
+    MinimizedExclusions(e1).join(MinimizedExclusions(e2)).toSet()
 
   val tests = Tests {
     val e1 = Set((org"org1", name"name1"))

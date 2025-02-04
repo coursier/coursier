@@ -146,8 +146,11 @@ trait CsTests extends TestModule {
   def testFramework = "utest.runner.Framework"
 }
 
-trait CsScalaJsModule extends ScalaJSModule {
+trait CsScalaJsModule extends ScalaJSModule with CsScalaModule {
   def scalaJSVersion = ScalaVersions.scalaJs
+  def scalacOptions = super.scalacOptions() ++ Seq(
+    "-P:scalajs:nowarnGlobalExecutionContext"
+  )
 }
 
 trait CsResourcesTests extends TestModule {
@@ -201,17 +204,18 @@ trait JsTests extends TestScalaJSModule with CsResourcesTests {
   }
 }
 
-trait CsModule extends SbtModule with CoursierJavaModule {
+trait CsScalaModule extends ScalaModule {
   def scalacOptions = T {
     val sv = scalaVersion()
     val scala212Opts =
-      if (sv.startsWith("2.12.")) Seq("-Ypartial-unification")
+      if (sv.startsWith("2.12.")) Seq("-Ypartial-unification", "-language:higherKinds")
       else Nil
     val scala213Opts =
-      if (sv.startsWith("2.13.")) Seq("-Ymacro-annotations")
+      if (sv.startsWith("2.13.")) Seq("-Ymacro-annotations", "-Wunused:nowarn")
       else Nil
     super.scalacOptions() ++ scala212Opts ++ scala213Opts ++ Seq(
       "-deprecation",
+      "-feature",
       "-Xasync",
       "--release",
       "8"
@@ -224,6 +228,9 @@ trait CsModule extends SbtModule with CoursierJavaModule {
       else Nil
     super.scalacPluginIvyDeps() ++ scala212Plugins
   }
+}
+
+trait CsModule extends SbtModule with CsScalaModule with CoursierJavaModule {
   def sources = T.sources {
     val sbv    = mill.scalalib.api.ZincWorkerUtil.scalaBinaryVersion(scalaVersion())
     val parent = super.sources()

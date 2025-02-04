@@ -1006,28 +1006,30 @@ object FileCacheRedirectionTests extends TestSuite {
     }
 
     test("custom protocols") {
-      test("unknown") - async {
-        val artifact = Artifact("unknown.protocol://hostname/file.txt")
+      test("unknown") {
+        async {
+          val artifact = Artifact("unknown.protocol://hostname/file.txt")
 
-        val res = await {
-          FileCache()
-            .file(artifact)
-            .run
-            .future
-        }
+          val res = await {
+            FileCache()
+              .file(artifact)
+              .run
+              .future()
+          }
 
-        val expectedReason =
-          List(
-            "Caught java.net.MalformedURLException (unknown protocol: unknown.protocol) while downloading unknown.protocol://hostname/file.txt.",
-            "Visit https://get-coursier.io/docs/extra.html#extra-protocols to learn how to handle custom protocols."
-          ).mkString(" ")
+          val expectedReason =
+            List(
+              "Caught java.net.MalformedURLException (unknown protocol: unknown.protocol) while downloading unknown.protocol://hostname/file.txt.",
+              "Visit https://get-coursier.io/docs/extra.html#extra-protocols to learn how to handle custom protocols."
+            ).mkString(" ")
 
-        res match {
-          case Left(error: ArtifactError.DownloadError) =>
-            assert(error.reason == expectedReason)
+          res match {
+            case Left(error: ArtifactError.DownloadError) =>
+              assert(error.reason == expectedReason)
 
-          case _ =>
-            assert(false)
+            case _ =>
+              assert(false)
+          }
         }
       }
 
@@ -1051,7 +1053,7 @@ object FileCacheRedirectionTests extends TestSuite {
                 .withLocation(dir.toFile)
                 .file(artifact)
                 .run
-                .future
+                .future()
             }
 
             res match {

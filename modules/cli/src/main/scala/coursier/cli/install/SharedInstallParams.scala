@@ -11,6 +11,8 @@ import coursier.core.Repository
 import coursier.install.{GraalvmParams, InstallDir, Platform}
 import coursier.util.Task
 
+import scala.language.implicitConversions
+
 final case class SharedInstallParams(
   dir: Path,
   graalvmParamsOpt: Option[GraalvmParams] = None,

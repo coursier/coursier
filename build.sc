@@ -626,7 +626,7 @@ trait Cli extends CsModule
     Deps.collectionCompat,
     Deps.dataClass,
     Deps.noCrcZis,
-    ivy"com.chuusai::shapeless:2.3.12",
+    Deps.shapeless,
     Deps.slf4JNop
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(

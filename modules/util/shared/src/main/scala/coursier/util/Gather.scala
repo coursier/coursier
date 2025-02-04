@@ -1,5 +1,7 @@
 package coursier.util
 
+import scala.language.implicitConversions
+
 trait Gather[F[_]] extends Monad[F] {
   def gather[A](elems: Seq[F[A]]): F[Seq[A]]
 }

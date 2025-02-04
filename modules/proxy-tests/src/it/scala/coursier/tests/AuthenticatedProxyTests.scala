@@ -54,23 +54,25 @@ object AuthenticatedProxyTests extends TestSuite {
 
   def actualTests = Tests {
 
-    test("simple") - async {
+    test("simple") {
+      async {
 
-      val res = await {
-        nopeRunner.resolutionCheck(
-          mod"com.github.alexarchambault:argonaut-shapeless_6.1_2.11",
-          "0.2.0"
-        ).map(Right(_)).recover { case t: Throwable => Left(t) }
-      }
-      assert(res.isLeft)
-      val message = res.swap.toOption.get.getCause.getMessage
-      assert(message.contains("407 Proxy Authentication Required"))
+        val res = await {
+          nopeRunner.resolutionCheck(
+            mod"com.github.alexarchambault:argonaut-shapeless_6.1_2.11",
+            "0.2.0"
+          ).map(Right(_)).recover { case t: Throwable => Left(t) }
+        }
+        assert(res.isLeft)
+        val message = res.swap.toOption.get.getCause.getMessage
+        assert(message.contains("407 Proxy Authentication Required"))
 
-      await {
-        okRunner.resolutionCheck(
-          mod"com.github.alexarchambault:argonaut-shapeless_6.1_2.11",
-          "0.2.0"
-        )
+        await {
+          okRunner.resolutionCheck(
+            mod"com.github.alexarchambault:argonaut-shapeless_6.1_2.11",
+            "0.2.0"
+          )
+        }
       }
     }
 

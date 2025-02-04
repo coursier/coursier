@@ -30,19 +30,23 @@ object CatsTests extends TestSuite {
   val tests = Tests {
 
     test("spark") {
-      test - runner.resolutionCheck(
-        mod"org.apache.spark:spark-core_2.11",
-        "1.3.1",
-        profiles = Some(Set("hadoop-2.2", "!scala-2.10", "scala-2.11")),
-        forceDepMgmtVersions = Some(true)
-      )
+      test {
+        runner.resolutionCheck(
+          mod"org.apache.spark:spark-core_2.11",
+          "1.3.1",
+          profiles = Some(Set("hadoop-2.2", "!scala-2.10", "scala-2.11")),
+          forceDepMgmtVersions = Some(true)
+        )
+      }
 
-      test("scala210") - runner.resolutionCheck(
-        mod"org.apache.spark:spark-core_2.10",
-        "2.1.1",
-        profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11")),
-        forceDepMgmtVersions = Some(true)
-      )
+      test("scala210") {
+        runner.resolutionCheck(
+          mod"org.apache.spark:spark-core_2.10",
+          "2.1.1",
+          profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11")),
+          forceDepMgmtVersions = Some(true)
+        )
+      }
     }
 
     test("argonautShapeless") {
