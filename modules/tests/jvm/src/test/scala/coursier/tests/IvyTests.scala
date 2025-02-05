@@ -2,12 +2,20 @@ package coursier.tests
 
 import java.io.File
 
-import coursier.core.{Attributes, Classifier, Configuration, Dependency, Module, Type}
+import coursier.core.{
+  Attributes,
+  Classifier,
+  Configuration,
+  Dependency,
+  Module,
+  Type,
+  VariantSelector
+}
 import coursier.ivy.IvyRepository
 import coursier.tests.compatibility.executionContext
 import coursier.util.StringInterpolators._
-import utest._
 import coursier.version.VersionConstraint
+import utest._
 
 object IvyTests extends TestSuite {
 
@@ -138,7 +146,7 @@ object IvyTests extends TestSuite {
 
       test("test conf") {
         "no attributes" - runner.withArtifacts(
-          dep = dep.withConfiguration(Configuration.test),
+          dep = dep.withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test)),
           extraRepos = Seq(repo),
           classifierOpt = None
         ) { artifacts =>
@@ -149,7 +157,7 @@ object IvyTests extends TestSuite {
 
         "attributes" - runner.withArtifacts(
           dep = dep
-            .withConfiguration(Configuration.test)
+            .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
             .withAttributes(Attributes(Type.jar, Classifier.empty)),
           extraRepos = Seq(repo),
           classifierOpt = None

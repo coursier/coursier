@@ -12,7 +12,8 @@ import coursier.core.{
   Module,
   Repository,
   Resolution,
-  ResolutionProcess
+  ResolutionProcess,
+  VariantSelector
 }
 import coursier.maven.MavenRepository
 import coursier.testcache.TestCache
@@ -148,7 +149,8 @@ class TestRunner[F[_]: Gather: ToFuture](
   ): Future[Resolution] =
     async {
 
-      val dep = Dependency(module, version).withConfiguration(configuration)
+      val dep = Dependency(module, version)
+        .withVariantSelector(VariantSelector.ConfigurationBased(configuration))
       val res = await {
         resolve(
           Seq(dep),
@@ -175,7 +177,7 @@ class TestRunner[F[_]: Gather: ToFuture](
             dep0.module.organization.value,
             dep0.module.nameWithAttributes,
             dep0.versionConstraint.asString,
-            dep0.configuration.value
+            dep0.variantSelector.repr
           )
         }
         .distinct

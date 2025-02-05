@@ -12,7 +12,8 @@ import coursier.core.{
   ModuleName,
   Repository,
   Resolution,
-  Type
+  Type,
+  VariantSelector
 }
 import coursier.error.ResolutionError
 import coursier.ivy.IvyRepository
@@ -531,7 +532,9 @@ object ResolveTests extends TestSuite {
             resolve
               .addDependencies(
                 dep"com.netflix.karyon:karyon-eureka:1.0.28"
-                  .withConfiguration(Configuration.defaultRuntime)
+                  .withVariantSelector(
+                    VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
+                  )
               )
               .future()
           }
@@ -1604,7 +1607,7 @@ object ResolveTests extends TestSuite {
           // as we pull the test entries too
           bomCheck(
             dep"org.apache.spark:spark-parent_2.13:3.5.3"
-              .withConfiguration(Configuration.test)
+              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
               .asBomDependency
           )(
             dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
@@ -1617,7 +1620,7 @@ object ResolveTests extends TestSuite {
             check(
               dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withConfiguration(Configuration.test)
+                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
                   .asBomDependency
               )
             )
@@ -1629,7 +1632,9 @@ object ResolveTests extends TestSuite {
             check(
               dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withConfiguration(Configuration.defaultRuntime)
+                  .withVariantSelector(
+                    VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
+                  )
                   .asBomDependency
               )
             )
@@ -1640,7 +1645,7 @@ object ResolveTests extends TestSuite {
       test("runtime") {
         bomCheck(
           dep"io.quarkus:quarkus-bom:3.15.1"
-            .withConfiguration(Configuration.runtime)
+            .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.runtime))
             .asBomDependency
         )(
           dep"org.mvnpm.at.hpcc-js:wasm"
@@ -1653,7 +1658,7 @@ object ResolveTests extends TestSuite {
           // protobuf-java is marked as provided there
           bomCheck(
             dep"org.apache.spark:spark-parent_2.13:3.5.3"
-              .withConfiguration(Configuration.provided)
+              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
               .asBomDependency
           )(
             dep"com.google.protobuf:protobuf-java"
@@ -1664,7 +1669,7 @@ object ResolveTests extends TestSuite {
           // protobuf-java is marked as provided there
           bomCheck(
             dep"org.apache.spark:spark-parent_2.13:3.5.3"
-              .withConfiguration(Configuration.provided)
+              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
               .asBomDependency
           )(
             dep"com.google.protobuf:protobuf-java-util"
@@ -1678,7 +1683,7 @@ object ResolveTests extends TestSuite {
                 .addDependencies(dep"com.google.protobuf:protobuf-java")
                 .addBom(
                   dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                    .withConfiguration(Configuration.compile)
+                    .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.compile))
                     .asBomDependency
                 )
                 .io
@@ -1707,7 +1712,7 @@ object ResolveTests extends TestSuite {
             check(
               dep"com.google.protobuf:protobuf-java:3.7.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withConfiguration(Configuration.provided)
+                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
                   .asBomDependency
               )
             )
@@ -1719,7 +1724,7 @@ object ResolveTests extends TestSuite {
             check(
               dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withConfiguration(Configuration.provided)
+                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
                   .asBomDependency
               )
             )
@@ -1730,7 +1735,9 @@ object ResolveTests extends TestSuite {
             check(
               dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withConfiguration(Configuration.defaultRuntime)
+                  .withVariantSelector(
+                    VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
+                  )
                   .asBomDependency
               )
             )
@@ -1744,7 +1751,7 @@ object ResolveTests extends TestSuite {
             check(
               dep"com.google.protobuf:protobuf-java:3.7.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withConfiguration(Configuration.provided)
+                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
                   .asBomDependency
                   .withForceOverrideVersions(true)
               )
@@ -1756,7 +1763,7 @@ object ResolveTests extends TestSuite {
             check(
               dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withConfiguration(Configuration.provided)
+                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
                   .asBomDependency
                   .withForceOverrideVersions(true)
               )

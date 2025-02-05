@@ -14,6 +14,7 @@ import coursier.core.{
   Publication,
   Repository,
   Type,
+  Variant,
   Versions
 }
 import coursier.maven.{MavenAttributes, MavenComplete}
@@ -111,19 +112,20 @@ import dataclass._
             }
             else if (dependency.attributes.classifier.nonEmpty)
               // FIXME We're ignoring dependency.attributes.`type` in this case
-              project.publications.collect {
+              project.publications0.collect {
                 case (_, p) if p.classifier == dependency.attributes.classifier =>
                   p
               }
             else if (dependency.attributes.`type`.nonEmpty)
-              project.publications.collect {
-                case (conf, p)
-                    if (conf == Configuration.all ||
-                    conf == dependency.configuration ||
-                    project.allConfigurations.getOrElse(
-                      dependency.configuration,
-                      Set.empty
-                    ).contains(conf)) &&
+              project.publications0.collect {
+                case (pubVariant: Variant.Configuration, p)
+                    if (pubVariant.configuration == Configuration.all ||
+                    dependency.variantSelector.asConfiguration.exists { depConfig =>
+                      depConfig == pubVariant.configuration ||
+                      project.allConfigurations
+                        .getOrElse(depConfig, Set.empty)
+                        .contains(pubVariant.configuration)
+                    }) &&
                     (
                       p.`type` == dependency.attributes.`type` ||
                       (p.ext == dependency.attributes.`type`.asExtension && project.packagingOpt
@@ -134,19 +136,20 @@ import dataclass._
                   p
               }
             else
-              project.publications.collect {
-                case (conf, p)
-                    if conf == Configuration.all ||
-                    conf == dependency.configuration ||
-                    project.allConfigurations.getOrElse(
-                      dependency.configuration,
-                      Set.empty
-                    ).contains(conf) =>
+              project.publications0.collect {
+                case (pubVariant: Variant.Configuration, p)
+                    if pubVariant.configuration == Configuration.all ||
+                    dependency.variantSelector.asConfiguration.exists { depConfig =>
+                      pubVariant.configuration == depConfig ||
+                      project.allConfigurations
+                        .getOrElse(depConfig, Set.empty)
+                        .contains(pubVariant.configuration)
+                    } =>
                   p
               }
           case Some(classifiers) =>
             val classifiersSet = classifiers.toSet
-            project.publications.collect {
+            project.publications0.collect {
               case (_, p) if classifiersSet(p.classifier) =>
                 p
             }
@@ -322,8 +325,8 @@ import dataclass._
                 }
               )
             )
-            .withDependencies(
-              proj0.dependencies.map {
+            .withDependencies0(
+              proj0.dependencies0.map {
                 case (config, dep0) =>
                   val dep = dep0.withModule(
                     dep0.module.withAttributes(

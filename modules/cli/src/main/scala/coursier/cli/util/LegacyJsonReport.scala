@@ -281,7 +281,7 @@ final case class JsonElem(
           case (mod, ver) =>
             JsonElem(
               Dependency(mod, ver)
-                .withConfiguration(Configuration.empty)
+                .withVariantSelector(VariantSelector.emptyConfiguration)
                 .clearExclusions
                 .withAttributes(Attributes.empty)
                 .withOptional(false)

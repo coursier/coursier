@@ -15,13 +15,14 @@ import coursier.core.{
   Overrides,
   Project,
   Publication,
-  Type
+  Type,
+  Variant,
+  VariantSelector
 }
 import coursier.util.Xml._
-import coursier.version.Version
+import coursier.version.{Version, VersionConstraint}
 
 import scala.collection.compat._
-import coursier.version.VersionConstraint
 
 object IvyXml {
 
@@ -111,7 +112,7 @@ object IvyXml {
     globalExcludes: Map[Configuration, Set[(Organization, ModuleName)]],
     globalExcludesFilter: (Configuration, Organization, ModuleName) => Boolean,
     globalOverrides: Overrides
-  ): Seq[(Configuration, Dependency)] =
+  ): Seq[(Variant, Dependency)] =
     node.children
       .filter(_.label == "dependency")
       .flatMap { node =>
@@ -165,12 +166,13 @@ object IvyXml {
             .toSeq
           rawConf            <- node.attribute("conf").toOption.toSeq
           (fromConf, toConf) <- mappings(rawConf)
+          fromConf0 = Variant.Configuration(fromConf)
           if globalExcludesFilter(fromConf, org, name)
           pub <- publications
-        } yield fromConf -> Dependency(
+        } yield fromConf0 -> Dependency(
           Module(org, name, attr.toMap),
           VersionConstraint(version),
-          toConf,
+          VariantSelector.ConfigurationBased(toConf),
           globalExcludes.getOrElse(Configuration.all, Set.empty) ++
             globalExcludes.getOrElse(fromConf, Set.empty) ++
             allConfsExcludes ++
@@ -310,7 +312,7 @@ object IvyXml {
         actualVersionOpt0 = None,
         if (publicationsOpt.isEmpty)
           // no publications node -> default JAR artifact
-          Seq(Configuration.all -> Publication(
+          Seq(Variant.Configuration(Configuration.all) -> Publication(
             module.name.value,
             Type.jar,
             Extension.jar,
@@ -320,8 +322,10 @@ object IvyXml {
           // publications node is there -> only its content (if it is empty, no artifacts,
           // as per the Ivy manual)
           val inAllConfs = publicationsOpt.flatMap(_.get(Configuration.all)).getOrElse(Nil)
-          configurations0.flatMap { case (conf, _) =>
-            (publicationsOpt.flatMap(_.get(conf)).getOrElse(Nil) ++ inAllConfs).map(conf -> _)
+          configurations0.flatMap {
+            case (conf, _) =>
+              val conf0 = Variant.Configuration(conf)
+              (publicationsOpt.flatMap(_.get(conf)).getOrElse(Nil) ++ inAllConfs).map(conf0 -> _)
           }
         },
         Info(

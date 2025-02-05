@@ -111,7 +111,7 @@ object PomParser {
 
     var packagingOpt = Option.empty[Type]
 
-    val dependencies         = new ListBuffer[(Configuration, Dependency)]
+    val dependencies         = new ListBuffer[(Variant, Dependency)]
     val dependencyManagement = new ListBuffer[(Configuration, Dependency)]
 
     val properties = new ListBuffer[(String, String)]
@@ -212,14 +212,14 @@ object PomParser {
             relocationVersionOpt.nonEmpty
           if (isRelocated)
             Some {
-              Configuration.empty -> Dependency(
+              Variant.emptyConfiguration -> Dependency(
                 Module(
                   organization = relocationGroupIdOpt.getOrElse(projModule.organization),
                   name = relocationArtifactIdOpt.getOrElse(projModule.name),
                   attributes = projModule.attributes
                 ),
                 relocationVersionOpt.getOrElse(VersionConstraint.fromVersion(finalVersion)),
-                Configuration.empty,
+                VariantSelector.emptyConfiguration,
                 Set.empty[(Organization, ModuleName)],
                 Attributes.empty,
                 optional = false,
@@ -332,7 +332,7 @@ object PomParser {
   ) ++ dependencyHandlers(
     "dependency" :: "dependencies" :: "project" :: Nil,
     (s, c, d) =>
-      s.dependencies += c -> d
+      s.dependencies += Variant.Configuration(c) -> d
   ) ++ dependencyHandlers(
     "dependency" :: "dependencies" :: "dependencyManagement" :: "project" :: Nil,
     (s, c, d) =>
@@ -480,7 +480,7 @@ object PomParser {
           val d = Dependency(
             Module(state.dependencyGroupIdOpt.get, state.dependencyArtifactIdOpt.get, Map.empty),
             VersionConstraint(state.dependencyVersion),
-            Configuration.empty,
+            VariantSelector.emptyConfiguration,
             state.dependencyExclusions,
             Attributes(state.dependencyType, state.dependencyClassifier),
             state.dependencyOptional,

@@ -5,10 +5,13 @@ import coursier.core.{
   ArtifactSource,
   Configuration,
   Dependency,
+  MinimizedExclusions,
   Module,
   Repository,
   Resolution,
-  ResolutionProcess
+  ResolutionProcess,
+  Variant,
+  VariantSelector
 }
 import coursier.maven.MavenRepository
 import coursier.tests.TestUtil._
@@ -18,7 +21,6 @@ import coursier.version.VersionConstraint
 import utest._
 
 import scala.async.Async.{async, await}
-import coursier.core.MinimizedExclusions
 
 object ResolutionTests extends TestSuite {
 
@@ -50,7 +52,7 @@ object ResolutionTests extends TestSuite {
       mod"acme:play",
       "2.4.0",
       Seq(
-        Configuration.empty -> dep"acme:play-json:2.4.0"
+        Variant.emptyConfiguration -> dep"acme:play-json:2.4.0"
       )
     ),
     Project(mod"acme:play-json", "2.4.0"),
@@ -58,8 +60,8 @@ object ResolutionTests extends TestSuite {
       mod"acme:play",
       "2.4.1",
       dependencies = Seq(
-        Configuration.empty -> dep"acme:play-json:$${play_json_version}",
-        Configuration.empty -> dep"$${project.groupId}:$${WithSpecialChar©}:1.3.0"
+        Variant.emptyConfiguration -> dep"acme:play-json:$${play_json_version}",
+        Variant.emptyConfiguration -> dep"$${project.groupId}:$${WithSpecialChar©}:1.3.0"
       ),
       properties = Seq(
         "play_json_version" -> "2.4.0",
@@ -70,7 +72,7 @@ object ResolutionTests extends TestSuite {
       mod"acme:play-extra-no-config",
       "2.4.1",
       Seq(
-        Configuration.empty -> dep"acme:play:2.4.1"
+        Variant.emptyConfiguration -> dep"acme:play:2.4.1"
           .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"config"))))
       )
     ),
@@ -78,7 +80,7 @@ object ResolutionTests extends TestSuite {
       mod"acme:play-extra-no-config-no",
       "2.4.1",
       Seq(
-        Configuration.empty -> dep"acme:play:2.4.1"
+        Variant.emptyConfiguration -> dep"acme:play:2.4.1"
           .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"config"))))
       )
     ),
@@ -93,7 +95,8 @@ object ResolutionTests extends TestSuite {
       mod"hudsucker:mail",
       "10.0",
       Seq(
-        Configuration.test -> dep"$${project.groupId}:test-util:$${project.version}"
+        Variant.Configuration(Configuration.test) ->
+          dep"$${project.groupId}:test-util:$${project.version}"
       )
     ),
     Project(mod"hudsucker:test-util", "10.0"),
@@ -109,7 +112,7 @@ object ResolutionTests extends TestSuite {
       mod"se.ikea:billy",
       "18.0",
       dependencies = Seq(
-        Configuration.empty -> dep"acme:play:"
+        Variant.emptyConfiguration -> dep"acme:play:"
       ),
       parent0 = Some((mod"se.ikea:parent", "18.0"))
     ),
@@ -117,14 +120,14 @@ object ResolutionTests extends TestSuite {
       mod"org.gnome:parent",
       "7.0",
       Seq(
-        Configuration.empty -> dep"org.gnu:glib:13.4"
+        Variant.emptyConfiguration -> dep"org.gnu:glib:13.4"
       )
     ),
     Project(
       mod"org.gnome:panel-legacy",
       "7.0",
       dependencies = Seq(
-        Configuration.empty -> dep"org.gnome:desktop:$${project.version}"
+        Variant.emptyConfiguration -> dep"org.gnome:desktop:$${project.version}"
       ),
       parent0 = Some(mod"org.gnome:parent", "7.0")
     ),
@@ -132,14 +135,14 @@ object ResolutionTests extends TestSuite {
       mod"gov.nsa:secure-pgp",
       "10.0",
       Seq(
-        Configuration.empty -> dep"gov.nsa:crypto:536.89"
+        Variant.emptyConfiguration -> dep"gov.nsa:crypto:536.89"
       )
     ),
     Project(
       mod"com.mailapp:mail-client",
       "2.1",
       dependencies = Seq(
-        Configuration.empty -> dep"gov.nsa:secure-pgp:10.0"
+        Variant.emptyConfiguration -> dep"gov.nsa:secure-pgp:10.0"
           .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"$${crypto.name}"))))
       ),
       properties = Seq("crypto.name" -> "crypto", "dummy" -> "2")
@@ -148,7 +151,7 @@ object ResolutionTests extends TestSuite {
       mod"com.thoughtworks.paranamer:paranamer-parent",
       "2.6",
       dependencies = Seq(
-        Configuration.empty -> dep"junit:junit:"
+        Variant.emptyConfiguration -> dep"junit:junit:"
       ),
       dependencyManagement = Seq(
         Configuration.test -> dep"junit:junit:4.11"
@@ -176,7 +179,7 @@ object ResolutionTests extends TestSuite {
       mod"com.github.dummy:libb",
       "0.4.2",
       dependencies = Seq(
-        Configuration.empty -> dep"org.scalaverification:scala-verification:1.12.4"
+        Variant.emptyConfiguration -> dep"org.scalaverification:scala-verification:1.12.4"
       ),
       profiles = Seq(
         Profile(
@@ -302,18 +305,18 @@ object ResolutionTests extends TestSuite {
     Project(
       mod"an-org:a-lib",
       "1.0",
-      Seq(Configuration.empty -> dep"an-org:a-name:1.0")
+      Seq(Variant.emptyConfiguration -> dep"an-org:a-name:1.0")
     ),
     Project(mod"an-org:a-lib", "1.1"),
     Project(
       mod"an-org:a-lib",
       "1.2",
-      Seq(Configuration.empty -> dep"an-org:a-name:1.2")
+      Seq(Variant.emptyConfiguration -> dep"an-org:a-name:1.2")
     ),
     Project(
       mod"an-org:another-lib",
       "1.0",
-      Seq(Configuration.empty -> dep"an-org:a-name:1.0")
+      Seq(Variant.emptyConfiguration -> dep"an-org:a-name:1.0")
     ),
 
     // Must bring transitively an-org:a-name, as an optional dependency
@@ -321,23 +324,23 @@ object ResolutionTests extends TestSuite {
       mod"an-org:an-app",
       "1.0",
       Seq(
-        Configuration.empty -> dep"an-org:a-lib:1.0"
+        Variant.emptyConfiguration -> dep"an-org:a-lib:1.0"
           .withMinimizedExclusions(MinimizedExclusions(Set((org"an-org", name"a-name")))),
-        Configuration.empty -> dep"an-org:another-lib:1.0".withOptional(true)
+        Variant.emptyConfiguration -> dep"an-org:another-lib:1.0".withOptional(true)
       )
     ),
     Project(
       mod"an-org:an-app",
       "1.1",
       Seq(
-        Configuration.empty -> dep"an-org:a-lib:1.1"
+        Variant.emptyConfiguration -> dep"an-org:a-lib:1.1"
       )
     ),
     Project(
       mod"an-org:an-app",
       "1.2",
       Seq(
-        Configuration.empty -> dep"an-org:a-lib:1.2"
+        Variant.emptyConfiguration -> dep"an-org:a-lib:1.2"
       )
     ),
     Project(mod"an-org:my-lib-1", "1.0.0+build.027", Seq()),
@@ -347,37 +350,37 @@ object ResolutionTests extends TestSuite {
       mod"an-org:my-lib-2",
       "1.0",
       Seq(
-        Configuration.empty -> dep"an-org:my-lib-1:1.0.0+build.027"
+        Variant.emptyConfiguration -> dep"an-org:my-lib-1:1.0.0+build.027"
       )
     ),
     Project(
       mod"an-org:my-lib-3",
       "1.0",
       Seq(
-        Configuration.empty -> dep"an-org:my-lib-1:1.1.0+build.018"
+        Variant.emptyConfiguration -> dep"an-org:my-lib-1:1.1.0+build.018"
       )
     ),
     Project(
       mod"an-org:my-lib-3",
       "1.1",
       Seq(
-        Configuration.empty -> dep"an-org:my-lib-1:1.2.0"
+        Variant.emptyConfiguration -> dep"an-org:my-lib-1:1.2.0"
       )
     ),
     Project(
       mod"an-org:my-app",
       "1.0",
       Seq(
-        Configuration.empty -> dep"an-org:my-lib-2:1.0",
-        Configuration.empty -> dep"an-org:my-lib-3:1.0"
+        Variant.emptyConfiguration -> dep"an-org:my-lib-2:1.0",
+        Variant.emptyConfiguration -> dep"an-org:my-lib-3:1.0"
       )
     ),
     Project(
       mod"an-org:my-app",
       "1.1",
       Seq(
-        Configuration.empty -> dep"an-org:my-lib-2:1.0",
-        Configuration.empty -> dep"an-org:my-lib-3:1.1"
+        Variant.emptyConfiguration -> dep"an-org:my-lib-2:1.0",
+        Variant.emptyConfiguration -> dep"an-org:my-lib-3:1.1"
       )
     )
   )
@@ -868,12 +871,12 @@ object ResolutionTests extends TestSuite {
     test("parts") {
       test("propertySubstitution") {
         val res =
-          Resolution.withProperties(
-            Seq(Configuration.empty -> dep"a-company:a-name:$${a.property}"),
-            Map("a.property"        -> "a-version")
+          Resolution.withProperties0(
+            Seq(Variant.emptyConfiguration -> dep"a-company:a-name:$${a.property}"),
+            Map("a.property"               -> "a-version")
           )
         val expected =
-          Seq(Configuration.empty -> dep"a-company:a-name:a-version")
+          Seq(Variant.emptyConfiguration -> dep"a-company:a-name:a-version")
 
         assert(res == expected)
       }

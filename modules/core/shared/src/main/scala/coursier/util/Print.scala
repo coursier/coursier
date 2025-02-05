@@ -1,6 +1,14 @@
 package coursier.util
 
-import coursier.core.{Attributes, Configuration, Dependency, Module, Project, Resolution}
+import coursier.core.{
+  Attributes,
+  Configuration,
+  Dependency,
+  Module,
+  Project,
+  Resolution,
+  VariantSelector
+}
 import coursier.graph.{Conflict, DependencyTree, ReverseModuleTree}
 import coursier.version.{Version, VersionConstraint, VersionInterval}
 import dataclass.data
@@ -32,7 +40,7 @@ object Print {
       }
       .mkString
 
-    s"${dep.module}:${dep.versionConstraint.asString}:${dep.configuration.value}" +
+    s"${dep.module}:${dep.versionConstraint.asString}:${dep.variantSelector.repr}" +
       (if (printExclusions) exclusionsStr else "")
   }
 
@@ -78,11 +86,25 @@ object Print {
     val deps1 =
       if (reorder)
         deps0
-          .groupBy(_.withConfiguration(Configuration.empty).withAttributes(Attributes.empty))
+          .groupBy { dep =>
+            dep
+              .withVariantSelector(VariantSelector.emptyConfiguration)
+              .withAttributes(Attributes.empty)
+          }
           .toVector
-          .map { case (k, l) =>
-            val conf = Configuration.join(l.toVector.map(_.configuration).sorted.distinct: _*)
-            k.withConfiguration(conf)
+          .flatMap {
+            case (k, l) =>
+              val configurations = l.map { dep =>
+                dep.variantSelector match {
+                  case c: VariantSelector.ConfigurationBased =>
+                    c.configuration
+                }
+              }
+              if (configurations.isEmpty) Nil
+              else {
+                val conf = Configuration.join(configurations.toVector.sorted.distinct: _*)
+                Seq(k.withVariantSelector(VariantSelector.ConfigurationBased(conf)))
+              }
           }
           .sortBy { dep =>
             (dep.module.organization, dep.module.name, dep.module.toString, dep.versionConstraint)

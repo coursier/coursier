@@ -97,7 +97,7 @@ object ResolutionError {
 
                 s"${node.module}:${node.retainedVersion0.asString} " +
                   (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
-                  s"wants ${node.dependsOnModule}:${node.dependsOnVersionConstraint}" +
+                  s"wants ${node.dependsOnModule}:${node.dependsOnVersionConstraint.asString}" +
                   colors0.reset
               }
               else

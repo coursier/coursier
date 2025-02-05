@@ -1,6 +1,14 @@
 package coursier.tests.util
 
-import coursier.core.{Attributes, Classifier, Configuration, Dependency, Reconciliation, Type}
+import coursier.core.{
+  Attributes,
+  Classifier,
+  Configuration,
+  Dependency,
+  Reconciliation,
+  Type,
+  VariantSelector
+}
 import coursier.tests.TestRunner
 import coursier.graph.{DependencyTree, ReverseModuleTree}
 import coursier.util.{Print, Tree}
@@ -27,7 +35,7 @@ object PrintTests extends TestSuite {
   val tests = Tests {
     test("ignoreAttributes") {
       val dep = dep"org:name:0.1"
-        .withConfiguration(Configuration("foo"))
+        .withVariantSelector(VariantSelector.ConfigurationBased(Configuration("foo")))
       val deps = Seq(
         dep,
         dep.withAttributes(Attributes(Type("fooz"), Classifier.empty))

@@ -9,7 +9,8 @@ import coursier.core.{
   Dependency,
   Module,
   Resolution,
-  Type
+  Type,
+  VariantSelector
 }
 import coursier.params.ResolutionParams
 import coursier.testcache.TestCache
@@ -79,7 +80,7 @@ object TestHelpers extends PlatformTestHelpers {
             Dependency(
               rootDep.module,
               rootDep.versionConstraint
-            ).withConfiguration(rootDep.configuration)
+            ).withVariantSelector(rootDep.variantSelector)
           )
           ds == simpleDeps
         }
@@ -144,10 +145,17 @@ object TestHelpers extends PlatformTestHelpers {
         rootDep.module.name.value,
         attrPathPart,
         rootDep.versionConstraint.asString + (
-          if (rootDep.configuration.isEmpty)
+          if (rootDep.variantSelector.isEmpty)
             ""
           else
-            "_" + rootDep.configuration.value.replace('(', '_').replace(')', '_')
+            "_" +
+              (rootDep.variantSelector match {
+                case c: VariantSelector.ConfigurationBased =>
+                  c.configuration
+                    .value
+                    .replace('(', '_')
+                    .replace(')', '_')
+              })
         ) + dependenciesHashPart + bomModVerHashPart + paramsPart + extraKeyPart
       ).filter(_.nonEmpty).mkString("/")
     }
@@ -220,7 +228,7 @@ object TestHelpers extends PlatformTestHelpers {
           dep.module.organization.value,
           dep.module.nameWithAttributes,
           dep.versionConstraint.asString,
-          dep.configuration.value
+          dep.variantSelector.asConfiguration.fold("")(_.value)
         ).mkString(":")
       }
     }

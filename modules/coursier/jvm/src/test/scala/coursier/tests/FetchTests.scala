@@ -3,17 +3,16 @@ package coursier.tests
 import java.io.File
 
 import coursier.{Artifacts, Fetch, Repositories}
-import coursier.core.{Activation, Classifier, Configuration, Extension, Type}
+import coursier.core.{Activation, Classifier, Configuration, Extension, Type, VariantSelector}
 import coursier.maven.MavenRepository
 import coursier.params.ResolutionParams
 import coursier.ivy.IvyRepository
 import coursier.util.StringInterpolators._
 import coursier.util.Task
-import coursier.version.Version
+import coursier.version.{Version, VersionConstraint}
 import utest._
 
 import scala.async.Async.{async, await}
-import coursier.version.VersionConstraint
 
 object FetchTests extends TestSuite {
 
@@ -219,7 +218,7 @@ object FetchTests extends TestSuite {
               .addRepositories(m2Repo)
               .addDependencies(
                 dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
-                  .withConfiguration(Configuration.test)
+                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
               )
               .futureResult()
           }
@@ -253,7 +252,7 @@ object FetchTests extends TestSuite {
               .addRepositories(ivy2Repo)
               .addDependencies(
                 dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
-                  .withConfiguration(Configuration.test)
+                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
               )
               .futureResult()
           }
