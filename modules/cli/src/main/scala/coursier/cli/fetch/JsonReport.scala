@@ -2,7 +2,15 @@ package coursier.cli.fetch
 
 import com.github.plokhotnyuk.jsoniter_scala.core.{JsonValueCodec, writeToString}
 import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
-import coursier.core.{Attributes, Dependency, MinimizedExclusions, Module, Publication, Resolution}
+import coursier.core.{
+  Attributes,
+  Dependency,
+  MinimizedExclusions,
+  Module,
+  Publication,
+  Resolution,
+  VariantPublication
+}
 import coursier.graph.DependencyTree
 import coursier.util.Artifact
 import coursier.version.VersionConstraint
@@ -37,7 +45,7 @@ object JsonReport {
 
   def report(
     resolution: Resolution,
-    artifacts: Seq[(Dependency, Publication, Artifact, Option[File])],
+    artifacts: Seq[(Dependency, Either[VariantPublication, Publication], Artifact, Option[File])],
     useSlashSeparator: Boolean = false
   ): String = {
 
@@ -52,7 +60,10 @@ object JsonReport {
       case (dep, pub, art, _) => (dep, pub, art)
     }
 
-    val key: ((Dependency, Publication, Artifact)) => (Module, Attributes) = {
+    val key: ((Dependency, Either[VariantPublication, Publication], Artifact)) => (
+      Module,
+      Attributes
+    ) = {
       case (dep, _, _) =>
         (dep.module, dep.attributes.normalize)
     }
@@ -125,12 +136,13 @@ object JsonReport {
                   .map(_._1)
                   .getOrElse {
                     resolution
-                      .dependenciesOf(
+                      .dependenciesOf0(
                         dep,
                         withRetainedVersions = false,
                         withReconciledVersions = true,
                         withFallbackConfig = true
                       )
+                      .toTry.get
                       .map(dep => (dep.module, dep.attributes))
                   }
             }
@@ -220,7 +232,7 @@ object JsonReport {
           val attributesMap = deps
             .flatMap {
               case (dep, pub, art) =>
-                val attr    = dep.withPublication(pub).attributes
+                val attr    = pub.fold(_ => dep, pub0 => dep.withPublication(pub0)).attributes
                 val fileOpt = fileMap.get(art)
                 fileOpt.map((_, attr))
             }

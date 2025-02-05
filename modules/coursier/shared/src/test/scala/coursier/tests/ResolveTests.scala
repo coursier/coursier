@@ -17,6 +17,7 @@ import coursier.core.{
 }
 import coursier.error.ResolutionError
 import coursier.ivy.IvyRepository
+import coursier.maven.MavenRepositoryLike
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
 import coursier.util.{ModuleMatchers, Task}
 import coursier.util.StringInterpolators._
@@ -47,6 +48,24 @@ object ResolveTests extends TestSuite {
 
   def check(dependencies: Dependency*): Future[Unit] =
     doCheck(resolve, dependencies)
+
+  def enableModules(resolve: Resolve[Task]): Resolve[Task] =
+    resolve.withRepositories {
+      resolve.repositories.map {
+        case m: MavenRepositoryLike.WithModuleSupport =>
+          m.withCheckModule(true)
+        case other => other
+      }
+    }
+  def gradleModuleCheck(dependencies: Dependency*): Future[Unit] =
+    async {
+      val res = await {
+        enableModules(resolve.addRepositories(Repositories.google))
+          .addDependencies(dependencies: _*)
+          .future()
+      }
+      await(validateDependencies(res, extraKeyPart = "_gradlemod"))
+    }
 
   def scopeCheck(
     defaultConfiguration: Configuration,
@@ -639,7 +658,7 @@ object ResolveTests extends TestSuite {
 
           await(validateDependencies(res))
 
-          val urls = res.dependencyArtifacts().map(_._3.url).toSet
+          val urls = res.dependencyArtifacts0().map(_._3.url).toSet
           val expectedUrls = Set(
             "https://repo1.maven.org/maven2/javax/ws/rs/javax.ws.rs-api/2.1.1/javax.ws.rs-api-2.1.1.jar"
           )
@@ -679,7 +698,7 @@ object ResolveTests extends TestSuite {
 
           assert(found == expected)
 
-          val urls = res.dependencyArtifacts()
+          val urls = res.dependencyArtifacts0()
             .map(_._3.url.replace(handmadeMetadataBase, "file:///handmade-metadata/"))
             .toSet
           val expectedUrls = Set(
@@ -690,7 +709,7 @@ object ResolveTests extends TestSuite {
 
           assert(urls == expectedUrls)
 
-          val handmadeArtifacts = res.dependencyArtifacts()
+          val handmadeArtifacts = res.dependencyArtifacts0()
             .map(_._3)
             .filter(_.url.startsWith(handmadeMetadataBase))
 
@@ -719,7 +738,7 @@ object ResolveTests extends TestSuite {
 
           await(validateDependencies(res))
 
-          val urls = res.dependencyArtifacts()
+          val urls = res.dependencyArtifacts0()
             .map(_._3.url.replace(handmadeMetadataBase, "file:///handmade-metadata/"))
             .toSet
           val expectedUrls = Set(
@@ -752,7 +771,7 @@ object ResolveTests extends TestSuite {
 
           await(validateDependencies(res))
 
-          val urls = res.dependencyArtifacts()
+          val urls = res.dependencyArtifacts0()
             .map(_._3.url.replace(handmadeMetadataBase, "file:///handmade-metadata/"))
             .toSet
           val expectedUrls = Set(
@@ -1013,7 +1032,10 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res))
 
-        val subRes = res.subset(Seq(json4s))
+        val subRes = res.subset0(Seq(json4s)) match {
+          case Left(ex)    => throw new Exception(ex)
+          case Right(res0) => res0
+        }
         await(validateDependencies(subRes))
       }
     }
@@ -1081,7 +1103,7 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res))
 
-        val depArtifacts = res.dependencyArtifacts(Some(Seq(Classifier.sources)))
+        val depArtifacts = res.dependencyArtifacts0(Some(Seq(Classifier.sources)))
 
         val urls = depArtifacts.map(_._3.url).toSet
         val expectedUrls = Set(
@@ -1090,7 +1112,7 @@ object ResolveTests extends TestSuite {
         )
         assert(urls == expectedUrls)
 
-        val pubTypes         = depArtifacts.map(_._2.`type`).toSet
+        val pubTypes         = depArtifacts.collect { case (_, Right(pub), _) => pub.`type` }.toSet
         val expectedPubTypes = Set(Type.source)
         assert(pubTypes == expectedPubTypes)
       }
@@ -1112,16 +1134,18 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res))
 
-        val depArtifacts = res.dependencyArtifacts()
+        val depArtifacts = res.dependencyArtifacts0()
         assert(depArtifacts.lengthCompare(1) == 0)
 
-        val (_, pub, artifact) = depArtifacts.head
+        val (_, pub0, artifact) = depArtifacts.head
 
         val url = artifact.url
         val expectedUrl =
           "https://repo1.maven.org/maven2/io/grpc/protoc-gen-grpc-java/1.23.0/protoc-gen-grpc-java-1.23.0-linux-x86_64.exe"
         assert(artifact.url == expectedUrl)
 
+        assert(pub0.isRight)
+        val pub = pub0.toOption.get
         assert(pub.`type` == Type("protoc-plugin"))
         assert(pub.ext == Extension("exe"))
         assert(pub.classifier == Classifier("linux-x86_64"))
@@ -1166,7 +1190,7 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res, params))
 
-        val urls = res.dependencyArtifacts().map(_._3.url)
+        val urls = res.dependencyArtifacts0().map(_._3.url)
         val wrongUrls =
           urls.filter(url => url.contains("$") || url.contains("{") || url.contains("}"))
 
@@ -1189,7 +1213,7 @@ object ResolveTests extends TestSuite {
         // The one we're interested in here
         val pomUrl =
           "https://repo1.maven.org/maven2/org/apache/zookeeper/zookeeper/3.5.0-alpha/zookeeper-3.5.0-alpha.pom"
-        val urls = res.dependencyArtifacts().map(_._3.url).toSet
+        val urls = res.dependencyArtifacts0().map(_._3.url).toSet
 
         assert(urls.contains(pomUrl))
       }
@@ -1209,7 +1233,7 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res))
 
-        val urls = res.dependencyArtifacts().map(_._3.url).toSet
+        val urls = res.dependencyArtifacts0().map(_._3.url).toSet
         val expectedUrls = Set(
           "https://repo1.maven.org/maven2/org/bytedeco/javacpp/1.5.2/javacpp-1.5.2.jar",
           "https://repo1.maven.org/maven2/org/bytedeco/mkl-platform-redist/2019.5-1.5.2/mkl-platform-redist-2019.5-1.5.2.jar",
@@ -1240,7 +1264,7 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res))
 
-        val artifacts = res.dependencyArtifacts()
+        val artifacts = res.dependencyArtifacts0()
         val expectedUrl =
           "https://repo1.maven.org/maven2/io/netty/netty-transport-native-epoll/4.1.44.Final/netty-transport-native-epoll-4.1.44.Final-woops.jar"
         val (_, _, woopsArtifact) = artifacts.find(_._3.url == expectedUrl).getOrElse {
@@ -1955,6 +1979,72 @@ object ResolveTests extends TestSuite {
       bomCheck(dep"com.google.cloud:libraries-bom-protobuf3:26.51.0".asBomDependency)(
         dep"com.google.protobuf:protobuf-java:"
       )
+    }
+
+    test("gradle modules") {
+      test("kotlinx-html-js") {
+        test("no-support") {
+          check(
+            dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0"
+          )
+        }
+        test("support") {
+          test("variants") {
+            gradleModuleCheck(
+              dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,variant.org.gradle.usage=kotlin-runtime,variant.org.jetbrains.kotlin.platform.type=js,variant.org.jetbrains.kotlin.js.compiler=ir,variant.org.gradle.category=library"
+            )
+          }
+          test("missing variants") {
+            async {
+              val res = await {
+                enableModules(resolve)
+                  .addDependencies(
+                    dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,variant.org.gradle.usage=kotlin-runtime"
+                  )
+                  .futureEither()
+              }
+              assert(res.isLeft)
+              assert(
+                res.left.toOption.get.getMessage
+                  .contains(
+                    "Found too many variants in org.jetbrains.kotlinx:kotlinx-html-js:0.11.0 for"
+                  )
+              )
+            }
+          }
+        }
+      }
+      test("android") {
+        def withVariant(dep: Dependency, map: Map[String, String]) =
+          dep.withVariantSelector(VariantSelector.AttributesBased(map))
+
+        def testVariants(map: Map[String, String]): Future[Unit] =
+          gradleModuleCheck(
+            withVariant(dep"androidx.core:core-ktx:1.15.0", map),
+            withVariant(dep"androidx.activity:activity-compose:1.9.3", map),
+            withVariant(dep"androidx.compose.ui:ui:1.7.5", map),
+            withVariant(dep"androidx.compose.material3:material3:1.3.1", map)
+          )
+
+        test("compile") {
+          testVariants(
+            Map(
+              "org.gradle.usage"                   -> "java-api",
+              "org.gradle.category"                -> "library",
+              "org.jetbrains.kotlin.platform.type" -> "jvm"
+            )
+          )
+        }
+        test("runtime") {
+          testVariants(
+            Map(
+              "org.gradle.usage"                   -> "java-runtime",
+              "org.gradle.category"                -> "library",
+              "org.jetbrains.kotlin.platform.type" -> "jvm"
+            )
+          )
+        }
+      }
     }
   }
 }

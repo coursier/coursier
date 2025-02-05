@@ -250,11 +250,11 @@ object Launch extends CoursierCommand[LaunchOptions] {
         .loaderNames
         .map { name =>
           val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
-          val subRes = res.subset(deps.map(_.dependency(
+          val subRes = res.subset0(deps.map(_.dependency(
             JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")),
             scalaVersionOpt.getOrElse(""),
             platformOpt.getOrElse("")
-          )))
+          ))).toTry.get
           val artifacts = coursier.Artifacts.artifacts(
             subRes,
             artifactParams.classifiers,

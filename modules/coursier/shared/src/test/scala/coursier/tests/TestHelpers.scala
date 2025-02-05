@@ -140,6 +140,12 @@ object TestHelpers extends PlatformTestHelpers {
           "_params" + sha1(n)
         }
 
+      val variantPart = rootDep.variantSelector match {
+        case _: VariantSelector.ConfigurationBased => ""
+        case other: VariantSelector.AttributesBased =>
+          "_variant" + sha1(other.repr).take(7)
+      }
+
       Seq(
         rootDep.module.organization.value,
         rootDep.module.name.value,
@@ -155,8 +161,10 @@ object TestHelpers extends PlatformTestHelpers {
                     .value
                     .replace('(', '_')
                     .replace(')', '_')
+                case a: VariantSelector.AttributesBased =>
+                  ""
               })
-        ) + dependenciesHashPart + bomModVerHashPart + paramsPart + extraKeyPart
+        ) + dependenciesHashPart + variantPart + bomModVerHashPart + paramsPart + extraKeyPart
       ).filter(_.nonEmpty).mkString("/")
     }
     finally

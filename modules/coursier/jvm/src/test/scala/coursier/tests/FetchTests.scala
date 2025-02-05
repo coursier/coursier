@@ -3,8 +3,16 @@ package coursier.tests
 import java.io.File
 
 import coursier.{Artifacts, Fetch, Repositories}
-import coursier.core.{Activation, Classifier, Configuration, Extension, Type, VariantSelector}
-import coursier.maven.MavenRepository
+import coursier.core.{
+  Activation,
+  Classifier,
+  Configuration,
+  Dependency,
+  Extension,
+  Type,
+  VariantSelector
+}
+import coursier.maven.{MavenRepository, MavenRepositoryLike}
 import coursier.params.ResolutionParams
 import coursier.ivy.IvyRepository
 import coursier.util.StringInterpolators._
@@ -13,6 +21,7 @@ import coursier.version.{Version, VersionConstraint}
 import utest._
 
 import scala.async.Async.{async, await}
+import scala.concurrent.Future
 
 object FetchTests extends TestSuite {
 
@@ -21,6 +30,15 @@ object FetchTests extends TestSuite {
   private val fetch = Fetch()
     .noMirrors
     .withCache(cache)
+
+  def enableModules(fetch: Fetch[Task]): Fetch[Task] =
+    fetch.withRepositories {
+      fetch.repositories.map {
+        case m: MavenRepositoryLike.WithModuleSupport =>
+          m.withCheckModule(true)
+        case other => other
+      }
+    }
 
   val tests = Tests {
 
@@ -330,7 +348,7 @@ object FetchTests extends TestSuite {
           }
 
           assert(res.artifacts.nonEmpty)
-          assert(res.detailedArtifacts.count(_._2.ext == Extension("csv")) == 1)
+          assert(res.detailedArtifacts0.count(_._2.exists(_.ext == Extension("csv"))) == 1)
 
           await {
             validateArtifacts(
@@ -355,7 +373,10 @@ object FetchTests extends TestSuite {
 
         await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
 
-        val subsetRes = res.resolution.subset(Seq(dep"sh.almond:scala-kernel-api_2.12.8"))
+        val subsetRes = res.resolution.subset0(Seq(dep"sh.almond:scala-kernel-api_2.12.8")) match {
+          case Left(ex)    => throw new Exception(ex)
+          case Right(res0) => res0
+        }
 
         val subsetArtifacts = await {
           Artifacts()
@@ -465,6 +486,92 @@ object FetchTests extends TestSuite {
             res.artifacts.map(_._1),
             params,
             extraKeyPart = "_customurl2"
+          )
+        }
+      }
+    }
+
+    test("gradle modules") {
+      test("kotlinx-html-js") {
+        test("no-support") {
+          async {
+
+            val res = await {
+              fetch
+                .addDependencies(
+                  dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,variant.org.gradle.usage=kotlin-runtime,variant.org.jetbrains.kotlin.platform.type=js,variant.org.jetbrains.kotlin.js.compiler=ir,variant.org.gradle.category=library"
+                )
+                .futureResult()
+            }
+
+            await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
+          }
+        }
+
+        test("support") {
+          async {
+
+            val res = await {
+              enableModules(fetch)
+                .addDependencies(
+                  dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,variant.org.gradle.usage=kotlin-runtime,variant.org.jetbrains.kotlin.platform.type=js,variant.org.jetbrains.kotlin.js.compiler=ir,variant.org.gradle.category=library"
+                )
+                .futureResult()
+            }
+
+            await(validateArtifacts(
+              res.resolution,
+              res.artifacts.map(_._1),
+              extraKeyPart = "_gradlemod"
+            ))
+          }
+        }
+      }
+
+      test("android") {
+
+        def withVariant(dep: Dependency, map: Map[String, String]) =
+          dep.withVariantSelector(VariantSelector.AttributesBased(map))
+
+        def testVariants(map: Map[String, String]): Future[Unit] = async {
+          val params = fetch.resolutionParams
+          val res = await {
+            enableModules(fetch.addRepositories(Repositories.google))
+              .withResolutionParams(params)
+              .addDependencies(
+                withVariant(dep"androidx.core:core-ktx:1.15.0", map),
+                withVariant(dep"androidx.activity:activity-compose:1.9.3", map),
+                withVariant(dep"androidx.compose.ui:ui:1.7.5", map),
+                withVariant(dep"androidx.compose.material3:material3:1.3.1", map)
+              )
+              .futureResult()
+          }
+
+          await(validateArtifacts(
+            res.resolution,
+            res.artifacts.map(_._1),
+            params = params,
+            extraKeyPart = "_gradlemod"
+          ))
+        }
+
+        test("compile") {
+          testVariants(
+            Map(
+              "org.gradle.usage"                   -> "java-api",
+              "org.gradle.category"                -> "library",
+              "org.jetbrains.kotlin.platform.type" -> "jvm"
+            )
+          )
+        }
+
+        test("runtime") {
+          testVariants(
+            Map(
+              "org.gradle.usage"                   -> "java-runtime",
+              "org.gradle.category"                -> "library",
+              "org.jetbrains.kotlin.platform.type" -> "jvm"
+            )
           )
         }
       }

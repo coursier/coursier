@@ -188,6 +188,14 @@ object StringInterpolators {
                 q"""_root_.coursier.core.VariantSelector.ConfigurationBased(
                   _root_.coursier.core.Configuration(${c.configuration.value})
                 )"""
+              case a: VariantSelector.AttributesBased =>
+                val entries = a.attributes.toVector.sorted.map {
+                  case (k, v) =>
+                    q"_root_.scala.Tuple2($k, $v)"
+                }
+                q"""_root_.coursier.core.VariantSelector.AttributesBased(
+                  _root_.scala.collection.immutable.Map[_root_.java.lang.String, _root_.java.lang.String](..$entries)
+                )"""
             }
             c.Expr(q"""
               _root_.coursier.core.Dependency(

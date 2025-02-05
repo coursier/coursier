@@ -48,8 +48,8 @@ object IvyLocalTests extends TestSuite {
             extraRepos = extraRepos
           ))
 
-          val artifacts = res.dependencyArtifacts()
-            .filter(t => t._2.`type` == Type.jar && !t._3.optional)
+          val artifacts = res.dependencyArtifacts0()
+            .filter(t => t._2.exists(_.`type` == Type.jar) && !t._3.optional)
             .map(_._3)
             .map(_.url)
             .groupBy(s => s)
@@ -66,7 +66,8 @@ object IvyLocalTests extends TestSuite {
             extraRepos = extraRepos
           ))
 
-          val artifacts  = res.dependencyArtifacts().filter(_._2.`type` == Type.jar).map(_._3.url)
+          val artifacts =
+            res.dependencyArtifacts0().filter(_._2.exists(_.`type` == Type.jar)).map(_._3.url)
           val anyJavadoc = artifacts.exists(_.contains("-javadoc"))
           val anySources = artifacts.exists(_.contains("-sources"))
 

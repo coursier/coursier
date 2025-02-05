@@ -15,6 +15,12 @@ object Variant {
     def isEmpty: Boolean =
       configuration.isEmpty
   }
+  @data class Attributes(variantName: String) extends Variant {
+    def asConfiguration: Option[Configuration0] =
+      None
+    def isEmpty: Boolean =
+      variantName.isEmpty
+  }
 
   lazy val emptyConfiguration: Variant =
     Configuration(Configuration0.empty)

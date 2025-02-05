@@ -103,13 +103,16 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
     val perLoaderResolutions = loaderDependencies
       .map {
         case (_, deps) =>
-          res.subset(deps.map { dep =>
+          res.subset0(deps.map { dep =>
             dep.dependency(
               JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")),
               scalaVersionOpt.getOrElse(""),
               platformOpt.getOrElse("")
             )
-          })
+          }) match {
+            case Left(ex)    => throw new Exception(ex)
+            case Right(res0) => res0
+          }
       }
 
     val perLoaderArtifacts = perLoaderResolutions

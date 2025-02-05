@@ -186,7 +186,28 @@ object JavaOrScalaDependency {
           userParams = userParams - inlineConfigKey
           Some(VariantSelector.ConfigurationBased(Configuration(config)))
         case None =>
-          None
+          val variantParams = userParams
+            .filter(_._1.startsWith("variant."))
+            .collect {
+              case (k, v) =>
+                k -> v.flatten.filter(_.nonEmpty).lastOption
+            }
+            .collect {
+              case (k, Some(v)) =>
+                k -> v
+            }
+          if (variantParams.isEmpty) None
+          else {
+            userParams = userParams.filter {
+              case (k, _) =>
+                !variantParams.contains(k)
+            }
+            val variantParams0 = variantParams.map {
+              case (k, v) =>
+                (k.stripPrefix("variant."), v)
+            }
+            Some(VariantSelector.AttributesBased(variantParams0))
+          }
       }
     for (variantSelector <- variantSelectorOpt)
       csDep = csDep.withVariantSelector(variantSelector)

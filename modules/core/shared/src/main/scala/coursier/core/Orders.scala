@@ -163,6 +163,8 @@ object Orders {
           case _ =>
             dep
         }
+      case _: VariantSelector.AttributesBased =>
+        dep
     }
 
   /** Assume all dependencies have same `module`, `version`, and `artifact`; see `minDependencies`

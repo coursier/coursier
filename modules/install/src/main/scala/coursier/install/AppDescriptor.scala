@@ -146,7 +146,7 @@ import dataclass._
         List.empty[(Artifact, File)]
       else {
         val artifactMap = res.artifacts.toMap
-        val subRes = res.resolution.subset(
+        val subRes = res.resolution.subset0(
           sharedDependencies.map { m =>
             val module = m.module(scalaVersion.asString)
             val ver = res.resolution.retainedVersions
@@ -155,7 +155,10 @@ import dataclass._
               .getOrElse(AppDescriptor.placeholder)
             Dependency(module, ver)
           }
-        )
+        ) match {
+          case Left(ex)    => throw new Exception(ex)
+          case Right(res0) => res0
+        }
         val l = coursier.Artifacts.artifacts(
           subRes,
           classifiers,

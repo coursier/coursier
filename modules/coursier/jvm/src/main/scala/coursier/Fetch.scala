@@ -12,7 +12,8 @@ import coursier.core.{
   Repository,
   Resolution,
   ResolutionProcess,
-  Type
+  Type,
+  VariantPublication
 }
 import coursier.error.CoursierError
 import coursier.internal.FetchCache
@@ -226,7 +227,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
         .withResolution(resolution)
         .ioResult
       S.map(fetchIO_) { res =>
-        Fetch.Result(resolution, res.fullDetailedArtifacts, res.fullExtraArtifacts)
+        Fetch.Result(resolution, res.fullDetailedArtifacts0, res.fullExtraArtifacts)
       }
     }
   }
@@ -271,14 +272,57 @@ object Fetch {
 
   @data class Result(
     resolution: Resolution = Resolution(),
-    fullDetailedArtifacts: Seq[(Dependency, Publication, Artifact, Option[File])] = Nil,
+    fullDetailedArtifacts0: Seq[(
+      Dependency,
+      Either[VariantPublication, Publication],
+      Artifact,
+      Option[File]
+    )] = Nil,
     fullExtraArtifacts: Seq[(Artifact, Option[File])] = Nil
   ) {
 
-    def detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)] =
-      fullDetailedArtifacts.collect {
+    def detailedArtifacts0
+      : Seq[(Dependency, Either[VariantPublication, Publication], Artifact, File)] =
+      fullDetailedArtifacts0.collect {
         case (dep, pub, art, Some(file)) =>
           (dep, pub, art, file)
+      }
+
+    @deprecated("Use fullDetailedArtifacts0 instead", "2.1.25")
+    def fullDetailedArtifacts: Seq[(
+      Dependency,
+      Publication,
+      Artifact,
+      Option[File]
+    )] =
+      fullDetailedArtifacts0.map {
+        case (dep, Right(pub), art, fOpt) =>
+          (dep, pub, art, fOpt)
+        case (_, Left(_), _, _) =>
+          sys.error("Deprecated method doesn't support Gradle Module variants")
+      }
+    @deprecated("Use withFullDetailedArtifacts0 instead", "2.1.25")
+    def withFullDetailedArtifacts(artifacts: Seq[(
+      Dependency,
+      Publication,
+      Artifact,
+      Option[File]
+    )]): Result =
+      withFullDetailedArtifacts0(
+        artifacts.map {
+          case (dep, pub, art, fOpt) =>
+            (dep, Right(pub), art, fOpt)
+        }
+      )
+
+    @deprecated("Use detailedArtifacts0 instead", "2.1.25")
+    def detailedArtifacts
+      : Seq[(Dependency, Publication, Artifact, File)] =
+      detailedArtifacts0.map {
+        case (dep, Right(pub), art, fOpt) =>
+          (dep, pub, art, fOpt)
+        case (_, Left(_), _, _) =>
+          sys.error("Deprecated method doesn't support Gradle Module variants")
       }
 
     def extraArtifacts: Seq[(Artifact, File)] =
@@ -297,7 +341,7 @@ object Fetch {
         }
 
     def fullArtifacts: Seq[(Artifact, Option[File])] = {
-      val artifacts = fullDetailedArtifacts.map { case (_, _, a, f) => (a, f) } ++
+      val artifacts = fullDetailedArtifacts0.map { case (_, _, a, f) => (a, f) } ++
         fullExtraArtifacts
       artifacts.distinct
     }
@@ -311,8 +355,8 @@ object Fetch {
     def withDetailedArtifacts(
       detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)]
     ): Result =
-      withFullDetailedArtifacts(detailedArtifacts.map { case (dep, pub, art, file) =>
-        (dep, pub, art, Some(file))
+      withFullDetailedArtifacts0(detailedArtifacts.map { case (dep, pub, art, file) =>
+        (dep, Right(pub), art, Some(file))
       })
     @deprecated("Use withFullExtraArtifacts instead", "2.0.0-RC6-15")
     def withExtraArtifacts(extraArtifacts: Seq[(Artifact, File)]): Result =

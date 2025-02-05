@@ -1,6 +1,7 @@
 package coursier.core
 
 import coursier.core.MinimizedExclusions._
+import coursier.error.DependencyError
 import coursier.util.Artifact
 import coursier.version.{
   ConstraintReconciliation,
@@ -223,6 +224,8 @@ object Resolution {
     ).map {
       case (c: Variant.Configuration, dep) =>
         (c.configuration, dep)
+      case (_: Variant.Attributes, _) =>
+        sys.error("Deprecated method doesn't support Gradle Module variants")
     }
 
   private def withProperties(
@@ -552,6 +555,8 @@ object Resolution {
     ).map {
       case (c: Variant.Configuration, dep) =>
         (c.configuration, dep)
+      case (_: Variant.Attributes, _) =>
+        sys.error("Deprecated method doesn't support Gradle Module variants")
     }
 
   @deprecated(
@@ -660,6 +665,8 @@ object Resolution {
     ).map {
       case (c: Variant.Configuration, dep) =>
         (c.configuration, dep)
+      case (_: Variant.Attributes, _) =>
+        sys.error("Deprecated method doesn't support Gradle Module variants")
     }
 
   def actualConfiguration(
@@ -795,7 +802,7 @@ object Resolution {
     keepProvidedDependencies: Boolean,
     forceDepMgmtVersions: Boolean,
     enableDependencyOverrides: Boolean
-  ): Seq[Dependency] = {
+  ): Either[DependencyError, Seq[Dependency]] = {
 
     // section numbers in the comments refer to withDependencyManagement
 
@@ -803,9 +810,29 @@ object Resolution {
       .toVector
       .flatMap(_.properties)
 
-    val project0 = withFinalProperties(
-      project.withProperties(parentProperties0 ++ project.properties)
-    )
+    val project0 = {
+      val p = withFinalProperties(
+        project.withProperties(parentProperties0 ++ project.properties)
+      )
+      from.variantSelector match {
+        case _: VariantSelector.ConfigurationBased => p
+        case attr: VariantSelector.AttributesBased =>
+          p.withDependencies0 {
+            p.dependencies0.map {
+              case (v: Variant.Attributes, dep) =>
+                val variantSelectorOverride = dep.variantSelector match {
+                  case a: VariantSelector.AttributesBased if a.isEmpty =>
+                    Some(from.variantSelector)
+                  case _ =>
+                    None
+                }
+                val dep0 = variantSelectorOverride.fold(dep)(dep.withVariantSelector)
+                (v, dep0)
+              case other => other
+            }
+          }
+      }
+    }
     val properties = project0.properties.toMap
 
     val actualConfig0: VariantSelector = from.variantSelector match {
@@ -816,11 +843,20 @@ object Resolution {
           project0.configurations
         )
         VariantSelector.ConfigurationBased(config)
+      case attr: VariantSelector.AttributesBased =>
+        if (project0.variants.isEmpty) // project seem to originate from a POM
+          VariantSelector.ConfigurationBased(
+            attr.equivalentConfiguration.getOrElse(defaultConfiguration)
+          )
+        else
+          from.variantSelector
     }
 
     val configurationsOrVariant = actualConfig0 match {
       case c: VariantSelector.ConfigurationBased =>
         Right(parentConfigurations(c.configuration, project0.configurations))
+      case attr: VariantSelector.AttributesBased =>
+        Left(project0.variantFor(attr))
     }
 
     val withProvidedOpt =
@@ -828,13 +864,17 @@ object Resolution {
       else None
     val keepConfigOpt = actualConfig0 match {
       case c: VariantSelector.ConfigurationBased =>
-        (
-          c.configuration,
-          project0.allConfigurations.get(c.configuration).map(_ ++ withProvidedOpt)
-        )
+        Left {
+          (
+            c.configuration,
+            project0.allConfigurations.get(c.configuration).map(_ ++ withProvidedOpt)
+          )
+        }
+      case other: VariantSelector.AttributesBased =>
+        Right(other)
     }
 
-    withExclusions0(
+    val rawDeps = withExclusions0(
       // 2.1 & 2.2
       depsWithDependencyManagement0(
         // 1.7
@@ -843,20 +883,31 @@ object Resolution {
         Option.when(enableDependencyOverrides)(from.overridesMap),
         project0.overrides,
         forceDepMgmtVersions = forceDepMgmtVersions,
-        keepVariant = {
-          val (actualConfig, keepConfigOpt0) = keepConfigOpt
-          (variant: Variant) =>
-            variant.asConfiguration.exists { config =>
-              keepConfigOpt0 match {
-                case Some(keep) => keep.contains(config)
-                case None       => config == actualConfig
+        keepVariant = keepConfigOpt match {
+          case Left((actualConfig, keepConfigOpt0)) =>
+            (variant: Variant) =>
+              variant.asConfiguration.exists { config =>
+                keepConfigOpt0 match {
+                  case Some(keep) => keep.contains(config)
+                  case None       => config == actualConfig
+                }
               }
-            }
+          case Right(_) =>
+            // TODO attributes
+            (variant: Variant) => false
         }
       ),
       from.minimizedExclusions.toSet()
     )
-      .flatMap {
+
+    val configurationsOrVariantOrError = configurationsOrVariant match {
+      case Left(Left(ex)) =>
+        Left(ex)
+      case Left(Right(attr)) => Right(Left(attr))
+      case Right(config)     => Right(Right(config))
+    }
+    configurationsOrVariantOrError.map { configurationsOrVariant0 =>
+      rawDeps.flatMap {
         case (variant0, dep0) =>
           // Dependencies from Maven verify
           //   dep.configuration.isEmpty
@@ -875,29 +926,38 @@ object Resolution {
 
           def default = variant match {
             case c: Variant.Configuration =>
-              if (configurationsOrVariant.exists(_.contains(c.configuration))) Seq(dep)
+              if (configurationsOrVariant0.exists(_.contains(c.configuration))) Seq(dep)
+              else Nil
+            case a: Variant.Attributes =>
+              if (configurationsOrVariant0.left.exists(_ == a)) Seq(dep)
               else Nil
           }
 
           if (dep.variantSelector.nonEmpty)
             default
-          else {
-            val (actualConfig, keepConfigOpt0) = keepConfigOpt
-            keepConfigOpt0.fold(default) { keep =>
-              if (variant.asConfiguration.exists(keep)) {
-                val depConfig =
-                  if (actualConfig == Configuration.test || actualConfig == Configuration.runtime)
-                    Configuration.runtime
-                  else
-                    defaultConfiguration
+          else
+            keepConfigOpt match {
+              case Left((actualConfig, keepConfigOpt0)) =>
+                keepConfigOpt0.fold(default) { keep =>
+                  if (variant.asConfiguration.exists(keep)) {
+                    val depConfig =
+                      if (
+                        actualConfig == Configuration.test || actualConfig == Configuration.runtime
+                      )
+                        Configuration.runtime
+                      else
+                        defaultConfiguration
 
-                Seq(dep.withVariantSelector(VariantSelector.ConfigurationBased(depConfig)))
-              }
-              else
-                Nil
+                    Seq(dep.withVariantSelector(VariantSelector.ConfigurationBased(depConfig)))
+                  }
+                  else
+                    Nil
+                }
+              case Right(_) =>
+                default
             }
-          }
       }
+    }
   }
 
   /** Default dependency filter used during resolution.
@@ -1012,6 +1072,8 @@ object Resolution {
           case _ =>
             dep
         }
+      case _: VariantSelector.AttributesBased =>
+        dep
     }
 
   private def withFinalProperties(project: Project): Project =
@@ -1210,14 +1272,14 @@ object Resolution {
 
   private[core] val finalDependenciesCache0 = new ConcurrentHashMap[Dependency, Seq[Dependency]]
 
-  private def finalDependencies0(dep: Dependency): Seq[Dependency] =
+  private def finalDependencies0(dep: Dependency): Either[DependencyError, Seq[Dependency]] =
     if (dep.transitive) {
       val deps = finalDependenciesCache.getOrElse(dep, finalDependenciesCache0.get(dep))
 
       if (deps == null)
         projectCache0.get(dep.moduleVersionConstraint) match {
           case Some((_, proj)) =>
-            val res0 = finalDependencies(
+            val resOrError = finalDependencies(
               dep,
               proj,
               defaultConfiguration,
@@ -1225,28 +1287,43 @@ object Resolution {
               keepProvidedDependencies,
               forceDepMgmtVersions,
               enableDependencyOverrides
-            ).filter(filter getOrElse defaultFilter)
-            val res = mapDependencies.fold(res0)(res0.map(_))
-            finalDependenciesCache0.put(dep, res)
-            res
-          case None => Nil
+            ).map(_.filter(filter getOrElse defaultFilter))
+              .map(res0 => mapDependencies.fold(res0)(res0.map(_)))
+            for (res <- resOrError)
+              finalDependenciesCache0.put(dep, res)
+            resOrError
+          case None => Right(Nil)
         }
       else
-        deps
+        Right(deps)
     }
     else
-      Nil
+      Right(Nil)
 
+  def dependenciesOf0(dep: Dependency): Either[DependencyError, Seq[Dependency]] =
+    dependenciesOf0(dep, withRetainedVersions = false)
+
+  @deprecated("Use dependenciesOf0 instead", "2.1.25")
   def dependenciesOf(dep: Dependency): Seq[Dependency] =
-    dependenciesOf(dep, withRetainedVersions = false)
+    dependenciesOf0(dep).toTry.get
 
-  def dependenciesOf(dep: Dependency, withRetainedVersions: Boolean): Seq[Dependency] =
-    dependenciesOf(
+  def dependenciesOf0(
+    dep: Dependency,
+    withRetainedVersions: Boolean
+  ): Either[DependencyError, Seq[Dependency]] =
+    dependenciesOf0(
       dep,
       withRetainedVersions = withRetainedVersions,
       withReconciledVersions = false,
       withFallbackConfig = false
     )
+
+  @deprecated("Use dependenciesOf0 instead", "2.1.25")
+  def dependenciesOf(
+    dep: Dependency,
+    withRetainedVersions: Boolean
+  ): Seq[Dependency] =
+    dependenciesOf0(dep, withRetainedVersions).toTry.get
 
   private def configsOf(dep: Dependency): Set[Configuration] = {
     val reconciledVersion = reconciledVersions.getOrElse(
@@ -1285,40 +1362,75 @@ object Resolution {
     dep0
   }
 
+  def dependenciesOf0(
+    dep: Dependency,
+    withRetainedVersions: Boolean,
+    withReconciledVersions: Boolean,
+    withFallbackConfig: Boolean
+  ): Either[DependencyError, Seq[Dependency]] =
+    finalDependencies0(dep).map { deps =>
+      if (withRetainedVersions || withFallbackConfig)
+        deps.map(updated(_, withRetainedVersions, withReconciledVersions, withFallbackConfig))
+      else
+        deps
+    }
+
+  @deprecated("Use dependenciesOf0 instead", "2.1.25")
   def dependenciesOf(
     dep: Dependency,
     withRetainedVersions: Boolean,
     withReconciledVersions: Boolean,
     withFallbackConfig: Boolean
-  ): Seq[Dependency] = {
-    val deps = finalDependencies0(dep)
-    if (withRetainedVersions || withFallbackConfig)
-      deps.map(updated(_, withRetainedVersions, withReconciledVersions, withFallbackConfig))
-    else
-      deps
-  }
+  ): Seq[Dependency] =
+    dependenciesOf0(
+      dep,
+      withRetainedVersions,
+      withReconciledVersions,
+      withFallbackConfig
+    ).toTry.get
 
-  def dependenciesOf(
+  def dependenciesOf0(
     dep: Dependency,
     withRetainedVersions: Boolean,
     withFallbackConfig: Boolean
-  ): Seq[Dependency] =
-    dependenciesOf(
+  ): Either[DependencyError, Seq[Dependency]] =
+    dependenciesOf0(
       dep,
       withRetainedVersions,
       withReconciledVersions = !withRetainedVersions,
       withFallbackConfig
     )
 
+  @deprecated("Use dependenciesOf0 instead", "2.1.25")
+  def dependenciesOf(
+    dep: Dependency,
+    withRetainedVersions: Boolean,
+    withFallbackConfig: Boolean
+  ): Seq[Dependency] =
+    dependenciesOf0(
+      dep,
+      withRetainedVersions,
+      withFallbackConfig
+    ).toTry.get
+
   /** Transitive dependencies of the current dependencies, according to what there currently is in
     * cache.
     *
     * No attempt is made to solve version conflicts here.
     */
-  lazy val transitiveDependencies: Seq[Dependency] =
-    (dependencySet.minimizedSet -- conflicts)
+  lazy val transitiveDependenciesAndErrors
+    : (Seq[(Dependency, DependencyError)], Seq[Dependency]) = {
+    val l = (dependencySet.minimizedSet -- conflicts)
       .toVector
-      .flatMap(finalDependencies0)
+      .map(dep => finalDependencies0(dep).left.map((dep, _)))
+    val errors = l.collect {
+      case Left(depAndError) => depAndError
+    }
+    val deps = l.flatMap(_.toSeq).flatten
+    (errors, deps)
+  }
+
+  def transitiveDependencies: Seq[Dependency] = transitiveDependenciesAndErrors._2
 
   private lazy val globalBomModuleVersions =
     ResolutionInternals.deprecatedBomDependencies(this)
@@ -1488,7 +1600,7 @@ object Resolution {
     val trDepsSeq =
       for {
         dep   <- updatedDeps
-        trDep <- finalDependencies0(dep)
+        trDep <- finalDependencies0(dep).toOption.getOrElse(Nil)
       } yield trDep.clearVersion -> dep.clearVersion
 
     val knownDeps = (updatedDeps ++ updatedConflicts)
@@ -1942,12 +2054,14 @@ object Resolution {
             helper(t, done)
           else {
             lazy val done0 = done.add(h0)
-            val todo = dependenciesOf(
+            val todo = dependenciesOf0(
               h,
               withRetainedVersions = false,
               withReconciledVersions = true,
               withFallbackConfig = true
             )
+              .toOption
+              .getOrElse(Nil)
               // filtering with done0 rather than done for some cycles (dependencies having themselves as dependency)
               .filter(!done0.covers(_))
             val t0 =
@@ -2012,25 +2126,45 @@ object Resolution {
     classifiers: Option[Seq[Classifier]],
     classpathOrder: Boolean
   ): Seq[Artifact] =
-    dependencyArtifacts(classifiers)
+    dependencyArtifacts0(classifiers)
       .collect {
-        case (_, pub, artifact) if types(pub.`type`) =>
+        case (_, Right(pub), artifact) if types(pub.`type`) =>
           artifact
       }
       .distinct
 
+  @deprecated("Use dependencyArtifacts0 instead", "2.1.25")
   def dependencyArtifacts(): Seq[(Dependency, Publication, Artifact)] =
     dependencyArtifacts(None)
 
+  @deprecated("Use dependencyArtifacts0 instead", "2.1.25")
   def dependencyArtifacts(
     classifiers: Option[Seq[Classifier]]
   ): Seq[(Dependency, Publication, Artifact)] =
     dependencyArtifacts(classifiers, classpathOrder = true)
 
+  @deprecated("Use dependencyArtifacts0 instead", "2.1.25")
   def dependencyArtifacts(
     classifiers: Option[Seq[Classifier]],
     classpathOrder: Boolean
   ): Seq[(Dependency, Publication, Artifact)] =
+    dependencyArtifacts0(classifiers, classpathOrder).collect {
+      case (dep, Right(pub), art) =>
+        (dep, pub, art)
+    }
+
+  def dependencyArtifacts0(): Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] =
+    dependencyArtifacts0(None)
+
+  def dependencyArtifacts0(
+    classifiers: Option[Seq[Classifier]]
+  ): Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] =
+    dependencyArtifacts0(classifiers, classpathOrder = true)
+
+  def dependencyArtifacts0(
+    classifiers: Option[Seq[Classifier]],
+    classpathOrder: Boolean
+  ): Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] =
     for {
       dep <- {
         // need to keep reconciled versions to later on use projectCache0 when listing artifacts
@@ -2048,7 +2182,22 @@ object Resolution {
         else
           Some(classifiers.getOrElse(Nil) ++ Seq(dep.attributes.classifier))
 
-      (pub, artifact) <- source.artifacts(dep, proj, classifiers0)
+      (pub, artifact) <- {
+        val modArtifacts = source match {
+          case modBased: ArtifactSource.ModuleBased =>
+            modBased.moduleArtifacts(dep, proj).map {
+              case (variantPub, art) =>
+                (Left(variantPub), art)
+            }
+          case _ =>
+            Nil
+        }
+        source.artifacts(dep, proj, classifiers0).map {
+          case (pub, art) =>
+            (Right(pub), art)
+        } ++
+          modArtifacts
+      }
     } yield (dep, pub, artifact)
 
   @deprecated("Use the artifacts overload accepting types and classifiers instead", "1.1.0-M8")
@@ -2071,7 +2220,13 @@ object Resolution {
     * @return
     *   errors
     */
-  def errors0: Seq[(ModuleVersionConstraint, Seq[String])] = errorCache.toSeq
+  def errors0: Seq[(ModuleVersionConstraint, Seq[String])] = {
+    val transitiveDepErrors = transitiveDependenciesAndErrors._1.map {
+      case (dep, ex) =>
+        (dep.moduleVersionConstraint, Seq(ex.message))
+    }
+    errorCache.toSeq ++ transitiveDepErrors
+  }
 
   @deprecated("Use errors0 instead", "2.1.25")
   def errors: Seq[((Module, String), Seq[String])] =
@@ -2103,7 +2258,7 @@ object Resolution {
     * @param dependencies:
     *   the dependencies to keep from this `Resolution`
     */
-  def subset(dependencies: Seq[Dependency]): Resolution = {
+  def subset0(dependencies: Seq[Dependency]): Either[DependencyError, Resolution] = {
 
     def updateVersion(dep: Dependency): Dependency =
       updated(
@@ -2113,30 +2268,46 @@ object Resolution {
         withFallbackConfig = false
       )
 
-    @tailrec def helper(current: Set[Dependency]): Set[Dependency] = {
-      val newDeps = current ++ current
-        .flatMap(finalDependencies0)
-        .map(updateVersion)
+    @tailrec def helper(current: Set[Dependency]): Either[DependencyError, Set[Dependency]] = {
+      val extraDepsOrErrors = current.toSeq.map(finalDependencies0)
+      val errors = extraDepsOrErrors.collect {
+        case Left(err) => err
+      }
 
-      val anyNewDep = (newDeps -- current).nonEmpty
+      errors match {
+        case Seq() =>
 
-      if (anyNewDep)
-        helper(newDeps)
-      else
-        newDeps
+          val newDeps   = current ++ extraDepsOrErrors.flatMap(_.toSeq).flatten.map(updateVersion)
+          val anyNewDep = (newDeps -- current).nonEmpty
+
+          if (anyNewDep)
+            helper(newDeps)
+          else
+            Right(newDeps)
+        case Seq(first, others @ _*) =>
+          for (other <- others)
+            first.addSuppressed(other)
+          Left(first)
+      }
     }
 
     val dependencies0 = dependencies
       .map(withDefaultConfig(_, defaultConfiguration))
       .map(updateVersion)
 
-    val allDependencies     = helper(dependencies0.toSet)
-    val subsetForceVersions = allDependencies.map(_.moduleVersionConstraint).toMap
+    val allDependenciesOrError = helper(dependencies0.toSet)
+    allDependenciesOrError.map { allDependencies =>
+      val subsetForceVersions = allDependencies.map(_.moduleVersionConstraint).toMap
 
-    copyWithCache(
-      rootDependencies = dependencies0,
-      dependencySet = dependencySet.setValues(allDependencies)
-      // don't know if something should be done about conflicts
-    ).withForceVersions0(subsetForceVersions ++ forceVersions0)
+      copyWithCache(
+        rootDependencies = dependencies0,
+        dependencySet = dependencySet.setValues(allDependencies)
+        // don't know if something should be done about conflicts
+      ).withForceVersions0(subsetForceVersions ++ forceVersions0)
+    }
   }
+
+  @deprecated("Use subset0 instead", "2.1.25")
+  def subset(dependencies: Seq[Dependency]): Resolution =
+    subset0(dependencies).toTry.get
 }

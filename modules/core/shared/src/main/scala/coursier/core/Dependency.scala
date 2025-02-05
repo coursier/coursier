@@ -45,6 +45,7 @@ import scala.annotation.nowarn
   def asBomDependency: BomDependency = {
     val config = variantSelector match {
       case c: VariantSelector.ConfigurationBased => c.configuration
+      case _: VariantSelector.AttributesBased    => Configuration.empty
     }
     BomDependency(module, versionConstraint, config)
   }
@@ -64,6 +65,8 @@ import scala.annotation.nowarn
   def configuration: Configuration =
     variantSelector match {
       case c: VariantSelector.ConfigurationBased => c.configuration
+      case _: VariantSelector.AttributesBased =>
+        sys.error("Deprecated method doesn't support Gradle Module variant selectors")
     }
   @deprecated("Use withVariantSelector instead", "2.1.25")
   def withConfiguration(newConfiguration: Configuration): Dependency =
@@ -357,6 +360,24 @@ import scala.annotation.nowarn
   def addOverrides(newOverrides: Overrides): Dependency =
     withOverridesMap(Overrides.add(overridesMap, newOverrides))
 
+  def isVariantAttributesBased: Boolean =
+    variantSelector match {
+      case _: VariantSelector.ConfigurationBased => false
+      case _: VariantSelector.AttributesBased    => true
+    }
+  def addVariantAttributes(attributes: (String, String)*): Dependency = {
+    val (attr, force) = variantSelector match {
+      case c: VariantSelector.ConfigurationBased =>
+        (VariantSelector.AttributesBased(), true)
+      case a: VariantSelector.AttributesBased =>
+        (a, false)
+    }
+    if (attributes.isEmpty && !force)
+      this
+    else
+      withVariantSelector(attr.addAttributes(attributes: _*))
+  }
+
   private[core] def copy(
     module: Module = this.module,
     version: VersionConstraint0 = this.versionConstraint,
@@ -407,7 +428,7 @@ import scala.annotation.nowarn
     var fields = Seq(
       module.toString,
       versionConstraint.asString,
-      variantSelector.asConfiguration.map(_.toString).getOrElse(variantSelector.toString),
+      variantSelector.asConfiguration.map(_.toString).getOrElse(variantSelector.repr),
       minimizedExclusions.toSet().toString,
       publication.toString,
       optional.toString,

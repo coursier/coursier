@@ -3,6 +3,7 @@ package coursier.core
 import java.util.concurrent.ConcurrentMap
 
 import coursier.core.Validation._
+import coursier.error.VariantError
 import coursier.util.Artifact
 import coursier.version.{Version => Version0}
 import dataclass.data
@@ -273,7 +274,10 @@ object Attributes {
   // Extra infos, not used during resolution
   info: Info,
   @since("2.1.23")
-  overrides: Overrides = Overrides.empty
+  overrides: Overrides = Overrides.empty,
+  @since("2.1.25")
+  variants: Map[Variant.Attributes, Map[String, String]] = Map.empty,
+  variantPublications: Map[Variant.Attributes, Seq[VariantPublication]] = Map.empty
 ) {
 
   @deprecated("Use dependencies0 instead", "2.1.25")
@@ -281,6 +285,8 @@ object Attributes {
     dependencies0.map {
       case (c: Variant.Configuration, dep) =>
         (c.configuration, dep)
+      case (_: Variant.Attributes, _) =>
+        sys.error("Deprecated method doesn't support Gradle Module variant attributes")
     }
   @deprecated("Use withDependencies0 instead", "2.1.25")
   def withDependencies(newDependencies: Seq[(Configuration, Dependency)]): Project =
@@ -296,6 +302,8 @@ object Attributes {
     publications0.map {
       case (c: Variant.Configuration, pub) =>
         (c.configuration, pub)
+      case (_: Variant.Attributes, _) =>
+        sys.error("Deprecated method doesn't support Gradle Module variant attributes")
     }
   @deprecated("Use withPublications0 instead", "2.1.25")
   def withPublications(newPublications: Seq[(Configuration, Publication)]): Project =
@@ -439,6 +447,48 @@ object Attributes {
 
   @deprecated("Use actualVersion0 instead", "2.1.25")
   def actualVersion: String = actualVersion0.asString
+
+  def variantFor(attr: VariantSelector.AttributesBased)
+    : Either[VariantError, Variant.Attributes] = {
+    val retainedVariants = variants
+      .filter {
+        case (name, values) =>
+          attr.matches(values)
+      }
+      .toVector
+      .sortBy(_._1.variantName)
+    retainedVariants match {
+      case Seq() =>
+        Left(
+          new VariantError.NoVariantFound(
+            module,
+            actualVersion0,
+            attr,
+            variants.toVector.sortBy(_._1.variantName)
+          )
+        )
+      case Seq((name, _)) =>
+        Right(name)
+      case _ =>
+        val nl = System.lineSeparator()
+        Left(
+          new VariantError.FoundTooManyVariants(
+            module,
+            actualVersion0,
+            attr,
+            retainedVariants
+          )
+        )
+    }
+  }
+
+  def isRelocatedVariant(variant: Variant.Attributes): Option[Dependency] = {
+    lazy val firstDeps = dependencies0.iterator.filter(_._1 == variant).take(2).toVector
+    val isRelocated = variants.get(variant).exists(_.get("$relocated").contains("true")) &&
+      firstDeps.length == 1
+    if (isRelocated) Some(firstDeps.head._2)
+    else None
+  }
 
   final override lazy val hashCode = tuple.hashCode
 }
@@ -776,12 +826,26 @@ object Publication {
     Publication("", Type.empty, Extension.empty, Classifier.empty)
 }
 
+@data class VariantPublication(
+  name: String,
+  url: String
+)
+
 trait ArtifactSource {
   def artifacts(
     dependency: Dependency,
     project: Project,
     overrideClassifiers: Option[Seq[Classifier]]
   ): Seq[(Publication, Artifact)]
+}
+
+object ArtifactSource {
+  trait ModuleBased {
+    def moduleArtifacts(
+      dependency: Dependency,
+      project: Project
+    ): Seq[(VariantPublication, Artifact)]
+  }
 }
 
 private[coursier] object Validation {

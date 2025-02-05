@@ -106,7 +106,7 @@ final class Backend($ : BackendScope[_, State]) {
 
       for {
         dep   <- minDependencies
-        trDep <- resolution.dependenciesOf(dep)
+        trDep <- resolution.dependenciesOf0(dep).toTry.get
       } m += trDep.module -> (m.getOrElse(trDep.module, Nil) :+ dep)
 
       m
@@ -117,7 +117,8 @@ final class Backend($ : BackendScope[_, State]) {
         "text" -> (s"${dep.module}": js.Any)
       ) ++ {
         val deps =
-          if (reverse) reverseDeps.getOrElse(dep.module, Nil) else resolution.dependenciesOf(dep)
+          if (reverse) reverseDeps.getOrElse(dep.module, Nil)
+          else resolution.dependenciesOf0(dep).toTry.get
         if (deps.isEmpty) Seq()
         else Seq("nodes" -> js.Array(deps.map(tree): _*))
       }: _*)

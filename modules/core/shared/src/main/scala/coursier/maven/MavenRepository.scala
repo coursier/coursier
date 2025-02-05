@@ -19,7 +19,13 @@ object MavenRepository {
   def apply(root: String): MavenRepository =
     new MavenRepository(actualRoot(root))
   def apply(root: String, authentication: Option[Authentication]): MavenRepository =
-    new MavenRepository(actualRoot(root), authentication)
+    new MavenRepository(
+      actualRoot(root),
+      authentication,
+      changing = None,
+      versionsCheckHasModule = true,
+      checkModule = false
+    )
 }
 
 @data(apply = false) class MavenRepository(
@@ -28,10 +34,17 @@ object MavenRepository {
   @since
   changing: Option[Boolean] = None,
   @since
-  override val versionsCheckHasModule: Boolean = true
-) extends MavenRepositoryLike with Repository.VersionApi {
+  override val versionsCheckHasModule: Boolean = true,
+  @since("2.1.25")
+  override val checkModule: Boolean = false
+) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi {
 
-  private val internal = new MavenRepositoryInternal(root, authentication, changing)
+  private val internal = new MavenRepositoryInternal(
+    root,
+    authentication,
+    changing,
+    checkModule
+  )
 
   def artifacts(
     dependency: Dependency,
@@ -39,6 +52,12 @@ object MavenRepository {
     overrideClassifiers: Option[Seq[Classifier]]
   ): Seq[(Publication, Artifact)] =
     internal.artifacts(dependency, project, overrideClassifiers)
+
+  def moduleArtifacts(
+    dependency: Dependency,
+    project: Project
+  ): Seq[(VariantPublication, Artifact)] =
+    internal.moduleArtifacts(dependency, project)
 
   override def find0[F[_]](
     module: Module,

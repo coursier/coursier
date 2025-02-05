@@ -146,6 +146,8 @@ import dataclass._
                         .contains(pubVariant.configuration)
                     } =>
                   p
+                case (attrVariant: Variant.Attributes, p) =>
+                  sys.error("Cannot happen (IvyRepository doesn't return nor handle Gradle Module)")
               }
           case Some(classifiers) =>
             val classifiersSet = classifiers.toSet

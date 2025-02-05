@@ -1,5 +1,6 @@
 package coursier.maven
 
+import com.github.plokhotnyuk.jsoniter_scala.core.{JsonReaderException, readFromString}
 import coursier.core.{
   Authentication,
   Classifier,
@@ -11,19 +12,23 @@ import coursier.core.{
   Publication,
   Repository,
   SnapshotVersioning,
-  Versions,
-  Type
+  Type,
+  VariantPublication,
+  Versions
 }
 import coursier.util.{Artifact, EitherT, Monad, WebPage, Xml}
 import coursier.util.Monad.ops._
 import coursier.version.{Version, VersionConstraint}
 
 import scala.collection.compat._
+import coursier.core.VariantSelector
+import java.net.URI
 
 private[coursier] class MavenRepositoryInternal(
   root: String,
   authentication: Option[Authentication],
-  changing: Option[Boolean]
+  changing: Option[Boolean],
+  checkModule: Boolean
 ) {
   import Repository._
   import MavenRepositoryInternal._
@@ -284,8 +289,31 @@ private[coursier] class MavenRepositoryInternal(
     val directoryPath = moduleVersionPath(module, version)
     def pathFor(ext: String) =
       directoryPath :+ s"$moduleNameInFileName-${versioningValue.getOrElse(version).asString}.$ext"
-    val pomArtifact = projectArtifact(pathFor("pom"), version)
-    fetch(pomArtifact).flatMap(parsePom(_))
+    def pomProjectTask = {
+      val pomArtifact = projectArtifact(pathFor("pom"), version)
+      fetch(pomArtifact).flatMap(parsePom(_))
+    }
+    if (checkModule) {
+      val moduleProjectTask: EitherT[F, String, Either[String, Project]] =
+        EitherT {
+          val moduleArtifact = projectArtifact(pathFor("module"), version)
+          fetch(moduleArtifact).run.flatMap {
+            case Left(err) =>
+              F.point(Right(Left(err)))
+            case Right(content) =>
+              parseModule(module, content, moduleArtifact.url).run.map(_.map(Right(_)))
+          }
+        }
+      moduleProjectTask.flatMap {
+        case Left(moduleFetchError) =>
+          pomProjectTask.leftMap { pomError =>
+            Seq(moduleFetchError, pomError).mkString(System.lineSeparator())
+          }
+        case Right(projectFromModule) => EitherT.point(projectFromModule)
+      }
+    }
+    else
+      pomProjectTask
   }
 
   def fetchArtifact[F[_]](
@@ -314,6 +342,24 @@ private[coursier] class MavenRepositoryInternal(
       } yield finalProj
     }
 
+  private def parseModule[F[_]](module: Module, str: String, uri: String)(implicit
+    F: Monad[F]
+  ): EitherT[F, String, Project] =
+    EitherT.fromEither {
+      val res =
+        try Right(readFromString(str)(GradleModule.codec))
+        catch {
+          case ex: JsonReaderException =>
+            Left(s"Error reading $uri: $ex")
+        }
+
+      res.map { gradleMod =>
+        val project = gradleMod.project
+        if (project.module == module) project
+        else project.withModule(module)
+      }
+    }
+
   private def findVersioning[F[_]](
     module: Module,
     version: Version,
@@ -330,6 +376,7 @@ private[coursier] class MavenRepositoryInternal(
   private def artifacts0(
     dependency: Dependency,
     project: Project,
+    isTest: Boolean,
     overrideClassifiers: Option[Seq[Classifier]]
   ): Seq[(Publication, Artifact)] = {
 
@@ -417,7 +464,7 @@ private[coursier] class MavenRepositoryInternal(
       val types =
         // this ignores publication.ext if publication.`type` is empty… should we?
         if (dependency.publication.`type`.isEmpty)
-          if (dependency.variantSelector.asConfiguration.exists(_ == Configuration.test))
+          if (isTest)
             Seq((Type.jar, Extension.empty), (Type.testJar, Extension.empty))
           else
             Seq((Type.jar, Extension.empty))
@@ -505,7 +552,50 @@ private[coursier] class MavenRepositoryInternal(
     if (project.relocated)
       Nil
     else
-      artifacts0(dependency, project, overrideClassifiers)
+      dependency.variantSelector match {
+        case c: VariantSelector.ConfigurationBased =>
+          artifacts0(
+            dependency,
+            project,
+            c.configuration == Configuration.test,
+            overrideClassifiers
+          )
+        case attr: VariantSelector.AttributesBased =>
+          if (project.variants.isEmpty) {
+            val isTest = attr.equivalentConfiguration.exists(_ == Configuration.test)
+            artifacts0(dependency, project, isTest, overrideClassifiers)
+          }
+          else
+            Nil
+      }
+
+  def moduleArtifacts(
+    dependency: Dependency,
+    project: Project
+  ): Seq[(VariantPublication, Artifact)] =
+    dependency.variantSelector match {
+      case _: VariantSelector.ConfigurationBased => Nil
+      case a: VariantSelector.AttributesBased =>
+        if (project.variants.isEmpty) Nil
+        else {
+          val attr = project.variantFor(a)
+            .toTry.get // things shouldn't throw at this point
+          project.variantPublications.getOrElse(attr, Nil).map { pub =>
+            val baseUri = new URI(pub.url)
+            val uri =
+              if (baseUri.isAbsolute) baseUri
+              else
+                new URI(
+                  urlFor(
+                    moduleVersionPath(dependency.module, project.actualVersion0),
+                    isDir = true
+                  )
+                ).resolve(baseUri)
+            val art = Artifact(uri.toASCIIString).withOptional(false)
+            (pub, art)
+          }
+        }
+    }
 }
 
 private[coursier] object MavenRepositoryInternal {

@@ -25,7 +25,13 @@ final case class RepositoryOptions(
   @Group(OptionGroup.repository)
   @Hidden
   @HelpMessage("Drop module attributes starting with 'info.' - these are sometimes used by projects built with sbt")
-    dropInfoAttr: Boolean = false
+    dropInfoAttr: Boolean = false,
+
+  @Group(OptionGroup.repository)
+  @Hidden
+  @HelpMessage("Enable Gradle Module support (experimental)")
+  @Name("enableModules")
+    enableGradleModules: Boolean = false
 
 )
 // format: on

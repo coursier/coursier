@@ -14,14 +14,21 @@ object SbtMavenRepository {
   def apply(root: String): SbtMavenRepository =
     new SbtMavenRepository(actualRoot(root))
   def apply(root: String, authentication: Option[Authentication]): SbtMavenRepository =
-    new SbtMavenRepository(actualRoot(root), authentication = authentication, None, true)
+    new SbtMavenRepository(
+      actualRoot(root),
+      authentication = authentication,
+      changing = None,
+      versionsCheckHasModule = true,
+      checkModule = false
+    )
 
   def apply(repo: MavenRepository): SbtMavenRepository =
     new SbtMavenRepository(
       repo.root,
       repo.authentication,
       repo.changing,
-      repo.versionsCheckHasModule
+      repo.versionsCheckHasModule,
+      repo.checkModule
     )
 
   private def extraAttributes(s: String)
@@ -122,12 +129,14 @@ object SbtMavenRepository {
   val root: String,
   val authentication: Option[Authentication] = None,
   val changing: Option[Boolean] = None,
-  override val versionsCheckHasModule: Boolean = true
-) extends MavenRepositoryLike with Repository.VersionApi { self =>
+  override val versionsCheckHasModule: Boolean = true,
+  @since("2.1.25")
+  checkModule: Boolean = false
+) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi { self =>
   import SbtMavenRepository._
 
   private val internal =
-    new MavenRepositoryInternal(root, authentication, changing) {
+    new MavenRepositoryInternal(root, authentication, changing, checkModule) {
 
       override def moduleDirectory(module: Module): String =
         self.moduleDirectory(module)
@@ -169,6 +178,12 @@ object SbtMavenRepository {
     overrideClassifiers: Option[Seq[Classifier]]
   ): Seq[(Publication, Artifact)] =
     internal.artifacts(dependency, project, overrideClassifiers)
+
+  def moduleArtifacts(
+    dependency: Dependency,
+    project: Project
+  ): Seq[(VariantPublication, Artifact)] =
+    internal.moduleArtifacts(dependency, project)
 
   override def find0[F[_]](
     module: Module,

@@ -56,6 +56,7 @@ object WritePom {
                   case (variant, dep) =>
                     val config = variant match {
                       case c: Variant.Configuration => c.configuration
+                      case _: Variant.Attributes => Configuration.empty
                     }
                     dependencyNode(config, dep)
                 }
