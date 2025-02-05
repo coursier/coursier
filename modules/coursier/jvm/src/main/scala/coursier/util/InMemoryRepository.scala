@@ -5,7 +5,7 @@ import java.net.{URL, URLConnection}
 
 import coursier.cache.{CacheUrl, ConnectionBuilder, FileCache}
 import coursier.core._
-import coursier.version.VersionConstraint
+import coursier.version.{Version => Version0}
 import dataclass.data
 
 object InMemoryRepository {
@@ -101,12 +101,12 @@ object InMemoryRepository {
     privateApply(
       fallbacks.map {
         case ((m, v), (url, thing)) =>
-          ((m, VersionConstraint(v)), (url, thing))
+          ((m, Version0(v)), (url, thing))
       }
     )
 
   private[coursier] def privateApply(
-    fallbacks: Map[(Module, VersionConstraint), (URL, Boolean)]
+    fallbacks: Map[(Module, Version0), (URL, Boolean)]
   ): InMemoryRepository =
     new InMemoryRepository(fallbacks, None, localArtifactsShouldBeCached = false)
 
@@ -118,19 +118,19 @@ object InMemoryRepository {
     privateApply(
       fallbacks.map {
         case ((m, v), (url, thing)) =>
-          ((m, VersionConstraint(v)), (url, thing))
+          ((m, Version0(v)), (url, thing))
       },
       localArtifactsShouldBeCached
     )
 
   private[coursier] def privateApply(
-    fallbacks: Map[(Module, VersionConstraint), (URL, Boolean)],
+    fallbacks: Map[(Module, Version0), (URL, Boolean)],
     localArtifactsShouldBeCached: Boolean
   ): InMemoryRepository =
     new InMemoryRepository(fallbacks, None, localArtifactsShouldBeCached)
 
   def create[F[_]](
-    fallbacks: Map[(Module, VersionConstraint), (URL, Boolean)],
+    fallbacks: Map[(Module, Version0), (URL, Boolean)],
     cache: FileCache[F]
   ): InMemoryRepository =
     new InMemoryRepository(
@@ -147,7 +147,7 @@ object InMemoryRepository {
     create(
       fallbacks.map {
         case ((mod, ver), value) =>
-          ((mod, VersionConstraint(ver)), value)
+          ((mod, Version0(ver)), value)
       },
       cache
     )
@@ -160,7 +160,7 @@ object InMemoryRepository {
     InMemoryRepository(
       fallbacks0.map {
         case ((mod, ver), value) =>
-          ((mod, VersionConstraint(ver)), value)
+          ((mod, Version0(ver)), value)
       },
       cacheOpt,
       localArtifactsShouldBeCached
@@ -169,7 +169,7 @@ object InMemoryRepository {
 }
 
 @data class InMemoryRepository(
-  fallbacks0: Map[(Module, VersionConstraint), (URL, Boolean)],
+  fallbacks0: Map[(Module, Version0), (URL, Boolean)],
   cacheOpt: Option[FileCache[Nothing]],
   localArtifactsShouldBeCached: Boolean
 ) extends Repository with Repository.VersionApi {
@@ -181,7 +181,7 @@ object InMemoryRepository {
   ) = this(
     fallbacks0.map {
       case ((mod, ver), value) =>
-        ((mod, VersionConstraint(ver)), value)
+        ((mod, Version0(ver)), value)
     },
     cacheOpt,
     localArtifactsShouldBeCached
@@ -198,13 +198,13 @@ object InMemoryRepository {
     withFallbacks0(
       newFallbacks.map {
         case ((mod, ver), value) =>
-          ((mod, VersionConstraint(ver)), value)
+          ((mod, Version0(ver)), value)
       }
     )
 
   override def find0[F[_]](
     module: Module,
-    version: VersionConstraint,
+    version: Version0,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
@@ -225,10 +225,7 @@ object InMemoryRepository {
             if (InMemoryRepository.exists(url, localArtifactsShouldBeCached, cacheOpt)) {
               val proj = Project(
                 module,
-                // meh
-                version.preferred.headOption.getOrElse {
-                  coursier.version.Version(version.asString)
-                },
+                version,
                 Nil,
                 Map.empty[Configuration, Seq[Configuration]],
                 None,
@@ -259,20 +256,25 @@ object InMemoryRepository {
     project: Project,
     overrideClassifiers: Option[Seq[Classifier]]
   ): Seq[(Publication, Artifact)] =
-    fallbacks0
-      .get(dependency.moduleVersionConstraint)
-      .toSeq
-      .map {
-        case (url, changing) =>
-          val url0 = url.toString
-          val ext  = url0.substring(url0.lastIndexOf('.') + 1)
-          val pub = Publication(
-            dependency.module.name.value, // ???
-            Type(ext),
-            Extension(ext),
-            Classifier.empty
-          )
-          (pub, Artifact(url0, Map.empty, Map.empty, changing, optional = false, None))
-      }
+    dependency.versionConstraint.preferred match {
+      case Some(version) =>
+        fallbacks0
+          .get((dependency.module, version))
+          .toSeq
+          .map {
+            case (url, changing) =>
+              val url0 = url.toString
+              val ext  = url0.substring(url0.lastIndexOf('.') + 1)
+              val pub = Publication(
+                dependency.module.name.value, // ???
+                Type(ext),
+                Extension(ext),
+                Classifier.empty
+              )
+              (pub, Artifact(url0, Map.empty, Map.empty, changing, optional = false, None))
+          }
+      case None =>
+        Nil
+    }
 
 }

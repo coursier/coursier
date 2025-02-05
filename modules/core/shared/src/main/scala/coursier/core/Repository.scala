@@ -20,7 +20,7 @@ trait Repository extends Serializable with ArtifactSource {
 
   def find0[F[_]](
     module: Module,
-    version: VersionConstraint0,
+    version: Version0,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
@@ -47,22 +47,18 @@ trait Repository extends Serializable with ArtifactSource {
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, (ArtifactSource, Project)] =
-    // Parse.versionInterval(version)
-    //   .orElse(Parse.multiVersionInterval(version))
-    //   .orElse(Parse.ivyLatestSubRevisionInterval(version))
-    //   .filter(_.isValid)
-    Some(version.interval).filter(_ != VersionInterval0.zero) match {
+    version.preferred match {
+      case Some(preferred) =>
+        find0(module, preferred, fetch)
       case None =>
-        find0(module, version, fetch)
-      case Some(itv) =>
         versions(module, fetch).flatMap {
           case (versions0, versionsUrl) =>
-            versions0.inInterval(itv) match {
+            versions0.inInterval(version.interval) match {
               case None =>
                 val reason = s"No version found for $version in $versionsUrl"
                 EitherT[F, String, (ArtifactSource, Project)](F.point(Left(reason)))
               case Some(version0) =>
-                find0(module, VersionConstraint0.fromVersion(version0), fetch)
+                find0(module, version0, fetch)
                   .map(t => t._1 -> t._2.withVersions(Some(versions0)))
             }
         }
@@ -87,7 +83,7 @@ trait Repository extends Serializable with ArtifactSource {
   ): EitherT[F, String, (ArtifactSource, Project)] = {
 
     def checkVersion(version: Version0): F[Either[String, (ArtifactSource, Project)]] =
-      find0(module, VersionConstraint0.fromVersion(version), fetch)
+      find0(module, version, fetch)
         .run
 
     def fromInterval = {
@@ -487,7 +483,7 @@ object Repository {
     )(implicit
       F: Monad[F]
     ): EitherT[F, String, (ArtifactSource, Project)] =
-      find0(module, VersionConstraint0(version), fetch)(F)
+      find0(module, Version0(version), fetch)(F)
 
   }
 }

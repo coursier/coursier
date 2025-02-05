@@ -158,7 +158,7 @@ object RefreshLogger {
         if (success)
           doneQueue += (url -> update0(info))
 
-        info
+        info.withSuccess(success)
       }
 
       display.removeEntry(out, url, inf)

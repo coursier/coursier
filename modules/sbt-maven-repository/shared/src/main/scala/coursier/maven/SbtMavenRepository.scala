@@ -2,7 +2,7 @@ package coursier.maven
 
 import coursier.core._
 import coursier.util.{Artifact, EitherT, Monad, Xml}
-import coursier.version.VersionConstraint
+import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
 import dataclass._
 
 import scala.collection.compat._
@@ -25,10 +25,10 @@ object SbtMavenRepository {
     )
 
   private def extraAttributes(s: String)
-    : Either[String, Map[(Module, VersionConstraint), Map[String, String]]] = {
+    : Either[String, Map[(Module, VersionConstraint0), Map[String, String]]] = {
     val lines = s.split('\n').toSeq.map(_.trim).filter(_.nonEmpty)
 
-    lines.foldLeft[Either[String, Map[(Module, VersionConstraint), Map[String, String]]]](
+    lines.foldLeft[Either[String, Map[(Module, VersionConstraint0), Map[String, String]]]](
       Right(Map.empty)
     ) {
       case (acc, line) =>
@@ -40,7 +40,7 @@ object SbtMavenRepository {
   }
 
   private def extraAttribute(s: String)
-    : Either[String, ((Module, VersionConstraint), Map[String, String])] = {
+    : Either[String, ((Module, VersionConstraint0), Map[String, String])] = {
     // vaguely does the same as:
     // https://github.com/apache/ant-ivy/blob/2.2.0/src/java/org/apache/ivy/core/module/id/ModuleRevisionId.java#L291
 
@@ -81,7 +81,7 @@ object SbtMavenRepository {
       version <- attrFrom(attrs, Pom.extraAttributeVersion)
     } yield {
       val remainingAttrs = attrs.view.filterKeys(!Pom.extraAttributeBase(_)).toMap
-      ((Module(org, name, Map.empty), VersionConstraint(version)), remainingAttrs)
+      ((Module(org, name, Map.empty), VersionConstraint0(version)), remainingAttrs)
     }
   }
 
@@ -95,7 +95,7 @@ object SbtMavenRepository {
     for {
       extraAttrs <- project.properties
         .collectFirst { case ("extraDependencyAttributes", s) => extraAttributes(s) }
-        .getOrElse(Right(Map.empty[(Module, VersionConstraint), Map[String, String]]))
+        .getOrElse(Right(Map.empty[(Module, VersionConstraint0), Map[String, String]]))
     } yield {
 
       val adaptedDependencies = project.dependencies0.map {
@@ -137,8 +137,8 @@ object SbtMavenRepository {
 
       override def fetchArtifact[F[_]](
         module: Module,
-        version: coursier.version.Version,
-        versioningValue: Option[coursier.version.Version],
+        version: Version0,
+        versioningValue: Option[Version0],
         fetch: Repository.Fetch[F]
       )(implicit F: Monad[F]): EitherT[F, String, Project] = {
         val directoryPath = moduleVersionPath(module, version)
@@ -175,7 +175,7 @@ object SbtMavenRepository {
 
   override def find0[F[_]](
     module: Module,
-    version: VersionConstraint,
+    version: Version0,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
