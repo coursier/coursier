@@ -162,7 +162,13 @@ private[coursier] class MavenRepositoryInternal(
   def tryListVersions(module: Module): Boolean = changing.forall(!_)
 
   def postProcessProject(project: Project): Either[String, Project] =
-    Right(project)
+    Right {
+      Pom.addOptionalDependenciesInConfig(
+        project.withConfigurations(defaultConfigurations),
+        Set(Configuration.empty, Configuration.default),
+        Configuration.optional
+      )
+    }
 
   def fetchVersions[F[_]](
     module: Module,
@@ -246,7 +252,10 @@ private[coursier] class MavenRepositoryInternal(
       }
 
       // keep exact version used to get metadata, in case the one inside the metadata is wrong
-      res.map(_.map(proj => proj.withActualVersionOpt0(Some(version))))
+      res.map(_.map { proj =>
+        if (proj.version0 == version) proj
+        else proj.withActualVersionOpt0(Some(version))
+      })
     }
 
   def artifactFor(url: String, changing: Boolean): Artifact =
@@ -259,18 +268,33 @@ private[coursier] class MavenRepositoryInternal(
       authentication
     )
 
-  def fetchArtifact[F[_]](
+  /** Allows to adjust the module name that appears in the file name
+    *
+    * Doesn't change the one in the directory path
+    *
+    * Useful for some weird sbt plugin stuff
+    */
+  protected def fetchArtifactForModuleName[F[_]](
     module: Module,
+    moduleNameInFileName: String,
     version: Version,
     versioningValue: Option[Version],
     fetch: Repository.Fetch[F]
   )(implicit F: Monad[F]): EitherT[F, String, Project] = {
     val directoryPath = moduleVersionPath(module, version)
-    val moduleName    = module.name.value
-    val path = directoryPath :+ s"$moduleName-${versioningValue.getOrElse(version).asString}.pom"
-    val artifact = projectArtifact(path, version)
-    fetch(artifact).flatMap(parsePom(_))
+    def pathFor(ext: String) =
+      directoryPath :+ s"$moduleNameInFileName-${versioningValue.getOrElse(version).asString}.$ext"
+    val pomArtifact = projectArtifact(pathFor("pom"), version)
+    fetch(pomArtifact).flatMap(parsePom(_))
   }
+
+  def fetchArtifact[F[_]](
+    module: Module,
+    version: Version,
+    versioningValue: Option[Version],
+    fetch: Repository.Fetch[F]
+  )(implicit F: Monad[F]): EitherT[F, String, Project] =
+    fetchArtifactForModuleName(module, module.name.value, version, versioningValue, fetch)(F)
 
   def parsePom[F[_]](str: String)(implicit F: Monad[F]): EitherT[F, String, Project] =
     EitherT.fromEither {
@@ -298,16 +322,10 @@ private[coursier] class MavenRepositoryInternal(
   )(implicit
     F: Monad[F]
   ): EitherT[F, String, Project] =
-    fetchArtifact(module, version, versioningValue, fetch)
-      .map { proj0 =>
-        Pom.addOptionalDependenciesInConfig(
-          proj0
-            .withActualVersionOpt0(Some(version))
-            .withConfigurations(defaultConfigurations),
-          Set(Configuration.empty, Configuration.default),
-          Configuration.optional
-        )
-      }
+    fetchArtifact(module, version, versioningValue, fetch).map { proj =>
+      if (proj.version0 == version) proj
+      else proj.withActualVersionOpt0(Some(version))
+    }
 
   private def artifacts0(
     dependency: Dependency,

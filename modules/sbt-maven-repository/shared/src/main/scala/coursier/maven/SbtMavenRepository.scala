@@ -133,7 +133,8 @@ object SbtMavenRepository {
         self.moduleDirectory(module)
 
       override def postProcessProject(project: Project): Either[String, Project] =
-        SbtMavenRepository.adaptProject(project)
+        super.postProcessProject(project)
+          .flatMap(SbtMavenRepository.adaptProject)
 
       override def fetchArtifact[F[_]](
         module: Module,
@@ -143,12 +144,8 @@ object SbtMavenRepository {
       )(implicit F: Monad[F]): EitherT[F, String, Project] = {
         val directoryPath = moduleVersionPath(module, version)
 
-        def tryFetch(artifactName: String): EitherT[F, String, Project] = {
-          val path =
-            directoryPath :+ s"$artifactName-${versioningValue.getOrElse(version).asString}.pom"
-          val artifact = projectArtifact(path, version)
-          fetch(artifact).flatMap(parsePom(_))
-        }
+        def tryFetch(artifactName: String): EitherT[F, String, Project] =
+          fetchArtifactForModuleName(module, artifactName, version, versioningValue, fetch)
 
         SbtMavenRepository.getSbtCrossVersion(module.attributes) match {
           case Some(crossVersion) =>
