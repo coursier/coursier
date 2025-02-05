@@ -1,7 +1,9 @@
 package coursier.graph
 
-import coursier.core.{Dependency, MinimizedExclusions, Resolution}
+import coursier.core.{Dependency, MinimizedExclusions, Resolution, VariantSelector}
 import coursier.version.{Version, VersionConstraint}
+
+import scala.annotation.tailrec
 
 /** Simple dependency tree. */
 sealed abstract class DependencyTree {
@@ -53,11 +55,52 @@ object DependencyTree {
     Node(root, excluded = false, resolution, withExclusions)
 
   private case class Node(
-    dependency: Dependency,
+    initialDependency: Dependency,
     excluded: Boolean,
     resolution: Resolution,
     withExclusions: Boolean
   ) extends DependencyTree {
+
+    lazy val dependency: Dependency = {
+
+      @tailrec
+      def relocation(dep: Dependency): Dependency = {
+        val reconciledVersion = resolution.reconciledVersions.getOrElse(
+          dep.module,
+          sys.error(s"Cannot find ${dep.module.repr} in reconciled versions")
+        )
+        val dep0 =
+          if (dep.versionConstraint == reconciledVersion) dep
+          else dep.withVersionConstraint(reconciledVersion)
+        val (_, proj) = resolution.projectCache0.getOrElse(
+          dep0.moduleVersionConstraint,
+          sys.error(
+            s"Cannot find ${dep0.module.repr}:${dep0.versionConstraint.asString} in project cache"
+          )
+        )
+        val mavenRelocatedOpt =
+          if (proj.relocated && proj.dependencies0.lengthCompare(1) == 0)
+            Some(proj.dependencies0.head._2)
+          else
+            None
+        mavenRelocatedOpt match {
+          case Some(relocatedTo) =>
+            val relocatedTo0 =
+              if (relocatedTo.variantSelector.isEmpty)
+                relocatedTo.withVariantSelector(dep0.variantSelector)
+              else
+                relocatedTo
+            relocation(relocatedTo0)
+          case None =>
+            dep
+        }
+      }
+
+      if (resolution.isDone && resolution.conflicts.isEmpty && resolution.errors0.isEmpty)
+        relocation(initialDependency)
+      else
+        initialDependency
+    }
 
     def reconciledVersionConstraint: VersionConstraint =
       resolution
@@ -84,7 +127,9 @@ object DependencyTree {
         val dependencies = resolution
           .dependenciesOf(
             dep0,
-            withRetainedVersions = false
+            withRetainedVersions = false,
+            withReconciledVersions = true,
+            withFallbackConfig = false
           )
           .sortBy { trDep =>
             (trDep.module.organization, trDep.module.name, trDep.versionConstraint)
