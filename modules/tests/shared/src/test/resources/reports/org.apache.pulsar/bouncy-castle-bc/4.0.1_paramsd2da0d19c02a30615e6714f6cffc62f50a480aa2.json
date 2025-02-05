@@ -6,10 +6,11 @@
       "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/pulsar/bouncy-castle-bc/4.0.1/bouncy-castle-bc-4.0.1.jar",
       "directDependencies": [
         "org.bouncycastle:bcpkix-jdk18on:1.78.1",
-        "org.bouncycastle:bcprov-jdk18on:1.78.1"
+        "org.bouncycastle:bcprov-ext-jdk18on:1.78.1"
       ],
       "dependencies": [
         "org.bouncycastle:bcpkix-jdk18on:1.78.1",
+        "org.bouncycastle:bcprov-ext-jdk18on:1.78.1",
         "org.bouncycastle:bcprov-jdk18on:1.78.1",
         "org.bouncycastle:bcutil-jdk18on:1.78.1"
       ]
