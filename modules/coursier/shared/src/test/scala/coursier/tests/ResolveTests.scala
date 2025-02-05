@@ -613,7 +613,7 @@ object ResolveTests extends TestSuite {
                 .toMap
               assert(versions == expectedVersions)
             case _ =>
-              sys.error(s"Unexpected error: $error")
+              throw new Exception("Unexpected exception", error)
           }
         }
       }
