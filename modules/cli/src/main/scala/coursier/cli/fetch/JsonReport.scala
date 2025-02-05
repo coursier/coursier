@@ -71,47 +71,47 @@ object JsonReport {
 
     val keys = dependencyArtifacts.map(key).distinct
 
-    val relocationMap = resolution
-      .orderedDependencies(true)
-      .iterator
-      .flatMap { dep =>
-        val (_, proj) = resolution.projectCache0.getOrElse(
-          dep.moduleVersionConstraint,
-          sys.error(
-            s"Cannot find ${dep.module.repr}:${dep.versionConstraint.asString} in project cache"
-          )
+    def withRetainedVersion(dep: Dependency): Dependency = {
+      val retainedVersion = VersionConstraint.fromVersion {
+        resolution.retainedVersions.getOrElse(
+          dep.module,
+          sys.error(s"${dep.module.repr} not found in retained versions")
         )
-        if (proj.relocated)
-          Iterator(dep.module -> proj.dependencies0.head._2)
-        else
-          Iterator.empty
       }
-      .toMap
-
-    def dependenciesOf(dep: Dependency): Seq[Dependency] = {
-      val actualDep = relocationMap.getOrElse(
-        dep.module,
-        dep
-      )
-
-      resolution
-        .dependenciesOf(
-          actualDep,
-          withRetainedVersions = false,
-          withReconciledVersions = true,
-          withFallbackConfig = true
-        )
-        .map { dep0 =>
-          relocationMap.getOrElse(dep0.module, dep0)
-        }
+      if (dep.versionConstraint == retainedVersion) dep
+      else dep.withVersionConstraint(retainedVersion)
     }
 
-    val depMap = dependencyArtifacts
-      .map {
-        case (dep, _, _) =>
-          dep -> dependenciesOf(dep)
-      }
-      .toMap
+    val fromDepTrees = map.map {
+      case (key, deps) =>
+        val deps0 = deps.map(_._1).map(withRetainedVersion)
+        val trees = DependencyTree(resolution, deps0)
+
+        val directDeps = trees
+          .iterator
+          .flatMap(_.children.iterator)
+          .map(_.dependency)
+          .map(key0)
+          .toVector
+
+        def allDeps(
+          acc: ListBuffer[(Module, Attributes)],
+          seen: Set[Dependency],
+          trees: List[DependencyTree]
+        ): Seq[(Module, Attributes)] =
+          trees match {
+            case Nil => acc.result().distinct
+            case h :: t =>
+              acc += key0(h.dependency)
+              allDeps(
+                acc,
+                seen + h.dependency,
+                h.children.filter(tr => !seen(tr.dependency)).toList ::: t
+              )
+          }
+
+        key -> (directDeps, allDeps(new ListBuffer, Set.empty, trees.toList).filter(_ != key))
+    }
 
     val directDependenciesMap = keys
       .map {
@@ -120,10 +120,23 @@ object JsonReport {
           val directDeps = deps
             .flatMap {
               case (dep, _, _) =>
-                depMap.get(dep).getOrElse(dependenciesOf(dep))
+                fromDepTrees
+                  .get(key)
+                  .map(_._1)
+                  .getOrElse {
+                    resolution
+                      .dependenciesOf(
+                        dep,
+                        withRetainedVersions = false,
+                        withReconciledVersions = true,
+                        withFallbackConfig = true
+                      )
+                      .map(dep => (dep.module, dep.attributes))
+                  }
             }
-            .map { dep =>
-              (dep.module, dep.attributes.normalize)
+            .map {
+              case (mod, attr) =>
+                (mod, attr.normalize)
             }
             .distinct
             .filter(_ != key)
@@ -162,43 +175,6 @@ object JsonReport {
       }
       .toMap
 
-    def withRetainedVersion(dep: Dependency): Dependency = {
-      val retainedVersion = VersionConstraint.fromVersion {
-        resolution.retainedVersions.getOrElse(
-          dep.module,
-          sys.error(s"${dep.module.repr} not found in retained versions")
-        )
-      }
-      if (dep.versionConstraint == retainedVersion) dep
-      else dep.withVersionConstraint(retainedVersion)
-    }
-
-    val fromDepTrees = map.map {
-      case (key, deps) =>
-        val deps0 = deps.map(_._1).map(withRetainedVersion)
-        val trees = DependencyTree(resolution, deps0)
-
-        def allDeps(
-          acc: ListBuffer[(Module, Attributes)],
-          seen: Set[Dependency],
-          trees: List[DependencyTree]
-        ): Seq[(Module, Attributes)] =
-          trees match {
-            case Nil => acc.result().distinct
-            case h :: t =>
-              val isRelocated = relocationMap.contains(h.dependency.module)
-              if (!isRelocated)
-                acc += key0(h.dependency)
-              allDeps(
-                acc,
-                seen + h.dependency,
-                h.children.filter(tr => !seen(tr.dependency)).toList ::: t
-              )
-          }
-
-        key -> allDeps(new ListBuffer, Set.empty, trees.toList).filter(_ != key)
-    }
-
     def coords(key: (Module, Attributes)): String = {
       val version = resolution.retainedVersions.getOrElse(
         key._1,
@@ -231,6 +207,7 @@ object JsonReport {
               directDependenciesMap(key).map(coords).sorted,
               fromDepTrees
                 .get(key)
+                .map(_._2)
                 .getOrElse {
                   sys.error(s"${key._1.repr} ${key._2} not found in report trees")
                 }
@@ -265,6 +242,7 @@ object JsonReport {
               directDependenciesMap(key).map(coords).sorted,
               fromDepTrees
                 .get(key)
+                .map(_._2)
                 .getOrElse {
                   sys.error(s"${key._1.repr} ${key._2} not found in report trees")
                 }

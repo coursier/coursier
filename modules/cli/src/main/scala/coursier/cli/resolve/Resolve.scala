@@ -101,14 +101,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
 
       val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
         val m0 = m.map {
-          case ((mod, v), url) =>
-            val version = v.preferred match {
-              case Some(v0) if v.latest.isEmpty && v.interval == VersionInterval.zero =>
-                v0
-              case _ =>
-                Version(v.asString) // meh
-            }
-
+          case ((mod, version), url) =>
             ((mod.module(scalaVersion.asString), version), (url, true))
         }
         InMemoryRepository.privateApply(
