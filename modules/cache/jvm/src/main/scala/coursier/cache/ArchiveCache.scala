@@ -152,7 +152,7 @@ object ArchiveCache {
       ArchiveType.Tgz
     else if (url.endsWith(".tar.bz2") || url.endsWith(".tbz2"))
       ArchiveType.Tbz2
-    else if (url.endsWith(".zip"))
+    else if (url.endsWith(".zip") || url.endsWith(".jar"))
       ArchiveType.Zip
     else if (url.endsWith(".gz"))
       ArchiveType.Gzip
