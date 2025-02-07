@@ -115,7 +115,7 @@ object ResolutionError {
           }
           .sortBy(_._1)
           .map(_._2)
-        s"${t.module.repr}:${dependeesWantVersions.mkString(" or ")} wanted by" +
+        s"${t.module.repr}:${dependeesWantVersions.map(_.asString).mkString(" or ")} wanted by" +
           System.lineSeparator() +
           System.lineSeparator() +
           rendered + System.lineSeparator()

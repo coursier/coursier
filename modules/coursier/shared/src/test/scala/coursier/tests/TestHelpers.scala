@@ -228,7 +228,7 @@ object TestHelpers extends PlatformTestHelpers {
           dep.module.organization.value,
           dep.module.nameWithAttributes,
           dep.versionConstraint.asString,
-          dep.variantSelector.asConfiguration.fold("")(_.value)
+          dep.variantSelector.repr
         ).mkString(":")
       }
     }

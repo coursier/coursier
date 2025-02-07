@@ -50,10 +50,10 @@ abstract class ResolveTests extends TestSuite {
       val noBomGsonVersion = gsonVersion(noBomRes)
       val bomGsonVersion   = gsonVersion(bomRes)
 
-      val expectedNoBomGsonVersion = "2.10.1"
-      val expectedBomGsonVersion   = "2.11.0"
+      // without a BOM, the gson version is picked from [2.9.1,2.11)
+      assert(noBomGsonVersion.startsWith("2.9.") || noBomGsonVersion.startsWith("2.10."))
 
-      assert(noBomGsonVersion == expectedNoBomGsonVersion)
+      val expectedBomGsonVersion = "2.11.0"
       assert(bomGsonVersion == expectedBomGsonVersion)
     }
   }
