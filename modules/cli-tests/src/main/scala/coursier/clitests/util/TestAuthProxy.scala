@@ -79,11 +79,15 @@ object TestAuthProxy {
         "run",
         "-d",
         "--rm",
+        "-v",
+        s"$dataPath:/data",
         "-p",
         s"$port:80",
         "--network",
         networkName,
-        "bahamat/authenticated-proxy@sha256:568c759ac687f93d606866fbb397f39fe1350187b95e648376b971e9d7596e75"
+        imageId,
+        "/bin/sh",
+        "/data/run.sh"
       )
         .call(stdin = os.Inherit)
       containerId = res.out.trim()
