@@ -4,6 +4,7 @@ import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
 import org.graalvm.nativeimage.Platform;
 import org.graalvm.nativeimage.Platforms;
+import org.graalvm.nativeimage.ProcessProperties;
 
 import java.nio.file.Path;
 
@@ -13,7 +14,7 @@ final class Argv0Subst {
 
     @Substitute
     String get(String defaultValue) {
-        return com.oracle.svm.core.JavaMainWrapper.getCRuntimeArgument0();
+        return ProcessProperties.getArgumentVectorProgramName();
     }
 
 }

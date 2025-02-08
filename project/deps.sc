@@ -56,7 +56,7 @@ object Deps {
   def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
   def shapeless                = ivy"com.chuusai::shapeless:2.3.12"
   def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.16"
-  def svm                      = ivy"org.graalvm.nativeimage:svm:22.0.0.2"
+  def svm                      = ivy"org.graalvm.nativeimage:svm:21.3.13"
   def ujson                    = ivy"com.lihaoyi::ujson:4.1.0"
   def utest                    = ivy"com.lihaoyi::utest::0.8.5"
   def versions                 = ivy"io.get-coursier::versions::0.5.0"
@@ -75,7 +75,7 @@ object Versions {
 
 def sbtCoursierVersion = "2.1.4"
 
-def graalVmJvmId = "graalvm-community:20.0.2"
+def graalVmJvmId = "graalvm-community:21.0.2"
 
 def scalaCliVersion = "1.5.1"
 
