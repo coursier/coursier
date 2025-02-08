@@ -75,7 +75,7 @@ object Versions {
 
 def sbtCoursierVersion = "2.1.4"
 
-def graalVmJvmId = "graalvm-community:17.0.9"
+def graalVmJvmId = "graalvm-community:20.0.2"
 
 def scalaCliVersion = "1.5.1"
 
