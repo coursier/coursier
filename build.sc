@@ -618,7 +618,6 @@ trait Cli extends CsModule
   )
   def artifactName = "coursier-cli"
   def ivyDeps = super.ivyDeps() ++ Agg(
-    Deps.argonautShapeless,
     Deps.caseApp,
     Deps.catsCore,
     Deps.catsFree,
@@ -626,7 +625,6 @@ trait Cli extends CsModule
     Deps.collectionCompat,
     Deps.dataClass,
     Deps.noCrcZis,
-    Deps.shapeless,
     Deps.slf4JNop
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(

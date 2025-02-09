@@ -1,0 +1,14 @@
+{
+  "conflict_resolution": {
+    "org.apache.commons:commons-compress:1.5": "org.apache.commons:commons-compress:1.4.1"
+  },
+  "dependencies": [
+    {
+      "coord": "org.apache.commons:commons-compress:jar:tests:1.4.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/commons/commons-compress/1.4.1/commons-compress-1.4.1-tests.jar",
+      "directDependencies": [],
+      "dependencies": []
+    }
+  ],
+  "version": "0.1.0"
+}

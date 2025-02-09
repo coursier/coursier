@@ -8,7 +8,7 @@ import coursier.maven.MavenRepository
 import coursier.params.ResolutionParams
 import coursier.ivy.IvyRepository
 import coursier.util.StringInterpolators._
-import coursier.util.Task
+import coursier.util.{InMemoryRepository, Task}
 import coursier.version.{Version, VersionConstraint}
 import utest._
 
@@ -409,6 +409,63 @@ object FetchTests extends TestSuite {
               .future()
           }
           assert(res(0) != null)
+        }
+      }
+    }
+
+    test("url on lower version") {
+      async {
+        val res = await {
+          fetch
+            .addDependencies(
+              dep"org.apache.commons:commons-compress:1.4.1",
+              dep"org.apache.commons:commons-compress:1.5"
+            )
+            .addRepositories(
+              InMemoryRepository.forDependencies(
+                dep"org.apache.commons:commons-compress:1.4.1" ->
+                  "https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
+              )
+            )
+            .futureResult()
+        }
+
+        await {
+          validateArtifacts(
+            res.resolution,
+            res.artifacts.map(_._1),
+            extraKeyPart = "_customurl"
+          )
+        }
+      }
+    }
+
+    test("url and force version") {
+      async {
+        val params = fetch.resolutionParams
+          .addForceVersion(mod"org.apache.commons:commons-compress" -> "1.5")
+        val res = await {
+          fetch
+            .withResolutionParams(params)
+            .addDependencies(
+              dep"org.apache.commons:commons-compress:1.5"
+            )
+            .addRepositories(
+              InMemoryRepository.forDependencies(
+                dep"org.apache.commons:commons-compress:1.5" ->
+                  "https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
+              )
+            )
+            .futureResult()
+        }
+
+        await {
+          validateArtifacts(
+            res.resolution,
+            res.artifacts.map(_._1),
+            params,
+            extraKeyPart = "_customurl2"
+          )
         }
       }
     }

@@ -275,6 +275,118 @@ object JsonReportTests extends TestSuite {
         Seq(dep"org.apache.commons:commons-compress:1.5")
       )
     }
+
+    test("intransitive") {
+      check(
+        dep"org.apache.commons:commons-compress:1.5"
+          .withTransitive(false)
+      )
+    }
+
+    test("intransitiveTests") {
+      check(
+        dep"org.apache.commons:commons-compress:1.5,classifier=tests"
+          .withTransitive(false)
+      )
+    }
+
+    test("forceVersionTests") {
+      doCheck(
+        fetch.withResolutionParams(
+          fetch.resolutionParams
+            .withForceVersion(
+              Map(mod"org.apache.commons:commons-compress" -> "1.4.1")
+            )
+        ),
+        Seq(
+          dep"org.apache.commons:commons-compress:1.5,classifier=tests"
+        )
+      )
+    }
+
+    test("forceVersionIntransitiveTests") {
+      doCheck(
+        fetch.withResolutionParams(
+          fetch.resolutionParams
+            .withForceVersion(
+              Map(mod"org.apache.commons:commons-compress" -> "1.4.1")
+            )
+        ),
+        Seq(
+          dep"org.apache.commons:commons-compress:1.5,classifier=tests"
+            .withTransitive(false)
+        )
+      )
+    }
+
+    test("depsWithClassifiers") {
+      check(
+        dep"com.spotify:helios-testing:0.9.193"
+      )
+    }
+
+    test("url") {
+      test {
+        doCheck(
+          fetch.addRepositories(
+            InMemoryRepository.forDependencies(
+              dep"org.apache.commons:commons-compress:1.5" -> "https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
+            )
+          ),
+          Seq(
+            dep"org.apache.commons:commons-compress:1.5"
+          ),
+          "_customurl1"
+        )
+      }
+      test {
+        doCheck(
+          fetch.addRepositories(
+            InMemoryRepository.forDependencies(
+              dep"h:i:j" -> "https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
+            )
+          ),
+          Seq(
+            dep"h:i:j"
+          ),
+          "_customurl2"
+        )
+      }
+      test {
+        doCheck(
+          fetch.addRepositories(
+            InMemoryRepository.forDependencies(
+              dep"org.apache.commons:commons-compress:1.5" -> "https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
+            )
+          ),
+          Seq(
+            dep"org.apache.commons:commons-compress:1.5,classifier=tests"
+          ),
+          "_customurl3"
+        )
+      }
+      test {
+        doCheck(
+          fetch.addRepositories(
+            InMemoryRepository.forDependencies(
+              dep"org.apache.commons:commons-compress:1.5" -> "https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
+            )
+          ),
+          Seq(
+            dep"org.apache.commons:commons-compress:1.5",
+            dep"org.codehaus.jackson:jackson-mapper-asl:1.8.8"
+          ),
+          "_customurl4"
+        )
+      }
+    }
+
+    test("grpc-core") {
+      check(
+        dep"io.grpc:grpc-netty-shaded:1.29.0"
+      )
+    }
+
   }
 
 }
