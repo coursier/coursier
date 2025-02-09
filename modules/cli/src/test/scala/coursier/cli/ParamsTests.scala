@@ -4,11 +4,24 @@ import java.io.{File, FileWriter}
 
 import coursier.cli.options.DependencyOptions
 import coursier.cli.params.DependencyParams
-import coursier.parse.JavaOrScalaModule
-import coursier.util.StringInterpolators._
+import coursier.core.Module
+import coursier.parse.{JavaOrScalaModule, ModuleParser}
 import utest._
 
 object ParamsTests extends TestSuite {
+
+  implicit class StringStuff(val sc: StringContext) extends AnyVal {
+    def mod(args: Any*): Module = {
+      val str = sc.s(args: _*)
+      ModuleParser.module(
+        str,
+        scala.util.Properties.versionNumberString
+      ) match {
+        case Left(err)   => sys.error(s"Malformed module '$str': $err")
+        case Right(mod0) => mod0
+      }
+    }
+  }
 
   def withFile(content: String)(testCode: (File, FileWriter) => Any): Unit = {
     val file   = File.createTempFile("hello", "world") // create the fixture
