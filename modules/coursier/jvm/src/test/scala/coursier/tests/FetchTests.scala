@@ -21,18 +21,6 @@ object FetchTests extends TestSuite {
   private val fetch = Fetch()
     .noMirrors
     .withCache(cache)
-    .withResolutionParams(
-      ResolutionParams()
-        .withOsInfo {
-          Activation.Os(
-            Some("x86_64"),
-            Set("mac", "unix"),
-            Some("mac os x"),
-            Some("10.15.1")
-          )
-        }
-        .withJdkVersion(Version("1.8.0_121"))
-    )
 
   val tests = Tests {
 
@@ -306,23 +294,21 @@ object FetchTests extends TestSuite {
       // are forced or not
 
       test - async {
+        val fetch = fetch0.mapResolutionParams(_.addForcedProperties(prop))
         val res = await {
-          fetch0
-            .mapResolutionParams(_.addForcedProperties(prop))
-            .futureResult()
+          fetch.futureResult()
         }
 
-        await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), fetch.resolutionParams))
       }
 
       test - async {
+        val fetch = fetch0.mapResolutionParams(_.addProperties(prop))
         val res = await {
-          fetch0
-            .mapResolutionParams(_.addProperties(prop))
-            .futureResult()
+          fetch.futureResult()
         }
 
-        await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), fetch.resolutionParams))
       }
     }
 

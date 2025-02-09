@@ -12,7 +12,6 @@ import coursier.core.{
   Resolution,
   Type
 }
-import coursier.params.ResolutionParams
 import coursier.testcache.TestCache
 import coursier.tests.TestHelpers
 import coursier.util.StringInterpolators._
@@ -44,18 +43,6 @@ object JsonReportTests extends TestSuite {
   private def resolve = Resolve()
     .noMirrors
     .withCache(TestHelpers.cache)
-    .withResolutionParams(
-      ResolutionParams()
-        .withOsInfo {
-          Activation.Os(
-            Some("x86_64"),
-            Set("mac", "unix"),
-            Some("mac os x"),
-            Some("10.15.1")
-          )
-        }
-        .withJdkVersion(Version("1.8.0_121"))
-    )
 
   private def fetch = Fetch()
     .withResolve(resolve)
@@ -68,7 +55,7 @@ object JsonReportTests extends TestSuite {
           .addDependencies(dependencies: _*)
           .futureResult()
       }
-      await(TestHelpers.validateDependencies(res.resolution))
+      await(TestHelpers.validateDependencies(res.resolution, fetch.resolutionParams))
 
       await {
         TestHelpers.validateResult(
@@ -142,10 +129,26 @@ object JsonReportTests extends TestSuite {
 
     test("quarkus") {
       test("rest") {
-        check(dep"io.quarkus:quarkus-rest:3.15.1")
+        doCheck(
+          fetch.withResolutionParams(
+            fetch.resolutionParams.withOsInfo(
+              Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1"))
+            )
+          ),
+          Seq(dep"io.quarkus:quarkus-rest:3.15.1")
+        )
       }
       test("rest-jackson") {
-        check(dep"io.quarkus:quarkus-rest-jackson:3.15.1")
+        doCheck(
+          fetch.withResolutionParams(
+            fetch.resolutionParams.withOsInfo(
+              Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1"))
+            )
+          ),
+          Seq(
+            dep"io.quarkus:quarkus-rest-jackson:3.15.1"
+          )
+        )
       }
       test("hibernate-orm-panache") {
         check(dep"io.quarkus:quarkus-hibernate-orm-panache:3.15.1")
