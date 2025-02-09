@@ -37,7 +37,21 @@ object DependencyParser {
     defaultScalaVersion: String,
     defaultConfiguration: Configuration
   ): Either[String, Dependency] =
-    dependencyParams(input, defaultScalaVersion, defaultConfiguration).map(_._1)
+    dependencyParams(input, defaultScalaVersion, defaultConfiguration).flatMap {
+      case (dep, params) =>
+        if (params.isEmpty) Right(dep)
+        else {
+          val paramsStr = params
+            .toVector
+            .sorted
+            .map {
+              case (k, v) =>
+                s"$k=$v"
+            }
+            .mkString(", ")
+          Left(s"Unexpected parameter(s) not accepted at this point: $paramsStr")
+        }
+    }
 
   def dependencies(
     inputs: Seq[String],
