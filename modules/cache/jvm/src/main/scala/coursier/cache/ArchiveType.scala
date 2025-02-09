@@ -11,6 +11,8 @@ object ArchiveType {
   case object Zip  extends ArchiveType
   case object Tgz  extends Tar
   case object Tbz2 extends Tar
+  case object Txz  extends Tar
+  case object Tzst extends Tar
   case object Gzip extends ArchiveType {
     override def singleFile: Boolean = true
   }
@@ -20,6 +22,8 @@ object ArchiveType {
       case "zip"  => Some(Zip)
       case "tgz"  => Some(Tgz)
       case "tbz2" => Some(Tbz2)
+      case "txz"  => Some(Txz)
+      case "tzst" => Some(Tzst)
       case "gz"   => Some(Gzip)
       case _      => None
     }

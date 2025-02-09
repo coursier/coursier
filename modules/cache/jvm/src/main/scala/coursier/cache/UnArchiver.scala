@@ -4,7 +4,12 @@ import java.io.{File, InputStream, OutputStream}
 import java.nio.file.Files
 import java.util.zip.GZIPInputStream
 
-import org.codehaus.plexus.archiver.tar.{TarBZip2UnArchiver, TarGZipUnArchiver}
+import org.codehaus.plexus.archiver.tar.{
+  TarBZip2UnArchiver,
+  TarGZipUnArchiver,
+  TarXZUnArchiver,
+  TarZstdUnArchiver
+}
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver
 
 trait UnArchiver {
@@ -28,6 +33,10 @@ object UnArchiver {
             Right(new TarGZipUnArchiver)
           case ArchiveType.Tbz2 =>
             Right(new TarBZip2UnArchiver)
+          case ArchiveType.Txz =>
+            Right(new TarXZUnArchiver)
+          case ArchiveType.Tzst =>
+            Right(new TarZstdUnArchiver)
           case ArchiveType.Gzip =>
             Left { () =>
               // TODO Case-insensitive stripSuffix?
