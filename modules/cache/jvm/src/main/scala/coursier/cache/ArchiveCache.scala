@@ -158,6 +158,8 @@ object ArchiveCache {
       ArchiveType.Tzst
     else if (url.endsWith(".zip") || url.endsWith(".jar"))
       ArchiveType.Zip
+    else if (url.endsWith(".ar") || url.endsWith(".deb"))
+      ArchiveType.Ar
     else if (url.endsWith(".gz"))
       ArchiveType.Gzip
     else

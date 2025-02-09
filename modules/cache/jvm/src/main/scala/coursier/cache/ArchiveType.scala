@@ -9,6 +9,7 @@ object ArchiveType {
   sealed abstract class Tar extends ArchiveType
 
   case object Zip  extends ArchiveType
+  case object Ar   extends Tar
   case object Tgz  extends Tar
   case object Tbz2 extends Tar
   case object Txz  extends Tar
@@ -20,6 +21,7 @@ object ArchiveType {
   def parse(input: String): Option[ArchiveType] =
     input match {
       case "zip"  => Some(Zip)
+      case "ar"   => Some(Ar)
       case "tgz"  => Some(Tgz)
       case "tbz2" => Some(Tbz2)
       case "txz"  => Some(Txz)

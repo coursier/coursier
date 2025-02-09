@@ -44,6 +44,13 @@ object ArchiveCacheTests extends TestSuite {
         os.sub / "usr/bin/busybox"
       )
     }
+
+    test("deb") {
+      checkArchiveHas(
+        "https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb",
+        os.sub / "control.tar.xz"
+      )
+    }
   }
 
 }
