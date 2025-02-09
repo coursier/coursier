@@ -15,7 +15,7 @@ import coursier.core.{
 import coursier.testcache.TestCache
 import coursier.tests.TestHelpers
 import coursier.util.StringInterpolators._
-import coursier.util.Task
+import coursier.util.{InMemoryRepository, Task}
 import coursier.version.{Version, VersionConstraint}
 import utest._
 
@@ -48,18 +48,28 @@ object JsonReportTests extends TestSuite {
     .withResolve(resolve)
     .withCache(TestHelpers.cache)
 
-  def doCheck(fetch: Fetch[Task], dependencies: Seq[Dependency]): Future[Unit] =
+  def doCheck(
+    fetch: Fetch[Task],
+    dependencies: Seq[Dependency],
+    extraKeyPart: String = ""
+  ): Future[Unit] =
     async {
       val res = await {
         fetch
           .addDependencies(dependencies: _*)
           .futureResult()
       }
-      await(TestHelpers.validateDependencies(res.resolution, fetch.resolutionParams))
+      await {
+        TestHelpers.validateDependencies(
+          res.resolution,
+          fetch.resolutionParams,
+          extraKeyPart = extraKeyPart
+        )
+      }
 
       await {
         TestHelpers.validateResult(
-          s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams)}.json"
+          s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams, extraKeyPart = extraKeyPart)}.json"
         ) {
           jsonLines {
             JsonReport.report(
@@ -245,9 +255,17 @@ object JsonReportTests extends TestSuite {
     }
 
     test("external dep url with classifier") {
-      check(
-        dep"org.apache.commons:commons-compress:1.5",
-        dep"org.tukaani:xz:1.2,classifier=tests,url=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fjunit%2Fjunit%2F4.12%2Fjunit-4.12.jar"
+      doCheck(
+        fetch.addRepositories(
+          InMemoryRepository.forDependencies(
+            dep"org.tukaani:xz:1.2" -> "https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
+          )
+        ),
+        Seq(
+          dep"org.apache.commons:commons-compress:1.5",
+          dep"org.tukaani:xz:1.2,classifier=tests"
+        ),
+        "_customurl"
       )
     }
 

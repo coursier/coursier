@@ -5,10 +5,29 @@ import java.net.{URL, URLConnection}
 
 import coursier.cache.{CacheUrl, ConnectionBuilder, FileCache}
 import coursier.core._
-import coursier.version.{Version => Version0}
+import coursier.version.{Version => Version0, VersionInterval => VersionInterval0}
 import dataclass.data
 
 object InMemoryRepository {
+
+  def forDependencies(dependencies: (Dependency, String)*): InMemoryRepository =
+    InMemoryRepository(
+      dependencies
+        .map {
+          case (dep, url) =>
+            if (
+              dep.versionConstraint.latest.nonEmpty || dep.versionConstraint.interval != VersionInterval0.zero || dep.versionConstraint.preferred.isEmpty
+            )
+              sys.error(
+                s"InMemoryRepository dependencies should have an exact version (got ${dep.versionConstraint.asString} for ${dep.module.repr})"
+              )
+            val version = dep.versionConstraint.preferred.get
+            ((dep.module, version), (new URL(url), version.repr.endsWith("SNAPSHOT")))
+        }
+        .toMap,
+      None,
+      false
+    )
 
   @deprecated("Use the override accepting a cache", "2.0.0-RC3")
   def exists(
