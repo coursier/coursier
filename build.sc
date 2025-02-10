@@ -202,6 +202,8 @@ object exec extends Exec
 object jvm     extends Cross[Jvm](ScalaVersions.all)
 object install extends Cross[Install](ScalaVersions.all)
 
+object docker extends Cross[Docker](ScalaVersions.all)
+
 object cli extends Cli {
   object test extends SbtTests with CsTests with CsResourcesTests {
     def moduleDeps = super.moduleDeps ++ Seq(
@@ -624,6 +626,45 @@ trait Exec extends JavaModule with CoursierPublishModule {
   )
 }
 
+trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
+  def artifactName = "coursier-docker"
+  def moduleDeps = super.moduleDeps ++ Seq(
+    cache.jvm(),
+    exec
+  )
+  def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+    Deps.dataClass,
+    Deps.jsoniterMacros
+  )
+  def ivyDeps = super.ivyDeps() ++ Agg(
+    Deps.jsoniterCore,
+    Deps.osLib
+  )
+  def mimaPreviousVersions = T {
+    import _root_.coursier.core.Version
+    val cutOff = Version("2.1.25")
+    super.mimaPreviousVersions().filter(Version(_) >= cutOff)
+  }
+  // Remove once 2.1.25 is out
+  def mimaPreviousArtifacts = T {
+    val versions     = mimaPreviousVersions()
+    val organization = pomSettings().organization
+    val artifactId0  = artifactId()
+    Agg.from(
+      versions.map(version => ivy"$organization:$artifactId0:$version")
+    )
+  }
+  object test extends CrossSbtTests with CsTests {
+    def moduleDeps = super.moduleDeps ++ Seq(
+      cache.jvm().test
+    )
+    def ivyDeps = super.ivyDeps() ++ Seq(
+      Deps.osLib,
+      Deps.pprint
+    )
+  }
+}
+
 trait Cli extends CsModule
     with CoursierPublishModule with Launchers {
   def scalaVersion = cliScalaVersion
@@ -632,6 +673,7 @@ trait Cli extends CsModule
     `sbt-maven-repository`.jvm(cliScalaVersion213Compat),
     install(cliScalaVersion213Compat),
     jvm(cliScalaVersion213Compat),
+    docker(cliScalaVersion213Compat),
     launcherModule(cliScalaVersion213Compat)
   )
   def artifactName = "coursier-cli"
@@ -641,6 +683,8 @@ trait Cli extends CsModule
     Deps.classPathUtil,
     Deps.collectionCompat,
     Deps.noCrcZis,
+    Deps.osLib,
+    Deps.pprint,
     Deps.slf4JNop
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
@@ -1024,7 +1068,8 @@ def jvmTests(scalaVersion: String = ScalaVersions.scala213) = {
     interop.scalaz.jvm .valuesToModules.get(List(sv)).map(_.test.test()),
     interop.cats.jvm   .valuesToModules.get(List(sv)).map(_.test.test()),
     install            .valuesToModules.get(List(sv)).map(_.test.test()),
-    jvm                .valuesToModules.get(List(sv)).map(_.test.test())
+    jvm                .valuesToModules.get(List(sv)).map(_.test.test()),
+    docker             .valuesToModules.get(List(sv)).map(_.test.test())
     // format: on
   ).flatten
 
