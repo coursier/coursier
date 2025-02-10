@@ -4,14 +4,19 @@ import coursier.paths.CachePath
 import coursier.util.{Artifact, Sync, Task}
 import coursier.util.Monad.ops._
 import dataclass._
+import org.apache.tika.Tika
 
 import java.io.File
 import java.nio.file.{Files, StandardCopyOption}
 
+import scala.util.Using
+
 @data class ArchiveCache[F[_]](
   location: File,
   cache: Cache[F] = FileCache(),
-  unArchiver: UnArchiver = UnArchiver.default()
+  unArchiver: UnArchiver = UnArchiver.default(),
+  @since("2.1.25")
+  openStream: UnArchiver.OpenStream = UnArchiver.default()
 )(implicit
   sync: Sync[F]
 ) {
@@ -26,10 +31,32 @@ import java.nio.file.{Files, StandardCopyOption}
       true
     )
 
-  def getIfExists(artifact: Artifact): F[Either[ArtifactError, Option[File]]] = {
+  def getIfExists(artifact: Artifact): F[Either[ArtifactError, Option[File]]] =
+    ArchiveCache.archiveType(artifact.url) match {
+      case Some(archiveType0) =>
+        getIfExists(artifact, archiveType0.singleFile)
+      case None =>
+        S.point(
+          Left(
+            new ArtifactError.DownloadError(
+              s"Cannot get archive format from URL for ${artifact.url}",
+              None
+            )
+          )
+        )
+    }
 
-    val dir          = localDir(artifact)
-    val archiveType0 = ArchiveCache.archiveType(artifact.url)
+  /** @param artifact
+    * @param isSingleFile
+    *   whether the corresponding archive can contain multiple files (like tar archive) or not
+    *   (compressed single file)
+    * @return
+    */
+  def getIfExists(
+    artifact: Artifact,
+    isSingleFile: Boolean
+  ): F[Either[ArtifactError, Option[File]]] = {
+    val dir = localDir(artifact)
 
     val dirTask: F[Either[ArtifactError, Option[File]]] =
       S.delay(dir.exists()).map {
@@ -37,7 +64,7 @@ import java.nio.file.{Files, StandardCopyOption}
         case false => Right(None)
       }
 
-    if (archiveType0.singleFile)
+    if (isSingleFile)
       dirTask.flatMap {
         case Right(Some(dir)) =>
           S.delay {
@@ -52,81 +79,128 @@ import java.nio.file.{Files, StandardCopyOption}
       dirTask
   }
 
-  def get(artifact: Artifact): F[Either[ArtifactError, File]] = {
+  private[cache] def get0(
+    dir: File,
+    urlOpt: Option[String],
+    download: F[Either[ArtifactError, File]]
+  ): F[Either[ArtifactError, File]] = {
 
-    val dir          = localDir(artifact)
-    val archiveType0 = ArchiveCache.archiveType(artifact.url)
-
-    def extract(f: File, deleteDest: Boolean): F[Either[ArtifactError, File]] =
-      S.delay {
-        CacheLocks.withLockOr(location, dir)(
-          if (deleteDest || !dir.exists()) {
-            val tmp = CachePath.temporaryFile(dir)
-            ArchiveCache.deleteRecursive(tmp)
-            Files.createDirectories(tmp.toPath)
-            unArchiver.extract(archiveType0, f, tmp, overwrite = false)
-            val lastModifiedTime = Files.getLastModifiedTime(f.toPath)
-            Files.setLastModifiedTime(tmp.toPath, lastModifiedTime)
-            def moveToDest(): Unit =
-              Files.move(tmp.toPath, dir.toPath, StandardCopyOption.ATOMIC_MOVE)
-            if (dir.exists())
-              if (deleteDest) {
-                ArchiveCache.deleteRecursive(dir)
-                moveToDest()
+    def maybeArchiveType(f: File, urlOpt: Option[String]): Either[ArtifactError, ArchiveType] =
+      urlOpt.flatMap(ArchiveCache.archiveType).map(Right(_)).getOrElse {
+        val tika = new Tika
+        val mimeType = Using.resource(Files.newInputStream(f.toPath)) { is =>
+          tika.detect(is)
+        }
+        ArchiveType.fromMimeType(mimeType) match {
+          case Some(compressed: ArchiveType.Compressed) =>
+            val t0 = Using.resource(Files.newInputStream(f.toPath)) { is =>
+              val tika = new Tika
+              tika.detect(openStream.inputStream(compressed, is))
+            }
+            Right {
+              ArchiveType.fromMimeType(t0) match {
+                case Some(ArchiveType.Tar) => compressed.tar
+                case _                     => compressed
               }
+            }
+          case Some(tpe) =>
+            Right(tpe)
+          case None =>
+            Left(
+              new ArtifactError.DownloadError(
+                s"Cannot detect archive type of $f, or unsupported archive type (MIME type $mimeType)",
+                None
+              )
+            )
+        }
+      }
+
+    def extract(
+      f: File,
+      deleteDest: Boolean,
+      archiveType0: ArchiveType
+    ): F[Either[ArtifactError, (File, ArchiveType)]] =
+      S.delay {
+        val archiveType1: ArchiveType = CacheLocks.withLockOr(location, dir)(
+          {
+            if (deleteDest || !dir.exists()) {
+              val tmp = CachePath.temporaryFile(dir)
+              ArchiveCache.deleteRecursive(tmp)
+              Files.createDirectories(tmp.toPath)
+              unArchiver.extract(archiveType0, f, tmp, overwrite = false)
+              val lastModifiedTime = Files.getLastModifiedTime(f.toPath)
+              Files.setLastModifiedTime(tmp.toPath, lastModifiedTime)
+              def moveToDest(): Unit =
+                Files.move(tmp.toPath, dir.toPath, StandardCopyOption.ATOMIC_MOVE)
+              if (dir.exists())
+                if (deleteDest) {
+                  ArchiveCache.deleteRecursive(dir)
+                  moveToDest()
+                }
+                else
+                  // We shouldn't go in that branch thanks to the lock and the condition above
+                  ArchiveCache.deleteRecursive(tmp)
               else
-                // We shouldn't go in that branch thanks to the lock and the condition above
-                ArchiveCache.deleteRecursive(tmp)
-            else
-              moveToDest()
+                moveToDest()
+            }
+            archiveType0
           }, {
             Thread.sleep(50L)
             None
           }
         )
 
-        Right(dir)
+        Right((dir, archiveType1))
       }
 
-    val downloadAndExtract: F[Either[ArtifactError, File]] =
-      cache.loggerOpt.getOrElse(CacheLogger.nop).using(cache.file(artifact).run).flatMap {
-        case Left(err) => S.point(Left(err))
-        case Right(f)  => extract(f, deleteDest = false)
-      }
-
-    val dirTask: F[Either[ArtifactError, File]] =
-      S.delay(dir.exists()).flatMap {
-        case true =>
-          if (artifact.changing)
-            cache.loggerOpt.getOrElse(CacheLogger.nop).using(cache.file(artifact).run).flatMap {
+    val dirTask: F[Either[ArtifactError, (File, ArchiveType)]] =
+      S.delay(dir.exists()).flatMap { exists =>
+        download.flatMap {
+          case Left(err) => S.point(Left(err))
+          case Right(f) =>
+            maybeArchiveType(f, urlOpt) match {
               case Left(err) => S.point(Left(err))
-              case Right(f) =>
-                val archiveLastModifiedTime = Files.getLastModifiedTime(f.toPath)
-                val dirLastModifiedTime     = Files.getLastModifiedTime(dir.toPath)
-                if (archiveLastModifiedTime == dirLastModifiedTime)
-                  S.point(Right(dir))
+              case Right(archiveType0) =>
+                if (exists) {
+                  val archiveLastModifiedTime = Files.getLastModifiedTime(f.toPath)
+                  val dirLastModifiedTime     = Files.getLastModifiedTime(dir.toPath)
+                  if (archiveLastModifiedTime == dirLastModifiedTime)
+                    S.point(Right((dir, archiveType0)))
+                  else
+                    extract(f, deleteDest = true, archiveType0)
+                }
                 else
-                  extract(f, deleteDest = true)
+                  extract(f, deleteDest = false, archiveType0)
             }
-          else
-            S.point(Right(dir))
-        case false =>
-          downloadAndExtract
+        }
       }
 
-    if (archiveType0.singleFile)
-      dirTask.flatMap {
-        case Right(dir) =>
-          S.delay {
+    dirTask.flatMap {
+      case Right((dir, arcType)) if arcType.singleFile =>
+        S.delay {
+          Right {
             dir.listFiles() match {
-              case Array(f) => Right(f)
-              case _        => Right(dir) // throw instead?
+              case Array(f) => f
+              case _        => dir // throw instead?
             }
           }
-        case other => S.point(other)
-      }
-    else
-      dirTask
+        }
+      case other =>
+        S.point(other.map(_._1))
+    }
+  }
+
+  def get(artifact: Artifact): F[Either[ArtifactError, File]] = {
+    val dir    = localDir(artifact)
+    val urlOpt = Some(artifact.url)
+    val download: F[Either[ArtifactError, File]] =
+      cache.loggerOpt.getOrElse(CacheLogger.nop).using(cache.file(artifact).run)
+
+    get0(
+      dir,
+      urlOpt,
+      download
+    )
   }
 
 }
@@ -142,27 +216,27 @@ object ArchiveCache {
     f.delete()
   }
 
-  private def archiveType(url: String): ArchiveType =
+  private def archiveType(url: String): Option[ArchiveType] =
     // TODO Case-insensitive comparisons?
     if (url.endsWith(".tar"))
-      ArchiveType.Tar
+      Some(ArchiveType.Tar)
     else if (url.endsWith(".tar.gz") || url.endsWith(".tgz") || url.endsWith(".apk"))
-      ArchiveType.Tgz
+      Some(ArchiveType.Tgz)
     else if (url.endsWith(".tar.bz2") || url.endsWith(".tbz2"))
-      ArchiveType.Tbz2
+      Some(ArchiveType.Tbz2)
     else if (url.endsWith(".tar.xz") || url.endsWith(".txz"))
-      ArchiveType.Txz
+      Some(ArchiveType.Txz)
     else if (url.endsWith(".tar.zst") || url.endsWith(".tzst"))
-      ArchiveType.Tzst
+      Some(ArchiveType.Tzst)
     else if (url.endsWith(".zip") || url.endsWith(".jar"))
-      ArchiveType.Zip
+      Some(ArchiveType.Zip)
     else if (url.endsWith(".ar") || url.endsWith(".deb"))
-      ArchiveType.Ar
+      Some(ArchiveType.Ar)
     else if (url.endsWith(".gz"))
-      ArchiveType.Gzip
+      Some(ArchiveType.Gzip)
     else if (url.endsWith(".xz"))
-      ArchiveType.Xz
+      Some(ArchiveType.Xz)
     else
-      sys.error(s"Unrecognized archive type: $url")
+      None
 
 }

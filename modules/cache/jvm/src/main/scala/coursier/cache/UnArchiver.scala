@@ -26,7 +26,77 @@ trait UnArchiver {
 }
 
 object UnArchiver {
-  private final class DefaultUnArchiver extends UnArchiver {
+  trait OpenStream {
+    def inputStream(archiveType: ArchiveType.Compressed, is: InputStream): InputStream
+  }
+
+  private final class DefaultUnArchiver extends UnArchiver with OpenStream {
+
+    def extractCompressed(
+      archiveType: ArchiveType.Compressed,
+      archive: File,
+      destDir: File
+    ): () => Unit =
+      archiveType match {
+        case ArchiveType.Gzip =>
+          () => {
+            // TODO Case-insensitive stripSuffix?
+            val dest = new File(destDir, archive.getName.stripSuffix(".gz"))
+
+            var fis: InputStream      = null
+            var fos: OutputStream     = null
+            var gzis: GZIPInputStream = null
+            try {
+              fis = Files.newInputStream(archive.toPath)
+              gzis = new GZIPInputStream(fis)
+              fos = Files.newOutputStream(dest.toPath)
+
+              val buf  = Array.ofDim[Byte](16 * 1024)
+              var read = -1
+              while ({
+                read = gzis.read(buf)
+                read >= 0
+              })
+                if (read > 0)
+                  fos.write(buf, 0, read)
+              fos.flush()
+            }
+            finally {
+              if (gzis != null) gzis.close()
+              if (fos != null) fos.close()
+              if (fis != null) fis.close()
+            }
+          }
+        case ArchiveType.Xz =>
+          () => {
+            // TODO Case-insensitive stripSuffix?
+            val dest = new File(destDir, archive.getName.stripSuffix(".xz"))
+
+            var fis: InputStream             = null
+            var fos: OutputStream            = null
+            var xis: XZCompressorInputStream = null
+            try {
+              fis = Files.newInputStream(archive.toPath)
+              xis = new XZCompressorInputStream(fis)
+              fos = Files.newOutputStream(dest.toPath)
+
+              val buf  = Array.ofDim[Byte](16 * 1024)
+              var read = -1
+              while ({
+                read = xis.read(buf)
+                read >= 0
+              })
+                if (read > 0)
+                  fos.write(buf, 0, read)
+              fos.flush()
+            }
+            finally {
+              if (xis != null) xis.close()
+              if (fos != null) fos.close()
+              if (fis != null) fis.close()
+            }
+          }
+      }
 
     def extract(
       archiveType: ArchiveType,
@@ -36,6 +106,8 @@ object UnArchiver {
     ): Unit = {
       val unArchiver: Either[() => Unit, org.codehaus.plexus.archiver.UnArchiver] =
         archiveType match {
+          case c: ArchiveType.Compressed =>
+            Left(extractCompressed(c, archive, destDir))
           case ArchiveType.Zip =>
             Right(new ZipUnArchiver)
           case ArchiveType.Ar =>
@@ -107,67 +179,9 @@ object UnArchiver {
             Right(new TarXZUnArchiver)
           case ArchiveType.Tzst =>
             Right(new TarZstdUnArchiver)
-          case ArchiveType.Gzip =>
-            Left { () =>
-              // TODO Case-insensitive stripSuffix?
-              val dest = new File(destDir, archive.getName.stripSuffix(".gz"))
-
-              var fis: InputStream      = null
-              var fos: OutputStream     = null
-              var gzis: GZIPInputStream = null
-              try {
-                fis = Files.newInputStream(archive.toPath)
-                gzis = new GZIPInputStream(fis)
-                fos = Files.newOutputStream(dest.toPath)
-
-                val buf  = Array.ofDim[Byte](16 * 1024)
-                var read = -1
-                while ({
-                  read = gzis.read(buf)
-                  read >= 0
-                })
-                  if (read > 0)
-                    fos.write(buf, 0, read)
-                fos.flush()
-              }
-              finally {
-                if (gzis != null) gzis.close()
-                if (fos != null) fos.close()
-                if (fis != null) fis.close()
-              }
-            }
-          case ArchiveType.Xz =>
-            Left { () =>
-              // TODO Case-insensitive stripSuffix?
-              val dest = new File(destDir, archive.getName.stripSuffix(".xz"))
-
-              var fis: InputStream             = null
-              var fos: OutputStream            = null
-              var xis: XZCompressorInputStream = null
-              try {
-                fis = Files.newInputStream(archive.toPath)
-                xis = new XZCompressorInputStream(fis)
-                fos = Files.newOutputStream(dest.toPath)
-
-                val buf  = Array.ofDim[Byte](16 * 1024)
-                var read = -1
-                while ({
-                  read = xis.read(buf)
-                  read >= 0
-                })
-                  if (read > 0)
-                    fos.write(buf, 0, read)
-                fos.flush()
-              }
-              finally {
-                if (xis != null) xis.close()
-                if (fos != null) fos.close()
-                if (fis != null) fis.close()
-              }
-            }
         }
 
-      destDir.mkdirs()
+      Files.createDirectories(destDir.toPath)
 
       unArchiver match {
         case Left(f) =>
@@ -179,8 +193,14 @@ object UnArchiver {
           u.extract()
       }
     }
+
+    def inputStream(archiveType: ArchiveType.Compressed, is: InputStream): InputStream =
+      archiveType match {
+        case ArchiveType.Gzip => new GZIPInputStream(is)
+        case ArchiveType.Xz   => new XZCompressorInputStream(is)
+      }
   }
 
-  def default(): UnArchiver =
+  def default(): UnArchiver with OpenStream =
     new DefaultUnArchiver
 }

@@ -1,6 +1,7 @@
 package coursier.cache
 
 import coursier.cache.TestUtil._
+import coursier.core.Authentication
 import coursier.util.{Artifact, Task}
 import utest._
 
@@ -11,13 +12,22 @@ import scala.concurrent.duration.Duration
 
 object ArchiveCacheTests extends TestSuite {
 
-  def checkArchiveHas(archiveUrl: String, pathInArchive: os.SubPath): Unit =
-    withTmpDir { dir =>
-      val archiveCache = ArchiveCache[Task]((dir / "arc").toIO)
+  def sandboxedCache = coursier.cache.FileCache[Task]((os.pwd / "test-cache").toIO)
+  def archiveCache(location: os.Path): ArchiveCache[Task] =
+    ArchiveCache[Task](location.toIO)
+  // Uncomment this to re-download everything in a test run
+  // .withCache(sandboxedCache)
 
-      val future = archiveCache
-        .get(Artifact(archiveUrl))
-        .future()(archiveCache.cache.ec)
+  def checkArchiveHas(archiveUrl: String, pathInArchive: os.SubPath): Unit =
+    checkArchiveHas(Artifact(archiveUrl), pathInArchive)
+
+  def checkArchiveHas(archive: Artifact, pathInArchive: os.SubPath): Unit =
+    withTmpDir { dir =>
+      val archiveCache0 = archiveCache(dir / "arc")
+
+      val future = archiveCache0
+        .get(archive)
+        .future()(archiveCache0.cache.ec)
       val archiveDir = Await.result(future, Duration.Inf).toTry.get
       val file       = new File(archiveDir, pathInArchive.toString)
       assert(file.exists())
@@ -57,6 +67,22 @@ object ArchiveCacheTests extends TestSuite {
       checkArchiveHas(
         "https://github.com/xz-mirror/xz/raw/refs/heads/master/tests/files/good-1-check-sha256.xz",
         os.sub
+      )
+    }
+
+    test("detect tgz") {
+
+      val repoName = "library/hello-world"
+      val auth = Authentication.byNameBearerToken(
+        DockerTestUtil.token(repoName)
+      )
+
+      checkArchiveHas(
+        Artifact(
+          s"https://registry-1.docker.io/v2/$repoName/blobs/sha256:c9c5fd25a1bdc181cb012bc4fbb1ab272a975728f54064b7ae3ee8e77fd28c46"
+        )
+          .withAuthentication(Some(auth)),
+        os.sub / "hello"
       )
     }
   }
