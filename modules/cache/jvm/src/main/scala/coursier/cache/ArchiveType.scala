@@ -9,7 +9,7 @@ object ArchiveType {
   sealed abstract class Tar extends ArchiveType
 
   case object Zip  extends ArchiveType
-  case object Ar   extends Tar
+  case object Ar   extends ArchiveType
   case object Tgz  extends Tar
   case object Tbz2 extends Tar
   case object Txz  extends Tar
