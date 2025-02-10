@@ -9,12 +9,14 @@ nav:
     - JVM management: 'features-jvm.md'
     - Bill of Material: 'features-bom.md'
     - Gradle Modules: 'features-gradle-modules.md'
+    - Docker: 'features-docker.md'
   - API:
     - Usage: 'api.md'
     - Dependencies: 'api-dependency.md'
     - Sub-projects: 'api-projects.md'
     - Cache: 'api-cache.md'
     - Archive Cache: 'api-archive-cache.md'
+    - Docker: 'api-docker.md'
   - Java API:
     - Java API: 'java-api.md'
   - CLI:
@@ -24,6 +26,7 @@ nav:
     - Archive Cache: 'cli-archive-cache.md'
     - Binaries: 'cli-binaries.md'
     - JSON report: 'cli-report.md'
+    - Docker: 'cli-docker.md'
   - GitHub Actions:
     - Actions: 'gha.md'
     - setup-action: 'gha-setup-action.md'
