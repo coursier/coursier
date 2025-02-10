@@ -63,10 +63,16 @@ jobs:
         OS: ["ubuntu-latest"]
         SCALA_VERSION: ["2.13.16"]
         include:
-          - SCALA_VERSION: "2.13.16"
-            OS: "windows-latest"
-          - SCALA_VERSION: "2.12.20"
-            OS: "ubuntu-latest"
+          - OS: "ubuntu-24.04-arm"
+            SCALA_VERSION: "2.13.16"
+          - OS: "macos-13"
+            SCALA_VERSION: "2.13.16"
+          - OS: "macos-14"
+            SCALA_VERSION: "2.13.16"
+          - OS: "windows-latest"
+            SCALA_VERSION: "2.13.16"
+          - OS: "ubuntu-latest"
+            SCALA_VERSION: "2.12.20"
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
@@ -83,8 +89,15 @@ jobs:
         jvm: 21
     - run: sudo apt-get install -y nailgun
       if: runner.os == 'Linux'
+    - run: brew install cdrtools # FIXME Get rid of that dependency
+      if: runner.os == 'macOS'
     # - run: .github/scripts/scala-native-setup.sh
     #   if: runner.os != 'Windows'
+    - run: ./mill -i dockerTests --scalaVersion "$SCALA_VERSION"
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        COURSIER_JNI: force
     - run: ./mill -i jvmTests --scalaVersion "$SCALA_VERSION"
       shell: bash
       env:
@@ -235,6 +248,8 @@ jobs:
           jvm: 21
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
+      - run: brew install cdrtools # FIXME Get rid of that dependency
+        if: runner.os == 'macOS'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
         shell: bash
       - name: Copy artifacts
