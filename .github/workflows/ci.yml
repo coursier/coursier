@@ -200,7 +200,7 @@ jobs:
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
 
   generate-native-launchers:
-    name: Test and upload native launcher ${{ matrix.OS }}
+    name: ${{ matrix.OS }} native
     runs-on: ${{ matrix.OS }}
     strategy:
       fail-fast: false
@@ -214,6 +214,8 @@ jobs:
             OSSHORT: "mac"
           - OS: "macos-14"
             OSSHORT: "mac-arm"
+          - OS: "ubuntu-24.04-arm"
+            OSSHORT: "linux-arm"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -245,8 +247,16 @@ jobs:
           retention-days: 2
 
   generate-native-static-launcher:
-    name: Test and upload native static launcher
-    runs-on: "ubuntu-latest"
+    name: ${{ matrix.OS }} static native
+    runs-on: ${{ matrix.OS }}
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest"]
+        OSSHORT: ["linux"]
+        include:
+          - OS: "ubuntu-24.04-arm"
+            OSSHORT: "linux-arm"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -269,14 +279,22 @@ jobs:
           subject-path: 'artifacts/*'
       - uses: actions/upload-artifact@v4
         with:
-          name: launchers-static
+          name: launchers-${{ matrix.OSSHORT }}-static
           path: artifacts/
           if-no-files-found: error
           retention-days: 2
 
   generate-native-mostly-static-launcher:
-    name: Test and upload native mostly static launcher
-    runs-on: "ubuntu-latest"
+    name: ${{ matrix.OS }} mostly static native
+    runs-on: ${{ matrix.OS }}
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest"]
+        OSSHORT: ["linux"]
+        include:
+          - OS: "ubuntu-24.04-arm"
+            OSSHORT: "linux-arm"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -299,14 +317,22 @@ jobs:
           subject-path: 'artifacts/*'
       - uses: actions/upload-artifact@v4
         with:
-          name: launchers-mostly-static
+          name: launchers-${{ matrix.OSSHORT }}-mostly-static
           path: artifacts/
           if-no-files-found: error
           retention-days: 2
 
   generate-native-container-launcher:
-    name: Test and upload native container launcher
-    runs-on: "ubuntu-latest"
+    name: ${{ matrix.OS }} container native
+    runs-on: ${{ matrix.OS }}
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest"]
+        OSSHORT: ["linux"]
+        include:
+          - OS: "ubuntu-24.04-arm"
+            OSSHORT: "linux-arm"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -329,7 +355,7 @@ jobs:
           subject-path: 'artifacts/*'
       - uses: actions/upload-artifact@v4
         with:
-          name: launchers-container
+          name: launchers-${{ matrix.OSSHORT }}-container
           path: artifacts/
           if-no-files-found: error
           retention-days: 2
@@ -395,15 +421,27 @@ jobs:
         path: artifacts/
     - uses: actions/download-artifact@v4
       with:
-        name: launchers-static
+        name: launchers-linux-static
         path: artifacts/
     - uses: actions/download-artifact@v4
       with:
-        name: launchers-mostly-static
+        name: launchers-linux-arm-static
         path: artifacts/
     - uses: actions/download-artifact@v4
       with:
-        name: launchers-container
+        name: launchers-linux-mostly-static
+        path: artifacts/
+    - uses: actions/download-artifact@v4
+      with:
+        name: launchers-linux-arm-mostly-static
+        path: artifacts/
+    - uses: actions/download-artifact@v4
+      with:
+        name: launchers-linux-container
+        path: artifacts/
+    - uses: actions/download-artifact@v4
+      with:
+        name: launchers-linux-arm-container
         path: artifacts/
     - uses: actions/download-artifact@v4
       with:

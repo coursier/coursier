@@ -745,12 +745,14 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
             s"""#!/usr/bin/env bash
                |set -e
                |export PATH="$$(pwd)/bin:$$PATH"
+               |echo "Command should fail first" 1>&2
                |if ./cs-echo a b foo; then
                |  echo "Expected command to fail at first"
                |  exit 1
                |fi
                |export SCALA_CLI_CONFIG="$$(pwd)/config.json"
                |echo "$header"
+               |echo "Command should succeed now" 1>&2
                |exec ./cs-echo ${words.map(w => "\"" + w + "\"").mkString(" ")}
                |""".stripMargin
           os.write(tmpDir / "script.sh", scriptContent)

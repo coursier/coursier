@@ -75,7 +75,7 @@ object Versions {
 
 def sbtCoursierVersion = "2.1.4"
 
-def graalVmJvmId = "graalvm-community:21.0.2"
+def graalVmJvmId = "liberica-nik:21.0.5"
 
 def scalaCliVersion = "1.5.1"
 
@@ -93,5 +93,6 @@ object ScalaVersions {
 object Docker {
   def customMuslBuilderImageName = "scala-cli-base-musl"
   def muslBuilder                = s"$customMuslBuilderImageName:latest"
-  def authProxyBase              = "alpine:3.21.2"
+  def alpineImage                = "alpine:3.21.2"
+  def alpineJavaImage            = "eclipse-temurin:21-jre-alpine"
 }

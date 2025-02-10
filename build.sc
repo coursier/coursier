@@ -686,7 +686,9 @@ trait CliTests extends CsModule
           "-Dcoursier-test-is-native=false",
           "-Dcoursier-test-is-native-static=false",
           s"-Dcoursier.test.auth-proxy-data-dir=${T.workspace / "project/authenticated-proxy"}",
-          s"-Dcoursier.test.auth-proxy-image=${deps.Docker.authProxyBase}"
+          s"-Dcoursier.test.auth-proxy-image=${deps.Docker.alpineImage}",
+          s"-Dcoursier.test.alpine-image=${deps.Docker.alpineImage}",
+          s"-Dcoursier.test.alpine-java-image=${deps.Docker.alpineJavaImage}"
         )
       }
     }
@@ -710,7 +712,9 @@ trait CliTests extends CsModule
           "-Dcoursier-test-is-native=true",
           s"-Dcoursier-test-is-native-static=$isStatic",
           s"-Dcoursier.test.auth-proxy-data-dir=${T.workspace / "project/authenticated-proxy"}",
-          s"-Dcoursier.test.auth-proxy-image=${deps.Docker.authProxyBase}"
+          s"-Dcoursier.test.auth-proxy-image=${deps.Docker.alpineImage}",
+          s"-Dcoursier.test.alpine-image=${deps.Docker.alpineImage}",
+          s"-Dcoursier.test.alpine-java-image=${deps.Docker.alpineJavaImage}"
         )
       }
     }
