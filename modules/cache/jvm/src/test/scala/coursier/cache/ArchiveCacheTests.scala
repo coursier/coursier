@@ -21,6 +21,7 @@ object ArchiveCacheTests extends TestSuite {
       val archiveDir = Await.result(future, Duration.Inf).toTry.get
       val file       = new File(archiveDir, pathInArchive.toString)
       assert(file.exists())
+      assert(file.isFile())
     }
 
   val tests = Tests {
@@ -49,6 +50,13 @@ object ArchiveCacheTests extends TestSuite {
       checkArchiveHas(
         "https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb",
         os.sub / "control.tar.xz"
+      )
+    }
+
+    test("xz") {
+      checkArchiveHas(
+        "https://github.com/xz-mirror/xz/raw/refs/heads/master/tests/files/good-1-check-sha256.xz",
+        os.sub
       )
     }
   }

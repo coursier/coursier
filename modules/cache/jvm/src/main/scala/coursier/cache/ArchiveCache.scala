@@ -162,6 +162,8 @@ object ArchiveCache {
       ArchiveType.Ar
     else if (url.endsWith(".gz"))
       ArchiveType.Gzip
+    else if (url.endsWith(".xz"))
+      ArchiveType.Xz
     else
       sys.error(s"Unrecognized archive type: $url")
 

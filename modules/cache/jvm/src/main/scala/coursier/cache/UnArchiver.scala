@@ -1,6 +1,7 @@
 package coursier.cache
 
 import org.apache.commons.compress.archivers.ar.{ArArchiveEntry, ArArchiveInputStream}
+import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
 import org.apache.commons.io.input.{BoundedInputStream, CountingInputStream}
 import org.codehaus.plexus.archiver.ArchiverException
 import org.codehaus.plexus.archiver.tar.{
@@ -129,6 +130,35 @@ object UnArchiver {
               }
               finally {
                 if (gzis != null) gzis.close()
+                if (fos != null) fos.close()
+                if (fis != null) fis.close()
+              }
+            }
+          case ArchiveType.Xz =>
+            Left { () =>
+              // TODO Case-insensitive stripSuffix?
+              val dest = new File(destDir, archive.getName.stripSuffix(".xz"))
+
+              var fis: InputStream             = null
+              var fos: OutputStream            = null
+              var xis: XZCompressorInputStream = null
+              try {
+                fis = Files.newInputStream(archive.toPath)
+                xis = new XZCompressorInputStream(fis)
+                fos = Files.newOutputStream(dest.toPath)
+
+                val buf  = Array.ofDim[Byte](16 * 1024)
+                var read = -1
+                while ({
+                  read = xis.read(buf)
+                  read >= 0
+                })
+                  if (read > 0)
+                    fos.write(buf, 0, read)
+                fos.flush()
+              }
+              finally {
+                if (xis != null) xis.close()
                 if (fos != null) fos.close()
                 if (fis != null) fis.close()
               }

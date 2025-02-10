@@ -17,6 +17,9 @@ object ArchiveType {
   case object Gzip extends ArchiveType {
     override def singleFile: Boolean = true
   }
+  case object Xz extends ArchiveType {
+    override def singleFile: Boolean = true
+  }
 
   def parse(input: String): Option[ArchiveType] =
     input match {
@@ -27,6 +30,7 @@ object ArchiveType {
       case "txz"  => Some(Txz)
       case "tzst" => Some(Tzst)
       case "gz"   => Some(Gzip)
+      case "xz"   => Some(Xz)
       case _      => None
     }
 }
