@@ -44,8 +44,6 @@ trait Launchers extends CsModule {
     def nativeImagePersist      = System.getenv("CI") != null
     def nativeImageGraalVmJvmId = graalVmJvmId
 
-    def nativeImageUseJpms = Some(false)
-
     def nativeImageName          = "cs"
     private def staticLibDirName = "native-libs"
     private def copyCsjniutilTo(destDir: os.Path, workspace: os.Path): Unit = {
@@ -86,7 +84,12 @@ trait Launchers extends CsModule {
           )
         else
           Nil
-      Seq(s"-H:CLibraryPath=$cLibPath") ++
+      Seq(
+        s"-H:CLibraryPath=$cLibPath",
+        "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.core.jdk=ALL-UNNAMED",
+        "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted=ALL-UNNAMED",
+        "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c=ALL-UNNAMED"
+      ) ++
         extraOpts
     }
   }
@@ -101,25 +104,17 @@ trait Launchers extends CsModule {
     else
       `base-image`.nativeImage
 
-  // FIXME Move that to mill-native-image
-  private def maybePassNativeImageJpmsOption =
-    Option(System.getenv("USE_NATIVE_IMAGE_JAVA_PLATFORM_MODULE_SYSTEM"))
-      .fold("") { value =>
-        "export USE_NATIVE_IMAGE_JAVA_PLATFORM_MODULE_SYSTEM=" + value + System.lineSeparator()
-      }
-
   object `linux-docker-image` extends CliNativeImage {
     def nativeImageDockerParams = Some(
       NativeImage.DockerParams(
         imageName = "ubuntu:18.04",
         prepareCommand =
-          maybePassNativeImageJpmsOption +
-            """apt-get update -q -y &&\
-              |apt-get install -q -y build-essential libz-dev locales
-              |locale-gen en_US.UTF-8
-              |export LANG=en_US.UTF-8
-              |export LANGUAGE=en_US:en
-              |export LC_ALL=en_US.UTF-8""".stripMargin,
+          """apt-get update -q -y &&\
+            |apt-get install -q -y build-essential libz-dev locales
+            |locale-gen en_US.UTF-8
+            |export LANG=en_US.UTF-8
+            |export LANGUAGE=en_US:en
+            |export LC_ALL=en_US.UTF-8""".stripMargin,
         csUrl =
           s"https://github.com/coursier/coursier/releases/download/v${deps.csDockerVersion}/cs-x86_64-pc-linux.gz",
         extraNativeImageArgs = Nil
@@ -129,8 +124,7 @@ trait Launchers extends CsModule {
 
   private def setupLocaleAndOptions(params: NativeImage.DockerParams): NativeImage.DockerParams =
     params.copy(
-      prepareCommand = maybePassNativeImageJpmsOption +
-        params.prepareCommand +
+      prepareCommand = params.prepareCommand +
         """
           |set -v
           |apt-get update
