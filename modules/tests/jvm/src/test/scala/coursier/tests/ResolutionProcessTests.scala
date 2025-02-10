@@ -11,7 +11,7 @@ import utest._
 import scala.jdk.CollectionConverters._
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.DurationInt
-import scala.util.Try
+import scala.util.{Properties, Try}
 
 object ResolutionProcessTests extends TestSuite {
 
@@ -59,7 +59,11 @@ object ResolutionProcessTests extends TestSuite {
         val f = ResolutionProcess.fetchAll(modVers, fetch)
           .future()(ec)
 
-        val res = Try(Await.result(f, 1.second))
+        val delay =
+          // seen things fail with 1 second delay on the Windows CI
+          if (Properties.isWin) 5.seconds
+          else 1.second
+        val res = Try(Await.result(f, delay))
 
         // must have timed out
         assert {
