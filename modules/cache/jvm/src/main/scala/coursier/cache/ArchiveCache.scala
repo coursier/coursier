@@ -210,6 +210,10 @@ object ArchiveCache {
   def apply[F[_]]()(implicit S: Sync[F] = Task.sync): ArchiveCache[F] =
     ArchiveCache(CacheDefaults.archiveCacheLocation)(S)
 
+  def priviledged[F[_]]()(implicit S: Sync[F] = Task.sync): ArchiveCache[F] =
+    ArchiveCache(CacheDefaults.priviledgedArchiveCacheLocation)(S)
+      .withUnArchiver(UnArchiver.priviledged())
+
   private def deleteRecursive(f: File): Unit = {
     if (f.isDirectory)
       f.listFiles().foreach(deleteRecursive)

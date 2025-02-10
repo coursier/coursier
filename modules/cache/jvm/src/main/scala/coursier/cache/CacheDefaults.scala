@@ -20,6 +20,9 @@ object CacheDefaults {
 
   lazy val archiveCacheLocation: File = CachePath.defaultArchiveCacheDirectory()
 
+  lazy val priviledgedArchiveCacheLocation: File =
+    CachePath.defaultPriviledgedArchiveCacheDirectory()
+
   lazy val digestBasedCacheLocation: File = CachePath.defaultDigestBasedCacheDirectory()
 
   @deprecated(

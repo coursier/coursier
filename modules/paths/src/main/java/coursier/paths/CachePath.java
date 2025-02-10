@@ -120,6 +120,10 @@ public class CachePath {
         return CoursierPaths.archiveCacheDirectory();
     }
 
+    public static File defaultPriviledgedArchiveCacheDirectory() throws IOException {
+        return CoursierPaths.priviledgedArchiveCacheDirectory();
+    }
+
     public static File defaultDigestBasedCacheDirectory() throws IOException {
         return CoursierPaths.digestBasedCacheDirectory();
     }

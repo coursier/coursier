@@ -29,6 +29,7 @@ public final class CoursierPaths {
     private static final Object cacheDirectoryLock = new Object();
     private static volatile File cacheDirectory0 = null;
     private static volatile File archiveCacheDirectory0 = null;
+    private static volatile File priviledgedArchiveCacheDirectory0 = null;
     private static volatile File digestBasedCacheDirectory0 = null;
     private static volatile File jvmCacheDirectory0 = null;
 
@@ -46,6 +47,10 @@ public final class CoursierPaths {
 
     private static String computeArchiveCacheDirectory() throws IOException {
         return computeCacheDirectory("COURSIER_ARCHIVE_CACHE", "coursier.archive.cache", "arc");
+    }
+
+    private static String computePriviledgedArchiveCacheDirectory() throws IOException {
+        return computeCacheDirectory("COURSIER_PRIVILEDGED_ARCHIVE_CACHE", "coursier.priviledged.archive.cache", "priv");
     }
 
     private static String computeDigestBasedCacheDirectory() throws IOException {
@@ -95,6 +100,18 @@ public final class CoursierPaths {
             }
 
         return archiveCacheDirectory0;
+    }
+
+    public static File priviledgedArchiveCacheDirectory() throws IOException {
+
+        if (priviledgedArchiveCacheDirectory0 == null)
+            synchronized (cacheDirectoryLock) {
+                if (priviledgedArchiveCacheDirectory0 == null) {
+                    priviledgedArchiveCacheDirectory0 = new File(computePriviledgedArchiveCacheDirectory()).getAbsoluteFile();
+                }
+            }
+
+        return priviledgedArchiveCacheDirectory0;
     }
 
     public static File digestBasedCacheDirectory() throws IOException {

@@ -9,14 +9,17 @@ import java.io.File
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.util.Properties
 
-object ArchiveCacheTests extends TestSuite {
+abstract class ArchiveCacheTests extends TestSuite {
 
   def sandboxedCache = coursier.cache.FileCache[Task]((os.pwd / "test-cache").toIO)
   def archiveCache(location: os.Path): ArchiveCache[Task] =
     ArchiveCache[Task](location.toIO)
   // Uncomment this to re-download everything in a test run
   // .withCache(sandboxedCache)
+
+  def notOnWindows: Boolean = false
 
   def checkArchiveHas(archiveUrl: String, pathInArchive: os.SubPath): Unit =
     checkArchiveHas(Artifact(archiveUrl), pathInArchive)
@@ -34,7 +37,7 @@ object ArchiveCacheTests extends TestSuite {
       assert(file.isFile())
     }
 
-  val tests = Tests {
+  def actualTests = Tests {
     test("jar") {
       checkArchiveHas(
         "https://repo1.maven.org/maven2/org/fusesource/jansi/jansi/2.4.1/jansi-2.4.1.jar",
@@ -87,4 +90,12 @@ object ArchiveCacheTests extends TestSuite {
     }
   }
 
+  val tests =
+    if (notOnWindows && Properties.isWin)
+      Tests {}
+    else
+      actualTests
+
 }
+
+object ArchiveCacheTests extends ArchiveCacheTests

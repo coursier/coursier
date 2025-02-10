@@ -201,6 +201,51 @@ object UnArchiver {
       }
   }
 
+  private final class SudoAbleUnArchiver(useSudo: Boolean) extends UnArchiver with OpenStream {
+    def extract(
+      archiveType: ArchiveType,
+      archive: File,
+      destDir: File,
+      overwrite: Boolean
+    ): Unit =
+      archiveType match {
+        case compressed: ArchiveType.Compressed =>
+          // single file to decompress
+          val proceed = new DefaultUnArchiver().extractCompressed(compressed, archive, destDir)
+          Files.createDirectories(destDir.toPath)
+          proceed()
+        case tar: ArchiveType.Tar =>
+          val (compressionOptionOneLetter, compressionArgs) = tar match {
+            case ArchiveType.Tar  => ("", Nil)
+            case ArchiveType.Tgz  => ("z", Nil)
+            case ArchiveType.Tbz2 => ("j", Nil)
+            case ArchiveType.Txz  => ("J", Nil)
+            case ArchiveType.Tzst => ("", Seq("--zstd"))
+          }
+          val maybeSudo = if (useSudo) Seq("sudo") else Nil
+          val command = maybeSudo ++ Seq("tar") ++ compressionArgs ++
+            Seq("-" + compressionOptionOneLetter + "xf", archive.toString)
+          Files.createDirectories(destDir.toPath)
+          val proc = new ProcessBuilder()
+            .command(command.asJava)
+            .directory(destDir)
+            .inheritIO()
+            .start()
+          val retCode = proc.waitFor()
+          if (retCode != 0)
+            sys.error(s"Error extracting $archive under $destDir (see tar command messages above)")
+        case other =>
+          new DefaultUnArchiver().extract(archiveType, archive, destDir, overwrite)
+      }
+
+    def inputStream(archiveType: ArchiveType.Compressed, is: InputStream): InputStream =
+      new DefaultUnArchiver().inputStream(archiveType, is)
+  }
+
   def default(): UnArchiver with OpenStream =
     new DefaultUnArchiver
+  def priviledged(): UnArchiver =
+    new SudoAbleUnArchiver(true)
+  def priviledgedTestMode(): UnArchiver =
+    new SudoAbleUnArchiver(false)
 }
