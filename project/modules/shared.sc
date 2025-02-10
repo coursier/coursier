@@ -213,10 +213,12 @@ trait CsScalaModule extends ScalaModule {
     val scala213Opts =
       if (sv.startsWith("2.13.")) Seq("-Ymacro-annotations", "-Wunused:nowarn")
       else Nil
-    super.scalacOptions() ++ scala212Opts ++ scala213Opts ++ Seq(
+    val scala2Opts =
+      if (sv.startsWith("2.")) Seq("-Xasync")
+      else Nil
+    super.scalacOptions() ++ scala212Opts ++ scala213Opts ++ scala2Opts ++ Seq(
       "-deprecation",
       "-feature",
-      "-Xasync",
       "--release",
       "8"
     )

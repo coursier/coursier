@@ -1,6 +1,7 @@
 package coursier.cli
 
 import caseapp._
+import caseapp.core.Scala3Helpers._
 import caseapp.core.help.HelpFormat
 import coursier.cli.options.OptionGroup
 

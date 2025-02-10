@@ -95,7 +95,6 @@ final case class ArtifactOptions(
 }
 
 object ArtifactOptions {
-  lazy val parser: Parser[ArtifactOptions]                           = Parser.derive
-  implicit lazy val parserAux: Parser.Aux[ArtifactOptions, parser.D] = parser
-  implicit lazy val help: Help[ArtifactOptions]                      = Help.derive
+  implicit lazy val parser: Parser[ArtifactOptions] = Parser.derive
+  implicit lazy val help: Help[ArtifactOptions]     = Help.derive
 }

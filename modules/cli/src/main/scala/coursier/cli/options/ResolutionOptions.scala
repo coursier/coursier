@@ -237,7 +237,6 @@ final case class ResolutionOptions(
 }
 
 object ResolutionOptions {
-  lazy val parser: Parser[ResolutionOptions]                           = Parser.derive
-  implicit lazy val parserAux: Parser.Aux[ResolutionOptions, parser.D] = parser
-  implicit lazy val help: Help[ResolutionOptions]                      = Help.derive
+  implicit lazy val parser: Parser[ResolutionOptions] = Parser.derive
+  implicit lazy val help: Help[ResolutionOptions]     = Help.derive
 }

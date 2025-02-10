@@ -31,7 +31,6 @@ final case class RepositoryOptions(
 // format: on
 
 object RepositoryOptions {
-  lazy val parser: Parser[RepositoryOptions]                           = Parser.derive
-  implicit lazy val parserAux: Parser.Aux[RepositoryOptions, parser.D] = parser
-  implicit lazy val help: Help[RepositoryOptions]                      = Help.derive
+  implicit lazy val parser: Parser[RepositoryOptions] = Parser.derive
+  implicit lazy val help: Help[RepositoryOptions]     = Help.derive
 }

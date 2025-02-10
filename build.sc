@@ -201,7 +201,7 @@ object install extends Cross[Install](ScalaVersions.all)
 object cli extends Cli {
   object test extends SbtTests with CsTests with CsResourcesTests {
     def moduleDeps = super.moduleDeps ++ Seq(
-      coursier.jvm(sv).test
+      coursier.jvm(cliScalaVersion213Compat).test
     )
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.ujson
@@ -367,15 +367,15 @@ trait Env extends CrossSbtModule with CsModule
   }
 }
 
-def cliScalaVersion = ScalaVersions.scala213
-def launcherModule  = launcher
+def cliScalaVersion          = ScalaVersions.scala3
+def cliScalaVersion213Compat = ScalaVersions.scala213
+def launcherModule           = launcher
 trait LauncherNative04 extends CsModule
     with CoursierPublishModule {
-  private def sv   = cliScalaVersion
-  def scalaVersion = sv
+  def scalaVersion = cliScalaVersion
   def artifactName = "coursier-launcher-native_0.4"
   def compileModuleDeps = Seq(
-    launcherModule(sv)
+    launcherModule(cliScalaVersion213Compat)
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.scalaNativeTools040
@@ -607,23 +607,20 @@ trait Jvm extends CrossSbtModule with CsModule
 
 trait Cli extends CsModule
     with CoursierPublishModule with Launchers {
-  protected def sv = cliScalaVersion
-  def scalaVersion = sv
+  def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(sv),
-    `sbt-maven-repository`.jvm(sv),
-    install(sv),
-    jvm(sv),
-    launcherModule(sv)
+    coursier.jvm(cliScalaVersion213Compat),
+    `sbt-maven-repository`.jvm(cliScalaVersion213Compat),
+    install(cliScalaVersion213Compat),
+    jvm(cliScalaVersion213Compat),
+    launcherModule(cliScalaVersion213Compat)
   )
   def artifactName = "coursier-cli"
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.caseApp,
-    Deps.catsCore,
-    Deps.catsFree,
+    Deps.catsFree213,
     Deps.classPathUtil,
     Deps.collectionCompat,
-    Deps.dataClass,
     Deps.noCrcZis,
     Deps.slf4JNop
   )
@@ -661,10 +658,9 @@ trait Cli extends CsModule
 
 trait CliTests extends CsModule
     with CoursierPublishModule { self =>
-  private def sv   = cliScalaVersion
-  def scalaVersion = sv
+  def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(sv)
+    coursier.jvm(cliScalaVersion213Compat)
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.caseApp,
