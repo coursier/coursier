@@ -1,15 +1,11 @@
 package coursier.cache
 
-import coursier.util.Artifact
+import coursier.paths.CachePath
+import coursier.util.{Artifact, Sync, Task}
 import coursier.util.Monad.ops._
 import dataclass._
 
-import coursier.util.Sync
-import coursier.paths.CachePath
-import coursier.util.Task
-
 import java.io.File
-import java.nio.file.attribute.FileTime
 import java.nio.file.{Files, StandardCopyOption}
 
 @data class ArchiveCache[F[_]](
