@@ -97,6 +97,8 @@ object UnArchiver {
                   }
               }
             Right(unArc)
+          case ArchiveType.Tar =>
+            Right(new TarUnArchiver)
           case ArchiveType.Tgz =>
             Right(new TarGZipUnArchiver)
           case ArchiveType.Tbz2 =>
