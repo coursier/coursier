@@ -40,7 +40,7 @@ object Setup extends CoursierCommand[SetupOptions] {
       if (params.env.env) None
       else Some(params.env.envVarUpdater)
 
-    val graalvmHome = { version: String =>
+    val graalvmHome = { (version: String) =>
       javaHome.get(s"graalvm:$version")
     }
 
@@ -56,7 +56,7 @@ object Setup extends CoursierCommand[SetupOptions] {
       if (params.yes)
         Confirm.YesToAll()
       else
-        Confirm.ConsoleInput().withIndent(2)
+        Confirm.ConsoleInput().copy(indent = 2)
 
     val tasks = Seq(
       MaybeInstallJvm(

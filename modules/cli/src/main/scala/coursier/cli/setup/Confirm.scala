@@ -4,7 +4,6 @@ import java.io.{InputStream, PrintStream}
 import java.util.{Locale, Scanner}
 
 import coursier.util.Task
-import dataclass.data
 
 import scala.annotation.tailrec
 
@@ -14,11 +13,10 @@ trait Confirm {
 
 object Confirm {
 
-  @data class ConsoleInput(
+  case class ConsoleInput(
     in: InputStream = System.in,
     out: PrintStream = System.err,
     locale: Locale = Locale.getDefault,
-    @since
     indent: Int = 0
   ) extends Confirm {
     private val marginOpt = if (indent > 0) Some(" " * indent) else None
@@ -59,7 +57,7 @@ object Confirm {
       }
   }
 
-  @data class YesToAll(
+  case class YesToAll(
     out: PrintStream = System.err
   ) extends Confirm {
     def confirm(message: String, default: Boolean): Task[Boolean] =

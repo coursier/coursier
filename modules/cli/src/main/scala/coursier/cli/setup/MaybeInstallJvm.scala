@@ -6,9 +6,8 @@ import coursier.cache.Cache
 import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.jvm.{JvmCacheLogger, JavaHome}
 import coursier.util.Task
-import dataclass.data
 
-@data class MaybeInstallJvm(
+case class MaybeInstallJvm(
   coursierCache: Cache[Task],
   envVarUpdaterOpt: Option[Either[WindowsEnvVarUpdater, ProfileUpdater]],
   javaHome: JavaHome,

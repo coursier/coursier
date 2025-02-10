@@ -1,5 +1,6 @@
 package coursier.cli
 
+import caseapp.core.Scala3Helpers._
 import caseapp.core.app.CommandsEntryPoint
 import caseapp.core.help.HelpFormat
 import caseapp.RemainingArgs

@@ -9,21 +9,55 @@ import coursier.core.{
   Dependency,
   DependencyManagement,
   MinimizedExclusions,
+  Module,
+  ModuleName,
+  Organization,
   Resolution,
   Type
 }
+import coursier.parse.{DependencyParser, ModuleParser}
 import coursier.testcache.TestCache
 import coursier.tests.TestHelpers
-import coursier.util.StringInterpolators._
 import coursier.util.{InMemoryRepository, Task}
 import coursier.version.{Version, VersionConstraint}
 import utest._
 
-import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Properties
 
 object JsonReportTests extends TestSuite {
+
+  implicit class StringStuff(val sc: StringContext) extends AnyVal {
+    def dep(args: Any*): Dependency = {
+      val str = sc.s(args: _*)
+      DependencyParser.dependency(
+        str,
+        scala.util.Properties.versionNumberString,
+        Configuration.empty
+      ) match {
+        case Left(err)   => sys.error(s"Malformed dependency '$str': $err")
+        case Right(dep0) => dep0
+      }
+    }
+    def mod(args: Any*): Module = {
+      val str = sc.s(args: _*)
+      ModuleParser.module(
+        str,
+        scala.util.Properties.versionNumberString
+      ) match {
+        case Left(err)   => sys.error(s"Malformed module '$str': $err")
+        case Right(mod0) => mod0
+      }
+    }
+    def org(args: Any*): Organization = {
+      val str = sc.s(args: _*)
+      Organization(str)
+    }
+    def name(args: Any*): ModuleName = {
+      val str = sc.s(args: _*)
+      ModuleName(str)
+    }
+  }
 
   implicit def ec: ExecutionContext = TestHelpers.cache.ec
 
@@ -53,34 +87,27 @@ object JsonReportTests extends TestSuite {
     dependencies: Seq[Dependency],
     extraKeyPart: String = ""
   ): Future[Unit] =
-    async {
-      val res = await {
-        fetch
-          .addDependencies(dependencies: _*)
-          .futureResult()
-      }
-      await {
-        TestHelpers.validateDependencies(
-          res.resolution,
-          fetch.resolutionParams,
-          extraKeyPart = extraKeyPart
-        )
-      }
-
-      await {
-        TestHelpers.validateResult(
-          s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams, extraKeyPart = extraKeyPart)}.json"
-        ) {
-          jsonLines {
-            JsonReport.report(
-              res.resolution,
-              res.fullDetailedArtifacts,
-              useSlashSeparator = Properties.isWin
-            )
-          }
+    for {
+      res <- fetch
+        .addDependencies(dependencies: _*)
+        .futureResult()
+      _ <- TestHelpers.validateDependencies(
+        res.resolution,
+        fetch.resolutionParams,
+        extraKeyPart = extraKeyPart
+      )
+      _ <- TestHelpers.validateResult(
+        s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams, extraKeyPart = extraKeyPart)}.json"
+      ) {
+        jsonLines {
+          JsonReport.report(
+            res.resolution,
+            res.fullDetailedArtifacts,
+            useSlashSeparator = Properties.isWin
+          )
         }
       }
-    }
+    } yield ()
 
   def check(dependencies: Dependency*): Future[Unit] =
     doCheck(fetch, dependencies)

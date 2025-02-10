@@ -31,7 +31,7 @@ object Update extends CoursierCommand[UpdateOptions] {
     val noUpdateCoursierCache =
       params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
-    val graalvmHome = { version: String =>
+    val graalvmHome = { (version: String) =>
       params.sharedJava.javaHome(
         cache,
         noUpdateCoursierCache,
