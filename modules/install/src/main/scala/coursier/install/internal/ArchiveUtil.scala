@@ -26,6 +26,8 @@ object ArchiveUtil {
     val method = compression match {
       case ArchiveType.Tgz  => CompressorStreamFactory.GZIP
       case ArchiveType.Tbz2 => CompressorStreamFactory.BZIP2
+      case ArchiveType.Txz  => CompressorStreamFactory.XZ
+      case ArchiveType.Tzst => CompressorStreamFactory.ZSTANDARD
     }
 
     // https://alexwlchan.net/2019/09/unpacking-compressed-archives-in-scala/

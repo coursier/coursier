@@ -152,10 +152,18 @@ object ArchiveCache {
       ArchiveType.Tgz
     else if (url.endsWith(".tar.bz2") || url.endsWith(".tbz2"))
       ArchiveType.Tbz2
+    else if (url.endsWith(".tar.xz") || url.endsWith(".txz"))
+      ArchiveType.Txz
+    else if (url.endsWith(".tar.zst") || url.endsWith(".tzst"))
+      ArchiveType.Tzst
     else if (url.endsWith(".zip") || url.endsWith(".jar"))
       ArchiveType.Zip
+    else if (url.endsWith(".ar") || url.endsWith(".deb"))
+      ArchiveType.Ar
     else if (url.endsWith(".gz"))
       ArchiveType.Gzip
+    else if (url.endsWith(".xz"))
+      ArchiveType.Xz
     else
       sys.error(s"Unrecognized archive type: $url")
 
