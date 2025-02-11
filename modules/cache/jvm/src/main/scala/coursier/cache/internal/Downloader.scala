@@ -70,7 +70,7 @@ import scala.util.control.NonFatal
   // Reference file - if it exists, and we get not found errors on some URLs, we assume
   // we can keep track of these missing, and not try to get them again later.
   private lazy val referenceFileOpt = artifact.extra.get("metadata").map { a =>
-    localFile(a.url, a.authentication.map(_.user))
+    localFile(a.url, a.authentication.flatMap(_.userOpt))
   }
 
   private val cacheErrors = artifact.changing &&
@@ -210,10 +210,15 @@ import scala.util.control.NonFatal
       val authenticationOpt =
         artifact.authentication match {
           case Some(auth) if auth.userOnly =>
-            allCredentials0
-              .find(_.matches(url, auth.user))
-              .map(_.authentication)
-              .orElse(artifact.authentication) // Default to None instead?
+            auth.userOpt match {
+              case Some(user) =>
+                allCredentials0
+                  .find(_.matches(url, user))
+                  .map(_.authentication)
+                  .orElse(artifact.authentication) // Default to None instead?
+              case None =>
+                artifact.authentication // Default to None instead?
+            }
           case _ =>
             artifact.authentication
         }
@@ -616,7 +621,7 @@ import scala.util.control.NonFatal
 
     logger.checkingArtifact(url, artifact)
 
-    val file = localFile(url, artifact.authentication.map(_.user))
+    val file = localFile(url, artifact.authentication.flatMap(_.userOpt))
 
     def run =
       if (url.startsWith("file:/") && !localArtifactsShouldBeCached)

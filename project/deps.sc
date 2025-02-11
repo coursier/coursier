@@ -22,6 +22,7 @@ object Deps {
   def isTerminal        = ivy"io.github.alexarchambault:is-terminal:0.1.2"
   def java8Compat       = ivy"org.scala-lang.modules::scala-java8-compat:1.0.2"
   def jimfs             = ivy"com.google.jimfs:jimfs:1.3.0"
+  def jna               = ivy"net.java.dev.jna:jna:5.12.1"
   def jniUtils          = ivy"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
   def jniUtilsBootstrap =
     ivy"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
@@ -57,6 +58,7 @@ object Deps {
   def shapeless                = ivy"com.chuusai::shapeless:2.3.12"
   def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.16"
   def svm                      = ivy"org.graalvm.nativeimage:svm:21.3.13"
+  def tika                     = ivy"org.apache.tika:tika-core:3.0.0"
   def ujson                    = ivy"com.lihaoyi::ujson:4.1.0"
   def utest                    = ivy"com.lihaoyi::utest::0.8.5"
   def versions                 = ivy"io.get-coursier::versions::0.5.0"

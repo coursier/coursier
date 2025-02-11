@@ -23,23 +23,28 @@ object ArchiveUtil {
     f: Iterator[(ArchiveEntry, InputStream)] => T
   ): T = {
 
-    val method = compression match {
-      case ArchiveType.Tgz  => CompressorStreamFactory.GZIP
-      case ArchiveType.Tbz2 => CompressorStreamFactory.BZIP2
-      case ArchiveType.Txz  => CompressorStreamFactory.XZ
-      case ArchiveType.Tzst => CompressorStreamFactory.ZSTANDARD
+    val methodOpt = compression match {
+      case ArchiveType.Tar  => None
+      case ArchiveType.Tgz  => Some(CompressorStreamFactory.GZIP)
+      case ArchiveType.Tbz2 => Some(CompressorStreamFactory.BZIP2)
+      case ArchiveType.Txz  => Some(CompressorStreamFactory.XZ)
+      case ArchiveType.Tzst => Some(CompressorStreamFactory.ZSTANDARD)
     }
 
     // https://alexwlchan.net/2019/09/unpacking-compressed-archives-in-scala/
     var fis: InputStream = null
     try {
       fis = Files.newInputStream(archive.toPath)
-      val uncompressedInputStream = new CompressorStreamFactory()
-        .createCompressorInputStream(
-          method,
-          if (fis.markSupported()) fis
-          else new BufferedInputStream(fis)
-        )
+      val uncompressedInputStream = methodOpt match {
+        case Some(method) =>
+          new CompressorStreamFactory().createCompressorInputStream(
+            method,
+            if (fis.markSupported()) fis
+            else new BufferedInputStream(fis)
+          )
+        case None =>
+          fis
+      }
       val archiveInputStream: ArchiveInputStream[_ <: ArchiveEntry] =
         new ArchiveStreamFactory().createArchiveInputStream(
           if (uncompressedInputStream.markSupported()) uncompressedInputStream

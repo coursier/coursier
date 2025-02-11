@@ -294,6 +294,7 @@ trait CacheJvm extends CacheJvmBase {
     Deps.plexusArchiver,
     Deps.plexusContainerDefault,
     Deps.scalaCliConfig,
+    Deps.tika,
     Deps.windowsAnsi
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
@@ -314,6 +315,9 @@ trait CacheJvm extends CacheJvmBase {
       Deps.osLib,
       Deps.pprint,
       Deps.scalaAsync
+    )
+    def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+      Deps.jsoniterMacros
     )
     def forkEnv = super.forkEnv() ++ Seq(
       "COURSIER_CUSTOMPROTOCOL_BASE" -> T.workspace.toString
@@ -585,6 +589,7 @@ trait Jvm extends CrossSbtModule with CsModule
     Deps.svm
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
+    Deps.jna,
     Deps.jsoniterCore
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {

@@ -1,6 +1,7 @@
 package coursier.cache
 
 import coursier.cache.TestUtil._
+import coursier.core.Authentication
 import coursier.util.{Artifact, Task}
 import utest._
 
@@ -8,23 +9,35 @@ import java.io.File
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
+import scala.util.Properties
 
-object ArchiveCacheTests extends TestSuite {
+abstract class ArchiveCacheTests extends TestSuite {
+
+  def sandboxedCache = coursier.cache.FileCache[Task]((os.pwd / "test-cache").toIO)
+  def archiveCache(location: os.Path): ArchiveCache[Task] =
+    ArchiveCache[Task](location.toIO)
+  // Uncomment this to re-download everything in a test run
+  // .withCache(sandboxedCache)
+
+  def notOnWindows: Boolean = false
 
   def checkArchiveHas(archiveUrl: String, pathInArchive: os.SubPath): Unit =
-    withTmpDir { dir =>
-      val archiveCache = ArchiveCache[Task]((dir / "arc").toIO)
+    checkArchiveHas(Artifact(archiveUrl), pathInArchive)
 
-      val future = archiveCache
-        .get(Artifact(archiveUrl))
-        .future()(archiveCache.cache.ec)
+  def checkArchiveHas(archive: Artifact, pathInArchive: os.SubPath): Unit =
+    withTmpDir { dir =>
+      val archiveCache0 = archiveCache(dir / "arc")
+
+      val future = archiveCache0
+        .get(archive)
+        .future()(archiveCache0.cache.ec)
       val archiveDir = Await.result(future, Duration.Inf).toTry.get
       val file       = new File(archiveDir, pathInArchive.toString)
       assert(file.exists())
       assert(file.isFile())
     }
 
-  val tests = Tests {
+  def actualTests = Tests {
     test("jar") {
       checkArchiveHas(
         "https://repo1.maven.org/maven2/org/fusesource/jansi/jansi/2.4.1/jansi-2.4.1.jar",
@@ -59,6 +72,30 @@ object ArchiveCacheTests extends TestSuite {
         os.sub
       )
     }
+
+    test("detect tgz") {
+
+      val repoName = "library/hello-world"
+      val auth = Authentication.byNameBearerToken(
+        DockerTestUtil.token(repoName)
+      )
+
+      checkArchiveHas(
+        Artifact(
+          s"https://registry-1.docker.io/v2/$repoName/blobs/sha256:c9c5fd25a1bdc181cb012bc4fbb1ab272a975728f54064b7ae3ee8e77fd28c46"
+        )
+          .withAuthentication(Some(auth)),
+        os.sub / "hello"
+      )
+    }
   }
 
+  val tests =
+    if (notOnWindows && Properties.isWin)
+      Tests {}
+    else
+      actualTests
+
 }
+
+object ArchiveCacheTests extends ArchiveCacheTests

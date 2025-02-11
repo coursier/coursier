@@ -681,7 +681,7 @@ object FetchTests extends TestSuite {
             |</project>
             |""".stripMargin
 
-        pomPath.getParentFile.mkdirs()
+        Files.createDirectories(pomPath.getParentFile.toPath)
         Files.write(pomPath.toPath, pomContent.getBytes(StandardCharsets.UTF_8))
         // wrong sha-1
         Files.write(

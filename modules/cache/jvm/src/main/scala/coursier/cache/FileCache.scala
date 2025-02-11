@@ -136,11 +136,11 @@ import scala.util.control.NonFatal
     sumType: String
   ): EitherT[F, ArtifactError, Unit] = {
 
-    val localFile0 = localFile(artifact.url, artifact.authentication.map(_.user))
+    val localFile0 = localFile(artifact.url, artifact.authentication.flatMap(_.userOpt))
 
     val headerSumFile = Seq(auxiliaryFile(localFile0, sumType))
     val downloadedSumFile = artifact.checksumUrls.get(sumType).map { sumUrl =>
-      localFile(sumUrl, artifact.authentication.map(_.user))
+      localFile(sumUrl, artifact.authentication.flatMap(_.userOpt))
     }
 
     EitherT {
@@ -260,7 +260,7 @@ import scala.util.control.NonFatal
         validateChecksum(artifact, c).map(_ => f)
     }.leftFlatMap {
       case err: ArtifactError.WrongChecksum =>
-        val badFile         = localFile(artifact.url, artifact.authentication.map(_.user))
+        val badFile         = localFile(artifact.url, artifact.authentication.flatMap(_.userOpt))
         val badChecksumFile = new File(err.sumFile)
         val foundBadFileInCache = {
           val location0 = location.getCanonicalPath.stripSuffix(File.separator) + File.separator
