@@ -22,7 +22,7 @@ object Deps {
   def isTerminal        = ivy"io.github.alexarchambault:is-terminal:0.1.2"
   def java8Compat       = ivy"org.scala-lang.modules::scala-java8-compat:1.0.2"
   def jimfs             = ivy"com.google.jimfs:jimfs:1.3.0"
-  def jna               = ivy"net.java.dev.jna:jna:5.12.1"
+  def jna               = ivy"net.java.dev.jna:jna:5.16.0"
   def jniUtils          = ivy"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
   def jniUtilsBootstrap =
     ivy"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
