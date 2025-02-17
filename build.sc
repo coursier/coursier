@@ -678,6 +678,10 @@ trait CliTests extends CsModule
   private def sharedTestArgs = Seq(
     s"-Dcoursier-test.scala-cli=${GetCs.scalaCli(scalaCliVersion)}"
   )
+  def docJar = Task {
+    // dottydoc currently crashes when generating this module's doc jar
+    emptyZip()
+  }
   object test extends SbtTests with CsTests {
     def forkArgs = {
       val launcherTask = cli.launcher.map(_.path)

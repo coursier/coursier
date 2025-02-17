@@ -12,9 +12,9 @@ permissions:
   attestations: write
 
 jobs:
-  compile-all:
+  compile-publish-all:
     runs-on: ubuntu-latest
-    name: Compile everything
+    name: Compile and publish everything locally
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
@@ -30,6 +30,7 @@ jobs:
       with:
         jvm: 21
     - run: ./mill -i __.compile
+    - run: ./mill -i __.publishLocal
 
   compile-all-no-package-object:
     runs-on: ubuntu-latest
@@ -172,7 +173,7 @@ jobs:
     - run: scalafmt --check
 
   publish:
-    needs: ["compile-all", "test", "js-test", "bin-compat", "website-check", "format"]
+    needs: ["compile-publish-all", "test", "js-test", "bin-compat", "website-check", "format"]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
