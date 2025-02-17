@@ -988,7 +988,7 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = T.command {
   // copyDemoFiles()
 
   val newSiteDir = docs.mkdocsBuild()().path
-  os.copy(newSiteDir, docusaurusDir / "build"/ "coursier" / "upcoming")
+  os.copy(newSiteDir, docusaurusDir / "build" / "coursier" / "upcoming")
 
   docHelpers.updateGhPages(
     docusaurusDir / "build",
