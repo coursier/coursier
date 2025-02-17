@@ -2046,5 +2046,34 @@ object ResolveTests extends TestSuite {
         }
       }
     }
+
+    test("empty version") {
+      async {
+
+        val res = await {
+          resolve
+            .addDependencies(
+              dep"com.google.protobuf:protobuf-java"
+            )
+            .io
+            .attempt
+            .future()
+        }
+
+        val isLeft = res.isLeft
+        assert(isLeft)
+
+        val error = res.swap.toOption.get
+
+        error match {
+          case e: ResolutionError.CantDownloadModule =>
+            assert(e.module == mod"com.google.protobuf:protobuf-java")
+            val message = e.getMessage.toString
+            assert(message.contains("Error downloading com.google.protobuf:protobuf-java:"))
+          case _ =>
+            throw error
+        }
+      }
+    }
   }
 }
