@@ -53,6 +53,7 @@ theme:
     - navigation.tabs
     - navigation.path
     - navigation.top
+    - navigation.footer
     - search.suggest
     - search.highlight
 
