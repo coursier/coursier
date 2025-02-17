@@ -301,6 +301,15 @@ object Resolve extends PlatformResolve {
       Await.result(f, Duration.Inf)
     }
 
+    def futureEither()(implicit
+      ec: ExecutionContext = resolve.cache.ec
+    ): Future[Either[ResolutionError, Resolution]] =
+      resolve
+        .io
+        .map(Right(_))
+        .handle { case ex: ResolutionError => Left(ex) }
+        .future()
+
     def run()(implicit ec: ExecutionContext = resolve.cache.ec): Resolution = {
       val f = future()(ec)
       Await.result(f, Duration.Inf)

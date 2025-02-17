@@ -102,7 +102,7 @@ object JsonReportTests extends TestSuite {
         jsonLines {
           JsonReport.report(
             res.resolution,
-            res.fullDetailedArtifacts,
+            res.fullDetailedArtifacts0,
             useSlashSeparator = Properties.isWin
           )
         }

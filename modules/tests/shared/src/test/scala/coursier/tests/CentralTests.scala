@@ -444,10 +444,10 @@ abstract class CentralTests extends TestSuite {
           assert(conflicts.isEmpty)
           assert(isDone)
 
-          val dependencyArtifacts = res.dependencyArtifacts()
+          val dependencyArtifacts = res.dependencyArtifacts0()
 
           val zookeeperTestArtifacts = dependencyArtifacts.collect {
-            case (dep, pub, artifact)
+            case (dep, Right(pub), artifact)
                 if dep.module == mod"org.apache.zookeeper:zookeeper" &&
                 pub.`type` == Type.testJar =>
               (pub, artifact)

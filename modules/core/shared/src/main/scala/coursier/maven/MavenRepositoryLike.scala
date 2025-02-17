@@ -1,6 +1,6 @@
 package coursier.maven
 
-import coursier.core.{Authentication, Module, Repository}
+import coursier.core.{ArtifactSource, Authentication, Module, Repository}
 import coursier.util.Artifact
 
 /** A [[Repository]] instance backed by a Maven repository
@@ -23,4 +23,11 @@ trait MavenRepositoryLike extends Repository {
   def urlFor(path: Seq[String], isDir: Boolean = false): String
   def artifactFor(url: String, changing: Boolean): Artifact
   def moduleDirectory(module: Module): String
+}
+
+object MavenRepositoryLike {
+  trait WithModuleSupport extends MavenRepositoryLike with ArtifactSource.ModuleBased {
+    def checkModule: Boolean
+    def withCheckModule(checkModule: Boolean): MavenRepositoryLike
+  }
 }

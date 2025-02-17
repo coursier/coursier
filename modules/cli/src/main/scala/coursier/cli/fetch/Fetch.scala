@@ -41,7 +41,7 @@ object Fetch extends CoursierCommand[FetchOptions] {
     for {
       t <- resolveTask
       (res, scalaVersionOpt, platformOpt, _) = t
-      artifacts = coursier.Artifacts.artifacts(
+      artifacts = coursier.Artifacts.artifacts0(
         res,
         params.artifact.classifiers,
         Some(params.artifact.mainArtifacts), // allow to be null?

@@ -191,23 +191,14 @@ object DependencyParser {
   ): Either[String, (JavaOrScalaDependency, Map[String, String])] =
     for {
       anyDep <- DepParser.parse(input, acceptInlineConfiguration = true)
-      dep    <- JavaOrScalaDependency.from(anyDep)
-      map = JavaOrScalaDependency.leftOverUserParams(anyDep)
-        .map {
-          case (k, v) =>
-            (k, v.getOrElse(""))
-        }
-        .toMap
+      t      <- JavaOrScalaDependency.from0(anyDep)
+      (dep, userParams) = t
+      map = userParams.map {
+        case (k, v) =>
+          (k, v.reverseIterator.flatMap(_.iterator).find(_ => true).getOrElse(""))
+      }
       _ <- validateAttributes(map.keySet, input, Set("url")).toLeft(())
-    } yield (
-      dep,
-      JavaOrScalaDependency.leftOverUserParams(anyDep)
-        .map {
-          case (k, v) =>
-            (k, v.getOrElse(""))
-        }
-        .toMap
-    )
+    } yield (dep, map)
 
   /** Parses coordinates like org:name:version with attributes, like
     * org:name:version,attr1=val1,attr2=val2 and a configuration, like org:name:version:config or

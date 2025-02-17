@@ -94,17 +94,27 @@ object Print {
           .toVector
           .flatMap {
             case (k, l) =>
-              val configurations = l.map { dep =>
+              val split = l.map { dep =>
                 dep.variantSelector match {
                   case c: VariantSelector.ConfigurationBased =>
-                    c.configuration
+                    Left(c.configuration)
+                  case _: VariantSelector.AttributesBased =>
+                    Right(dep)
                 }
               }
-              if (configurations.isEmpty) Nil
-              else {
-                val conf = Configuration.join(configurations.toVector.sorted.distinct: _*)
-                Seq(k.withVariantSelector(VariantSelector.ConfigurationBased(conf)))
+              val configurations = split.collect {
+                case Left(conf) => conf
               }
+              val others = split.collect {
+                case Right(dep0) => dep0
+              }
+              val updatedConfDep =
+                if (configurations.isEmpty) Nil
+                else {
+                  val conf = Configuration.join(configurations.toVector.sorted.distinct: _*)
+                  Seq(k.withVariantSelector(VariantSelector.ConfigurationBased(conf)))
+                }
+              updatedConfDep ++ others
           }
           .sortBy { dep =>
             (dep.module.organization, dep.module.name, dep.module.toString, dep.versionConstraint)

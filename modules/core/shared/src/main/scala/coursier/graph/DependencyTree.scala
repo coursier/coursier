@@ -83,7 +83,21 @@ object DependencyTree {
             Some(proj.dependencies0.head._2)
           else
             None
-        mavenRelocatedOpt match {
+        def gradleModuleRelocatedOpt =
+          dep.variantSelector match {
+            case attr: VariantSelector.AttributesBased =>
+              if (proj.variants.isEmpty) None
+              else {
+                val variantOrError = proj.variantFor(attr)
+                variantOrError match {
+                  case Left(_)        => None
+                  case Right(variant) => proj.isRelocatedVariant(variant)
+                }
+              }
+            case _: VariantSelector.ConfigurationBased =>
+              None
+          }
+        mavenRelocatedOpt.orElse(gradleModuleRelocatedOpt) match {
           case Some(relocatedTo) =>
             val relocatedTo0 =
               if (relocatedTo.variantSelector.isEmpty)
@@ -125,12 +139,14 @@ object DependencyTree {
         val dep0 = dependency.withVersionConstraint(reconciledVersionConstraint)
 
         val dependencies = resolution
-          .dependenciesOf(
+          .dependenciesOf0(
             dep0,
             withRetainedVersions = false,
             withReconciledVersions = true,
             withFallbackConfig = false
           )
+          .toOption
+          .getOrElse(Nil)
           .sortBy { trDep =>
             (trDep.module.organization, trDep.module.name, trDep.versionConstraint)
           }
@@ -138,10 +154,12 @@ object DependencyTree {
         val dependencies0 = dependencies.map(_.moduleVersionConstraint).toSet
 
         def excluded = resolution
-          .dependenciesOf(
+          .dependenciesOf0(
             dep0.withMinimizedExclusions(MinimizedExclusions.zero),
             withRetainedVersions = false
           )
+          .toOption
+          .getOrElse(Nil)
           .sortBy { trDep =>
             (trDep.module.organization, trDep.module.name, trDep.versionConstraint)
           }

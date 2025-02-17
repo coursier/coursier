@@ -341,7 +341,7 @@ object ArtifactsTests extends TestSuite {
       val databindUrl =
         "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.6.7.2/jackson-databind-2.6.7.2.jar"
 
-      val artifacts   = Artifacts.artifacts(res, Set.empty, None, None, true).map(_._3).distinct
+      val artifacts   = Artifacts.artifacts0(res, Set.empty, None, None, true).map(_._3).distinct
       val databindOpt = artifacts.find(_.url == databindUrl)
       assert(databindOpt.isDefined)
       val groupedArtifacts = Artifacts.groupArtifacts(artifacts :+ databindOpt.get)
