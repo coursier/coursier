@@ -119,7 +119,9 @@ trait CoursierJavaModule extends JavaModule {
       Seq("-source", "8", "-target", "8", "-bootclasspath", rtJar.toString)
   }
   def javacOptions = T {
-    super.javacOptions() ++ maybeJdk8JavacOpt()
+    super.javacOptions() ++ maybeJdk8JavacOpt() ++ Seq(
+      "-Xlint:unchecked"
+    )
   }
 }
 
