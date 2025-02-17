@@ -1,7 +1,7 @@
 import $meta._
 
 import $file.project.deps, deps.{Deps, ScalaVersions, scalaCliVersion}
-import $file.project.docs
+import $file.project.docHelpers
 import $file.project.ghreleaseassets
 import $file.project.launchers, launchers.{Launchers, platformBootstrapExtension}
 import $file.project.modules.`bootstrap-launcher0`, `bootstrap-launcher0`.BootstrapLauncher
@@ -39,6 +39,8 @@ import mill._
 import mill.scalalib._
 import mill.scalajslib._
 import mill.contrib.bloop.Bloop
+
+import java.io.File
 
 import scala.concurrent.duration._
 import scala.util.Properties
@@ -960,7 +962,7 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = T.command {
       .filter(_.startsWith("refs/tags/v"))
       .map(_.stripPrefix("refs/tags/v"))
 
-  System.err.println(s"versionOpt=$versionOpt")
+  pprint.err.log(versionOpt)
 
   val token =
     if (dryRun) ""
@@ -973,7 +975,7 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = T.command {
   doc.generate("--npm-install", "--yarn-run-build")()
 
   for (version <- versionOpt)
-    docs.updateVersionedDocs(
+    docHelpers.updateVersionedDocs(
       docusaurusDir,
       versionedDocsRepo,
       versionedDocsBranch,
@@ -985,7 +987,10 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = T.command {
 
   // copyDemoFiles()
 
-  docs.updateGhPages(
+  val newSiteDir = docs.mkdocsBuild()().path
+  os.copy(newSiteDir, docusaurusDir / "build" / "upcoming")
+
+  docHelpers.updateGhPages(
     docusaurusDir / "build",
     token,
     "coursier/coursier",
@@ -1176,4 +1181,107 @@ object `build-util` extends Module {
     os.proc("git", "rev-parse", "HEAD").call().out.text().trim()
   }
 
+}
+
+// copied from https://github.com/alexarchambault/case-app/blob/fd9e3fcb7d628f166cd0a532addacde49629632a/build.sc#L453-L549
+object docs extends ScalaModule {
+  private def sv   = ScalaVersions.scala213
+  def scalaVersion = sv
+  def ivyDeps = Agg(
+    Deps.mdoc
+  )
+  def mainClass = Some("mdoc.Main")
+
+  def mdocInput = T.sources {
+    Seq(PathRef(millModuleBasePath.value / "pages"))
+  }
+  def mkdocsConfigFile = T.sources {
+    Seq(PathRef(millModuleBasePath.value / "mkdocs.yml"))
+  }
+
+  def mdocOutput = T {
+    val dir = millModuleBasePath.value / "docs"
+    os.makeDir.all(dir)
+    PathRef(dir)
+  }
+  def mkdocsOutput = T {
+    PathRef(millModuleBasePath.value / "site")
+  }
+
+  def mdocArgs = T.task {
+    val mdocInput0 = mdocInput().map(_.path)
+    assert(mdocInput0.length == 1)
+    define.Args(
+      "--in",
+      mdocInput0.head,
+      "--out",
+      mdocOutput().path,
+      "--site.VERSION",
+      coursier.jvm(sv).publishVersion(),
+      "--classpath",
+      coursier.jvm(sv).runClasspath().map(_.path).mkString(File.pathSeparator)
+    )
+  }
+  def mdocWatchArgs = T.task {
+    new define.Args(
+      mdocArgs().value :+ "--watch"
+    )
+  }
+
+  def mdoc() = T.command[Unit] {
+    run(mdocArgs)()
+  }
+  def mdocWatch() = T.command[Unit] {
+    run(mdocWatchArgs)()
+  }
+
+  def mkdocsConfigArgs = T {
+    val mkdocsConfigFile0 = mkdocsConfigFile().map(_.path)
+    assert(mkdocsConfigFile0.length == 1)
+    Seq("--config-file", mkdocsConfigFile0.head.toString)
+  }
+  def mkdocsSiteDirArgs = T {
+    Seq("--site-dir", mkdocsOutput().path.toString)
+  }
+  def millSourcePath = super.millSourcePath / os.up / os.up / "docs"
+  def mkdocsServe() = T.command[Unit] {
+    mdoc()()
+    val docsDir = T.workspace / "docs"
+    val serveProc = os.proc("mkdocs", "serve", mkdocsConfigArgs())
+      .spawn(cwd = docsDir, stdin = os.Inherit, stdout = os.Inherit)
+    val mdocProc = os.proc(
+      "java",
+      "-cp",
+      compileClasspath().map(_.path).mkString(File.pathSeparator),
+      mainClass().getOrElse(???),
+      mdocWatchArgs().value
+    )
+      .spawn(cwd = docsDir, stdin = os.Inherit, stdout = os.Inherit)
+
+    while (serveProc.isAlive && mdocProc.isAlive)
+      Thread.sleep(1000L)
+
+    serveProc.waitFor()
+    mdocProc.waitFor()
+
+    val serveRetCode = serveProc.exitCode()
+    val mdocRetCode  = mdocProc.exitCode()
+    if (serveRetCode != 0 || mdocRetCode != 0)
+      sys.error(s"Got exit code $serveRetCode for mkdocs serve and $mdocRetCode for mdoc")
+    ()
+  }
+  def mkdocsBuild() = T.command[PathRef] {
+    mdoc()()
+    os.proc("mkdocs", "build", mkdocsConfigArgs(), mkdocsSiteDirArgs())
+      .call(cwd = millModuleBasePath.value, stdin = os.Inherit, stdout = os.Inherit)
+
+    PathRef(millSourcePath / "site")
+  }
+  def mkdocsGhDeploy() = T.command[Unit] {
+    mdoc()()
+    os.proc("mkdocs", "gh-deploy", mkdocsConfigArgs(), mkdocsSiteDirArgs())
+      .call(cwd = millModuleBasePath.value, stdin = os.Inherit, stdout = os.Inherit)
+
+    ()
+  }
 }

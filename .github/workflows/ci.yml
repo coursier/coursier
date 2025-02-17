@@ -154,6 +154,13 @@ jobs:
     - uses: coursier/setup-action@v1.3
       with:
         jvm: 21
+    - run: ./mill -i docs.mdoc
+      env:
+        COURSIER_JNI: force
+    - run: .github/scripts/setup-mkdocs.sh
+    - run: ./mill -i docs.mkdocsBuild
+      env:
+        COURSIER_JNI: force
     - run: ./mill -i doc.generate --npm-install --yarn-run-build
       env:
         COURSIER_JNI: force
@@ -487,6 +494,7 @@ jobs:
       - uses: coursier/setup-action@v1.3
         with:
           jvm: 21
+      - run: .github/scripts/setup-mkdocs.sh
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill -i updateWebsite
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -508,6 +516,7 @@ jobs:
       - uses: coursier/setup-action@v1.3
         with:
           jvm: 21
+      - run: .github/scripts/setup-mkdocs.sh
       - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill -i updateWebsite
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

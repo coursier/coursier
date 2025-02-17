@@ -1,0 +1,89 @@
+site_name: coursier
+
+nav:
+  - Home: 'index.md'
+  - Features:
+    - Coursier features: 'features.md'
+    - Bill of Material: 'features-bom.md'
+    - Gradle Modules: 'features-gradle-modules.md'
+  - API:
+    - Usage: 'api.md'
+    - Dependencies: 'api-dependency.md'
+  - CLI:
+    - Usage: 'cli.md'
+    - Dependencies: 'cli-dependency.md'
+
+repo_url: https://get-coursier.io/upcoming
+edit_uri: edit/main/docs/pages/
+
+theme:
+  name: material
+  palette:
+
+    # Palette toggle for automatic mode
+    - media: "(prefers-color-scheme)"
+      primary: orange
+      accent: yellow
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      primary: orange
+      accent: red
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      primary: orange
+      accent: yellow
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+
+  features:
+    - content.action.edit
+    - navigation.instant
+    - navigation.instant.progress
+    - navigation.tabs
+    - navigation.path
+    - navigation.top
+    - search.suggest
+    - search.highlight
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - tables
+  - def_list
+  - toc:
+      permalink: true
+
+plugins:
+  - git-revision-date-localized:
+      enable_creation_date: true
+  - git-committers:
+      repository: coursier/coursier
+      branch: main
+      enabled: !ENV [CI, false]
+  - search
+
+extra:
+  version:
+    provider: mike
+
+validation:
+  links:
+    not_found:
+    anchors:
+    unrecognized_links:
