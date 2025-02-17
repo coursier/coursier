@@ -1187,6 +1187,9 @@ object `build-util` extends Module {
 object docs extends ScalaModule {
   private def sv   = ScalaVersions.scala213
   def scalaVersion = sv
+  def moduleDeps = Seq(
+    coursier.jvm(sv)
+  )
   def ivyDeps = Agg(
     Deps.mdoc
   )
@@ -1208,7 +1211,7 @@ object docs extends ScalaModule {
     PathRef(millModuleBasePath.value / "site")
   }
 
-  def mdocArgs = T.task {
+  def mdocArgs = Task.Anon {
     val mdocInput0 = mdocInput().map(_.path)
     assert(mdocInput0.length == 1)
     define.Args(
@@ -1219,7 +1222,7 @@ object docs extends ScalaModule {
       "--site.VERSION",
       coursier.jvm(sv).publishVersion(),
       "--classpath",
-      coursier.jvm(sv).runClasspath().map(_.path).mkString(File.pathSeparator)
+      runClasspath().map(_.path).mkString(File.pathSeparator)
     )
   }
   def mdocWatchArgs = T.task {
