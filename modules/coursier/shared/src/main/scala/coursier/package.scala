@@ -31,6 +31,18 @@ package object coursier {
       core.Dependency(module, VersionConstraint0(version))
   }
 
+  type VersionConstraint = coursier.version.VersionConstraint
+  val VersionConstraint = coursier.version.VersionConstraint
+
+  type Variant = core.Variant
+  val Variant = core.Variant
+
+  type VariantSelector = core.VariantSelector
+  val VariantSelector = core.VariantSelector
+
+  type BomDependency = core.BomDependency
+  val BomDependency = core.BomDependency
+
   type Attributes = core.Attributes
   object Attributes extends Serializable {
     def apply(
