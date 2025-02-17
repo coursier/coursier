@@ -1,7 +1,7 @@
 import $file.^.deps, deps.{Deps, sbtCoursierVersion}
 import $file.^.relativize, relativize.{relativize => doRelativize}
 import $file.shared, shared.latestTaggedVersion
-import $file.^.docs
+import $file.^.docHelpers
 
 import java.io.File
 
@@ -22,7 +22,7 @@ trait Doc extends ScalaModule {
     docusaurusDir: String = "doc/website"
   ) = T.command {
     val dir = os.Path(docusaurusDir, T.workspace)
-    docs.copyDocusaurusVersionedData(repo, branch, dir, T.dest / "repo")
+    docHelpers.copyDocusaurusVersionedData(repo, branch, dir, T.dest / "repo")
   }
 
   def forkWorkingDir = T.dest

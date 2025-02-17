@@ -1,7 +1,7 @@
 import $meta._
 
 import $file.project.deps, deps.{Deps, ScalaVersions, scalaCliVersion}
-import $file.project.docs
+import $file.project.docHelpers
 import $file.project.ghreleaseassets
 import $file.project.launchers, launchers.{Launchers, platformBootstrapExtension}
 import $file.project.modules.`bootstrap-launcher0`, `bootstrap-launcher0`.BootstrapLauncher
@@ -973,7 +973,7 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = T.command {
   doc.generate("--npm-install", "--yarn-run-build")()
 
   for (version <- versionOpt)
-    docs.updateVersionedDocs(
+    docHelpers.updateVersionedDocs(
       docusaurusDir,
       versionedDocsRepo,
       versionedDocsBranch,
@@ -985,7 +985,7 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = T.command {
 
   // copyDemoFiles()
 
-  docs.updateGhPages(
+  docHelpers.updateGhPages(
     docusaurusDir / "build",
     token,
     "coursier/coursier",
