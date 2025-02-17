@@ -61,7 +61,7 @@ object Deps {
   def tika                     = ivy"org.apache.tika:tika-core:3.1.0"
   def ujson                    = ivy"com.lihaoyi::ujson:4.1.0"
   def utest                    = ivy"com.lihaoyi::utest::0.8.5"
-  def versions                 = ivy"io.get-coursier::versions::0.5.0"
+  def versions                 = ivy"io.get-coursier::versions::0.5.1"
   def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
   def windowsAnsiPs =
     ivy"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
