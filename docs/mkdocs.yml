@@ -9,11 +9,14 @@ nav:
   - API:
     - Usage: 'api.md'
     - Dependencies: 'api-dependency.md'
+    - Sub-projects: 'api-projects.md'
+  - Java API:
+    - Java API: 'java-api.md'
   - CLI:
     - Usage: 'cli.md'
     - Dependencies: 'cli-dependency.md'
 
-repo_url: https://get-coursier.io/upcoming
+repo_url: https://github.com/coursier/coursier
 edit_uri: edit/main/docs/pages/
 
 theme:
@@ -48,14 +51,17 @@ theme:
 
   features:
     - content.action.edit
+    - content.action.view
     - navigation.instant
     - navigation.instant.progress
     - navigation.tabs
+    - navigation.tracking
     - navigation.path
     - navigation.top
     - navigation.footer
     - search.suggest
     - search.highlight
+    - toc.follow
 
 markdown_extensions:
   - pymdownx.highlight:
