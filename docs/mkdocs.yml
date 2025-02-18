@@ -22,6 +22,7 @@ nav:
     - Dependencies: 'cli-dependency.md'
     - Cache: 'cli-cache.md'
     - Archive Cache: 'cli-archive-cache.md'
+    - JSON report: 'cli-report.md'
 
 repo_url: https://github.com/coursier/coursier
 edit_uri: edit/main/docs/pages/
