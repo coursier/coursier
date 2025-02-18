@@ -61,7 +61,9 @@ class Python {
         try {
             Object[] propsArgs = {};
             assert propsMethod != null;
-            props = (Map<String, String>) propsMethod.invoke(null, propsArgs);
+            @SuppressWarnings("unchecked")
+            Map<String, String> props0 = (Map<String, String>) propsMethod.invoke(null, propsArgs);
+            props = props0;
         }
         catch (IllegalAccessException ex) {
             exit(ex.getMessage());
