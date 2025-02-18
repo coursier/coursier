@@ -231,7 +231,7 @@ def uploadLaunchers(
   val (tag, overwriteAssets) =
     if (version.endsWith("-SNAPSHOT")) ("latest", true)
     else ("v" + version, false)
-  upload(ghOrg, ghName, ghToken, tag, dryRun = false, overwrite = true)(launchers: _*)
+  upload(ghOrg, ghName, ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
 
   upload0(
     launchers,
