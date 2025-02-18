@@ -253,7 +253,7 @@ object Print {
             compatibleVersions(version, retainedVersion)
 
           (if (assumeCompatibleVersions) colors.yellow else colors.red) +
-            s"$version -> ${retainedVersion.asString}" +
+            s"${version.asString} -> ${retainedVersion.asString}" +
             (if (assumeCompatibleVersions) "" else " (possible incompatibility)") +
             colors.reset
         }
