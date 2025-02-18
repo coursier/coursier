@@ -20,7 +20,7 @@ Their use should be preferred to their deprecated equivalents under `coursier.co
 
 The [coursier-dependency](https://github.com/coursier/dependency) project allows to define
 and parse dependencies. It can do so on the JVM, Scala.js, and Scala Native too (the latter
-now being supported by coursier itself). It mainly publishes the `io.get-coursier::dependency`
+not being supported by coursier itself). It mainly publishes the `io.get-coursier::dependency`
 module. It defines classes under the `dependency` package (right under root, so `_root_.dependency`).
 
 It's only used internally by coursier for now, but isn't part of its public API yet.
