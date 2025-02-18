@@ -6,6 +6,7 @@ nav:
     - Coursier features: 'features.md'
     - Cache: 'features-cache.md'
     - Archive Cache: 'features-archive-cache.md'
+    - JVM management: 'features-jvm.md'
     - Bill of Material: 'features-bom.md'
     - Gradle Modules: 'features-gradle-modules.md'
   - API:
