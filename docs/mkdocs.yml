@@ -4,17 +4,23 @@ nav:
   - Home: 'index.md'
   - Features:
     - Coursier features: 'features.md'
+    - Cache: 'features-cache.md'
+    - Archive Cache: 'features-archive-cache.md'
     - Bill of Material: 'features-bom.md'
     - Gradle Modules: 'features-gradle-modules.md'
   - API:
     - Usage: 'api.md'
     - Dependencies: 'api-dependency.md'
     - Sub-projects: 'api-projects.md'
+    - Cache: 'api-cache.md'
+    - Archive Cache: 'api-archive-cache.md'
   - Java API:
     - Java API: 'java-api.md'
   - CLI:
     - Usage: 'cli.md'
     - Dependencies: 'cli-dependency.md'
+    - Cache: 'cli-cache.md'
+    - Archive Cache: 'cli-archive-cache.md'
 
 repo_url: https://github.com/coursier/coursier
 edit_uri: edit/main/docs/pages/
