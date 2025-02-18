@@ -905,7 +905,7 @@ def waitForSync(version: String = buildVersion) = T.command {
   val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
   sync.waitForSync(
     launcher.toString,
-    s"io.get-coursier:coursier-cli_2.13:$version",
+    s"${cli.pomSettings().organization}:${cli.artifactId()}:$version",
     extraArgs,
     25
   )
