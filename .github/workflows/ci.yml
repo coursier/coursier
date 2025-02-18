@@ -417,6 +417,10 @@ jobs:
         path: artifacts/
     - uses: actions/download-artifact@v4
       with:
+        name: launchers-linux-arm
+        path: artifacts/
+    - uses: actions/download-artifact@v4
+      with:
         name: launchers-windows
         path: artifacts/
     - uses: actions/download-artifact@v4
