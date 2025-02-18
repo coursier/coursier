@@ -20,6 +20,7 @@ def platformBootstrapExtension: String =
 def platformSuffix: String = {
   val arch = sys.props("os.arch").toLowerCase(java.util.Locale.ROOT) match {
     case "amd64" => "x86_64"
+    case "arm64" => "aarch64"
     case other   => other
   }
   val os = {
