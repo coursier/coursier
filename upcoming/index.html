@@ -374,6 +374,17 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="." class="md-nav__link md-nav__link--active">
         
   
@@ -383,6 +394,103 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#where-to-look" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where to look?
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Where to look?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mill-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mill user
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scala-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scala user
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scala-cli-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scala CLI user
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scala-sbt-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scala / sbt user
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bazel-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bazel user
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jvm-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      JVM user
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#java-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Java user
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -924,6 +1032,92 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#where-to-look" class="md-nav__link">
+    <span class="md-ellipsis">
+      Where to look?
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Where to look?">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mill-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mill user
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scala-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scala user
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scala-cli-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scala CLI user
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#scala-sbt-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Scala / sbt user
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bazel-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Bazel user
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#jvm-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      JVM user
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#java-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      Java user
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -956,6 +1150,67 @@
 <h1 id="new-coursier-website">New coursier website<a class="headerlink" href="#new-coursier-website" title="Permanent link">&para;</a></h1>
 <p>This website is in construction. See <a href="https://get-coursier.io">the legacy website</a> for details
 about other topics.</p>
+<h2 id="where-to-look">Where to look?<a class="headerlink" href="#where-to-look" title="Permanent link">&para;</a></h2>
+<p>The coursier cache backs basically all coursier features. It should be important for you
+to understand how it works.</p>
+<ul>
+<li>cache</li>
+</ul>
+<p>What user are you?</p>
+<h3 id="mill-user">Mill user<a class="headerlink" href="#mill-user" title="Permanent link">&para;</a></h3>
+<p>You use coursier via Mill. Mill uses coursier to get and manage JVM dependencies.
+It also uses it to fetch JVMs, if you're using the Mill native launcher, or Mill's
+per module JVM capabilities.</p>
+<ul>
+<li>archive cache</li>
+<li>JVM</li>
+<li>Gradle Modules</li>
+<li>BOM</li>
+<li>dependency format</li>
+</ul>
+<h3 id="scala-user">Scala user<a class="headerlink" href="#scala-user" title="Permanent link">&para;</a></h3>
+<p>You use the coursier CLI to setup Scala on your machine, following the instructions
+of the scala-lang.org website.</p>
+<ul>
+<li>setup</li>
+<li>install</li>
+<li>bootstraps</li>
+<li>JVM</li>
+</ul>
+<h3 id="scala-cli-user">Scala CLI user<a class="headerlink" href="#scala-cli-user" title="Permanent link">&para;</a></h3>
+<p>You use coursier via Scala CLI. Scala CLI relies on many coursier features, most notably
+JVM dependencies resolution and JVM management.</p>
+<ul>
+<li>dependency format</li>
+<li>archive cache</li>
+<li>JVM</li>
+</ul>
+<h3 id="scala-sbt-user">Scala / sbt user<a class="headerlink" href="#scala-sbt-user" title="Permanent link">&para;</a></h3>
+<p>You use coursier via sbt. sbt uses coursier to get and manage JVM dependencies.</p>
+<ul>
+<li>sbt particularities (relaxed reconciliation, disabled BOM support, no Gradle Module support, …)</li>
+</ul>
+<h3 id="bazel-user">Bazel user<a class="headerlink" href="#bazel-user" title="Permanent link">&para;</a></h3>
+<p>You use coursier via Bazel's rules_jvm_external. rules_jvm_external uses the coursier CLI
+to fetch dependencies, and uses the coursier CLI's JSON report output to read its results.</p>
+<ul>
+<li>Gradle Modules</li>
+<li>BOM</li>
+<li>dependency format</li>
+</ul>
+<h3 id="jvm-user">JVM user<a class="headerlink" href="#jvm-user" title="Permanent link">&para;</a></h3>
+<p>You use the coursier CLI to manage JVMs on your machine or from scripts.</p>
+<ul>
+<li>archive cache</li>
+<li>JVM</li>
+</ul>
+<h3 id="java-user">Java user<a class="headerlink" href="#java-user" title="Permanent link">&para;</a></h3>
+<p>You use the coursier Java API to download dependencies, and maybe JVMs or archives too.</p>
+<ul>
+<li>Java API</li>
+<li>archive cache</li>
+<li>JVM</li>
+</ul>
 
 
 
