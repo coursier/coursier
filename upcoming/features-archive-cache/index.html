@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../features-jvm/">
+        <link rel="prev" href="../features-cache/">
       
       
-        <link rel="next" href="../features-gradle-modules/">
+        <link rel="next" href="../features-jvm/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -20,7 +20,7 @@
     
     
       
-        <title>Bill of Material - coursier</title>
+        <title>Archive Cache - coursier</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#bill-of-material" class="md-skip">
+        <a href="#coursier-archive-cache" class="md-skip">
           Skip to content
         </a>
       
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Bill of Material
+              Archive Cache
             
           </span>
         </div>
@@ -469,10 +469,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../features-archive-cache/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Archive Cache
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -481,6 +501,44 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#standalone-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      Standalone use
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cache-location" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cache location
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -511,19 +569,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../features-bom/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -532,7 +581,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -931,6 +979,32 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#standalone-use" class="md-nav__link">
+    <span class="md-ellipsis">
+      Standalone use
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cache-location" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cache location
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -944,7 +1018,7 @@
                   
 
   
-    <a href="https://github.com/coursier/coursier/edit/main/docs/pages/features-bom.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/coursier/coursier/edit/main/docs/pages/features-archive-cache.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4v-2m10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1 2.1 2.1Z"/></svg>
     </a>
@@ -953,21 +1027,79 @@
     
       
     
-    <a href="https://github.com/coursier/coursier/raw/main/docs/pages/features-bom.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/coursier/coursier/raw/main/docs/pages/features-archive-cache.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.15 8.15 0 0 1-1.23-2Z"/></svg>
     </a>
   
 
 
-<h1 id="bill-of-material">Bill Of Material<a class="headerlink" href="#bill-of-material" title="Permanent link">&para;</a></h1>
-<p>Bills Of Material, or BOMs, allow to:</p>
-<ul>
-<li>fill input dependencies' versions if these are empty</li>
-<li>override versions of transitive dependencies</li>
-</ul>
-<p>See <a href="../api-dependency/#bill-of-material">the dedicated API section</a> and
-<a href="../cli-dependency/#bill-of-material">the dedicated CLI section</a>.</p>
+<h1 id="coursier-archive-cache">Coursier Archive Cache<a class="headerlink" href="#coursier-archive-cache" title="Permanent link">&para;</a></h1>
+<p>The archive cache offers to unpack artifacts downloaded by the <a href="../features-cache/">main coursier cache</a>.
+It unpacks them in a predefined and stable location, so that things need to be unpacked only once,
+and can be re-used many times after that.</p>
+<p>For example, <a href="https://cosmo.zip/pub/cosmocc/cosmocc-3.9.7.zip">this archive</a> ends up being unpacked
+in this location on Linux:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>~/.cache/coursier/arc/https/cosmo.zip/pub/cosmocc/cosmocc-3.9.7.zip/
+</span></code></pre></div></p>
+<p>Note the <code>arc</code> component in the path, where paths of the <a href="../features-cache/">main coursier cache</a> contain
+a <code>v1</code> instead.</p>
+<p>One can get such a path from the command-line, with:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>$ cs get --archive https://cosmo.zip/pub/cosmocc/cosmocc-3.9.7.zip
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>~/.cache/coursier/arc/https/cosmo.zip/pub/cosmocc/cosmocc-3.9.7.zip
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>$ ls &quot;$(cs get --archive https://cosmo.zip/pub/cosmocc/cosmocc-3.9.7.zip)&quot;
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>LICENSE.gpl2
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>LICENSE.gpl3
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>LICENSE.lgpl2
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>LICENSE.lgpl3
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>README.md
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>aarch64-linux-cosmo
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>bin
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>include
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>lib
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>libexec
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>x86_64-linux-cosmo
+</span></code></pre></div></p>
+<p>This command downloads the artifact via the main coursier cache if needed, then
+unpacks it in the archive cache if needed. If the archive is already unpacked in the
+main archive cache, it doesn't check or try to download the artifact in the main
+coursier cache in the first place.</p>
+<h2 id="standalone-use">Standalone use<a class="headerlink" href="#standalone-use" title="Permanent link">&para;</a></h2>
+<p>While various features of coursier rely on the archive cache, it can be used in a standalone fashion
+<a href="../api-archive-cache/">via its API</a> or <a href="../cli-archive-cache/">via the CLI</a>.</p>
+<h2 id="cache-location">Cache location<a class="headerlink" href="#cache-location" title="Permanent link">&para;</a></h2>
+<p>The exact location of the archive cache is OS-dependent. Like for
+<a href="../features-cache/#cache-location">the main coursier cache</a>, it relies on the
+<a href="https://github.com/dirs-dev/directories-jvm">directories-jvm</a> library (more precisely,
+<a href="https://github.com/coursier/directories-jvm">a slightly customized fork of it</a>) to follow
+OS conventions and put the coursier cache at the most appropriate location for your OS.</p>
+<table>
+<thead>
+<tr>
+<th>OS</th>
+<th>Location</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Linux</td>
+<td><code>~/.cache/coursier/arc/</code></td>
+<td>XDG…</td>
+</tr>
+<tr>
+<td>macOS</td>
+<td><code>~/Library/Caches/Coursier/arc/</code></td>
+<td></td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>C:\Users\username\AppData\Local\Coursier\Cache\arc</code></td>
+<td>Windows API…</td>
+</tr>
+</tbody>
+</table>
 
 
 
@@ -1035,7 +1167,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../features-jvm/" class="md-footer__link md-footer__link--prev" aria-label="Previous: JVM management">
+          <a href="../features-cache/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Cache">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
@@ -1045,20 +1177,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                JVM management
+                Cache
               </div>
             </div>
           </a>
         
         
           
-          <a href="../features-gradle-modules/" class="md-footer__link md-footer__link--next" aria-label="Next: Gradle Modules">
+          <a href="../features-jvm/" class="md-footer__link md-footer__link--next" aria-label="Next: JVM management">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Gradle Modules
+                JVM management
               </div>
             </div>
             <div class="md-footer__button md-icon">

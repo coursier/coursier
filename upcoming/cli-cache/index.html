@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../features-jvm/">
+        <link rel="prev" href="../cli-dependency/">
       
       
-        <link rel="next" href="../features-gradle-modules/">
+        <link rel="next" href="../cli-archive-cache/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -20,7 +20,7 @@
     
     
       
-        <title>Bill of Material - coursier</title>
+        <title>Cache - coursier</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#bill-of-material" class="md-skip">
+        <a href="#cache" class="md-skip">
           Skip to content
         </a>
       
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Bill of Material
+              Cache
             
           </span>
         </div>
@@ -244,12 +244,10 @@
         
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
+      <li class="md-tabs__item">
         <a href="../features/" class="md-tabs__link">
           
   
@@ -300,10 +298,12 @@
         
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../cli/" class="md-tabs__link">
           
   
@@ -384,28 +384,23 @@
       
   
   
-    
   
   
-  
     
     
     
       
-        
-        
-      
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -416,7 +411,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             Features
@@ -511,19 +506,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../features-bom/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -532,7 +518,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -786,23 +771,28 @@
       
   
   
+    
   
   
+  
     
     
     
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -813,7 +803,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             CLI
@@ -866,10 +856,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../cli-cache/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Cache
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -878,6 +888,68 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cs-get" class="md-nav__link">
+    <span class="md-ellipsis">
+      cs get
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Environment variables
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Environment variables">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cache-location" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cache location
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ttl" class="md-nav__link">
+    <span class="md-ellipsis">
+      TTL
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -931,6 +1003,56 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cs-get" class="md-nav__link">
+    <span class="md-ellipsis">
+      cs get
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#environment-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Environment variables
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Environment variables">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cache-location" class="md-nav__link">
+    <span class="md-ellipsis">
+      Cache location
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ttl" class="md-nav__link">
+    <span class="md-ellipsis">
+      TTL
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -944,7 +1066,7 @@
                   
 
   
-    <a href="https://github.com/coursier/coursier/edit/main/docs/pages/features-bom.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/coursier/coursier/edit/main/docs/pages/cli-cache.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4v-2m10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1 2.1 2.1Z"/></svg>
     </a>
@@ -953,21 +1075,36 @@
     
       
     
-    <a href="https://github.com/coursier/coursier/raw/main/docs/pages/features-bom.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/coursier/coursier/raw/main/docs/pages/cli-cache.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.15 8.15 0 0 1-1.23-2Z"/></svg>
     </a>
   
 
 
-<h1 id="bill-of-material">Bill Of Material<a class="headerlink" href="#bill-of-material" title="Permanent link">&para;</a></h1>
-<p>Bills Of Material, or BOMs, allow to:</p>
-<ul>
-<li>fill input dependencies' versions if these are empty</li>
-<li>override versions of transitive dependencies</li>
-</ul>
-<p>See <a href="../api-dependency/#bill-of-material">the dedicated API section</a> and
-<a href="../cli-dependency/#bill-of-material">the dedicated CLI section</a>.</p>
+<h1 id="cache">Cache<a class="headerlink" href="#cache" title="Permanent link">&para;</a></h1>
+<p>From the CLI, one can interact directly with the cache with <code>cs get</code>. One can also
+adjust some cache parameters, that should apply to all applications using coursier.</p>
+<h2 id="cs-get"><code>cs get</code><a class="headerlink" href="#cs-get" title="Permanent link">&para;</a></h2>
+<p>The <code>cs get</code> command of the coursier CLI allows to download files via the coursier cache:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ cs get https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16.jar
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>~/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16.jar
+</span></code></pre></div></p>
+<p>For URLs whose content might change, pass <code>--changing</code>, to check for updates if the last
+check is older than the <a href="../features-cache/#ttl">TTL</a>:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>$ cs get https://repo1.maven.org/maven2/org/scala-lang/scala-library/maven-metadata.xml --changing
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>~/.cache/coursier/v1/https/repo1.maven.org/maven2/org/scala-lang/scala-library/maven-metadata.xml
+</span></code></pre></div></p>
+<h2 id="environment-variables">Environment variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h2>
+<h3 id="cache-location">Cache location<a class="headerlink" href="#cache-location" title="Permanent link">&para;</a></h3>
+<p>Adjust the cache location with <code>COURSIER_CACHE</code>:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>$ export COURSIER_CACHE=&quot;/some/other/location&quot;
+</span></code></pre></div></p>
+<h3 id="ttl">TTL<a class="headerlink" href="#ttl" title="Permanent link">&para;</a></h3>
+<p>Adjust the TTL with <code>COURSIER_TTL</code>:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>$ export COURSIER_TTL=&quot;1 hour&quot;
+</span></code></pre></div></p>
+<p>The value of <code>COURSIER_TTL</code> is parsed with <code>scala.concurrent.duration.Duration</code>.</p>
 
 
 
@@ -1035,7 +1172,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../features-jvm/" class="md-footer__link md-footer__link--prev" aria-label="Previous: JVM management">
+          <a href="../cli-dependency/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Dependencies">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
@@ -1045,20 +1182,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                JVM management
+                Dependencies
               </div>
             </div>
           </a>
         
         
           
-          <a href="../features-gradle-modules/" class="md-footer__link md-footer__link--next" aria-label="Next: Gradle Modules">
+          <a href="../cli-archive-cache/" class="md-footer__link md-footer__link--next" aria-label="Next: Archive Cache">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Gradle Modules
+                Archive Cache
               </div>
             </div>
             <div class="md-footer__button md-icon">
