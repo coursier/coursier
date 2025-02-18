@@ -559,10 +559,11 @@ trait Install extends CrossSbtModule with CsModule
     launcherModule()
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
-    Deps.dataClass
+    Deps.dataClass,
+    Deps.jsoniterMacros
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
-    Deps.argonautShapeless,
+    Deps.jsoniterCore,
     Deps.catsCore
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {

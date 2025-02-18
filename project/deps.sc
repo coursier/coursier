@@ -1,13 +1,12 @@
 import mill._, scalalib._
 
 object Deps {
-  def argonautShapeless = ivy"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.1"
-  def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M30"
-  def catsCore          = ivy"org.typelevel::cats-core:${Versions.cats}"
-  def catsFree213       = ivy"org.typelevel:cats-free_2.13:${Versions.cats}"
-  def catsEffect        = ivy"org.typelevel::cats-effect::3.5.7"
-  def classPathUtil     = ivy"io.get-coursier::class-path-util:0.1.4"
-  def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.13.0"
+  def caseApp          = ivy"com.github.alexarchambault::case-app:2.1.0-M30"
+  def catsCore         = ivy"org.typelevel::cats-core:${Versions.cats}"
+  def catsFree213      = ivy"org.typelevel:cats-free_2.13:${Versions.cats}"
+  def catsEffect       = ivy"org.typelevel::cats-effect::3.5.7"
+  def classPathUtil    = ivy"io.get-coursier::class-path-util:0.1.4"
+  def collectionCompat = ivy"org.scala-lang.modules::scala-collection-compat::2.13.0"
   def concurrentReferenceHashMap =
     ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
   def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.7"
@@ -55,7 +54,6 @@ object Deps {
   def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.3.0"
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
   def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
-  def shapeless                = ivy"com.chuusai::shapeless:2.3.12"
   def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.16"
   def svm                      = ivy"org.graalvm.nativeimage:svm:21.3.13"
   def tika                     = ivy"org.apache.tika:tika-core:3.1.0"
