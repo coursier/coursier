@@ -2,9 +2,15 @@
 class Coursier < Formula
   desc "Launcher for Coursier"
   homepage "https://get-coursier.io"
-  url "@LAUNCHER_URL@"
   version "@LAUNCHER_VERSION@"
-  sha256 "@LAUNCHER_SHA256@"
+  on_intel do
+    url "@LAUNCHER_X86_64_URL@"
+    sha256 "@LAUNCHER_X86_64_SHA256@"
+  end
+  on_arm do
+    url "@LAUNCHER_AARCH64_URL@"
+    sha256 "@LAUNCHER_AARCH64_SHA256@"
+  end
 
   option "without-shell-completions", "Disable shell completion installation"
 
@@ -17,7 +23,12 @@ class Coursier < Formula
   depends_on "openjdk"
 
   def install
-    bin.install "cs-x86_64-apple-darwin" => "cs"
+    on_intel do
+      bin.install "cs-x86_64-apple-darwin" => "cs"
+    end
+    on_arm do
+      bin.install "cs-aarch64-apple-darwin" => "cs"
+    end
     resource("jar-launcher").stage { bin.install "coursier" }
 
     unless build.without? "shell-completions"
