@@ -41,7 +41,7 @@ import coursier.cache.ArchiveCache
 Get the archive cache location with
 ```scala mdoc:silent
 val archiveCache = ArchiveCache()
-cache.location // java.io.File
+archiveCache.location // java.io.File
 ```
 
 Set the directory under which all archives are extracted with
