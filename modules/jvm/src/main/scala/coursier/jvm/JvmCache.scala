@@ -158,7 +158,7 @@ import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 object JvmCache {
 
   def defaultJdkName: String =
-    "adoptium"
+    "temurin"
   def defaultVersion: String =
     "[1,)"
 
