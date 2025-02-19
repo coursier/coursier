@@ -10,16 +10,18 @@ object ArchiveType {
   sealed abstract class Compressed extends ArchiveType {
     override def singleFile: Boolean = true
     def tar: Tar
+    def cpio: Cpio = Cpio(Some(this))
   }
 
-  case object Zip  extends ArchiveType
-  case object Ar   extends ArchiveType
-  case object Xar  extends ArchiveType
-  case object Tar  extends Tar
-  case object Tgz  extends Tar
-  case object Tbz2 extends Tar
-  case object Txz  extends Tar
-  case object Tzst extends Tar
+  case object Zip                                               extends ArchiveType
+  case object Ar                                                extends ArchiveType
+  case object Xar                                               extends ArchiveType
+  final case class Cpio(compression: Option[Compressed] = None) extends ArchiveType
+  case object Tar                                               extends Tar
+  case object Tgz                                               extends Tar
+  case object Tbz2                                              extends Tar
+  case object Txz                                               extends Tar
+  case object Tzst                                              extends Tar
   case object Gzip extends Compressed {
     def tar = Tgz
   }
@@ -32,6 +34,7 @@ object ArchiveType {
       case "zip"  => Some(Zip)
       case "ar"   => Some(Ar)
       case "xar"  => Some(Xar)
+      case "cpio" => Some(Cpio())
       case "tar"  => Some(Tar)
       case "tgz"  => Some(Tgz)
       case "tbz2" => Some(Tbz2)
@@ -46,6 +49,7 @@ object ArchiveType {
       case "application/gzip" | "application/x-gzip"                      => Some(Gzip)
       case "application/xz" | "application/x-xz"                          => Some(Xz)
       case "application/tar" | "application/x-tar" | "application/x-gtar" => Some(Tar)
+      case "application/cpio" | "application/x-cpio"                      => Some(Cpio())
       case _                                                              => None
     }
 }

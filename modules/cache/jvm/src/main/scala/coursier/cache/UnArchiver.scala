@@ -2,6 +2,7 @@ package coursier.cache
 
 import com.sprylab.xar.{FileXarSource, XarEntry}
 import org.apache.commons.compress.archivers.ar.{ArArchiveEntry, ArArchiveInputStream}
+import org.apache.commons.compress.archivers.cpio.{CpioArchiveEntry, CpioArchiveInputStream}
 import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
 import org.apache.commons.io.input.{BoundedInputStream, CountingInputStream}
@@ -256,6 +257,72 @@ object UnArchiver {
                         throw new ArchiverException("Maximum output size limit reached")
                     }
                   }
+                  catch {
+                    case ex: IOException =>
+                      throw new ArchiverException(
+                        "Error while expanding " + getSourceFile.getAbsolutePath,
+                        ex
+                      )
+                  }
+              }
+            Right(unArc)
+          case ArchiveType.Cpio(compression) =>
+            val unArc: org.codehaus.plexus.archiver.UnArchiver =
+              new org.codehaus.plexus.archiver.AbstractUnArchiver {
+                val mask = Integer.decode("0777")
+                def fileInfo(entry: CpioArchiveEntry): PlexusIoResource =
+                  new PlexusIoResource {
+                    def getName         = entry.getName
+                    def isSymbolicLink  = false
+                    def getContents     = ???
+                    def getLastModified = entry.getTime
+                    def getSize         = entry.getSize
+                    def getURL          = null
+                    def isDirectory     = entry.isDirectory
+                    def isExisting      = true
+                    def isFile          = !isDirectory
+                  }
+                def execute(): Unit = execute("", getDestDirectory)
+                // based on org.codehaus.plexus.archiver.zip.AbstractZipUnArchiver
+                def execute(path: String, outputDirectory: File): Unit =
+                  try
+                    Using.resource(Files.newInputStream(getSourceFile.toPath)) { fis =>
+                      val is = compression match {
+                        case Some(ArchiveType.Gzip) => new GZIPInputStream(fis)
+                        case Some(ArchiveType.Xz)   => new XZCompressorInputStream(fis)
+                        case None                   => fis
+                      }
+                      val ais = new CpioArchiveInputStream(new BufferedInputStream(is))
+                      var entry: CpioArchiveEntry = null
+                      // not needed ??? supposed to allow to protect against zip bombs
+                      var remainingSpace: Long = Long.MaxValue
+                      while ({
+                        entry = ais.getNextEntry
+                        entry != null
+                      })
+                        if (
+                          entry.getName.startsWith(path) &&
+                          isSelected(entry.getName, fileInfo(entry))
+                        ) {
+                          val bis = new BoundedInputStream(ais, remainingSpace + 1)
+                          val cis = new CountingInputStream(bis)
+                          extractFile(
+                            getSourceFile,
+                            outputDirectory,
+                            cis,
+                            entry.getName,
+                            entry.getLastModifiedDate,
+                            entry.isDirectory,
+                            (entry.getMode & mask).toInt,
+                            null,
+                            getFileMappers
+                          )
+                          import org.apache.commons.compress.archivers.cpio.CpioConstants
+                          remainingSpace -= cis.getByteCount
+                          if (remainingSpace < 0)
+                            throw new ArchiverException("Maximum output size limit reached")
+                        }
+                    }
                   catch {
                     case ex: IOException =>
                       throw new ArchiverException(

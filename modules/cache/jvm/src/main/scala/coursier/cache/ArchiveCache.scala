@@ -109,8 +109,9 @@ import scala.util.Using
             }
             Right {
               ArchiveType.fromMimeType(t0) match {
-                case Some(ArchiveType.Tar) => compressed.tar
-                case _                     => compressed
+                case Some(ArchiveType.Tar)        => compressed.tar
+                case Some(ArchiveType.Cpio(None)) => compressed.cpio
+                case _                            => compressed
               }
             }
           case Some(tpe) =>
@@ -274,6 +275,8 @@ object ArchiveCache {
       Some(ArchiveType.Ar)
     else if (url.endsWith(".xar") || url.endsWith(".pkg"))
       Some(ArchiveType.Xar)
+    else if (url.endsWith(".cpio"))
+      Some(ArchiveType.Cpio())
     else if (url.endsWith(".gz"))
       Some(ArchiveType.Gzip)
     else if (url.endsWith(".xz"))
