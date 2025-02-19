@@ -14,7 +14,7 @@ import scala.annotation.tailrec
 import scala.collection.compat.immutable.LazyList
 
 sealed abstract class ResolutionProcess extends Product with Serializable {
-  def run[F[_]](
+  def run0[F[_]](
     fetch: ResolutionProcess.Fetch0[F],
     maxIterations: Int = ResolutionProcess.defaultMaxIterations
   )(implicit
@@ -30,17 +30,35 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
           F.point(done.resolution)
         case missing0: Missing =>
           ResolutionProcess.fetchAll[F](missing0.missing0, fetch).flatMap(result =>
-            missing0.next0_(result).run[F](fetch, maxIterations0)
+            missing0.next0_(result).run0[F](fetch, maxIterations0)
           )
         case cont: Continue =>
           cont
             .nextNoCont
-            .run(fetch, maxIterations0)
+            .run0(fetch, maxIterations0)
       }
     }
 
+  @deprecated("Use run0 instead", "2.1.25")
+  def run[F[_]](
+    fetch: ResolutionProcess.Fetch[F],
+    maxIterations: Int = ResolutionProcess.defaultMaxIterations
+  )(implicit
+    F: Monad[F]
+  ): F[Resolution] =
+    run0[F](
+      modVersions =>
+        F.map(fetch(modVersions.map { case (mod, ver) => (mod, ver.asString) })) { result =>
+          result.map {
+            case ((mod, ver), res) =>
+              ((mod, VersionConstraint0(ver)), res)
+          }
+        },
+      maxIterations
+    )
+
   @tailrec
-  final def next[F[_]](
+  final def next_[F[_]](
     fetch: ResolutionProcess.Fetch0[F],
     fastForward: Boolean = true
   )(implicit
@@ -54,10 +72,28 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
           .map(result => missing0.next0_(result))
       case cont: Continue =>
         if (fastForward)
-          cont.nextNoCont.next(fetch, fastForward = fastForward)
+          cont.nextNoCont.next_(fetch, fastForward = fastForward)
         else
           F.point(cont.next)
     }
+
+  @deprecated("Use next_ instead", "2.1.25")
+  final def next[F[_]](
+    fetch: ResolutionProcess.Fetch[F],
+    fastForward: Boolean = true
+  )(implicit
+    F: Monad[F]
+  ): F[ResolutionProcess] =
+    next_[F](
+      modVersions =>
+        F.map(fetch(modVersions.map { case (mod, ver) => (mod, ver.asString) })) { result =>
+          result.map {
+            case ((mod, ver), res) =>
+              ((mod, VersionConstraint0(ver)), res)
+          }
+        },
+      fastForward
+    )
 
   def current: Resolution
 }

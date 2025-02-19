@@ -448,7 +448,7 @@ object Resolve extends PlatformResolve {
     loggerOpt: Option[CacheLogger] = None
   )(implicit S: Sync[F]): F[Resolution] = {
 
-    val task = ResolutionProcess(initialResolution).run(fetch, maxIterations)
+    val task = ResolutionProcess(initialResolution).run0(fetch, maxIterations)
 
     loggerOpt match {
       case None         => task

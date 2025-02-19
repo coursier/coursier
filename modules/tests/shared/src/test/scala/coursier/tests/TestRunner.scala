@@ -64,7 +64,7 @@ class TestRunner[F[_]: Gather: ToFuture](
       .withDefaultConfiguration(defaultConfiguration)
       .withReconciliation0(reconciliation)
       .withForceDepMgmtVersions(forceDepMgmtVersions.getOrElse(false))
-    val r = ResolutionProcess(res).run(fetch0)
+    val r = ResolutionProcess(res).run0(fetch0)
 
     val t = Gather[F].map(r) { res =>
 

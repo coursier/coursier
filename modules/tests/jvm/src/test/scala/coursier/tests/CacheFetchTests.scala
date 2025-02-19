@@ -70,7 +70,7 @@ object CacheFetchTests extends TestSuite {
       .withRootDependencies(deps)
 
     val f = ResolutionProcess(startRes)
-      .run(processFetch)
+      .run0(processFetch)
       .future()(ExecutionContext.global)
 
     val res =
