@@ -9,10 +9,6 @@
       
       
       
-        <link rel="prev" href="../java-api/">
-      
-      
-        <link rel="next" href="../cli-dependency/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -20,7 +16,7 @@
     
     
       
-        <title>Usage - coursier</title>
+        <title>Security - coursier</title>
       
     
     
@@ -72,7 +68,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#cli" class="md-skip">
+        <a href="#security" class="md-skip">
           Skip to content
         </a>
       
@@ -110,7 +106,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Usage
+              Security
             
           </span>
         </div>
@@ -298,13 +294,11 @@
         
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../cli/" class="md-tabs__link">
           
   
   CLI
@@ -825,28 +819,23 @@
       
   
   
-    
   
   
-  
     
     
     
       
-        
-        
-      
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -857,7 +846,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             CLI
@@ -868,19 +857,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../cli/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -889,7 +869,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -1309,6 +1288,32 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#cve" class="md-nav__link">
+    <span class="md-ellipsis">
+      CVE
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#artifact-attestations" class="md-nav__link">
+    <span class="md-ellipsis">
+      Artifact attestations
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1322,7 +1327,7 @@
                   
 
   
-    <a href="https://github.com/coursier/coursier/edit/main/docs/pages/cli.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/coursier/coursier/edit/main/docs/pages/about-security.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4v-2m10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1 2.1 2.1Z"/></svg>
     </a>
@@ -1331,16 +1336,25 @@
     
       
     
-    <a href="https://github.com/coursier/coursier/raw/main/docs/pages/cli.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/coursier/coursier/raw/main/docs/pages/about-security.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.15 8.15 0 0 1-1.23-2Z"/></svg>
     </a>
   
 
 
-<h1 id="cli">CLI<a class="headerlink" href="#cli" title="Permanent link">&para;</a></h1>
-<p>Coursier can be used via its CLI. Its CLI is distributed as a native binary,
-and as a JAR that needs an already installed JVM to run.</p>
+<h1 id="security">Security<a class="headerlink" href="#security" title="Permanent link">&para;</a></h1>
+<h2 id="cve">CVE<a class="headerlink" href="#cve" title="Permanent link">&para;</a></h2>
+<p>As of writing this, coursier has been indirectly impacted by two CVEs:
+- <a href="https://www.cve.org/CVERecord?id=CVE-2022-46751">CVE-2022-46751</a>
+- <a href="https://www.cve.org/CVERecord?id=CVE-2022-37866">CVE-2022-37866</a></p>
+<p>See <a href="../about-contact/">the contact page</a> if you need to reach coursier maintainers
+for urgent non-public security-related issues.</p>
+<h2 id="artifact-attestations">Artifact attestations<a class="headerlink" href="#artifact-attestations" title="Permanent link">&para;</a></h2>
+<p>coursier use the <a href="https://github.com/actions/attest-build-provenance">actions/attest-build-provenance</a>
+GitHub action to attest that the binaries it distributes on its release pages were indeed built
+by the GitHub Action runners themselves. Attestations can be found
+<a href="https://github.com/coursier/coursier/attestations">here</a>.</p>
 
 
 
@@ -1403,44 +1417,6 @@ and as a JAR that needs an already installed JVM to run.</p>
       
         <footer class="md-footer">
   
-    
-      
-      <nav class="md-footer__inner md-grid" aria-label="Footer" >
-        
-          
-          <a href="../java-api/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Java API">
-            <div class="md-footer__button md-icon">
-              
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
-            </div>
-            <div class="md-footer__title">
-              <span class="md-footer__direction">
-                Previous
-              </span>
-              <div class="md-ellipsis">
-                Java API
-              </div>
-            </div>
-          </a>
-        
-        
-          
-          <a href="../cli-dependency/" class="md-footer__link md-footer__link--next" aria-label="Next: Dependencies">
-            <div class="md-footer__title">
-              <span class="md-footer__direction">
-                Next
-              </span>
-              <div class="md-ellipsis">
-                Dependencies
-              </div>
-            </div>
-            <div class="md-footer__button md-icon">
-              
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
-            </div>
-          </a>
-        
-      </nav>
     
   
   <div class="md-footer-meta md-typeset">
