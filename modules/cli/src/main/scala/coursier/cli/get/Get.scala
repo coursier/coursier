@@ -3,6 +3,7 @@ package coursier.cli.get
 import caseapp.core.RemainingArgs
 import coursier.cache.ArchiveCache
 import coursier.cli.CoursierCommand
+import coursier.core.Authentication
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
@@ -26,11 +27,12 @@ object Get extends CoursierCommand[GetOptions] {
       .withCache(cache)
 
     val artifacts = args.all.map { rawUrl =>
-      val artifact = Artifact.fromUrl(rawUrl)
-      params.changing match {
-        case None           => artifact
-        case Some(changing) => artifact.withChanging(changing)
-      }
+      var artifact = Artifact.fromUrl(rawUrl)
+      for (changing <- params.changing)
+        artifact = artifact.withChanging(changing)
+      if (params.authHeaders.nonEmpty)
+        artifact = artifact.withAuthentication(Some(Authentication(params.authHeaders)))
+      artifact
     }
 
     if (artifacts.isEmpty)
@@ -40,7 +42,8 @@ object Get extends CoursierCommand[GetOptions] {
 
     val fetchAll =
       artifacts.map { artifact =>
-        if (options.archive)
+        val isArchive = params.archiveOpt.getOrElse(artifact.url.contains("!"))
+        if (isArchive)
           archiveCache.get(artifact)
         else
           cache.file(artifact).run

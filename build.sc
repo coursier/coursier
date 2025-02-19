@@ -669,6 +669,9 @@ trait CliTests extends CsModule
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion213Compat)
   )
+  def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+    Deps.jsoniterMacros
+  )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.caseApp,
     Deps.dockerClient,

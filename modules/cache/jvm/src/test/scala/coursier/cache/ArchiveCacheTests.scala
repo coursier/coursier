@@ -24,7 +24,21 @@ abstract class ArchiveCacheTests extends TestSuite {
   def checkArchiveHas(archiveUrl: String, pathInArchive: os.SubPath): Unit =
     checkArchiveHas(Artifact(archiveUrl), pathInArchive)
 
+  def checkArchiveHas(
+    archiveUrl: String,
+    pathInArchiveOpt: Option[os.SubPath] = None,
+    withFileOpt: Option[File => Unit] = None
+  ): Unit =
+    checkArchiveHas(Artifact(archiveUrl), pathInArchiveOpt, None)
+
   def checkArchiveHas(archive: Artifact, pathInArchive: os.SubPath): Unit =
+    checkArchiveHas(archive, Some(pathInArchive), None)
+
+  def checkArchiveHas(
+    archive: Artifact,
+    pathInArchiveOpt: Option[os.SubPath],
+    withFileOpt: Option[File => Unit]
+  ): Unit =
     withTmpDir { dir =>
       val archiveCache0 = archiveCache(dir / "arc")
 
@@ -32,9 +46,15 @@ abstract class ArchiveCacheTests extends TestSuite {
         .get(archive)
         .future()(archiveCache0.cache.ec)
       val archiveDir = Await.result(future, Duration.Inf).toTry.get
-      val file       = new File(archiveDir, pathInArchive.toString)
-      assert(file.exists())
-      assert(file.isFile())
+      pathInArchiveOpt match {
+        case None => archiveDir
+        case Some(pathInArchive) =>
+          val file = new File(archiveDir, pathInArchive.toString)
+          assert(file.exists())
+          assert(file.isFile())
+          for (withFile <- withFileOpt)
+            withFile(file)
+      }
     }
 
   def actualTests = Tests {
@@ -86,6 +106,20 @@ abstract class ArchiveCacheTests extends TestSuite {
         )
           .withAuthentication(Some(auth)),
         os.sub / "hello"
+      )
+    }
+
+    test("archive in archive") {
+      checkArchiveHas(
+        "https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb!data.tar.xz!usr/bin/hello"
+      )
+
+      checkArchiveHas(
+        "https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb!data.tar.xz!usr/share/doc/hello/changelog.gz!",
+        withFileOpt = Some { changelog =>
+          val content = os.read(os.Path(changelog))
+          assert(content.startsWith("2014-11-16  Sami Kerola  <kerolasa@iki.fi>"))
+        }
       )
     }
   }

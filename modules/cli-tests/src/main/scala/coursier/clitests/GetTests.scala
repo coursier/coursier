@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 
-import coursier.clitests.util.TestAuthProxy
+import coursier.clitests.util.{DockerTestUtil, TestAuthProxy}
 import utest._
 import scala.util.Properties
 
@@ -162,6 +162,33 @@ abstract class GetTests extends TestSuite {
     }
     test("tbz2 archive") {
       tarArchiveTest(".bz2")
+    }
+
+    test("detect archive type") {
+      val repoName = "library/hello-world"
+      val token    = DockerTestUtil.token(repoName)
+      TestUtil.withTempDir { tmpDir =>
+        val cache    = new File(tmpDir, "cache").getAbsolutePath
+        val arcCache = new File(tmpDir, "arc-cache").getAbsolutePath
+        val output =
+          os.proc(
+            launcher,
+            "get",
+            s"https://registry-1.docker.io/v2/$repoName/blobs/sha256:c9c5fd25a1bdc181cb012bc4fbb1ab272a975728f54064b7ae3ee8e77fd28c46!",
+            "--cache",
+            cache,
+            "--archive-cache",
+            arcCache,
+            "--auth-header",
+            s"Authorization: Bearer $token"
+          )
+            .call()
+            .out.text()
+        val dir             = os.Path(output.trim)
+        val listing         = os.walk(dir).map(_.relativeTo(dir).asSubPath)
+        val expectedListing = Seq(os.sub / "hello")
+        assert(expectedListing == listing)
+      }
     }
   }
 
