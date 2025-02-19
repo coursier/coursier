@@ -128,7 +128,7 @@ Let's run the whole resolution,
 ```scala mdoc:silent
 import scala.concurrent.ExecutionContext.Implicits.global
 
-val resolution = start.process.run(fetch).unsafeRun()
+val resolution = start.process.run0(fetch).unsafeRun()
 ```
 
 To get additional feedback during the resolution, we can give the `Cache.fetch` method above

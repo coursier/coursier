@@ -37,7 +37,7 @@ object ResolutionTests extends TestSuite {
       .withForceProperties(forceProperties)
       .withOsInfo(Activation.Os.empty)
     ResolutionProcess(res)
-      .run(Platform.fetch(repositories))
+      .run0(Platform.fetch(repositories))
       .future()
   }
 
