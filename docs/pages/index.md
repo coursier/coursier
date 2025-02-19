@@ -58,6 +58,7 @@ to fetch dependencies, and uses the coursier CLI's JSON report output to read it
 * Gradle Modules
 * BOM
 * dependency format
+* report
 
 ### JVM user
 

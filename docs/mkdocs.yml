@@ -22,6 +22,18 @@ nav:
     - Dependencies: 'cli-dependency.md'
     - Cache: 'cli-cache.md'
     - Archive Cache: 'cli-archive-cache.md'
+    - Binaries: 'cli-binaries.md'
+    - JSON report: 'cli-report.md'
+  - GitHub Actions:
+    - Actions: 'gha.md'
+    - setup-action: 'gha-setup-action.md'
+    - cache-action: 'gha-cache-action.md'
+  - Contributors:
+    - Contributing: 'contrib.md'
+  - About:
+    - Community: 'about-community.md'
+    - Funding: 'about-funding.md'
+    - Contact: 'about-contact.md'
 
 repo_url: https://github.com/coursier/coursier
 edit_uri: edit/main/docs/pages/
