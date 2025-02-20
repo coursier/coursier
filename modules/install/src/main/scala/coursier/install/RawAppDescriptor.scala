@@ -1,8 +1,14 @@
 package coursier.install
 
-import argonaut._
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
+import com.github.plokhotnyuk.jsoniter_scala.core.{
+  JsonReaderError,
+  JsonValueCodec,
+  readFromString,
+  writeToString
+}
+import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
 import coursier.core.{
   Classifier,
   Configuration,
@@ -22,6 +28,7 @@ import coursier.parse.{
 import coursier.version.{VersionInterval, VersionParse}
 import dataclass._
 
+import scala.collection.immutable.ListMap
 import scala.language.implicitConversions
 
 @data class RawAppDescriptor(
@@ -226,27 +233,17 @@ object RawAppDescriptor {
   object Properties {
     implicit def fromSeq(s: Seq[(String, String)]): Properties =
       Properties(s)
-    implicit val encoder: EncodeJson[Properties] =
-      EncodeJson { props =>
-        Json.obj(props.props.map { case (k, v) => k -> Json.jString(v) }: _*)
-      }
-    implicit val decoder: DecodeJson[Properties] =
-      DecodeJson { c =>
-        c.focus.obj match {
-          case None => DecodeResult.fail("Expected JSON object", c.history)
-          case Some(obj) =>
-            obj
-              .toList
-              .foldLeft(DecodeResult.ok(List.empty[(String, String)])) {
-                case (acc, (k, v)) =>
-                  for (a <- acc; s <- v.as[String]) yield (k -> s) :: a
-              }
-              .map(l => Properties(l.reverse))
-        }
+    private lazy val mapCodec: JsonValueCodec[ListMap[String, String]] =
+      JsonCodecMaker.make
+    implicit lazy val codec: JsonValueCodec[Properties] =
+      new JsonValueCodec[Properties] {
+        def nullValue = Properties(Nil)
+        def encodeValue(x: Properties, out: JsonWriter) =
+          mapCodec.encodeValue(x.s.to(ListMap), out)
+        def decodeValue(in: JsonReader, default: Properties) =
+          Properties(mapCodec.decodeValue(in, mapCodec.nullValue).iterator.toSeq)
       }
   }
-
-  import argonaut.ArgonautShapeless._
 
   @data class RawGraalvmOptions(
     options: List[String] = Nil,
@@ -261,8 +258,6 @@ object RawAppDescriptor {
 
   object RawGraalvmOptions {
 
-    import Codecs.{decodeObj, encodeObj}
-
     private final case class RawGraalvmOptionsJson(
       options: List[String] = Nil
     ) {
@@ -274,11 +269,8 @@ object RawAppDescriptor {
     private def optionsJson(opt: RawGraalvmOptions): RawGraalvmOptionsJson =
       RawGraalvmOptionsJson(opt.options)
 
-    implicit val encoder: EncodeJson[RawGraalvmOptions] =
-      EncodeJson.of[RawGraalvmOptionsJson].contramap(optionsJson)
-    implicit val decoder: DecodeJson[RawGraalvmOptions] =
-      DecodeJson.of[RawGraalvmOptionsJson].map(_.get)
-
+    implicit lazy val codec: JsonValueCodec[RawGraalvmOptionsJson] =
+      JsonCodecMaker.make
   }
 
   @data class RawVersionOverride(
@@ -433,12 +425,10 @@ object RawAppDescriptor {
       versionOverrides = desc.versionOverrides
     )
 
-  implicit val encoder: EncodeJson[RawAppDescriptor] =
-    EncodeJson.of[RawAppDescriptorJson].contramap(descriptorJson)
-  implicit val decoder: DecodeJson[RawAppDescriptor] =
-    DecodeJson.of[RawAppDescriptorJson].map(_.get)
+  implicit lazy val codec: JsonValueCodec[RawAppDescriptorJson] =
+    JsonCodecMaker.make
 
   def parse(input: String): Either[String, RawAppDescriptor] =
-    Parse.decodeEither(input)(decoder)
+    readFromString(input)(codec).map(_.get)
 
 }

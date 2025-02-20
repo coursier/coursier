@@ -5,12 +5,11 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths, Path}
 import java.util.zip.ZipFile
 
-import argonaut.{DecodeJson, Parse}
+import com.github.plokhotnyuk.jsoniter_scala.core.readFromString
 import coursier.Fetch
 import coursier.cache.{Cache, FileCache}
 import coursier.cache.internal.FileUtil
 import coursier.core.{Dependency, Repository}
-import coursier.install.Codecs.{decodeObj, encodeObj}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepositoryLike
 import coursier.util.{Artifact, Task}
@@ -214,20 +213,11 @@ import scala.jdk.CollectionConverters._
           else
             None
         }
-        objOpt <- Task.fromEither {
-          contentOpt match {
-            case None => Right(None)
-            case Some(content) =>
-              Parse.decodeEither(content)(decodeObj)
-                .left.map(err => new Exception(s"Error decoding $f: $err"))
-                .map(Some(_))
-          }
-        }
-      } yield objOpt.map { obj =>
+      } yield contentOpt.map { content =>
         ChannelData(
           channel,
           f.toString,
-          encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8)
+          content.getBytes(StandardCharsets.UTF_8)
         )
       }
     }
