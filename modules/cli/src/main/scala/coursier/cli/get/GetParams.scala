@@ -2,14 +2,18 @@ package coursier.cli.get
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
+import coursier.cache.CacheDefaults
 import coursier.cli.params.{CacheParams, OutputParams}
+
+import java.io.File
 
 final case class GetParams(
   cache: CacheParams,
   output: OutputParams,
   separator: String,
   force: Boolean,
-  changing: Option[Boolean]
+  changing: Option[Boolean],
+  archiveCacheLocation: File
 )
 
 object GetParams {
@@ -33,7 +37,10 @@ object GetParams {
           output,
           separator,
           options.force,
-          options.changing
+          options.changing,
+          options.archiveCache.map(new File(_)).getOrElse {
+            CacheDefaults.archiveCacheLocation
+          }
         )
     }
   }

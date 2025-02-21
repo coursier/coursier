@@ -17,7 +17,9 @@ final case class GetOptions(
   separator: Option[String] = None,
   force: Boolean = false,
   changing: Option[Boolean] = None,
-  archive: Boolean = false
+  archive: Boolean = false,
+  @HelpMessage("Archive cache location")
+    archiveCache: Option[String] = None
 )
 // format: on
 

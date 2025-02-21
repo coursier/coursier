@@ -22,7 +22,7 @@ object Get extends CoursierCommand[GetOptions] {
     val pool  = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
 
-    val archiveCache = ArchiveCache()
+    val archiveCache = ArchiveCache[Task](params.archiveCacheLocation)
       .withCache(cache)
 
     val artifacts = args.all.map { rawUrl =>
