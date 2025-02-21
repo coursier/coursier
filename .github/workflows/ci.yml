@@ -87,9 +87,10 @@ jobs:
         jvm: 21
     - run: sudo apt-get install -y nailgun
       if: runner.os == 'Linux'
-    - run: brew install --cask multipass
-      if: runner.os == 'macOS'
-    - run: multipass launch -n cs-docker-vm --cpus 2 --memory 4G --disk 5G
+    - run: |
+        brew install --cask multipass
+        sleep 20 # https://github.com/canonical/multipass/issues/3723
+        multipass launch -n cs-docker-vm --cpus 2 --memory 4G --disk 5G
       if: runner.os == 'macOS'
     # - run: .github/scripts/scala-native-setup.sh
     #   if: runner.os != 'Windows'
