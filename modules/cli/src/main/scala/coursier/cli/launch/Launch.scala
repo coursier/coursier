@@ -18,8 +18,8 @@ import coursier.cli.Util.ValidatedExitOnError
 import coursier.core.{Dependency, Resolution}
 import coursier.env.EnvironmentUpdate
 import coursier.error.ResolutionError
+import coursier.exec.Execve
 import coursier.install.{Channels, MainClass, RawAppDescriptor}
-import coursier.jvm.Execve
 import coursier.launcher.{
   BootstrapGenerator,
   ClassLoaderContent,
