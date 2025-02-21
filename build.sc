@@ -1060,6 +1060,7 @@ def jvmTests(scalaVersion: String = ScalaVersions.scala213) = {
 
   def crossTests(sv: String) = Seq(
     // format: off
+    docker             .valuesToModules.get(List(sv)).map(_.test.test()),
     core.jvm           .valuesToModules.get(List(sv)).map(_.test.test()),
     cache.jvm          .valuesToModules.get(List(sv)).map(_.test.test()),
     env                .valuesToModules.get(List(sv)).map(_.test.test()),
@@ -1068,8 +1069,7 @@ def jvmTests(scalaVersion: String = ScalaVersions.scala213) = {
     interop.scalaz.jvm .valuesToModules.get(List(sv)).map(_.test.test()),
     interop.cats.jvm   .valuesToModules.get(List(sv)).map(_.test.test()),
     install            .valuesToModules.get(List(sv)).map(_.test.test()),
-    jvm                .valuesToModules.get(List(sv)).map(_.test.test()),
-    docker             .valuesToModules.get(List(sv)).map(_.test.test())
+    jvm                .valuesToModules.get(List(sv)).map(_.test.test())
     // format: on
   ).flatten
 
