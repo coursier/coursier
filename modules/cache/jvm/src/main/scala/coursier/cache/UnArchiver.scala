@@ -1,6 +1,8 @@
 package coursier.cache
 
+import com.sprylab.xar.{FileXarSource, XarEntry}
 import org.apache.commons.compress.archivers.ar.{ArArchiveEntry, ArArchiveInputStream}
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
 import org.apache.commons.io.input.{BoundedInputStream, CountingInputStream}
 import org.codehaus.plexus.archiver.ArchiverException
@@ -14,7 +16,14 @@ import org.codehaus.plexus.archiver.tar.{
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver
 import org.codehaus.plexus.components.io.resources.PlexusIoResource
 
-import java.io.{BufferedInputStream, File, IOException, InputStream, OutputStream}
+import java.io.{
+  ByteArrayInputStream,
+  BufferedInputStream,
+  File,
+  IOException,
+  InputStream,
+  OutputStream
+}
 import java.nio.file.Files
 import java.util.zip.GZIPInputStream
 
@@ -160,6 +169,93 @@ object UnArchiver {
                             throw new ArchiverException("Maximum output size limit reached")
                         }
                     }
+                  catch {
+                    case ex: IOException =>
+                      throw new ArchiverException(
+                        "Error while expanding " + getSourceFile.getAbsolutePath,
+                        ex
+                      )
+                  }
+              }
+            Right(unArc)
+          case ArchiveType.Xar =>
+            val unArc: org.codehaus.plexus.archiver.UnArchiver =
+              new org.codehaus.plexus.archiver.AbstractUnArchiver {
+                def fileInfo(entry: XarEntry): PlexusIoResource =
+                  new PlexusIoResource {
+                    def getName         = entry.getName
+                    def isSymbolicLink  = false
+                    def getContents     = ???
+                    def getLastModified = entry.getTime.toInstant.getEpochSecond
+                    def getSize         = entry.getSize
+                    def getURL          = null
+                    def isDirectory     = entry.isDirectory
+                    def isExisting      = true
+                    def isFile          = !isDirectory
+                  }
+                def execute(): Unit = execute("", getDestDirectory)
+                // based on org.codehaus.plexus.archiver.zip.AbstractZipUnArchiver
+                def execute(path: String, outputDirectory: File): Unit =
+                  try {
+                    val source = new FileXarSource(getSourceFile)
+                    val it     = source.getEntries.asScala.iterator
+
+                    // not needed ??? supposed to allow to protect against zip bombs
+                    var remainingSpace: Long = Long.MaxValue
+                    for {
+                      entry <- it
+                      if entry.getName.startsWith(path) &&
+                      isSelected(entry.getName, fileInfo(entry))
+                    } {
+                      if (entry.isDirectory)
+                        extractFile(
+                          getSourceFile,
+                          outputDirectory,
+                          new ByteArrayInputStream(Array.emptyByteArray),
+                          entry.getName,
+                          entry.getTime,
+                          entry.isDirectory,
+                          Integer.decode(entry.getMode),
+                          null,
+                          getFileMappers
+                        )
+                      else {
+                        val originalEncoding = entry.getEncoding
+                        if (originalEncoding == com.sprylab.xar.toc.model.Encoding.BZIP2) {
+                          val fld = entry.getClass.getDeclaredField("encoding")
+                          fld.setAccessible(true)
+                          fld.set(entry, com.sprylab.xar.toc.model.Encoding.NONE)
+                        }
+                        Using.resource(entry.getInputStream()) { eis =>
+                          val bis = new BoundedInputStream(eis, remainingSpace + 1)
+                          val cis = new CountingInputStream(bis)
+                          val is = originalEncoding match {
+                            case com.sprylab.xar.toc.model.Encoding.NONE => cis
+                            case com.sprylab.xar.toc.model.Encoding.GZIP =>
+                              // new GZIPInputStream(cis)
+                              cis
+                            case com.sprylab.xar.toc.model.Encoding.BZIP2 =>
+                              new BZip2CompressorInputStream(cis)
+                          }
+                          extractFile(
+                            getSourceFile,
+                            outputDirectory,
+                            is,
+                            entry.getName,
+                            entry.getTime,
+                            entry.isDirectory,
+                            Integer.decode(entry.getMode),
+                            null,
+                            getFileMappers
+                          )
+                          remainingSpace -= cis.getByteCount
+                        }
+                      }
+
+                      if (remainingSpace < 0)
+                        throw new ArchiverException("Maximum output size limit reached")
+                    }
+                  }
                   catch {
                     case ex: IOException =>
                       throw new ArchiverException(

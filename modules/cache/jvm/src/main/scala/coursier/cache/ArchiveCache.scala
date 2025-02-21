@@ -272,6 +272,8 @@ object ArchiveCache {
       Some(ArchiveType.Zip)
     else if (url.endsWith(".ar") || url.endsWith(".deb"))
       Some(ArchiveType.Ar)
+    else if (url.endsWith(".xar") || url.endsWith(".pkg"))
+      Some(ArchiveType.Xar)
     else if (url.endsWith(".gz"))
       Some(ArchiveType.Gzip)
     else if (url.endsWith(".xz"))

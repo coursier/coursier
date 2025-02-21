@@ -14,6 +14,7 @@ object ArchiveType {
 
   case object Zip  extends ArchiveType
   case object Ar   extends ArchiveType
+  case object Xar  extends ArchiveType
   case object Tar  extends Tar
   case object Tgz  extends Tar
   case object Tbz2 extends Tar
@@ -30,6 +31,7 @@ object ArchiveType {
     input match {
       case "zip"  => Some(Zip)
       case "ar"   => Some(Ar)
+      case "xar"  => Some(Xar)
       case "tar"  => Some(Tar)
       case "tgz"  => Some(Tgz)
       case "tbz2" => Some(Tbz2)
