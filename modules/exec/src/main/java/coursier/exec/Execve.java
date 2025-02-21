@@ -1,4 +1,4 @@
-package coursier.jvm;
+package coursier.exec;
 
 import com.sun.jna.Library;
 import com.sun.jna.Native;
@@ -7,7 +7,6 @@ import java.util.Locale;
 
 // bits of this file were written with OpenAI o3-mini
 
-@Deprecated
 public final class Execve {
 
   public interface LibC extends Library {
