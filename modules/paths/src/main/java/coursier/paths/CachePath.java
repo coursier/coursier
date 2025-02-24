@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -199,6 +200,8 @@ public class CachePath {
                         lock = out.getChannel().lock();
                     } catch (FileNotFoundException ex) {
                         throw throwExceptions ? ex : new StructureLockException(ex);
+                    } catch (OverlappingFileLockException ex) {
+                        throw throwExceptions ? ex : new StructureLockException(ex);
                     }
 
                     try {
@@ -269,6 +272,8 @@ public class CachePath {
                     try {
                         lock = channel.lock();
                     } catch (FileNotFoundException ex) {
+                        throw throwExceptions ? ex : new StructureLockException(ex);
+                    } catch (OverlappingFileLockException ex) {
                         throw throwExceptions ? ex : new StructureLockException(ex);
                     }
 
