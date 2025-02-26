@@ -15,9 +15,32 @@ object VariantSelector {
     def asConfiguration: Option[Configuration] = Some(configuration)
     def isEmpty: Boolean                       = configuration.isEmpty
     def repr: String                           = configuration.value
+
+    def equivalentAttributesSelector: Option[AttributesBased] =
+      configuration match {
+        case Configuration.compile | Configuration.defaultCompile =>
+          val a = AttributesBased(
+            Map(
+              "org.gradle.category" -> "library",
+              "org.gradle.usage"    -> "java-api"
+            )
+          )
+          Some(a)
+        case Configuration.runtime | Configuration.defaultRuntime | Configuration.default =>
+          val a = AttributesBased(
+            Map(
+              "org.gradle.category" -> "library",
+              "org.gradle.usage"    -> "java-runtime"
+            )
+          )
+          Some(a)
+        case _ => None
+      }
   }
 
-  @data class AttributesBased(attributes: Map[String, String] = Map.empty) extends VariantSelector {
+  @data class AttributesBased(
+    attributes: Map[String, String] = Map.empty
+  ) extends VariantSelector {
     def asConfiguration: Option[Configuration] = None
     def isEmpty: Boolean                       = attributes.isEmpty
     def repr: String =

@@ -1,7 +1,7 @@
 package coursier.error
 
-import coursier.core.{Module, Variant, VariantSelector}
-import coursier.version.Version
+import coursier.core.{Configuration, Module, Variant, VariantSelector}
+import coursier.version.{Version, VersionConstraint}
 
 abstract class VariantError(message: String) extends DependencyError(message)
 
@@ -31,5 +31,13 @@ object VariantError {
   ) extends VariantError(
         s"Found too many variants in ${module.repr}:${version.asString} for ${attributes.repr}:" + System.lineSeparator() +
           desc(retained).mkString(System.lineSeparator())
+      )
+
+  class CannotFindEquivalentVariants(
+    module: Module,
+    versionConstraint: VersionConstraint,
+    configuration: Configuration
+  ) extends VariantError(
+        s"Cannot find equivalent variants for configuration ${configuration.value} of ${module.repr}:${versionConstraint.asString}"
       )
 }
