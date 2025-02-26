@@ -673,6 +673,12 @@ object Resolution {
     config: Configuration,
     configurations: Map[Configuration, Seq[Configuration]]
   ): Configuration =
+    actualConfiguration(config, configurations.keySet)
+
+  def actualConfiguration(
+    config: Configuration,
+    configurations: Set[Configuration]
+  ): Configuration =
     Parse.withFallbackConfig(config) match {
       case Some((main, fallback)) =>
         if (configurations.contains(main))
@@ -680,7 +686,7 @@ object Resolution {
         else if (configurations.contains(fallback))
           fallback
         else
-          main
+          config
       case None => config
     }
 
@@ -1061,17 +1067,11 @@ object Resolution {
   private def fallbackConfigIfNecessary(dep: Dependency, configs: Set[Configuration]): Dependency =
     dep.variantSelector match {
       case c: VariantSelector.ConfigurationBased =>
-        Parse.withFallbackConfig(c.configuration) match {
-          case Some((main, fallback)) =>
-            if (configs(main))
-              dep.withVariantSelector(VariantSelector.ConfigurationBased(main))
-            else if (configs(fallback))
-              dep.withVariantSelector(VariantSelector.ConfigurationBased(fallback))
-            else
-              dep
-          case _ =>
-            dep
-        }
+        val actualConfig = actualConfiguration(c.configuration, configs)
+        if (actualConfig == c.configuration)
+          dep
+        else
+          dep.withVariantSelector(VariantSelector.ConfigurationBased(actualConfig))
       case _: VariantSelector.AttributesBased =>
         dep
     }
