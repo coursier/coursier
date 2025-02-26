@@ -4,7 +4,7 @@ import java.io.{ByteArrayOutputStream, File}
 import java.net.{URI, URL, URLClassLoader}
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
-import java.util
+import java.util.Arrays
 import java.util.zip.GZIPOutputStream
 
 import cats.effect.IO
@@ -1239,7 +1239,7 @@ object FileCacheRedirectionTests extends TestSuite {
             val computedPath = FileCache.auxiliaryFile(file, "SHA-1" + ".computed")
             val expected     = stringToByteArray("f9627d29027e5a853b65242cfbbb44f354f3836f")
             val actual       = Files.readAllBytes(computedPath.toPath)
-            assert(util.Arrays.equals(actual, expected))
+            assert(Arrays.equals(actual, expected))
           case Left(e) => throw e
         }
       }
@@ -1275,7 +1275,7 @@ object FileCacheRedirectionTests extends TestSuite {
             val computedPath = FileCache.auxiliaryFile(file, "MD5" + ".computed")
             val expected     = stringToByteArray("001717e73bca14e4fb2df3cabd6eac98")
             val actual       = Files.readAllBytes(computedPath.toPath)
-            assert(util.Arrays.equals(actual, expected))
+            assert(Arrays.equals(actual, expected))
           case Left(e) => throw e
         }
       }

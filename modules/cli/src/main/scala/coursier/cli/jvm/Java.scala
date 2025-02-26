@@ -8,7 +8,8 @@ import coursier.cli.params.EnvParams
 import coursier.cli.setup.MaybeInstallJvm
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.env.{Shell, ShellUtil}
-import coursier.jvm.{Execve, JvmCache, JvmCacheLogger}
+import coursier.exec.Execve
+import coursier.jvm.{JvmCache, JvmCacheLogger}
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
 import coursier.version.Version
