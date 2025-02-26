@@ -575,6 +575,43 @@ object FetchTests extends TestSuite {
           )
         }
       }
+
+      test("fallback from config") {
+
+        def testVariants(
+          config: Option[Configuration] = None
+        )(
+          dependencies: Dependency*
+        ): Future[Unit] = async {
+          val params = fetch.resolutionParams.withDefaultConfiguration(
+            config.getOrElse(fetch.resolutionParams.defaultConfiguration)
+          )
+          val res = await {
+            enableModules(fetch.addRepositories(Repositories.google))
+              .withResolutionParams(params)
+              .addDependencies(dependencies: _*)
+              .futureResult()
+          }
+
+          await(validateArtifacts(
+            res.resolution,
+            res.artifacts.map(_._1),
+            params = params,
+            extraKeyPart = "_gradlemod"
+          ))
+        }
+
+        test("compile") {
+          testVariants(Some(Configuration.compile))(
+            dep"androidx.core:core-ktx:1.15.0:compile"
+          )
+        }
+        test("runtime") {
+          testVariants()(
+            dep"androidx.core:core-ktx:1.15.0"
+          )
+        }
+      }
     }
   }
 }

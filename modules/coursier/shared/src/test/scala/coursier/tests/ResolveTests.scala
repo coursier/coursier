@@ -57,15 +57,24 @@ object ResolveTests extends TestSuite {
         case other => other
       }
     }
-  def gradleModuleCheck(dependencies: Dependency*): Future[Unit] =
+  def gradleModuleAndScopeCheck(
+    defaultConfiguration: Option[Configuration]
+  )(
+    dependencies: Dependency*
+  ): Future[Unit] =
     async {
+      var resolve0 = enableModules(resolve.addRepositories(Repositories.google))
+      for (conf <- defaultConfiguration)
+        resolve0 = resolve0.mapResolutionParams(_.withDefaultConfiguration(conf))
       val res = await {
-        enableModules(resolve.addRepositories(Repositories.google))
+        resolve0
           .addDependencies(dependencies: _*)
           .future()
       }
-      await(validateDependencies(res, extraKeyPart = "_gradlemod"))
+      await(validateDependencies(res, resolve0.resolutionParams, extraKeyPart = "_gradlemod"))
     }
+  def gradleModuleCheck(dependencies: Dependency*): Future[Unit] =
+    gradleModuleAndScopeCheck(None)(dependencies: _*)
 
   def scopeCheck(
     defaultConfiguration: Configuration,
@@ -2042,6 +2051,18 @@ object ResolveTests extends TestSuite {
               "org.gradle.category"                -> "library",
               "org.jetbrains.kotlin.platform.type" -> "jvm"
             )
+          )
+        }
+      }
+      test("fallback from config") {
+        test("compile") {
+          gradleModuleAndScopeCheck(Some(Configuration.compile))(
+            dep"androidx.core:core-ktx:1.15.0:compile"
+          )
+        }
+        test("runtime") {
+          gradleModuleCheck(
+            dep"androidx.core:core-ktx:1.15.0"
           )
         }
       }
