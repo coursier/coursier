@@ -218,6 +218,9 @@ import scala.concurrent.{Await, ExecutionContext, Future}
   def withClasspathOrder(classpathOrder: Boolean): Fetch[F] =
     withArtifacts(artifacts.withClasspathOrder(classpathOrder))
 
+  def withGradleModuleSupport(enable: Boolean): Fetch[F] =
+    withResolve(resolve.withGradleModuleSupport(Some(enable)))
+
   def ioResult: F[Fetch.Result] = {
 
     val resolutionIO = resolve.io

@@ -57,8 +57,9 @@ object ResolveTests extends TestSuite {
         case other => other
       }
     }
-  def gradleModuleAndScopeCheck(
-    defaultConfiguration: Option[Configuration]
+  def gradleModuleCheck0(
+    defaultConfiguration: Option[Configuration] = None,
+    defaultAttributes: Option[VariantSelector.AttributesBased] = None
   )(
     dependencies: Dependency*
   ): Future[Unit] =
@@ -66,6 +67,8 @@ object ResolveTests extends TestSuite {
       var resolve0 = enableModules(resolve.addRepositories(Repositories.google))
       for (conf <- defaultConfiguration)
         resolve0 = resolve0.mapResolutionParams(_.withDefaultConfiguration(conf))
+      for (attr <- defaultAttributes)
+        resolve0 = resolve0.mapResolutionParams(_.withDefaultVariantAttributes(attr))
       val res = await {
         resolve0
           .addDependencies(dependencies: _*)
@@ -74,7 +77,7 @@ object ResolveTests extends TestSuite {
       await(validateDependencies(res, resolve0.resolutionParams, extraKeyPart = "_gradlemod"))
     }
   def gradleModuleCheck(dependencies: Dependency*): Future[Unit] =
-    gradleModuleAndScopeCheck(None)(dependencies: _*)
+    gradleModuleCheck0()(dependencies: _*)
 
   def scopeCheck(
     defaultConfiguration: Configuration,
@@ -1999,9 +2002,27 @@ object ResolveTests extends TestSuite {
         }
         test("support") {
           test("variants") {
-            gradleModuleCheck(
-              dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,variant.org.gradle.usage=kotlin-runtime,variant.org.jetbrains.kotlin.platform.type=js,variant.org.jetbrains.kotlin.js.compiler=ir,variant.org.gradle.category=library"
-            )
+            test("dependency") {
+              gradleModuleCheck(
+                dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,variant.org.gradle.usage=kotlin-runtime,variant.org.jetbrains.kotlin.platform.type=js,variant.org.jetbrains.kotlin.js.compiler=ir,variant.org.gradle.category=library"
+              )
+            }
+            test("global") {
+              gradleModuleCheck0(
+                defaultAttributes = Some(
+                  VariantSelector.AttributesBased(Map(
+                    "org.gradle.usage" -> VariantSelector.VariantMatcher.Runtime,
+                    "org.jetbrains.kotlin.platform.type" ->
+                      VariantSelector.VariantMatcher.Equals("js"),
+                    "org.jetbrains.kotlin.js.compiler" ->
+                      VariantSelector.VariantMatcher.Equals("ir"),
+                    "org.gradle.category" -> VariantSelector.VariantMatcher.Library
+                  ))
+                )
+              )(
+                dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0"
+              )
+            }
           }
           test("missing variants") {
             async {
@@ -2024,46 +2045,123 @@ object ResolveTests extends TestSuite {
         }
       }
       test("android") {
-        def withVariant(dep: Dependency, map: Map[String, String]) =
-          dep.withVariantSelector(VariantSelector.AttributesBased(map))
+        test("dependency") {
+          def withVariant(dep: Dependency, map: Map[String, VariantSelector.VariantMatcher]) =
+            dep.withVariantSelector(VariantSelector.AttributesBased(map))
 
-        def testVariants(map: Map[String, String]): Future[Unit] =
-          gradleModuleCheck(
-            withVariant(dep"androidx.core:core-ktx:1.15.0", map),
-            withVariant(dep"androidx.activity:activity-compose:1.9.3", map),
-            withVariant(dep"androidx.compose.ui:ui:1.7.5", map),
-            withVariant(dep"androidx.compose.material3:material3:1.3.1", map)
-          )
-
-        test("compile") {
-          testVariants(
-            Map(
-              "org.gradle.usage"                   -> "java-api",
-              "org.gradle.category"                -> "library",
-              "org.jetbrains.kotlin.platform.type" -> "jvm"
+          def testVariants(
+            config: Configuration,
+            map: Map[String, VariantSelector.VariantMatcher]
+          ): Future[Unit] =
+            gradleModuleCheck0(defaultConfiguration = Some(config))(
+              withVariant(dep"androidx.core:core-ktx:1.15.0", map),
+              withVariant(dep"androidx.activity:activity-compose:1.9.3", map),
+              withVariant(dep"androidx.compose.ui:ui:1.7.5", map),
+              withVariant(dep"androidx.compose.material3:material3:1.3.1", map)
             )
-          )
+
+          // needs some extra default attributes for compile scope to work
+
+          test("runtime") {
+            testVariants(
+              Configuration.runtime,
+              Map(
+                "org.gradle.usage"    -> VariantSelector.VariantMatcher.Equals("java-runtime"),
+                "org.gradle.category" -> VariantSelector.VariantMatcher.Equals("library"),
+                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+              )
+            )
+          }
         }
-        test("runtime") {
-          testVariants(
-            Map(
-              "org.gradle.usage"                   -> "java-runtime",
-              "org.gradle.category"                -> "library",
-              "org.jetbrains.kotlin.platform.type" -> "jvm"
+        test("global") {
+          def withVariant(dep: Dependency, map: Map[String, VariantSelector.VariantMatcher]) =
+            dep.withVariantSelector(VariantSelector.AttributesBased(map))
+
+          def testVariants(
+            config: Configuration,
+            map: Map[String, VariantSelector.VariantMatcher]
+          ): Future[Unit] =
+            gradleModuleCheck0(
+              defaultConfiguration = Some(config),
+              defaultAttributes = Some(VariantSelector.AttributesBased(map))
+            )(
+              dep"androidx.core:core-ktx:1.15.0",
+              dep"androidx.activity:activity-compose:1.9.3",
+              dep"androidx.compose.ui:ui:1.7.5",
+              dep"androidx.compose.material3:material3:1.3.1"
             )
-          )
+
+          test("compile") {
+            testVariants(
+              Configuration.compile,
+              Map(
+                "org.gradle.usage"    -> VariantSelector.VariantMatcher.Equals("java-api"),
+                "org.gradle.category" -> VariantSelector.VariantMatcher.Equals("library"),
+                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+              )
+            )
+          }
+          test("runtime") {
+            testVariants(
+              Configuration.runtime,
+              Map(
+                "org.gradle.usage"    -> VariantSelector.VariantMatcher.Equals("java-runtime"),
+                "org.gradle.category" -> VariantSelector.VariantMatcher.Equals("library"),
+                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+              )
+            )
+          }
         }
       }
       test("fallback from config") {
-        test("compile") {
-          gradleModuleAndScopeCheck(Some(Configuration.compile))(
-            dep"androidx.core:core-ktx:1.15.0:compile"
-          )
+        test("android") {
+          test("compile") {
+            val attr = VariantSelector.AttributesBased().withMatchers(
+              Map(
+                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+              )
+            )
+            gradleModuleCheck0(Some(Configuration.compile), defaultAttributes = Some(attr))(
+              dep"androidx.core:core-ktx:1.15.0:compile"
+            )
+          }
+          test("runtime") {
+            val attr = VariantSelector.AttributesBased().withMatchers(
+              Map(
+                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+              )
+            )
+            gradleModuleCheck0(defaultAttributes = Some(attr))(
+              dep"androidx.core:core-ktx:1.15.0"
+            )
+          }
         }
-        test("runtime") {
-          gradleModuleCheck(
-            dep"androidx.core:core-ktx:1.15.0"
-          )
+        test("kotlin") {
+          test("runtime") {
+            test("js") {
+              val attr = VariantSelector.AttributesBased().withMatchers(
+                Map(
+                  "org.jetbrains.kotlin.platform.type" ->
+                    VariantSelector.VariantMatcher.Equals("js"),
+                  "org.jetbrains.kotlin.js.compiler" -> VariantSelector.VariantMatcher.Equals("ir")
+                )
+              )
+              gradleModuleCheck0(defaultAttributes = Some(attr))(
+                dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0"
+              )
+            }
+            test("jvm") {
+              val attr = VariantSelector.AttributesBased().withMatchers(
+                Map(
+                  "org.gradle.jvm.environment" ->
+                    VariantSelector.VariantMatcher.Equals("standard-jvm")
+                )
+              )
+              gradleModuleCheck0(defaultAttributes = Some(attr))(
+                dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0"
+              )
+            }
+          }
         }
       }
     }

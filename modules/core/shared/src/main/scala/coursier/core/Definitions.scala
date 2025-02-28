@@ -451,34 +451,51 @@ object Attributes {
   def variantFor(attr: VariantSelector.AttributesBased)
     : Either[VariantError, Variant.Attributes] = {
     val retainedVariants = variants
-      .filter {
+      .iterator
+      .map {
         case (name, values) =>
-          attr.matches(values)
+          (name, attr.matches(values))
+      }
+      .collect {
+        case (name, Some(score)) =>
+          (name, score)
       }
       .toVector
-      .sortBy(_._1.variantName)
-    retainedVariants match {
-      case Seq() =>
-        Left(
-          new VariantError.NoVariantFound(
-            module,
-            actualVersion0,
-            attr,
-            variants.toVector.sortBy(_._1.variantName)
-          )
+    if (retainedVariants.isEmpty)
+      Left(
+        new VariantError.NoVariantFound(
+          module,
+          actualVersion0,
+          attr,
+          variants.toVector.sortBy(_._1.variantName)
         )
-      case Seq((name, _)) =>
-        Right(name)
-      case _ =>
-        val nl = System.lineSeparator()
+      )
+    else {
+      val highestScore = retainedVariants.map(_._2).max
+      val retainedVariants0 = retainedVariants.collect {
+        case (name, `highestScore`) => name
+      }
+      assert(retainedVariants0.nonEmpty)
+      if (retainedVariants0.lengthCompare(1) == 0)
+        Right(retainedVariants0.head)
+      else {
+        val nl                  = System.lineSeparator()
+        val retainedVariantsSet = retainedVariants0.toSet
         Left(
           new VariantError.FoundTooManyVariants(
             module,
             actualVersion0,
             attr,
-            retainedVariants
+            variants
+              .filter {
+                case (k, v) =>
+                  retainedVariantsSet.contains(k)
+              }
+              .toVector
+              .sortBy(_._1.variantName)
           )
         )
+      }
     }
   }
 
