@@ -1,6 +1,5 @@
 package coursier.cache
 
-import coursier.cache.DigestArtifact
 import coursier.cache.internal.Retry
 import coursier.util.{Sync, Task}
 import dataclass.data

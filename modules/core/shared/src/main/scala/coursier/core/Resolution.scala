@@ -1,7 +1,7 @@
 package coursier.core
 
 import coursier.core.MinimizedExclusions._
-import coursier.error.DependencyError
+import coursier.error.{DependencyError, VariantError}
 import coursier.util.Artifact
 import coursier.version.{
   ConstraintReconciliation,
@@ -804,6 +804,7 @@ object Resolution {
     from: Dependency,
     project: Project,
     defaultConfiguration: Configuration,
+    defaultAttributes: VariantSelector.AttributesBased,
     projectCache: ((Module, VersionConstraint0)) => Option[Project],
     keepProvidedDependencies: Boolean,
     forceDepMgmtVersions: Boolean,
@@ -816,68 +817,63 @@ object Resolution {
       .toVector
       .flatMap(_.properties)
 
-    val project0 = {
-      val p = withFinalProperties(
-        project.withProperties(parentProperties0 ++ project.properties)
-      )
-      from.variantSelector match {
-        case _: VariantSelector.ConfigurationBased => p
-        case attr: VariantSelector.AttributesBased =>
-          p.withDependencies0 {
-            p.dependencies0.map {
-              case (v: Variant.Attributes, dep) =>
-                val variantSelectorOverride = dep.variantSelector match {
-                  case a: VariantSelector.AttributesBased if a.isEmpty =>
-                    Some(from.variantSelector)
-                  case _ =>
-                    None
-                }
-                val dep0 = variantSelectorOverride.fold(dep)(dep.withVariantSelector)
-                (v, dep0)
-              case other => other
-            }
+    val projectWithProperties = withFinalProperties(
+      project.withProperties(parentProperties0 ++ project.properties)
+    )
+
+    val actualConfigOrError = finalSelector(
+      from,
+      if (projectWithProperties.variants.isEmpty)
+        Some(projectWithProperties.configurations.keySet)
+      else
+        None,
+      defaultConfiguration,
+      defaultAttributes
+    )
+
+    val project0 = actualConfigOrError match {
+      case Right(attr: VariantSelector.AttributesBased) =>
+        projectWithProperties.withDependencies0 {
+          projectWithProperties.dependencies0.map {
+            case (v: Variant.Attributes, dep) =>
+              val variantSelectorOverride = dep.variantSelector match {
+                case a: VariantSelector.AttributesBased if a.isEmpty =>
+                  Some(attr)
+                case _ =>
+                  None
+              }
+              val dep0 = variantSelectorOverride.fold(dep)(dep.withVariantSelector)
+              (v, dep0)
+            case other => other
           }
-      }
+        }
+      case Right(_: VariantSelector.ConfigurationBased) => projectWithProperties
+      case Left(_)                                      => projectWithProperties
     }
     val properties = project0.properties.toMap
 
-    val actualConfig0: VariantSelector = from.variantSelector match {
+    val configurationsOrVariantOrError = actualConfigOrError.flatMap {
       case c: VariantSelector.ConfigurationBased =>
-        val config = actualConfiguration(
-          if (c.configuration.isEmpty) defaultConfiguration
-          else c.configuration,
-          project0.configurations
-        )
-        VariantSelector.ConfigurationBased(config)
+        Right(Right(parentConfigurations(c.configuration, project0.configurations)))
       case attr: VariantSelector.AttributesBased =>
-        if (project0.variants.isEmpty) // project seem to originate from a POM
-          VariantSelector.ConfigurationBased(
-            attr.equivalentConfiguration.getOrElse(defaultConfiguration)
-          )
-        else
-          from.variantSelector
-    }
-
-    val configurationsOrVariant = actualConfig0 match {
-      case c: VariantSelector.ConfigurationBased =>
-        Right(parentConfigurations(c.configuration, project0.configurations))
-      case attr: VariantSelector.AttributesBased =>
-        Left(project0.variantFor(attr))
+        project0.variantFor(attr).map(Left(_))
     }
 
     val withProvidedOpt =
       if (keepProvidedDependencies) Some(Configuration.provided)
       else None
-    val keepConfigOpt = actualConfig0 match {
-      case c: VariantSelector.ConfigurationBased =>
-        Left {
+    val keepConfigOpt = actualConfigOrError match {
+      case Right(c: VariantSelector.ConfigurationBased) =>
+        Some {
           (
             c.configuration,
             project0.allConfigurations.get(c.configuration).map(_ ++ withProvidedOpt)
           )
         }
-      case other: VariantSelector.AttributesBased =>
-        Right(other)
+      case Right(_: VariantSelector.AttributesBased) =>
+        None
+      case Left(_) =>
+        None
     }
 
     val rawDeps = withExclusions0(
@@ -890,7 +886,7 @@ object Resolution {
         project0.overrides,
         forceDepMgmtVersions = forceDepMgmtVersions,
         keepVariant = keepConfigOpt match {
-          case Left((actualConfig, keepConfigOpt0)) =>
+          case Some((actualConfig, keepConfigOpt0)) =>
             (variant: Variant) =>
               variant.asConfiguration.exists { config =>
                 keepConfigOpt0 match {
@@ -898,7 +894,7 @@ object Resolution {
                   case None       => config == actualConfig
                 }
               }
-          case Right(_) =>
+          case None =>
             // TODO attributes
             (variant: Variant) => false
         }
@@ -906,12 +902,6 @@ object Resolution {
       from.minimizedExclusions.toSet()
     )
 
-    val configurationsOrVariantOrError = configurationsOrVariant match {
-      case Left(Left(ex)) =>
-        Left(ex)
-      case Left(Right(attr)) => Right(Left(attr))
-      case Right(config)     => Right(Right(config))
-    }
     configurationsOrVariantOrError.map { configurationsOrVariant0 =>
       rawDeps.flatMap {
         case (variant0, dep0) =>
@@ -928,7 +918,8 @@ object Resolution {
           val variant: Variant =
             if (variant0.isEmpty)
               Variant.Configuration(Configuration.compile)
-            else variant0
+            else
+              variant0
 
           def default = variant match {
             case c: Variant.Configuration =>
@@ -943,7 +934,7 @@ object Resolution {
             default
           else
             keepConfigOpt match {
-              case Left((actualConfig, keepConfigOpt0)) =>
+              case Some((actualConfig, keepConfigOpt0)) =>
                 keepConfigOpt0.fold(default) { keep =>
                   if (variant.asConfiguration.exists(keep)) {
                     val depConfig =
@@ -959,7 +950,7 @@ object Resolution {
                   else
                     Nil
                 }
-              case Right(_) =>
+              case None =>
                 default
             }
       }
@@ -1064,17 +1055,62 @@ object Resolution {
   def forceScalaVersion(sv: String): Dependency => Dependency =
     overrideScalaModule(VersionConstraint0(sv)) andThen overrideFullSuffix(sv)
 
-  private def fallbackConfigIfNecessary(dep: Dependency, configs: Set[Configuration]): Dependency =
-    dep.variantSelector match {
-      case c: VariantSelector.ConfigurationBased =>
-        val actualConfig = actualConfiguration(c.configuration, configs)
-        if (actualConfig == c.configuration)
-          dep
-        else
-          dep.withVariantSelector(VariantSelector.ConfigurationBased(actualConfig))
-      case _: VariantSelector.AttributesBased =>
-        dep
+  private def finalSelector(
+    dep: Dependency,
+    configsOpt: Option[Set[Configuration]],
+    defaultConfig: Configuration,
+    defaultAttributes: VariantSelector.AttributesBased
+  ): Either[DependencyError, VariantSelector] = {
+    def actualConfig(config: Configuration, configs: Set[Configuration]): Configuration =
+      actualConfiguration(
+        if (config.isEmpty) defaultConfig else config,
+        configs
+      )
+    (dep.variantSelector, configsOpt) match {
+      case (c: VariantSelector.ConfigurationBased, Some(configs)) =>
+        val actualConfig0 = actualConfig(c.configuration, configs)
+        Right {
+          if (actualConfig0 == c.configuration)
+            c
+          else
+            VariantSelector.ConfigurationBased(actualConfig0)
+        }
+      case (c: VariantSelector.ConfigurationBased, None) =>
+        c.equivalentAttributesSelector.map(defaultAttributes + _).toRight {
+          new VariantError.CannotFindEquivalentVariants(
+            dep.module,
+            dep.versionConstraint,
+            c.configuration
+          )
+        }
+      case (attr: VariantSelector.AttributesBased, Some(configs)) =>
+        val config = attr.equivalentConfiguration.getOrElse(
+          actualConfig(Configuration.empty, configs)
+        )
+        Right(VariantSelector.ConfigurationBased(config))
+      case (attr: VariantSelector.AttributesBased, None) =>
+        Right(defaultAttributes + attr)
     }
+  }
+
+  private def fallbackConfigIfNecessary(
+    dep: Dependency,
+    configsOpt: Option[Set[Configuration]],
+    defaultConfiguration: Configuration,
+    defaultAttributes: VariantSelector.AttributesBased
+  ): Dependency = {
+    val updatedSelector = finalSelector(
+      dep,
+      configsOpt,
+      defaultConfiguration,
+      defaultAttributes
+    ).getOrElse {
+      // FIXME Can't convert the attributes to a config, this should be an error
+      dep.variantSelector
+    }
+    if (dep.variantSelector == updatedSelector) dep
+    else dep.withVariantSelector(updatedSelector)
+  }
 
   private def withFinalProperties(project: Project): Project =
     project.withProperties(projectProperties(project))
@@ -1121,17 +1157,16 @@ object Resolution {
   @deprecated("Use boms instead", "2.1.19")
   bomModuleVersions: Seq[(Module, String)] = Nil,
   @since("2.1.19")
-  boms: Seq[BomDependency] = Nil
+  boms: Seq[BomDependency] = Nil,
+  @since("2.1.25")
+  defaultVariantAttributes: VariantSelector.AttributesBased =
+    VariantSelector.AttributesBased.empty
 ) {
 
   lazy val dependencies: Set[Dependency] =
     dependencySet.set
 
-  override lazy val hashCode: Int = {
-    var code = 17 + "coursier.core.Resolution".##
-    code = 37 * code + tuple.##
-    37 * code
-  }
+  override lazy val hashCode: Int = super.hashCode
 
   @deprecated("Use forceVersions0 instead", "2.1.25")
   def forceVersions: Map[Module, String] =
@@ -1283,6 +1318,7 @@ object Resolution {
               dep,
               proj,
               defaultConfiguration,
+              defaultVariantAttributes,
               k => projectCache0.get(k).map(_._2),
               keepProvidedDependencies,
               forceDepMgmtVersions,
@@ -1325,15 +1361,21 @@ object Resolution {
   ): Seq[Dependency] =
     dependenciesOf0(dep, withRetainedVersions).toTry.get
 
-  private def configsOf(dep: Dependency): Set[Configuration] = {
+  private def configsOf(dep: Dependency): Option[Set[Configuration]] = {
     val reconciledVersion = reconciledVersions.getOrElse(
       dep.module,
       sys.error(s"No reconciled version found for ${dep.module}")
     )
     projectCache0
       .get((dep.module, reconciledVersion))
-      .map(_._2.configurations.keySet)
-      .getOrElse(Set.empty)
+      .map(_._2)
+      .map { proj =>
+        if (proj.variants.isEmpty)
+          Some(proj.configurations.keySet)
+        else
+          None
+      }
+      .getOrElse(Some(Set.empty))
   }
 
   private def updated(
@@ -1358,7 +1400,12 @@ object Resolution {
           .getOrElse(dep0.versionConstraint)
       )
     if (withFallbackConfig)
-      dep0 = Resolution.fallbackConfigIfNecessary(dep0, configsOf(dep0))
+      dep0 = Resolution.fallbackConfigIfNecessary(
+        dep0,
+        configsOf(dep0),
+        defaultConfiguration,
+        defaultVariantAttributes
+      )
     dep0
   }
 

@@ -204,7 +204,7 @@ object JavaOrScalaDependency {
             }
             val variantParams0 = variantParams.map {
               case (k, v) =>
-                (k.stripPrefix("variant."), v)
+                (k.stripPrefix("variant."), VariantSelector.VariantMatcher.Equals(v))
             }
             Some(VariantSelector.AttributesBased(variantParams0))
           }
