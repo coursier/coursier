@@ -1,6 +1,14 @@
 package coursier.params
 
-import coursier.core.{Activation, Configuration, Module, ModuleName, Organization, Reconciliation}
+import coursier.core.{
+  Activation,
+  Configuration,
+  Module,
+  ModuleName,
+  Organization,
+  Reconciliation,
+  VariantSelector
+}
 import coursier.params.rule.{Rule, RuleResolution, Strict}
 import coursier.util.ModuleMatchers
 import coursier.version.{ConstraintReconciliation, Version, VersionConstraint}
@@ -30,7 +38,9 @@ import dataclass.data
   keepProvidedDependencies: Option[Boolean] = None,
   @since("2.1.17")
   forceDepMgmtVersions: Option[Boolean] = None,
-  enableDependencyOverrides: Option[Boolean] = None
+  enableDependencyOverrides: Option[Boolean] = None,
+  @since("2.1.25")
+  defaultVariantAttributes: Option[VariantSelector.AttributesBased] = None
 ) {
 
   @deprecated("Use forceVersion0 instead", "2.1.25")
@@ -146,6 +156,9 @@ import dataclass.data
 
   def withKeepProvidedDependencies(keepProvidedDependencies: Boolean): ResolutionParams =
     withKeepProvidedDependencies(Some(keepProvidedDependencies))
+
+  def withDefaultVariantAttributes(attributes: VariantSelector.AttributesBased): ResolutionParams =
+    withDefaultVariantAttributes(Some(attributes))
 
   def addReconciliation(reconciliation: (ModuleMatchers, ConstraintReconciliation)*)
     : ResolutionParams =

@@ -16,7 +16,8 @@ import coursier.core.{
   Organization,
   Repository,
   Resolution,
-  ResolutionProcess
+  ResolutionProcess,
+  VariantSelector
 }
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
@@ -433,6 +434,9 @@ object Resolve extends PlatformResolve {
       .withExtraProperties(params.properties)
       .withForceProperties(params.forcedProperties)
       .withDefaultConfiguration(params.defaultConfiguration)
+      .withDefaultVariantAttributes(
+        params.defaultVariantAttributes.getOrElse(VariantSelector.AttributesBased.empty)
+      )
       .withKeepProvidedDependencies(params.keepProvidedDependencies.getOrElse(false))
       .withForceDepMgmtVersions(params.forceDepMgmtVersions.getOrElse(false))
       .withEnableDependencyOverrides(

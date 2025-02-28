@@ -804,6 +804,7 @@ object Resolution {
     from: Dependency,
     project: Project,
     defaultConfiguration: Configuration,
+    defaultAttributes: VariantSelector.AttributesBased,
     projectCache: ((Module, VersionConstraint0)) => Option[Project],
     keepProvidedDependencies: Boolean,
     forceDepMgmtVersions: Boolean,
@@ -826,7 +827,8 @@ object Resolution {
         Some(projectWithProperties.configurations.keySet)
       else
         None,
-      defaultConfiguration
+      defaultConfiguration,
+      defaultAttributes
     )
 
     val project0 = actualConfigOrError match {
@@ -1056,40 +1058,53 @@ object Resolution {
   private def finalSelector(
     dep: Dependency,
     configsOpt: Option[Set[Configuration]],
-    defaultConfig: Configuration
-  ): Either[DependencyError, VariantSelector] =
+    defaultConfig: Configuration,
+    defaultAttributes: VariantSelector.AttributesBased
+  ): Either[DependencyError, VariantSelector] = {
+    def actualConfig(config: Configuration, configs: Set[Configuration]): Configuration =
+      actualConfiguration(
+        if (config.isEmpty) defaultConfig else config,
+        configs
+      )
     (dep.variantSelector, configsOpt) match {
       case (c: VariantSelector.ConfigurationBased, Some(configs)) =>
-        val actualConfig = actualConfiguration(
-          if (c.configuration.isEmpty) defaultConfig else c.configuration,
-          configs
-        )
+        val actualConfig0 = actualConfig(c.configuration, configs)
         Right {
-          if (actualConfig == c.configuration)
+          if (actualConfig0 == c.configuration)
             c
           else
-            VariantSelector.ConfigurationBased(actualConfig)
+            VariantSelector.ConfigurationBased(actualConfig0)
         }
       case (c: VariantSelector.ConfigurationBased, None) =>
-        c.equivalentAttributesSelector.toRight {
+        c.equivalentAttributesSelector.map(defaultAttributes + _).toRight {
           new VariantError.CannotFindEquivalentVariants(
             dep.module,
             dep.versionConstraint,
             c.configuration
           )
         }
-      case (attr: VariantSelector.AttributesBased, Some(_)) =>
-        val config = attr.equivalentConfiguration.getOrElse(defaultConfig)
+      case (attr: VariantSelector.AttributesBased, Some(configs)) =>
+        val config = attr.equivalentConfiguration.getOrElse(
+          actualConfig(Configuration.empty, configs)
+        )
         Right(VariantSelector.ConfigurationBased(config))
       case (attr: VariantSelector.AttributesBased, None) =>
-        Right(attr)
+        Right(defaultAttributes + attr)
     }
+  }
 
   private def fallbackConfigIfNecessary(
     dep: Dependency,
-    configsOpt: Option[Set[Configuration]]
+    configsOpt: Option[Set[Configuration]],
+    defaultConfiguration: Configuration,
+    defaultAttributes: VariantSelector.AttributesBased
   ): Dependency = {
-    val updatedSelector = finalSelector(dep, configsOpt, Configuration.empty).getOrElse {
+    val updatedSelector = finalSelector(
+      dep,
+      configsOpt,
+      defaultConfiguration,
+      defaultAttributes
+    ).getOrElse {
       // FIXME Can't convert the attributes to a config, this should be an error
       dep.variantSelector
     }
@@ -1142,17 +1157,16 @@ object Resolution {
   @deprecated("Use boms instead", "2.1.19")
   bomModuleVersions: Seq[(Module, String)] = Nil,
   @since("2.1.19")
-  boms: Seq[BomDependency] = Nil
+  boms: Seq[BomDependency] = Nil,
+  @since("2.1.25")
+  defaultVariantAttributes: VariantSelector.AttributesBased =
+    VariantSelector.AttributesBased.empty
 ) {
 
   lazy val dependencies: Set[Dependency] =
     dependencySet.set
 
-  override lazy val hashCode: Int = {
-    var code = 17 + "coursier.core.Resolution".##
-    code = 37 * code + tuple.##
-    37 * code
-  }
+  override lazy val hashCode: Int = super.hashCode
 
   @deprecated("Use forceVersions0 instead", "2.1.25")
   def forceVersions: Map[Module, String] =
@@ -1304,6 +1318,7 @@ object Resolution {
               dep,
               proj,
               defaultConfiguration,
+              defaultVariantAttributes,
               k => projectCache0.get(k).map(_._2),
               keepProvidedDependencies,
               forceDepMgmtVersions,
@@ -1385,7 +1400,12 @@ object Resolution {
           .getOrElse(dep0.versionConstraint)
       )
     if (withFallbackConfig)
-      dep0 = Resolution.fallbackConfigIfNecessary(dep0, configsOf(dep0))
+      dep0 = Resolution.fallbackConfigIfNecessary(
+        dep0,
+        configsOf(dep0),
+        defaultConfiguration,
+        defaultVariantAttributes
+      )
     dep0
   }
 
