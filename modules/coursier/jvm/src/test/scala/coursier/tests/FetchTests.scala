@@ -464,7 +464,7 @@ object FetchTests extends TestSuite {
     test("url and force version") {
       async {
         val params = fetch.resolutionParams
-          .addForceVersion(mod"org.apache.commons:commons-compress" -> "1.5")
+          .addForceVersion0(mod"org.apache.commons:commons-compress" -> VersionConstraint("1.5"))
         val res = await {
           fetch
             .withResolutionParams(params)
