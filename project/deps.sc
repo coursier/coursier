@@ -56,7 +56,7 @@ object Deps {
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
   def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
   def shapeless                = ivy"com.chuusai::shapeless:2.3.12"
-  def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.16"
+  def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.17"
   def svm                      = ivy"org.graalvm.nativeimage:svm:21.3.13"
   def tika                     = ivy"org.apache.tika:tika-core:3.1.0"
   def ujson                    = ivy"com.lihaoyi::ujson:4.1.0"
