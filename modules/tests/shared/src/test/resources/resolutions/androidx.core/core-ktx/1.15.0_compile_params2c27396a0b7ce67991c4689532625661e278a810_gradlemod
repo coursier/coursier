@@ -1,0 +1,19 @@
+androidx.core:core-ktx:1.15.0:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.annotation:annotation:1.8.1:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.core:core:1.15.0:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+org.jetbrains.kotlin:kotlin-stdlib:1.8.22:compile
+androidx.annotation:annotation-jvm:1.8.1:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.annotation:annotation-experimental:1.4.1:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.lifecycle:lifecycle-runtime:2.6.2:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.versionedparcelable:versionedparcelable:1.1.1:compile
+org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22:compile
+org.jetbrains:annotations:13.0:compile
+androidx.arch.core:core-common:2.2.0:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.lifecycle:lifecycle-common:2.6.2:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.collection:collection:1.0.0:compile
+org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.4:compile
+org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21:compile
+org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21:compile

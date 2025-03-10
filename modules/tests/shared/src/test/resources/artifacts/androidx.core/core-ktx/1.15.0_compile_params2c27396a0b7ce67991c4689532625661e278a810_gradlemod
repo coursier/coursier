@@ -1,0 +1,17 @@
+https://maven.google.com/androidx/core/core-ktx/1.15.0/core-ktx-1.15.0.aar
+https://maven.google.com/androidx/core/core/1.15.0/core-1.15.0.aar
+https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib/1.8.22/kotlin-stdlib-1.8.22.jar
+https://maven.google.com/androidx/annotation/annotation-jvm/1.8.1/annotation-jvm-1.8.1.jar
+https://maven.google.com/androidx/annotation/annotation-experimental/1.4.1/annotation-experimental-1.4.1.aar
+https://maven.google.com/androidx/lifecycle/lifecycle-runtime/2.6.2/lifecycle-runtime-2.6.2.aar
+https://maven.google.com/androidx/versionedparcelable/versionedparcelable/1.1.1/versionedparcelable-1.1.1.jar
+https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-common/1.8.22/kotlin-stdlib-common-1.8.22.jar
+https://repo1.maven.org/maven2/org/jetbrains/annotations/13.0/annotations-13.0.jar
+https://maven.google.com/androidx/arch/core/core-common/2.2.0/core-common-2.2.0.jar
+https://maven.google.com/androidx/lifecycle/lifecycle-common/2.6.2/lifecycle-common-2.6.2.jar
+https://maven.google.com/androidx/collection/collection/1.0.0/collection-1.0.0.jar
+https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.6.4/kotlinx-coroutines-android-1.6.4.jar
+https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-bom/1.6.4/kotlinx-coroutines-bom-1.6.4.jar
+https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.6.21/kotlin-stdlib-jdk8-1.6.21.jar
+https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.6.4/kotlinx-coroutines-core-jvm-1.6.4.jar
+https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.6.21/kotlin-stdlib-jdk7-1.6.21.jar

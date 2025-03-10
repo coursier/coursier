@@ -464,7 +464,7 @@ object FetchTests extends TestSuite {
     test("url and force version") {
       async {
         val params = fetch.resolutionParams
-          .addForceVersion(mod"org.apache.commons:commons-compress" -> "1.5")
+          .addForceVersion0(mod"org.apache.commons:commons-compress" -> VersionConstraint("1.5"))
         val res = await {
           fetch
             .withResolutionParams(params)
@@ -530,10 +530,10 @@ object FetchTests extends TestSuite {
 
       test("android") {
 
-        def withVariant(dep: Dependency, map: Map[String, String]) =
+        def withVariant(dep: Dependency, map: Map[String, VariantSelector.VariantMatcher]) =
           dep.withVariantSelector(VariantSelector.AttributesBased(map))
 
-        def testVariants(map: Map[String, String]): Future[Unit] = async {
+        def testVariants(map: Map[String, VariantSelector.VariantMatcher]): Future[Unit] = async {
           val params = fetch.resolutionParams
           val res = await {
             enableModules(fetch.addRepositories(Repositories.google))
@@ -558,9 +558,9 @@ object FetchTests extends TestSuite {
         test("compile") {
           testVariants(
             Map(
-              "org.gradle.usage"                   -> "java-api",
-              "org.gradle.category"                -> "library",
-              "org.jetbrains.kotlin.platform.type" -> "jvm"
+              "org.gradle.usage"    -> VariantSelector.VariantMatcher.Equals("java-api"),
+              "org.gradle.category" -> VariantSelector.VariantMatcher.Equals("library"),
+              "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
             )
           )
         }
@@ -568,10 +568,62 @@ object FetchTests extends TestSuite {
         test("runtime") {
           testVariants(
             Map(
-              "org.gradle.usage"                   -> "java-runtime",
-              "org.gradle.category"                -> "library",
-              "org.jetbrains.kotlin.platform.type" -> "jvm"
+              "org.gradle.usage"    -> VariantSelector.VariantMatcher.Equals("java-runtime"),
+              "org.gradle.category" -> VariantSelector.VariantMatcher.Equals("library"),
+              "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
             )
+          )
+        }
+      }
+
+      test("fallback from config") {
+
+        def testVariants(
+          config: Option[Configuration] = None,
+          defaultAttributes: Option[VariantSelector.AttributesBased] = None
+        )(
+          dependencies: Dependency*
+        ): Future[Unit] = async {
+          val params = fetch.resolutionParams
+            .withDefaultConfiguration(
+              config.getOrElse(fetch.resolutionParams.defaultConfiguration)
+            )
+            .withDefaultVariantAttributes(
+              defaultAttributes.orElse(fetch.resolutionParams.defaultVariantAttributes)
+            )
+          val res = await {
+            enableModules(fetch.addRepositories(Repositories.google))
+              .withResolutionParams(params)
+              .addDependencies(dependencies: _*)
+              .futureResult()
+          }
+
+          await(validateArtifacts(
+            res.resolution,
+            res.artifacts.map(_._1),
+            params = params,
+            extraKeyPart = "_gradlemod"
+          ))
+        }
+
+        test("compile") {
+          val attr = VariantSelector.AttributesBased().withMatchers(
+            Map(
+              "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+            )
+          )
+          testVariants(Some(Configuration.compile), defaultAttributes = Some(attr))(
+            dep"androidx.core:core-ktx:1.15.0:compile"
+          )
+        }
+        test("runtime") {
+          val attr = VariantSelector.AttributesBased().withMatchers(
+            Map(
+              "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+            )
+          )
+          testVariants(defaultAttributes = Some(attr))(
+            dep"androidx.core:core-ktx:1.15.0"
           )
         }
       }
