@@ -77,7 +77,7 @@ object Versions {
 
 def sbtCoursierVersion = "2.1.4"
 
-def graalVmJvmId = "liberica-nik:21.0.5"
+def graalVmJvmId = "liberica-nik:23.0.2"
 
 def scalaCliVersion = "1.5.1"
 
