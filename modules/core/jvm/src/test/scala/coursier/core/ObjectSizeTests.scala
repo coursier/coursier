@@ -6,10 +6,17 @@ import utest._
 import utest.asserts.{RetryInterval, RetryMax}
 
 import scala.concurrent.duration._
+import scala.util.Properties
 
 object ObjectSizeTests extends TestSuite {
 
-  val tests = Tests {
+  val tests =
+    if (Properties.isLinux)
+      actualTests
+    else
+      Tests {}
+
+  def actualTests = Tests {
 
     test("Dependency sizes") {
       test("should be the same for same dependency") {

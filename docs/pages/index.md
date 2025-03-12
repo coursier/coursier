@@ -74,3 +74,12 @@ You use the coursier Java API to download dependencies, and maybe JVMs or archiv
 * Java API
 * archive cache
 * JVM
+
+### Docker user
+
+You use the coursier CLI to fetch, run, and maybe build Docker images.
+
+* archive cache
+* digest cache
+* digest archive cache
+* docker (feature, API, CLI)
