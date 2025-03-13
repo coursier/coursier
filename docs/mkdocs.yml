@@ -96,8 +96,6 @@ markdown_extensions:
       permalink: true
 
 plugins:
-  - git-revision-date-localized:
-      enable_creation_date: true
   - git-committers:
       repository: coursier/coursier
       branch: main
