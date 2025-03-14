@@ -1,7 +1,7 @@
 # Coursier Cache
 
 This page is about the main, "standard", coursier cache. coursier has other kind of caches,
-such its [archive cache](feature-archive-cache.md), documented on its own page.
+such its [archive cache](features-archive-cache.md), documented on its own page.
 
 The coursier cache aims at being quite generic. "Cool URLs don't change", and the coursier
 cache basically caches things using URLs as keys. For example,

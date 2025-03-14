@@ -16,12 +16,14 @@ import coursier.core.{
   Organization,
   Repository,
   Resolution,
-  ResolutionProcess
+  ResolutionProcess,
+  VariantSelector
 }
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.graph.ReverseModuleTree
 import coursier.internal.Typelevel
+import coursier.maven.MavenRepository
 import coursier.params.{Mirror, MirrorConfFile, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
@@ -59,7 +61,9 @@ import scala.language.higherKinds
   @deprecated("Use boms instead", "2.1.19")
     bomModuleVersions: Seq[(Module, String)] = Nil,
   @since("2.1.19")
-    boms: Seq[BomDependency] = Nil
+    boms: Seq[BomDependency] = Nil,
+  @since("2.1.25")
+    gradleModuleSupport: Option[Boolean] = None
 )(implicit
   sync: Sync[F]
 ) {
@@ -100,7 +104,15 @@ import scala.language.higherKinds
       }
       else
         repositories
-    allMirrors.map(Mirror.replace(repositories0, _))
+    val repositories1 = gradleModuleSupport match {
+      case None => repositories0
+      case Some(enable) =>
+        repositories0.map {
+          case m: MavenRepository => m.withCheckModule(enable)
+          case other              => other
+        }
+    }
+    allMirrors.map(Mirror.replace(repositories1, _))
   }
 
   def addDependencies(dependencies: Dependency*): Resolve[F] =
@@ -176,6 +188,9 @@ import scala.language.higherKinds
   def withTransformFetcher(fOpt: Option[ResolutionProcess.Fetch0[F] => ResolutionProcess.Fetch0[F]])
     : Resolve[F] =
     withTransformFetcherOpt(fOpt)
+
+  def withGradleModuleSupport(enable: Boolean): Resolve[F] =
+    withGradleModuleSupport(Some(enable))
 
   private def allMirrors0 =
     mirrors ++
@@ -433,6 +448,9 @@ object Resolve extends PlatformResolve {
       .withExtraProperties(params.properties)
       .withForceProperties(params.forcedProperties)
       .withDefaultConfiguration(params.defaultConfiguration)
+      .withDefaultVariantAttributes(
+        params.defaultVariantAttributes.getOrElse(VariantSelector.AttributesBased.empty)
+      )
       .withKeepProvidedDependencies(params.keepProvidedDependencies.getOrElse(false))
       .withForceDepMgmtVersions(params.forceDepMgmtVersions.getOrElse(false))
       .withEnableDependencyOverrides(

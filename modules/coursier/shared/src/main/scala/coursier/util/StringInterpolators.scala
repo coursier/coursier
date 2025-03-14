@@ -122,6 +122,30 @@ object StringInterpolators {
     """)
   }
 
+  private def matcherTree(c: blackbox.Context)(matcher: VariantSelector.VariantMatcher)
+    : c.Expr[VariantSelector.VariantMatcher] = {
+    import c.universe._
+    matcher match {
+      case VariantSelector.VariantMatcher.Api =>
+        c.Expr(q"_root_.coursier.core.VariantSelector.VariantMatcher.Api")
+      case VariantSelector.VariantMatcher.Runtime =>
+        c.Expr(q"_root_.coursier.core.VariantSelector.VariantMatcher.Runtime")
+      case eq: VariantSelector.VariantMatcher.Equals =>
+        c.Expr(q"_root_.coursier.core.VariantSelector.VariantMatcher.Equals(${eq.value})")
+      case mv: VariantSelector.VariantMatcher.MinimumVersion =>
+        c.Expr(
+          q"_root_.coursier.core.VariantSelector.VariantMatcher.MinimumVersion(_root_.coursier.version.Version(${mv.minimumVersion.asString}))"
+        )
+      case ew: VariantSelector.VariantMatcher.EndsWith =>
+        c.Expr(q"_root_.coursier.core.VariantSelector.VariantMatcher.EndsWith(${ew.suffix})")
+      case anyOf: VariantSelector.VariantMatcher.AnyOf =>
+        val values = anyOf.matchers.map(matcherTree(c)(_))
+        c.Expr(
+          q"_root_.coursier.core.VariantSelector.VariantMatcher.AnyOf(_root_.scala.collection.immutable.Seq(..$values))"
+        )
+    }
+  }
+
   def safeDependency(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[Dependency] = {
     import c.universe._
     c.prefix.tree match {
@@ -189,12 +213,12 @@ object StringInterpolators {
                   _root_.coursier.core.Configuration(${c.configuration.value})
                 )"""
               case a: VariantSelector.AttributesBased =>
-                val entries = a.attributes.toVector.sorted.map {
+                val entries = a.matchers.toVector.sortBy(_._1).map {
                   case (k, v) =>
-                    q"_root_.scala.Tuple2($k, $v)"
+                    q"_root_.scala.Tuple2($k, ${matcherTree(c)(v)})"
                 }
                 q"""_root_.coursier.core.VariantSelector.AttributesBased(
-                  _root_.scala.collection.immutable.Map[_root_.java.lang.String, _root_.java.lang.String](..$entries)
+                  _root_.scala.collection.immutable.Map[_root_.java.lang.String, _root_.coursier.core.VariantSelector.VariantMatcher](..$entries)
                 )"""
             }
             c.Expr(q"""

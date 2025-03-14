@@ -365,7 +365,7 @@ import scala.annotation.nowarn
       case _: VariantSelector.ConfigurationBased => false
       case _: VariantSelector.AttributesBased    => true
     }
-  def addVariantAttributes(attributes: (String, String)*): Dependency = {
+  def addVariantAttributes(attributes: (String, VariantSelector.VariantMatcher)*): Dependency = {
     val (attr, force) = variantSelector match {
       case c: VariantSelector.ConfigurationBased =>
         (VariantSelector.AttributesBased(), true)

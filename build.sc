@@ -1247,6 +1247,48 @@ object docs extends ScalaModule {
     Seq("--site-dir", mkdocsOutput().path.toString)
   }
   def millSourcePath = super.millSourcePath / os.up / os.up / "docs"
+  def mkdocsWatchScript: T[PathRef] = Task {
+    mdoc()()
+    val docsDir = T.workspace / "docs"
+
+    def quoteArg(arg: String): String =
+      "\"" + arg.replace("\"", "\\\"") + "\""
+    def quoteArgs(args: Seq[String]): String =
+      args.map(quoteArg).mkString(" ")
+    val cp         = compileClasspath().map(_.path).mkString(File.pathSeparator)
+    val mainClass0 = mainClass().getOrElse(???)
+    val mdocArgs   = mdocWatchArgs().value
+    val scriptContent =
+      s"""#!/usr/bin/env bash
+         |set -e
+         |
+         |cd ${quoteArg(docsDir.toString)}
+         |
+         |cleanUp() {
+         |  if [ "z$$MKDOCS_PID" != "z" ]; then
+         |    kill "$$MKDOCS_PID"
+         |  fi
+         |  if [ "z$$MDOC_PID" != "z" ]; then
+         |    kill "$$MDOC_PID"
+         |  fi
+         |}
+         |
+         |trap cleanUp EXIT
+         |
+         |mkdocs serve ${quoteArgs(mkdocsConfigArgs())} &
+         |MKDOCS_PID="$$!"
+         |
+         |java -cp ${quoteArg(cp)} ${quoteArg(mainClass0)} ${quoteArgs(mdocArgs)} &
+         |MDOC_PID="$$!"
+         |
+         |wait "$$MKDOCS_PID" "$$MDOC_PID"
+         |""".stripMargin
+    val script = T.dest / "watch.sh"
+    os.write(script, scriptContent)
+    if (!Properties.isWin)
+      script.toIO.setExecutable(true)
+    PathRef(script)
+  }
   def mkdocsServe() = T.command[Unit] {
     mdoc()()
     val docsDir = T.workspace / "docs"

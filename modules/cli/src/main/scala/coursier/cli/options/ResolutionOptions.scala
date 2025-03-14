@@ -1,9 +1,9 @@
 package coursier.cli.options
 
 import caseapp._
-import cats.data.{Validated, ValidatedNel}
+import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.core.{Configuration, ResolutionProcess}
+import coursier.core.{Configuration, ResolutionProcess, VariantSelector}
 import coursier.params.ResolutionParams
 import coursier.parse.{DependencyParser, ModuleParser, ReconciliationParser, RuleParser}
 import coursier.version.Version
@@ -113,7 +113,12 @@ final case class ResolutionOptions(
 
   @Group(OptionGroup.resolution)
   @Hidden
-    enableDependencyOverrides: Option[Boolean] = None
+    enableDependencyOverrides: Option[Boolean] = None,
+
+  @Group(OptionGroup.resolution)
+  @Hidden
+  @ExtraName("variant")
+    variants: List[String] = Nil
 
 ) {
   // format: on
@@ -193,13 +198,55 @@ final case class ResolutionOptions(
         case Right(elems) => Validated.validNel(elems)
       }
 
+    val defaultVariantAttributesOptV = {
+      val variantsOrErrors = variants
+        .filter(_.trim.nonEmpty)
+        .map(_.split("=", 2))
+        .map {
+          case Array(k, v)  => Right((k, v))
+          case Array(thing) => Left(s"Malformed variant value: '$thing' (expected 'name=value')")
+        }
+      val errors = variantsOrErrors.collect {
+        case Left(err) => err
+      }
+      errors match {
+        case h :: t =>
+          Validated.Invalid(NonEmptyList(h, t))
+        case Nil =>
+          val values = variantsOrErrors.collect {
+            case Right((k, v)) =>
+              VariantSelector.VariantMatcher.fromString(k, v)
+          }
+          val valuesMap = values.toMap
+          if (values.distinct.length == valuesMap.size)
+            Validated.validNel {
+              if (values.isEmpty) None
+              else Some(VariantSelector.AttributesBased(values.toMap))
+            }
+          else {
+            val desc = values
+              .distinct
+              .groupBy(_._1)
+              .filter(_._2.length > 1)
+              .map(_._1)
+              .toVector
+              .sorted
+              .mkString(", ")
+            Validated.invalidNel(
+              s"Found duplicated variants: $desc"
+            )
+          }
+      }
+    }
+
     (
       maxIterationsV,
       forceVersionV,
       extraPropertiesV,
       forcedPropertiesV,
       rulesV,
-      reconciliationV
+      reconciliationV,
+      defaultVariantAttributesOptV
     ).mapN {
       (
         maxIterations,
@@ -207,7 +254,8 @@ final case class ResolutionOptions(
         extraProperties,
         forcedProperties,
         rules,
-        reconciliation
+        reconciliation,
+        defaultVariantAttributesOpt
       ) =>
         ResolutionParams()
           .withKeepOptionalDependencies(keepOptional)
@@ -232,6 +280,7 @@ final case class ResolutionOptions(
           .withJdkVersionOpt0(jdkVersion.map(_.trim).filter(_.nonEmpty).map(Version(_)))
           .withForceDepMgmtVersions(forceDepMgmtVersions)
           .withEnableDependencyOverrides(enableDependencyOverrides)
+          .withDefaultVariantAttributes(defaultVariantAttributesOpt)
     }
   }
 }
