@@ -26,6 +26,7 @@ object TestCache {
 
   def cache[F[_]: Sync] = MockCache.create(
     dataDir,
+    baseChangingOpt = Some(dataDir.resolve("changing")),
     writeMissing = updateSnapshots,
     pool = pool
   )
