@@ -26,7 +26,19 @@ object TestCache {
 
   def cache[F[_]: Sync] = MockCache.create(
     dataDir,
+    baseChangingOpt = Some(dataDir.resolve("changing")),
     writeMissing = updateSnapshots,
+    replaceByNames = artifact =>
+      artifact.url.startsWith("https://github.com/") &&
+      artifact.url.contains("/releases/download/") &&
+      (
+        artifact.url.endsWith(".gz") ||
+        artifact.url.endsWith(".zip") ||
+        artifact.url.startsWith(
+          "https://github.com/coursier/coursier/releases/download/v2.0.13/cs-"
+        )
+      ) &&
+      !artifact.url.startsWith("https://github.com/sbt/sbtn-dist/releases/download/"),
     pool = pool
   )
 

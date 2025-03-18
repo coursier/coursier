@@ -33,8 +33,10 @@ abstract class PlatformTestHelpers {
         sys.error("COURSIER_TESTS_HANDMADE_METADATA_DIR_URI not set")
       }
 
-  lazy val handmadeMetadataCache: Cache[Task] =
-    MockCache(handmadeMetadataBase.stripPrefix("file://").stripPrefix("file:"))
+  lazy val handmadeMetadataCache: Cache[Task] = {
+    val base = handmadeMetadataBase.stripPrefix("file://").stripPrefix("file:")
+    MockCache(base, base)
+  }
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =
     Platform.textResource(path)

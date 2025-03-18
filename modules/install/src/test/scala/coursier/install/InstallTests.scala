@@ -665,9 +665,9 @@ object InstallTests extends TestSuite {
             .withLauncherType("graalvm-native-image")
             .withPrebuiltBinaries(
               Map(
-                "x86_64-apple-darwin" -> "gz+https://github.com/alexarchambault/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-apple-darwin.gz",
-                "x86_64-pc-linux" -> "gz+https://github.com/alexarchambault/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-linux.gz",
-                "x86_64-pc-win32" -> "zip+https://github.com/alexarchambault/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-win32.zip"
+                "x86_64-apple-darwin" -> "gz+https://github.com/scala-cli/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-apple-darwin.gz",
+                "x86_64-pc-linux" -> "gz+https://github.com/scala-cli/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-linux.gz",
+                "x86_64-pc-win32" -> "zip+https://github.com/scala-cli/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-win32.zip"
               )
             ),
           id
@@ -998,23 +998,42 @@ object InstallTests extends TestSuite {
         def testRun(expectedContent: String): Unit = {
           assert(Files.isRegularFile(auxiliaryLauncher))
           val content = new String(Files.readAllBytes(auxiliaryLauncher), StandardCharsets.UTF_8)
-          assert(content == expectedContent)
+          val contentMatches = content == expectedContent
+          assert(contentMatches)
         }
 
         val pf = installDir0.platform.getOrElse(sys.error("No platform?"))
 
-        testRun(s"cs-$pf-2.1.0-M3-1")
+        testRun(
+          if (os == "linux")
+            "https://github.com/coursier/coursier/releases/download/v2.1.25-M3/cs-x86_64-pc-linux.gz!cs-x86_64-pc-linux"
+          else if (os == "mac")
+            "https://github.com/coursier/coursier/releases/download/v2.1.25-M3/cs-x86_64-apple-darwin.gz!cs-x86_64-apple-darwin"
+          else if (os == "windows")
+            "https://github.com/coursier/coursier/releases/download/v2.1.25-M3/cs-x86_64-pc-win32.zip!cs-x86_64-pc-win32.exe"
+          else
+            sys.error(s"Unknown test os: $os")
+        )
 
         val overridenAppInfo = appInfo0.overrideVersion("2.0.13")
         val overridden       = installDir0.createOrUpdate(overridenAppInfo)
         assert(overridden.exists(identity))
 
-        testRun(s"cs-$pf-2.0.13")
+        testRun(s"https://github.com/coursier/coursier/releases/download/v2.0.13/cs-$pf$ext")
 
         val updated = installDir0.createOrUpdate(appInfo0)
         assert(updated.exists(identity))
 
-        testRun(s"cs-$pf-2.1.0-M3-1")
+        testRun(
+          if (os == "linux")
+            "https://github.com/coursier/coursier/releases/download/v2.1.25-M3/cs-x86_64-pc-linux.gz!cs-x86_64-pc-linux"
+          else if (os == "mac")
+            "https://github.com/coursier/coursier/releases/download/v2.1.25-M3/cs-x86_64-apple-darwin.gz!cs-x86_64-apple-darwin"
+          else if (os == "windows")
+            "https://github.com/coursier/coursier/releases/download/v2.1.25-M3/cs-x86_64-pc-win32.zip!cs-x86_64-pc-win32.exe"
+          else
+            sys.error(s"Unknown test os: $os")
+        )
       }
 
       test("linux") {

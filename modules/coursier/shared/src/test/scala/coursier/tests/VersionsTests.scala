@@ -27,6 +27,12 @@ object VersionsTests extends TestSuite {
           Version("2.3.5"),
           Version("2.3.6"),
           Version("2.3.7"),
+          Version("2.3.8"),
+          Version("2.3.9"),
+          Version("2.3.10"),
+          Version("2.3.11"),
+          Version("2.3.12"),
+          Version("2.3.13"),
           Version("2.4.0-M1")
         )
         assert(shapelessVersions == expectedShapelessVersions)
