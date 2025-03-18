@@ -1,0 +1,17 @@
+androidx.compose.animation:animation-core:1.1.1:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.compose.ui:ui:1.1.1:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.annotation:annotation:1.2.0:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.compose.runtime:runtime-saveable:1.1.1:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.compose.ui:ui-geometry:1.1.1:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.compose.ui:ui-graphics:1.1.1:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.compose.ui:ui-text:1.1.1:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.compose.ui:ui-unit:1.1.1:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.2:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+androidx.compose.runtime:runtime:1.1.1:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.30:compile
+org.jetbrains.kotlin:kotlin-stdlib-common:1.5.30:compile
+org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
+org.jetbrains.kotlin:kotlin-stdlib:1.5.30:compile
+org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.5.30:compile
+org.jetbrains:annotations:13.0:compile

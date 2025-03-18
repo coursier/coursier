@@ -6,7 +6,8 @@ com.google.code.gson:gson:2.11.0:default
 org.eclipse.xtext:org.eclipse.xtext.xbase.lib:2.28.0:default
 org.eclipse.xtend:org.eclipse.xtend.lib.macro:2.28.0:default
 com.google.errorprone:error_prone_annotations:2.33.0:default
-com.google.guava:guava:33.3.1-jre:default
-com.google.guava:failureaccess:1.0.1:default
-org.checkerframework:checker-qual:3.48.1:default
-com.google.j2objc:j2objc-annotations:2.8:default
+com.google.guava:guava:33.3.1-jre:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.google.guava:failureaccess:1.0.1:runtime
+org.checkerframework:checker-qual:3.48.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.google.errorprone:error_prone_annotations:2.33.0:runtime
+com.google.j2objc:j2objc-annotations:2.8:runtime

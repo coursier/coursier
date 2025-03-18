@@ -13,7 +13,8 @@ import coursier.core.{
   ModuleName,
   Organization,
   Resolution,
-  Type
+  Type,
+  VariantSelector
 }
 import coursier.parse.{DependencyParser, ModuleParser}
 import coursier.testcache.TestCache
@@ -119,7 +120,10 @@ object JsonReportTests extends TestSuite {
         doCheck(
           fetch
             .addRepositories(Repositories.google)
-            .withArtifactTypes(Resolution.defaultTypes ++ Seq(Type.Exotic.aar)),
+            .withArtifactTypes(Resolution.defaultTypes ++ Seq(Type.Exotic.aar))
+            .addVariantAttributes(
+              "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+            ),
           dependencies
         )
 
@@ -200,7 +204,12 @@ object JsonReportTests extends TestSuite {
         check(dep"io.quarkus:quarkus-hibernate-orm:3.15.1")
       }
       test("junit5") {
-        check(dep"io.quarkus:quarkus-junit5:3.15.1")
+        doCheck(
+          fetch.addVariantAttributes(
+            "org.gradle.jvm.environment" -> VariantSelector.VariantMatcher.Equals("standard-jvm")
+          ),
+          Seq(dep"io.quarkus:quarkus-junit5:3.15.1")
+        )
       }
       test("rest-assured") {
         check(dep"io.rest-assured:rest-assured:5.5.0")

@@ -178,6 +178,10 @@ object FetchTests extends TestSuite {
             val res = await {
               fetch
                 .addDependencies(dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0")
+                .addVariantAttributes(
+                  "org.gradle.jvm.environment" ->
+                    VariantSelector.VariantMatcher.Equals("standard-jvm")
+                )
                 .futureResult()
             }
 

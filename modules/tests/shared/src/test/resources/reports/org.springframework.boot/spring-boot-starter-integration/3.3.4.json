@@ -285,10 +285,7 @@
       "coord": "org.springframework.retry:spring-retry:2.0.9",
       "file": "${CACHE}/https/repo1.maven.org/maven2/org/springframework/retry/spring-retry/2.0.9/spring-retry-2.0.9.jar",
       "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "org.springframework:*"
-      ]
+      "dependencies": []
     },
     {
       "coord": "org.springframework:spring-aop:6.1.13",

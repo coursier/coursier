@@ -188,6 +188,7 @@ object ResolveTests extends TestSuite {
       val expectedOutput =
         s"""Error downloading ioi.get-coursier:coursier-core_2.12:1.1.0-M9
            |  not found: $notFoundPath
+           |  not found: https://repo1.maven.org/maven2/ioi/get-coursier/coursier-core_2.12/1.1.0-M9/coursier-core_2.12-1.1.0-M9.module
            |  not found: https://repo1.maven.org/maven2/ioi/get-coursier/coursier-core_2.12/1.1.0-M9/coursier-core_2.12-1.1.0-M9.pom
            |io.get-coursier:coursier-cache_2.12:1.1.0-M9:default
            |io.get-coursier:coursier-core_2.12:1.1.0-M9:default
@@ -569,6 +570,7 @@ object ResolveTests extends TestSuite {
             val expectedMessage =
               s"""Resolution error: Error downloading com.chuusaiz:shapeless_2.13:2.3.3
                  |  not found: $notFoundPath
+                 |  not found: https://repo1.maven.org/maven2/com/chuusaiz/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.module
                  |  not found: https://repo1.maven.org/maven2/com/chuusaiz/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.pom""".stripMargin
             val message = e.message.replace(System.getProperty("user.home"), "HOME")
             assert(message.noCrLf == expectedMessage.noCrLf)

@@ -81,31 +81,36 @@ object ResolveTests extends TestSuite {
     gradleModuleCheck0()(dependencies: _*)
 
   def scopeCheck(
+    resolve0: Resolve[Task],
     defaultConfiguration: Configuration,
     extraRepositories: Seq[Repository]
   )(
     dependencies: Dependency*
   ): Future[Unit] =
     async {
-      val resolve0 = resolve
+      val resolve1 = resolve0
         .addDependencies(dependencies: _*)
         .addRepositories(extraRepositories: _*)
         .mapResolutionParams(_.withDefaultConfiguration(defaultConfiguration))
       val res = await {
-        resolve0.future()
+        resolve1.future()
       }
-      await(validateDependencies(res, resolve0.resolutionParams))
+      await(validateDependencies(res, resolve1.resolutionParams))
     }
 
   def bomCheck(boms: BomDependency*)(dependencies: Dependency*): Future[Unit] =
+    bomCheck0(resolve)(boms: _*)(dependencies: _*)
+
+  def bomCheck0(resolve0: Resolve[Task])(boms: BomDependency*)(dependencies: Dependency*)
+    : Future[Unit] =
     async {
       val res = await {
-        resolve
+        resolve0
           .addDependencies(dependencies: _*)
           .addBomConfigs(boms: _*)
           .future()
       }
-      await(validateDependencies(res))
+      await(validateDependencies(res, resolve0.resolutionParams))
     }
 
   val tests = Tests {
@@ -1512,7 +1517,12 @@ object ResolveTests extends TestSuite {
         check(dep"org.springframework.boot:spring-boot-starter-graphql:3.3.4")
       }
       test("integration") {
-        check(dep"org.springframework.boot:spring-boot-starter-integration:3.3.4")
+        doCheck(
+          resolve.addVariantAttributes(
+            "org.gradle.jvm.environment" -> VariantSelector.VariantMatcher.Equals("standard-jvm")
+          ),
+          Seq(dep"org.springframework.boot:spring-boot-starter-integration:3.3.4")
+        )
       }
       test("oauth2-client") {
         check(dep"org.springframework.boot:spring-boot-starter-oauth2-client:3.3.4")
@@ -1565,7 +1575,12 @@ object ResolveTests extends TestSuite {
         check(dep"io.quarkus:quarkus-hibernate-orm:3.15.1")
       }
       test("junit5") {
-        check(dep"io.quarkus:quarkus-junit5:3.15.1")
+        doCheck(
+          resolve.addVariantAttributes(
+            "org.gradle.jvm.environment" -> VariantSelector.VariantMatcher.Equals("standard-jvm")
+          ),
+          Seq(dep"io.quarkus:quarkus-junit5:3.15.1")
+        )
       }
       test("rest-assured") {
         check(dep"io.rest-assured:rest-assured:5.5.0")
@@ -1580,6 +1595,9 @@ object ResolveTests extends TestSuite {
             resolve
               .addRepositories(Repositories.google)
               .addDependencies(dependencies: _*)
+              .addVariantAttributes(
+                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+              )
               .future()
           }
           await(validateDependencies(res))
@@ -1624,7 +1642,10 @@ object ResolveTests extends TestSuite {
           check(dep"ch.epfl.scala:bsp4j:2.2.0-M2")
         }
         test("enabled") {
-          bomCheck(dep"io.quarkus:quarkus-bom:3.16.2".asBomDependency)(
+          val resolve0 = resolve.addVariantAttributes(
+            "org.gradle.jvm.environment" -> VariantSelector.VariantMatcher.Equals("standard-jvm")
+          )
+          bomCheck0(resolve0)(dep"io.quarkus:quarkus-bom:3.16.2".asBomDependency)(
             dep"ch.epfl.scala:bsp4j:2.2.0-M2"
           )
         }
@@ -1660,15 +1681,19 @@ object ResolveTests extends TestSuite {
       }
 
       test("scalatest-play") {
+        val resolve0 = resolve.addVariantAttributes(
+          "org.gradle.jvm.environment"     -> VariantSelector.VariantMatcher.Equals("standard-jvm"),
+          "org.gradle.dependency.bundling" -> VariantSelector.VariantMatcher.Equals("external")
+        )
         test("default") {
-          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency)(
+          bomCheck0(resolve0)(dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency)(
             dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
           )
         }
         test("test") {
           // BOM should override org.scalatest:scalatest_2.13 version,
           // as we pull the test entries too
-          bomCheck(
+          bomCheck0(resolve0)(
             dep"org.apache.spark:spark-parent_2.13:3.5.3"
               .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
               .asBomDependency
@@ -1680,11 +1705,14 @@ object ResolveTests extends TestSuite {
           test {
             // BOM should force org.scalatest:scalatest_2.13 version to 3.2.16
             // (because we take into account dep mgmt with test scope here)
-            check(
-              dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1".addBom(
-                dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
-                  .asBomDependency
+            doCheck(
+              resolve0,
+              Seq(
+                dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1".addBom(
+                  dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                    .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
+                    .asBomDependency
+                )
               )
             )
           }
@@ -1692,13 +1720,16 @@ object ResolveTests extends TestSuite {
             // BOM shouldn't force org.scalatest:scalatest_2.13 version to 3.2.16,
             // leaving it to 3.2.17
             // (because we don't take into account dep mgmt with test scope here)
-            check(
-              dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1".addBom(
-                dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withVariantSelector(
-                    VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
-                  )
-                  .asBomDependency
+            doCheck(
+              resolve0,
+              Seq(
+                dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1".addBom(
+                  dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                    .withVariantSelector(
+                      VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
+                    )
+                    .asBomDependency
+                )
               )
             )
           }
@@ -1961,19 +1992,28 @@ object ResolveTests extends TestSuite {
     }
 
     test("scalatest-play") {
-      check(dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1")
+      doCheck(
+        resolve.addVariantAttributes(
+          "org.gradle.jvm.environment"     -> VariantSelector.VariantMatcher.Equals("standard-jvm"),
+          "org.gradle.dependency.bundling" -> VariantSelector.VariantMatcher.Equals("external")
+        ),
+        Seq(dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1")
+      )
     }
 
     test("scope") {
+      val resolve0 = resolve.addVariantAttributes(
+        "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+      )
       test("compile") {
-        scopeCheck(Configuration.compile, Seq(Repositories.google))(
+        scopeCheck(resolve0, Configuration.compile, Seq(Repositories.google))(
           dep"androidx.compose.animation:animation-core:1.1.1",
           dep"androidx.compose.ui:ui:1.1.1"
         )
       }
 
       test("defaultCompile") {
-        scopeCheck(Configuration.defaultCompile, Seq(Repositories.google))(
+        scopeCheck(resolve0, Configuration.defaultCompile, Seq(Repositories.google))(
           dep"androidx.compose.animation:animation-core:1.1.1",
           dep"androidx.compose.ui:ui:1.1.1"
         )
@@ -1981,7 +2021,12 @@ object ResolveTests extends TestSuite {
     }
 
     test("large resolution") {
-      check(dep"io.trino:trino-hive:467")
+      doCheck(
+        resolve.addVariantAttributes(
+          "org.gradle.jvm.environment" -> VariantSelector.VariantMatcher.Equals("standard-jvm")
+        ),
+        Seq(dep"io.trino:trino-hive:467")
+      )
     }
 
     test("dep import and parent precedence") {
@@ -1996,8 +2041,11 @@ object ResolveTests extends TestSuite {
     test("gradle modules") {
       test("kotlinx-html-js") {
         test("no-support") {
-          check(
-            dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0"
+          doCheck(
+            resolve.addVariantAttributes(
+              "org.gradle.jvm.environment" -> VariantSelector.VariantMatcher.Equals("standard-jvm")
+            ),
+            Seq(dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0")
           )
         }
         test("support") {
