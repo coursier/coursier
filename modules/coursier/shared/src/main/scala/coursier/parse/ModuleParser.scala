@@ -20,7 +20,7 @@ object ModuleParser {
         validateCoordinate(anyMod.name, "module name")
       ) match {
         case (Right(org), Right(name)) =>
-          var csMod = Module(Organization(org), ModuleName(name), anyMod.attributes)
+          val csMod = Module(Organization(org), ModuleName(name), anyMod.attributes)
           val res = anyMod.nameAttributes match {
             case NoAttributes =>
               JavaOrScalaModule.JavaModule(csMod)

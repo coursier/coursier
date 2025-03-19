@@ -1,12 +1,10 @@
 package coursier.jvm
 
 import java.io.{File, IOException}
-import java.nio.charset.Charset
 import java.nio.file.{Files, Path}
 import java.util.Locale
 
-import coursier.cache.{ArchiveCache, Cache, CacheLogger}
-import coursier.cache.internal.FileUtil
+import coursier.cache.ArchiveCache
 import coursier.env.EnvironmentUpdate
 import coursier.jvm.util.CommandOutput
 import coursier.util.Task

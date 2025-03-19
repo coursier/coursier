@@ -2,9 +2,7 @@ package coursier.bootstrap.launcher
 
 import utest._
 
-import coursier.bootstrap.launcher.credentials.Credentials
 import coursier.bootstrap.launcher.credentials.DirectCredentials
-import coursier.paths.CachePath
 
 import scala.jdk.CollectionConverters._
 import java.nio.file.Files

@@ -1,11 +1,11 @@
 package coursier.launcher
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, FileNotFoundException}
+import java.io.{ByteArrayInputStream, FileNotFoundException}
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path}
+import java.nio.file.Path
 import java.util.zip.{CRC32, ZipEntry, ZipException, ZipOutputStream}
 
-import coursier.launcher.internal.{FileUtil, WrappedZipInputStream, Zip}
+import coursier.launcher.internal.{FileUtil, WrappedZipInputStream}
 
 object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
 

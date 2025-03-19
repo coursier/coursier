@@ -1303,7 +1303,7 @@ object docs extends ScalaModule {
     )
       .spawn(cwd = docsDir, stdin = os.Inherit, stdout = os.Inherit)
 
-    while (serveProc.isAlive && mdocProc.isAlive)
+    while (serveProc.isAlive() && mdocProc.isAlive())
       Thread.sleep(1000L)
 
     serveProc.waitFor()

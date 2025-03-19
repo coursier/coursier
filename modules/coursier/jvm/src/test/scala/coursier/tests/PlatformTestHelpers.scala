@@ -4,7 +4,6 @@ import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 import java.security.MessageDigest
-import java.util.Locale
 
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import coursier.cache.{Cache, MockCache}

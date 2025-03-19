@@ -1,6 +1,6 @@
 package coursier.tests
 
-import coursier.core.{Activation, Parse}
+import coursier.core.Activation
 import coursier.core.Activation.Os
 import coursier.version.VersionParse
 import utest._

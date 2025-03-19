@@ -3,8 +3,6 @@ package coursier.core
 import coursier.version.{VersionConstraint => VersionConstraint0}
 import dataclass.data
 
-import java.util.concurrent.ConcurrentMap
-
 import scala.collection.mutable
 
 object DependencyManagement {

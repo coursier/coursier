@@ -260,7 +260,7 @@ object StringInterpolators {
     c.prefix.tree match {
       case Apply(_, List(Apply(_, Literal(Constant(root: String)) :: Nil))) =>
         // FIXME Check that there's no query string, fragment, … in uri?
-        val uri = new java.net.URI(root)
+        new java.net.URI(root)
         c.Expr(q"""_root_.coursier.maven.MavenRepository($root)""")
       case _ =>
         c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
@@ -272,10 +272,10 @@ object StringInterpolators {
     c.prefix.tree match {
       case Apply(_, List(Apply(_, Literal(Constant(str: String)) :: Nil))) =>
         // FIXME Check that there's no query string, fragment, … in uri?
-        val r = IvyRepository.parse(str) match {
+        IvyRepository.parse(str) match {
           case Left(e) =>
             c.abort(c.enclosingPosition, s"Malformed Ivy repository '$str': $e")
-          case Right(r0) => r0
+          case Right(r0) =>
         }
         // Here, ideally, we should lift r as an Expr, but this is quite cumbersome to do (it involves lifting
         // Seq[coursier.ivy.Pattern.Chunk], where coursier.ivy.Pattern.Chunk is an ADT, …

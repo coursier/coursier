@@ -1,6 +1,5 @@
 package coursier.core
 
-import coursier.core.MinimizedExclusions._
 import coursier.error.{DependencyError, VariantError}
 import coursier.util.Artifact
 import coursier.version.{

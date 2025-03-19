@@ -1,7 +1,7 @@
 package coursier.launcher
 
-import java.io.{ByteArrayOutputStream, OutputStream}
-import java.nio.file.{Files, Path}
+import java.io.ByteArrayOutputStream
+import java.nio.file.Path
 import java.util.jar.{Attributes, JarOutputStream, Manifest}
 
 import coursier.launcher.internal.FileUtil

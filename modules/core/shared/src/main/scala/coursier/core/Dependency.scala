@@ -3,11 +3,8 @@ package coursier.core
 import coursier.core.Validation._
 import coursier.version.{VersionConstraint => VersionConstraint0}
 import dataclass.data
-import MinimizedExclusions._
 
 import java.util.concurrent.ConcurrentMap
-
-import scala.annotation.nowarn
 
 /** Dependencies with the same @module will typically see their @version-s merged.
   *

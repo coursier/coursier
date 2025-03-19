@@ -1,10 +1,7 @@
 package coursier.launcher
 
 import java.io.File
-import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path, Paths}
-
-import coursier.launcher.internal.FileUtil
 
 object NativeImageGenerator extends Generator[Parameters.NativeImage] {
 
@@ -124,17 +121,6 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
         sys.error(s"Error running native-image (exit code: $retCode)")
       case Right(()) =>
     }
-  }
-
-  private def withTempFile[T](content: Array[Byte])(t: Path => T): T = {
-
-    val path = Files.createTempFile("temp", ".tmp")
-
-    try {
-      Files.write(path, content)
-      t(path)
-    }
-    finally Files.deleteIfExists(path)
   }
 
 }

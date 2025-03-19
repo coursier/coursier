@@ -94,7 +94,7 @@ object CacheFetchTests extends TestSuite {
         val shouldFail = Try(CacheUrl.url("notfoundzzzz://foo/bar"))
         assert(shouldFail.isFailure)
 
-        val url = CacheUrl.url("testprotocol://foo/bar")
+        CacheUrl.url("testprotocol://foo/bar")
       }
 
       test("actual custom protocol test") {

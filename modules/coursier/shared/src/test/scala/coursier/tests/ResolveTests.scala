@@ -1151,7 +1151,6 @@ object ResolveTests extends TestSuite {
 
         val (_, pub0, artifact) = depArtifacts.head
 
-        val url = artifact.url
         val expectedUrl =
           "https://repo1.maven.org/maven2/io/grpc/protoc-gen-grpc-java/1.23.0/protoc-gen-grpc-java-1.23.0-linux-x86_64.exe"
         assert(artifact.url == expectedUrl)
@@ -2074,9 +2073,6 @@ object ResolveTests extends TestSuite {
           }
         }
         test("global") {
-          def withVariant(dep: Dependency, map: Map[String, VariantSelector.VariantMatcher]) =
-            dep.withVariantSelector(VariantSelector.AttributesBased(map))
-
           def testVariants(
             config: Configuration,
             map: Map[String, VariantSelector.VariantMatcher]

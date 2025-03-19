@@ -9,7 +9,6 @@ import com.google.common.jimfs.Jimfs
 import utest._
 
 import scala.collection.compat.immutable.LazyList
-import java.nio.file.Paths
 
 object ProfileUpdaterTests extends TestSuite {
 

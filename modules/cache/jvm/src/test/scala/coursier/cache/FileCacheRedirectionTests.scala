@@ -305,7 +305,7 @@ object FileCacheRedirectionTests extends TestSuite {
         val realm    = "simple realm"
         val userPass = ("simple", "SiMpLe")
 
-        def routes(challengeParams: Map[String, String] = Map.empty) = HttpRoutes.of[IO] {
+        def routes(challengeParams: Map[String, String]) = HttpRoutes.of[IO] {
           case req @ GET -> Root / "redirect" =>
             if (authorized(req, userPass))
               TemporaryRedirect("redirecting", Location(Uri(path = Uri.Path.empty / "hello")))

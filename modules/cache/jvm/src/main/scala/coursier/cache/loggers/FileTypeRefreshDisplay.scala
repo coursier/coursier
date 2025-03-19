@@ -2,7 +2,6 @@ package coursier.cache.loggers
 
 import java.io.Writer
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 
 import coursier.cache.internal.ConsoleDim
 

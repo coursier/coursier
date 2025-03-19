@@ -1,11 +1,11 @@
 package coursier.error
 
-import coursier.core.{Dependency, Module, Parse, Resolution}
+import coursier.core.{Dependency, Module, Resolution}
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.graph.ReverseModuleTree
 import coursier.params.rule.Rule
 import coursier.util.Print.{Colors, compatibleVersions}
-import coursier.util.{Print, Tree}
+import coursier.util.Tree
 import coursier.version.{Version, VersionConstraint}
 
 sealed abstract class ResolutionError(

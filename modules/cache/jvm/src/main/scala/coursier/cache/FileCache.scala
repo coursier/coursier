@@ -208,7 +208,7 @@ import scala.util.control.NonFatal
   private def filePerPolicy0(
     artifact: Artifact,
     policy: CachePolicy,
-    retry: Int = retry
+    retry: Int
   ): EitherT[F, ArtifactError, File] =
     EitherT {
       download(

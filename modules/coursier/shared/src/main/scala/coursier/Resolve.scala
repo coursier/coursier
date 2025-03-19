@@ -9,7 +9,6 @@ import coursier.core.{
   Configuration,
   Dependency,
   DependencySet,
-  Exclusions,
   MinimizedExclusions,
   Module,
   ModuleName,
@@ -21,14 +20,12 @@ import coursier.core.{
 }
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
-import coursier.graph.ReverseModuleTree
 import coursier.internal.Typelevel
 import coursier.maven.MavenRepository
 import coursier.params.{Mirror, MirrorConfFile, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
 import coursier.util.Monad.ops._
-import coursier.util.StringInterpolators._
 import coursier.version.{ConstraintReconciliation, VersionConstraint, VersionParse}
 import dataclass.{data, since}
 
