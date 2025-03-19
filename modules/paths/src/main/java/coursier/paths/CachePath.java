@@ -2,7 +2,6 @@ package coursier.paths;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -25,7 +24,7 @@ public class CachePath {
     private static long structureLockInitialRetryDelay = Long.getLong("coursier.structure-lock-retry-initial-delay-ms", 10L);
     private static double structureLockRetryDelayMultiplier = Double.parseDouble(System.getProperty("coursier.structure-lock-retry-multiplier", "2.0"));
 
-    private static boolean throwExceptions = Boolean.getBoolean("coursier.cache.throw-exceptions");
+    private static boolean throwExceptions = true;
 
     // based on https://stackoverflow.com/questions/4571346/how-to-encode-url-to-avoid-special-characters-in-java/4605848#4605848
     // '/' was removed from the unsafe list
@@ -185,11 +184,15 @@ public class CachePath {
         synchronized (intraProcessLock) {
             File lockFile = new File(cache, ".structure.lock");
             Util.createDirectories(lockFile.toPath().getParent());
-            FileOutputStream out = null;
+            FileChannel channel = null;
 
             try {
                 try {
-                    out = new FileOutputStream(lockFile);
+                    channel = FileChannel.open(
+                        lockFile.toPath(),
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.WRITE,
+                        StandardOpenOption.DELETE_ON_CLOSE);
                 } catch (FileNotFoundException ex) {
                     throw throwExceptions ? ex : new StructureLockException(ex);
                 }
@@ -197,7 +200,7 @@ public class CachePath {
                 FileLock lock = null;
                 try {
                     try {
-                        lock = out.getChannel().lock();
+                        lock = channel.lock();
                     } catch (FileNotFoundException ex) {
                         throw throwExceptions ? ex : new StructureLockException(ex);
                     } catch (OverlappingFileLockException ex) {
@@ -210,16 +213,15 @@ public class CachePath {
                     finally {
                         lock.release();
                         lock = null;
-                        out.close();
-                        out = null;
-                        lockFile.delete();
+                        channel.close();
+                        channel = null;
                     }
                 }
                 finally {
                     if (lock != null) lock.release();
                 }
             } finally {
-                if (out != null) out.close();
+                if (channel != null) channel.close();
             }
         }
     }
