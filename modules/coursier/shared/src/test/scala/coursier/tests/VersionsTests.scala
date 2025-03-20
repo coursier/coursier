@@ -15,20 +15,22 @@ object VersionsTests extends TestSuite {
     .withCache(cache)
 
   val tests = Tests {
-    "simple" - async {
-      val shapelessVersions =
-        await(versions.withModule(mod"com.chuusai:shapeless_2.12").versions().future()).available0
-      val expectedShapelessVersions = Seq(
-        Version("2.3.2"),
-        Version("2.3.3"),
-        Version("2.3.4-M1"),
-        Version("2.3.4"),
-        Version("2.3.5"),
-        Version("2.3.6"),
-        Version("2.3.7"),
-        Version("2.4.0-M1")
-      )
-      assert(shapelessVersions == expectedShapelessVersions)
+    test("simple") {
+      async {
+        val shapelessVersions =
+          await(versions.withModule(mod"com.chuusai:shapeless_2.12").versions().future()).available0
+        val expectedShapelessVersions = Seq(
+          Version("2.3.2"),
+          Version("2.3.3"),
+          Version("2.3.4-M1"),
+          Version("2.3.4"),
+          Version("2.3.5"),
+          Version("2.3.6"),
+          Version("2.3.7"),
+          Version("2.4.0-M1")
+        )
+        assert(shapelessVersions == expectedShapelessVersions)
+      }
     }
   }
 
