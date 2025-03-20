@@ -3,7 +3,6 @@ package coursier.testcache
 import java.nio.file.{Files, Paths}
 import coursier.cache.MockCache
 import coursier.util.Sync
-import coursier.util.Task
 
 object TestCache {
 

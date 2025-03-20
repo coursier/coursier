@@ -1,7 +1,7 @@
 package coursier.core
 
 import coursier.version.{Version => Version0}
-import dataclass.{data, since}
+import dataclass.data
 
 sealed abstract class VariantSelector extends Product with Serializable {
   def asConfiguration: Option[Configuration]

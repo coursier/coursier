@@ -1,15 +1,13 @@
 package coursier.jvm
 
 import java.io.File
-import java.time.Instant
-import java.util.concurrent.ScheduledExecutorService
 
-import coursier.cache.{ArchiveCache, Cache, CacheDefaults, CacheLogger, FileCache, UnArchiver}
+import coursier.cache.{ArchiveCache, CacheLogger}
 import coursier.core.Repository
 import coursier.util.{Artifact, Task}
 import dataclass.data
 
-import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
+import scala.concurrent.duration.Duration
 
 // format: off
 @data class JvmCache(

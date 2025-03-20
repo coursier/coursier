@@ -3,7 +3,6 @@ package coursier.tests
 import java.lang.{Boolean => JBoolean}
 
 import coursier.core.{
-  BomDependency,
   Classifier,
   Configuration,
   Dependency,
@@ -115,7 +114,6 @@ object TestHelpers extends PlatformTestHelpers {
         if (params == ResolutionParams())
           ""
         else {
-          import coursier.core.Configuration
           // hack not to have to edit / review lots of test fixtures
           val params0 =
             if (params.defaultConfiguration == Configuration.defaultRuntime)

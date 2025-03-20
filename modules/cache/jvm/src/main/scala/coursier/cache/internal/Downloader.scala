@@ -14,7 +14,7 @@ import coursier.cache._
 import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
 import coursier.paths.{CachePath, Util}
-import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
+import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
 import dataclass._
 
@@ -64,7 +64,7 @@ import scala.util.control.NonFatal
   private def blockingIOE[T](f: => Either[ArtifactError, T]): EitherT[F, ArtifactError, T] =
     EitherT(S.schedule(pool)(f))
 
-  private def localFile(url: String, user: Option[String] = None): File =
+  private def localFile(url: String, user: Option[String]): File =
     FileCache.localFile0(url, location, user, localArtifactsShouldBeCached)
 
   // Reference file - if it exists, and we get not found errors on some URLs, we assume

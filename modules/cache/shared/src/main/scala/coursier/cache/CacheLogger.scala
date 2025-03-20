@@ -1,6 +1,6 @@
 package coursier.cache
 
-import coursier.util.{Artifact, Sync, Task}
+import coursier.util.{Artifact, Sync}
 import coursier.util.Monad.ops._
 
 trait CacheLogger {

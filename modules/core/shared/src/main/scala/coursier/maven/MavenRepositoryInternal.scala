@@ -16,9 +16,9 @@ import coursier.core.{
   VariantPublication,
   Versions
 }
-import coursier.util.{Artifact, EitherT, Monad, WebPage, Xml}
+import coursier.util.{Artifact, EitherT, Monad, WebPage}
 import coursier.util.Monad.ops._
-import coursier.version.{Version, VersionConstraint}
+import coursier.version.Version
 
 import scala.collection.compat._
 import coursier.core.VariantSelector

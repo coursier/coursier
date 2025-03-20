@@ -25,7 +25,7 @@ package object compatibility {
 
   private lazy val throwExceptions = java.lang.Boolean.getBoolean("coursier.core.throw-exceptions")
 
-  private def entityIdx(s: String, fromIdx: Int = 0): Option[(Int, Int)] = {
+  private def entityIdx(s: String, fromIdx: Int): Option[(Int, Int)] = {
 
     var i     = fromIdx
     var found = Option.empty[(Int, Int)]

@@ -1,6 +1,6 @@
 package coursier.cache
 
-import java.io.{File, FilenameFilter}
+import java.io.File
 import java.net.URI
 import java.nio.file.Path
 
@@ -9,8 +9,7 @@ import coursier.parse.{CachePolicyParser, CredentialsParser}
 import coursier.paths.{CachePath, CoursierPaths}
 import coursier.util.Sync
 
-import scala.cli.config.{ConfigDb, Key, Keys, PasswordOption}
-import scala.collection.mutable.ListBuffer
+import scala.cli.config.{ConfigDb, Keys}
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.util.{Failure, Success, Try}
 

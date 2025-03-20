@@ -48,7 +48,7 @@ trait Launchers extends CsModule {
     def nativeImageName          = "cs"
     private def staticLibDirName = "native-libs"
     private def copyCsjniutilTo(destDir: os.Path, workspace: os.Path): Unit = {
-      val jniUtilsVersion = Deps.jniUtils.dep.version
+      val jniUtilsVersion = Deps.jniUtils.dep.versionConstraint.asString
       val libRes = os.proc(
         cs.cs,
         "fetch",

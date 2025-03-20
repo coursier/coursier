@@ -2,10 +2,9 @@ package coursier.cache
 
 import cats.effect.IO
 import coursier.cache.TestUtil._
-import coursier.paths.CachePath
 import coursier.util.{Artifact, Task}
 import org.http4s.dsl.io._
-import org.http4s.{HttpRoutes, Uri}
+import org.http4s.HttpRoutes
 import utest._
 
 import java.time._

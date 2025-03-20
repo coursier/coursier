@@ -1,7 +1,5 @@
 package coursier
 
-import java.io.File
-
 import scala.cli.config.{ConfigDb, Keys}
 
 import coursier.core.Repository

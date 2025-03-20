@@ -1,7 +1,7 @@
 package coursier.maven
 
 import coursier.core._
-import coursier.util.{Artifact, EitherT, Monad, Xml}
+import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
 import dataclass._
 
@@ -133,7 +133,6 @@ object SbtMavenRepository {
   @since("2.1.25")
   checkModule: Boolean = false
 ) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi { self =>
-  import SbtMavenRepository._
 
   private val internal =
     new MavenRepositoryInternal(root, authentication, changing, checkModule) {
@@ -151,8 +150,6 @@ object SbtMavenRepository {
         versioningValue: Option[Version0],
         fetch: Repository.Fetch[F]
       )(implicit F: Monad[F]): EitherT[F, String, Project] = {
-        val directoryPath = moduleVersionPath(module, version)
-
         def tryFetch(artifactName: String): EitherT[F, String, Project] =
           fetchArtifactForModuleName(module, artifactName, version, versioningValue, fetch)
 

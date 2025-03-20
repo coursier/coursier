@@ -4,7 +4,6 @@ import java.io.File
 
 import coursier.core._
 import utest._
-import java.nio.file.Files
 import scala.util.Using
 import scala.io.Source
 import scala.util._

@@ -2,7 +2,7 @@ package coursier.cache
 
 import coursier.cache.TestUtil._
 import coursier.core.Authentication
-import coursier.util.{Artifact, Task}
+import coursier.util.Artifact
 import utest._
 
 import java.nio.file.Files

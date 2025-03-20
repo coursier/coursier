@@ -11,7 +11,6 @@ import coursier.core.{
   Module,
   ModuleName,
   Organization,
-  Parse,
   Profile,
   Project,
   SnapshotVersion,

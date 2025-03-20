@@ -1,6 +1,6 @@
 package coursier.credentials
 
-import java.io.{File, StringReader}
+import java.io.StringReader
 import java.nio.charset.Charset
 import java.nio.file.{Files, Paths}
 import java.util.Properties

@@ -1,6 +1,6 @@
 package coursier.graph
 
-import coursier.core.{Module, Parse, Resolution}
+import coursier.core.{Module, Resolution}
 import coursier.version.{
   Version => Version0,
   VersionConstraint => VersionConstraint0,

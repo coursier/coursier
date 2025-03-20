@@ -123,12 +123,10 @@ trait BootstrapLauncher extends CsModule {
          |""".stripMargin
     os.write.over(conf, confContent)
 
-    Jvm.runSubprocess(
-      "proguard.ProGuard",
-      proguardClassPath().map(_.path),
-      Nil,
-      Map(),
-      Seq("-include", conf.toString)
+    Jvm.callProcess(
+      mainClass = "proguard.ProGuard",
+      classPath = proguardClassPath().map(_.path),
+      mainArgs = Seq("-include", conf.toString)
     )
     PathRef(dest)
   }
@@ -166,12 +164,10 @@ trait BootstrapLauncher extends CsModule {
          |""".stripMargin
     os.write.over(conf, confContent)
 
-    Jvm.runSubprocess(
-      "proguard.ProGuard",
-      proguardClassPath().map(_.path),
-      Nil,
-      Map(),
-      Seq("-include", conf.toString)
+    Jvm.callProcess(
+      mainClass = "proguard.ProGuard",
+      classPath = proguardClassPath().map(_.path),
+      mainArgs = Seq("-include", conf.toString)
     )
     PathRef(dest)
   }

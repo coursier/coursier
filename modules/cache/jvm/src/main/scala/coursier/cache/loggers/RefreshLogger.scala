@@ -5,7 +5,6 @@ import java.util.concurrent._
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
 import coursier.cache.CacheLogger
-import coursier.cache.internal.Terminal
 import coursier.cache.loggers.RefreshInfo.{CheckUpdateInfo, DownloadInfo}
 import coursier.util.Artifact
 
@@ -90,7 +89,7 @@ object RefreshLogger {
 
   private class UpdateDisplayRunnable(out: Writer, val display: RefreshDisplay) extends Runnable {
 
-    private var messages = new ConcurrentLinkedQueue[String]
+    private val messages = new ConcurrentLinkedQueue[String]
 
     def log(message: String): Unit =
       messages.add(message)

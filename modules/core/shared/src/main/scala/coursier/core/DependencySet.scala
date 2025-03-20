@@ -4,7 +4,6 @@ import coursier.core.DependencySet.Sets
 
 import scala.collection.compat._
 import scala.collection.immutable.IntMap
-import scala.collection.mutable
 
 final class DependencySet private (
   val set: Set[Dependency],

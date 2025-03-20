@@ -1,23 +1,12 @@
 package coursier.tests
 
-import java.io.File
-
 import coursier.{Artifacts, Fetch, Repositories}
-import coursier.core.{
-  Activation,
-  Classifier,
-  Configuration,
-  Dependency,
-  Extension,
-  Type,
-  VariantSelector
-}
+import coursier.core.{Classifier, Configuration, Dependency, Extension, Type, VariantSelector}
 import coursier.maven.{MavenRepository, MavenRepositoryLike}
-import coursier.params.ResolutionParams
 import coursier.ivy.IvyRepository
 import coursier.util.StringInterpolators._
 import coursier.util.{InMemoryRepository, Task}
-import coursier.version.{Version, VersionConstraint}
+import coursier.version.VersionConstraint
 import utest._
 
 import scala.async.Async.{async, await}
@@ -580,7 +569,7 @@ object FetchTests extends TestSuite {
 
         def testVariants(
           config: Option[Configuration] = None,
-          defaultAttributes: Option[VariantSelector.AttributesBased] = None
+          defaultAttributes: Option[VariantSelector.AttributesBased]
         )(
           dependencies: Dependency*
         ): Future[Unit] = async {

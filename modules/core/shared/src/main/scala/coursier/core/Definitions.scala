@@ -479,7 +479,6 @@ object Attributes {
       if (retainedVariants0.lengthCompare(1) == 0)
         Right(retainedVariants0.head)
       else {
-        val nl                  = System.lineSeparator()
         val retainedVariantsSet = retainedVariants0.toSet
         Left(
           new VariantError.FoundTooManyVariants(

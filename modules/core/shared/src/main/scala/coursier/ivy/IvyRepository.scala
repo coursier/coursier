@@ -9,7 +9,6 @@ import coursier.core.{
   Extension,
   Module,
   Organization,
-  Parse,
   Project,
   Publication,
   Repository,
@@ -19,7 +18,7 @@ import coursier.core.{
 }
 import coursier.maven.{MavenAttributes, MavenComplete}
 import coursier.util.{Artifact, EitherT, Monad}
-import coursier.version.{Version, VersionConstraint, VersionParse}
+import coursier.version.{Version, VersionParse}
 import dataclass._
 
 @data class IvyRepository(
