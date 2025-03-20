@@ -323,7 +323,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(endTagIndices.length == 1)
 
       val exportPathIndices = indicesOf(newDotProfile, "export PATH=")
-      assert(endTagIndices.length == 1)
+      assert(exportPathIndices.length == 1)
     }
 
     test("update the previous section fish") {
@@ -380,8 +380,8 @@ object ProfileUpdaterTests extends TestSuite {
       val endTagIndices = indicesOf(newDotProfile, s"# <<< $title <<<")
       assert(endTagIndices.length == 1)
 
-      val exportPathIndices = indicesOf(newDotProfile, "export PATH=")
-      assert(endTagIndices.length == 1)
+      val exportPathIndices = indicesOf(newDotProfile, "set -gx PATH ")
+      assert(exportPathIndices.length == 1)
     }
 
     test("leave previous content intact") {
