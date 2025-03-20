@@ -24,7 +24,9 @@ import scala.util.{Failure, Success, Try}
   S: Sync[F],
   dummyArtifact: Artifact => Boolean = _ => false,
   @since
-    proxy: Option[java.net.Proxy] = None
+    proxy: Option[java.net.Proxy] = None,
+  @since("2.1.25")
+    baseChangingOpt: Option[Path] = None
 ) extends Cache[F] {
 // format: on
 
@@ -72,9 +74,13 @@ import scala.util.{Failure, Success, Try}
     }
     else {
 
+      val base0 =
+        if (artifact.changing) baseChangingOpt.getOrElse(base)
+        else base
+
       assert(artifact.authentication.isEmpty)
 
-      val path = base.resolve(MockCacheEscape.urlAsPath(artifact.url))
+      val path = base0.resolve(MockCacheEscape.urlAsPath(artifact.url))
 
       val fromExtraData = extraData.foldLeft(S.point(Option.empty[Path])) {
         (acc, p) =>
@@ -139,7 +145,25 @@ object MockCache {
     base: Path,
     pool: ExecutorService,
     extraData: Seq[Path] = Nil,
-    writeMissing: Boolean = false
+    writeMissing: Boolean = false,
+    baseChangingOpt: Option[Path]
+  ): MockCache[F] =
+    MockCache(
+      base,
+      extraData,
+      writeMissing,
+      pool,
+      Sync[F],
+      dummyArtifact = _ => false,
+      proxy = None,
+      baseChangingOpt = baseChangingOpt
+    )
+
+  def create[F[_]: Sync](
+    base: Path,
+    pool: ExecutorService,
+    extraData: Seq[Path],
+    writeMissing: Boolean
   ): MockCache[F] =
     MockCache(
       base,

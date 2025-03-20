@@ -176,8 +176,12 @@ object JavaHomeTests extends TestSuite {
               )
           }
         val failArchiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(failCache)
-        val csCache          = MockCache.create[Task](JvmCacheTests.mockDataLocation, pool)
-        val archiveCache     = ArchiveCache[Task](tmpDir.toFile).withCache(csCache)
+        val csCache = MockCache.create[Task](
+          JvmCacheTests.mockDataLocation,
+          pool,
+          baseChangingOpt = Some(JvmCacheTests.mockDataLocation)
+        )
+        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(csCache)
         val cache = JvmCache()
           .withArchiveCache(archiveCache)
           .withOs("the-os")
