@@ -589,6 +589,24 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#archive-content-addressing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Archive content addressing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#archives-in-archives" class="md-nav__link">
+    <span class="md-ellipsis">
+      Archives in archives
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1381,6 +1399,24 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#archive-content-addressing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Archive content addressing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#archives-in-archives" class="md-nav__link">
+    <span class="md-ellipsis">
+      Archives in archives
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1478,6 +1514,26 @@ OS conventions and put the coursier cache at the most appropriate location for y
 </tr>
 </tbody>
 </table>
+<h2 id="archive-content-addressing">Archive content addressing<a class="headerlink" href="#archive-content-addressing" title="Permanent link">&para;</a></h2>
+<p>One can get particular files in archives, by separating the archive URL and the path
+inside the archive with <code>!</code>, like
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>$ cs get --archive &#39;https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb!data.tar.xz&#39;
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>~/.cache/coursier/arc/https/ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb/data.tar.xz
+</span></code></pre></div></p>
+<p>Note that if the URL passed to <code>cs get</code> contains <code>!</code>, it automatically assumes it deals with archives,
+so that <code>--archive</code> doesn't have to be passed:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>$ cs get &#39;https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb!&#39;
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>~/.cache/coursier/arc/https/ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb
+</span></code></pre></div></p>
+<h2 id="archives-in-archives">Archives in archives<a class="headerlink" href="#archives-in-archives" title="Permanent link">&para;</a></h2>
+<p>Using <code>!</code> like <a href="#archive-content-addressing">above</a> multiple times, one can get files from
+archives contained themselves in archives:
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$ cs get --archive &#39;https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb!data.tar.xz!usr/bin/hello&#39;
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>~/.cache/coursier/arc/https/ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb/.data.tar.xz/usr/bin/hello
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>$ cs get &#39;https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb!data.tar.xz!usr/share/doc/hello/changelog.gz!&#39;
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>~/.cache/coursier/arc/https/ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb/data.tar.xz/usr/share/doc/hello/.changelog.gz/changelog
+</span></code></pre></div></p>
 
 
 
