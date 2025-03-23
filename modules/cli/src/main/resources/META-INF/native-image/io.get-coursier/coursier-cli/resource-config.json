@@ -1,0 +1,25 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "\\QMETA-INF/services/org.apache.tika.detect.Detector\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/org.apache.tika.detect.EncodingDetector\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/org.apache.tika.parser.Parser\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/org.apache.tika.renderer.Renderer\\E"
+      },
+      {
+        "pattern": "\\Qorg/apache/tika/mime/tika-mimetypes.xml\\E"
+      },
+      {
+        "pattern": "\\Qcustom-mimetypes.xml\\E"
+      }
+    ]
+  },
+  "bundles": []
+}

@@ -55,3 +55,31 @@ OS conventions and put the coursier cache at the most appropriate location for y
 | Linux | `~/.cache/coursier/arc/` | XDG… |
 | macOS | `~/Library/Caches/Coursier/arc/` |      |
 | Windows | `C:\Users\username\AppData\Local\Coursier\Cache\arc` | Windows API… |
+
+## Archive content addressing
+
+One can get particular files in archives, by separating the archive URL and the path
+inside the archive with `!`, like
+```text
+$ cs get --archive 'https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb!data.tar.xz'
+~/.cache/coursier/arc/https/ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb/data.tar.xz
+```
+
+Note that if the URL passed to `cs get` contains `!`, it automatically assumes it deals with archives,
+so that `--archive` doesn't have to be passed:
+```text
+$ cs get 'https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb!'
+~/.cache/coursier/arc/https/ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb
+```
+
+## Archives in archives
+
+Using `!` like [above](#archive-content-addressing) multiple times, one can get files from
+archives contained themselves in archives:
+```text
+$ cs get --archive 'https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb!data.tar.xz!usr/bin/hello'
+~/.cache/coursier/arc/https/ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb/.data.tar.xz/usr/bin/hello
+
+$ cs get 'https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb!data.tar.xz!usr/share/doc/hello/changelog.gz!'
+~/.cache/coursier/arc/https/ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb/data.tar.xz/usr/share/doc/hello/.changelog.gz/changelog
+```

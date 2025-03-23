@@ -1,13 +1,13 @@
 package coursier.cache
 
 import coursier.paths.CachePath
-import coursier.util.{Artifact, Sync, Task}
+import coursier.util.{Artifact, EitherT, Sync, Task}
 import coursier.util.Monad.ops._
 import dataclass._
 import org.apache.tika.Tika
 
 import java.io.File
-import java.nio.file.{Files, StandardCopyOption}
+import java.nio.file.{Files, Path, StandardCopyOption}
 
 import scala.util.Using
 
@@ -23,13 +23,17 @@ import scala.util.Using
 
   private def S = sync
 
-  private def localDir(artifact: Artifact): File =
-    CachePath.localFile(
-      artifact.url,
+  private def localDir(artifact: Artifact): (File, Seq[String]) = {
+    val Array(mainUrl, subPaths @ _*) = artifact.url.split("\\!", -1)
+    val dir = CachePath.localFile(
+      mainUrl,
       location,
       artifact.authentication.flatMap(_.userOpt).orNull,
       true
     )
+    // FIXME security
+    (dir, subPaths)
+  }
 
   def getIfExists(artifact: Artifact): F[Either[ArtifactError, Option[File]]] =
     ArchiveCache.archiveType(artifact.url) match {
@@ -56,7 +60,13 @@ import scala.util.Using
     artifact: Artifact,
     isSingleFile: Boolean
   ): F[Either[ArtifactError, Option[File]]] = {
-    val dir = localDir(artifact)
+    val (dir0, subPaths) = localDir(artifact)
+    val dir = subPaths
+      .foldLeft(dir0.toPath) { (dir, subPath) =>
+        val f = dir.resolve(subPath)
+        f.getParent.resolve("." + f.getFileName)
+      }
+      .toFile
 
     val dirTask: F[Either[ArtifactError, Option[File]]] =
       S.delay(dir.exists()).map {
@@ -191,16 +201,42 @@ import scala.util.Using
   }
 
   def get(artifact: Artifact): F[Either[ArtifactError, File]] = {
-    val dir    = localDir(artifact)
-    val urlOpt = Some(artifact.url)
+    val (dir0, subPaths) = localDir(artifact)
+    val artifact0        = artifact.withUrl(artifact.url.takeWhile(_ != '!'))
     val download: F[Either[ArtifactError, File]] =
-      cache.loggerOpt.getOrElse(CacheLogger.nop).using(cache.file(artifact).run)
+      cache.loggerOpt.getOrElse(CacheLogger.nop).using(cache.file(artifact0).run)
 
-    get0(
-      dir,
-      urlOpt,
+    val main = get0(
+      dir0,
+      Some(artifact0.url),
       download
     )
+
+    EitherT(main).flatMap { dir =>
+
+      def process(
+        file: Path,
+        url: String,
+        subPaths0: List[String]
+      ): EitherT[F, ArtifactError, Path] =
+        subPaths0 match {
+          case Nil => EitherT.point(file)
+          case subPath :: rest =>
+            val arc  = file.resolve(subPath)
+            val dest = arc.getParent.resolve("." + arc.getFileName)
+            val url0 = url + "!" + subPath
+            EitherT(get0(dest.toFile, Some(url0), S.point(Right(arc.toFile)))).flatMap { dir0 =>
+              process(dir0.toPath, url0, rest)
+            }
+        }
+
+      if (subPaths.isEmpty) EitherT.point(dir)
+      else {
+        val init = subPaths.init
+        val last = subPaths.last
+        process(dir.toPath, artifact0.url, init.toList).map(_.resolve(last).toFile)
+      }
+    }.run
   }
 
 }

@@ -17,7 +17,12 @@ final case class GetOptions(
   separator: Option[String] = None,
   force: Boolean = false,
   changing: Option[Boolean] = None,
-  archive: Boolean = false
+  @HelpMessage("Whether the passed URL(s) correspond to archives. By default, this is inferred for each URL individually: if a URL contains '!', it is assumed to be an archive.")
+    archive: Option[Boolean] = None,
+  @HelpMessage("Archive cache location")
+    archiveCache: Option[String] = None,
+  @HelpMessage("HTTP headers to use as authentication (\"header: value\"), can be specified multiples times to add multiple headers")
+    authHeader: List[String] = Nil
 )
 // format: on
 

@@ -2,14 +2,20 @@ package coursier.cli.get
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
+import coursier.cache.CacheDefaults
 import coursier.cli.params.{CacheParams, OutputParams}
+
+import java.io.File
 
 final case class GetParams(
   cache: CacheParams,
   output: OutputParams,
   separator: String,
   force: Boolean,
-  changing: Option[Boolean]
+  changing: Option[Boolean],
+  archiveOpt: Option[Boolean],
+  archiveCacheLocation: File,
+  authHeaders: Seq[(String, String)]
 )
 
 object GetParams {
@@ -26,14 +32,29 @@ object GetParams {
         Validated.invalidNel("--zero and --separator cannot be specific at the same time")
     }
 
-    (cacheV, outputV, separatorV).mapN {
-      case (cache, output, separator) =>
+    val authHeadersV = options.authHeader
+      .filter(_.trim.nonEmpty)
+      .traverse { input =>
+        input.split(":\\s*", 2) match {
+          case Array(k, v) => Validated.valid(k.trim -> v)
+          case Array(_) =>
+            Validated.invalidNel(s"Malformed auth header value: '$input', expected 'header: value'")
+        }
+      }
+
+    (cacheV, outputV, separatorV, authHeadersV).mapN {
+      case (cache, output, separator, authHeaders) =>
         GetParams(
           cache,
           output,
           separator,
           options.force,
-          options.changing
+          options.changing,
+          options.archive,
+          options.archiveCache.map(new File(_)).getOrElse {
+            CacheDefaults.archiveCacheLocation
+          },
+          authHeaders
         )
     }
   }
