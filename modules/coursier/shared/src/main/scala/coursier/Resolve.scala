@@ -21,7 +21,7 @@ import coursier.core.{
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.internal.Typelevel
-import coursier.maven.MavenRepository
+import coursier.maven.MavenRepositoryLike
 import coursier.params.{Mirror, MirrorConfFile, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
@@ -105,8 +105,8 @@ import scala.language.higherKinds
       case None => repositories0
       case Some(enable) =>
         repositories0.map {
-          case m: MavenRepository => m.withCheckModule(enable)
-          case other              => other
+          case m: MavenRepositoryLike.WithModuleSupport => m.withCheckModule(enable)
+          case other                                    => other
         }
     }
     allMirrors.map(Mirror.replace(repositories1, _))
