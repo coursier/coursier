@@ -60,7 +60,6 @@ androidx.compose.material:material-icons-core-desktop:1.6.0:{ org.gradle.categor
 androidx.compose.material:material-ripple-desktop:1.7.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
 androidx.startup:startup-runtime:1.1.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
 androidx.lifecycle:lifecycle-livedata-core:2.6.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
-org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.7.3:runtime
 org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.20:runtime
 androidx.compose.animation:animation:1.7.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
 org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.20:runtime

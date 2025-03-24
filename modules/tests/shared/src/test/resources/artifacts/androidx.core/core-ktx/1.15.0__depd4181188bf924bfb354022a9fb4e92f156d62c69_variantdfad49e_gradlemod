@@ -43,7 +43,6 @@ https://maven.google.com/androidx/compose/material/material-icons-core-desktop/1
 https://maven.google.com/androidx/compose/material/material-ripple-desktop/1.7.0/material-ripple-desktop-1.7.0.jar
 https://maven.google.com/androidx/startup/startup-runtime/1.1.1/startup-runtime-1.1.1.aar
 https://maven.google.com/androidx/lifecycle/lifecycle-livedata-core/2.6.1/lifecycle-livedata-core-2.6.1.aar
-https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-bom/1.7.3/kotlinx-coroutines-bom-1.7.3.jar
 https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.8.20/kotlin-stdlib-jdk8-1.8.20.jar
 https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.8.20/kotlin-stdlib-jdk7-1.8.20.jar
 https://maven.google.com/androidx/compose/animation/animation-desktop/1.7.0/animation-desktop-1.7.0.jar

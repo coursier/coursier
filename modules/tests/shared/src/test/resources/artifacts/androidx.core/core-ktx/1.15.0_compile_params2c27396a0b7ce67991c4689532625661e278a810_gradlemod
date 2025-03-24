@@ -11,7 +11,6 @@ https://maven.google.com/androidx/arch/core/core-common/2.2.0/core-common-2.2.0.
 https://maven.google.com/androidx/lifecycle/lifecycle-common/2.6.2/lifecycle-common-2.6.2.jar
 https://maven.google.com/androidx/collection/collection/1.0.0/collection-1.0.0.jar
 https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-android/1.6.4/kotlinx-coroutines-android-1.6.4.jar
-https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-bom/1.6.4/kotlinx-coroutines-bom-1.6.4.jar
 https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.6.21/kotlin-stdlib-jdk8-1.6.21.jar
 https://repo1.maven.org/maven2/org/jetbrains/kotlinx/kotlinx-coroutines-core-jvm/1.6.4/kotlinx-coroutines-core-jvm-1.6.4.jar
 https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk7/1.6.21/kotlin-stdlib-jdk7-1.6.21.jar

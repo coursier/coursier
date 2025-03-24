@@ -58,23 +58,24 @@ object ResolveTests extends TestSuite {
       }
     }
   def gradleModuleCheck0(
+    resolve0: Resolve[Task] = resolve,
     defaultConfiguration: Option[Configuration] = None,
     defaultAttributes: Option[VariantSelector.AttributesBased] = None
   )(
     dependencies: Dependency*
   ): Future[Unit] =
     async {
-      var resolve0 = enableModules(resolve.addRepositories(Repositories.google))
+      var resolve1 = enableModules(resolve0.addRepositories(Repositories.google))
       for (conf <- defaultConfiguration)
-        resolve0 = resolve0.mapResolutionParams(_.withDefaultConfiguration(conf))
+        resolve1 = resolve1.mapResolutionParams(_.withDefaultConfiguration(conf))
       for (attr <- defaultAttributes)
-        resolve0 = resolve0.mapResolutionParams(_.withDefaultVariantAttributes(attr))
+        resolve1 = resolve1.mapResolutionParams(_.withDefaultVariantAttributes(attr))
       val res = await {
-        resolve0
+        resolve1
           .addDependencies(dependencies: _*)
           .future()
       }
-      await(validateDependencies(res, resolve0.resolutionParams, extraKeyPart = "_gradlemod"))
+      await(validateDependencies(res, resolve1.resolutionParams, extraKeyPart = "_gradlemod"))
     }
   def gradleModuleCheck(dependencies: Dependency*): Future[Unit] =
     gradleModuleCheck0()(dependencies: _*)
@@ -2117,7 +2118,10 @@ object ResolveTests extends TestSuite {
                 "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
               )
             )
-            gradleModuleCheck0(Some(Configuration.compile), defaultAttributes = Some(attr))(
+            gradleModuleCheck0(
+              defaultConfiguration = Some(Configuration.compile),
+              defaultAttributes = Some(attr)
+            )(
               dep"androidx.core:core-ktx:1.15.0:compile"
             )
           }
@@ -2159,6 +2163,16 @@ object ResolveTests extends TestSuite {
             }
           }
         }
+      }
+      test("module-bom") {
+        val resolve0 = resolve.withResolutionParams(
+          resolve.resolutionParams.withOsInfo(
+            Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1"))
+          )
+        )
+        gradleModuleCheck0(resolve0 = resolve0)(
+          dep"io.quarkus:quarkus-rest-jackson:3.15.1"
+        )
       }
     }
 

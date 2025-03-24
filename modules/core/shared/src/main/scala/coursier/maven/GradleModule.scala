@@ -30,9 +30,12 @@ import coursier.core.VariantPublication
 ) {
   def project: Project = {
 
-    def variantDependencies(variant: GradleModule.Variant) = {
+    def variantDependencies(variant: GradleModule.Variant, constraints: Boolean = false) = {
       val variant0 = Variant.Attributes(variant.name)
-      variant.dependencies.map { dep =>
+      val deps =
+        if (constraints) variant.dependencyConstraints
+        else variant.dependencies
+      deps.map { dep =>
         val version = dep.version.toSeq match {
           case Seq(("requires", req)) => VersionConstraint(req)
           case _ => sys.error(s"Unrecognized dependency version shape: ${dep.version}")
@@ -41,7 +44,12 @@ import coursier.core.VariantPublication
         variant0 -> Dependency(
           Module(Organization(dep.group), ModuleName(dep.module), Map.empty),
           version,
-          VariantSelector.AttributesBased(Map.empty),
+          VariantSelector.AttributesBased(
+            dep.attributes.map {
+              case (k, v) =>
+                VariantSelector.VariantMatcher.fromString(k, v.value)
+            }
+          ),
           MinimizedExclusions.zero,
           publication = Publication("", Type.empty, Extension.empty, Classifier.empty),
           optional = false,
@@ -72,7 +80,9 @@ import coursier.core.VariantPublication
     }
 
     val dependencies = relocationDependencies ++
-      variants.flatMap(variantDependencies)
+      variants.flatMap(variantDependencies(_))
+    val dependencyManagement =
+      variants.flatMap(variantDependencies(_, constraints = true))
 
     val variantsMap = variants
       .map { variant =>
@@ -98,7 +108,7 @@ import coursier.core.VariantPublication
       dependencies0 = dependencies,
       configurations = GradleModule.defaultConfigurations,
       parent0 = None,
-      dependencyManagement = Nil,
+      dependencyManagement0 = dependencyManagement,
       properties = Nil,
       profiles = Nil,
       versions = None,
@@ -168,6 +178,7 @@ object GradleModule {
     name: String,
     attributes: Map[String, StringOrInt],
     dependencies: Seq[ModuleDependency],
+    dependencyConstraints: Seq[ModuleDependency],
     files: Seq[ModuleFile],
     `available-at`: Option[AvailableAt] = None
   ) {
@@ -187,7 +198,9 @@ object GradleModule {
   @data class ModuleDependency(
     group: String,
     module: String,
-    version: Map[String, String]
+    version: Map[String, String],
+    attributes: Map[String, StringOrInt],
+    endorseStrictVersions: Option[Boolean]
   )
 
   @data class ModuleFile(

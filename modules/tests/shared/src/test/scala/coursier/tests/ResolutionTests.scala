@@ -88,7 +88,7 @@ object ResolutionTests extends TestSuite {
       mod"acme:module-with-missing-pom",
       "1.0.0",
       dependencyManagement = Seq(
-        Configuration.`import` -> dep"acme:missing-pom:1.0.0"
+        Variant.Configuration(Configuration.`import`) -> dep"acme:missing-pom:1.0.0"
       )
     ),
     Project(
@@ -104,7 +104,7 @@ object ResolutionTests extends TestSuite {
       mod"se.ikea:parent",
       "18.0",
       dependencyManagement = Seq(
-        Configuration.empty -> dep"acme:play:2.4.0"
+        Variant.Configuration(Configuration.empty) -> dep"acme:play:2.4.0"
           .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"play-json"))))
       )
     ),
@@ -154,7 +154,7 @@ object ResolutionTests extends TestSuite {
         Variant.emptyConfiguration -> dep"junit:junit:"
       ),
       dependencyManagement = Seq(
-        Configuration.test -> dep"junit:junit:4.11"
+        Variant.Configuration(Configuration.test) -> dep"junit:junit:4.11"
       )
     ),
     Project(
