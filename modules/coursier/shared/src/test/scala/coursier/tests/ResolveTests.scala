@@ -2036,7 +2036,7 @@ object ResolveTests extends TestSuite {
               assert(
                 res.left.toOption.get.getMessage
                   .contains(
-                    "Found too many variants in org.jetbrains.kotlinx:kotlinx-html-js:0.11.0 for"
+                    "Found too many variants in org.jetbrains.kotlin:kotlin-stdlib:1.9.22 for"
                   )
               )
             }

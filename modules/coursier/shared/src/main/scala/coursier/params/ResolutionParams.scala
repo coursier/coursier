@@ -187,4 +187,11 @@ import dataclass.data
 
     rules ++ fromReconciliation
   }
+
+  def finalDefaultVariantAttributes: VariantSelector.AttributesBased =
+    defaultVariantAttributes.getOrElse(
+      VariantSelector.ConfigurationBased(defaultConfiguration)
+        .equivalentAttributesSelector
+        .getOrElse(VariantSelector.AttributesBased.empty)
+    )
 }
