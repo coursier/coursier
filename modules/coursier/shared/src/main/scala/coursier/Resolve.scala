@@ -446,7 +446,11 @@ object Resolve extends PlatformResolve {
       .withForceProperties(params.forcedProperties)
       .withDefaultConfiguration(params.defaultConfiguration)
       .withDefaultVariantAttributes(
-        params.defaultVariantAttributes.getOrElse(VariantSelector.AttributesBased.empty)
+        params.defaultVariantAttributes.getOrElse(
+          VariantSelector.ConfigurationBased(params.defaultConfiguration)
+            .equivalentAttributesSelector
+            .getOrElse(VariantSelector.AttributesBased.empty)
+        )
       )
       .withKeepProvidedDependencies(params.keepProvidedDependencies.getOrElse(false))
       .withForceDepMgmtVersions(params.forceDepMgmtVersions.getOrElse(false))
