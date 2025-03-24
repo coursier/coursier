@@ -661,6 +661,27 @@ trait Cli extends CsModule
     os.write.over(jar, baos.toByteArray)
     PathRef(jar)
   }
+
+  // Locally, run cli in exclusive mode with os.InheritRaw stdin / stdout / stderr, so that it sees
+  // an actual terminal, and not pipes, and we get progress bars and all.
+  private def isCI = System.getenv("CI") != null
+  def run(args: Task[Args] = Task.Anon(Args())): Command[Unit] = Task.Command(exclusive = !isCI) {
+    mill.util.Jvm.callProcess(
+      mainClass = mainClass().getOrElse(sys.error("main class?")),
+      classPath = runClasspath().map(_.path),
+      jvmArgs = Nil,
+      env = Map.empty,
+      mainArgs = args().value,
+      cwd = T.workspace,
+      stdin = if (isCI) os.Inherit else os.InheritRaw,
+      stdout = if (isCI) os.Inherit else os.InheritRaw,
+      stderr = if (isCI) os.Inherit else os.InheritRaw,
+      cpPassingJarPath = None,
+      javaHome = None
+    )
+
+    ()
+  }
 }
 
 trait CliTests extends CsModule
