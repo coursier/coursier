@@ -98,7 +98,11 @@ object JvmCacheTests extends TestSuite {
       |""".stripMargin
   private val index = JvmIndex.fromString(strIndex).fold(throw _, identity)
 
-  private val cache = MockCache.create[Task](mockDataLocation, pool)
+  private val cache = MockCache.create[Task](
+    mockDataLocation,
+    pool,
+    baseChangingOpt = Some(mockDataLocation)
+  )
 
   val tests = Tests {
     test("specific version") {

@@ -1,2 +1,2 @@
-com.chuusai:shapeless_2.12:2.3.7:default
-org.scala-lang:scala-library:2.12.13:default
+com.chuusai:shapeless_2.12:2.3.13:default
+org.scala-lang:scala-library:2.12.20:default

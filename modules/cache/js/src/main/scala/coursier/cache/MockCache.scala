@@ -6,7 +6,10 @@ import dataclass.data
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@data class MockCache(base: String) extends Cache[Task] {
+@data class MockCache(
+  base: String,
+  baseChanging: String
+) extends Cache[Task] {
 
   implicit def ec: ExecutionContext =
     scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -31,8 +34,10 @@ import scala.concurrent.{ExecutionContext, Future}
           else
             path
         }
-        else
-          base + "/" + MockCacheEscape.urlAsPath(artifact0.url)
+        else {
+          val base0 = if (artifact0.changing) baseChanging else base
+          base0 + "/" + MockCacheEscape.urlAsPath(artifact0.url)
+        }
 
       Task { implicit ec =>
         Platform.textResource(path, if (links) Some(artifact0.url) else None)
@@ -49,7 +54,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 object MockCache {
 
-  def create(base: String): MockCache =
-    MockCache(base)
+  def create(base: String, baseChanging: String): MockCache =
+    MockCache(base, baseChanging)
 
 }
