@@ -126,10 +126,11 @@
     {
       "coord": "org.apache.tomcat.embed:tomcat-embed-core:10.1.30",
       "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/tomcat/embed/tomcat-embed-core/10.1.30/tomcat-embed-core-10.1.30.jar",
-      "directDependencies": [],
-      "dependencies": [],
-      "exclusions": [
-        "org.apache.tomcat:tomcat-annotations-api"
+      "directDependencies": [
+        "org.apache.tomcat:tomcat-annotations-api:10.1.30"
+      ],
+      "dependencies": [
+        "org.apache.tomcat:tomcat-annotations-api:10.1.30"
       ]
     },
     {
@@ -145,11 +146,15 @@
         "org.apache.tomcat.embed:tomcat-embed-core:10.1.30"
       ],
       "dependencies": [
-        "org.apache.tomcat.embed:tomcat-embed-core:10.1.30"
-      ],
-      "exclusions": [
-        "org.apache.tomcat:tomcat-annotations-api"
+        "org.apache.tomcat.embed:tomcat-embed-core:10.1.30",
+        "org.apache.tomcat:tomcat-annotations-api:10.1.30"
       ]
+    },
+    {
+      "coord": "org.apache.tomcat:tomcat-annotations-api:10.1.30",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/tomcat/tomcat-annotations-api/10.1.30/tomcat-annotations-api-10.1.30.jar",
+      "directDependencies": [],
+      "dependencies": []
     },
     {
       "coord": "org.slf4j:jul-to-slf4j:2.0.16",
@@ -256,7 +261,8 @@
         "jakarta.annotation:jakarta.annotation-api:2.1.1",
         "org.apache.tomcat.embed:tomcat-embed-core:10.1.30",
         "org.apache.tomcat.embed:tomcat-embed-el:10.1.30",
-        "org.apache.tomcat.embed:tomcat-embed-websocket:10.1.30"
+        "org.apache.tomcat.embed:tomcat-embed-websocket:10.1.30",
+        "org.apache.tomcat:tomcat-annotations-api:10.1.30"
       ]
     },
     {
@@ -286,6 +292,7 @@
         "org.apache.tomcat.embed:tomcat-embed-core:10.1.30",
         "org.apache.tomcat.embed:tomcat-embed-el:10.1.30",
         "org.apache.tomcat.embed:tomcat-embed-websocket:10.1.30",
+        "org.apache.tomcat:tomcat-annotations-api:10.1.30",
         "org.slf4j:jul-to-slf4j:2.0.16",
         "org.slf4j:slf4j-api:2.0.16",
         "org.springframework.boot:spring-boot-autoconfigure:3.3.4",

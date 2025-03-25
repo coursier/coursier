@@ -24,7 +24,7 @@ object MavenRepository {
       authentication,
       changing = None,
       versionsCheckHasModule = true,
-      checkModule = false
+      checkModule = true
     )
 }
 
@@ -36,7 +36,7 @@ object MavenRepository {
   @since
   override val versionsCheckHasModule: Boolean = true,
   @since("2.1.25")
-  override val checkModule: Boolean = false
+  override val checkModule: Boolean = true
 ) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi {
 
   private val internal = new MavenRepositoryInternal(

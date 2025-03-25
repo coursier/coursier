@@ -7,4 +7,4 @@ com.google.guava:guava:32.0.1-jre:default
 com.google.j2objc:j2objc-annotations:2.8:default
 com.google.guava:failureaccess:1.0.1:default
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:default
-org.checkerframework:checker-qual:3.33.0:default
+org.checkerframework:checker-qual:3.33.0:{ org.gradle.category=library, org.gradle.usage=runtime }

@@ -78,7 +78,7 @@ io.netty:netty-codec-http:4.1.111.Final:default
 io.netty:netty-codec-http2:4.1.111.Final:default
 io.netty:netty-resolver:4.1.111.Final:default
 io.netty:netty-resolver-dns:4.1.111.Final:default
-com.fasterxml.jackson.core:jackson-core:2.17.2:default
+com.fasterxml.jackson.core:jackson-core:2.17.2:{ org.gradle.category=library, org.gradle.usage=runtime }
 org.jctools:jctools-core:4.0.5:default
 io.smallrye:smallrye-context-propagation:2.1.2:default
 io.smallrye:smallrye-context-propagation:2.1.2:default

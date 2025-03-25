@@ -35,10 +35,15 @@ abstract class ResolveTests extends TestSuite {
       val bom        = "io.quarkus:quarkus-bom:3.16.2"
       val gsonModule = "com.google.code.gson:gson"
 
+      val extraArgs = Seq(
+        "--variant",
+        "org.gradle.jvm.environment=standard-jvm"
+      )
+
       val noBomRes =
-        os.proc(launcher, "resolve", dependency).call().out.lines()
+        os.proc(launcher, "resolve", extraArgs, dependency).call().out.lines()
       val bomRes =
-        os.proc(launcher, "resolve", dependency, "--bom", bom).call().out.lines()
+        os.proc(launcher, "resolve", extraArgs, dependency, "--bom", bom).call().out.lines()
 
       def gsonVersion(results: Seq[String]) =
         results

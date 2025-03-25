@@ -2,10 +2,10 @@ io.trino:trino-hive:467:default
 com.amazonaws:aws-java-sdk-core:1.12.779:default
 com.amazonaws:aws-java-sdk-glue:1.12.779:default
 com.amazonaws:aws-java-sdk-sts:1.12.779:default
-com.fasterxml.jackson.core:jackson-core:2.18.2:default
-com.fasterxml.jackson.core:jackson-databind:2.18.2:default
+com.fasterxml.jackson.core:jackson-core:2.18.2:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.fasterxml.jackson.core:jackson-databind:2.18.2:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 com.google.errorprone:error_prone_annotations:2.36.0:default
-com.google.guava:guava:33.3.1-jre:default
+com.google.guava:guava:33.3.1-jre:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 com.google.inject:guice:7.0.0:default
 dev.failsafe:failsafe:3.3.2:default
 io.airlift:aircompressor-v3:3.2:default
@@ -16,9 +16,6 @@ io.airlift:json:291:default
 io.airlift:log:291:default
 io.airlift:stats:291:default
 io.airlift:units:1.10:default
-io.opentelemetry.instrumentation:opentelemetry-apache-httpclient-5.2:2.10.0-alpha:default
-io.opentelemetry.instrumentation:opentelemetry-aws-sdk-1.11:2.10.0-alpha:default
-io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2:2.10.0-alpha:default
 io.trino:trino-cache:467:default
 io.trino:trino-filesystem:467:default
 io.trino:trino-filesystem-manager:467:default
@@ -39,7 +36,7 @@ org.apache.httpcomponents.client5:httpclient5:5.4.1:default
 org.apache.httpcomponents.core5:httpcore5:5.3.1:default
 org.apache.parquet:parquet-column:1.15.0:default
 org.apache.parquet:parquet-format-structures:1.15.0:default
-org.apache.thrift:libthrift:0.21.0:default
+org.apache.thrift:libthrift:0.21.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 org.gaul:modernizer-maven-annotations:2.9.0:default
 org.weakref:jmxutils:1.26:default
 software.amazon.awssdk:apache-client:2.29.29:default
@@ -56,45 +53,39 @@ software.amazon.awssdk:utils:2.29.29:default
 com.amazonaws:aws-java-sdk-s3:1.12.779:default
 io.airlift:log-manager:291:default
 io.airlift:node:291:default
-io.opentelemetry:opentelemetry-sdk-trace:1.44.1:default
+io.opentelemetry:opentelemetry-sdk-trace:1.44.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 jakarta.servlet:jakarta.servlet-api:6.0.0:default
 org.apache.httpcomponents:httpcore:4.4.16:default
 org.apache.parquet:parquet-common:1.15.0:default
-org.jetbrains:annotations:26.0.1:default
+org.jetbrains:annotations:26.0.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 software.amazon.awssdk:s3:2.29.29:default
 commons-codec:commons-codec:1.17.1:default
 org.apache.httpcomponents:httpclient:4.5.14:default
-com.fasterxml.jackson.core:jackson-databind:2.18.2:default
-com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.18.2:default
+com.fasterxml.jackson.core:jackson-databind:2.18.2:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.18.2:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 com.amazonaws:jmespath-java:1.12.779:default
-com.fasterxml.jackson.core:jackson-annotations:2.18.2:default
-com.google.guava:failureaccess:1.0.2:default
-com.google.code.findbugs:jsr305:3.0.2:default
-org.checkerframework:checker-qual:3.48.3:default
-com.google.j2objc:j2objc-annotations:3.0.0:default
+com.fasterxml.jackson.core:jackson-annotations:2.18.2:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.google.guava:failureaccess:1.0.2:runtime
+com.google.code.findbugs:jsr305:3.0.2:runtime
+org.checkerframework:checker-qual:3.48.3:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.google.errorprone:error_prone_annotations:2.36.0:runtime
+com.google.j2objc:j2objc-annotations:3.0.0:runtime
 jakarta.inject:jakarta.inject-api:2.0.1:default
 aopalliance:aopalliance:1.0:default
 io.airlift:secrets-spi:291:default
 net.bytebuddy:byte-buddy:1.15.10:default
 org.hibernate.validator:hibernate-validator:8.0.1.Final:default
 org.tomlj:tomlj:1.1.1:default
-com.fasterxml.jackson.datatype:jackson-datatype-guava:2.18.2:default
-com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.2:default
-com.fasterxml.jackson.datatype:jackson-datatype-joda:2.18.2:default
-com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2:default
-com.fasterxml.jackson.module:jackson-module-parameter-names:2.18.2:default
+com.fasterxml.jackson.datatype:jackson-datatype-guava:2.18.2:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.18.2:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.fasterxml.jackson.datatype:jackson-datatype-joda:2.18.2:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.fasterxml.jackson.module:jackson-module-parameter-names:2.18.2:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 io.airlift:slice:2.3:default
 org.hdrhistogram:HdrHistogram:2.2.2:default
-io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:2.10.0:default
-io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-incubator:2.10.0-alpha:default
-io.opentelemetry:opentelemetry-api:1.44.1:default
-io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:1.40.0-alpha:default
-com.github.ishugaliy:allgood-consistent-hash:1.0.0:default
-io.opentelemetry:opentelemetry-api:1.44.1:default
-io.opentelemetry:opentelemetry-context:1.44.1:default
-io.opentelemetry.semconv:opentelemetry-semconv:1.28.0-alpha:default
+com.github.ishugaliy:allgood-consistent-hash:1.0.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 io.trino:trino-spi:467:default
-org.checkerframework:checker-qual:3.48.3:default
+org.checkerframework:checker-qual:3.48.3:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 io.trino:trino-filesystem-alluxio:467:default
 io.trino:trino-filesystem-azure:467:default
 io.trino:trino-filesystem-cache-alluxio:467:default
@@ -113,7 +104,12 @@ com.google.code.gson:gson:2.11.0:default
 org.slf4j:slf4j-api:2.0.16:default
 org.apache.commons:commons-compress:1.27.1:default
 org.apache.httpcomponents.core5:httpcore5-h2:5.3.1:default
-org.apache.commons:commons-lang3:3.17.0:default
+org.slf4j:slf4j-api:2.0.16:runtime
+org.apache.httpcomponents.client5:httpclient5:5.4.1:runtime
+org.apache.httpcomponents.core5:httpcore5:5.3.1:runtime
+jakarta.servlet:jakarta.servlet-api:6.0.0:runtime
+jakarta.annotation:jakarta.annotation-api:3.0.0:runtime
+org.apache.commons:commons-lang3:3.17.0:runtime
 software.amazon.awssdk:metrics-spi:2.29.29:default
 software.amazon.awssdk:annotations:2.29.29:default
 org.apache.httpcomponents:httpclient:4.5.14:default
@@ -141,8 +137,9 @@ org.apache.logging.log4j:log4j-to-slf4j:2.24.2:default
 org.slf4j:jcl-over-slf4j:2.0.16:default
 org.slf4j:log4j-over-slf4j:2.0.16:default
 org.slf4j:slf4j-jdk14:2.0.16:default
-io.opentelemetry:opentelemetry-sdk-common:1.44.1:default
-io.opentelemetry:opentelemetry-api-incubator:1.44.1-alpha:default
+io.opentelemetry:opentelemetry-api-incubator:1.44.1-alpha:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+io.opentelemetry:opentelemetry-api:1.44.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+io.opentelemetry:opentelemetry-sdk-common:1.44.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 org.apache.parquet:parquet-format-structures:1.15.0:default
 software.amazon.awssdk:aws-xml-protocol:2.29.29:default
 software.amazon.awssdk:arns:2.29.29:default
@@ -151,7 +148,8 @@ org.jboss.logging:jboss-logging:3.4.3.Final:default
 com.fasterxml:classmate:1.5.1:default
 org.antlr:antlr4-runtime:4.13.2:default
 org.openjdk.jol:jol-core:0.17:default
-net.openhft:zero-allocation-hashing:0.11:default
+net.openhft:zero-allocation-hashing:0.11:runtime
+io.opentelemetry:opentelemetry-context:1.44.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 org.alluxio:alluxio-core-client-fs:2.9.6:default
 org.alluxio:alluxio-core-common:2.9.6:default
 org.alluxio:alluxio-core-transport:2.9.6:default
@@ -162,8 +160,7 @@ com.azure:azure-identity:1.14.2:default
 com.azure:azure-storage-blob:12.29.0:default
 com.azure:azure-storage-common:12.28.0:default
 com.azure:azure-storage-file-datalake:12.22.0:default
-com.squareup.okhttp3:okhttp:4.12.0:default
-com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.18.2:default
+com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.18.2:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 com.nimbusds:oauth2-oidc-sdk:11.20.1:default
 io.airlift:tracing:291:default
 com.google.api:gax:2.58.0:default
@@ -173,9 +170,8 @@ com.google.cloud:google-cloud-core:2.48.0:default
 com.google.cloud:google-cloud-storage:2.45.0:default
 org.threeten:threetenbp:1.7.0:default
 com.google.http-client:google-http-client:1.45.1:default
-io.opentelemetry:opentelemetry-opencensus-shim:1.44.1-alpha:default
+io.opentelemetry:opentelemetry-opencensus-shim:1.44.1-alpha:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 ch.qos.logback:logback-core:1.5.12:default
-io.opentelemetry.semconv:opentelemetry-semconv-incubating:1.28.0-alpha:default
 org.eclipse.jetty:jetty-client:12.0.14:default
 org.eclipse.jetty:jetty-http:12.0.14:default
 org.eclipse.jetty:jetty-io:12.0.14:default
@@ -183,6 +179,8 @@ org.eclipse.jetty:jetty-util:12.0.14:default
 org.eclipse.jetty.http2:jetty-http2-client:12.0.14:default
 org.eclipse.jetty.http2:jetty-http2-client-transport:12.0.14:default
 commons-io:commons-io:2.18.0:default
+org.apache.commons:commons-lang3:3.17.0:default
+org.apache.httpcomponents.core5:httpcore5-h2:5.3.1:runtime
 software.amazon.awssdk:third-party-jackson-core:2.29.29:default
 org.apache.httpcomponents:httpclient:4.5.14:default
 io.netty:netty-codec-http:4.1.115.Final:default
@@ -225,22 +223,19 @@ io.grpc:grpc-stub:1.68.1:default
 org.apache.logging.log4j:log4j-api:2.24.2:default
 com.azure:azure-json:1.3.0:default
 com.azure:azure-xml:1.1.0:default
-io.projectreactor:reactor-core:3.7.0:default
-com.squareup.okio:okio-jvm:3.9.1:default
+io.projectreactor:reactor-core:3.7.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.squareup.okio:okio-jvm:3.9.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.squareup.okhttp3:okhttp:4.12.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 com.microsoft.azure:msal4j:1.17.2:default
 com.microsoft.azure:msal4j-persistence-extension:1.3.0:default
 com.azure:azure-storage-internal-avro:12.14.0:default
-com.squareup.okio:okio:3.9.1:default
-org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.0:default
-org.codehaus.woodstox:stax2-api:4.2.2:default
-com.fasterxml.woodstox:woodstox-core:7.0.0:default
+org.codehaus.woodstox:stax2-api:4.2.2:runtime
+com.fasterxml.woodstox:woodstox-core:7.0.0:runtime
 com.github.stephenc.jcip:jcip-annotations:1.0-1:default
 com.nimbusds:content-type:2.3:default
 net.minidev:json-smart:2.5.1:default
 com.nimbusds:lang-tag:1.7:default
 com.nimbusds:nimbus-jose-jwt:9.47:default
-io.opentelemetry:opentelemetry-exporter-otlp:1.44.1:default
-io.opentelemetry:opentelemetry-sdk:1.44.1:default
 com.google.api:api-common:2.41.0:default
 com.google.api.grpc:proto-google-common-protos:2.49.0:default
 com.google.protobuf:protobuf-java:3.25.5:default
@@ -255,6 +250,8 @@ com.google.api.grpc:proto-google-common-protos:2.49.0:default
 com.google.api.grpc:proto-google-iam-v1:1.44.0:default
 com.google.api:api-common:2.41.0:default
 com.google.protobuf:protobuf-java:3.25.5:default
+com.google.guava:failureaccess:1.0.2:default
+com.google.j2objc:j2objc-annotations:3.0.0:default
 io.grpc:grpc-context:1.68.1:default
 io.opencensus:opencensus-contrib-http-util:0.31.1:default
 com.google.http-client:google-http-client-jackson2:1.45.0:default
@@ -276,23 +273,25 @@ io.grpc:grpc-s2a:1.68.1:default
 io.grpc:grpc-core:1.68.1:default
 com.google.android:annotations:4.1.1.4:default
 org.codehaus.mojo:animal-sniffer-annotations:1.24:default
-io.perfmark:perfmark-api:0.27.0:default
+io.perfmark:perfmark-api:0.27.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 io.grpc:grpc-protobuf:1.68.1:default
 io.grpc:grpc-protobuf-lite:1.68.1:default
 com.google.api.grpc:proto-google-cloud-storage-v2:2.45.0-beta:default
 com.google.api.grpc:grpc-google-cloud-storage-v2:2.45.0-beta:default
 com.google.api.grpc:gapic-google-cloud-storage-v2:2.45.0-beta:default
-io.opentelemetry:opentelemetry-sdk-logs:1.44.1:default
+io.opentelemetry:opentelemetry-sdk:1.44.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+io.opentelemetry:opentelemetry-sdk-logs:1.44.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 io.grpc:grpc-opentelemetry:1.68.1:default
-io.opentelemetry:opentelemetry-sdk-metrics:1.44.1:default
-io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:1.44.1:default
-com.google.cloud.opentelemetry:exporter-metrics:0.31.0:default
+io.opentelemetry:opentelemetry-sdk-metrics:1.44.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:1.42.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+io.opentelemetry.semconv:opentelemetry-semconv:1.25.0-alpha:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.google.cloud.opentelemetry:exporter-metrics:0.31.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 com.google.cloud:google-cloud-monitoring:3.55.0:default
 com.google.api.grpc:proto-google-cloud-monitoring-v3:3.55.0:default
 io.opencensus:opencensus-proto:0.2.0:default
 com.google.cloud.opentelemetry:shared-resourcemapping:0.32.0:default
-io.opentelemetry.contrib:opentelemetry-gcp-resources:1.37.0-alpha:default
-com.google.cloud.opentelemetry:detector-resources-support:0.32.0:default
+io.opentelemetry.contrib:opentelemetry-gcp-resources:1.37.0-alpha:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.google.cloud.opentelemetry:detector-resources-support:0.32.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 io.grpc:grpc-api:1.68.1:default
 io.grpc:grpc-netty-shaded:1.68.1:default
 io.grpc:grpc-util:1.68.1:default
@@ -306,10 +305,11 @@ com.google.j2objc:j2objc-annotations:3.0.0:default
 io.grpc:grpc-context:1.68.1:default
 io.opencensus:opencensus-api:0.31.1:default
 io.opencensus:opencensus-contrib-http-util:0.31.1:default
-io.opentelemetry:opentelemetry-extension-trace-propagators:1.44.1:default
-io.opencensus:opencensus-api:0.31.1:default
-io.opencensus:opencensus-impl-core:0.31.1:default
-io.opencensus:opencensus-exporter-metrics-util:0.31.1:default
+io.opentelemetry:opentelemetry-extension-trace-propagators:1.44.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+io.opentelemetry:opentelemetry-sdk:1.44.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+io.opencensus:opencensus-api:0.31.1:runtime
+io.opencensus:opencensus-impl-core:0.31.1:runtime
+io.opencensus:opencensus-exporter-metrics-util:0.31.1:runtime
 org.eclipse.jetty:jetty-alpn-client:12.0.14:default
 org.eclipse.jetty.http2:jetty-http2-common:12.0.14:default
 org.eclipse.jetty:jetty-alpn-java-client:12.0.14:default
@@ -317,7 +317,7 @@ commons-logging:commons-logging:1.2:default
 io.netty:netty-transport-native-unix-common:4.1.115.Final:default
 com.google.android:annotations:4.1.1.4:default
 org.codehaus.mojo:animal-sniffer-annotations:1.24:default
-io.perfmark:perfmark-api:0.27.0:default
+io.perfmark:perfmark-api:0.27.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 io.grpc:grpc-context:1.68.1:default
 io.netty:netty-codec-dns:4.1.115.Final:default
 io.netty:netty-codec-haproxy:4.1.115.Final:default
@@ -353,7 +353,7 @@ io.netty:netty-resolver-dns-native-macos:4.1.115.Final:default
 io.grpc:grpc-api:1.68.1:default
 com.google.android:annotations:4.1.1.4:default
 org.codehaus.mojo:animal-sniffer-annotations:1.24:default
-io.perfmark:perfmark-api:0.27.0:default
+io.perfmark:perfmark-api:0.27.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 io.grpc:grpc-context:1.68.1:default
 io.netty:netty-handler-proxy:4.1.115.Final:default
 io.grpc:grpc-util:1.68.1:default
@@ -371,25 +371,25 @@ io.netty:netty-tcnative-boringssl-static:2.0.69.Final:default
 io.grpc:grpc-api:1.68.1:default
 com.google.android:annotations:4.1.1.4:default
 org.codehaus.mojo:animal-sniffer-annotations:1.24:default
-io.perfmark:perfmark-api:0.27.0:default
+io.perfmark:perfmark-api:0.27.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
 io.grpc:grpc-context:1.68.1:default
 io.grpc:grpc-protobuf-lite:1.68.1:default
-org.jetbrains.kotlin:kotlin-stdlib:2.1.0:default
+org.reactivestreams:reactive-streams:1.0.4:runtime
+org.jetbrains.kotlin:kotlin-stdlib:2.1.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.1.0:runtime
 net.java.dev.jna:jna:5.15.0:default
-org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.1.0:default
 net.minidev:accessors-smart:2.5.1:default
-io.opentelemetry:opentelemetry-sdk-metrics:1.44.1:default
-io.opentelemetry:opentelemetry-sdk-logs:1.44.1:default
-io.opentelemetry:opentelemetry-exporter-otlp-common:1.44.1:default
-io.opentelemetry:opentelemetry-exporter-sender-okhttp:1.44.1:default
-io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi:1.44.1:default
 com.google.j2objc:j2objc-annotations:3.0.0:default
 io.grpc:grpc-context:1.68.1:default
 com.google.j2objc:j2objc-annotations:3.0.0:default
 io.grpc:grpc-context:1.68.1:default
+io.opencensus:opencensus-api:0.31.1:default
 io.opencensus:opencensus-contrib-http-util:0.31.1:default
 javax.annotation:javax.annotation-api:1.3.2:default
 io.grpc:grpc-api:1.68.1:default
+io.opentelemetry:opentelemetry-sdk-metrics:1.44.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+io.opentelemetry:opentelemetry-sdk-logs:1.44.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+io.grpc:grpc-context:1.68.1:runtime
 org.eclipse.jetty.http2:jetty-http2-hpack:12.0.14:default
 io.netty:netty-transport-classes-kqueue:4.1.115.Final:default
 io.netty:netty-resolver-dns-classes-macos:4.1.115.Final:default
@@ -399,10 +399,11 @@ io.prometheus:prometheus-metrics-tracer-common:1.0.0:default
 io.prometheus:prometheus-metrics-tracer-otel:1.0.0:default
 io.prometheus:prometheus-metrics-tracer-otel-agent:1.0.0:default
 io.prometheus:prometheus-metrics-exposition-formats:1.0.0:default
+org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.1.0:runtime
 org.ow2.asm:asm:9.7.1:default
-io.opentelemetry:opentelemetry-exporter-common:1.44.1:default
 io.grpc:grpc-api:1.68.1:default
 io.grpc:grpc-api:1.68.1:default
+io.grpc:grpc-api:1.68.1:runtime
 io.netty:netty-resolver-dns:4.1.115.Final:default
 io.prometheus:prometheus-metrics-shaded-protobuf:1.0.0:default
 io.netty:netty-codec-dns:4.1.115.Final:default

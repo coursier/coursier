@@ -1,0 +1,4 @@
+org.jetbrains.kotlinx:kotlinx-html-js:0.11.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.jetbrains.kotlin:kotlin-dom-api-compat:1.9.22:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.jetbrains.kotlin:kotlin-stdlib:1.9.22:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.jetbrains:annotations:13.0:runtime

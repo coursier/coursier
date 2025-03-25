@@ -19,7 +19,7 @@ object SbtMavenRepository {
       authentication = authentication,
       changing = None,
       versionsCheckHasModule = true,
-      checkModule = false
+      checkModule = true
     )
 
   def apply(repo: MavenRepository): SbtMavenRepository =
@@ -131,7 +131,7 @@ object SbtMavenRepository {
   val changing: Option[Boolean] = None,
   override val versionsCheckHasModule: Boolean = true,
   @since("2.1.25")
-  checkModule: Boolean = false
+  checkModule: Boolean = true
 ) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi { self =>
 
   private val internal =
