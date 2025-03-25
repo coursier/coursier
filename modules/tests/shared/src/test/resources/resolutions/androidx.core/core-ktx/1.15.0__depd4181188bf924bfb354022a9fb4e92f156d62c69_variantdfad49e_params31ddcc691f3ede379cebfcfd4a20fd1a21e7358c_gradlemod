@@ -64,7 +64,6 @@ androidx.annotation:annotation-jvm:1.8.1:{ org.gradle.category=library, org.grad
 androidx.startup:startup-runtime:1.1.1:{ org.gradle.category=library, org.gradle.usage=java-runtime, org.jetbrains.kotlin.platform.type=jvm }
 androidx.collection:collection-jvm:1.4.4:{ org.gradle.category=library, org.gradle.usage=runtime }
 androidx.lifecycle:lifecycle-livedata-core:2.6.1:{ org.gradle.category=library, org.gradle.usage=java-runtime, org.jetbrains.kotlin.platform.type=jvm }
-org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.7.3:runtime
 org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.20:runtime
 androidx.compose.animation:animation:1.7.0:{ org.gradle.category=library, org.gradle.usage=java-runtime, org.jetbrains.kotlin.platform.type=jvm }
 org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.20:runtime

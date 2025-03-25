@@ -187,4 +187,19 @@ import dataclass.data
 
     rules ++ fromReconciliation
   }
+
+  /** Add variant attributes to be taken into account when picking Gradle Module variants
+    */
+  def addVariantAttributes(attributes: (String, VariantSelector.VariantMatcher)*)
+    : ResolutionParams =
+    withDefaultVariantAttributes(
+      finalDefaultVariantAttributes.addAttributes(attributes: _*)
+    )
+
+  def finalDefaultVariantAttributes: VariantSelector.AttributesBased =
+    defaultVariantAttributes.getOrElse(
+      VariantSelector.ConfigurationBased(defaultConfiguration)
+        .equivalentAttributesSelector
+        .getOrElse(VariantSelector.AttributesBased.empty)
+    )
 }

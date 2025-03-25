@@ -1786,17 +1786,29 @@ object Resolution {
 
       val modules = withProperties0(
         project0.dependencies0 ++
-          project0.dependencyManagement.map { case (c, d) => (Variant.Configuration(c), d) } ++
+          project0.dependencyManagement0 ++
           profileDependencies.map { case (c, d) => (Variant.Configuration(c), d) },
         propertiesMap0
       ).collect {
-        case (v: Variant.Configuration, dep) if v.configuration == Configuration.`import` =>
+        case (v, dep) if isImport(v, dep) =>
           dep.moduleVersionConstraint
       }
 
       modules.toSet
     }
   }
+
+  private def isImport(variant: Variant, dep: Dependency): Boolean =
+    variant match {
+      case v: Variant.Configuration =>
+        v.configuration == Configuration.`import`
+      case _: Variant.Attributes =>
+        dep.variantSelector match {
+          case _: VariantSelector.ConfigurationBased => false
+          case attr: VariantSelector.AttributesBased =>
+            attr.equivalentConfiguration.exists(_ == Configuration.`import`)
+        }
+    }
 
   @deprecated("Use dependencyManagementRequirements0 instead", "2.1.25")
   def dependencyManagementRequirements(
@@ -1932,9 +1944,9 @@ object Resolution {
 
       val (importDeps0, standardDeps0) = dependencies0
         .map { dep =>
-          val dep0 = withProperties(dep, propertiesMap0)
-          if (dep0._1.asConfiguration.exists(_ == Configuration.`import`))
-            (dep0._2 :: Nil, Nil)
+          val (v0, dep0) = withProperties(dep, propertiesMap0)
+          if (isImport(v0, dep0))
+            (dep0 :: Nil, Nil)
           else
             (Nil, dep :: Nil) // not dep0 (properties with be substituted later)
         }
@@ -1946,13 +1958,18 @@ object Resolution {
     val importDepsMgmt = {
 
       val dependenciesMgmt0 = addDependencies(
-        (project0.dependencyManagement +: profiles.map(_.dependencyManagement))
-          .map(_.map { case (c, d) => (Variant.Configuration(c), d) })
+        project0.dependencyManagement0 +:
+          profiles.map { profile =>
+            profile.dependencyManagement.map {
+              case (c, d) =>
+                (Variant.Configuration(c), d)
+            }
+          }
       )
 
       dependenciesMgmt0.flatMap { dep =>
         val (conf0, dep0) = withProperties(dep, propertiesMap0)
-        if (conf0.asConfiguration.exists(_ == Configuration.`import`))
+        if (isImport(conf0, dep0))
           dep0 :: Nil
         else
           Nil
@@ -1977,8 +1994,29 @@ object Resolution {
     val retainedImportProjects = retainedImportDeps.map(projectCache0(_)._2)
 
     val depMgmtInputs =
-      (project0.dependencyManagement +: profiles.map(_.dependencyManagement))
-        .map(_.filter(_._1 != Configuration.`import`))
+      (
+        project0
+          .dependencyManagement0
+          .filter {
+            case (variant, dep) =>
+              !isImport(variant, dep)
+          }
+          .map {
+            case (variant, dep) =>
+              val config = variant match {
+                case c: Variant.Configuration =>
+                  c.configuration
+                case attr: Variant.Attributes =>
+                  project0.equivalentConfigurations.getOrElse(attr, Configuration.empty)
+              }
+              config -> dep
+          } +:
+          profiles.map { profile =>
+            profile
+              .dependencyManagement
+              .filter(_._1 != Configuration.`import`)
+          }
+      )
         .filter(_.nonEmpty)
         .map { input =>
           Overrides(
@@ -2017,7 +2055,7 @@ object Resolution {
             .toSeq
             .flatMap(projectCache0(_)._2.dependencies0)
       )
-      .withDependencyManagement(Nil)
+      .withDependencyManagement0(Nil)
       .withOverrides(depMgmt)
       .withProperties(
         retainedParentProjects.flatMap(_.properties) ++ project0.properties

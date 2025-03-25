@@ -112,7 +112,7 @@ object PomParser {
     var packagingOpt = Option.empty[Type]
 
     val dependencies         = new ListBuffer[(Variant, Dependency)]
-    val dependencyManagement = new ListBuffer[(Configuration, Dependency)]
+    val dependencyManagement = new ListBuffer[(Variant, Dependency)]
 
     val properties = new ListBuffer[(String, String)]
 
@@ -252,7 +252,10 @@ object PomParser {
             publication,
             scmOpt,
             licenseInfo.toSeq
-          )
+          ),
+          Overrides.empty,
+          Map.empty,
+          Map.empty
         )
       }
     }
@@ -336,7 +339,7 @@ object PomParser {
   ) ++ dependencyHandlers(
     "dependency" :: "dependencies" :: "dependencyManagement" :: "project" :: Nil,
     (s, c, d) =>
-      s.dependencyManagement += c -> d
+      s.dependencyManagement += Variant.Configuration(c) -> d
   ) ++ propertyHandlers(
     "properties" :: "project" :: Nil,
     (s, k, v) =>

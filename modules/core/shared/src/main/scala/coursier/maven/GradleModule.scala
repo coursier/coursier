@@ -30,18 +30,53 @@ import coursier.core.VariantPublication
 ) {
   def project: Project = {
 
-    def variantDependencies(variant: GradleModule.Variant) = {
+    def variantDependencies(variant: GradleModule.Variant, constraints: Boolean = false) = {
       val variant0 = Variant.Attributes(variant.name)
-      variant.dependencies.map { dep =>
-        val version = dep.version.toSeq match {
-          case Seq(("requires", req)) => VersionConstraint(req)
-          case _ => sys.error(s"Unrecognized dependency version shape: ${dep.version}")
+      val deps =
+        if (constraints) variant.dependencyConstraints
+        else variant.dependencies
+      deps.map { dep =>
+        val versionMap = {
+          var map = dep.version
+          if (map.contains("strictly") && map.contains("requires"))
+            map = map - "requires"
+          if (map.contains("strictly") && map.contains("reject"))
+            map = map - "reject"
+          if (map.contains("prefers") && map.contains("reject"))
+            map = map - "reject"
+          map
+        }
+        val prefersOpt = versionMap.get("prefers").flatMap { v =>
+          val c = VersionConstraint(v)
+          if (c.preferred.isEmpty) None
+          else Some(c)
+        }
+        val versionMap0 =
+          if (prefersOpt.isEmpty) versionMap
+          else versionMap - "prefers"
+        val version = versionMap0.toSeq match {
+          case Seq(("requires" | "strictly", req)) => VersionConstraint(req)
+          case _ =>
+            sys.error(s"Unrecognized dependency version shape: $versionMap0")
+        }
+
+        val finalVersion = prefersOpt match {
+          case Some(prefers) =>
+            VersionConstraint.merge(version, prefers).getOrElse {
+              sys.error(s"Invalid version specification: $versionMap0")
+            }
+          case None => version
         }
 
         variant0 -> Dependency(
           Module(Organization(dep.group), ModuleName(dep.module), Map.empty),
-          version,
-          VariantSelector.AttributesBased(Map.empty),
+          finalVersion,
+          VariantSelector.AttributesBased(
+            dep.attributes.map {
+              case (k, v) =>
+                VariantSelector.VariantMatcher.fromString(k, v.value)
+            }
+          ),
           MinimizedExclusions.zero,
           publication = Publication("", Type.empty, Extension.empty, Classifier.empty),
           optional = false,
@@ -72,9 +107,19 @@ import coursier.core.VariantPublication
     }
 
     val dependencies = relocationDependencies ++
-      variants.flatMap(variantDependencies)
+      variants.flatMap(variantDependencies(_))
+    val dependencyManagement =
+      variants.flatMap(variantDependencies(_, constraints = true))
 
     val variantsMap = variants
+      .filter { variant =>
+        variant.capabilities.isEmpty ||
+        variant.capabilities.exists { capability =>
+          capability.group == component.group &&
+          capability.name == component.module &&
+          (capability.version.isEmpty || capability.version == component.version)
+        }
+      }
       .map { variant =>
         val relocationEntries =
           if (variant.`available-at`.isEmpty) Nil
@@ -98,7 +143,7 @@ import coursier.core.VariantPublication
       dependencies0 = dependencies,
       configurations = GradleModule.defaultConfigurations,
       parent0 = None,
-      dependencyManagement = Nil,
+      dependencyManagement0 = dependencyManagement,
       properties = Nil,
       profiles = Nil,
       versions = None,
@@ -115,7 +160,9 @@ import coursier.core.VariantPublication
         scm = None,
         licenseInfo = Nil
       ),
-      overrides = Overrides.empty
+      overrides = Overrides.empty,
+      variants = Map.empty,
+      variantPublications = Map.empty
     )
 
     baseProject
@@ -166,8 +213,10 @@ object GradleModule {
     name: String,
     attributes: Map[String, StringOrInt],
     dependencies: Seq[ModuleDependency],
+    dependencyConstraints: Seq[ModuleDependency],
     files: Seq[ModuleFile],
-    `available-at`: Option[AvailableAt] = None
+    `available-at`: Option[AvailableAt] = None,
+    capabilities: Seq[Capability]
   ) {
     lazy val attributesMap = attributes.map {
       case (k, v) =>
@@ -185,23 +234,31 @@ object GradleModule {
   @data class ModuleDependency(
     group: String,
     module: String,
-    version: Map[String, String]
+    version: Map[String, String],
+    attributes: Map[String, StringOrInt],
+    endorseStrictVersions: Option[Boolean]
   )
 
   @data class ModuleFile(
     name: String,
     url: String,
-    size: Long,
-    sha512: String = "",
-    sha256: String = "",
-    sha1: String = "",
-    md5: String = ""
+    size: Option[Long] = None,
+    sha512: Option[String] = None,
+    sha256: Option[String] = None,
+    sha1: Option[String] = None,
+    md5: Option[String] = None
   )
 
   @data class AvailableAt(
     url: String,
     group: String,
     module: String,
+    version: String
+  )
+
+  @data class Capability(
+    group: String,
+    name: String,
     version: String
   )
 

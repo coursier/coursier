@@ -74,29 +74,34 @@ object VariantSelector {
       else None
     }
 
-    def equivalentConfiguration: Option[Configuration] = {
-      val isCompile = matchers
-        .get("org.gradle.usage")
-        .exists { v =>
-          v == VariantMatcher.Equals("api") ||
-          v == VariantMatcher.Equals("java-api") ||
-          v == VariantMatcher.Equals("kotlin-api") ||
-          v == VariantMatcher.EndsWith("-api") ||
-          v == VariantMatcher.Api
-        }
-      val isRuntime = matchers
-        .get("org.gradle.usage")
-        .exists { v =>
-          v == VariantMatcher.Equals("runtime") ||
-          v == VariantMatcher.Equals("java-runtime") ||
-          v == VariantMatcher.Equals("kotlin-runtime") ||
-          v == VariantMatcher.EndsWith("-runtime") ||
-          v == VariantMatcher.Runtime
-        }
-      if (isCompile) Some(Configuration.compile)
-      else if (isRuntime) Some(Configuration.runtime)
-      else None
-    }
+    def equivalentConfiguration: Option[Configuration] =
+      if (matchers.get("org.gradle.category").contains(VariantMatcher.Library)) {
+        val isCompile = matchers
+          .get("org.gradle.usage")
+          .exists { v =>
+            v == VariantMatcher.Equals("api") ||
+            v == VariantMatcher.Equals("java-api") ||
+            v == VariantMatcher.Equals("kotlin-api") ||
+            v == VariantMatcher.EndsWith("-api") ||
+            v == VariantMatcher.Api
+          }
+        val isRuntime = matchers
+          .get("org.gradle.usage")
+          .exists { v =>
+            v == VariantMatcher.Equals("runtime") ||
+            v == VariantMatcher.Equals("java-runtime") ||
+            v == VariantMatcher.Equals("kotlin-runtime") ||
+            v == VariantMatcher.EndsWith("-runtime") ||
+            v == VariantMatcher.Runtime
+          }
+        if (isCompile) Some(Configuration.compile)
+        else if (isRuntime) Some(Configuration.runtime)
+        else None
+      }
+      else if (matchers.get("org.gradle.category").contains(VariantMatcher.Platform))
+        Some(Configuration.`import`)
+      else
+        None
 
     def addAttributes(attributes: (String, VariantSelector.VariantMatcher)*): AttributesBased =
       if (attributes.isEmpty) this
@@ -153,7 +158,8 @@ object VariantSelector {
       def repr: String = s"*$suffix"
     }
 
-    val Library: VariantMatcher = Equals("library")
+    val Library: VariantMatcher  = Equals("library")
+    val Platform: VariantMatcher = Equals("platform")
 
     def fromString(key: String, value: String): (String, VariantMatcher) =
       if (key.endsWith("!"))

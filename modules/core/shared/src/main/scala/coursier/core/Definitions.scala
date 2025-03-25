@@ -258,7 +258,7 @@ object Attributes {
 
   // Maven-specific
   parent0: Option[(Module, Version0)],
-  dependencyManagement: Seq[(Configuration, Dependency)],
+  dependencyManagement0: Seq[(Variant, Dependency)],
   properties: Seq[(String, String)],
   profiles: Seq[Profile],
   versions: Option[Versions],
@@ -273,11 +273,9 @@ object Attributes {
 
   // Extra infos, not used during resolution
   info: Info,
-  @since("2.1.23")
-  overrides: Overrides = Overrides.empty,
-  @since("2.1.25")
-  variants: Map[Variant.Attributes, Map[String, String]] = Map.empty,
-  variantPublications: Map[Variant.Attributes, Seq[VariantPublication]] = Map.empty
+  overrides: Overrides,
+  variants: Map[Variant.Attributes, Map[String, String]],
+  variantPublications: Map[Variant.Attributes, Seq[VariantPublication]]
 ) {
 
   @deprecated("Use dependencies0 instead", "2.1.25")
@@ -342,7 +340,10 @@ object Attributes {
       },
       configurations,
       parent.map { case (mod, ver) => (mod, Version0(ver)) },
-      dependencyManagement,
+      dependencyManagement.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
       properties,
       profiles,
       versions,
@@ -355,7 +356,9 @@ object Attributes {
           (Variant.Configuration(config), dep)
       },
       info,
-      overrides
+      overrides,
+      Map.empty,
+      Map.empty
     )
 
   @deprecated("Use the override accepting Version-s instead", "2.1.25")
@@ -385,7 +388,10 @@ object Attributes {
       },
       configurations,
       parent.map { case (mod, ver) => (mod, Version0(ver)) },
-      dependencyManagement,
+      dependencyManagement.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
       properties,
       profiles,
       versions,
@@ -397,7 +403,10 @@ object Attributes {
         case (config, dep) =>
           (Variant.Configuration(config), dep)
       },
-      info
+      info,
+      Overrides.empty,
+      Map.empty,
+      Map.empty
     )
 
   @deprecated("Use moduleVersion0 instead", "2.1.25")
@@ -434,6 +443,23 @@ object Attributes {
   def withActualVersionOpt(newParent: Option[String]): Project =
     withActualVersionOpt0(newParent.map(Version0(_)))
 
+  @deprecated("Use dependencyManagement0 instead", "2.1.25")
+  def dependencyManagement: Seq[(Configuration, Dependency)] =
+    dependencyManagement0.map {
+      case (c: Variant.Configuration, dep) =>
+        (c.configuration, dep)
+      case (_: Variant.Attributes, _) =>
+        sys.error("Deprecated method doesn't support Gradle Module variant attributes")
+    }
+  @deprecated("Use withDependencyManagement0 instead", "2.1.25")
+  def withDependencyManagement(dependencyManagement: Seq[(Configuration, Dependency)]): Project =
+    withDependencyManagement0(
+      dependencyManagement.map {
+        case (c, dep) =>
+          (Variant.Configuration(c), dep)
+      }
+    )
+
   /** All configurations that each configuration extends, including the ones it extends transitively
     */
   lazy val allConfigurations: Map[Configuration, Set[Configuration]] =
@@ -450,23 +476,39 @@ object Attributes {
 
   def variantFor(attr: VariantSelector.AttributesBased)
     : Either[VariantError, Variant.Attributes] = {
-    val retainedVariants = variants
+    def retainedVariantsFor(attr0: VariantSelector.AttributesBased) = variants
       .iterator
       .map {
         case (name, values) =>
-          (name, attr.matches(values))
+          (name, attr0.matches(values))
       }
       .collect {
         case (name, Some(score)) =>
           (name, score)
       }
       .toVector
+    val baseRetainedVariants = retainedVariantsFor(attr)
+    def isModuleBasedBom =
+      dependencies0.isEmpty && (dependencyManagement0.nonEmpty || !overrides.isEmpty) &&
+      variants.nonEmpty
+    val (actualAttr, retainedVariants) =
+      if (
+        baseRetainedVariants.isEmpty &&
+        isModuleBasedBom && attr.matchers.get("org.gradle.category")
+          .contains(VariantSelector.VariantMatcher.Library)
+      ) {
+        val attr0 =
+          attr.addAttributes("org.gradle.category" -> VariantSelector.VariantMatcher.Platform)
+        (attr0, retainedVariantsFor(attr0))
+      }
+      else
+        (attr, baseRetainedVariants)
     if (retainedVariants.isEmpty)
       Left(
         new VariantError.NoVariantFound(
           module,
           actualVersion0,
-          attr,
+          actualAttr,
           variants.toVector.sortBy(_._1.variantName)
         )
       )
@@ -484,7 +526,7 @@ object Attributes {
           new VariantError.FoundTooManyVariants(
             module,
             actualVersion0,
-            attr,
+            actualAttr,
             variants
               .filter {
                 case (k, v) =>
@@ -504,6 +546,14 @@ object Attributes {
       firstDeps.length == 1
     if (isRelocated) Some(firstDeps.head._2)
     else None
+  }
+
+  lazy val equivalentConfigurations = variants.flatMap {
+    case (attr, map) =>
+      val attr0 = VariantSelector.AttributesBased(
+        map.map { case (k, v) => VariantSelector.VariantMatcher.fromString(k, v) }
+      )
+      attr0.equivalentConfiguration.toSeq.map(attr -> _)
   }
 
   final override lazy val hashCode = tuple.hashCode
@@ -538,7 +588,10 @@ object Project {
       },
       configurations,
       parent.map { case (mod, ver) => (mod, Version0(ver)) },
-      dependencyManagement,
+      dependencyManagement.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
       properties,
       profiles,
       versions,
@@ -550,7 +603,10 @@ object Project {
         case (config, dep) =>
           (Variant.Configuration(config), dep)
       },
-      info
+      info,
+      Overrides.empty,
+      Map.empty,
+      Map.empty
     )
   @deprecated("Use the override accepting Version-s instead", "2.1.25")
   def apply(
@@ -580,7 +636,10 @@ object Project {
       },
       configurations,
       parent.map { case (mod, ver) => (mod, Version0(ver)) },
-      dependencyManagement,
+      dependencyManagement.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
       properties,
       profiles,
       versions,
@@ -593,7 +652,9 @@ object Project {
           (Variant.Configuration(config), dep)
       },
       info,
-      overrides
+      overrides,
+      Map.empty,
+      Map.empty
     )
 }
 

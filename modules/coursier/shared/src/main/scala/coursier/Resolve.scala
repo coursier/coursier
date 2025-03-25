@@ -21,7 +21,7 @@ import coursier.core.{
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.internal.Typelevel
-import coursier.maven.MavenRepository
+import coursier.maven.MavenRepositoryLike
 import coursier.params.{Mirror, MirrorConfFile, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
@@ -105,8 +105,8 @@ import scala.language.higherKinds
       case None => repositories0
       case Some(enable) =>
         repositories0.map {
-          case m: MavenRepository => m.withCheckModule(enable)
-          case other              => other
+          case m: MavenRepositoryLike.WithModuleSupport => m.withCheckModule(enable)
+          case other                                    => other
         }
     }
     allMirrors.map(Mirror.replace(repositories1, _))
@@ -188,6 +188,13 @@ import scala.language.higherKinds
 
   def withGradleModuleSupport(enable: Boolean): Resolve[F] =
     withGradleModuleSupport(Some(enable))
+
+  /** Add variant attributes to be taken into account when picking Gradle Module variants
+    */
+  def addVariantAttributes(attributes: (String, VariantSelector.VariantMatcher)*): Resolve[F] =
+    withResolutionParams(
+      resolutionParams.addVariantAttributes(attributes: _*)
+    )
 
   private def allMirrors0 =
     mirrors ++
@@ -445,9 +452,7 @@ object Resolve extends PlatformResolve {
       .withExtraProperties(params.properties)
       .withForceProperties(params.forcedProperties)
       .withDefaultConfiguration(params.defaultConfiguration)
-      .withDefaultVariantAttributes(
-        params.defaultVariantAttributes.getOrElse(VariantSelector.AttributesBased.empty)
-      )
+      .withDefaultVariantAttributes(params.finalDefaultVariantAttributes)
       .withKeepProvidedDependencies(params.keepProvidedDependencies.getOrElse(false))
       .withForceDepMgmtVersions(params.forceDepMgmtVersions.getOrElse(false))
       .withEnableDependencyOverrides(

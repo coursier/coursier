@@ -64,14 +64,18 @@ object WritePom {
             </dependencies>
         }
         {
-          if (proj.dependencyManagement.isEmpty)
+          if (proj.dependencyManagement0.isEmpty)
             Nil
           else
             <dependencyManagement>
               <dependencies>
                 {
-                  proj.dependencyManagement.map {
-                    case (config, dep) =>
+                  proj.dependencyManagement0.map {
+                    case (variant, dep) =>
+                      val config = variant match {
+                        case c: Variant.Configuration => c.configuration
+                        case _: Variant.Attributes => Configuration.empty
+                      }
                       dependencyNode(config, dep)
                   }
                 }

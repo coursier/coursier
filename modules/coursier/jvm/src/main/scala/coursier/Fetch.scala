@@ -13,7 +13,8 @@ import coursier.core.{
   Resolution,
   ResolutionProcess,
   Type,
-  VariantPublication
+  VariantPublication,
+  VariantSelector
 }
 import coursier.error.CoursierError
 import coursier.internal.FetchCache
@@ -220,6 +221,15 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 
   def withGradleModuleSupport(enable: Boolean): Fetch[F] =
     withResolve(resolve.withGradleModuleSupport(Some(enable)))
+
+  /** Add variant attributes to be taken into account when picking Gradle Module variants
+    */
+  def addVariantAttributes(attributes: (String, VariantSelector.VariantMatcher)*): Fetch[F] =
+    withResolve {
+      resolve.withResolutionParams(
+        resolve.resolutionParams.addVariantAttributes(attributes: _*)
+      )
+    }
 
   def ioResult: F[Fetch.Result] = {
 

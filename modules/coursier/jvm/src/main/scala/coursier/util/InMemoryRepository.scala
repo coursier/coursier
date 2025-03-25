@@ -257,7 +257,10 @@ object InMemoryRepository {
                 relocated = false,
                 None,
                 Nil,
-                Info.empty
+                Info.empty,
+                Overrides.empty,
+                Map.empty,
+                Map.empty
               )
 
               Right((this, proj))
