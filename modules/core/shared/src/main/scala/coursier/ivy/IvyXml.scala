@@ -335,7 +335,10 @@ object IvyXml {
           Nil,
           publicationDate,
           None
-        )
+        ),
+        Overrides.empty,
+        Map.empty,
+        Map.empty
       )
     }
 

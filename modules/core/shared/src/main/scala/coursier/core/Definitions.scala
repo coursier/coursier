@@ -273,11 +273,9 @@ object Attributes {
 
   // Extra infos, not used during resolution
   info: Info,
-  @since("2.1.23")
-  overrides: Overrides = Overrides.empty,
-  @since("2.1.25")
-  variants: Map[Variant.Attributes, Map[String, String]] = Map.empty,
-  variantPublications: Map[Variant.Attributes, Seq[VariantPublication]] = Map.empty
+  overrides: Overrides,
+  variants: Map[Variant.Attributes, Map[String, String]],
+  variantPublications: Map[Variant.Attributes, Seq[VariantPublication]]
 ) {
 
   @deprecated("Use dependencies0 instead", "2.1.25")
@@ -355,7 +353,9 @@ object Attributes {
           (Variant.Configuration(config), dep)
       },
       info,
-      overrides
+      overrides,
+      Map.empty,
+      Map.empty
     )
 
   @deprecated("Use the override accepting Version-s instead", "2.1.25")
@@ -397,7 +397,10 @@ object Attributes {
         case (config, dep) =>
           (Variant.Configuration(config), dep)
       },
-      info
+      info,
+      Overrides.empty,
+      Map.empty,
+      Map.empty
     )
 
   @deprecated("Use moduleVersion0 instead", "2.1.25")
@@ -550,7 +553,10 @@ object Project {
         case (config, dep) =>
           (Variant.Configuration(config), dep)
       },
-      info
+      info,
+      Overrides.empty,
+      Map.empty,
+      Map.empty
     )
   @deprecated("Use the override accepting Version-s instead", "2.1.25")
   def apply(
@@ -593,7 +599,9 @@ object Project {
           (Variant.Configuration(config), dep)
       },
       info,
-      overrides
+      overrides,
+      Map.empty,
+      Map.empty
     )
 }
 

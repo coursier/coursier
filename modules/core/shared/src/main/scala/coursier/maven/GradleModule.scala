@@ -115,7 +115,9 @@ import coursier.core.VariantPublication
         scm = None,
         licenseInfo = Nil
       ),
-      overrides = Overrides.empty
+      overrides = Overrides.empty,
+      variants = Map.empty,
+      variantPublications = Map.empty
     )
 
     baseProject

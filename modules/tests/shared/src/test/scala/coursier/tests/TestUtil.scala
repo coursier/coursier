@@ -136,7 +136,10 @@ object TestUtil {
         relocated,
         None,
         publications,
-        Info.empty
+        Info.empty,
+        Overrides.empty,
+        Map.empty,
+        Map.empty
       )
   }
 }

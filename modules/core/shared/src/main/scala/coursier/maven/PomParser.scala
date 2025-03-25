@@ -252,7 +252,10 @@ object PomParser {
             publication,
             scmOpt,
             licenseInfo.toSeq
-          )
+          ),
+          Overrides.empty,
+          Map.empty,
+          Map.empty
         )
       }
     }

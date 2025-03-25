@@ -11,6 +11,7 @@ import coursier.core.{
   Module,
   ModuleName,
   Organization,
+  Overrides,
   Profile,
   Project,
   SnapshotVersion,
@@ -346,7 +347,10 @@ object Pom {
           developers,
           None,
           scm
-        )
+        ),
+        Overrides.empty,
+        Map.empty,
+        Map.empty
       )
     }
 
