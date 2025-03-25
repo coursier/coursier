@@ -90,12 +90,13 @@ trait Doc extends ScalaModule {
 
     def runMdoc(): Unit =
       // adapted from https://github.com/com-lihaoyi/mill/blob/c500ca986ab79af3ce59ba65a093146672092307/scalalib/src/JavaModule.scala#L488-L494
-      mill.util.Jvm.callProcess(
-        mainClass = finalMainClass(),
-        classPath = runClasspath().map(_.path),
-        env = forkEnv(),
-        mainArgs = allArgs,
-        cwd = forkWorkingDir()
+      mill.util.Jvm.runSubprocess(
+        finalMainClass(),
+        runClasspath().map(_.path),
+        Nil,
+        forkEnv(),
+        allArgs,
+        workingDir = forkWorkingDir()
       )
 
     if (watch)
