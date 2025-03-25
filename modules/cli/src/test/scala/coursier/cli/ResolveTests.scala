@@ -114,7 +114,7 @@ object ResolveTests extends TestSuite {
           |            └─ org.apache.spark:spark-sql_2.12:2.4.0
           |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("print what depends on with regex") {
@@ -150,7 +150,7 @@ object ResolveTests extends TestSuite {
           |            └─ org.apache.spark:spark-sql_2.12:2.4.0
           |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("print results anyway") {
@@ -196,7 +196,7 @@ object ResolveTests extends TestSuite {
            |org.scala-lang.modules:scala-xml_2.12:1.1.0:default
            |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("resolve sbt plugins") {
@@ -343,7 +343,7 @@ object ResolveTests extends TestSuite {
           |org.vafer:jdeb:1.3:default
           |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("resolve sbt 0.13 plugins") {
@@ -366,7 +366,7 @@ object ResolveTests extends TestSuite {
       val expectedOutput =
         "org.scalameta:sbt-metals;sbtVersion=0.13;scalaVersion=2.10:0.7.0:default\n"
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("resolve the main artifact first in classpath order") {
@@ -416,7 +416,7 @@ object ResolveTests extends TestSuite {
           |https://repo1.maven.org/maven2/com/chuusai/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.jar
           |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("exclude root dependencies") {
@@ -451,7 +451,7 @@ object ResolveTests extends TestSuite {
           |org.scala-lang:scala-library:2.13.2:default
           |org.scala-lang:scala-reflect:2.13.2:default
           |""".stripMargin
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("ignore binary scala version") {
