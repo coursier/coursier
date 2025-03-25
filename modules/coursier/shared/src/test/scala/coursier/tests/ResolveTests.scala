@@ -2182,6 +2182,9 @@ object ResolveTests extends TestSuite {
           dep"io.quarkus:quarkus-junit5:3.15.1"
         )
       }
+      test("quarkus-rest-assured") {
+        gradleModuleCheck(dep"io.rest-assured:rest-assured:5.5.0")
+      }
     }
 
     test("empty version") {

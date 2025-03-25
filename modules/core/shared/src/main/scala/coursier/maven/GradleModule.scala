@@ -85,6 +85,14 @@ import coursier.core.VariantPublication
       variants.flatMap(variantDependencies(_, constraints = true))
 
     val variantsMap = variants
+      .filter { variant =>
+        variant.capabilities.isEmpty ||
+        variant.capabilities.exists { capability =>
+          capability.group == component.group &&
+          capability.name == component.module &&
+          (capability.version.isEmpty || capability.version == component.version)
+        }
+      }
       .map { variant =>
         val relocationEntries =
           if (variant.`available-at`.isEmpty) Nil
@@ -180,7 +188,8 @@ object GradleModule {
     dependencies: Seq[ModuleDependency],
     dependencyConstraints: Seq[ModuleDependency],
     files: Seq[ModuleFile],
-    `available-at`: Option[AvailableAt] = None
+    `available-at`: Option[AvailableAt] = None,
+    capabilities: Seq[Capability]
   ) {
     lazy val attributesMap = attributes.map {
       case (k, v) =>
@@ -217,6 +226,12 @@ object GradleModule {
     url: String,
     group: String,
     module: String,
+    version: String
+  )
+
+  @data class Capability(
+    group: String,
+    name: String,
     version: String
   )
 
