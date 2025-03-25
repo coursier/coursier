@@ -206,11 +206,11 @@ object GradleModule {
   @data class ModuleFile(
     name: String,
     url: String,
-    size: Long,
-    sha512: String = "",
-    sha256: String = "",
-    sha1: String = "",
-    md5: String = ""
+    size: Option[Long] = None,
+    sha512: Option[String] = None,
+    sha256: Option[String] = None,
+    sha1: Option[String] = None,
+    md5: Option[String] = None
   )
 
   @data class AvailableAt(

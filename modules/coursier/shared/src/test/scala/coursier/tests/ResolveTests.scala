@@ -2174,6 +2174,14 @@ object ResolveTests extends TestSuite {
           dep"io.quarkus:quarkus-rest-jackson:3.15.1"
         )
       }
+      test("quarkus-junit5") {
+        val resolve0 = resolve.addVariantAttributes(
+          "org.gradle.jvm.environment" -> VariantSelector.VariantMatcher.Equals("standard-jvm")
+        )
+        gradleModuleCheck0(resolve0 = resolve0)(
+          dep"io.quarkus:quarkus-junit5:3.15.1"
+        )
+      }
     }
 
     test("empty version") {
