@@ -36,7 +36,7 @@ object ResolutionError {
     s"Error downloading $module:${versionConstraint.asString}" + System.lineSeparator() +
       perRepositoryErrors
         .map { err =>
-          "  " + err.replace(System.lineSeparator(), "  " + System.lineSeparator())
+          "  " + err.replace(System.lineSeparator(), System.lineSeparator() + "  ")
         }
         .mkString(System.lineSeparator())
   ) {
