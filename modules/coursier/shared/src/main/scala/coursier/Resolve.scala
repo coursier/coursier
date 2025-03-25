@@ -189,6 +189,13 @@ import scala.language.higherKinds
   def withGradleModuleSupport(enable: Boolean): Resolve[F] =
     withGradleModuleSupport(Some(enable))
 
+  /** Add variant attributes to be taken into account when picking Gradle Module variants
+    */
+  def addVariantAttributes(attributes: (String, VariantSelector.VariantMatcher)*): Resolve[F] =
+    withResolutionParams(
+      resolutionParams.addVariantAttributes(attributes: _*)
+    )
+
   private def allMirrors0 =
     mirrors ++
       mirrorConfFiles.flatMap(_.mirrors()) ++
