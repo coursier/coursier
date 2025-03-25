@@ -36,14 +36,41 @@ import coursier.core.VariantPublication
         if (constraints) variant.dependencyConstraints
         else variant.dependencies
       deps.map { dep =>
-        val version = dep.version.toSeq match {
-          case Seq(("requires", req)) => VersionConstraint(req)
-          case _ => sys.error(s"Unrecognized dependency version shape: ${dep.version}")
+        val versionMap = {
+          var map = dep.version
+          if (map.contains("strictly") && map.contains("requires"))
+            map = map - "requires"
+          if (map.contains("strictly") && map.contains("reject"))
+            map = map - "reject"
+          if (map.contains("prefers") && map.contains("reject"))
+            map = map - "reject"
+          map
+        }
+        val prefersOpt = versionMap.get("prefers").flatMap { v =>
+          val c = VersionConstraint(v)
+          if (c.preferred.isEmpty) None
+          else Some(c)
+        }
+        val versionMap0 =
+          if (prefersOpt.isEmpty) versionMap
+          else versionMap - "prefers"
+        val version = versionMap0.toSeq match {
+          case Seq(("requires" | "strictly", req)) => VersionConstraint(req)
+          case _ =>
+            sys.error(s"Unrecognized dependency version shape: $versionMap0")
+        }
+
+        val finalVersion = prefersOpt match {
+          case Some(prefers) =>
+            VersionConstraint.merge(version, prefers).getOrElse {
+              sys.error(s"Invalid version specification: $versionMap0")
+            }
+          case None => version
         }
 
         variant0 -> Dependency(
           Module(Organization(dep.group), ModuleName(dep.module), Map.empty),
-          version,
+          finalVersion,
           VariantSelector.AttributesBased(
             dep.attributes.map {
               case (k, v) =>

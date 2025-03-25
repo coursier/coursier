@@ -2185,6 +2185,20 @@ object ResolveTests extends TestSuite {
       test("quarkus-rest-assured") {
         gradleModuleCheck(dep"io.rest-assured:rest-assured:5.5.0")
       }
+
+      test("scalatest-play") {
+        val resolve0 = resolve
+          .addVariantAttributes(
+            "org.gradle.jvm.environment" -> VariantSelector.VariantMatcher.Equals("standard-jvm"),
+            "org.gradle.dependency.bundling" -> VariantSelector.VariantMatcher.Equals("external")
+          )
+          .addBomConfigs(
+            dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency
+          )
+        gradleModuleCheck0(resolve0 = resolve0)(
+          dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
+        )
+      }
     }
 
     test("empty version") {
