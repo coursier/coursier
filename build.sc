@@ -297,7 +297,8 @@ trait CacheJvm extends CacheJvmBase {
     Deps.plexusContainerDefault,
     Deps.scalaCliConfig,
     Deps.tika,
-    Deps.windowsAnsi
+    Deps.windowsAnsi,
+    Deps.xar
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.jsoniterMacros,

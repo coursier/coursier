@@ -65,6 +65,7 @@ object Deps {
   def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
   def windowsAnsiPs =
     ivy"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
+  def xar = ivy"com.sprylab.xar:xar:0.9.11"
 }
 
 object Versions {

@@ -244,6 +244,9 @@ trait CsModule extends SbtModule with CsScalaModule with CoursierJavaModule {
     }
     parent ++ extra
   }
+  def runClasspath = Task {
+    localClasspath() ++ transitiveLocalClasspath() ++ super.runClasspath()
+  }
 }
 
 trait CsCrossJvmJsModule extends CrossSbtModule with CsModule {
