@@ -203,8 +203,7 @@ import scala.util.Using
   def get(artifact: Artifact): F[Either[ArtifactError, File]] = {
     val (dir0, subPaths) = localDir(artifact)
     val artifact0        = artifact.withUrl(artifact.url.takeWhile(_ != '!'))
-    val download: F[Either[ArtifactError, File]] =
-      cache.loggerOpt.getOrElse(CacheLogger.nop).using(cache.file(artifact0).run)
+    val download: F[Either[ArtifactError, File]] = cache.file(artifact0).run
 
     val main = get0(
       dir0,
