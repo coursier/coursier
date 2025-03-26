@@ -9,6 +9,7 @@ import org.graalvm.nativeimage.c.type.CTypeConversion;
 import org.graalvm.nativeimage.Platform;
 import org.graalvm.nativeimage.Platforms;
 
+@Deprecated
 @TargetClass(className = "coursier.jvm.Execve")
 @Platforms({Platform.LINUX.class, Platform.DARWIN.class})
 final class ExecveGraalvm {
