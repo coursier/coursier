@@ -626,6 +626,7 @@ trait Exec extends JavaModule with CoursierPublishModule {
 
 trait Cli extends CsModule
     with CoursierPublishModule with Launchers {
+  def jvmRelease   = "11"
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion213Compat),
