@@ -88,14 +88,15 @@ trait PublishLocalNoFluff extends PublishModule {
 }
 
 trait CoursierJavaModule extends JavaModule {
+  def jvmRelease = "8"
   private def isArm64 =
     Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
       case Some("aarch64" | "arm64") => true
       case _                         => false
     }
   def javacSystemJvmId = T {
-    if (Properties.isMac && isArm64) "zulu:8"
-    else "adoptium:8"
+    if (Properties.isMac && isArm64) s"zulu:$jvmRelease"
+    else s"adoptium:$jvmRelease"
   }
   def javacSystemJvm = T.source {
     val output = os.proc("cs", "java-home", "--jvm", javacSystemJvmId())
@@ -105,9 +106,9 @@ trait CoursierJavaModule extends JavaModule {
     assert(os.isDir(javaHome))
     PathRef(javaHome, quick = true)
   }
-  // adds options equivalent to --release 8 + allowing access to unsupported JDK APIs
+  // adds options equivalent to --release $jvmRelease + allowing access to unsupported JDK APIs
   // (no more straightforward options to achieve that AFAIK)
-  def maybeJdk8JavacOpt = T {
+  def maybeJdkJavacOpt = T {
     val javaHome   = javacSystemJvm().path
     val rtJar      = javaHome / "jre/lib/rt.jar"
     val hasModules = os.isDir(javaHome / "jmods")
@@ -116,10 +117,10 @@ trait CoursierJavaModule extends JavaModule {
     if (hasModules)
       Seq("--system", javaHome.toString)
     else
-      Seq("-source", "8", "-target", "8", "-bootclasspath", rtJar.toString)
+      Seq("-source", jvmRelease, "-target", jvmRelease, "-bootclasspath", rtJar.toString)
   }
   def javacOptions = T {
-    super.javacOptions() ++ maybeJdk8JavacOpt() ++ Seq(
+    super.javacOptions() ++ maybeJdkJavacOpt() ++ Seq(
       "-Xlint:unchecked"
     )
   }
@@ -206,7 +207,7 @@ trait JsTests extends TestScalaJSModule with CsResourcesTests {
   }
 }
 
-trait CsScalaModule extends ScalaModule {
+trait CsScalaModule extends ScalaModule with CoursierJavaModule {
   def scalacOptions = T {
     val sv = scalaVersion()
     val scala212Opts =
@@ -222,7 +223,7 @@ trait CsScalaModule extends ScalaModule {
       "-deprecation",
       "-feature",
       "--release",
-      "8"
+      jvmRelease
     )
   }
   def scalacPluginIvyDeps = T {
