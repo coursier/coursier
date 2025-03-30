@@ -197,6 +197,8 @@ object interop extends Module {
   }
 }
 
+object exec extends Exec
+
 object jvm     extends Cross[Jvm](ScalaVersions.all)
 object install extends Cross[Install](ScalaVersions.all)
 
@@ -583,7 +585,8 @@ trait Jvm extends CrossSbtModule with CsModule
   def artifactName = "coursier-jvm"
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(),
-    env()
+    env(),
+    exec
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.dataClass,
@@ -591,7 +594,6 @@ trait Jvm extends CrossSbtModule with CsModule
     Deps.svm
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
-    Deps.jna,
     Deps.jsoniterCore
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
@@ -612,8 +614,19 @@ trait Jvm extends CrossSbtModule with CsModule
   }
 }
 
+trait Exec extends JavaModule with CoursierPublishModule {
+  def artifactName = "coursier-exec"
+  def ivyDeps = Agg(
+    Deps.jna
+  )
+  def compileIvyDeps = Agg(
+    Deps.svm
+  )
+}
+
 trait Cli extends CsModule
     with CoursierPublishModule with Launchers {
+  def jvmRelease   = "11"
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion213Compat),

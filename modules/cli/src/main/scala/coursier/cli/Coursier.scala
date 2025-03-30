@@ -15,6 +15,7 @@ import io.github.alexarchambault.isterminal.IsTerminal
 
 import java.nio.file.Paths
 import java.util.Scanner
+import sun.misc.{Signal, SignalHandler}
 
 import scala.util.control.NonFatal
 import scala.util.Properties
@@ -72,6 +73,10 @@ object Coursier extends CommandsEntryPoint {
   }
 
   override def main(args: Array[String]): Unit = {
+
+    if (!Properties.isWin && isGraalvmNativeImage)
+      // Ignore SIGPIPE
+      Signal.handle(new Signal("PIPE"), SignalHandler.SIG_IGN)
 
     if (Properties.isWin && isGraalvmNativeImage)
       // The DLL loaded by LoadWindowsLibrary is statically linked in

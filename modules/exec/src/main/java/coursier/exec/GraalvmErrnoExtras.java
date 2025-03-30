@@ -1,4 +1,4 @@
-package coursier.jvm;
+package coursier.exec;
 
 import com.oracle.svm.core.posix.headers.PosixDirectives;
 import org.graalvm.nativeimage.Platform;
@@ -6,7 +6,6 @@ import org.graalvm.nativeimage.Platforms;
 import org.graalvm.nativeimage.c.CContext;
 import org.graalvm.nativeimage.c.constant.CConstant;
 
-@Deprecated
 @CContext(PosixDirectives.class)
 @Platforms({Platform.LINUX.class, Platform.DARWIN.class})
 public class GraalvmErrnoExtras {

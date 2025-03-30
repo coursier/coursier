@@ -38,7 +38,10 @@ object TestCache {
           "https://github.com/coursier/coursier/releases/download/v2.0.13/cs-"
         )
       ) &&
-      !artifact.url.startsWith("https://github.com/sbt/sbtn-dist/releases/download/"),
+      !artifact.url.startsWith("https://github.com/sbt/sbtn-dist/releases/download/") &&
+      !artifact.url.startsWith(
+        "https://github.com/scala-cli/scalafmt-native-image/releases/download/v3.0.6/"
+      ),
     pool = pool
   )
 

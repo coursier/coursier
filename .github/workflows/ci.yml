@@ -63,10 +63,16 @@ jobs:
         OS: ["ubuntu-latest"]
         SCALA_VERSION: ["2.13.16"]
         include:
-          - SCALA_VERSION: "2.13.16"
-            OS: "windows-latest"
-          - SCALA_VERSION: "2.12.20"
-            OS: "ubuntu-latest"
+          - OS: "ubuntu-24.04-arm"
+            SCALA_VERSION: "2.13.16"
+          - OS: "macos-13"
+            SCALA_VERSION: "2.13.16"
+          - OS: "macos-14"
+            SCALA_VERSION: "2.13.16"
+          - OS: "windows-latest"
+            SCALA_VERSION: "2.13.16"
+          - OS: "ubuntu-latest"
+            SCALA_VERSION: "2.12.20"
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
