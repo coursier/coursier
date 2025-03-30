@@ -92,17 +92,7 @@ abstract class DockerTests extends TestSuite {
         os.remove.all(tmpDir)
     }
 
-  val tests =
-    if (Properties.isLinux || Properties.isMac)
-      actualTests
-    else
-      Tests {
-        test("disabled on Windows") {
-          "disabled"
-        }
-      }
-
-  def actualTests = Tests {
+  def tests = Tests {
     test("pull") {
       val res = os.proc(
         launcher,

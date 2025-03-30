@@ -47,17 +47,7 @@ object DockerTests extends TestSuite {
       vm.close()
   }
 
-  val tests =
-    if (Properties.isLinux || Properties.isMac)
-      actualTests
-    else
-      Tests {
-        test("disabled on Windows") {
-          "disabled"
-        }
-      }
-
-  def actualTests = Tests {
+  def tests = Tests {
 
     test("hello-world") {
       test("pull") {
