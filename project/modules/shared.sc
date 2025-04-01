@@ -96,6 +96,7 @@ trait CoursierJavaModule extends JavaModule {
     }
   def javacSystemJvmId = T {
     if (Properties.isMac && isArm64) s"zulu:$jvmRelease"
+    else if (Properties.isWin && isArm64) s"liberica:$jvmRelease"
     else s"adoptium:$jvmRelease"
   }
   def javacSystemJvm = T.source {

@@ -167,7 +167,10 @@ object JvmCache {
       case _                        => "temurin"
     }
   def defaultJdkNameFor(os: String, arch: String): String =
+    // Seems zulu and liberica are the distributions
+    // that support best Mac ARM and Windows ARM respectively
     if (os == "darwin" && arch == "arm64") "zulu"
+    else if (os == "windows" && arch == "arm64") "liberica"
     else "temurin"
   def defaultVersion: String =
     "[1,)"
