@@ -121,16 +121,22 @@ final class Vm(
           true
         }
         catch {
-          case e: JSchException
-              if e.getCause.isInstanceOf[ConnectException] ||
-              e.getCause.isInstanceOf[SocketTimeoutException] ||
-              e.getCause.isInstanceOf[SocketException] ||
-              e.getMessage.contains("channel is not opened") =>
-            System.err.println(s"Caught $e, waiting $delay")
-            if (debug)
-              e.printStackTrace(System.err)
-            Thread.sleep(delay.toMillis)
-            false
+          case e: JSchException =>
+            val retry = e.getCause match {
+              case _: ConnectException       => true
+              case _: SocketTimeoutException => true
+              case _: SocketException        => true
+              case _                         => e.getMessage.contains("channel is not opened")
+            }
+            if (retry) {
+              System.err.println(s"Caught $e, waiting $delay")
+              if (debug)
+                e.printStackTrace(System.err)
+              Thread.sleep(delay.toMillis)
+              false
+            }
+            else
+              throw e
         }
       if (!success)
         connect()
