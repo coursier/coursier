@@ -250,6 +250,8 @@ object Vm {
   }
   def defaultVmDir(): os.Path =
     defaultBaseVmDir() / "vms"
+  def defaultVmOutputDir(): os.Path =
+    defaultBaseVmDir() / "output"
 
   def readFrom(vmsDir: os.Path, id: String): Vm = {
     val content = os.read.bytes(vmsDir / id / "vm.json")
@@ -267,7 +269,8 @@ object Vm {
     id: String,
     vmFiles: VmFiles,
     params: Params,
-    extraArgs: Seq[String]
+    extraArgs: Seq[String],
+    outputTo: Option[os.Path]
   ): Vm = {
     val seedIso0 = seedIso(
       params.user,
@@ -290,6 +293,15 @@ object Vm {
         else Nil // ???
       else
         Seq("--accel", "tcg")
+    val outputOpts = outputTo
+      .map(f => Seq("-serial", s"file:$f"))
+      .getOrElse(Nil)
+    for (f <- outputTo) {
+      os.makeDir.all(f / os.up)
+      if (os.exists(f))
+        os.remove(f)
+      System.err.println(s"Sending VM output to $f")
+    }
     val qemuOptions = Seq[os.Shellable](
       "-M",
       params.machine,
@@ -303,6 +315,7 @@ object Vm {
       vmFiles.qemu.bios.toSeq.flatMap(p => Seq[os.Shellable]("-bios", p)),
       "-display",
       "none",
+      outputOpts,
       "-netdev",
       s"id=net00,type=user,hostfwd=tcp::$port-:22",
       "-device",

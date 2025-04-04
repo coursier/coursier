@@ -59,7 +59,8 @@ object VmStart extends CoursierCommand[VmStartOptions] {
       params.vmSelect.id,
       vmFiles,
       vmParams,
-      remainingArgs.all
+      remainingArgs.all,
+      outputTo = Some(Vm.defaultVmOutputDir() / params.vmSelect.id)
     )
 
     vm.withSession { session =>

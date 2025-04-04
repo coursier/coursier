@@ -37,7 +37,15 @@ object DockerTests extends TestSuite {
               memory = "2g",
               useVirtualization = useVirtualization
             )
-            vmOpt0 = Some(Vm.spawn("cs-tests", vmFiles, vmParams, Nil))
+            vmOpt0 = Some {
+              Vm.spawn(
+                "cs-tests",
+                vmFiles,
+                vmParams,
+                Nil,
+                outputTo = Some(Vm.defaultVmOutputDir() / "cs-tests")
+              )
+            }
             vmOpt0
           }
         }
