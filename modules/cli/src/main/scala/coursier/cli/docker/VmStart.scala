@@ -23,10 +23,12 @@ object VmStart extends CoursierCommand[VmStartOptions] {
       case Right(params0) => params0
     }
 
-    val pool         = Sync.fixedThreadPool(params.cache.parallel)
-    val logger       = params.output.logger()
-    val cache        = params.cache.cache(pool, logger)
-    val archiveCache = ArchiveCache().withCache(cache)
+    val pool   = Sync.fixedThreadPool(params.cache.parallel)
+    val logger = params.output.logger()
+    val cache  = params.cache.cache(pool, logger)
+    val archiveCacheForVmFiles =
+      if (params.defaultCacheForVmFiles) ArchiveCache()
+      else ArchiveCache().withCache(cache)
 
     val vmsDir = Vm.defaultVmDir()
 
@@ -37,7 +39,7 @@ object VmStart extends CoursierCommand[VmStartOptions] {
     }
 
     val vmFiles =
-      try logger.using(VmFiles.default(archiveCache = archiveCache)).unsafeRun()(cache.ec)
+      try logger.using(VmFiles.default(archiveCache = archiveCacheForVmFiles)).unsafeRun()(cache.ec)
       catch {
         case ex: Throwable =>
           throw new Exception(ex)

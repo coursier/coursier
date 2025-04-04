@@ -22,7 +22,9 @@ final case class VmStartOptions(
   @HelpMessage("Name of the user to create in the VM")
     user: Option[String] = None,
   @HelpMessage("Enable virtualization (if not supported by your system, this needs to be explicitly disabled with --virtualization=false)")
-    virtualization: Option[Boolean] = None
+    virtualization: Option[Boolean] = None,
+  @HelpMessage("Use the default coursier cache rather than the one passed via --cache to download VM files (the one passed via --cache is assumed to hold docker files later on)")
+    defaultCacheForVmFiles: Option[Boolean] = None
 )
 // format: on
 

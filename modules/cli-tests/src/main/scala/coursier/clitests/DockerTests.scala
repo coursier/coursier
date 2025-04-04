@@ -43,7 +43,8 @@ abstract class DockerTests extends TestSuite {
               "2g",
               s"--virtualization=$useVirtualization",
               "--cache",
-              tmpDir / "cache"
+              tmpDir / "cache",
+              "--default-cache-for-vm-files"
             ).call(
               stdin = os.Inherit,
               stdout = os.Inherit,
