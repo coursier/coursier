@@ -61,7 +61,7 @@ object QemuFiles {
             Artifact(
               // FIXME The file at that address frequently disappears, and the URL needs to be
               // updated (go to the directory, look for a file with the same name but newer date, …)
-              "http://ftp.debian.org/debian/pool/main/e/edk2/qemu-efi-aarch64_2022.11-6+deb12u2_all.deb" +
+              "http://http.us.debian.org/debian/pool/main/e/edk2/qemu-efi-aarch64_2025.02-5_all.deb" +
                 "!data.tar.xz" +
                 "!usr/share/qemu-efi-aarch64/QEMU_EFI.fd"
             )
