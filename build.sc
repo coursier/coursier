@@ -1084,17 +1084,16 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = T.command {
   )
 }
 
-def dockerTests(scalaVersion: String = ScalaVersions.scala213) = {
-  val scalaVersions =
-    if (scalaVersion == "*") ScalaVersions.all
-    else Seq(scalaVersion)
-
-  val tasks = scalaVersions.flatMap { sv =>
-    docker.valuesToModules.get(List(sv)).map(_.test.test())
-  }
+def dockerTests(): Command[Unit] = {
+  val cmd = docker.valuesToModules
+    .get(List(ScalaVersions.scala3))
+    .map(_.test.test())
+    .getOrElse {
+      sys.error("docker test command not found")
+    }
 
   Task.Command[Unit] {
-    T.sequence(tasks)()
+    cmd()
 
     ()
   }
