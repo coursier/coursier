@@ -1,6 +1,5 @@
 package coursier.docker.vm
 
-import dataclass.data
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import com.jcraft.jsch.{JSch, KeyPair => JSchKeyPair}
@@ -169,7 +168,7 @@ final class Vm(
 
 object Vm {
 
-  @data class Params(
+  final case class Params(
     sshLocalPort: Int,
     user: String,
     keyPair: KeyPair,
@@ -316,7 +315,7 @@ object Vm {
 
     val params0 =
       if (params.sshLocalPort == port) params
-      else params.withSshLocalPort(port)
+      else params.copy(sshLocalPort = port)
 
     val vm = new Vm(id, params0, Right(qemuProc))
     vm.setupMounts()
@@ -370,7 +369,7 @@ object Vm {
     isoFile
   }
 
-  @data class KeyPair(
+  final case class KeyPair(
     publicKey: String,
     privateKey: String
   )
@@ -398,7 +397,7 @@ object Vm {
     }
   }
 
-  @data class Mount(
+  final case class Mount(
     tag: String,
     hostPath: os.Path,
     guestPath: os.SubPath

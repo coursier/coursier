@@ -1,6 +1,5 @@
 package coursier.docker.vm
 
-import dataclass.data
 import coursier.util.Artifact
 import coursier.cache.ArchiveCache
 import coursier.util.Task
@@ -12,7 +11,7 @@ import scala.util.Properties
 import coursier.cache.util.Cpu
 import coursier.cache.util.Os
 
-@data class QemuFiles(
+final case class QemuFiles(
   qemu: os.Path,
   bios: Option[os.Path],
   virtioRom: os.Path
@@ -20,7 +19,7 @@ import coursier.cache.util.Os
 
 object QemuFiles {
 
-  @data class Artifacts(
+  final case class Artifacts(
     qemu: Artifact,
     bios: Option[Artifact],
     virtioRom: Artifact

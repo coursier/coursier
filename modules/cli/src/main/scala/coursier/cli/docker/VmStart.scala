@@ -47,11 +47,12 @@ object VmStart extends CoursierCommand[VmStartOptions] {
       val baseParams = Vm.Params.default(
         cacheLocation = Some(os.Path(cache.location, os.pwd))
       )
-      baseParams
-        .withMemory(params.memory)
-        .withCpu(params.cpu)
-        .withUser(params.user)
-        .withUseVirtualization(params.virtualization)
+      baseParams.copy(
+        memory = params.memory,
+        cpu = params.cpu,
+        user = params.user,
+        useVirtualization = params.virtualization
+      )
     }
 
     val vm = Vm.spawn(

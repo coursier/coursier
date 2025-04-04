@@ -202,7 +202,7 @@ object exec extends Exec
 object jvm     extends Cross[Jvm](ScalaVersions.all)
 object install extends Cross[Install](ScalaVersions.all)
 
-object docker extends Cross[Docker](ScalaVersions.all)
+object docker extends Cross[Docker](Seq(ScalaVersions.scala3))
 
 object cli extends Cli {
   object test extends SbtTests with CsTests with CsResourcesTests {
@@ -630,11 +630,10 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
   def jvmRelease   = "11"
   def artifactName = "coursier-docker"
   def moduleDeps = super.moduleDeps ++ Seq(
-    cache.jvm(),
+    cache.jvm(cliScalaVersion213Compat),
     exec
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
-    Deps.dataClass,
     Deps.jsoniterMacros
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
@@ -659,7 +658,7 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
   }
   object test extends CrossSbtTests with CsTests {
     def moduleDeps = super.moduleDeps ++ Seq(
-      cache.jvm().test
+      cache.jvm(cliScalaVersion213Compat).test
     )
     def ivyDeps = super.ivyDeps() ++ Seq(
       Deps.osLib,
@@ -677,7 +676,7 @@ trait Cli extends CsModule
     `sbt-maven-repository`.jvm(cliScalaVersion213Compat),
     install(cliScalaVersion213Compat),
     jvm(cliScalaVersion213Compat),
-    docker(cliScalaVersion213Compat),
+    docker(cliScalaVersion),
     launcherModule(cliScalaVersion213Compat)
   )
   def artifactName = "coursier-cli"

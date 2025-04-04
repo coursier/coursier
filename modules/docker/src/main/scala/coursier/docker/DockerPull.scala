@@ -5,7 +5,6 @@ import coursier.cache.util.{Cpu, Os}
 import coursier.core.Authentication
 import coursier.util.{Artifact, Task}
 import com.github.plokhotnyuk.jsoniter_scala.core.readFromArray
-import dataclass.data
 
 import java.io.File
 import java.nio.file.Files
@@ -152,7 +151,7 @@ object DockerPull {
     )
   }
 
-  @data class Result(
+  final case class Result(
     indexResult: (Artifact, File, DockerImageIndex),
     manifestEntry: DockerImageIndex.Entry,
     manifestResult: (Artifact, File, DockerImageManifest),
