@@ -63,8 +63,6 @@ object DockerRunCommand extends CoursierCommand[DockerRunOptions] {
       vmOpt = vmOpt
     )
 
-    pprint.err.log(res.exitCode)
-
     if (res.exitCode != 0)
       sys.exit(res.exitCode)
   }
