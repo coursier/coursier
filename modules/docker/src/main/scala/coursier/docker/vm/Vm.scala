@@ -25,6 +25,7 @@ import com.github.plokhotnyuk.jsoniter_scala.core.{JsonValueCodec, readFromArray
 import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
 import java.io.InputStream
 import coursier.cache.util.Cpu
+import coursier.docker.vm.iso.Image
 
 final class Vm(
   val id: String,
@@ -350,18 +351,14 @@ object Vm {
     os.write(userData, userDataContent)
     os.write(metaData, metaDataContent)
 
-    os.proc(
-      "mkisofs",
-      "-output",
-      isoFile,
-      "-volid",
-      "cidata",
-      "-joliet",
-      "-rock",
-      userData,
-      metaData
+    val imageBytes = Image.generate(
+      volumeId = "cidata",
+      files = Seq(
+        "meta-data" -> metaDataContent.getBytes(StandardCharsets.UTF_8),
+        "user-data" -> userDataContent.getBytes(StandardCharsets.UTF_8)
+      )
     )
-      .call(cwd = workDir, stdin = os.Inherit, stdout = os.Inherit)
+    os.write(isoFile, imageBytes)
 
     os.remove(userData)
     os.remove(metaData)

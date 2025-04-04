@@ -640,7 +640,8 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
     Deps.jsch,
     Deps.jsoniterCore,
     Deps.osLib,
-    Deps.pprint
+    Deps.pprint,
+    Deps.scodec
   )
   def mimaPreviousVersions = T {
     import _root_.coursier.core.Version

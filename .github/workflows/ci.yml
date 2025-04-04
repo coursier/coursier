@@ -89,8 +89,6 @@ jobs:
         jvm: 21
     - run: sudo apt-get install -y nailgun
       if: runner.os == 'Linux'
-    - run: brew install cdrtools # FIXME Get rid of that dependency
-      if: runner.os == 'macOS'
     # - run: .github/scripts/scala-native-setup.sh
     #   if: runner.os != 'Windows'
     - run: ./mill -i dockerTests --scalaVersion "$SCALA_VERSION"
@@ -248,8 +246,6 @@ jobs:
           jvm: 21
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
-      - run: brew install cdrtools # FIXME Get rid of that dependency
-        if: runner.os == 'macOS'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
         shell: bash
       - name: Copy artifacts
