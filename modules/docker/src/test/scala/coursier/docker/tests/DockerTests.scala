@@ -33,10 +33,19 @@ object DockerTests extends TestSuite {
         synchronized {
           vmOpt0.orElse {
             val vmFiles = cache.logger.using(VmFiles.default()).unsafeRun()(cache.ec)
-            val vmParams = Vm.Params.default()
-              .withMemory("2g")
-              .withUseVirtualization(useVirtualization)
-            vmOpt0 = Some(Vm.spawn("cs-tests", vmFiles, vmParams, Nil))
+            val vmParams = Vm.Params.default().copy(
+              memory = "2g",
+              useVirtualization = useVirtualization
+            )
+            vmOpt0 = Some {
+              Vm.spawn(
+                "cs-tests",
+                vmFiles,
+                vmParams,
+                Nil,
+                outputTo = Some(Vm.defaultVmOutputDir() / "cs-tests")
+              )
+            }
             vmOpt0
           }
         }

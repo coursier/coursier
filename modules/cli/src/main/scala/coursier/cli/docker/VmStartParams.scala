@@ -12,7 +12,8 @@ final case class VmStartParams(
   memory: String,
   cpu: String,
   user: String,
-  virtualization: Boolean
+  virtualization: Boolean,
+  defaultCacheForVmFiles: Boolean
 )
 
 object VmStartParams {
@@ -34,7 +35,8 @@ object VmStartParams {
             case None        => Vm.Params.defaultCpu
           },
           options.user.map(_.trim).filter(_.nonEmpty).getOrElse(Vm.Params.defaultUser),
-          options.virtualization.getOrElse(true)
+          options.virtualization.getOrElse(true),
+          options.defaultCacheForVmFiles.getOrElse(false)
         )
     }
 }

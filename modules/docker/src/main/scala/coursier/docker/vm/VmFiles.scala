@@ -1,6 +1,5 @@
 package coursier.docker.vm
 
-import dataclass.data
 import coursier.cache.ArchiveCache
 import coursier.util.Task
 import coursier.util.Artifact
@@ -8,7 +7,7 @@ import coursier.cache.ArtifactError
 import java.io.File
 import coursier.cache.util.Cpu
 
-@data class VmFiles(
+final case class VmFiles(
   qemu: QemuFiles,
   image: os.Path
 )

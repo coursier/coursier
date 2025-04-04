@@ -1,6 +1,5 @@
 package coursier.docker.vm
 
-import dataclass.data
 import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 import com.jcraft.jsch.{JSch, KeyPair => JSchKeyPair}
@@ -26,6 +25,7 @@ import com.github.plokhotnyuk.jsoniter_scala.core.{JsonValueCodec, readFromArray
 import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
 import java.io.InputStream
 import coursier.cache.util.Cpu
+import coursier.docker.vm.iso.Image
 
 final class Vm(
   val id: String,
@@ -117,20 +117,26 @@ final class Vm(
     def connect(): Unit = {
       val success =
         try {
-          session.connect()
+          session.connect(delay.toMillis.toInt)
           true
         }
         catch {
-          case e: JSchException
-              if e.getCause.isInstanceOf[ConnectException] ||
-              e.getCause.isInstanceOf[SocketTimeoutException] ||
-              e.getCause.isInstanceOf[SocketException] ||
-              e.getMessage.contains("channel is not opened") =>
-            System.err.println(s"Caught $e, waiting $delay")
-            if (debug)
-              e.printStackTrace(System.err)
-            Thread.sleep(delay.toMillis)
-            false
+          case e: JSchException =>
+            val retry = e.getCause match {
+              case _: ConnectException       => true
+              case _: SocketTimeoutException => true
+              case _: SocketException        => true
+              case _                         => e.getMessage.contains("channel is not opened")
+            }
+            if (retry) {
+              System.err.println(s"Caught $e, waiting $delay")
+              if (debug)
+                e.printStackTrace(System.err)
+              Thread.sleep(delay.toMillis)
+              false
+            }
+            else
+              throw e
         }
       if (!success)
         connect()
@@ -169,7 +175,7 @@ final class Vm(
 
 object Vm {
 
-  @data class Params(
+  final case class Params(
     sshLocalPort: Int,
     user: String,
     keyPair: KeyPair,
@@ -244,6 +250,8 @@ object Vm {
   }
   def defaultVmDir(): os.Path =
     defaultBaseVmDir() / "vms"
+  def defaultVmOutputDir(): os.Path =
+    defaultBaseVmDir() / "output"
 
   def readFrom(vmsDir: os.Path, id: String): Vm = {
     val content = os.read.bytes(vmsDir / id / "vm.json")
@@ -261,7 +269,8 @@ object Vm {
     id: String,
     vmFiles: VmFiles,
     params: Params,
-    extraArgs: Seq[String]
+    extraArgs: Seq[String],
+    outputTo: Option[os.Path]
   ): Vm = {
     val seedIso0 = seedIso(
       params.user,
@@ -284,6 +293,15 @@ object Vm {
         else Nil // ???
       else
         Seq("--accel", "tcg")
+    val outputOpts = outputTo
+      .map(f => Seq("-serial", s"file:$f"))
+      .getOrElse(Nil)
+    for (f <- outputTo) {
+      os.makeDir.all(f / os.up)
+      if (os.exists(f))
+        os.remove(f)
+      System.err.println(s"Sending VM output to $f")
+    }
     val qemuOptions = Seq[os.Shellable](
       "-M",
       params.machine,
@@ -297,6 +315,7 @@ object Vm {
       vmFiles.qemu.bios.toSeq.flatMap(p => Seq[os.Shellable]("-bios", p)),
       "-display",
       "none",
+      outputOpts,
       "-netdev",
       s"id=net00,type=user,hostfwd=tcp::$port-:22",
       "-device",
@@ -316,7 +335,7 @@ object Vm {
 
     val params0 =
       if (params.sshLocalPort == port) params
-      else params.withSshLocalPort(port)
+      else params.copy(sshLocalPort = port)
 
     val vm = new Vm(id, params0, Right(qemuProc))
     vm.setupMounts()
@@ -351,18 +370,14 @@ object Vm {
     os.write(userData, userDataContent)
     os.write(metaData, metaDataContent)
 
-    os.proc(
-      "mkisofs",
-      "-output",
-      isoFile,
-      "-volid",
-      "cidata",
-      "-joliet",
-      "-rock",
-      userData,
-      metaData
+    val imageBytes = Image.generate(
+      volumeId = "cidata",
+      files = Seq(
+        "meta-data" -> metaDataContent.getBytes(StandardCharsets.UTF_8),
+        "user-data" -> userDataContent.getBytes(StandardCharsets.UTF_8)
+      )
     )
-      .call(cwd = workDir, stdin = os.Inherit, stdout = os.Inherit)
+    os.write(isoFile, imageBytes)
 
     os.remove(userData)
     os.remove(metaData)
@@ -370,7 +385,7 @@ object Vm {
     isoFile
   }
 
-  @data class KeyPair(
+  final case class KeyPair(
     publicKey: String,
     privateKey: String
   )
@@ -398,7 +413,7 @@ object Vm {
     }
   }
 
-  @data class Mount(
+  final case class Mount(
     tag: String,
     hostPath: os.Path,
     guestPath: os.SubPath

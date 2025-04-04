@@ -23,10 +23,12 @@ object VmStart extends CoursierCommand[VmStartOptions] {
       case Right(params0) => params0
     }
 
-    val pool         = Sync.fixedThreadPool(params.cache.parallel)
-    val logger       = params.output.logger()
-    val cache        = params.cache.cache(pool, logger)
-    val archiveCache = ArchiveCache().withCache(cache)
+    val pool   = Sync.fixedThreadPool(params.cache.parallel)
+    val logger = params.output.logger()
+    val cache  = params.cache.cache(pool, logger)
+    val archiveCacheForVmFiles =
+      if (params.defaultCacheForVmFiles) ArchiveCache()
+      else ArchiveCache().withCache(cache)
 
     val vmsDir = Vm.defaultVmDir()
 
@@ -37,7 +39,7 @@ object VmStart extends CoursierCommand[VmStartOptions] {
     }
 
     val vmFiles =
-      try logger.using(VmFiles.default(archiveCache = archiveCache)).unsafeRun()(cache.ec)
+      try logger.using(VmFiles.default(archiveCache = archiveCacheForVmFiles)).unsafeRun()(cache.ec)
       catch {
         case ex: Throwable =>
           throw new Exception(ex)
@@ -47,18 +49,20 @@ object VmStart extends CoursierCommand[VmStartOptions] {
       val baseParams = Vm.Params.default(
         cacheLocation = Some(os.Path(cache.location, os.pwd))
       )
-      baseParams
-        .withMemory(params.memory)
-        .withCpu(params.cpu)
-        .withUser(params.user)
-        .withUseVirtualization(params.virtualization)
+      baseParams.copy(
+        memory = params.memory,
+        cpu = params.cpu,
+        user = params.user,
+        useVirtualization = params.virtualization
+      )
     }
 
     val vm = Vm.spawn(
       params.vmSelect.id,
       vmFiles,
       vmParams,
-      remainingArgs.all
+      remainingArgs.all,
+      outputTo = Some(Vm.defaultVmOutputDir() / params.vmSelect.id)
     )
 
     vm.withSession { session =>

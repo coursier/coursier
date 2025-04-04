@@ -1,6 +1,5 @@
 package coursier.docker.vm
 
-import dataclass.data
 import coursier.util.Artifact
 import coursier.cache.ArchiveCache
 import coursier.util.Task
@@ -12,7 +11,7 @@ import scala.util.Properties
 import coursier.cache.util.Cpu
 import coursier.cache.util.Os
 
-@data class QemuFiles(
+final case class QemuFiles(
   qemu: os.Path,
   bios: Option[os.Path],
   virtioRom: os.Path
@@ -20,7 +19,7 @@ import coursier.cache.util.Os
 
 object QemuFiles {
 
-  @data class Artifacts(
+  final case class Artifacts(
     qemu: Artifact,
     bios: Option[Artifact],
     virtioRom: Artifact
@@ -62,7 +61,7 @@ object QemuFiles {
             Artifact(
               // FIXME The file at that address frequently disappears, and the URL needs to be
               // updated (go to the directory, look for a file with the same name but newer date, …)
-              "http://ftp.debian.org/debian/pool/main/e/edk2/qemu-efi-aarch64_2022.11-6+deb12u2_all.deb" +
+              "http://http.us.debian.org/debian/pool/main/e/edk2/qemu-efi-aarch64_2025.02-5_all.deb" +
                 "!data.tar.xz" +
                 "!usr/share/qemu-efi-aarch64/QEMU_EFI.fd"
             )
