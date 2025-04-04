@@ -117,7 +117,7 @@ final class Vm(
     def connect(): Unit = {
       val success =
         try {
-          session.connect()
+          session.connect(delay.toMillis.toInt)
           true
         }
         catch {
