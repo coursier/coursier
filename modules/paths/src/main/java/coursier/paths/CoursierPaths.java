@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.function.Supplier;
 
 import dev.dirs.ProjectDirectories;
@@ -27,17 +28,17 @@ public final class CoursierPaths {
     private static ProjectDirectories coursierDirectories0;
 
     private static final Object cacheDirectoryLock = new Object();
-    private static volatile File cacheDirectory0 = null;
-    private static volatile File archiveCacheDirectory0 = null;
-    private static volatile File priviledgedArchiveCacheDirectory0 = null;
-    private static volatile File digestBasedCacheDirectory0 = null;
-    private static volatile File jvmCacheDirectory0 = null;
+    private static volatile Path cacheDirectory0 = null;
+    private static volatile Path archiveCacheDirectory0 = null;
+    private static volatile Path priviledgedArchiveCacheDirectory0 = null;
+    private static volatile Path digestBasedCacheDirectory0 = null;
+    private static volatile Path jvmCacheDirectory0 = null;
 
     private static final Object configDirectoryLock = new Object();
-    private static volatile File[] configDirectories0 = null;
+    private static volatile Path[] configDirectories0 = null;
 
     private static final Object dataLocalDirectoryLock = new Object();
-    private static volatile File dataLocalDirectory0 = null;
+    private static volatile Path dataLocalDirectory0 = null;
 
     // TODO After switching to nio, that logic can be unit tested with mock filesystems.
 
@@ -70,20 +71,24 @@ public final class CoursierPaths {
         if (path != null)
           return path;
 
-        File baseXdgDir = new File(coursierDirectories().cacheDir);
-        File xdgDir = new File(baseXdgDir, dirName);
+        Path baseXdgDir = Paths.get(coursierDirectories().cacheDir);
+        Path xdgDir = baseXdgDir.resolve(dirName);
 
-        Util.createDirectories(xdgDir.toPath());
+        Util.createDirectories(xdgDir);
 
-        return xdgDir.getAbsolutePath();
+        return xdgDir.toAbsolutePath().normalize().toString();
     }
 
     public static File cacheDirectory() throws IOException {
+        return cacheDirectoryPath().toFile();
+    }
+
+    public static Path cacheDirectoryPath() throws IOException {
 
         if (cacheDirectory0 == null)
             synchronized (cacheDirectoryLock) {
                 if (cacheDirectory0 == null) {
-                    cacheDirectory0 = new File(computeCacheDirectory()).getAbsoluteFile();
+                    cacheDirectory0 = Paths.get(computeCacheDirectory()).toAbsolutePath().normalize();
                 }
             }
 
@@ -91,11 +96,15 @@ public final class CoursierPaths {
     }
 
     public static File archiveCacheDirectory() throws IOException {
+        return archiveCacheDirectoryPath().toFile();
+    }
+
+    public static Path archiveCacheDirectoryPath() throws IOException {
 
         if (archiveCacheDirectory0 == null)
             synchronized (cacheDirectoryLock) {
                 if (archiveCacheDirectory0 == null) {
-                    archiveCacheDirectory0 = new File(computeArchiveCacheDirectory()).getAbsoluteFile();
+                    archiveCacheDirectory0 = Paths.get(computeArchiveCacheDirectory()).toAbsolutePath().normalize();
                 }
             }
 
@@ -103,11 +112,15 @@ public final class CoursierPaths {
     }
 
     public static File priviledgedArchiveCacheDirectory() throws IOException {
+        return priviledgedArchiveCacheDirectoryPath().toFile();
+    }
+
+    public static Path priviledgedArchiveCacheDirectoryPath() throws IOException {
 
         if (priviledgedArchiveCacheDirectory0 == null)
             synchronized (cacheDirectoryLock) {
                 if (priviledgedArchiveCacheDirectory0 == null) {
-                    priviledgedArchiveCacheDirectory0 = new File(computePriviledgedArchiveCacheDirectory()).getAbsoluteFile();
+                    priviledgedArchiveCacheDirectory0 = Paths.get(computePriviledgedArchiveCacheDirectory()).toAbsolutePath().normalize();
                 }
             }
 
@@ -115,11 +128,15 @@ public final class CoursierPaths {
     }
 
     public static File digestBasedCacheDirectory() throws IOException {
+        return digestBasedCacheDirectoryPath().toFile();
+    }
+
+    public static Path digestBasedCacheDirectoryPath() throws IOException {
 
         if (digestBasedCacheDirectory0 == null)
             synchronized (cacheDirectoryLock) {
                 if (digestBasedCacheDirectory0 == null) {
-                    digestBasedCacheDirectory0 = new File(computeDigestBasedCacheDirectory()).getAbsoluteFile();
+                    digestBasedCacheDirectory0 = Paths.get(computeDigestBasedCacheDirectory()).toAbsolutePath().normalize();
                 }
             }
 
@@ -127,11 +144,15 @@ public final class CoursierPaths {
     }
 
     public static File jvmCacheDirectory() throws IOException {
+        return jvmCacheDirectoryPath().toFile();
+    }
+
+    public static Path jvmCacheDirectoryPath() throws IOException {
 
         if (jvmCacheDirectory0 == null)
             synchronized (cacheDirectoryLock) {
                 if (jvmCacheDirectory0 == null) {
-                    jvmCacheDirectory0 = new File(computeJvmCacheDirectory()).getAbsoluteFile();
+                    jvmCacheDirectory0 = Paths.get(computeJvmCacheDirectory()).toAbsolutePath().normalize();
                 }
             }
 
@@ -159,29 +180,33 @@ public final class CoursierPaths {
         return coursierDirectories0;
     }
 
-    private static File[] computeConfigDirectories() throws IOException {
+    private static Path[] computeConfigDirectories() throws IOException {
         String path = System.getenv("COURSIER_CONFIG_DIR");
 
         if (path == null)
             path = System.getProperty("coursier.config-dir");
 
         if (path != null)
-            return new File[] { new File(path).getAbsoluteFile() };
+            return new Path[] { Paths.get(path).toAbsolutePath().normalize() };
 
         String configDir = coursierDirectories().configDir;
         String preferenceDir = coursierDirectories().preferenceDir;
         if (configDir.equals(preferenceDir))
-            return new File[] {
-                new File(configDir).getAbsoluteFile(),
+            return new Path[] {
+                Paths.get(configDir).toAbsolutePath().normalize(),
             };
         else
-            return new File[] {
-                new File(configDir).getAbsoluteFile(),
-                new File(preferenceDir).getAbsoluteFile()
+            return new Path[] {
+                Paths.get(configDir).toAbsolutePath().normalize(),
+                Paths.get(preferenceDir).toAbsolutePath().normalize()
             };
     }
 
     public static File[] configDirectories() throws IOException {
+        return Arrays.stream(configDirectoriesPaths()).map(Path::toFile).toArray(File[]::new);
+    }
+
+    public static Path[] configDirectoriesPaths() throws IOException {
 
         if (configDirectories0 == null)
             synchronized (configDirectoryLock) {
@@ -202,6 +227,10 @@ public final class CoursierPaths {
         return configDirectories()[0];
     }
 
+    public static Path defaultConfigDirectoryPath() throws IOException {
+        return configDirectoriesPaths()[0];
+    }
+
     private static String computeDataLocalDirectory() throws IOException {
         String path = System.getenv("COURSIER_DATA_DIR");
 
@@ -215,11 +244,15 @@ public final class CoursierPaths {
     }
 
     public static File dataLocalDirectory() throws IOException {
+        return dataLocalDirectoryPath().toFile();
+    }
+
+    public static Path dataLocalDirectoryPath() throws IOException {
 
         if (dataLocalDirectory0 == null)
             synchronized (dataLocalDirectoryLock) {
                 if (dataLocalDirectory0 == null) {
-                    dataLocalDirectory0 = new File(computeDataLocalDirectory()).getAbsoluteFile();
+                    dataLocalDirectory0 = Paths.get(computeDataLocalDirectory()).toAbsolutePath().normalize();
                 }
             }
 
@@ -228,6 +261,10 @@ public final class CoursierPaths {
 
     public static File projectCacheDirectory() throws IOException {
         return new File(coursierDirectories().cacheDir);
+    }
+
+    public static Path projectCacheDirectoryPath() throws IOException {
+        return Paths.get(coursierDirectories().cacheDir);
     }
 
     private static Path scalaConfigFile0 = null;
