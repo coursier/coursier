@@ -7,7 +7,9 @@ import dataclass._
 import org.apache.tika.Tika
 
 import java.io.File
+import java.math.BigInteger
 import java.nio.file.{Files, Path, StandardCopyOption}
+import java.security.MessageDigest
 
 import scala.util.Using
 
@@ -16,7 +18,21 @@ import scala.util.Using
   cache: Cache[F] = FileCache(),
   unArchiver: UnArchiver = UnArchiver.default(),
   @since("2.1.25")
-  openStream: UnArchiver.OpenStream = UnArchiver.default()
+  openStream: UnArchiver.OpenStream = UnArchiver.default(),
+  /** Set this to a non-empty value, to extract archives in single-level sub-directories under the
+    * passed directory
+    *
+    * When this is non-empty, a hash of the default destination for archives is computed. Then, the
+    * archive is actually extracted under the directory named with the hash under the directory
+    * passed via `shortPathDirectory`.
+    *
+    * For example, if `shortPathDirectory` is set to `Some(new File("C:/jvms"))`,
+    * `https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-23.0.1/graalvm-community-jdk-23.0.1_windows-x64_bin.zip`
+    * is extracted under a directory like `C:\jvms\5aa5d09c\`, rather than
+    * `{location}\https\github.com\graalvm\graalvm-ce-builds\releases\download\jdk-23.0.1\graalvm-community-jdk-23.0.1_windows-x64_bin.zip\`.
+    * The latter directory path is used to compute the hash used in the former one.
+    */
+  shortPathDirectory: Option[File] = None
 )(implicit
   sync: Sync[F]
 ) {
@@ -31,8 +47,18 @@ import scala.util.Using
       artifact.authentication.flatMap(_.userOpt).orNull,
       true
     )
+    val finalDir = shortPathDirectory match {
+      case Some(shortPathBase) =>
+        val sha1 = {
+          val bytes    = MessageDigest.getInstance("SHA-1").digest(dir.toString.getBytes)
+          val baseSha1 = new BigInteger(1, bytes).toString(16)
+          "0" * (40 - baseSha1.length) + baseSha1
+        }
+        new File(shortPathBase, sha1.take(8))
+      case None => dir
+    }
     // FIXME security
-    (dir, subPaths)
+    (finalDir, subPaths)
   }
 
   def getIfExists(artifact: Artifact): F[Either[ArtifactError, Option[File]]] =

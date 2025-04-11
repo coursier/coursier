@@ -122,6 +122,49 @@ abstract class ArchiveCacheTests extends TestSuite {
         }
       )
     }
+
+    test("short path dir") {
+      val archive =
+        Artifact("https://repo1.maven.org/maven2/org/fusesource/jansi/jansi/2.4.1/jansi-2.4.1.jar")
+      val pathInArchive = os.sub / "org/fusesource/jansi/internal/native/Mac/arm64/libjansi.jnilib"
+      withTmpDir { dir =>
+        val defaultDir = dir / "arc"
+        val shortBase  = dir / "short"
+
+        def check(useShortBase: Boolean): Unit = {
+          val archiveCache0 = archiveCache(defaultDir)
+            .withShortPathDirectory(if (useShortBase) Some(shortBase.toIO) else None)
+
+          val future = archiveCache0
+            .get(archive)
+            .future()(archiveCache0.cache.ec)
+          val archiveDir = Await.result(future, Duration.Inf).toTry.get
+          val file       = new File(archiveDir, pathInArchive.toString)
+          assert(file.exists())
+          assert(file.isFile())
+
+          if (useShortBase) {
+            assert(archiveDir.toPath.startsWith(shortBase.toNIO))
+            assert(!archiveDir.toPath.startsWith(defaultDir.toNIO))
+          }
+          else {
+            assert(!archiveDir.toPath.startsWith(shortBase.toNIO))
+            assert(archiveDir.toPath.startsWith(defaultDir.toNIO))
+          }
+
+          val subPath = os.Path(archiveDir)
+            .relativeTo(if (useShortBase) shortBase else defaultDir)
+            .asSubPath
+          if (useShortBase)
+            assert(subPath.segments.length == 1) // checksum should be the only component
+          else
+            assert(subPath.segments.length > 1)
+        }
+
+        check(useShortBase = true)
+        check(useShortBase = false)
+      }
+    }
   }
 
   val tests =
