@@ -35,7 +35,7 @@ object Deps {
   def jsoup          = ivy"org.jsoup:jsoup:1.19.1"
   def logbackClassic = ivy"ch.qos.logback:logback-classic:1.5.18"
   def macroParadise  = ivy"org.scalamacros:::paradise:2.1.1"
-  def mdoc           = ivy"org.scalameta::mdoc:2.6.5"
+  def mdoc           = ivy"org.scalameta::mdoc:2.7.0"
   def noCrcZis       = ivy"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
   def osLib          = ivy"com.lihaoyi::os-lib:0.11.4"
   def plexusArchiver = ivy"org.codehaus.plexus:plexus-archiver:4.10.0"
