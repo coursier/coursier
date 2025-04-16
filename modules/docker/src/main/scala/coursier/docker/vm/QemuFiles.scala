@@ -10,6 +10,15 @@ import coursier.cache.ArtifactError
 import scala.util.Properties
 import coursier.cache.util.Cpu
 import coursier.cache.util.Os
+import scala.util.Using
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.nio.charset.StandardCharsets
+import scala.jdk.CollectionConverters._
+import scala.collection.mutable.ListBuffer
+import java.util.zip.GZIPInputStream
+import java.security.MessageDigest
+import java.math.BigInteger
 
 final case class QemuFiles(
   qemu: os.Path,
@@ -21,7 +30,7 @@ object QemuFiles {
 
   final case class Artifacts(
     qemu: Artifact,
-    bios: Option[Artifact],
+    bios: Option[(Artifact, Artifact, String)],
     virtioRom: Artifact
   )
 
@@ -32,7 +41,7 @@ object QemuFiles {
       hostOsVersion: String = sys.props.getOrElse("os.version", ""),
       hostCpu: Cpu = Cpu.get(),
       guestCpu: Cpu = Cpu.get()
-    ): Artifacts = {
+    ): Task[Artifacts] = {
       val qemuArchive = (hostOs, hostCpu) match {
         case (Os.Mac, Cpu.Arm64) =>
           if (hostOsVersion.startsWith("15."))
@@ -55,19 +64,93 @@ object QemuFiles {
           sys.error(s"Unsupported OS and CPU combination: $hostOs / $hostCpu")
       }
 
-      val biosArtifactOpt = guestCpu match {
+      val biosArtifactOptTask = guestCpu match {
         case Cpu.Arm64 =>
-          Some(
-            Artifact(
-              // FIXME The file at that address frequently disappears, and the URL needs to be
-              // updated (go to the directory, look for a file with the same name but newer date, …)
-              "http://http.us.debian.org/debian/pool/main/e/edk2/qemu-efi-aarch64_2025.02-5_all.deb" +
-                "!data.tar.xz" +
-                "!usr/share/qemu-efi-aarch64/QEMU_EFI.fd"
-            )
-          )
+          val cache = coursier.cache.FileCache()
+          val debIndexArtifact =
+            Artifact("https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.gz")
+              .withChanging(true)
+          val debIndexFileTask = cache.file(debIndexArtifact).run
+            .flatMap {
+              case Left(ex) => Task.fail(ex)
+              case Right(f) => Task.point(os.Path(f, os.pwd))
+            }
+          debIndexFileTask.map { debIndexFile =>
+            val packageName = "qemu-efi-aarch64"
+            val detailsFromIndexOpt = Using.resource(os.read.inputStream(debIndexFile)) { is =>
+              val reader = new BufferedReader(new InputStreamReader(
+                new GZIPInputStream(is),
+                StandardCharsets.UTF_8
+              ))
+              val it = reader.lines().iterator().asScala
+              val groupIt: Iterator[Seq[String]] =
+                new Iterator[Seq[String]] {
+                  var nextGroup = Option.empty[Seq[String]]
+                  def tryReadNext(): Unit = {
+                    val buf  = new ListBuffer[String]
+                    var done = false
+                    while (!done && it.hasNext) {
+                      val elem = it.next().trim()
+                      if (elem.isEmpty())
+                        done = true
+                      else
+                        buf += elem
+                    }
+                    nextGroup = if (buf.isEmpty) None else Some(buf.result())
+                  }
+                  def hasNext: Boolean =
+                    nextGroup.nonEmpty || {
+                      tryReadNext()
+                      nextGroup.nonEmpty
+                    }
+                  def next(): Seq[String] =
+                    nextGroup match {
+                      case Some(group) =>
+                        nextGroup = None
+                        group
+                      case None =>
+                        tryReadNext()
+                        nextGroup.getOrElse {
+                          throw new NoSuchElementException
+                        }
+                    }
+                }
+              groupIt.find(_.headOption.contains(s"Package: $packageName"))
+            }
+            val (biosUrl, biosSha256) = detailsFromIndexOpt match {
+              case None =>
+                throw new Exception(s"Cannot find package $packageName in ${debIndexArtifact.url}")
+              case Some(detailsFromIndex) =>
+                val url = detailsFromIndex
+                  .find(_.startsWith("Filename: "))
+                  .map("http://http.us.debian.org/debian/" + _.stripPrefix("Filename: "))
+                  .getOrElse {
+                    throw new Exception(
+                      s"Entry for package $packageName in ${debIndexArtifact.url} has no filename"
+                    )
+                  }
+                val sha256 = detailsFromIndex
+                  .find(_.startsWith("SHA256: "))
+                  .map(_.stripPrefix("SHA256: ").trim())
+                  .getOrElse {
+                    throw new Exception(
+                      s"Entry for package $packageName in ${debIndexArtifact.url} has no SHA-256"
+                    )
+                  }
+                (url, sha256)
+            }
+            Some((
+              Artifact(
+                biosUrl +
+                  "!data.tar.xz" +
+                  "!usr/share/qemu-efi-aarch64/QEMU_EFI.fd"
+              ),
+              Artifact(biosUrl),
+              biosSha256
+            ))
+          }
         case Cpu.X86_64 =>
-          None
+          Task.point(None)
       }
 
       val binarySubPath =
@@ -88,65 +171,89 @@ object QemuFiles {
         else if (Properties.isWin) os.sub / "qemu/share/efi-virtio.rom"
         else sys.error(s"Unsupported OS: ${sys.props.getOrElse("os.name", "")}")
 
-      Artifacts(
-        qemu = Artifact(qemuArchive + "!" + binarySubPath.toString),
-        bios = biosArtifactOpt,
-        virtioRom = Artifact(qemuArchive + "!" + virtioRomSubPath.toString)
-      )
+      biosArtifactOptTask.map { biosArtifactOpt =>
+        Artifacts(
+          qemu = Artifact(qemuArchive + "!" + binarySubPath.toString),
+          bios = biosArtifactOpt,
+          virtioRom = Artifact(qemuArchive + "!" + virtioRomSubPath.toString)
+        )
+      }
     }
   }
 
   def default(
-    artifacts: Artifacts = Artifacts.default(),
+    artifactsTask: Task[Artifacts] = Artifacts.default(),
     archiveCache: ArchiveCache[Task] = ArchiveCache()
-  ): Task[QemuFiles] = {
+  ): Task[QemuFiles] =
+    artifactsTask.flatMap { artifacts =>
 
-    def baseArtifact(art: Artifact): Artifact =
-      if (art.url.contains("!")) art.withUrl(art.url.takeWhile(_ != '!'))
-      else art
+      def baseArtifact(art: Artifact): Artifact =
+        if (art.url.contains("!")) art.withUrl(art.url.takeWhile(_ != '!'))
+        else art
 
-    def taskFor(art: Artifact): Task[Either[ArtifactError, File]] =
-      if (art.url.contains("!")) archiveCache.get(art)
-      else archiveCache.cache.file(art).run
+      def taskFor(art: Artifact): Task[Either[ArtifactError, File]] =
+        if (art.url.contains("!")) archiveCache.get(art)
+        else archiveCache.cache.file(art).run
 
-    val artifacts0 = Seq(artifacts.qemu) ++ artifacts.bios.toSeq ++ Seq(artifacts.virtioRom)
-    val downloadTask =
-      // First download every artifact with 'distinct', to work around "Attempts to download … twice" issues
-      // (coursier logger not accepting concurrent downloads of the same URL)
-      Task.gather.gather(artifacts0.map(baseArtifact).distinct.map(taskFor)).flatMap { _ =>
-        Task.gather.gather(artifacts0.map(taskFor))
-      }
+      val artifacts0 = Seq(artifacts.qemu) ++
+        artifacts.bios.map(_._2).toSeq ++
+        artifacts.bios.map(_._1).toSeq ++
+        Seq(artifacts.virtioRom)
+      val downloadTask =
+        // First download every artifact with 'distinct', to work around "Attempts to download … twice" issues
+        // (coursier logger not accepting concurrent downloads of the same URL)
+        Task.gather.gather(artifacts0.map(baseArtifact).distinct.map(taskFor)).flatMap { _ =>
+          Task.gather.gather(artifacts0.map(taskFor))
+        }
 
-    downloadTask.flatMap { downloadResults =>
-      val errors = downloadResults.collect {
-        case Left(err) => err
-      }
-      errors match {
-        case Seq(first, others @ _*) =>
-          for (other <- others)
-            first.addSuppressed(other)
-          Task.fail(new Exception(first))
-        case Seq() =>
-          val (qemu, bios, virtioRom) =
-            if (artifacts.bios.isEmpty) {
-              val Seq(qemu0, virtioRom0) = downloadResults.collect {
-                case Right(f) => os.Path(f)
-              }
-              (qemu0, None, virtioRom0)
+      downloadTask.flatMap { downloadResults =>
+        val errors = downloadResults.collect {
+          case Left(err) => err
+        }
+        errors match {
+          case Seq(first, others @ _*) =>
+            for (other <- others)
+              first.addSuppressed(other)
+            Task.fail(new Exception(first))
+          case Seq() =>
+            val (qemu, bios, virtioRom) = artifacts.bios match {
+              case None =>
+                val Seq(qemu0, virtioRom0) = downloadResults.collect {
+                  case Right(f) => os.Path(f)
+                }
+                (qemu0, None, virtioRom0)
+              case Some((_, _, sha256)) =>
+                val Seq(qemu0, biosDebPkg, bios0, virtioRom0) = downloadResults.collect {
+                  case Right(f) => os.Path(f)
+                }
+                // FIXME Ideally, we should check the sha-256 before letting ArchiveCache unpack things on disk
+                val rawDigest = Using.resource(os.read.inputStream(biosDebPkg)) { is =>
+                  val md   = MessageDigest.getInstance("SHA-256")
+                  val buf  = Array.ofDim[Byte](64 * 1024)
+                  var read = 0
+                  while ({
+                    read = is.read(buf)
+                    read >= 0
+                  })
+                    md.update(buf, 0, read)
+                  md.digest()
+                }
+                val rawChecksum = new BigInteger(1, rawDigest).toString(16)
+                val checksum    = "0" * (64 - rawChecksum.length) + rawChecksum
+                if (checksum == sha256)
+                  (qemu0, Some(bios0), virtioRom0)
+                else
+                  throw new Exception(
+                    s"Invalid SHA-256 checksum for $bios0 (got $checksum, expected $sha256)"
+                  )
             }
-            else {
-              val Seq(qemu0, bios0, virtioRom0) = downloadResults.collect {
-                case Right(f) => os.Path(f)
-              }
-              (qemu0, Some(bios0), virtioRom0)
-            }
 
-          postProcessQemuBinary(qemu)
+            postProcessQemuBinary(qemu)
 
-          Task.point(QemuFiles(qemu, bios, virtioRom))
+            Task.point(QemuFiles(qemu, bios, virtioRom))
+        }
       }
     }
-  }
 
   def postProcessQemuBinary(qemu: os.Path): Unit = {
     val supportsPerms = qemu.toNIO.getFileSystem.supportedFileAttributeViews().contains("posix")
