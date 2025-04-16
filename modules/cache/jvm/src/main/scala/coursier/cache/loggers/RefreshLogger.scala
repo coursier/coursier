@@ -290,6 +290,10 @@ class RefreshLogger(
         }
       }
 
+  override def checkInitialized(): Unit = {
+    updateRunnable
+  }
+
   override def checkingArtifact(url: String, artifact: Artifact): Unit =
     if (logChanging && artifact.changing)
       updateRunnable.log(s"Checking changing artifact $url")

@@ -44,6 +44,8 @@ trait CacheLogger {
   def init(sizeHint: Option[Int] = None): Unit = {}
   def stop(): Unit                             = {}
 
+  def checkInitialized(): Unit = {}
+
   final def use[T](f: => T): T = {
     init()
     try f

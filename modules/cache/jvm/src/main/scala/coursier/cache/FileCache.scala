@@ -295,8 +295,10 @@ import scala.util.control.NonFatal
     file(artifact, retry)
 
   def file(artifact: Artifact, retry: Int): EitherT[F, ArtifactError, File] =
-    cachePolicies.tail.map(filePerPolicy(artifact, _, retry))
-      .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry))(_ orElse _)
+    ensureLoggerIsInitialized[ArtifactError].flatMap { _ =>
+      cachePolicies.tail.map(filePerPolicy(artifact, _, retry))
+        .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry))(_ orElse _)
+    }
 
   private def fetchPerPolicy(
     artifact: Artifact,
@@ -401,10 +403,19 @@ import scala.util.control.NonFatal
     }
   }
 
+  private def ensureLoggerIsInitialized[L]: EitherT[F, L, Unit] =
+    EitherT[F, L, Unit] {
+      S.delay {
+        Right(logger.checkInitialized())
+      }
+    }
+
   def fetch: Cache.Fetch[F] =
     a =>
-      cachePolicies.tail
-        .foldLeft(fetchPerPolicy(a, cachePolicies.head))(_ orElse fetchPerPolicy(a, _))
+      ensureLoggerIsInitialized[String].flatMap { _ =>
+        cachePolicies.tail
+          .foldLeft(fetchPerPolicy(a, cachePolicies.head))(_ orElse fetchPerPolicy(a, _))
+      }
 
   override def fetchs: Seq[Cache.Fetch[F]] =
     // format: off
