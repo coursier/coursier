@@ -97,6 +97,14 @@ trait Launchers extends CsModule {
 
   object `base-image` extends CliNativeImage
 
+  private def compatNativeImageOptions = Seq(
+    "--native-compiler-options=-march=x86-64",
+    "--native-compiler-options=-mtune=generic"
+  )
+  object `compat-image` extends CliNativeImage {
+    def nativeImageOptions = super.nativeImageOptions() ++ compatNativeImageOptions
+  }
+
   private val arch = sys.props.getOrElse("os.arch", "").toLowerCase(java.util.Locale.ROOT)
   private def isCI = System.getenv("CI") != null
   def nativeImage =
@@ -104,6 +112,12 @@ trait Launchers extends CsModule {
       `linux-docker-image`.nativeImage
     else
       `base-image`.nativeImage
+
+  def compatNativeImage =
+    if (Properties.isLinux && isCI)
+      `linux-compat-docker-image`.nativeImage
+    else
+      `compat-image`.nativeImage
 
   object `linux-docker-image` extends CliNativeImage {
     def nativeImageDockerParams = Some(
@@ -119,6 +133,23 @@ trait Launchers extends CsModule {
         extraNativeImageArgs = Nil
       )
     )
+  }
+
+  object `linux-compat-docker-image` extends CliNativeImage {
+    def nativeImageDockerParams = Some(
+      NativeImage.DockerParams(
+        imageName = "ubuntu:20.04",
+        prepareCommand =
+          """apt-get update -q -y &&\
+            |apt-get install -q -y build-essential libz-dev zlib1g-dev git python3-pip curl zip
+            |export LANG=en_US.UTF-8
+            |export LANGUAGE=en_US:en
+            |export LC_ALL=en_US.UTF-8""".stripMargin,
+        csUrl = linuxCsLauncher,
+        extraNativeImageArgs = Nil
+      )
+    )
+    def nativeImageOptions = super.nativeImageOptions() ++ compatNativeImageOptions
   }
 
   private def linuxCsLauncher =
