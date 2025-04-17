@@ -2199,6 +2199,17 @@ object ResolveTests extends TestSuite {
           dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
         )
       }
+      test("bom") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.gradle.jvm.environment" -> VariantSelector.VariantMatcher.Equals("standard-jvm")
+            ))
+          )
+        )(
+          dep"org.junit-pioneer:junit-pioneer:1.9.1"
+        )
+      }
     }
 
     test("empty version") {
