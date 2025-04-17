@@ -817,6 +817,9 @@ trait CliTests extends CsModule
   object `native-tests` extends NativeTests {
     def cliLauncher = cli.nativeImage
   }
+  object `native-compat-tests` extends NativeTests {
+    def cliLauncher = cli.compatNativeImage
+  }
   object `native-static-tests` extends NativeTests {
     def cliLauncher = cli.`static-image`.nativeImage
     def isStatic    = true
@@ -916,6 +919,11 @@ def copyTo(task: mill.main.Tasks[PathRef], dest: String) = T.command {
 def copyLauncher(directory: String = "artifacts") = T.command {
   val nativeLauncher = cli.nativeImage().path
   ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, T.workspace))
+}
+
+def copyCompatLauncher(directory: String = "artifacts") = T.command {
+  val nativeLauncher = cli.compatNativeImage().path
+  ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, T.workspace), suffix = "-compat")
 }
 
 def copyStaticLauncher(directory: String = "artifacts") = T.command {
@@ -1183,6 +1191,10 @@ def jsTests(scalaVersion: String = "*") = {
 
 def nativeTests() = T.command {
   `cli-tests`.`native-tests`.test()()
+}
+
+def nativeCompatTests() = T.command {
+  `cli-tests`.`native-compat-tests`.test()()
 }
 
 def nativeStaticTests() = T.command {
