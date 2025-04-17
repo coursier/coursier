@@ -56,6 +56,7 @@ import coursier.core.VariantPublication
           else versionMap - "prefers"
         val version = versionMap0.toSeq match {
           case Seq(("requires" | "strictly", req)) => VersionConstraint(req)
+          case Seq()                               => VersionConstraint.empty
           case _ =>
             val mainDep = s"${component.group}:${component.module}:${component.version}"
             val subDep  = s"${dep.group}:${dep.module}"
