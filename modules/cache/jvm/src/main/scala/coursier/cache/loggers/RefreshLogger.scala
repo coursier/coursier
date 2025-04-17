@@ -201,6 +201,18 @@ object RefreshLogger {
       }
   }
 
+  private final class State(
+    var refCount: Int,
+    val runnable: UpdateDisplayRunnable,
+    val scheduler: ScheduledExecutorService
+  ) extends AutoCloseable {
+    def close(): Unit = {
+      scheduler.shutdown()
+      val refreshInterval = runnable.display.refreshInterval
+      scheduler.awaitTermination(2 * refreshInterval.length, refreshInterval.unit)
+      runnable.stop()
+    }
+  }
 }
 
 // FIXME Default values should be removed in later versions
@@ -226,20 +238,20 @@ class RefreshLogger(
 
   import RefreshLogger._
 
-  private val refCount                                      = new AtomicInteger
-  private var updateRunnableOpt                             = Option.empty[UpdateDisplayRunnable]
-  @volatile private var scheduler: ScheduledExecutorService = _
-  private val lock                                          = new Object
+  private val lock               = new Object
+  @volatile private var stateOpt = Option.empty[State]
 
-  private def updateRunnable = updateRunnableOpt.getOrElse {
-    throw new Exception("Uninitialized TermDisplay")
+  private def updateRunnable = stateOpt.map(_.runnable).getOrElse {
+    throw new Exception(s"Uninitialized TermDisplay $this")
   }
 
   override def init(sizeHint: Option[Int]): Unit =
-    if (scheduler == null || updateRunnableOpt.isEmpty)
-      lock.synchronized {
-        if (scheduler == null)
-          scheduler = Executors.newSingleThreadScheduledExecutor(
+    lock.synchronized {
+      stateOpt match {
+        case Some(state) =>
+          state.refCount += 1
+        case None =>
+          val scheduler = Executors.newSingleThreadScheduledExecutor(
             new ThreadFactory {
               val defaultThreadFactory = Executors.defaultThreadFactory()
               def newThread(r: Runnable) = {
@@ -251,11 +263,7 @@ class RefreshLogger(
             }
           )
 
-        refCount.getAndIncrement()
-
-        if (updateRunnableOpt.isEmpty) {
-
-          updateRunnableOpt = Some(new UpdateDisplayRunnable(out, display))
+          val updateRunnable = new UpdateDisplayRunnable(out, display)
 
           for (n <- sizeHint)
             display.sizeHint(n)
@@ -268,27 +276,28 @@ class RefreshLogger(
             refreshInterval.length,
             refreshInterval.unit
           )
-        }
+
+          stateOpt = Some(
+            new State(
+              refCount = 1,
+              runnable = updateRunnable,
+              scheduler = scheduler
+            )
+          )
       }
+    }
 
   override def stop(): Unit =
-    if (scheduler != null || updateRunnableOpt.nonEmpty)
-      lock.synchronized {
-        if (scheduler != null) {
-          scheduler.shutdown()
-          for (r <- updateRunnableOpt) {
-            val refreshInterval = r.display.refreshInterval
-            scheduler.awaitTermination(2 * refreshInterval.length, refreshInterval.unit)
-          }
-          scheduler = null
-        }
-
-        val newCount = refCount.decrementAndGet()
-        if (updateRunnableOpt.nonEmpty && newCount == 0) {
-          updateRunnable.stop()
-          updateRunnableOpt = None
-        }
+    lock.synchronized {
+      stateOpt match {
+        case Some(state) =>
+          state.refCount -= 1
+          if (state.refCount <= 0)
+            state.close()
+        case None =>
+        // throw?
       }
+    }
 
   override def checkInitialized(): Unit = {
     updateRunnable
