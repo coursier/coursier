@@ -49,12 +49,17 @@ object TestHelpers extends PlatformTestHelpers {
   def pathFor(
     res: Resolution,
     params: ResolutionParams,
-    extraKeyPart: String = ""
+    extraKeyPart: String = "",
+    // seems to make VariantSelector.AttributesBased#toString more reproducible
+    // across different environments
+    attributesBasedReprAsToString: Boolean = false
   ): String = {
     assert(res.rootDependencies.nonEmpty)
 
     val rootDep = res.rootDependencies.head
 
+    if (attributesBasedReprAsToString)
+      VariantSelector.AttributesBased.reprAsToString.set(true)
     VersionConstraint.parsedValueAsToString.set(true)
     try {
 
@@ -165,15 +170,19 @@ object TestHelpers extends PlatformTestHelpers {
         ) + dependenciesHashPart + variantPart + bomModVerHashPart + paramsPart + extraKeyPart
       ).filter(_.nonEmpty).mkString("/")
     }
-    finally
+    finally {
       VersionConstraint.parsedValueAsToString.remove()
+      if (attributesBasedReprAsToString)
+        VariantSelector.AttributesBased.reprAsToString.remove()
+    }
   }
 
   def validate(
     name: String,
     res: Resolution,
     params: ResolutionParams,
-    extraKeyPart: String = ""
+    extraKeyPart: String = "",
+    attributesBasedReprAsToString: Boolean = false
   )(
     result: => Seq[String]
   ): Future[Unit] = async {
@@ -183,7 +192,12 @@ object TestHelpers extends PlatformTestHelpers {
     val path = Seq(
       testDataDir,
       name,
-      pathFor(res, params, extraKeyPart)
+      pathFor(
+        res,
+        params,
+        extraKeyPart,
+        attributesBasedReprAsToString = attributesBasedReprAsToString
+      )
     ).filter(_.nonEmpty).mkString("/")
 
     await(validateResult(path)(result))
@@ -226,9 +240,16 @@ object TestHelpers extends PlatformTestHelpers {
   def validateDependencies(
     res: Resolution,
     params: ResolutionParams = ResolutionParams(),
-    extraKeyPart: String = ""
+    extraKeyPart: String = "",
+    attributesBasedReprAsToString: Boolean = false
   ): Future[Unit] =
-    validate("resolutions", res, params, extraKeyPart) {
+    validate(
+      "resolutions",
+      res,
+      params,
+      extraKeyPart,
+      attributesBasedReprAsToString = attributesBasedReprAsToString
+    ) {
       res.orderedDependencies.map { dep =>
         Seq(
           dep.module.organization.value,

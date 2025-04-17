@@ -52,6 +52,11 @@ object VariantSelector {
           s"$key=${matcher.repr}"
       }
       .mkString("{ ", ", ", " }")
+    override def toString: String =
+      if (AttributesBased.reprAsToString.get())
+        repr
+      else
+        s"AttributesBased$tuple"
 
     def matches(variantAttributes: Map[String, String]): Option[Int] = {
       val matchesMap = matchers.map {
@@ -117,6 +122,11 @@ object VariantSelector {
   object AttributesBased {
     private val empty0         = AttributesBased(Map.empty)
     def empty: AttributesBased = empty0
+
+    private[coursier] val reprAsToString: ThreadLocal[Boolean] = new ThreadLocal[Boolean] {
+      override protected def initialValue(): Boolean =
+        false
+    }
   }
 
   lazy val emptyConfiguration: VariantSelector =

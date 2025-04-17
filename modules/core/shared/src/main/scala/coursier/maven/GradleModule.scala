@@ -46,31 +46,38 @@ import coursier.core.VariantPublication
             map = map - "reject"
           map
         }
-        val prefersOpt = versionMap.get("prefers").flatMap { v =>
-          val c = VersionConstraint(v)
-          if (c.preferred.isEmpty) None
-          else Some(c)
-        }
-        val versionMap0 =
-          if (prefersOpt.isEmpty) versionMap
-          else versionMap - "prefers"
-        val version = versionMap0.toSeq match {
-          case Seq(("requires" | "strictly", req)) => VersionConstraint(req)
-          case Seq()                               => VersionConstraint.empty
-          case _ =>
-            val mainDep = s"${component.group}:${component.module}:${component.version}"
-            val subDep  = s"${dep.group}:${dep.module}"
-            sys.error(
-              s"Unrecognized dependency version shape for $subDep in $mainDep: $versionMap0"
-            )
-        }
 
-        val finalVersion = prefersOpt match {
-          case Some(prefers) =>
-            VersionConstraint.merge(version, prefers).getOrElse {
-              sys.error(s"Invalid version specification: $versionMap0")
-            }
-          case None => version
+        val finalVersion = {
+          val prefersOpt = versionMap.get("prefers").flatMap { v =>
+            val c = VersionConstraint(v)
+            if (c.preferred.isEmpty) None
+            else Some(c)
+          }
+          prefersOpt match {
+            case Some(prefers) if versionMap.size == 1 =>
+              prefers
+            case _ =>
+              val versionMap0 =
+                if (prefersOpt.isEmpty) versionMap
+                else versionMap - "prefers"
+              val version = versionMap0.toSeq match {
+                case Seq(("requires" | "strictly", req)) => VersionConstraint(req)
+                case Seq()                               => VersionConstraint.empty
+                case _ =>
+                  val mainDep = s"${component.group}:${component.module}:${component.version}"
+                  val subDep  = s"${dep.group}:${dep.module}"
+                  sys.error(
+                    s"Unrecognized dependency version shape for $subDep in $mainDep: $versionMap0"
+                  )
+              }
+              prefersOpt match {
+                case Some(prefers) =>
+                  VersionConstraint.merge(version, prefers).getOrElse {
+                    sys.error(s"Invalid version specification: $versionMap0")
+                  }
+                case None => version
+              }
+          }
         }
 
         variant0 -> Dependency(

@@ -60,7 +60,8 @@ object ResolveTests extends TestSuite {
   def gradleModuleCheck0(
     resolve0: Resolve[Task] = resolve,
     defaultConfiguration: Option[Configuration] = None,
-    defaultAttributes: Option[VariantSelector.AttributesBased] = None
+    defaultAttributes: Option[VariantSelector.AttributesBased] = None,
+    attributesBasedReprAsToString: Boolean = false
   )(
     dependencies: Dependency*
   ): Future[Unit] =
@@ -75,7 +76,14 @@ object ResolveTests extends TestSuite {
           .addDependencies(dependencies: _*)
           .future()
       }
-      await(validateDependencies(res, resolve1.resolutionParams, extraKeyPart = "_gradlemod"))
+      await {
+        validateDependencies(
+          res,
+          resolve1.resolutionParams,
+          extraKeyPart = "_gradlemod",
+          attributesBasedReprAsToString = attributesBasedReprAsToString
+        )
+      }
     }
   def gradleModuleCheck(dependencies: Dependency*): Future[Unit] =
     gradleModuleCheck0()(dependencies: _*)
@@ -2208,6 +2216,24 @@ object ResolveTests extends TestSuite {
           )
         )(
           dep"org.junit-pioneer:junit-pioneer:1.9.1"
+        )
+      }
+      test("only prefers") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.gradle.category"            -> VariantSelector.VariantMatcher.Library,
+              "org.gradle.dependency.bundling" -> VariantSelector.VariantMatcher.Equals("external"),
+              "org.gradle.jvm.environment"     -> VariantSelector.VariantMatcher.Equals("non-jvm"),
+              "org.gradle.usage"               -> VariantSelector.VariantMatcher.Runtime,
+              "org.jetbrains.kotlin.js.compiler"   -> VariantSelector.VariantMatcher.Equals("ir"),
+              "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("js")
+            ))
+          ),
+          defaultConfiguration = Some(Configuration.runtime),
+          attributesBasedReprAsToString = true
+        )(
+          dep"io.kotest:kotest-framework-engine-js:6.0.0.M3"
         )
       }
     }
