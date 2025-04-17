@@ -1,10 +1,11 @@
 package coursier.cache.loggers
 
 import java.io.{OutputStream, OutputStreamWriter, Writer}
-import java.util.concurrent._
+import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, ScheduledExecutorService}
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
 import coursier.cache.CacheLogger
+import coursier.cache.internal.ThreadUtil
 import coursier.cache.loggers.RefreshInfo.{CheckUpdateInfo, DownloadInfo}
 import coursier.util.Artifact
 
@@ -251,18 +252,7 @@ class RefreshLogger(
         case Some(state) =>
           state.refCount += 1
         case None =>
-          val scheduler = Executors.newSingleThreadScheduledExecutor(
-            new ThreadFactory {
-              val defaultThreadFactory = Executors.defaultThreadFactory()
-              def newThread(r: Runnable) = {
-                val t = defaultThreadFactory.newThread(r)
-                t.setDaemon(true)
-                t.setName("coursier-progress-bar")
-                t
-              }
-            }
-          )
-
+          val scheduler = ThreadUtil.fixedScheduledThreadPool(1, name = "coursier-progress-bars")
           val updateRunnable = new UpdateDisplayRunnable(out, display)
 
           for (n <- sizeHint)
