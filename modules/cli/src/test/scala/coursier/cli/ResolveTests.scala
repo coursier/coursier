@@ -95,7 +95,7 @@ object ResolveTests extends TestSuite {
       val params = paramsOrThrow(options)
 
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
@@ -131,7 +131,7 @@ object ResolveTests extends TestSuite {
       val params = paramsOrThrow(options)
 
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
@@ -171,7 +171,7 @@ object ResolveTests extends TestSuite {
 
       val ps = new PrintStream(stdout, true, "UTF-8")
       Resolve.printTask(params, pool, ps, ps, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
         .replace(sys.props("user.home"), "HOME")
@@ -215,7 +215,7 @@ object ResolveTests extends TestSuite {
       val params = paramsOrThrow(options)
 
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
@@ -360,7 +360,7 @@ object ResolveTests extends TestSuite {
       val params = paramsOrThrow(options)
 
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
@@ -384,7 +384,7 @@ object ResolveTests extends TestSuite {
 
       val ps = new PrintStream(stdout, true, "UTF-8")
       Resolve.printTask(params, pool, ps, ps, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       assert(output.startsWith("io.get-coursier:coursier-cli_2.12:1.1.0-M9"))
@@ -405,7 +405,7 @@ object ResolveTests extends TestSuite {
 
       val ps = new PrintStream(stdout, true, "UTF-8")
       Resolve.printTask(params, pool, ps, ps, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, StandardCharsets.UTF_8)
       val expectedOutput =
@@ -442,7 +442,7 @@ object ResolveTests extends TestSuite {
 
       val ps = new PrintStream(stdout, true, "UTF-8")
       Resolve.printTask(params, pool, ps, ps, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =

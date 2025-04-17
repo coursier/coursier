@@ -43,7 +43,7 @@ object FileCacheRedirectionTests extends TestSuite {
     withTmpDir0 { dir =>
       val c = fileCache0()
         .withLocation(dir.toFile)
-      val res         = transform(c).fetch(artifact).run.unsafeRun()
+      val res         = transform(c).fetch(artifact).run.unsafeRun(wrapExceptions = true)
       val expectedRes = Right(content)
       assert(res == expectedRes)
     }
@@ -69,7 +69,7 @@ object FileCacheRedirectionTests extends TestSuite {
     withTmpDir0 { dir =>
       val c = fileCache0()
         .withLocation(dir.toFile)
-      val res = transform(c).fetch(artifact).run.unsafeRun()
+      val res = transform(c).fetch(artifact).run.unsafeRun(wrapExceptions = true)
       assert(res.isLeft)
       assert(res.left.exists(check))
     }
@@ -1203,7 +1203,10 @@ object FileCacheRedirectionTests extends TestSuite {
           .withCachePolicies(Seq(
             CachePolicy.LocalUpdateChanging
           ))
-        val res = c.fetch(artifact(Uri.unsafeFromString(url), changing = true)).run.unsafeRun()
+        val res = c.fetch(artifact(
+          Uri.unsafeFromString(url),
+          changing = true
+        )).run.unsafeRun(wrapExceptions = true)
         assert(res.left.exists(_.contains("java.net.UnknownHostException")))
       }
     }
@@ -1232,7 +1235,7 @@ object FileCacheRedirectionTests extends TestSuite {
             .withChecksums(Seq(Some("SHA-1")))
             .file(artifact)
             .run
-            .unsafeRun()
+            .unsafeRun(wrapExceptions = true)
 
         res match {
           case Right(file: File) =>
@@ -1268,7 +1271,7 @@ object FileCacheRedirectionTests extends TestSuite {
           .withChecksums(Seq(Some("MD5")))
           .file(artifact)
           .run
-          .unsafeRun()
+          .unsafeRun(wrapExceptions = true)
 
         res match {
           case Right(file: File) =>
@@ -1304,7 +1307,7 @@ object FileCacheRedirectionTests extends TestSuite {
           .withChecksums(Seq(Some("MD5")))
           .file(artifact)
           .run
-          .unsafeRun()
+          .unsafeRun(wrapExceptions = true)
 
         val computedPath = FileCache.auxiliaryFile(dummyFile.toFile, "MD5" + ".computed")
         assert(!computedPath.exists())
@@ -1333,12 +1336,13 @@ object FileCacheRedirectionTests extends TestSuite {
             .run
         }
 
-        val Right(_)         = resolve.unsafeRun()
+        val Right(_)         = resolve.unsafeRun(wrapExceptions = true)
         val computedSha1Path = FileCache.auxiliaryFile(dummyFile.toFile, "SHA-1" + ".computed")
 
         Files.write(computedSha1Path.toPath, Array[Byte](1, 2, 3))
 
-        val Left(_: coursier.cache.ArtifactError.NotFound) = resolve.unsafeRun()
+        val Left(_: coursier.cache.ArtifactError.NotFound) =
+          resolve.unsafeRun(wrapExceptions = true)
       }
     }
 
@@ -1356,7 +1360,7 @@ object FileCacheRedirectionTests extends TestSuite {
           .withLocation(dir.toString)
           .file(artifact)
           .run
-          .unsafeRun()
+          .unsafeRun(wrapExceptions = true)
 
         res match {
           case Right(file) => assert(file.isFile)

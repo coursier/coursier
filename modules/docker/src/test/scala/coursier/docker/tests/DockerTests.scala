@@ -32,7 +32,8 @@ object DockerTests extends TestSuite {
       else
         synchronized {
           vmOpt0.orElse {
-            val vmFiles = cache.logger.using(VmFiles.default()).unsafeRun()(cache.ec)
+            val vmFiles =
+              cache.logger.using(VmFiles.default()).unsafeRun(wrapExceptions = true)(cache.ec)
             val vmParams = Vm.Params.default().copy(
               memory = "2g",
               useVirtualization = useVirtualization

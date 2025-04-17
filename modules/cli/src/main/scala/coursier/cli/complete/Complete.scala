@@ -35,7 +35,7 @@ object Complete extends CoursierCommand[CompleteOptions] {
       .withScalaVersionOpt(params.scalaVersion)
       .withInput(params.toComplete)
       .result()
-      .unsafeRun()(ec)
+      .unsafeRun(wrapExceptions = true)(ec)
 
     if (params.output.verbosity >= 2)
       System.err.println(s"Completing ${result.input}")

@@ -88,7 +88,7 @@ object Java extends CoursierCommand[JavaOptions] {
           }
         } yield maybeError
 
-      val maybeError = task.unsafeRun()(coursierCache.ec)
+      val maybeError = task.unsafeRun(wrapExceptions = true)(coursierCache.ec)
       maybeError match {
         case Left(error) =>
           System.err.println(error)
@@ -104,7 +104,9 @@ object Java extends CoursierCommand[JavaOptions] {
       // As is, its output gets flushed too late sometimes, resulting in progress bars
       // displayed after actions done after downloads.
       val (isSystem, home) = logger.use {
-        try task.unsafeRun()(coursierCache.ec) // TODO Better error messages for relevant exceptions
+        try task.unsafeRun(wrapExceptions =
+            true
+          )(coursierCache.ec) // TODO Better error messages for relevant exceptions
         catch {
           case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
             System.err.println(e.getMessage)
@@ -172,7 +174,7 @@ object Java extends CoursierCommand[JavaOptions] {
           params.output.verbosity,
           MaybeInstallJvm.headerComment
         )
-        task.unsafeRun()(coursierCache.ec)
+        task.unsafeRun(wrapExceptions = true)(coursierCache.ec)
       }
       else if (Execve.available()) {
         val extraEnv = envUpdate.transientUpdates()

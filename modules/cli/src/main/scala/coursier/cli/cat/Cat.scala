@@ -77,7 +77,7 @@ object Cat extends CoursierCommand[CatOptions] {
       }
 
     val ec = ExecutionContext.fromExecutorService(pool)
-    task.unsafeRun()(ec)
+    task.unsafeRun(wrapExceptions = true)(ec)
 
     if (anyError)
       sys.exit(1)

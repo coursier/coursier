@@ -115,7 +115,7 @@ object Fetch extends CoursierCommand[FetchOptions] {
 
     val t = task(params, pool, deps)
 
-    val (_, _, _, files) = t.attempt.unsafeRun()(ec) match {
+    val (_, _, _, files) = t.attempt.unsafeRun(wrapExceptions = true)(ec) match {
       case Left(e: ResolveException) if params.resolve.output.verbosity <= 1 =>
         Output.errPrintln(e.message)
         sys.exit(1)

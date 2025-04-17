@@ -81,7 +81,9 @@ object JavaHomeTests extends TestSuite {
         .withOs("linux")
 
       val expectedSystem = Some(platformPath("/home/foo/jvm/adopt-31"))
-      val system         = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
+      val system = home.system()
+        .unsafeRun(wrapExceptions = true)(ExecutionContext.global)
+        .map(_.getAbsolutePath)
       assert(system == expectedSystem)
     }
 
@@ -106,7 +108,9 @@ object JavaHomeTests extends TestSuite {
         .withOs("darwin")
 
       val expectedSystem = Some(platformPath("/Library/JVMs/oracle-41"))
-      val system         = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
+      val system = home.system()
+        .unsafeRun(wrapExceptions = true)(ExecutionContext.global)
+        .map(_.getAbsolutePath)
       assert(system == expectedSystem)
     }
 
@@ -145,7 +149,9 @@ object JavaHomeTests extends TestSuite {
         .withOs("linux")
 
       val expectedSystem = Some(platformPath("/usr/lib/jvm/oracle-39b07"))
-      val system         = home.system().unsafeRun()(ExecutionContext.global).map(_.getAbsolutePath)
+      val system = home.system()
+        .unsafeRun(wrapExceptions = true)(ExecutionContext.global)
+        .map(_.getAbsolutePath)
       assert(system == expectedSystem)
     }
 
@@ -196,22 +202,24 @@ object JavaHomeTests extends TestSuite {
           .withNoUpdateCache(Some(cache))
           .withCache(cache.withArchiveCache(failArchiveCache))
 
-        val initialCheckRes = home.getIfInstalled("the-jdk:1.1").unsafeRun()
+        val initialCheckRes = home.getIfInstalled("the-jdk:1.1").unsafeRun(wrapExceptions = true)
         assert(initialCheckRes.isEmpty)
 
-        val noUpdateInitialCheckRes = noUpdateHome.getIfInstalled("the-jdk:1.1").unsafeRun()
+        val noUpdateInitialCheckRes =
+          noUpdateHome.getIfInstalled("the-jdk:1.1").unsafeRun(wrapExceptions = true)
         assert(noUpdateInitialCheckRes.isEmpty)
 
-        home.get("the-jdk:1.1").unsafeRun() // install 1.1
+        home.get("the-jdk:1.1").unsafeRun(wrapExceptions = true) // install 1.1
 
         val entries = index.lookup("the-jdk", "1", Some("the-os"), Some("the-arch"))
         assert(entries.exists(_.last.version == "1.2"))
 
-        val ifInstalled = home.getWithIsSystemIfInstalled("the-jdk:1").unsafeRun()
+        val ifInstalled =
+          home.getWithIsSystemIfInstalled("the-jdk:1").unsafeRun(wrapExceptions = true)
         assert(ifInstalled.nonEmpty)
         assert(ifInstalled.map(_._1).contains(false))
 
-        val (isSystem, _) = home.getWithIsSystem("the-jdk:1").unsafeRun()
+        val (isSystem, _) = home.getWithIsSystem("the-jdk:1").unsafeRun(wrapExceptions = true)
         assert(!isSystem)
       }
     }

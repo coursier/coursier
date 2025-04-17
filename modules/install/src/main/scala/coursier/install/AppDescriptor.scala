@@ -129,7 +129,7 @@ import dataclass._
       .withClassifiers(classifiers)
       .withArtifactTypes(artifactTypes)
       .ioResult
-      .unsafeRun()(cache.ec)
+      .unsafeRun(wrapExceptions = true)(cache.ec)
 
     val extraProperties0 = extraProperties(res.resolution)
 
@@ -282,7 +282,7 @@ import dataclass._
         .withRepositories(repositories)
         .withCache(cache)
         .result()
-        .unsafeRun()(cache.ec)
+        .unsafeRun(wrapExceptions = true)(cache.ec)
         .versions
 
       Latest(deps.head.versionConstraint.asString) match {
@@ -483,7 +483,7 @@ object AppDescriptor {
         .withRepositories(repositories)
         .withInput(base)
         .complete()
-        .unsafeRun()(cache.ec)
+        .unsafeRun(wrapExceptions = true)(cache.ec)
       if (verbosity >= 2) {
         System.err.println(s"Found ${compl.length} completions:")
         for (c <- compl)
@@ -546,7 +546,7 @@ object AppDescriptor {
         res <- Task.fromEither(a)
       } yield res
 
-      t.unsafeRun()(cache.ec) match {
+      t.unsafeRun(wrapExceptions = true)(cache.ec) match {
         case Left(err) =>
           // FIXME Trapped error
           Set.empty

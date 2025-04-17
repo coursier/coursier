@@ -39,7 +39,9 @@ object VmStart extends CoursierCommand[VmStartOptions] {
     }
 
     val vmFiles =
-      try logger.using(VmFiles.default(archiveCache = archiveCacheForVmFiles)).unsafeRun()(cache.ec)
+      try logger.using(VmFiles.default(archiveCache =
+          archiveCacheForVmFiles
+        )).unsafeRun(wrapExceptions = true)(cache.ec)
       catch {
         case ex: Throwable =>
           throw new Exception(ex)

@@ -99,7 +99,7 @@ object Install extends CoursierCommand[InstallOptions] {
         params.output.verbosity,
         MaybeSetupPath.headerComment
       )
-      task.unsafeRun()(cache.ec)
+      task.unsafeRun(wrapExceptions = true)(cache.ec)
     }
     else {
 
@@ -114,13 +114,14 @@ object Install extends CoursierCommand[InstallOptions] {
 
       try for (id <- args.all) {
 
-          val appInfo = channels.appDescriptor(id).attempt.unsafeRun()(cache.ec) match {
-            case Left(err: Channels.ChannelsException) =>
-              System.err.println(err.getMessage)
-              sys.exit(1)
-            case Left(err)      => throw err
-            case Right(appInfo) => appInfo
-          }
+          val appInfo =
+            channels.appDescriptor(id).attempt.unsafeRun(wrapExceptions = true)(cache.ec) match {
+              case Left(err: Channels.ChannelsException) =>
+                System.err.println(err.getMessage)
+                sys.exit(1)
+              case Left(err)      => throw err
+              case Right(appInfo) => appInfo
+            }
 
           val wroteSomethingOpt = installDir.createOrUpdate(
             appInfo,
