@@ -174,7 +174,7 @@ object JavaHome {
   def systemId: String =
     "system"
   def defaultJvm: String =
-    "temurin:21"
+    s"${JvmCache.defaultJdkName}:21"
   def defaultId: String =
     s"$systemId|$defaultJvm"
 
