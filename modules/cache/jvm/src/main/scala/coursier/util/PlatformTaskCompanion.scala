@@ -41,6 +41,15 @@ abstract class PlatformTaskCompanion { self =>
   implicit class PlatformTaskOps[T](private val task: Task[T]) {
     def unsafeRun()(implicit ec: ExecutionContext): T =
       Await.result(task.future(), Duration.Inf)
+    def unsafeRun(wrapExceptions: Boolean)(implicit ec: ExecutionContext): T =
+      if (wrapExceptions)
+        try unsafeRun()
+        catch {
+          case t: Throwable =>
+            throw new Exception(t)
+        }
+      else
+        unsafeRun()
   }
 
 }

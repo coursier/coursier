@@ -27,12 +27,12 @@ object DigestBasedArchiveCacheTests extends TestSuite {
           Artifact(s"https://registry-1.docker.io/v2/$repoName/blobs/sha256:$sha256")
             .withAuthentication(Some(auth))
         )
-          .run.unsafeRun()(cache.ec)
+          .run.unsafeRun(wrapExceptions = true)(cache.ec)
           .toTry.get
           .toPath
 
         val dir = digestBased.get(DigestArtifact(sha256, file))
-          .unsafeRun()(cache.ec)
+          .unsafeRun(wrapExceptions = true)(cache.ec)
           .toTry.get
           .toPath
 

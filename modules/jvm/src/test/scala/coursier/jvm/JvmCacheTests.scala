@@ -116,7 +116,7 @@ object JvmCacheTests extends TestSuite {
           .withDefaultVersionOpt(None)
           .withIndex(Task.point(index))
 
-        val home           = jvmCache.get("the-jdk:1.1").unsafeRun()(cache.ec)
+        val home           = jvmCache.get("the-jdk:1.1").unsafeRun(wrapExceptions = true)(cache.ec)
         val expectedOutput = "the jdk 1.1\n"
         val javaExec       = new File(new File(home, "bin"), filename)
 
@@ -136,7 +136,7 @@ object JvmCacheTests extends TestSuite {
           .withDefaultVersionOpt(None)
           .withIndex(Task.point(index))
 
-        val home           = jvmCache.get("the-jdk:1+").unsafeRun()(cache.ec)
+        val home           = jvmCache.get("the-jdk:1+").unsafeRun(wrapExceptions = true)(cache.ec)
         val javaExec       = new File(new File(home, "bin"), filename)
         val output         = Seq(javaExec.getAbsolutePath, "-version").!!
         val expectedOutput = "the jdk 1.2\n"
@@ -155,7 +155,7 @@ object JvmCacheTests extends TestSuite {
           .withDefaultVersionOpt(None)
           .withIndex(Task.point(index))
 
-        val home = jvmCache.get("the-jdk:1.1").unsafeRun()(cache.ec)
+        val home = jvmCache.get("the-jdk:1.1").unsafeRun(wrapExceptions = true)(cache.ec)
         assert(home.getName == "Home")
         assert(home.getParentFile.getName == "Contents")
         val javaExec = new File(home, "bin/java")
@@ -171,7 +171,7 @@ object JvmCacheTests extends TestSuite {
 
         val alreadyThereHome = jvmCache
           .getIfInstalled("the-jdk:1.1")
-          .unsafeRun()(cache.ec)
+          .unsafeRun(wrapExceptions = true)(cache.ec)
           .getOrElse {
             sys.error("Should have been there")
           }
@@ -201,7 +201,7 @@ object JvmCacheTests extends TestSuite {
           .withDefaultVersionOpt(None)
           .withIndex(Task.point(index))
 
-        val home = jvmCache.get("the-jdk:1.2").unsafeRun()(cache.ec)
+        val home = jvmCache.get("the-jdk:1.2").unsafeRun(wrapExceptions = true)(cache.ec)
         assert(home.getName == "the-jdk-1.2")
         val javaExec = new File(home, "bin/java")
         try {
@@ -226,8 +226,11 @@ object JvmCacheTests extends TestSuite {
           .withDefaultJdkNameOpt(None)
           .withDefaultVersionOpt(None)
 
-        val dir =
-          os.Path(jvmCache.get("https://foo.com/download/the-jdk-1.2.tar.gz").unsafeRun()(cache.ec))
+        val dir = os.Path(
+          jvmCache
+            .get("https://foo.com/download/the-jdk-1.2.tar.gz")
+            .unsafeRun(wrapExceptions = true)(cache.ec)
+        )
 
         val expectedDir =
           os.rel / "https" / "foo.com" / "download" / "the-jdk-1.2.tar.gz" / "the-jdk-1.2"

@@ -451,7 +451,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
           else
             sys.error(s"Async-profiler not supported on current OS (${sys.props("os.name")})")
 
-        val dir = archiveCache.get(Artifact(url)).unsafeRun()(cache.ec) match {
+        val dir = archiveCache.get(Artifact(url)).unsafeRun(wrapExceptions = true)(cache.ec) match {
           case Left(err)  => throw new Exception(err)
           case Right(res) => res
         }
@@ -666,7 +666,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
         fetchCacheTask(params, pool, deps, args.unparsed)
 
     val (mainClass, run) =
-      try t.unsafeRun()(ec)
+      try t.unsafeRun(wrapExceptions = true)(ec)
       catch {
         case e: ResolveException if params.shared.resolve.output.verbosity <= 1 =>
           System.err.println(e.message)

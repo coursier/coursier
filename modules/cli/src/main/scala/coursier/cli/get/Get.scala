@@ -74,7 +74,7 @@ object Get extends CoursierCommand[GetOptions] {
       }
 
     val ec = ExecutionContext.fromExecutorService(pool)
-    task.unsafeRun()(ec)
+    task.unsafeRun(wrapExceptions = true)(ec)
 
     if (anyError)
       sys.exit(1)

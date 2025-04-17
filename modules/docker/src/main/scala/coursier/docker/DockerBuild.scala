@@ -229,7 +229,7 @@ object DockerBuild {
                   priviledgedDigestArchiveCache.get(art)
               }
               val fromBuiltLayersOrErrors =
-                Task.gather.gather(fromBuiltLayersTasks).unsafeRun()(cache.ec)
+                Task.gather.gather(fromBuiltLayersTasks).unsafeRun(wrapExceptions = true)(cache.ec)
               val fromBuiltErrors = fromBuiltLayersOrErrors.collect {
                 case Left(err) => err
               }

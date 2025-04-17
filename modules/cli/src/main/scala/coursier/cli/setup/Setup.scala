@@ -102,7 +102,7 @@ object Setup extends CoursierCommand[SetupOptions] {
       )
 
     // TODO Better error messages for relevant exceptions
-    try task.unsafeRun()(cache.ec)
+    try task.unsafeRun(wrapExceptions = true)(cache.ec)
     catch {
       case e: InstallDirException if params.output.verbosity <= 1 =>
         System.err.println(e.getMessage)

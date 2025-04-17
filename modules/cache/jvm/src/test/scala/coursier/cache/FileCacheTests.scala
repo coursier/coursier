@@ -50,7 +50,7 @@ object FileCacheTests extends TestSuite {
             val file = cache
               .withClock(Clock.fixed(instant, offset))
               .file(artifact).run
-              .unsafeRun()(cache.ec)
+              .unsafeRun(wrapExceptions = true)(cache.ec)
               .fold(e => throw new Exception(e), identity)
             val content = os.read(os.Path(file))
             assert(content == expected0)

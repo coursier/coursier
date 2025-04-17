@@ -430,7 +430,7 @@ object InstallTests extends TestSuite {
               else
                 Task.fail(new Exception(s"Invalid source: $src")),
             currentTime = now
-          ).unsafeRun()(cache.ec)
+          ).unsafeRun(wrapExceptions = true)(cache.ec)
         }
 
         // randomly seeing the old file on OS X if we don't check that :|
@@ -464,7 +464,7 @@ object InstallTests extends TestSuite {
           installDir0.maybeUpdate(
             "dummy-app-id",
             src => sys.error("illegal: that code should not be reached")
-          ).attempt.unsafeRun()(cache.ec)
+          ).attempt.unsafeRun(wrapExceptions = true)(cache.ec)
 
         assert(
           result.contains(Some(false))

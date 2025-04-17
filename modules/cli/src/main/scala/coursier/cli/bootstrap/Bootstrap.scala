@@ -251,25 +251,26 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
       deps
     )
 
-    val (res, scalaVersionOpt, platformOpt, files, mainClass) = t.attempt.unsafeRun()(ec) match {
-      case Left(e: ResolveException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
-        System.err.println(e.message)
-        sys.exit(1)
-      case Left(e: coursier.error.FetchError)
-          if params.sharedLaunch.resolve.output.verbosity <= 1 =>
-        System.err.println(e.getMessage)
-        sys.exit(1)
-      case Left(e: LaunchException.NoMainClassFound)
-          if params.sharedLaunch.resolve.output.verbosity <= 1 =>
-        System.err.println("Cannot find default main class. Specify one with -M or --main-class.")
-        sys.exit(1)
-      case Left(e: LaunchException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
-        System.err.println(e.getMessage)
-        sys.exit(1)
-      case Left(e) => throw e
-      case Right(t0) =>
-        t0
-    }
+    val (res, scalaVersionOpt, platformOpt, files, mainClass) =
+      t.attempt.unsafeRun(wrapExceptions = true)(ec) match {
+        case Left(e: ResolveException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
+          System.err.println(e.message)
+          sys.exit(1)
+        case Left(e: coursier.error.FetchError)
+            if params.sharedLaunch.resolve.output.verbosity <= 1 =>
+          System.err.println(e.getMessage)
+          sys.exit(1)
+        case Left(e: LaunchException.NoMainClassFound)
+            if params.sharedLaunch.resolve.output.verbosity <= 1 =>
+          System.err.println("Cannot find default main class. Specify one with -M or --main-class.")
+          sys.exit(1)
+        case Left(e: LaunchException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
+          System.err.println(e.getMessage)
+          sys.exit(1)
+        case Left(e) => throw e
+        case Right(t0) =>
+          t0
+      }
 
     var wroteBat = false
 
@@ -335,7 +336,8 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
             )
           )
         val javaHomeTask = handle.get(s"graalvm:$graalvmVersion")
-        val javaHome     = javaHomeTask.unsafeRun()(ExecutionContext.fromExecutorService(pool))
+        val javaHome =
+          javaHomeTask.unsafeRun(wrapExceptions = true)(ExecutionContext.fromExecutorService(pool))
 
         Parameters.NativeImage(mainClass, fetch0)
           .withJars(files.map(_._2))
@@ -426,7 +428,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
               pool,
               Seq("io.github.alexarchambault.python:interface:0.1.0")
             )
-            val (_, _, _, pythonFiles) = task.attempt.unsafeRun()(ec) match {
+            val (_, _, _, pythonFiles) = task.attempt.unsafeRun(wrapExceptions = true)(ec) match {
               case Left(e: ResolveException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
                 System.err.println(e.message)
                 sys.exit(1)
