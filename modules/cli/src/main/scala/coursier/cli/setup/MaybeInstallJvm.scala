@@ -2,7 +2,7 @@ package coursier.cli.setup
 
 import java.io.File
 
-import coursier.cache.Cache
+import coursier.cache.{Cache, CacheLogger}
 import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.jvm.{JvmCacheLogger, JavaHome}
 import coursier.util.Task
@@ -22,7 +22,7 @@ case class MaybeInstallJvm(
   def banner: String =
     "Checking if a JVM is installed"
 
-  def task: Task[Unit] =
+  private def task0: Task[Unit] =
     for {
       initialIsSystemJavaHomeOpt <- javaHome.getWithIsSystemIfInstalled(defaultId)
 
@@ -111,6 +111,9 @@ case class MaybeInstallJvm(
       }
 
     } yield ()
+
+  def task: Task[Unit] =
+    coursierCache.loggerOpt.getOrElse(CacheLogger.nop).using(task0)
 
   private def tryRevertEnvVarUpdate(
     envUpdate: EnvironmentUpdate,
