@@ -205,12 +205,14 @@ object RefreshLogger {
   private final class State(
     var refCount: Int,
     val runnable: UpdateDisplayRunnable,
-    val scheduler: ScheduledExecutorService
+    val managedSchedulerOpt: Option[ScheduledExecutorService]
   ) extends AutoCloseable {
     def close(): Unit = {
-      scheduler.shutdown()
-      val refreshInterval = runnable.display.refreshInterval
-      scheduler.awaitTermination(2 * refreshInterval.length, refreshInterval.unit)
+      for (scheduler <- managedSchedulerOpt) {
+        scheduler.shutdown()
+        val refreshInterval = runnable.display.refreshInterval
+        scheduler.awaitTermination(2 * refreshInterval.length, refreshInterval.unit)
+      }
       runnable.stop()
     }
   }
@@ -223,19 +225,28 @@ class RefreshLogger(
   display: RefreshDisplay,
   val fallbackMode: Boolean = RefreshLogger.defaultFallbackMode,
   logChanging: Boolean = false,
-  logPickedVersions: Boolean = false
+  logPickedVersions: Boolean = false,
+  schedulerOpt: Option[ScheduledExecutorService] = None
 ) extends CacheLogger {
 
   def this(
     out: Writer,
     display: RefreshDisplay
-  ) = this(out, display, RefreshLogger.defaultFallbackMode, false)
+  ) = this(out, display, RefreshLogger.defaultFallbackMode, false, false, None)
 
   def this(
     out: Writer,
     display: RefreshDisplay,
     fallbackMode: Boolean
-  ) = this(out, display, fallbackMode, false)
+  ) = this(out, display, fallbackMode, false, false, None)
+
+  def this(
+    out: Writer,
+    display: RefreshDisplay,
+    fallbackMode: Boolean,
+    logChanging: Boolean,
+    logPickedVersions: Boolean
+  ) = this(out, display, fallbackMode, false, false, None)
 
   import RefreshLogger._
 
@@ -252,7 +263,13 @@ class RefreshLogger(
         case Some(state) =>
           state.refCount += 1
         case None =>
-          val scheduler = ThreadUtil.fixedScheduledThreadPool(1, name = "coursier-progress-bars")
+          val (scheduler, managedSchedulerOpt) = schedulerOpt match {
+            case Some(scheduler0) => (scheduler0, None)
+            case None =>
+              val scheduler0 =
+                ThreadUtil.fixedScheduledThreadPool(1, name = "coursier-progress-bars")
+              (scheduler0, Some(scheduler0))
+          }
           val updateRunnable = new UpdateDisplayRunnable(out, display)
 
           for (n <- sizeHint)
@@ -271,7 +288,7 @@ class RefreshLogger(
             new State(
               refCount = 1,
               runnable = updateRunnable,
-              scheduler = scheduler
+              managedSchedulerOpt = managedSchedulerOpt
             )
           )
       }
