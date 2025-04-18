@@ -28,7 +28,9 @@ import coursier.core.VariantPublication
   component: GradleModule.Component,
   variants: Seq[GradleModule.Variant] = Nil
 ) {
-  def project: Project = {
+  def project(actualComponentOpt: Option[GradleModule.Component]): Project = {
+
+    val actualComponent = actualComponentOpt.getOrElse(component)
 
     def variantDependencies(variant: GradleModule.Variant, constraints: Boolean = false) = {
       val variant0 = Variant.Attributes(variant.name)
@@ -46,31 +48,39 @@ import coursier.core.VariantPublication
             map = map - "reject"
           map
         }
-        val prefersOpt = versionMap.get("prefers").flatMap { v =>
-          val c = VersionConstraint(v)
-          if (c.preferred.isEmpty) None
-          else Some(c)
-        }
-        val versionMap0 =
-          if (prefersOpt.isEmpty) versionMap
-          else versionMap - "prefers"
-        val version = versionMap0.toSeq match {
-          case Seq(("requires" | "strictly", req)) => VersionConstraint(req)
-          case Seq()                               => VersionConstraint.empty
-          case _ =>
-            val mainDep = s"${component.group}:${component.module}:${component.version}"
-            val subDep  = s"${dep.group}:${dep.module}"
-            sys.error(
-              s"Unrecognized dependency version shape for $subDep in $mainDep: $versionMap0"
-            )
-        }
 
-        val finalVersion = prefersOpt match {
-          case Some(prefers) =>
-            VersionConstraint.merge(version, prefers).getOrElse {
-              sys.error(s"Invalid version specification: $versionMap0")
-            }
-          case None => version
+        val finalVersion = {
+          val prefersOpt = versionMap.get("prefers").flatMap { v =>
+            val c = VersionConstraint(v)
+            if (c.preferred.isEmpty) None
+            else Some(c)
+          }
+          prefersOpt match {
+            case Some(prefers) if versionMap.size == 1 =>
+              prefers
+            case _ =>
+              val versionMap0 =
+                if (prefersOpt.isEmpty) versionMap
+                else versionMap - "prefers"
+              val version = versionMap0.toSeq match {
+                case Seq(("requires" | "strictly", req)) => VersionConstraint(req)
+                case Seq()                               => VersionConstraint.empty
+                case _ =>
+                  val mainDep =
+                    s"${actualComponent.group}:${actualComponent.module}:${actualComponent.version}"
+                  val subDep = s"${dep.group}:${dep.module}"
+                  sys.error(
+                    s"Unrecognized dependency version shape for $subDep in $mainDep: $versionMap0"
+                  )
+              }
+              prefersOpt match {
+                case Some(prefers) =>
+                  VersionConstraint.merge(version, prefers).getOrElse {
+                    sys.error(s"Invalid version specification: $versionMap0")
+                  }
+                case None => version
+              }
+          }
         }
 
         variant0 -> Dependency(
@@ -120,9 +130,9 @@ import coursier.core.VariantPublication
       .filter { variant =>
         variant.capabilities.isEmpty ||
         variant.capabilities.exists { capability =>
-          capability.group == component.group &&
-          capability.name == component.module &&
-          (capability.version.isEmpty || capability.version == component.version)
+          capability.group == actualComponent.group &&
+          capability.name == actualComponent.module &&
+          (capability.version.isEmpty || capability.version == actualComponent.version)
         }
       }
       .map { variant =>
@@ -143,8 +153,9 @@ import coursier.core.VariantPublication
       .toMap
 
     val baseProject = Project(
-      module = Module(Organization(component.group), ModuleName(component.module), Map.empty),
-      version0 = Version(component.version),
+      module =
+        Module(Organization(actualComponent.group), ModuleName(actualComponent.module), Map.empty),
+      version0 = Version(actualComponent.version),
       dependencies0 = dependencies,
       configurations = GradleModule.defaultConfigurations,
       parent0 = None,

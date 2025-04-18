@@ -301,7 +301,12 @@ private[coursier] class MavenRepositoryInternal(
             case Left(err) =>
               F.point(Right(Left(err)))
             case Right(content) =>
-              parseModule(module, content, moduleArtifact.url).run.map(_.map(Right(_)))
+              parseModule(
+                module,
+                version.asString,
+                content,
+                moduleArtifact.url
+              ).run.map(_.map(Right(_)))
           }
         }
       moduleProjectTask.flatMap {
@@ -342,7 +347,7 @@ private[coursier] class MavenRepositoryInternal(
       } yield finalProj
     }
 
-  private def parseModule[F[_]](module: Module, str: String, uri: String)(implicit
+  private def parseModule[F[_]](module: Module, version: String, str: String, uri: String)(implicit
     F: Monad[F]
   ): EitherT[F, String, Project] =
     EitherT.fromEither {
@@ -354,7 +359,15 @@ private[coursier] class MavenRepositoryInternal(
         }
 
       res.map { gradleMod =>
-        val project = gradleMod.project
+        val project = gradleMod.project(
+          Some(
+            GradleModule.Component(
+              group = module.organization.value,
+              module = module.name.value,
+              version = version
+            )
+          )
+        )
         if (project.module == module) project
         else project.withModule(module)
       }
