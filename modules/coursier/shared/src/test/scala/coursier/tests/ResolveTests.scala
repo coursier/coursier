@@ -2236,6 +2236,19 @@ object ResolveTests extends TestSuite {
           dep"io.kotest:kotest-framework-engine-js:6.0.0.M3"
         )
       }
+      test("wrong module name") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.gradle.category"        -> VariantSelector.VariantMatcher.Library,
+              "org.gradle.jvm.environment" -> VariantSelector.VariantMatcher.Equals("standard-jvm")
+            ))
+          ),
+          attributesBasedReprAsToString = true
+        )(
+          dep"org.jetbrains.kotlin:kotlin-test-junit:2.0.20"
+        )
+      }
     }
 
     test("empty version") {
