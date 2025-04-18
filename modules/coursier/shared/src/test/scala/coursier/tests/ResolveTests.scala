@@ -2249,6 +2249,11 @@ object ResolveTests extends TestSuite {
           dep"org.jetbrains.kotlin:kotlin-test-junit:2.0.20"
         )
       }
+      test("module BOM") {
+        gradleModuleCheck(
+          dep"org.springframework.data:spring-data-jpa:2.5.4"
+        )
+      }
     }
 
     test("empty version") {

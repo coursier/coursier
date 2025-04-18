@@ -548,10 +548,20 @@ object Attributes {
     else None
   }
 
-  lazy val equivalentConfigurations = variants.flatMap {
+  lazy val depMgmtEquivalentConfigurations = variants.flatMap {
     case (attr, map) =>
       val attr0 = VariantSelector.AttributesBased(
-        map.map { case (k, v) => VariantSelector.VariantMatcher.fromString(k, v) }
+        map
+          .map {
+            case (k, v) =>
+              VariantSelector.VariantMatcher.fromString(k, v)
+          }
+          .map {
+            case ("org.gradle.category", VariantSelector.VariantMatcher.Platform) =>
+              ("org.gradle.category", VariantSelector.VariantMatcher.Library)
+            case other =>
+              other
+          }
       )
       attr0.equivalentConfiguration.toSeq.map(attr -> _)
   }

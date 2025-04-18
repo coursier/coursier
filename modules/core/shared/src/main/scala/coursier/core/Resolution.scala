@@ -2007,7 +2007,7 @@ object Resolution {
                 case c: Variant.Configuration =>
                   c.configuration
                 case attr: Variant.Attributes =>
-                  project0.equivalentConfigurations.getOrElse(attr, Configuration.empty)
+                  project0.depMgmtEquivalentConfigurations.getOrElse(attr, Configuration.empty)
               }
               config -> dep
           } +:
