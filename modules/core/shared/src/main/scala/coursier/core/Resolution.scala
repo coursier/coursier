@@ -1075,11 +1075,12 @@ object Resolution {
             VariantSelector.ConfigurationBased(actualConfig0)
         }
       case (c: VariantSelector.ConfigurationBased, None) =>
-        c.equivalentAttributesSelector.map(defaultAttributes + _).toRight {
+        val c0 = if (c.isEmpty) VariantSelector.ConfigurationBased(defaultConfig) else c
+        c0.equivalentAttributesSelector.map(defaultAttributes + _).toRight {
           new VariantError.CannotFindEquivalentVariants(
             dep.module,
             dep.versionConstraint,
-            c.configuration
+            c0.configuration
           )
         }
       case (attr: VariantSelector.AttributesBased, Some(configs)) =>
