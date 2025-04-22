@@ -76,6 +76,21 @@ trait Launchers extends CsModule {
       val cLibPath =
         if (usesDocker) s"/data/$staticLibDirName"
         else staticLibDir().path.toString
+      val zstdOpt =
+        if (Properties.isWin && (arch == "x86_64" || arch == "amd64"))
+          Seq(s"-H:IncludeResources=win/amd64/libzstd-jni-.*\\.dll")
+        else if (Properties.isMac && (arch == "x86_64" || arch == "amd64"))
+          Seq(s"-H:IncludeResources=darwin/x86_64/libzstd-jni-.*\\.dylib")
+        else if (Properties.isMac && arch == "aarch64")
+          Seq(s"-H:IncludeResources=darwin/aarch64/libzstd-jni-.*\\.dylib")
+        else if (Properties.isLinux && (arch == "x86_64" || arch == "amd64"))
+          Seq(s"-H:IncludeResources=linux/amd64/libzstd-jni-.*\\.so")
+        else if (Properties.isLinux && arch == "aarch64")
+          Seq(s"-H:IncludeResources=linux/aarch64/libzstd-jni-.*\\.so")
+        else {
+          System.err.println("Warning: not sure which zstd-jni library to embed")
+          Nil
+        }
       val extraOpts =
         if (Properties.isLinux && arch == "aarch64")
           Seq(
@@ -91,7 +106,8 @@ trait Launchers extends CsModule {
         "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted=ALL-UNNAMED",
         "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c=ALL-UNNAMED"
       ) ++
-        extraOpts
+        extraOpts ++
+        zstdOpt
     }
   }
 
