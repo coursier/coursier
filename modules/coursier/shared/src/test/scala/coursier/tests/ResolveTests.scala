@@ -15,6 +15,7 @@ import coursier.core.{
   Type,
   VariantSelector
 }
+import coursier.core.VariantSelector.VariantMatcher
 import coursier.error.ResolutionError
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepositoryLike
@@ -2019,12 +2020,12 @@ object ResolveTests extends TestSuite {
               gradleModuleCheck0(
                 defaultAttributes = Some(
                   VariantSelector.AttributesBased(Map(
-                    "org.gradle.usage" -> VariantSelector.VariantMatcher.Runtime,
+                    "org.gradle.usage" -> VariantMatcher.Runtime,
                     "org.jetbrains.kotlin.platform.type" ->
-                      VariantSelector.VariantMatcher.Equals("js"),
+                      VariantMatcher.Equals("js"),
                     "org.jetbrains.kotlin.js.compiler" ->
-                      VariantSelector.VariantMatcher.Equals("ir"),
-                    "org.gradle.category" -> VariantSelector.VariantMatcher.Library
+                      VariantMatcher.Equals("ir"),
+                    "org.gradle.category" -> VariantMatcher.Library
                   ))
                 )
               )(
@@ -2054,12 +2055,12 @@ object ResolveTests extends TestSuite {
       }
       test("android") {
         test("dependency") {
-          def withVariant(dep: Dependency, map: Map[String, VariantSelector.VariantMatcher]) =
+          def withVariant(dep: Dependency, map: Map[String, VariantMatcher]) =
             dep.withVariantSelector(VariantSelector.AttributesBased(map))
 
           def testVariants(
             config: Configuration,
-            map: Map[String, VariantSelector.VariantMatcher]
+            map: Map[String, VariantMatcher]
           ): Future[Unit] =
             gradleModuleCheck0(defaultConfiguration = Some(config))(
               withVariant(dep"androidx.core:core-ktx:1.15.0", map),
@@ -2074,9 +2075,9 @@ object ResolveTests extends TestSuite {
             testVariants(
               Configuration.runtime,
               Map(
-                "org.gradle.usage"    -> VariantSelector.VariantMatcher.Equals("java-runtime"),
-                "org.gradle.category" -> VariantSelector.VariantMatcher.Equals("library"),
-                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+                "org.gradle.usage"                   -> VariantMatcher.Equals("java-runtime"),
+                "org.gradle.category"                -> VariantMatcher.Equals("library"),
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
               )
             )
           }
@@ -2084,7 +2085,7 @@ object ResolveTests extends TestSuite {
         test("global") {
           def testVariants(
             config: Configuration,
-            map: Map[String, VariantSelector.VariantMatcher]
+            map: Map[String, VariantMatcher]
           ): Future[Unit] =
             gradleModuleCheck0(
               defaultConfiguration = Some(config),
@@ -2100,9 +2101,9 @@ object ResolveTests extends TestSuite {
             testVariants(
               Configuration.compile,
               Map(
-                "org.gradle.usage"    -> VariantSelector.VariantMatcher.Equals("java-api"),
-                "org.gradle.category" -> VariantSelector.VariantMatcher.Equals("library"),
-                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+                "org.gradle.usage"                   -> VariantMatcher.Equals("java-api"),
+                "org.gradle.category"                -> VariantMatcher.Equals("library"),
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
               )
             )
           }
@@ -2110,9 +2111,9 @@ object ResolveTests extends TestSuite {
             testVariants(
               Configuration.runtime,
               Map(
-                "org.gradle.usage"    -> VariantSelector.VariantMatcher.Equals("java-runtime"),
-                "org.gradle.category" -> VariantSelector.VariantMatcher.Equals("library"),
-                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+                "org.gradle.usage"                   -> VariantMatcher.Equals("java-runtime"),
+                "org.gradle.category"                -> VariantMatcher.Equals("library"),
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
               )
             )
           }
@@ -2123,7 +2124,7 @@ object ResolveTests extends TestSuite {
           test("compile") {
             val attr = VariantSelector.AttributesBased().withMatchers(
               Map(
-                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
               )
             )
             gradleModuleCheck0(
@@ -2136,7 +2137,7 @@ object ResolveTests extends TestSuite {
           test("runtime") {
             val attr = VariantSelector.AttributesBased().withMatchers(
               Map(
-                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
               )
             )
             gradleModuleCheck0(defaultAttributes = Some(attr))(
@@ -2150,8 +2151,8 @@ object ResolveTests extends TestSuite {
               val attr = VariantSelector.AttributesBased().withMatchers(
                 Map(
                   "org.jetbrains.kotlin.platform.type" ->
-                    VariantSelector.VariantMatcher.Equals("js"),
-                  "org.jetbrains.kotlin.js.compiler" -> VariantSelector.VariantMatcher.Equals("ir")
+                    VariantMatcher.Equals("js"),
+                  "org.jetbrains.kotlin.js.compiler" -> VariantMatcher.Equals("ir")
                 )
               )
               gradleModuleCheck0(defaultAttributes = Some(attr))(
@@ -2162,7 +2163,7 @@ object ResolveTests extends TestSuite {
               val attr = VariantSelector.AttributesBased().withMatchers(
                 Map(
                   "org.gradle.jvm.environment" ->
-                    VariantSelector.VariantMatcher.Equals("standard-jvm")
+                    VariantMatcher.Equals("standard-jvm")
                 )
               )
               gradleModuleCheck0(defaultAttributes = Some(attr))(
@@ -2184,7 +2185,7 @@ object ResolveTests extends TestSuite {
       }
       test("quarkus-junit5") {
         val resolve0 = resolve.addVariantAttributes(
-          "org.gradle.jvm.environment" -> VariantSelector.VariantMatcher.Equals("standard-jvm")
+          "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
         )
         gradleModuleCheck0(resolve0 = resolve0)(
           dep"io.quarkus:quarkus-junit5:3.15.1"
@@ -2197,8 +2198,8 @@ object ResolveTests extends TestSuite {
       test("scalatest-play") {
         val resolve0 = resolve
           .addVariantAttributes(
-            "org.gradle.jvm.environment" -> VariantSelector.VariantMatcher.Equals("standard-jvm"),
-            "org.gradle.dependency.bundling" -> VariantSelector.VariantMatcher.Equals("external")
+            "org.gradle.jvm.environment"     -> VariantMatcher.Equals("standard-jvm"),
+            "org.gradle.dependency.bundling" -> VariantMatcher.Equals("external")
           )
           .addBomConfigs(
             dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency
@@ -2211,7 +2212,7 @@ object ResolveTests extends TestSuite {
         gradleModuleCheck0(
           defaultAttributes = Some(
             VariantSelector.AttributesBased(Map(
-              "org.gradle.jvm.environment" -> VariantSelector.VariantMatcher.Equals("standard-jvm")
+              "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
             ))
           )
         )(
@@ -2222,12 +2223,12 @@ object ResolveTests extends TestSuite {
         gradleModuleCheck0(
           defaultAttributes = Some(
             VariantSelector.AttributesBased(Map(
-              "org.gradle.category"            -> VariantSelector.VariantMatcher.Library,
-              "org.gradle.dependency.bundling" -> VariantSelector.VariantMatcher.Equals("external"),
-              "org.gradle.jvm.environment"     -> VariantSelector.VariantMatcher.Equals("non-jvm"),
-              "org.gradle.usage"               -> VariantSelector.VariantMatcher.Runtime,
-              "org.jetbrains.kotlin.js.compiler"   -> VariantSelector.VariantMatcher.Equals("ir"),
-              "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("js")
+              "org.gradle.category"                -> VariantMatcher.Library,
+              "org.gradle.dependency.bundling"     -> VariantMatcher.Equals("external"),
+              "org.gradle.jvm.environment"         -> VariantMatcher.Equals("non-jvm"),
+              "org.gradle.usage"                   -> VariantMatcher.Runtime,
+              "org.jetbrains.kotlin.js.compiler"   -> VariantMatcher.Equals("ir"),
+              "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("js")
             ))
           ),
           defaultConfiguration = Some(Configuration.runtime),
@@ -2240,8 +2241,8 @@ object ResolveTests extends TestSuite {
         gradleModuleCheck0(
           defaultAttributes = Some(
             VariantSelector.AttributesBased(Map(
-              "org.gradle.category"        -> VariantSelector.VariantMatcher.Library,
-              "org.gradle.jvm.environment" -> VariantSelector.VariantMatcher.Equals("standard-jvm")
+              "org.gradle.category"        -> VariantMatcher.Library,
+              "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
             ))
           ),
           attributesBasedReprAsToString = true
