@@ -145,7 +145,7 @@ object DependencyTree {
             withReconciledVersions = true,
             withFallbackConfig = false
           )
-          .toOption
+          .toOption // FIXME Swallows errors
           .getOrElse(Nil)
           .sortBy { trDep =>
             (trDep.module.organization, trDep.module.name, trDep.versionConstraint)

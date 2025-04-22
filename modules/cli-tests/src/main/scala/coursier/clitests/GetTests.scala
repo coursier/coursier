@@ -11,6 +11,8 @@ import scala.util.Properties
 abstract class GetTests extends TestSuite {
 
   def launcher: String
+  def isNative: Boolean
+  def isNativeStatic: Boolean
 
   private def isCI = System.getenv("CI") != null
   def hasDocker: Boolean =
@@ -163,6 +165,33 @@ abstract class GetTests extends TestSuite {
     test("tbz2 archive") {
       tarArchiveTest(".bz2")
     }
+
+    test("deb tar zst archive") {
+      if (Properties.isLinux && isNative && isNativeStatic) "Disabled for static launcher"
+      else debTarZstArchiveTest()
+    }
+    def debTarZstArchiveTest(): Unit =
+      TestUtil.withTempDir { tmpDir =>
+        val cache    = new File(tmpDir, "cache").getAbsolutePath
+        val arcCache = new File(tmpDir, "arc-cache").getAbsolutePath
+        val output =
+          os.proc(
+            launcher,
+            "get",
+            s"https://github.com/VirtusLab/scala-cli/releases/download/v1.7.1/scala-cli-x86_64-pc-linux.deb!data.tar.zst!",
+            "--cache",
+            cache,
+            "--archive-cache",
+            arcCache
+          )
+            .call()
+            .out.text()
+        val dir     = os.Path(output.trim)
+        val listing = os.walk(dir).filter(os.isFile).map(_.relativeTo(dir).asSubPath).sorted
+        val expectedListing =
+          Seq(os.sub / "usr/bin/scala-cli", os.sub / "usr/share/scala/scala-cli")
+        assert(expectedListing == listing)
+      }
 
     test("detect archive type") {
       val repoName = "library/hello-world"

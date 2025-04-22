@@ -81,8 +81,8 @@ abstract class ArchiveCacheTests extends TestSuite {
 
     test("deb") {
       checkArchiveHas(
-        "https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb",
-        os.sub / "control.tar.xz"
+        "https://github.com/VirtusLab/scala-cli/releases/download/v1.7.1/scala-cli-x86_64-pc-linux.deb",
+        os.sub / "control.tar.zst"
       )
     }
 
@@ -111,16 +111,19 @@ abstract class ArchiveCacheTests extends TestSuite {
 
     test("archive in archive") {
       checkArchiveHas(
-        "https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb!data.tar.xz!usr/bin/hello"
+        "https://github.com/VirtusLab/scala-cli/releases/download/v1.7.1/scala-cli-x86_64-pc-linux.deb!data.tar.zst!usr/bin/scala-cli"
       )
 
-      checkArchiveHas(
-        "https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb!data.tar.xz!usr/share/doc/hello/changelog.gz!",
-        withFileOpt = Some { changelog =>
-          val content = os.read(os.Path(changelog))
-          assert(content.startsWith("2014-11-16  Sami Kerola  <kerolasa@iki.fi>"))
-        }
-      )
+      // TODO Add that back after having factored some Debian index related helpers from QemuFiles,
+      // so that we can get from the index the latest URL of the package. Hard-coded addresses tend
+      // to disappear after some time.
+      // checkArchiveHas(
+      //   "https://ftp.debian.org/debian/pool/main/h/hello/hello_2.10-3+b1_arm64.deb!data.tar.xz!usr/share/doc/hello/changelog.gz!",
+      //   withFileOpt = Some { changelog =>
+      //     val content = os.read(os.Path(changelog))
+      //     assert(content.startsWith("2014-11-16  Sami Kerola  <kerolasa@iki.fi>"))
+      //   }
+      // )
     }
 
     test("short path dir") {

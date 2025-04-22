@@ -301,7 +301,9 @@ trait CacheJvm extends CacheJvmBase {
     Deps.plexusContainerDefault,
     Deps.scalaCliConfig,
     Deps.tika,
-    Deps.windowsAnsi
+    Deps.windowsAnsi,
+    // here only for the sake of bumping it, to work around JNI loading issues with earlier versions on macOS
+    Deps.zstdJni
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.jsoniterMacros,
