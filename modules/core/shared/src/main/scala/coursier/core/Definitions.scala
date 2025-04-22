@@ -494,7 +494,8 @@ object Attributes {
     val (actualAttr, retainedVariants) =
       if (
         baseRetainedVariants.isEmpty &&
-        isModuleBasedBom && attr.matchers.get("org.gradle.category")
+        isModuleBasedBom &&
+        attr.matchers.get("org.gradle.category")
           .contains(VariantSelector.VariantMatcher.Library)
       ) {
         val attr0 =
