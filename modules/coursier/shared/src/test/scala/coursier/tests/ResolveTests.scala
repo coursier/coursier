@@ -2255,6 +2255,25 @@ object ResolveTests extends TestSuite {
           dep"org.springframework.data:spring-data-jpa:2.5.4"
         )
       }
+      test("any of") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.jetbrains.kotlin.platform.type" ->
+                VariantMatcher.AnyOf(Seq(
+                  VariantMatcher.Equals("androidJvm"),
+                  VariantMatcher.Equals("jvm")
+                ))
+            ))
+          ),
+          attributesBasedReprAsToString = true
+        )(
+          dep"androidx.compose.material3:material3:1.3.1",
+          dep"androidx.collection:collection-ktx:1.4.0",
+          dep"androidx.lifecycle:lifecycle-process:2.8.3",
+          dep"androidx.lifecycle:lifecycle-common-java8:2.8.3"
+        )
+      }
     }
 
     test("empty version") {
