@@ -616,6 +616,35 @@ object FetchTests extends TestSuite {
           )
         }
       }
+      test("sources") {
+        async {
+
+          val params = fetch.resolutionParams.addVariantAttributes(
+            "org.jetbrains.kotlin.platform.type" ->
+              VariantSelector.VariantMatcher.AnyOf(Seq(
+                VariantSelector.VariantMatcher.Equals("androidJvm"),
+                VariantSelector.VariantMatcher.Equals("jvm")
+              ))
+          )
+          val classifiers = Set(Classifier.sources)
+          val attr        = Seq(VariantSelector.AttributesBased.sources)
+          val res = await {
+            enableModules(fetch.addRepositories(Repositories.google))
+              .addDependencies(dep"androidx.compose.material3:material3:1.3.1")
+              .withClassifiers(classifiers)
+              .withArtifactAttributes(attr)
+              .withResolutionParams(params)
+              .futureResult()
+          }
+
+          await(validateArtifacts(
+            res.resolution,
+            res.artifacts.map(_._1),
+            classifiers = classifiers,
+            params = params
+          ))
+        }
+      }
     }
   }
 }

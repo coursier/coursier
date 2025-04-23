@@ -931,7 +931,8 @@ object ArtifactSource {
   trait ModuleBased {
     def moduleArtifacts(
       dependency: Dependency,
-      project: Project
+      project: Project,
+      overrideAttributes: Option[VariantSelector.AttributesBased]
     ): Seq[(VariantPublication, Artifact)]
   }
 }

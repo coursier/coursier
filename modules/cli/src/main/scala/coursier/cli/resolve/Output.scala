@@ -101,8 +101,8 @@ object Output {
         }
         else if (params.candidateUrls) {
           val classpathOrder = params.classpathOrder.getOrElse(true)
-          // TODO Allow to filter on classifiers / artifact types
-          val urls = res.dependencyArtifacts0(None, classpathOrder).map(_._3.url)
+          // TODO Allow to filter on classifiers / attributes / artifact types
+          val urls = res.dependencyArtifacts0(None, None, classpathOrder).map(_._3.url)
           urls.mkString(nl)
         }
         else {

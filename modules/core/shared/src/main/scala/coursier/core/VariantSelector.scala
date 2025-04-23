@@ -137,6 +137,16 @@ object VariantSelector {
       override protected def initialValue(): Boolean =
         false
     }
+
+    def sources: AttributesBased =
+      AttributesBased().addAttributes(
+        "org.gradle.category" -> VariantMatcher.Documentation,
+        "org.gradle.docstype" ->
+          VariantMatcher.AnyOf(Seq(
+            VariantMatcher.Equals("sources"),
+            VariantMatcher.Equals("fake-sources")
+          ))
+      )
   }
 
   lazy val emptyConfiguration: VariantSelector =
@@ -189,8 +199,9 @@ object VariantSelector {
       def repr: String = s"*$suffix"
     }
 
-    val Library: VariantMatcher  = Equals("library")
-    val Platform: VariantMatcher = Equals("platform")
+    val Library: VariantMatcher       = Equals("library")
+    val Platform: VariantMatcher      = Equals("platform")
+    val Documentation: VariantMatcher = Equals("documentation")
 
     def fromString(key: String, value: String): (String, VariantMatcher) =
       if (key.endsWith("!"))

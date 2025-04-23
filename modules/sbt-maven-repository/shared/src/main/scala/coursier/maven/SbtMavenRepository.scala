@@ -178,9 +178,10 @@ object SbtMavenRepository {
 
   def moduleArtifacts(
     dependency: Dependency,
-    project: Project
+    project: Project,
+    overrideAttributes: Option[VariantSelector.AttributesBased]
   ): Seq[(VariantPublication, Artifact)] =
-    internal.moduleArtifacts(dependency, project)
+    internal.moduleArtifacts(dependency, project, overrideAttributes)
 
   override def find0[F[_]](
     module: Module,
