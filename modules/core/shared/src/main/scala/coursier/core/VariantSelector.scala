@@ -140,6 +140,8 @@ object VariantSelector {
 
     def sources: AttributesBased =
       AttributesBased().addAttributes(
+        // seems sources are put in runtime scope in Gradle Modules
+        "org.gradle.usage"    -> VariantMatcher.Runtime,
         "org.gradle.category" -> VariantMatcher.Documentation,
         "org.gradle.docstype" ->
           VariantMatcher.AnyOf(Seq(

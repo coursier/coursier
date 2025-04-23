@@ -276,6 +276,7 @@ object TestHelpers extends PlatformTestHelpers {
     artifacts: Seq[Artifact],
     params: ResolutionParams = ResolutionParams(),
     classifiers: Set[Classifier] = Set(),
+    artifactAttributes: Seq[VariantSelector.AttributesBased] = Nil,
     mainArtifacts: JBoolean = null,
     artifactTypes: Set[Type] = Set(),
     extraKeyPart: String = ""
@@ -286,6 +287,12 @@ object TestHelpers extends PlatformTestHelpers {
         ""
       else
         "_classifiers_" + sha1(classifiers.toVector.sorted.mkString("|"))
+
+    val artifactAttrPart =
+      if (artifactAttributes.isEmpty)
+        ""
+      else
+        "_artAttr_" + sha1(artifactAttributes.toVector.map(_.repr).sorted.mkString("|")).take(8)
 
     val mainArtifactsPart =
       Option(mainArtifacts) match {
@@ -303,7 +310,7 @@ object TestHelpers extends PlatformTestHelpers {
       "artifacts",
       res,
       params,
-      mainArtifactsPart + classifiersPart + artifactTypesPart + extraKeyPart
+      mainArtifactsPart + classifiersPart + artifactAttrPart + artifactTypesPart + extraKeyPart
     ) {
       artifacts.map(_.url).distinct
     }
