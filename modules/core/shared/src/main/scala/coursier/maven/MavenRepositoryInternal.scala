@@ -289,14 +289,22 @@ private[coursier] class MavenRepositoryInternal(
     val directoryPath = moduleVersionPath(module, version)
     def pathFor(ext: String) =
       directoryPath :+ s"$moduleNameInFileName-${versioningValue.getOrElse(version).asString}.$ext"
-    def pomProjectTask = {
-      val pomArtifact = projectArtifact(pathFor("pom"), version)
-      fetch(pomArtifact).flatMap(parsePom(_))
-    }
+    def baseModuleArtifact = projectArtifact(pathFor("module"), version)
+    def basePomArtifact    = projectArtifact(pathFor("pom"), version)
+    def pomArtifact =
+      if (checkModule)
+        basePomArtifact
+          .withExtra(Map("check" -> baseModuleArtifact))
+      else
+        basePomArtifact
+    def pomProjectTask = fetch(pomArtifact).flatMap(parsePom(_))
     if (checkModule) {
       val moduleProjectTask: EitherT[F, String, Either[String, Project]] =
         EitherT {
-          val moduleArtifact = projectArtifact(pathFor("module"), version)
+          val moduleArtifact = baseModuleArtifact
+            // if the pom is in cache, makes the cache remember when we get 404,
+            // and not attempt to download the file again later on
+            .withExtra(Map("metadata" -> basePomArtifact))
           fetch(moduleArtifact).run.flatMap {
             case Left(err) =>
               F.point(Right(Left(err)))
