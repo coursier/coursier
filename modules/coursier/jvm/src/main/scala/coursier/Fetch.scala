@@ -202,6 +202,9 @@ import scala.concurrent.{Await, ExecutionContext, Future}
   def allArtifactTypes(): Fetch[F] =
     withArtifacts(artifacts.withArtifactTypesOpt(Some(Set(Type.all))))
 
+  def withArtifactAttributes(attributes: Seq[VariantSelector.AttributesBased]): Fetch[F] =
+    withArtifacts(artifacts.withAttributes(attributes))
+
   def addExtraArtifacts(f: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]): Fetch[F] =
     withArtifacts(artifacts.withExtraArtifactsSeq(artifacts.extraArtifactsSeq :+ f))
   def noExtraArtifacts(): Fetch[F] =

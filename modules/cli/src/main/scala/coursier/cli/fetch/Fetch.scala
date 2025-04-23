@@ -44,6 +44,7 @@ object Fetch extends CoursierCommand[FetchOptions] {
       artifacts = coursier.Artifacts.artifacts0(
         res,
         params.artifact.classifiers,
+        params.artifact.attributes,
         Some(params.artifact.mainArtifacts), // allow to be null?
         Some(params.artifact.artifactTypes), // allow to be null?
         params.resolve.classpathOrder.getOrElse(true)

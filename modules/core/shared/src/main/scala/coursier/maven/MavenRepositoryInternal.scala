@@ -584,16 +584,23 @@ private[coursier] class MavenRepositoryInternal(
 
   def moduleArtifacts(
     dependency: Dependency,
-    project: Project
+    project: Project,
+    overrideAttributes: Option[VariantSelector.AttributesBased]
   ): Seq[(VariantPublication, Artifact)] =
     dependency.variantSelector match {
       case _: VariantSelector.ConfigurationBased => Nil
       case a: VariantSelector.AttributesBased =>
+        val a0 = a + overrideAttributes.getOrElse(VariantSelector.AttributesBased.empty)
         if (project.variants.isEmpty) Nil
         else {
-          val attr = project.variantFor(a)
-            .toTry.get // things shouldn't throw at this point
-          project.variantPublications.getOrElse(attr, Nil).map { pub =>
+          val attrOpt = {
+            val maybeAttr = project.variantFor(a0)
+            if (overrideAttributes.isEmpty)
+              Some(maybeAttr.toTry.get) // things shouldn't throw at this point
+            else
+              maybeAttr.toOption
+          }
+          attrOpt.toSeq.flatMap(project.variantPublications.getOrElse(_, Nil)).map { pub =>
             val baseUri = new URI(pub.url)
             val uri =
               if (baseUri.isAbsolute) baseUri

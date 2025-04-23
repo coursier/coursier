@@ -2233,7 +2233,7 @@ object Resolution {
     classifiers: Option[Seq[Classifier]],
     classpathOrder: Boolean
   ): Seq[(Dependency, Publication, Artifact)] =
-    dependencyArtifacts0(classifiers, classpathOrder).collect {
+    dependencyArtifacts0(classifiers, attributes = None, classpathOrder = classpathOrder).collect {
       case (dep, Right(pub), art) =>
         (dep, pub, art)
     }
@@ -2244,10 +2244,11 @@ object Resolution {
   def dependencyArtifacts0(
     classifiers: Option[Seq[Classifier]]
   ): Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] =
-    dependencyArtifacts0(classifiers, classpathOrder = true)
+    dependencyArtifacts0(classifiers, attributes = None, classpathOrder = true)
 
   def dependencyArtifacts0(
     classifiers: Option[Seq[Classifier]],
+    attributes: Option[VariantSelector.AttributesBased],
     classpathOrder: Boolean
   ): Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] =
     for {
@@ -2270,7 +2271,7 @@ object Resolution {
       (pub, artifact) <- {
         val modArtifacts = source match {
           case modBased: ArtifactSource.ModuleBased =>
-            modBased.moduleArtifacts(dep, proj).map {
+            modBased.moduleArtifacts(dep, proj, attributes).map {
               case (variantPub, art) =>
                 (Left(variantPub), art)
             }
