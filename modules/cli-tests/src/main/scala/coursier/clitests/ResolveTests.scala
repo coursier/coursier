@@ -56,6 +56,47 @@ abstract class ResolveTests extends TestSuite {
       val expectedBomGsonVersion = "2.11.0"
       assert(bomGsonVersion == expectedBomGsonVersion)
     }
+
+    test("Gradle Module") {
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir     = os.Path(tmpDir0)
+        val dependency = "org.jetbrains.kotlinx:kotlinx-html-js:0.11.0"
+
+        val moduleArgs = Seq(
+          "--enable-gradle-modules",
+          "--variant",
+          "org.jetbrains.kotlin.platform.type=js",
+          "--variant",
+          "org.jetbrains.kotlin.js.compiler=ir"
+        )
+
+        // download POMs via a fresh cache
+        val basePomRes =
+          os.proc(launcher, "resolve", dependency, "--cache", tmpDir / "pom-cache")
+            .call().out.lines()
+        // download modules via a fresh cache
+        val baseModuleRes =
+          os.proc(launcher, "resolve", dependency, "--cache", tmpDir / "module-cache", moduleArgs)
+            .call().out.lines()
+        // download modules in a cache that already has the POMs
+        val moduleAfterPomRes =
+          os.proc(launcher, "resolve", dependency, "--cache", tmpDir / "pom-cache", moduleArgs)
+            .call().out.lines()
+
+        assert(basePomRes.forall(!_.contains("{")))
+        assert(basePomRes.forall(!_.contains("}")))
+
+        assert(baseModuleRes.forall(_.contains("{")))
+        assert(baseModuleRes.forall(_.contains("}")))
+
+        if (baseModuleRes != moduleAfterPomRes) {
+          pprint.err.log(basePomRes)
+          pprint.err.log(baseModuleRes)
+          pprint.err.log(moduleAfterPomRes)
+        }
+        assert(baseModuleRes == moduleAfterPomRes)
+      }
+    }
   }
 
 }

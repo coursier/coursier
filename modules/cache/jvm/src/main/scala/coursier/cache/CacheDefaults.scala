@@ -190,10 +190,8 @@ object CacheDefaults {
   val noEnvCachePolicies = Seq(
     // first, try to update changing artifacts that were previously downloaded (follows TTL)
     CachePolicy.LocalUpdateChanging,
-    // then, use what's available locally
-    CachePolicy.LocalOnly,
     // lastly, try to download what's missing
-    CachePolicy.Update
+    CachePolicy.FetchMissing
   )
 
   def cachePolicies: Seq[CachePolicy] = {

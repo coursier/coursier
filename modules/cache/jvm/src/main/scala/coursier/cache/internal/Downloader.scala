@@ -476,6 +476,20 @@ import scala.util.control.NonFatal
       }
   }
 
+  private def checkSideArtifact: EitherT[F, ArtifactError, Unit] =
+    artifact.extra.get("check") match {
+      case None => EitherT.point(())
+      case Some(toCheck) =>
+        blockingIOE {
+          val toCheckFile    = localFile(toCheck.url, toCheck.authentication.flatMap(_.userOpt))
+          val toCheckErrFile = errFile(toCheckFile).toPath
+          if (Files.exists(toCheckFile.toPath) || Files.exists(toCheckErrFile))
+            Right(())
+          else
+            Left(new ArtifactError.MissingOtherArtifactCheck(artifact, toCheck))
+        }
+    }
+
   private def shouldDownload(
     file: File,
     url: String,
@@ -534,6 +548,7 @@ import scala.util.control.NonFatal
 
     for {
       _   <- blockingIOE(checkErrFile)
+      _   <- checkSideArtifact
       res <- EitherT(checkShouldDownload)
     } yield res
   }
@@ -611,7 +626,8 @@ import scala.util.control.NonFatal
   private val actualCachePolicy: CachePolicy.Mixed = cachePolicy.acceptChanging match {
     case CachePolicy.UpdateChanging if !artifact.changing =>
       CachePolicy.FetchMissing
-    case CachePolicy.LocalUpdateChanging | CachePolicy.LocalOnlyIfValid if !artifact.changing =>
+    case CachePolicy.LocalUpdateChanging | CachePolicy.LocalOnlyIfValid
+        if !artifact.changing && !artifact.extra.contains("check") =>
       CachePolicy.LocalOnly
     case other =>
       other
@@ -675,16 +691,22 @@ import scala.util.control.NonFatal
           case CachePolicy.UpdateChanging | CachePolicy.Update =>
             maybeUpdate.run
           case CachePolicy.FetchMissing =>
-            EitherT(checkFileExists(file, url))
-              .orElse {
-                EitherT(
-                  remoteKeepErrors(
-                    file,
-                    url,
-                    keepHeaderChecksums,
-                    () => !checkFileExistsBlocking(file, url)
-                  )
-                )
+            checkSideArtifact
+              .flatMap { _ =>
+                EitherT(checkFileExists(file, url))
+                  .leftFlatMap {
+                    case nf: ArtifactError.NotFound =>
+                      EitherT(
+                        remoteKeepErrors(
+                          file,
+                          url,
+                          keepHeaderChecksums,
+                          () => !checkFileExistsBlocking(file, url)
+                        )
+                      )
+                    case other =>
+                      EitherT.fromEither(Left(other))
+                  }
               }
               .run
           case CachePolicy.ForceDownload =>
@@ -694,7 +716,7 @@ import scala.util.control.NonFatal
 
     val run0 =
       if (artifact.changing && !cachePolicy.acceptsChangingArtifacts)
-        S.point(Left(new ArtifactError.ForbiddenChangingArtifact(url)))
+        S.point[Either[ArtifactError, Unit]](Left(new ArtifactError.ForbiddenChangingArtifact(url)))
       else
         run
 

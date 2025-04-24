@@ -1,5 +1,7 @@
 package coursier.cache
 
+import coursier.util.Artifact
+
 import java.io.File
 
 sealed abstract class ArtifactError(
@@ -130,6 +132,16 @@ object ArtifactError {
   final class ForbiddenChangingArtifact(val url: String) extends ArtifactError(
     "changing artifact found",
     url
+  )
+  // format: on
+
+  // format: off
+  final class MissingOtherArtifactCheck(
+    val mainArtifact: Artifact,
+    val otherArtifact: Artifact
+  ) extends ArtifactError(
+    "missing check for other artifact",
+    s"${otherArtifact.url} needs to be checked before trying to use ${mainArtifact.url}"
   )
   // format: on
 
