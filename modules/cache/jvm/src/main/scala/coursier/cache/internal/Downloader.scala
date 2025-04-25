@@ -73,7 +73,7 @@ import scala.util.control.NonFatal
     localFile(a.url, a.authentication.flatMap(_.userOpt))
   }
 
-  private val cacheErrors = artifact.changing &&
+  private val cacheErrors = artifact.changing ||
     artifact.extra.contains("cache-errors")
 
   private def cacheErrors0: Boolean = cacheErrors || referenceFileOpt.exists(_.exists())

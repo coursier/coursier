@@ -262,6 +262,30 @@ object FileCacheTests extends TestSuite {
           }
         }
       }
+
+      test {
+        withHttpServer(routes(enableModule = false)) { serverUri =>
+          withTmpDir { dir =>
+
+            val cache = FileCache[Task]((dir / "cache").toIO)
+
+            val basePomArtifact0    = basePomArtifact(serverUri)
+            val baseModuleArtifact0 = baseModuleArtifact(serverUri)
+
+            // try to download the module - this should fail
+            check(cache, dir)(
+              baseModuleArtifact0.withExtra(Map("cache-errors" -> Artifact(""))),
+              None
+            )
+
+            // then try to download the pom - this should succeed
+            check(cache, dir)(
+              basePomArtifact0.withExtra(Map("check" -> baseModuleArtifact0)),
+              Some("the pom")
+            )
+          }
+        }
+      }
     }
   }
 

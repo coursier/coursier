@@ -302,9 +302,9 @@ private[coursier] class MavenRepositoryInternal(
       val moduleProjectTask: EitherT[F, String, Either[String, Project]] =
         EitherT {
           val moduleArtifact = baseModuleArtifact
-            // if the pom is in cache, makes the cache remember when we get 404,
-            // and not attempt to download the file again later on
-            .withExtra(Map("metadata" -> basePomArtifact))
+            // keep track of missing module files, so that we don't attempt to download
+            // them over and over, and so that we know we can safely use a cached POM
+            .withExtra(Map("cache-errors" -> Artifact("")))
           fetch(moduleArtifact).run.flatMap {
             case Left(err) =>
               F.point(Right(Left(err)))

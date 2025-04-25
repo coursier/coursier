@@ -96,16 +96,20 @@ object CachePolicy {
 
   object NoChanging {
     case object LocalOnly extends NoChanging {
-      def acceptChanging = CachePolicy.LocalOnly
+      def acceptChanging            = CachePolicy.LocalOnly
+      override def toString: String = "NoChanging.LocalOnly"
     }
     case object LocalUpdate extends NoChanging {
-      def acceptChanging = CachePolicy.LocalUpdate
+      def acceptChanging            = CachePolicy.LocalUpdate
+      override def toString: String = "NoChanging.LocalUpdate"
     }
     case object FetchMissing extends NoChanging {
-      def acceptChanging = CachePolicy.FetchMissing
+      def acceptChanging            = CachePolicy.FetchMissing
+      override def toString: String = "NoChanging.FetchMissing"
     }
     case object ForceDownload extends NoChanging {
-      def acceptChanging = CachePolicy.ForceDownload
+      def acceptChanging            = CachePolicy.ForceDownload
+      override def toString: String = "NoChanging.ForceDownload"
     }
   }
 
