@@ -115,8 +115,6 @@ object Conflict {
     semVer: Boolean = false
   ): Seq[Conflicted] = {
 
-    val tree = ReverseModuleTree(resolution, withExclusions = withExclusions)
-
     def compatible(wanted: VersionConstraint0, selected: Version0): Boolean =
       wanted.asString == selected.asString || {
         if (wanted.interval == VersionInterval0.zero)
@@ -128,40 +126,17 @@ object Conflict {
           wanted.interval.contains(selected)
       }
 
-    val transitive = tree.flatMap { t =>
+    val tree = ReverseModuleTree(resolution, withExclusions = withExclusions)
+
+    tree.flatMap { t =>
       t.dependees.collect {
         case d
-            if !d.excludedDependsOn &&
+            if d.dependsOnVersionConstraint.asString.nonEmpty &&
+            !d.excludedDependsOn &&
             !compatible(d.dependsOnVersionConstraint, d.dependsOnRetainedVersion0) =>
           Conflicted(d)
       }
     }
-
-    val fromRoots = resolution.rootDependencies.flatMap { dep =>
-      val version = resolution
-        .retainedVersions
-        .getOrElse(dep.module, sys.error(s"Cannot find ${dep.module} in reconciled versions"))
-      val matches =
-        dep.versionConstraint.asString.isEmpty || compatible(dep.versionConstraint, version)
-      if (matches)
-        Nil
-      else {
-        val node = ReverseModuleTree.Node(
-          dep.module,
-          dep.versionConstraint,
-          version,
-          dep.module,
-          dep.versionConstraint,
-          version,
-          excludedDependsOn = false,
-          Map.empty,
-          Map.empty
-        )
-        Seq(Conflicted(node))
-      }
-    }
-
-    fromRoots ++ transitive
   }
 
   def apply(

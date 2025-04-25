@@ -58,7 +58,10 @@ object ResolutionError {
   }
   // format: on
 
-  private def conflictingDependenciesErrorMessage(resolution: Resolution): String =
+  private[coursier] def conflictingDependenciesErrorMessage(
+    resolution: Resolution,
+    colors: Colors = Colors.get(coursier.core.compatibility.coloredOutput)
+  ): String =
     "Conflicting dependencies:" + System.lineSeparator() + {
       val roots = resolution.conflicts.map(_.module)
       val trees = ReverseModuleTree(
@@ -66,25 +69,32 @@ object ResolutionError {
         roots =
           roots.toVector.sortBy(m => (m.organization.value, m.name.value, m.nameWithAttributes))
       )
-      val colors0 = Colors.get(coursier.core.compatibility.coloredOutput)
-
       val renderedTrees = trees.map { t =>
         val rendered = Tree(t.dependees.toVector)(_.dependees)
           .customRender(assumeTopRoot = false, extraPrefix = "  ", extraSeparator = Some("")) {
             node =>
               if (node.excludedDependsOn)
-                s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.retainedVersion0.asString}"
+                s"${colors.yellow}(excluded by)${colors.reset} ${node.module}:${node.retainedVersion0.asString}"
               else if (node.dependsOnModule == t.module) {
-                val assumeCompatibleVersions =
-                  compatibleVersions(
-                    node.dependsOnVersionConstraint,
-                    node.dependsOnRetainedVersion0
-                  )
+                val (retainedVersion, assumeCompatibleVersions) =
+                  if (node.retainedVersion0.asString.isEmpty && node.module == node.dependsOnModule)
+                    (
+                      node.reconciledVersionConstraint.asString,
+                      true
+                    )
+                  else
+                    (
+                      node.retainedVersion0.asString,
+                      compatibleVersions(
+                        node.dependsOnVersionConstraint,
+                        node.dependsOnRetainedVersion0
+                      )
+                    )
 
-                s"${node.module}:${node.retainedVersion0.asString} " +
-                  (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
+                s"${node.module}:$retainedVersion " +
+                  (if (assumeCompatibleVersions) colors.yellow else colors.red) +
                   s"wants ${node.dependsOnVersionConstraint.asString}" +
-                  colors0.reset
+                  colors.reset
               }
               else if (
                 node.dependsOnVersionConstraint.asString != node.dependsOnRetainedVersion0.asString
@@ -96,9 +106,9 @@ object ResolutionError {
                   )
 
                 s"${node.module}:${node.retainedVersion0.asString} " +
-                  (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
+                  (if (assumeCompatibleVersions) colors.yellow else colors.red) +
                   s"wants ${node.dependsOnModule}:${node.dependsOnVersionConstraint.asString}" +
-                  colors0.reset
+                  colors.reset
               }
               else
                 s"${node.module}:${node.retainedVersion0.asString}"
