@@ -344,6 +344,7 @@ object Resolution {
       .map { case (module, deps) =>
         val forcedVersionOpt = forceVersions.get(module)
           .orElse(forceVersions.get(module.withOrganization(Organization("*"))))
+          .orElse(forceVersions.get(module.withName(ModuleName("*"))))
 
         module -> {
           forcedVersionOpt match {
