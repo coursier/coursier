@@ -998,7 +998,12 @@ abstract class CentralTests extends TestSuite {
               |         └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
               |            └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10""".stripMargin
           val tree = Print.dependencyTree(res, reverse = true, colors = false)
-          assert(tree.replace("\r\n", "\n") == expectedTree)
+            .replace("\r\n", "\n")
+          if (tree != expectedTree) {
+            pprint.err.log(expectedTree)
+            pprint.err.log(tree)
+          }
+          assert(expectedTree == tree)
         }
       }
 

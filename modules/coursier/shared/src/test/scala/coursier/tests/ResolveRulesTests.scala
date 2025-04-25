@@ -243,7 +243,11 @@ object ResolveRulesTests extends TestSuite {
               throw new Exception("Unexpected exception type", ex)
           }
 
-          assert(evicted == expectedEvicted)
+          if (evicted != expectedEvicted) {
+            pprint.err.log(expectedEvicted)
+            pprint.err.log(evicted)
+          }
+          assert(expectedEvicted == evicted)
         }
       }
 
@@ -294,7 +298,11 @@ object ResolveRulesTests extends TestSuite {
               throw new Exception("Unexpected exception type", ex)
           }
 
-          assert(evicted == expectedEvicted)
+          if (evicted != expectedEvicted) {
+            pprint.err.log(expectedEvicted)
+            pprint.err.log(evicted)
+          }
+          assert(expectedEvicted == evicted)
         }
       }
 
