@@ -191,31 +191,35 @@ object ResolveTests extends TestSuite {
     }
 
     test("addForceVersion") {
-      async {
+      test("simple") {
+        async {
 
-        val resolve0 = resolve
-          .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:1.6.3")
-          .mapResolutionParams { params =>
-            params
-              .withScalaVersion("2.12.8")
-              .addForceVersion0(mod"com.lihaoyi:upickle_2.12" -> VersionConstraint("0.7.0"))
-              .addForceVersion0(mod"io.get-coursier:coursier_2.12" -> VersionConstraint("1.1.0-M6"))
+          val resolve0 = resolve
+            .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:1.6.3")
+            .mapResolutionParams { params =>
+              params
+                .withScalaVersion("2.12.8")
+                .addForceVersion0(mod"com.lihaoyi:upickle_2.12" -> VersionConstraint("0.7.0"))
+                .addForceVersion0(
+                  mod"io.get-coursier:coursier_2.12" -> VersionConstraint("1.1.0-M6")
+                )
+            }
+
+          val res = await {
+            resolve0
+              .future()
           }
 
-        val res = await {
-          resolve0
-            .future()
+          await(validateDependencies(res, resolve0.resolutionParams))
+
+          val upickleVersionOpt      = versionOf(res, mod"com.lihaoyi:upickle_2.12")
+          val expectedUpickleVersion = "0.7.0"
+          assert(upickleVersionOpt.contains(expectedUpickleVersion))
+
+          val coursierVersionOpt      = versionOf(res, mod"io.get-coursier:coursier_2.12")
+          val expectedCoursierVersion = "1.1.0-M6"
+          assert(coursierVersionOpt.contains(expectedCoursierVersion))
         }
-
-        await(validateDependencies(res, resolve0.resolutionParams))
-
-        val upickleVersionOpt      = versionOf(res, mod"com.lihaoyi:upickle_2.12")
-        val expectedUpickleVersion = "0.7.0"
-        assert(upickleVersionOpt.contains(expectedUpickleVersion))
-
-        val coursierVersionOpt      = versionOf(res, mod"io.get-coursier:coursier_2.12")
-        val expectedCoursierVersion = "1.1.0-M6"
-        assert(coursierVersionOpt.contains(expectedCoursierVersion))
       }
     }
 
