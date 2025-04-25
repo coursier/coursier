@@ -185,7 +185,8 @@ object StringInterpolators {
                     ${values.versionConstraint.asString}
                   ),
                   _root_.coursier.core.MinimizedExclusions(_root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$excls)),
-                  ${values.optional}
+                  ${values.optional},
+                  ${values.reconcileVersionConstraint}
                 )"""
                 q"_root_.scala.Tuple2($key0, $values0)"
             }

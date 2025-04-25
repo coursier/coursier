@@ -478,7 +478,8 @@ object Resolution {
                   newConfig,
                   newVersion,
                   v.minimizedExclusions,
-                  optional = false
+                  optional = false,
+                  reconcileVersionConstraint = v.reconcileVersionConstraint
                 )
               else
                 v

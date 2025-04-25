@@ -1,7 +1,7 @@
 package coursier.core
 
-import coursier.version.{VersionConstraint => VersionConstraint0}
-import dataclass.data
+import coursier.version.{ConstraintReconciliation, VersionConstraint => VersionConstraint0}
+import dataclass.{data, since}
 
 import scala.collection.mutable
 
@@ -47,7 +47,9 @@ object DependencyManagement {
     config: Configuration,
     versionConstraint: VersionConstraint0,
     minimizedExclusions: MinimizedExclusions,
-    optional: Boolean
+    optional: Boolean,
+    @since("2.1.25")
+    reconcileVersionConstraint: Boolean = false
   ) {
 
     @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
@@ -85,18 +87,60 @@ object DependencyManagement {
       )
     def orElse(other: Values): Values = {
       val newConfig = if (config.value.isEmpty) other.config else config
-      val newVersion =
-        if (versionConstraint.asString.isEmpty) other.versionConstraint else versionConstraint
+      val (newVersion, newReconcileVersionConstraint) =
+        (reconcileVersionConstraint, other.reconcileVersionConstraint) match {
+          case (false, false) =>
+            val ver =
+              if (versionConstraint.asString.isEmpty) other.versionConstraint
+              else versionConstraint
+            (ver, false)
+          case (true, true) =>
+            val ver =
+              if (versionConstraint.asString.isEmpty) other.versionConstraint
+              else if (other.versionConstraint.asString.isEmpty) versionConstraint
+              else
+                ConstraintReconciliation.Default.reconcile(Seq(
+                  versionConstraint,
+                  other.versionConstraint
+                ))
+                  .getOrElse {
+                    ???
+                  }
+            (ver, true)
+          case (true, false) | (false, true) =>
+            if (versionConstraint.asString.isEmpty)
+              (other.versionConstraint, other.reconcileVersionConstraint)
+            else if (other.versionConstraint.asString.isEmpty)
+              (versionConstraint, reconcileVersionConstraint)
+            else {
+              val ver =
+                if (reconcileVersionConstraint)
+                  ConstraintReconciliation.Default.reconcile(Seq(
+                    versionConstraint,
+                    other.versionConstraint
+                  ))
+                    .getOrElse {
+                      ???
+                    }
+                else versionConstraint
+              (ver, false)
+            }
+        }
       val newExcl     = other.minimizedExclusions.join(minimizedExclusions)
       val newOptional = optional || other.optional
       if (
-        config != newConfig || versionConstraint != newVersion || minimizedExclusions != newExcl || optional != newOptional
+        config != newConfig ||
+        versionConstraint != newVersion ||
+        minimizedExclusions != newExcl ||
+        optional != newOptional ||
+        reconcileVersionConstraint != newReconcileVersionConstraint
       )
         Values(
           newConfig,
           newVersion,
           newExcl,
-          newOptional
+          newOptional,
+          newReconcileVersionConstraint
         )
       else
         this
@@ -110,7 +154,8 @@ object DependencyManagement {
           versionConstraint = versionConstraint,
           minimizedExclusions = newExcl,
           // FIXME This might have been a string like "${some-prop}" initially :/
-          optional = optional
+          optional = optional,
+          reconcileVersionConstraint = reconcileVersionConstraint
         )
       else
         this
@@ -120,6 +165,15 @@ object DependencyManagement {
       if (versionConstraint.asString == newVersion) this
       else withVersionConstraint(VersionConstraint0(newVersion))
     }
+
+    override def toString(): String =
+      if (reconcileVersionConstraint)
+        "Values" + tuple.toString
+      else
+        // helpful for the tests that rely on hashing toString, if reconcileVersionConstraint equals
+        // its default value, toString returns the same string as before, not perturbating the hashing
+        // done in tests
+        Seq(config, versionConstraint, minimizedExclusions, optional).mkString("Values(", ", ", ")")
   }
 
   object Values {
@@ -127,16 +181,25 @@ object DependencyManagement {
       config = Configuration.empty,
       versionConstraint = VersionConstraint0.empty,
       minimizedExclusions = MinimizedExclusions.zero,
-      optional = false
+      optional = false,
+      reconcileVersionConstraint = false
     )
 
-    def from(config: Configuration, dep: Dependency): Values =
+    def from(config: Configuration, dep: Dependency): Values = {
+      val isFromModule = dep.variantSelector match {
+        case _: VariantSelector.AttributesBased =>
+          true
+        case _: VariantSelector.ConfigurationBased =>
+          false
+      }
       Values(
         config,
         dep.versionConstraint,
         dep.minimizedExclusions,
-        dep.optional
+        dep.optional,
+        reconcileVersionConstraint = isFromModule
       )
+    }
 
     @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
     def apply(
