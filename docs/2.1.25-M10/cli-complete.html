@@ -1,0 +1,238 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>complete-dep · Coursier</title><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="generator" content="Docusaurus"/><meta name="description" content="`complete-dep` allows one to complete _Maven_ coordinates."/><meta name="docsearch:version" content="2.1.25-M10"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="complete-dep · Coursier"/><meta property="og:type" content="website"/><meta property="og:url" content="https://get-coursier.io/"/><meta property="og:description" content="`complete-dep` allows one to complete _Maven_ coordinates."/><meta name="twitter:card" content="summary"/><link rel="shortcut icon" href="/undefined"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><link rel="alternate" type="application/atom+xml" href="https://get-coursier.io/blog/atom.xml" title="Coursier Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://get-coursier.io/blog/feed.xml" title="Coursier Blog RSS Feed"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><h2 class="headerTitle">Coursier</h2></a><a href="/versions"><h3>2.1.25-M10</h3></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/docs/2.1.25-M10/overview" target="_self">Docs</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li><li class=""><a href="https://github.com/coursier/coursier" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Command-line</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Intro</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/overview">Overview</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Command-line</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/cli-overview">Overview</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/cli-installation">Installation</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/cli-install">install</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/cli-launch">launch</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/cli-bootstrap">bootstrap</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/cli-java">java</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/cli-resolve">resolve</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/cli-fetch">fetch</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/2.1.25-M10/cli-complete">complete-dep</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/cli-setup">setup</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/cli-appdescriptors">Application descriptors</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Motivation</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/overview-motivations">Motivations</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/overview-in-the-wild">Users</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">sbt plugins</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/sbt-coursier">sbt-coursier</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/sbt-pgp-coursier">sbt-pgp-coursier</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">API</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/api">API</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/api-low-level">Low-level API</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/api-scala-js">Scala.js</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Other</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/cache">Cache</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/ttl">TTL</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/other-repositories">Repositories</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/other-credentials">Credentials</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/other-proxy">Proxy</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/json-report">JSON report</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/extra">Extra</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/limitations">Limitations</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/other-version-handling">Version handling</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/faq">FAQ</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Development</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/dev-contributing">Contributing</a></li><li class="navListItem"><a class="navItem" href="/docs/2.1.25-M10/dev-website">Website</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/main/doc/docs/cli-complete.md" target="_blank" rel="noreferrer noopener">Edit</a><h1 id="__docusaurus" class="postHeaderTitle">complete-dep</h1></header><article><div><span><p><code>complete-dep</code> allows one to complete <em>Maven</em> coordinates.</p>
+<p>It can answer questions such as:</p>
+<ul>
+<li>What artifacts are published under a given <em>Maven</em> <em>groupId</em>, for example <code>org.scala-lang</code> or <code>io.circe</code>?</li>
+<li>For a given <em>Maven</em> <em>groupId</em> and <em>artifactId</em>, which version(s) of the artifact are available?</li>
+</ul>
+<p>The <code>complete-dep</code> command takes a single argument which is composed of up to 3 colon-separated components.</p>
+<p><code>cs complete-dep groupId:artifactId:version</code></p>
+<p>Let's demonstrate this with a few examples.</p>
+<h2><a class="anchor" aria-hidden="true" id="looking-up-a-_maven_-_groupid_"></a><a href="#looking-up-a-_maven_-_groupid_" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Looking-up a <em>Maven</em> <em>groupId</em></h2>
+<pre><code class="hljs css language-bash">$ cs complete-dep org.scala-lang
+org.scala-lang
+org.scala-lang-osgi
+
+$ cs complete-dep com.zax
+com.zaxxer
+
+$ cs complete-dep com.typesafe.
+com.typesafe.akka
+com.typesafe.conductr
+com.typesafe.config
+com.typesafe.genjavadoc
+com.typesafe.jse_2.10
+com.typesafe.jse_2.11
+
+&lt;elided&gt;
+
+com.typesafe.ssl-config-core_2.13.0-RC3
+com.typesafe.webdriver_2.10
+com.typesafe.zinc
+</code></pre>
+<p>As can be seen from these 3 examples, there are two <em>Maven</em> <em>groupIds</em> that share the common <code>org.scala-lang</code> prefix whereas <code>com.zax</code> has exactly one matching <em>groupId</em>. Finally, <code>cs complete-dep com.typesafe.</code> will list more than 80 matching <em>groupIds</em>.</p>
+<p>We can now focus on searching for some artifacts under these <em>groupIds</em>.</p>
+<h2><a class="anchor" aria-hidden="true" id="looking-up-artifacts-for-a-given-_groupid_"></a><a href="#looking-up-artifacts-for-a-given-_groupid_" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Looking-up artifacts for a given <em>groupId</em></h2>
+<p>Passing a <em>Maven</em> <em>groupId</em> terminated by a colon will trigger a lookup of all artifacts published under that <em>groupId</em>.</p>
+<p>For example:</p>
+<pre><code class="hljs css language-bash">$ cs complete-dep com.zaxxer:
+HikariCP
+HikariCP-agent
+HikariCP-java6
+HikariCP-java7
+HikariCP-java9ea
+HikariCP-parent
+SansOrm
+SparseBitSet
+influx4j
+jnb-ping
+kuill
+nuprocess
+sansorm
+
+$ cs complete-dep com.typesafe.akka:
+akka
+akka-actor-testkit-typed_2.11
+akka-actor-testkit-typed_2.12
+akka-actor-testkit-typed_2.13
+akka-actor-testkit-typed_2.13.0-M3
+akka-actor-testkit-typed_2.13.0-M5
+akka-actor-testkit-typed_2.13.0-RC1
+akka-actor-testkit-typed_2.13.0-RC2
+akka-actor-testkit-typed_2.13.0-RC3
+akka-actor-tests_2.10
+akka-actor-tests_2.10.0-M7
+akka-actor-tests_2.10.0-RC1
+akka-actor-tests_2.10.0-RC2
+akka-actor-tests_2.10.0-RC3
+akka-actor-tests_2.10.0-RC5
+akka-actor-tests_2.11
+akka-actor-tests_2.11.0-M3
+akka-actor-tests_2.11.0-RC3
+akka-actor-tests_2.11.0-RC4
+akka-actor-tests_2.12.0-M1
+akka-actor-typed_2.11
+akka-actor-typed_2.12
+akka-actor-typed_2.13
+akka-actor-typed_2.13.0-M3
+akka-actor-typed_2.13.0-M5
+akka-actor-typed_2.13.0-RC1
+akka-actor-typed_2.13.0-RC2
+akka-actor-typed_2.13.0-RC3
+
+&lt;elided&gt;
+
+akka-zeromq_2.11
+akka-zeromq_2.11.0-M3
+hello-kernel_2.10
+hello-kernel_2.11
+</code></pre>
+<p>An interesting observation that can be made when looking at the output for <code>cs complete-dep com.typesafe.akka:</code> is that each artifact is published against one or more minor versions of <em>Scala</em> (e.g. <code>2.11</code>, <code>2.12</code>, <code>2.13</code>, etc.). This is because these are <em>Scala</em> libraries that are cross-built for each <em>Scala</em> version supported by the library.</p>
+<blockquote>
+<p>Note: <em>Scala</em> guarantees binary compatibility between patch releases with a minor release.</p>
+</blockquote>
+<p>For example, if we take the <code>akka-actor-typed</code> library:</p>
+<pre><code class="hljs css language-bash">$ cs complete-dep com.typesafe.akka:akka-actor-typed
+akka-actor-typed_2.11
+akka-actor-typed_2.12
+akka-actor-typed_2.13
+akka-actor-typed_2.13.0-M3
+akka-actor-typed_2.13.0-M5
+akka-actor-typed_2.13.0-RC1
+akka-actor-typed_2.13.0-RC2
+akka-actor-typed_2.13.0-RC3
+</code></pre>
+<p>We see that it was published against 3 <em>Scala</em> releases (ignoring Milestone releases and Release Candidates).</p>
+<h2><a class="anchor" aria-hidden="true" id="looking-up-artifact-versions"></a><a href="#looking-up-artifact-versions" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Looking-up artifact versions</h2>
+<p>Given a <em>Maven</em> <em>groupId</em> and <em>artifactId</em>, we can use <code>cs complete-dep</code> to look up which version[s] of the artifact have been published.</p>
+<p>We'll take two examples, one for a <em>Java</em> library and one for a <em>Scala</em> Library.</p>
+<p>Let's start with the <code>HikariCP</code> library.</p>
+<pre><code class="hljs css language-bash">$ cs complete-dep com.zaxxer:HikariCP:
+1.1.3
+1.1.4
+
+&lt;elided&gt;
+
+2.7.8
+2.7.9
+3.0.0
+3.1.0
+3.2.0
+3.3.0
+3.3.1
+3.4.0
+3.4.1
+3.4.2
+3.4.3
+3.4.4
+3.4.5
+</code></pre>
+<p>Pretty straightforward...</p>
+<p>Let's look at the <code>akka-actor-typed</code> library published for <em>Scala</em> 2.13.</p>
+<pre><code class="hljs css language-bash">$ cs complete-dep com.typesafe.akka:akka-actor-typed_2.13:
+2.5.23
+2.5.24
+2.5.25
+2.5.26
+2.5.27
+2.5.28
+2.5.29
+2.5.30
+2.5.31
+2.5.32
+2.6.0-M3
+2.6.0-M4
+2.6.0-M5
+2.6.0-M6
+2.6.0-M7
+2.6.0-M8
+2.6.0-RC1
+2.6.0-RC2
+2.6.0
+2.6.1
+2.6.2
+2.6.3
+2.6.4
+2.6.5
+2.6.6
+2.6.7
+2.6.8
+2.6.9
+2.6.10
+</code></pre>
+<p>In conclusion we can say that <code>cs complete-dep</code> is a very powerful command that allows us to easily look-up library (artifact) version information from the command line.</p>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/2.1.25-M10/cli-fetch"><span class="arrow-prev">← </span><span>fetch</span></a><a class="docs-next button" href="/docs/2.1.25-M10/cli-setup"><span>Next</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#looking-up-a-_maven_-_groupid_">Looking-up a <em>Maven</em> <em>groupId</em></a></li><li><a href="#looking-up-artifacts-for-a-given-_groupid_">Looking-up artifacts for a given <em>groupId</em></a></li><li><a href="#looking-up-artifact-versions">Looking-up artifact versions</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><h2><a href="/" class="nav-home">Coursier</a></h2><div><h5><a href="/docs/overview">Docs</a></h5><a href="/docs/overview">Overview</a><a href="/docs/cli-installation">Install CLI</a><a href="/docs/sbt-coursier">Setup sbt</a><a href="/docs/api">Use the API</a></div><div><h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5><a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"/></a><a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"/></a></div></section><section class="copyright">Copyright © 2025 coursier contributors</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
+                indexName: 'get-coursier',
+                inputSelector: '#search_input_react',
+                algoliaOptions: {}
+              });
+            </script></body></html>
