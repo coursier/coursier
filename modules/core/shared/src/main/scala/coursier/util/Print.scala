@@ -176,14 +176,24 @@ object Print {
 
       val t = ReverseModuleTree.fromDependencyTree(
         roots0.map(_.module).distinct,
-        DependencyTree(resolution, withExclusions = printExclusions)
+        DependencyTree(resolution, withExclusions = printExclusions),
+        resolution.rootDependencies
+          .groupBy(_.module)
+          .map {
+            case (mod, deps0) =>
+              (mod, deps0.map(_.versionConstraint).distinct)
+          }
       )
 
       val tree0 = Tree(
         t.toVector.sortBy(t =>
           (t.module.organization.value, t.module.name.value, t.module.nameWithAttributes)
         )
-      )(_.dependees)
+      ) { tree =>
+        tree.dependees.filter { depTree =>
+          depTree.module != tree.module || depTree.dependees.nonEmpty
+        }
+      }
       tree0.render { node =>
         if (node.excludedDependsOn)
           s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.retainedVersion0.asString}"

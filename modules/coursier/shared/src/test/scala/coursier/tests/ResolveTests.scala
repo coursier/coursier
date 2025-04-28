@@ -191,31 +191,89 @@ object ResolveTests extends TestSuite {
     }
 
     test("addForceVersion") {
-      async {
+      test("simple") {
+        async {
 
-        val resolve0 = resolve
-          .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:1.6.3")
-          .mapResolutionParams { params =>
-            params
-              .withScalaVersion("2.12.8")
-              .addForceVersion0(mod"com.lihaoyi:upickle_2.12" -> VersionConstraint("0.7.0"))
-              .addForceVersion0(mod"io.get-coursier:coursier_2.12" -> VersionConstraint("1.1.0-M6"))
+          val resolve0 = resolve
+            .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:1.6.3")
+            .mapResolutionParams { params =>
+              params
+                .withScalaVersion("2.12.8")
+                .addForceVersion0(mod"com.lihaoyi:upickle_2.12" -> VersionConstraint("0.7.0"))
+                .addForceVersion0(
+                  mod"io.get-coursier:coursier_2.12" -> VersionConstraint("1.1.0-M6")
+                )
+            }
+
+          val res = await {
+            resolve0
+              .future()
           }
 
-        val res = await {
-          resolve0
-            .future()
+          await(validateDependencies(res, resolve0.resolutionParams))
+
+          val upickleVersionOpt      = versionOf(res, mod"com.lihaoyi:upickle_2.12")
+          val expectedUpickleVersion = "0.7.0"
+          assert(upickleVersionOpt.contains(expectedUpickleVersion))
+
+          val coursierVersionOpt      = versionOf(res, mod"io.get-coursier:coursier_2.12")
+          val expectedCoursierVersion = "1.1.0-M6"
+          assert(coursierVersionOpt.contains(expectedCoursierVersion))
         }
+      }
 
-        await(validateDependencies(res, resolve0.resolutionParams))
+      test("whole org") {
+        async {
+          val forcedCollectionVersion = "1.4.2"
+          val forcedLifecycleVersion  = "2.8.7"
+          val baseResolve = enableModules(resolve.addRepositories(Repositories.google))
+            .addDependencies(dep"androidx.customview:customview-poolingcontainer:1.0.0")
+            .mapResolutionParams { params =>
+              params.addVariantAttributes(
+                "org.jetbrains.kotlin.platform.type" ->
+                  VariantMatcher.AnyOf(Seq(
+                    VariantMatcher.Equals("androidJvm"),
+                    VariantMatcher.Equals("jvm")
+                  ))
+              )
+            }
+          val resolve0 = baseResolve
+            .mapResolutionParams { params =>
+              params.addForceVersion0(
+                mod"androidx.collection:*" -> VersionConstraint(forcedCollectionVersion),
+                mod"androidx.lifecycle:*"  -> VersionConstraint(forcedLifecycleVersion)
+              )
+            }
 
-        val upickleVersionOpt      = versionOf(res, mod"com.lihaoyi:upickle_2.12")
-        val expectedUpickleVersion = "0.7.0"
-        assert(upickleVersionOpt.contains(expectedUpickleVersion))
+          val baseRes = await {
+            baseResolve
+              .future()
+          }
+          val res = await {
+            resolve0
+              .future()
+          }
 
-        val coursierVersionOpt      = versionOf(res, mod"io.get-coursier:coursier_2.12")
-        val expectedCoursierVersion = "1.1.0-M6"
-        assert(coursierVersionOpt.contains(expectedCoursierVersion))
+          await(validateDependencies(baseRes, baseResolve.resolutionParams))
+          await(validateDependencies(res, resolve0.resolutionParams))
+
+          val baseCollectionVersionOpt = versionOf(baseRes, mod"androidx.collection:collection")
+          val collectionVersionOpt     = versionOf(res, mod"androidx.collection:collection")
+          assert(baseCollectionVersionOpt.exists(_ != forcedCollectionVersion))
+          assert(collectionVersionOpt.contains(forcedCollectionVersion))
+
+          val baseLifecycleCommonVersionOpt =
+            versionOf(baseRes, mod"androidx.lifecycle:lifecycle-common")
+          val lifecycleCommonVersionOpt = versionOf(res, mod"androidx.lifecycle:lifecycle-common")
+          assert(baseLifecycleCommonVersionOpt.exists(_ != forcedLifecycleVersion))
+          assert(lifecycleCommonVersionOpt.contains(forcedLifecycleVersion))
+
+          val baseLifecycleRuntimeVersionOpt =
+            versionOf(baseRes, mod"androidx.lifecycle:lifecycle-runtime")
+          val lifecycleRuntimeVersionOpt = versionOf(res, mod"androidx.lifecycle:lifecycle-runtime")
+          assert(baseLifecycleRuntimeVersionOpt.exists(_ != forcedLifecycleVersion))
+          assert(lifecycleRuntimeVersionOpt.contains(forcedLifecycleVersion))
+        }
       }
     }
 

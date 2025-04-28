@@ -1,0 +1,27 @@
+androidx.customview:customview-poolingcontainer:1.0.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.core:core-ktx:1.5.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+org.jetbrains.kotlin:kotlin-stdlib:1.8.22:runtime
+androidx.annotation:annotation:1.8.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.core:core:1.5.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+org.jetbrains.kotlin:kotlin-stdlib-common:1.8.22:runtime
+org.jetbrains:annotations:23.0.0:runtime
+androidx.annotation:annotation-jvm:1.8.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.lifecycle:lifecycle-runtime:2.8.7:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.versionedparcelable:versionedparcelable:1.1.1:runtime
+androidx.collection:collection:1.4.2:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.lifecycle:lifecycle-runtime-android:2.8.7:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.collection:collection-jvm:1.4.2:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.arch.core:core-common:2.2.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.arch.core:core-runtime:2.2.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.lifecycle:lifecycle-common:2.8.7:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.profileinstaller:profileinstaller:1.3.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.lifecycle:lifecycle-common-jvm:2.8.7:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.concurrent:concurrent-futures:1.1.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.startup:startup-runtime:1.1.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+com.google.guava:listenablefuture:1.0:runtime
+org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.20:runtime
+androidx.tracing:tracing:1.0.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.7.3:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.20:runtime

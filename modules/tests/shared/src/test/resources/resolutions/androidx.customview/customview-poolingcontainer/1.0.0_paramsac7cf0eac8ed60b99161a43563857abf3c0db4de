@@ -1,0 +1,12 @@
+androidx.customview:customview-poolingcontainer:1.0.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.core:core-ktx:1.5.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+org.jetbrains.kotlin:kotlin-stdlib:1.6.21:runtime
+androidx.annotation:annotation:1.2.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+androidx.core:core:1.5.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
+org.jetbrains.kotlin:kotlin-stdlib-common:1.6.21:runtime
+org.jetbrains:annotations:13.0:runtime
+androidx.lifecycle:lifecycle-runtime:2.0.0:runtime
+androidx.versionedparcelable:versionedparcelable:1.1.1:runtime
+androidx.collection:collection:1.0.0:runtime
+androidx.lifecycle:lifecycle-common:2.0.0:runtime
+androidx.arch.core:core-common:2.0.0:runtime

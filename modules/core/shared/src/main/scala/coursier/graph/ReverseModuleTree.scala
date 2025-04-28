@@ -72,7 +72,11 @@ sealed abstract class ReverseModuleTree {
 
 object ReverseModuleTree {
 
-  def fromModuleTree(roots: Seq[Module], moduleTrees: Seq[ModuleTree]): Seq[ReverseModuleTree] = {
+  def fromModuleTree(
+    roots: Seq[Module],
+    moduleTrees: Seq[ModuleTree],
+    rootDependencies: Map[Module, VersionConstraint]
+  ): Seq[ReverseModuleTree] = {
 
     // Some assumptions about moduleTrees, and the ModuleTree-s we get though their children:
     // - any two ModuleTree-s with the same module are assumed to have the same reconciledVersion
@@ -129,13 +133,22 @@ object ReverseModuleTree {
       retained,
       excludedDependsOn = false,
       dependees0,
-      versions0
+      versions0,
+      Map.empty
     )
   }
 
+  @deprecated("Use the override accepting rootDependencies", "2.1.25")
+  def fromModuleTree(
+    roots: Seq[Module],
+    moduleTrees: Seq[ModuleTree]
+  ): Seq[ReverseModuleTree] =
+    fromModuleTree(roots, moduleTrees, Map.empty)
+
   def fromDependencyTree(
     roots: Seq[Module],
-    dependencyTrees: Seq[DependencyTree]
+    dependencyTrees: Seq[DependencyTree],
+    rootDependencies: Map[Module, Seq[VersionConstraint]]
   ): Seq[ReverseModuleTree] = {
 
     val alreadySeen = new mutable.HashSet[DependencyTree]
@@ -186,9 +199,17 @@ object ReverseModuleTree {
       retained,
       excludedDependsOn = false,
       dependees0,
-      versions0
+      versions0,
+      rootDependencies
     )
   }
+
+  @deprecated("Use the override accepting rootDependencies", "2.1.25")
+  def fromDependencyTree(
+    roots: Seq[Module],
+    dependencyTrees: Seq[DependencyTree]
+  ): Seq[ReverseModuleTree] =
+    fromDependencyTree(roots, dependencyTrees, Map.empty)
 
   def apply(
     resolution: Resolution,
@@ -197,7 +218,16 @@ object ReverseModuleTree {
   ): Seq[ReverseModuleTree] = {
     val t      = DependencyTree(resolution, withExclusions = withExclusions)
     val roots0 = Option(roots).getOrElse(resolution.minDependencies.toVector.map(_.module))
-    fromDependencyTree(roots0, t)
+    fromDependencyTree(
+      roots0,
+      t,
+      resolution.rootDependencies
+        .groupBy(_.module)
+        .map {
+          case (mod, deps0) =>
+            mod -> deps0.map(_.versionConstraint).distinct
+        }
+    )
   }
 
   private[graph] final case class Node(
@@ -209,9 +239,26 @@ object ReverseModuleTree {
     dependsOnRetainedVersion0: Version,
     excludedDependsOn: Boolean,
     allDependees: Map[Module, Seq[(Module, VersionConstraint, Boolean)]],
-    versions: Map[Module, (VersionConstraint, Version)]
+    versions: Map[Module, (VersionConstraint, Version)],
+    rootDependencies: Map[Module, Seq[VersionConstraint]]
   ) extends ReverseModuleTree {
-    def dependees: Seq[Node] =
+    private def dependeesFromRoot =
+      for {
+        wantVer       <- rootDependencies.getOrElse(module, Nil)
+        (_, retained) <- versions.get(module)
+      } yield Node(
+        module,
+        wantVer,
+        retained,
+        module,
+        wantVer,
+        retainedVersion0,
+        excludedDependsOn = false,
+        Map.empty,
+        versions,
+        rootDependencies = Map.empty
+      )
+    private def actualDependees: Seq[Node] =
       for {
         (m, wantVer, excl)     <- allDependees.getOrElse(module, Nil)
         (reconciled, retained) <- versions.get(m)
@@ -224,8 +271,11 @@ object ReverseModuleTree {
         retainedVersion0,
         excl,
         allDependees,
-        versions
+        versions,
+        rootDependencies
       )
+    def dependees: Seq[Node] =
+      dependeesFromRoot ++ actualDependees
   }
 
 }
