@@ -13,6 +13,7 @@ trait Core extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.fastParse,
     Deps.jsoniterCore,
+    Deps.pprint,
     Deps.versions
   )
 

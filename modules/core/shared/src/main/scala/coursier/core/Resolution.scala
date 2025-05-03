@@ -479,7 +479,8 @@ object Resolution {
                   newConfig,
                   newVersion,
                   v.minimizedExclusions,
-                  optional = false
+                  optional = false,
+                  reconcileVersionConstraint = v.reconcileVersionConstraint
                 )
               else
                 v
@@ -504,6 +505,18 @@ object Resolution {
             dep.versionConstraint.asString.isEmpty ||
             overridesOpt.exists(_.contains(dep0.depManagementKey))
           )
+          if (
+            useManagedVersion && mgmtValues.reconcileVersionConstraint && dep.versionConstraint.asString.nonEmpty && dep.versionConstraint.asString != mgmtValues.versionConstraint.asString
+          ) {
+            val reconciled = ConstraintReconciliation.Default.reconcile(Seq(
+              mgmtValues.versionConstraint,
+              dep.versionConstraint
+            ))
+            // if (!reconciled.contains(mgmtValues.versionConstraint)) {
+            pprint.err.log(dep.versionConstraint.asString)
+            pprint.err.log(mgmtValues.versionConstraint.asString)
+            // }
+          }
           if (useManagedVersion)
             dep = dep.withVersionConstraint(mgmtValues.versionConstraint)
 

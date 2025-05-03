@@ -17,11 +17,11 @@ import coursier.core.{
   Publication,
   Type,
   Variant,
+  VariantPublication,
   VariantSelector
 }
-import coursier.version.{Version, VersionConstraint}
+import coursier.version.{Version, VersionConstraint, VersionInterval}
 import dataclass.data
-import coursier.core.VariantPublication
 
 @data class GradleModule(
   formatVersion: String,
@@ -63,8 +63,28 @@ import coursier.core.VariantPublication
                 if (prefersOpt.isEmpty) versionMap
                 else versionMap - "prefers"
               val version = versionMap0.toSeq match {
-                case Seq(("requires" | "strictly", req)) => VersionConstraint(req)
-                case Seq()                               => VersionConstraint.empty
+                case Seq(("requires", req)) =>
+                  VersionConstraint(req)
+                case Seq(("strictly", req)) =>
+                  val c = VersionConstraint(req)
+                  c.preferred match {
+                    case Some(preferred)
+                        if c.latest.isEmpty && c.interval == VersionInterval.zero =>
+                      VersionConstraint.from(
+                        VersionInterval(
+                          from = Some(preferred),
+                          to = Some(preferred),
+                          fromIncluded = true,
+                          toIncluded = true
+                        ),
+                        None,
+                        None
+                      )
+                    case _ =>
+                      c
+                  }
+                case Seq() =>
+                  VersionConstraint.empty
                 case _ =>
                   val mainDep =
                     s"${actualComponent.group}:${actualComponent.module}:${actualComponent.version}"

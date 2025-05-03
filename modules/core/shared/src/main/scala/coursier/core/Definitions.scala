@@ -489,7 +489,8 @@ object Attributes {
       .toVector
     val baseRetainedVariants = retainedVariantsFor(attr)
     def isModuleBasedBom =
-      dependencies0.isEmpty && (dependencyManagement0.nonEmpty || !overrides.isEmpty) &&
+      dependencies0.isEmpty &&
+      (dependencyManagement0.nonEmpty || !overrides.isEmpty) &&
       variants.nonEmpty
     val (actualAttr, retainedVariants) =
       if (

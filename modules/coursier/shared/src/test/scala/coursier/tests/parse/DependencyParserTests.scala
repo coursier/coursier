@@ -361,7 +361,8 @@ object DependencyParserTests extends TestSuite {
           Configuration.empty,
           VersionConstraint("1.2"),
           MinimizedExclusions.zero,
-          optional = false
+          optional = false,
+          reconcileVersionConstraint = false
         )
       )
       val res = DependencyParser.dependencyParams(
@@ -395,7 +396,8 @@ object DependencyParserTests extends TestSuite {
               Configuration.empty,
               VersionConstraint("1.2"),
               MinimizedExclusions.zero,
-              optional = false
+              optional = false,
+              reconcileVersionConstraint = false
             )
           ),
           (
@@ -409,7 +411,8 @@ object DependencyParserTests extends TestSuite {
               Configuration.empty,
               VersionConstraint("2.1"),
               MinimizedExclusions.zero,
-              optional = false
+              optional = false,
+              reconcileVersionConstraint = false
             )
           )
         )
