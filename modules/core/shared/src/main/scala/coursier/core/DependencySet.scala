@@ -130,6 +130,9 @@ final class DependencySet private (
       .removeNoCheck(toRemove)
   }
 
+  private[coursier] def containsModule(mod: Module): Boolean =
+    grouped.exists(_._1.module == mod)
+
 }
 
 object DependencySet {

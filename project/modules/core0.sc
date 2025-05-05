@@ -45,6 +45,8 @@ trait CoreJvmBase extends Core with CsMima with Shading {
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.core.Reconciliation.*"),
 
       // private case class
+      ProblemFilter.exclude[Problem]("coursier.graph.DependencyTree#Node.*"),
+      ProblemFilter.exclude[MissingTypesProblem]("coursier.graph.DependencyTree$Node$"),
       ProblemFilter.exclude[Problem]("coursier.graph.ModuleTree#Node.*"),
 
       // added abstract method to sealed abstract class, should be safe

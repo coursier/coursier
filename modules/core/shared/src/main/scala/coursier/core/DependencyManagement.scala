@@ -1,7 +1,10 @@
 package coursier.core
 
-import coursier.version.{VersionConstraint => VersionConstraint0}
-import dataclass.data
+import coursier.version.{
+  VersionConstraint => VersionConstraint0,
+  VersionInterval => VersionInterval0
+}
+import dataclass.{data, since}
 
 import scala.collection.mutable
 
@@ -33,6 +36,9 @@ object DependencyManagement {
         this
     }
 
+    def fakeModule: Module =
+      Module(organization, name, Map.empty)
+
     // Mainly there for sorting purposes
     def repr: String =
       s"${organization.value}:${name.value}:${`type`.value}:${classifier.value}"
@@ -47,7 +53,9 @@ object DependencyManagement {
     config: Configuration,
     versionConstraint: VersionConstraint0,
     minimizedExclusions: MinimizedExclusions,
-    optional: Boolean
+    optional: Boolean,
+    @since("2.1.25")
+    global: Boolean = false
   ) {
 
     @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
@@ -75,7 +83,7 @@ object DependencyManagement {
       config.value.isEmpty && versionConstraint.asString.isEmpty && minimizedExclusions.isEmpty && !optional
     def fakeDependency(key: Key): Dependency =
       Dependency(
-        Module(key.organization, key.name, Map.empty),
+        key.fakeModule,
         versionConstraint,
         VariantSelector.ConfigurationBased(config),
         minimizedExclusions,
@@ -119,6 +127,18 @@ object DependencyManagement {
       val newVersion = f(versionConstraint.asString)
       if (versionConstraint.asString == newVersion) this
       else withVersionConstraint(VersionConstraint0(newVersion))
+    }
+
+    override def toString(): String = {
+      var fields = Seq(
+        config.toString,
+        versionConstraint.toString,
+        minimizedExclusions.toString,
+        optional.toString
+      )
+      if (global)
+        fields = fields :+ global.toString
+      fields.mkString("Values(", ", ", ")")
     }
   }
 
