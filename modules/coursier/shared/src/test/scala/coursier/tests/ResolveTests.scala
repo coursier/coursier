@@ -2332,6 +2332,19 @@ object ResolveTests extends TestSuite {
           dep"androidx.lifecycle:lifecycle-common-java8:2.8.3"
         )
       }
+
+      test("endorseStrictVersions") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
+            ))
+          ),
+          attributesBasedReprAsToString = true
+        )(
+          dep"androidx.test.ext:junit:1.2.1"
+        )
+      }
     }
 
     test("empty version") {

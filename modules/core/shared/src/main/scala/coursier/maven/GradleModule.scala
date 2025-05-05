@@ -83,7 +83,7 @@ import coursier.core.VariantPublication
           }
         }
 
-        variant0 -> Dependency(
+        val dependency = Dependency(
           Module(Organization(dep.group), ModuleName(dep.module), Map.empty),
           finalVersion,
           VariantSelector.AttributesBased(
@@ -97,6 +97,14 @@ import coursier.core.VariantPublication
           optional = false,
           transitive = true
         )
+
+        val dependency0 =
+          if (dep.endorseStrictVersions.getOrElse(false))
+            dependency.withEndorseStrictVersions(true)
+          else
+            dependency
+
+        variant0 -> dependency0
       }
     }
 

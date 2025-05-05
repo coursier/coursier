@@ -246,7 +246,8 @@ object StringInterpolators {
                 _root_.scala.collection.immutable.Seq(..$boms),
                 _root_.coursier.core.Overrides(
                   _root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.Values](..$overrides)
-                )
+                ),
+                ${dep.endorseStrictVersions}
               )
             """)
         }

@@ -66,6 +66,8 @@ sealed abstract class ReverseModuleTree {
     */
   def excludedDependsOn: Boolean
 
+  def endorsedDependsOn: Boolean
+
   /** Dependees of this module. */
   def dependees: Seq[ReverseModuleTree]
 }
@@ -90,7 +92,7 @@ object ReverseModuleTree {
 
     val alreadySeen = new mutable.HashSet[ModuleTree]
     val dependees =
-      new mutable.HashMap[Module, mutable.HashSet[(Module, VersionConstraint, Boolean)]]
+      new mutable.HashMap[Module, mutable.HashSet[(Module, VersionConstraint, Boolean, Boolean)]]
     val versions = new mutable.HashMap[Module, (VersionConstraint, Version)]
     val toCheck  = new mutable.Queue[ModuleTree]
 
@@ -105,9 +107,9 @@ object ReverseModuleTree {
       for (c <- children) {
         val b = dependees.getOrElseUpdate(
           c.module,
-          new mutable.HashSet[(Module, VersionConstraint, Boolean)]
+          new mutable.HashSet[(Module, VersionConstraint, Boolean, Boolean)]
         )
-        b.add((elem.module, c.reconciledVersionConstraint, false))
+        b.add((elem.module, c.reconciledVersionConstraint, false, false))
       }
     }
 
@@ -132,6 +134,7 @@ object ReverseModuleTree {
       reconciled,
       retained,
       excludedDependsOn = false,
+      endorsedDependsOn = false,
       dependees0,
       versions0,
       Map.empty
@@ -153,7 +156,7 @@ object ReverseModuleTree {
 
     val alreadySeen = new mutable.HashSet[DependencyTree]
     val dependees =
-      new mutable.HashMap[Module, mutable.HashSet[(Module, VersionConstraint, Boolean)]]
+      new mutable.HashMap[Module, mutable.HashSet[(Module, VersionConstraint, Boolean, Boolean)]]
     val versions = new mutable.HashMap[Module, (VersionConstraint, Version)]
     val toCheck  = new mutable.Queue[DependencyTree]
 
@@ -171,9 +174,9 @@ object ReverseModuleTree {
       for (c <- children) {
         val b = dependees.getOrElseUpdate(
           c.dependency.module,
-          new mutable.HashSet[(Module, VersionConstraint, Boolean)]
+          new mutable.HashSet[(Module, VersionConstraint, Boolean, Boolean)]
         )
-        b.add((elem.dependency.module, c.dependency.versionConstraint, c.excluded))
+        b.add((elem.dependency.module, c.dependency.versionConstraint, c.excluded, c.endorsed))
       }
     }
 
@@ -198,6 +201,7 @@ object ReverseModuleTree {
       reconciled,
       retained,
       excludedDependsOn = false,
+      endorsedDependsOn = false,
       dependees0,
       versions0,
       rootDependencies
@@ -238,7 +242,8 @@ object ReverseModuleTree {
     dependsOnVersionConstraint: VersionConstraint,
     dependsOnRetainedVersion0: Version,
     excludedDependsOn: Boolean,
-    allDependees: Map[Module, Seq[(Module, VersionConstraint, Boolean)]],
+    endorsedDependsOn: Boolean,
+    allDependees: Map[Module, Seq[(Module, VersionConstraint, Boolean, Boolean)]],
     versions: Map[Module, (VersionConstraint, Version)],
     rootDependencies: Map[Module, Seq[VersionConstraint]]
   ) extends ReverseModuleTree {
@@ -254,14 +259,15 @@ object ReverseModuleTree {
         wantVer,
         retainedVersion0,
         excludedDependsOn = false,
+        endorsedDependsOn = false,
         Map.empty,
         versions,
         rootDependencies = Map.empty
       )
     private def actualDependees: Seq[Node] =
       for {
-        (m, wantVer, excl)     <- allDependees.getOrElse(module, Nil)
-        (reconciled, retained) <- versions.get(m)
+        (m, wantVer, excl, endorsed) <- allDependees.getOrElse(module, Nil)
+        (reconciled, retained)       <- versions.get(m)
       } yield Node(
         m,
         reconciled,
@@ -270,6 +276,7 @@ object ReverseModuleTree {
         wantVer,
         retainedVersion0,
         excl,
+        endorsed,
         allDependees,
         versions,
         rootDependencies

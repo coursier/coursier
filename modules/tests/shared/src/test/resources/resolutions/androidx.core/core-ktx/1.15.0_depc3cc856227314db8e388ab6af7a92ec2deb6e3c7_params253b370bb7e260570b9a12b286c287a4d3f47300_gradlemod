@@ -46,7 +46,7 @@ androidx.lifecycle:lifecycle-common:2.6.2:{ org.gradle.category=library, org.gra
 androidx.profileinstaller:profileinstaller:1.3.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
 androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
 androidx.savedstate:savedstate:1.2.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
-org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
+org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
 androidx.compose.ui:ui-geometry-jvmstubs:1.7.5:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
 androidx.compose.ui:ui-graphics-jvmstubs:1.7.5:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }
 androidx.compose.ui:ui-text-jvmstubs:1.7.5:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=jvm }

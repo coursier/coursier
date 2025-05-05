@@ -2,7 +2,7 @@ package coursier.core
 
 import coursier.core.Validation._
 import coursier.version.{VersionConstraint => VersionConstraint0}
-import dataclass.data
+import dataclass.{data, since}
 
 import java.util.concurrent.ConcurrentMap
 
@@ -31,7 +31,9 @@ import java.util.concurrent.ConcurrentMap
   bomDependencies: Seq[BomDependency] = Nil,
   @since("2.1.23")
   overridesMap: Overrides =
-    Overrides.empty
+    Overrides.empty,
+  @since("2.1.25")
+  endorseStrictVersions: Boolean = false
 ) {
   assertValid(versionConstraint.asString, "version")
   def moduleVersionConstraint: (Module, VersionConstraint0) = (module, versionConstraint)
@@ -394,7 +396,8 @@ import java.util.concurrent.ConcurrentMap
     Map.empty[DependencyManagement.Key, DependencyManagement.Values],
     deprecatedBoms,
     bomDependencies,
-    overridesMap
+    overridesMap,
+    endorseStrictVersions
   )
 
   lazy val clearExclusions: Dependency =
@@ -447,6 +450,8 @@ import java.util.concurrent.ConcurrentMap
           bomDep.forceOverrideVersions
         ).mkString("BomDependency(", ", ", ")")
       }.toString
+    if (endorseStrictVersions)
+      fields = fields :+ endorseStrictVersions.toString
     s"Dependency(${fields.mkString(", ")})"
   }
 
@@ -470,7 +475,8 @@ object Dependency {
     overrides: DependencyManagement.Map,
     boms: Seq[(Module, String)],
     bomDependencies: Seq[BomDependency],
-    overridesMap: Overrides
+    overridesMap: Overrides,
+    endorseStrictVersions: Boolean
   ): Dependency =
     coursier.util.Cache.cacheMethod(instanceCache)(
       new Dependency(
@@ -484,7 +490,8 @@ object Dependency {
         overrides,
         boms,
         bomDependencies,
-        overridesMap
+        overridesMap,
+        endorseStrictVersions
       )
     )
 
@@ -513,7 +520,8 @@ object Dependency {
       overrides,
       boms,
       bomDependencies,
-      overridesMap
+      overridesMap,
+      endorseStrictVersions = false
     )
 
   def apply(
@@ -539,7 +547,8 @@ object Dependency {
       Map.empty[DependencyManagement.Key, DependencyManagement.Values],
       boms,
       bomDependencies,
-      Overrides(overrides)
+      Overrides(overrides),
+      endorseStrictVersions = false
     )
 
   @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
@@ -590,7 +599,8 @@ object Dependency {
       Map.empty[DependencyManagement.Key, DependencyManagement.Values],
       boms,
       Nil,
-      Overrides(overrides)
+      Overrides(overrides),
+      endorseStrictVersions = false
     )
 
   @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
@@ -638,7 +648,8 @@ object Dependency {
       Map.empty[DependencyManagement.Key, DependencyManagement.Values],
       Nil,
       Nil,
-      Overrides(overrides)
+      Overrides(overrides),
+      endorseStrictVersions = false
     )
 
   @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
@@ -683,7 +694,8 @@ object Dependency {
       Map.empty[DependencyManagement.Key, DependencyManagement.Values],
       Nil,
       Nil,
-      Overrides.empty
+      Overrides.empty,
+      endorseStrictVersions = false
     )
 
   @deprecated("Use the override accepting a VersionConstraint", "2.1.25")

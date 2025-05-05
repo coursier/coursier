@@ -14,6 +14,8 @@ sealed abstract class DependencyTree {
     */
   def excluded: Boolean
 
+  def endorsed: Boolean
+
   def reconciledVersionConstraint: VersionConstraint
 
   @deprecated("Use reconciledVersion0 instead", "2.1.25")
@@ -43,7 +45,7 @@ object DependencyTree {
 
     roots0
       .map { dep =>
-        Node(dep, excluded = false, resolution, withExclusions)
+        Node(dep, excluded = false, endorsed = false, resolution, withExclusions)
       }
   }
 
@@ -52,11 +54,12 @@ object DependencyTree {
     root: Dependency,
     withExclusions: Boolean = false
   ): DependencyTree =
-    Node(root, excluded = false, resolution, withExclusions)
+    Node(root, excluded = false, endorsed = false, resolution, withExclusions)
 
   private case class Node(
     initialDependency: Dependency,
     excluded: Boolean,
+    endorsed: Boolean,
     resolution: Resolution,
     withExclusions: Boolean
   ) extends DependencyTree {
@@ -151,29 +154,45 @@ object DependencyTree {
             (trDep.module.organization, trDep.module.name, trDep.versionConstraint)
           }
 
-        val dependencies0 = dependencies.map(_.moduleVersionConstraint).toSet
-
-        def excluded = resolution
-          .dependenciesOf0(
-            dep0.withMinimizedExclusions(MinimizedExclusions.zero),
-            withRetainedVersions = false
-          )
-          .toOption
+        val globalOverrides = resolution.projectCache0
+          .get(dependency.moduleVersionConstraint)
+          .map(_._2.overrides.global.flatten.toSeq)
           .getOrElse(Nil)
-          .sortBy { trDep =>
-            (trDep.module.organization, trDep.module.name, trDep.versionConstraint)
-          }
           .collect {
-            case trDep if !dependencies0(trDep.moduleVersionConstraint) =>
-              Node(
-                trDep,
-                excluded = true,
-                resolution,
-                withExclusions
-              )
+            case (k, v) if resolution.dependencySet.containsModule(k.fakeModule) =>
+              v.fakeDependency(k).withTransitive(false)
           }
 
-        dependencies.map(Node(_, excluded = false, resolution, withExclusions)) ++
+        def excluded = {
+          val dependencies0 = dependencies.map(_.moduleVersionConstraint).toSet
+          resolution
+            .dependenciesOf0(
+              dep0.withMinimizedExclusions(MinimizedExclusions.zero),
+              withRetainedVersions = false
+            )
+            .toOption
+            .getOrElse(Nil)
+            .sortBy { trDep =>
+              (trDep.module.organization, trDep.module.name, trDep.versionConstraint)
+            }
+            .collect {
+              case trDep if !dependencies0(trDep.moduleVersionConstraint) =>
+                Node(
+                  trDep,
+                  excluded = true,
+                  endorsed = false,
+                  resolution,
+                  withExclusions
+                )
+            }
+        }
+
+        dependencies.map { childDep =>
+          Node(childDep, excluded = false, endorsed = false, resolution, withExclusions)
+        } ++
+          globalOverrides.map { endorsedDep =>
+            Node(endorsedDep, excluded = false, endorsed = true, resolution, withExclusions)
+          } ++
           (if (withExclusions) excluded else Nil)
       }
   }

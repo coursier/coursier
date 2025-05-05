@@ -338,6 +338,19 @@ object Resolution {
         case Some(f) => f(mod)
         case _       => ConstraintReconciliation.Default
       }
+    val constraints = dependencies
+      .iterator
+      .flatMap(_.overridesMap.global.flatten.iterator)
+      .map {
+        case (k, v) =>
+          v.fakeDependency(k)
+      }
+      .toSeq
+      .groupBy(_.module)
+      .map {
+        case (mod, list) =>
+          (mod, list.map(_.versionConstraint))
+      }
     val dependencies0 = dependencies.toVector
     val mergedByModVer = dependencies0
       .groupBy(dep => dep.module)
@@ -349,9 +362,11 @@ object Resolution {
         module -> {
           forcedVersionOpt match {
             case None =>
-              if (deps.lengthCompare(1) == 0) (Right(deps), Some(deps.head.versionConstraint))
+              val fromConstraints = constraints.getOrElse(module, Nil)
+              if (deps.lengthCompare(1) == 0 && fromConstraints.isEmpty)
+                (Right(deps), Some(deps.head.versionConstraint))
               else {
-                val versions0  = deps.map(_.versionConstraint)
+                val versions0  = deps.map(_.versionConstraint) ++ fromConstraints
                 val reconciler = reconcilerByMod(module)
                 val versionOpt = reconciler.reconcile(versions0)
 
@@ -1985,15 +2000,20 @@ object Resolution {
       }
       .toSeq // belongs to 1.5 & 1.6
 
-    val allImportDeps =
-      importDeps.map(_.moduleVersionConstraint) ++
-        importDepsMgmt.map(_.moduleVersionConstraint)
+    val allImportDeps = (importDeps ++ importDepsMgmt)
+      .map(dep => (dep.module, dep.versionConstraint, dep.endorseStrictVersions))
 
     val retainedParentDeps = parentDeps.filter(projectCache0.contains)
-    val retainedImportDeps = allImportDeps.filter(projectCache0.contains)
+    val retainedImportDeps = allImportDeps.filter {
+      case (mod, ver, _) =>
+        projectCache0.contains((mod, ver))
+    }
 
     val retainedParentProjects = retainedParentDeps.map(projectCache0(_)._2)
-    val retainedImportProjects = retainedImportDeps.map(projectCache0(_)._2)
+    val retainedImportProjects = retainedImportDeps.map {
+      case (mod, ver, endorseStrictVersions) =>
+        (projectCache0((mod, ver))._2, endorseStrictVersions)
+    }
 
     val depMgmtInputs =
       (
@@ -2035,8 +2055,11 @@ object Resolution {
       // takes precedence over dep imports
       // that takes precedence over parents
       depMgmtInputs ++
-        retainedImportProjects.map { p =>
-          withProperties(p.overrides, projectProperties(p).toMap)
+        retainedImportProjects.map {
+          case (p, endorseStrictVersions) =>
+            val overrides = withProperties(p.overrides, projectProperties(p).toMap)
+            if (endorseStrictVersions) overrides.enforceGlobalStrictVersions
+            else overrides
         } ++
         retainedParentProjects.map { p =>
           withProperties(p.overrides, staticProjectProperties(p).toMap)

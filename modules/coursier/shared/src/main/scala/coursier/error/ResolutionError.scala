@@ -70,7 +70,7 @@ object ResolutionError {
           roots.toVector.sortBy(m => (m.organization.value, m.name.value, m.nameWithAttributes))
       )
       val renderedTrees = trees.map { t =>
-        val rendered = Tree(t.dependees.toVector)(_.dependees)
+        val rendered = Tree(t.dependees.toVector)(_.dependees.filter(!_.endorsedDependsOn))
           .customRender(assumeTopRoot = false, extraPrefix = "  ", extraSeparator = Some("")) {
             node =>
               if (node.excludedDependsOn)
@@ -94,6 +94,7 @@ object ResolutionError {
                 s"${node.module}:$retainedVersion " +
                   (if (assumeCompatibleVersions) colors.yellow else colors.red) +
                   s"wants ${node.dependsOnVersionConstraint.asString}" +
+                  (if (node.endorsedDependsOn) " (endorsed dependency)" else "") +
                   colors.reset
               }
               else if (
@@ -108,6 +109,7 @@ object ResolutionError {
                 s"${node.module}:${node.retainedVersion0.asString} " +
                   (if (assumeCompatibleVersions) colors.yellow else colors.red) +
                   s"wants ${node.dependsOnModule}:${node.dependsOnVersionConstraint.asString}" +
+                  (if (node.endorsedDependsOn) " (endorsed dependency)" else "") +
                   colors.reset
               }
               else
