@@ -119,7 +119,7 @@ object DependencyTree {
     def reconciledVersionConstraint: VersionConstraint =
       resolution
         .reconciledVersions
-        .getOrElse(dependency.module, dependency.versionConstraint)
+        .getOrElse(dependency.module, VersionConstraint.empty)
 
     def retainedVersion0: Version =
       resolution
