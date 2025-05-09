@@ -87,7 +87,7 @@ def scalaCliVersion = "1.5.1"
 def csDockerVersion = "2.1.23"
 
 object ScalaVersions {
-  def scala3   = "3.3.5"
+  def scala3   = "3.3.6"
   def scala213 = "2.13.16"
   def scala212 = "2.12.20"
   val all      = Seq(scala213, scala212)
