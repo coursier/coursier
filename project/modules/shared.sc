@@ -215,7 +215,7 @@ trait CsScalaModule extends ScalaModule with CoursierJavaModule {
       if (sv.startsWith("2.12.")) Seq("-Ypartial-unification", "-language:higherKinds")
       else Nil
     val scala213Opts =
-      if (sv.startsWith("2.13.")) Seq("-Ymacro-annotations", "-Wunused:nowarn")
+      if (sv.startsWith("2.13.")) Seq("-Ymacro-annotations", "-Wunused:nowarn", "-Ytasty-reader")
       else Nil
     val scala2Opts =
       if (sv.startsWith("2.")) Seq("-Xasync")

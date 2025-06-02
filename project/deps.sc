@@ -42,11 +42,13 @@ object Deps {
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
     .exclude("junit" -> "junit")
-  def pprint                   = ivy"com.lihaoyi::pprint::0.9.0"
-  def proguard                 = ivy"com.guardsquare:proguard-base:7.7.0"
-  def pythonNativeLibs         = ivy"ai.kien::python-native-libs:0.2.4"
-  def scalaAsync               = ivy"org.scala-lang.modules::scala-async::1.0.1"
-  def scalaCliConfig           = ivy"org.virtuslab.scala-cli::config:1.1.3"
+  def pprint           = ivy"com.lihaoyi::pprint::0.9.0"
+  def proguard         = ivy"com.guardsquare:proguard-base:7.7.0"
+  def pythonNativeLibs = ivy"ai.kien::python-native-libs:0.2.4"
+  def scalaAsync       = ivy"org.scala-lang.modules::scala-async::1.0.1"
+  def scalaCliConfig(sv: String) =
+    if (sv.startsWith("2.12")) ivy"org.virtuslab.scala-cli::config:1.1.3"
+    else ivy"org.virtuslab.scala-cli:config_3:1.8.0"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.4.0"
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.2"
   def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
