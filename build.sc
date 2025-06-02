@@ -299,7 +299,7 @@ trait CacheJvm extends CacheJvmBase {
     Deps.jniUtils,
     Deps.plexusArchiver,
     Deps.plexusContainerDefault,
-    Deps.scalaCliConfig,
+    Deps.scalaCliConfig(scalaVersion()),
     Deps.tika,
     Deps.windowsAnsi,
     // here only for the sake of bumping it, to work around JNI loading issues with earlier versions on macOS
