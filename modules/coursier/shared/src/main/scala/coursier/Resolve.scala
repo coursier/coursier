@@ -38,15 +38,17 @@ import scala.language.higherKinds
   cache: Cache[F],
   dependencies: Seq[Dependency] = Nil,
   repositories: Seq[Repository] = Resolve.defaultRepositories,
-  mirrorConfFiles: Seq[MirrorConfFile] = Resolve.defaultMirrorConfFiles,
-  mirrors: Seq[Mirror] = Nil,
+  @deprecated("Use MirrorConfFile(...), call mirrors() on it, and set mirrors instead", "2.1.25")
+  mirrorConfFiles: Seq[MirrorConfFile] = Nil,
+  mirrors: Seq[Mirror] = Resolve.defaultMirrors,
   resolutionParams: ResolutionParams = ResolutionParams(),
   throughOpt: Option[F[Resolution] => F[Resolution]] = None,
   transformFetcherOpt: Option[ResolutionProcess.Fetch0[F] => ResolutionProcess.Fetch0[F]] = None,
   @since
     initialResolution: Option[Resolution] = None,
   @since
-    confFiles: Seq[Resolve.Path] = Resolve.defaultConfFiles,
+  @deprecated("For mirrors, use Resolve.confFileMirrors and set mirrors instead; for repositories, use Resolve.confFileRepositories and set repositories", "2.1.25")
+    confFiles: Seq[Resolve.Path] = Nil,
   @deprecated("Unused now, repositories from default config files are read by Resolve.defaultRepositories. Use Resolve.confFileRepositories and set repositories to adjust the default repositories via config files", "2.1.25")
   preferConfFileDefaultRepositories: Boolean = true,
   @since("2.1.12")
@@ -152,8 +154,16 @@ import scala.language.higherKinds
   def addMirrors(mirrors: Mirror*): Resolve[F] =
     withMirrors(this.mirrors ++ mirrors)
 
+  @deprecated(
+    "Unused now, parse mirror files yourself with Resolve.confFileMirrors and set mirrors instead",
+    "2.1.25"
+  )
   def addMirrorConfFiles(mirrorConfFiles: MirrorConfFile*): Resolve[F] =
     withMirrorConfFiles(this.mirrorConfFiles ++ mirrorConfFiles)
+  @deprecated(
+    "For mirrors, use Resolve.confFileMirrors and set mirrors instead; for repositories, use Resolve.confFileRepositories and set repositories",
+    "2.1.25"
+  )
   def addConfFiles(confFiles: Resolve.Path*): Resolve[F] =
     withConfFiles(this.confFiles ++ confFiles)
 
