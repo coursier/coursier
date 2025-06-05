@@ -48,7 +48,7 @@ object Deps {
   def scalaAsync       = ivy"org.scala-lang.modules::scala-async::1.0.1"
   def scalaCliConfig(sv: String) =
     if (sv.startsWith("2.12")) ivy"org.virtuslab.scala-cli::config:1.1.3"
-    else ivy"org.virtuslab.scala-cli:config_3:1.8.0"
+    else ivy"org.virtuslab.scala-cli:config_3:1.8.1"
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.4.0"
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.2"
   def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
