@@ -47,6 +47,7 @@ import scala.language.higherKinds
     initialResolution: Option[Resolution] = None,
   @since
     confFiles: Seq[Resolve.Path] = Resolve.defaultConfFiles,
+  @deprecated("Unused now, repositories from default config files are read by Resolve.defaultRepositories. Use Resolve.confFileRepositories and set repositories to adjust the default repositories via config files", "2.1.25")
   preferConfFileDefaultRepositories: Boolean = true,
   @since("2.1.12")
   @deprecated("Workaround for former uses of Resolution.mapDependencies, prefer relying on ResolutionParams", "2.1.12")
@@ -89,27 +90,15 @@ import scala.language.higherKinds
   }
 
   def finalRepositories: F[Seq[Repository]] = {
-    val repositories0 =
-      if (preferConfFileDefaultRepositories) {
-        val defaultFromConfOpt = confFiles
-          .iterator
-          .flatMap(Resolve.confFileRepositories(_).iterator)
-          .take(1)
-          .toList
-          .headOption
-        defaultFromConfOpt.getOrElse(repositories)
-      }
-      else
-        repositories
-    val repositories1 = gradleModuleSupport match {
-      case None => repositories0
+    val repositories0 = gradleModuleSupport match {
+      case None => repositories
       case Some(enable) =>
-        repositories0.map {
+        repositories.map {
           case m: MavenRepositoryLike.WithModuleSupport => m.withCheckModule(enable)
           case other                                    => other
         }
     }
-    allMirrors.map(Mirror.replace(repositories1, _))
+    allMirrors.map(Mirror.replace(repositories0, _))
   }
 
   def addDependencies(dependencies: Dependency*): Resolve[F] =

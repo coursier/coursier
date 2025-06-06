@@ -82,19 +82,25 @@ abstract class PlatformResolve {
       .filter(_.nonEmpty)
       .flatMap(fromString(_, "environment variable COURSIER_REPOSITORIES"))
 
-    val fromPropsOpt = sys.props
+    def fromPropsOpt = sys.props
       .get("coursier.repositories")
       .map(_.trim)
       .filter(_.nonEmpty)
       .flatMap(fromString(_, "Java property coursier.repositories"))
 
-    val default = Seq(
+    def fromConfFiles = defaultConfFiles
+      .iterator
+      .flatMap(confFileRepositories(_).iterator)
+      .find(_ => true)
+
+    def default = Seq(
       LocalRepositories.ivy2Local,
       Repositories.central
     )
 
     fromEnvOpt
       .orElse(fromPropsOpt)
+      .orElse(fromConfFiles)
       .getOrElse(default)
   }
 
