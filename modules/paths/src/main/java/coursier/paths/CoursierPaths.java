@@ -63,13 +63,14 @@ public final class CoursierPaths {
     }
 
     private static String computeCacheDirectory(String envVar, String propName, String dirName) throws IOException {
-        String path = System.getenv(envVar);
+        return computeCacheDirectoryFrom(System.getenv(envVar), System.getProperty(propName), dirName);
+    }
 
-        if (path == null)
-            path = System.getProperty(propName);
-
-        if (path != null)
-          return path;
+    public static String computeCacheDirectoryFrom(String env, String prop, String dirName) throws IOException {
+        if (env != null)
+            return env;
+        if (prop != null)
+            return prop;
 
         Path baseXdgDir = Paths.get(coursierDirectories().cacheDir);
         Path xdgDir = baseXdgDir.resolve(dirName);
@@ -181,10 +182,13 @@ public final class CoursierPaths {
     }
 
     private static Path[] computeConfigDirectories() throws IOException {
-        String path = System.getenv("COURSIER_CONFIG_DIR");
+        return computeConfigDirectories(System.getenv("COURSIER_CONFIG_DIR"), System.getProperty("coursier.config-dir"));
+    }
+    private static Path[] computeConfigDirectories(String fromEnv, String fromProps) throws IOException {
+        String path = fromEnv;
 
         if (path == null)
-            path = System.getProperty("coursier.config-dir");
+            path = fromProps;
 
         if (path != null)
             return new Path[] { Paths.get(path).toAbsolutePath().normalize() };
@@ -206,6 +210,10 @@ public final class CoursierPaths {
         return Arrays.stream(configDirectoriesPaths()).map(Path::toFile).toArray(File[]::new);
     }
 
+    public static File[] configDirectories(String fromEnv, String fromProps) throws IOException {
+        return Arrays.stream(configDirectoriesPaths(fromEnv, fromProps)).map(Path::toFile).toArray(File[]::new);
+    }
+
     public static Path[] configDirectoriesPaths() throws IOException {
 
         if (configDirectories0 == null)
@@ -216,6 +224,13 @@ public final class CoursierPaths {
             }
 
         return configDirectories0.clone();
+    }
+
+    public static Path[] configDirectoriesPaths(String fromEnv, String fromProps) throws IOException {
+        if (fromEnv == null && fromProps == null)
+            return configDirectoriesPaths();
+        else
+            return computeConfigDirectories(fromEnv, fromProps);
     }
 
     @Deprecated
@@ -269,24 +284,22 @@ public final class CoursierPaths {
 
     private static Path scalaConfigFile0 = null;
 
-    public static Path scalaConfigFile() throws Throwable {
-        if (scalaConfigFile0 == null) {
-            Path configPath = null;
-            String fromEnv = System.getenv("SCALA_CLI_CONFIG");
-            if (fromEnv != null && fromEnv.length() > 0)
-                configPath = Paths.get(fromEnv);
-            if (configPath == null) {
-                String fromProps = System.getProperty("scala-cli.config");
-                if (fromProps != null && fromProps.length() > 0)
-                    configPath = Paths.get(fromProps);
-            }
-            if (configPath == null) {
-                ProjectDirectories dirs = CoursierPaths.directoriesInstance("ScalaCli");
-                configPath = Paths.get(dirs.dataLocalDir).resolve("secrets/config.json");
-            }
-
-            scalaConfigFile0 = configPath;
+    public static Path scalaConfigFile(String fromEnv, String fromProps) throws Throwable {
+        Path configPath = null;
+        if (fromEnv != null && fromEnv.length() > 0)
+            configPath = Paths.get(fromEnv);
+        if (configPath == null && (fromProps != null && fromProps.length() > 0))
+            configPath = Paths.get(fromProps);
+        if (configPath == null) {
+            ProjectDirectories dirs = CoursierPaths.directoriesInstance("ScalaCli");
+            configPath = Paths.get(dirs.dataLocalDir).resolve("secrets/config.json");
         }
+        return configPath;
+    }
+
+    public static Path scalaConfigFile() throws Throwable {
+        if (scalaConfigFile0 == null)
+            scalaConfigFile0 = scalaConfigFile(System.getenv("SCALA_CLI_CONFIG"), System.getProperty("scala-cli.config"));
         return scalaConfigFile0;
     }
 
