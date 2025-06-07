@@ -32,7 +32,7 @@ lazy val latestTaggedVersion = os.proc("git", "describe", "--abbrev=0", "--tags"
   .call().out
   .trim()
 def computeBuildVersion() = {
-  val gitHead = os.proc("git", "rev-parse", "HEAD").call().out.trim()
+  val gitHead       = os.proc("git", "rev-parse", "HEAD").call().out.trim()
   val maybeExactTag = scala.util.Try {
     os.proc("git", "describe", "--exact-match", "--tags", "--always", gitHead)
       .call().out
@@ -88,7 +88,7 @@ trait PublishLocalNoFluff extends PublishModule {
 }
 
 trait CoursierJavaModule extends JavaModule {
-  def jvmRelease = "8"
+  def jvmRelease      = "8"
   private def isArm64 =
     Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
       case Some("aarch64" | "arm64") => true
@@ -152,7 +152,7 @@ trait CsTests extends TestModule {
 
 trait CsScalaJsModule extends ScalaJSModule with CsScalaModule {
   def scalaJSVersion = ScalaVersions.scalaJs
-  def scalacOptions = super.scalacOptions() ++ Seq(
+  def scalacOptions  = super.scalacOptions() ++ Seq(
     "-P:scalajs:nowarnGlobalExecutionContext"
   )
 }
@@ -177,7 +177,7 @@ trait CsResourcesTests extends TestModule {
 
 trait JvmTests extends JavaModule with CsResourcesTests {
   def defaultCommandName() = "test"
-  def sources = T.sources {
+  def sources              = T.sources {
     val shared = Seq(
       millSourcePath / os.up / "shared" / "src" / "test" / "scala",
       millSourcePath / os.up / "jvm" / "src" / "test" / "scala"
@@ -210,7 +210,7 @@ trait JsTests extends TestScalaJSModule with CsResourcesTests {
 
 trait CsScalaModule extends ScalaModule with CoursierJavaModule {
   def scalacOptions = T {
-    val sv = scalaVersion()
+    val sv           = scalaVersion()
     val scala212Opts =
       if (sv.startsWith("2.12.")) Seq("-Ypartial-unification", "-language:higherKinds")
       else Nil
@@ -228,7 +228,7 @@ trait CsScalaModule extends ScalaModule with CoursierJavaModule {
     )
   }
   def scalacPluginIvyDeps = T {
-    val sv = scalaVersion()
+    val sv              = scalaVersion()
     val scala212Plugins =
       if (sv.startsWith("2.12.")) Agg(Deps.macroParadise)
       else Nil
@@ -240,7 +240,7 @@ trait CsModule extends SbtModule with CsScalaModule with CoursierJavaModule {
   def sources = T.sources {
     val sbv    = mill.scalalib.api.ZincWorkerUtil.scalaBinaryVersion(scalaVersion())
     val parent = super.sources()
-    val extra = parent.map(_.path).filter(_.last == "scala").flatMap { p =>
+    val extra  = parent.map(_.path).filter(_.last == "scala").flatMap { p =>
       val dirNames = Seq(s"scala-$sbv")
       dirNames.map(n => PathRef(p / os.up / n))
     }

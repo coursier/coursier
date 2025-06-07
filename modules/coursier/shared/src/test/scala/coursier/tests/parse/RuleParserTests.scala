@@ -32,7 +32,7 @@ object RuleParserTests extends TestSuite {
       test("sameVersion") {
 
         test {
-          val s = "SameVersion(com.michael:jackson-core)"
+          val s           = "SameVersion(com.michael:jackson-core)"
           val expectedRes =
             Right((SameVersion(mod"com.michael:jackson-core"), RuleResolution.TryResolve))
           val res = RuleParser.rule(s)
@@ -46,7 +46,7 @@ object RuleParserTests extends TestSuite {
         }
 
         test {
-          val s = "SameVersion(com.michael:jackson-core, com.michael:jackson-databind)"
+          val s           = "SameVersion(com.michael:jackson-core, com.michael:jackson-databind)"
           val expectedRes = Right((
             SameVersion(mod"com.michael:jackson-core", mod"com.michael:jackson-databind"),
             RuleResolution.TryResolve
@@ -56,7 +56,7 @@ object RuleParserTests extends TestSuite {
         }
 
         test {
-          val s = "SameVersion(com.michael:jackson-core,com.michael:jackson-databind)"
+          val s           = "SameVersion(com.michael:jackson-core,com.michael:jackson-databind)"
           val expectedRes = Right((
             SameVersion(mod"com.michael:jackson-core", mod"com.michael:jackson-databind"),
             RuleResolution.TryResolve
@@ -66,7 +66,7 @@ object RuleParserTests extends TestSuite {
         }
 
         test {
-          val s = "SameVersion(com.michael:jackson-*)"
+          val s           = "SameVersion(com.michael:jackson-*)"
           val expectedRes =
             Right((SameVersion(mod"com.michael:jackson-*"), RuleResolution.TryResolve))
           val res = RuleParser.rule(s)
@@ -93,7 +93,7 @@ object RuleParserTests extends TestSuite {
           }
 
           test {
-            val s = "Strict(org:name)"
+            val s           = "Strict(org:name)"
             val expectedRes =
               Right((Strict(Set(ModuleMatcher(mod"org:name"))), RuleResolution.TryResolve))
             val res = RuleParser.rule(s)
@@ -103,7 +103,7 @@ object RuleParserTests extends TestSuite {
 
         test("excludes") {
           test {
-            val s = "Strict(org:*, !org:name, !org:foo)"
+            val s           = "Strict(org:*, !org:name, !org:foo)"
             val expectedRes = Right((
               Strict(
                 Set(ModuleMatcher(mod"org:*")),
@@ -123,7 +123,7 @@ object RuleParserTests extends TestSuite {
     test("explicitRuleResolution") {
 
       test("resolve") {
-        val s = "resolve:SameVersion(com.michael:jackson-core)"
+        val s           = "resolve:SameVersion(com.michael:jackson-core)"
         val expectedRes =
           Right((SameVersion(mod"com.michael:jackson-core"), RuleResolution.TryResolve))
         val res = RuleParser.rule(s)
@@ -156,7 +156,7 @@ object RuleParserTests extends TestSuite {
       }
 
       test {
-        val s = "AlwaysFail, AlwaysFail"
+        val s           = "AlwaysFail, AlwaysFail"
         val expectedRes = Right {
           Seq(AlwaysFail(), AlwaysFail())
             .map(_ -> RuleResolution.TryResolve)
@@ -194,7 +194,7 @@ object RuleParserTests extends TestSuite {
       }
 
       test {
-        val s = "DontBumpRootDependencies(exclude=[org.scala-lang:*], include=[])"
+        val s        = "DontBumpRootDependencies(exclude=[org.scala-lang:*], include=[])"
         val matchers = ModuleMatchers(
           Set(ModuleMatcher(mod"org.scala-lang:*"))
         )
@@ -218,7 +218,7 @@ object RuleParserTests extends TestSuite {
       }
 
       test {
-        val s = "DontBumpRootDependencies, SameVersion(com.michael:jackson-core)"
+        val s           = "DontBumpRootDependencies, SameVersion(com.michael:jackson-core)"
         val expectedRes = Right {
           Seq(DontBumpRootDependencies(), SameVersion(mod"com.michael:jackson-core"))
             .map(_ -> RuleResolution.TryResolve)

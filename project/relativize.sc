@@ -35,7 +35,7 @@ def processHtmlFile(site: Path, file: Path): Unit = {
     if (absoluteHref.getHost == baseUri.getHost) {
       val hrefPath     = Paths.get(absoluteHref.getPath)
       val relativeHref = originPath.relativize(hrefPath)
-      val fragment =
+      val fragment     =
         if (absoluteHref.getFragment == null) ""
         else "#" + absoluteHref.getFragment
       val newHref = relativeUri(relativeHref).toString + fragment
@@ -64,7 +64,7 @@ def processHtmlFile(site: Path, file: Path): Unit = {
 private def relativeUri(relativePath: Path): URI = {
   require(!relativePath.isAbsolute, relativePath)
   val names = relativePath.iterator().asScala
-  val uris = names.map { name =>
+  val uris  = names.map { name =>
     new URI(null, null, name.toString, null)
   }
   URI.create(uris.mkString("", "/", ""))

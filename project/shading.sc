@@ -19,7 +19,7 @@ trait Shading extends JavaModule with PublishModule {
   def shadedJars = T {
     val depToDependency = (d: Dep) => bindDependency().apply(d).dep
     val depSeq          = transitiveIvyDeps().map(_.toDep)
-    val resolution = mill.util.Jvm.resolveDependenciesMetadataSafe(
+    val resolution      = mill.util.Jvm.resolveDependenciesMetadataSafe(
       repositoriesTask(),
       deps = depSeq.map(depToDependency),
       force = depSeq.filter(_.force).map(depToDependency),
@@ -38,7 +38,7 @@ trait Shading extends JavaModule with PublishModule {
     )
 
     def load(resolution: coursier.Resolution) = {
-      val artifacts = resolution.artifacts(types = types)
+      val artifacts       = resolution.artifacts(types = types)
       val loadedArtifacts = Gather[Task].gather(
         for (a <- artifacts)
           yield coursier.cache.Cache.default.file(a).run.map(a.optional -> _)
@@ -56,7 +56,7 @@ trait Shading extends JavaModule with PublishModule {
     val shadedDepSeq = shadedDependencies()
 
     val allJars = load(resolution)
-    val subset = depSeq.iterator.map(depToDependency).toSeq.filterNot(
+    val subset  = depSeq.iterator.map(depToDependency).toSeq.filterNot(
       shadedDepSeq.iterator.map(depToDependency).toSet
     )
     val retainedJars = load {
