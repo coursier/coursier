@@ -28,7 +28,7 @@ object GetParams {
       case (false, Some(sep))     => Validated.validNel(sep)
       case (true, None)           => Validated.validNel("\u0000")
       case (true, Some("\u0000")) => Validated.validNel("\u0000")
-      case (true, Some(_)) =>
+      case (true, Some(_))        =>
         Validated.invalidNel("--zero and --separator cannot be specific at the same time")
     }
 
@@ -37,7 +37,7 @@ object GetParams {
       .traverse { input =>
         input.split(":\\s*", 2) match {
           case Array(k, v) => Validated.valid(k.trim -> v)
-          case Array(_) =>
+          case Array(_)    =>
             Validated.invalidNel(s"Malformed auth header value: '$input', expected 'header: value'")
         }
       }

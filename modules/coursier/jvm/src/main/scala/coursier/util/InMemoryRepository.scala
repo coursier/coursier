@@ -287,7 +287,7 @@ object InMemoryRepository {
             case (url, changing) =>
               val url0 = url.toString
               val ext  = url0.substring(url0.lastIndexOf('.') + 1)
-              val pub = Publication(
+              val pub  = Publication(
                 dependency.module.name.value, // ???
                 Type(ext),
                 Extension(ext),

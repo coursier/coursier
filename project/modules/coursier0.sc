@@ -6,7 +6,7 @@ import com.github.lolgab.mill.mima._
 import mill._, mill.scalalib._
 
 trait Coursier extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
-  def artifactName = "coursier"
+  def artifactName   = "coursier"
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.dataClass,
     Deps.jsoniterMacros,
@@ -46,7 +46,7 @@ trait CoursierJvmBase extends Coursier with CsMima with Shading {
     Deps.pprint
   )
   def validNamespaces = Seq("coursier")
-  def shadeRenames = Seq(
+  def shadeRenames    = Seq(
     "fastparse.**"  -> "coursier.internal.shaded.fastparse.@1",
     "geny.**"       -> "coursier.internal.shaded.geny.@1",
     "sourcecode.**" -> "coursier.internal.shaded.sourcecode.@1",

@@ -45,14 +45,14 @@ private def releaseId(
   ghToken: String,
   tag: String
 ): Long = {
-  val url = uri"https://api.github.com/repos/$ghOrg/$ghProj/releases"
+  val url  = uri"https://api.github.com/repos/$ghOrg/$ghProj/releases"
   val resp = quickRequest
     .header("Accept", "application/vnd.github.v3+json")
     .header("Authorization", s"token $ghToken")
     .get(url)
     .send()
 
-  val json = ujson.read(resp.body)
+  val json      = ujson.read(resp.body)
   val releaseId =
     try json
         .arr

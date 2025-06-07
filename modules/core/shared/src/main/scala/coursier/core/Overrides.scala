@@ -65,7 +65,7 @@ object Overrides {
         DependencyManagement.Values
       ) => (DependencyManagement.Key, DependencyManagement.Values)
     ): Overrides = {
-      var changed = false
+      var changed    = false
       val updatedMap = map.map {
         case kv @ (k, v) =>
           // FIXME Key collisions after applying f?
@@ -94,7 +94,7 @@ object Overrides {
         .getOrElse(this)
   }
 
-  private val empty0 = Impl(Map.empty)
+  private val empty0   = Impl(Map.empty)
   def empty: Overrides =
     empty0
 
@@ -106,7 +106,7 @@ object Overrides {
     overrides.filter(_.nonEmpty) match {
       case Seq()     => empty
       case Seq(elem) => elem
-      case more =>
+      case more      =>
         Impl(
           DependencyManagement.addAll(
             Map.empty[DependencyManagement.Key, DependencyManagement.Values],

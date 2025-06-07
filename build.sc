@@ -62,7 +62,7 @@ object `sbt-maven-repository` extends Module {
   object js  extends Cross[SbtMavenRepositoryJs](ScalaVersions.all)
 }
 object `cache-util` extends CacheUtil
-object cache extends Module {
+object cache        extends Module {
   object jvm extends Cross[CacheJvm](ScalaVersions.all)
   object js  extends Cross[CacheJs](ScalaVersions.all)
 }
@@ -337,7 +337,7 @@ trait CacheJs extends Cache with CsScalaJsModule {
     util.js()
   )
   def artifactName = "fetch-js"
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def ivyDeps      = super.ivyDeps() ++ Agg(
     Deps.scalaJsDom
   )
 }
@@ -364,7 +364,7 @@ trait Env extends CrossSbtModule with CsModule
   def mimaPreviousVersions = T {
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
-  def artifactName = "coursier-env"
+  def artifactName   = "coursier-env"
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.dataClass
   )
@@ -384,8 +384,8 @@ def cliScalaVersion213Compat = ScalaVersions.scala213
 def launcherModule           = launcher
 trait LauncherNative04 extends CsModule
     with CoursierPublishModule {
-  def scalaVersion = cliScalaVersion
-  def artifactName = "coursier-launcher-native_0.4"
+  def scalaVersion      = cliScalaVersion
+  def artifactName      = "coursier-launcher-native_0.4"
   def compileModuleDeps = Seq(
     launcherModule(cliScalaVersion213Compat)
   )
@@ -558,7 +558,7 @@ trait Install extends CrossSbtModule with CsModule
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
   def artifactName = "coursier-install"
-  def moduleDeps = super.moduleDeps ++ Seq(
+  def moduleDeps   = super.moduleDeps ++ Seq(
     coursier.jvm(),
     env(),
     jvm(),
@@ -587,7 +587,7 @@ trait Jvm extends CrossSbtModule with CsModule
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
   def artifactName = "coursier-jvm"
-  def moduleDeps = super.moduleDeps ++ Seq(
+  def moduleDeps   = super.moduleDeps ++ Seq(
     coursier.jvm(),
     env(),
     exec
@@ -620,7 +620,7 @@ trait Jvm extends CrossSbtModule with CsModule
 
 trait Exec extends JavaModule with CoursierPublishModule {
   def artifactName = "coursier-exec"
-  def ivyDeps = Agg(
+  def ivyDeps      = Agg(
     Deps.jna
   )
   def compileIvyDeps = Agg(
@@ -631,7 +631,7 @@ trait Exec extends JavaModule with CoursierPublishModule {
 trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
   def jvmRelease   = "11"
   def artifactName = "coursier-docker"
-  def moduleDeps = super.moduleDeps ++ Seq(
+  def moduleDeps   = super.moduleDeps ++ Seq(
     cache.jvm(cliScalaVersion213Compat),
     exec
   )
@@ -674,7 +674,7 @@ trait Cli extends CsModule
     with CoursierPublishModule with Launchers {
   def jvmRelease   = "11"
   def scalaVersion = cliScalaVersion
-  def moduleDeps = super.moduleDeps ++ Seq(
+  def moduleDeps   = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion213Compat),
     `sbt-maven-repository`.jvm(cliScalaVersion213Compat),
     install(cliScalaVersion213Compat),
@@ -683,7 +683,7 @@ trait Cli extends CsModule
     launcherModule(cliScalaVersion213Compat)
   )
   def artifactName = "coursier-cli"
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def ivyDeps      = super.ivyDeps() ++ Agg(
     Deps.caseApp,
     Deps.catsFree213,
     Deps.classPathUtil,
@@ -697,7 +697,7 @@ trait Cli extends CsModule
     Deps.jsoniterMacros,
     Deps.svm
   )
-  def mainClass = Some("coursier.cli.Coursier")
+  def mainClass         = Some("coursier.cli.Coursier")
   def finalMainClassOpt = T {
     Right("coursier.cli.Coursier"): Either[String, String]
   }
@@ -726,7 +726,7 @@ trait Cli extends CsModule
 
   // Locally, run cli in exclusive mode with os.InheritRaw stdin / stdout / stderr, so that it sees
   // an actual terminal, and not pipes, and we get progress bars and all.
-  private def isCI = System.getenv("CI") != null
+  private def isCI                                             = System.getenv("CI") != null
   def run(args: Task[Args] = Task.Anon(Args())): Command[Unit] = Task.Command(exclusive = !isCI) {
     mill.util.Jvm.callProcess(
       mainClass = mainClass().getOrElse(sys.error("main class?")),
@@ -749,7 +749,7 @@ trait Cli extends CsModule
 trait CliTests extends CsModule
     with CoursierPublishModule { self =>
   def scalaVersion = cliScalaVersion
-  def moduleDeps = super.moduleDeps ++ Seq(
+  def moduleDeps   = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion213Compat)
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
@@ -793,11 +793,11 @@ trait CliTests extends CsModule
   trait NativeTests extends SbtTests with CsTests with Bloop.Module {
     def cliLauncher: T[PathRef]
     def skipBloop = true
-    def sources = T.sources {
+    def sources   = T.sources {
       super.sources() ++ self.test.sources()
     }
     def isStatic: Boolean = false
-    def forkArgs = {
+    def forkArgs          = {
       val launcherTask = cliLauncher.map(_.path)
       T {
         val launcher = launcherTask()
@@ -862,7 +862,7 @@ trait Web extends CsScalaJsModule {
 
 object `redirecting-server` extends CsModule {
   def scalaVersion = ScalaVersions.scala213
-  def ivyDeps = Agg(
+  def ivyDeps      = Agg(
     Deps.http4sBlazeServer,
     Deps.http4sDsl,
     Deps.http4sServer,
@@ -873,21 +873,21 @@ object `redirecting-server` extends CsModule {
 
 trait TestCacheJvm extends Cross.Module[String] with CsCrossJvmJsModule {
   def scalaVersion = crossValue
-  def moduleDeps = Seq(
+  def moduleDeps   = Seq(
     cache.jvm()
   )
 }
 trait TestCacheJs extends Cross.Module[String] with CsCrossJvmJsModule with CsScalaJsModule {
   def scalaVersion = crossValue
-  def moduleDeps = Seq(
+  def moduleDeps   = Seq(
     cache.js()
   )
 }
 
 def simpleNative04CliTest() = T.command {
   `launcher-native_04`.publishLocal()()
-  val launcher = cli.launcher().path
-  val tmpDir   = os.temp.dir(prefix = "coursier-bootstrap-scala-native-test")
+  val launcher        = cli.launcher().path
+  val tmpDir          = os.temp.dir(prefix = "coursier-bootstrap-scala-native-test")
   def cleanUp(): Unit =
     try os.remove.all(tmpDir)
     catch {
@@ -1032,7 +1032,7 @@ def publishSonatype(tasks: mill.main.Tasks[PublishModule.PublishData]) =
 private val docScalaVersion = ScalaVersions.scala213
 object `doc-deps` extends ScalaModule {
   def scalaVersion = docScalaVersion
-  def moduleDeps = Seq(
+  def moduleDeps   = Seq(
     coursier.jvm(docScalaVersion),
     interop.cats.jvm(docScalaVersion)
   )
@@ -1218,7 +1218,7 @@ def cliNativeImageLauncher() = T.command {
 object ci extends Module {
   def copyJvm(jvm: String = deps.graalVmJvmId, dest: String = "jvm") = T.command {
     import sys.process._
-    val cs = if (Properties.isWin) "cs.exe" else "cs"
+    val cs      = if (Properties.isWin) "cs.exe" else "cs"
     val command = Seq(
       cs,
       "java-home",
@@ -1300,7 +1300,7 @@ object `build-util` extends Module {
 object docs extends ScalaModule {
   private def sv   = ScalaVersions.scala213
   def scalaVersion = sv
-  def moduleDeps = Seq(
+  def moduleDeps   = Seq(
     coursier.jvm(sv)
   )
   def ivyDeps = Agg(
@@ -1359,7 +1359,7 @@ object docs extends ScalaModule {
   def mkdocsSiteDirArgs = T {
     Seq("--site-dir", mkdocsOutput().path.toString)
   }
-  def millSourcePath = super.millSourcePath / os.up / os.up / "docs"
+  def millSourcePath                = super.millSourcePath / os.up / os.up / "docs"
   def mkdocsWatchScript: T[PathRef] = Task {
     mdoc()()
     val docsDir = T.workspace / "docs"
@@ -1368,9 +1368,9 @@ object docs extends ScalaModule {
       "\"" + arg.replace("\"", "\\\"") + "\""
     def quoteArgs(args: Seq[String]): String =
       args.map(quoteArg).mkString(" ")
-    val cp         = compileClasspath().map(_.path).mkString(File.pathSeparator)
-    val mainClass0 = mainClass().getOrElse(???)
-    val mdocArgs   = mdocWatchArgs().value
+    val cp            = compileClasspath().map(_.path).mkString(File.pathSeparator)
+    val mainClass0    = mainClass().getOrElse(???)
+    val mdocArgs      = mdocWatchArgs().value
     val scriptContent =
       s"""#!/usr/bin/env bash
          |set -e
@@ -1404,7 +1404,7 @@ object docs extends ScalaModule {
   }
   def mkdocsServe() = T.command[Unit] {
     mdoc()()
-    val docsDir = T.workspace / "docs"
+    val docsDir   = T.workspace / "docs"
     val serveProc = os.proc("mkdocs", "serve", mkdocsConfigArgs())
       .spawn(cwd = docsDir, stdin = os.Inherit, stdout = os.Inherit)
     val mdocProc = os.proc(

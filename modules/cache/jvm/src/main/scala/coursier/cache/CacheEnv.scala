@@ -84,7 +84,7 @@ object CacheEnv {
           configDirs.map(configDir => new File(configDir, "credentials.properties"))
         val otherFiles = {
           // delay listing files until credentials are really needed?
-          val dirs = configDirs.map(configDir => new File(configDir, "credentials"))
+          val dirs  = configDirs.map(configDir => new File(configDir, "credentials"))
           val files = dirs.flatMap { dir =>
             val listOrNull = dir.listFiles { (dir, name) =>
               !name.startsWith(".") && name.endsWith(".properties")
