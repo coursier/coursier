@@ -297,6 +297,7 @@ trait CacheJvm extends CacheJvmBase {
     Deps.directories,
     Deps.isTerminal,
     Deps.jniUtils,
+    Deps.jsoniterCore, // required alongside scalaCliConfig, given we exclude its version of jsoniter-scala
     Deps.plexusArchiver,
     Deps.plexusContainerDefault,
     Deps.scalaCliConfig(scalaVersion()),
