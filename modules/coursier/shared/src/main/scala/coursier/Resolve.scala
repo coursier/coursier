@@ -198,7 +198,7 @@ import scala.language.higherKinds
   private def allMirrors0 =
     mirrors ++
       mirrorConfFiles.flatMap(_.mirrors()) ++
-      confFiles.flatMap(Resolve.confFileMirrors)
+      confFiles.flatMap(Resolve.confFileMirrors).map(_.mirror)
 
   def allMirrors: F[Seq[Mirror]] =
     S.delay(allMirrors0)
