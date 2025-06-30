@@ -1,3 +1,4 @@
+import java.io.File
 import com.github.lolgab.mill.mima.Mima
 import $file.^.deps, deps.{Deps, ScalaVersions}
 
@@ -89,6 +90,27 @@ trait PublishLocalNoFluff extends PublishModule {
 
 trait CoursierJavaModule extends JavaModule {
   def jvmRelease = "8"
+  private def csApp(workspace: os.Path): String =
+    if (Properties.isWin) {
+      def pathEntries = Option(System.getenv("PATH"))
+        .iterator
+        .flatMap(_.split(File.pathSeparator).iterator)
+        .map(os.Path(_, workspace))
+      val pathExts = Option(System.getenv("PATHEXT"))
+        .iterator
+        .flatMap(_.split(File.pathSeparator).iterator)
+        .toSeq
+      pathEntries
+        .flatMap(dir => pathExts.iterator.map(ext => dir / s"cs$ext"))
+        .find(os.isFile)
+        .map(_.toString)
+        .getOrElse {
+          System.err.println("Warning: cannot find cs in PATH")
+          "cs"
+        }
+    }
+    else
+      "cs"
   private def isArm64 =
     Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
       case Some("aarch64" | "arm64") => true
@@ -100,7 +122,7 @@ trait CoursierJavaModule extends JavaModule {
     else s"adoptium:$jvmRelease"
   }
   def javacSystemJvm = T.source {
-    val output = os.proc("cs", "java-home", "--jvm", javacSystemJvmId())
+    val output = os.proc(csApp(T.workspace), "java-home", "--jvm", javacSystemJvmId())
       .call(cwd = T.workspace)
       .out.trim()
     val javaHome = os.Path(output)
