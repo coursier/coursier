@@ -67,7 +67,7 @@ object Deps {
   def svm                      = ivy"org.graalvm.nativeimage:svm:21.3.13"
   def tika                     = ivy"org.apache.tika:tika-core:3.1.0"
   def ujson                    = ivy"com.lihaoyi::ujson:4.2.1"
-  def utest                    = ivy"com.lihaoyi::utest::0.8.5"
+  def utest                    = ivy"com.lihaoyi::utest::0.8.8"
   def versions                 = ivy"io.get-coursier::versions::0.5.1"
   def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
   def windowsAnsiPs =
