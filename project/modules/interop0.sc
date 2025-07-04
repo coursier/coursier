@@ -1,5 +1,5 @@
 import $file.^.deps, deps.Deps
-import $file.shared, shared.{CoursierPublishModule, CsCrossJvmJsModule, CsModule}
+import $file.shared, shared.{CoursierPublishModule, CsCrossJvmJsModule, CsMima, CsModule}
 
 import mill._, mill.scalalib._
 

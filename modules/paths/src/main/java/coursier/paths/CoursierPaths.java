@@ -16,7 +16,7 @@ import dev.dirs.jni.WindowsJni;
  * Computes Coursier's directories according to the standard
  * defined by operating system Coursier is running on.
  *
- * @implNote If more paths e. g. for configuration or application data is required,
+ * Note that if more paths e.g. for configuration or application data are required,
  * use {@link #coursierDirectories} and do not roll your own logic.
  */
 public final class CoursierPaths {

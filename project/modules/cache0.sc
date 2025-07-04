@@ -27,6 +27,15 @@ trait CacheJvmBase extends Cache with CsMima with Shading {
 
   def mimaBinaryIssueFilters =
     super.mimaBinaryIssueFilters() ++ Seq(
+      // moved a different module (archive-cache, NOT pulled transitively)
+      ProblemFilter.exclude[MissingClassProblem]("coursier.cache.ArchiveCache"),
+      ProblemFilter.exclude[MissingClassProblem]("coursier.cache.ArchiveCache$"),
+      ProblemFilter.exclude[MissingClassProblem]("coursier.cache.ArchiveType"),
+      ProblemFilter.exclude[MissingClassProblem]("coursier.cache.ArchiveType$*"),
+      ProblemFilter.exclude[MissingClassProblem]("coursier.cache.UnArchiver"),
+      ProblemFilter.exclude[MissingClassProblem]("coursier.cache.UnArchiver$*"),
+      // moved a different module (pulled transitively)
+      ProblemFilter.exclude[MissingClassProblem]("coursier.paths.*"),
       // added methods on a sealed abstract class
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.cache.loggers.RefreshInfo.*"),
       // moved to cache-util module
@@ -68,4 +77,12 @@ trait CacheJvmBase extends Cache with CsMima with Shading {
       super.sources() ++ Seq(PathRef(dest))
     }
   }
+}
+
+trait ArchiveCacheBase extends CsModule with CsCrossJvmJsModule with CoursierPublishModule
+    with CsMima {
+  def artifactName = "coursier-archive-cache"
+  def compileIvyDeps = Agg(
+    Deps.dataClass
+  )
 }
