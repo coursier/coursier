@@ -28,7 +28,6 @@ import $file.project.modules.`sbt-maven-repository0`,
   `sbt-maven-repository0`.{SbtMavenRepository, SbtMavenRepositoryJvmBase}
 import $file.project.modules.tests0, tests0.TestsModule
 import $file.project.modules.util0, util0.{Util, UtilJvmBase}
-import $file.project.publishing, publishing.mavenOrg
 import $file.project.relativize, relativize.{relativize => doRelativize}
 import $file.project.sync
 import $file.project.workers
@@ -44,6 +43,8 @@ import java.io.File
 
 import scala.concurrent.duration._
 import scala.util.Properties
+
+def mavenOrg = "io.get-coursier"
 
 // Tell mill modules are under modules/
 implicit def millModuleBasePath: define.Ctx.BasePath =
@@ -1082,17 +1083,6 @@ def copyJarLaunchers(version: String = buildVersion, directory: String = "artifa
   )
   os.copy(assembly, dir / "coursier.jar", createFolders = true, replaceExisting = true)
 }
-
-def publishSonatype(tasks: mill.main.Tasks[PublishModule.PublishData]) =
-  T.command {
-    val data = T.sequence(tasks.value)()
-
-    publishing.publishSonatype(
-      data = data,
-      log = T.ctx().log,
-      workspace = T.workspace
-    )
-  }
 
 private val docScalaVersion = ScalaVersions.scala213
 object `doc-deps` extends ScalaModule {
