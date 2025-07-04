@@ -79,12 +79,33 @@ object `proxy-setup` extends JavaModule with CoursierPublishModule with CsMima {
   def artifactName = "coursier-proxy-setup"
 }
 
-object paths extends CoursierJavaModule {
+object paths extends Paths
+
+trait Paths extends CoursierPublishModule with CsMima {
+  def artifactName = "coursier-paths"
   def ivyDeps = Agg(
     Deps.directories,
     Deps.isTerminal,
     Deps.jniUtils
   )
+
+  def mimaPreviousVersions = T {
+    import _root_.coursier.core.Version
+    val cutOff = Version("2.1.25")
+    super.mimaPreviousVersions()
+      .map(Version(_))
+      .filter(_ >= cutOff)
+      .map(_.repr)
+  }
+  // Remove once 2.1.25 is out
+  def mimaPreviousArtifacts = T {
+    val versions     = mimaPreviousVersions()
+    val organization = pomSettings().organization
+    val artifactId0  = artifactId()
+    Agg.from(
+      versions.map(version => ivy"$organization:$artifactId0:$version")
+    )
+  }
 }
 
 object `custom-protocol-for-test` extends CsModule {
@@ -282,6 +303,7 @@ trait CacheUtil extends CoursierPublishModule with CsMima {
 trait CacheJvm extends CacheJvmBase {
   def moduleDeps = Seq(
     `cache-util`,
+    paths,
     util.jvm()
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
@@ -301,9 +323,6 @@ trait CacheJvm extends CacheJvmBase {
     Deps.jsoniterMacros,
     Deps.svm
   )
-  def sources = T.sources {
-    super.sources() ++ paths.sources()
-  }
   def customLoaderCp = T {
     `custom-protocol-for-test`.runClasspath()
   }
