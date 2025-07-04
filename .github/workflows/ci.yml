@@ -200,21 +200,17 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.4
-      - run: .github/scripts/gpg-setup.sh
-        env:
-          PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
       - uses: coursier/setup-action@v1.3
         with:
           jvm: 21
-      - run: |
-          mv .mill-jvm-opts .mill-jvm-opts.bak
-          cat .mill-jvm-opts.bak | grep -v -- '-Xmx' > .mill-jvm-opts
-          echo '-Xmx2g' >> .mill-jvm-opts
-
-      - name: Release
-        run: ./mill -i publishSonatype --tasks __.publishArtifacts
+      - name: Publish
+        run: |
+          ./mill -i mill.scalalib.SonatypeCentralPublishModule/ \
+            --username "$SONATYPE_USERNAME" \
+            --password "$SONATYPE_PASSWORD"
         env:
-          PGP_PASSWORD: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
+          MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}
+          MILL_PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
 

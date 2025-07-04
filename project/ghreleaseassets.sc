@@ -2,7 +2,6 @@
 
 import $file.docHelpers, docHelpers.gitRepoHasChanges
 import $file.launchers, launchers.{platformExtension, platformSuffix}
-import $file.publishing, publishing.{ghOrg, ghName}
 
 import java.io._
 import java.nio.ByteBuffer
@@ -15,6 +14,9 @@ import sttp.client.quick._
 import scala.annotation.tailrec
 import scala.util.control.NonFatal
 import scala.util.Properties
+
+def ghOrg  = "coursier"
+def ghName = "coursier"
 
 private def contentType(path: os.Path): String = {
 
