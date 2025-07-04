@@ -206,11 +206,6 @@ jobs:
       - uses: coursier/setup-action@v1.3
         with:
           jvm: 21
-      - run: |
-          mv .mill-jvm-opts .mill-jvm-opts.bak
-          cat .mill-jvm-opts.bak | grep -v -- '-Xmx' > .mill-jvm-opts
-          echo '-Xmx2g' >> .mill-jvm-opts
-
       - name: Release
         run: ./mill -i publishSonatype --tasks __.publishArtifacts
         env:
