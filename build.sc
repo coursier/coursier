@@ -277,15 +277,6 @@ trait CacheUtil extends CoursierPublishModule with CsMima {
       .filter(_ >= cutOff)
       .map(_.repr)
   }
-  // Remove once 2.1.15 is out
-  def mimaPreviousArtifacts = T {
-    val versions     = mimaPreviousVersions()
-    val organization = pomSettings().organization
-    val artifactId0  = artifactId()
-    Agg.from(
-      versions.map(version => ivy"$organization:$artifactId0:$version")
-    )
-  }
 }
 
 trait CacheJvm extends CacheJvmBase {
