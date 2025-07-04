@@ -75,7 +75,7 @@ object coursier extends Module {
   object js  extends Cross[CoursierJs](ScalaVersions.all)
 }
 
-object `proxy-setup` extends JavaModule with CoursierPublishModule {
+object `proxy-setup` extends JavaModule with CoursierPublishModule with CsMima {
   def artifactName = "coursier-proxy-setup"
 }
 
@@ -619,7 +619,7 @@ trait Jvm extends CrossSbtModule with CsModule
   }
 }
 
-trait Exec extends JavaModule with CoursierPublishModule {
+trait Exec extends JavaModule with CoursierPublishModule with CsMima {
   def artifactName = "coursier-exec"
   def ivyDeps = Agg(
     Deps.jna
@@ -627,6 +627,24 @@ trait Exec extends JavaModule with CoursierPublishModule {
   def compileIvyDeps = Agg(
     Deps.svm
   )
+
+  def mimaPreviousVersions = T {
+    import _root_.coursier.core.Version
+    val cutOff = Version("2.1.25")
+    super.mimaPreviousVersions()
+      .map(Version(_))
+      .filter(_ >= cutOff)
+      .map(_.repr)
+  }
+  // Remove once 2.1.25 is out
+  def mimaPreviousArtifacts = T {
+    val versions     = mimaPreviousVersions()
+    val organization = pomSettings().organization
+    val artifactId0  = artifactId()
+    Agg.from(
+      versions.map(version => ivy"$organization:$artifactId0:$version")
+    )
+  }
 }
 
 trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
