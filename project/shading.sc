@@ -1,13 +1,16 @@
 import com.eed3si9n.jarjarabrams.{ShadePattern, Shader}
 import coursier.util.{Gather, Task}
 import mill._, mill.scalalib._
+import mill.util.JarManifest
 
 import java.io._
 import java.nio.file.Files
+import java.util.jar.Attributes
 import java.util.zip._
 
 import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Using
 
 trait Shading extends JavaModule with PublishModule {
 
@@ -74,6 +77,24 @@ trait Shading extends JavaModule with PublishModule {
     shadedJars.map(os.Path(_)).map(PathRef(_))
   }
 
+  def manifest: T[JarManifest] = T {
+    val isMultiRelease = shadedJars().map(_.path).exists { shadedJar =>
+      Using.resource(new ZipFile(shadedJar.toIO)) { zf =>
+        val ent = zf.getEntry("META-INF/MANIFEST.MF")
+        ent != null && {
+          val mf = new java.util.jar.Manifest(zf.getInputStream(ent))
+          Option(mf.getMainAttributes().getValue(Attributes.Name.MULTI_RELEASE))
+            .contains("true")
+        }
+      }
+    }
+    val baseManifest = super.manifest()
+    if (isMultiRelease)
+      baseManifest.add(Attributes.Name.MULTI_RELEASE.toString -> "true")
+    else
+      baseManifest
+  }
+
   def jar = T {
 
     val shadeRules0 = {
@@ -85,7 +106,7 @@ trait Shading extends JavaModule with PublishModule {
     val updated     = T.dest / (orig.last.stripSuffix(".jar") + "-shaded.jar")
     val shadedJars0 = shadedJars().map(_.path)
 
-    val shader = Shader.bytecodeShader(shadeRules0, verbose = false, skipManifest = true)
+    val shader = Shader.bytecodeShader(shadeRules0, verbose = false, skipManifest = false)
 
     val inputFiles = Seq(orig) ++ shadedJars0
 
