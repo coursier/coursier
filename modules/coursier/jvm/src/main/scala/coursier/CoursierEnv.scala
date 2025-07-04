@@ -3,7 +3,8 @@ package coursier
 import coursier.cache.CacheEnv
 import coursier.core.Repository
 import coursier.params.{Mirror, MirrorConfFile}
-import coursier.parse.RepositoryParser
+import coursier.parse.{RepositoryParser, StandardRepository}
+import coursier.parse.StandardRepository.syntax._
 import coursier.util.{EnvEntry, EnvValues}
 
 import java.nio.file.Path
@@ -34,11 +35,14 @@ object CoursierEnv {
   val configDir = CacheEnv.configDir
 
   /** Computes the default repositories from the passed env var and Java property */
-  def defaultRepositories(repositories: EnvValues, scalaCliConfig: EnvValues): Seq[Repository] = {
+  def defaultRepositories(
+    repositories: EnvValues,
+    scalaCliConfig: EnvValues
+  ): Seq[StandardRepository] = {
 
     val spaceSep = "\\s+".r
 
-    def fromString(str: String, origin: String): Option[Seq[Repository]] = {
+    def fromString(str: String, origin: String): Option[Seq[StandardRepository]] = {
 
       val l =
         if (spaceSep.findFirstIn(str).isEmpty)
@@ -52,7 +56,7 @@ object CoursierEnv {
             .toSeq
             .filter(_.nonEmpty)
 
-      RepositoryParser.repositories(l).either match {
+      RepositoryParser.repositoriesAsStandard(l).either match {
         case Left(errs) =>
           System.err.println(
             s"Ignoring $origin, error parsing repositories from it:" + System.lineSeparator() +
@@ -80,8 +84,8 @@ object CoursierEnv {
       .find(_ => true)
 
     def default = Seq(
-      LocalRepositories.ivy2Local,
-      Repositories.central
+      LocalRepositories.ivy2Local.asStandard,
+      Repositories.central.asStandard
     )
 
     fromEnvOpt
@@ -90,11 +94,11 @@ object CoursierEnv {
       .getOrElse(default)
   }
 
-  private[coursier] def confFileRepositories(confFile: Path): Option[Seq[Repository]] = {
+  private[coursier] def confFileRepositories(confFile: Path): Option[Seq[StandardRepository]] = {
     val db       = ConfigDb.open(confFile).fold(e => throw new Exception(e), identity)
     val valueOpt = db.get(Keys.defaultRepositories).fold(e => throw new Exception(e), identity)
     valueOpt.map { inputs =>
-      RepositoryParser.repositories(inputs).either match {
+      RepositoryParser.repositoriesAsStandard(inputs).either match {
         case Left(errors) =>
           val errorMessage = errors.mkString("Malformed repositories:\n", "\n", "")
           throw new Exception(errorMessage)
@@ -103,11 +107,11 @@ object CoursierEnv {
     }
   }
 
-  private[coursier] def confFileMirrors(confFile: Path): Seq[Mirror] = {
+  private[coursier] def confFileMirrors(confFile: Path): Seq[Mirror.StandardMirror] = {
     val db       = ConfigDb.open(confFile).fold(e => throw new Exception(e), identity)
     val valueOpt = db.get(Keys.repositoriesMirrors).fold(e => throw new Exception(e), identity)
     valueOpt.toList.flatten.map { input =>
-      Mirror.parse(input) match {
+      Mirror.parseAsStandard(input) match {
         case Left(err) => throw new Exception(s"Malformed mirror: $err")
         case Right(m)  => m
       }
@@ -146,7 +150,11 @@ object CoursierEnv {
     mirrorExtraValues: EnvValues,
     scalaCliConfig: EnvValues,
     configDirValues: EnvValues
-  ): Seq[Mirror] =
-    defaultMirrorConfFiles(mirrorValues, mirrorExtraValues, configDirValues).flatMap(_.mirrors()) ++
+  ): Seq[Mirror.StandardMirror] =
+    defaultMirrorConfFiles(
+      mirrorValues,
+      mirrorExtraValues,
+      configDirValues
+    ).flatMap(_.mirrorsAsStandard()) ++
       CacheEnv.defaultConfFiles(scalaCliConfig).flatMap(confFileMirrors)
 }

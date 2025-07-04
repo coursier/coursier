@@ -11,7 +11,10 @@ abstract class PlatformMirrorConfFile {
   def path: String
   def optional: Boolean
 
-  def mirrors(): Seq[Mirror] = {
+  def mirrors(): Seq[Mirror] =
+    mirrorsAsStandard().map(_.mirror)
+
+  def mirrorsAsStandard(): Seq[Mirror.StandardMirror] = {
 
     val f = new File(path)
 
@@ -22,9 +25,9 @@ abstract class PlatformMirrorConfFile {
         .map { m =>
           m.`type`() match {
             case coursier.paths.Mirror.Types.MAVEN =>
-              MavenMirror(m.from().asScala.toVector, m.to())
+              Mirror.StandardMirror.Maven(MavenMirror(m.from().asScala.toVector, m.to()))
             case coursier.paths.Mirror.Types.TREE =>
-              TreeMirror(m.from().asScala.toVector, m.to())
+              Mirror.StandardMirror.Tree(TreeMirror(m.from().asScala.toVector, m.to()))
             case other =>
               sys.error(s"Unrecognized mirror type $other")
           }

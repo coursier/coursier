@@ -26,6 +26,9 @@ abstract class PlatformResolve {
 
   /** Default value for mirror repositories */
   lazy val defaultMirrors: Seq[Mirror] =
+    defaultMirrorsAsStandard.map(_.mirror)
+
+  private[coursier] lazy val defaultMirrorsAsStandard: Seq[Mirror.StandardMirror] =
     CoursierEnv.defaultMirrors(
       CoursierEnv.mirrors.read(),
       CoursierEnv.mirrorsExtra.read(),
@@ -33,18 +36,18 @@ abstract class PlatformResolve {
       CacheEnv.configDir.read()
     )
 
-  def confFileMirrors(confFile: Path): Seq[Mirror] =
+  def confFileMirrors(confFile: Path): Seq[Mirror.StandardMirror] =
     CoursierEnv.confFileMirrors(confFile)
 
   def confFileRepositories(confFile: Path): Option[Seq[Repository]] =
-    CoursierEnv.confFileRepositories(confFile)
+    CoursierEnv.confFileRepositories(confFile).map(_.map(_.repository))
 
   /** Default value for repositories */
   lazy val defaultRepositories: Seq[Repository] =
     CoursierEnv.defaultRepositories(
       CoursierEnv.repositories.read(),
       CoursierEnv.scalaCliConfig.read()
-    )
+    ).map(_.repository)
 
   def proxySetup(): Unit =
     if (!SetupProxy.setup()) {

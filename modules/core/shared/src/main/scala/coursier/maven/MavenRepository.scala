@@ -26,6 +26,21 @@ object MavenRepository {
       versionsCheckHasModule = true,
       checkModule = false
     )
+
+  def apply(
+    root: String,
+    authentication: Option[Authentication],
+    changing: Option[Boolean],
+    versionsCheckHasModule: Boolean,
+    checkModule: Boolean
+  ): MavenRepository =
+    MavenRepository(
+      root,
+      authentication,
+      changing,
+      versionsCheckHasModule,
+      checkModule
+    )
 }
 
 @data(apply = false) class MavenRepository(
