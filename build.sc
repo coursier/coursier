@@ -5,7 +5,7 @@ import $file.project.docHelpers
 import $file.project.ghreleaseassets
 import $file.project.launchers, launchers.{Launchers, platformBootstrapExtension}
 import $file.project.modules.`bootstrap-launcher0`, `bootstrap-launcher0`.BootstrapLauncher
-import $file.project.modules.cache0, cache0.{Cache, CacheJvmBase}
+import $file.project.modules.cache0, cache0.{ArchiveCacheBase, Cache, CacheJvmBase}
 import $file.project.modules.core0, core0.{Core, CoreJvmBase}
 import $file.project.modules.coursier0, coursier0.{Coursier, CoursierJvmBase, CoursierTests}
 import $file.project.modules.doc0, doc0.Doc
@@ -66,6 +66,7 @@ object cache extends Module {
   object jvm extends Cross[CacheJvm](ScalaVersions.all)
   object js  extends Cross[CacheJs](ScalaVersions.all)
 }
+object `archive-cache`      extends Cross[ArchiveCache](ScalaVersions.all)
 object launcher             extends Cross[Launcher](ScalaVersions.all)
 object env                  extends Cross[Env](ScalaVersions.all)
 object `launcher-native_04` extends LauncherNative04
@@ -307,17 +308,9 @@ trait CacheJvm extends CacheJvmBase {
     util.jvm()
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
-    Deps.directories,
-    Deps.isTerminal,
-    Deps.jniUtils,
     Deps.jsoniterCore, // required alongside scalaCliConfig, given we exclude its version of jsoniter-scala
-    Deps.plexusArchiver,
-    Deps.plexusContainerDefault,
     Deps.scalaCliConfig(scalaVersion()),
-    Deps.tika,
-    Deps.windowsAnsi,
-    // here only for the sake of bumping it, to work around JNI loading issues with earlier versions on macOS
-    Deps.zstdJni
+    Deps.windowsAnsi
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.jsoniterMacros,
@@ -351,6 +344,47 @@ trait CacheJs extends Cache with CsScalaJsModule {
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.scalaJsDom
   )
+}
+
+trait ArchiveCache extends ArchiveCacheBase {
+  def moduleDeps = Seq(
+    cache.jvm()
+  )
+  def ivyDeps = super.ivyDeps() ++ Agg(
+    Deps.plexusArchiver,
+    Deps.plexusContainerDefault,
+    Deps.tika,
+    // here only for the sake of bumping it, to work around JNI loading issues with earlier versions on macOS
+    Deps.zstdJni
+  )
+  object test extends CrossSbtTests with CsTests {
+    def ivyDeps = super.ivyDeps() ++ Agg(
+      Deps.osLib,
+      Deps.pprint,
+      Deps.scalaAsync
+    )
+    def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+      Deps.jsoniterMacros
+    )
+  }
+
+  def mimaPreviousVersions = T {
+    import _root_.coursier.core.Version
+    val cutOff = Version("2.1.25")
+    super.mimaPreviousVersions()
+      .map(Version(_))
+      .filter(_ >= cutOff)
+      .map(_.repr)
+  }
+  // Remove once 2.1.25 is out
+  def mimaPreviousArtifacts = T {
+    val versions     = mimaPreviousVersions()
+    val organization = pomSettings().organization
+    val artifactId0  = artifactId()
+    Agg.from(
+      versions.map(version => ivy"$organization:$artifactId0:$version")
+    )
+  }
 }
 
 trait Launcher extends LauncherBase {
@@ -600,6 +634,7 @@ trait Jvm extends CrossSbtModule with CsModule
   def artifactName = "coursier-jvm"
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(),
+    `archive-cache`(),
     env(),
     exec
   )
@@ -662,6 +697,7 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
   def artifactName = "coursier-docker"
   def moduleDeps = super.moduleDeps ++ Seq(
     cache.jvm(cliScalaVersion213Compat),
+    `archive-cache`(cliScalaVersion213Compat),
     exec
   )
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
@@ -1330,7 +1366,8 @@ object docs extends ScalaModule {
   private def sv   = ScalaVersions.scala213
   def scalaVersion = sv
   def moduleDeps = Seq(
-    coursier.jvm(sv)
+    coursier.jvm(sv),
+    `archive-cache`(sv)
   )
   def ivyDeps = Agg(
     Deps.mdoc
