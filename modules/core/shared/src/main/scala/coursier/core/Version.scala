@@ -30,7 +30,7 @@ object Version {
         case (a: Number, b: BigNumber)    => -b.value.compare(a.value)
         case (a: BigNumber, b: Number)    => a.value.compare(b.value)
         case (a: Tag, b: Tag)             => a.compareTag(b)
-        case _ =>
+        case _                            =>
           val rel0 = compareToEmpty
           val rel1 = other.compareToEmpty
 
@@ -65,7 +65,7 @@ object Version {
   @data class Tag(value: String) extends Item {
     val order              = -1
     private val otherLevel = -5
-    lazy val level: Int =
+    lazy val level: Int    =
       value match {
         case "ga" | "final" | "" => 0 // 1.0.0 equivalent
         case "snapshot"          => -1
@@ -77,8 +77,8 @@ object Version {
         case _                   => otherLevel
       }
 
-    override def compareToEmpty = level.compare(0)
-    def isPreRelease: Boolean   = level < 0
+    override def compareToEmpty     = level.compare(0)
+    def isPreRelease: Boolean       = level < 0
     def compareTag(other: Tag): Int = {
       val levelComp = level.compare(other.level)
       if (levelComp == 0 && level == otherLevel) value.compareToIgnoreCase(other.value)
@@ -117,7 +117,7 @@ object Version {
             else digits(b += s.head, s.tail)
 
           val (digits0, rem) = digits(new StringBuilder, s)
-          val item =
+          val item           =
             if (digits0.length >= 10) BigNumber(BigInt(digits0))
             else Number(digits0.toInt)
 
@@ -131,7 +131,7 @@ object Version {
               letters(b += s.head, s.tail)
 
           val (letters0, rem) = letters(new StringBuilder, s)
-          val item = letters0 match {
+          val item            = letters0 match {
             case "x" if prev == Some(Dot) => Max
             case "min"                    => Min
             case "max"                    => Max

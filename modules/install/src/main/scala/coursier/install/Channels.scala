@@ -88,7 +88,7 @@ import scala.jdk.CollectionConverters._
       }
 
       repositoriesRepr0 = Channels.repositoriesRepr(repositories).toList
-      sourceBytes = RawSource(repositoriesRepr0, source.channel.repr, actualId)
+      sourceBytes       = RawSource(repositoriesRepr0, source.channel.repr, actualId)
         .repr.getBytes(StandardCharsets.UTF_8)
 
     } yield AppInfo(desc, channelData.data, source, sourceBytes)
@@ -167,7 +167,7 @@ import scala.jdk.CollectionConverters._
       val fetch = cache.file(a).run
 
       val task = loggerOpt match {
-        case None => fetch
+        case None         => fetch
         case Some(logger) =>
           Task.delay(logger.init(sizeHint = Some(1))).flatMap { _ =>
             fetch.attempt.flatMap { a =>
@@ -216,7 +216,7 @@ import scala.jdk.CollectionConverters._
         }
         objOpt <- Task.fromEither {
           contentOpt match {
-            case None => Right(None)
+            case None          => Right(None)
             case Some(content) =>
               Parse.decodeEither(content)(decodeObj)
                 .left.map(err => new Exception(s"Error decoding $f: $err"))
@@ -316,7 +316,7 @@ import scala.jdk.CollectionConverters._
       val fetch = cache.file(a).run
 
       val task = loggerOpt match {
-        case None => fetch
+        case None         => fetch
         case Some(logger) =>
           Task.delay(logger.init(sizeHint = Some(1))).flatMap { _ =>
             fetch.attempt.flatMap { a =>

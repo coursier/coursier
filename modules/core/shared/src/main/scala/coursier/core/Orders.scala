@@ -178,7 +178,7 @@ object Orders {
     dependencies: Set[Dependency],
     configs: Map[Configuration, Seq[Configuration]]
   ): Set[Dependency] = {
-    val availableConfigs = configs.keySet
+    val availableConfigs    = configs.keySet
     val groupedDependencies = dependencies
       .map(fallbackConfigIfNecessary(_, availableConfigs))
       .groupBy(dep => (dep.optional, dep.variantSelector))

@@ -21,7 +21,7 @@ object IvyXmlParsingTests extends TestSuite {
         </ivy-module>
       """
 
-      val result = IvyXml.project(xmlParseDom(node).toOption.get).map(_.info)
+      val result   = IvyXml.project(xmlParseDom(node).toOption.get).map(_.info)
       val expected = Right(Info(
         "sbt-release",
         "https://github.com/sbt/sbt-release",
