@@ -100,7 +100,7 @@ import scala.language.implicitConversions
     Pattern(
       chunks.flatMap {
         case v: Chunk.Var if v.name == varName => replacement
-        case opt: Chunk.Opt =>
+        case opt: Chunk.Opt                    =>
           Seq(Chunk.Opt(Pattern(opt.content).substitute(varName, replacement).chunks))
         case c => Seq(c)
       }

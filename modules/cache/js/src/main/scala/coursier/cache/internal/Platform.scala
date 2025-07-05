@@ -33,7 +33,7 @@ object Platform {
   def get(url: String)(implicit executionContext: ExecutionContext): Future[String] = {
     val p       = Promise[String]()
     val xhrReq0 = xhrReq()
-    val f = { _: Event =>
+    val f       = { _: Event =>
       if (xhrReq0.status >= 200 && xhrReq0.status < 300)
         p.success(xhrReq0.responseText)
       else
@@ -71,9 +71,9 @@ object Platform {
     val cb: js.Function2[js.Dynamic, js.Dynamic, Unit] =
       (err, data) => {
         if (js.typeOf(err) == "undefined" || err == null) {
-          val s = data.asInstanceOf[String]
+          val s   = data.asInstanceOf[String]
           val res = linkUrlOpt match {
-            case None => s
+            case None      => s
             case Some(url) =>
               WebPage.listElements(url, s)
                 .mkString("\n")

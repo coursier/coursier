@@ -114,7 +114,7 @@ class TestRunner[F[_]: Gather: ToFuture](
     path: String,
     result: Seq[String]
   ): Future[Unit] = async {
-    def tryRead = textResource(path)
+    def tryRead  = textResource(path)
     val expected =
       await(
         tryRead.recoverWith {

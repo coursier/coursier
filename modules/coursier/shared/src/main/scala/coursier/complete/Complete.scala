@@ -96,7 +96,7 @@ object Complete {
     input: Repository.Complete.Input,
     results: Seq[(Repository, Either[Throwable, Seq[String]])]
   ) {
-    def from: Int = input.from
+    def from: Int                = input.from
     def completions: Seq[String] =
       results.flatMap(_._2.toSeq.flatten)
   }

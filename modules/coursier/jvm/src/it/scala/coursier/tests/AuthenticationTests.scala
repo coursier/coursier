@@ -75,7 +75,7 @@ object AuthenticationTests extends TestSuite {
 
     test {
       val credentialsStr = s"$testHost $user:$password"
-      val credentials = CredentialsParser.parse(credentialsStr) match {
+      val credentials    = CredentialsParser.parse(credentialsStr) match {
         case Left(error) => sys.error(s"Error parsing credentials: $error")
         case Right(c)    => c
       }

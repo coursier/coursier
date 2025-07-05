@@ -162,13 +162,13 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
           if (map.isEmpty)
             acc.reverse
           else {
-            val min = map.map(_._2.size).min // should be 0
+            val min                = map.map(_._2.size).min // should be 0
             val (toAdd, remaining) = map.partition {
               case (_, v) => v.size == min
             }
             val acc0                                             = toAdd.keys.foldLeft(acc)(_.::(_))
             val remainingKeys: Set[(Module, VersionConstraint0)] = remaining.keySet.map(_._1)
-            val map0 = remaining.map {
+            val map0                                             = remaining.map {
               case (k, v) =>
                 k -> v.intersect(remainingKeys)
             }
@@ -281,7 +281,7 @@ object ResolutionProcess {
           if (found.isEmpty)
             Left(
               results.map {
-                case Left(e) => e
+                case Left(e)                => e
                 case Right((_, listingUrl)) =>
                   s"No latest ${Latest0.Integration.name} version found in $listingUrl"
               }
@@ -293,7 +293,7 @@ object ResolutionProcess {
             else
               Left(
                 results.map {
-                  case Left(e) => e
+                  case Left(e)                => e
                   case Right((v, listingUrl)) =>
                     v.latest(Latest0.Integration) match {
                       case None =>
@@ -426,7 +426,7 @@ object ResolutionProcess {
       val res = modVers.groupBy(_._1).toSeq.map(_._2).map {
         case Seq(v) => (v, Nil)
         case Seq()  => sys.error("Cannot happen")
-        case v =>
+        case v      =>
           val res = v.maxBy(_._2)
           (res, v.filter(_ != res))
       }
