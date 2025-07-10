@@ -29,6 +29,7 @@ import $file.project.modules.`sbt-maven-repository0`,
 import $file.project.modules.tests0, tests0.TestsModule
 import $file.project.modules.util0, util0.{Util, UtilJvmBase}
 import $file.project.relativize, relativize.{relativize => doRelativize}
+import $file.project.shading, shading.Shading
 import $file.project.sync
 import $file.project.workers
 
@@ -83,12 +84,22 @@ object `proxy-setup` extends JavaModule with CoursierPublishModule with CsMima {
 
 object paths extends Paths
 
-trait Paths extends CoursierPublishModule with CsMima {
+trait Paths extends CoursierPublishModule with CsMima with Shading {
   def artifactName = "coursier-paths"
   def ivyDeps = Agg(
     Deps.directories,
     Deps.isTerminal,
     Deps.jniUtils
+  )
+
+  def shadedDependencies = Agg(
+    Deps.directories
+  )
+  def validNamespaces = Seq(
+    "coursier.paths"
+  )
+  def shadeRenames = Seq(
+    "dev.dirs.**" -> "coursier.paths.shaded.dirs.@1"
   )
 
   def mimaPreviousVersions = T {
