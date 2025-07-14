@@ -50,8 +50,8 @@ import dataclass.data
 
   private def latestIntegrationCandidates(): Iterator[Version0] = {
 
-    val latestOpt  = Some(latest0).filter(_.repr.nonEmpty)
-    val releaseOpt = Some(release0).filter(_.repr.nonEmpty)
+    val latestOpt           = Some(latest0).filter(_.repr.nonEmpty)
+    val releaseOpt          = Some(release0).filter(_.repr.nonEmpty)
     def latestFromAvailable = available0
       .filter(v => !latestOpt.contains(v))
       .filter(v => !releaseOpt.contains(v))
@@ -86,8 +86,8 @@ import dataclass.data
         .split(Array('.', '-'))
         .forall(_.lengthCompare(5) <= 0)
 
-    val latestOpt  = Some(latest0).filter(_.repr.nonEmpty).filter(isStable)
-    val releaseOpt = Some(release0).filter(_.repr.nonEmpty).filter(isStable)
+    val latestOpt           = Some(latest0).filter(_.repr.nonEmpty).filter(isStable)
+    val releaseOpt          = Some(release0).filter(_.repr.nonEmpty).filter(isStable)
     def latestFromAvailable = available0
       .filter(isStable)
       .filter(v => !releaseOpt.contains(v))
@@ -124,7 +124,7 @@ import dataclass.data
 
   def candidatesInInterval(itv: VersionInterval0)
     : Iterator[Version0] = {
-    val fromRelease = Some(release0).filter(itv.contains)
+    val fromRelease   = Some(release0).filter(itv.contains)
     def fromAvailable = available0
       .filter(itv.contains)
       .filter(v => !fromRelease.contains(v))

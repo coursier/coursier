@@ -243,13 +243,13 @@ object Launch extends CoursierCommand[LaunchOptions] {
     extraJars: Seq[File],
     classpathOrder: Boolean
   ): Seq[(Option[String], Array[(Option[Artifact], File)])] = {
-    val fileMap      = files.toMap
-    val alreadyAdded = Set.empty[File] // unused???
+    val fileMap                                                       = files.toMap
+    val alreadyAdded                                                  = Set.empty[File] // unused???
     val parents: Seq[(Some[String], Array[(Option[Artifact], File)])] =
       sharedLoaderParams
         .loaderNames
         .map { name =>
-          val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
+          val deps   = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
           val subRes = res.subset0(deps.map(_.dependency(
             JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")),
             scalaVersionOpt.getOrElse(""),
@@ -352,7 +352,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
     val (pythonJepProps, pythonJepEnv) =
       if (params.shared.pythonJep || params.jep)
         try {
-          val home = Jep.pythonHome()
+          val home  = Jep.pythonHome()
           val props = Jep.pythonProperties()
             .iterator()
             .asScala
@@ -373,7 +373,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
       if (params.shared.python)
         Python().scalapyProperties match {
           case Success(props) => props
-          case Failure(e) =>
+          case Failure(e)     =>
             if (params.shared.resolve.output.verbosity >= 2)
               throw new Exception(e)
             else if (params.shared.resolve.output.verbosity >= 1)
@@ -383,7 +383,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
       else
         Nil
 
-    val extraJars = params.shared.extraJars.map(_.toFile) ++ jepExtraJar.toSeq
+    val extraJars  = params.shared.extraJars.map(_.toFile) ++ jepExtraJar.toSeq
     val hierarchy0 =
       if (extraJars.isEmpty) hierarchy
       else {
@@ -424,7 +424,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
 
     val asyncProfilerOptions = params.asyncProfilerVersion match {
       case Some(asyncProfilerVersion) =>
-        val archiveCache = ArchiveCache().withCache(cache)
+        val archiveCache         = ArchiveCache().withCache(cache)
         val (url, pathInArchive) =
           if (Properties.isMac)
             (
@@ -526,7 +526,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
       javaPathEnvUpdate <- params.javaPath(cache)
       (javaPath, envUpdate) = javaPathEnvUpdate
       mainClass0 <- mainClass(params.shared, files.map(_._2), deps0.headOption)
-      f <- Task.fromEither {
+      f          <- Task.fromEither {
         launchCall(
           params,
           javaPath,
@@ -688,7 +688,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
       System.err.println("Launching")
 
     run() match {
-      case None =>
+      case None          =>
       case Some(retCode) =>
         if (retCode != 0)
           sys.exit(retCode)

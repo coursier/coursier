@@ -45,11 +45,11 @@ trait Launchers extends CsModule {
     def nativeImagePersist      = System.getenv("CI") != null
     def nativeImageGraalVmJvmId = graalVmJvmId
 
-    def nativeImageName          = "cs"
-    private def staticLibDirName = "native-libs"
+    def nativeImageName                                                     = "cs"
+    private def staticLibDirName                                            = "native-libs"
     private def copyCsjniutilTo(destDir: os.Path, workspace: os.Path): Unit = {
       val jniUtilsVersion = Deps.jniUtils.dep.versionConstraint.asString
-      val libRes = os.proc(
+      val libRes          = os.proc(
         cs.cs,
         "fetch",
         "--intransitive",
@@ -73,7 +73,7 @@ trait Launchers extends CsModule {
 
     def nativeImageOptions = T {
       val usesDocker = nativeImageDockerParams().nonEmpty
-      val cLibPath =
+      val cLibPath   =
         if (usesDocker) s"/data/$staticLibDirName"
         else staticLibDir().path.toString
       val zstdOpt =
@@ -123,7 +123,7 @@ trait Launchers extends CsModule {
 
   private val arch = sys.props.getOrElse("os.arch", "").toLowerCase(java.util.Locale.ROOT)
   private def isCI = System.getenv("CI") != null
-  def nativeImage =
+  def nativeImage  =
     if (Properties.isLinux && isCI)
       `linux-docker-image`.nativeImage
     else
@@ -228,7 +228,7 @@ trait Launchers extends CsModule {
   // Same as container-image, but built from docker to avoid glibc version issues
   object `container-image-from-docker` extends CliNativeImage {
     def nativeImageDockerParams = `linux-docker-image`.nativeImageDockerParams()
-    def nativeImageOptions = super.nativeImageOptions() ++ Seq(
+    def nativeImageOptions      = super.nativeImageOptions() ++ Seq(
       "-H:-UseContainerSupport"
     )
   }
@@ -244,8 +244,8 @@ trait Launchers extends CsModule {
   }
 
   def runWithAssistedConfig(args: String*) = T.command {
-    val cp         = jarClassPath().map(_.path).mkString(File.pathSeparator)
-    val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
+    val cp          = jarClassPath().map(_.path).mkString(File.pathSeparator)
+    val mainClass0  = mainClass().getOrElse(sys.error("No main class"))
     val graalVmHome = Option(System.getenv("GRAALVM_HOME")).getOrElse {
       import sys.process._
       Seq(
@@ -256,7 +256,7 @@ trait Launchers extends CsModule {
       ).!!.trim
     }
     val outputDir = T.dest / "config"
-    val command = Seq(
+    val command   = Seq(
       s"$graalVmHome/bin/java",
       s"-agentlib:native-image-agent=config-output-dir=$outputDir",
       "-cp",
@@ -306,7 +306,7 @@ trait Launchers extends CsModule {
       .callsItself(isWin)
     val entries       = cp.map(path => ClassPathEntry.Url(path.toNIO.toUri.toASCIIString))
     val loaderContent = coursier.launcher.ClassLoaderContent(entries)
-    val params = Parameters.Bootstrap(Seq(loaderContent), mainClass0)
+    val params        = Parameters.Bootstrap(Seq(loaderContent), mainClass0)
       .withDeterministic(true)
       .withPreamble(preamble)
 
@@ -352,7 +352,7 @@ trait Launchers extends CsModule {
       }
     }
     val loaderContent = coursier.launcher.ClassLoaderContent(entries)
-    val params = Parameters.Bootstrap(Seq(loaderContent), mainClass0)
+    val params        = Parameters.Bootstrap(Seq(loaderContent), mainClass0)
       .withDeterministic(true)
       .withPreamble(preamble)
 

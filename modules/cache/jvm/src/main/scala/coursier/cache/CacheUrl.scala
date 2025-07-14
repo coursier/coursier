@@ -344,7 +344,7 @@ object CacheUrl {
             Left(args.copy(alreadyDownloaded = 0L))
           case _ =>
             val partialDownload = rangeResOpt0.nonEmpty
-            val redirectOpt =
+            val redirectOpt     =
               redirect(url0, conn, followHttpToHttpsRedirections, followHttpsToHttpRedirections)
 
             redirectOpt match {
@@ -379,7 +379,7 @@ object CacheUrl {
                 }
               case None =>
                 if (is4xx(conn)) {
-                  val realmOpt = realm(conn)
+                  val realmOpt        = realm(conn)
                   val authentication0 = authentication
                     .map(_.withOptional(false))
                     .orElse(

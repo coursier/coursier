@@ -197,7 +197,7 @@ object InstallTests extends TestSuite {
     test("generate an echo launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
-        val id = "echo"
+        val id       = "echo"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
             .withRepositories(List("central")),
@@ -245,7 +245,7 @@ object InstallTests extends TestSuite {
     test("generate an echo assembly") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
-        val id = "echo"
+        val id       = "echo"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
             .withRepositories(List("central"))
@@ -284,7 +284,7 @@ object InstallTests extends TestSuite {
     test("generate an echo standalone launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
-        val id = "echo"
+        val id       = "echo"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
             .withRepositories(List("central"))
@@ -331,7 +331,7 @@ object InstallTests extends TestSuite {
     test("not update an already up-to-date launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
-        val id = "echo"
+        val id       = "echo"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
             .withRepositories(List("central")),
@@ -377,7 +377,7 @@ object InstallTests extends TestSuite {
     test("update a launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
-        val id = "echo"
+        val id       = "echo"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.1"))
             .withRepositories(List("central"))
@@ -485,8 +485,8 @@ object InstallTests extends TestSuite {
     test("install a prebuilt launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
-        val id    = "coursier"
-        val csUrl = "https://github.com/coursier/coursier/releases/download/v2.0.0/coursier"
+        val id       = "coursier"
+        val csUrl    = "https://github.com/coursier/coursier/releases/download/v2.0.0/coursier"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.1"))
             .withRepositories(List("central"))
@@ -533,7 +533,7 @@ object InstallTests extends TestSuite {
     test("install a compressed prebuilt launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
-        val id = "sbtn"
+        val id       = "sbtn"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("org.scala-sbt:sbt:1.4.0"))
             .withRepositories(List("central"))
@@ -557,7 +557,7 @@ object InstallTests extends TestSuite {
 
         def testRun(): Unit = {
           val expectedRetCode = if (Properties.isWin) 0 else 1
-          val output = commandOutput(
+          val output          = commandOutput(
             tmpDir.toFile,
             mergeError = true,
             expectedReturnCode = expectedRetCode,
@@ -593,7 +593,7 @@ object InstallTests extends TestSuite {
 
       def run(os: String, arch: String, pattern: String) = withTempDir { tmpDir =>
 
-        val id = "sbtn"
+        val id       = "sbtn"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("org.scala-sbt:sbt:1.4.1"))
             .withRepositories(List("central"))
@@ -613,7 +613,7 @@ object InstallTests extends TestSuite {
 
         def testRun(): Unit = {
           val expectedRetCode = if (Properties.isWin) 0 else 1
-          val output = commandOutput(
+          val output          = commandOutput(
             tmpDir.toFile,
             mergeError = true,
             expectedReturnCode = expectedRetCode,
@@ -658,7 +658,7 @@ object InstallTests extends TestSuite {
     test("install a prebuilt gzip-ed / zip-ed launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
-        val id = "scalafmt-native"
+        val id       = "scalafmt-native"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("org.scalameta::scalafmt-cli:3.0.6"))
             .withRepositories(List("central"))
@@ -712,7 +712,7 @@ object InstallTests extends TestSuite {
     test("install a prebuilt-only zip-ed launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
-        val id = "sbt"
+        val id       = "sbt"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("org.scala-sbt:sbt:1.4.1"))
             .withRepositories(List("central"))
@@ -835,7 +835,7 @@ object InstallTests extends TestSuite {
 
     test("install and override and update scalac") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
-        val id = "scalac"
+        val id              = "scalac"
         val versionOverride =
           RawAppDescriptor.RawVersionOverride("(,2.max]")
             .withLauncherType(Some("bootstrap"))
@@ -959,7 +959,7 @@ object InstallTests extends TestSuite {
     }
 
     test("override prebuilt / prebuiltBinaries") {
-      val id = "cs"
+      val id              = "cs"
       val versionOverride =
         RawAppDescriptor.RawVersionOverride("(,2.0.16]")
           .withPrebuilt(Some(

@@ -54,7 +54,7 @@ object Java extends CoursierCommand[JavaOptions] {
     if (params.available || params.installed) {
       val task =
         for {
-          index <- jvmCache.index.getOrElse(sys.error("should not happen"))
+          index          <- jvmCache.index.getOrElse(sys.error("should not happen"))
           maybeErrorTask <- Task.delay {
             index.available().map { map =>
               val available = for {
@@ -178,7 +178,7 @@ object Java extends CoursierCommand[JavaOptions] {
       }
       else if (Execve.available()) {
         val extraEnv = envUpdate.transientUpdates()
-        val fullEnv = (sys.env ++ extraEnv)
+        val fullEnv  = (sys.env ++ extraEnv)
           .iterator
           .map {
             case (k, v) =>
