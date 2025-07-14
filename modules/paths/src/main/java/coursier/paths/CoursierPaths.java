@@ -162,10 +162,19 @@ public final class CoursierPaths {
 
     public static ProjectDirectories directoriesInstance(String name) {
         Supplier<Windows> windows;
-        if (coursier.paths.Util.useJni())
-            windows = WindowsJni.getJdkAwareSupplier();
-        else
-            windows = Windows.getDefaultSupplier();
+
+        if (Boolean.getBoolean("coursier.windows.disable-ffm")) {
+            if (coursier.paths.Util.useJni())
+                windows = () -> new dev.dirs.jni.WindowsJni();
+            else
+                windows = () -> new dev.dirs.impl.WindowsPowerShell();
+        }
+        else {
+            if (coursier.paths.Util.useJni())
+                windows = WindowsJni.getJdkAwareSupplier();
+            else
+                windows = Windows.getDefaultSupplier();
+        }
         return ProjectDirectories.from(null, null, name, windows);
     }
 
