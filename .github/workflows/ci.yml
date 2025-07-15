@@ -205,14 +205,12 @@ jobs:
           jvm: 21
       - name: Publish
         run: |
-          ./mill -i mill.scalalib.SonatypeCentralPublishModule/ \
-            --username "$SONATYPE_USERNAME" \
-            --password "$SONATYPE_PASSWORD"
+          ./mill -i mill.scalalib.SonatypeCentralPublishModule/
         env:
           MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}
           MILL_PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
-          SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+          MILL_SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          MILL_SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
 
   generate-native-launchers:
     name: ${{ matrix.OS }} native
