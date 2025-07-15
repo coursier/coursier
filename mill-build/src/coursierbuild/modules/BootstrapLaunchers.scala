@@ -1,5 +1,6 @@
-import $file.^.deps, deps.{Deps, ScalaVersions}
-import $file.shared, shared.CsModule
+package coursierbuild.modules
+
+import coursierbuild.Deps.{Deps, ScalaVersions}
 
 import coursier.launcher.{AssemblyGenerator, ClassPathEntry, Parameters, Preamble}
 import mill._, mill.scalalib._

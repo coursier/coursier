@@ -1,6 +1,7 @@
-import $file.^.deps, deps.Deps
-import $file.^.shading, shading.Shading
-import $file.shared, shared.{CoursierPublishModule, CsCrossJvmJsModule, CsMima, CsModule}
+package coursierbuild.modules
+
+import coursierbuild.Deps.Deps
+import coursierbuild.Shading
 import mill._
 
 trait SbtMavenRepository extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
@@ -9,4 +10,3 @@ trait SbtMavenRepository extends CsModule with CsCrossJvmJsModule with CoursierP
     Deps.dataClass
   )
 }
-trait SbtMavenRepositoryJvmBase extends SbtMavenRepository with CsMima
