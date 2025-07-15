@@ -52,21 +52,25 @@ implicit def millModuleBasePath: define.Ctx.BasePath =
   define.Ctx.BasePath(super.millModuleBasePath.value / "modules")
 
 object util extends Module {
-  object jvm extends Cross[UtilJvm](ScalaVersions.all)
-  object js  extends Cross[UtilJs](ScalaVersions.all)
+  object shared extends Cross[SharedScalaSources](ScalaVersions.all)
+  object jvm    extends Cross[UtilJvm](ScalaVersions.all)
+  object js     extends Cross[UtilJs](ScalaVersions.all)
 }
 object core extends Module {
-  object jvm extends Cross[CoreJvm](ScalaVersions.all)
-  object js  extends Cross[CoreJs](ScalaVersions.all)
+  object shared extends Cross[SharedScalaSources](ScalaVersions.all)
+  object jvm    extends Cross[CoreJvm](ScalaVersions.all)
+  object js     extends Cross[CoreJs](ScalaVersions.all)
 }
 object `sbt-maven-repository` extends Module {
-  object jvm extends Cross[SbtMavenRepositoryJvm](ScalaVersions.all)
-  object js  extends Cross[SbtMavenRepositoryJs](ScalaVersions.all)
+  object shared extends Cross[SharedScalaSources](ScalaVersions.all)
+  object jvm    extends Cross[SbtMavenRepositoryJvm](ScalaVersions.all)
+  object js     extends Cross[SbtMavenRepositoryJs](ScalaVersions.all)
 }
 object `cache-util` extends CacheUtil
 object cache extends Module {
-  object jvm extends Cross[CacheJvm](ScalaVersions.all)
-  object js  extends Cross[CacheJs](ScalaVersions.all)
+  object shared extends Cross[SharedScalaSources](ScalaVersions.all)
+  object jvm    extends Cross[CacheJvm](ScalaVersions.all)
+  object js     extends Cross[CacheJs](ScalaVersions.all)
 }
 object `archive-cache`      extends Cross[ArchiveCache](ScalaVersions.all)
 object launcher             extends Cross[Launcher](ScalaVersions.all)
@@ -74,8 +78,9 @@ object env                  extends Cross[Env](ScalaVersions.all)
 object `launcher-native_04` extends LauncherNative04
 
 object coursier extends Module {
-  object jvm extends Cross[CoursierJvm](ScalaVersions.all)
-  object js  extends Cross[CoursierJs](ScalaVersions.all)
+  object shared extends Cross[SharedScalaSources](ScalaVersions.all)
+  object jvm    extends Cross[CoursierJvm](ScalaVersions.all)
+  object js     extends Cross[CoursierJs](ScalaVersions.all)
 }
 
 object `proxy-setup` extends JavaModule with CoursierPublishModule with CsMima {
@@ -189,9 +194,9 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
     )
   }
   object it extends SbtTests with CsTests {
-    def sources = T.sources(
-      millSourcePath / "src" / "it" / "scala",
-      millSourcePath / "src" / "it" / "java"
+    def sources = Task.Sources(
+      os.sub / "src/it/scala",
+      os.sub / "src/it/java"
     )
     def moduleDeps = Seq(
       self.test
@@ -214,20 +219,23 @@ object proguard extends JavaModule {
 }
 
 object tests extends Module {
-  object jvm extends Cross[TestsJvm](ScalaVersions.all)
-  object js  extends Cross[TestsJs](ScalaVersions.all)
+  object shared extends Cross[SharedScalaSources](ScalaVersions.all)
+  object jvm    extends Cross[TestsJvm](ScalaVersions.all)
+  object js     extends Cross[TestsJs](ScalaVersions.all)
 }
 
 object `proxy-tests` extends Cross[ProxyTests](ScalaVersions.all)
 
 object interop extends Module {
   object scalaz extends Module {
-    object jvm extends Cross[ScalazJvm](ScalaVersions.all)
-    object js  extends Cross[ScalazJs](ScalaVersions.all)
+    object shared extends Cross[SharedScalaSources](ScalaVersions.all)
+    object jvm    extends Cross[ScalazJvm](ScalaVersions.all)
+    object js     extends Cross[ScalazJs](ScalaVersions.all)
   }
   object cats extends Module {
-    object jvm extends Cross[CatsJvm](ScalaVersions.all)
-    object js  extends Cross[CatsJs](ScalaVersions.all)
+    object shared extends Cross[SharedScalaSources](ScalaVersions.all)
+    object jvm    extends Cross[CatsJvm](ScalaVersions.all)
+    object js     extends Cross[CatsJs](ScalaVersions.all)
   }
 }
 
@@ -258,13 +266,23 @@ object `test-cache` extends Module {
 }
 
 trait UtilJvm extends UtilJvmBase {
+  def sources = Task {
+    super.sources() ++ util.shared(crossValue).sources()
+  }
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.jsoup
   )
 }
-trait UtilJs extends CsScalaJsModule with Util
+trait UtilJs extends CsScalaJsModule with Util {
+  def sources = Task {
+    super.sources() ++ util.shared(crossValue).sources()
+  }
+}
 
 trait CoreJvm extends CoreJvmBase {
+  def sources = Task {
+    super.sources() ++ core.shared(crossValue).sources()
+  }
   def moduleDeps = super.moduleDeps ++ Seq(
     util.jvm()
   )
@@ -274,12 +292,18 @@ trait CoreJvm extends CoreJvmBase {
   )
   def commitHash = `build-util`.commitHash
   object test extends CrossSbtTests with CsTests {
+    def sources = Task {
+      super.sources() ++ core.shared(crossValue).testSources()
+    }
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.jol
     )
   }
 }
 trait CoreJs extends Core with CsScalaJsModule {
+  def sources = Task {
+    super.sources() ++ core.shared(crossValue).sources()
+  }
   def moduleDeps = super.moduleDeps ++ Seq(
     util.js()
   )
@@ -287,16 +311,36 @@ trait CoreJs extends Core with CsScalaJsModule {
     Deps.scalaJsDom
   )
   def commitHash = `build-util`.commitHash
-  object test extends SbtTests with ScalaJSTests with JsTests with CsTests
+  object test extends SbtTests with ScalaJSTests with JsTests with CsTests {
+    def sources = Task {
+      super.sources() ++ core.shared(crossValue).testSources()
+    }
+  }
 }
 
+trait SharedScalaSources extends Cross.Module[String] {
+  def sources = Task.Sources(
+    os.sub / "src/main/scala",
+    os.sub / "src/main/java"
+  )
+  def testSources = Task.Sources(
+    os.sub / "src/test/scala",
+    os.sub / "src/test/java"
+  )
+}
 trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase {
+  def sources = Task {
+    super.sources() ++ `sbt-maven-repository`.shared(crossValue).sources()
+  }
   def moduleDeps = super.moduleDeps ++ Seq(
     core.jvm()
   )
 }
 trait SbtMavenRepositoryJs extends SbtMavenRepository
     with CsScalaJsModule {
+  def sources = Task {
+    super.sources() ++ `sbt-maven-repository`.shared(crossValue).sources()
+  }
   def moduleDeps = super.moduleDeps ++ Seq(
     core.js()
   )
@@ -314,6 +358,9 @@ trait CacheUtil extends CoursierPublishModule with CsMima {
 }
 
 trait CacheJvm extends CacheJvmBase {
+  def sources = Task {
+    super.sources() ++ cache.shared(crossValue).sources()
+  }
   def moduleDeps = Seq(
     `cache-util`,
     paths,
@@ -332,6 +379,9 @@ trait CacheJvm extends CacheJvmBase {
     `custom-protocol-for-test`.runClasspath()
   }
   object test extends CacheJvmBaseTests with CsTests {
+    def sources = Task {
+      super.sources() ++ cache.shared(crossValue).testSources()
+    }
     def ivyDeps = super.ivyDeps() ++ Agg(
       Deps.http4sBlazeServer,
       Deps.http4sDsl,
@@ -349,6 +399,9 @@ trait CacheJvm extends CacheJvmBase {
   }
 }
 trait CacheJs extends Cache with CsScalaJsModule {
+  def sources = Task {
+    super.sources() ++ cache.shared(crossValue).sources()
+  }
   def moduleDeps = Seq(
     util.js()
   )
@@ -452,6 +505,9 @@ trait LauncherNative04 extends CsModule
 }
 
 trait CoursierJvm extends CoursierJvmBase { self =>
+  def sources = Task {
+    super.sources() ++ coursier.shared(crossValue).sources()
+  }
   def moduleDeps = Seq(
     core.jvm(),
     cache.jvm(),
@@ -460,15 +516,18 @@ trait CoursierJvm extends CoursierJvmBase { self =>
   // Put CoursierTests right after TestModule, and see what happens
   object test extends TestModule with CrossSbtTests with CoursierTests with CsTests
       with JvmTests {
+    def sources = Task {
+      super.sources() ++ coursier.shared(crossValue).testSources()
+    }
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.jvm()
     )
   }
   object it extends TestModule with CrossSbtTests with CoursierTests with CsTests
       with JvmTests {
-    def sources = T.sources(
-      this.millSourcePath / "src" / "it" / "scala",
-      this.millSourcePath / "src" / "it" / "java"
+    def sources = Task.Sources(
+      os.sub / "src/it/scala",
+      os.sub / "src/it/java"
     )
     def moduleDeps = super.moduleDeps ++ Seq(
       self.test
@@ -484,11 +543,17 @@ trait CoursierJvm extends CoursierJvmBase { self =>
   }
 }
 trait CoursierJs extends Coursier with CsScalaJsModule {
+  def sources = Task {
+    super.sources() ++ coursier.shared(crossValue).sources()
+  }
   def moduleDeps = Seq(
     core.js(),
     cache.js()
   )
   object test extends SbtTests with ScalaJSTests with CsTests with JsTests with CoursierTests {
+    def sources = Task {
+      super.sources() ++ coursier.shared(crossValue).testSources()
+    }
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.js()
     )
@@ -496,6 +561,9 @@ trait CoursierJs extends Coursier with CsScalaJsModule {
 }
 
 trait TestsJvm extends TestsModule { self =>
+  def sources = Task {
+    super.sources() ++ tests.shared(crossValue).sources()
+  }
   def moduleDeps = super.moduleDeps ++ Seq(
     core.jvm(),
     `sbt-maven-repository`.jvm()
@@ -504,6 +572,9 @@ trait TestsJvm extends TestsModule { self =>
     Deps.jsoup
   )
   object test extends CrossSbtTests with CsTests with JvmTests {
+    def sources = Task {
+      super.sources() ++ tests.shared(crossValue).testSources()
+    }
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm(),
       `test-cache`.jvm()
@@ -525,9 +596,9 @@ trait TestsJvm extends TestsModule { self =>
         s"-Dtest.repository.password=${testRepoServer0.password}"
       )
     }
-    def sources = T.sources(
-      this.millSourcePath / "src" / "it" / "scala",
-      this.millSourcePath / "src" / "it" / "java"
+    def sources = Task.Sources(
+      os.sub / "src/it/scala",
+      os.sub / "src/it/java"
     )
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm(),
@@ -536,12 +607,18 @@ trait TestsJvm extends TestsModule { self =>
   }
 }
 trait TestsJs extends TestsModule with CsScalaJsModule {
+  def sources = Task {
+    super.sources() ++ tests.shared(crossValue).sources()
+  }
   def moduleDeps = super.moduleDeps ++ Seq(
     core.js(),
     `sbt-maven-repository`.js()
   )
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
   object test extends SbtTests with ScalaJSTests with CsTests with JsTests {
+    def sources = Task {
+      super.sources() ++ tests.shared(crossValue).testSources()
+    }
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.js(),
       `test-cache`.js()
@@ -559,9 +636,9 @@ trait ProxyTests extends CrossSbtModule with CsModule {
     Deps.slf4JNop
   )
   object it extends CrossSbtTests with CsTests {
-    def sources = T.sources(
-      millSourcePath / "src" / "it" / "scala",
-      millSourcePath / "src" / "it" / "java"
+    def sources = Task.Sources(
+      os.sub / "src/it/scala",
+      os.sub / "src/it/java"
     )
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
@@ -572,6 +649,9 @@ trait ProxyTests extends CrossSbtModule with CsModule {
 }
 
 trait ScalazJvm extends Scalaz with CsMima {
+  def sources = Task {
+    super.sources() ++ interop.scalaz.shared(crossValue).sources()
+  }
   def moduleDeps = Seq(
     cache.jvm()
   )
@@ -585,6 +665,9 @@ trait ScalazJvm extends Scalaz with CsMima {
   }
 }
 trait ScalazJs extends Scalaz with CsScalaJsModule {
+  def sources = Task {
+    super.sources() ++ interop.scalaz.shared(crossValue).sources()
+  }
   def moduleDeps = Seq(
     cache.js()
   )
@@ -594,6 +677,9 @@ trait ScalazJs extends Scalaz with CsScalaJsModule {
 }
 
 trait CatsJvm extends Cats with CsMima {
+  def sources = Task {
+    super.sources() ++ interop.cats.shared(crossValue).sources()
+  }
   def moduleDeps = Seq(
     cache.jvm()
   )
@@ -604,6 +690,9 @@ trait CatsJvm extends Cats with CsMima {
   }
 }
 trait CatsJs extends Cats with CsScalaJsModule {
+  def sources = Task {
+    super.sources() ++ interop.cats.shared(crossValue).sources()
+  }
   def moduleDeps = Seq(
     cache.js()
   )
@@ -1345,7 +1434,7 @@ object buildWorkers extends Module {
       countDown -= 1
     }
     if (serverRunning && server.proc.isAlive()) {
-      T.log.outputStream.println(s"Test repository listening on ${server.url}")
+      System.err.println(s"Test repository listening on ${server.url}")
       server
     }
     else
@@ -1426,7 +1515,6 @@ object docs extends ScalaModule {
   def mkdocsSiteDirArgs = T {
     Seq("--site-dir", mkdocsOutput().path.toString)
   }
-  def millSourcePath = super.millSourcePath / os.up / os.up / "docs"
   def mkdocsWatchScript: T[PathRef] = Task {
     mdoc()()
     val docsDir = T.workspace / "docs"
@@ -1495,12 +1583,13 @@ object docs extends ScalaModule {
       sys.error(s"Got exit code $serveRetCode for mkdocs serve and $mdocRetCode for mdoc")
     ()
   }
+  def site = Task.Source(os.sub / "site")
   def mkdocsBuild() = T.command[PathRef] {
     mdoc()()
     os.proc("mkdocs", "build", mkdocsConfigArgs(), mkdocsSiteDirArgs())
       .call(cwd = millModuleBasePath.value, stdin = os.Inherit, stdout = os.Inherit)
 
-    PathRef(millSourcePath / "site")
+    site()
   }
   def mkdocsGhDeploy() = T.command[Unit] {
     mdoc()()

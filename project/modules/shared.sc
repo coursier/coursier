@@ -199,24 +199,10 @@ trait CsResourcesTests extends TestModule {
 
 trait JvmTests extends JavaModule with CsResourcesTests {
   def defaultCommandName() = "test"
-  def sources = T.sources {
-    val shared = Seq(
-      millSourcePath / os.up / "shared" / "src" / "test" / "scala",
-      millSourcePath / os.up / "jvm" / "src" / "test" / "scala"
-    )
-    super.sources() ++ shared.map(PathRef(_))
-  }
 }
 
 trait JsTests extends TestScalaJSModule with CsResourcesTests {
   import mill.scalajslib.api._
-  override def sources = T.sources {
-    val shared = Seq(
-      millSourcePath / os.up / "shared" / "src" / "test",
-      millSourcePath / os.up / "js" / "src" / "test"
-    )
-    super.sources() ++ shared.map(PathRef(_))
-  }
   def jsEnvConfig = T {
     super.jsEnvConfig() match {
       case node: JsEnvConfig.NodeJs =>
@@ -260,7 +246,7 @@ trait CsScalaModule extends ScalaModule with CoursierJavaModule {
 
 trait CsModule extends SbtModule with CsScalaModule with CoursierJavaModule {
   def sources = T.sources {
-    val sbv    = mill.scalalib.api.ZincWorkerUtil.scalaBinaryVersion(scalaVersion())
+    val sbv    = mill.scalalib.api.JvmWorkerUtil.scalaBinaryVersion(scalaVersion())
     val parent = super.sources()
     val extra = parent.map(_.path).filter(_.last == "scala").flatMap { p =>
       val dirNames = Seq(s"scala-$sbv")
@@ -270,9 +256,4 @@ trait CsModule extends SbtModule with CsScalaModule with CoursierJavaModule {
   }
 }
 
-trait CsCrossJvmJsModule extends CrossSbtModule with CsModule {
-  def sources = T.sources {
-    val shared = PathRef(millSourcePath / os.up / "shared" / "src" / "main")
-    super.sources() ++ Seq(shared)
-  }
-}
+trait CsCrossJvmJsModule extends CrossSbtModule with CsModule
