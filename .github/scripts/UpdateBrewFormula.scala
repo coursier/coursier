@@ -1,4 +1,4 @@
-//> using dep com.lihaoyi::os-lib:0.11.3
+//> using dep com.lihaoyi::os-lib:0.11.4
 
 import java.security.MessageDigest
 
@@ -60,9 +60,9 @@ object UpdateBrewFormula {
     val launcherAarch64Url =
       s"https://github.com/coursier/coursier/releases/download/v$version/cs-aarch64-apple-darwin.gz"
 
-    val jarPath             = os.sub / "jar-launcher"
-    val launcherX86_64Path  = os.sub / "launcher-x86_64"
-    val launcherAarch64Path = os.sub / "launcher-aarch64"
+    val jarPath             = repoDir / "jar-launcher"
+    val launcherX86_64Path  = repoDir / "launcher-x86_64"
+    val launcherAarch64Path = repoDir / "launcher-aarch64"
     System.err.println(s"Getting $jarUrl")
     os.proc("curl", "-fLo", jarPath, jarUrl)
       .call(cwd = repoDir, stdout = os.Inherit)
@@ -73,9 +73,9 @@ object UpdateBrewFormula {
     os.proc("curl", "-fLo", launcherAarch64Path, launcherAarch64Url)
       .call(cwd = repoDir, stdout = os.Inherit)
 
-    def sha256(path: os.SubPath): String = {
+    def sha256(path: os.Path): String = {
       val digest    = MessageDigest.getInstance("SHA-256")
-      val bytes     = digest.digest(os.read.bytes(repoDir / path))
+      val bytes     = digest.digest(os.read.bytes(path))
       val hexString = new StringBuilder(2 * bytes.length)
       for (b <- bytes)
         hexString.append(String.format("%02x", b & 0xff))
@@ -89,9 +89,9 @@ object UpdateBrewFormula {
     assert(launcherX86_64Sha256.nonEmpty)
     assert(launcherAarch64Sha256.nonEmpty)
 
-    os.remove(repoDir / jarPath)
-    os.remove(repoDir / launcherX86_64Path)
-    os.remove(repoDir / launcherAarch64Path)
+    os.remove(jarPath)
+    os.remove(launcherX86_64Path)
+    os.remove(launcherAarch64Path)
 
     val template = os.read(templateFile)
 
