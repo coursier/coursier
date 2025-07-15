@@ -268,7 +268,7 @@ trait Launchers extends CsModule {
       stdout = os.Inherit,
       stderr = os.Inherit
     )
-    T.log.outputStream.println(s"Config generated in ${outputDir.relativeTo(T.workspace)}")
+    System.err.println(s"Config generated in ${outputDir.relativeTo(T.workspace)}")
   }
 
   def runFromJars(args: String*) = T.command {
