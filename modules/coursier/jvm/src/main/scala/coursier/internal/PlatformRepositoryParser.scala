@@ -8,33 +8,39 @@ import coursier.cache.CacheUrl
 import coursier.core.{Authentication, Repository}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepositoryLike
+import coursier.parse.StandardRepository
+import coursier.parse.StandardRepository.syntax._
 
 abstract class PlatformRepositoryParser {
 
   def repository(input: String): Either[String, Repository] =
-    repository(input, maybeFile = false)
+    repositoryAsStandard(input).map(_.repository)
+
+  def repositoryAsStandard(input: String): Either[String, StandardRepository] =
+    repositoryAsStandard(input, maybeFile = false)
 
   def repository(input: String, maybeFile: Boolean): Either[String, Repository] =
+    repositoryAsStandard(input, maybeFile).map(_.repository)
+
+  def repositoryAsStandard(input: String, maybeFile: Boolean): Either[String, StandardRepository] =
     if (input == "ivy2local" || input == "ivy2Local")
-      Right(LocalRepositories.ivy2Local)
+      Right(LocalRepositories.ivy2Local.asStandard)
     else if (input == "ivy2cache" || input == "ivy2Cache")
-      Right(LocalRepositories.Dangerous.ivy2Cache)
+      Right(LocalRepositories.Dangerous.ivy2Cache.asStandard)
     else if (input == "m2Local" || input == "m2local")
-      Right(LocalRepositories.Dangerous.maven2Local)
+      Right(LocalRepositories.Dangerous.maven2Local.asStandard)
     else {
-      val repo = SharedRepositoryParser.repository(input)
+      val repo = SharedRepositoryParser.repositoryAsStandard(input)
 
       val url = repo.map {
-        case m: MavenRepositoryLike =>
+        case StandardRepository.Maven(m) =>
           m.root
-        case i: IvyRepository =>
+        case StandardRepository.Ivy(i) =>
           // FIXME We're not handling metadataPattern here
           i.pattern.chunks.takeWhile {
             case _: coursier.ivy.Pattern.Chunk.Const => true
             case _                                   => false
           }.map(_.string).mkString
-        case r =>
-          sys.error(s"Unrecognized repository: $r")
       }
 
       val validatedUrl = url.flatMap { url0 =>
@@ -76,10 +82,11 @@ abstract class PlatformRepositoryParser {
             ).toString
 
             repo.map {
-              case m: MavenRepositoryLike =>
-                m.withRoot(baseUrl).withAuthentication(Some(auth))
-              case i: IvyRepository =>
-                i.withAuthentication(Some(auth)).withPattern(
+              case StandardRepository.Maven(m) =>
+                val m0 = m.withRoot(baseUrl).withAuthentication(Some(auth))
+                StandardRepository.Maven(m0)
+              case StandardRepository.Ivy(i) =>
+                val i0 = i.withAuthentication(Some(auth)).withPattern(
                   coursier.ivy.Pattern(
                     coursier.ivy.Pattern.Chunk.Const(baseUrl) +: i.pattern.chunks.dropWhile {
                       case _: coursier.ivy.Pattern.Chunk.Const => true
@@ -87,8 +94,7 @@ abstract class PlatformRepositoryParser {
                     }
                   )
                 )
-              case r =>
-                sys.error(s"Unrecognized repository: $r")
+                StandardRepository.Ivy(i0)
             }
         }
       }

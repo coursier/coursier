@@ -31,6 +31,30 @@ object RepositoryParser extends PlatformRepositoryParser {
           }
     }
 
+  private def repositoriesAsStandard0(
+    inputs: Seq[String],
+    defaultRepositoriesOpt: Option[Seq[StandardRepository]]
+  ): ValidationNel[String, Seq[StandardRepository]] =
+    defaultRepositoriesOpt match {
+      case Some(defaultRepositories) =>
+        inputs
+          .toVector
+          .validationNelTraverse[String, Seq[StandardRepository]] {
+            case "default" =>
+              ValidationNel.success(defaultRepositories)
+            case s =>
+              ValidationNel.fromEither(repositoryAsStandard(s).map(Seq(_)))
+          }
+          .map(_.flatten)
+      case None =>
+        inputs
+          .toVector
+          .validationNelTraverse[String, StandardRepository] {
+            case s =>
+              ValidationNel.fromEither(repositoryAsStandard(s))
+          }
+    }
+
   /** Parses repository strings, accepting "default" as a value too
     *
     * When "default" is passed in one of the input values, `defaultRepositories` is used for it.
@@ -60,5 +84,8 @@ object RepositoryParser extends PlatformRepositoryParser {
     */
   def repositories(inputs: Seq[String]): ValidationNel[String, Seq[Repository]] =
     repositories0(inputs, None)
+
+  def repositoriesAsStandard(inputs: Seq[String]): ValidationNel[String, Seq[StandardRepository]] =
+    repositoriesAsStandard0(inputs, None)
 
 }

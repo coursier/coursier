@@ -22,6 +22,15 @@ object Mirror {
       }
       .distinct
 
+  sealed abstract class StandardMirror extends Product with Serializable {
+    def mirror: Mirror
+  }
+
+  object StandardMirror {
+    final case class Tree(mirror: TreeMirror)   extends StandardMirror
+    final case class Maven(mirror: MavenMirror) extends StandardMirror
+  }
+
   private def parseMirrorString(input: String): Either[String, (String, Seq[String])] =
     input.split("=", 2) match {
       case Array(dest, froms) =>
@@ -34,19 +43,22 @@ object Mirror {
     }
 
   def parse(input: String): Either[String, Mirror] =
+    parseAsStandard(input).map(_.mirror)
+
+  def parseAsStandard(input: String): Either[String, Mirror.StandardMirror] =
     if (input.startsWith("tree:"))
       parseMirrorString(input.stripPrefix("tree:")).map {
         case (dest, froms) =>
-          TreeMirror(froms, dest)
+          Mirror.StandardMirror.Tree(TreeMirror(froms, dest))
       }
     else if (input.startsWith("maven:"))
       parseMirrorString(input.stripPrefix("maven:")).map {
         case (dest, froms) =>
-          MavenMirror(froms, dest)
+          Mirror.StandardMirror.Maven(MavenMirror(froms, dest))
       }
     else
       parseMirrorString(input).map {
         case (dest, froms) =>
-          MavenMirror(froms, dest)
+          Mirror.StandardMirror.Maven(MavenMirror(froms, dest))
       }
 }
