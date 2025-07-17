@@ -15,7 +15,7 @@ trait CoursierPublishModule extends PublishModule with PublishLocalNoFluff
       Developer("alexarchambault", "Alex Archambault", "https://github.com/alexarchambault")
     )
   )
-  def publishVersion = T.input(CoursierPublishModule.computeBuildVersion())
+  def publishVersion = Task.Input(CoursierPublishModule.computeBuildVersion())
 }
 
 object CoursierPublishModule {

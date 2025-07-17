@@ -63,17 +63,17 @@ object Launchers {
         os.copy.over(libPath, destDir / "csjniutils.lib")
       }
 
-      def staticLibDir = T {
+      def staticLibDir = Task {
         val dir = nativeImageDockerWorkingDir() / staticLibDirName
         os.makeDir.all(dir)
 
         if (Properties.isWin)
-          copyCsjniutilTo(dir, T.workspace)
+          copyCsjniutilTo(dir, Task.workspace)
 
         PathRef(dir)
       }
 
-      def nativeImageOptions = T {
+      def nativeImageOptions = Task {
         val usesDocker = nativeImageDockerParams().nonEmpty
         val cLibPath =
           if (usesDocker) s"/data/$staticLibDirName"
@@ -189,7 +189,7 @@ object Launchers {
       )
 
     object `static-image` extends CliNativeImage {
-      def nativeImageDockerParams = T {
+      def nativeImageDockerParams = Task {
         val baseDockerParams = NativeImage.linuxStaticParams(
           Docker.muslBuilder,
           linuxCsLauncher
@@ -198,20 +198,20 @@ object Launchers {
         buildHelperImage()
         Some(dockerParams)
       }
-      def buildHelperImage = T {
+      def buildHelperImage = Task {
         val imageDirName = if (arch == "aarch64") "musl-image-arm64" else "musl-image"
         os.proc("docker", "build", "-t", Docker.customMuslBuilderImageName, ".")
-          .call(cwd = T.workspace / "project" / imageDirName, stdout = os.Inherit)
+          .call(cwd = Task.workspace / "project" / imageDirName, stdout = os.Inherit)
         ()
       }
-      def writeNativeImageScript(scriptDest: String, imageDest: String = "") = T.command {
+      def writeNativeImageScript(scriptDest: String, imageDest: String = "") = Task.Command {
         buildHelperImage()
         super.writeNativeImageScript(scriptDest, imageDest)()
       }
     }
 
     object `mostly-static-image` extends CliNativeImage {
-      def nativeImageDockerParams = T {
+      def nativeImageDockerParams = Task {
         val baseDockerParams = NativeImage.linuxMostlyStaticParams(
           if (arch == "aarch64") "ubuntu:20.04" else "ubuntu:18.04", // TODO Pin that
           linuxCsLauncher
@@ -242,10 +242,10 @@ object Launchers {
         `container-image`.nativeImage
 
     def transitiveRunJars: T[Seq[PathRef]] = Task {
-      T.traverse(transitiveModuleDeps)(_.jar)()
+      Task.traverse(transitiveModuleDeps)(_.jar)()
     }
 
-    def runWithAssistedConfig(args: String*) = T.command {
+    def runWithAssistedConfig(args: String*) = Task.Command {
       val cp         = jarClassPath().map(_.path).mkString(File.pathSeparator)
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
       val graalVmHome = Option(System.getenv("GRAALVM_HOME")).getOrElse {
@@ -257,7 +257,7 @@ object Launchers {
           `base-image`.nativeImageGraalVmJvmId()
         ).!!.trim
       }
-      val outputDir = T.dest / "config"
+      val outputDir = Task.dest / "config"
       val command = Seq(
         s"$graalVmHome/bin/java",
         s"-agentlib:native-image-agent=config-output-dir=$outputDir",
@@ -270,10 +270,10 @@ object Launchers {
         stdout = os.Inherit,
         stderr = os.Inherit
       )
-      System.err.println(s"Config generated in ${outputDir.relativeTo(T.workspace)}")
+      System.err.println(s"Config generated in ${outputDir.relativeTo(Task.workspace)}")
     }
 
-    def runFromJars(args: String*) = T.command {
+    def runFromJars(args: String*) = Task.Command {
       val cp         = jarClassPath().map(_.path).mkString(File.pathSeparator)
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
       val command    = Seq("java", "-cp", cp, mainClass0) ++ args
@@ -284,12 +284,12 @@ object Launchers {
       )
     }
 
-    def jarClassPath = T {
+    def jarClassPath = Task {
       val cp = runClasspath() ++ transitiveRunJars()
       cp.filter(ref => os.exists(ref.path) && !os.isDir(ref.path))
     }
 
-    def launcher = T {
+    def launcher = Task {
       import coursier.launcher.{
         AssemblyGenerator,
         BootstrapGenerator,
@@ -301,7 +301,7 @@ object Launchers {
       val cp         = jarClassPath().map(_.path)
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
-      val dest = T.dest / (if (isWin) "launcher.bat" else "launcher")
+      val dest = Task.dest / (if (isWin) "launcher.bat" else "launcher")
 
       val preamble = Preamble()
         .withOsKind(isWin)
@@ -317,9 +317,9 @@ object Launchers {
       PathRef(dest)
     }
 
-    def standaloneLauncher = T {
+    def standaloneLauncher = Task {
 
-      val cachePath = os.Path(coursier.cache.FileCache().location, T.workspace)
+      val cachePath = os.Path(coursier.cache.FileCache().location, Task.workspace)
       def urlOf(path: os.Path): Option[String] =
         if (path.startsWith(cachePath)) {
           val segments = path.relativeTo(cachePath).segments
@@ -339,7 +339,7 @@ object Launchers {
       val cp         = jarClassPath().map(_.path)
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
-      val dest = T.dest / (if (isWin) "launcher.bat" else "launcher")
+      val dest = Task.dest / (if (isWin) "launcher.bat" else "launcher")
 
       val preamble = Preamble()
         .withOsKind(isWin)

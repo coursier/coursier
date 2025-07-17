@@ -23,7 +23,7 @@ trait BootstrapLauncher extends CsModule {
   )
   def mainClass = Some("coursier.bootstrap.launcher.Launcher")
 
-  def runtimeLibs = T {
+  def runtimeLibs = Task {
     val javaHome = os.Path(sys.props("java.home"))
     val rtJar    = javaHome / "lib" / "rt.jar"
     val jmods    = javaHome / "jmods"
@@ -35,7 +35,7 @@ trait BootstrapLauncher extends CsModule {
       sys.error(s"$rtJar and $jmods not found")
   }
 
-  def sharedProguardConf = T {
+  def sharedProguardConf = Task {
     s"""-libraryjars ${runtimeLibs().path}
        |-dontnote
        |-dontwarn
@@ -52,7 +52,7 @@ trait BootstrapLauncher extends CsModule {
        |""".stripMargin
   }
 
-  def sharedResourceProguardConf = T {
+  def sharedResourceProguardConf = Task {
     s"""-libraryjars ${runtimeLibs().path}
        |-dontnote
        |-dontwarn
@@ -70,7 +70,7 @@ trait BootstrapLauncher extends CsModule {
   }
 
   def transitiveRunJars: T[Seq[PathRef]] = Task {
-    T.traverse(transitiveModuleDeps)(_.jar)()
+    Task.traverse(transitiveModuleDeps)(_.jar)()
   }
   def upstreamAssemblyClasspath: T[Agg[PathRef]] = Task {
     // use JARs instead of directories of upstream deps, to make assembly generation below happy
@@ -89,12 +89,12 @@ trait BootstrapLauncher extends CsModule {
     )
   }
 
-  def assembly = T {
+  def assembly = Task {
     val baseJar    = jar().path
     val cp         = upstreamAssemblyClasspath().iterator.toSeq.map(_.path).filter(os.exists)
     val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
-    val dest = T.dest / "bootstrap-orig.jar"
+    val dest = Task.dest / "bootstrap-orig.jar"
 
     val params = Parameters.Assembly()
       .withFiles((baseJar +: cp).map(_.toIO))
@@ -107,12 +107,12 @@ trait BootstrapLauncher extends CsModule {
     PathRef(dest)
   }
 
-  def proguardedAssembly = T {
+  def proguardedAssembly = Task {
 
     // TODO Cache this more heavily (hash inputs, and don't recompute if inputs didn't change)
 
-    val conf = T.dest / "configuration.pro"
-    val dest = T.dest / "proguard-bootstrap.jar"
+    val conf = Task.dest / "configuration.pro"
+    val dest = Task.dest / "proguard-bootstrap.jar"
 
     val baseJar    = assembly().path
     val sharedConf = sharedProguardConf()
@@ -132,13 +132,13 @@ trait BootstrapLauncher extends CsModule {
     PathRef(dest)
   }
 
-  def resourceAssemblyMainClass = T("coursier.bootstrap.launcher.ResourcesLauncher")
-  def resourceAssembly = T {
+  def resourceAssemblyMainClass = Task("coursier.bootstrap.launcher.ResourcesLauncher")
+  def resourceAssembly = Task {
     val baseJar    = jar().path
     val cp         = upstreamAssemblyClasspath().iterator.toSeq.map(_.path)
     val mainClass0 = resourceAssemblyMainClass()
 
-    val dest = T.dest / "bootstrap-orig.jar"
+    val dest = Task.dest / "bootstrap-orig.jar"
 
     val params = Parameters.Assembly()
       .withFiles((baseJar +: cp).map(_.toIO))
@@ -151,9 +151,9 @@ trait BootstrapLauncher extends CsModule {
     PathRef(dest)
   }
 
-  def proguardedResourceAssembly = T {
-    val conf = T.dest / "configuration.pro"
-    val dest = T.dest / "proguard-resource-bootstrap.jar"
+  def proguardedResourceAssembly = Task {
+    val conf = Task.dest / "configuration.pro"
+    val dest = Task.dest / "proguard-resource-bootstrap.jar"
 
     val baseJar    = resourceAssembly().path
     val sharedConf = sharedResourceProguardConf()

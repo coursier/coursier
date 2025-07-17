@@ -39,7 +39,7 @@ object Workers {
     def redirectingServerCp: T[Seq[PathRef]]
     def redirectingServerMainClass: T[String]
 
-    def redirectingServer = T.worker {
+    def redirectingServer = Task.Worker {
       val cp        = redirectingServerCp().map(_.path)
       val mainClass = redirectingServerMainClass()
 

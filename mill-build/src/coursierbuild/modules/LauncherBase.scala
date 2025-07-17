@@ -12,9 +12,9 @@ trait LauncherBase extends CsModule with CrossSbtModule with CoursierPublishModu
 
   def commitHash: T[String]
 
-  def resources = T.sources {
+  def resources = Task {
 
-    val dir = T.dest / "resources"
+    val dir = Task.dest / "resources"
 
     val files = Seq(
       "bootstrap-orig.jar"           -> noProguardBootstrap(),
@@ -30,8 +30,8 @@ trait LauncherBase extends CsModule with CrossSbtModule with CoursierPublishModu
     super.resources() :+ PathRef(dir)
   }
 
-  def constantsFile = T {
-    val dest = T.dest / "Properties.scala"
+  def constantsFile = Task {
+    val dest = Task.dest / "Properties.scala"
     val code =
       s"""package coursier.launcher.internal
          |

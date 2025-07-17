@@ -22,14 +22,14 @@ trait Doc extends ScalaModule {
     repo: String = "coursier/versioned-docs",
     branch: String = "master",
     docusaurusDir: String = "doc/website"
-  ) = T.command {
-    val dir = os.Path(docusaurusDir, T.workspace)
-    DocHelpers.copyDocusaurusVersionedData(repo, branch, dir, T.dest / "repo")
+  ) = Task.Command {
+    val dir = os.Path(docusaurusDir, Task.workspace)
+    DocHelpers.copyDocusaurusVersionedData(repo, branch, dir, Task.dest / "repo")
   }
 
-  def forkWorkingDir = T.dest
+  def forkWorkingDir = Task.dest
 
-  def generate(args: String*) = T.command {
+  def generate(args: String*) = Task.Command {
 
     def processArgs(
       npmInstall: Boolean,
@@ -57,13 +57,13 @@ trait Doc extends ScalaModule {
       if (ver.endsWith("SNAPSHOT")) """resolvers += Resolver.sonatypeRepo("snapshots")""" + "\n"
       else ""
 
-    val outputDir = T.workspace / "doc" / "processed-docs"
+    val outputDir = Task.workspace / "doc" / "processed-docs"
 
     val allArgs: Seq[String] = Seq(
       "--classpath",
       classPath().map(_.path.toString).mkString(File.pathSeparator),
       "--in",
-      (T.workspace / "doc" / "docs").toString,
+      (Task.workspace / "doc" / "docs").toString,
       "--out",
       outputDir.toString,
       "--site.VERSION",
@@ -80,7 +80,7 @@ trait Doc extends ScalaModule {
 
     // TODO Run yarn run thing right after, add --watch mode
 
-    val websiteDir = T.workspace / "doc" / "website"
+    val websiteDir = Task.workspace / "doc" / "website"
 
     if (npmInstall)
       os.proc("npm", "install").call(

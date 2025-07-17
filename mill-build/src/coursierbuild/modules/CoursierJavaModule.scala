@@ -38,14 +38,14 @@ trait CoursierJavaModule extends JavaModule {
       case Some("aarch64" | "arm64") => true
       case _                         => false
     }
-  def javacSystemJvmId = T {
+  def javacSystemJvmId = Task {
     if (Properties.isMac && isArm64) s"zulu:$jvmRelease"
     else if (Properties.isWin && isArm64) s"liberica:$jvmRelease"
     else s"adoptium:$jvmRelease"
   }
-  def javacSystemJvm = T.source {
-    val output = os.proc(csApp(T.workspace), "java-home", "--jvm", javacSystemJvmId())
-      .call(cwd = T.workspace)
+  def javacSystemJvm = Task {
+    val output = os.proc(csApp(Task.workspace), "java-home", "--jvm", javacSystemJvmId())
+      .call(cwd = Task.workspace)
       .out.trim()
     val javaHome = os.Path(output)
     assert(os.isDir(javaHome))
@@ -53,7 +53,7 @@ trait CoursierJavaModule extends JavaModule {
   }
   // adds options equivalent to --release $jvmRelease + allowing access to unsupported JDK APIs
   // (no more straightforward options to achieve that AFAIK)
-  def maybeJdkJavacOpt = T {
+  def maybeJdkJavacOpt = Task {
     val javaHome   = javacSystemJvm().path
     val rtJar      = javaHome / "jre/lib/rt.jar"
     val hasModules = os.isDir(javaHome / "jmods")
@@ -64,7 +64,7 @@ trait CoursierJavaModule extends JavaModule {
     else
       Seq("-source", jvmRelease, "-target", jvmRelease, "-bootclasspath", rtJar.toString)
   }
-  def javacOptions = T {
+  def javacOptions = Task {
     super.javacOptions() ++ maybeJdkJavacOpt() ++ Seq(
       "-Xlint:unchecked"
     )

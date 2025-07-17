@@ -19,8 +19,8 @@ trait Core extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
 
   def commitHash: T[String]
 
-  def constantsFile = T {
-    val dest = T.dest / "Properties.scala"
+  def constantsFile = Task {
+    val dest = Task.dest / "Properties.scala"
     val code =
       s"""package coursier.util
          |
