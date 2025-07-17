@@ -50,7 +50,7 @@ object Deps {
     if (sv.startsWith("2.12"))
       ivy"org.virtuslab.scala-cli::config:1.1.3"
     else
-      ivy"org.virtuslab.scala-cli:config_3:1.8.3"
+      ivy"org.virtuslab.scala-cli:config_3:1.8.4"
         .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.4.0"
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.2"
