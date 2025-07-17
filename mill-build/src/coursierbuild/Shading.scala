@@ -14,15 +14,16 @@ import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Using
 
-trait Shading extends JavaModule with PublishModule {
+trait Shading extends PublishModule {
 
   // TODO Change that to shadedModules
-  def shadedDependencies: T[Agg[Dep]]
+  def shadedDependencies: T[Seq[Dep]]
   def validNamespaces: T[Seq[String]]
   def shadeRenames: T[Seq[(String, String)]]
 
   def shadedJars = Task {
-    val depToDependency = (d: Dep) => bindDependency().apply(d).dep
+    val bindDependency0 = bindDependency()
+    val depToDependency = (d: Dep) => bindDependency0(d).dep
     val resolution      = millResolver().resolution(Seq(coursierDependency))
     val types = Set(
       coursier.Type.jar,
@@ -54,7 +55,7 @@ trait Shading extends JavaModule with PublishModule {
     val allJars = load(resolution)
     val subset =
       moduleDepsChecked.map(_.coursierDependency) ++
-        ivyDeps().map(depToDependency).toSeq.filterNot(
+        mvnDeps().map(depToDependency).toSeq.filterNot(
           shadedDepSeq.toSet
         )
     val subset0 = subset.map { dep =>
@@ -218,10 +219,10 @@ trait Shading extends JavaModule with PublishModule {
   }
 
   def publishXmlDeps = Task.Anon {
-    val convert = resolvePublishDependency().apply(_)
-    val orig    = super.publishXmlDeps()
-    val shaded  = shadedDependencies().iterator.map(convert).toSet
-    Agg(orig.iterator.toSeq.filterNot(shaded): _*)
+    val resolvePublishDependency0 = resolvePublishDependency()
+    val orig                      = super.publishXmlDeps()
+    val shaded = shadedDependencies().iterator.map(resolvePublishDependency0).toSet
+    Seq(orig.iterator.toSeq.filterNot(shaded) *)
   }
 
   def onlyNamespaces(namespaces: Seq[String], jar: File): Unit = {
