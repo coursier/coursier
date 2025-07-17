@@ -4,7 +4,7 @@ import coursierbuild.Deps.Deps
 import mill._, mill.scalalib._
 
 trait CsScalaModule extends ScalaModule with CoursierJavaModule {
-  def scalacOptions = T {
+  def scalacOptions = Task {
     val sv = scalaVersion()
     val scala212Opts =
       if (sv.startsWith("2.12.")) Seq("-Ypartial-unification", "-language:higherKinds")
@@ -22,7 +22,7 @@ trait CsScalaModule extends ScalaModule with CoursierJavaModule {
       jvmRelease
     )
   }
-  def scalacPluginIvyDeps = T {
+  def scalacPluginIvyDeps = Task {
     val sv = scalaVersion()
     val scala212Plugins =
       if (sv.startsWith("2.12.")) Agg(Deps.macroParadise)

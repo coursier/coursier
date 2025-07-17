@@ -1,7 +1,7 @@
 package coursierbuild
 
 import com.eed3si9n.jarjarabrams.{ShadePattern, Shader}
-import coursier.util.{Gather, Task}
+import coursier.util.{Gather, Task => CsTask}
 import mill._, mill.scalalib._
 import mill.util.JarManifest
 
@@ -21,7 +21,7 @@ trait Shading extends JavaModule with PublishModule {
   def validNamespaces: T[Seq[String]]
   def shadeRenames: T[Seq[(String, String)]]
 
-  def shadedJars = T {
+  def shadedJars = Task {
     val depToDependency = (d: Dep) => bindDependency().apply(d).dep
     val resolution      = millResolver().resolution(Seq(coursierDependency))
     val types = Set(
@@ -35,7 +35,7 @@ trait Shading extends JavaModule with PublishModule {
 
     def load(resolution: coursier.Resolution) = {
       val artifacts = resolution.artifacts(types = types)
-      val loadedArtifacts = Gather[Task].gather(
+      val loadedArtifacts = Gather[CsTask].gather(
         for (a <- artifacts)
           yield coursier.cache.Cache.default.file(a).run.map(a.optional -> _)
       ).unsafeRun()
@@ -70,7 +70,7 @@ trait Shading extends JavaModule with PublishModule {
     shadedJars.map(os.Path(_)).map(PathRef(_))
   }
 
-  def manifest: T[JarManifest] = T {
+  def manifest: T[JarManifest] = Task {
     val isMultiRelease = shadedJars().map(_.path).exists { shadedJar =>
       Using.resource(new ZipFile(shadedJar.toIO)) { zf =>
         val ent = zf.getEntry("META-INF/MANIFEST.MF")
@@ -88,7 +88,7 @@ trait Shading extends JavaModule with PublishModule {
       baseManifest
   }
 
-  def jar = T {
+  def jar = Task {
 
     val shadeRules0 = {
       val renames = shadeRenames()
@@ -96,7 +96,7 @@ trait Shading extends JavaModule with PublishModule {
       else Seq(ShadePattern.Rename(renames.toList).inAll)
     }
     val orig        = super.jar().path
-    val updated     = T.dest / (orig.last.stripSuffix(".jar") + "-shaded.jar")
+    val updated     = Task.dest / (orig.last.stripSuffix(".jar") + "-shaded.jar")
     val shadedJars0 = shadedJars().map(_.path)
 
     val shader = Shader.bytecodeShader(shadeRules0, verbose = false, skipManifest = false)
@@ -197,7 +197,7 @@ trait Shading extends JavaModule with PublishModule {
     PathRef(updated)
   }
 
-  def publishXmlDeps = T.task {
+  def publishXmlDeps = Task.Anon {
     val convert = resolvePublishDependency().apply(_)
     val orig    = super.publishXmlDeps()
     val shaded  = shadedDependencies().iterator.map(convert).toSet

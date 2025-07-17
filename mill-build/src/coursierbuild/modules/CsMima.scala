@@ -11,7 +11,7 @@ import java.util.Locale
 import scala.util.Properties
 
 trait CsMima extends Mima {
-  def mimaPreviousVersions: T[Seq[String]] = T.input {
+  def mimaPreviousVersions: T[Seq[String]] = Task.Input {
     val current = os.proc("git", "describe", "--tags", "--match", "v*")
       .call()
       .out.trim()

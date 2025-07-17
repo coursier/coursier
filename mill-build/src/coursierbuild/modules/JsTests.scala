@@ -12,7 +12,7 @@ import scala.util.Properties
 
 trait JsTests extends TestScalaJSModule with CsResourcesTests {
   import mill.scalajslib.api._
-  def jsEnvConfig = T {
+  def jsEnvConfig = Task {
     super.jsEnvConfig() match {
       case node: JsEnvConfig.NodeJs =>
         node.copy(

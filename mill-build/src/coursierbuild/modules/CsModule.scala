@@ -4,7 +4,7 @@ import mill._, mill.scalalib._
 import mill.scalalib.api.JvmWorkerUtil
 
 trait CsModule extends SbtModule with CsScalaModule with CoursierJavaModule {
-  def sources = T.sources {
+  def sources = Task {
     val sbv    = JvmWorkerUtil.scalaBinaryVersion(scalaVersion())
     val parent = super.sources()
     val extra = parent.map(_.path).filter(_.last == "scala").flatMap { p =>
