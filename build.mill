@@ -1,4 +1,4 @@
-import $meta._
+//| mill-version: 1.0.0-22-ce6899
 
 import coursierbuild.Deps.{Deps, ScalaVersions, scalaCliVersion}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
@@ -9,9 +9,9 @@ import coursierbuild.modules._
 import _root_.coursier.getcs.GetCs
 
 import mill._
+import mill.api.*
 import mill.scalalib._
 import mill.scalajslib._
-import mill.contrib.bloop.Bloop
 
 import java.io.File
 
@@ -21,8 +21,15 @@ import scala.util.Properties
 def mavenOrg = "io.get-coursier"
 
 // Tell mill modules are under modules/
-implicit def millModuleBasePath: define.Ctx.BasePath =
-  define.Ctx.BasePath(super.millModuleBasePath.value / "modules")
+implicit def millModuleBasePath: ModuleCtx.Nested =
+  ModuleCtx.makeRoot(
+    implicitly,
+    implicitly,
+    BuildCtx.workspaceRoot / "modules",
+    Segments(),
+    false,
+    implicitly
+  )
 
 object util extends Module {
   object shared extends SharedScalaSources
@@ -64,13 +71,13 @@ object paths extends Paths
 
 trait Paths extends CoursierPublishModule with CsMima with Shading {
   def artifactName = "coursier-paths"
-  def ivyDeps = Agg(
+  def mvnDeps = Seq(
     Deps.directories,
     Deps.isTerminal,
     Deps.jniUtils
   )
 
-  def shadedDependencies = Agg(
+  def shadedDependencies = Seq(
     Deps.directories
   )
   def validNamespaces = Seq(
@@ -93,9 +100,7 @@ trait Paths extends CoursierPublishModule with CsMima with Shading {
     val versions     = mimaPreviousVersions()
     val organization = pomSettings().organization
     val artifactId0  = artifactId()
-    Agg.from(
-      versions.map(version => ivy"$organization:$artifactId0:$version")
-    )
+    versions.map(version => mvn"$organization:$artifactId0:$version")
   }
 }
 
@@ -125,14 +130,14 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
   def windowsAnsiPsSources = Task {
     val jars = resolveDeps(
       Task.Anon {
-        Agg(Deps.windowsAnsiPs.exclude("*" -> "*"))
+        Seq(Deps.windowsAnsiPs.exclude("*" -> "*"))
           .map(bindDependency())
       },
       sources = true,
       artifactTypes = None
     )()
     jars.foreach { jar =>
-      mill.api.IO.unpackZip(jar.path, os.rel)
+      IO.unpackZip(jar.path, os.rel)
     }
     Seq(PathRef(Task.dest))
   }
@@ -161,7 +166,7 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
     proguard.runClasspath()
   }
   object test extends SbtTests with CsTests {
-    def ivyDeps = super.ivyDeps() ++ Seq(
+    def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.collectionCompat,
       Deps.java8Compat
     )
@@ -186,7 +191,7 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
 }
 
 object proguard extends JavaModule {
-  def ivyDeps = Agg(
+  def mvnDeps = Seq(
     Deps.proguard
   )
 }
@@ -225,7 +230,7 @@ object cli extends Cli {
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm(cliScalaVersion213Compat).test
     )
-    def ivyDeps = super.ivyDeps() ++ Agg(
+    def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.ujson
     )
   }
@@ -243,7 +248,7 @@ trait UtilJvm extends UtilJvmBase {
   def sources = Task {
     super.sources() ++ util.shared.sources()
   }
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoup
   )
 }
@@ -260,7 +265,7 @@ trait CoreJvm extends CoreJvmBase {
   def moduleDeps = super.moduleDeps ++ Seq(
     util.jvm()
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.concurrentReferenceHashMap,
     Deps.scalaXml
   )
@@ -269,7 +274,7 @@ trait CoreJvm extends CoreJvmBase {
     def sources = Task {
       super.sources() ++ core.shared.testSources()
     }
-    def ivyDeps = super.ivyDeps() ++ Agg(
+    def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.jol
     )
   }
@@ -281,7 +286,7 @@ trait CoreJs extends Core with CsScalaJsModule {
   def moduleDeps = super.moduleDeps ++ Seq(
     util.js()
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalaJsDom
   )
   def commitHash = `build-util`.commitHash
@@ -331,12 +336,12 @@ trait CacheJvm extends CacheJvmBase {
     paths,
     util.jvm()
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoniterCore, // required alongside scalaCliConfig, given we exclude its version of jsoniter-scala
     Deps.scalaCliConfig(scalaVersion()),
     Deps.windowsAnsi
   )
-  def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.jsoniterMacros,
     Deps.svm
   )
@@ -347,7 +352,7 @@ trait CacheJvm extends CacheJvmBase {
     def sources = Task {
       super.sources() ++ cache.shared.testSources()
     }
-    def ivyDeps = super.ivyDeps() ++ Agg(
+    def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.http4sBlazeServer,
       Deps.http4sDsl,
       Deps.logbackClassic,
@@ -355,11 +360,11 @@ trait CacheJvm extends CacheJvmBase {
       Deps.pprint,
       Deps.scalaAsync
     )
-    def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+    def compileMvnDeps = super.compileMvnDeps() ++ Seq(
       Deps.jsoniterMacros
     )
     def forkEnv = super.forkEnv() ++ Seq(
-      "COURSIER_CUSTOMPROTOCOL_BASE" -> Task.workspace.toString
+      "COURSIER_CUSTOMPROTOCOL_BASE" -> BuildCtx.workspaceRoot.toString
     )
   }
 }
@@ -371,7 +376,7 @@ trait CacheJs extends Cache with CsScalaJsModule {
     util.js()
   )
   def artifactName = "fetch-js"
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalaJsDom
   )
 }
@@ -380,7 +385,7 @@ trait ArchiveCache extends ArchiveCacheBase {
   def moduleDeps = Seq(
     cache.jvm()
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.plexusArchiver,
     Deps.plexusContainerDefault,
     Deps.tika,
@@ -388,12 +393,12 @@ trait ArchiveCache extends ArchiveCacheBase {
     Deps.zstdJni
   )
   object test extends CrossSbtTests with CsTests {
-    def ivyDeps = super.ivyDeps() ++ Agg(
+    def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.osLib,
       Deps.pprint,
       Deps.scalaAsync
     )
-    def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+    def compileMvnDeps = super.compileMvnDeps() ++ Seq(
       Deps.jsoniterMacros
     )
   }
@@ -411,19 +416,17 @@ trait ArchiveCache extends ArchiveCacheBase {
     val versions     = mimaPreviousVersions()
     val organization = pomSettings().organization
     val artifactId0  = artifactId()
-    Agg.from(
-      versions.map(version => ivy"$organization:$artifactId0:$version")
-    )
+    versions.map(version => mvn"$organization:$artifactId0:$version")
   }
 }
 
 trait Launcher extends LauncherBase {
-  def ivyDeps = super.ivyDeps() ++ Seq(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.collectionCompat,
     Deps.noCrcZis,
     Deps.pythonNativeLibs
   )
-  def compileIvyDeps = Agg(
+  def compileMvnDeps = Seq(
     Deps.dataClass
   )
   def commitHash = `build-util`.commitHash
@@ -440,15 +443,15 @@ trait Env extends CrossSbtModule with CsModule
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
   def artifactName = "coursier-env"
-  def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.dataClass
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.collectionCompat,
     Deps.jniUtils
   )
   object test extends CrossSbtTests with CsTests {
-    def ivyDeps = super.ivyDeps() ++ Agg(
+    def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.jimfs
     )
   }
@@ -464,7 +467,7 @@ trait LauncherNative04 extends CsModule
   def compileModuleDeps = Seq(
     launcherModule(cliScalaVersion213Compat)
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalaNativeTools040
   )
 }
@@ -539,7 +542,7 @@ trait TestsJvm extends TestsModule { self =>
     core.jvm(),
     `sbt-maven-repository`.jvm()
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoup
   )
   object test extends CrossSbtTests with CsTests with JvmTests {
@@ -604,7 +607,7 @@ trait ProxyTests extends CrossSbtModule with CsModule {
   def moduleDeps = super.moduleDeps ++ Seq(
     `proxy-setup`
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.dockerClient,
     Deps.scalaAsync,
     Deps.slf4JNop
@@ -629,7 +632,7 @@ trait ScalazJvm extends Scalaz with CsMima {
   def moduleDeps = Seq(
     cache.jvm()
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalazConcurrent
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
@@ -646,7 +649,7 @@ trait ScalazJs extends Scalaz with CsScalaJsModule {
   def moduleDeps = Seq(
     cache.js()
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalazCore
   )
 }
@@ -686,10 +689,10 @@ trait Install extends CrossSbtModule with CsModule
     jvm(),
     launcherModule()
   )
-  def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.dataClass
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.argonautShapeless,
     Deps.catsCore
   )
@@ -698,7 +701,7 @@ trait Install extends CrossSbtModule with CsModule
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.jvm()
     )
-    def ivyDeps = super.ivyDeps() ++ Agg(
+    def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.pprint
     )
   }
@@ -717,12 +720,12 @@ trait Jvm extends CrossSbtModule with CsModule
     env(),
     exec
   )
-  def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.dataClass,
     Deps.jsoniterMacros,
     Deps.svm
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoniterCore
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
@@ -730,7 +733,7 @@ trait Jvm extends CrossSbtModule with CsModule
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.jvm()
     )
-    def ivyDeps = super.ivyDeps() ++ Seq(
+    def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.osLib,
       Deps.pprint,
       Deps.scalaAsync
@@ -743,10 +746,10 @@ trait Jvm extends CrossSbtModule with CsModule
 
 trait Exec extends JavaModule with CoursierPublishModule with CsMima {
   def artifactName = "coursier-exec"
-  def ivyDeps = Agg(
+  def mvnDeps = Seq(
     Deps.jna
   )
-  def compileIvyDeps = Agg(
+  def compileMvnDeps = Seq(
     Deps.svm
   )
 
@@ -763,9 +766,7 @@ trait Exec extends JavaModule with CoursierPublishModule with CsMima {
     val versions     = mimaPreviousVersions()
     val organization = pomSettings().organization
     val artifactId0  = artifactId()
-    Agg.from(
-      versions.map(version => ivy"$organization:$artifactId0:$version")
-    )
+    versions.map(version => mvn"$organization:$artifactId0:$version")
   }
 }
 
@@ -777,10 +778,10 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
     `archive-cache`(cliScalaVersion213Compat),
     exec
   )
-  def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.jsoniterMacros
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsch,
     Deps.jsoniterCore,
     Deps.osLib,
@@ -797,15 +798,13 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
     val versions     = mimaPreviousVersions()
     val organization = pomSettings().organization
     val artifactId0  = artifactId()
-    Agg.from(
-      versions.map(version => ivy"$organization:$artifactId0:$version")
-    )
+    versions.map(version => mvn"$organization:$artifactId0:$version")
   }
   object test extends CrossSbtTests with CsTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       cache.jvm(cliScalaVersion213Compat).test
     )
-    def ivyDeps = super.ivyDeps() ++ Seq(
+    def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.osLib,
       Deps.pprint
     )
@@ -825,7 +824,7 @@ trait Cli extends CsModule
     launcherModule(cliScalaVersion213Compat)
   )
   def artifactName = "coursier-cli"
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.caseApp,
     Deps.catsFree213,
     Deps.classPathUtil,
@@ -835,7 +834,7 @@ trait Cli extends CsModule
     Deps.pprint,
     Deps.slf4JNop
   )
-  def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.jsoniterMacros,
     Deps.svm
   )
@@ -876,7 +875,7 @@ trait Cli extends CsModule
       jvmArgs = Nil,
       env = Map.empty,
       mainArgs = args().value,
-      cwd = Task.workspace,
+      cwd = BuildCtx.workspaceRoot,
       stdin = if (isCI) os.Inherit else os.InheritRaw,
       stdout = if (isCI) os.Inherit else os.InheritRaw,
       stderr = if (isCI) os.Inherit else os.InheritRaw,
@@ -894,10 +893,10 @@ trait CliTests extends CsModule
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion213Compat)
   )
-  def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.jsoniterMacros
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.caseApp,
     Deps.dockerClient,
     Deps.osLib,
@@ -910,7 +909,16 @@ trait CliTests extends CsModule
   )
   def docJar = Task {
     // dottydoc currently crashes when generating this module's doc jar
-    emptyZip()
+
+    import java.io._
+    import java.util.zip._
+    val dest = Task.dest / "empty.zip"
+    val baos = new ByteArrayOutputStream
+    val zos  = new ZipOutputStream(baos)
+    zos.finish()
+    zos.close()
+    os.write(dest, baos.toByteArray)
+    PathRef(dest)
   }
   object test extends SbtTests with CsTests {
     def forkArgs = {
@@ -924,7 +932,7 @@ trait CliTests extends CsModule
           "-Dcoursier-test-launcher-accepts-J=true",
           "-Dcoursier-test-is-native=false",
           "-Dcoursier-test-is-native-static=false",
-          s"-Dcoursier.test.auth-proxy-data-dir=${Task.workspace / "project/authenticated-proxy"}",
+          s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
           s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
           s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
           s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
@@ -932,9 +940,8 @@ trait CliTests extends CsModule
       }
     }
   }
-  trait NativeTests extends SbtTests with CsTests with Bloop.Module {
+  trait NativeTests extends SbtTests with CsTests {
     def cliLauncher: T[PathRef]
-    def skipBloop = true
     def sources = Task {
       super.sources() ++ self.test.sources()
     }
@@ -950,7 +957,7 @@ trait CliTests extends CsModule
           "-Dcoursier-test-launcher-accepts-J=false",
           "-Dcoursier-test-is-native=true",
           s"-Dcoursier-test-is-native-static=$isStatic",
-          s"-Dcoursier.test.auth-proxy-data-dir=${Task.workspace / "project/authenticated-proxy"}",
+          s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
           s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
           s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
           s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
@@ -983,7 +990,7 @@ trait Web extends CsScalaJsModule {
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.js(webScalaVersion)
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalaJsReact
   )
   def moduleKind = mill.scalajslib.api.ModuleKind.CommonJSModule
@@ -1004,7 +1011,7 @@ trait Web extends CsScalaJsModule {
 
 object `redirecting-server` extends CsModule {
   def scalaVersion = ScalaVersions.scala213
-  def ivyDeps = Agg(
+  def mvnDeps = Seq(
     Deps.http4sBlazeServer,
     Deps.http4sDsl,
     Deps.http4sServer,
@@ -1056,20 +1063,20 @@ def copyTo(task: mill.main.Tasks[PathRef], dest: String) = Task.Command {
   if (task.value.length > 1)
     sys.error("Expected a single task")
   val ref   = task.value.head()
-  val dest1 = os.Path(dest, Task.workspace)
+  val dest1 = os.Path(dest, BuildCtx.workspaceRoot)
   os.makeDir.all(dest1 / os.up)
   os.copy.over(ref.path, dest1)
 }
 def copyLauncher(directory: String = "artifacts") = Task.Command {
   val nativeLauncher = cli.nativeImage().path
-  GitHubReleaseAssets.copyLauncher(nativeLauncher, os.Path(directory, Task.workspace))
+  GitHubReleaseAssets.copyLauncher(nativeLauncher, os.Path(directory, BuildCtx.workspaceRoot))
 }
 
 def copyCompatLauncher(directory: String = "artifacts") = Task.Command {
   val nativeLauncher = cli.compatNativeImage().path
   GitHubReleaseAssets.copyLauncher(
     nativeLauncher,
-    os.Path(directory, Task.workspace),
+    os.Path(directory, BuildCtx.workspaceRoot),
     suffix = "-compat"
   )
 }
@@ -1078,7 +1085,7 @@ def copyStaticLauncher(directory: String = "artifacts") = Task.Command {
   val nativeLauncher = cli.`static-image`.nativeImage().path
   GitHubReleaseAssets.copyLauncher(
     nativeLauncher,
-    os.Path(directory, Task.workspace),
+    os.Path(directory, BuildCtx.workspaceRoot),
     suffix = "-static"
   )
 }
@@ -1087,7 +1094,7 @@ def copyMostlyStaticLauncher(directory: String = "artifacts") = Task.Command {
   val nativeLauncher = cli.`mostly-static-image`.nativeImage().path
   GitHubReleaseAssets.copyLauncher(
     nativeLauncher,
-    os.Path(directory, Task.workspace),
+    os.Path(directory, BuildCtx.workspaceRoot),
     suffix = "-mostly-static"
   )
 }
@@ -1096,14 +1103,14 @@ def copyContainerLauncher(directory: String = "artifacts") = Task.Command {
   val nativeLauncher = cli.containerImage().path
   GitHubReleaseAssets.copyLauncher(
     nativeLauncher,
-    os.Path(directory, Task.workspace),
+    os.Path(directory, BuildCtx.workspaceRoot),
     suffix = "-container"
   )
 }
 
 def uploadLaunchers(directory: String = "artifacts") = Task.Command {
   val version = cli.publishVersion()
-  GitHubReleaseAssets.uploadLaunchers(version, os.Path(directory, Task.workspace))
+  GitHubReleaseAssets.uploadLaunchers(version, os.Path(directory, BuildCtx.workspaceRoot))
 }
 
 def bootstrapLauncher(
@@ -1122,7 +1129,7 @@ def bootstrapLauncher(
       cliScalaVersion
     ) ++ extraArgs)
   })()
-  os.Path(dest, Task.workspace)
+  os.Path(dest, BuildCtx.workspaceRoot)
 }
 
 def assemblyLauncher(
@@ -1144,7 +1151,7 @@ def assemblyLauncher(
       ) ++ extraArgs
     )
   })()
-  os.Path(dest, Task.workspace)
+  os.Path(dest, BuildCtx.workspaceRoot)
 }
 
 def waitForSync(version: String = CoursierPublishModule.buildVersion) = Task.Command {
@@ -1164,7 +1171,7 @@ def copyJarLaunchers(
 ) = Task.Command {
   val bootstrap: os.Path = bootstrapLauncher(version = version)()
   val assembly: os.Path  = assemblyLauncher(version = version)()
-  val dir                = os.Path(directory, Task.workspace)
+  val dir                = os.Path(directory, BuildCtx.workspaceRoot)
   os.copy(
     bootstrap,
     dir / s"coursier$platformBootstrapExtension",
@@ -1191,9 +1198,10 @@ object doc extends Doc {
 
 def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command {
 
-  val rootDir0          = if (rootDir.isEmpty) Task.workspace else os.Path(rootDir, Task.workspace)
-  val docusaurusDir     = rootDir0 / "doc" / "website"
-  val versionedDocsRepo = "coursier/versioned-docs"
+  val rootDir0 =
+    if (rootDir.isEmpty) BuildCtx.workspaceRoot else os.Path(rootDir, BuildCtx.workspaceRoot)
+  val docusaurusDir       = rootDir0 / "doc" / "website"
+  val versionedDocsRepo   = "coursier/versioned-docs"
   val versionedDocsBranch = "master"
 
   val versionOpt =
@@ -1239,10 +1247,10 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command 
   )
 }
 
-def dockerTests(): Command[Unit] = {
+def dockerTests(): Task.Command[Unit] = {
   val cmd = docker.valuesToModules
     .get(List(ScalaVersions.scala3))
-    .map(_.test.test())
+    .map(_.test.testForked())
     .getOrElse {
       sys.error("docker test command not found")
     }
@@ -1258,22 +1266,22 @@ def jvmTests(scalaVersion: String = ScalaVersions.scala213) = {
 
   def crossTests(sv: String) = Seq(
     // format: off
-    core.jvm           .valuesToModules.get(List(sv)).map(_.test.test()),
-    cache.jvm          .valuesToModules.get(List(sv)).map(_.test.test()),
-    env                .valuesToModules.get(List(sv)).map(_.test.test()),
-    coursier.jvm       .valuesToModules.get(List(sv)).map(_.test.test()),
-    tests.jvm          .valuesToModules.get(List(sv)).map(_.test.test()),
-    interop.scalaz.jvm .valuesToModules.get(List(sv)).map(_.test.test()),
-    interop.cats.jvm   .valuesToModules.get(List(sv)).map(_.test.test()),
-    install            .valuesToModules.get(List(sv)).map(_.test.test()),
-    jvm                .valuesToModules.get(List(sv)).map(_.test.test())
+    core.jvm           .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    cache.jvm          .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    env                .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    coursier.jvm       .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    tests.jvm          .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    interop.scalaz.jvm .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    interop.cats.jvm   .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    install            .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    jvm                .valuesToModules.get(List(sv)).map(_.test.testForked())
     // format: on
   ).flatten
 
   def crossIts(sv: String) = Seq(
     // format: off
-    coursier.jvm .valuesToModules.get(List(sv)).map(_.it.test()),
-    tests.jvm    .valuesToModules.get(List(sv)).map(_.it.test())
+    coursier.jvm .valuesToModules.get(List(sv)).map(_.it.testForked()),
+    tests.jvm    .valuesToModules.get(List(sv)).map(_.it.testForked())
     // format: on
   ).flatten
 
@@ -1284,10 +1292,10 @@ def jvmTests(scalaVersion: String = ScalaVersions.scala213) = {
 
   val nonCrossTests = Seq(
     // format: off
-    `bootstrap-launcher` .test .test(),
-    `bootstrap-launcher` .it   .test(),
-    cli                  .test .test(),
-    `cli-tests`          .test .test()
+    `bootstrap-launcher` .test .testForked(),
+    `bootstrap-launcher` .it   .testForked(),
+    cli                  .test .testForked(),
+    `cli-tests`          .test .testForked()
     // format: on
   )
 
@@ -1319,9 +1327,9 @@ def jsTests(scalaVersion: String = "*") = {
 
   def crossTests(sv: String) = Seq(
     // format: off
-    core.js            .valuesToModules.get(List(sv)).map(_.test.test()),
-    coursier.js        .valuesToModules.get(List(sv)).map(_.test.test()),
-    tests.js           .valuesToModules.get(List(sv)).map(_.test.test())
+    core.js            .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    coursier.js        .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    tests.js           .valuesToModules.get(List(sv)).map(_.test.testForked())
     // format: on
   ).flatten
 
@@ -1337,23 +1345,23 @@ def jsTests(scalaVersion: String = "*") = {
 }
 
 def nativeTests() = Task.Command {
-  `cli-tests`.`native-tests`.test()()
+  `cli-tests`.`native-tests`.testForked()()
 }
 
 def nativeCompatTests() = Task.Command {
-  `cli-tests`.`native-compat-tests`.test()()
+  `cli-tests`.`native-compat-tests`.testForked()()
 }
 
 def nativeStaticTests() = Task.Command {
-  `cli-tests`.`native-static-tests`.test()()
+  `cli-tests`.`native-static-tests`.testForked()()
 }
 
 def nativeMostlyStaticTests() = Task.Command {
-  `cli-tests`.`native-mostly-static-tests`.test()()
+  `cli-tests`.`native-mostly-static-tests`.testForked()()
 }
 
 def nativeContainerTests() = Task.Command {
-  `cli-tests`.`native-container-tests`.test()()
+  `cli-tests`.`native-container-tests`.testForked()()
 }
 
 def cliNativeImageLauncher() = Task.Command {
@@ -1373,9 +1381,9 @@ object ci extends Module {
       "--ttl",
       "0"
     )
-    val baseJavaHome = os.Path(command.!!.trim, Task.workspace)
+    val baseJavaHome = os.Path(command.!!.trim, BuildCtx.workspaceRoot)
     System.err.println(s"Initial Java home $baseJavaHome")
-    val destJavaHome = os.Path(dest, Task.workspace)
+    val destJavaHome = os.Path(dest, BuildCtx.workspaceRoot)
     os.copy(baseJavaHome, destJavaHome, createFolders = true)
     System.err.println(s"New Java home $destJavaHome")
     destJavaHome
@@ -1409,7 +1417,7 @@ object buildWorkers extends Module {
       "--port",
       server.port.toString
     ).spawn(
-      cwd = Task.workspace,
+      cwd = BuildCtx.workspaceRoot,
       stdin = os.Pipe,
       stdout = os.Inherit,
       stderr = os.Inherit
@@ -1449,7 +1457,7 @@ object docs extends ScalaModule {
     coursier.jvm(sv),
     `archive-cache`(sv)
   )
-  def ivyDeps = Agg(
+  def mvnDeps = Seq(
     Deps.mdoc
   )
   def mainClass = Some("mdoc.Main")
@@ -1495,7 +1503,7 @@ object docs extends ScalaModule {
   }
   def mkdocsWatchScript: T[PathRef] = Task {
     mdoc()()
-    val docsDir = Task.workspace / "docs"
+    val docsDir = BuildCtx.workspaceRoot / "docs"
 
     def quoteArg(arg: String): String =
       "\"" + arg.replace("\"", "\\\"") + "\""
@@ -1537,7 +1545,7 @@ object docs extends ScalaModule {
   }
   def mkdocsServe() = Task.Command[Unit] {
     mdoc()()
-    val docsDir = Task.workspace / "docs"
+    val docsDir = BuildCtx.workspaceRoot / "docs"
     val serveProc = os.proc("mkdocs", "serve", mkdocsConfigArgs())
       .spawn(cwd = docsDir, stdin = os.Inherit, stdout = os.Inherit)
     val mdocProc = os.proc(

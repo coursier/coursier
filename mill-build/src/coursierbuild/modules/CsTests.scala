@@ -4,7 +4,7 @@ import coursierbuild.Deps.Deps
 import mill._, mill.scalalib._
 
 trait CsTests extends TestModule {
-  def ivyDeps = super.ivyDeps() ++ Seq(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.pprint,
     Deps.utest
   )

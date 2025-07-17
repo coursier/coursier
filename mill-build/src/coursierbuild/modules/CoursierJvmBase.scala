@@ -20,7 +20,7 @@ trait CoursierJvmBase extends Coursier with CsMima with Shading {
       ProblemFilter.exclude[Problem]("coursier.internal.shaded.*")
     )
 
-  def shadedDependencies = Agg(
+  def shadedDependencies = Seq(
     Deps.fastParse,
     Deps.pprint
   )

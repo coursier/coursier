@@ -11,7 +11,7 @@ trait UtilJvmBase extends Util with CsMima with Shading {
       Seq(
         ProblemFilter.exclude[Problem]("coursier.util.shaded.*")
       )
-  def shadedDependencies = Agg(
+  def shadedDependencies = Seq(
     Deps.jsoup
   )
   def validNamespaces = Seq("coursier")

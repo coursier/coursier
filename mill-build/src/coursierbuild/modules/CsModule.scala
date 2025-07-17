@@ -1,7 +1,7 @@
 package coursierbuild.modules
 
 import mill._, mill.scalalib._
-import mill.scalalib.api.JvmWorkerUtil
+import mill.javalib.api.JvmWorkerUtil
 
 trait CsModule extends SbtModule with CsScalaModule with CoursierJavaModule {
   def sources = Task {

@@ -47,7 +47,7 @@ trait CoreJvmBase extends Core with CsMima with Shading {
       ProblemFilter.exclude[Problem]("coursier.core.shaded.*")
     )
 
-  def shadedDependencies = Agg(
+  def shadedDependencies = Seq(
     Deps.fastParse,
     Deps.jsoniterCore,
     Deps.pprint

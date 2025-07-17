@@ -7,11 +7,11 @@ import com.github.lolgab.mill.mima._
 
 trait Core extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-core"
-  def compileIvyDeps = super.compileIvyDeps() ++ Agg(
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.dataClass,
     Deps.jsoniterMacros
   )
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.fastParse,
     Deps.jsoniterCore,
     Deps.versions

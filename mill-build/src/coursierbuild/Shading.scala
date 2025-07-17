@@ -17,7 +17,7 @@ import scala.util.Using
 trait Shading extends JavaModule with PublishModule {
 
   // TODO Change that to shadedModules
-  def shadedDependencies: T[Agg[Dep]]
+  def shadedDependencies: T[Seq[Dep]]
   def validNamespaces: T[Seq[String]]
   def shadeRenames: T[Seq[(String, String)]]
 
@@ -52,7 +52,7 @@ trait Shading extends JavaModule with PublishModule {
     val shadedDepSeq = shadedDependencies()
 
     val allJars = load(resolution)
-    val subset = ivyDeps().map(depToDependency).toSeq.filterNot(
+    val subset = mvnDeps().map(depToDependency).toSeq.filterNot(
       shadedDepSeq.iterator.map(depToDependency).toSet
     )
     val retainedJars = load {
@@ -201,6 +201,6 @@ trait Shading extends JavaModule with PublishModule {
     val convert = resolvePublishDependency().apply(_)
     val orig    = super.publishXmlDeps()
     val shaded  = shadedDependencies().iterator.map(convert).toSet
-    Agg(orig.iterator.toSeq.filterNot(shaded): _*)
+    Seq(orig.iterator.toSeq.filterNot(shaded) *)
   }
 }

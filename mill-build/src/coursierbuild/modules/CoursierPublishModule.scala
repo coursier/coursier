@@ -2,7 +2,7 @@ package coursierbuild.modules
 
 import mill._, mill.scalalib._
 
-trait CoursierPublishModule extends PublishModule with PublishLocalNoFluff
+trait CoursierPublishModule extends PublishModule
     with CoursierJavaModule {
   import mill.scalalib.publish._
   def pomSettings = PomSettings(
