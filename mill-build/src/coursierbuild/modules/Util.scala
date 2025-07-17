@@ -5,10 +5,10 @@ import mill._
 
 trait Util extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-util"
-  def ivyDeps = Agg(
+  def mvnDeps = Seq(
     Deps.collectionCompat
   )
-  def compileIvyDeps = Agg(
+  def compileMvnDeps = Seq(
     Deps.dataClass
   )
 }
