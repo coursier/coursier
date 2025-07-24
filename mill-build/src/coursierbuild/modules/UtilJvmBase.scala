@@ -6,6 +6,9 @@ import mill._
 import com.github.lolgab.mill.mima._
 
 trait UtilJvmBase extends Util with CsMima with Shading {
+
+  def manifest = super[Shading].manifest
+
   def mimaBinaryIssueFilters =
     super.mimaBinaryIssueFilters() ++
       Seq(

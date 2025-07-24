@@ -1,4 +1,4 @@
-//| mill-version: 1.0.0-22-ce6899
+//| mill-version: 1.0.1
 
 import coursierbuild.Deps.{Deps, ScalaVersions, scalaCliVersion}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
@@ -8,27 +8,35 @@ import coursierbuild.modules._
 
 import _root_.coursier.getcs.GetCs
 
-import mill._
+import mill.*
 import mill.api.*
 import mill.scalalib._
 import mill.scalajslib._
 
 import java.io.File
+import java.util.zip.ZipFile
 
 import scala.concurrent.duration._
-import scala.util.Properties
+import scala.jdk.CollectionConverters.*
+import scala.util.{Properties, Using}
 
 def mavenOrg = "io.get-coursier"
 
+lazy val millDiscover0         = Discover[this.type]
+override lazy val millDiscover = millDiscover0
+
 // Tell mill modules are under modules/
 implicit def millModuleBasePath: ModuleCtx.Nested =
-  ModuleCtx.makeRoot(
-    implicitly,
-    implicitly,
-    BuildCtx.workspaceRoot / "modules",
-    Segments(),
-    false,
-    implicitly
+  MillCsHelper.moduleCtxWithDiscover(
+    ModuleCtx.makeRoot(
+      implicitly,
+      implicitly,
+      BuildCtx.workspaceRoot / "modules",
+      Segments(),
+      false,
+      implicitly
+    ),
+    millDiscover0
   )
 
 object util extends Module {
@@ -88,7 +96,7 @@ trait Paths extends CoursierPublishModule with CsMima with Shading {
   )
 
   def mimaPreviousVersions = Task {
-    import _root_.coursier.core.Version
+    import _root_.coursier.version.Version
     val cutOff = Version("2.1.25")
     super.mimaPreviousVersions()
       .map(Version(_))
@@ -128,17 +136,17 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
     Seq(PathRef(dest))
   }
   def windowsAnsiPsSources = Task {
-    val jars = resolveDeps(
-      Task.Anon {
-        Seq(Deps.windowsAnsiPs.exclude("*" -> "*"))
-          .map(bindDependency())
-      },
-      sources = true,
-      artifactTypes = None
-    )()
-    jars.foreach { jar =>
-      IO.unpackZip(jar.path, os.rel)
-    }
+    val jars = defaultResolver().classpath(
+      Seq(Deps.windowsAnsiPs.exclude("*" -> "*")),
+      sources = true
+    )
+    for (jar <- jars)
+      Using.resource(new ZipFile(jar.path.toIO)) { zf =>
+        for (ent <- zf.entries().asScala if !ent.getName.endsWith("/")) {
+          val b = zf.getInputStream(ent).readAllBytes()
+          os.write(Task.dest / ent.getName.split("/"), b, createFolders = true)
+        }
+      }
     Seq(PathRef(Task.dest))
   }
   def sources = Task {
@@ -179,7 +187,7 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
     def moduleDeps = Seq(
       self.test
     )
-    def forkArgs = Task.Input {
+    def forkArgs = Task {
       val testRepoServer0 = buildWorkers.testRepoServer()
       super.forkArgs() ++ Seq(
         s"-Dtest.repository=${testRepoServer0.url}",
@@ -258,7 +266,7 @@ trait UtilJs extends CsScalaJsModule with Util {
   }
 }
 
-trait CoreJvm extends CoreJvmBase {
+trait CoreJvm extends Core with CoreJvmBase with Shading {
   def sources = Task {
     super.sources() ++ core.shared.sources()
   }
@@ -290,10 +298,13 @@ trait CoreJs extends Core with CsScalaJsModule {
     Deps.scalaJsDom
   )
   def commitHash = `build-util`.commitHash
-  object test extends SbtTests with ScalaJSTests with JsTests with CsTests {
+  object test extends SbtTests with ScalaJSTests with CsResourcesTests with CsTests {
     def testDataDir = tests.shared.testDataDir
     def sources = Task {
       super.sources() ++ core.shared.testSources()
+    }
+    def jsEnvConfig = Task {
+      JsTests.jsEnvConfig(super.jsEnvConfig(), forkEnv())
     }
   }
 }
@@ -318,7 +329,7 @@ trait SbtMavenRepositoryJs extends SbtMavenRepository
 
 trait CacheUtil extends CoursierPublishModule with CsMima {
   def mimaPreviousVersions = Task {
-    import _root_.coursier.core.Version
+    import _root_.coursier.version.Version
     val cutOff = Version("2.1.15")
     super.mimaPreviousVersions()
       .map(Version(_))
@@ -404,7 +415,7 @@ trait ArchiveCache extends ArchiveCacheBase {
   }
 
   def mimaPreviousVersions = Task {
-    import _root_.coursier.core.Version
+    import _root_.coursier.version.Version
     val cutOff = Version("2.1.25")
     super.mimaPreviousVersions()
       .map(Version(_))
@@ -482,8 +493,7 @@ trait CoursierJvm extends CoursierJvmBase { self =>
     `proxy-setup`
   )
   // Put CoursierTests right after TestModule, and see what happens
-  object test extends TestModule with CrossSbtTests with CoursierTests with CsTests
-      with JvmTests {
+  object test extends CrossSbtTests with CoursierTests {
     def testDataDir = tests.shared.testDataDir
     def sources = Task {
       super.sources() ++ coursier.shared.testSources()
@@ -492,8 +502,7 @@ trait CoursierJvm extends CoursierJvmBase { self =>
       `test-cache`.jvm()
     )
   }
-  object it extends TestModule with CrossSbtTests with CoursierTests with CsTests
-      with JvmTests {
+  object it extends CrossSbtTests with CoursierTests {
     def testDataDir = tests.shared.testDataDir
     def sources = Task.Sources(
       os.sub / "src/it/scala",
@@ -502,7 +511,7 @@ trait CoursierJvm extends CoursierJvmBase { self =>
     def moduleDeps = super.moduleDeps ++ Seq(
       self.test
     )
-    def forkArgs = Task.Input {
+    def forkArgs = Task {
       val testRepoServer0 = buildWorkers.testRepoServer()
       super.forkArgs() ++ Seq(
         s"-Dtest.repository=${testRepoServer0.url}",
@@ -520,7 +529,7 @@ trait CoursierJs extends Coursier with CsScalaJsModule {
     core.js(),
     cache.js()
   )
-  object test extends SbtTests with ScalaJSTests with CsTests with JsTests with CoursierTests {
+  object test extends SbtTests with ScalaJSTests with CsResourcesTests with CoursierTests {
     def testDataDir = tests.shared.testDataDir
     def sources = Task {
       super.sources() ++ coursier.shared.testSources()
@@ -528,6 +537,9 @@ trait CoursierJs extends Coursier with CsScalaJsModule {
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.js()
     )
+    def jsEnvConfig = Task {
+      JsTests.jsEnvConfig(super.jsEnvConfig(), forkEnv())
+    }
   }
 }
 
@@ -545,7 +557,7 @@ trait TestsJvm extends TestsModule { self =>
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoup
   )
-  object test extends CrossSbtTests with CsTests with JvmTests {
+  object test extends CrossSbtTests with CsTests {
     def testDataDir = tests.shared.testDataDir
     def sources = Task {
       super.sources() ++ tests.shared.testSources()
@@ -555,14 +567,14 @@ trait TestsJvm extends TestsModule { self =>
       `test-cache`.jvm()
     )
   }
-  object it extends CrossSbtTests with CsTests with JvmTests
+  object it extends CrossSbtTests with CsTests
       with Workers.UsesRedirectingServer {
     def testDataDir = tests.shared.testDataDir
     def redirectingServerCp =
       `redirecting-server`.runClasspath()
     def redirectingServerMainClass =
       `redirecting-server`.mainClass().getOrElse(sys.error("no main class"))
-    def forkArgs = Task.Input {
+    def forkArgs = Task {
       val redirectingServer0 = redirectingServer()
       val testRepoServer0    = buildWorkers.testRepoServer()
       super.forkArgs() ++ Seq(
@@ -591,7 +603,7 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
     `sbt-maven-repository`.js()
   )
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
-  object test extends SbtTests with ScalaJSTests with CsTests with JsTests {
+  object test extends SbtTests with ScalaJSTests with CsTests with CsResourcesTests {
     def testDataDir = tests.shared.testDataDir
     def sources = Task {
       super.sources() ++ tests.shared.testSources()
@@ -600,6 +612,9 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
       coursier.js(),
       `test-cache`.js()
     )
+    def jsEnvConfig = Task {
+      JsTests.jsEnvConfig(super.jsEnvConfig(), forkEnv())
+    }
   }
 }
 
@@ -620,7 +635,9 @@ trait ProxyTests extends CrossSbtModule with CsModule {
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
-    def testFramework = "coursier.tests.CustomFramework"
+    def testFramework = Task {
+      "coursier.tests.CustomFramework"
+    }
   }
   // sharedTestResources
 }
@@ -754,7 +771,7 @@ trait Exec extends JavaModule with CoursierPublishModule with CsMima {
   )
 
   def mimaPreviousVersions = Task {
-    import _root_.coursier.core.Version
+    import _root_.coursier.version.Version
     val cutOff = Version("2.1.25")
     super.mimaPreviousVersions()
       .map(Version(_))
@@ -942,9 +959,6 @@ trait CliTests extends CsModule
   }
   trait NativeTests extends SbtTests with CsTests {
     def cliLauncher: T[PathRef]
-    def sources = Task {
-      super.sources() ++ self.test.sources()
-    }
     def isStatic: Boolean = false
     def forkArgs = {
       val launcherTask = cliLauncher.map(_.path)
@@ -1059,7 +1073,7 @@ def simpleNative04CliTest() = Task.Command {
   assert(res.out.text() == "foo a")
 }
 
-def copyTo(task: mill.main.Tasks[PathRef], dest: String) = Task.Command {
+def copyTo(task: mill.util.Tasks[PathRef], dest: String) = Task.Command {
   if (task.value.length > 1)
     sys.error("Expected a single task")
   val ref   = task.value.head()
@@ -1469,7 +1483,7 @@ object docs extends ScalaModule {
   def mkdocsOutput = Task.Source(os.sub / "site")
 
   def mdocArgs = Task.Anon {
-    define.Args(
+    Args(
       "--in",
       mdocInput().path,
       "--out",
@@ -1481,7 +1495,7 @@ object docs extends ScalaModule {
     )
   }
   def mdocWatchArgs = Task.Anon {
-    new define.Args(
+    new Args(
       mdocArgs().value :+ "--watch"
     )
   }
@@ -1573,14 +1587,14 @@ object docs extends ScalaModule {
   def mkdocsBuild() = Task.Command[PathRef] {
     mdoc()()
     os.proc("mkdocs", "build", mkdocsConfigArgs(), mkdocsSiteDirArgs())
-      .call(cwd = millModuleBasePath.value, stdin = os.Inherit, stdout = os.Inherit)
+      .call(cwd = BuildCtx.workspaceRoot / "docs", stdin = os.Inherit, stdout = os.Inherit)
 
     site()
   }
   def mkdocsGhDeploy() = Task.Command[Unit] {
     mdoc()()
     os.proc("mkdocs", "gh-deploy", mkdocsConfigArgs(), mkdocsSiteDirArgs())
-      .call(cwd = millModuleBasePath.value, stdin = os.Inherit, stdout = os.Inherit)
+      .call(cwd = BuildCtx.workspaceRoot / "docs", stdin = os.Inherit, stdout = os.Inherit)
 
     ()
   }
