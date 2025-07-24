@@ -27,7 +27,7 @@ override lazy val millDiscover = millDiscover0
 
 // Tell mill modules are under modules/
 implicit def millModuleBasePath: ModuleCtx.Nested =
-  MillCsHelper.moduleCtxWithDiscover(
+  MillCsHelper.moduleCtxWithDiscoverAndEnclosingModule(
     ModuleCtx.makeRoot(
       implicitly,
       implicitly,
