@@ -4,6 +4,6 @@ import mill.*
 import mill.api.*
 
 object MillCsHelper {
-  def moduleCtxWithDiscover(ctx: ModuleCtx, discover: Discover): ModuleCtx =
-    ctx.withDiscover(discover)
+  def moduleCtxWithDiscover(ctx: ModuleCtx, discover: Discover, enclosingModule: ModuleCtx.Wrapper): ModuleCtx =
+    ctx.withDiscover(discover).withEnclosingModule(enclosingModule)
 }

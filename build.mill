@@ -36,7 +36,8 @@ implicit def millModuleBasePath: ModuleCtx.Nested =
       false,
       implicitly
     ),
-    millDiscover0
+    millDiscover0,
+    this
   )
 
 object util extends Module {
