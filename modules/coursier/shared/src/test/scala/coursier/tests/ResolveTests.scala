@@ -1933,7 +1933,7 @@ object ResolveTests extends TestSuite {
           // protobuf-java should stay on 3.7.1
           check(
             dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8",
-            dep"com.lihaoyi:pprint_2.13:0.9.0"
+            dep"com.lihaoyi:pprint_2.13:0.9.1"
               .addBom(mod"com.google.cloud:libraries-bom", VersionConstraint("26.50.0"))
           )
         }
@@ -1943,7 +1943,7 @@ object ResolveTests extends TestSuite {
           check(
             dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
               .addBom(mod"com.google.cloud:libraries-bom", VersionConstraint("26.50.0")),
-            dep"com.lihaoyi:pprint_2.13:0.9.0"
+            dep"com.lihaoyi:pprint_2.13:0.9.1"
           )
         }
       }
