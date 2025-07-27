@@ -61,7 +61,7 @@ object Deps {
   def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.4.0"
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
   def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
-  def scodec                   = ivy"org.scodec::scodec-core:2.3.2"
+  def scodec                   = ivy"org.scodec::scodec-core:2.3.3"
   def shapeless                = ivy"com.chuusai::shapeless:2.3.12"
   def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.17"
   def svm                      = ivy"org.graalvm.nativeimage:svm:21.3.13"
