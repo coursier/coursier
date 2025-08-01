@@ -22,13 +22,13 @@ package object compatibility {
   }
 
   private val utf8Bom = "\ufeff"
-
+  private val utf8BomLength = utf8Bom.length
   private lazy val throwExceptions = java.lang.Boolean.getBoolean("coursier.core.throw-exceptions")
 
-  private def entityIdx(s: String, fromIdx: Int): Option[(Int, Int)] = {
+  private def entityIdx(s: String, fromIdx: Int): (Int, Int) = {
 
     var i     = fromIdx
-    var found = Option.empty[(Int, Int)]
+    var found: (Int, Int) = null
     while (found.isEmpty && i < s.length)
       if (s.charAt(i) == '&') {
         val start = i
@@ -45,7 +45,7 @@ package object compatibility {
           assert(!isAlpha)
           if (s.charAt(i) == ';') {
             i += 1
-            found = Some((start, i))
+            found = (start, i)
           }
         }
       }
@@ -63,24 +63,25 @@ package object compatibility {
     var i = 0
 
     var j = 0
-    while (j < s.length && j < utf8Bom.length && s.charAt(i) == utf8Bom.charAt(j))
+    val sLength = s.length
+    while (j < sLength && j < utf8BomLength && s.charAt(i) == utf8Bom.charAt(j))
       j += 1
 
-    if (j == utf8Bom.length)
+    if (j == utf8BomLength)
       i = j
 
-    var found = Option.empty[(Int, Int)]
+    var found: (Int, Int) = null
     while ({
       found = entityIdx(s, i)
-      found.nonEmpty
+      found != null
     }) {
-      val from = found.get._1
-      val to   = found.get._2
+      val from = found._1
+      val to   = found._2
 
       b.appendAll(a, i, from - i)
 
       val name        = s.substring(from, to)
-      val replacement = Entities.map.getOrElse(name, name)
+      val replacement = Entities.map(name)
       b.appendAll(replacement)
 
       i = to
