@@ -15,7 +15,7 @@ object UpdateBrewFormula {
     val dryRun = args match {
       case Array()                   => false
       case Array("-n" | "--dry-run") => true
-      case _ =>
+      case _                         =>
         System.err.println(s"Usage: UpdateBrewFormula (-n|--dry-run)?")
         sys.exit(1)
     }

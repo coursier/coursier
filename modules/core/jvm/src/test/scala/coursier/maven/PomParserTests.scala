@@ -118,7 +118,7 @@ object PomParserTests extends TestSuite {
       )
       assert(success.isRight)
       val licenseInfo = success.toOption.get.info.licenseInfo
-      val expected = Seq(
+      val expected    = Seq(
         Info.License(
           "Apache License, Version 2.0",
           Some("https://www.apache.org/licenses/LICENSE-2.0.txt"),
@@ -175,7 +175,7 @@ object PomParserTests extends TestSuite {
       )
       assert(success.isRight)
       val licenseInfo = success.toOption.get.info.licenseInfo
-      val expected = Seq(
+      val expected    = Seq(
         Info.License(
           "Apache License, Version 2.0",
           Some("https://www.apache.org/licenses/LICENSE-2.0.txt"),
@@ -212,7 +212,7 @@ object PomParserTests extends TestSuite {
       )
       assert(success.isRight)
       val licenseInfo = success.toOption.get.info.licenseInfo
-      val expected = Seq(
+      val expected    = Seq(
         Info.License(
           "Apache License, Version 2.0",
           Some("https://www.apache.org/licenses/LICENSE-2.0.txt"),

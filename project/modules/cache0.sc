@@ -4,7 +4,7 @@ import mill._
 import com.github.lolgab.mill.mima._
 
 trait Cache extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
-  def artifactName = "coursier-cache"
+  def artifactName   = "coursier-cache"
   def compileIvyDeps = Agg(
     Deps.dataClass
   )
@@ -50,7 +50,7 @@ trait CacheJvmBase extends Cache with CsMima {
 
   trait CacheJvmBaseTests extends CrossSbtTests {
     def sources = T.sources {
-      val dest = T.dest / "CustomLoaderClasspath.scala"
+      val dest            = T.dest / "CustomLoaderClasspath.scala"
       val customLoaderCp0 = customLoaderCp()
         .map("\"" + _.path.toNIO.toUri.toASCIIString + "\"")
         .mkString("Seq(", ", ", ")")
@@ -68,7 +68,7 @@ trait CacheJvmBase extends Cache with CsMima {
 
 trait ArchiveCacheBase extends CsModule with CsCrossJvmJsModule with CoursierPublishModule
     with CsMima {
-  def artifactName = "coursier-archive-cache"
+  def artifactName   = "coursier-archive-cache"
   def compileIvyDeps = Agg(
     Deps.dataClass
   )

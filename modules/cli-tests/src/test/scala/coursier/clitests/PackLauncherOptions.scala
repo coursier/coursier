@@ -10,7 +10,7 @@ trait PackLauncherOptions extends LauncherOptions {
       case Some("true")  => true
       case Some("false") => false
       case None          => true
-      case Some(other) =>
+      case Some(other)   =>
         System.err.println(s"Warning: unrecognized coursier-test-launcher-accepts-D value '$other'")
         true
     }
@@ -19,7 +19,7 @@ trait PackLauncherOptions extends LauncherOptions {
       case Some("true")  => true
       case Some("false") => false
       case None          => !Properties.isWin
-      case Some(other) =>
+      case Some(other)   =>
         System.err.println(s"Warning: unrecognized coursier-test-launcher-accepts-J value '$other'")
         true
     }
