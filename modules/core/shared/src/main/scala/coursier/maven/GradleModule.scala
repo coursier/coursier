@@ -34,7 +34,7 @@ import coursier.core.VariantPublication
 
     def variantDependencies(variant: GradleModule.Variant, constraints: Boolean = false) = {
       val variant0 = Variant.Attributes(variant.name)
-      val deps =
+      val deps     =
         if (constraints) variant.dependencyConstraints
         else variant.dependencies
       deps.map { dep =>
@@ -65,7 +65,7 @@ import coursier.core.VariantPublication
               val version = versionMap0.toSeq match {
                 case Seq(("requires" | "strictly", req)) => VersionConstraint(req)
                 case Seq()                               => VersionConstraint.empty
-                case _ =>
+                case _                                   =>
                   val mainDep =
                     s"${actualComponent.group}:${actualComponent.module}:${actualComponent.version}"
                   val subDep = s"${dep.group}:${dep.module}"
@@ -112,7 +112,7 @@ import coursier.core.VariantPublication
 
     val relocationDependencies = variants.flatMap { variant =>
       variant.`available-at` match {
-        case None => Nil
+        case None              => Nil
         case Some(availableAt) =>
           val variant0 = Variant.Attributes(variant.name)
           Seq(
@@ -205,7 +205,7 @@ object GradleModule {
         val stringCodec: JsonValueCodec[String] = JsonCodecMaker.make
         val intCodec: JsonValueCodec[Int]       = JsonCodecMaker.make
 
-        def nullValue = StringOrInt(stringCodec.nullValue)
+        def nullValue                                    = StringOrInt(stringCodec.nullValue)
         def encodeValue(x: StringOrInt, out: JsonWriter) =
           stringCodec.encodeValue(x.value, out)
         def decodeValue(in: JsonReader, default: StringOrInt) = {

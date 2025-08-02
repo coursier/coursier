@@ -84,7 +84,7 @@ final case class NativeLauncherOptions(
       .filter(_.nonEmpty)
 
     val linkStubs = nativeLinkStubs
-    val clangOpt = nativeClang
+    val clangOpt  = nativeClang
       .filter(_.nonEmpty)
       .map(Paths.get(_))
     val clangppOpt = nativeClangpp
@@ -92,7 +92,7 @@ final case class NativeLauncherOptions(
       .map(Paths.get(_))
 
     val prependDefaultLinkingOptions = nativeDefaultLinkingOptions
-    val linkingOptions = {
+    val linkingOptions               = {
       val ldflags =
         if (nativeUseLdflags) Option(System.getenv("LDFLAGS")).toSeq.flatMap(_.split("\\s+"))
         else Nil

@@ -6,7 +6,7 @@ import com.github.lolgab.mill.mima._
 
 trait Util extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-util"
-  def ivyDeps = Agg(
+  def ivyDeps      = Agg(
     Deps.collectionCompat
   )
   def compileIvyDeps = Agg(
@@ -24,7 +24,7 @@ trait UtilJvmBase extends Util with CsMima with Shading {
     Deps.jsoup
   )
   def validNamespaces = Seq("coursier")
-  def shadeRenames = Seq(
+  def shadeRenames    = Seq(
     "org.jsoup.**" -> "coursier.util.shaded.org.jsoup.@1"
   )
 }

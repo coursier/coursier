@@ -472,8 +472,8 @@ object Vm {
     )
   }
 
-  private val sq = "'"
-  private val dq = "\""
+  private val sq                                   = "'"
+  private val dq                                   = "\""
   private def toCommand(args: Seq[String]): String =
     args
       .map { arg =>

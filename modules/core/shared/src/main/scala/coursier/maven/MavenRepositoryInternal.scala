@@ -286,12 +286,12 @@ private[coursier] class MavenRepositoryInternal(
     versioningValue: Option[Version],
     fetch: Repository.Fetch[F]
   )(implicit F: Monad[F]): EitherT[F, String, Project] = {
-    val directoryPath = moduleVersionPath(module, version)
+    val directoryPath        = moduleVersionPath(module, version)
     def pathFor(ext: String) =
       directoryPath :+ s"$moduleNameInFileName-${versioningValue.getOrElse(version).asString}.$ext"
     def baseModuleArtifact = projectArtifact(pathFor("module"), version)
     def basePomArtifact    = projectArtifact(pathFor("pom"), version)
-    def pomArtifact =
+    def pomArtifact        =
       if (checkModule)
         basePomArtifact
           .withExtra(Map("check" -> baseModuleArtifact))
@@ -522,7 +522,7 @@ private[coursier] class MavenRepositoryInternal(
           ) -> optional
       }
 
-      val allPubs = packagingPublicationOpt.map(_ -> false).toSeq ++ extraPubs
+      val allPubs  = packagingPublicationOpt.map(_ -> false).toSeq ++ extraPubs
       val optional = allPubs
         .groupBy(_._1)
         .view
@@ -597,7 +597,7 @@ private[coursier] class MavenRepositoryInternal(
   ): Seq[(VariantPublication, Artifact)] =
     dependency.variantSelector match {
       case _: VariantSelector.ConfigurationBased => Nil
-      case a: VariantSelector.AttributesBased =>
+      case a: VariantSelector.AttributesBased    =>
         val a0 = a + overrideAttributes.getOrElse(VariantSelector.AttributesBased.empty)
         if (project.variants.isEmpty) Nil
         else {
@@ -610,7 +610,7 @@ private[coursier] class MavenRepositoryInternal(
           }
           attrOpt.toSeq.flatMap(project.variantPublications.getOrElse(_, Nil)).map { pub =>
             val baseUri = new URI(pub.url)
-            val uri =
+            val uri     =
               if (baseUri.isAbsolute) baseUri
               else
                 new URI(

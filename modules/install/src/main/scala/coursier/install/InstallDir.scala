@@ -43,7 +43,7 @@ import scala.jdk.CollectionConverters._
   archiveCache: ArchiveCache[Task] = ArchiveCache()
 ) {
 
-  private lazy val isWin = platform.exists(_.endsWith("-pc-win32"))
+  private lazy val isWin        = platform.exists(_.endsWith("-pc-win32"))
   private lazy val auxExtension =
     if (isWin) ".exe"
     else ""
@@ -115,7 +115,7 @@ import scala.jdk.CollectionConverters._
     mainClass: String,
     baseJarPreamble: Preamble
   ): Parameters = {
-    val isStandalone = desc.launcherType != LauncherType.Bootstrap
+    val isStandalone     = desc.launcherType != LauncherType.Bootstrap
     val sharedContentOpt =
       if (appArtifacts.shared.isEmpty) None
       else {
@@ -190,7 +190,7 @@ import scala.jdk.CollectionConverters._
       case LauncherType.ScalaNative =>
         assert(appArtifacts.shared.isEmpty) // just in case
 
-        val fetch = simpleFetch(cache, coursierRepositories)
+        val fetch         = simpleFetch(cache, coursierRepositories)
         val nativeVersion = appArtifacts.platformSuffixOpt
           .fold("" /* FIXME throw instead? */ )(_.stripPrefix("_native"))
         // FIXME Allow options to be tweaked
@@ -418,7 +418,7 @@ import scala.jdk.CollectionConverters._
 
             pathDescriptorBytes <- update(source).flatMap {
               case Some(res) => Task.point(res)
-              case None =>
+              case None      =>
                 Task.fail(new Exception(s"${source.id} not found in ${source.channel.repr}"))
             }
             (path, descriptorBytes) = pathDescriptorBytes
@@ -426,7 +426,7 @@ import scala.jdk.CollectionConverters._
             desc <- Task.fromEither(InfoFile.appDescriptor(path, descriptorBytes))
 
             appInfo = {
-              val info = AppInfo(desc, descriptorBytes, source, sourceBytes)
+              val info      = AppInfo(desc, descriptorBytes, source, sourceBytes)
               val foundName = info.appDescriptor.nameOpt
                 .getOrElse(info.source.id)
               if (foundName == name)

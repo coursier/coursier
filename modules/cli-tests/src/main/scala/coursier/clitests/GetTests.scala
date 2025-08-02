@@ -14,7 +14,7 @@ abstract class GetTests extends TestSuite {
   def isNative: Boolean
   def isNativeStatic: Boolean
 
-  private def isCI = System.getenv("CI") != null
+  private def isCI       = System.getenv("CI") != null
   def hasDocker: Boolean =
     Properties.isLinux || (Properties.isMac && !isCI)
 
@@ -36,7 +36,7 @@ abstract class GetTests extends TestSuite {
   val tests = Tests {
     test("Maven Central") {
       TestUtil.withTempDir { tmpDir =>
-        val cache = new File(tmpDir, "cache").getAbsolutePath
+        val cache  = new File(tmpDir, "cache").getAbsolutePath
         val output =
           os.proc(
             launcher,
@@ -54,7 +54,7 @@ abstract class GetTests extends TestSuite {
 
     test("GitHub") {
       TestUtil.withTempDir { tmpDir =>
-        val cache = new File(tmpDir, "cache").getAbsolutePath
+        val cache  = new File(tmpDir, "cache").getAbsolutePath
         val output =
           os.proc(
             launcher,
@@ -139,7 +139,7 @@ abstract class GetTests extends TestSuite {
       assert(archiveUrl.getProtocol == "file")
 
       TestUtil.withTempDir { tmpDir =>
-        val cache = new File(tmpDir, "cache").getAbsolutePath
+        val cache  = new File(tmpDir, "cache").getAbsolutePath
         val output =
           os.proc(
             launcher,
@@ -151,7 +151,7 @@ abstract class GetTests extends TestSuite {
           )
             .call()
             .out.text()
-        val dir = Paths.get(output.trim)
+        val dir     = Paths.get(output.trim)
         val content =
           new String(Files.readAllBytes(dir.resolve("archive/a")), StandardCharsets.UTF_8)
         val expectedContent = "a\n"
@@ -174,7 +174,7 @@ abstract class GetTests extends TestSuite {
       TestUtil.withTempDir { tmpDir =>
         val cache    = new File(tmpDir, "cache").getAbsolutePath
         val arcCache = new File(tmpDir, "arc-cache").getAbsolutePath
-        val output =
+        val output   =
           os.proc(
             launcher,
             "get",
@@ -186,8 +186,8 @@ abstract class GetTests extends TestSuite {
           )
             .call()
             .out.text()
-        val dir     = os.Path(output.trim)
-        val listing = os.walk(dir).filter(os.isFile).map(_.relativeTo(dir).asSubPath).sorted
+        val dir             = os.Path(output.trim)
+        val listing         = os.walk(dir).filter(os.isFile).map(_.relativeTo(dir).asSubPath).sorted
         val expectedListing =
           Seq(os.sub / "usr/bin/scala-cli", os.sub / "usr/share/scala/scala-cli")
         assert(expectedListing == listing)
@@ -199,7 +199,7 @@ abstract class GetTests extends TestSuite {
       TestUtil.withTempDir { tmpDir =>
         val cache    = new File(tmpDir, "cache").getAbsolutePath
         val arcCache = new File(tmpDir, "arc-cache").getAbsolutePath
-        val output =
+        val output   =
           os.proc(
             launcher,
             "get",
