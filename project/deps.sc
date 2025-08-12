@@ -65,7 +65,7 @@ object Deps {
   def shapeless                = ivy"com.chuusai::shapeless:2.3.12"
   def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.17"
   def svm                      = ivy"org.graalvm.nativeimage:svm:21.3.13"
-  def tika                     = ivy"org.apache.tika:tika-core:3.2.1"
+  def tika                     = ivy"org.apache.tika:tika-core:3.2.2"
   def ujson                    = ivy"com.lihaoyi::ujson:4.2.1"
   def utest                    = ivy"com.lihaoyi::utest::0.8.9"
   def versions                 = ivy"io.get-coursier::versions::0.5.1"
