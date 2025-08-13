@@ -4,7 +4,7 @@ object Entities {
 
   // Generated via https://gist.github.com/alexarchambault/79388ff31ec8cbddf6607b55ab2f6527
 
-  val map(s: String) = s match {
+  def map(s: String) = s match {
     case "&nbsp;" => "&#160;"
     case "&iexcl;" => "&#161;"
     case "&cent;" => "&#162;"

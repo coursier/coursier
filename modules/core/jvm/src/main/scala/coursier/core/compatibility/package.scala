@@ -29,7 +29,7 @@ package object compatibility {
 
     var i     = fromIdx
     var found: (Int, Int) = null
-    while (found.isEmpty && i < s.length)
+    while (found == null && i < s.length)
       if (s.charAt(i) == '&') {
         val start = i
         i += 1
