@@ -21,13 +21,13 @@ package object compatibility {
     def letter        = c.isLetter
   }
 
-  private val utf8Bom = "\ufeff"
-  private val utf8BomLength = utf8Bom.length
+  private val utf8Bom              = "\ufeff"
+  private val utf8BomLength        = utf8Bom.length
   private lazy val throwExceptions = java.lang.Boolean.getBoolean("coursier.core.throw-exceptions")
 
   private def entityIdx(s: String, fromIdx: Int): (Int, Int) = {
 
-    var i     = fromIdx
+    var i                 = fromIdx
     var found: (Int, Int) = null
     while (found == null && i < s.length)
       if (s.charAt(i) == '&') {
@@ -62,7 +62,7 @@ package object compatibility {
 
     var i = 0
 
-    var j = 0
+    var j       = 0
     val sLength = s.length
     while (j < sLength && j < utf8BomLength && s.charAt(i) == utf8Bom.charAt(j))
       j += 1
