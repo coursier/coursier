@@ -66,8 +66,8 @@ object ProfileUpdaterTests extends TestSuite {
     }
 
     test("set variable in ~/.profile") {
-      val fs   = Jimfs.newFileSystem(Configuration.unix())
-      val home = fs.getPath("/home/alex")
+      val fs      = Jimfs.newFileSystem(Configuration.unix())
+      val home    = fs.getPath("/home/alex")
       val updater = ProfileUpdater()
         .withHome(Some(home))
         .withGetEnv(Some(_ => None))
@@ -93,7 +93,7 @@ object ProfileUpdaterTests extends TestSuite {
     test("set variable in ~/.config/alex/fish/config.fish") {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex/")
-      val env = Map(
+      val env  = Map(
         "SHELL" -> "/bin/fish"
       )
       val updater = ProfileUpdater()
@@ -122,9 +122,9 @@ object ProfileUpdaterTests extends TestSuite {
     }
 
     test("create ~/.profile and ~/.zprofile") {
-      val fs   = Jimfs.newFileSystem(Configuration.unix())
-      val home = fs.getPath("/home/alex")
-      val env  = Map("SHELL" -> "/bin/zsh")
+      val fs      = Jimfs.newFileSystem(Configuration.unix())
+      val home    = fs.getPath("/home/alex")
+      val env     = Map("SHELL" -> "/bin/zsh")
       val updater = ProfileUpdater()
         .withHome(Some(home))
         .withGetEnv(Some(env.get))
@@ -164,8 +164,8 @@ object ProfileUpdaterTests extends TestSuite {
       ProfileUpdater.createDirectories(bashProfilePath.getParent)
       Files.write(bashProfilePath, Array.emptyByteArray)
 
-      val home = fs.getPath("/home/alex")
-      val env  = Map("SHELL" -> "/bin/zsh")
+      val home    = fs.getPath("/home/alex")
+      val env     = Map("SHELL" -> "/bin/zsh")
       val updater = ProfileUpdater()
         .withHome(Some(home))
         .withGetEnv(Some(env.get))
@@ -203,9 +203,9 @@ object ProfileUpdaterTests extends TestSuite {
     }
 
     test("take ZDOTDIR into account") {
-      val fs   = Jimfs.newFileSystem(Configuration.unix())
-      val home = fs.getPath("/home/alex")
-      val env  = Map("SHELL" -> "/bin/zsh", "ZDOTDIR" -> "/the/zdotdir")
+      val fs      = Jimfs.newFileSystem(Configuration.unix())
+      val home    = fs.getPath("/home/alex")
+      val env     = Map("SHELL" -> "/bin/zsh", "ZDOTDIR" -> "/the/zdotdir")
       val updater = ProfileUpdater()
         .withHome(Some(home))
         .withGetEnv(Some(env.get))
@@ -239,8 +239,8 @@ object ProfileUpdaterTests extends TestSuite {
     }
 
     test("be idempotent") {
-      val fs   = Jimfs.newFileSystem(Configuration.unix())
-      val home = fs.getPath("/home/alex")
+      val fs      = Jimfs.newFileSystem(Configuration.unix())
+      val home    = fs.getPath("/home/alex")
       val updater = ProfileUpdater()
         .withHome(Some(home))
         .withGetEnv(Some(_ => None))
@@ -272,8 +272,8 @@ object ProfileUpdaterTests extends TestSuite {
     }
 
     test("update the previous section") {
-      val fs   = Jimfs.newFileSystem(Configuration.unix())
-      val home = fs.getPath("/home/alex")
+      val fs      = Jimfs.newFileSystem(Configuration.unix())
+      val home    = fs.getPath("/home/alex")
       val updater = ProfileUpdater()
         .withHome(Some(home))
         .withGetEnv(Some(_ => None))
@@ -329,7 +329,7 @@ object ProfileUpdaterTests extends TestSuite {
     test("update the previous section fish") {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex")
-      val env = Map(
+      val env  = Map(
         "SHELL" -> "/bin/fish"
       )
       val updater = ProfileUpdater()

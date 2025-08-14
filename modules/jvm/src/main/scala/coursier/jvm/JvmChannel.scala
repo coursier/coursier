@@ -145,7 +145,7 @@ object JvmChannel {
   lazy val currentOs: Either[String, String] =
     Option(System.getProperty("os.name")).map(_.toLowerCase(Locale.ROOT)) match {
       case Some(s) if s.contains("windows") => Right("windows")
-      case Some(s) if s.contains("linux") =>
+      case Some(s) if s.contains("linux")   =>
         if (isMusl.getOrElse(false)) Right("linux-musl")
         else Right("linux")
       case Some(s) if s.contains("mac") => Right("darwin")
@@ -285,7 +285,7 @@ object JvmChannel {
         }
       else
         ModuleParser.javaOrScalaModule(s).flatMap {
-          case j: JavaOrScalaModule.JavaModule => Right(JvmChannel.module(j.module))
+          case j: JavaOrScalaModule.JavaModule  => Right(JvmChannel.module(j.module))
           case s: JavaOrScalaModule.ScalaModule =>
             Left(s"Scala dependencies ($s) not accepted as JVM channels")
         }

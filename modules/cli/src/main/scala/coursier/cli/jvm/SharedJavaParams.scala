@@ -42,7 +42,7 @@ final case class SharedJavaParams(
     }
     val noUpdateJvmCache = jvmCacheOf(noUpdateCache)
     val jvmCache         = jvmCacheOf(cache)
-    val javaHome = coursier.jvm.JavaHome()
+    val javaHome         = coursier.jvm.JavaHome()
       .withCache(jvmCache)
       .withNoUpdateCache(Some(noUpdateJvmCache))
       .withAllowSystem(allowSystemJvm)
@@ -85,7 +85,7 @@ final case class SharedJavaParams(
 
 object SharedJavaParams {
   def apply(options: SharedJavaOptions): ValidatedNel[String, SharedJavaParams] = {
-    val jvm = options.jvm.map(_.trim).filter(_.nonEmpty)
+    val jvm                          = options.jvm.map(_.trim).filter(_.nonEmpty)
     val (allowSystem, requireSystem) = options.systemJvm match {
       case None        => (true, false)
       case Some(false) => (false, false)
