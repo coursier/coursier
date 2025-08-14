@@ -9,7 +9,7 @@ trait Scalaz extends CsModule with CsCrossJvmJsModule with CoursierPublishModule
 
 trait Cats extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-cats-interop"
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def ivyDeps      = super.ivyDeps() ++ Agg(
     Deps.catsEffect
   )
 }

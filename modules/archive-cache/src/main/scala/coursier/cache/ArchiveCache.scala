@@ -41,7 +41,7 @@ import scala.util.Using
 
   private def localDir(artifact: Artifact): (File, Seq[String]) = {
     val Array(mainUrl, subPaths @ _*) = artifact.url.split("\\!", -1)
-    val dir = CachePath.localFile(
+    val dir                           = CachePath.localFile(
       mainUrl,
       location,
       artifact.authentication.flatMap(_.userOpt).orNull,
@@ -87,7 +87,7 @@ import scala.util.Using
     isSingleFile: Boolean
   ): F[Either[ArtifactError, Option[File]]] = {
     val (dir0, subPaths) = localDir(artifact)
-    val dir = subPaths
+    val dir              = subPaths
       .foldLeft(dir0.toPath) { (dir, subPath) =>
         val f = dir.resolve(subPath)
         f.getParent.resolve("." + f.getFileName)
@@ -123,7 +123,7 @@ import scala.util.Using
 
     def maybeArchiveType(f: File, urlOpt: Option[String]): Either[ArtifactError, ArchiveType] =
       urlOpt.flatMap(ArchiveCache.archiveType).map(Right(_)).getOrElse {
-        val tika = new Tika
+        val tika     = new Tika
         val mimeType = Using.resource(Files.newInputStream(f.toPath)) { is =>
           tika.detect(is)
         }
@@ -193,9 +193,9 @@ import scala.util.Using
       S.delay(dir.exists()).flatMap { exists =>
         download.flatMap {
           case Left(err) => S.point(Left(err))
-          case Right(f) =>
+          case Right(f)  =>
             maybeArchiveType(f, urlOpt) match {
-              case Left(err) => S.point(Left(err))
+              case Left(err)           => S.point(Left(err))
               case Right(archiveType0) =>
                 if (exists) {
                   val archiveLastModifiedTime = Files.getLastModifiedTime(f.toPath)
@@ -245,7 +245,7 @@ import scala.util.Using
         subPaths0: List[String]
       ): EitherT[F, ArtifactError, Path] =
         subPaths0 match {
-          case Nil => EitherT.point(file)
+          case Nil             => EitherT.point(file)
           case subPath :: rest =>
             val arc  = file.resolve(subPath)
             val dest = arc.getParent.resolve("." + arc.getFileName)

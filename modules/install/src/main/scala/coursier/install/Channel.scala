@@ -160,7 +160,7 @@ object Channel {
         }
       else
         ModuleParser.javaOrScalaModule(s).flatMap {
-          case j: JavaOrScalaModule.JavaModule => Right(Channel.module(j.module))
+          case j: JavaOrScalaModule.JavaModule  => Right(Channel.module(j.module))
           case s: JavaOrScalaModule.ScalaModule =>
             Left(s"Scala dependencies ($s) not accepted as channels")
         }

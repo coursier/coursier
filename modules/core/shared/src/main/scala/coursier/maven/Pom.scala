@@ -399,7 +399,7 @@ object Pom {
 
     val classifier = Classifier(textOrEmpty("classifier", "Classifier"))
     val ext        = Extension(textOrEmpty("extension", "Extensions"))
-    val value = text(node, "value", "Value")
+    val value      = text(node, "value", "Value")
       .map(Version(_))
       .getOrElse(Version.zero)
 

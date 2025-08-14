@@ -16,7 +16,7 @@ trait BootstrapLauncher extends CsModule {
   def proguardClassPath: T[Seq[PathRef]]
 
   def scalaVersion = ScalaVersions.scala213
-  def ivyDeps = super.ivyDeps() ++ Seq(
+  def ivyDeps      = super.ivyDeps() ++ Seq(
     Deps.directories,
     Deps.jniUtilsBootstrap
   )
@@ -132,7 +132,7 @@ trait BootstrapLauncher extends CsModule {
   }
 
   def resourceAssemblyMainClass = T("coursier.bootstrap.launcher.ResourcesLauncher")
-  def resourceAssembly = T {
+  def resourceAssembly          = T {
     val baseJar    = jar().path
     val cp         = upstreamAssemblyClasspath().iterator.toSeq.map(_.path)
     val mainClass0 = resourceAssemblyMainClass()
