@@ -29,7 +29,7 @@ package object compatibility {
 
     var i                 = fromIdx
     var found: (Int, Int) = null
-    while (found == null && i < s.length)
+    while (found eq null && i < s.length)
       if (s.charAt(i) == '&') {
         val start = i
         i += 1
@@ -73,7 +73,7 @@ package object compatibility {
     var found: (Int, Int) = null
     while ({
       found = entityIdx(s, i)
-      found != null
+      found ne null
     }) {
       val from = found._1
       val to   = found._2
