@@ -81,7 +81,7 @@ package object compatibility {
       b.appendAll(a, i, from - i)
 
       val name        = s.substring(from, to)
-      val replacement = Entities.map(name)
+      val replacement = Entities.mapFast(name)
       b.appendAll(replacement)
 
       i = to
