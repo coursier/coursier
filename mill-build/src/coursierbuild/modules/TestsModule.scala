@@ -1,5 +1,6 @@
-import $file.^.deps, deps.Deps
-import $file.shared, shared.CsCrossJvmJsModule
+package coursierbuild.modules
+
+import coursierbuild.Deps.Deps
 import mill._
 
 trait TestsModule extends CsCrossJvmJsModule {

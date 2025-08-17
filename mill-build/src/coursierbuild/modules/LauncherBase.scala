@@ -1,4 +1,4 @@
-import $file.shared, shared.{CoursierPublishModule, CsMima, CsModule}
+package coursierbuild.modules
 
 import mill._, mill.scalalib._
 

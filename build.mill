@@ -1,37 +1,10 @@
 import $meta._
 
-import $file.project.deps, deps.{Deps, ScalaVersions, scalaCliVersion}
-import $file.project.docHelpers
-import $file.project.ghreleaseassets
-import $file.project.launchers, launchers.{Launchers, platformBootstrapExtension}
-import $file.project.modules.`bootstrap-launcher0`, `bootstrap-launcher0`.BootstrapLauncher
-import $file.project.modules.cache0, cache0.{ArchiveCacheBase, Cache, CacheJvmBase}
-import $file.project.modules.core0, core0.{Core, CoreJvmBase}
-import $file.project.modules.coursier0, coursier0.{Coursier, CoursierJvmBase, CoursierTests}
-import $file.project.modules.doc0, doc0.Doc
-import $file.project.modules.interop0, interop0.{Cats, Scalaz}
-import $file.project.modules.launcher0, launcher0.LauncherBase
-import $file.project.modules.shared, shared.{
-  buildVersion,
-  CoursierJavaModule,
-  CoursierPublishModule,
-  CsCrossJvmJsModule,
-  CsResourcesTests,
-  CsMima,
-  CsModule,
-  CsScalaJsModule,
-  CsTests,
-  JsTests,
-  JvmTests
-}
-import $file.project.modules.`sbt-maven-repository0`,
-  `sbt-maven-repository0`.{SbtMavenRepository, SbtMavenRepositoryJvmBase}
-import $file.project.modules.tests0, tests0.TestsModule
-import $file.project.modules.util0, util0.{Util, UtilJvmBase}
-import $file.project.relativize, relativize.{relativize => doRelativize}
-import $file.project.shading, shading.Shading
-import $file.project.sync
-import $file.project.workers
+import coursierbuild.Deps.{Deps, ScalaVersions, scalaCliVersion}
+import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
+import coursierbuild.Relativize.{relativize => doRelativize}
+import coursierbuild.{DocHelpers, GitHubReleaseAssets, Shading, Sync, Workers}
+import coursierbuild.modules._
 
 import _root_.coursier.getcs.GetCs
 
@@ -581,7 +554,7 @@ trait TestsJvm extends TestsModule { self =>
     )
   }
   object it extends CrossSbtTests with CsTests with JvmTests
-      with workers.UsesRedirectingServer {
+      with Workers.UsesRedirectingServer {
     def redirectingServerCp =
       `redirecting-server`.runClasspath()
     def redirectingServerMainClass =
@@ -949,9 +922,9 @@ trait CliTests extends CsModule
           "-Dcoursier-test-is-native=false",
           "-Dcoursier-test-is-native-static=false",
           s"-Dcoursier.test.auth-proxy-data-dir=${T.workspace / "project/authenticated-proxy"}",
-          s"-Dcoursier.test.auth-proxy-image=${deps.Docker.alpineImage}",
-          s"-Dcoursier.test.alpine-image=${deps.Docker.alpineImage}",
-          s"-Dcoursier.test.alpine-java-image=${deps.Docker.alpineJavaImage}"
+          s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
+          s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
+          s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
         )
       }
     }
@@ -975,9 +948,9 @@ trait CliTests extends CsModule
           "-Dcoursier-test-is-native=true",
           s"-Dcoursier-test-is-native-static=$isStatic",
           s"-Dcoursier.test.auth-proxy-data-dir=${T.workspace / "project/authenticated-proxy"}",
-          s"-Dcoursier.test.auth-proxy-image=${deps.Docker.alpineImage}",
-          s"-Dcoursier.test.alpine-image=${deps.Docker.alpineImage}",
-          s"-Dcoursier.test.alpine-java-image=${deps.Docker.alpineJavaImage}"
+          s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
+          s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
+          s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
         )
       }
     }
@@ -1086,22 +1059,30 @@ def copyTo(task: mill.main.Tasks[PathRef], dest: String) = T.command {
 }
 def copyLauncher(directory: String = "artifacts") = T.command {
   val nativeLauncher = cli.nativeImage().path
-  ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, T.workspace))
+  GitHubReleaseAssets.copyLauncher(nativeLauncher, os.Path(directory, T.workspace))
 }
 
 def copyCompatLauncher(directory: String = "artifacts") = T.command {
   val nativeLauncher = cli.compatNativeImage().path
-  ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, T.workspace), suffix = "-compat")
+  GitHubReleaseAssets.copyLauncher(
+    nativeLauncher,
+    os.Path(directory, T.workspace),
+    suffix = "-compat"
+  )
 }
 
 def copyStaticLauncher(directory: String = "artifacts") = T.command {
   val nativeLauncher = cli.`static-image`.nativeImage().path
-  ghreleaseassets.copyLauncher(nativeLauncher, os.Path(directory, T.workspace), suffix = "-static")
+  GitHubReleaseAssets.copyLauncher(
+    nativeLauncher,
+    os.Path(directory, T.workspace),
+    suffix = "-static"
+  )
 }
 
 def copyMostlyStaticLauncher(directory: String = "artifacts") = T.command {
   val nativeLauncher = cli.`mostly-static-image`.nativeImage().path
-  ghreleaseassets.copyLauncher(
+  GitHubReleaseAssets.copyLauncher(
     nativeLauncher,
     os.Path(directory, T.workspace),
     suffix = "-mostly-static"
@@ -1110,7 +1091,7 @@ def copyMostlyStaticLauncher(directory: String = "artifacts") = T.command {
 
 def copyContainerLauncher(directory: String = "artifacts") = T.command {
   val nativeLauncher = cli.containerImage().path
-  ghreleaseassets.copyLauncher(
+  GitHubReleaseAssets.copyLauncher(
     nativeLauncher,
     os.Path(directory, T.workspace),
     suffix = "-container"
@@ -1119,11 +1100,11 @@ def copyContainerLauncher(directory: String = "artifacts") = T.command {
 
 def uploadLaunchers(directory: String = "artifacts") = T.command {
   val version = cli.publishVersion()
-  ghreleaseassets.uploadLaunchers(version, os.Path(directory, T.workspace))
+  GitHubReleaseAssets.uploadLaunchers(version, os.Path(directory, T.workspace))
 }
 
 def bootstrapLauncher(
-  version: String = buildVersion,
+  version: String = CoursierPublishModule.buildVersion,
   dest: String = s"coursier$platformBootstrapExtension"
 ) = T.command {
   cli.run(T.task {
@@ -1141,7 +1122,10 @@ def bootstrapLauncher(
   os.Path(dest, T.workspace)
 }
 
-def assemblyLauncher(version: String = buildVersion, dest: String = "coursier.jar") = T.command {
+def assemblyLauncher(
+  version: String = CoursierPublishModule.buildVersion,
+  dest: String = "coursier.jar"
+) = T.command {
   cli.run(T.task {
     val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
     Args(
@@ -1160,10 +1144,10 @@ def assemblyLauncher(version: String = buildVersion, dest: String = "coursier.ja
   os.Path(dest, T.workspace)
 }
 
-def waitForSync(version: String = buildVersion) = T.command {
+def waitForSync(version: String = CoursierPublishModule.buildVersion) = T.command {
   val launcher  = cli.launcher().path
   val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
-  sync.waitForSync(
+  Sync.waitForSync(
     launcher.toString,
     s"${cli.pomSettings().organization}:${cli.artifactId()}:$version",
     extraArgs,
@@ -1171,7 +1155,10 @@ def waitForSync(version: String = buildVersion) = T.command {
   )
 }
 
-def copyJarLaunchers(version: String = buildVersion, directory: String = "artifacts") = T.command {
+def copyJarLaunchers(
+  version: String = CoursierPublishModule.buildVersion,
+  directory: String = "artifacts"
+) = T.command {
   val bootstrap: os.Path = bootstrapLauncher(version = version)()
   val assembly: os.Path  = assemblyLauncher(version = version)()
   val dir                = os.Path(directory, T.workspace)
@@ -1224,7 +1211,7 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = T.command {
   doc.generate("--npm-install", "--yarn-run-build")()
 
   for (version <- versionOpt)
-    docHelpers.updateVersionedDocs(
+    DocHelpers.updateVersionedDocs(
       docusaurusDir,
       versionedDocsRepo,
       versionedDocsBranch,
@@ -1239,7 +1226,7 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = T.command {
   val newSiteDir = docs.mkdocsBuild()().path
   os.copy(newSiteDir, docusaurusDir / "build" / "coursier" / "upcoming")
 
-  docHelpers.updateGhPages(
+  DocHelpers.updateGhPages(
     docusaurusDir / "build",
     token,
     "coursier/coursier",
@@ -1371,7 +1358,7 @@ def cliNativeImageLauncher() = T.command {
 }
 
 object ci extends Module {
-  def copyJvm(jvm: String = deps.graalVmJvmId, dest: String = "jvm") = T.command {
+  def copyJvm(jvm: String = coursierbuild.Deps.graalVmJvmId, dest: String = "jvm") = T.command {
     import sys.process._
     val cs = if (Properties.isWin) "cs.exe" else "cs"
     val command = Seq(
@@ -1395,7 +1382,7 @@ object ci extends Module {
 object buildWorkers extends Module {
 
   def testRepoServer = T.worker {
-    val server = new workers.TestRepoServer
+    val server = new Workers.TestRepoServer
 
     if (server.healthCheck())
       sys.error("Test repo server already running")

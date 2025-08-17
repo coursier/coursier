@@ -1,3 +1,5 @@
+package coursierbuild
+
 import com.eed3si9n.jarjarabrams.{ShadePattern, Shader}
 import coursier.util.{Gather, Task}
 import mill._, mill.scalalib._

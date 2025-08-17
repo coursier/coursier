@@ -1,7 +1,9 @@
-import $file.^.deps, deps.{Deps, sbtCoursierVersion}
-import $file.^.relativize, relativize.{relativize => doRelativize}
-import $file.shared, shared.latestTaggedVersion
-import $file.^.docHelpers
+package coursierbuild.modules
+
+import coursierbuild.Deps.{Deps, sbtCoursierVersion}
+import coursierbuild.Relativize.{relativize => doRelativize}
+import coursierbuild.modules.CoursierPublishModule.latestTaggedVersion
+import coursierbuild.DocHelpers
 
 import java.io.File
 
@@ -22,7 +24,7 @@ trait Doc extends ScalaModule {
     docusaurusDir: String = "doc/website"
   ) = T.command {
     val dir = os.Path(docusaurusDir, T.workspace)
-    docHelpers.copyDocusaurusVersionedData(repo, branch, dir, T.dest / "repo")
+    DocHelpers.copyDocusaurusVersionedData(repo, branch, dir, T.dest / "repo")
   }
 
   def forkWorkingDir = T.dest
@@ -101,10 +103,10 @@ trait Doc extends ScalaModule {
 
     if (watch)
       if (yarnRunBuild)
-        Util.withBgProcess(
+        Doc.withBgProcess(
           Seq("yarn", "run", "start"),
           dir = websiteDir.toIO,
-          waitFor = () => Util.waitForDir(outputDir.toIO)
+          waitFor = () => Doc.waitForDir(outputDir.toIO)
         ) {
           runMdoc()
         }
@@ -125,10 +127,10 @@ trait Doc extends ScalaModule {
   }
 }
 
-private object Util {
+object Doc {
   import java.io.File
 
-  def withBgProcess[T](
+  private def withBgProcess[T](
     cmd: Seq[String],
     dir: File = new File("."),
     waitFor: () => Unit = null
@@ -163,7 +165,7 @@ private object Util {
     }
   }
 
-  def waitForDir(dir: File): Unit = {
+  private def waitForDir(dir: File): Unit = {
     @annotation.tailrec
     def helper(): Unit = {
       val found =
