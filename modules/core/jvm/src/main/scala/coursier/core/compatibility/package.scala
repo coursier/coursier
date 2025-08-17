@@ -70,7 +70,7 @@ package object compatibility {
     if (j == utf8BomLength)
       i = j
 
-    var found: (Int, Int) = 
+    var found: (Int, Int) = null
     while ({
       found = entityIdx(s, i)
       found ne null
