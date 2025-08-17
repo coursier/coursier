@@ -29,7 +29,7 @@ package object compatibility {
 
     var i                 = fromIdx
     var found: (Int, Int) = null
-    while (found eq null && i < s.length)
+    while ((found eq null) && i < s.length)
       if (s.charAt(i) == '&') {
         val start = i
         i += 1
@@ -70,7 +70,7 @@ package object compatibility {
     if (j == utf8BomLength)
       i = j
 
-    var found: (Int, Int) = null
+    var found: (Int, Int) = 
     while ({
       found = entityIdx(s, i)
       found ne null
