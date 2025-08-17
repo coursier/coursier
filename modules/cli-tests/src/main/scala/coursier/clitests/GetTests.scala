@@ -96,7 +96,7 @@ abstract class GetTests extends TestSuite {
         val nopeM2Dir = tmpDir / "m2-nope"
         os.write(
           nopeM2Dir / "settings.xml",
-          TestAuthProxy.m2Settings(9083, "wrong", "nope"),
+          TestAuthProxy.m2Settings(9087, "wrong", "nope"),
           createFolders = true
         )
 
