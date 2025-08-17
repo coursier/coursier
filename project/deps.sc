@@ -2,7 +2,7 @@ import mill._, scalalib._
 
 object Deps {
   def argonautShapeless = ivy"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.1"
-  def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0-M30"
+  def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0"
   def catsCore          = ivy"org.typelevel::cats-core:${Versions.cats}"
   def catsFree213       = ivy"org.typelevel:cats-free_2.13:${Versions.cats}"
   def catsEffect        = ivy"org.typelevel::cats-effect::3.6.1"
@@ -37,7 +37,7 @@ object Deps {
   def macroParadise  = ivy"org.scalamacros:::paradise:2.1.1"
   def mdoc           = ivy"org.scalameta::mdoc:2.7.0"
   def noCrcZis       = ivy"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
-  def osLib          = ivy"com.lihaoyi::os-lib:0.11.4"
+  def osLib          = ivy"com.lihaoyi::os-lib:0.11.5"
   def plexusArchiver = ivy"org.codehaus.plexus:plexus-archiver:4.10.0"
   // plexus-archiver needs its loggers
   def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
@@ -50,7 +50,7 @@ object Deps {
     if (sv.startsWith("2.12"))
       ivy"org.virtuslab.scala-cli::config:1.1.3"
     else
-      ivy"org.virtuslab.scala-cli:config_3:1.8.3"
+      ivy"org.virtuslab.scala-cli:config_3:1.8.5"
         .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
   def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.4.0"
   def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.2"
@@ -61,11 +61,11 @@ object Deps {
   def scalaXml                 = ivy"org.scala-lang.modules::scala-xml:2.4.0"
   def scalazCore               = ivy"org.scalaz::scalaz-core::${Versions.scalaz}"
   def scalazConcurrent         = ivy"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
-  def scodec                   = ivy"org.scodec::scodec-core:2.3.2"
+  def scodec                   = ivy"org.scodec::scodec-core:2.3.3"
   def shapeless                = ivy"com.chuusai::shapeless:2.3.12"
   def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.17"
-  def svm                      = ivy"org.graalvm.nativeimage:svm:21.3.13"
-  def tika                     = ivy"org.apache.tika:tika-core:3.2.1"
+  def svm                      = ivy"org.graalvm.nativeimage:svm:21.3.15"
+  def tika                     = ivy"org.apache.tika:tika-core:3.2.2"
   def ujson                    = ivy"com.lihaoyi::ujson:4.2.1"
   def utest                    = ivy"com.lihaoyi::utest::0.8.9"
   def versions                 = ivy"io.get-coursier::versions::0.5.1"
