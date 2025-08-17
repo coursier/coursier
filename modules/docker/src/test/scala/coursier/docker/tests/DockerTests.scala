@@ -93,10 +93,14 @@ object DockerTests extends TestSuite {
         val expectedIndexUrl =
           "https://registry-1.docker.io/v2/library/hello-world/manifests/latest"
 
-        assert(res.configArtifact.url == expectedConfigUrl)
-        assert(res.indexArtifact.url == expectedIndexUrl)
-        assert(res.manifestArtifact.url == expectedManifestUrl)
-        assert(res.layerArtifacts.map(_.url) == Seq(expectedLayerUrl))
+        val configUrl   = res.configArtifact.url
+        val indexUrl    = res.indexArtifact.url
+        val manifestUrl = res.manifestArtifact.url
+        val layerUrls   = res.layerArtifacts.map(_.url)
+        assert(expectedConfigUrl == configUrl)
+        assert(expectedIndexUrl == indexUrl)
+        assert(expectedManifestUrl == manifestUrl)
+        assert(Seq(expectedLayerUrl) == layerUrls)
       }
 
       test("run") {
