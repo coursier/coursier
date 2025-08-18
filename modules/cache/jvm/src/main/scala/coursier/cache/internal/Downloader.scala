@@ -594,6 +594,18 @@ import scala.util.control.NonFatal
           case err @ Left(nf: ArtifactError.NotFound) if nf.permanent.contains(true) =>
             createErrFileBlocking()
             err: Either[ArtifactError, Unit]
+          case err @ Left(err0: ArtifactError.DownloadError)
+              if err0.getCause.isInstanceOf[IOException] =>
+            if (referenceFileOpt.exists(_.exists()) && errFile0.exists())
+              // We got a download error, but we also got a not-found error
+              // in the past. We assume the download error is transient
+              // (user is offline for example), and return the cached
+              // not-found error.
+              Left(new ArtifactError.NotFound(url, permanent = Some(true), causeOpt = Some(err0)))
+            else {
+              deleteErrFileBlocking()
+              err: Either[ArtifactError, Unit]
+            }
           case other =>
             deleteErrFileBlocking()
             other
