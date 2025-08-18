@@ -1319,152 +1319,160 @@ abstract class CentralTests extends TestSuite {
         }
 
       test("force") {
-        "2.12.7" - async {
-          val res = await(
-            runner.resolve(
-              Seq(
-                dep"sh.almond:scala-kernel_2.12.7:0.2.2",
-                dep"org.scalameta:interactive_2.12.7:4.1.4"
-              ),
-              extraRepos = Seq(Repositories.jitpack),
-              mapDependencies =
-                Some(coursier.core.Resolution.overrideScalaModule(VersionConstraint("2.12.7")))
+        test("2.12.7") {
+          async {
+            val res = await(
+              runner.resolve(
+                Seq(
+                  dep"sh.almond:scala-kernel_2.12.7:0.2.2",
+                  dep"org.scalameta:interactive_2.12.7:4.1.4"
+                ),
+                extraRepos = Seq(Repositories.jitpack),
+                mapDependencies =
+                  Some(coursier.core.Resolution.overrideScalaModule(VersionConstraint("2.12.7")))
+              )
             )
-          )
 
-          val deps = res.dependencies.map { dep =>
-            s"${dep.module}:${dep.versionConstraint.asString}"
+            val deps = res.dependencies.map { dep =>
+              s"${dep.module}:${dep.versionConstraint.asString}"
+            }
+
+            val expectedDeps = sharedDeps ++ Seq(
+              "com.lihaoyi:ammonite-interp_2.12.7:1.5.0-4-6296f20",
+              "com.lihaoyi:ammonite-repl_2.12.7:1.5.0-4-6296f20",
+              "com.lihaoyi:fansi_2.12:0.2.4",
+              "com.lihaoyi:pprint_2.12:0.5.2",
+              "org.scala-lang:scala-compiler:2.12.7",
+              "org.scala-lang:scala-library:2.12.7",
+              "org.scala-lang:scala-reflect:2.12.7",
+              "org.scala-lang:scalap:2.12.7",
+              "org.scalameta:interactive_2.12.7:4.1.4",
+              "org.scalameta:semanticdb-scalac-core_2.12.7:4.1.4",
+              "sh.almond:scala-interpreter_2.12.7:0.2.2",
+              "sh.almond:scala-kernel-api_2.12.7:0.2.2",
+              "sh.almond:scala-kernel_2.12.7:0.2.2"
+            )
+
+            assertSameElements(expectedDeps, deps)
           }
-
-          val expectedDeps = sharedDeps ++ Seq(
-            "com.lihaoyi:ammonite-interp_2.12.7:1.5.0-4-6296f20",
-            "com.lihaoyi:ammonite-repl_2.12.7:1.5.0-4-6296f20",
-            "com.lihaoyi:fansi_2.12:0.2.4",
-            "com.lihaoyi:pprint_2.12:0.5.2",
-            "org.scala-lang:scala-compiler:2.12.7",
-            "org.scala-lang:scala-library:2.12.7",
-            "org.scala-lang:scala-reflect:2.12.7",
-            "org.scala-lang:scalap:2.12.7",
-            "org.scalameta:interactive_2.12.7:4.1.4",
-            "org.scalameta:semanticdb-scalac-core_2.12.7:4.1.4",
-            "sh.almond:scala-interpreter_2.12.7:0.2.2",
-            "sh.almond:scala-kernel-api_2.12.7:0.2.2",
-            "sh.almond:scala-kernel_2.12.7:0.2.2"
-          )
-
-          assertSameElements(expectedDeps, deps)
         }
 
-        "overrideFullSuffix" - async {
-          val res = await(
-            runner.resolve(
-              Seq(
-                dep"sh.almond:scala-kernel_2.12.8:0.2.2",
-                dep"org.scalameta:interactive_2.12.8:4.1.4"
-              ),
-              extraRepos = Seq(Repositories.jitpack),
-              mapDependencies = Some(coursier.core.Resolution.overrideFullSuffix("2.12.8"))
+        test("overrideFullSuffix") {
+          async {
+            val res = await(
+              runner.resolve(
+                Seq(
+                  dep"sh.almond:scala-kernel_2.12.8:0.2.2",
+                  dep"org.scalameta:interactive_2.12.8:4.1.4"
+                ),
+                extraRepos = Seq(Repositories.jitpack),
+                mapDependencies = Some(coursier.core.Resolution.overrideFullSuffix("2.12.8"))
+              )
             )
-          )
 
-          val deps = res.dependencies.map { dep =>
-            s"${dep.module}:${dep.versionConstraint.asString}"
+            val deps = res.dependencies.map { dep =>
+              s"${dep.module}:${dep.versionConstraint.asString}"
+            }
+
+            val expectedDeps = sharedDeps ++ Seq(
+              "com.lihaoyi:ammonite-interp_2.12.8:1.5.0-4-6296f20",
+              "com.lihaoyi:ammonite-repl_2.12.8:1.5.0-4-6296f20",
+              "com.lihaoyi:fansi_2.12:0.2.4",
+              "com.lihaoyi:pprint_2.12:0.5.2",
+              "org.scala-lang:scala-compiler:2.12.8",
+              "org.scala-lang:scala-library:2.12.8",
+              "org.scala-lang:scala-reflect:2.12.8",
+              "org.scala-lang:scalap:2.12.8",
+              "org.scalameta:interactive_2.12.8:4.1.4",
+              "org.scalameta:semanticdb-scalac-core_2.12.8:4.1.4",
+              "sh.almond:scala-interpreter_2.12.8:0.2.2",
+              "sh.almond:scala-kernel-api_2.12.8:0.2.2",
+              "sh.almond:scala-kernel_2.12.8:0.2.2"
+            )
+
+            assertSameElements(expectedDeps, deps)
           }
-
-          val expectedDeps = sharedDeps ++ Seq(
-            "com.lihaoyi:ammonite-interp_2.12.8:1.5.0-4-6296f20",
-            "com.lihaoyi:ammonite-repl_2.12.8:1.5.0-4-6296f20",
-            "com.lihaoyi:fansi_2.12:0.2.4",
-            "com.lihaoyi:pprint_2.12:0.5.2",
-            "org.scala-lang:scala-compiler:2.12.8",
-            "org.scala-lang:scala-library:2.12.8",
-            "org.scala-lang:scala-reflect:2.12.8",
-            "org.scala-lang:scalap:2.12.8",
-            "org.scalameta:interactive_2.12.8:4.1.4",
-            "org.scalameta:semanticdb-scalac-core_2.12.8:4.1.4",
-            "sh.almond:scala-interpreter_2.12.8:0.2.2",
-            "sh.almond:scala-kernel-api_2.12.8:0.2.2",
-            "sh.almond:scala-kernel_2.12.8:0.2.2"
-          )
-
-          assertSameElements(expectedDeps, deps)
         }
       }
 
       test("dontForce") {
-        "2.12.7" - async {
-          val res = await(
-            runner.resolve(
-              Seq(
-                dep"sh.almond:scala-kernel_2.12.7:0.2.2",
-                dep"org.scalameta:interactive_2.12.7:4.1.4"
-              ),
-              extraRepos = Seq(Repositories.jitpack)
+        test("2.12.7") {
+          async {
+            val res = await(
+              runner.resolve(
+                Seq(
+                  dep"sh.almond:scala-kernel_2.12.7:0.2.2",
+                  dep"org.scalameta:interactive_2.12.7:4.1.4"
+                ),
+                extraRepos = Seq(Repositories.jitpack)
+              )
             )
-          )
 
-          val deps = res.dependencies.map { dep =>
-            s"${dep.module}:${dep.versionConstraint.asString}"
+            val deps = res.dependencies.map { dep =>
+              s"${dep.module}:${dep.versionConstraint.asString}"
+            }
+
+            val expectedDeps = sharedDeps ++ Seq(
+              "com.lihaoyi:ammonite-interp_2.12.7:1.5.0-4-6296f20",
+              "com.lihaoyi:ammonite-repl_2.12.7:1.5.0-4-6296f20",
+              "com.lihaoyi:fansi_2.12:0.2.4",
+              "com.lihaoyi:pprint_2.12:0.5.2",
+              // borked classpath - 2.12.7 full cross-versioned stuff, along scala 2.12.8 JARs
+              "org.scala-lang:scala-compiler:2.12.8",
+              "org.scala-lang:scala-library:2.12.8",
+              "org.scala-lang:scala-reflect:2.12.8",
+              "org.scala-lang:scalap:2.12.8",
+              "org.scalameta:interactive_2.12.7:4.1.4",
+              "org.scalameta:semanticdb-scalac-core_2.12.7:4.1.4",
+              "sh.almond:scala-interpreter_2.12.7:0.2.2",
+              "sh.almond:scala-kernel-api_2.12.7:0.2.2",
+              "sh.almond:scala-kernel_2.12.7:0.2.2"
+            )
+
+            assertSameElements(expectedDeps, deps)
           }
-
-          val expectedDeps = sharedDeps ++ Seq(
-            "com.lihaoyi:ammonite-interp_2.12.7:1.5.0-4-6296f20",
-            "com.lihaoyi:ammonite-repl_2.12.7:1.5.0-4-6296f20",
-            "com.lihaoyi:fansi_2.12:0.2.4",
-            "com.lihaoyi:pprint_2.12:0.5.2",
-            // borked classpath - 2.12.7 full cross-versioned stuff, along scala 2.12.8 JARs
-            "org.scala-lang:scala-compiler:2.12.8",
-            "org.scala-lang:scala-library:2.12.8",
-            "org.scala-lang:scala-reflect:2.12.8",
-            "org.scala-lang:scalap:2.12.8",
-            "org.scalameta:interactive_2.12.7:4.1.4",
-            "org.scalameta:semanticdb-scalac-core_2.12.7:4.1.4",
-            "sh.almond:scala-interpreter_2.12.7:0.2.2",
-            "sh.almond:scala-kernel-api_2.12.7:0.2.2",
-            "sh.almond:scala-kernel_2.12.7:0.2.2"
-          )
-
-          assertSameElements(expectedDeps, deps)
         }
 
-        "2.12.8" - async {
-          val res = await(
-            runner.resolve(
-              Seq(
-                dep"sh.almond:scala-kernel_2.12.8:0.2.2",
-                dep"org.scalameta:interactive_2.12.8:4.1.4"
-              ),
-              extraRepos = Seq(Repositories.jitpack)
+        test("2.12.8") {
+          async {
+            val res = await(
+              runner.resolve(
+                Seq(
+                  dep"sh.almond:scala-kernel_2.12.8:0.2.2",
+                  dep"org.scalameta:interactive_2.12.8:4.1.4"
+                ),
+                extraRepos = Seq(Repositories.jitpack)
+              )
             )
-          )
 
-          val deps = res.dependencies.map { dep =>
-            s"${dep.module}:${dep.versionConstraint.asString}"
+            val deps = res.dependencies.map { dep =>
+              s"${dep.module}:${dep.versionConstraint.asString}"
+            }
+
+            val expectedDeps = sharedDeps ++ Seq(
+              "com.lihaoyi:ammonite-interp_2.12.8:1.5.0-4-6296f20",
+              "com.lihaoyi:ammonite-repl_2.12.8:1.5.0-4-6296f20",
+
+              // not sure why fansi and pprint differ from the others here
+              "com.lihaoyi:fansi_2.12:0.2.5",
+              "com.lihaoyi:pprint_2.12:0.5.3",
+              "org.scala-lang:scala-compiler:2.12.8",
+              "org.scala-lang:scala-library:2.12.8",
+              "org.scala-lang:scala-reflect:2.12.8",
+              "org.scala-lang:scalap:2.12.8",
+
+              // not forcing the scala version -> borked classpath, with both 2.12.7 and 2.12.8 stuff
+              "org.scalameta:interactive_2.12.7:4.0.0",
+              "org.scalameta:semanticdb-scalac-core_2.12.7:4.0.0",
+              "org.scalameta:interactive_2.12.8:4.1.4",
+              "org.scalameta:semanticdb-scalac-core_2.12.8:4.1.4",
+              "sh.almond:scala-interpreter_2.12.8:0.2.2",
+              "sh.almond:scala-kernel-api_2.12.8:0.2.2",
+              "sh.almond:scala-kernel_2.12.8:0.2.2"
+            )
+
+            assertSameElements(expectedDeps, deps)
           }
-
-          val expectedDeps = sharedDeps ++ Seq(
-            "com.lihaoyi:ammonite-interp_2.12.8:1.5.0-4-6296f20",
-            "com.lihaoyi:ammonite-repl_2.12.8:1.5.0-4-6296f20",
-
-            // not sure why fansi and pprint differ from the others here
-            "com.lihaoyi:fansi_2.12:0.2.5",
-            "com.lihaoyi:pprint_2.12:0.5.3",
-            "org.scala-lang:scala-compiler:2.12.8",
-            "org.scala-lang:scala-library:2.12.8",
-            "org.scala-lang:scala-reflect:2.12.8",
-            "org.scala-lang:scalap:2.12.8",
-
-            // not forcing the scala version -> borked classpath, with both 2.12.7 and 2.12.8 stuff
-            "org.scalameta:interactive_2.12.7:4.0.0",
-            "org.scalameta:semanticdb-scalac-core_2.12.7:4.0.0",
-            "org.scalameta:interactive_2.12.8:4.1.4",
-            "org.scalameta:semanticdb-scalac-core_2.12.8:4.1.4",
-            "sh.almond:scala-interpreter_2.12.8:0.2.2",
-            "sh.almond:scala-kernel-api_2.12.8:0.2.2",
-            "sh.almond:scala-kernel_2.12.8:0.2.2"
-          )
-
-          assertSameElements(expectedDeps, deps)
         }
       }
     }
