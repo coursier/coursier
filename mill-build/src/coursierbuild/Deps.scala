@@ -75,7 +75,7 @@ object Deps {
     def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
     def windowsAnsiPs =
       ivy"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
-    def zstdJni = ivy"com.github.luben:zstd-jni:1.5.7-3"
+    def zstdJni = ivy"com.github.luben:zstd-jni:1.5.7-4"
   }
 
   object Versions {
