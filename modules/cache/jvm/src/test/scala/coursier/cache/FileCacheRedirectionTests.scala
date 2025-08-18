@@ -1386,7 +1386,7 @@ object FileCacheRedirectionTests extends TestSuite {
     }
 
     test("does not accept redundant path elements like .. or .") {
-      intercept[IllegalArgumentException] {
+      assertThrows[IllegalArgumentException] {
         val localFile = FileCache.localFile0(
           "https://evil-repo.org/com.fake/../../../../../../lib1.jar",
           CacheDefaults.location,
