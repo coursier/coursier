@@ -55,7 +55,7 @@ object Deps {
       else
         ivy"org.virtuslab.scala-cli:config_3:1.8.5"
           .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
-    def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.4.0"
+    def scalaJsDom               = ivy"org.scala-js::scalajs-dom::2.8.1"
     def scalaJsReact             = ivy"com.github.japgolly.scalajs-react::core::2.1.2"
     def scalaNativeTools03       = ivy"org.scala-native::tools:0.3.9"
     def scalaNativeTools040M2    = ivy"org.scala-native::tools:0.4.0-M2"
