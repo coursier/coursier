@@ -100,7 +100,7 @@ object Deps {
     def scala212 = "2.12.20"
     val all      = Seq(scala213, scala212)
 
-    def scalaJs = "1.18.1"
+    def scalaJs = "1.19.0"
   }
 
   object Docker {
