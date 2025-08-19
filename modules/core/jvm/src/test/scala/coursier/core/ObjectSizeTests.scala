@@ -104,7 +104,7 @@ object ObjectSizeTests extends TestSuite {
         ad1 = null
         ad2 = null
         // nothing in cache
-        eventually {
+        assertEventually {
           System.gc()
           cacheSize() == 0
         }
