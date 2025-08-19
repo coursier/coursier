@@ -55,7 +55,7 @@ trait Doc extends ScalaModule {
 
     def extraSbt(ver: String) =
       if (ver.endsWith("SNAPSHOT")) """resolvers += Resolver.sonatypeRepo("snapshots")""" + "\n"
-      else ""
+      else """//""" + "\n"
 
     val outputDir = Task.workspace / "doc" / "processed-docs"
 
@@ -97,8 +97,9 @@ trait Doc extends ScalaModule {
         classPath = runClasspath().map(_.path),
         jvmArgs = Nil,
         env = forkEnv(),
-        mainArgs = allArgs,
-        cwd = forkWorkingDir()
+        mainArgs = pprint.err.log(allArgs),
+        cwd = forkWorkingDir(),
+        stdout = os.Inherit
       )
 
     if (watch)
