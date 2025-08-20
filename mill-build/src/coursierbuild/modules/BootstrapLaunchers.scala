@@ -32,7 +32,7 @@ trait BootstrapLauncher extends CsModule {
     else if (os.isDir(jmods))
       PathRef(jmods)
     else
-      sys.error(s"$rtJar and $jmods not found")
+      sys.error(s"$rtJar and $jmods not found, you might want to use a Zulu JDK")
   }
 
   def sharedProguardConf = Task {
