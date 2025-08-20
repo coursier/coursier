@@ -1,9 +1,7 @@
 package coursierbuild.modules
 
 import coursierbuild.Deps.Deps
-import coursierbuild.Shading
 import mill._
-import com.github.lolgab.mill.mima._
 
 trait Core extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-core"
