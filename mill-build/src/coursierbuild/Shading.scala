@@ -52,9 +52,11 @@ trait Shading extends JavaModule with PublishModule {
     val shadedDepSeq = shadedDependencies()
 
     val allJars = load(resolution)
-    val subset = ivyDeps().map(depToDependency).toSeq.filterNot(
-      shadedDepSeq.iterator.map(depToDependency).toSet
-    )
+    val subset =
+      moduleDepsChecked.map(_.coursierDependency) ++
+        ivyDeps().map(depToDependency).toSeq.filterNot(
+          shadedDepSeq.iterator.map(depToDependency).toSet
+        )
     val retainedJars = load {
       resolution.subset0(subset) match {
         case Left(err)  => throw new Exception(err)
