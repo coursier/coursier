@@ -251,7 +251,7 @@ import scala.util.Using
       }) {}
     }
     ArchiveCache.archiveType(url).collect {
-      case ArchiveType.Gzip =>
+      case ArchiveType.Gzip | ArchiveType.Tgz =>
         // read uncompressed content fully to validate GZIP checksum
         var fis: InputStream = null
         try {
