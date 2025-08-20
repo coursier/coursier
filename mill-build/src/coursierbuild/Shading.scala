@@ -103,6 +103,13 @@ trait Shading extends JavaModule with PublishModule {
 
     val inputFiles = Seq(orig) ++ shadedJars0
 
+    val keepDirs = validNamespaces()
+      .iterator
+      .flatMap(_.split("/").inits)
+      .filter(_.nonEmpty)
+      .map(_.map(_ + "/").mkString)
+      .toSet
+
     var fos: OutputStream    = null
     var zos: ZipOutputStream = null
     try {
@@ -120,6 +127,7 @@ trait Shading extends JavaModule with PublishModule {
             if (ent.getName.endsWith("/"))
               for {
                 (_, updatedName) <- shader(Array.emptyByteArray, ent.getName)
+                if keepDirs(updatedName)
                 if !seen(updatedName)
               } {
                 seen += updatedName
@@ -194,6 +202,8 @@ trait Shading extends JavaModule with PublishModule {
         fos.close()
     }
 
+    onlyNamespaces(validNamespaces(), updated.toIO)
+
     PathRef(updated)
   }
 
@@ -202,5 +212,30 @@ trait Shading extends JavaModule with PublishModule {
     val orig    = super.publishXmlDeps()
     val shaded  = shadedDependencies().iterator.map(convert).toSet
     Agg(orig.iterator.toSeq.filterNot(shaded): _*)
+  }
+
+  def onlyNamespaces(namespaces: Seq[String], jar: File): Unit = {
+    val allowedPrefixes = namespaces.map(_.replace('.', '/') + "/")
+    val extraAllowedDirs = namespaces.iterator
+      .flatMap { ns =>
+        ns.split('.').inits.filter(_.nonEmpty).map(_.map(_ + "/").mkString)
+      }
+      .toSet
+    val zf = new ZipFile(jar)
+    val unrecognized = zf.entries()
+      .asScala
+      .map(_.getName)
+      .filter { n =>
+        !n.startsWith("META-INF/") && allowedPrefixes.forall(!n.startsWith(_)) &&
+        !extraAllowedDirs.contains(n) &&
+        n != "reflect.properties" &&                 // scala-reflect adds that
+        n != "scala-collection-compat.properties" && // collection-compat adds that
+        !n.contains("/libzstd-jni-") // com.github.luben:zstd-jni stuff (pulled via plexus-archiver)
+      }
+      .toVector
+      .sorted
+    for (u <- unrecognized)
+      System.err.println(s"Unrecognized: $u")
+    assert(unrecognized.isEmpty)
   }
 }
