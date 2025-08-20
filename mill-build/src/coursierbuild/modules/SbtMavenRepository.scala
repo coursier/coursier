@@ -1,7 +1,6 @@
 package coursierbuild.modules
 
 import coursierbuild.Deps.Deps
-import coursierbuild.Shading
 import mill._
 
 trait SbtMavenRepository extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
