@@ -49,16 +49,21 @@ trait Shading extends JavaModule with PublishModule {
       loadedArtifacts.collect { case (_, Right(x)) => x }
     }
 
-    val shadedDepSeq = shadedDependencies()
+    val shadedDepSeq = shadedDependencies().iterator.map(depToDependency).toVector
 
     val allJars = load(resolution)
     val subset =
       moduleDepsChecked.map(_.coursierDependency) ++
         ivyDeps().map(depToDependency).toSeq.filterNot(
-          shadedDepSeq.iterator.map(depToDependency).toSet
+          shadedDepSeq.toSet
         )
+    val subset0 = subset.map { dep =>
+      shadedDepSeq.iterator.foldLeft(dep) { (dep0, shaded) =>
+        dep0.addExclusion(shaded.module.organization, shaded.module.name)
+      }
+    }
     val retainedJars = load {
-      resolution.subset0(subset) match {
+      resolution.subset0(subset0) match {
         case Left(err)  => throw new Exception(err)
         case Right(res) => res
       }
@@ -68,6 +73,9 @@ trait Shading extends JavaModule with PublishModule {
     println(s"${shadedJars.length} JAR(s) to shade")
     for (j <- shadedJars)
       println(s"  $j")
+
+    if (shadedJars.isEmpty)
+      sys.error("Found no JARs to shade")
 
     shadedJars.map(os.Path(_)).map(PathRef(_))
   }
