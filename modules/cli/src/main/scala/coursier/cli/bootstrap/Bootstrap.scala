@@ -158,7 +158,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
       else
         (Nil, artifactFiles)
 
-    val urls0 = asUrls.map(_._1.url).map(ClassPathEntry.Url(_))
+    val urls0  = asUrls.map(_._1.url).map(ClassPathEntry.Url(_))
     val files0 = asFiles.map { f =>
       ClassPathEntry.Resource(
         f.getName,
@@ -267,7 +267,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
         case Left(e: LaunchException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
           System.err.println(e.getMessage)
           sys.exit(1)
-        case Left(e) => throw e
+        case Left(e)   => throw e
         case Right(t0) =>
           t0
       }
@@ -336,7 +336,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
             )
           )
         val javaHomeTask = handle.get(s"graalvm:$graalvmVersion")
-        val javaHome =
+        val javaHome     =
           javaHomeTask.unsafeRun(wrapExceptions = true)(ExecutionContext.fromExecutorService(pool))
 
         Parameters.NativeImage(mainClass, fetch0)

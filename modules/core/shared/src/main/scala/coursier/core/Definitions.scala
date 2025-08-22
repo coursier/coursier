@@ -488,7 +488,7 @@ object Attributes {
       }
       .toVector
     val baseRetainedVariants = retainedVariantsFor(attr)
-    def isModuleBasedBom =
+    def isModuleBasedBom     =
       dependencies0.isEmpty && (dependencyManagement0.nonEmpty || !overrides.isEmpty) &&
       variants.nonEmpty
     val (actualAttr, retainedVariants) =
@@ -514,7 +514,7 @@ object Attributes {
         )
       )
     else {
-      val highestScore = retainedVariants.map(_._2).max
+      val highestScore      = retainedVariants.map(_._2).max
       val retainedVariants0 = retainedVariants.collect {
         case (name, `highestScore`) => name
       }
@@ -543,7 +543,7 @@ object Attributes {
 
   def isRelocatedVariant(variant: Variant.Attributes): Option[Dependency] = {
     lazy val firstDeps = dependencies0.iterator.filter(_._1 == variant).take(2).toVector
-    val isRelocated = variants.get(variant).exists(_.get("$relocated").contains("true")) &&
+    val isRelocated    = variants.get(variant).exists(_.get("$relocated").contains("true")) &&
       firstDeps.length == 1
     if (isRelocated) Some(firstDeps.head._2)
     else None
@@ -893,7 +893,7 @@ object SnapshotVersioning {
   classifier: Classifier
 ) {
   def attributes: Attributes = Attributes(`type`, classifier)
-  def isEmpty: Boolean =
+  def isEmpty: Boolean       =
     name.isEmpty && `type`.isEmpty && ext.isEmpty && classifier.isEmpty
 
   lazy val attributesHaveProperties =

@@ -24,7 +24,7 @@ object CoursierPublishModule {
     .call().out
     .trim()
   private def computeBuildVersion() = {
-    val gitHead = os.proc("git", "rev-parse", "HEAD").call().out.trim()
+    val gitHead       = os.proc("git", "rev-parse", "HEAD").call().out.trim()
     val maybeExactTag = scala.util.Try {
       os.proc("git", "describe", "--exact-match", "--tags", "--always", gitHead)
         .call().out

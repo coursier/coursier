@@ -91,7 +91,7 @@ import scala.collection.mutable
         if (!m.contains(k))
           l += k
         val formerOpt = m.get(k).orElse(getEnv(k))
-        val newValue = formerOpt.fold(v) { p =>
+        val newValue  = formerOpt.fold(v) { p =>
           if (upfront)
             v + pathSeparator + p
           else
