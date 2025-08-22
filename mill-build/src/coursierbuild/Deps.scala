@@ -41,7 +41,7 @@ object Deps {
     def mdoc           = ivy"org.scalameta::mdoc:2.7.2"
     def noCrcZis       = ivy"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
     def osLib          = ivy"com.lihaoyi::os-lib:0.11.5"
-    def plexusArchiver = ivy"org.codehaus.plexus:plexus-archiver:4.10.0"
+    def plexusArchiver = ivy"org.codehaus.plexus:plexus-archiver:4.10.1"
     // plexus-archiver needs its loggers
     def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
       .exclude("junit" -> "junit")
