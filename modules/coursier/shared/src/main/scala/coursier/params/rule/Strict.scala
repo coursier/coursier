@@ -25,10 +25,10 @@ import dataclass._
 
     val conflicts = coursier.graph.Conflict.conflicted(res, semVer = semVer).filter { c =>
       val conflict = c.conflict
-      val ignore =
+      val ignore   =
         ignoreIfForcedVersion && res.forceVersions0.get(conflict.module).exists {
           forcedConstraint =>
-            val validateInterval = forcedConstraint.interval.contains(conflict.version0)
+            val validateInterval          = forcedConstraint.interval.contains(conflict.version0)
             def validatePreferredVersions = forcedConstraint.preferred.isEmpty ||
               forcedConstraint.preferred.contains(conflict.version0)
             validateInterval && validatePreferredVersions

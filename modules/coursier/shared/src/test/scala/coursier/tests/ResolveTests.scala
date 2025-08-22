@@ -226,7 +226,7 @@ object ResolveTests extends TestSuite {
         async {
           val forcedCollectionVersion = "1.4.2"
           val forcedLifecycleVersion  = "2.8.7"
-          val baseResolve = enableModules(resolve.addRepositories(Repositories.google))
+          val baseResolve             = enableModules(resolve.addRepositories(Repositories.google))
             .addDependencies(dep"androidx.customview:customview-poolingcontainer:1.0.0")
             .mapResolutionParams { params =>
               params.addVariantAttributes(
@@ -477,7 +477,7 @@ object ResolveTests extends TestSuite {
                 .future()
             }
 
-            val found = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
+            val found    = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
             val expected = Set(
               mod"org.scala-lang:scala-library" -> VersionConstraint("2.12.8"),
               mod"test:a_2.12"                  -> VersionConstraint("1.0.2-SNAPSHOT")
@@ -500,7 +500,7 @@ object ResolveTests extends TestSuite {
                 .future()
             }
 
-            val found = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
+            val found    = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
             val expected = Set(
               mod"org.scala-lang:scala-library" -> VersionConstraint("2.12.8"),
               mod"test:a_2.12"                  -> VersionConstraint("1.0.1")
@@ -570,7 +570,7 @@ object ResolveTests extends TestSuite {
               .future()
           }
 
-          val found = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
+          val found    = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
           val expected = Set(
             mod"org.scala-lang:scala-library" -> VersionConstraint("2.12.8"),
             mod"test:b_2.12"                  -> VersionConstraint("1.0.2+20190524-1")
@@ -738,7 +738,7 @@ object ResolveTests extends TestSuite {
 
           await(validateDependencies(res))
 
-          val urls = res.dependencyArtifacts0().map(_._3.url).toSet
+          val urls         = res.dependencyArtifacts0().map(_._3.url).toSet
           val expectedUrls = Set(
             "https://repo1.maven.org/maven2/javax/ws/rs/javax.ws.rs-api/2.1.1/javax.ws.rs-api-2.1.1.jar"
           )
@@ -770,7 +770,7 @@ object ResolveTests extends TestSuite {
               .future()
           }
 
-          val found = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
+          val found    = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
           val expected = Set(
             mod"org.scala-lang:scala-library" -> VersionConstraint("2.12.8"),
             mod"test:b_2.12"                  -> VersionConstraint("1.0.1")
@@ -1052,8 +1052,8 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res))
 
-        val artifacts = res.artifacts(types = Resolution.defaultTypes + Type("so"))
-        val urls      = artifacts.map(_.url).toSet
+        val artifacts    = res.artifacts(types = Resolution.defaultTypes + Type("so"))
+        val urls         = artifacts.map(_.url).toSet
         val expectedUrls = Set(
           "https://repo1.maven.org/maven2/com/almworks/sqlite4java/sqlite4java/1.0.392/sqlite4java-1.0.392.jar",
           "https://repo1.maven.org/maven2/com/almworks/sqlite4java/libsqlite4java-linux-amd64/1.0.392/libsqlite4java-linux-amd64-1.0.392.so",
@@ -1101,7 +1101,7 @@ object ResolveTests extends TestSuite {
     test("subset") {
       async {
         val json4s = dep"org.json4s:json4s-native_2.12:[3.3.0,3.5.0)"
-        val res = await {
+        val res    = await {
           resolve
             .addDependencies(
               json4s,
@@ -1185,7 +1185,7 @@ object ResolveTests extends TestSuite {
 
         val depArtifacts = res.dependencyArtifacts0(Some(Seq(Classifier.sources)))
 
-        val urls = depArtifacts.map(_._3.url).toSet
+        val urls         = depArtifacts.map(_._3.url).toSet
         val expectedUrls = Set(
           "https://repo1.maven.org/maven2/org/tukaani/xz/1.2/xz-1.2-sources.jar",
           "https://repo1.maven.org/maven2/org/apache/commons/commons-compress/1.5/commons-compress-1.5-sources.jar"
@@ -1249,7 +1249,7 @@ object ResolveTests extends TestSuite {
 
     test("default value for pom project_packaging property") {
       async {
-        val dep = dep"org.nd4j:nd4j-native-platform:1.0.0-beta4"
+        val dep    = dep"org.nd4j:nd4j-native-platform:1.0.0-beta4"
         val params = ResolutionParams()
           .withOsInfo {
             Activation.Os(
@@ -1269,7 +1269,7 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res, params))
 
-        val urls = res.dependencyArtifacts0().map(_._3.url)
+        val urls      = res.dependencyArtifacts0().map(_._3.url)
         val wrongUrls =
           urls.filter(url => url.contains("$") || url.contains("{") || url.contains("}"))
 
@@ -1312,7 +1312,7 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res))
 
-        val urls = res.dependencyArtifacts0().map(_._3.url).toSet
+        val urls         = res.dependencyArtifacts0().map(_._3.url).toSet
         val expectedUrls = Set(
           "https://repo1.maven.org/maven2/org/bytedeco/javacpp/1.5.2/javacpp-1.5.2.jar",
           "https://repo1.maven.org/maven2/org/bytedeco/mkl-platform-redist/2019.5-1.5.2/mkl-platform-redist-2019.5-1.5.2.jar",
@@ -1343,7 +1343,7 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res))
 
-        val artifacts = res.dependencyArtifacts0()
+        val artifacts   = res.dependencyArtifacts0()
         val expectedUrl =
           "https://repo1.maven.org/maven2/io/netty/netty-transport-native-epoll/4.1.44.Final/netty-transport-native-epoll-4.1.44.Final-woops.jar"
         val (_, _, woopsArtifact) = artifacts.find(_._3.url == expectedUrl).getOrElse {
@@ -1358,7 +1358,7 @@ object ResolveTests extends TestSuite {
       test("JDK 1.8") {
         async {
           val params = resolve.resolutionParams.withJdkVersion(Version("1.8.0_121"))
-          val res = await {
+          val res    = await {
             resolve
               .withResolutionParams(params)
               .addDependencies(dep)
@@ -1370,7 +1370,7 @@ object ResolveTests extends TestSuite {
       test("JDK 11") {
         async {
           val params = resolve.resolutionParams.withJdkVersion(Version("11.0.5"))
-          val res = await {
+          val res    = await {
             resolve
               .withResolutionParams(params)
               .addDependencies(dep)
@@ -1412,8 +1412,8 @@ object ResolveTests extends TestSuite {
         }
         await(validateDependencies(res, params))
 
-        val artifacts = res.artifacts()
-        val urls      = artifacts.map(_.url)
+        val artifacts    = res.artifacts()
+        val urls         = artifacts.map(_.url)
         val expectedUrls = Seq(
           "https://repo1.maven.org/maven2/org/openjfx/javafx-base/18-ea+2/javafx-base-18-ea+2.jar",
           "https://repo1.maven.org/maven2/org/openjfx/javafx-base/18-ea+2/javafx-base-18-ea+2-mac.jar"
@@ -2078,7 +2078,7 @@ object ResolveTests extends TestSuite {
               gradleModuleCheck0(
                 defaultAttributes = Some(
                   VariantSelector.AttributesBased(Map(
-                    "org.gradle.usage" -> VariantMatcher.Runtime,
+                    "org.gradle.usage"                   -> VariantMatcher.Runtime,
                     "org.jetbrains.kotlin.platform.type" ->
                       VariantMatcher.Equals("js"),
                     "org.jetbrains.kotlin.js.compiler" ->

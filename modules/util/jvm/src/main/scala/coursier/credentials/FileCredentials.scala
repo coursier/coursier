@@ -46,7 +46,7 @@ object FileCredentials {
     userProps.map { userProp =>
       val prefix = userProp.stripSuffix(".username")
 
-      val user = props.getProperty(userProp)
+      val user     = props.getProperty(userProp)
       val password = Option(props.getProperty(s"$prefix.password")).getOrElse {
         throw new Exception(s"Property $prefix.password not found in $origin")
       }

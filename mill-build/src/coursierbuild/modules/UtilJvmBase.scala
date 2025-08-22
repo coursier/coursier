@@ -15,7 +15,7 @@ trait UtilJvmBase extends Util with CsMima with Shading {
     Deps.jsoup
   )
   def validNamespaces = Seq("coursier")
-  def shadeRenames = Seq(
+  def shadeRenames    = Seq(
     "org.jsoup.**" -> "coursier.util.shaded.org.jsoup.@1"
   )
 }

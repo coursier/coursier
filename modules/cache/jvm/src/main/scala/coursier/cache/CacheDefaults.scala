@@ -85,7 +85,7 @@ object CacheDefaults {
       .filter(_ >= 0)
       .getOrElse(retryCount)
 
-  private def defaultMaxRedirections = Option(20) // same default as java.net.HttpURLConnection
+  private def defaultMaxRedirections    = Option(20) // same default as java.net.HttpURLConnection
   lazy val maxRedirections: Option[Int] = {
     def prop(name: String) =
       sys.props

@@ -18,7 +18,7 @@ object Image {
     lazy val pathTable = NoDirPathTable(rootDir)
 
     lazy val rootDir: Directory = new Directory(() => rootEntries)
-    lazy val rootEntries =
+    lazy val rootEntries        =
       Seq(
         new DotDirectoryEntry(rootDir),
         new DotDotDirectoryEntry(rootDir, None)

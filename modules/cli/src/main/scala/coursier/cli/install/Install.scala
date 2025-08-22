@@ -38,8 +38,8 @@ object Install extends CoursierCommand[InstallOptions] {
     else
       Util.createDirectories(params.shared.dir)
 
-    val pool  = Sync.fixedThreadPool(params.cache.parallel)
-    val cache = params.cache.cache(pool, params.output.logger())
+    val pool                  = Sync.fixedThreadPool(params.cache.parallel)
+    val cache                 = params.cache.cache(pool, params.output.logger())
     val noUpdateCoursierCache =
       params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
@@ -75,7 +75,7 @@ object Install extends CoursierCommand[InstallOptions] {
     }
     else if (params.env.disableEnv) {
       // TODO Move that to InstallDir?
-      val dir = installDir.baseDir.toAbsolutePath.toString
+      val dir         = installDir.baseDir.toAbsolutePath.toString
       val updatedPath = Option(System.getenv("PATH")).flatMap { strPath =>
         val path = strPath.split(File.pathSeparator)
         if (path.contains(dir))
