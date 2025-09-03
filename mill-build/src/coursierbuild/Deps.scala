@@ -69,7 +69,7 @@ object Deps {
     def slf4JNop                 = ivy"org.slf4j:slf4j-nop:2.0.17"
     def svm                      = ivy"org.graalvm.nativeimage:svm:21.3.15"
     def tika                     = ivy"org.apache.tika:tika-core:3.2.2"
-    def ujson                    = ivy"com.lihaoyi::ujson:4.2.1"
+    def ujson                    = ivy"com.lihaoyi::ujson:4.3.0"
     def utest                    = ivy"com.lihaoyi::utest::0.9.1"
     def versions                 = ivy"io.get-coursier::versions::0.5.1"
     def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
