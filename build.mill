@@ -899,7 +899,6 @@ trait CliTests extends CsModule
   )
   def ivyDeps = super.ivyDeps() ++ Agg(
     Deps.caseApp,
-    Deps.dockerClient,
     Deps.osLib,
     Deps.pprint,
     Deps.ujson,
