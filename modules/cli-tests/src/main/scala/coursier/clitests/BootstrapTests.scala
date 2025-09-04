@@ -669,7 +669,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         val nopeM2Dir = tmpDir / "m2-nope"
         os.write(
           nopeM2Dir / "settings.xml",
-          TestAuthProxy.m2Settings(9083, "wrong", "nope"),
+          TestAuthProxy.m2Settings(9088, "wrong", "nope"),
           createFolders = true
         )
 

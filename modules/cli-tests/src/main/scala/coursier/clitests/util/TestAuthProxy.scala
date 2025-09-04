@@ -7,7 +7,7 @@ import scala.concurrent.duration._
 
 object TestAuthProxy {
 
-  def defaultPort = 9083
+  def defaultPort = 9085
 
   private lazy val imageId = sys.props.getOrElse(
     "coursier.test.auth-proxy-image",
