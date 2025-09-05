@@ -45,7 +45,7 @@ trait CacheJvmBase extends Cache with CsMima {
 
   trait CacheJvmBaseTests extends CrossSbtTests {
     def sources = Task {
-      val dest = Task.dest / "CustomLoaderClasspath.scala"
+      val dest            = Task.dest / "CustomLoaderClasspath.scala"
       val customLoaderCp0 = customLoaderCp()
         .map("\"" + _.path.toNIO.toUri.toASCIIString + "\"")
         .mkString("Seq(", ", ", ")")

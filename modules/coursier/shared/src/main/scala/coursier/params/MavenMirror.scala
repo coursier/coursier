@@ -33,7 +33,7 @@ import dataclass.data
 
 object MavenMirror {
   def apply(to: String, first: String, others: String*): MavenMirror = {
-    val from = first +: others
+    val from  = first +: others
     val from0 =
       if (from.contains("*"))
         Seq("*")

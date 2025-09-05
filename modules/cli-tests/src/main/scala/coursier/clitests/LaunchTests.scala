@@ -50,7 +50,7 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
           check = false
         )
       assert(res.exitCode != 0)
-      val output = res.out.text()
+      val output           = res.out.text()
       val expectedInOutput = Seq(
         "Main method",
         "in class scala.tools.nsc.Driver",
@@ -252,10 +252,10 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
             "--",
             "--help"
           ).call(cwd = tmpDir0)
-          val found = os.list(workDir)
+          val found          = os.list(workDir)
           val hybridLauncher = found match {
             case Seq(f) => f
-            case _ =>
+            case _      =>
               sys.error(s"Expected one file in work dir, got ${found.map(_.relativeTo(workDir))}")
           }
           val zf = new ZipFile(hybridLauncher.toIO)
@@ -449,10 +449,10 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
           "--",
           "--help"
         ).call(cwd = tmpDir0)
-        val found = os.list(workDir)
+        val found          = os.list(workDir)
         val hybridLauncher = found match {
           case Seq(f) => f
-          case _ =>
+          case _      =>
             sys.error(s"Expected one file in work dir, got ${found.map(_.relativeTo(workDir))}")
         }
         var zf: ZipFile = null

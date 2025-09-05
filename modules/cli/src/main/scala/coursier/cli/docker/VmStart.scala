@@ -23,9 +23,9 @@ object VmStart extends CoursierCommand[VmStartOptions] {
       case Right(params0) => params0
     }
 
-    val pool   = Sync.fixedThreadPool(params.cache.parallel)
-    val logger = params.output.logger()
-    val cache  = params.cache.cache(pool, logger)
+    val pool                   = Sync.fixedThreadPool(params.cache.parallel)
+    val logger                 = params.output.logger()
+    val cache                  = params.cache.cache(pool, logger)
     val archiveCacheForVmFiles =
       if (params.defaultCacheForVmFiles) ArchiveCache()
       else ArchiveCache().withCache(cache)

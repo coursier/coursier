@@ -457,7 +457,7 @@ import scala.util.control.NonFatal
   private def checkNeeded(file: File) = ttl match {
     case None                       => S.point(true)
     case Some(ttl) if !ttl.isFinite => S.point(false)
-    case Some(ttl) =>
+    case Some(ttl)                  =>
       blockingIO {
         Blocking.lastCheck(file).fold(true) { ts =>
           val now = clock.millis()
@@ -469,7 +469,7 @@ import scala.util.control.NonFatal
   private def checkNeededBlocking(file: File) = ttl match {
     case None                       => true
     case Some(ttl) if !ttl.isFinite => false
-    case Some(ttl) =>
+    case Some(ttl)                  =>
       Blocking.lastCheck(file).fold(true) { ts =>
         val now = clock.millis()
         now > ts + ttl.toMillis
@@ -478,7 +478,7 @@ import scala.util.control.NonFatal
 
   private def checkSideArtifact: EitherT[F, ArtifactError, Unit] =
     artifact.extra.get("check") match {
-      case None => EitherT.point(())
+      case None          => EitherT.point(())
       case Some(toCheck) =>
         blockingIOE {
           val toCheckFile    = localFile(toCheck.url, toCheck.authentication.flatMap(_.userOpt))
@@ -528,10 +528,10 @@ import scala.util.control.NonFatal
     def checkShouldDownload: F[Either[ArtifactError, Boolean]] =
       blockingIO(file.exists()).flatMap {
         case false => S.point(Right(true))
-        case true =>
+        case true  =>
           checkNeeded(file).flatMap {
             case false => S.point(Right(false))
-            case true =>
+            case true  =>
               if (checkRemote)
                 doCheckRemote.run.flatMap {
                   case Right(false) =>
@@ -664,7 +664,7 @@ import scala.util.control.NonFatal
       else {
         def maybeUpdate = for {
           needsUpdate <- shouldDownload(file, url, checkRemote = true)
-          _ <- {
+          _           <- {
             val f: F[Either[ArtifactError, Unit]] =
               if (needsUpdate)
                 remoteKeepErrors(
@@ -692,7 +692,7 @@ import scala.util.control.NonFatal
             val e = for {
               _           <- EitherT(checkFileExists(file, url, log = false))
               needsUpdate <- shouldDownload(file, url, checkRemote = false)
-              _ <- {
+              _           <- {
                 val e: Either[ArtifactError, Unit] =
                   if (needsUpdate) Left(new ArtifactError.FileTooOldOrNotFound(file.toString))
                   else Right(())
@@ -751,7 +751,7 @@ import scala.util.control.NonFatal
             val candidate = FileCache.auxiliaryFile(r.file, c)
             blockingIO(candidate.exists()).map {
               case false => checksumRes(c)
-              case true =>
+              case true  =>
                 def fallbackUrl = s"${artifact.url}.${c.toLowerCase(Locale.ROOT).filter(_ != '-')}"
                 val url         = artifact.checksumUrls.getOrElse(c, fallbackUrl)
                 Seq(S.point(DownloadResult(url, candidate)))

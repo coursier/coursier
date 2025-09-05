@@ -40,9 +40,9 @@ object ResolveParams {
     val sharedV  = SharedResolveParams(options.sharedResolveOptions)
     val channelV = SharedChannelParams(options.channelOptions)
 
-    val benchmark   = options.benchmark
-    val tree        = options.tree
-    val reverseTree = options.reverseTree
+    val benchmark      = options.benchmark
+    val tree           = options.tree
+    val reverseTree    = options.reverseTree
     val whatDependsOnV = options.whatDependsOn.traverse(
       ModuleParser.javaOrScalaModule(_).toValidatedNel
     )

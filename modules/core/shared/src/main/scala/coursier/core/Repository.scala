@@ -129,7 +129,7 @@ trait Repository extends Serializable with ArtifactSource {
 
     versionConstraint.latest match {
       case Some(latest) => fromLatest(latest)
-      case None =>
+      case None         =>
         versionConstraint.preferred match {
           case Some(preferred) => EitherT(checkVersion(preferred))
           case None            => fromInterval
@@ -160,7 +160,7 @@ trait Repository extends Serializable with ArtifactSource {
   ): EitherT[F, String, (Versions, String)] =
     if (versionsCheckHasModule)
       completeOpt(fetch) match {
-        case None => fetchVersions(module, fetch)
+        case None    => fetchVersions(module, fetch)
         case Some(c) =>
           EitherT[F, String, Boolean](F.map(c.hasModule(module))(Right(_))).flatMap {
             case false =>
@@ -293,7 +293,7 @@ object Repository {
     def hasModule(module: Module)(implicit F: Monad[F]): F[Boolean] =
       hasOrg(Complete.Input.Org(module.organization.value), partial = false).flatMap {
         case false => F.point(false)
-        case true =>
+        case true  =>
           val prefix              = s"${module.organization.value}:"
           val moduleDirectoryName = moduleDirectory(module)
           hasName(Complete.Input.Name(
@@ -355,7 +355,7 @@ object Repository {
         case verInput: Complete.Input.Ver =>
           hasOrg(verInput.orgInput, partial = false).flatMap {
             case false => empty
-            case true =>
+            case true  =>
               hasName(verInput.nameInput).flatMap {
                 case false => empty
                 case true  => ver(verInput)

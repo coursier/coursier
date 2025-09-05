@@ -46,7 +46,7 @@ final case class BootstrapSpecificParams(
 
   def jvmCache(cache: Cache[Task]): JvmCache = {
     val archiveCache = ArchiveCache().withCache(cache)
-    val c = JvmCache()
+    val c            = JvmCache()
       .withArchiveCache(archiveCache)
     jvmIndexUrlOpt match {
       case None              => c.withDefaultIndex
@@ -134,7 +134,7 @@ object BootstrapSpecificParams {
       .map(JvmChannel.handleAliases)
 
     val baseManifestOptV = options.baseManifest.filter(_.nonEmpty) match {
-      case None => Validated.validNel(None)
+      case None       => Validated.validNel(None)
       case Some(path) =>
         val p = Paths.get(path)
         if (Files.isRegularFile(p))
