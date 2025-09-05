@@ -24,7 +24,7 @@ final case class Retry(
           catch catchEx.andThen(_ => None)
       resOpt match {
         case Some(res) => res
-        case None =>
+        case None      =>
           Thread.sleep(delay.toMillis)
           loop(
             attempt + 1,

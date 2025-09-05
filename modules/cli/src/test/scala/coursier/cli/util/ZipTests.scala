@@ -14,7 +14,7 @@ object ZipTests extends TestSuite {
 
       // Inspired by https://github.com/spring-projects/spring-boot/commit/a50646b7cc3ad941e748dfb450077e3a73706205#diff-2297c301250b25e3b80301c58daf3ea0R621
 
-      val baos = new ByteArrayOutputStream
+      val baos   = new ByteArrayOutputStream
       val output = new ZipOutputStream(baos) {
         `def` = new Deflater(Deflater.NO_COMPRESSION, true)
       }
@@ -28,7 +28,7 @@ object ZipTests extends TestSuite {
 
       val result = baos.toByteArray
 
-      val zos = new ZipOutputStream(new ByteArrayOutputStream)
+      val zos        = new ZipOutputStream(new ByteArrayOutputStream)
       val entryNames =
         WrappedZipInputStream(Right(new ZipInputStream(new ByteArrayInputStream(result))))
           .entriesWithData()

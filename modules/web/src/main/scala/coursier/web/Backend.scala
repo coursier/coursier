@@ -43,7 +43,7 @@ final class Backend($ : BackendScope[_, State]) {
 
     val graph = js.Dynamic.newInstance(Dracula.Graph)()
 
-    var nodes = Set.empty[String]
+    var nodes                 = Set.empty[String]
     def addNode(name: String) =
       if (!nodes(name)) {
         graph.addNode(name)

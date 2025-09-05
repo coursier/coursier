@@ -66,7 +66,7 @@ object QemuFiles {
 
       val biosArtifactOptTask = guestCpu match {
         case Cpu.Arm64 =>
-          val cache = coursier.cache.FileCache()
+          val cache            = coursier.cache.FileCache()
           val debIndexArtifact =
             Artifact("https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.gz")
               .withChanging(true)
@@ -76,16 +76,16 @@ object QemuFiles {
               case Right(f) => Task.point(os.Path(f, os.pwd))
             }
           debIndexFileTask.map { debIndexFile =>
-            val packageName = "qemu-efi-aarch64"
+            val packageName         = "qemu-efi-aarch64"
             val detailsFromIndexOpt = Using.resource(os.read.inputStream(debIndexFile)) { is =>
               val reader = new BufferedReader(new InputStreamReader(
                 new GZIPInputStream(is),
                 StandardCharsets.UTF_8
               ))
-              val it = reader.lines().iterator().asScala
+              val it                             = reader.lines().iterator().asScala
               val groupIt: Iterator[Seq[String]] =
                 new Iterator[Seq[String]] {
-                  var nextGroup = Option.empty[Seq[String]]
+                  var nextGroup           = Option.empty[Seq[String]]
                   def tryReadNext(): Unit = {
                     val buf  = new ListBuffer[String]
                     var done = false

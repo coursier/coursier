@@ -46,7 +46,7 @@ object VariantSelector {
   ) extends VariantSelector {
     def asConfiguration: Option[Configuration] = None
     def isEmpty: Boolean                       = matchers.isEmpty
-    def repr: String = matchers
+    def repr: String                           = matchers
       .toVector
       .sortBy(_._1)
       .map {
