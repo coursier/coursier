@@ -97,7 +97,7 @@ object ResolveTests extends TestSuite {
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
         .unsafeRun(wrapExceptions = true)(ec)
 
-      val output = new String(stdout.toByteArray, "UTF-8")
+      val output         = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
         """└─ org.htrace:htrace-core:3.0.4
           |   ├─ org.apache.hadoop:hadoop-common:2.6.5
@@ -133,7 +133,7 @@ object ResolveTests extends TestSuite {
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
         .unsafeRun(wrapExceptions = true)(ec)
 
-      val output = new String(stdout.toByteArray, "UTF-8")
+      val output         = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
         """└─ org.htrace:htrace-core:3.0.4
           |   ├─ org.apache.hadoop:hadoop-common:2.6.5
@@ -217,7 +217,7 @@ object ResolveTests extends TestSuite {
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
         .unsafeRun(wrapExceptions = true)(ec)
 
-      val output = new String(stdout.toByteArray, "UTF-8")
+      val output         = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
         """aopalliance:aopalliance:1.0:default
           |ch.qos.logback:logback-classic:1.2.1:default
@@ -362,7 +362,7 @@ object ResolveTests extends TestSuite {
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
         .unsafeRun(wrapExceptions = true)(ec)
 
-      val output = new String(stdout.toByteArray, "UTF-8")
+      val output         = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
         "org.scalameta:sbt-metals;sbtVersion=0.13;scalaVersion=2.10:0.7.0:default\n"
 
@@ -407,7 +407,7 @@ object ResolveTests extends TestSuite {
       Resolve.printTask(params, pool, ps, ps, args.all)
         .unsafeRun(wrapExceptions = true)(ec)
 
-      val output = new String(stdout.toByteArray, StandardCharsets.UTF_8)
+      val output         = new String(stdout.toByteArray, StandardCharsets.UTF_8)
       val expectedOutput =
         """https://repo1.maven.org/maven2/com/github/alexarchambault/case-app_2.13/2.0.0-M9/case-app_2.13-2.0.0-M9.jar
           |https://repo1.maven.org/maven2/org/scala-lang/scala-library/2.13.0/scala-library-2.13.0.jar
@@ -444,7 +444,7 @@ object ResolveTests extends TestSuite {
       Resolve.printTask(params, pool, ps, ps, args.all)
         .unsafeRun(wrapExceptions = true)(ec)
 
-      val output = new String(stdout.toByteArray, "UTF-8")
+      val output         = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
         """com.github.alexarchambault:argonaut-shapeless_6.2_2.13:1.2.0-M12:default
           |io.argonaut:argonaut_2.13:6.2.4:default
@@ -581,7 +581,7 @@ object ResolveTests extends TestSuite {
       val jsonUrl = Thread.currentThread().getContextClassLoader.getResource("test-apps/scala.json")
       assert(jsonUrl != null)
       val channelDir = Paths.get(jsonUrl.toURI).getParent.normalize
-      val options = ResolveOptions(
+      val options    = ResolveOptions(
         channelOptions = SharedChannelOptions(
           defaultChannels = false,
           channel = List(channelDir.toString)

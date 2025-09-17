@@ -5,7 +5,7 @@ import coursierbuild.Deps.Deps
 import mill._, mill.scalalib._
 
 trait Coursier extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
-  def artifactName = "coursier"
+  def artifactName   = "coursier"
   def compileIvyDeps = super.compileIvyDeps() ++ Agg(
     Deps.dataClass,
     Deps.jsoniterMacros,

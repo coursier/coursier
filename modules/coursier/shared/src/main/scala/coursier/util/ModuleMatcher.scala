@@ -13,8 +13,8 @@ import scala.util.matching.Regex
 
   import ModuleMatcher.blobToPattern
 
-  lazy val orgPattern  = blobToPattern(matcher.organization.value)
-  lazy val namePattern = blobToPattern(matcher.name.value)
+  lazy val orgPattern        = blobToPattern(matcher.organization.value)
+  lazy val namePattern       = blobToPattern(matcher.name.value)
   lazy val attributesPattern = matcher
     .attributes
     .view

@@ -31,7 +31,7 @@ abstract class SetupTests extends TestSuite {
       TestUtil.withTempDir { tempDir =>
         val homeDir    = os.Path(tempDir, os.pwd)
         val installDir = homeDir / "bin"
-        val result = os.proc(
+        val result     = os.proc(
           launcher,
           "setup",
           "--yes",

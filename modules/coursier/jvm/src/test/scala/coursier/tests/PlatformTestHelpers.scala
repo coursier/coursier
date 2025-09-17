@@ -77,7 +77,7 @@ abstract class PlatformTestHelpers {
 
   def maybePrintConsistencyDiff(fromOrdered: Seq[String], fromMinimized: Seq[String]): Unit = {
     val patch = DiffUtils.diff(fromOrdered.asJava, fromMinimized.asJava)
-    val diff = UnifiedDiffUtils.generateUnifiedDiff(
+    val diff  = UnifiedDiffUtils.generateUnifiedDiff(
       "ordered-dependencies",
       "minimized-dependencies",
       fromOrdered.asJava,

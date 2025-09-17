@@ -92,7 +92,7 @@ object DependencyManagement {
         transitive = true
       )
     def orElse(other: Values): Values = {
-      val newConfig = if (config.value.isEmpty) other.config else config
+      val newConfig  = if (config.value.isEmpty) other.config else config
       val newVersion =
         if (versionConstraint.asString.isEmpty) other.versionConstraint else versionConstraint
       val newExcl     = other.minimizedExclusions.join(minimizedExclusions)
@@ -198,7 +198,7 @@ object DependencyManagement {
       val it = entries.iterator
       while (it.hasNext) {
         val (key0, incomingValues) = it.next()
-        val newValues = b.get(key0) match {
+        val newValues              = b.get(key0) match {
           case Some(previousValues) =>
             if (composeValues) previousValues.orElse(incomingValues)
             else previousValues
@@ -223,7 +223,7 @@ object DependencyManagement {
       val it = entries.iterator.flatMap(_.iterator)
       while (it.hasNext) {
         val (key0, incomingValues) = it.next()
-        val newValuesOpt = b.get(key0).orElse(initialMap.get(key0)) match {
+        val newValuesOpt           = b.get(key0).orElse(initialMap.get(key0)) match {
           case Some(previousValues) =>
             if (composeValues)
               Some(previousValues.orElse(incomingValues))
