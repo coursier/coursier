@@ -4,13 +4,13 @@ import mill._, scalalib._
 
 object Deps {
   object Deps {
-    def argonautShapeless = ivy"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.1"
-    def caseApp           = ivy"com.github.alexarchambault::case-app:2.1.0"
-    def catsCore          = ivy"org.typelevel::cats-core:${Versions.cats}"
-    def catsFree213       = ivy"org.typelevel:cats-free_2.13:${Versions.cats}"
-    def catsEffect        = ivy"org.typelevel::cats-effect::3.6.1"
-    def classPathUtil     = ivy"io.get-coursier::class-path-util:0.1.4"
-    def collectionCompat  = ivy"org.scala-lang.modules::scala-collection-compat::2.13.0"
+    def argonautShapeless          = ivy"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.1"
+    def caseApp                    = ivy"com.github.alexarchambault::case-app:2.1.0"
+    def catsCore                   = ivy"org.typelevel::cats-core:${Versions.cats}"
+    def catsFree213                = ivy"org.typelevel:cats-free_2.13:${Versions.cats}"
+    def catsEffect                 = ivy"org.typelevel::cats-effect::3.6.1"
+    def classPathUtil              = ivy"io.get-coursier::class-path-util:0.1.4"
+    def collectionCompat           = ivy"org.scala-lang.modules::scala-collection-compat::2.13.0"
     def concurrentReferenceHashMap =
       ivy"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
     def dataClass         = ivy"io.github.alexarchambault::data-class:0.2.7"
@@ -29,8 +29,8 @@ object Deps {
     def jniUtils          = ivy"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
     def jniUtilsBootstrap =
       ivy"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
-    def jol  = ivy"org.openjdk.jol:jol-core:0.17"
-    def jsch = ivy"com.github.mwiede:jsch:0.2.25"
+    def jol          = ivy"org.openjdk.jol:jol-core:0.17"
+    def jsch         = ivy"com.github.mwiede:jsch:0.2.25"
     def jsoniterCore =
       ivy"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${Versions.jsoniterScala}"
     def jsoniterMacros =
@@ -45,10 +45,10 @@ object Deps {
     // plexus-archiver needs its loggers
     def plexusContainerDefault = ivy"org.codehaus.plexus:plexus-container-default:2.1.1"
       .exclude("junit" -> "junit")
-    def pprint           = ivy"com.lihaoyi::pprint::0.9.0"
-    def proguard         = ivy"com.guardsquare:proguard-base:7.7.0"
-    def pythonNativeLibs = ivy"ai.kien::python-native-libs:0.2.4"
-    def scalaAsync       = ivy"org.scala-lang.modules::scala-async::1.0.1"
+    def pprint                     = ivy"com.lihaoyi::pprint::0.9.0"
+    def proguard                   = ivy"com.guardsquare:proguard-base:7.7.0"
+    def pythonNativeLibs           = ivy"ai.kien::python-native-libs:0.2.4"
+    def scalaAsync                 = ivy"org.scala-lang.modules::scala-async::1.0.1"
     def scalaCliConfig(sv: String) =
       if (sv.startsWith("2.12"))
         ivy"org.virtuslab.scala-cli::config:1.1.3"
@@ -73,7 +73,7 @@ object Deps {
     def utest                    = ivy"com.lihaoyi::utest::0.9.1"
     def versions                 = ivy"io.get-coursier::versions::0.5.1"
     def windowsAnsi              = ivy"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
-    def windowsAnsiPs =
+    def windowsAnsiPs            =
       ivy"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
     def zstdJni = ivy"com.github.luben:zstd-jni:1.5.7-4"
   }

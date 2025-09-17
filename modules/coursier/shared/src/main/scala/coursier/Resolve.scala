@@ -93,7 +93,7 @@ import scala.language.higherKinds
 
   def finalRepositories: F[Seq[Repository]] = {
     val repositories0 = gradleModuleSupport match {
-      case None => repositories
+      case None         => repositories
       case Some(enable) =>
         repositories.map {
           case m: MavenRepositoryLike.WithModuleSupport => m.withCheckModule(enable)

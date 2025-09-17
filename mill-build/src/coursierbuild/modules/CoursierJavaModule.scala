@@ -11,7 +11,7 @@ import java.util.Locale
 import scala.util.Properties
 
 trait CoursierJavaModule extends JavaModule {
-  def jvmRelease = "8"
+  def jvmRelease                                = "8"
   private def csApp(workspace: os.Path): String =
     if (Properties.isWin) {
       def pathEntries = Option(System.getenv("PATH"))

@@ -104,7 +104,7 @@ object Resolution {
     var acc = Seq.empty[(Variant, Dependency)]
     while (it.hasNext) {
       val deps0 = it.next()
-      val deps = deps0.filter {
+      val deps  = deps0.filter {
         case (_, dep) =>
           !set(DependencyManagement.Key.from(dep))
       }
@@ -351,7 +351,7 @@ object Resolution {
         case (mod, list) =>
           (mod, list.map(_.versionConstraint))
       }
-    val dependencies0 = dependencies.toVector
+    val dependencies0  = dependencies.toVector
     val mergedByModVer = dependencies0
       .groupBy(dep => dep.module)
       .map { case (module, deps) =>
@@ -488,7 +488,7 @@ object Resolution {
                 .exists(_ != v.versionConstraint.asString)
             val newConfig  = Configuration.empty
             val newVersion = if (clearVersion) VersionConstraint0.empty else v.versionConstraint
-            val values =
+            val values     =
               if (v.config != newConfig || v.versionConstraint != newVersion || v.optional)
                 DependencyManagement.Values(
                   newConfig,
@@ -1005,7 +1005,7 @@ object Resolution {
     sv: VersionConstraint0,
     scalaOrg: Organization
   ): Dependency => Dependency = {
-    val sbv = sv.asString.split('.').take(2).mkString(".")
+    val sbv          = sv.asString.split('.').take(2).mkString(".")
     val scalaModules =
       if (sbv.startsWith("3"))
         Set(
@@ -1040,7 +1040,7 @@ object Resolution {
   /** Replaces the full suffix _2.12.8 with the given Scala version.
     */
   def overrideFullSuffix(sv: String): Dependency => Dependency = {
-    val sbv = sv.split('.').take(2).mkString(".")
+    val sbv                                                  = sv.split('.').take(2).mkString(".")
     def fullCrossVersionBase(module: Module): Option[String] =
       if (module.attributes.isEmpty && !module.name.value.endsWith("_" + sv)) {
         val idx = module.name.value.lastIndexOf("_" + sbv + ".")
@@ -1528,7 +1528,7 @@ object Resolution {
     }
   lazy val bomDepMgmtOverrides = bomEntries(globalBomModuleVersions)
   @deprecated("Use bomDepMgmtOverrides.flatten instead", "2.1.23")
-  def bomDepMgmt = bomDepMgmtOverrides.flatten.toMap
+  def bomDepMgmt      = bomDepMgmtOverrides.flatten.toMap
   lazy val hasAllBoms =
     allBomModuleVersions.forall { bomDep =>
       projectCache0.contains(bomDep.moduleVersionConstraint)
@@ -1551,7 +1551,7 @@ object Resolution {
               rootDep0
           }
       rootDependencies0.map { rootDep =>
-        val depBomDepMgmt = bomEntries(rootDep.bomDependencies)
+        val depBomDepMgmt         = bomEntries(rootDep.bomDependencies)
         val overrideDepBomDepMgmt =
           bomEntries(rootDep.bomDependencies.filter(_.forceOverrideVersions))
         val rootDep0 = rootDep.addOverrides(depBomDepMgmt)
@@ -1859,7 +1859,7 @@ object Resolution {
         helper(toCheck -- missing, done, missing)
       else if (toCheck.exists(projectCache0.contains)) {
         val (checking, remaining) = toCheck.partition(projectCache0.contains)
-        val directRequirements = checking
+        val directRequirements    = checking
           .flatMap(mod => dependencyManagementRequirements0(projectCache0(mod)._2))
 
         helper(remaining ++ directRequirements, done ++ checking, missing)
@@ -2156,14 +2156,14 @@ object Resolution {
 
     def helper(deps: List[Dependency], done: DependencySet): LazyList[Dependency] =
       deps match {
-        case Nil => LazyList.empty
+        case Nil    => LazyList.empty
         case h :: t =>
           val h0 = if (keepOverrides) h else h.clearOverrides
           if (done.covers(h0))
             helper(t, done)
           else {
             lazy val done0 = done.add(h0)
-            val todo = dependenciesOf0(
+            val todo       = dependenciesOf0(
               h,
               withRetainedVersions = false,
               withReconciledVersions = true,
@@ -2380,7 +2380,7 @@ object Resolution {
 
     @tailrec def helper(current: Set[Dependency]): Either[DependencyError, Set[Dependency]] = {
       val extraDepsOrErrors = current.toSeq.map(finalDependencies0)
-      val errors = extraDepsOrErrors.collect {
+      val errors            = extraDepsOrErrors.collect {
         case Left(err) => err
       }
 

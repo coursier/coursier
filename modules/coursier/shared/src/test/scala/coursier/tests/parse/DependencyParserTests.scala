@@ -28,7 +28,7 @@ object DependencyParserTests extends TestSuite {
 
     test("org:name:version") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4", "2.11.11") match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -40,7 +40,7 @@ object DependencyParserTests extends TestSuite {
 
     test("org:name") {
       DependencyParser.dependencyParams("org.apache.avro:avro", "2.11.11") match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -52,7 +52,7 @@ object DependencyParserTests extends TestSuite {
 
     test("org:name:version:config") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime", "2.11.11") match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -64,7 +64,7 @@ object DependencyParserTests extends TestSuite {
 
     test("org:name: :config") {
       DependencyParser.dependencyParams("org.apache.avro:avro: :runtime", "2.11.11") match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -76,7 +76,7 @@ object DependencyParserTests extends TestSuite {
 
     test("org:name:interval:config") {
       DependencyParser.dependencyParams("org.apache.avro:avro:[1.7,1.8):runtime", "2.11.11") match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -91,7 +91,7 @@ object DependencyParserTests extends TestSuite {
         "org.apache.avro:avro:1.7.4:runtime,classifier=tests",
         "2.11.11"
       ) match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -106,7 +106,7 @@ object DependencyParserTests extends TestSuite {
         "org.apache.avro:avro: :runtime,classifier=tests",
         "2.11.11"
       ) match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -121,7 +121,7 @@ object DependencyParserTests extends TestSuite {
         "org.apache.avro:avro:1.7.4:runtime,ext=exe",
         "2.11.11"
       ) match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -136,7 +136,7 @@ object DependencyParserTests extends TestSuite {
         "org.apache.avro:avro:1.7.4:runtime,type=typetype",
         "2.11.11"
       ) match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -157,7 +157,7 @@ object DependencyParserTests extends TestSuite {
         "org.apache.avro:avro:1.7.4:runtime,ext=exe,type=typetype",
         "2.11.11"
       ) match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -178,7 +178,7 @@ object DependencyParserTests extends TestSuite {
         "org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests",
         "2.11.11"
       ) match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -193,7 +193,7 @@ object DependencyParserTests extends TestSuite {
         "org.apache.avro:avro:1.7.4:runtime,url=" + url,
         "2.11.11"
       ) match {
-        case Left(err) => assert(false)
+        case Left(err)                 => assert(false)
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -210,7 +210,7 @@ object DependencyParserTests extends TestSuite {
         "org.apache.avro:avro:1.7.4:runtime,classifier=tests,url=" + url,
         "2.11.11"
       ) match {
-        case Left(err) => assert(false)
+        case Left(err)                 => assert(false)
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -227,7 +227,7 @@ object DependencyParserTests extends TestSuite {
         "org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests,url=" + url,
         "2.11.11"
       ) match {
-        case Left(err) => assert(false)
+        case Left(err)                 => assert(false)
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -244,7 +244,7 @@ object DependencyParserTests extends TestSuite {
         "org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests,url=" + url + ",exclude=org%nme",
         "2.11.11"
       ) match {
-        case Left(err) => assert(false)
+        case Left(err)                 => assert(false)
         case Right((dep, extraParams)) =>
           assert(dep.module.organization == org"org.apache.avro")
           assert(dep.module.name == name"avro")
@@ -262,7 +262,7 @@ object DependencyParserTests extends TestSuite {
         "io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,classifier=tests",
         "2.11.11"
       ) match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"io.get-coursier.scala-native")
           // use `contains` to be scala version agnostic
@@ -277,7 +277,7 @@ object DependencyParserTests extends TestSuite {
         "io.get-coursier.scala-native::sandbox_native0.3:[0.3.0,0.4.0),classifier=tests",
         "2.11.11"
       ) match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"io.get-coursier.scala-native")
           // use `contains` to be scala version agnostic
@@ -292,7 +292,7 @@ object DependencyParserTests extends TestSuite {
         "io.get-coursier.scala-native::sandbox_native0.3:[0.3.0,0.4.0),classifier=tests,exclude=foo%bar",
         "2.11.11"
       ) match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"io.get-coursier.scala-native")
           // use `contains` to be scala version agnostic
@@ -426,7 +426,7 @@ object DependencyParserTests extends TestSuite {
 
     test("full cross versioned org:::name:version") {
       DependencyParser.dependencyParams("com.lihaoyi:::ammonite:1.6.7", "2.12.8") match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"com.lihaoyi")
           assert(dep.module.name.value == "ammonite_2.12.8")
@@ -439,7 +439,7 @@ object DependencyParserTests extends TestSuite {
         "com.lihaoyi:::ammonite:1.6.7,exclude=aa%*",
         "2.12.8"
       ) match {
-        case Left(err) => assert(false)
+        case Left(err)       => assert(false)
         case Right((dep, _)) =>
           assert(dep.module.organization == org"com.lihaoyi")
           assert(dep.module.name.value == "ammonite_2.12.8")
@@ -471,7 +471,7 @@ object DependencyParserTests extends TestSuite {
 
     test("scala module") {
       DependencyParser.javaOrScalaDependencyParams("org::name:ver") match {
-        case Left(err) => sys.error(err)
+        case Left(err)            => sys.error(err)
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
@@ -487,7 +487,7 @@ object DependencyParserTests extends TestSuite {
 
     test("scala module empty version") {
       DependencyParser.javaOrScalaDependencyParams("org::name") match {
-        case Left(err) => sys.error(err)
+        case Left(err)            => sys.error(err)
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
@@ -503,7 +503,7 @@ object DependencyParserTests extends TestSuite {
 
     test("full cross versioned scala module") {
       DependencyParser.javaOrScalaDependencyParams("org:::name:ver") match {
-        case Left(err) => sys.error(err)
+        case Left(err)            => sys.error(err)
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
@@ -519,7 +519,7 @@ object DependencyParserTests extends TestSuite {
 
     test("full cross versioned scala module empty version") {
       DependencyParser.javaOrScalaDependencyParams("org:::name") match {
-        case Left(err) => sys.error(err)
+        case Left(err)            => sys.error(err)
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
@@ -535,7 +535,7 @@ object DependencyParserTests extends TestSuite {
 
     test("full cross versioned scala module with config") {
       DependencyParser.javaOrScalaDependencyParams("org:::name:ver:conf") match {
-        case Left(err) => sys.error(err)
+        case Left(err)            => sys.error(err)
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
@@ -551,7 +551,7 @@ object DependencyParserTests extends TestSuite {
 
     test("full cross versioned scala module with config and empty version") {
       DependencyParser.javaOrScalaDependencyParams("org:::name: :conf") match {
-        case Left(err) => sys.error(err)
+        case Left(err)            => sys.error(err)
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(

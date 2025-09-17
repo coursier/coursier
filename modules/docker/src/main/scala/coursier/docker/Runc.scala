@@ -46,7 +46,7 @@ object Runc {
     val logger = cache.loggerOpt.getOrElse(CacheLogger.nop)
 
     val runcArtifact = crunArtifact()
-    val runcFile = Await.result(
+    val runcFile     = Await.result(
       logger.using(cache.file(runcArtifact).run).future()(cache.ec),
       Duration.Inf
     ) match {

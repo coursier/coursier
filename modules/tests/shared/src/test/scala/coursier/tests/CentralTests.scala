@@ -140,8 +140,8 @@ abstract class CentralTests extends TestSuite {
       }
 
       test {
-        val mod     = mod"org.jitsi:jitsi-videobridge"
-        val version = "1.0-SNAPSHOT"
+        val mod        = mod"org.jitsi:jitsi-videobridge"
+        val version    = "1.0-SNAPSHOT"
         val extraRepos = Seq(
           MavenRepository("https://github.com/jitsi/jitsi-maven-repository/raw/master/releases"),
           MavenRepository("https://github.com/jitsi/jitsi-maven-repository/raw/master/snapshots"),
@@ -235,8 +235,8 @@ abstract class CentralTests extends TestSuite {
     }
 
     test("versionFromDependency") {
-      val mod     = mod"org.apache.ws.commons:XmlSchema"
-      val version = "1.1"
+      val mod                 = mod"org.apache.ws.commons:XmlSchema"
+      val version             = "1.1"
       val expectedArtifactUrl =
         s"$centralBase/org/apache/ws/commons/XmlSchema/1.1/XmlSchema-1.1.jar"
 
@@ -740,7 +740,7 @@ abstract class CentralTests extends TestSuite {
         extraRepos = Seq(extraRepo),
         transitive = true
       ) { artifacts =>
-        val urls = artifacts.map(_.url).toSet
+        val urls         = artifacts.map(_.url).toSet
         val expectedUrls = Set(
           "https://maven.google.com/com/android/support/support-fragment/25.3.1/support-fragment-25.3.1.aar",
           "https://maven.google.com/android/arch/core/core/1.0.0-alpha3/core-1.0.0-alpha3.aar",
@@ -787,7 +787,7 @@ abstract class CentralTests extends TestSuite {
         extraRepos = extraRepos,
         transitive = true
       ) { artifacts =>
-        val urls = artifacts.map(_.url).toSet
+        val urls         = artifacts.map(_.url).toSet
         val expectedUrls = Set(
           "https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceRelease/com/cedarsoftware/json-io/4.9.9-TALEND/json-io-4.9.9-TALEND.jar",
           "https://artifacts-oss.talend.com/nexus/content/repositories/TalendOpenSourceSnapshot/org/talend/daikon/daikon/0.19.0-SNAPSHOT/daikon-0.19.0-20171201.100416-43.jar",
@@ -1016,7 +1016,7 @@ abstract class CentralTests extends TestSuite {
             )
           )
           val tree = ModuleTree(res)
-          val str = Tree(tree.toVector)(_.children).render { t =>
+          val str  = Tree(tree.toVector)(_.children).render { t =>
             s"${t.module}:${t.retainedVersion0.asString}"
           }
           val expectedStr =
@@ -1091,7 +1091,7 @@ abstract class CentralTests extends TestSuite {
               VersionConstraint("1.1.0-M10")
             )
           }
-          val conflicts = Conflict(res).toSet
+          val conflicts         = Conflict(res).toSet
           val expectedConflicts = Set(
             Conflict(
               mod"org.scala-lang:scala-library",

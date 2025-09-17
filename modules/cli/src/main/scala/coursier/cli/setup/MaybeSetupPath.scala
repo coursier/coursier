@@ -41,7 +41,7 @@ case class MaybeSetupPath(
         case Some(Left(windowsEnvVarUpdater)) =>
           confirm.confirm(s"Should we add $binDirStr to your PATH?", default = true).flatMap {
             case false => Task.point(())
-            case true =>
+            case true  =>
               Task.delay {
                 windowsEnvVarUpdater.applyUpdate(envUpdate)
               }
@@ -53,7 +53,7 @@ case class MaybeSetupPath(
             default = true
           ).flatMap {
             case false => Task.point(())
-            case true =>
+            case true  =>
               Task.delay {
                 profileUpdater.applyUpdate(envUpdate, MaybeSetupPath.headerComment)
               }

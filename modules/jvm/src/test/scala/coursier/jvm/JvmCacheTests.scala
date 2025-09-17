@@ -48,7 +48,7 @@ object JvmCacheTests extends TestSuite {
   }
 
   private val poolInitialized = new AtomicBoolean(false)
-  private lazy val pool = {
+  private lazy val pool       = {
     val p = Sync.fixedThreadPool(6)
     poolInitialized.set(true)
     p
@@ -108,7 +108,7 @@ object JvmCacheTests extends TestSuite {
     test("specific version") {
       withTempDir { tmpDir =>
         val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
-        val jvmCache = JvmCache()
+        val jvmCache     = JvmCache()
           .withArchiveCache(archiveCache)
           .withOs(theOS)
           .withArchitecture("the-arch")
@@ -128,7 +128,7 @@ object JvmCacheTests extends TestSuite {
     test("version range") {
       withTempDir { tmpDir =>
         val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
-        val jvmCache = JvmCache()
+        val jvmCache     = JvmCache()
           .withArchiveCache(archiveCache)
           .withOs(theOS)
           .withArchitecture("the-arch")
@@ -147,7 +147,7 @@ object JvmCacheTests extends TestSuite {
     test("Contents/Home directory on macOS") {
       withTempDir { tmpDir =>
         val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
-        val jvmCache = JvmCache()
+        val jvmCache     = JvmCache()
           .withArchiveCache(archiveCache)
           .withOs("darwin")
           .withArchitecture("the-arch")
@@ -193,7 +193,7 @@ object JvmCacheTests extends TestSuite {
     test("no Contents/Home directory on macOS") {
       withTempDir { tmpDir =>
         val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
-        val jvmCache = JvmCache()
+        val jvmCache     = JvmCache()
           .withArchiveCache(archiveCache)
           .withOs("darwin")
           .withArchitecture("the-arch")
@@ -219,7 +219,7 @@ object JvmCacheTests extends TestSuite {
     test("URL id") {
       withTempDir0 { tmpDir =>
         val archiveCache = ArchiveCache[Task](tmpDir.toIO).withCache(cache)
-        val jvmCache = JvmCache()
+        val jvmCache     = JvmCache()
           .withArchiveCache(archiveCache)
           .withOs("the-os")
           .withArchitecture("the-arch")

@@ -26,8 +26,8 @@ object Update extends CoursierCommand[UpdateOptions] {
 
     val now = Instant.now()
 
-    val pool  = Sync.fixedThreadPool(params.cache.parallel)
-    val cache = params.cache.cache(pool, params.output.logger())
+    val pool                  = Sync.fixedThreadPool(params.cache.parallel)
+    val cache                 = params.cache.cache(pool, params.output.logger())
     val noUpdateCoursierCache =
       params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 

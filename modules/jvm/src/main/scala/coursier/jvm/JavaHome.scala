@@ -101,7 +101,7 @@ import dataclass._
       }
     else
       noUpdateCache.orElse(cache) match {
-        case None => Task.point(None)
+        case None         => Task.point(None)
         case Some(cache0) =>
           val id0 =
             if (id == JavaHome.defaultId)
@@ -144,7 +144,7 @@ import dataclass._
           id
 
       cache match {
-        case None => Task.fail(new Exception("No JVM cache passed"))
+        case None         => Task.fail(new Exception("No JVM cache passed"))
         case Some(cache0) =>
           cache0.get(id0).map(home => false -> home)
       }
@@ -248,7 +248,7 @@ object JavaHome {
       previousHome <- getEnv("JAVA_HOME").map(fs.getPath(_))
       if previousHome.startsWith(cacheDirectory)
       previousPath0 = previousPath.split(pathSeparator)
-      removeIdx = previousPath0.indexWhere { entry =>
+      removeIdx     = previousPath0.indexWhere { entry =>
         val p0 = fs.getPath(entry)
         // FIXME Make that more strict?
         p0.startsWith(previousHome) && p0.endsWith("bin")
@@ -318,7 +318,7 @@ object JavaHome {
     isMacOs: Boolean = JvmChannel.defaultOs() == "darwin"
   ): String =
     getEnv("CS_FORMER_JAVA_HOME") match {
-      case None => ""
+      case None     => ""
       case Some("") =>
         """unset JAVA_HOME""" + "\n" +
           """unset CS_FORMER_JAVA_HOME""" + "\n"
@@ -333,7 +333,7 @@ object JavaHome {
     isMacOs: Boolean = JvmChannel.defaultOs() == "darwin"
   ): String =
     getEnv("CS_FORMER_JAVA_HOME") match {
-      case None => ""
+      case None     => ""
       case Some("") =>
         """set -e JAVA_HOME""" + "\n" +
           """set -e CS_FORMER_JAVA_HOME""" + "\n"
@@ -347,7 +347,7 @@ object JavaHome {
     pathSeparator: String = ";"
   ): String =
     getEnv("CS_FORMER_JAVA_HOME") match {
-      case None => ""
+      case None     => ""
       case Some("") =>
         """set JAVA_HOME=""" + "\r\n" +
           """set CS_FORMER_JAVA_HOME=""" + "\r\n"
