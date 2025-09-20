@@ -24,7 +24,7 @@ trait Shading extends PublishModule {
   def shadedJars = Task {
     val bindDependency0 = bindDependency()
     val depToDependency = (d: Dep) => bindDependency0(d).dep
-    val resolution      = millResolver().resolution(Seq(coursierDependency))
+    val resolution      = millResolver().resolution(Seq(coursierDependencyTask()))
     val types = Set(
       coursier.Type.jar,
       coursier.Type.testJar,
@@ -54,10 +54,8 @@ trait Shading extends PublishModule {
 
     val allJars = load(resolution)
     val subset =
-      moduleDepsChecked.map(_.coursierDependency) ++
-        mvnDeps().map(depToDependency).toSeq.filterNot(
-          shadedDepSeq.toSet
-        )
+      Task.sequence(moduleDepsChecked.map(_.coursierDependencyTask))() ++
+        mvnDeps().map(depToDependency).toSeq.filterNot(shadedDepSeq.toSet)
     val subset0 = subset.map { dep =>
       shadedDepSeq.iterator.foldLeft(dep) { (dep0, shaded) =>
         dep0.addExclusion(shaded.module.organization, shaded.module.name)

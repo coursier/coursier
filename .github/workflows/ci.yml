@@ -92,12 +92,10 @@ jobs:
     # - run: .github/scripts/scala-native-setup.sh
     #   if: runner.os != 'Windows'
     - run: ./mill -i dockerTests
-      shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
-    - run: ./mill -i jvmTests --scalaVersion "$SCALA_VERSION"
-      shell: bash
+    - run: ./mill -i jvmTests
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
