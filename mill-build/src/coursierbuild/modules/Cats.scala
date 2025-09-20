@@ -6,7 +6,7 @@ import mill._, mill.scalalib._
 
 trait Cats extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-cats-interop"
-  def ivyDeps = super.ivyDeps() ++ Agg(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.catsEffect
   )
 }

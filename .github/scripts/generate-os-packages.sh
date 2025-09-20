@@ -6,7 +6,7 @@ ARCHITECTURE=$(uname -m)
 ARTIFACTS_DIR="artifacts/"
 mkdir -p "$ARTIFACTS_DIR"
 
-if [[ -z "$OSTYPE" ]]; then
+if [[ -z "$OSTYPE" || "$OSTYPE" == "msys" ]]; then
   mill="./mill.bat"
 else
   mill="./mill"

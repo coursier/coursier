@@ -11,7 +11,7 @@ import java.nio.charset.{MalformedInputException, StandardCharsets}
 import java.nio.file.Files
 import java.util.zip.{ZipException, ZipFile}
 
-import sttp.client.quick._
+import sttp.client4.quick._
 
 import scala.annotation.tailrec
 import scala.util.control.NonFatal
@@ -236,7 +236,7 @@ object GitHubReleaseAssets {
     val (tag, overwriteAssets) =
       if (version.endsWith("-SNAPSHOT")) ("latest", true)
       else ("v" + version, false)
-    upload(ghOrg, ghName, ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
+    upload(ghOrg, ghName, ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers *)
 
     upload0(
       launchers,
