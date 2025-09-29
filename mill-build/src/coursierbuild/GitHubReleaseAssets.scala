@@ -309,7 +309,7 @@ object GitHubReleaseAssets {
 
       val repo = s"https://$ghToken@github.com/$ghOrg/$ghProj.git"
       System.err.println(s"Cloning ${repo.replace(ghToken, "****")} in $tmpDir")
-      os.proc("git", "clone", repo, "-q", "-b", branch, tmpDir.toString).call(
+      os.proc("git", "clone", repo, "-q", "--depth", "1", "-b", branch, tmpDir.toString).call(
         stdin = os.Inherit,
         stdout = os.Inherit,
         stderr = os.Inherit
