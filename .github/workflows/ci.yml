@@ -230,6 +230,76 @@ jobs:
         if-no-files-found: error
         retention-days: 2
 
+  upload-launchers:
+    name: Upload launchers to GitHub release assets
+    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-mostly-static-launcher, generate-native-container-launcher, generate-jar-launchers]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 21
+    - uses: actions/download-artifact@v5
+      with:
+        name: launchers-linux
+        path: artifacts/
+    - uses: actions/download-artifact@v5
+      with:
+        name: launchers-linux-compat
+        path: artifacts/
+    - uses: actions/download-artifact@v5
+      with:
+        name: launchers-linux-arm
+        path: artifacts/
+    - uses: actions/download-artifact@v5
+      with:
+        name: launchers-windows
+        path: artifacts/
+    - uses: actions/download-artifact@v5
+      with:
+        name: launchers-mac
+        path: artifacts/
+    - uses: actions/download-artifact@v5
+      with:
+        name: launchers-mac-arm
+        path: artifacts/
+    - uses: actions/download-artifact@v5
+      with:
+        name: launchers-linux-static
+        path: artifacts/
+    - uses: actions/download-artifact@v5
+      with:
+        name: launchers-linux-arm-static
+        path: artifacts/
+    - uses: actions/download-artifact@v5
+      with:
+        name: launchers-linux-mostly-static
+        path: artifacts/
+    - uses: actions/download-artifact@v5
+      with:
+        name: launchers-linux-arm-mostly-static
+        path: artifacts/
+    - uses: actions/download-artifact@v5
+      with:
+        name: launchers-linux-container
+        path: artifacts/
+    - uses: actions/download-artifact@v5
+      with:
+        name: launchers-linux-arm-container
+        path: artifacts/
+    - uses: actions/download-artifact@v5
+      with:
+        name: launchers-jar
+        path: artifacts/
+    - run: ./mill -i uploadLaunchers --directory artifacts/
+      env:
+        UPLOAD_GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
   upload-launchers-special-repo:
     name: Upload launchers to dedicated repository
     needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-mostly-static-launcher, generate-native-container-launcher, generate-jar-launchers]
@@ -302,6 +372,7 @@ jobs:
 
   update-brew-formula:
     name: Update brew formula
+    needs: [upload-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
