@@ -12,6 +12,204 @@ permissions:
   attestations: write
 
 jobs:
+  compile-publish-all:
+    runs-on: ubuntu-latest
+    name: Compile and publish everything locally
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 21
+    - run: ./mill -i __.compile
+    - run: ./mill -i __.publishLocal
+
+  compile-all-no-package-object:
+    runs-on: ubuntu-latest
+    name: Compile everything (no package object)
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 21
+    - run: |
+        test -e modules/coursier/shared/src/main/scala/coursier/package.scala
+        rm -f modules/coursier/shared/src/main/scala/coursier/package.scala
+        ./mill -i __.compile
+
+  test:
+    runs-on: ${{ matrix.OS }}
+    name: ${{ matrix.OS }} Scala ${{ matrix.SCALA_VERSION }}
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest"]
+        SCALA_VERSION: ["2.13.16"]
+        include:
+          - OS: "ubuntu-24.04-arm"
+            SCALA_VERSION: "2.13.16"
+          - OS: "macos-13"
+            SCALA_VERSION: "2.13.16"
+          - OS: "macos-14"
+            SCALA_VERSION: "2.13.16"
+          - OS: "windows-latest"
+            SCALA_VERSION: "2.13.16"
+          - OS: "ubuntu-latest"
+            SCALA_VERSION: "2.12.20"
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 21
+    - run: sudo apt-get install -y nailgun
+      if: runner.os == 'Linux'
+    # - run: .github/scripts/scala-native-setup.sh
+    #   if: runner.os != 'Windows'
+    - run: ./mill -i dockerTests
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        COURSIER_JNI: force
+    - run: ./mill -i jvmTests
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        COURSIER_JNI: force
+
+  js-test:
+    runs-on: ubuntu-latest
+    name: Scala.JS Scala ${{ matrix.SCALA_VERSION }}
+    strategy:
+      fail-fast: false
+      matrix:
+        SCALA_VERSION: ["2.12.20", "2.13.16"]
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '12'
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 21
+    - run: npm install && ./mill -i jsTests --scalaVersion "$SCALA_VERSION"
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+
+  bin-compat:
+    runs-on: ubuntu-latest
+    name: Binary compatibility
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 21
+    - run: ./mill -i -k __.mimaReportBinaryIssues
+
+  website-check:
+    runs-on: ubuntu-latest
+    name: Website check
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '12'
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 21
+    - run: ./mill -i docs.mdoc
+      env:
+        COURSIER_JNI: force
+    - run: .github/scripts/setup-mkdocs.sh
+    - run: ./mill -i docs.mkdocsBuild
+      env:
+        COURSIER_JNI: force
+    - run: ./mill -i doc.generate --npm-install --yarn-run-build
+      env:
+        COURSIER_JNI: force
+
+  format:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.4
+    - uses: coursier/setup-action@v1.3
+      with:
+        jvm: 21
+        apps: scalafmt:3.8.3
+    - run: scalafmt --check
+
+  publish:
+    needs: ["compile-publish-all", "test", "js-test", "bin-compat", "website-check", "format"]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v6.4
+      - uses: coursier/setup-action@v1.3
+        with:
+          jvm: 21
+      - name: Publish
+        run: |
+          ./mill -i mill.scalalib.SonatypeCentralPublishModule/
+        env:
+          MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}
+          MILL_PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
+          MILL_SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          MILL_SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+
   generate-native-launchers:
     name: ${{ matrix.OS }} native
     runs-on: ${{ matrix.OS }}
@@ -204,6 +402,7 @@ jobs:
 
   generate-jar-launchers:
     name: Upload JAR launchers
+    needs: publish
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
