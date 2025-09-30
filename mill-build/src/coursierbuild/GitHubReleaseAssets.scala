@@ -237,6 +237,18 @@ object GitHubReleaseAssets {
       if (version.endsWith("-SNAPSHOT")) ("latest", true)
       else ("v" + version, false)
     upload(ghOrg, ghName, ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers *)
+  }
+
+  def uploadLaunchersSpecialRepo(
+    version: String,
+    directory: os.Path
+  ): Unit = {
+    val launchers = os.list(directory).filter(os.isFile(_)).map { path =>
+      path -> path.last
+    }
+    val ghToken = Option(System.getenv("UPLOAD_GH_TOKEN")).getOrElse {
+      sys.error("UPLOAD_GH_TOKEN not set")
+    }
 
     upload0(
       launchers,

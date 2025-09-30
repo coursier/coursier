@@ -1128,6 +1128,11 @@ def uploadLaunchers(directory: String = "artifacts") = Task.Command {
   GitHubReleaseAssets.uploadLaunchers(version, os.Path(directory, BuildCtx.workspaceRoot))
 }
 
+def uploadLaunchersSpecialRepo(directory: String = "artifacts") = Task.Command {
+  val version = cli.publishVersion()
+  GitHubReleaseAssets.uploadLaunchersSpecialRepo(version, os.Path(directory, BuildCtx.workspaceRoot))
+}
+
 def bootstrapLauncher(
   version: String = CoursierPublishModule.buildVersion,
   dest: String = s"coursier$platformBootstrapExtension"
