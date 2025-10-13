@@ -40,7 +40,8 @@ import dataclass.data
   forceDepMgmtVersions: Option[Boolean] = None,
   enableDependencyOverrides: Option[Boolean] = None,
   @since("2.1.25")
-  defaultVariantAttributes: Option[VariantSelector.AttributesBased] = None
+  defaultVariantAttributes: Option[VariantSelector.AttributesBased] = None,
+  renderModuleVersion: Option[(Module, String) => String] = None
 ) {
 
   @deprecated("Use forceVersion0 instead", "2.1.25")
@@ -202,4 +203,9 @@ import dataclass.data
         .equivalentAttributesSelector
         .getOrElse(VariantSelector.AttributesBased.empty)
     )
+}
+
+object ResolutionParams {
+  def defaultRenderModuleVersion(module: Module, version: String): String =
+    s"${module.repr}:$version"
 }
