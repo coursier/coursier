@@ -1130,7 +1130,10 @@ def uploadLaunchers(directory: String = "artifacts") = Task.Command {
 
 def uploadLaunchersSpecialRepo(directory: String = "artifacts") = Task.Command {
   val version = cli.publishVersion()
-  GitHubReleaseAssets.uploadLaunchersSpecialRepo(version, os.Path(directory, BuildCtx.workspaceRoot))
+  GitHubReleaseAssets.uploadLaunchersSpecialRepo(
+    version,
+    os.Path(directory, BuildCtx.workspaceRoot)
+  )
 }
 
 def bootstrapLauncher(
