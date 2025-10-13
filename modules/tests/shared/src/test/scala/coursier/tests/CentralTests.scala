@@ -832,7 +832,7 @@ abstract class CentralTests extends TestSuite {
               |         ├─ de.bwaldvogel:liblinear:1.94
               |         └─ nz.ac.waikato.cms.weka:weka-stable:3.6.10
               |            └─ net.sf.squirrel-sql.thirdparty-non-maven:java-cup:0.11a""".stripMargin
-          val tree = Print.dependencyTree(res, colors = false)
+          val tree = Print.dependencyTree0(res, colors = false)
           assert(tree.replace("\r\n", "\n") == expectedTree)
         }
       }
@@ -996,7 +996,7 @@ abstract class CentralTests extends TestSuite {
               |      └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
               |         └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
               |            └─ OURSELVES""".stripMargin
-          val tree = Print.dependencyTree(
+          val tree = Print.dependencyTree0(
             res,
             reverse = true,
             colors = false,

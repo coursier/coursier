@@ -161,7 +161,23 @@ object Print {
   def compatibleVersions(compatibleWith: String, selected: String): Boolean =
     compatibleVersions(VersionConstraint(compatibleWith), Version(selected))
 
+  @deprecated("Use dependencyTree0 instead", "2.1.25")
   def dependencyTree(
+    resolution: Resolution,
+    roots: Seq[Dependency] = null,
+    printExclusions: Boolean = false,
+    reverse: Boolean = false,
+    colors: Boolean = true
+  ): String =
+    dependencyTree0(
+      resolution,
+      roots,
+      printExclusions,
+      reverse,
+      colors
+    )
+
+  def dependencyTree0(
     resolution: Resolution,
     roots: Seq[Dependency] = null,
     printExclusions: Boolean = false,

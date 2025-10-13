@@ -30,17 +30,28 @@ object ResolutionError {
     resolution: Resolution,
     val module: Module,
     val versionConstraint: VersionConstraint,
-    val perRepositoryErrors: Seq[String],
-    renderModuleVersion: (Module, String) => String
+    val perRepositoryErrors: Seq[String]
   ) extends Simple(
     resolution,
-    s"Error downloading ${renderModuleVersion(module, versionConstraint.asString)}" + System.lineSeparator() +
+    s"Error downloading $module:${versionConstraint.asString}" + System.lineSeparator() +
       perRepositoryErrors
         .map { err =>
           "  " + err.replace(System.lineSeparator(), System.lineSeparator() + "  ")
         }
         .mkString(System.lineSeparator())
   ) {
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def this(
+      resolution: Resolution,
+      module: Module,
+      version: String,
+      perRepositoryErrors: Seq[String]
+    ) = this(
+      resolution,
+      module,
+      VersionConstraint(version),
+      perRepositoryErrors
+    )
 
     @deprecated("Use version0 instead", "2.1.25")
     def version: String = versionConstraint.asString
@@ -131,7 +142,20 @@ object ResolutionError {
     resolution: Resolution,
     val dependencies: Set[Dependency],
     renderModuleVersion: (Module, String) => String
-  ) extends Simple(resolution, conflictingDependenciesErrorMessage(resolution, renderModuleVersion))
+  ) extends Simple(
+        resolution,
+        conflictingDependenciesErrorMessage(resolution, renderModuleVersion)
+      ) {
+    def this(
+      resolution: Resolution,
+      dependencies: Set[Dependency]
+    ) =
+      this(
+        resolution,
+        dependencies,
+        renderModuleVersion = (mod, ver) => s"${mod.repr}:$ver"
+      )
+  }
 
   sealed abstract class Simple(resolution: Resolution, message: String, cause: Throwable = null)
       extends ResolutionError(resolution, message, cause) {

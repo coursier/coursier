@@ -478,6 +478,12 @@ object Resolve extends PlatformResolve {
     }
   }
 
+  def validate(res: Resolution): ValidationNel[ResolutionError, Unit] =
+    validate(
+      res,
+      (mod, ver) => s"${mod.repr}:$ver"
+    )
+
   def validate(
     res: Resolution,
     renderModuleVersion: (Module, String) => String
@@ -497,8 +503,7 @@ object Resolve extends PlatformResolve {
             res,
             module,
             version,
-            errors,
-            renderModuleVersion
+            errors
           )
       } match {
       case Seq() =>
