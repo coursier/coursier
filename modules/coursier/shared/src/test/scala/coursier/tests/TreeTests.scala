@@ -19,7 +19,7 @@ object TreeTests extends TestSuite {
   def tests = Tests {
     test("root conflict") {
       async {
-        val renderModuleVersion: (coursier.Module, String) => String = {
+        val renderModuleVersion: (coursier.core.Module, String) => String = {
           (mod, ver) =>
             val replace = mod.organization.value == "com.softwaremill.sttp.shared" &&
               mod.name.value == "ws_2.13" &&
