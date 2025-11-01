@@ -27,6 +27,9 @@ public final class CoursierPaths {
     private static final Object coursierDirectoriesLock = new Object();
     private static ProjectDirectories coursierDirectories0;
 
+    private static final Object scalaCliDirectoriesLock = new Object();
+    private static ProjectDirectories scalaCliDirectories0;
+
     private static final Object cacheDirectoryLock = new Object();
     private static volatile Path cacheDirectory0 = null;
     private static volatile Path archiveCacheDirectory0 = null;
@@ -300,8 +303,13 @@ public final class CoursierPaths {
         if (configPath == null && (fromProps != null && fromProps.length() > 0))
             configPath = Paths.get(fromProps);
         if (configPath == null) {
-            ProjectDirectories dirs = CoursierPaths.directoriesInstance("ScalaCli");
-            configPath = Paths.get(dirs.dataLocalDir).resolve("secrets/config.json");
+            if (scalaCliDirectories0 == null)
+                synchronized (scalaCliDirectoriesLock) {
+                    if (scalaCliDirectories0 == null) {
+                        scalaCliDirectories0 = directoriesInstance("ScalaCli");
+                    }
+                }
+            configPath = Paths.get(scalaCliDirectories0.dataLocalDir).resolve("secrets/config.json");
         }
         return configPath;
     }
