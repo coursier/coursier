@@ -246,6 +246,9 @@ import scala.util.control.NonFatal
           Left(new ArtifactError.Forbidden(url))
         else if (respCodeOpt.contains(401))
           Left(new ArtifactError.Unauthorized(url, realm = CacheUrl.realm(conn)))
+        else if (respCodeOpt.exists(c => c / 100 == 5))
+          // Mark http 500 errors as retryable, to mitigate flakiness
+          Left(new ArtifactError.RetryableServerError(url, respCodeOpt.get))
         else {
           for (len0 <- Option(conn.getContentLengthLong) if len0 >= 0L) {
             val len = len0 + (if (partialDownload) alreadyDownloaded else 0L)
@@ -819,7 +822,10 @@ object Downloader {
           }
         }
 
-        res0.orElse(ifLocked)
+        res0.orElse(ifLocked) match {
+          case Some(Left(_: ArtifactError.RetryableServerError)) => None
+          case other => other
+        }
       }
       catch {
         case NonFatal(e) if throwExceptions =>
