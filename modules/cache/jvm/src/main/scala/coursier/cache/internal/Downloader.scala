@@ -824,7 +824,7 @@ object Downloader {
 
         res0.orElse(ifLocked) match {
           case Some(Left(_: ArtifactError.RetryableServerError)) => None
-          case other => other
+          case other                                             => other
         }
       }
       catch {
