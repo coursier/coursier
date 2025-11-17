@@ -65,7 +65,7 @@ jobs:
         include:
           - OS: "ubuntu-24.04-arm"
             SCALA_VERSION: "2.13.16"
-          - OS: "macos-13"
+          - OS: "macos-15-intel"
             SCALA_VERSION: "2.13.16"
           - OS: "macos-14"
             SCALA_VERSION: "2.13.16"
@@ -221,7 +221,7 @@ jobs:
         include:
           - OS: "windows-latest"
             OSSHORT: "windows"
-          - OS: "macos-13"
+          - OS: "macos-15-intel"
             OSSHORT: "mac"
           - OS: "macos-14"
             OSSHORT: "mac-arm"
