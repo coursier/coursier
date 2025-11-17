@@ -443,55 +443,55 @@ jobs:
     - uses: coursier/setup-action@v1.3
       with:
         jvm: 21
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-compat
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-arm
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-windows
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-mac
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-mac-arm
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-static
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-arm-static
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-mostly-static
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-arm-mostly-static
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-container
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-arm-container
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-jar
         path: artifacts/
@@ -513,55 +513,55 @@ jobs:
     - uses: coursier/setup-action@v1.3
       with:
         jvm: 21
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-compat
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-arm
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-windows
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-mac
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-mac-arm
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-static
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-arm-static
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-mostly-static
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-arm-mostly-static
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-container
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-arm-container
         path: artifacts/
-    - uses: actions/download-artifact@v5
+    - uses: actions/download-artifact@v6
       with:
         name: launchers-jar
         path: artifacts/
