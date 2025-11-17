@@ -117,7 +117,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v6
       with:
         node-version: '12'
     - uses: coursier/cache-action@v7.0
@@ -156,7 +156,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v6
       with:
         node-version: '12'
     - uses: coursier/cache-action@v7.0
@@ -596,7 +596,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '12'
       - uses: coursier/cache-action@v7.0
@@ -618,7 +618,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: '12'
       - uses: coursier/cache-action@v7.0
