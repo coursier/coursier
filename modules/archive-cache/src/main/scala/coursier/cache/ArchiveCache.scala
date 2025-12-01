@@ -298,19 +298,54 @@ import scala.util.Using
       if (integrityCheck.getOrElse(true)) {
         val eitherT = for {
           f <- EitherT(doDownload)
-          invalid <- EitherT(
-            S.delay[Either[ArtifactError, Boolean]] {
-              Right(integrityCheck0(artifact0.url, f).contains(false))
+          invalid <- {
+            val cacheLocationOpt = cache match {
+              case fc: FileCache[F] => Some(fc.location)
+              case _                => None
             }
-          )
+            EitherT(
+              S.delay[Either[ArtifactError, Boolean]] {
+                Right {
+                  cacheLocationOpt match {
+                    case Some(cacheLocation) =>
+                      val invalid0 = CacheLocks.withLockOr(cacheLocation, f)(
+                        {
+                          val integrityFile = FileCache.auxiliaryFile(f, "integrity").toPath
+                          val hasValidIntegrityFile = Files.exists(integrityFile) && {
+                            val lastModified          = Files.getLastModifiedTime(f.toPath)
+                            val integrityLastModified = Files.getLastModifiedTime(integrityFile)
+                            integrityLastModified.toMillis() >= lastModified.toMillis()
+                          }
+                          if (!hasValidIntegrityFile)
+                            Files.deleteIfExists(integrityFile)
+                          !hasValidIntegrityFile && {
+                            val invalid0 = integrityCheck0(artifact0.url, f).contains(false)
+                            if (invalid0) {
+                              Files.delete(f.toPath)
+                              // clear all but the lock file for Windows?
+                              FileCache.clearAuxiliaryFiles(f)
+                            }
+                            else
+                              Files.write(integrityFile, Array.emptyByteArray)
+                            invalid0
+                          }
+                        },
+                        None
+                      )
+                      invalid0
+                    case None =>
+                      val invalid0 = integrityCheck0(artifact0.url, f).contains(false)
+                      if (invalid0)
+                        Files.delete(f.toPath)
+                      invalid0
+                  }
+                }
+              }
+            )
+          }
           f0 <- EitherT[F, ArtifactError, File](
-            if (invalid)
-              S.delay {
-                Files.delete(f.toPath)
-                FileCache.clearAuxiliaryFiles(f)
-              }.flatMap(_ => doDownload)
-            else
-              S.point(Right(f))
+            if (invalid) doDownload
+            else S.point(Right(f))
           )
         } yield f0
         eitherT.run
