@@ -186,16 +186,22 @@ abstract class ArchiveCacheTests extends TestSuite {
 
         val size = os.size(localArchivePath)
 
-        // corrupt the archive
-        val content = os.read.bytes(localArchivePath)
-        os.write.over(
-          localArchivePath,
-          content.take(content.length / 2) ++
-            Array.fill[Byte](10)(0) ++
-            content.drop(content.length / 2)
-        )
-        val corruptedSize = os.size(localArchivePath)
-        assert(corruptedSize == size + 10)
+        def corrupt(): Unit = {
+          val modifiedTime = os.mtime(localArchivePath)
+          // corrupt the archive
+          val content = os.read.bytes(localArchivePath)
+          os.write.over(
+            localArchivePath,
+            content.take(content.length / 2) ++
+              Array.fill[Byte](10)(0) ++
+              content.drop(content.length / 2)
+          )
+          os.mtime.set(localArchivePath, modifiedTime)
+          val corruptedSize = os.size(localArchivePath)
+          assert(corruptedSize == size + 10)
+        }
+
+        corrupt()
 
         val archiveDir = archiveCache0.get(artifact).unsafeRun()(cache.ec) match {
           case Left(err) =>
@@ -206,6 +212,12 @@ abstract class ArchiveCacheTests extends TestSuite {
 
         val finalSize = os.size(localArchivePath)
         assert(finalSize == size)
+
+        val integrityFile = localArchivePath / os.up / s".${localArchivePath.last}__integrity"
+
+        // For now, the integrity file doesn't exist after a re-download, as we don't do
+        // an integrity check right after a failed one, to avoid going into loops.
+        assert(!os.exists(integrityFile))
 
         if (os.isDir(archiveDir)) {
           import scala.math.Ordering.Implicits._
@@ -220,6 +232,35 @@ abstract class ArchiveCacheTests extends TestSuite {
         }
         else
           Nil
+
+        archiveCache0.get(artifact).unsafeRun()(cache.ec) match {
+          case Left(err) =>
+            throw new Exception(err)
+          case Right(_) =>
+        }
+
+        // Integrity check should succeed upon second access, and should write a file for it
+        assert(os.exists(integrityFile))
+
+        os.remove.all(archiveDir)
+
+        // Corrupt the archive, but keep the integrity file
+        corrupt()
+
+        val failed =
+          try {
+            archiveCache0.get(artifact).unsafeRun()(cache.ec)
+            false
+          }
+          catch {
+            case err: org.codehaus.plexus.archiver.ArchiverException =>
+              pprint.err.log(err)
+              true
+            case err: java.util.zip.ZipException =>
+              pprint.err.log(err)
+              true
+          }
+        assert(failed)
       }
 
     test("zip integrity") {
