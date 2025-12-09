@@ -26,34 +26,24 @@ package object compatibility {
   private lazy val throwExceptions = java.lang.Boolean.getBoolean("coursier.core.throw-exceptions")
 
   private def entityIdx(s: String, fromIdx: Int): (Int, Int) = {
+    val len = s.length
+    var i = s.indexOf('&', fromIdx)
 
-    var i                 = fromIdx
-    var found: (Int, Int) = null
-    while ((found eq null) && i < s.length)
-      if (s.charAt(i) == '&') {
-        val start = i
-        i += 1
-        var isAlpha = true
-        while (isAlpha && i < s.length) {
-          val c = s.charAt(i)
-          if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z'))
-            isAlpha = false
-          else
-            i += 1
-        }
-        if (start + 1 < i && i < s.length) {
-          assert(!isAlpha)
-          if (s.charAt(i) == ';') {
-            i += 1
-            found = (start, i)
-          }
-        }
-      }
-      else
-        i += 1
+    while (i >= 0 && i <= len - 3) { // Need at least &X; (3 chars)
+      var j = i + 1
+      while (j < len && {
+        val c = s.charAt(j)
+        (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+      }) j += 1
 
-    found
+      if (j > i + 1 && j < len && s.charAt(j) == ';')
+        return (i, j + 1)
+
+      i = s.indexOf('&', i + 1)
+    }
+    null
   }
+
 
   private def substituteEntities(s: String): String = {
 

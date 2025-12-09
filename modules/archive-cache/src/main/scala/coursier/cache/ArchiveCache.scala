@@ -296,7 +296,21 @@ import scala.util.Using
     val download: F[Either[ArtifactError, File]] = {
       def doDownload: F[Either[ArtifactError, File]] = cache.file(artifact0).run
       if (integrityCheck.getOrElse(true)) {
+        val cachedFileOpt = cache match {
+          case fc: FileCache[F] =>
+            Some(fc.localFile(artifact0.url, artifact0.authentication.flatMap(_.userOpt)))
+          case _ => None
+        }
         val eitherT = for {
+          lastModifiedBefore <- EitherT(S.delay[Either[ArtifactError, Option[Long]]] {
+            Right {
+              cachedFileOpt match {
+                case Some(cachedFile) if cachedFile.exists() =>
+                  Some(Files.getLastModifiedTime(cachedFile.toPath).toMillis)
+                case _ => None
+              }
+            }
+          })
           f <- EitherT(doDownload)
           invalid <- {
             val cacheLocationOpt = cache match {
