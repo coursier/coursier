@@ -2354,9 +2354,16 @@ object ResolveTests extends TestSuite {
           .addBom(
             dep"io.micronaut.platform:micronaut-platform:4.9.2".asBomDependency
           )
-        gradleModuleCheck0(resolve0 = resolve0)(
-          dep"io.micronaut:micronaut-inject-kotlin:"
-        )
+        test("micronaut-inject-kotlin") {
+          gradleModuleCheck0(resolve0 = resolve0)(
+            dep"io.micronaut:micronaut-inject-kotlin:"
+          )
+        }
+        test("micronaut-openapi") {
+          gradleModuleCheck0(resolve0 = resolve0)(
+            dep"io.micronaut.openapi:micronaut-openapi:"
+          )
+        }
       }
     }
 
