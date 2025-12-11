@@ -2345,6 +2345,26 @@ object ResolveTests extends TestSuite {
           dep"androidx.test.ext:junit:1.2.1"
         )
       }
+
+      test("bom config graph") {
+        val resolve0 = resolve
+          .addVariantAttributes(
+            "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
+          )
+          .addBom(
+            dep"io.micronaut.platform:micronaut-platform:4.9.2".asBomDependency
+          )
+        test("micronaut-inject-kotlin") {
+          gradleModuleCheck0(resolve0 = resolve0)(
+            dep"io.micronaut:micronaut-inject-kotlin:"
+          )
+        }
+        test("micronaut-openapi") {
+          gradleModuleCheck0(resolve0 = resolve0)(
+            dep"io.micronaut.openapi:micronaut-openapi:"
+          )
+        }
+      }
     }
 
     test("empty version") {

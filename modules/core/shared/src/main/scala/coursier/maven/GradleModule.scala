@@ -291,7 +291,7 @@ object GradleModule {
 
   val defaultConfigurations: Map[Configuration, Seq[Configuration]] = Map(
     Configuration.compile -> Nil,
-    Configuration.runtime -> Nil,
-    Configuration.test    -> Nil
+    Configuration.runtime -> Seq(Configuration.compile),
+    Configuration.test    -> Seq(Configuration.runtime)
   )
 }
