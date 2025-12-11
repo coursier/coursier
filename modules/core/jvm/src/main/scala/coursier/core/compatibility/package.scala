@@ -27,14 +27,16 @@ package object compatibility {
 
   private def entityIdx(s: String, fromIdx: Int): (Int, Int) = {
     val len = s.length
-    var i = s.indexOf('&', fromIdx)
+    var i   = s.indexOf('&', fromIdx)
 
     while (i >= 0 && i <= len - 3) { // Need at least &X; (3 chars)
       var j = i + 1
-      while (j < len && {
-        val c = s.charAt(j)
-        (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-      }) j += 1
+      while (
+        j < len && {
+          val c = s.charAt(j)
+          (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+        }
+      ) j += 1
 
       if (j > i + 1 && j < len && s.charAt(j) == ';')
         return (i, j + 1)
@@ -43,7 +45,6 @@ package object compatibility {
     }
     null
   }
-
 
   private def substituteEntities(s: String): String = {
 
