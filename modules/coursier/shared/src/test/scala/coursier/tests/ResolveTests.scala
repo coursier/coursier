@@ -18,7 +18,7 @@ import coursier.core.{
 import coursier.core.VariantSelector.VariantMatcher
 import coursier.error.ResolutionError
 import coursier.ivy.IvyRepository
-import coursier.maven.MavenRepositoryLike
+import coursier.maven.{MavenRepository, MavenRepositoryLike}
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
 import coursier.util.{ModuleMatchers, Task}
 import coursier.util.StringInterpolators._
@@ -2364,6 +2364,22 @@ object ResolveTests extends TestSuite {
             dep"io.micronaut.openapi:micronaut-openapi:"
           )
         }
+      }
+
+      test("lottie") {
+        val resolve0 = resolve
+          .addVariantAttributes(
+            "org.gradle.jvm.environment"         -> VariantMatcher.Equals("standard-jvm"),
+            "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm"),
+            "ui"                                 -> VariantMatcher.Equals("android")
+          )
+          .addRepositories(
+            Repositories.google,
+            MavenRepository("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+          )
+        gradleModuleCheck0(resolve0 = resolve0, attributesBasedReprAsToString = true)(
+          dep"com.airbnb.android:lottie-compose:6.6.6"
+        )
       }
     }
 
