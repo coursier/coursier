@@ -294,6 +294,13 @@ object GradleModule {
         case (k, StringOrSeqString(Right(str))) =>
           k -> str
       }
+    def withVersion(version: Map[String, String]): ModuleDependency =
+      withVersion0(
+        version.map {
+          case (k, v) =>
+            (k, StringOrSeqString(Right(v)))
+        }
+      )
   }
 
   object ModuleDependency {
