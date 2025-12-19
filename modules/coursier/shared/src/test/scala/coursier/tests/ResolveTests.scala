@@ -2377,7 +2377,7 @@ object ResolveTests extends TestSuite {
             Repositories.google,
             MavenRepository("https://maven.pkg.jetbrains.space/public/p/compose/dev")
           )
-        gradleModuleCheck0(resolve0 = resolve0)(
+        gradleModuleCheck0(resolve0 = resolve0, attributesBasedReprAsToString = true)(
           dep"com.airbnb.android:lottie-compose:6.6.6"
         )
       }
