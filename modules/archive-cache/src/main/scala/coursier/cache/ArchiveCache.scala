@@ -256,9 +256,8 @@ import scala.util.Using
         var fis: InputStream = null
         try {
           fis = Files.newInputStream(file.toPath)
-          val gzis = new GZIPInputStream(fis)
           try {
-            readAndDiscard(gzis)
+            readAndDiscard(new GZIPInputStream(fis))
             true
           }
           catch {
