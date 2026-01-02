@@ -102,7 +102,7 @@ jobs:
 
   js-test:
     runs-on: ubuntu-latest
-    name: Scala.JS Scala ${{ matrix.SCALA_VERSION }}
+    name: Scala.js Scala ${{ matrix.SCALA_VERSION }}
     strategy:
       fail-fast: false
       matrix:
