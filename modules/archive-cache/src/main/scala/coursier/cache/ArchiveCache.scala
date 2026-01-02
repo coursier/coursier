@@ -6,7 +6,7 @@ import coursier.util.Monad.ops._
 import dataclass._
 import org.apache.tika.Tika
 
-import java.io.{File, InputStream}
+import java.io.{EOFException, File, InputStream}
 import java.math.BigInteger
 import java.nio.file.{Files, Path, StandardCopyOption}
 import java.security.MessageDigest
@@ -264,6 +264,8 @@ import scala.util.Using
           catch {
             case _: ZipException =>
               false
+            case ex: EOFException if ex.getMessage.contains("ZLIB") =>
+              false
           }
         }
         finally
@@ -274,15 +276,13 @@ import scala.util.Using
         var zf: ZipFile = null
         try {
           zf = new ZipFile(file)
-          try {
-            for (ent <- zf.entries().asScala)
-              readAndDiscard(zf.getInputStream(ent))
-            true
-          }
-          catch {
-            case _: ZipException =>
-              false
-          }
+          for (ent <- zf.entries().asScala)
+            readAndDiscard(zf.getInputStream(ent))
+          true
+        }
+        catch {
+          case _: ZipException =>
+            false
         }
         finally
           if (zf != null)
