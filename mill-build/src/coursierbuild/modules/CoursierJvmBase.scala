@@ -8,6 +8,8 @@ import mill._, mill.scalalib._
 
 trait CoursierJvmBase extends Coursier with CsMima with Shading {
 
+  def manifest = super[Shading].manifest
+
   def mimaBinaryIssueFilters =
     super.mimaBinaryIssueFilters() ++ Seq(
       // added new abstract method to sealed class, should be safe
@@ -20,7 +22,7 @@ trait CoursierJvmBase extends Coursier with CsMima with Shading {
       ProblemFilter.exclude[Problem]("coursier.internal.shaded.*")
     )
 
-  def shadedDependencies = Agg(
+  def shadedDependencies = Seq(
     Deps.fastParse,
     Deps.pprint
   )

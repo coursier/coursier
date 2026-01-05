@@ -11,7 +11,7 @@ import java.nio.charset.{MalformedInputException, StandardCharsets}
 import java.nio.file.Files
 import java.util.zip.{ZipException, ZipFile}
 
-import sttp.client.quick._
+import sttp.client4.quick._
 
 import scala.annotation.tailrec
 import scala.util.control.NonFatal
@@ -236,7 +236,19 @@ object GitHubReleaseAssets {
     val (tag, overwriteAssets) =
       if (version.endsWith("-SNAPSHOT")) ("latest", true)
       else ("v" + version, false)
-    upload(ghOrg, ghName, ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers: _*)
+    upload(ghOrg, ghName, ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers *)
+  }
+
+  def uploadLaunchersSpecialRepo(
+    version: String,
+    directory: os.Path
+  ): Unit = {
+    val launchers = os.list(directory).filter(os.isFile(_)).map { path =>
+      path -> path.last
+    }
+    val ghToken = Option(System.getenv("UPLOAD_GH_TOKEN")).getOrElse {
+      sys.error("UPLOAD_GH_TOKEN not set")
+    }
 
     upload0(
       launchers,
@@ -309,7 +321,7 @@ object GitHubReleaseAssets {
 
       val repo = s"https://$ghToken@github.com/$ghOrg/$ghProj.git"
       System.err.println(s"Cloning ${repo.replace(ghToken, "****")} in $tmpDir")
-      os.proc("git", "clone", repo, "-q", "-b", branch, tmpDir.toString).call(
+      os.proc("git", "clone", repo, "-q", "--depth", "1", "-b", branch, tmpDir.toString).call(
         stdin = os.Inherit,
         stdout = os.Inherit,
         stderr = os.Inherit
