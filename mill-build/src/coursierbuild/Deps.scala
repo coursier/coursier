@@ -53,7 +53,7 @@ object Deps {
       if (sv.startsWith("2.12"))
         mvn"org.virtuslab.scala-cli::config:1.1.3"
       else
-        mvn"org.virtuslab.scala-cli:config_3:1.9.0"
+        mvn"org.virtuslab.scala-cli:config_3:1.9.1"
           .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
     def scalaJsDom               = mvn"org.scala-js::scalajs-dom::2.4.0"
     def scalaJsReact             = mvn"com.github.japgolly.scalajs-react::core::2.1.2"
