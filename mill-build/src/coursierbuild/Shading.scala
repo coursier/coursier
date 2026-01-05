@@ -14,16 +14,17 @@ import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Using
 
-trait Shading extends JavaModule with PublishModule {
+trait Shading extends PublishModule {
 
   // TODO Change that to shadedModules
-  def shadedDependencies: T[Agg[Dep]]
+  def shadedDependencies: T[Seq[Dep]]
   def validNamespaces: T[Seq[String]]
   def shadeRenames: T[Seq[(String, String)]]
 
   def shadedJars = Task {
-    val depToDependency = (d: Dep) => bindDependency().apply(d).dep
-    val resolution      = millResolver().resolution(Seq(coursierDependency))
+    val bindDependency0 = bindDependency()
+    val depToDependency = (d: Dep) => bindDependency0(d).dep
+    val resolution      = millResolver().resolution(Seq(coursierDependencyTask()))
     val types = Set(
       coursier.Type.jar,
       coursier.Type.testJar,
@@ -49,14 +50,19 @@ trait Shading extends JavaModule with PublishModule {
       loadedArtifacts.collect { case (_, Right(x)) => x }
     }
 
-    val shadedDepSeq = shadedDependencies()
+    val shadedDepSeq = shadedDependencies().iterator.map(depToDependency).toVector
 
     val allJars = load(resolution)
-    val subset = ivyDeps().map(depToDependency).toSeq.filterNot(
-      shadedDepSeq.iterator.map(depToDependency).toSet
-    )
+    val subset =
+      Task.sequence(moduleDepsChecked.map(_.coursierDependencyTask))() ++
+        mvnDeps().map(depToDependency).toSeq.filterNot(shadedDepSeq.toSet)
+    val subset0 = subset.map { dep =>
+      shadedDepSeq.iterator.foldLeft(dep) { (dep0, shaded) =>
+        dep0.addExclusion(shaded.module.organization, shaded.module.name)
+      }
+    }
     val retainedJars = load {
-      resolution.subset0(subset) match {
+      resolution.subset0(subset0) match {
         case Left(err)  => throw new Exception(err)
         case Right(res) => res
       }
@@ -66,6 +72,9 @@ trait Shading extends JavaModule with PublishModule {
     println(s"${shadedJars.length} JAR(s) to shade")
     for (j <- shadedJars)
       println(s"  $j")
+
+    if (shadedJars.isEmpty)
+      sys.error("Found no JARs to shade")
 
     shadedJars.map(os.Path(_)).map(PathRef(_))
   }
@@ -103,6 +112,13 @@ trait Shading extends JavaModule with PublishModule {
 
     val inputFiles = Seq(orig) ++ shadedJars0
 
+    val keepDirs = validNamespaces()
+      .iterator
+      .flatMap(_.split("/").inits)
+      .filter(_.nonEmpty)
+      .map(_.map(_ + "/").mkString)
+      .toSet
+
     var fos: OutputStream    = null
     var zos: ZipOutputStream = null
     try {
@@ -120,6 +136,7 @@ trait Shading extends JavaModule with PublishModule {
             if (ent.getName.endsWith("/"))
               for {
                 (_, updatedName) <- shader(Array.emptyByteArray, ent.getName)
+                if keepDirs(updatedName)
                 if !seen(updatedName)
               } {
                 seen += updatedName
@@ -194,13 +211,40 @@ trait Shading extends JavaModule with PublishModule {
         fos.close()
     }
 
+    onlyNamespaces(validNamespaces(), updated.toIO)
+
     PathRef(updated)
   }
 
   def publishXmlDeps = Task.Anon {
-    val convert = resolvePublishDependency().apply(_)
-    val orig    = super.publishXmlDeps()
-    val shaded  = shadedDependencies().iterator.map(convert).toSet
-    Agg(orig.iterator.toSeq.filterNot(shaded): _*)
+    val resolvePublishDependency0 = resolvePublishDependency()
+    val orig                      = super.publishXmlDeps()
+    val shaded = shadedDependencies().iterator.map(resolvePublishDependency0).toSet
+    Seq(orig.iterator.toSeq.filterNot(shaded) *)
+  }
+
+  def onlyNamespaces(namespaces: Seq[String], jar: File): Unit = {
+    val allowedPrefixes = namespaces.map(_.replace('.', '/') + "/")
+    val extraAllowedDirs = namespaces.iterator
+      .flatMap { ns =>
+        ns.split('.').inits.filter(_.nonEmpty).map(_.map(_ + "/").mkString)
+      }
+      .toSet
+    val zf = new ZipFile(jar)
+    val unrecognized = zf.entries()
+      .asScala
+      .map(_.getName)
+      .filter { n =>
+        !n.startsWith("META-INF/") && allowedPrefixes.forall(!n.startsWith(_)) &&
+        !extraAllowedDirs.contains(n) &&
+        n != "reflect.properties" &&                 // scala-reflect adds that
+        n != "scala-collection-compat.properties" && // collection-compat adds that
+        !n.contains("/libzstd-jni-") // com.github.luben:zstd-jni stuff (pulled via plexus-archiver)
+      }
+      .toVector
+      .sorted
+    for (u <- unrecognized)
+      System.err.println(s"Unrecognized: $u")
+    assert(unrecognized.isEmpty)
   }
 }

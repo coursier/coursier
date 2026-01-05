@@ -258,105 +258,118 @@ object ArtifactsTests extends TestSuite {
     }
 
     test("Take Ivy dependency artifacts into account") {
-      "to maven" - async {
+      test("to maven") {
+        async {
 
-        val res = await {
-          Resolve()
-            .noMirrors
-            .addDependencies(dep"com.fake:lib1:1.7.27")
-            .withRepositories(Seq(
-              MavenRepository(handmadeMetadataBase + "/fake-maven"),
-              IvyRepository.parse(
-                handmadeMetadataBase +
-                  "/fake-ivy/[defaultPattern]"
-              ).fold(sys.error, identity)
-            ))
-            .withCache(cache)
-            .future()
+          val res = await {
+            Resolve()
+              .noMirrors
+              .addDependencies(dep"com.fake:lib1:1.7.27")
+              .withRepositories(Seq(
+                MavenRepository(handmadeMetadataBase + "/fake-maven"),
+                IvyRepository.parse(
+                  handmadeMetadataBase +
+                    "/fake-ivy/[defaultPattern]"
+                ).fold(sys.error, identity)
+              ))
+              .withCache(cache)
+              .future()
+          }
+
+          val artifacts = await {
+            Artifacts()
+              .withResolutions(Seq(res))
+              .withCache(cache)
+              .future()
+          }
+
+          val urls =
+            artifacts.map(_._1.url.replace(
+              handmadeMetadataBase,
+              "file:///handmade-metadata/"
+            )).sorted
+
+          val expectedUrls = Seq(
+            "file:///handmade-metadata//fake-ivy/com.fake/lib1/1.7.27/jars/lib1.jar",
+            "file:///handmade-metadata//fake-maven/com/fake/lib2/1.3.4/lib2-1.3.4-core.jar"
+          )
+
+          assert(urls == expectedUrls)
         }
-
-        val artifacts = await {
-          Artifacts()
-            .withResolutions(Seq(res))
-            .withCache(cache)
-            .future()
-        }
-
-        val urls =
-          artifacts.map(_._1.url.replace(handmadeMetadataBase, "file:///handmade-metadata/")).sorted
-
-        val expectedUrls = Seq(
-          "file:///handmade-metadata//fake-ivy/com.fake/lib1/1.7.27/jars/lib1.jar",
-          "file:///handmade-metadata//fake-maven/com/fake/lib2/1.3.4/lib2-1.3.4-core.jar"
-        )
-
-        assert(urls == expectedUrls)
       }
 
-      "to ivy" - async {
+      test("to ivy") {
+        async {
 
-        val res = await {
-          Resolve()
-            .noMirrors
-            .addDependencies(dep"com.fake:lib1:1.7.27")
-            .withRepositories(Seq(
-              IvyRepository.parse(
-                handmadeMetadataBase +
-                  "/fake-ivy/[defaultPattern]"
-              ).fold(sys.error, identity)
-            ))
-            .withCache(cache)
-            .future()
+          val res = await {
+            Resolve()
+              .noMirrors
+              .addDependencies(dep"com.fake:lib1:1.7.27")
+              .withRepositories(Seq(
+                IvyRepository.parse(
+                  handmadeMetadataBase +
+                    "/fake-ivy/[defaultPattern]"
+                ).fold(sys.error, identity)
+              ))
+              .withCache(cache)
+              .future()
+          }
+
+          val artifacts = await {
+            Artifacts()
+              .withResolutions(Seq(res))
+              .withCache(cache)
+              .future()
+          }
+
+          val urls =
+            artifacts.map(_._1.url.replace(
+              handmadeMetadataBase,
+              "file:///handmade-metadata/"
+            )).sorted
+
+          val expectedUrls = Seq(
+            "file:///handmade-metadata//fake-ivy/com.fake/lib1/1.7.27/jars/lib1.jar",
+            "file:///handmade-metadata//fake-ivy/com.fake/lib2/1.3.4/jars/lib2-core.jar"
+          )
+
+          assert(urls == expectedUrls)
         }
-
-        val artifacts = await {
-          Artifacts()
-            .withResolutions(Seq(res))
-            .withCache(cache)
-            .future()
-        }
-
-        val urls =
-          artifacts.map(_._1.url.replace(handmadeMetadataBase, "file:///handmade-metadata/")).sorted
-
-        val expectedUrls = Seq(
-          "file:///handmade-metadata//fake-ivy/com.fake/lib1/1.7.27/jars/lib1.jar",
-          "file:///handmade-metadata//fake-ivy/com.fake/lib2/1.3.4/jars/lib2-core.jar"
-        )
-
-        assert(urls == expectedUrls)
       }
     }
 
-    "Don't group artifacts with same URL" - async {
+    test("Don't group artifacts with same URL") {
+      async {
 
-      val res = await {
-        Resolve()
-          .noMirrors
-          .addDependencies(dep"com.amazonaws:aws-java-sdk-s3:1.11.507")
-          .withCache(cache)
-          .future()
+        val res = await {
+          Resolve()
+            .noMirrors
+            .addDependencies(dep"com.amazonaws:aws-java-sdk-s3:1.11.507")
+            .withCache(cache)
+            .future()
+        }
+
+        val databindUrl =
+          "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.6.7.2/jackson-databind-2.6.7.2.jar"
+
+        val artifacts =
+          Artifacts.artifacts0(res, Set.empty, Nil, None, None, true).map(_._3).distinct
+        val databindOpt = artifacts.find(_.url == databindUrl)
+        assert(databindOpt.isDefined)
+        val groupedArtifacts = Artifacts.groupArtifacts(artifacts :+ databindOpt.get)
+
+        assert(groupedArtifacts.length == 2)
+
+        val expectedDuplicatedUrls = Set(
+          databindUrl
+        )
+
+        val firstGroupUrls = groupedArtifacts.head.map(_.url).toSet
+        val duplicatedUrls = groupedArtifacts(1).map(_.url).toSet
+
+        assert(duplicatedUrls == expectedDuplicatedUrls)
+        assert((duplicatedUrls -- firstGroupUrls).isEmpty)
       }
-
-      val databindUrl =
-        "https://repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.6.7.2/jackson-databind-2.6.7.2.jar"
-
-      val artifacts = Artifacts.artifacts0(res, Set.empty, Nil, None, None, true).map(_._3).distinct
-      val databindOpt = artifacts.find(_.url == databindUrl)
-      assert(databindOpt.isDefined)
-      val groupedArtifacts = Artifacts.groupArtifacts(artifacts :+ databindOpt.get)
-
-      assert(groupedArtifacts.length == 2)
-
-      val expectedDuplicatedUrls = Set(
-        databindUrl
-      )
-
-      val firstGroupUrls = groupedArtifacts.head.map(_.url).toSet
-      val duplicatedUrls = groupedArtifacts(1).map(_.url).toSet
-
-      assert(duplicatedUrls == expectedDuplicatedUrls)
-      assert((duplicatedUrls -- firstGroupUrls).isEmpty)
     }
   }
 

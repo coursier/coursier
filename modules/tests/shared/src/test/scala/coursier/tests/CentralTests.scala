@@ -832,173 +832,180 @@ abstract class CentralTests extends TestSuite {
               |         ├─ de.bwaldvogel:liblinear:1.94
               |         └─ nz.ac.waikato.cms.weka:weka-stable:3.6.10
               |            └─ net.sf.squirrel-sql.thirdparty-non-maven:java-cup:0.11a""".stripMargin
-          val tree = Print.dependencyTree(res, colors = false)
+          val tree = Print.dependencyTree0(res, colors = false)
           assert(tree.replace("\r\n", "\n") == expectedTree)
         }
       }
 
       test("reverse") {
         async {
+          val mod = mod"io.get-coursier:coursier-cli_2.12"
+          val ver = VersionConstraint("1.1.0-M10")
           val res = await {
-            runner.resolution(
-              mod"io.get-coursier:coursier-cli_2.12",
-              VersionConstraint("1.1.0-M10")
-            )
+            runner.resolution(mod, ver)
           }
-          // not sure the leftmost '├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10' should be there…
+          // not sure the leftmost '├─ OURSELVES' should be there…
           val expectedTree =
             """├─ com.chuusai:shapeless_2.12:2.3.3
               |│  ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
-              |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  └─ OURSELVES
               |│  └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
               |│     └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
-              |│        └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│        └─ OURSELVES
               |├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
-              |│  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  └─ OURSELVES
               |├─ com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M5
               |│  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
-              |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│     └─ OURSELVES
               |├─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
               |│  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
-              |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│     └─ OURSELVES
               |├─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
-              |│  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  └─ OURSELVES
               |├─ io.argonaut:argonaut_2.12:6.2.1
               |│  └─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
-              |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│     └─ OURSELVES
               |├─ io.get-coursier:coursier-bootstrap_2.12:1.1.0-M10
-              |│  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  └─ OURSELVES
               |├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
-              |│  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  ├─ OURSELVES
               |│  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
-              |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│     └─ OURSELVES
+              |├─ OURSELVES
               |├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
               |│  ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
-              |│  │  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  ├─ OURSELVES
               |│  │  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
-              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |│  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     └─ OURSELVES
+              |│  ├─ OURSELVES
               |│  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
-              |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│     └─ OURSELVES
               |├─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
-              |│  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  └─ OURSELVES
               |├─ org.scala-lang:scala-library:2.12.8
               |│  ├─ com.chuusai:shapeless_2.12:2.3.3 org.scala-lang:scala-library:2.12.4 -> 2.12.8
               |│  │  ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
-              |│  │  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  │  └─ OURSELVES
               |│  │  └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
               |│  │     └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
-              |│  │        └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │        └─ OURSELVES
               |│  ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8 org.scala-lang:scala-library:2.12.4 -> 2.12.8
-              |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  └─ OURSELVES
               |│  ├─ com.github.alexarchambault:case-app-annotations_2.12:2.0.0-M5 org.scala-lang:scala-library:2.12.7 -> 2.12.8
               |│  │  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
-              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     └─ OURSELVES
               |│  ├─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5 org.scala-lang:scala-library:2.12.7 -> 2.12.8
               |│  │  └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
-              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     └─ OURSELVES
               |│  ├─ com.github.alexarchambault:case-app_2.12:2.0.0-M5 org.scala-lang:scala-library:2.12.7 -> 2.12.8
-              |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  └─ OURSELVES
               |│  ├─ io.get-coursier:coursier-bootstrap_2.12:1.1.0-M10
-              |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  └─ OURSELVES
               |│  ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
-              |│  │  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  ├─ OURSELVES
               |│  │  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
-              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |│  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     └─ OURSELVES
+              |│  ├─ OURSELVES
               |│  ├─ io.get-coursier:coursier-core_2.12:1.1.0-M10
               |│  │  ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
-              |│  │  │  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  │  ├─ OURSELVES
               |│  │  │  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
-              |│  │  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |│  │  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  │     └─ OURSELVES
+              |│  │  ├─ OURSELVES
               |│  │  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
-              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     └─ OURSELVES
               |│  ├─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
-              |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  └─ OURSELVES
               |│  ├─ org.scala-lang:scala-reflect:2.12.6 org.scala-lang:scala-library:2.12.6 -> 2.12.8
               |│  │  ├─ io.argonaut:argonaut_2.12:6.2.1 org.scala-lang:scala-reflect:2.12.4 -> 2.12.6
               |│  │  │  └─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
-              |│  │  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  │     └─ OURSELVES
               |│  │  └─ org.typelevel:machinist_2.12:0.6.6
               |│  │     ├─ org.typelevel:cats-core_2.12:1.5.0
-              |│  │     │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     │  └─ OURSELVES
               |│  │     └─ org.typelevel:cats-macros_2.12:1.5.0
               |│  │        └─ org.typelevel:cats-core_2.12:1.5.0
-              |│  │           └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │           └─ OURSELVES
               |│  ├─ org.scala-lang.modules:scala-xml_2.12:1.1.1 org.scala-lang:scala-library:2.12.6 -> 2.12.8
               |│  │  └─ io.get-coursier:coursier-core_2.12:1.1.0-M10
               |│  │     ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
-              |│  │     │  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     │  ├─ OURSELVES
               |│  │     │  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
-              |│  │     │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |│  │     ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     │     └─ OURSELVES
+              |│  │     ├─ OURSELVES
               |│  │     └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
-              |│  │        └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │        └─ OURSELVES
               |│  ├─ org.typelevel:cats-core_2.12:1.5.0 org.scala-lang:scala-library:2.12.7 -> 2.12.8
-              |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  └─ OURSELVES
               |│  ├─ org.typelevel:cats-kernel_2.12:1.5.0 org.scala-lang:scala-library:2.12.7 -> 2.12.8
               |│  │  └─ org.typelevel:cats-core_2.12:1.5.0
-              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     └─ OURSELVES
               |│  ├─ org.typelevel:cats-macros_2.12:1.5.0 org.scala-lang:scala-library:2.12.7 -> 2.12.8
               |│  │  └─ org.typelevel:cats-core_2.12:1.5.0
-              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     └─ OURSELVES
               |│  ├─ org.typelevel:machinist_2.12:0.6.6 org.scala-lang:scala-library:2.12.6 -> 2.12.8
               |│  │  ├─ org.typelevel:cats-core_2.12:1.5.0
-              |│  │  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  │  └─ OURSELVES
               |│  │  └─ org.typelevel:cats-macros_2.12:1.5.0
               |│  │     └─ org.typelevel:cats-core_2.12:1.5.0
-              |│  │        └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │        └─ OURSELVES
               |│  └─ org.typelevel:macro-compat_2.12:1.1.1 org.scala-lang:scala-library:2.12.0 -> 2.12.8
               |│     └─ com.chuusai:shapeless_2.12:2.3.3
               |│        ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
-              |│        │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│        │  └─ OURSELVES
               |│        └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
               |│           └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
-              |│              └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│              └─ OURSELVES
               |├─ org.scala-lang:scala-reflect:2.12.6
               |│  ├─ io.argonaut:argonaut_2.12:6.2.1 org.scala-lang:scala-reflect:2.12.4 -> 2.12.6
               |│  │  └─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
-              |│  │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │     └─ OURSELVES
               |│  └─ org.typelevel:machinist_2.12:0.6.6
               |│     ├─ org.typelevel:cats-core_2.12:1.5.0
-              |│     │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│     │  └─ OURSELVES
               |│     └─ org.typelevel:cats-macros_2.12:1.5.0
               |│        └─ org.typelevel:cats-core_2.12:1.5.0
-              |│           └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│           └─ OURSELVES
               |├─ org.scala-lang.modules:scala-xml_2.12:1.1.1
               |│  └─ io.get-coursier:coursier-core_2.12:1.1.0-M10
               |│     ├─ io.get-coursier:coursier-cache_2.12:1.1.0-M10
-              |│     │  ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│     │  ├─ OURSELVES
               |│     │  └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
-              |│     │     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
-              |│     ├─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│     │     └─ OURSELVES
+              |│     ├─ OURSELVES
               |│     └─ io.get-coursier:coursier-extra_2.12:1.1.0-M10
-              |│        └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│        └─ OURSELVES
               |├─ org.typelevel:cats-core_2.12:1.5.0
-              |│  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  └─ OURSELVES
               |├─ org.typelevel:cats-kernel_2.12:1.5.0
               |│  └─ org.typelevel:cats-core_2.12:1.5.0
-              |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│     └─ OURSELVES
               |├─ org.typelevel:cats-macros_2.12:1.5.0
               |│  └─ org.typelevel:cats-core_2.12:1.5.0
-              |│     └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│     └─ OURSELVES
               |├─ org.typelevel:machinist_2.12:0.6.6
               |│  ├─ org.typelevel:cats-core_2.12:1.5.0
-              |│  │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│  │  └─ OURSELVES
               |│  └─ org.typelevel:cats-macros_2.12:1.5.0
               |│     └─ org.typelevel:cats-core_2.12:1.5.0
-              |│        └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |│        └─ OURSELVES
               |└─ org.typelevel:macro-compat_2.12:1.1.1
               |   └─ com.chuusai:shapeless_2.12:2.3.3
               |      ├─ com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M8
-              |      │  └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10
+              |      │  └─ OURSELVES
               |      └─ com.github.alexarchambault:case-app-util_2.12:2.0.0-M5
               |         └─ com.github.alexarchambault:case-app_2.12:2.0.0-M5
-              |            └─ io.get-coursier:coursier-cli_2.12:1.1.0-M10""".stripMargin
-          val tree = Print.dependencyTree(res, reverse = true, colors = false)
-            .replace("\r\n", "\n")
+              |            └─ OURSELVES""".stripMargin
+          val tree = Print.dependencyTree0(
+            res,
+            reverse = true,
+            colors = false,
+            renderModuleVersion = (mod0, ver0) =>
+              if (mod == mod0 && ver.asString == ver0)
+                "OURSELVES"
+              else
+                s"${mod0.repr}:$ver0"
+          ).replace("\r\n", "\n")
           if (tree != expectedTree) {
             pprint.err.log(expectedTree)
             pprint.err.log(tree)
@@ -1319,152 +1326,160 @@ abstract class CentralTests extends TestSuite {
         }
 
       test("force") {
-        "2.12.7" - async {
-          val res = await(
-            runner.resolve(
-              Seq(
-                dep"sh.almond:scala-kernel_2.12.7:0.2.2",
-                dep"org.scalameta:interactive_2.12.7:4.1.4"
-              ),
-              extraRepos = Seq(Repositories.jitpack),
-              mapDependencies =
-                Some(coursier.core.Resolution.overrideScalaModule(VersionConstraint("2.12.7")))
+        test("2.12.7") {
+          async {
+            val res = await(
+              runner.resolve(
+                Seq(
+                  dep"sh.almond:scala-kernel_2.12.7:0.2.2",
+                  dep"org.scalameta:interactive_2.12.7:4.1.4"
+                ),
+                extraRepos = Seq(Repositories.jitpack),
+                mapDependencies =
+                  Some(coursier.core.Resolution.overrideScalaModule(VersionConstraint("2.12.7")))
+              )
             )
-          )
 
-          val deps = res.dependencies.map { dep =>
-            s"${dep.module}:${dep.versionConstraint.asString}"
+            val deps = res.dependencies.map { dep =>
+              s"${dep.module}:${dep.versionConstraint.asString}"
+            }
+
+            val expectedDeps = sharedDeps ++ Seq(
+              "com.lihaoyi:ammonite-interp_2.12.7:1.5.0-4-6296f20",
+              "com.lihaoyi:ammonite-repl_2.12.7:1.5.0-4-6296f20",
+              "com.lihaoyi:fansi_2.12:0.2.4",
+              "com.lihaoyi:pprint_2.12:0.5.2",
+              "org.scala-lang:scala-compiler:2.12.7",
+              "org.scala-lang:scala-library:2.12.7",
+              "org.scala-lang:scala-reflect:2.12.7",
+              "org.scala-lang:scalap:2.12.7",
+              "org.scalameta:interactive_2.12.7:4.1.4",
+              "org.scalameta:semanticdb-scalac-core_2.12.7:4.1.4",
+              "sh.almond:scala-interpreter_2.12.7:0.2.2",
+              "sh.almond:scala-kernel-api_2.12.7:0.2.2",
+              "sh.almond:scala-kernel_2.12.7:0.2.2"
+            )
+
+            assertSameElements(expectedDeps, deps)
           }
-
-          val expectedDeps = sharedDeps ++ Seq(
-            "com.lihaoyi:ammonite-interp_2.12.7:1.5.0-4-6296f20",
-            "com.lihaoyi:ammonite-repl_2.12.7:1.5.0-4-6296f20",
-            "com.lihaoyi:fansi_2.12:0.2.4",
-            "com.lihaoyi:pprint_2.12:0.5.2",
-            "org.scala-lang:scala-compiler:2.12.7",
-            "org.scala-lang:scala-library:2.12.7",
-            "org.scala-lang:scala-reflect:2.12.7",
-            "org.scala-lang:scalap:2.12.7",
-            "org.scalameta:interactive_2.12.7:4.1.4",
-            "org.scalameta:semanticdb-scalac-core_2.12.7:4.1.4",
-            "sh.almond:scala-interpreter_2.12.7:0.2.2",
-            "sh.almond:scala-kernel-api_2.12.7:0.2.2",
-            "sh.almond:scala-kernel_2.12.7:0.2.2"
-          )
-
-          assertSameElements(expectedDeps, deps)
         }
 
-        "overrideFullSuffix" - async {
-          val res = await(
-            runner.resolve(
-              Seq(
-                dep"sh.almond:scala-kernel_2.12.8:0.2.2",
-                dep"org.scalameta:interactive_2.12.8:4.1.4"
-              ),
-              extraRepos = Seq(Repositories.jitpack),
-              mapDependencies = Some(coursier.core.Resolution.overrideFullSuffix("2.12.8"))
+        test("overrideFullSuffix") {
+          async {
+            val res = await(
+              runner.resolve(
+                Seq(
+                  dep"sh.almond:scala-kernel_2.12.8:0.2.2",
+                  dep"org.scalameta:interactive_2.12.8:4.1.4"
+                ),
+                extraRepos = Seq(Repositories.jitpack),
+                mapDependencies = Some(coursier.core.Resolution.overrideFullSuffix("2.12.8"))
+              )
             )
-          )
 
-          val deps = res.dependencies.map { dep =>
-            s"${dep.module}:${dep.versionConstraint.asString}"
+            val deps = res.dependencies.map { dep =>
+              s"${dep.module}:${dep.versionConstraint.asString}"
+            }
+
+            val expectedDeps = sharedDeps ++ Seq(
+              "com.lihaoyi:ammonite-interp_2.12.8:1.5.0-4-6296f20",
+              "com.lihaoyi:ammonite-repl_2.12.8:1.5.0-4-6296f20",
+              "com.lihaoyi:fansi_2.12:0.2.4",
+              "com.lihaoyi:pprint_2.12:0.5.2",
+              "org.scala-lang:scala-compiler:2.12.8",
+              "org.scala-lang:scala-library:2.12.8",
+              "org.scala-lang:scala-reflect:2.12.8",
+              "org.scala-lang:scalap:2.12.8",
+              "org.scalameta:interactive_2.12.8:4.1.4",
+              "org.scalameta:semanticdb-scalac-core_2.12.8:4.1.4",
+              "sh.almond:scala-interpreter_2.12.8:0.2.2",
+              "sh.almond:scala-kernel-api_2.12.8:0.2.2",
+              "sh.almond:scala-kernel_2.12.8:0.2.2"
+            )
+
+            assertSameElements(expectedDeps, deps)
           }
-
-          val expectedDeps = sharedDeps ++ Seq(
-            "com.lihaoyi:ammonite-interp_2.12.8:1.5.0-4-6296f20",
-            "com.lihaoyi:ammonite-repl_2.12.8:1.5.0-4-6296f20",
-            "com.lihaoyi:fansi_2.12:0.2.4",
-            "com.lihaoyi:pprint_2.12:0.5.2",
-            "org.scala-lang:scala-compiler:2.12.8",
-            "org.scala-lang:scala-library:2.12.8",
-            "org.scala-lang:scala-reflect:2.12.8",
-            "org.scala-lang:scalap:2.12.8",
-            "org.scalameta:interactive_2.12.8:4.1.4",
-            "org.scalameta:semanticdb-scalac-core_2.12.8:4.1.4",
-            "sh.almond:scala-interpreter_2.12.8:0.2.2",
-            "sh.almond:scala-kernel-api_2.12.8:0.2.2",
-            "sh.almond:scala-kernel_2.12.8:0.2.2"
-          )
-
-          assertSameElements(expectedDeps, deps)
         }
       }
 
       test("dontForce") {
-        "2.12.7" - async {
-          val res = await(
-            runner.resolve(
-              Seq(
-                dep"sh.almond:scala-kernel_2.12.7:0.2.2",
-                dep"org.scalameta:interactive_2.12.7:4.1.4"
-              ),
-              extraRepos = Seq(Repositories.jitpack)
+        test("2.12.7") {
+          async {
+            val res = await(
+              runner.resolve(
+                Seq(
+                  dep"sh.almond:scala-kernel_2.12.7:0.2.2",
+                  dep"org.scalameta:interactive_2.12.7:4.1.4"
+                ),
+                extraRepos = Seq(Repositories.jitpack)
+              )
             )
-          )
 
-          val deps = res.dependencies.map { dep =>
-            s"${dep.module}:${dep.versionConstraint.asString}"
+            val deps = res.dependencies.map { dep =>
+              s"${dep.module}:${dep.versionConstraint.asString}"
+            }
+
+            val expectedDeps = sharedDeps ++ Seq(
+              "com.lihaoyi:ammonite-interp_2.12.7:1.5.0-4-6296f20",
+              "com.lihaoyi:ammonite-repl_2.12.7:1.5.0-4-6296f20",
+              "com.lihaoyi:fansi_2.12:0.2.4",
+              "com.lihaoyi:pprint_2.12:0.5.2",
+              // borked classpath - 2.12.7 full cross-versioned stuff, along scala 2.12.8 JARs
+              "org.scala-lang:scala-compiler:2.12.8",
+              "org.scala-lang:scala-library:2.12.8",
+              "org.scala-lang:scala-reflect:2.12.8",
+              "org.scala-lang:scalap:2.12.8",
+              "org.scalameta:interactive_2.12.7:4.1.4",
+              "org.scalameta:semanticdb-scalac-core_2.12.7:4.1.4",
+              "sh.almond:scala-interpreter_2.12.7:0.2.2",
+              "sh.almond:scala-kernel-api_2.12.7:0.2.2",
+              "sh.almond:scala-kernel_2.12.7:0.2.2"
+            )
+
+            assertSameElements(expectedDeps, deps)
           }
-
-          val expectedDeps = sharedDeps ++ Seq(
-            "com.lihaoyi:ammonite-interp_2.12.7:1.5.0-4-6296f20",
-            "com.lihaoyi:ammonite-repl_2.12.7:1.5.0-4-6296f20",
-            "com.lihaoyi:fansi_2.12:0.2.4",
-            "com.lihaoyi:pprint_2.12:0.5.2",
-            // borked classpath - 2.12.7 full cross-versioned stuff, along scala 2.12.8 JARs
-            "org.scala-lang:scala-compiler:2.12.8",
-            "org.scala-lang:scala-library:2.12.8",
-            "org.scala-lang:scala-reflect:2.12.8",
-            "org.scala-lang:scalap:2.12.8",
-            "org.scalameta:interactive_2.12.7:4.1.4",
-            "org.scalameta:semanticdb-scalac-core_2.12.7:4.1.4",
-            "sh.almond:scala-interpreter_2.12.7:0.2.2",
-            "sh.almond:scala-kernel-api_2.12.7:0.2.2",
-            "sh.almond:scala-kernel_2.12.7:0.2.2"
-          )
-
-          assertSameElements(expectedDeps, deps)
         }
 
-        "2.12.8" - async {
-          val res = await(
-            runner.resolve(
-              Seq(
-                dep"sh.almond:scala-kernel_2.12.8:0.2.2",
-                dep"org.scalameta:interactive_2.12.8:4.1.4"
-              ),
-              extraRepos = Seq(Repositories.jitpack)
+        test("2.12.8") {
+          async {
+            val res = await(
+              runner.resolve(
+                Seq(
+                  dep"sh.almond:scala-kernel_2.12.8:0.2.2",
+                  dep"org.scalameta:interactive_2.12.8:4.1.4"
+                ),
+                extraRepos = Seq(Repositories.jitpack)
+              )
             )
-          )
 
-          val deps = res.dependencies.map { dep =>
-            s"${dep.module}:${dep.versionConstraint.asString}"
+            val deps = res.dependencies.map { dep =>
+              s"${dep.module}:${dep.versionConstraint.asString}"
+            }
+
+            val expectedDeps = sharedDeps ++ Seq(
+              "com.lihaoyi:ammonite-interp_2.12.8:1.5.0-4-6296f20",
+              "com.lihaoyi:ammonite-repl_2.12.8:1.5.0-4-6296f20",
+
+              // not sure why fansi and pprint differ from the others here
+              "com.lihaoyi:fansi_2.12:0.2.5",
+              "com.lihaoyi:pprint_2.12:0.5.3",
+              "org.scala-lang:scala-compiler:2.12.8",
+              "org.scala-lang:scala-library:2.12.8",
+              "org.scala-lang:scala-reflect:2.12.8",
+              "org.scala-lang:scalap:2.12.8",
+
+              // not forcing the scala version -> borked classpath, with both 2.12.7 and 2.12.8 stuff
+              "org.scalameta:interactive_2.12.7:4.0.0",
+              "org.scalameta:semanticdb-scalac-core_2.12.7:4.0.0",
+              "org.scalameta:interactive_2.12.8:4.1.4",
+              "org.scalameta:semanticdb-scalac-core_2.12.8:4.1.4",
+              "sh.almond:scala-interpreter_2.12.8:0.2.2",
+              "sh.almond:scala-kernel-api_2.12.8:0.2.2",
+              "sh.almond:scala-kernel_2.12.8:0.2.2"
+            )
+
+            assertSameElements(expectedDeps, deps)
           }
-
-          val expectedDeps = sharedDeps ++ Seq(
-            "com.lihaoyi:ammonite-interp_2.12.8:1.5.0-4-6296f20",
-            "com.lihaoyi:ammonite-repl_2.12.8:1.5.0-4-6296f20",
-
-            // not sure why fansi and pprint differ from the others here
-            "com.lihaoyi:fansi_2.12:0.2.5",
-            "com.lihaoyi:pprint_2.12:0.5.3",
-            "org.scala-lang:scala-compiler:2.12.8",
-            "org.scala-lang:scala-library:2.12.8",
-            "org.scala-lang:scala-reflect:2.12.8",
-            "org.scala-lang:scalap:2.12.8",
-
-            // not forcing the scala version -> borked classpath, with both 2.12.7 and 2.12.8 stuff
-            "org.scalameta:interactive_2.12.7:4.0.0",
-            "org.scalameta:semanticdb-scalac-core_2.12.7:4.0.0",
-            "org.scalameta:interactive_2.12.8:4.1.4",
-            "org.scalameta:semanticdb-scalac-core_2.12.8:4.1.4",
-            "sh.almond:scala-interpreter_2.12.8:0.2.2",
-            "sh.almond:scala-kernel-api_2.12.8:0.2.2",
-            "sh.almond:scala-kernel_2.12.8:0.2.2"
-          )
-
-          assertSameElements(expectedDeps, deps)
         }
       }
     }

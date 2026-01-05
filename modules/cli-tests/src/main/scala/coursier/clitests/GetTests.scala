@@ -91,16 +91,18 @@ abstract class GetTests extends TestSuite {
         val tmpDir = os.Path(tmpDir0, os.pwd)
         val cache  = (tmpDir / "cache").toString
 
+        val port = 9098
+
         val okM2Dir = tmpDir / "m2-ok"
-        os.write(okM2Dir / "settings.xml", TestAuthProxy.m2Settings(), createFolders = true)
+        os.write(okM2Dir / "settings.xml", TestAuthProxy.m2Settings(port), createFolders = true)
         val nopeM2Dir = tmpDir / "m2-nope"
         os.write(
           nopeM2Dir / "settings.xml",
-          TestAuthProxy.m2Settings(9083, "wrong", "nope"),
+          TestAuthProxy.m2Settings(port, "wrong", "nope"),
           createFolders = true
         )
 
-        val output = TestAuthProxy.withAuthProxy { _ =>
+        val output = TestAuthProxy.withAuthProxy(port) { _ =>
 
           val proc = os.proc(launcher, "get", pomAscUrl)
 
