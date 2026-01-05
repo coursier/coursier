@@ -45,7 +45,7 @@ object Deps {
     // plexus-archiver needs its loggers
     def plexusContainerDefault = mvn"org.codehaus.plexus:plexus-container-default:2.1.1"
       .exclude("junit" -> "junit")
-    def pprint           = mvn"com.lihaoyi::pprint::0.9.0"
+    def pprint           = mvn"com.lihaoyi::pprint::0.9.3"
     def proguard         = mvn"com.guardsquare:proguard-base:7.7.0"
     def pythonNativeLibs = mvn"ai.kien::python-native-libs:0.2.4"
     def scalaAsync       = mvn"org.scala-lang.modules::scala-async::1.0.1"
