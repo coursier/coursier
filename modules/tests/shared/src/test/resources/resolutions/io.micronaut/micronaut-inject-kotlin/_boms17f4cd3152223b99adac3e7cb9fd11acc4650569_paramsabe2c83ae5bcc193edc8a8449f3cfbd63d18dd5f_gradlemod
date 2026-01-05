@@ -1,0 +1,31 @@
+io.micronaut:micronaut-inject-kotlin:4.9.9:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.ow2.asm:asm:9.8:runtime
+com.google.devtools.ksp:symbol-processing-api:1.9.25-1.0.20:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.slf4j:slf4j-api:2.0.17:runtime
+io.micronaut:micronaut-core-processor:4.9.9:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.25:runtime
+io.micronaut:micronaut-core-reactive:4.9.9:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+io.micronaut:micronaut-inject:4.9.9:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+io.micronaut:micronaut-aop:4.9.9:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.github.javaparser:javaparser-symbol-solver-core:3.26.4:runtime
+io.micronaut.sourcegen:micronaut-sourcegen-bytecode-writer:1.8.2:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.jetbrains.kotlin:kotlin-stdlib:1.9.25:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.25:runtime
+io.micronaut:micronaut-core:4.9.9:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.reactivestreams:reactive-streams:1.0.4:runtime
+jakarta.inject:jakarta.inject-api:2.0.1:runtime
+jakarta.annotation:jakarta.annotation-api:2.1.1:runtime
+com.github.javaparser:javaparser-core:3.26.4:runtime
+org.javassist:javassist:3.30.2-GA:runtime
+com.google.guava:guava:33.4.8-jre:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.ow2.asm:asm-commons:9.8:runtime
+org.ow2.asm:asm-util:9.8:runtime
+io.micronaut.sourcegen:micronaut-sourcegen-model:1.8.2:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.jetbrains:annotations:13.0:runtime
+com.google.guava:failureaccess:1.0.3:runtime
+com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:runtime
+org.jspecify:jspecify:1.0.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+com.google.errorprone:error_prone_annotations:2.36.0:runtime
+com.google.j2objc:j2objc-annotations:3.0.0:runtime
+org.ow2.asm:asm-tree:9.8:runtime
+org.ow2.asm:asm-analysis:9.8:runtime

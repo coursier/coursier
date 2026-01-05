@@ -228,7 +228,10 @@ import scala.language.higherKinds
     }
 
     def validate0(res: Resolution): F[Resolution] =
-      Resolve.validate(res).either match {
+      Resolve.validate(
+        res,
+        resolutionParams.renderModuleVersion.getOrElse((mod, ver) => s"${mod.repr}:$ver")
+      ).either match {
         case Left(errors) =>
           val err = ResolutionError.from(errors.head, errors.tail: _*)
           S.fromAttempt(Left(err))
@@ -475,7 +478,16 @@ object Resolve extends PlatformResolve {
     }
   }
 
-  def validate(res: Resolution): ValidationNel[ResolutionError, Unit] = {
+  def validate(res: Resolution): ValidationNel[ResolutionError, Unit] =
+    validate(
+      res,
+      (mod, ver) => s"${mod.repr}:$ver"
+    )
+
+  def validate(
+    res: Resolution,
+    renderModuleVersion: (Module, String) => String
+  ): ValidationNel[ResolutionError, Unit] = {
 
     val checkDone: ValidationNel[ResolutionError, Unit] =
       if (res.isDone)
@@ -487,7 +499,12 @@ object Resolve extends PlatformResolve {
       .errors0
       .map {
         case ((module, version), errors) =>
-          new ResolutionError.CantDownloadModule(res, module, version, errors)
+          new ResolutionError.CantDownloadModule(
+            res,
+            module,
+            version,
+            errors
+          )
       } match {
       case Seq() =>
         ValidationNel.success(())
@@ -502,7 +519,8 @@ object Resolve extends PlatformResolve {
         ValidationNel.failure(
           new ResolutionError.ConflictingDependencies(
             res,
-            res.conflicts
+            res.conflicts,
+            renderModuleVersion
           )
         )
 

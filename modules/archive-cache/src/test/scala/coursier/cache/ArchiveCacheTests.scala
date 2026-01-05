@@ -171,7 +171,8 @@ abstract class ArchiveCacheTests extends TestSuite {
 
     def integrityTest(
       artifact: Artifact,
-      expectedElems: Seq[os.SubPath]
+      expectedElems: Seq[os.SubPath],
+      truncate: Boolean
     ): Unit =
       withTmpDir { dir =>
         val cache         = FileCache().withLocation((dir / "cache").toIO)
@@ -186,16 +187,26 @@ abstract class ArchiveCacheTests extends TestSuite {
 
         val size = os.size(localArchivePath)
 
-        // corrupt the archive
-        val content = os.read.bytes(localArchivePath)
-        os.write.over(
-          localArchivePath,
-          content.take(content.length / 2) ++
-            Array.fill[Byte](10)(0) ++
-            content.drop(content.length / 2)
-        )
-        val corruptedSize = os.size(localArchivePath)
-        assert(corruptedSize == size + 10)
+        def corrupt(): Unit = {
+          val modifiedTime = os.mtime(localArchivePath)
+          // corrupt the archive
+          val content = os.read.bytes(localArchivePath)
+          os.write.over(
+            localArchivePath,
+            if (truncate)
+              content.take(content.length - 200)
+            else
+              content.take(content.length / 2) ++
+                Array.fill[Byte](10)(0) ++
+                content.drop(content.length / 2)
+          )
+          os.mtime.set(localArchivePath, modifiedTime)
+          val corruptedSize = os.size(localArchivePath)
+          val expectedSize  = if (truncate) size - 200 else size + 10
+          assert(corruptedSize == expectedSize)
+        }
+
+        corrupt()
 
         val archiveDir = archiveCache0.get(artifact).unsafeRun()(cache.ec) match {
           case Left(err) =>
@@ -206,6 +217,12 @@ abstract class ArchiveCacheTests extends TestSuite {
 
         val finalSize = os.size(localArchivePath)
         assert(finalSize == size)
+
+        val integrityFile = localArchivePath / os.up / s".${localArchivePath.last}__integrity"
+
+        // For now, the integrity file doesn't exist after a re-download, as we don't do
+        // an integrity check right after a failed one, to avoid going into loops.
+        assert(!os.exists(integrityFile))
 
         if (os.isDir(archiveDir)) {
           import scala.math.Ordering.Implicits._
@@ -220,9 +237,41 @@ abstract class ArchiveCacheTests extends TestSuite {
         }
         else
           Nil
+
+        archiveCache0.get(artifact).unsafeRun()(cache.ec) match {
+          case Left(err) =>
+            throw new Exception(err)
+          case Right(_) =>
+        }
+
+        // Integrity check should succeed upon second access, and should write a file for it
+        assert(os.exists(integrityFile))
+
+        os.remove.all(archiveDir)
+
+        // Corrupt the archive, but keep the integrity file
+        corrupt()
+
+        val failed =
+          try {
+            archiveCache0.get(artifact).unsafeRun()(cache.ec)
+            false
+          }
+          catch {
+            case err: org.codehaus.plexus.archiver.ArchiverException =>
+              pprint.err.log(err)
+              true
+            case err: java.util.zip.ZipException =>
+              pprint.err.log(err)
+              true
+            case err: java.io.EOFException =>
+              pprint.err.log(err)
+              true
+          }
+        assert(failed)
       }
 
-    test("zip integrity") {
+    def zipIntegrityTest(truncate: Boolean): Unit =
       integrityTest(
         Artifact(
           "https://repo1.maven.org/maven2/com/lihaoyi/mill-dist/1.0.3/mill-dist-1.0.3-example-androidlib-java-1-hello-world.zip"
@@ -239,18 +288,36 @@ abstract class ArchiveCacheTests extends TestSuite {
           os.sub / "build.mill",
           os.sub / "mill",
           os.sub / "mill.bat"
-        ).map(os.sub / "mill-dist-1.0.3-example-androidlib-java-1-hello-world" / _)
+        ).map(os.sub / "mill-dist-1.0.3-example-androidlib-java-1-hello-world" / _),
+        truncate = truncate
       )
-    }
 
-    test("gzip integrity") {
+    def gzipIntegrityTest(truncate: Boolean): Unit =
       integrityTest(
         // random gzip file found on Maven Central
         Artifact(
           "https://repo1.maven.org/maven2/org/danbrough/kotlinxtras/curl/binaries/curlLinuxX64/7_86_0/curlLinuxX64-7_86_0.gz"
         ),
-        Nil
+        Nil,
+        truncate = truncate
       )
+
+    test("zip integrity") {
+      test("corrupt") {
+        zipIntegrityTest(truncate = false)
+      }
+      test("truncate") {
+        zipIntegrityTest(truncate = true)
+      }
+    }
+
+    test("gzip integrity") {
+      test("corrupt") {
+        gzipIntegrityTest(truncate = false)
+      }
+      test("truncate") {
+        gzipIntegrityTest(truncate = true)
+      }
     }
   }
 

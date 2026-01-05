@@ -42,7 +42,7 @@ object DocHelpers {
       msg0.replace(secret, "****")
     }
     System.err.println(msg)
-    os.proc(command: _*)
+    os.proc(command *)
   }
 
   def updateVersionedDocs(
