@@ -1,6 +1,6 @@
 package coursier.util
 
-import java.util.concurrent.{ExecutorService, ScheduledExecutorService}
+import java.util.concurrent.{CompletionException, ExecutorService, ScheduledExecutorService}
 
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -46,7 +46,7 @@ abstract class PlatformTaskCompanion { self =>
         try unsafeRun()
         catch {
           case t: Throwable =>
-            throw new Exception(t)
+            throw new CompletionException(t)
         }
       else
         unsafeRun()

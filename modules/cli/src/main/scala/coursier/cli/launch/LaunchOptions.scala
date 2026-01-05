@@ -14,7 +14,7 @@ import coursier.cli.options.OptionGroup
   "\n" +
   "Examples:\n" +
   "$ cs launch org.scalameta:scalafmt-cli:2.4.2 -- --version\n" +
-  "$ cs scalafmt -- --version\n"
+  "$ cs launch scalafmt -- --version\n"
 )
 final case class LaunchOptions(
 

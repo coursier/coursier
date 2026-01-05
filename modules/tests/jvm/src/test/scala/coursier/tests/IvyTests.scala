@@ -131,40 +131,46 @@ object IvyTests extends TestSuite {
       val mainJarUrl = repoBase + "com.example/a_2.11/0.1.0-SNAPSHOT/jars/a_2.11.jar"
       val testJarUrl = repoBase + "com.example/a_2.11/0.1.0-SNAPSHOT/jars/a_2.11-tests.jar"
 
-      "no conf or classifier" - runner.withArtifacts(
-        dep = dep.withAttributes(Attributes(Type.jar, Classifier.empty)),
-        extraRepos = Seq(repo),
-        classifierOpt = None
-      ) {
-        case Seq(artifact) =>
-          assert(artifact.url == mainJarUrl)
-        case other =>
-          throw new Exception(
-            s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}"
-          )
+      test("no conf or classifier") {
+        runner.withArtifacts(
+          dep = dep.withAttributes(Attributes(Type.jar, Classifier.empty)),
+          extraRepos = Seq(repo),
+          classifierOpt = None
+        ) {
+          case Seq(artifact) =>
+            assert(artifact.url == mainJarUrl)
+          case other =>
+            throw new Exception(
+              s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}"
+            )
+        }
       }
 
       test("test conf") {
-        "no attributes" - runner.withArtifacts(
-          dep = dep.withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test)),
-          extraRepos = Seq(repo),
-          classifierOpt = None
-        ) { artifacts =>
-          val urls = artifacts.map(_.url).toSet
-          assert(urls(mainJarUrl))
-          assert(urls(testJarUrl))
+        test("no attributes") {
+          runner.withArtifacts(
+            dep = dep.withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test)),
+            extraRepos = Seq(repo),
+            classifierOpt = None
+          ) { artifacts =>
+            val urls = artifacts.map(_.url).toSet
+            assert(urls(mainJarUrl))
+            assert(urls(testJarUrl))
+          }
         }
 
-        "attributes" - runner.withArtifacts(
-          dep = dep
-            .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
-            .withAttributes(Attributes(Type.jar, Classifier.empty)),
-          extraRepos = Seq(repo),
-          classifierOpt = None
-        ) { artifacts =>
-          val urls = artifacts.map(_.url).toSet
-          assert(urls(mainJarUrl))
-          assert(urls(testJarUrl))
+        test("attributes") {
+          runner.withArtifacts(
+            dep = dep
+              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
+              .withAttributes(Attributes(Type.jar, Classifier.empty)),
+            extraRepos = Seq(repo),
+            classifierOpt = None
+          ) { artifacts =>
+            val urls = artifacts.map(_.url).toSet
+            assert(urls(mainJarUrl))
+            assert(urls(testJarUrl))
+          }
         }
       }
 

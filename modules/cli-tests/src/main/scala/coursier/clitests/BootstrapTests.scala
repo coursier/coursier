@@ -664,16 +664,18 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         val expectedOutput = "foo" + System.lineSeparator()
         assert(output == expectedOutput)
 
+        val port = 9085
+
         val okM2Dir = tmpDir / "m2-ok"
-        os.write(okM2Dir / "settings.xml", TestAuthProxy.m2Settings(), createFolders = true)
+        os.write(okM2Dir / "settings.xml", TestAuthProxy.m2Settings(port), createFolders = true)
         val nopeM2Dir = tmpDir / "m2-nope"
         os.write(
           nopeM2Dir / "settings.xml",
-          TestAuthProxy.m2Settings(9083, "wrong", "nope"),
+          TestAuthProxy.m2Settings(port, "wrong", "nope"),
           createFolders = true
         )
 
-        TestAuthProxy.withAuthProxy { _ =>
+        TestAuthProxy.withAuthProxy(port) { _ =>
 
           val proc = os.proc("./cs-echo", "foo")
 

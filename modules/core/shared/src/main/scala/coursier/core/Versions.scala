@@ -120,7 +120,7 @@ import dataclass.data
 
   @deprecated("Use the override accepting a coursier.version.Latest instead", "2.1.25")
   def latest(kind: Latest): Option[String] =
-    latest(Latest0(kind.name).get).map(_.asString)
+    Latest0("latest." + kind.name).flatMap(latest).map(_.asString)
 
   def candidatesInInterval(itv: VersionInterval0)
     : Iterator[Version0] = {

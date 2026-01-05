@@ -40,12 +40,20 @@ object ArtifactError {
   // format: off
   final class NotFound(
     val file: String,
-    val permanent: Option[Boolean] = None
+    val permanent: Option[Boolean] = None,
+    causeOpt: Option[Throwable] = None
   ) extends ArtifactError(
     "not found",
-    file
-  )
-  // format: on
+    file,
+    causeOpt
+  ) {
+    // format: on
+
+    def this(
+      file: String,
+      permanent: Option[Boolean]
+    ) = this(file, permanent, None)
+  }
 
   // format: off
   final class Forbidden(
@@ -63,6 +71,16 @@ object ArtifactError {
   ) extends ArtifactError(
     "unauthorized",
     file + realm.fold("")(" (" + _ + ")")
+  )
+  // format: on
+
+  // format: off
+  final class RetryableServerError(
+    val url: String,
+    val responseCode: Int
+  ) extends ArtifactError(
+    "retryable server error",
+    s"$url (HTTP $responseCode)"
   )
   // format: on
 

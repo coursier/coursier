@@ -24,11 +24,11 @@ object JvmIndex {
   def handleAliases(indexName: String): String =
     JvmChannel.handleAliases(indexName)
 
-  @deprecated("Use JvmChannel.coursierIndexUrl instead", "2.1.15")
+  @deprecated("Use JvmChannel.gitHubIndexUrl instead", "2.1.15")
   def coursierIndexUrl: String =
     JvmChannel.gitHubIndexUrl
 
-  @deprecated("Use JvmChannel.coursierIndexUrl instead", "2.1.15")
+  @deprecated("Use JvmChannel.gitHubIndexUrl instead", "2.1.15")
   def defaultIndexUrl: String =
     JvmChannel.gitHubIndexUrl
 
