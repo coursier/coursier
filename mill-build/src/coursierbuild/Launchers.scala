@@ -4,7 +4,9 @@ import coursierbuild.Deps.{Deps, Docker, graalVmJvmId}
 import coursierbuild.modules.CsModule
 
 import io.github.alexarchambault.millnativeimage.NativeImage
-import mill._, mill.scalalib._
+import mill.*
+import mill.api.*
+import mill.scalalib.*
 
 import java.io.File
 
@@ -43,6 +45,8 @@ object Launchers {
       def nativeImageClassPath = runClasspath()
       def nativeImageMainClass = mainClass().getOrElse(sys.error("No main class"))
 
+      def generateNativeImageWithFileSystemChecker = false
+
       def nativeImageCsCommand    = Seq(coursierbuild.Cs.cs)
       def nativeImagePersist      = System.getenv("CI") != null
       def nativeImageGraalVmJvmId = graalVmJvmId
@@ -64,13 +68,15 @@ object Launchers {
       }
 
       def staticLibDir = Task {
-        val dir = nativeImageDockerWorkingDir() / staticLibDirName
-        os.makeDir.all(dir)
+        BuildCtx.withFilesystemCheckerDisabled {
+          val dir = nativeImageDockerWorkingDir() / staticLibDirName
+          os.makeDir.all(dir)
 
-        if (Properties.isWin)
-          copyCsjniutilTo(dir, Task.workspace)
+          if (Properties.isWin)
+            copyCsjniutilTo(dir, BuildCtx.workspaceRoot)
 
-        PathRef(dir)
+          PathRef(dir)
+        }
       }
 
       def nativeImageOptions = Task {
@@ -201,7 +207,7 @@ object Launchers {
       def buildHelperImage = Task {
         val imageDirName = if (arch == "aarch64") "musl-image-arm64" else "musl-image"
         os.proc("docker", "build", "-t", Docker.customMuslBuilderImageName, ".")
-          .call(cwd = Task.workspace / "project" / imageDirName, stdout = os.Inherit)
+          .call(cwd = BuildCtx.workspaceRoot / "project" / imageDirName, stdout = os.Inherit)
         ()
       }
       def writeNativeImageScript(scriptDest: String, imageDest: String = "") = Task.Command {
@@ -265,19 +271,19 @@ object Launchers {
         cp,
         mainClass0
       ) ++ args
-      os.proc(command.map(x => x: os.Shellable): _*).call(
+      os.proc(command.map(x => x: os.Shellable) *).call(
         stdin = os.Inherit,
         stdout = os.Inherit,
         stderr = os.Inherit
       )
-      System.err.println(s"Config generated in ${outputDir.relativeTo(Task.workspace)}")
+      System.err.println(s"Config generated in ${outputDir.relativeTo(BuildCtx.workspaceRoot)}")
     }
 
     def runFromJars(args: String*) = Task.Command {
       val cp         = jarClassPath().map(_.path).mkString(File.pathSeparator)
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
       val command    = Seq("java", "-cp", cp, mainClass0) ++ args
-      os.proc(command.map(x => x: os.Shellable): _*).call(
+      os.proc(command.map(x => x: os.Shellable) *).call(
         stdin = os.Inherit,
         stdout = os.Inherit,
         stderr = os.Inherit
@@ -319,7 +325,7 @@ object Launchers {
 
     def standaloneLauncher = Task {
 
-      val cachePath = os.Path(coursier.cache.FileCache().location, Task.workspace)
+      val cachePath = os.Path(coursier.cache.FileCache().location, BuildCtx.workspaceRoot)
       def urlOf(path: os.Path): Option[String] =
         if (path.startsWith(cachePath)) {
           val segments = path.relativeTo(cachePath).segments

@@ -6,7 +6,7 @@ import coursier.util.Monad.ops._
 import dataclass._
 import org.apache.tika.Tika
 
-import java.io.{File, InputStream}
+import java.io.{EOFException, File, InputStream}
 import java.math.BigInteger
 import java.nio.file.{Files, Path, StandardCopyOption}
 import java.security.MessageDigest
@@ -256,13 +256,14 @@ import scala.util.Using
         var fis: InputStream = null
         try {
           fis = Files.newInputStream(file.toPath)
-          val gzis = new GZIPInputStream(fis)
           try {
-            readAndDiscard(gzis)
+            readAndDiscard(new GZIPInputStream(fis))
             true
           }
           catch {
             case _: ZipException =>
+              false
+            case ex: EOFException if ex.getMessage.contains("ZLIB") =>
               false
           }
         }
@@ -274,15 +275,13 @@ import scala.util.Using
         var zf: ZipFile = null
         try {
           zf = new ZipFile(file)
-          try {
-            for (ent <- zf.entries().asScala)
-              readAndDiscard(zf.getInputStream(ent))
-            true
-          }
-          catch {
-            case _: ZipException =>
-              false
-          }
+          for (ent <- zf.entries().asScala)
+            readAndDiscard(zf.getInputStream(ent))
+          true
+        }
+        catch {
+          case _: ZipException =>
+            false
         }
         finally
           if (zf != null)
@@ -298,19 +297,54 @@ import scala.util.Using
       if (integrityCheck.getOrElse(true)) {
         val eitherT = for {
           f <- EitherT(doDownload)
-          invalid <- EitherT(
-            S.delay[Either[ArtifactError, Boolean]] {
-              Right(integrityCheck0(artifact0.url, f).contains(false))
+          invalid <- {
+            val cacheLocationOpt = cache match {
+              case fc: FileCache[F] => Some(fc.location)
+              case _                => None
             }
-          )
+            EitherT(
+              S.delay[Either[ArtifactError, Boolean]] {
+                Right {
+                  cacheLocationOpt match {
+                    case Some(cacheLocation) =>
+                      val invalid0 = CacheLocks.withLockOr(cacheLocation, f)(
+                        {
+                          val integrityFile = FileCache.auxiliaryFile(f, "integrity").toPath
+                          val hasValidIntegrityFile = Files.exists(integrityFile) && {
+                            val lastModified          = Files.getLastModifiedTime(f.toPath)
+                            val integrityLastModified = Files.getLastModifiedTime(integrityFile)
+                            integrityLastModified.toMillis() >= lastModified.toMillis()
+                          }
+                          if (!hasValidIntegrityFile)
+                            Files.deleteIfExists(integrityFile)
+                          !hasValidIntegrityFile && {
+                            val invalid0 = integrityCheck0(artifact0.url, f).contains(false)
+                            if (invalid0) {
+                              Files.delete(f.toPath)
+                              // clear all but the lock file for Windows?
+                              FileCache.clearAuxiliaryFiles(f)
+                            }
+                            else
+                              Files.write(integrityFile, Array.emptyByteArray)
+                            invalid0
+                          }
+                        },
+                        None
+                      )
+                      invalid0
+                    case None =>
+                      val invalid0 = integrityCheck0(artifact0.url, f).contains(false)
+                      if (invalid0)
+                        Files.delete(f.toPath)
+                      invalid0
+                  }
+                }
+              }
+            )
+          }
           f0 <- EitherT[F, ArtifactError, File](
-            if (invalid)
-              S.delay {
-                Files.delete(f.toPath)
-                FileCache.clearAuxiliaryFiles(f)
-              }.flatMap(_ => doDownload)
-            else
-              S.point(Right(f))
+            if (invalid) doDownload
+            else S.point(Right(f))
           )
         } yield f0
         eitherT.run

@@ -10,6 +10,8 @@ object SharedRepositoryParser {
   def repository(s: String): Either[String, Repository] =
     if (s == "central")
       Right(Repositories.central)
+    else if (s.startsWith("central:"))
+      Right(Repositories.centralRepository(s.stripPrefix("central:")))
     else if (s.startsWith("sonatype:"))
       Right(Repositories.sonatype(s.stripPrefix("sonatype:")))
     else if (s.startsWith("sonatype-s01:"))

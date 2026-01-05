@@ -321,8 +321,8 @@ object JsonReportTests extends TestSuite {
       doCheck(
         fetch.withResolutionParams(
           fetch.resolutionParams
-            .withForceVersion(
-              Map(mod"org.apache.commons:commons-compress" -> "1.4.1")
+            .withForceVersion0(
+              Map(mod"org.apache.commons:commons-compress" -> VersionConstraint("1.4.1"))
             )
         ),
         Seq(
@@ -335,8 +335,8 @@ object JsonReportTests extends TestSuite {
       doCheck(
         fetch.withResolutionParams(
           fetch.resolutionParams
-            .withForceVersion(
-              Map(mod"org.apache.commons:commons-compress" -> "1.4.1")
+            .withForceVersion0(
+              Map(mod"org.apache.commons:commons-compress" -> VersionConstraint("1.4.1"))
             )
         ),
         Seq(
