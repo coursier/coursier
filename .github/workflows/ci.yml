@@ -27,7 +27,7 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v7.0
-    - uses: coursier/setup-action@v1.3
+    - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
     - run: ./mill -i __.compile
@@ -48,7 +48,7 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v7.0
-    - uses: coursier/setup-action@v1.3
+    - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
     - run: |
@@ -86,7 +86,7 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v7.0
-    - uses: coursier/setup-action@v1.3
+    - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
     - run: sudo apt-get install -y nailgun
@@ -124,7 +124,7 @@ jobs:
       with:
         node-version: '12'
     - uses: coursier/cache-action@v7.0
-    - uses: coursier/setup-action@v1.3
+    - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
     - run: npm install && ./mill -i jsTests --scalaVersion "$SCALA_VERSION"
@@ -141,7 +141,7 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v7.0
-    - uses: coursier/setup-action@v1.3
+    - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
     - run: ./mill -i -k __.mimaReportBinaryIssues
@@ -163,7 +163,7 @@ jobs:
       with:
         node-version: '12'
     - uses: coursier/cache-action@v7.0
-    - uses: coursier/setup-action@v1.3
+    - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
     - run: ./mill -i docs.mdoc
@@ -185,7 +185,7 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v7.0
-    - uses: coursier/setup-action@v1.3
+    - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
         apps: scalafmt:3.8.3
@@ -201,7 +201,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v7.0
-      - uses: coursier/setup-action@v1.3
+      - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
       - name: Publish
@@ -236,7 +236,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v7.0
-      - uses: coursier/setup-action@v1.3
+      - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
       - run: sudo apt-get install -y nailgun
@@ -269,7 +269,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v7.0
-      - uses: coursier/setup-action@v1.3
+      - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
       - run: sudo apt-get install -y nailgun
@@ -306,7 +306,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v7.0
-      - uses: coursier/setup-action@v1.3
+      - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
       - run: sudo apt-get install -y nailgun
@@ -344,7 +344,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v7.0
-      - uses: coursier/setup-action@v1.3
+      - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
       - run: sudo apt-get install -y nailgun
@@ -382,7 +382,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v7.0
-      - uses: coursier/setup-action@v1.3
+      - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
       - run: sudo apt-get install -y nailgun
@@ -414,7 +414,7 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v7.0
-    - uses: coursier/setup-action@v1.3
+    - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
     - name: Wait for sync to Central
@@ -443,7 +443,7 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v7.0
-    - uses: coursier/setup-action@v1.3
+    - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
     - uses: actions/download-artifact@v6
@@ -513,7 +513,7 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v7.0
-    - uses: coursier/setup-action@v1.3
+    - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
     - uses: actions/download-artifact@v6
@@ -583,7 +583,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v7.0
-      - uses: coursier/setup-action@v1.3
+      - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
       - run: .github/scripts/scala-cli.sh .github/scripts/UpdateBrewFormula.scala
@@ -603,7 +603,7 @@ jobs:
         with:
           node-version: '12'
       - uses: coursier/cache-action@v7.0
-      - uses: coursier/setup-action@v1.3
+      - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
       - run: .github/scripts/setup-mkdocs.sh
@@ -625,7 +625,7 @@ jobs:
         with:
           node-version: '12'
       - uses: coursier/cache-action@v7.0
-      - uses: coursier/setup-action@v1.3
+      - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
       - run: .github/scripts/setup-mkdocs.sh
