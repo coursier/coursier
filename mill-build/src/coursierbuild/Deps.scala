@@ -30,7 +30,7 @@ object Deps {
     def jniUtilsBootstrap =
       mvn"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
     def jol  = mvn"org.openjdk.jol:jol-core:0.17"
-    def jsch = mvn"com.github.mwiede:jsch:0.2.25"
+    def jsch = mvn"com.github.mwiede:jsch:2.27.0"
     def jsoniterCore =
       mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${Versions.jsoniterScala}"
     def jsoniterMacros =
