@@ -14,6 +14,7 @@ permissions:
 jobs:
   compile-publish-all:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     name: Compile and publish everything locally
     steps:
     - name: Don't convert LF to CRLF during checkout
@@ -34,6 +35,7 @@ jobs:
 
   compile-all-no-package-object:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     name: Compile everything (no package object)
     steps:
     - name: Don't convert LF to CRLF during checkout
@@ -102,7 +104,8 @@ jobs:
 
   js-test:
     runs-on: ubuntu-latest
-    name: Scala.JS Scala ${{ matrix.SCALA_VERSION }}
+    name: Scala.js Scala ${{ matrix.SCALA_VERSION }}
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
