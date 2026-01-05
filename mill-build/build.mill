@@ -1,0 +1,15 @@
+import mill.*
+import mill.meta.MillBuildRootModule
+import mill.scalalib.*
+
+object `package` extends MillBuildRootModule {
+  def mvnDeps = Seq(
+    mvn"com.github.lolgab::mill-mima::0.2.0",
+    mvn"io.get-coursier.util:get-cs_2.13:0.1.1",
+    mvn"com.softwaremill.sttp.client4::core:4.0.9",
+    mvn"io.get-coursier:coursier-launcher_2.13:2.1.25-M13",
+    mvn"io.github.alexarchambault.mill::mill-native-image::0.2.2",
+    mvn"org.jsoup:jsoup:1.20.1",
+    mvn"com.eed3si9n.jarjarabrams:jarjar-abrams-core_2.13:1.14.1"
+  )
+}

@@ -16,7 +16,7 @@ import dev.dirs.jni.WindowsJni;
  * Computes Coursier's directories according to the standard
  * defined by operating system Coursier is running on.
  *
- * @implNote If more paths e. g. for configuration or application data is required,
+ * Note that if more paths e.g. for configuration or application data are required,
  * use {@link #coursierDirectories} and do not roll your own logic.
  */
 public final class CoursierPaths {
@@ -26,6 +26,9 @@ public final class CoursierPaths {
 
     private static final Object coursierDirectoriesLock = new Object();
     private static ProjectDirectories coursierDirectories0;
+
+    private static final Object scalaCliDirectoriesLock = new Object();
+    private static ProjectDirectories scalaCliDirectories0;
 
     private static final Object cacheDirectoryLock = new Object();
     private static volatile Path cacheDirectory0 = null;
@@ -63,13 +66,14 @@ public final class CoursierPaths {
     }
 
     private static String computeCacheDirectory(String envVar, String propName, String dirName) throws IOException {
-        String path = System.getenv(envVar);
+        return computeCacheDirectoryFrom(System.getenv(envVar), System.getProperty(propName), dirName);
+    }
 
-        if (path == null)
-            path = System.getProperty(propName);
-
-        if (path != null)
-          return path;
+    public static String computeCacheDirectoryFrom(String env, String prop, String dirName) throws IOException {
+        if (env != null)
+            return env;
+        if (prop != null)
+            return prop;
 
         Path baseXdgDir = Paths.get(coursierDirectories().cacheDir);
         Path xdgDir = baseXdgDir.resolve(dirName);
@@ -161,10 +165,19 @@ public final class CoursierPaths {
 
     public static ProjectDirectories directoriesInstance(String name) {
         Supplier<Windows> windows;
-        if (coursier.paths.Util.useJni())
-            windows = WindowsJni.getJdkAwareSupplier();
-        else
-            windows = Windows.getDefaultSupplier();
+
+        if (Boolean.getBoolean("coursier.windows.disable-ffm")) {
+            if (coursier.paths.Util.useJni())
+                windows = () -> new dev.dirs.jni.WindowsJni();
+            else
+                windows = () -> new dev.dirs.impl.WindowsPowerShell();
+        }
+        else {
+            if (coursier.paths.Util.useJni())
+                windows = WindowsJni.getJdkAwareSupplier();
+            else
+                windows = Windows.getDefaultSupplier();
+        }
         return ProjectDirectories.from(null, null, name, windows);
     }
 
@@ -181,10 +194,13 @@ public final class CoursierPaths {
     }
 
     private static Path[] computeConfigDirectories() throws IOException {
-        String path = System.getenv("COURSIER_CONFIG_DIR");
+        return computeConfigDirectories(System.getenv("COURSIER_CONFIG_DIR"), System.getProperty("coursier.config-dir"));
+    }
+    private static Path[] computeConfigDirectories(String fromEnv, String fromProps) throws IOException {
+        String path = fromEnv;
 
         if (path == null)
-            path = System.getProperty("coursier.config-dir");
+            path = fromProps;
 
         if (path != null)
             return new Path[] { Paths.get(path).toAbsolutePath().normalize() };
@@ -206,6 +222,10 @@ public final class CoursierPaths {
         return Arrays.stream(configDirectoriesPaths()).map(Path::toFile).toArray(File[]::new);
     }
 
+    public static File[] configDirectories(String fromEnv, String fromProps) throws IOException {
+        return Arrays.stream(configDirectoriesPaths(fromEnv, fromProps)).map(Path::toFile).toArray(File[]::new);
+    }
+
     public static Path[] configDirectoriesPaths() throws IOException {
 
         if (configDirectories0 == null)
@@ -216,6 +236,13 @@ public final class CoursierPaths {
             }
 
         return configDirectories0.clone();
+    }
+
+    public static Path[] configDirectoriesPaths(String fromEnv, String fromProps) throws IOException {
+        if (fromEnv == null && fromProps == null)
+            return configDirectoriesPaths();
+        else
+            return computeConfigDirectories(fromEnv, fromProps);
     }
 
     @Deprecated
@@ -269,24 +296,27 @@ public final class CoursierPaths {
 
     private static Path scalaConfigFile0 = null;
 
-    public static Path scalaConfigFile() throws Throwable {
-        if (scalaConfigFile0 == null) {
-            Path configPath = null;
-            String fromEnv = System.getenv("SCALA_CLI_CONFIG");
-            if (fromEnv != null && fromEnv.length() > 0)
-                configPath = Paths.get(fromEnv);
-            if (configPath == null) {
-                String fromProps = System.getProperty("scala-cli.config");
-                if (fromProps != null && fromProps.length() > 0)
-                    configPath = Paths.get(fromProps);
-            }
-            if (configPath == null) {
-                ProjectDirectories dirs = CoursierPaths.directoriesInstance("ScalaCli");
-                configPath = Paths.get(dirs.dataLocalDir).resolve("secrets/config.json");
-            }
-
-            scalaConfigFile0 = configPath;
+    public static Path scalaConfigFile(String fromEnv, String fromProps) throws Throwable {
+        Path configPath = null;
+        if (fromEnv != null && fromEnv.length() > 0)
+            configPath = Paths.get(fromEnv);
+        if (configPath == null && (fromProps != null && fromProps.length() > 0))
+            configPath = Paths.get(fromProps);
+        if (configPath == null) {
+            if (scalaCliDirectories0 == null)
+                synchronized (scalaCliDirectoriesLock) {
+                    if (scalaCliDirectories0 == null) {
+                        scalaCliDirectories0 = directoriesInstance("ScalaCli");
+                    }
+                }
+            configPath = Paths.get(scalaCliDirectories0.dataLocalDir).resolve("secrets/config.json");
         }
+        return configPath;
+    }
+
+    public static Path scalaConfigFile() throws Throwable {
+        if (scalaConfigFile0 == null)
+            scalaConfigFile0 = scalaConfigFile(System.getenv("SCALA_CLI_CONFIG"), System.getProperty("scala-cli.config"));
         return scalaConfigFile0;
     }
 

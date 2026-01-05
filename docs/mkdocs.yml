@@ -31,6 +31,8 @@ nav:
     - Actions: 'gha.md'
     - setup-action: 'gha-setup-action.md'
     - cache-action: 'gha-cache-action.md'
+  - Reference:
+    - Repositories: 'reference-repositories.md'
   - Contributors:
     - Contributing: 'contrib.md'
   - About:

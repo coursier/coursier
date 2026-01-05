@@ -79,24 +79,28 @@ object DockerTests extends TestSuite {
         val (expectedConfigUrl, expectedManifestUrl, expectedLayerUrl) = Cpu.get() match {
           case Cpu.X86_64 =>
             (
-              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:74cc54e27dc41bb10dc4b2226072d469509f2f22f1a3ce74f4a59661a1d44602",
-              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:03b62250a3cb1abd125271d393fc08bf0cc713391eda6b57c02d1ef85efcc25c",
-              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:e6590344b1a5dc518829d6ea1524fc12f8bcd14ee9a02aa6ad8360cce3a9a9e9"
+              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:1b44b5a3e06a9aae883e7bf25e45c100be0bb81a0e01b32de604f3ac44711634",
+              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:2771e37a12b7bcb2902456ecf3f29bf9ee11ec348e66e8eb322d9780ad7fc2df",
+              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:17eec7bbc9d79fa397ac95c7283ecd04d1fe6978516932a3db110c6206430809"
             )
           case Cpu.Arm64 =>
             (
-              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:f1f77a0f96b7251d7ef5472705624e2d76db64855b5b121e1cbefe9dc52d0f86",
-              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:a3f53a068794afb31f76ae82f79c71db0fb05a3ec960c62cd15027e214d7dc7f",
-              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:c9c5fd25a1bdc181cb012bc4fbb1ab272a975728f54064b7ae3ee8e77fd28c46"
+              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:ca9905c726f06de3cb54aaa54d4d1eade5403594e3fbfb050ccc970fd0212983",
+              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:00abdbfd095cf666ff8523d0ac0c5776c617a50907b0c32db3225847b622ec5a",
+              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:198f93fd5094f85a71f793fb8d8f481294d75fb80e6190abb4c6fad2b052a6b6"
             )
         }
         val expectedIndexUrl =
           "https://registry-1.docker.io/v2/library/hello-world/manifests/latest"
 
-        assert(res.configArtifact.url == expectedConfigUrl)
-        assert(res.indexArtifact.url == expectedIndexUrl)
-        assert(res.manifestArtifact.url == expectedManifestUrl)
-        assert(res.layerArtifacts.map(_.url) == Seq(expectedLayerUrl))
+        val configUrl   = res.configArtifact.url
+        val indexUrl    = res.indexArtifact.url
+        val manifestUrl = res.manifestArtifact.url
+        val layerUrls   = res.layerArtifacts.map(_.url)
+        assert(expectedConfigUrl == configUrl)
+        assert(expectedIndexUrl == indexUrl)
+        assert(expectedManifestUrl == manifestUrl)
+        assert(Seq(expectedLayerUrl) == layerUrls)
       }
 
       test("run") {

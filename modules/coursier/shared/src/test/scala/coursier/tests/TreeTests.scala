@@ -19,12 +19,22 @@ object TreeTests extends TestSuite {
   def tests = Tests {
     test("root conflict") {
       async {
+        val renderModuleVersion: (coursier.core.Module, String) => String = {
+          (mod, ver) =>
+            val replace = mod.organization.value == "com.softwaremill.sttp.shared" &&
+              mod.name.value == "ws_2.13" &&
+              ver == "1.3.10"
+            if (replace) "WS"
+            else s"${mod.repr}:$ver"
+        }
+
         val res = await {
           resolve
             .addDependencies(
               dep"com.softwaremill.sttp.client3:core_2.13:3.8.3",
               dep"org.scala-lang:scala-library:[2.13.8]"
             )
+            .mapResolutionParams(_.withRenderModuleVersion(Some(renderModuleVersion)))
             .io
             .attempt
             .future()
@@ -43,24 +53,28 @@ object TreeTests extends TestSuite {
                 |  com.softwaremill.sttp.model:core_2.13:1.5.2 wants 2.13.8
                 |  ├─ com.softwaremill.sttp.client3:core_2.13:3.8.3
                 |  │  └─ com.softwaremill.sttp.client3:core_2.13:3.8.3
-                |  └─ com.softwaremill.sttp.shared:ws_2.13:1.3.10
+                |  └─ WS
                 |     └─ com.softwaremill.sttp.client3:core_2.13:3.8.3
                 |        └─ com.softwaremill.sttp.client3:core_2.13:3.8.3
                 |
                 |  com.softwaremill.sttp.shared:core_2.13:1.3.10 wants 2.13.9
                 |  ├─ com.softwaremill.sttp.client3:core_2.13:3.8.3
                 |  │  └─ com.softwaremill.sttp.client3:core_2.13:3.8.3
-                |  └─ com.softwaremill.sttp.shared:ws_2.13:1.3.10
+                |  └─ WS
                 |     └─ com.softwaremill.sttp.client3:core_2.13:3.8.3
                 |        └─ com.softwaremill.sttp.client3:core_2.13:3.8.3
                 |
-                |  com.softwaremill.sttp.shared:ws_2.13:1.3.10 wants 2.13.9
+                |  WS wants 2.13.9
                 |  └─ com.softwaremill.sttp.client3:core_2.13:3.8.3
                 |     └─ com.softwaremill.sttp.client3:core_2.13:3.8.3
                 |
                 |""".stripMargin
             val tree =
-              ResolutionError.conflictingDependenciesErrorMessage(err.resolution, Colors.get(false))
+              ResolutionError.conflictingDependenciesErrorMessage(
+                err.resolution,
+                colors = Colors.get(false),
+                renderModuleVersion = renderModuleVersion
+              )
 
             assert(expectedTree == tree.replace("\r\n", "\n"))
           case Left(other) =>
