@@ -59,6 +59,7 @@ jobs:
   test:
     runs-on: ${{ matrix.OS }}
     name: ${{ matrix.OS }} Scala ${{ matrix.SCALA_VERSION }}
+    timeout-minutes: 35
     strategy:
       fail-fast: false
       matrix:
