@@ -1176,16 +1176,20 @@ def assemblyLauncher(
   os.Path(dest, BuildCtx.workspaceRoot)
 }
 
-def waitForSync(version: String = CoursierPublishModule.buildVersion) = Task.Command {
-  val launcher  = cli.launcher().path
-  val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
-  Sync.waitForSync(
-    launcher.toString,
-    s"${cli.pomSettings().organization}:${cli.artifactId()}:$version",
-    extraArgs,
-    25
-  )
-}
+def waitForSync(
+  version: String = CoursierPublishModule.buildVersion,
+  attemptCount: Int = -1
+) =
+  Task.Command {
+    val launcher  = cli.launcher().path
+    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
+    Sync.waitForSync(
+      launcher.toString,
+      s"${cli.pomSettings().organization}:${cli.artifactId()}:$version",
+      extraArgs,
+      Some(attemptCount).filter(_ > 0)
+    )
+  }
 
 def copyJarLaunchers(
   version: String = CoursierPublishModule.buildVersion,
