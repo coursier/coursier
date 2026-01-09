@@ -509,6 +509,25 @@ object ResolveTests extends TestSuite {
             assert(found == expected)
           }
         }
+
+        test("RELEASE") {
+          async {
+
+            val res = await {
+              resolve0
+                .addDependencies(dep"test:a_2.12:RELEASE")
+                .future()
+            }
+
+            val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
+            val expected = Set(
+              mod"org.scala-lang:scala-library" -> "2.12.8",
+              mod"test:a_2.12"                  -> "1.0.1"
+            )
+
+            assert(found == expected)
+          }
+        }
       }
     }
 
