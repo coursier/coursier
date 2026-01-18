@@ -774,8 +774,7 @@ import scala.util.control.NonFatal
 
 object Downloader {
 
-  private[cache] lazy val throwExceptions =
-    java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions")
+  private[cache] lazy val throwExceptions = true
 
   private val checksumHeader = Seq("MD5", "SHA1", "SHA256")
 
