@@ -153,8 +153,15 @@ import coursier.core.VariantPublication
 
     val variantPublications = variants
       .map { variant =>
+        val isDocumentation =
+          variant.attributesMap.get("org.gradle.category").contains("documentation")
+        val classifier = if (isDocumentation)
+          variant.attributesMap.get("org.gradle.docstype").map(Classifier(_))
+        else
+          None
+
         val publications = variant.files.map { file =>
-          VariantPublication(file.name, file.url)
+          VariantPublication(file.name, file.url, classifier)
         }
         Variant.Attributes(variant.name) -> publications
       }

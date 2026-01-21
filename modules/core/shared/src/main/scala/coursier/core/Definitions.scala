@@ -916,7 +916,8 @@ object Publication {
 
 @data class VariantPublication(
   name: String,
-  url: String
+  url: String,
+  classifier: Option[Classifier] = None
 )
 
 trait ArtifactSource {
