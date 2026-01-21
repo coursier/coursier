@@ -22,6 +22,11 @@ After the setup, you can [start using Scala](https://docs.scala-lang.org/scala3/
 
 ## Native launcher
 
+### Installer for Linux / Mac / Shell Environments
+
+$ curl -fL "https://github.com/coursier/launchers/raw/master/install-coursier.sh"
+$ ./install-coursier.sh
+
 ### Linux
 
 On Linux, download the coursier installer with
@@ -72,7 +77,15 @@ On Windows, [download and execute the Windows installer](https://github.com/cour
 
 If you prefer a command line-based install, or if you would like to customize the setup options, use:
 
-```pwsh
+# Windows Shell Environments (Git For Windows, MSYS64 / MINGW64 / CYGWIN64 / CLANG64 / etc)
+```bash
+curl -fLo cs-x86_64-pc-win32.zip https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip
+jar -xf cs-x86_64-pc-win32.zip
+mv cs-x86_64-pc-win32.exe cs.exe
+./cs --help
+```
+
+```pws
 # PowerShell
 Invoke-WebRequest -Uri "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip" -OutFile "cs-x86_64-pc-win32.zip"
 Expand-Archive -Path "cs-x86_64-pc-win32.zip" -DestinationPath .
