@@ -16,6 +16,32 @@ import scala.xml.{Attribute, Elem, MetaData, Null}
 
 package object compatibility {
 
+  import java.util.concurrent.{Callable, Executors, ForkJoinPool, Future => JFuture}
+  import scala.collection.mutable.ArrayBuffer
+  import scala.jdk.CollectionConverters._
+
+  /** Parallel flatMap for JVM - distributes work across the common ForkJoinPool. This is used to
+    * parallelize expensive computations in dependency resolution.
+    */
+  def parFlatMap[A, B](seq: Seq[A])(f: A => Seq[B]): Seq[B] = {
+    val size = seq.size
+    if (size <= 1)
+      seq.flatMap(f)
+    else {
+      val pool = ForkJoinPool.commonPool()
+      val tasks = seq.map { a =>
+        pool.submit(new Callable[Seq[B]] {
+          def call(): Seq[B] = f(a)
+        })
+      }
+      val result = new ArrayBuffer[B]
+      tasks.foreach { task =>
+        result ++= task.get()
+      }
+      result.toSeq
+    }
+  }
+
   implicit class RichChar(val c: Char) extends AnyVal {
     def letterOrDigit = c.isLetterOrDigit
     def letter        = c.isLetter

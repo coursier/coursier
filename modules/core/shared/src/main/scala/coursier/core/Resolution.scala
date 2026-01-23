@@ -1660,11 +1660,12 @@ object Resolution {
   lazy val reverseDependencies: Map[Dependency, Vector[Dependency]] = {
     val (updatedConflicts, updatedDeps, _) = nextDependenciesAndConflicts
 
-    val trDepsSeq =
-      for {
-        dep   <- updatedDeps
-        trDep <- finalDependencies0(dep).toOption.getOrElse(Nil)
-      } yield trDep.clearVersion -> dep.clearVersion
+    // Use parallel processing on JVM to speed up the expensive finalDependencies0 calls
+    val trDepsSeq = compatibility.parFlatMap(updatedDeps) { dep =>
+      finalDependencies0(dep).toOption.getOrElse(Nil).map(trDep =>
+        (trDep.clearVersion, dep.clearVersion)
+      )
+    }
 
     val knownDeps = (updatedDeps ++ updatedConflicts)
       .map(_.clearVersion)
