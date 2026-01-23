@@ -1483,9 +1483,9 @@ object Resolution {
     */
   lazy val transitiveDependenciesAndErrors
     : (Seq[(Dependency, DependencyError)], Seq[Dependency]) = {
-    val l = (dependencySet.minimizedSet -- conflicts)
-      .toVector
-      .map(dep => finalDependencies0(dep).left.map((dep, _)))
+    val l = compatibility.parMap((dependencySet.minimizedSet -- conflicts).toVector) { dep =>
+      finalDependencies0(dep).left.map((dep, _))
+    }
     val errors = l.collect {
       case Left(depAndError) => depAndError
     }
