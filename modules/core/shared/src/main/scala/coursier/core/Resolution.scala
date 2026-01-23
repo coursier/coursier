@@ -2380,7 +2380,7 @@ object Resolution {
       )
 
     @tailrec def helper(current: Set[Dependency]): Either[DependencyError, Set[Dependency]] = {
-      val extraDepsOrErrors = current.toSeq.map(finalDependencies0)
+      val extraDepsOrErrors = compatibility.parMap(current.toVector)(finalDependencies0)
       val errors = extraDepsOrErrors.collect {
         case Left(err) => err
       }
