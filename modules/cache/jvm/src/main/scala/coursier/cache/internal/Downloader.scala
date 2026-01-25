@@ -858,6 +858,7 @@ object Downloader {
       case _: AccessDeniedException if Properties.isWin =>
       case _: javax.net.ssl.SSLException                =>
       case _: java.net.SocketException                  =>
+      case _: java.net.ConnectException                 =>
       // TODO Allow to log that exception.
     }
 
