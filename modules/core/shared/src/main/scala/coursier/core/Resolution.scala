@@ -1483,9 +1483,9 @@ object Resolution {
     */
   lazy val transitiveDependenciesAndErrors
     : (Seq[(Dependency, DependencyError)], Seq[Dependency]) = {
-    val l = (dependencySet.minimizedSet -- conflicts)
-      .toVector
-      .map(dep => finalDependencies0(dep).left.map((dep, _)))
+    val l = compatibility.parMap((dependencySet.minimizedSet -- conflicts).toVector) { dep =>
+      finalDependencies0(dep).left.map((dep, _))
+    }
     val errors = l.collect {
       case Left(depAndError) => depAndError
     }
@@ -1660,11 +1660,12 @@ object Resolution {
   lazy val reverseDependencies: Map[Dependency, Vector[Dependency]] = {
     val (updatedConflicts, updatedDeps, _) = nextDependenciesAndConflicts
 
-    val trDepsSeq =
-      for {
-        dep   <- updatedDeps
-        trDep <- finalDependencies0(dep).toOption.getOrElse(Nil)
-      } yield trDep.clearVersion -> dep.clearVersion
+    // Use parallel processing on JVM to speed up the expensive finalDependencies0 calls
+    val trDepsSeq = compatibility.parFlatMap(updatedDeps) { dep =>
+      finalDependencies0(dep).toOption.getOrElse(Nil).map(trDep =>
+        (trDep.clearVersion, dep.clearVersion)
+      )
+    }
 
     val knownDeps = (updatedDeps ++ updatedConflicts)
       .map(_.clearVersion)
@@ -2379,7 +2380,7 @@ object Resolution {
       )
 
     @tailrec def helper(current: Set[Dependency]): Either[DependencyError, Set[Dependency]] = {
-      val extraDepsOrErrors = current.toSeq.map(finalDependencies0)
+      val extraDepsOrErrors = compatibility.parMap(current.toVector)(finalDependencies0)
       val errors = extraDepsOrErrors.collect {
         case Left(err) => err
       }
