@@ -424,7 +424,7 @@ object Pom {
     timestamp: String,
     buildNumber: Int
   ): SnapshotVersion = {
-    val value = Version(s"${version.dropRight("SNAPSHOT".length)}$timestamp-$buildNumber")
+    val value = MavenRepositoryInternal.guessSnapshotVersion(version, timestamp, buildNumber)
     SnapshotVersion(Classifier("*"), Extension("*"), value, None)
   }
 

@@ -656,19 +656,44 @@ private[coursier] object MavenRepositoryInternal {
       s"$name$baseSuffix.$ext"
     )
 
+  def guessSnapshotVersion(
+    version: String,
+    timestamp: String,
+    buildNumber: Int
+  ): Version = Version(s"${version.dropRight("SNAPSHOT".length)}$timestamp-$buildNumber")
+
   def mavenVersioning(
     snapshotVersioning: SnapshotVersioning,
     classifier: Classifier,
     extension: Extension
   ): Option[Version] =
-    snapshotVersioning
-      .snapshotVersions
-      .find { v =>
-        (v.classifier == classifier || v.classifier == Classifier("*")) &&
-        (v.extension == extension || v.extension == Extension("*"))
-      }
-      .map(_.value0)
-      .filter(_.asString.nonEmpty)
+    snapshotVersioning.buildNumber.flatMap {
+      buildNumber =>
+        val guessedLatestSnapshotVersion = guessSnapshotVersion(
+          snapshotVersioning.version0.asString,
+          snapshotVersioning.timestamp,
+          buildNumber
+        )
+
+        // Make sure it is in the list, otherwise fallback to previous computation (first snapshot version)
+        snapshotVersioning
+          .snapshotVersions
+          .collectFirst {
+            case v if
+                  (v.classifier == classifier || v.classifier == Classifier("*")) &&
+                  (v.extension == extension || v.extension == Extension("*")) &&
+                  (v.value0 == guessedLatestSnapshotVersion) => v.value0
+          }
+    }.orElse {
+      snapshotVersioning
+        .snapshotVersions
+        .find { v =>
+          (v.classifier == classifier || v.classifier == Classifier("*")) &&
+          (v.extension == extension || v.extension == Extension("*"))
+        }
+        .map(_.value0)
+        .filter(_.asString.nonEmpty)
+    }
 
   val defaultConfigurations = Map(
     Configuration.compile -> Seq.empty,
