@@ -2067,6 +2067,7 @@ object Resolution {
     )
 
     project0
+      .withModule(Module(project0.module.organization, project0.module.name.map{ s => substituteProps(s, propertiesMap0) }, project0.module.attributes))
       .withPackagingOpt(project0.packagingOpt.map(_.map(substituteProps(_, propertiesMap0))))
       .withVersion0(Version0(substituteProps(project0.version0.asString, propertiesMap0)))
       .withDependencies0(
