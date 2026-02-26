@@ -3,7 +3,8 @@ package coursier.ivy
 import coursier.util.Traverse.TraverseOps
 import coursier.util.ValidationNel
 import dataclass.data
-import fastparse._, NoWhitespace._
+import fastparse._
+import fastparse.NoWhitespace._
 
 import scala.language.implicitConversions
 
