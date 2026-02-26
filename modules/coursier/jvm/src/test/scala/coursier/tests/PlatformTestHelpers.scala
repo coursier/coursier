@@ -1,15 +1,15 @@
 package coursier.tests
 
-import java.math.BigInteger
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths}
-import java.security.MessageDigest
-
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import coursier.cache.{Cache, MockCache}
 import coursier.paths.Util
 import coursier.testcache.TestCache
 import coursier.util.Task
+
+import java.math.BigInteger
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
+import java.security.MessageDigest
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._

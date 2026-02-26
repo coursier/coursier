@@ -1,13 +1,13 @@
 package coursier.internal
 
-import java.io.File
-import java.net.MalformedURLException
-
 import coursier.LocalRepositories
 import coursier.cache.CacheUrl
 import coursier.core.{Authentication, Repository}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepositoryLike
+
+import java.io.File
+import java.net.MalformedURLException
 
 abstract class PlatformRepositoryParser {
 

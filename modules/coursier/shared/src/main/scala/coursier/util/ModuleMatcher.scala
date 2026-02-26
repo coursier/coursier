@@ -1,9 +1,9 @@
 package coursier.util
 
-import java.util.regex.Pattern
-
 import coursier.core.{Module, ModuleName, Organization}
 import dataclass.data
+
+import java.util.regex.Pattern
 
 import scala.annotation.tailrec
 import scala.collection.compat._

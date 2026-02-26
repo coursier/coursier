@@ -1,15 +1,20 @@
 package coursierbuild.modules
 
+import coursier.launcher.{
+  AssemblyGenerator,
+  ClassPathEntry,
+  Parameters,
+  Preamble
+}
 import coursierbuild.Deps.{Deps, ScalaVersions}
-
-import coursier.launcher.{AssemblyGenerator, ClassPathEntry, Parameters, Preamble}
-import mill._, mill.scalalib._
+import mill.*
+import mill.scalalib.*
 import mill.util.Jvm
 
-import java.io._
-import java.util.zip._
+import java.io.*
+import java.util.zip.*
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 import scala.util.Properties.isWin
 
 trait BootstrapLauncher extends CsModule {

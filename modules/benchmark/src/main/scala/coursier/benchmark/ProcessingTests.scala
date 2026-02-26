@@ -1,9 +1,14 @@
 package coursier.benchmark
 
-import java.util.concurrent.TimeUnit
-
 import coursier.Repositories
-import org.openjdk.jmh.annotations.{Benchmark, BenchmarkMode, Mode, OutputTimeUnit}
+import org.openjdk.jmh.annotations.{
+  Benchmark,
+  BenchmarkMode,
+  Mode,
+  OutputTimeUnit
+}
+
+import java.util.concurrent.TimeUnit
 
 @BenchmarkMode(Array(Mode.AverageTime))
 @OutputTimeUnit(TimeUnit.MILLISECONDS)

@@ -1,13 +1,17 @@
 package coursier.cache.loggers
 
-import java.io.{OutputStream, OutputStreamWriter, Writer}
-import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, ScheduledExecutorService}
-import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
-
 import coursier.cache.CacheLogger
 import coursier.cache.internal.ThreadUtil
 import coursier.cache.loggers.RefreshInfo.{CheckUpdateInfo, DownloadInfo}
 import coursier.util.Artifact
+
+import java.io.{OutputStream, OutputStreamWriter, Writer}
+import java.util.concurrent.{
+  ConcurrentHashMap,
+  ConcurrentLinkedQueue,
+  ScheduledExecutorService
+}
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
 import scala.collection.mutable.ArrayBuffer
 

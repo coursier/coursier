@@ -3,6 +3,7 @@ package coursier.docker
 import com.github.plokhotnyuk.jsoniter_scala.core.{JsonValueCodec, writeToArray}
 import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
 import coursier.cache.{ArchiveCache, DigestBasedCache, FileCache}
+import coursier.docker.vm.Vm
 import coursier.exec.Execve
 import coursier.util.{Artifact, Task}
 import io.github.alexarchambault.isterminal.IsTerminal
@@ -10,10 +11,9 @@ import io.github.alexarchambault.isterminal.IsTerminal
 import java.lang.management.ManagementFactory
 import java.nio.file.FileSystems
 import java.nio.file.attribute.PosixFilePermission
+import java.util.UUID
 
 import scala.util.Properties
-import coursier.docker.vm.Vm
-import java.util.UUID
 
 object DockerRun {
 

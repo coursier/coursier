@@ -1,19 +1,19 @@
 package coursier.tests
 
-import java.io.File
-import java.nio.file.Files
-
 import coursier.cache.{CacheUrl, FileCache}
 import coursier.cache.protocol.TestprotocolHandler
 import coursier.core.{Dependency, Repository, Resolution, ResolutionProcess}
 import coursier.maven.MavenRepository
 import coursier.util.StringInterpolators._
+import coursier.version.VersionConstraint
 import utest._
+
+import java.io.File
+import java.nio.file.Files
 
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.Duration
 import scala.util.Try
-import coursier.version.VersionConstraint
 
 object CacheFetchTests extends TestSuite {
 

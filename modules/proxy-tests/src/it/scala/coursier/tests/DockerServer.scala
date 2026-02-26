@@ -1,12 +1,16 @@
 package coursier.tests
 
 import com.spotify.docker.client.DefaultDockerClient
-import com.spotify.docker.client.messages.{ContainerConfig, HostConfig, PortBinding}
+import com.spotify.docker.client.messages.{
+  ContainerConfig,
+  HostConfig,
+  PortBinding
+}
 import coursier.cache.internal.FileUtil
 
 import scala.annotation.tailrec
-import scala.jdk.CollectionConverters._
 import scala.concurrent.duration.{Duration, DurationInt}
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 final case class DockerServer(base: String, shutdown: () => Unit)

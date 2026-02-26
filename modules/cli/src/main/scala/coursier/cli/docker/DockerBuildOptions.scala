@@ -1,8 +1,8 @@
 package coursier.cli.docker
 
+import caseapp.{HelpMessage, Name, Recurse}
 import caseapp.core.help.Help
 import caseapp.core.parser.Parser
-import caseapp.{HelpMessage, Name, Recurse}
 
 // format: off
 final case class DockerBuildOptions(

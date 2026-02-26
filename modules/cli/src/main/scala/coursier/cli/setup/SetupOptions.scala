@@ -1,7 +1,7 @@
 package coursier.cli.setup
 
-import caseapp.core.parser.Parser
 import caseapp.{Group, Help, HelpMessage, Hidden, Name, Recurse}
+import caseapp.core.parser.Parser
 import coursier.cli.install.{SharedChannelOptions, SharedInstallOptions}
 import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.{

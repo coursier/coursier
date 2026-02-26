@@ -3,10 +3,9 @@ package coursier.complete
 import coursier.Resolve
 import coursier.cache.Cache
 import coursier.core.Repository
+import coursier.util.{Sync, Task}
 import coursier.util.Monad.ops._
-import coursier.util.Sync
 import dataclass.data
-import coursier.util.Task
 
 @data class Complete[F[_]](
   cache: Cache[F],

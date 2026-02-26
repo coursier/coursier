@@ -2,8 +2,8 @@ package coursier.util
 
 import java.util.concurrent.ScheduledExecutorService
 
-import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success}
 
 final case class Task[+T](value: ExecutionContext => Future[T]) extends AnyVal {

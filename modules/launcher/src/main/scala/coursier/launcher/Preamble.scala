@@ -1,9 +1,9 @@
 package coursier.launcher
 
+import dataclass._
+
 import java.io.InputStream
 import java.nio.charset.{Charset, StandardCharsets}
-
-import dataclass._
 
 import scala.io.{Codec, Source}
 

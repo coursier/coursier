@@ -1,7 +1,7 @@
 package coursierbuild.modules
 
 import coursierbuild.Deps.Deps
-import mill._
+import mill.*
 
 trait Core extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-core"

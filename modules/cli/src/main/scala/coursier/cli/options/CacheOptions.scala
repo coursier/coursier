@@ -1,7 +1,5 @@
 package coursier.cli.options
 
-import java.io.File
-
 import caseapp._
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
@@ -9,6 +7,8 @@ import coursier.cache.CacheDefaults
 import coursier.cli.params.CacheParams
 import coursier.credentials.FileCredentials
 import coursier.parse.{CachePolicyParser, CredentialsParser}
+
+import java.io.File
 
 import scala.concurrent.duration.Duration
 

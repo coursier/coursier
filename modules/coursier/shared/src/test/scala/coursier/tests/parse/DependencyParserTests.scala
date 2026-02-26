@@ -1,6 +1,5 @@
 package coursier.tests.parse
 
-import coursier.parse._
 import coursier.core.{
   Attributes,
   Classifier,
@@ -16,6 +15,7 @@ import coursier.core.{
   Type,
   VariantSelector
 }
+import coursier.parse._
 import coursier.util.StringInterpolators._
 import coursier.version.VersionConstraint
 import utest._

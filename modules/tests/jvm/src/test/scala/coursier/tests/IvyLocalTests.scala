@@ -1,17 +1,17 @@
 package coursier.tests
 
-import java.io.File
-
 import coursier.LocalRepositories
 import coursier.core.{Classifier, Dependency, Type}
 import coursier.ivy.{IvyRepository, Pattern}
 import coursier.testcache.TestCache
 import coursier.tests.compatibility._
 import coursier.util.StringInterpolators._
+import coursier.version.VersionConstraint
 import utest._
 
+import java.io.File
+
 import scala.async.Async.{async, await}
-import coursier.version.VersionConstraint
 
 object IvyLocalTests extends TestSuite {
 

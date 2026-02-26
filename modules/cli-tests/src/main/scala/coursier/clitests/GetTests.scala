@@ -1,11 +1,12 @@
 package coursier.clitests
 
+import coursier.clitests.util.{DockerTestUtil, TestAuthProxy}
+import utest._
+
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 
-import coursier.clitests.util.{DockerTestUtil, TestAuthProxy}
-import utest._
 import scala.util.Properties
 
 abstract class GetTests extends TestSuite {

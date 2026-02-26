@@ -1,9 +1,9 @@
 package coursier.cache.internal
 
-import java.io.File
-
 import coursier.cache.ArtifactError
 import dataclass.data
+
+import java.io.File
 
 @data class DownloadResult(
   url: String,

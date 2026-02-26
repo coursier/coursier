@@ -9,8 +9,8 @@ import coursier.core.{
   Type,
   VariantSelector
 }
-import coursier.tests.TestRunner
 import coursier.graph.{DependencyTree, ReverseModuleTree}
+import coursier.tests.TestRunner
 import coursier.util.{Print, Tree}
 import coursier.util.StringInterpolators._
 import coursier.version.{ConstraintReconciliation, VersionConstraint}

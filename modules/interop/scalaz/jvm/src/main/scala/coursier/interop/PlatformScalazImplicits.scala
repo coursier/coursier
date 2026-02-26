@@ -1,9 +1,9 @@
 package coursier.interop
 
-import java.util.concurrent.ExecutorService
-
-import coursier.util.Sync
 import _root_.scalaz.concurrent.{Task => ScalazTask}
+import coursier.util.Sync
+
+import java.util.concurrent.ExecutorService
 
 abstract class PlatformScalazImplicits {
 

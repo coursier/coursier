@@ -1,6 +1,6 @@
 package coursier.core
 
-import coursier.core.Exclusions.{allOrganizations, allNames}
+import coursier.core.Exclusions.{allNames, allOrganizations}
 import dataclass.data
 
 /** This file defines a special-purpose structure for exclusions that has the following

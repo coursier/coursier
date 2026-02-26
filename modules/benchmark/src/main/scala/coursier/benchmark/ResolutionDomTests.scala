@@ -1,9 +1,9 @@
 package coursier.benchmark
 
-import java.util.concurrent.TimeUnit
-
 import coursier.Resolve
 import org.openjdk.jmh.annotations._
+
+import java.util.concurrent.TimeUnit
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration

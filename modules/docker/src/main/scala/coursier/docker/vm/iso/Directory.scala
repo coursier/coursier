@@ -1,9 +1,7 @@
 package coursier.docker.vm.iso
 
+import java.io.{ByteArrayOutputStream, InputStream, OutputStream}
 import java.nio.ByteBuffer
-import java.io.InputStream
-import java.io.OutputStream
-import java.io.ByteArrayOutputStream
 
 final class Directory(
   private var getEntries: () => Seq[DirectoryEntry]

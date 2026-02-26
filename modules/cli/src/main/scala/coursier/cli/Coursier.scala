@@ -1,9 +1,9 @@
 package coursier.cli
 
+import caseapp.RemainingArgs
 import caseapp.core.Scala3Helpers._
 import caseapp.core.app.CommandsEntryPoint
 import caseapp.core.help.HelpFormat
-import caseapp.RemainingArgs
 import coursier.cache.CacheUrl
 import coursier.cli.internal.{Argv0, PathUtil}
 import coursier.cli.setup.{Setup, SetupOptions}
@@ -12,13 +12,13 @@ import coursier.jniutils.ModuleFileName
 import coursier.paths.CoursierPaths
 import coursier.proxy.SetupProxy
 import io.github.alexarchambault.isterminal.IsTerminal
+import sun.misc.{Signal, SignalHandler}
 
 import java.nio.file.Paths
 import java.util.Scanner
-import sun.misc.{Signal, SignalHandler}
 
-import scala.util.control.NonFatal
 import scala.util.Properties
+import scala.util.control.NonFatal
 
 object Coursier extends CommandsEntryPoint {
 

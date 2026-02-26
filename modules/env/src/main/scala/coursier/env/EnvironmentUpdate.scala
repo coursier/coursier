@@ -1,8 +1,8 @@
 package coursier.env
 
-import java.io.File
-
 import dataclass.data
+
+import java.io.File
 
 import scala.collection.mutable
 

@@ -1,12 +1,12 @@
 package coursier.internal
 
-import java.io.File
-
 import coursier.cache.{ArtifactError, Cache, CacheLogger}
 import coursier.util.{Artifact, EitherT, Sync}
+import dataclass.data
+
+import java.io.File
 
 import scala.concurrent.ExecutionContext
-import dataclass.data
 
 @data class InMemoryCache[F[_]](underlying: Cache[F], S: Sync[F]) extends Cache[F] {
 

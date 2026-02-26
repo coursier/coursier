@@ -1,12 +1,12 @@
 package coursier.tests
 
-import java.io.File
-import java.nio.file.{Path, Paths}
-
 import coursier.Resolve
 import coursier.params.MirrorConfFile
 import coursier.util.StringInterpolators._
 import utest._
+
+import java.io.File
+import java.nio.file.{Path, Paths}
 
 import scala.async.Async.{async, await}
 

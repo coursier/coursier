@@ -1,11 +1,11 @@
 package coursier.cli.setup
 
-import java.io.File
-
 import coursier.cache.{Cache, CacheLogger}
 import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
-import coursier.jvm.{JvmCacheLogger, JavaHome}
+import coursier.jvm.{JavaHome, JvmCacheLogger}
 import coursier.util.Task
+
+import java.io.File
 
 case class MaybeInstallJvm(
   coursierCache: Cache[Task],

@@ -1,8 +1,8 @@
 package coursier.credentials
 
-import java.io.File
-
 import utest._
+
+import java.io.File
 
 object FileCredentialsParseTests extends TestSuite {
 

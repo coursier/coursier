@@ -1,12 +1,12 @@
 package coursier.tests
 
-import utest._
-
-import scala.async.Async.{async, await}
 import coursier.Repositories
 import coursier.maven.SbtMavenRepository
 import coursier.tests.compatibility.executionContext
 import coursier.util.StringInterpolators._
+import utest._
+
+import scala.async.Async.{async, await}
 
 object SbtPluginResolveTests extends TestSuite {
 

@@ -1,20 +1,29 @@
 package coursier.cache
 
-import org.apache.commons.compress.archivers.ar.{ArArchiveEntry, ArArchiveInputStream}
+import org.apache.commons.compress.archivers.ar.{
+  ArArchiveEntry,
+  ArArchiveInputStream
+}
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
 import org.apache.commons.io.input.{BoundedInputStream, CountingInputStream}
 import org.codehaus.plexus.archiver.ArchiverException
 import org.codehaus.plexus.archiver.tar.{
   TarBZip2UnArchiver,
   TarGZipUnArchiver,
+  TarUnArchiver,
   TarXZUnArchiver,
-  TarZstdUnArchiver,
-  TarUnArchiver
+  TarZstdUnArchiver
 }
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver
 import org.codehaus.plexus.components.io.resources.PlexusIoResource
 
-import java.io.{BufferedInputStream, File, IOException, InputStream, OutputStream}
+import java.io.{
+  BufferedInputStream,
+  File,
+  IOException,
+  InputStream,
+  OutputStream
+}
 import java.nio.file.Files
 import java.util.zip.GZIPInputStream
 

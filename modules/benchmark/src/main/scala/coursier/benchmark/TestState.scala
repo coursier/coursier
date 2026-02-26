@@ -1,12 +1,12 @@
 package coursier.benchmark
 
+import coursier.{Repositories, Resolve}
 import coursier.cache.Cache
 import coursier.core.{Configuration, ResolutionProcess}
-import coursier.{Repositories, Resolve}
 import coursier.internal.InMemoryCachingFetcher
 import coursier.maven.{MavenRepository, Pom}
-import coursier.util.StringInterpolators._
 import coursier.util.Sync
+import coursier.util.StringInterpolators._
 import org.openjdk.jmh.annotations.{Scope, State}
 
 import scala.concurrent.{Await, ExecutionContext}

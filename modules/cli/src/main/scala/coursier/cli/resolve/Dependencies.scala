@@ -1,7 +1,5 @@
 package coursier.cli.resolve
 
-import java.net.{URL, URLDecoder}
-
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.core.{
@@ -12,8 +10,14 @@ import coursier.core.{
   ModuleName,
   Organization
 }
-import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
+import coursier.parse.{
+  DependencyParser,
+  JavaOrScalaDependency,
+  JavaOrScalaModule
+}
 import coursier.version.{Version, VersionInterval}
+
+import java.net.{URL, URLDecoder}
 
 object Dependencies {
 

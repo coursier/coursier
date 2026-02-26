@@ -17,11 +17,11 @@ import coursier.core.{
   Publication,
   Type,
   Variant,
+  VariantPublication,
   VariantSelector
 }
 import coursier.version.{Version, VersionConstraint}
 import dataclass.data
-import coursier.core.VariantPublication
 
 @data class GradleModule(
   formatVersion: String,

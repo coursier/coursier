@@ -1,12 +1,12 @@
 package coursier.cli
 
-import java.io.{File, FileWriter}
-
 import coursier.cli.options.DependencyOptions
 import coursier.cli.params.DependencyParams
 import coursier.core.Module
 import coursier.parse.{JavaOrScalaModule, ModuleParser}
 import utest._
+
+import java.io.{File, FileWriter}
 
 object ParamsTests extends TestSuite {
 

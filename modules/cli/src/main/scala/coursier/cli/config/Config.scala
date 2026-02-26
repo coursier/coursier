@@ -7,7 +7,13 @@ import coursier.paths.CoursierPaths
 
 import java.nio.file.{Files, Paths}
 
-import scala.cli.config.{ConfigDb, Key, Keys, PasswordOption, RepositoryCredentials}
+import scala.cli.config.{
+  ConfigDb,
+  Key,
+  Keys,
+  PasswordOption,
+  RepositoryCredentials
+}
 import scala.collection.mutable.ListBuffer
 
 object Config extends Command[ConfigOptions] {

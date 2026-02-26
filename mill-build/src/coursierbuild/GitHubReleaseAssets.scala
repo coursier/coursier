@@ -4,18 +4,17 @@ package coursierbuild
 
 import coursierbuild.DocHelpers.gitRepoHasChanges
 import coursierbuild.Launchers.{platformExtension, platformSuffix}
+import sttp.client4.quick.*
 
-import java.io._
+import java.io.*
 import java.nio.ByteBuffer
 import java.nio.charset.{MalformedInputException, StandardCharsets}
 import java.nio.file.Files
 import java.util.zip.{ZipException, ZipFile}
 
-import sttp.client4.quick._
-
 import scala.annotation.tailrec
-import scala.util.control.NonFatal
 import scala.util.Properties
+import scala.util.control.NonFatal
 
 object GitHubReleaseAssets {
   def ghOrg  = "coursier"

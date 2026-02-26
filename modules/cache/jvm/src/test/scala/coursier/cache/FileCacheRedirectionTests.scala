@@ -1,22 +1,22 @@
 package coursier.cache
 
+import cats.effect.IO
+import coursier.cache.TestUtil._
+import coursier.credentials.{Credentials, DirectCredentials}
+import coursier.paths.Util
+import coursier.util.{Artifact, Sync, Task}
+import org.http4s.{Header, HttpRoutes, Response, Uri}
+import org.http4s.dsl.io._
+import org.http4s.headers.{Authorization, Location}
+import org.typelevel.ci.CIString
+import utest._
+
 import java.io.{ByteArrayOutputStream, File}
 import java.net.{URI, URL, URLClassLoader}
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 import java.util.Arrays
 import java.util.zip.GZIPOutputStream
-
-import cats.effect.IO
-import coursier.cache.TestUtil._
-import coursier.credentials.{Credentials, DirectCredentials}
-import coursier.paths.Util
-import coursier.util.{Artifact, Sync, Task}
-import org.http4s.dsl.io._
-import org.http4s.headers.{Authorization, Location}
-import org.http4s.{Header, HttpRoutes, Response, Uri}
-import org.typelevel.ci.CIString
-import utest._
 
 import scala.async.Async.{async, await}
 import scala.concurrent.ExecutionContext

@@ -1,10 +1,10 @@
 package coursier.cli.setup
 
-import java.nio.file.Path
-
 import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.install.InstallDir
 import coursier.util.Task
+
+import java.nio.file.Path
 
 case class MaybeSetupPath(
   installDir: InstallDir,

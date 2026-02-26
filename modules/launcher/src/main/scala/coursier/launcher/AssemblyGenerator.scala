@@ -1,11 +1,11 @@
 package coursier.launcher
 
+import coursier.launcher.internal.{FileUtil, WrappedZipInputStream, Zip}
+
 import java.io.{ByteArrayInputStream, File, OutputStream}
 import java.nio.file.Path
 import java.util.jar.{Attributes => JarAttributes, JarOutputStream}
 import java.util.zip.{CRC32, ZipEntry, ZipFile, ZipOutputStream}
-
-import coursier.launcher.internal.{FileUtil, WrappedZipInputStream, Zip}
 
 import scala.collection.mutable
 

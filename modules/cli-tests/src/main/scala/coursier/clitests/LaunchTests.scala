@@ -1,11 +1,11 @@
 package coursier.clitests
 
+import coursier.cache.internal.FileUtil
+import utest._
+
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.zip.ZipFile
-
-import coursier.cache.internal.FileUtil
-import utest._
 
 import scala.util.Properties
 

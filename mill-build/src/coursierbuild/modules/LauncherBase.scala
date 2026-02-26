@@ -1,6 +1,7 @@
 package coursierbuild.modules
 
-import mill._, mill.scalalib._
+import mill.*
+import mill.scalalib.*
 
 trait LauncherBase extends CsModule with CrossSbtModule with CoursierPublishModule with CsMima {
   def artifactName = "coursier-launcher"

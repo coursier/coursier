@@ -3,7 +3,6 @@ package coursier.tests
 import coursier.ivy.PropertiesPattern
 import coursier.ivy.PropertiesPattern.ChunkOrProperty
 import coursier.ivy.PropertiesPattern.ChunkOrProperty._
-
 import utest._
 
 object IvyPatternParserTests extends TestSuite {

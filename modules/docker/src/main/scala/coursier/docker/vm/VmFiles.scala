@@ -1,14 +1,14 @@
 package coursier.docker.vm
 
-import coursier.cache.ArchiveCache
-import coursier.util.Task
-import coursier.util.Artifact
-import coursier.cache.ArtifactError
-import java.io.File
+import coursier.cache.{ArchiveCache, ArtifactError}
 import coursier.cache.util.Cpu
-import scala.util.Using
+import coursier.util.{Artifact, Task}
+
+import java.io.File
 import java.math.BigInteger
 import java.security.MessageDigest
+
+import scala.util.Using
 
 final case class VmFiles(
   qemu: QemuFiles,

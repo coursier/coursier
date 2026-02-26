@@ -1,8 +1,8 @@
 package coursier.cache
 
-import java.io.File
-
 import coursier.util.{Artifact, EitherT}
+
+import java.io.File
 
 abstract class PlatformCache[F[_]] {
 

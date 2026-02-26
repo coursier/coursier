@@ -1,7 +1,7 @@
 package coursier.cli.complete
 
 import caseapp.core.RemainingArgs
-import coursier.cli.{CoursierCommand, CommandGroup}
+import coursier.cli.{CommandGroup, CoursierCommand}
 import coursier.util.Sync
 
 import scala.concurrent.ExecutionContext

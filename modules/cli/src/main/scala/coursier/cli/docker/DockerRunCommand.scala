@@ -4,9 +4,10 @@ import caseapp.core.RemainingArgs
 import coursier.cache.{ArchiveCache, DigestBasedCache}
 import coursier.cli.CoursierCommand
 import coursier.docker.{DockerPull, DockerRun, DockerUnpack, DockerUtil}
-import coursier.util.Sync
-import scala.util.Properties
 import coursier.docker.vm.Vm
+import coursier.util.Sync
+
+import scala.util.Properties
 
 object DockerRunCommand extends CoursierCommand[DockerRunOptions] {
   override def hidden = !experimentalFeatures

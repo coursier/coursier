@@ -1,8 +1,8 @@
 package coursierbuild.modules
 
+import com.github.lolgab.mill.mima.*
 import coursierbuild.Deps.Deps
-import mill._
-import com.github.lolgab.mill.mima._
+import mill.*
 
 trait CacheJvmBase extends Cache with CsMima {
   def customLoaderCp: T[Seq[PathRef]]

@@ -1,10 +1,10 @@
 package coursier.docker
 
+import com.github.plokhotnyuk.jsoniter_scala.core.readFromArray
 import coursier.cache.{Cache, CacheLogger, FileCache}
 import coursier.cache.util.{Cpu, Os}
 import coursier.core.Authentication
 import coursier.util.{Artifact, Task}
-import com.github.plokhotnyuk.jsoniter_scala.core.readFromArray
 
 import java.io.File
 import java.nio.file.Files

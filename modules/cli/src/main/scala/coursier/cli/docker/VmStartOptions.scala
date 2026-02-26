@@ -1,11 +1,9 @@
 package coursier.cli.docker
 
-import caseapp.Recurse
+import caseapp.{HelpMessage, Recurse}
 import caseapp.core.help.Help
 import caseapp.core.parser.Parser
-import coursier.cli.options.CacheOptions
-import coursier.cli.options.OutputOptions
-import caseapp.HelpMessage
+import coursier.cli.options.{CacheOptions, OutputOptions}
 
 // format: off
 final case class VmStartOptions(

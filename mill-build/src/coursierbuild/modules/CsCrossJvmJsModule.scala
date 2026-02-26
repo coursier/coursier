@@ -1,5 +1,6 @@
 package coursierbuild.modules
 
-import mill._, mill.scalalib._
+import mill.*
+import mill.scalalib.*
 
 trait CsCrossJvmJsModule extends CrossSbtModule with CsModule

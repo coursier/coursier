@@ -1,8 +1,8 @@
 package coursier.cli.setup
 
-import java.io.PrintStream
-
 import coursier.util.Task
+
+import java.io.PrintStream
 
 trait SetupStep {
   def banner: String

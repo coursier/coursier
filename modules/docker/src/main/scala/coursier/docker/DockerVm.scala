@@ -1,13 +1,13 @@
 package coursier.docker
 
 import com.github.plokhotnyuk.jsoniter_scala.core.writeToArray
+import com.jcraft.jsch.Session
 import coursier.cache.{DigestBasedCache, FileCache}
-import coursier.util.Task
 import coursier.docker.vm.Vm
+import coursier.util.Task
 import io.github.alexarchambault.isterminal.IsTerminal
 
 import java.util.UUID
-import com.jcraft.jsch.Session
 
 object DockerVm {
 

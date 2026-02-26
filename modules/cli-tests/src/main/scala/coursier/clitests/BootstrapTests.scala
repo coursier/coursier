@@ -1,5 +1,9 @@
 package coursier.clitests
 
+import coursier.clitests.util.TestAuthProxy
+import coursier.util.StringInterpolators._
+import utest._
+
 import java.io._
 import java.net.{ServerSocket, URI}
 import java.nio.charset.Charset
@@ -12,10 +16,6 @@ import scala.concurrent.duration.Duration
 import scala.io.{Codec, Source}
 import scala.jdk.CollectionConverters._
 import scala.util.Properties
-
-import coursier.clitests.util.TestAuthProxy
-import coursier.util.StringInterpolators._
-import utest._
 
 abstract class BootstrapTests extends TestSuite with LauncherOptions {
 

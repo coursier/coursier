@@ -1,6 +1,5 @@
 package coursier.ivy
 
-import coursier.core.Validation._
 import coursier.core.{
   Classifier,
   Configuration,
@@ -19,6 +18,7 @@ import coursier.core.{
   Variant,
   VariantSelector
 }
+import coursier.core.Validation._
 import coursier.util.Xml._
 import coursier.version.{Version, VersionConstraint}
 

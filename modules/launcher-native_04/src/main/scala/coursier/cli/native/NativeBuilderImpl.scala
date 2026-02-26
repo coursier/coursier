@@ -1,10 +1,10 @@
 package coursier.launcher
 
+import coursier.launcher.Parameters.ScalaNative.ScalaNativeOptions
+import coursier.launcher.native.NativeBuilder
+
 import java.io.File
 import java.nio.file.{Files, Path}
-
-import coursier.launcher.native.NativeBuilder
-import coursier.launcher.Parameters.ScalaNative.ScalaNativeOptions
 
 import scala.scalanative.{build => sn}
 import scala.scalanative.build.NativeConfig

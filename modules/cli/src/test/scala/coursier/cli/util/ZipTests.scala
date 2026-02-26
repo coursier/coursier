@@ -1,11 +1,11 @@
 package coursier.cli.util
 
+import coursier.launcher.internal.{WrappedZipInputStream, Zip}
+import utest._
+
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream}
 import java.util.Random
 import java.util.zip.{Deflater, ZipEntry, ZipInputStream, ZipOutputStream}
-
-import coursier.launcher.internal.{WrappedZipInputStream, Zip}
-import utest._
 
 object ZipTests extends TestSuite {
 

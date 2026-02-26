@@ -1,9 +1,9 @@
 package coursier.cache.loggers
 
+import coursier.cache.internal.ConsoleDim
+
 import java.io.Writer
 import java.util.Locale
-
-import coursier.cache.internal.ConsoleDim
 
 import scala.collection.compat._
 import scala.concurrent.duration.{Duration, DurationInt}

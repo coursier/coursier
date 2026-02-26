@@ -1,11 +1,11 @@
 package coursier.tests
 
-import java.nio.file.{Files, Path}
-
 import coursier.Fetch
 import coursier.cache.FileCache
 import coursier.util.StringInterpolators._
 import utest._
+
+import java.nio.file.{Files, Path}
 
 import scala.async.Async.{async, await}
 import scala.jdk.CollectionConverters._

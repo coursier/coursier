@@ -1,8 +1,5 @@
 package coursier
 
-import java.io.File
-import java.lang.{Boolean => JBoolean}
-
 import coursier.cache.{Cache, FileCache}
 import coursier.core.{
   BomDependency,
@@ -23,8 +20,11 @@ import coursier.util.{Artifact, Sync, Task}
 import coursier.util.Monad.ops._
 import dataclass.data
 
-import scala.concurrent.duration.Duration
+import java.io.File
+import java.lang.{Boolean => JBoolean}
+
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration.Duration
 
 @data class Fetch[F[_]](
   private val resolve: Resolve[F],

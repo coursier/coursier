@@ -1,13 +1,13 @@
 package coursier.tests
 
-import java.io.File
-
 import coursier.core.{Attributes, Classifier, Dependency, Type}
 import coursier.maven.MavenRepository
 import coursier.tests.compatibility.executionContext
 import coursier.util.StringInterpolators._
-import utest._
 import coursier.version.VersionConstraint
+import utest._
+
+import java.io.File
 
 object MavenTests extends TestSuite {
 

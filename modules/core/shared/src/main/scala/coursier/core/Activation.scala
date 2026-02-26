@@ -1,6 +1,9 @@
 package coursier.core
 
-import coursier.version.{Version => Version0, VersionInterval => VersionInterval0}
+import coursier.version.{
+  Version => Version0,
+  VersionInterval => VersionInterval0
+}
 import dataclass.data
 
 import java.util.Locale

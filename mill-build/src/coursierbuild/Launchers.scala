@@ -2,7 +2,6 @@ package coursierbuild
 
 import coursierbuild.Deps.{Deps, Docker, graalVmJvmId}
 import coursierbuild.modules.CsModule
-
 import io.github.alexarchambault.millnativeimage.NativeImage
 import mill.*
 import mill.api.*

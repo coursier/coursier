@@ -1,7 +1,5 @@
 package coursier.tests
 
-import java.lang.{Boolean => JBoolean}
-
 import coursier.core.{
   Classifier,
   Configuration,
@@ -15,6 +13,8 @@ import coursier.params.ResolutionParams
 import coursier.testcache.TestCache
 import coursier.util.Artifact
 import coursier.version.VersionConstraint
+
+import java.lang.{Boolean => JBoolean}
 
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}

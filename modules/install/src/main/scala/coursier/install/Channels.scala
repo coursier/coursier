@@ -1,10 +1,5 @@
 package coursier.install
 
-import java.io.File
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path}
-import java.util.zip.ZipFile
-
 import argonaut.{DecodeJson, Parse}
 import coursier.Fetch
 import coursier.cache.{Cache, FileCache}
@@ -16,6 +11,11 @@ import coursier.maven.MavenRepositoryLike
 import coursier.util.{Artifact, Task}
 import coursier.util.StringInterpolators._
 import dataclass._
+
+import java.io.File
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path}
+import java.util.zip.ZipFile
 
 import scala.jdk.CollectionConverters._
 

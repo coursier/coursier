@@ -1,7 +1,7 @@
 package coursier.cli.get
 
-import caseapp.core.parser.Parser
 import caseapp.{ArgsName, Help, HelpMessage, Name, Recurse}
+import caseapp.core.parser.Parser
 import coursier.cli.options.{CacheOptions, OutputOptions}
 
 // format: off

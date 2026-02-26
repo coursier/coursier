@@ -1,13 +1,12 @@
 package coursier.cli.install
 
+import cats.data.{NonEmptyList, Validated, ValidatedNel}
+import cats.implicits._
+import coursier.install.{Channel, Channels}
+
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-
-import cats.data.{NonEmptyList, Validated, ValidatedNel}
-import cats.implicits._
-import coursier.install.Channel
-import coursier.install.Channels
 
 final case class SharedChannelParams(
   channels: Seq[Channel]

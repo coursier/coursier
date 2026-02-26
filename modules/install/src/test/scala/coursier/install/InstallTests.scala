@@ -1,13 +1,5 @@
 package coursier.install
 
-import java.io.{ByteArrayOutputStream, File}
-import java.lang.ProcessBuilder.Redirect
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, FileSystemException, Path, Paths}
-import java.time.Instant
-import java.util.Locale
-import java.util.zip.ZipFile
-
 import coursier.cache.Cache
 import coursier.cache.internal.FileUtil
 import coursier.install.error.NotAnApplication
@@ -17,9 +9,17 @@ import coursier.testcache.TestCache
 import coursier.util.Task
 import utest._
 
+import java.io.{ByteArrayOutputStream, File}
+import java.lang.ProcessBuilder.Redirect
+import java.nio.charset.StandardCharsets
+import java.nio.file.{FileSystemException, Files, Path, Paths}
+import java.time.Instant
+import java.util.Locale
+import java.util.zip.ZipFile
+
 import scala.jdk.CollectionConverters._
-import scala.util.control.NonFatal
 import scala.util.{Properties, Using}
+import scala.util.control.NonFatal
 
 object InstallTests extends TestSuite {
 

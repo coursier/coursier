@@ -1,7 +1,5 @@
 package coursier.cli.bootstrap
 
-import java.nio.file.{Files, Path, Paths}
-
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.{ArchiveCache, Cache}
@@ -9,6 +7,8 @@ import coursier.jvm.{JvmCache, JvmChannel, JvmIndex}
 import coursier.launcher.MergeRule
 import coursier.launcher.internal.Windows
 import coursier.util.Task
+
+import java.nio.file.{Files, Path, Paths}
 
 import scala.util.Properties
 

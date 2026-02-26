@@ -1,8 +1,8 @@
 package coursier.util
 
-import java.util.concurrent.ExecutorService
-
 import coursier.cache.internal.ThreadUtil
+
+import java.util.concurrent.ExecutorService
 
 abstract class PlatformSyncCompanion {
 

@@ -1,10 +1,10 @@
 package coursier.paths
 
+import utest._
+
 import java.io.File
 import java.nio.file.{Files, Path}
 import java.util.Properties
-
-import utest._
 
 import scala.jdk.CollectionConverters._
 

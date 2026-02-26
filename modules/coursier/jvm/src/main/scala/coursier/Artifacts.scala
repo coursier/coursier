@@ -1,19 +1,19 @@
 package coursier
 
-import java.io.File
-import java.lang.{Boolean => JBoolean}
-
 import coursier.cache.{ArtifactError, Cache}
 import coursier.core._
 import coursier.error.FetchError
 import coursier.util.{Artifact, Sync, Task}
 import coursier.util.Monad.ops._
-
-import scala.collection.compat._
-import scala.collection.mutable
-import scala.concurrent.duration.Duration
-import scala.concurrent.{Await, ExecutionContext, Future}
 import dataclass._
+
+import java.io.File
+import java.lang.{Boolean => JBoolean}
+
+import scala.collection.mutable
+import scala.collection.compat._
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration.Duration
 
 @data class Artifacts[F[_]](
   cache: Cache[F],

@@ -1,11 +1,11 @@
 package coursier.jvm
 
-import java.io.File
-
 import coursier.cache.{ArchiveCache, CacheLogger}
 import coursier.core.Repository
 import coursier.util.{Artifact, Task}
 import dataclass.data
+
+import java.io.File
 
 import scala.concurrent.duration.Duration
 

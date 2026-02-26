@@ -1,17 +1,14 @@
 package coursier.cli.bootstrap
 
-import java.io.{File, PrintStream}
-import java.nio.file.Files
-import java.util.concurrent.ExecutorService
-
 import caseapp.core.RemainingArgs
+import caseapp.core.help.HelpFormat
 import coursier.cache.{Cache, CacheLogger}
-import coursier.cli.{CoursierCommand, CommandGroup}
+import coursier.cli.{CommandGroup, CoursierCommand}
+import coursier.cli.Util.ValidatedExitOnError
 import coursier.cli.fetch.Fetch
 import coursier.cli.launch.{Launch, LaunchException}
 import coursier.cli.options.OptionGroup
 import coursier.cli.resolve.{Resolve, ResolveException}
-import coursier.cli.Util.ValidatedExitOnError
 import coursier.core.{
   Classifier,
   Dependency,
@@ -37,8 +34,11 @@ import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Sync, Task}
 import coursier.version.VersionConstraint
 
+import java.io.{File, PrintStream}
+import java.nio.file.Files
+import java.util.concurrent.ExecutorService
+
 import scala.concurrent.ExecutionContext
-import caseapp.core.help.HelpFormat
 
 object Bootstrap extends CoursierCommand[BootstrapOptions] {
   override def group: String = CommandGroup.launcher

@@ -1,21 +1,21 @@
 package coursier.cli.install
 
-import java.io.File
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.time.Instant
-
 import caseapp.core.RemainingArgs
-import coursier.cli.channel.Channel
-import coursier.cli.{CoursierCommand, CommandGroup}
-import coursier.cli.setup.MaybeSetupPath
+import coursier.cli.{CommandGroup, CoursierCommand}
 import coursier.cli.Util.ValidatedExitOnError
+import coursier.cli.channel.Channel
+import coursier.cli.setup.MaybeSetupPath
 import coursier.env.ShellUtil
 import coursier.install.{Channels, InstallDir, RawSource}
 import coursier.install.error.InstallDirException
 import coursier.launcher.internal.Windows
 import coursier.paths.Util
 import coursier.util.Sync
+
+import java.io.File
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.time.Instant
 
 import scala.concurrent.duration.Duration
 import scala.util.Properties

@@ -1,14 +1,14 @@
 package coursier.install
 
-import java.io.{File, InputStream}
-import java.math.BigInteger
-import java.nio.file.Files
-import java.security.MessageDigest
-
 import cats.implicits._
 import coursier.cache.internal.FileUtil
 import coursier.util.Artifact
 import dataclass.data
+
+import java.io.{File, InputStream}
+import java.math.BigInteger
+import java.nio.file.Files
+import java.security.MessageDigest
 
 @data class ArtifactsLock(
   entries: Set[ArtifactsLock.Entry]

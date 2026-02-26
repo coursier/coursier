@@ -3,9 +3,8 @@ package coursier.cli.launch
 import caseapp._
 import coursier.cli.install.SharedChannelOptions
 import coursier.cli.jvm.SharedJavaOptions
-import coursier.cli.options.SharedLaunchOptions
+import coursier.cli.options.{OptionGroup, SharedLaunchOptions}
 import coursier.install.RawAppDescriptor
-import coursier.cli.options.OptionGroup
 
 // format: off
 @ArgsName("org:name:version*|app-name[:version]")

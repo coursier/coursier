@@ -1,14 +1,13 @@
 package coursier.cache
 
-import java.net._
-import java.nio.charset.StandardCharsets
-import java.util.Base64
-import java.util.concurrent.ConcurrentHashMap
-import java.util.Locale
-import java.util.regex.Pattern
-
 import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
+
+import java.net._
+import java.nio.charset.StandardCharsets
+import java.util.{Base64, Locale}
+import java.util.concurrent.ConcurrentHashMap
+import java.util.regex.Pattern
 import javax.net.ssl.{HostnameVerifier, HttpsURLConnection, SSLSocketFactory}
 
 import scala.annotation.tailrec

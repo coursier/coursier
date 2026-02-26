@@ -1,12 +1,7 @@
 package coursier.jvm
 
-import java.io.File
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.util.zip.ZipFile
-
-import com.github.plokhotnyuk.jsoniter_scala.macros._
 import com.github.plokhotnyuk.jsoniter_scala.core._
+import com.github.plokhotnyuk.jsoniter_scala.macros._
 import coursier.cache.{ArchiveType, Cache, FileCache}
 import coursier.cache.internal.FileUtil
 import coursier.core.{Dependency, Repository}
@@ -14,6 +9,11 @@ import coursier.util.{Artifact, Task}
 import coursier.util.Traverse.TraverseOps
 import coursier.version.{Latest, Version, VersionParse}
 import dataclass.data
+
+import java.io.File
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.util.zip.ZipFile
 
 import scala.collection.compat._
 import scala.util.{Failure, Success, Try}

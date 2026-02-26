@@ -1,15 +1,20 @@
 package coursier.cli.jvm
 
-import java.io.File
-
 import caseapp.core.RemainingArgs
-import coursier.cli.{CoursierCommand, CommandGroup}
-import coursier.cli.setup.MaybeInstallJvm
+import coursier.cli.{CommandGroup, CoursierCommand}
 import coursier.cli.Util.ValidatedExitOnError
-import coursier.env.{EnvironmentUpdate, EnvVarUpdater, ProfileUpdater, WindowsEnvVarUpdater}
+import coursier.cli.setup.MaybeInstallJvm
+import coursier.env.{
+  EnvVarUpdater,
+  EnvironmentUpdate,
+  ProfileUpdater,
+  WindowsEnvVarUpdater
+}
 import coursier.jvm.{JvmCache, JvmCacheLogger}
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
+
+import java.io.File
 
 import scala.concurrent.duration.Duration
 

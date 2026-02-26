@@ -1,9 +1,9 @@
 package coursier.parse
 
 import coursier.core.{Module, ModuleName, Organization}
-import coursier.util.Traverse._
-import coursier.util.ValidationNel
 import coursier.core.Validation._
+import coursier.util.ValidationNel
+import coursier.util.Traverse._
 import dependency.{NoAttributes, ScalaNameAttributes}
 
 object ModuleParser {

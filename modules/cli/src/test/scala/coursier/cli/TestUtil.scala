@@ -1,9 +1,10 @@
 package coursier.cli
 
+import coursier.util.StringInterpolators._
+
 import java.io.{File, FileWriter}
 import java.nio.file.Files
 
-import coursier.util.StringInterpolators._
 import scala.util.control.NonFatal
 
 object TestUtil {

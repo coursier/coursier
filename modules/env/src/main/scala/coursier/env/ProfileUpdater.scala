@@ -1,10 +1,10 @@
 package coursier.env
 
+import dataclass.data
+
 import java.io.File
 import java.nio.charset.Charset
 import java.nio.file.{FileAlreadyExistsException, Files, Path, Paths}
-
-import dataclass.data
 
 @data class ProfileUpdater(
   home: Option[Path] = ProfileUpdater.defaultHome,

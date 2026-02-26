@@ -1,7 +1,7 @@
 package coursier.tests.util
 
-import coursier.util.StringInterpolators._
 import coursier.util._
+import coursier.util.StringInterpolators._
 import utest._
 
 object ModuleMatchersTests extends TestSuite {

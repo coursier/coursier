@@ -1,13 +1,13 @@
 package coursier.graph
 
 import coursier.core.{Module, Resolution}
+import coursier.util.{Print, Tree}
+import coursier.util.Print.{Colors, compatibleVersions}
 import coursier.version.{
   Version => Version0,
   VersionConstraint => VersionConstraint0,
   VersionInterval => VersionInterval0
 }
-import coursier.util.Print.{Colors, compatibleVersions}
-import coursier.util.{Print, Tree}
 import dataclass.data
 
 @data class Conflict(

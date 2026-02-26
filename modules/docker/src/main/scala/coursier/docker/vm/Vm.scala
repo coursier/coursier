@@ -1,31 +1,38 @@
 package coursier.docker.vm
 
-import java.io.ByteArrayOutputStream
-import java.nio.charset.StandardCharsets
-import com.jcraft.jsch.{JSch, KeyPair => JSchKeyPair}
-import scala.util.Using
-import java.net.ServerSocket
-import scala.util.Properties
-import com.jcraft.jsch.Session
-import java.util.{Properties => JProperties}
-import scala.concurrent.duration.DurationInt
-import com.jcraft.jsch.JSchException
-import java.net.ConnectException
-import java.net.SocketTimeoutException
-import java.net.SocketException
-import com.jcraft.jsch.Logger
-import com.jcraft.jsch.Channel
-import com.jcraft.jsch.ChannelExec
-import com.jcraft.jsch.ChannelShell
-import com.jcraft.jsch.Session
-import coursier.cache.DigestBasedCache
-import coursier.cache.FileCache
-import coursier.paths.CoursierPaths
-import com.github.plokhotnyuk.jsoniter_scala.core.{JsonValueCodec, readFromArray, writeToArray}
+import com.github.plokhotnyuk.jsoniter_scala.core.{
+  JsonValueCodec,
+  readFromArray,
+  writeToArray
+}
 import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
-import java.io.InputStream
+import com.jcraft.jsch.{
+  Channel,
+  ChannelExec,
+  ChannelShell,
+  JSch,
+  JSchException,
+  KeyPair => JSchKeyPair,
+  Logger,
+  Session
+}
+import coursier.cache.{DigestBasedCache, FileCache}
 import coursier.cache.util.Cpu
 import coursier.docker.vm.iso.Image
+import coursier.paths.CoursierPaths
+
+import java.io.{ByteArrayOutputStream, InputStream}
+import java.net.{
+  ConnectException,
+  ServerSocket,
+  SocketException,
+  SocketTimeoutException
+}
+import java.nio.charset.StandardCharsets
+import java.util.{Properties => JProperties}
+
+import scala.concurrent.duration.DurationInt
+import scala.util.{Properties, Using}
 
 final class Vm(
   val id: String,

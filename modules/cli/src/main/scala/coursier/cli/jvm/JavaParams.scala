@@ -2,7 +2,12 @@ package coursier.cli.jvm
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.params.{CacheParams, EnvParams, OutputParams, RepositoryParams}
+import coursier.cli.params.{
+  CacheParams,
+  EnvParams,
+  OutputParams,
+  RepositoryParams
+}
 
 final case class JavaParams(
   available: Boolean,

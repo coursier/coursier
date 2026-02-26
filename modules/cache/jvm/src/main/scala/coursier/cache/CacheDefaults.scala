@@ -1,11 +1,11 @@
 package coursier.cache
 
-import java.io.File
-import java.nio.file.Path
-
 import coursier.credentials.Credentials
 import coursier.paths.CachePath
 import coursier.util.Sync
+
+import java.io.File
+import java.nio.file.Path
 
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.util.Try

@@ -1,11 +1,11 @@
 package coursier.credentials
 
+import dataclass.data
+
 import java.io.StringReader
 import java.nio.charset.Charset
 import java.nio.file.{Files, Paths}
 import java.util.Properties
-
-import dataclass.data
 
 import scala.jdk.CollectionConverters._
 

@@ -1,10 +1,7 @@
 package coursier.cli.setup
 
-import java.io.File
-import java.util.Locale
-
 import caseapp.core.RemainingArgs
-import coursier.cli.{CoursierCommand, CommandGroup}
+import coursier.cli.{CommandGroup, CoursierCommand}
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.install.{Channels, InstallDir}
@@ -12,6 +9,9 @@ import coursier.install.error.InstallDirException
 import coursier.jvm.JvmCache
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
+
+import java.io.File
+import java.util.Locale
 
 import scala.concurrent.duration.Duration
 

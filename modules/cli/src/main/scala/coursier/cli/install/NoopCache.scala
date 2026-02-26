@@ -1,9 +1,9 @@
 package coursier.cli.install
 
-import java.io.File
-
 import coursier.cache.{ArtifactError, Cache}
 import coursier.util.{Artifact, EitherT, Task}
+
+import java.io.File
 
 import scala.concurrent.ExecutionContext
 

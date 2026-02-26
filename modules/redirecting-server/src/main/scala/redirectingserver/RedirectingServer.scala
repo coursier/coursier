@@ -1,7 +1,7 @@
 package redirectingserver
 
 import cats.effect.IO
-import cats.effect.unsafe.implicits.global // ???
+import cats.effect.unsafe.implicits.global
 import io.github.alexarchambault.isterminal.IsTerminal
 import org.http4s._
 import org.http4s.blaze.server.BlazeServerBuilder

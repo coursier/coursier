@@ -1,16 +1,16 @@
 package coursier.internal
 
-import java.io.File
-import java.math.BigInteger
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path, Paths, StandardCopyOption}
-import java.security.MessageDigest
-
 import coursier.cache.CacheLocks
 import coursier.core.{Classifier, Dependency, Repository, Type}
 import coursier.params.ResolutionParams
 import coursier.paths.CachePath
 import dataclass.data
+
+import java.io.File
+import java.math.BigInteger
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path, Paths, StandardCopyOption}
+import java.security.MessageDigest
 
 @data class FetchCache(base: Path) {
 

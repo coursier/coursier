@@ -1,12 +1,12 @@
 package coursier.cache
 
+import coursier.cache.internal.Retry
+import coursier.paths.{CachePath, Util}
+
 import java.io.{File, IOException}
 import java.nio.channels.{FileChannel, FileLock, OverlappingFileLockException}
 import java.nio.file.{AccessDeniedException, Files, Path, StandardOpenOption}
 import java.util.concurrent.{Callable, ConcurrentHashMap}
-
-import coursier.cache.internal.Retry
-import coursier.paths.{CachePath, Util}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.DurationInt

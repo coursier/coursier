@@ -1,8 +1,8 @@
 package coursier.clitests
 
-import java.io.File
-
 import utest._
+
+import java.io.File
 
 import scala.util.Properties
 

@@ -1,8 +1,9 @@
 package coursier.launcher
 
+import dataclass.data
+
 import java.util.jar.JarFile
 import java.util.regex.Pattern
-import dataclass.data
 
 sealed abstract class MergeRule extends Product with Serializable
 

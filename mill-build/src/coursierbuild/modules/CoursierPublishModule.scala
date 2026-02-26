@@ -1,6 +1,7 @@
 package coursierbuild.modules
 
-import mill._, mill.scalalib._
+import mill.*
+import mill.scalalib.*
 
 trait CoursierPublishModule extends PublishModule
     with CoursierJavaModule {

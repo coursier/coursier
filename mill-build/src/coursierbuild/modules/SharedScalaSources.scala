@@ -1,6 +1,6 @@
 package coursierbuild.modules
 
-import mill._
+import mill.*
 
 trait SharedScalaSources extends Module {
   def sources = Task.Sources(

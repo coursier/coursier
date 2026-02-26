@@ -1,27 +1,23 @@
 package coursier.cli
 
-import java.io._
-import java.net.URLEncoder.encode
-
 import caseapp.core.RemainingArgs
+import cats.data.Validated
+import coursier.cache.FileCache
+import coursier.cli.TestUtil.{mayThrow, withFile, withTempDir}
+import coursier.cli.fetch.{Fetch, FetchOptions, FetchParams}
+import coursier.cli.launch.Launch
 import coursier.cli.options._
-import coursier.cli.options._
+import coursier.cli.resolve.{ResolveException, SharedResolveOptions}
+import coursier.install.MainClass
+import coursier.util.Sync
+import utest._
+
 import java.io._
 import java.net.URLClassLoader
 import java.net.URLEncoder.encode
 import java.nio.charset.StandardCharsets
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Paths}
-
-import cats.data.Validated
-import coursier.cache.FileCache
-import coursier.cli.fetch.{Fetch, FetchOptions, FetchParams}
-import coursier.cli.launch.Launch
-import coursier.cli.resolve.{ResolveException, SharedResolveOptions}
-import coursier.cli.TestUtil.{mayThrow, withFile, withTempDir}
-import coursier.install.MainClass
-import coursier.util.Sync
-import utest._
 
 import scala.concurrent.ExecutionContext
 import scala.io.Source

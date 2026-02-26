@@ -1,11 +1,18 @@
 package coursier.tests
 
 import coursier.{Artifacts, Fetch, Repositories}
-import coursier.core.{Classifier, Configuration, Dependency, Extension, Type, VariantSelector}
-import coursier.maven.{MavenRepository, MavenRepositoryLike}
+import coursier.core.{
+  Classifier,
+  Configuration,
+  Dependency,
+  Extension,
+  Type,
+  VariantSelector
+}
 import coursier.ivy.IvyRepository
-import coursier.util.StringInterpolators._
+import coursier.maven.{MavenRepository, MavenRepositoryLike}
 import coursier.util.{InMemoryRepository, Task}
+import coursier.util.StringInterpolators._
 import coursier.version.VersionConstraint
 import utest._
 

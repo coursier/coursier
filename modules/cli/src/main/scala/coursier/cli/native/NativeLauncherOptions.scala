@@ -1,11 +1,11 @@
 package coursier.cli.native
 
-import java.nio.file.Paths
-
 import caseapp._
 import cats.data.{Validated, ValidatedNel}
 import coursier.cli.options.OptionGroup
 import coursier.launcher.Parameters.ScalaNative.ScalaNativeOptions
+
+import java.nio.file.Paths
 
 // format: off
 final case class NativeLauncherOptions(

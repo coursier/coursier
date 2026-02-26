@@ -1,10 +1,10 @@
 package coursierbuild.modules
 
-import coursierbuild.Deps.Deps
+import com.github.lolgab.mill.mima.*
 import coursierbuild.Shading
-import com.github.lolgab.mill.mima._
-
-import mill._, mill.scalalib._
+import coursierbuild.Deps.Deps
+import mill.*
+import mill.scalalib.*
 
 trait CoursierJvmBase extends Coursier with CsMima with Shading {
 

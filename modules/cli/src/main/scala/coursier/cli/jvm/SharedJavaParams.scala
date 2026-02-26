@@ -1,14 +1,14 @@
 package coursier.cli.jvm
 
-import java.io.File
-import java.nio.file.{Path, Paths}
-
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.{ArchiveCache, Cache}
 import coursier.core.Repository
 import coursier.jvm.{JvmCache, JvmCacheLogger, JvmChannel, JvmIndex}
 import coursier.util.Task
+
+import java.io.File
+import java.nio.file.{Path, Paths}
 
 final case class SharedJavaParams(
   jvm: Option[String],

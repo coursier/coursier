@@ -1,10 +1,10 @@
 package coursier.core
 
-import scala.scalajs.js
-import js.Dynamic.{global => g}
+import coursier.util.{SaxHandler, Xml}
 import org.scalajs.dom.{Node, NodeList}
 
-import coursier.util.{SaxHandler, Xml}
+import scala.scalajs.js
+import scala.scalajs.js.Dynamic.{global => g}
 
 package object compatibility {
   def option[A](a: js.Dynamic): Option[A] =

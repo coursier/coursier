@@ -1,12 +1,15 @@
 package coursier.util
 
-import java.io.{File, FileNotFoundException, IOException}
-import java.net.{URL, URLConnection}
-
 import coursier.cache.{CacheUrl, ConnectionBuilder, FileCache}
 import coursier.core._
-import coursier.version.{Version => Version0, VersionInterval => VersionInterval0}
+import coursier.version.{
+  Version => Version0,
+  VersionInterval => VersionInterval0
+}
 import dataclass.data
+
+import java.io.{File, FileNotFoundException, IOException}
+import java.net.{URL, URLConnection}
 
 object InMemoryRepository {
 

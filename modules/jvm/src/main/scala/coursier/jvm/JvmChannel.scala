@@ -1,5 +1,17 @@
 package coursier.jvm
 
+import coursier.cache.internal.FileUtil
+import coursier.core.{Module, ModuleName, Organization}
+import coursier.parse.{
+  DependencyParser,
+  JavaOrScalaDependency,
+  JavaOrScalaModule,
+  ModuleParser
+}
+import coursier.util.StringInterpolators._
+import coursier.version.VersionConstraint
+import dataclass.data
+
 import java.io.IOException
 import java.nio.charset.Charset
 import java.nio.file.{FileSystem, FileSystems, Files, Path, Paths}
@@ -7,13 +19,6 @@ import java.util.Locale
 import java.util.regex.Pattern.quote
 
 import scala.jdk.CollectionConverters._
-
-import coursier.cache.internal.FileUtil
-import coursier.core.{Module, ModuleName, Organization}
-import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
-import coursier.util.StringInterpolators._
-import dataclass.data
-import coursier.version.VersionConstraint
 
 // FIXME Initially copied from coursier.install.Channel, there's some duplication with it…
 

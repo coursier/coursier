@@ -1,15 +1,19 @@
 package coursier.tests
 
-import java.io.File
-import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.{Files, Paths}
-
 import coursier.core.Repository
 import coursier.paths.Util
 import coursier.testcache.TestCache
 import coursier.util.{Sync, Task}
 
-import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService, Future}
+import java.io.File
+import java.nio.charset.StandardCharsets.UTF_8
+import java.nio.file.{Files, Paths}
+
+import scala.concurrent.{
+  ExecutionContext,
+  ExecutionContextExecutorService,
+  Future
+}
 
 object compatibility {
 

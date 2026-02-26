@@ -2,7 +2,10 @@ package coursier.maven
 
 import coursier.core._
 import coursier.util.{Artifact, EitherT, Monad}
-import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
+import coursier.version.{
+  Version => Version0,
+  VersionConstraint => VersionConstraint0
+}
 import dataclass._
 
 import scala.collection.compat._

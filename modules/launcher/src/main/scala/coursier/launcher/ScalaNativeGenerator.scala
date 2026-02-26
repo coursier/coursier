@@ -1,9 +1,9 @@
 package coursier.launcher
 
-import java.nio.file.Path
-
 import ai.kien.python.Python
 import coursier.launcher.native.NativeBuilder
+
+import java.nio.file.Path
 
 object ScalaNativeGenerator extends Generator[Parameters.ScalaNative] {
   def generate(parameters: Parameters.ScalaNative, output: Path): Unit = {

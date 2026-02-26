@@ -1,12 +1,12 @@
 package coursier.cli
 
-import java.io._
-import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.Files
-import java.security.MessageDigest
-
 import caseapp.core.{Indexed, RemainingArgs}
-import coursier.cli.bootstrap.{Bootstrap, BootstrapOptions, BootstrapSpecificOptions}
+import coursier.cli.TestUtil.withFile
+import coursier.cli.bootstrap.{
+  Bootstrap,
+  BootstrapOptions,
+  BootstrapSpecificOptions
+}
 import coursier.cli.options.{
   ArtifactOptions,
   DependencyOptions,
@@ -15,10 +15,14 @@ import coursier.cli.options.{
   SharedLoaderOptions
 }
 import coursier.cli.resolve.SharedResolveOptions
-import coursier.cli.TestUtil.withFile
 import coursier.launcher.BootstrapGenerator.resourceDir
 import io.github.scala_cli.zip.ZipInputStream
 import utest._
+
+import java.io._
+import java.nio.charset.StandardCharsets.UTF_8
+import java.nio.file.Files
+import java.security.MessageDigest
 
 /** Bootstrap test is not covered by Pants because it does not prebuild a bootstrap.jar
   */

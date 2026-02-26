@@ -1,14 +1,13 @@
 package coursierbuild.modules
 
-import java.io.File
 import com.github.lolgab.mill.mima.Mima
 import coursierbuild.Deps.{Deps, ScalaVersions}
-
 import mill.*
 import mill.api.*
-import mill.scalalib.*
 import mill.scalajslib.*
+import mill.scalalib.*
 
+import java.io.File
 import java.util.Locale
 
 import scala.util.Properties

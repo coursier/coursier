@@ -1,8 +1,8 @@
 package coursier.internal
 
-import java.io.File
-
 import coursier.params.{MavenMirror, Mirror, TreeMirror}
+
+import java.io.File
 
 import scala.jdk.CollectionConverters._
 

@@ -6,18 +6,18 @@ import cats.implicits._
 import coursier.core.{
   Classifier,
   Configuration,
+  MinimizedExclusions,
   ModuleName,
-  Resolution,
-  Type,
   Repository,
-  MinimizedExclusions
+  Resolution,
+  Type
 }
 import coursier.parse.{
   DependencyParser,
+  JavaOrScalaDependency,
   JavaOrScalaModule,
   ModuleParser,
-  RepositoryParser,
-  JavaOrScalaDependency
+  RepositoryParser
 }
 import coursier.version.{VersionInterval, VersionParse}
 import dataclass._

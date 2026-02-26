@@ -2,7 +2,12 @@ package coursier.cli.resolve
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cli.params.{CacheParams, DependencyParams, OutputParams, RepositoryParams}
+import coursier.cli.params.{
+  CacheParams,
+  DependencyParams,
+  OutputParams,
+  RepositoryParams
+}
 import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaModule, ModuleParser}
 import coursier.version.VersionConstraint

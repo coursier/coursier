@@ -1,13 +1,13 @@
 package coursier.benchmark
 
-import java.io.ByteArrayInputStream
-import java.nio.charset.StandardCharsets
-import java.util.concurrent.TimeUnit
-
 import coursier.maven.MavenRepository
 import coursier.util.StringInterpolators._
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader
 import org.openjdk.jmh.annotations._
+
+import java.io.ByteArrayInputStream
+import java.nio.charset.StandardCharsets
+import java.util.concurrent.TimeUnit
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration

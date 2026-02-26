@@ -1,8 +1,8 @@
 package coursier.cli.bootstrap
 
 import caseapp._
-import coursier.install.RawAppDescriptor
 import coursier.cli.options.OptionGroup
+import coursier.install.RawAppDescriptor
 
 // format: off
 final case class BootstrapSpecificOptions(

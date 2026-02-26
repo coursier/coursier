@@ -1,7 +1,13 @@
 package coursier.web
 
 import coursier.cache.{AlwaysDownload, CacheLogger}
-import coursier.core.{Dependency, Module, Repository, Resolution, ResolutionProcess}
+import coursier.core.{
+  Dependency,
+  Module,
+  Repository,
+  Resolution,
+  ResolutionProcess
+}
 import coursier.maven.MavenRepository
 import coursier.util.{Artifact, EitherT, Gather, Task}
 import coursier.util.StringInterpolators._

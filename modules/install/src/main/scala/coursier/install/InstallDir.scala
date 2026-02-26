@@ -1,24 +1,36 @@
 package coursier.install
 
-import java.io.{File, InputStream, OutputStream}
-import java.nio.file.attribute.FileTime
-import java.nio.file.{Files, Path, Paths, StandardCopyOption, StandardOpenOption}
-import java.time.Instant
-import java.util.Locale
-import java.util.stream.Stream
-import java.util.zip.ZipEntry
-
 import coursier.cache.{ArchiveCache, ArchiveType, Cache, FileCache}
 import coursier.core.{Dependency, Module, Repository}
 import coursier.env.EnvironmentUpdate
 import coursier.install.error._
 import coursier.install.internal._
-import coursier.launcher.{ClassLoaderContent, ClassPathEntry, Generator, Parameters, Preamble}
-import coursier.launcher.internal.FileUtil
+import coursier.launcher.{
+  ClassLoaderContent,
+  ClassPathEntry,
+  Generator,
+  Parameters,
+  Preamble
+}
 import coursier.launcher.Parameters.ScalaNative
+import coursier.launcher.internal.FileUtil
 import coursier.util.{Artifact, Task}
 import coursier.version.VersionConstraint
 import dataclass._
+
+import java.io.{File, InputStream, OutputStream}
+import java.nio.file.{
+  Files,
+  Path,
+  Paths,
+  StandardCopyOption,
+  StandardOpenOption
+}
+import java.nio.file.attribute.FileTime
+import java.time.Instant
+import java.util.Locale
+import java.util.stream.Stream
+import java.util.zip.ZipEntry
 
 import scala.jdk.CollectionConverters._
 

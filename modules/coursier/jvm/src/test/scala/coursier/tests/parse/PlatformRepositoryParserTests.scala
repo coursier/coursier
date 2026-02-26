@@ -1,10 +1,10 @@
 package coursier.tests.parse
 
 import coursier.{LocalRepositories, Repositories}
+import coursier.core.Authentication
 import coursier.maven.MavenRepository
 import coursier.parse._
 import utest._
-import coursier.core.Authentication
 
 object PlatformRepositoryParserTests extends TestSuite {
 

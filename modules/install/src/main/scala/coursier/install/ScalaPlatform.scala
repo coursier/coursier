@@ -2,8 +2,8 @@ package coursier.install
 
 import coursier.cache.Cache
 import coursier.core.Repository
-import coursier.util.StringInterpolators._
 import coursier.util.Task
+import coursier.util.StringInterpolators._
 
 abstract class ScalaPlatform extends Product with Serializable {
   def availableVersions(cache: Cache[Task], repositories: Seq[Repository]): Set[String]
