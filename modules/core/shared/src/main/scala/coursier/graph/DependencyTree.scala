@@ -1,6 +1,11 @@
 package coursier.graph
 
-import coursier.core.{Dependency, MinimizedExclusions, Resolution, VariantSelector}
+import coursier.core.{
+  Dependency,
+  MinimizedExclusions,
+  Resolution,
+  VariantSelector
+}
 import coursier.version.{Version, VersionConstraint}
 
 import scala.annotation.tailrec

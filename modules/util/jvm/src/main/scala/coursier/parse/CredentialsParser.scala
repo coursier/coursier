@@ -1,8 +1,8 @@
 package coursier.parse
 
 import coursier.credentials.DirectCredentials
-import coursier.util.Traverse._
 import coursier.util.ValidationNel
+import coursier.util.Traverse._
 
 object CredentialsParser {
 

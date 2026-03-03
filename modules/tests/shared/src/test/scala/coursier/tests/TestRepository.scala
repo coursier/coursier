@@ -2,7 +2,10 @@ package coursier.tests
 
 import coursier.core._
 import coursier.util.{EitherT, Monad}
-import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
+import coursier.version.{
+  Version => Version0,
+  VersionConstraint => VersionConstraint0
+}
 
 final case class TestRepository(projects: Map[(Module, VersionConstraint0), Project])
     extends Repository with Repository.VersionApi {

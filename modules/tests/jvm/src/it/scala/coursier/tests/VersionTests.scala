@@ -1,8 +1,8 @@
 package coursier.tests
 
-import coursier.cache.FileCache
-import coursier.core.{Organization, Module, ModuleName}
 import coursier.Versions
+import coursier.cache.FileCache
+import coursier.core.{Module, ModuleName, Organization}
 import utest.{TestSuite, Tests, assert, test}
 
 import scala.async.Async.{async, await}

@@ -1,14 +1,14 @@
 package coursier.cli.channel
 
+import caseapp.core.RemainingArgs
+import coursier.cli.{CommandGroup, CoursierCommand}
+import coursier.cli.Util.ValidatedExitOnError
+import coursier.cli.params.OutputParams
+import coursier.paths.Util.createDirectories
+
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
-
-import caseapp.core.RemainingArgs
-import coursier.cli.{CoursierCommand, CommandGroup}
-import coursier.cli.params.OutputParams
-import coursier.cli.Util.ValidatedExitOnError
-import coursier.paths.Util.createDirectories
 
 object Channel extends CoursierCommand[ChannelOptions] {
 

@@ -12,9 +12,9 @@ import dataclass.data
 import java.util.concurrent.ConcurrentHashMap
 
 import scala.annotation.tailrec
+import scala.collection.mutable
 import scala.collection.compat._
 import scala.collection.compat.immutable.LazyList
-import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 
 object Resolution {

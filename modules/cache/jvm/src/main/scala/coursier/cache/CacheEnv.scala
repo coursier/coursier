@@ -1,6 +1,11 @@
 package coursier.cache
 
-import coursier.credentials.{Credentials, DirectCredentials, FileCredentials, Password}
+import coursier.credentials.{
+  Credentials,
+  DirectCredentials,
+  FileCredentials,
+  Password
+}
 import coursier.parse.{CachePolicyParser, CredentialsParser}
 import coursier.util.{EnvEntry, EnvValues}
 

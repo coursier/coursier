@@ -1,9 +1,9 @@
 package coursier.cli.setup
 
+import coursier.util.Task
+
 import java.io.{InputStream, PrintStream}
 import java.util.{Locale, Scanner}
-
-import coursier.util.Task
 
 import scala.annotation.tailrec
 

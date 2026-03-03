@@ -2,9 +2,8 @@ package coursier.docker.vm.iso
 
 import coursier.docker.vm.iso.Structs._
 
+import java.io.{ByteArrayOutputStream, OutputStream}
 import java.nio.ByteBuffer
-import java.io.OutputStream
-import java.io.ByteArrayOutputStream
 
 final case class NoDirPathTable(rootDir: Directory, isLittleEndian: Boolean = true) extends Record {
   def pathTableLength: Int = {

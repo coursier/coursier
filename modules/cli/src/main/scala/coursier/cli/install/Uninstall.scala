@@ -1,20 +1,17 @@
 package coursier.cli.install
 
-import java.io.File
-import java.io.FileNotFoundException
-
 import caseapp.core.RemainingArgs
-import coursier.cli.{CoursierCommand, CommandGroup}
+import coursier.cache.{ArtifactError, Cache}
+import coursier.cli.{CommandGroup, CoursierCommand}
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.InstallDir
-import coursier.cache.Cache
 import coursier.install.error.InstallDirException
-import coursier.util.Task
-import coursier.util.EitherT
-import coursier.util.Artifact
-import coursier.cache.ArtifactError
-import scala.concurrent.ExecutionContext
+import coursier.util.{Artifact, EitherT, Task}
+
+import java.io.{File, FileNotFoundException}
 import java.nio.file.NoSuchFileException
+
+import scala.concurrent.ExecutionContext
 
 object Uninstall extends CoursierCommand[UninstallOptions] {
 

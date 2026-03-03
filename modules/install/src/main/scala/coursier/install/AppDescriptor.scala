@@ -1,16 +1,23 @@
 package coursier.install
 
-import java.io.File
-
-import coursier.cache.{Cache, CacheLogger}
-import coursier.core.{Classifier, Dependency, Module, Repository, Resolution, Type}
 import coursier.Fetch
+import coursier.cache.{Cache, CacheLogger}
+import coursier.core.{
+  Classifier,
+  Dependency,
+  Module,
+  Repository,
+  Resolution,
+  Type
+}
 import coursier.params.ResolutionParams
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Task}
 import coursier.util.StringInterpolators._
 import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
 import dataclass._
+
+import java.io.File
 
 @data class AppDescriptor(
   repositories: Seq[Repository] = Nil,

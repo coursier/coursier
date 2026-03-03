@@ -1,10 +1,19 @@
 package coursier.util
 
-import java.util.concurrent.{CompletionException, ExecutorService, ScheduledExecutorService}
+import java.util.concurrent.{
+  CompletionException,
+  ExecutorService,
+  ScheduledExecutorService
+}
 
-import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
+import scala.concurrent.{
+  Await,
+  ExecutionContext,
+  ExecutionContextExecutorService,
+  Future,
+  Promise
+}
 import scala.concurrent.duration.{Duration, FiniteDuration}
-import scala.concurrent.Promise
 import scala.util.Success
 
 abstract class PlatformTaskCompanion { self =>

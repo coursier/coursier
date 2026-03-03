@@ -1,12 +1,12 @@
 package coursier.install
 
-import java.nio.channels.{FileChannel, FileLock}
-import java.nio.file.{Files, Path, StandardOpenOption, StandardCopyOption}
-
 import coursier.cache.CacheLocks
 import coursier.install.error.NotAnApplication
 import coursier.launcher.internal.FileUtil
 import coursier.paths.CachePath
+
+import java.nio.channels.{FileChannel, FileLock}
+import java.nio.file.{Files, Path, StandardCopyOption, StandardOpenOption}
 
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal

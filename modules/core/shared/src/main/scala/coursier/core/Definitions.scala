@@ -1,12 +1,12 @@
 package coursier.core
 
-import java.util.concurrent.ConcurrentMap
-
 import coursier.core.Validation._
 import coursier.error.VariantError
 import coursier.util.Artifact
 import coursier.version.{Version => Version0}
 import dataclass.data
+
+import java.util.concurrent.ConcurrentMap
 
 final case class Organization(value: String) extends AnyVal {
   def map(f: String => String): Organization =

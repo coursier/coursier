@@ -1,17 +1,16 @@
 package coursier.install
 
-import java.io.OutputStream
-import java.nio.charset.StandardCharsets
-import java.nio.file.attribute.FileTime
-import java.nio.file.{Files, Path}
-import java.time.Instant
-import java.util.zip.{ZipEntry, ZipFile, ZipOutputStream}
-
 import coursier.cache.internal.FileUtil
 import coursier.launcher.Preamble
 
+import java.io.OutputStream
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path}
+import java.nio.file.attribute.FileTime
+import java.time.Instant
+import java.util.zip.{ZipEntry, ZipException, ZipFile, ZipOutputStream}
+
 import scala.util.control.NonFatal
-import java.util.zip.ZipException
 
 object InfoFile {
 

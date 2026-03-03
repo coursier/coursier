@@ -1,7 +1,7 @@
 package coursierbuild.modules
 
 import coursierbuild.Deps.Deps
-import mill._
+import mill.*
 
 trait SbtMavenRepository extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-sbt-maven-repository"

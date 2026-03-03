@@ -3,6 +3,7 @@ package coursier.docker.vm.iso
 import scodec._
 import scodec.bits._
 import scodec.codecs._
+
 import java.nio.charset.StandardCharsets
 import java.time.{LocalDateTime, ZoneOffset}
 

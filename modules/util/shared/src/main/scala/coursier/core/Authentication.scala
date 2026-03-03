@@ -1,9 +1,9 @@
 package coursier.core
 
+import dataclass.{data, since}
+
 import java.nio.charset.StandardCharsets
 import java.util.Base64
-
-import dataclass.{data, since}
 
 @data class Authentication(
   userOpt: Option[String],

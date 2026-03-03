@@ -1,17 +1,17 @@
 package coursier.cli.fetch
 
-import java.io.{File, PrintStream}
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-import java.util.concurrent.ExecutorService
-
 import caseapp._
 import cats.data.Validated
-import coursier.cli.{CoursierCommand, CommandGroup}
+import coursier.cli.{CommandGroup, CoursierCommand}
 import coursier.cli.resolve.{Output, Resolve, ResolveException}
 import coursier.core.Resolution
 import coursier.install.Channels
 import coursier.util.{Artifact, Sync, Task}
+
+import java.io.{File, PrintStream}
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
+import java.util.concurrent.ExecutorService
 
 import scala.concurrent.ExecutionContext
 

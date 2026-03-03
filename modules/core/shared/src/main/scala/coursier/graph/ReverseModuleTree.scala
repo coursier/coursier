@@ -3,8 +3,8 @@ package coursier.graph
 import coursier.core.{Module, Resolution}
 import coursier.version.{Version, VersionConstraint}
 
-import scala.collection.compat._
 import scala.collection.mutable
+import scala.collection.compat._
 
 /** Tree allowing to walk the dependency graph from dependency to dependees. */
 sealed abstract class ReverseModuleTree {

@@ -1,7 +1,5 @@
 package coursier.cli.install
 
-import java.nio.file.{Path, Paths}
-
 import caseapp.Tag
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
@@ -10,6 +8,8 @@ import coursier.cli.params.OutputParams
 import coursier.core.Repository
 import coursier.install.{GraalvmParams, InstallDir, Platform}
 import coursier.util.Task
+
+import java.nio.file.{Path, Paths}
 
 import scala.language.implicitConversions
 

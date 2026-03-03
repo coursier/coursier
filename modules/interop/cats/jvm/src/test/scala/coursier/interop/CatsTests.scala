@@ -3,8 +3,8 @@ package coursier.interop
 import _root_.cats.effect.IO
 import _root_.cats.effect.unsafe.IORuntime
 import coursier.interop.cats.{coursierGatherFromCats => _, _}
-import coursier.tests.compatibility.executionContext
 import coursier.tests.{TestRunner, compatibility}
+import coursier.tests.compatibility.executionContext
 import coursier.tests.util.ToFuture
 import coursier.util.StringInterpolators._
 import utest._

@@ -1,7 +1,8 @@
 package coursierbuild.modules
 
 import coursierbuild.Deps.Deps
-import mill._, mill.scalalib._
+import mill.*
+import mill.scalalib.*
 
 trait CsScalaModule extends ScalaModule with CoursierJavaModule {
   def scalacOptions = Task {

@@ -1,6 +1,9 @@
 package coursier.clitests.util
 
-import com.github.plokhotnyuk.jsoniter_scala.core.{JsonValueCodec, readFromArray}
+import com.github.plokhotnyuk.jsoniter_scala.core.{
+  JsonValueCodec,
+  readFromArray
+}
 import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
 import coursier.cache.internal.FileUtil
 

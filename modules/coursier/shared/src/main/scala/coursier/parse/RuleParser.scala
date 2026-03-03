@@ -1,9 +1,10 @@
 package coursier.parse
 
-import fastparse._, NoWhitespace._
 import coursier.core.{Module, ModuleName, Organization}
 import coursier.params.rule._
 import coursier.util.{ModuleMatcher, ModuleMatchers}
+import fastparse._
+import fastparse.NoWhitespace._
 
 object RuleParser {
 

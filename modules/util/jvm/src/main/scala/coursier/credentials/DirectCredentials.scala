@@ -1,11 +1,11 @@
 package coursier.credentials
 
+import coursier.core.Authentication
+import dataclass._
+
 import java.net.URI
 
-import coursier.core.Authentication
-
 import scala.util.Try
-import dataclass._
 
 @data class DirectCredentials(
   host: String = "",

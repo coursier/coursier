@@ -1,15 +1,21 @@
 package coursier.cache
 
+import cats.data.NonEmptyList
+import cats.effect.IO
+import coursier.core.Authentication
+import coursier.util.Artifact
+import org.http4s.{BasicCredentials, Challenge, HttpRoutes, Request, Uri}
+import org.http4s.blaze.server.BlazeServerBuilder
+import org.http4s.dsl.io._
+import org.http4s.headers.{Authorization, `WWW-Authenticate`}
+import org.http4s.server.Router
+import org.typelevel.ci.CIString
+
 import java.io.File
 import java.math.BigInteger
 import java.nio.file.{Files, Path}
 import java.security.{KeyStore, MessageDigest}
 import java.security.cert.X509Certificate
-
-import cats.data.NonEmptyList
-import cats.effect.IO
-import coursier.core.Authentication
-import coursier.util.Artifact
 import javax.net.ssl.{
   HostnameVerifier,
   KeyManagerFactory,
@@ -18,12 +24,6 @@ import javax.net.ssl.{
   TrustManager,
   X509TrustManager
 }
-import org.http4s.blaze.server.BlazeServerBuilder
-import org.http4s.dsl.io._
-import org.http4s.headers.{Authorization, `WWW-Authenticate`}
-import org.http4s.server.Router
-import org.http4s.{BasicCredentials, Challenge, HttpRoutes, Request, Uri}
-import org.typelevel.ci.CIString
 
 import scala.language.implicitConversions
 

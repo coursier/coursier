@@ -1,12 +1,12 @@
 package coursier.cli.install
 
-import java.time.Instant
-
 import caseapp.core.RemainingArgs
-import coursier.cli.{CoursierCommand, CommandGroup}
+import coursier.cli.{CommandGroup, CoursierCommand}
 import coursier.install.{Channels, InstallDir}
 import coursier.install.error.InstallDirException
 import coursier.util.{Sync, Task}
+
+import java.time.Instant
 
 import scala.concurrent.duration.Duration
 

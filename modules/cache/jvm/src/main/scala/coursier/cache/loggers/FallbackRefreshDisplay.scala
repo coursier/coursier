@@ -1,8 +1,8 @@
 package coursier.cache.loggers
 
-import java.io.Writer
-
 import coursier.cache.loggers.RefreshInfo.{CheckUpdateInfo, DownloadInfo}
+
+import java.io.Writer
 
 import scala.concurrent.duration.{Duration, DurationInt}
 

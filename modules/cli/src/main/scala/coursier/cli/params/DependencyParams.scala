@@ -6,10 +6,15 @@ import coursier.cli.options.DependencyOptions
 import coursier.cli.util.DeprecatedModuleRequirements0
 import coursier.core._
 import coursier.install.ScalaPlatform
-import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
+import coursier.parse.{
+  DependencyParser,
+  JavaOrScalaDependency,
+  JavaOrScalaModule,
+  ModuleParser
+}
 
-import java.nio.file.{Files, Paths}
 import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
 
 import scala.io.Source
 import scala.util.control.NonFatal

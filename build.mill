@@ -1,22 +1,20 @@
 //| mill-version: 1.1.0-RC3
 
+import _root_.coursier.getcs.GetCs
+import coursierbuild.{DocHelpers, GitHubReleaseAssets, Shading, Sync, Workers}
 import coursierbuild.Deps.{Deps, ScalaVersions, scalaCliVersion}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
-import coursierbuild.Relativize.{relativize => doRelativize}
-import coursierbuild.{DocHelpers, GitHubReleaseAssets, Shading, Sync, Workers}
-import coursierbuild.modules._
-
-import _root_.coursier.getcs.GetCs
-
+import coursierbuild.Relativize.relativize as doRelativize
+import coursierbuild.modules.*
 import mill.*
 import mill.api.*
-import mill.scalalib._
-import mill.scalajslib._
+import mill.scalajslib.*
+import mill.scalalib.*
 
 import java.io.File
 import java.util.zip.ZipFile
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.jdk.CollectionConverters.*
 import scala.util.{Properties, Using}
 

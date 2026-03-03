@@ -1,12 +1,12 @@
 package coursier.cli.params
 
-import java.io.File
-import java.util.concurrent.ExecutorService
-
 import coursier.cache._
 import coursier.credentials.Credentials
 import coursier.internal.InMemoryCache
 import coursier.util.{Sync, Task}
+
+import java.io.File
+import java.util.concurrent.ExecutorService
 
 import scala.concurrent.duration.Duration
 

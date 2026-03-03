@@ -4,7 +4,6 @@ import coursier.maven.MavenRepository
 import coursier.tests.compatibility._
 import coursier.util.StringInterpolators._
 import coursier.version.Version
-
 import utest._
 
 import scala.concurrent.{Future, Promise}

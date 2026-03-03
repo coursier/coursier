@@ -1,20 +1,16 @@
 package coursier.jvm
 
-import java.io.File
-import java.nio.file.{Files, Path, Paths}
-import java.util.concurrent.atomic.AtomicBoolean
-
-import coursier.cache.internal.FileUtil
 import coursier.cache.{ArchiveCache, MockCache}
+import coursier.cache.internal.FileUtil
 import coursier.util.{Sync, Task}
 import utest._
 
+import java.io.{File, IOException}
+import java.nio.file.{Files, Path, Paths}
+import java.util.concurrent.atomic.AtomicBoolean
+
 import scala.sys.process._
-import java.io.IOException
-import scala.util.Success
-import scala.util.Failure
-import scala.util.Properties
-import scala.util.Try
+import scala.util.{Failure, Properties, Success, Try}
 
 object JvmCacheTests extends TestSuite {
 

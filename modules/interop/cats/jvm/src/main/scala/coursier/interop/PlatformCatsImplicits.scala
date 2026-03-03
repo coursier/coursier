@@ -1,10 +1,10 @@
 package coursier.interop
 
-import java.util.concurrent.ExecutorService
-
 import _root_.cats.instances.vector._
 import _root_.cats.syntax.all._
 import coursier.util.Sync
+
+import java.util.concurrent.ExecutorService
 
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 

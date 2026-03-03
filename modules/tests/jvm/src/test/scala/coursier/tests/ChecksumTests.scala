@@ -1,10 +1,10 @@
 package coursier.tests
 
-import java.math.BigInteger
-
 import coursier.cache.{ArtifactError, CacheChecksum, FileCache}
 import coursier.util.{Artifact, Gather, Sync, Task}
 import utest._
+
+import java.math.BigInteger
 
 import scala.concurrent.{ExecutionContext, Future}
 

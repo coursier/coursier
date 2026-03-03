@@ -1,11 +1,11 @@
 package coursier.clitests
 
-import java.io.{File, FileWriter}
-import java.nio.file.Files
-
 import coursier.core.{Dependency, Module, ModuleName, Organization}
 import coursier.util.StringInterpolators._
 import coursier.version.VersionConstraint
+
+import java.io.{File, FileWriter}
+import java.nio.file.Files
 
 object TestUtil {
 

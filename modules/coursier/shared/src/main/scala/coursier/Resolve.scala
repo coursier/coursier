@@ -1,7 +1,5 @@
 package coursier
 
-import java.util.concurrent.ConcurrentHashMap
-
 import coursier.cache.{Cache, CacheLogger}
 import coursier.core.{
   Activation,
@@ -26,11 +24,17 @@ import coursier.params.{Mirror, MirrorConfFile, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
 import coursier.util.Monad.ops._
-import coursier.version.{ConstraintReconciliation, VersionConstraint, VersionParse}
+import coursier.version.{
+  ConstraintReconciliation,
+  VersionConstraint,
+  VersionParse
+}
 import dataclass.{data, since}
 
-import scala.concurrent.duration.Duration
+import java.util.concurrent.ConcurrentHashMap
+
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration.Duration
 import scala.language.higherKinds
 
 // format: off

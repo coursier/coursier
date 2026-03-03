@@ -1,15 +1,14 @@
 package coursierbuild.modules
 
-import coursierbuild.Deps.{Deps, sbtCoursierVersion}
-import coursierbuild.Relativize.{relativize => doRelativize}
-import coursierbuild.modules.CoursierPublishModule.latestTaggedVersion
 import coursierbuild.DocHelpers
-
-import java.io.File
-
+import coursierbuild.Deps.{Deps, sbtCoursierVersion}
+import coursierbuild.Relativize.relativize as doRelativize
+import coursierbuild.modules.CoursierPublishModule.latestTaggedVersion
 import mill.*
 import mill.api.*
 import mill.scalalib.*
+
+import java.io.File
 
 trait Doc extends ScalaModule {
   def version: T[String]

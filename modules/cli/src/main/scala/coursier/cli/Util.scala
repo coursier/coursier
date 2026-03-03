@@ -1,8 +1,8 @@
 package coursier.cli
 
-import java.io.PrintStream
-
 import cats.data.ValidatedNel
+
+import java.io.PrintStream
 
 object Util {
 

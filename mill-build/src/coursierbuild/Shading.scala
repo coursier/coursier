@@ -1,17 +1,18 @@
 package coursierbuild
 
 import com.eed3si9n.jarjarabrams.{ShadePattern, Shader}
-import coursier.util.{Gather, Task => CsTask}
-import mill._, mill.scalalib._
+import coursier.util.{Gather, Task as CsTask}
+import mill.*
+import mill.scalalib.*
 import mill.util.JarManifest
 
-import java.io._
+import java.io.*
 import java.nio.file.Files
 import java.util.jar.Attributes
-import java.util.zip._
+import java.util.zip.*
 
-import scala.jdk.CollectionConverters._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.jdk.CollectionConverters.*
 import scala.util.Using
 
 trait Shading extends PublishModule {

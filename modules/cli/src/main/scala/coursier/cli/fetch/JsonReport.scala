@@ -1,6 +1,9 @@
 package coursier.cli.fetch
 
-import com.github.plokhotnyuk.jsoniter_scala.core.{JsonValueCodec, writeToString}
+import com.github.plokhotnyuk.jsoniter_scala.core.{
+  JsonValueCodec,
+  writeToString
+}
 import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
 import coursier.core.{
   Attributes,

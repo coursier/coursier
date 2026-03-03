@@ -1,5 +1,5 @@
 package coursierbuild.modules
 
-import mill._
+import mill.*
 
 trait SbtMavenRepositoryJvmBase extends SbtMavenRepository with CsMima

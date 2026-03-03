@@ -1,11 +1,11 @@
 package coursier.install
 
-import java.io.File
-
 import coursier.Fetch
 import coursier.parse.JavaOrScalaDependency
 import coursier.util.Artifact
 import dataclass.data
+
+import java.io.File
 
 @data class AppArtifacts(
   fetchResult: Fetch.Result = Fetch.Result(),

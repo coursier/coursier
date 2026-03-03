@@ -1,11 +1,11 @@
 package coursier.tests
 
-import java.io._
-import java.nio.charset.StandardCharsets.UTF_8
-
 import coursier.cache.ConnectionBuilder
 import coursier.core.{Repository, ResolutionProcess}
 import coursier.util.{EitherT, Sync, Task}
+
+import java.io._
+import java.nio.charset.StandardCharsets.UTF_8
 
 import scala.util.{Failure, Success, Try}
 

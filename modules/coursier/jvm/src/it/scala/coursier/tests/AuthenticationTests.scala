@@ -1,9 +1,5 @@
 package coursier.tests
 
-import java.io.File
-import java.net.URI
-import java.nio.file.{Files, Path}
-
 import coursier.{Repositories, Resolve}
 import coursier.cache.FileCache
 import coursier.credentials.{DirectCredentials, FileCredentials}
@@ -11,6 +7,10 @@ import coursier.maven.MavenRepository
 import coursier.parse.CredentialsParser
 import coursier.util.StringInterpolators._
 import utest._
+
+import java.io.File
+import java.net.URI
+import java.nio.file.{Files, Path}
 
 object AuthenticationTests extends TestSuite {
 

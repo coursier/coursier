@@ -1,7 +1,7 @@
 package coursier.cli.about
 
-import caseapp.core.parser.Parser
 import caseapp.{Help, HelpMessage}
+import caseapp.core.parser.Parser
 
 // format: off
 @HelpMessage(

@@ -1,7 +1,7 @@
 package coursier.tests
 
-import coursier.cache.internal.Platform
 import coursier.cache.{Cache, MockCache}
+import coursier.cache.internal.Platform
 import coursier.testcache.TestCache
 import coursier.util.Task
 

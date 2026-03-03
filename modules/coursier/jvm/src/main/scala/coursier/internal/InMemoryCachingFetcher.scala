@@ -1,9 +1,9 @@
 package coursier.internal
 
-import java.util.concurrent.ConcurrentHashMap
-
 import coursier.core.Repository
 import coursier.util.{Artifact, EitherT, Sync}
+
+import java.util.concurrent.ConcurrentHashMap
 
 /** For benchmarking purposes */
 final class InMemoryCachingFetcher[F[_]](underlying: Repository.Fetch[F])(implicit S: Sync[F]) {

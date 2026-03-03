@@ -4,9 +4,8 @@ import caseapp.Tag
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.CacheLogger
-import coursier.cache.loggers.RefreshLogger
+import coursier.cache.loggers.{FileTypeRefreshDisplay, RefreshLogger}
 import coursier.cli.options.OutputOptions
-import coursier.cache.loggers.FileTypeRefreshDisplay
 
 final case class OutputParams(
   verbosity: Int,

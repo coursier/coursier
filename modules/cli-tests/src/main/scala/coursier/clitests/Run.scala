@@ -1,10 +1,10 @@
 package coursier.clitests
 
-import java.util.Locale
-
 import caseapp._
-import utest.framework.Result
 import utest.TestRunner
+import utest.framework.Result
+
+import java.util.Locale
 
 import scala.annotation.tailrec
 

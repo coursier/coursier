@@ -8,6 +8,7 @@ import coursier.cache.{
   FileCache
 }
 import coursier.docker.DockerFile.WithLines
+import coursier.docker.vm.Vm
 import coursier.util.Task
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 
@@ -18,9 +19,7 @@ import java.util.UUID
 import java.util.zip.GZIPOutputStream
 
 import scala.collection.immutable.SortedSet
-import scala.util.Using
-import scala.util.Properties
-import coursier.docker.vm.Vm
+import scala.util.{Properties, Using}
 
 object DockerBuild {
 

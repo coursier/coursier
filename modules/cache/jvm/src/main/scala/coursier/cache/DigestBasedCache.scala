@@ -4,8 +4,7 @@ import coursier.cache.internal.Retry
 import coursier.util.{Sync, Task}
 import dataclass.data
 
-import java.nio.file.{Files, Path}
-import java.nio.file.StandardCopyOption
+import java.nio.file.{Files, Path, StandardCopyOption}
 
 @data class DigestBasedCache[F[_]](
   location: Path,

@@ -1,9 +1,5 @@
 package coursier.cli.params
 
-import java.io.File
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.Repositories
@@ -14,6 +10,10 @@ import coursier.ivy.IvyRepository
 import coursier.maven.{MavenRepository, MavenRepositoryLike, SbtMavenRepository}
 import coursier.parse.RepositoryParser
 import coursier.util.StringInterpolators._
+
+import java.io.File
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 
 final case class RepositoryParams(
   repositories: Seq[Repository]

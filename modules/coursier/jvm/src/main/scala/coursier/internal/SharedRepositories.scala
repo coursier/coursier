@@ -1,7 +1,7 @@
 package coursier.internal
 
-import coursier.core.Repository
 import coursier.LocalRepositories
+import coursier.core.Repository
 
 trait SharedRepositories {
   def central: Repository

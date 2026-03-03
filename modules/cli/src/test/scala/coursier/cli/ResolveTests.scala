@@ -1,12 +1,14 @@
 package coursier.cli
 
-import java.io.{ByteArrayOutputStream, File, PrintStream}
-import java.nio.charset.StandardCharsets
-
 import caseapp.core.{Indexed, RemainingArgs}
 import cats.data.Validated
 import coursier.cli.install.SharedChannelOptions
-import coursier.cli.options.{CacheOptions, DependencyOptions, OutputOptions, ResolutionOptions}
+import coursier.cli.options.{
+  CacheOptions,
+  DependencyOptions,
+  OutputOptions,
+  ResolutionOptions
+}
 import coursier.cli.resolve.{
   Resolve,
   ResolveException,
@@ -18,6 +20,8 @@ import coursier.install.Channels
 import coursier.util.Sync
 import utest._
 
+import java.io.{ByteArrayOutputStream, File, PrintStream}
+import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 
 import scala.concurrent.ExecutionContext

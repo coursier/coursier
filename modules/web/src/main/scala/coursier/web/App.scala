@@ -13,9 +13,9 @@ import coursier.core.{
 import coursier.maven.{MavenRepository, MavenRepositoryLike}
 import coursier.util.StringInterpolators._
 import coursier.version.{Version, VersionConstraint}
+import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.{Attr, TagMod}
 import japgolly.scalajs.react.vdom.HtmlAttrs.dangerouslySetInnerHtml
-import japgolly.scalajs.react._
 import japgolly.scalajs.react.vdom.html_<^._
 
 import scala.scalajs.js.Dynamic.{global => g}

@@ -1,14 +1,14 @@
 package coursier.jvm
 
-import java.io.{File, IOException}
-import java.nio.file.{Files, Path}
-import java.util.Locale
-
 import coursier.cache.ArchiveCache
 import coursier.env.EnvironmentUpdate
 import coursier.jvm.util.CommandOutput
 import coursier.util.Task
 import dataclass._
+
+import java.io.{File, IOException}
+import java.nio.file.{Files, Path}
+import java.util.Locale
 
 @data class JavaHome(
   cache: Option[JvmCache] = None,

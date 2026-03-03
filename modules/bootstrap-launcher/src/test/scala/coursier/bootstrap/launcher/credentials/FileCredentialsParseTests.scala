@@ -2,9 +2,10 @@ package coursier.bootstrap.launcher.credentials
 
 import utest._
 
-import scala.jdk.CollectionConverters._
-import scala.compat.java8.OptionConverters._
 import java.io.File
+
+import scala.compat.java8.OptionConverters._
+import scala.jdk.CollectionConverters._
 
 object FileCredentialsParseTests extends TestSuite {
 

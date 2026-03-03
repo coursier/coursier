@@ -1,13 +1,13 @@
 package coursier.cli.install
 
-import java.nio.file.{Path, Paths}
-import java.util.concurrent.TimeUnit
-
 import cats.data.ValidatedNel
 import cats.implicits._
 import coursier.cli.jvm.SharedJavaParams
 import coursier.cli.params.{CacheParams, OutputParams, RepositoryParams}
 import coursier.core.Repository
+
+import java.nio.file.{Path, Paths}
+import java.util.concurrent.TimeUnit
 
 import scala.concurrent.duration.Duration
 

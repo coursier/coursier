@@ -2,16 +2,15 @@ package coursierbuild
 
 // Originally adapted from https://github.com/olafurpg/sbt-docusaurus/blob/16e548280117d3fcd8db4c244f91f089470b8ee7/plugin/src/main/scala/sbtdocusaurus/internal/Relativize.scala
 
-import java.net.URI
-import java.nio.charset.Charset
-import java.nio.charset.StandardCharsets
-import java.nio.file._
-import java.nio.file.attribute.BasicFileAttributes
-
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 
-import scala.jdk.CollectionConverters._
+import java.net.URI
+import java.nio.charset.{Charset, StandardCharsets}
+import java.nio.file.*
+import java.nio.file.attribute.BasicFileAttributes
+
+import scala.jdk.CollectionConverters.*
 
 object Relativize {
   def relativize(site: Path): Unit =

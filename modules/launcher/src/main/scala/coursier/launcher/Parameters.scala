@@ -1,12 +1,12 @@
 package coursier.launcher
 
+import coursier.launcher.internal.Windows
+import dataclass._
+
 import java.io.File
 import java.nio.file.Path
 import java.util.jar.{Attributes => JarAttributes}
 import java.util.zip.ZipEntry
-
-import coursier.launcher.internal.Windows
-import dataclass._
 
 import scala.util.Properties
 

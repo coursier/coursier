@@ -1,7 +1,7 @@
 package coursier.cache.internal
 
-import scala.concurrent.duration.FiniteDuration
 import scala.annotation.tailrec
+import scala.concurrent.duration.FiniteDuration
 
 final case class Retry(
   count: Int,

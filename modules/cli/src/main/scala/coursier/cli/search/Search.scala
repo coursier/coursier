@@ -1,7 +1,7 @@
 package coursier.cli.search
 
 import caseapp.core.RemainingArgs
-import coursier.cli.{CoursierCommand, CommandGroup}
+import coursier.cli.{CommandGroup, CoursierCommand}
 import coursier.cli.Util.ValidatedExitOnError
 import coursier.install.Channels
 import coursier.util.Sync

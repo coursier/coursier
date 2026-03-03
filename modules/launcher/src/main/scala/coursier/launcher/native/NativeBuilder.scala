@@ -1,9 +1,9 @@
 package coursier.launcher.native
 
+import coursier.launcher.Parameters.ScalaNative
+
 import java.io.File
 import java.net.URLClassLoader
-
-import coursier.launcher.Parameters.ScalaNative
 
 trait NativeBuilder {
   def build(

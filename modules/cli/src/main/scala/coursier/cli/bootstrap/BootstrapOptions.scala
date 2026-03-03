@@ -1,10 +1,9 @@
 package coursier.cli.bootstrap
 
 import caseapp.{ArgsName, Group, Help, HelpMessage, Parser, Recurse}
-import coursier.cli.options.OptionGroup
 import coursier.cli.install.SharedChannelOptions
 import coursier.cli.native.NativeLauncherOptions
-import coursier.cli.options.SharedLaunchOptions
+import coursier.cli.options.{OptionGroup, SharedLaunchOptions}
 import coursier.install.RawAppDescriptor
 
 // format: off

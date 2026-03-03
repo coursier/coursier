@@ -4,9 +4,8 @@ import com.github.plokhotnyuk.jsoniter_scala.core._
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import coursier.credentials.DirectCredentials
 
-import scala.cli.config.Key
 import scala.cli.commands.SpecificationLevel
-import scala.cli.config.PasswordOption
+import scala.cli.config.{Key, PasswordOption}
 import scala.collection.mutable.ListBuffer
 
 @deprecated("Unused by coursier now", "2.1.15")

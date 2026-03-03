@@ -1,15 +1,14 @@
 package coursier.core
 
-import java.io.CharArrayReader
-import java.util.Locale
-import javax.xml.parsers.ParserConfigurationException
-import javax.xml.parsers.SAXParserFactory
-import javax.xml.XMLConstants
-
 import coursier.util.{SaxHandler, Xml}
 import org.xml.sax
 import org.xml.sax.InputSource
 import org.xml.sax.helpers.DefaultHandler
+
+import java.io.CharArrayReader
+import java.util.Locale
+import javax.xml.XMLConstants
+import javax.xml.parsers.{ParserConfigurationException, SAXParserFactory}
 
 import scala.collection.compat.immutable.LazyList
 import scala.xml.{Attribute, Elem, MetaData, Null}

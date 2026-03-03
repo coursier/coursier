@@ -1,13 +1,18 @@
 package coursier.install
 
+import coursier.core.Module
+import coursier.parse.{
+  DependencyParser,
+  JavaOrScalaDependency,
+  JavaOrScalaModule,
+  ModuleParser
+}
+import coursier.version.VersionConstraint
+import dataclass.data
+
 import java.io.File
 import java.nio.file.{FileSystem, FileSystems, Path}
 import java.util.regex.Pattern.quote
-
-import coursier.core.Module
-import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
-import coursier.version.VersionConstraint
-import dataclass.data
 
 sealed abstract class Channel extends Product with Serializable {
   def repr: String

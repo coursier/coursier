@@ -1,7 +1,5 @@
 package coursier.cli.params
 
-import java.nio.file.{Path, Paths}
-
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.fetch.FetchParams
@@ -9,6 +7,8 @@ import coursier.cli.install.SharedChannelParams
 import coursier.cli.options.SharedLaunchOptions
 import coursier.cli.resolve.SharedResolveParams
 import coursier.cputil.ClassPathUtil
+
+import java.nio.file.{Path, Paths}
 
 final case class SharedLaunchParams(
   resolve: SharedResolveParams,

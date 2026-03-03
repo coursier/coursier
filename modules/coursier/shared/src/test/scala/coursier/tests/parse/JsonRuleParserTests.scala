@@ -1,7 +1,7 @@
 package coursier.tests.parse
 
-import coursier.parse._
 import coursier.params.rule._
+import coursier.parse._
 import coursier.util.{ModuleMatcher, ModuleMatchers}
 import coursier.util.StringInterpolators._
 import utest._

@@ -1,8 +1,13 @@
 package coursier.cli.jvm
 
-import coursier.cli.options.{CacheOptions, EnvOptions, OutputOptions, RepositoryOptions}
-import caseapp.core.parser.Parser
 import caseapp.{Help, HelpMessage, Recurse}
+import caseapp.core.parser.Parser
+import coursier.cli.options.{
+  CacheOptions,
+  EnvOptions,
+  OutputOptions,
+  RepositoryOptions
+}
 
 // format: off
 @HelpMessage(

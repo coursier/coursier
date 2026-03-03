@@ -1,8 +1,8 @@
 package coursier.install
 
-import java.nio.charset.StandardCharsets
-
 import dataclass.data
+
+import java.nio.charset.StandardCharsets
 
 @data class ChannelData(
   channel: Channel,

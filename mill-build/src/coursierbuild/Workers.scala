@@ -1,10 +1,10 @@
 package coursierbuild
 
 import coursierbuild.Deps.ScalaVersions
+import mill.*
+import scalalib.*
 
-import mill._, scalalib._
-
-import java.io.{File, InputStream, IOException}
+import java.io.{File, IOException, InputStream}
 
 object Workers {
   final class RedirectingServer(

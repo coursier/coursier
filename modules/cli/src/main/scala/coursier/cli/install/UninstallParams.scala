@@ -1,9 +1,9 @@
 package coursier.cli.install
 
-import java.nio.file.{Path, Paths}
-
 import caseapp.Tag
 import cats.data.{Validated, ValidatedNel}
+
+import java.nio.file.{Path, Paths}
 
 final case class UninstallParams(
   dir: Path,

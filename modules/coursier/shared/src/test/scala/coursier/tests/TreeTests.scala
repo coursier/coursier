@@ -1,12 +1,12 @@
 package coursier.tests
 
 import coursier.Resolve
+import coursier.error.ResolutionError
+import coursier.util.Print.Colors
 import coursier.util.StringInterpolators._
 import utest._
 
 import scala.async.Async.{async, await}
-import coursier.error.ResolutionError
-import coursier.util.Print.Colors
 
 object TreeTests extends TestSuite {
 

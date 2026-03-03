@@ -1,7 +1,9 @@
 package coursierbuild.modules
 
 import coursierbuild.Deps.ScalaVersions
-import mill._, mill.scalalib._, mill.scalajslib._
+import mill.*
+import mill.scalajslib.*
+import mill.scalalib.*
 
 trait CsScalaJsModule extends ScalaJSModule with CsScalaModule {
   def scalaJSVersion = ScalaVersions.scalaJs

@@ -1,15 +1,5 @@
 package coursier.cache.internal
 
-import java.io.{Serializable => _, _}
-import java.net.{HttpURLConnection, URLConnection, MalformedURLException}
-import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.{AccessDeniedException, Files, StandardCopyOption, StandardOpenOption}
-import java.time.Clock
-import java.util.Locale
-import java.util.concurrent.ExecutorService
-import java.util.zip.GZIPInputStream
-import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
-
 import coursier.cache._
 import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
@@ -17,6 +7,21 @@ import coursier.paths.{CachePath, Util}
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
 import dataclass._
+
+import java.io.{Serializable => _, _}
+import java.net.{HttpURLConnection, MalformedURLException, URLConnection}
+import java.nio.charset.StandardCharsets.UTF_8
+import java.nio.file.{
+  AccessDeniedException,
+  Files,
+  StandardCopyOption,
+  StandardOpenOption
+}
+import java.time.Clock
+import java.util.Locale
+import java.util.concurrent.ExecutorService
+import java.util.zip.GZIPInputStream
+import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.{Duration, FiniteDuration}

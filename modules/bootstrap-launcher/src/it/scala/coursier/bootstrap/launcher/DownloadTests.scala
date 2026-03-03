@@ -1,17 +1,14 @@
 package coursier.bootstrap.launcher
 
+import coursier.bootstrap.launcher.credentials.DirectCredentials
 import utest._
 
-import coursier.bootstrap.launcher.credentials.DirectCredentials
+import java.io.File
+import java.net.{URI, URL}
+import java.nio.file.{Files, Path, Paths}
+import java.util.Collections
 
 import scala.jdk.CollectionConverters._
-import java.nio.file.Files
-import java.io.File
-import java.nio.file.Path
-import java.net.URL
-import java.nio.file.Paths
-import java.net.URI
-import java.util.Collections
 
 object DownloadTests extends TestSuite {
 

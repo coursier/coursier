@@ -1,8 +1,5 @@
 package coursier.tests
 
-import utest._
-
-import scala.async.Async.{async, await}
 import coursier.core.{
   Attributes,
   Classifier,
@@ -21,7 +18,9 @@ import coursier.tests.compatibility.{textResource, tryCreate}
 import coursier.tests.util.ToFuture
 import coursier.util.{Artifact, Gather}
 import coursier.version.{ConstraintReconciliation, VersionConstraint}
+import utest._
 
+import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
 class TestRunner[F[_]: Gather: ToFuture](

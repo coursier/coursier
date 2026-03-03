@@ -1,10 +1,10 @@
 package coursier.ivy
 
-import java.io.File
-
 import coursier.core._
 import utest._
-import scala.util.Using
+
+import java.io.File
+
 import scala.io.Source
 import scala.util._
 

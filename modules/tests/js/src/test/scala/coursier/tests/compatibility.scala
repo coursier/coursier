@@ -6,7 +6,7 @@ import coursier.util.Task
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.scalajs.js
-import js.Dynamic.{global => g}
+import scala.scalajs.js.Dynamic.{global => g}
 
 object compatibility {
 

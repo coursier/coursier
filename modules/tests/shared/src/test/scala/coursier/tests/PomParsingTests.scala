@@ -2,10 +2,10 @@ package coursier.tests
 
 import coursier.core.{Profile => _, Project => _, _}
 import coursier.core.compatibility._
-import coursier.util.Traverse.TraverseOps
 import coursier.maven.Pom
 import coursier.tests.TestUtil._
 import coursier.util.StringInterpolators._
+import coursier.util.Traverse.TraverseOps
 import utest._
 
 object PomParsingTests extends TestSuite {

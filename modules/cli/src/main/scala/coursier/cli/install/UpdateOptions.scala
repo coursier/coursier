@@ -2,7 +2,12 @@ package coursier.cli.install
 
 import caseapp._
 import coursier.cli.jvm.SharedJavaOptions
-import coursier.cli.options.{CacheOptions, OptionGroup, OutputOptions, RepositoryOptions}
+import coursier.cli.options.{
+  CacheOptions,
+  OptionGroup,
+  OutputOptions,
+  RepositoryOptions
+}
 
 // format: off
 @ArgsName("app-name*")

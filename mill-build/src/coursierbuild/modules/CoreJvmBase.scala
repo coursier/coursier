@@ -1,9 +1,9 @@
 package coursierbuild.modules
 
-import coursierbuild.Deps.Deps
+import com.github.lolgab.mill.mima.*
 import coursierbuild.Shading
-import mill._
-import com.github.lolgab.mill.mima._
+import coursierbuild.Deps.Deps
+import mill.*
 
 trait CoreJvmBase extends Core with Shading with CsMima {
 

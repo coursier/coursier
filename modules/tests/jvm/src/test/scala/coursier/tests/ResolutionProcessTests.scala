@@ -1,16 +1,16 @@
 package coursier.tests
 
-import java.util.concurrent.{ConcurrentHashMap, Executors}
-
 import coursier.core.{Module, ResolutionProcess}
-import coursier.util.StringInterpolators._
 import coursier.util.Task
+import coursier.util.StringInterpolators._
 import coursier.version.VersionConstraint
 import utest._
 
-import scala.jdk.CollectionConverters._
+import java.util.concurrent.{ConcurrentHashMap, Executors}
+
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.DurationInt
+import scala.jdk.CollectionConverters._
 import scala.util.{Properties, Try}
 
 object ResolutionProcessTests extends TestSuite {

@@ -4,13 +4,13 @@ import coursier.{Repositories, Resolve}
 import coursier.cache.ArchiveCache
 import coursier.parse.ModuleParser
 import coursier.testcache.TestCache
-import coursier.util.StringInterpolators._
 import coursier.util.Task
+import coursier.util.StringInterpolators._
+import coursier.version.VersionConstraint
 import utest._
 
 import scala.async.Async.{async, await}
 import scala.concurrent.ExecutionContext
-import coursier.version.VersionConstraint
 
 object CentralIndexTests extends TestSuite {
 

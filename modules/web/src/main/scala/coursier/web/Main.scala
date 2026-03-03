@@ -1,8 +1,9 @@
 package coursier.web
 
+import org.scalajs.dom.document
+
 import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel, JSImport}
-import org.scalajs.dom.document
 
 // Initializing bootstrap, like
 // https://getbootstrap.com/docs/4.0/getting-started/webpack/#importing-javascript

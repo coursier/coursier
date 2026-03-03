@@ -1,12 +1,11 @@
 package coursier.env
 
+import com.google.common.jimfs.{Configuration, Jimfs}
+import utest._
+
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.util.Arrays
-
-import com.google.common.jimfs.Configuration
-import com.google.common.jimfs.Jimfs
-import utest._
 
 import scala.collection.compat.immutable.LazyList
 

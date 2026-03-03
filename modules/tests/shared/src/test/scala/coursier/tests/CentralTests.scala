@@ -1,8 +1,5 @@
 package coursier.tests
 
-import utest._
-
-import scala.async.Async.{async, await}
 import coursier.Repositories
 import coursier.core.{
   Attributes,
@@ -16,12 +13,14 @@ import coursier.core.{
 }
 import coursier.graph.{Conflict, ModuleTree}
 import coursier.maven.{MavenRepository, MavenRepositoryLike}
-import coursier.tests.compatibility._
 import coursier.tests.TestUtil._
+import coursier.tests.compatibility._
 import coursier.util.{Artifact, Print, Tree}
 import coursier.util.StringInterpolators._
 import coursier.version.{Version, VersionConstraint}
+import utest._
 
+import scala.async.Async.{async, await}
 import scala.concurrent.Future
 
 object CentralTests extends CentralTests

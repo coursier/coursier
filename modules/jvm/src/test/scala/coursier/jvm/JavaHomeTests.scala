@@ -1,15 +1,15 @@
 package coursier.jvm
 
+import coursier.cache.{ArchiveCache, ArtifactError, Cache, MockCache}
+import coursier.env.EnvironmentUpdate
+import coursier.internal.InMemoryCache
+import coursier.jvm.util.CommandOutput
+import coursier.util.{Artifact, EitherT, Sync, Task}
+import utest._
+
 import java.io.File
 import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicBoolean
-
-import coursier.cache.{ArchiveCache, ArtifactError, Cache, MockCache}
-import coursier.env.EnvironmentUpdate
-import coursier.jvm.util.CommandOutput
-import coursier.internal.InMemoryCache
-import coursier.util.{Artifact, EitherT, Sync, Task}
-import utest._
 
 import scala.concurrent.ExecutionContext
 import scala.util.Properties

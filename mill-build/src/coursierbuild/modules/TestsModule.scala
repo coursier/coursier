@@ -1,7 +1,7 @@
 package coursierbuild.modules
 
 import coursierbuild.Deps.Deps
-import mill._
+import mill.*
 
 trait TestsModule extends CsCrossJvmJsModule {
   def mvnDeps = Seq(

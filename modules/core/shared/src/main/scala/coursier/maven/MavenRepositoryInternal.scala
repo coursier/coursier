@@ -1,6 +1,9 @@
 package coursier.maven
 
-import com.github.plokhotnyuk.jsoniter_scala.core.{JsonReaderException, readFromString}
+import com.github.plokhotnyuk.jsoniter_scala.core.{
+  JsonReaderException,
+  readFromString
+}
 import coursier.core.{
   Authentication,
   Classifier,
@@ -14,15 +17,16 @@ import coursier.core.{
   SnapshotVersioning,
   Type,
   VariantPublication,
+  VariantSelector,
   Versions
 }
 import coursier.util.{Artifact, EitherT, Monad, WebPage}
 import coursier.util.Monad.ops._
 import coursier.version.Version
 
-import scala.collection.compat._
-import coursier.core.VariantSelector
 import java.net.URI
+
+import scala.collection.compat._
 
 private[coursier] class MavenRepositoryInternal(
   root: String,

@@ -5,9 +5,13 @@ import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.core.{Configuration, ResolutionProcess, VariantSelector}
 import coursier.params.ResolutionParams
-import coursier.parse.{DependencyParser, ModuleParser, ReconciliationParser, RuleParser}
-import coursier.version.Version
-import coursier.version.VersionConstraint
+import coursier.parse.{
+  DependencyParser,
+  ModuleParser,
+  ReconciliationParser,
+  RuleParser
+}
+import coursier.version.{Version, VersionConstraint}
 
 // format: off
 final case class ResolutionOptions(

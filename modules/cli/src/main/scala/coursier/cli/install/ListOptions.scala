@@ -1,7 +1,6 @@
 package coursier.cli.install
 
 import caseapp._
-import caseapp.Group
 import coursier.cli.options.OptionGroup
 
 // format: off

@@ -2,9 +2,9 @@ package coursier.cli.search
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.core.Repository
 import coursier.cli.install.SharedChannelParams
 import coursier.cli.params.{CacheParams, OutputParams, RepositoryParams}
+import coursier.core.Repository
 import coursier.install.Channel
 import coursier.parse.RepositoryParser
 

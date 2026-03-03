@@ -1,9 +1,8 @@
 package coursier.tests
 
-import utest._
-
 import coursier.core.Authentication
 import coursier.maven.MavenRepository
+import utest._
 
 object HttpAuthenticationTests extends TestSuite {
 

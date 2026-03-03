@@ -1,24 +1,18 @@
 package coursier.docker.vm
 
-import coursier.util.Artifact
-import coursier.cache.ArchiveCache
-import coursier.util.Task
-import coursier.cache.FileCache
-import coursier.cache.CacheLogger
-import java.io.File
-import coursier.cache.ArtifactError
-import scala.util.Properties
-import coursier.cache.util.Cpu
-import coursier.cache.util.Os
-import scala.util.Using
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.nio.charset.StandardCharsets
-import scala.jdk.CollectionConverters._
-import scala.collection.mutable.ListBuffer
-import java.util.zip.GZIPInputStream
-import java.security.MessageDigest
+import coursier.cache.{ArchiveCache, ArtifactError, CacheLogger, FileCache}
+import coursier.cache.util.{Cpu, Os}
+import coursier.util.{Artifact, Task}
+
+import java.io.{BufferedReader, File, InputStreamReader}
 import java.math.BigInteger
+import java.nio.charset.StandardCharsets
+import java.security.MessageDigest
+import java.util.zip.GZIPInputStream
+
+import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters._
+import scala.util.{Properties, Using}
 
 final case class QemuFiles(
   qemu: os.Path,

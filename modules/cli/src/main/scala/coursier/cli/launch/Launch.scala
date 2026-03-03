@@ -1,20 +1,18 @@
 package coursier.cli.launch
 
-import java.io.{File, PrintStream}
-import java.lang.reflect.Modifier
-import java.net.{URL, URLClassLoader}
-import java.nio.file.{Files, Path}
-import java.util.concurrent.ExecutorService
-
 import ai.kien.python.Python
 import caseapp.core.RemainingArgs
 import cats.data.Validated
 import coursier.cache.{ArchiveCache, FileCache}
-import coursier.cli.{CoursierCommand, CommandGroup}
-import coursier.cli.fetch.Fetch
-import coursier.cli.params.{ArtifactParams, SharedLaunchParams, SharedLoaderParams}
-import coursier.cli.resolve.{Resolve, ResolveException}
+import coursier.cli.{CommandGroup, CoursierCommand}
 import coursier.cli.Util.ValidatedExitOnError
+import coursier.cli.fetch.Fetch
+import coursier.cli.params.{
+  ArtifactParams,
+  SharedLaunchParams,
+  SharedLoaderParams
+}
+import coursier.cli.resolve.{Resolve, ResolveException}
 import coursier.core.{Dependency, Resolution}
 import coursier.env.EnvironmentUpdate
 import coursier.error.ResolutionError
@@ -27,16 +25,26 @@ import coursier.launcher.{
   MergeRule,
   Parameters
 }
-import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
+import coursier.parse.{
+  DependencyParser,
+  JavaOrScalaDependency,
+  JavaOrScalaModule
+}
 import coursier.paths.Jep
 import coursier.util.{Artifact, Sync, Task}
+
+import java.io.{File, PrintStream}
+import java.lang.reflect.Modifier
+import java.net.{URL, URLClassLoader}
+import java.nio.file.{Files, Path}
+import java.util.concurrent.ExecutorService
 
 import scala.annotation.tailrec
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
-import scala.util.control.NonFatal
 import scala.util.{Failure, Properties, Success}
+import scala.util.control.NonFatal
 
 object Launch extends CoursierCommand[LaunchOptions] {
 

@@ -1,9 +1,9 @@
 package coursier.cache.loggers
 
+import coursier.cache.internal.ConsoleDim
+
 import java.io.Writer
 import java.sql.Timestamp
-
-import coursier.cache.internal.ConsoleDim
 
 import scala.concurrent.duration.{Duration, DurationInt}
 

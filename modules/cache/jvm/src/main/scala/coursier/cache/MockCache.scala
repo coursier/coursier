@@ -1,17 +1,22 @@
 package coursier.cache
 
-import java.io._
-import java.net.URI
-import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path}
-import java.util.concurrent.{ConcurrentHashMap, ExecutorService}
-import java.util.zip.{GZIPOutputStream, ZipEntry, ZipInputStream, ZipOutputStream}
-
 import coursier.cache.internal.MockCacheEscape
 import coursier.paths.Util
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
 import dataclass._
+
+import java.io._
+import java.net.URI
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path}
+import java.util.concurrent.{ConcurrentHashMap, ExecutorService}
+import java.util.zip.{
+  GZIPOutputStream,
+  ZipEntry,
+  ZipInputStream,
+  ZipOutputStream
+}
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}

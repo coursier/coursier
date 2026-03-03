@@ -1,7 +1,7 @@
 package coursier.cli.install
 
 import caseapp.core.RemainingArgs
-import coursier.cli.{CoursierCommand, CommandGroup}
+import coursier.cli.{CommandGroup, CoursierCommand}
 import coursier.install.InstallDir
 
 object List extends CoursierCommand[ListOptions] {

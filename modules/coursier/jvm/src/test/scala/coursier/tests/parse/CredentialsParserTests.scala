@@ -1,7 +1,7 @@
 package coursier.tests.parse
 
-import coursier.parse._
 import coursier.credentials.DirectCredentials
+import coursier.parse._
 import utest._
 
 object CredentialsParserTests extends TestSuite {

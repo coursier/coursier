@@ -1,14 +1,19 @@
 package coursier.cli.install
 
-import java.io.File
-import java.nio.charset.StandardCharsets
-import java.nio.file.Files
-
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.jvm.SharedJavaParams
-import coursier.cli.params.{CacheParams, EnvParams, OutputParams, RepositoryParams}
+import coursier.cli.params.{
+  CacheParams,
+  EnvParams,
+  OutputParams,
+  RepositoryParams
+}
 import coursier.install.Channel
+
+import java.io.File
+import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 
 final case class InstallParams(
   cache: CacheParams,

@@ -8,9 +8,8 @@ import coursier.util.{Sync, Task}
 import coursier.util.Monad.ops._
 import coursier.version.Version
 import dataclass._
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.concurrent.Await
+
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.Duration
 
 @data class Versions[F[_]](

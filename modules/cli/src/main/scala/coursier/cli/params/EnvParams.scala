@@ -1,13 +1,13 @@
 package coursier.cli.params
 
-import java.nio.file.{Path, Paths}
-
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.options.EnvOptions
 import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.launcher.internal.Windows
 import coursier.util.Task
+
+import java.nio.file.{Path, Paths}
 
 import scala.util.Properties
 

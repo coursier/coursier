@@ -1,10 +1,15 @@
 package coursier.cli.jvm
 
-import java.nio.file.{Path, Paths}
-
 import cats.data.ValidatedNel
 import cats.implicits._
-import coursier.cli.params.{CacheParams, EnvParams, OutputParams, RepositoryParams}
+import coursier.cli.params.{
+  CacheParams,
+  EnvParams,
+  OutputParams,
+  RepositoryParams
+}
+
+import java.nio.file.{Path, Paths}
 
 final case class JavaHomeParams(
   shared: SharedJavaParams,

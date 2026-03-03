@@ -1,9 +1,9 @@
 package coursierbuild.modules
 
+import com.github.lolgab.mill.mima.*
 import coursierbuild.Deps.Deps
-import com.github.lolgab.mill.mima._
-
-import mill._, mill.scalalib._
+import mill.*
+import mill.scalalib.*
 
 trait CoursierTests extends TestModule with JavaModule with CsTests {
   def mvnDeps = Task {

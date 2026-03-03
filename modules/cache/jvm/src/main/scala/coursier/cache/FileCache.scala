@@ -1,5 +1,12 @@
 package coursier.cache
 
+import coursier.cache.internal.{DownloadResult, Downloader, FileUtil, Retry}
+import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
+import coursier.paths.CachePath
+import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
+import coursier.util.Monad.ops._
+import dataclass.data
+
 import java.io.{Serializable => _, _}
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets.UTF_8
@@ -16,13 +23,6 @@ import java.time.Clock
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
-
-import coursier.cache.internal.{Downloader, DownloadResult, FileUtil, Retry}
-import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
-import coursier.paths.CachePath
-import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
-import coursier.util.Monad.ops._
-import dataclass.data
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
