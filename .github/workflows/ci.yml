@@ -162,7 +162,7 @@ jobs:
         submodules: true
     - uses: actions/setup-node@v6
       with:
-        node-version: '12'
+        node-version: '18'
     - uses: coursier/cache-action@v7.0
     - uses: coursier/setup-action@v2.0
       with:
@@ -603,7 +603,7 @@ jobs:
           submodules: true
       - uses: actions/setup-node@v6
         with:
-          node-version: '12'
+          node-version: '18'
       - uses: coursier/cache-action@v7.0
       - uses: coursier/setup-action@v2.0
         with:
@@ -625,7 +625,7 @@ jobs:
           submodules: true
       - uses: actions/setup-node@v6
         with:
-          node-version: '12'
+          node-version: '18'
       - uses: coursier/cache-action@v7.0
       - uses: coursier/setup-action@v2.0
         with:
