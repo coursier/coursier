@@ -631,6 +631,6 @@ jobs:
         with:
           jvm: 21
       - run: .github/scripts/setup-mkdocs.sh
-      - run: npm install && export PATH="$PATH:$(pwd)/node_modules/bower/bin" && ./mill -i updateWebsite
+      - run: npm install && ./mill -i updateWebsite
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
