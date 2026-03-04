@@ -247,6 +247,10 @@ object ReverseModuleTree {
     versions: Map[Module, (VersionConstraint, Version)],
     rootDependencies: Map[Module, Seq[VersionConstraint]]
   ) extends ReverseModuleTree {
+    override lazy val hashCode: Int =
+      (module, reconciledVersionConstraint, retainedVersion0,
+        dependsOnModule, dependsOnVersionConstraint, dependsOnRetainedVersion0,
+        excludedDependsOn, endorsedDependsOn).hashCode()
     private def dependeesFromRoot =
       for {
         wantVer       <- rootDependencies.getOrElse(module, Nil)
