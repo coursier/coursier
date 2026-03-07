@@ -10,6 +10,7 @@ import coursier.core.{
   Extension,
   Module,
   ModuleName,
+  Organization,
   Repository,
   Resolution,
   Type,
@@ -2409,6 +2410,87 @@ object ResolveTests extends TestSuite {
           case _ =>
             throw error
         }
+      }
+    }
+
+    test("scalaOrganizationOverride") {
+
+      test("swapsDepsForScala3") {
+        val params = ResolutionParams()
+          .withScalaVersion("3.8.0")
+          .withScalaOrganizationOverride(Some(Organization("ch.epfl.lara")))
+
+        val dep = Dependency(mod"com.lihaoyi:fansi_3", VersionConstraint("0.5.0"))
+        val res = Resolve.initialResolution(Seq(dep), params)
+
+        // forceVersions should use the custom org
+        val forceVersionModules = res.forceVersions0.keys.map(_.repr).toSet
+        assert(forceVersionModules.contains("ch.epfl.lara:scala3-library_3"))
+        assert(forceVersionModules.contains("ch.epfl.lara:scala3-compiler_3"))
+        assert(!forceVersionModules.exists(_.startsWith("org.scala-lang:scala3-")))
+
+        // mapDependencies should swap org.scala-lang to the custom org
+        val mapDeps = res.mapDependencies.get
+        val scalaLibDep = Dependency(
+          Module(Organization("org.scala-lang"), ModuleName("scala3-library_3"), Map.empty),
+          VersionConstraint("3.3.1")
+        )
+        val mapped = mapDeps(scalaLibDep)
+        assert(mapped.module.organization == Organization("ch.epfl.lara"))
+        assert(mapped.module.name == ModuleName("scala3-library_3"))
+      }
+
+      test("swapsDepsForScala2") {
+        val params = ResolutionParams()
+          .withScalaVersion("2.12.20")
+          .withScalaOrganizationOverride(Some(Organization("org.typelevel")))
+
+        val dep = Dependency(mod"com.example:foo_2.12", VersionConstraint("1.0.0"))
+        val res = Resolve.initialResolution(Seq(dep), params)
+
+        val mapDeps = res.mapDependencies.get
+        val scalaLibDep = Dependency(
+          Module(Organization("org.scala-lang"), ModuleName("scala-library"), Map.empty),
+          VersionConstraint("2.12.18")
+        )
+        val mapped = mapDeps(scalaLibDep)
+        assert(mapped.module.organization == Organization("org.typelevel"))
+        assert(mapped.module.name == ModuleName("scala-library"))
+      }
+
+      test("noSwapWhenNotSet") {
+        val params = ResolutionParams()
+          .withScalaVersion("3.8.0")
+
+        val dep = Dependency(mod"com.lihaoyi:fansi_3", VersionConstraint("0.5.0"))
+        val res = Resolve.initialResolution(Seq(dep), params)
+
+        val mapDeps = res.mapDependencies.get
+        val scalaLibDep = Dependency(
+          Module(Organization("org.scala-lang"), ModuleName("scala3-library_3"), Map.empty),
+          VersionConstraint("3.3.1")
+        )
+        val mapped = mapDeps(scalaLibDep)
+        // org should remain unchanged
+        assert(mapped.module.organization == Organization("org.scala-lang"))
+      }
+
+      test("doesNotSwapNonScalaModules") {
+        val params = ResolutionParams()
+          .withScalaVersion("3.8.0")
+          .withScalaOrganizationOverride(Some(Organization("ch.epfl.lara")))
+
+        val dep = Dependency(mod"com.lihaoyi:fansi_3", VersionConstraint("0.5.0"))
+        val res = Resolve.initialResolution(Seq(dep), params)
+
+        val mapDeps = res.mapDependencies.get
+        val nonScalaDep = Dependency(
+          Module(Organization("org.scala-lang"), ModuleName("some-other-module"), Map.empty),
+          VersionConstraint("1.0.0")
+        )
+        val mapped = mapDeps(nonScalaDep)
+        // non-Scala modules under org.scala-lang should NOT be swapped
+        assert(mapped.module.organization == Organization("org.scala-lang"))
       }
     }
   }
