@@ -12,18 +12,22 @@ object ReverseModuleTreeTests extends TestSuite {
 
   // Build a large shared allDependees map simulating a large dependency graph
   private def makeLargeDepMap(size: Int): Map[Module, Seq[(Module, VersionConstraint, Boolean, Boolean)]] =
-    (0 until size).map { i =>
-      val mod = makeModule("org.example", s"dep-$i")
-      val dependees = Seq(
-        (makeModule("org.example", s"parent-$i"), VersionConstraint(s"1.$i.0"), false, false)
-      )
-      mod -> dependees
-    }.toMap
+    (0 until size)
+      .map { i =>
+        val mod = makeModule("org.example", s"dep-$i")
+        val dependees = Seq(
+          (makeModule("org.example", s"parent-$i"), VersionConstraint(s"1.$i.0"), false, false)
+        )
+        mod -> dependees
+      }
+      .toMap
 
   private def makeLargeVersionMap(size: Int): Map[Module, (VersionConstraint, Version)] =
-    (0 until size).map { i =>
-      makeModule("org.example", s"dep-$i") -> (VersionConstraint(s"1.$i.0"), Version(s"1.$i.0"))
-    }.toMap
+    (0 until size)
+      .map { i =>
+        makeModule("org.example", s"dep-$i") -> (VersionConstraint(s"1.$i.0"), Version(s"1.$i.0"))
+      }
+      .toMap
 
   val tests = Tests {
 
