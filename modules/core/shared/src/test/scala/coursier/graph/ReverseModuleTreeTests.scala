@@ -11,7 +11,8 @@ object ReverseModuleTreeTests extends TestSuite {
     Module(Organization(org), ModuleName(name), Map.empty)
 
   // Build a large shared allDependees map simulating a large dependency graph
-  private def makeLargeDepMap(size: Int): Map[Module, Seq[(Module, VersionConstraint, Boolean, Boolean)]] =
+  private def makeLargeDepMap(size: Int)
+    : Map[Module, Seq[(Module, VersionConstraint, Boolean, Boolean)]] =
     (0 until size)
       .map { i =>
         val mod = makeModule("org.example", s"dep-$i")
@@ -33,7 +34,7 @@ object ReverseModuleTreeTests extends TestSuite {
 
     test("nodeHashCodeIsCached") {
       val allDependees = makeLargeDepMap(500)
-      val versions = makeLargeVersionMap(500)
+      val versions     = makeLargeVersionMap(500)
 
       val node = ReverseModuleTree.Node(
         module = makeModule("org.example", "test"),
@@ -59,7 +60,7 @@ object ReverseModuleTreeTests extends TestSuite {
     test("nodeHashCodePerformance") {
       // Simulate a large dependency graph with 500 modules
       val allDependees = makeLargeDepMap(50000)
-      val versions = makeLargeVersionMap(50000)
+      val versions     = makeLargeVersionMap(50000)
 
       // Create many nodes sharing the same large maps (like in real resolution)
       val nodes = (0 until 10000).map { i =>
@@ -82,7 +83,7 @@ object ReverseModuleTreeTests extends TestSuite {
       // With uncached hashCode on case class, this would hash 500-entry maps
       // on every contains/add call, taking O(n * mapSize) time.
       val start = System.nanoTime()
-      var set = Set.empty[ReverseModuleTree.Node]
+      var set   = Set.empty[ReverseModuleTree.Node]
       for (node <- nodes) {
         set.contains(node)
         set = set + node
