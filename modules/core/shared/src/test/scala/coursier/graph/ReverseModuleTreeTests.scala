@@ -88,7 +88,7 @@ object ReverseModuleTreeTests extends TestSuite {
         set.contains(node)
         set = set + node
       }
-      val elapsedMs = (System.nanoTime() - start) / 1_000_000
+      val elapsedMs = (System.nanoTime() - start) / 1000000
 
       // With cached hashCode, this should complete in well under 1 second.
       // Without caching, 100 nodes * 500-entry maps would take much longer.
