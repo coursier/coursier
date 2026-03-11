@@ -42,6 +42,9 @@ package object compatibility {
     }
   }
 
+  def parMap[A, B](seq: Seq[A])(f: A => B): Seq[B] =
+    parFlatMap(seq)(a => Seq(f(a)))
+
   implicit class RichChar(val c: Char) extends AnyVal {
     def letterOrDigit = c.isLetterOrDigit
     def letter        = c.isLetter

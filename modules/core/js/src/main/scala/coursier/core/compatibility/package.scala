@@ -14,6 +14,9 @@ package object compatibility {
   def parFlatMap[A, B](seq: Seq[A])(f: A => Seq[B]): Seq[B] =
     seq.flatMap(f)
 
+  def parMap[A, B](seq: Seq[A])(f: A => B): Seq[B] =
+    seq.map(f)
+
   def option[A](a: js.Dynamic): Option[A] =
     if (js.typeOf(a) == "undefined") None
     else Some(a.asInstanceOf[A])
