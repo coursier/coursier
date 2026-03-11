@@ -10,7 +10,6 @@ import coursier.core.{
   Extension,
   Module,
   ModuleName,
-  Organization,
   Repository,
   Resolution,
   Type,
