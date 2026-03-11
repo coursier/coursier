@@ -383,7 +383,8 @@ object Resolve extends PlatformResolve {
         Nil
 
     val scalaOrgSwap: Option[Dependency => Dependency] =
-      if (scalaOrg != Organization("org.scala-lang")) {
+      if (scalaOrg == Organization("org.scala-lang")) None
+      else {
         val mainLineOrg = Organization("org.scala-lang")
         val scala2Modules = Set(
           ModuleName("scala-library"),
@@ -408,8 +409,6 @@ object Resolve extends PlatformResolve {
             dep
         }
       }
-      else
-        None
 
     val mapDependencies = {
       val l = mapDependenciesOpt.toSeq ++
