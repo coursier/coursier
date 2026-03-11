@@ -58,11 +58,11 @@ object ReverseModuleTreeTests extends TestSuite {
 
     test("nodeHashCodePerformance") {
       // Simulate a large dependency graph with 500 modules
-      val allDependees = makeLargeDepMap(500)
-      val versions = makeLargeVersionMap(500)
+      val allDependees = makeLargeDepMap(50000)
+      val versions = makeLargeVersionMap(50000)
 
       // Create many nodes sharing the same large maps (like in real resolution)
-      val nodes = (0 until 100).map { i =>
+      val nodes = (0 until 10000).map { i =>
         ReverseModuleTree.Node(
           module = makeModule("org.example", s"node-$i"),
           reconciledVersionConstraint = VersionConstraint("1.0.0"),
