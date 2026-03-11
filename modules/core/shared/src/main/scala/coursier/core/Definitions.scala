@@ -917,6 +917,7 @@ object Publication {
 @data class VariantPublication(
   name: String,
   url: String,
+  @since
   classifier: Option[Classifier] = None
 )
 

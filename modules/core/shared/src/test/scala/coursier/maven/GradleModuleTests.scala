@@ -17,7 +17,9 @@ object GradleModuleTests extends TestSuite {
     )
 
   def attrs(pairs: (String, String)*): Map[String, GradleModule.StringOrInt] =
-    pairs.map { case (k, v) => k -> GradleModule.StringOrInt(v) }.toMap
+    pairs
+      .map { case (k, v) => k -> GradleModule.StringOrInt(v) }
+      .toMap
 
   def file(name: String): GradleModule.ModuleFile =
     GradleModule.ModuleFile(name = name, url = name)
@@ -44,12 +46,12 @@ object GradleModuleTests extends TestSuite {
         val project = module.project(None)
 
         val publications =
-          project.variantPublications.get(Variant.Attributes("jvmRuntimeElements-published"))
-        assert(publications.isDefined)
-        assert(publications.get.nonEmpty)
-
-        val pub = publications.get.head
-        assert(pub.classifier.isEmpty)
+          project.variantPublications.getOrElse(
+            Variant.Attributes("jvmRuntimeElements-published"),
+            Nil
+          )
+        assert(publications.nonEmpty)
+        assert(publications.forall(_.classifier.isEmpty))
       }
 
       test("documentation variant with docstype=sources should have sources classifier") {
@@ -71,12 +73,12 @@ object GradleModuleTests extends TestSuite {
         val project = module.project(None)
 
         val publications =
-          project.variantPublications.get(Variant.Attributes("jvmSourcesElements-published"))
-        assert(publications.isDefined)
-        assert(publications.get.nonEmpty)
-
-        val pub = publications.get.head
-        assert(pub.classifier.contains(Classifier("sources")))
+          project.variantPublications.getOrElse(
+            Variant.Attributes("jvmSourcesElements-published"),
+            Nil
+          )
+        assert(publications.nonEmpty)
+        assert(publications.forall(_.classifier.contains(Classifier("sources"))))
       }
 
       test("documentation variant with docstype=javadoc should have javadoc classifier") {
@@ -97,12 +99,10 @@ object GradleModuleTests extends TestSuite {
         val module  = createGradleModule(Seq(variant))
         val project = module.project(None)
 
-        val publications = project.variantPublications.get(Variant.Attributes("javadocElements"))
-        assert(publications.isDefined)
-        assert(publications.get.nonEmpty)
-
-        val pub = publications.get.head
-        assert(pub.classifier.contains(Classifier("javadoc")))
+        val publications =
+          project.variantPublications.getOrElse(Variant.Attributes("javadocElements"), Nil)
+        assert(publications.nonEmpty)
+        assert(publications.forall(_.classifier.contains(Classifier("javadoc"))))
       }
 
       test("documentation variant with docstype=groovydoc should have groovydoc classifier") {
@@ -123,12 +123,10 @@ object GradleModuleTests extends TestSuite {
         val module  = createGradleModule(Seq(variant))
         val project = module.project(None)
 
-        val publications = project.variantPublications.get(Variant.Attributes("groovydocElements"))
-        assert(publications.isDefined)
-        assert(publications.get.nonEmpty)
-
-        val pub = publications.get.head
-        assert(pub.classifier.contains(Classifier("groovydoc")))
+        val publications =
+          project.variantPublications.getOrElse(Variant.Attributes("groovydocElements"), Nil)
+        assert(publications.nonEmpty)
+        assert(publications.forall(_.classifier.contains(Classifier("groovydoc"))))
       }
 
       test("documentation variant without docstype should have no classifier") {
@@ -148,12 +146,10 @@ object GradleModuleTests extends TestSuite {
         val module  = createGradleModule(Seq(variant))
         val project = module.project(None)
 
-        val publications = project.variantPublications.get(Variant.Attributes("docElements"))
-        assert(publications.isDefined)
-        assert(publications.get.nonEmpty)
-
-        val pub = publications.get.head
-        assert(pub.classifier.isEmpty)
+        val publications =
+          project.variantPublications.getOrElse(Variant.Attributes("docElements"), Nil)
+        assert(publications.nonEmpty)
+        assert(publications.forall(_.classifier.isEmpty))
       }
 
       test("mixed variants should have correct classifiers") {
@@ -200,19 +196,22 @@ object GradleModuleTests extends TestSuite {
         val project = module.project(None)
 
         // Library variant - no classifier
-        val libPubs = project.variantPublications.get(Variant.Attributes("jvmRuntimeElements"))
-        assert(libPubs.isDefined)
-        assert(libPubs.get.head.classifier.isEmpty)
+        val libPubs =
+          project.variantPublications.getOrElse(Variant.Attributes("jvmRuntimeElements"), Nil)
+        assert(libPubs.nonEmpty)
+        assert(libPubs.forall(_.classifier.isEmpty))
 
         // Sources variant - sources classifier
-        val srcPubs = project.variantPublications.get(Variant.Attributes("jvmSourcesElements"))
-        assert(srcPubs.isDefined)
-        assert(srcPubs.get.head.classifier.contains(Classifier("sources")))
+        val srcPubs =
+          project.variantPublications.getOrElse(Variant.Attributes("jvmSourcesElements"), Nil)
+        assert(srcPubs.nonEmpty)
+        assert(srcPubs.forall(_.classifier.contains(Classifier("sources"))))
 
         // Javadoc variant - javadoc classifier
-        val docPubs = project.variantPublications.get(Variant.Attributes("javadocElements"))
-        assert(docPubs.isDefined)
-        assert(docPubs.get.head.classifier.contains(Classifier("javadoc")))
+        val docPubs =
+          project.variantPublications.getOrElse(Variant.Attributes("javadocElements"), Nil)
+        assert(docPubs.nonEmpty)
+        assert(docPubs.forall(_.classifier.contains(Classifier("javadoc"))))
       }
     }
   }
