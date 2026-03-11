@@ -399,9 +399,9 @@ object Resolve extends PlatformResolve {
         val modules = scala2Modules ++ scala3Modules
         Some { dep =>
           if (
-            dep.module.organization == mainLineOrg && modules(
-              dep.module.name
-            ) && dep.module.attributes.isEmpty
+            dep.module.organization == mainLineOrg &&
+            modules(dep.module.name) &&
+            dep.module.attributes.isEmpty
           )
             dep.withModule(dep.module.withOrganization(scalaOrg))
           else

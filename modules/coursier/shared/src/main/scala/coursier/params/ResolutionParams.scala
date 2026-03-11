@@ -42,7 +42,6 @@ import dataclass.data
   @since("2.1.25")
   defaultVariantAttributes: Option[VariantSelector.AttributesBased] = None,
   renderModuleVersion: Option[(Module, String) => String] = None,
-  @since("2.1.25")
   scalaOrganizationOverride: Option[Organization] = None
 ) {
 
