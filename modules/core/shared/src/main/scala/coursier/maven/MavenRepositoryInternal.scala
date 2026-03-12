@@ -660,40 +660,41 @@ private[coursier] object MavenRepositoryInternal {
     version: String,
     timestamp: String,
     buildNumber: Int
-  ): Version = Version(s"${version.dropRight("SNAPSHOT".length)}$timestamp-$buildNumber")
+  ): Version =
+    Version(s"${version.dropRight("SNAPSHOT".length)}$timestamp-$buildNumber")
 
   def mavenVersioning(
     snapshotVersioning: SnapshotVersioning,
     classifier: Classifier,
     extension: Extension
-  ): Option[Version] =
-    snapshotVersioning.buildNumber.flatMap {
-      buildNumber =>
-        val guessedLatestSnapshotVersion = guessSnapshotVersion(
+  ): Option[Version] = {
+
+    def validatedSnapshotVersions = snapshotVersioning
+      .snapshotVersions
+      .iterator
+      .filter { v =>
+        (v.classifier == classifier || v.classifier == Classifier("*")) &&
+        (v.extension == extension || v.extension == Extension("*"))
+      }
+      .map(_.value0)
+
+    val guessedVersionOpt = snapshotVersioning.buildNumber
+      .map { buildNumber =>
+        guessSnapshotVersion(
           snapshotVersioning.version0.asString,
           snapshotVersioning.timestamp,
           buildNumber
         )
-
+      }
+      .filter { guessedVersion =>
         // Make sure it is in the list, otherwise fallback to previous computation (first snapshot version)
-        snapshotVersioning
-          .snapshotVersions
-          .collectFirst {
-            case v if
-                  (v.classifier == classifier || v.classifier == Classifier("*")) &&
-                  (v.extension == extension || v.extension == Extension("*")) &&
-                  (v.value0 == guessedLatestSnapshotVersion) => v.value0
-          }
-    }.orElse {
-      snapshotVersioning
-        .snapshotVersions
-        .find { v =>
-          (v.classifier == classifier || v.classifier == Classifier("*")) &&
-          (v.extension == extension || v.extension == Extension("*"))
-        }
-        .map(_.value0)
-        .filter(_.asString.nonEmpty)
+        validatedSnapshotVersions.contains(guessedVersion)
+      }
+
+    guessedVersionOpt.orElse {
+      validatedSnapshotVersions.find(_.asString.nonEmpty)
     }
+  }
 
   val defaultConfigurations = Map(
     Configuration.compile -> Seq.empty,
