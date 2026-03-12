@@ -30,12 +30,12 @@ object Deps {
     def jniUtilsBootstrap =
       mvn"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
     def jol  = mvn"org.openjdk.jol:jol-core:0.17"
-    def jsch = mvn"com.github.mwiede:jsch:0.2.25"
+    def jsch = mvn"com.github.mwiede:jsch:2.27.0"
     def jsoniterCore =
       mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${Versions.jsoniterScala}"
     def jsoniterMacros =
       mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
-    def jsoup          = mvn"org.jsoup:jsoup:1.20.1"
+    def jsoup          = mvn"org.jsoup:jsoup:1.21.2"
     def logbackClassic = mvn"ch.qos.logback:logback-classic:1.5.18"
     def macroParadise  = mvn"org.scalamacros:::paradise:2.1.1"
     def mdoc           = mvn"org.scalameta::mdoc:2.7.2"
@@ -45,7 +45,7 @@ object Deps {
     // plexus-archiver needs its loggers
     def plexusContainerDefault = mvn"org.codehaus.plexus:plexus-container-default:2.1.1"
       .exclude("junit" -> "junit")
-    def pprint           = mvn"com.lihaoyi::pprint::0.9.0"
+    def pprint           = mvn"com.lihaoyi::pprint::0.9.3"
     def proguard         = mvn"com.guardsquare:proguard-base:7.7.0"
     def pythonNativeLibs = mvn"ai.kien::python-native-libs:0.2.4"
     def scalaAsync       = mvn"org.scala-lang.modules::scala-async::1.0.1"
@@ -53,7 +53,7 @@ object Deps {
       if (sv.startsWith("2.12"))
         mvn"org.virtuslab.scala-cli::config:1.1.3"
       else
-        mvn"org.virtuslab.scala-cli:config_3:1.9.0"
+        mvn"org.virtuslab.scala-cli:config_3:1.9.1"
           .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
     def scalaJsDom               = mvn"org.scala-js::scalajs-dom::2.4.0"
     def scalaJsReact             = mvn"com.github.japgolly.scalajs-react::core::2.1.2"
@@ -68,7 +68,7 @@ object Deps {
     def shapeless                = mvn"com.chuusai::shapeless:2.3.12"
     def slf4JNop                 = mvn"org.slf4j:slf4j-nop:2.0.17"
     def svm                      = mvn"org.graalvm.nativeimage:svm:21.3.15"
-    def tika                     = mvn"org.apache.tika:tika-core:3.2.2"
+    def tika                     = mvn"org.apache.tika:tika-core:3.2.3"
     def ujson                    = mvn"com.lihaoyi::ujson:4.3.2"
     def utest                    = mvn"com.lihaoyi::utest::0.9.1"
     def versions                 = mvn"io.get-coursier::versions::0.5.1"

@@ -348,8 +348,10 @@ object Resolve extends PlatformResolve {
     import coursier.core.{Resolution => CoreResolution}
 
     val scalaOrg =
-      if (params.typelevel) Organization("org.typelevel")
-      else Organization("org.scala-lang")
+      params.scalaOrganizationOverride.getOrElse {
+        if (params.typelevel) Organization("org.typelevel")
+        else Organization("org.scala-lang")
+      }
 
     val forceScalaVersions =
       if (params.doForceScalaVersion)
@@ -380,8 +382,37 @@ object Resolve extends PlatformResolve {
       else
         Nil
 
+    val scalaOrgSwap: Option[Dependency => Dependency] =
+      if (scalaOrg == Organization("org.scala-lang")) None
+      else {
+        val mainLineOrg = Organization("org.scala-lang")
+        val scala2Modules = Set(
+          ModuleName("scala-library"),
+          ModuleName("scala-library-all"),
+          ModuleName("scala-compiler"),
+          ModuleName("scala-reflect"),
+          ModuleName("scalap")
+        )
+        val scala3Modules = Set(
+          ModuleName("scala3-library_3"),
+          ModuleName("scala3-compiler_3")
+        )
+        val modules = scala2Modules ++ scala3Modules
+        Some { dep =>
+          if (
+            dep.module.organization == mainLineOrg &&
+            modules(dep.module.name) &&
+            dep.module.attributes.isEmpty
+          )
+            dep.withModule(dep.module.withOrganization(scalaOrg))
+          else
+            dep
+        }
+      }
+
     val mapDependencies = {
       val l = mapDependenciesOpt.toSeq ++
+        scalaOrgSwap.toSeq ++
         (if (params.typelevel) Seq(Typelevel.swap) else Nil) ++
         (if (params.doForceScalaVersion)
            Seq(CoreResolution.overrideScalaModule(params.selectedScalaVersionConstraint, scalaOrg))

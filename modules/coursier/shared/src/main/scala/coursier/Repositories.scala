@@ -1,9 +1,10 @@
 package coursier
 
+import coursier.internal.SharedRepositories
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepository
 
-object Repositories {
+object Repositories extends SharedRepositories {
   def central: MavenRepository =
     MavenRepository("https://repo1.maven.org/maven2")
   def centralMavenSnapshots: MavenRepository =
