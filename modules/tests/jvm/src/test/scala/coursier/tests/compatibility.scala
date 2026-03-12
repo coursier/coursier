@@ -4,7 +4,6 @@ import java.io.File
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Paths}
 
-import coursier.cache.MockCache
 import coursier.core.Repository
 import coursier.paths.Util
 import coursier.testcache.TestCache

@@ -40,7 +40,6 @@ final case class SharedLoaderOptions(
 // format: on
 
 object SharedLoaderOptions {
-  lazy val parser: Parser[SharedLoaderOptions]                           = Parser.derive
-  implicit lazy val parserAux: Parser.Aux[SharedLoaderOptions, parser.D] = parser
-  implicit lazy val help: Help[SharedLoaderOptions]                      = Help.derive
+  implicit lazy val parser: Parser[SharedLoaderOptions] = Parser.derive
+  implicit lazy val help: Help[SharedLoaderOptions]     = Help.derive
 }

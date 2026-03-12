@@ -4,13 +4,16 @@ import coursier.core.{
   Classifier,
   Configuration,
   Dependency,
+  DependencyManagement,
   Extension,
   MinimizedExclusions,
   Module,
   ModuleName,
   Organization,
-  Type
+  Type,
+  VariantSelector
 }
+import coursier.version.VersionConstraint
 import dataclass.data
 import dependency.{CovariantSet, DependencyLike, ModuleLike}
 
@@ -18,7 +21,7 @@ import scala.collection.mutable
 
 sealed abstract class JavaOrScalaDependency extends Product with Serializable {
   def module: JavaOrScalaModule
-  def version: String
+  def versionConstraint: VersionConstraint
   def exclude: Set[JavaOrScalaModule]
   def addExclude(excl: JavaOrScalaModule*): JavaOrScalaDependency
   def dependency(scalaBinaryVersion: String, scalaVersion: String, platformName: String): Dependency
@@ -31,6 +34,9 @@ sealed abstract class JavaOrScalaDependency extends Product with Serializable {
     val sbv = JavaOrScalaModule.scalaBinaryVersion(scalaVersion)
     dependency(sbv, scalaVersion, "")
   }
+
+  @deprecated("Use versionConstraint instead", "2.1.25")
+  def version: String = versionConstraint.asString
 }
 
 object JavaOrScalaDependency {
@@ -52,8 +58,8 @@ object JavaOrScalaDependency {
       extends JavaOrScalaDependency {
     def module: JavaOrScalaModule.JavaModule =
       JavaOrScalaModule.JavaModule(dependency.module)
-    def version: String =
-      dependency.version
+    def versionConstraint: VersionConstraint =
+      dependency.versionConstraint
     def dependency(
       scalaBinaryVersion: String,
       scalaVersion: String,
@@ -87,9 +93,9 @@ object JavaOrScalaDependency {
       // FIXME withPlatformSuffix not supported in JavaOrScalaModule.ScalaModule
       JavaOrScalaModule.ScalaModule(baseDependency.module, fullCrossVersion)
     def repr: String =
-      s"$module:${if (withPlatformSuffix) ":" else ""}${baseDependency.version}"
-    def version: String =
-      baseDependency.version
+      s"$module:${if (withPlatformSuffix) ":" else ""}${baseDependency.versionConstraint.asString}"
+    def versionConstraint: VersionConstraint =
+      baseDependency.versionConstraint
     def dependency(
       scalaBinaryVersion: String,
       scalaVersion: String,
@@ -141,36 +147,71 @@ object JavaOrScalaDependency {
   private def extKey          = "ext"
   private def typeKey         = "type"
   private def bomKey          = "bom"
+  private def overrideKey     = "override"
   private lazy val readKeys = Set(
     inlineConfigKey,
     classifierKey,
     extKey,
     typeKey,
-    bomKey
+    bomKey,
+    overrideKey
   )
   def leftOverUserParams(dep: dependency.AnyDependency): Seq[(String, Option[String])] =
     dep.userParams.filter {
       case (key, _) =>
         !readKeys.contains(key)
     }
-  def from(dep: dependency.AnyDependency): Either[String, JavaOrScalaDependency] = {
+  @deprecated("Use from0 instead", "2.1.25")
+  def from(dep: dependency.AnyDependency): Either[String, JavaOrScalaDependency] =
+    from0(dep).map {
+      case (dep0, _) =>
+        dep0
+    }
+  def from0(dep: dependency.AnyDependency)
+    : Either[String, (JavaOrScalaDependency, Map[String, Seq[Option[String]]])] = {
+
+    var userParams = dep.userParamsMap
+
     var csDep = Dependency(
       Module(
         Organization(dep.module.organization),
         ModuleName(dep.module.name),
         dep.module.attributes
       ),
-      dep.version
+      VersionConstraint(dep.version)
     )
-    val (userParams, configOpt) =
-      dep.userParamsMap.get(inlineConfigKey).flatMap(_.headOption) match {
-        case Some(configOpt0) =>
-          (dep.userParamsMap - inlineConfigKey, configOpt0: Option[String])
+    val variantSelectorOpt =
+      dep.userParamsMap.get(inlineConfigKey).flatMap(_.headOption).flatten match {
+        case Some(config) =>
+          userParams = userParams - inlineConfigKey
+          Some(VariantSelector.ConfigurationBased(Configuration(config)))
         case None =>
-          (dep.userParamsMap, None)
+          val variantParams = userParams
+            .filter(_._1.startsWith("variant."))
+            .collect {
+              case (k, v) =>
+                k -> v.flatten.filter(_.nonEmpty).lastOption
+            }
+            .collect {
+              case (k, Some(v)) =>
+                k -> v
+            }
+          if (variantParams.isEmpty) None
+          else {
+            userParams = userParams.filter {
+              case (k, _) =>
+                !variantParams.contains(k)
+            }
+            val variantParams0 = variantParams.map {
+              case (k, v) =>
+                val k0 = k.stripPrefix("variant.")
+                VariantSelector.VariantMatcher.fromString(k0, v)
+            }
+            Some(VariantSelector.AttributesBased(variantParams0))
+          }
       }
-    for (config <- configOpt)
-      csDep = csDep.withConfiguration(Configuration(config))
+    for (variantSelector <- variantSelectorOpt)
+      csDep = csDep.withVariantSelector(variantSelector)
 
     val excludes = dep.exclude.map { mod =>
       mod.nameAttributes match {
@@ -198,6 +239,7 @@ object JavaOrScalaDependency {
     for (classifierOpt <- userParams.get(classifierKey).flatMap(_.headOption))
       classifierOpt match {
         case Some(classifier) =>
+          userParams = userParams - classifierKey
           csDep = csDep.withPublication(
             csDep.publication.withClassifier(Classifier(classifier))
           )
@@ -207,6 +249,7 @@ object JavaOrScalaDependency {
     for (extOpt <- userParams.get(extKey).flatMap(_.headOption))
       extOpt match {
         case Some(ext) =>
+          userParams = userParams - extKey
           csDep = csDep.withPublication(
             csDep.publication.withExt(Extension(ext))
           )
@@ -216,6 +259,7 @@ object JavaOrScalaDependency {
     for (typeOpt <- userParams.get(typeKey).flatMap(_.headOption))
       typeOpt match {
         case Some(tpe) =>
+          userParams = userParams - typeKey
           csDep = csDep.withPublication(
             csDep.publication.withType(Type(tpe))
           )
@@ -223,6 +267,7 @@ object JavaOrScalaDependency {
           errors += "Invalid empty classifier attribute"
       }
     val bomValues = userParams.get(bomKey).getOrElse(Nil)
+    userParams = userParams - bomKey
     if (bomValues.exists(_.isEmpty))
       errors += "Invalid empty bom parameter"
     val bomOrErrors = bomValues.flatten.map { v =>
@@ -248,7 +293,7 @@ object JavaOrScalaDependency {
                   ModuleName(bomDep.module.name),
                   Map.empty
                 ),
-                bomDep.version
+                VersionConstraint(bomDep.version)
               )
             )
           else
@@ -264,22 +309,71 @@ object JavaOrScalaDependency {
       case Right(modVer) => modVer
     }
 
-    csDep = csDep.addBoms(boms)
+    csDep = csDep.addBoms0(boms)
 
-    if (errors.isEmpty)
-      Right {
-        dep.module.nameAttributes match {
-          case dependency.NoAttributes =>
-            JavaOrScalaDependency.JavaDependency(csDep, excludes.toSet)
-          case scalaAttr: dependency.ScalaNameAttributes =>
-            JavaOrScalaDependency.ScalaDependency(
-              csDep,
-              fullCrossVersion = scalaAttr.fullCrossVersion.getOrElse(false),
-              withPlatformSuffix = scalaAttr.platform.getOrElse(false),
-              exclude = excludes.toSet
-            )
-        }
+    val overrideValues = userParams.get(overrideKey).getOrElse(Nil)
+    userParams = userParams - overrideKey
+    if (overrideValues.exists(_.isEmpty))
+      errors += "Invalid empty override parameter"
+    val overrideOrErrors = overrideValues.flatten.map { v =>
+      dependency.parser.DependencyParser.parse(v.replace('%', ':')) match {
+        case Left(error) => Left(error)
+        case Right(overrideDep) =>
+          val expectedShape = DependencyLike(
+            ModuleLike(
+              overrideDep.module.organization,
+              overrideDep.module.name,
+              dependency.NoAttributes,
+              Map.empty
+            ),
+            overrideDep.version,
+            CovariantSet.empty,
+            Nil
+          )
+          if (overrideDep == expectedShape)
+            Right((
+              DependencyManagement.Key(
+                Organization(overrideDep.module.organization),
+                ModuleName(overrideDep.module.name),
+                Type.jar,
+                Classifier.empty
+              ),
+              DependencyManagement.Values(
+                Configuration.empty,
+                VersionConstraint(overrideDep.version),
+                MinimizedExclusions.zero,
+                optional = false
+              )
+            ))
+          else
+            Left(s"Invalid override value '$v' (expected org%name%version)")
       }
+    }
+    val overrideErrors = overrideOrErrors.collect {
+      case Left(e) => e
+    }
+    errors ++= overrideErrors
+
+    val overrides = overrideOrErrors.collect {
+      case Right(entry) => entry
+    }
+
+    csDep = csDep.addOverrides(overrides)
+
+    if (errors.isEmpty) {
+      val dep0 = dep.module.nameAttributes match {
+        case dependency.NoAttributes =>
+          JavaOrScalaDependency.JavaDependency(csDep, excludes.toSet)
+        case scalaAttr: dependency.ScalaNameAttributes =>
+          JavaOrScalaDependency.ScalaDependency(
+            csDep,
+            fullCrossVersion = scalaAttr.fullCrossVersion.getOrElse(false),
+            withPlatformSuffix = scalaAttr.platform.getOrElse(false),
+            exclude = excludes.toSet
+          )
+      }
+      Right((dep0, userParams))
+    }
     else
       Left(errors.mkString(", "))
   }

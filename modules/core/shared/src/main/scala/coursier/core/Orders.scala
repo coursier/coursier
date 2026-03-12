@@ -1,5 +1,7 @@
 package coursier.core
 
+import scala.annotation.nowarn
+
 object Orders {
 
   @deprecated("Will likely be removed at some point in future versions", "2.0.0-RC3")
@@ -41,7 +43,7 @@ object Orders {
     configurations
       .keys
       .toList
-      .map(config => config -> (allParents(config) - config))
+      .map(config => config -> allParents(config))
       .toMap
   }
 
@@ -56,6 +58,7 @@ object Orders {
   ): PartialOrdering[Configuration] =
     configurationPartialOrder0(configurations)
 
+  @nowarn
   private def configurationPartialOrder0(
     configurations: Map[Configuration, Seq[Configuration]]
   ): PartialOrdering[Configuration] =
@@ -144,18 +147,23 @@ object Orders {
     }
 
   private def fallbackConfigIfNecessary(dep: Dependency, configs: Set[Configuration]): Dependency =
-    Parse.withFallbackConfig(dep.configuration) match {
-      case Some((main, fallback)) =>
-        val config0 =
-          if (configs(main))
-            main
-          else if (configs(fallback))
-            fallback
-          else
-            dep.configuration
+    dep.variantSelector match {
+      case c: VariantSelector.ConfigurationBased =>
+        Parse.withFallbackConfig(c.configuration) match {
+          case Some((main, fallback)) =>
+            val config0 =
+              if (configs(main))
+                main
+              else if (configs(fallback))
+                fallback
+              else
+                c.configuration
 
-        dep.withConfiguration(config0)
-      case _ =>
+            dep.withVariantSelector(VariantSelector.ConfigurationBased(config0))
+          case _ =>
+            dep
+        }
+      case _: VariantSelector.AttributesBased =>
         dep
     }
 
@@ -173,7 +181,7 @@ object Orders {
     val availableConfigs = configs.keySet
     val groupedDependencies = dependencies
       .map(fallbackConfigIfNecessary(_, availableConfigs))
-      .groupBy(dep => (dep.optional, dep.configuration))
+      .groupBy(dep => (dep.optional, dep.variantSelector))
       .mapValues { deps =>
         deps.head.withExclusions(deps.foldLeft(Exclusions.one)((acc, dep) =>
           Exclusions.meet(acc, dep.exclusions)
@@ -183,8 +191,11 @@ object Orders {
 
     val remove =
       for {
-        List(((xOpt, xScope), xDep), ((yOpt, yScope), yDep)) <- groupedDependencies.combinations(2)
+        List(((xOpt, xVariant), xDep), ((yOpt, yVariant), yDep)) <-
+          groupedDependencies.combinations(2)
         optCmp   <- optionalPartialOrder.tryCompare(xOpt, yOpt).iterator
+        xScope   <- xVariant.asConfiguration.iterator
+        yScope   <- yVariant.asConfiguration.iterator
         scopeCmp <- configurationPartialOrder0(configs).tryCompare(xScope, yScope).iterator
         if optCmp * scopeCmp >= 0
         exclCmp <- exclusionsPartialOrder.tryCompare(xDep.exclusions, yDep.exclusions).iterator
@@ -212,9 +223,16 @@ object Orders {
   ): Set[Dependency] =
     dependencies
       .groupBy(
-        _.withConfiguration(Configuration.empty).withExclusions(Set.empty).withOptional(false)
+        _.withVariantSelector(VariantSelector.emptyConfiguration)
+          .withExclusions(Set.empty)
+          .withOptional(false)
       )
-      .mapValues(deps => minDependenciesUnsafe(deps, configs(deps.head.moduleVersion)))
+      .mapValues { deps =>
+        minDependenciesUnsafe(
+          deps,
+          configs(deps.head.moduleVersionConstraint match { case (m, v) => (m, v.asString) })
+        )
+      }
       .valuesIterator
       .fold(Set.empty)(_ ++ _)
 

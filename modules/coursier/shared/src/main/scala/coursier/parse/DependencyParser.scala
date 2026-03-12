@@ -1,21 +1,9 @@
 package coursier.parse
 
-import coursier.core.{
-  Attributes,
-  Classifier,
-  Configuration,
-  Dependency,
-  Extension,
-  Module,
-  ModuleName,
-  Organization,
-  Publication,
-  Type
-}
-import coursier.core.Validation._
+import coursier.core.{Configuration, Dependency, Module}
 import coursier.util.ValidationNel
 import coursier.util.Traverse._
-import dependency.{NoAttributes, ScalaNameAttributes}
+import coursier.version.VersionConstraint
 import dependency.parser.{DependencyParser => DepParser}
 
 import scala.collection.mutable
@@ -36,7 +24,21 @@ object DependencyParser {
     defaultScalaVersion: String,
     defaultConfiguration: Configuration
   ): Either[String, Dependency] =
-    dependencyParams(input, defaultScalaVersion, defaultConfiguration).map(_._1)
+    dependencyParams(input, defaultScalaVersion, defaultConfiguration).flatMap {
+      case (dep, params) =>
+        if (params.isEmpty) Right(dep)
+        else {
+          val paramsStr = params
+            .toVector
+            .sorted
+            .map {
+              case (k, v) =>
+                s"$k=$v"
+            }
+            .mkString(", ")
+          Left(s"Unexpected parameter(s) not accepted at this point: $paramsStr")
+        }
+    }
 
   def dependencies(
     inputs: Seq[String],
@@ -67,35 +69,55 @@ object DependencyParser {
   /** Parses coordinates like org:name:version possibly with attributes, like
     * org:name;attr1=val1;attr2=val2:version
     */
-  def moduleVersion(
+  def moduleVersion0(
     input: String,
     defaultScalaVersion: String
-  ): Either[String, (Module, String)] = {
+  ): Either[String, (Module, VersionConstraint)] = {
 
     val parts = input.split(":", 4)
 
     parts match {
       case Array(org, rawName, version) =>
         ModuleParser.module(s"$org:$rawName", defaultScalaVersion)
-          .map((_, version))
+          .map((_, VersionConstraint(version)))
 
       case Array(org, "", rawName, version) =>
         ModuleParser.module(s"$org::$rawName", defaultScalaVersion)
-          .map((_, version))
+          .map((_, VersionConstraint(version)))
 
       case _ =>
         Left(s"Malformed dependency: $input")
     }
   }
 
+  @deprecated("Use moduleVersion0 instead", "2.1.25")
+  def moduleVersion(
+    input: String,
+    defaultScalaVersion: String
+  ): Either[String, (Module, String)] =
+    moduleVersion0(input, defaultScalaVersion).map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    }
+
+  def moduleVersions0(
+    inputs: Seq[String],
+    defaultScalaVersion: String
+  ): ValidationNel[String, Seq[(Module, VersionConstraint)]] =
+    inputs.validationNelTraverse { input =>
+      val e = moduleVersion0(input, defaultScalaVersion)
+      ValidationNel.fromEither(e)
+    }
+
+  @deprecated("Use moduleVersions0 instead", "2.1.25")
   def moduleVersions(
     inputs: Seq[String],
     defaultScalaVersion: String
   ): ValidationNel[String, Seq[(Module, String)]] =
-    inputs.validationNelTraverse { input =>
-      val e = moduleVersion(input, defaultScalaVersion)
-      ValidationNel.fromEither(e)
-    }
+    moduleVersions0(inputs, defaultScalaVersion).map(_.map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    })
 
   /*
    * Validates the parsed attributes.
@@ -113,13 +135,19 @@ object DependencyParser {
     dep: String,
     validAttrsKeys: Set[String]
   ): Option[String] = {
-    val extraAttributes = attrs.diff(validAttrsKeys)
+    val attrs0          = attrs.filter(!_.startsWith("variant."))
+    val extraAttributes = attrs0.diff(validAttrsKeys)
 
-    if (attrs.size > validAttrsKeys.size || extraAttributes.nonEmpty)
-      Some(
-        s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")}. ${if (extraAttributes.nonEmpty) s"The following are invalid: " +
-            s"${extraAttributes.map(_ + s" in " + dep).mkString(", ")}"}"
-      )
+    if (attrs0.size > validAttrsKeys.size || extraAttributes.nonEmpty)
+      Some {
+        val invalidMsg =
+          if (extraAttributes.nonEmpty)
+            s" The following are invalid: " +
+              s"${extraAttributes.map(_ + s" in " + dep).mkString(", ")}"
+          else
+            ""
+        s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")} and variant.* .$invalidMsg"
+      }
     else None
   }
 
@@ -150,18 +178,14 @@ object DependencyParser {
   ): Either[String, (JavaOrScalaDependency, Map[String, String])] =
     for {
       anyDep <- DepParser.parse(input, acceptInlineConfiguration = true)
-      dep    <- JavaOrScalaDependency.from(anyDep)
-      map = JavaOrScalaDependency.leftOverUserParams(anyDep)
-        .map {
-          case (k, v) =>
-            (k, v.getOrElse(""))
-        }
-        .toMap
+      t      <- JavaOrScalaDependency.from0(anyDep)
+      (dep, userParams) = t
+      map = userParams.map {
+        case (k, v) =>
+          (k, v.reverseIterator.flatMap(_.iterator).find(_ => true).getOrElse(""))
+      }
       _ <- validateAttributes(map.keySet, input, Set("url")).toLeft(())
-    } yield (
-      dep,
-      JavaOrScalaDependency.leftOverUserParams(anyDep).map { case (k, v) => (k, v.getOrElse("")) }.toMap
-    )
+    } yield (dep, map)
 
   /** Parses coordinates like org:name:version with attributes, like
     * org:name:version,attr1=val1,attr2=val2 and a configuration, like org:name:version:config or

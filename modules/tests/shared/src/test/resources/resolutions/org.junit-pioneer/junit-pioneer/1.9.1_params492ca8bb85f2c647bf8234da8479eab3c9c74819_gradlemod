@@ -1,0 +1,7 @@
+org.junit-pioneer:junit-pioneer:1.9.1:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.junit.jupiter:junit-jupiter-api:5.9.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.junit.jupiter:junit-jupiter-params:5.9.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.junit.platform:junit-platform-launcher:1.9.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.opentest4j:opentest4j:1.2.0:runtime
+org.junit.platform:junit-platform-commons:1.9.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
+org.junit.platform:junit-platform-engine:1.9.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }

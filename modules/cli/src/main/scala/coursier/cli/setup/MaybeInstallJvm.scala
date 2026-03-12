@@ -2,13 +2,12 @@ package coursier.cli.setup
 
 import java.io.File
 
-import coursier.cache.Cache
+import coursier.cache.{Cache, CacheLogger}
 import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.jvm.{JvmCacheLogger, JavaHome}
 import coursier.util.Task
-import dataclass.data
 
-@data class MaybeInstallJvm(
+case class MaybeInstallJvm(
   coursierCache: Cache[Task],
   envVarUpdaterOpt: Option[Either[WindowsEnvVarUpdater, ProfileUpdater]],
   javaHome: JavaHome,
@@ -23,7 +22,7 @@ import dataclass.data
   def banner: String =
     "Checking if a JVM is installed"
 
-  def task: Task[Unit] =
+  private def task0: Task[Unit] =
     for {
       initialIsSystemJavaHomeOpt <- javaHome.getWithIsSystemIfInstalled(defaultId)
 
@@ -113,6 +112,9 @@ import dataclass.data
 
     } yield ()
 
+  def task: Task[Unit] =
+    coursierCache.loggerOpt.getOrElse(CacheLogger.nop).using(task0)
+
   private def tryRevertEnvVarUpdate(
     envUpdate: EnvironmentUpdate,
     id: String
@@ -158,7 +160,7 @@ import dataclass.data
     val maybeRemoveJvm = javaHome.cache
       .map { jvmCache =>
         val entryOpt = jvmCache.entries(defaultId)
-          .unsafeRun()(coursierCache.ec) // meh
+          .unsafeRun(wrapExceptions = true)(coursierCache.ec) // meh
           .toOption
           .map(_.last)
         // replaces version ranges with actual versions in particular

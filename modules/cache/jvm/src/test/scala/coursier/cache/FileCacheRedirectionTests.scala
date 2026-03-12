@@ -4,7 +4,7 @@ import java.io.{ByteArrayOutputStream, File}
 import java.net.{URI, URL, URLClassLoader}
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
-import java.util
+import java.util.Arrays
 import java.util.zip.GZIPOutputStream
 
 import cats.effect.IO
@@ -43,7 +43,7 @@ object FileCacheRedirectionTests extends TestSuite {
     withTmpDir0 { dir =>
       val c = fileCache0()
         .withLocation(dir.toFile)
-      val res         = transform(c).fetch(artifact).run.unsafeRun()
+      val res         = transform(c).fetch(artifact).run.unsafeRun(wrapExceptions = true)
       val expectedRes = Right(content)
       assert(res == expectedRes)
     }
@@ -69,7 +69,7 @@ object FileCacheRedirectionTests extends TestSuite {
     withTmpDir0 { dir =>
       val c = fileCache0()
         .withLocation(dir.toFile)
-      val res = transform(c).fetch(artifact).run.unsafeRun()
+      val res = transform(c).fetch(artifact).run.unsafeRun(wrapExceptions = true)
       assert(res.isLeft)
       assert(res.left.exists(check))
     }
@@ -101,16 +101,26 @@ object FileCacheRedirectionTests extends TestSuite {
             case GET -> Root / "hello"    => Ok("hello")
             case GET -> Root / "redirect" => resp(Location(Uri(path = Uri.Path.empty / "hello")))
           }
-        def test(resp: Location => IO[Response[IO]]): Unit =
+        def test0(resp: Location => IO[Response[IO]]): Unit =
           withHttpServer(routes(resp)) { base =>
             expect(base / "redirect", "hello")
           }
 
-        "301" - test(MovedPermanently("redirecting", _))
-        "302" - test(Found("redirecting", _))
-        "304" - test(loc => NotModified().map(_.putHeaders(loc)))
-        "307" - test(TemporaryRedirect("redirecting", _))
-        "308" - test(PermanentRedirect("redirecting", _))
+        test("301") {
+          test0(MovedPermanently("redirecting", _))
+        }
+        test("302") {
+          test0(Found("redirecting", _))
+        }
+        test("304") {
+          test0(loc => NotModified().map(_.putHeaders(loc)))
+        }
+        test("307") {
+          test0(TemporaryRedirect("redirecting", _))
+        }
+        test("308") {
+          test0(PermanentRedirect("redirecting", _))
+        }
       }
 
       test("httpsToHttps") {
@@ -305,7 +315,7 @@ object FileCacheRedirectionTests extends TestSuite {
         val realm    = "simple realm"
         val userPass = ("simple", "SiMpLe")
 
-        def routes(challengeParams: Map[String, String] = Map.empty) = HttpRoutes.of[IO] {
+        def routes(challengeParams: Map[String, String]) = HttpRoutes.of[IO] {
           case req @ GET -> Root / "redirect" =>
             if (authorized(req, userPass))
               TemporaryRedirect("redirecting", Location(Uri(path = Uri.Path.empty / "hello")))
@@ -389,7 +399,8 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
-        test("rfc7617WithCharset") { // current (2020/2021) Sonatype Nexus Repository Manager implements this
+        test("rfc7617WithCharset") {
+          // current (2020/2021) Sonatype Nexus Repository Manager implements this
           val challengeParams = Map("charset" -> "UTF-8") // RFC 7617 only allows UTF-8
 
           test("enabled") {
@@ -406,7 +417,8 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
-        test("beyondRfc7617") { // this tests that the underlying challenge-parsing code is robust enough
+        test("beyondRfc7617") {
+          // this tests that the underlying challenge-parsing code is robust enough
           val challengeParams = Map(
             "schtroumpf" -> "salsepareille",
             "charset"    -> "iso-8859-15", // out of RFC 7617
@@ -1004,28 +1016,30 @@ object FileCacheRedirectionTests extends TestSuite {
     }
 
     test("custom protocols") {
-      test("unknown") - async {
-        val artifact = Artifact("unknown.protocol://hostname/file.txt")
+      test("unknown") {
+        async {
+          val artifact = Artifact("unknown.protocol://hostname/file.txt")
 
-        val res = await {
-          FileCache()
-            .file(artifact)
-            .run
-            .future
-        }
+          val res = await {
+            FileCache()
+              .file(artifact)
+              .run
+              .future()
+          }
 
-        val expectedReason =
-          List(
-            "Caught java.net.MalformedURLException (unknown protocol: unknown.protocol) while downloading unknown.protocol://hostname/file.txt.",
-            "Visit https://get-coursier.io/docs/extra.html#extra-protocols to learn how to handle custom protocols."
-          ).mkString(" ")
+          val expectedReason =
+            List(
+              "Caught java.net.MalformedURLException (unknown protocol: unknown.protocol) while downloading unknown.protocol://hostname/file.txt.",
+              "Visit https://get-coursier.io/docs/extra.html#extra-protocols to learn how to handle custom protocols."
+            ).mkString(" ")
 
-        res match {
-          case Left(error: ArtifactError.DownloadError) =>
-            assert(error.reason == expectedReason)
+          res match {
+            case Left(error: ArtifactError.DownloadError) =>
+              assert(error.reason == expectedReason)
 
-          case _ =>
-            assert(false)
+            case _ =>
+              assert(false)
+          }
         }
       }
 
@@ -1049,7 +1063,7 @@ object FileCacheRedirectionTests extends TestSuite {
                 .withLocation(dir.toFile)
                 .file(artifact)
                 .run
-                .future
+                .future()
             }
 
             res match {
@@ -1175,14 +1189,20 @@ object FileCacheRedirectionTests extends TestSuite {
           )
         }
 
-        "SHA-256" - withHttpServer(routes) { root =>
-          expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("SHA-256"))))
+        test("SHA-256") {
+          withHttpServer(routes) { root =>
+            expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("SHA-256"))))
+          }
         }
-        "SHA-1" - withHttpServer(routes) { root =>
-          expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("SHA-1"))))
+        test("SHA-1") {
+          withHttpServer(routes) { root =>
+            expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("SHA-1"))))
+          }
         }
-        "MD5" - withHttpServer(routes) { root =>
-          expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("MD5"))))
+        test("MD5") {
+          withHttpServer(routes) { root =>
+            expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("MD5"))))
+          }
         }
       }
     }
@@ -1199,7 +1219,10 @@ object FileCacheRedirectionTests extends TestSuite {
           .withCachePolicies(Seq(
             CachePolicy.LocalUpdateChanging
           ))
-        val res = c.fetch(artifact(Uri.unsafeFromString(url), changing = true)).run.unsafeRun()
+        val res = c.fetch(artifact(
+          Uri.unsafeFromString(url),
+          changing = true
+        )).run.unsafeRun(wrapExceptions = true)
         assert(res.left.exists(_.contains("java.net.UnknownHostException")))
       }
     }
@@ -1228,14 +1251,14 @@ object FileCacheRedirectionTests extends TestSuite {
             .withChecksums(Seq(Some("SHA-1")))
             .file(artifact)
             .run
-            .unsafeRun()
+            .unsafeRun(wrapExceptions = true)
 
         res match {
           case Right(file: File) =>
             val computedPath = FileCache.auxiliaryFile(file, "SHA-1" + ".computed")
             val expected     = stringToByteArray("f9627d29027e5a853b65242cfbbb44f354f3836f")
             val actual       = Files.readAllBytes(computedPath.toPath)
-            assert(util.Arrays.equals(actual, expected))
+            assert(Arrays.equals(actual, expected))
           case Left(e) => throw e
         }
       }
@@ -1264,14 +1287,14 @@ object FileCacheRedirectionTests extends TestSuite {
           .withChecksums(Seq(Some("MD5")))
           .file(artifact)
           .run
-          .unsafeRun()
+          .unsafeRun(wrapExceptions = true)
 
         res match {
           case Right(file: File) =>
             val computedPath = FileCache.auxiliaryFile(file, "MD5" + ".computed")
             val expected     = stringToByteArray("001717e73bca14e4fb2df3cabd6eac98")
             val actual       = Files.readAllBytes(computedPath.toPath)
-            assert(util.Arrays.equals(actual, expected))
+            assert(Arrays.equals(actual, expected))
           case Left(e) => throw e
         }
       }
@@ -1300,7 +1323,7 @@ object FileCacheRedirectionTests extends TestSuite {
           .withChecksums(Seq(Some("MD5")))
           .file(artifact)
           .run
-          .unsafeRun()
+          .unsafeRun(wrapExceptions = true)
 
         val computedPath = FileCache.auxiliaryFile(dummyFile.toFile, "MD5" + ".computed")
         assert(!computedPath.exists())
@@ -1329,12 +1352,13 @@ object FileCacheRedirectionTests extends TestSuite {
             .run
         }
 
-        val Right(_)         = resolve.unsafeRun()
+        val Right(_)         = resolve.unsafeRun(wrapExceptions = true)
         val computedSha1Path = FileCache.auxiliaryFile(dummyFile.toFile, "SHA-1" + ".computed")
 
         Files.write(computedSha1Path.toPath, Array[Byte](1, 2, 3))
 
-        val Left(_: coursier.cache.ArtifactError.NotFound) = resolve.unsafeRun()
+        val Left(_: coursier.cache.ArtifactError.NotFound) =
+          resolve.unsafeRun(wrapExceptions = true)
       }
     }
 
@@ -1352,7 +1376,7 @@ object FileCacheRedirectionTests extends TestSuite {
           .withLocation(dir.toString)
           .file(artifact)
           .run
-          .unsafeRun()
+          .unsafeRun(wrapExceptions = true)
 
         res match {
           case Right(file) => assert(file.isFile)
@@ -1362,7 +1386,7 @@ object FileCacheRedirectionTests extends TestSuite {
     }
 
     test("does not accept redundant path elements like .. or .") {
-      intercept[IllegalArgumentException] {
+      assertThrows[IllegalArgumentException] {
         val localFile = FileCache.localFile0(
           "https://evil-repo.org/com.fake/../../../../../../lib1.jar",
           CacheDefaults.location,

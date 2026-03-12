@@ -1,13 +1,27 @@
 package coursier.tests
 
-import coursier.core.{Configuration, Dependency, Info, Module, Profile, Resolution, Type}
+import coursier.core.{
+  Configuration,
+  Dependency,
+  Info,
+  Module,
+  Overrides,
+  Profile,
+  Resolution,
+  Type,
+  Variant,
+  VariantSelector
+}
+import coursier.version.{Version, VersionConstraint}
 
 import scala.collection.compat._
 
 object TestUtil {
 
   implicit class DependencyOps(val underlying: Dependency) extends AnyVal {
-    def withCompileScope: Dependency = underlying.withConfiguration(Configuration.defaultCompile)
+    def withDefaultScope: Dependency = underlying.withVariantSelector(
+      VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
+    )
   }
 
   private val projectProperties = Set(
@@ -39,19 +53,19 @@ object TestUtil {
       underlying.withFinalDependenciesCache(Map.empty)
     def clearCaches: Resolution =
       underlying
-        .withProjectCache(Map.empty)
+        .withProjectCache0(Map.empty)
         .withErrorCache(Map.empty)
         .withFinalDependenciesCache(Map.empty)
     def clearDependencyOverrides: Resolution =
       underlying.withDependencies(
-        underlying.dependencies.map(_.withOverrides(Map.empty))
+        underlying.dependencies.map(_.withOverridesMap(Overrides.empty))
       )
     def clearFilter: Resolution =
       underlying.withFilter(None)
     def clearProjectProperties: Resolution =
-      underlying.withProjectCache(
+      underlying.withProjectCache0(
         underlying
-          .projectCache
+          .projectCache0
           .view
           .mapValues {
             case (s, p) =>
@@ -92,9 +106,9 @@ object TestUtil {
     def apply(
       module: Module,
       version: String,
-      dependencies: Seq[(Configuration, Dependency)] = Seq.empty,
-      parent: Option[(Module, String)] = None,
-      dependencyManagement: Seq[(Configuration, Dependency)] = Seq.empty,
+      dependencies: Seq[(Variant, Dependency)] = Seq.empty,
+      parent0: Option[(Module, String)] = None,
+      dependencyManagement: Seq[(Variant, Dependency)] = Seq.empty,
       configurations: Map[Configuration, Seq[Configuration]] = Map.empty,
       properties: Seq[(String, String)] = Seq.empty,
       profiles: Seq[Profile] = Seq.empty,
@@ -102,14 +116,17 @@ object TestUtil {
       snapshotVersioning: Option[coursier.core.SnapshotVersioning] = None,
       packaging: Option[Type] = None,
       relocated: Boolean = false,
-      publications: Seq[(Configuration, coursier.core.Publication)] = Nil
+      publications: Seq[(Variant, coursier.core.Publication)] = Nil
     ): Project =
       coursier.core.Project(
         module,
-        version,
+        Version(version),
         dependencies,
         configurations,
-        parent,
+        parent0.map {
+          case (mod, ver) =>
+            (mod, Version(ver))
+        },
         dependencyManagement,
         properties,
         profiles,
@@ -119,7 +136,10 @@ object TestUtil {
         relocated,
         None,
         publications,
-        Info.empty
+        Info.empty,
+        Overrides.empty,
+        Map.empty,
+        Map.empty
       )
   }
 }

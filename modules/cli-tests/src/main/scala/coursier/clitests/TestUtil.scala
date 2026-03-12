@@ -3,7 +3,9 @@ package coursier.clitests
 import java.io.{File, FileWriter}
 import java.nio.file.Files
 
+import coursier.core.{Dependency, Module, ModuleName, Organization}
 import coursier.util.StringInterpolators._
+import coursier.version.VersionConstraint
 
 object TestUtil {
 
@@ -34,8 +36,11 @@ object TestUtil {
       )
   }
 
-  val propsDep    = dep"io.get-coursier:props:1.0.2"
-  val propsDepStr = s"${propsDep.module}:${propsDep.version}"
+  val propsDep = Dependency(
+    Module(Organization("io.get-coursier"), ModuleName("props"), Map.empty),
+    VersionConstraint("1.0.2")
+  )
+  val propsDepStr = s"${propsDep.module}:${propsDep.versionConstraint.asString}"
   lazy val propsCp = coursier.Fetch()
     .addDependencies(propsDep)
     .run()

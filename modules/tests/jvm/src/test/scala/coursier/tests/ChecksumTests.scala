@@ -45,7 +45,7 @@ object ChecksumTests extends TestSuite {
         sha1ParseTest(cleanSha1, dirtySha1)
       }
 
-      test("singleLineEndingWithChunkedSha1") - {
+      test("singleLineEndingWithChunkedSha1") {
         // http://www-eu.apache.org/dist/kafka/0.10.1.0/kafka_2.11-0.10.1.0.tgz.sha1
         // as of 2017-08-17
         val dirtySha1 =
@@ -56,31 +56,31 @@ object ChecksumTests extends TestSuite {
         sha1ParseTest(cleanSha1, dirtySha1)
       }
 
-      test("nonHexValue") - {
+      test("nonHexValue") {
         val content = "0000000000000000000000000000000z"
         val res     = CacheChecksum.parseChecksum(content)
         assert(res.isEmpty)
       }
 
-      test("binarySha1") - {
+      test("binarySha1") {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha1").openStream())
         val res     = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
 
-      test("binarySha256") - {
+      test("binarySha256") {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha256").openStream())
         val res     = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
 
-      test("binarySha512") - {
+      test("binarySha512") {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha512").openStream())
         val res     = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
 
-      test("binaryMd5") - {
+      test("binaryMd5") {
         val content = Platform.readFullySync(getClass.getResource("/empty.md5").openStream())
         val res     = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
@@ -128,10 +128,18 @@ object ChecksumTests extends TestSuite {
           }
         ).map(_ => ()).future()(ExecutionContext.global)
 
-      test("sha1") - validateAll("SHA-1")
-      test("sha256") - validateAll("SHA-256")
-      test("sha512") - validateAll("SHA-512")
-      test("md5") - validateAll("MD5")
+      test("sha1") {
+        validateAll("SHA-1")
+      }
+      test("sha256") {
+        validateAll("SHA-256")
+      }
+      test("sha512") {
+        validateAll("SHA-512")
+      }
+      test("md5") {
+        validateAll("MD5")
+      }
     }
   }
 }

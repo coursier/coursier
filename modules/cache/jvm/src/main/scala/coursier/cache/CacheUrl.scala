@@ -9,7 +9,6 @@ import java.util.regex.Pattern
 
 import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
-import dataclass.data
 import javax.net.ssl.{HostnameVerifier, HttpsURLConnection, SSLSocketFactory}
 
 import scala.annotation.tailrec

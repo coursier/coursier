@@ -2,10 +2,19 @@ package coursier.tests
 
 import java.io.File
 
-import coursier.core.{Attributes, Classifier, Configuration, Dependency, Module, Type}
+import coursier.core.{
+  Attributes,
+  Classifier,
+  Configuration,
+  Dependency,
+  Module,
+  Type,
+  VariantSelector
+}
 import coursier.ivy.IvyRepository
 import coursier.tests.compatibility.executionContext
 import coursier.util.StringInterpolators._
+import coursier.version.VersionConstraint
 import utest._
 
 object IvyTests extends TestSuite {
@@ -19,15 +28,15 @@ object IvyTests extends TestSuite {
 
   val tests = Tests {
     test("dropInfoAttributes") {
-      runner.resolutionCheck(
+      runner.resolutionCheck0(
         module = Module(
           org"org.scala-js",
           name"sbt-scalajs",
           Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
         ),
-        version = "0.6.6",
+        version = VersionConstraint("0.6.6"),
         extraRepos = Seq(sbtRepo),
-        configuration = Configuration.defaultCompile
+        configuration = Configuration.defaultRuntime
       )
     }
 
@@ -39,12 +48,12 @@ object IvyTests extends TestSuite {
         name"sbt-reactjs",
         Map("sbtVersion" -> "0.13", "scalaVersion" -> "2.10")
       )
-      val ver = "0.6.+"
+      val ver = VersionConstraint("0.6.+")
 
       val expectedArtifactUrl =
         "https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/com.github.ddispaltro/sbt-reactjs/scala_2.10/sbt_0.13/0.6.8/jars/sbt-reactjs.jar"
 
-      test - runner.resolutionCheck(
+      test - runner.resolutionCheck0(
         module = mod,
         version = ver,
         extraRepos = Seq(sbtRepo)
@@ -52,7 +61,7 @@ object IvyTests extends TestSuite {
 
       test - runner.withArtifacts(
         mod,
-        ver,
+        ver.asString,
         Attributes(Type.jar, Classifier.empty),
         extraRepos = Seq(sbtRepo)
       ) {
@@ -74,7 +83,7 @@ object IvyTests extends TestSuite {
     test("changing") {
       test("-SNAPSHOT suffix") {
 
-        val dep = Dependency(mod"com.example:a_2.11", "0.1.0-SNAPSHOT")
+        val dep = Dependency(mod"com.example:a_2.11", VersionConstraint("0.1.0-SNAPSHOT"))
           .withTransitive(false)
           .withAttributes(Attributes(Type.jar, Classifier.empty))
 
@@ -94,7 +103,7 @@ object IvyTests extends TestSuite {
 
       test("-SNAPSHOT suffix") {
 
-        val dep = Dependency(mod"com.example:a_2.11", "0.2.0.SNAPSHOT")
+        val dep = Dependency(mod"com.example:a_2.11", VersionConstraint("0.2.0.SNAPSHOT"))
           .withTransitive(false)
           .withAttributes(Attributes(Type.jar, Classifier.empty))
 
@@ -115,47 +124,53 @@ object IvyTests extends TestSuite {
 
     test("testArtifacts") {
 
-      val dep = Dependency(mod"com.example:a_2.11", "0.1.0-SNAPSHOT")
+      val dep = Dependency(mod"com.example:a_2.11", VersionConstraint("0.1.0-SNAPSHOT"))
         .withTransitive(false)
         .withAttributes(Attributes.empty)
 
       val mainJarUrl = repoBase + "com.example/a_2.11/0.1.0-SNAPSHOT/jars/a_2.11.jar"
       val testJarUrl = repoBase + "com.example/a_2.11/0.1.0-SNAPSHOT/jars/a_2.11-tests.jar"
 
-      "no conf or classifier" - runner.withArtifacts(
-        dep = dep.withAttributes(Attributes(Type.jar, Classifier.empty)),
-        extraRepos = Seq(repo),
-        classifierOpt = None
-      ) {
-        case Seq(artifact) =>
-          assert(artifact.url == mainJarUrl)
-        case other =>
-          throw new Exception(
-            s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}"
-          )
+      test("no conf or classifier") {
+        runner.withArtifacts(
+          dep = dep.withAttributes(Attributes(Type.jar, Classifier.empty)),
+          extraRepos = Seq(repo),
+          classifierOpt = None
+        ) {
+          case Seq(artifact) =>
+            assert(artifact.url == mainJarUrl)
+          case other =>
+            throw new Exception(
+              s"Unexpected number of artifacts\n${other.mkString(System.lineSeparator())}"
+            )
+        }
       }
 
       test("test conf") {
-        "no attributes" - runner.withArtifacts(
-          dep = dep.withConfiguration(Configuration.test),
-          extraRepos = Seq(repo),
-          classifierOpt = None
-        ) { artifacts =>
-          val urls = artifacts.map(_.url).toSet
-          assert(urls(mainJarUrl))
-          assert(urls(testJarUrl))
+        test("no attributes") {
+          runner.withArtifacts(
+            dep = dep.withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test)),
+            extraRepos = Seq(repo),
+            classifierOpt = None
+          ) { artifacts =>
+            val urls = artifacts.map(_.url).toSet
+            assert(urls(mainJarUrl))
+            assert(urls(testJarUrl))
+          }
         }
 
-        "attributes" - runner.withArtifacts(
-          dep = dep
-            .withConfiguration(Configuration.test)
-            .withAttributes(Attributes(Type.jar, Classifier.empty)),
-          extraRepos = Seq(repo),
-          classifierOpt = None
-        ) { artifacts =>
-          val urls = artifacts.map(_.url).toSet
-          assert(urls(mainJarUrl))
-          assert(urls(testJarUrl))
+        test("attributes") {
+          runner.withArtifacts(
+            dep = dep
+              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
+              .withAttributes(Attributes(Type.jar, Classifier.empty)),
+            extraRepos = Seq(repo),
+            classifierOpt = None
+          ) { artifacts =>
+            val urls = artifacts.map(_.url).toSet
+            assert(urls(mainJarUrl))
+            assert(urls(testJarUrl))
+          }
         }
       }
 

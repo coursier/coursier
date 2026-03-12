@@ -5,9 +5,8 @@ import java.nio.file.Path
 import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.install.InstallDir
 import coursier.util.Task
-import dataclass.data
 
-@data class MaybeSetupPath(
+case class MaybeSetupPath(
   installDir: InstallDir,
   envVarUpdaterOpt: Option[Either[WindowsEnvVarUpdater, ProfileUpdater]],
   getEnv: String => Option[String],

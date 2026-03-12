@@ -1,6 +1,5 @@
 package coursier.tests
 
-import coursier.cache.MockCache
 import coursier.core.Repository
 import coursier.testcache.TestCache
 import coursier.util.Task

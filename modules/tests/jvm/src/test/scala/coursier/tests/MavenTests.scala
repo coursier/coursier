@@ -7,6 +7,7 @@ import coursier.maven.MavenRepository
 import coursier.tests.compatibility.executionContext
 import coursier.util.StringInterpolators._
 import utest._
+import coursier.version.VersionConstraint
 
 object MavenTests extends TestSuite {
 
@@ -17,7 +18,7 @@ object MavenTests extends TestSuite {
   val tests = Tests {
     test("testSnapshotNoVersioning") {
 
-      val dep = Dependency(mod"com.abc:test-snapshot-special", "0.1.0-SNAPSHOT")
+      val dep = Dependency(mod"com.abc:test-snapshot-special", VersionConstraint("0.1.0-SNAPSHOT"))
         .withTransitive(false)
         .withAttributes(Attributes.empty)
 

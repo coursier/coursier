@@ -1,7 +1,6 @@
 package coursier.cache.loggers
 
 import java.io.Writer
-import java.util.Locale
 
 import scala.concurrent.duration.Duration
 import scala.util.Properties

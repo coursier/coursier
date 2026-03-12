@@ -29,26 +29,30 @@ object DirectoryListingTests extends TestSuite {
   private val runner = new TestRunner
 
   val tests = Tests {
-    test("jar") - runner.withArtifacts(
-      module,
-      version,
-      attributes = Attributes(Type.jar, Classifier.empty),
-      extraRepos = Seq(repo)
-    ) {
-      artifacts =>
-        assert(artifacts.length == 1)
-        assert(artifacts.headOption.exists(_.url.endsWith(".jar")))
+    test("jar") {
+      runner.withArtifacts(
+        module,
+        version,
+        attributes = Attributes(Type.jar, Classifier.empty),
+        extraRepos = Seq(repo)
+      ) {
+        artifacts =>
+          assert(artifacts.length == 1)
+          assert(artifacts.headOption.exists(_.url.endsWith(".jar")))
+      }
     }
 
-    test("jarFoo") - runner.withArtifacts(
-      module,
-      version,
-      attributes = Attributes(Type("jar-foo"), Classifier.empty),
-      extraRepos = Seq(repo)
-    ) {
-      artifacts =>
-        assert(artifacts.length == 1)
-        assert(artifacts.headOption.exists(_.url.endsWith(".jar-foo")))
+    test("jarFoo") {
+      runner.withArtifacts(
+        module,
+        version,
+        attributes = Attributes(Type("jar-foo"), Classifier.empty),
+        extraRepos = Seq(repo)
+      ) {
+        artifacts =>
+          assert(artifacts.length == 1)
+          assert(artifacts.headOption.exists(_.url.endsWith(".jar-foo")))
+      }
     }
   }
 

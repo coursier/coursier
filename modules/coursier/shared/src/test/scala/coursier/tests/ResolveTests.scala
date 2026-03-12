@@ -3,22 +3,26 @@ package coursier.tests
 import coursier.{Repositories, Resolve}
 import coursier.core.{
   Activation,
+  BomDependency,
   Classifier,
   Configuration,
   Dependency,
   Extension,
   Module,
   ModuleName,
-  Reconciliation,
   Repository,
   Resolution,
-  Type
+  Type,
+  VariantSelector
 }
+import coursier.core.VariantSelector.VariantMatcher
 import coursier.error.ResolutionError
 import coursier.ivy.IvyRepository
+import coursier.maven.{MavenRepository, MavenRepositoryLike}
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
-import coursier.util.ModuleMatchers
+import coursier.util.{ModuleMatchers, Task}
 import coursier.util.StringInterpolators._
+import coursier.version.{ConstraintReconciliation, Version, VersionConstraint}
 import utest._
 
 import scala.async.Async.{async, await}
@@ -27,40 +31,63 @@ import scala.concurrent.Future
 
 object ResolveTests extends TestSuite {
 
-  import TestHelpers.{
-    ec,
-    cache,
-    dependenciesWithRetainedVersion,
-    handmadeMetadataBase,
-    validateDependencies,
-    versionOf
-  }
+  import TestHelpers.{ec, cache, handmadeMetadataBase, validateDependencies, versionOf}
 
   private val resolve = Resolve()
     .noMirrors
     .withCache(cache)
-    .withResolutionParams(
-      ResolutionParams()
-        .withOsInfo {
-          Activation.Os(
-            Some("x86_64"),
-            Set("mac", "unix"),
-            Some("mac os x"),
-            Some("10.15.1")
-          )
-        }
-        .withJdkVersion("1.8.0_121")
-    )
 
-  def check(dependencies: Dependency*): Future[Unit] =
+  def doCheck(resolve: Resolve[Task], dependencies: Seq[Dependency]): Future[Unit] =
     async {
       val res = await {
         resolve
           .addDependencies(dependencies: _*)
           .future()
       }
-      await(validateDependencies(res))
+      await(validateDependencies(res, resolve.resolutionParams))
     }
+
+  def check(dependencies: Dependency*): Future[Unit] =
+    doCheck(resolve, dependencies)
+
+  def enableModules(resolve: Resolve[Task]): Resolve[Task] =
+    resolve.withRepositories {
+      resolve.repositories.map {
+        case m: MavenRepositoryLike.WithModuleSupport =>
+          m.withCheckModule(true)
+        case other => other
+      }
+    }
+  def gradleModuleCheck0(
+    resolve0: Resolve[Task] = resolve,
+    defaultConfiguration: Option[Configuration] = None,
+    defaultAttributes: Option[VariantSelector.AttributesBased] = None,
+    attributesBasedReprAsToString: Boolean = false
+  )(
+    dependencies: Dependency*
+  ): Future[Unit] =
+    async {
+      var resolve1 = enableModules(resolve0.addRepositories(Repositories.google))
+      for (conf <- defaultConfiguration)
+        resolve1 = resolve1.mapResolutionParams(_.withDefaultConfiguration(conf))
+      for (attr <- defaultAttributes)
+        resolve1 = resolve1.mapResolutionParams(_.withDefaultVariantAttributes(attr))
+      val res = await {
+        resolve1
+          .addDependencies(dependencies: _*)
+          .future()
+      }
+      await {
+        validateDependencies(
+          res,
+          resolve1.resolutionParams,
+          extraKeyPart = "_gradlemod",
+          attributesBasedReprAsToString = attributesBasedReprAsToString
+        )
+      }
+    }
+  def gradleModuleCheck(dependencies: Dependency*): Future[Unit] =
+    gradleModuleCheck0()(dependencies: _*)
 
   def scopeCheck(
     defaultConfiguration: Configuration,
@@ -77,6 +104,17 @@ object ResolveTests extends TestSuite {
         resolve0.future()
       }
       await(validateDependencies(res, resolve0.resolutionParams))
+    }
+
+  def bomCheck(boms: BomDependency*)(dependencies: Dependency*): Future[Unit] =
+    async {
+      val res = await {
+        resolve
+          .addDependencies(dependencies: _*)
+          .addBomConfigs(boms: _*)
+          .future()
+      }
+      await(validateDependencies(res))
     }
 
   val tests = Tests {
@@ -153,31 +191,89 @@ object ResolveTests extends TestSuite {
     }
 
     test("addForceVersion") {
-      async {
+      test("simple") {
+        async {
 
-        val resolve0 = resolve
-          .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:1.6.3")
-          .mapResolutionParams { params =>
-            params
-              .withScalaVersion("2.12.8")
-              .addForceVersion(mod"com.lihaoyi:upickle_2.12" -> "0.7.0")
-              .addForceVersion(mod"io.get-coursier:coursier_2.12" -> "1.1.0-M6")
+          val resolve0 = resolve
+            .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:1.6.3")
+            .mapResolutionParams { params =>
+              params
+                .withScalaVersion("2.12.8")
+                .addForceVersion0(mod"com.lihaoyi:upickle_2.12" -> VersionConstraint("0.7.0"))
+                .addForceVersion0(
+                  mod"io.get-coursier:coursier_2.12" -> VersionConstraint("1.1.0-M6")
+                )
+            }
+
+          val res = await {
+            resolve0
+              .future()
           }
 
-        val res = await {
-          resolve0
-            .future()
+          await(validateDependencies(res, resolve0.resolutionParams))
+
+          val upickleVersionOpt      = versionOf(res, mod"com.lihaoyi:upickle_2.12")
+          val expectedUpickleVersion = "0.7.0"
+          assert(upickleVersionOpt.contains(expectedUpickleVersion))
+
+          val coursierVersionOpt      = versionOf(res, mod"io.get-coursier:coursier_2.12")
+          val expectedCoursierVersion = "1.1.0-M6"
+          assert(coursierVersionOpt.contains(expectedCoursierVersion))
         }
+      }
 
-        await(validateDependencies(res, resolve0.resolutionParams))
+      test("whole org") {
+        async {
+          val forcedCollectionVersion = "1.4.2"
+          val forcedLifecycleVersion  = "2.8.7"
+          val baseResolve = enableModules(resolve.addRepositories(Repositories.google))
+            .addDependencies(dep"androidx.customview:customview-poolingcontainer:1.0.0")
+            .mapResolutionParams { params =>
+              params.addVariantAttributes(
+                "org.jetbrains.kotlin.platform.type" ->
+                  VariantMatcher.AnyOf(Seq(
+                    VariantMatcher.Equals("androidJvm"),
+                    VariantMatcher.Equals("jvm")
+                  ))
+              )
+            }
+          val resolve0 = baseResolve
+            .mapResolutionParams { params =>
+              params.addForceVersion0(
+                mod"androidx.collection:*" -> VersionConstraint(forcedCollectionVersion),
+                mod"androidx.lifecycle:*"  -> VersionConstraint(forcedLifecycleVersion)
+              )
+            }
 
-        val upickleVersionOpt      = versionOf(res, mod"com.lihaoyi:upickle_2.12")
-        val expectedUpickleVersion = "0.7.0"
-        assert(upickleVersionOpt.contains(expectedUpickleVersion))
+          val baseRes = await {
+            baseResolve
+              .future()
+          }
+          val res = await {
+            resolve0
+              .future()
+          }
 
-        val coursierVersionOpt      = versionOf(res, mod"io.get-coursier:coursier_2.12")
-        val expectedCoursierVersion = "1.1.0-M6"
-        assert(coursierVersionOpt.contains(expectedCoursierVersion))
+          await(validateDependencies(baseRes, baseResolve.resolutionParams))
+          await(validateDependencies(res, resolve0.resolutionParams))
+
+          val baseCollectionVersionOpt = versionOf(baseRes, mod"androidx.collection:collection")
+          val collectionVersionOpt     = versionOf(res, mod"androidx.collection:collection")
+          assert(baseCollectionVersionOpt.exists(_ != forcedCollectionVersion))
+          assert(collectionVersionOpt.contains(forcedCollectionVersion))
+
+          val baseLifecycleCommonVersionOpt =
+            versionOf(baseRes, mod"androidx.lifecycle:lifecycle-common")
+          val lifecycleCommonVersionOpt = versionOf(res, mod"androidx.lifecycle:lifecycle-common")
+          assert(baseLifecycleCommonVersionOpt.exists(_ != forcedLifecycleVersion))
+          assert(lifecycleCommonVersionOpt.contains(forcedLifecycleVersion))
+
+          val baseLifecycleRuntimeVersionOpt =
+            versionOf(baseRes, mod"androidx.lifecycle:lifecycle-runtime")
+          val lifecycleRuntimeVersionOpt = versionOf(res, mod"androidx.lifecycle:lifecycle-runtime")
+          assert(baseLifecycleRuntimeVersionOpt.exists(_ != forcedLifecycleVersion))
+          assert(lifecycleRuntimeVersionOpt.contains(forcedLifecycleVersion))
+        }
       }
     }
 
@@ -305,8 +401,8 @@ object ResolveTests extends TestSuite {
                 .future()
             }
 
-            val found         = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toMap
-            val ammVersionOpt = found.get(mod"com.lihaoyi:ammonite_2.12.8")
+            val found         = res.orderedDependencies.map(_.moduleVersionConstraint).toMap
+            val ammVersionOpt = found.get(mod"com.lihaoyi:ammonite_2.12.8").map(_.asString)
             assert(ammVersionOpt.exists(_.split('.').length == 3))
             assert(ammVersionOpt.exists(!_.contains("-")))
 
@@ -353,6 +449,8 @@ object ResolveTests extends TestSuite {
               error match {
                 case e: ResolutionError.CantDownloadModule =>
                   assert(e.module == mod"com.chuusai:shapeless_2.10")
+                  val lines = e.getMessage.linesIterator.toVector.map(_.trim)
+                  assert(lines.contains("No version for latest.release available in [2.3.0,2.3.3)"))
                 case _ =>
                   throw error
               }
@@ -379,12 +477,16 @@ object ResolveTests extends TestSuite {
                 .future()
             }
 
-            val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
+            val found = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
             val expected = Set(
-              mod"org.scala-lang:scala-library" -> "2.12.8",
-              mod"test:a_2.12"                  -> "1.0.2-SNAPSHOT"
+              mod"org.scala-lang:scala-library" -> VersionConstraint("2.12.8"),
+              mod"test:a_2.12"                  -> VersionConstraint("1.0.2-SNAPSHOT")
             )
 
+            if (found != expected) {
+              pprint.err.log(expected)
+              pprint.err.log(found)
+            }
             assert(found == expected)
           }
         }
@@ -398,10 +500,10 @@ object ResolveTests extends TestSuite {
                 .future()
             }
 
-            val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
+            val found = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
             val expected = Set(
-              mod"org.scala-lang:scala-library" -> "2.12.8",
-              mod"test:a_2.12"                  -> "1.0.1"
+              mod"org.scala-lang:scala-library" -> VersionConstraint("2.12.8"),
+              mod"test:a_2.12"                  -> VersionConstraint("1.0.1")
             )
 
             assert(found == expected)
@@ -468,10 +570,10 @@ object ResolveTests extends TestSuite {
               .future()
           }
 
-          val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
+          val found = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
           val expected = Set(
-            mod"org.scala-lang:scala-library" -> "2.12.8",
-            mod"test:b_2.12"                  -> "1.0.2+20190524-1"
+            mod"org.scala-lang:scala-library" -> VersionConstraint("2.12.8"),
+            mod"test:b_2.12"                  -> VersionConstraint("1.0.2+20190524-1")
           )
 
           assert(found == expected)
@@ -500,16 +602,16 @@ object ResolveTests extends TestSuite {
 
       test("test") {
         async {
+          val resolve = resolve0
+            .mapResolutionParams(_.addExclusions((org"io.argonaut", name"*")))
           val res = await {
-            resolve0
-              .mapResolutionParams(_.addExclusions((org"io.argonaut", name"*")))
-              .future()
+            resolve.future()
           }
 
           val argonaut = res.minDependencies.filter(_.module.organization == org"io.argonaut")
           assert(argonaut.isEmpty)
 
-          await(validateDependencies(res))
+          await(validateDependencies(res, resolve.resolutionParams))
         }
       }
 
@@ -520,7 +622,9 @@ object ResolveTests extends TestSuite {
             resolve
               .addDependencies(
                 dep"com.netflix.karyon:karyon-eureka:1.0.28"
-                  .withConfiguration(Configuration.defaultCompile)
+                  .withVariantSelector(
+                    VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
+                  )
               )
               .future()
           }
@@ -541,6 +645,25 @@ object ResolveTests extends TestSuite {
           }
 
           await(validateDependencies(res))
+        }
+      }
+
+      test("compile") {
+        async {
+
+          val resolve0 = resolve
+            .withResolutionParams(
+              resolve.resolutionParams
+                .withDefaultConfiguration(Configuration.compile)
+            )
+
+          val res = await {
+            resolve0
+              .addDependencies(dep"org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.3.0")
+              .future()
+          }
+
+          await(validateDependencies(res, resolve0.resolutionParams))
         }
       }
 
@@ -575,12 +698,12 @@ object ResolveTests extends TestSuite {
                 .dependencies
                 .groupBy(_.module)
                 .view
-                .mapValues(_.map(_.version))
+                .mapValues(_.map(_.versionConstraint.asString))
                 .iterator
                 .toMap
               assert(versions == expectedVersions)
             case _ =>
-              sys.error(s"Unexpected error: $error")
+              throw new Exception("Unexpected exception", error)
           }
         }
       }
@@ -615,7 +738,7 @@ object ResolveTests extends TestSuite {
 
           await(validateDependencies(res))
 
-          val urls = res.dependencyArtifacts().map(_._3.url).toSet
+          val urls = res.dependencyArtifacts0().map(_._3.url).toSet
           val expectedUrls = Set(
             "https://repo1.maven.org/maven2/javax/ws/rs/javax.ws.rs-api/2.1.1/javax.ws.rs-api-2.1.1.jar"
           )
@@ -647,15 +770,15 @@ object ResolveTests extends TestSuite {
               .future()
           }
 
-          val found = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toSet
+          val found = res.orderedDependencies.map(_.moduleVersionConstraint).toSet
           val expected = Set(
-            mod"org.scala-lang:scala-library" -> "2.12.8",
-            mod"test:b_2.12"                  -> "1.0.1"
+            mod"org.scala-lang:scala-library" -> VersionConstraint("2.12.8"),
+            mod"test:b_2.12"                  -> VersionConstraint("1.0.1")
           )
 
           assert(found == expected)
 
-          val urls = res.dependencyArtifacts()
+          val urls = res.dependencyArtifacts0()
             .map(_._3.url.replace(handmadeMetadataBase, "file:///handmade-metadata/"))
             .toSet
           val expectedUrls = Set(
@@ -666,7 +789,7 @@ object ResolveTests extends TestSuite {
 
           assert(urls == expectedUrls)
 
-          val handmadeArtifacts = res.dependencyArtifacts()
+          val handmadeArtifacts = res.dependencyArtifacts0()
             .map(_._3)
             .filter(_.url.startsWith(handmadeMetadataBase))
 
@@ -695,7 +818,7 @@ object ResolveTests extends TestSuite {
 
           await(validateDependencies(res))
 
-          val urls = res.dependencyArtifacts()
+          val urls = res.dependencyArtifacts0()
             .map(_._3.url.replace(handmadeMetadataBase, "file:///handmade-metadata/"))
             .toSet
           val expectedUrls = Set(
@@ -728,7 +851,7 @@ object ResolveTests extends TestSuite {
 
           await(validateDependencies(res))
 
-          val urls = res.dependencyArtifacts()
+          val urls = res.dependencyArtifacts0()
             .map(_._3.url.replace(handmadeMetadataBase, "file:///handmade-metadata/"))
             .toSet
           val expectedUrls = Set(
@@ -790,10 +913,10 @@ object ResolveTests extends TestSuite {
                 val modules         = c.dependencies.map(_.module)
                 assert(modules == expectedModules)
                 val expectedVersions = Set("2.12+", "2.13.0")
-                val versions         = c.dependencies.map(_.version)
+                val versions         = c.dependencies.map(_.versionConstraint.asString)
                 assert(versions == expectedVersions)
               case _ =>
-                ???
+                throw new Exception(error)
             }
           }
         }
@@ -823,7 +946,7 @@ object ResolveTests extends TestSuite {
                 val modules         = c.dependencies.map(_.module)
                 assert(modules == expectedModules)
                 val expectedVersions = Set("[2.3.0,2.3.3)", "2.3.3")
-                val versions         = c.dependencies.map(_.version)
+                val versions         = c.dependencies.map(_.versionConstraint.asString)
                 assert(versions == expectedVersions)
               case _ =>
                 throw error
@@ -919,7 +1042,7 @@ object ResolveTests extends TestSuite {
     test("runtime dependencies") {
       async {
 
-        // default configuration "default(compile)" should fetch runtime JARs too ("default" scope pulls the runtime one)
+        // default configuration "default(runtime)" should fetch runtime JARs too
 
         val res: coursier.core.Resolution = await {
           resolve
@@ -947,7 +1070,7 @@ object ResolveTests extends TestSuite {
         async {
           val params = ResolutionParams()
             .withScalaVersion("2.12.8")
-            .withReconciliation(Seq(ModuleMatchers.all -> Reconciliation.Relaxed))
+            .withReconciliation0(Seq(ModuleMatchers.all -> ConstraintReconciliation.Relaxed))
 
           val res = await {
             resolve
@@ -959,12 +1082,15 @@ object ResolveTests extends TestSuite {
               .future()
           }
 
-          await(validateDependencies(res))
+          await(validateDependencies(res, params))
 
-          val deps = res.minDependencies
+          val deps = res.minimizedDependencies(
+            withRetainedVersions = false,
+            withReconciledVersions = true
+          )
           val isNumberVersions = deps.collect {
             case dep if dep.module == mod"org.webjars.npm:is-number" =>
-              dep.version
+              dep.versionConstraint.asString
           }
           val expectedIsNumberVersions = Set("[4.0.0,5)")
           assert(isNumberVersions == expectedIsNumberVersions)
@@ -986,7 +1112,10 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res))
 
-        val subRes = res.subset(Seq(json4s))
+        val subRes = res.subset0(Seq(json4s)) match {
+          case Left(ex)    => throw new Exception(ex)
+          case Right(res0) => res0
+        }
         await(validateDependencies(subRes))
       }
     }
@@ -1012,16 +1141,30 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res0))
 
-        assert(res1.projectCache.contains((mod"io.get-coursier:coursier-cli_2.12", "1.1.0-M8")))
-        assert(res1.projectCache.contains((mod"io.get-coursier:coursier-cli_2.12", "2.0.0-RC6-16")))
+        assert(
+          res1.projectCache0.contains(
+            (
+              mod"io.get-coursier:coursier-cli_2.12",
+              VersionConstraint("1.1.0-M8")
+            )
+          )
+        )
+        assert(
+          res1.projectCache0.contains(
+            (
+              mod"io.get-coursier:coursier-cli_2.12",
+              VersionConstraint("2.0.0-RC6-16")
+            )
+          )
+        )
         assert {
           res1.finalDependenciesCache.keys.exists(dep =>
-            dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.version == "1.1.0-M8"
+            dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.versionConstraint.asString == "1.1.0-M8"
           )
         }
         assert {
           res1.finalDependenciesCache.keys.exists(dep =>
-            dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.version == "2.0.0-RC6-16"
+            dep.module == mod"io.get-coursier:coursier-cli_2.12" && dep.versionConstraint.asString == "2.0.0-RC6-16"
           )
         }
       }
@@ -1040,7 +1183,7 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res))
 
-        val depArtifacts = res.dependencyArtifacts(Some(Seq(Classifier.sources)))
+        val depArtifacts = res.dependencyArtifacts0(Some(Seq(Classifier.sources)))
 
         val urls = depArtifacts.map(_._3.url).toSet
         val expectedUrls = Set(
@@ -1049,7 +1192,7 @@ object ResolveTests extends TestSuite {
         )
         assert(urls == expectedUrls)
 
-        val pubTypes         = depArtifacts.map(_._2.`type`).toSet
+        val pubTypes         = depArtifacts.collect { case (_, Right(pub), _) => pub.`type` }.toSet
         val expectedPubTypes = Set(Type.source)
         assert(pubTypes == expectedPubTypes)
       }
@@ -1071,16 +1214,17 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res))
 
-        val depArtifacts = res.dependencyArtifacts()
+        val depArtifacts = res.dependencyArtifacts0()
         assert(depArtifacts.lengthCompare(1) == 0)
 
-        val (_, pub, artifact) = depArtifacts.head
+        val (_, pub0, artifact) = depArtifacts.head
 
-        val url = artifact.url
         val expectedUrl =
           "https://repo1.maven.org/maven2/io/grpc/protoc-gen-grpc-java/1.23.0/protoc-gen-grpc-java-1.23.0-linux-x86_64.exe"
         assert(artifact.url == expectedUrl)
 
+        assert(pub0.isRight)
+        val pub = pub0.toOption.get
         assert(pub.`type` == Type("protoc-plugin"))
         assert(pub.ext == Extension("exe"))
         assert(pub.classifier == Classifier("linux-x86_64"))
@@ -1103,18 +1247,29 @@ object ResolveTests extends TestSuite {
       }
     }
 
-    test("default value for pom project.packaging property") {
+    test("default value for pom project_packaging property") {
       async {
         val dep = dep"org.nd4j:nd4j-native-platform:1.0.0-beta4"
+        val params = ResolutionParams()
+          .withOsInfo {
+            Activation.Os(
+              Some("x86_64"),
+              Set("mac", "unix"),
+              Some("mac os x"),
+              Some("10.15.1")
+            )
+          }
+          .withJdkVersion(Version("1.8.0_121"))
         val res = await {
           resolve
+            .withResolutionParams(params)
             .addDependencies(dep)
             .future()
         }
 
-        await(validateDependencies(res))
+        await(validateDependencies(res, params))
 
-        val urls = res.dependencyArtifacts().map(_._3.url)
+        val urls = res.dependencyArtifacts0().map(_._3.url)
         val wrongUrls =
           urls.filter(url => url.contains("$") || url.contains("{") || url.contains("}"))
 
@@ -1137,7 +1292,7 @@ object ResolveTests extends TestSuite {
         // The one we're interested in here
         val pomUrl =
           "https://repo1.maven.org/maven2/org/apache/zookeeper/zookeeper/3.5.0-alpha/zookeeper-3.5.0-alpha.pom"
-        val urls = res.dependencyArtifacts().map(_._3.url).toSet
+        val urls = res.dependencyArtifacts0().map(_._3.url).toSet
 
         assert(urls.contains(pomUrl))
       }
@@ -1157,7 +1312,7 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res))
 
-        val urls = res.dependencyArtifacts().map(_._3.url).toSet
+        val urls = res.dependencyArtifacts0().map(_._3.url).toSet
         val expectedUrls = Set(
           "https://repo1.maven.org/maven2/org/bytedeco/javacpp/1.5.2/javacpp-1.5.2.jar",
           "https://repo1.maven.org/maven2/org/bytedeco/mkl-platform-redist/2019.5-1.5.2/mkl-platform-redist-2019.5-1.5.2.jar",
@@ -1188,7 +1343,7 @@ object ResolveTests extends TestSuite {
 
         await(validateDependencies(res))
 
-        val artifacts = res.dependencyArtifacts()
+        val artifacts = res.dependencyArtifacts0()
         val expectedUrl =
           "https://repo1.maven.org/maven2/io/netty/netty-transport-native-epoll/4.1.44.Final/netty-transport-native-epoll-4.1.44.Final-woops.jar"
         val (_, _, woopsArtifact) = artifacts.find(_._3.url == expectedUrl).getOrElse {
@@ -1202,7 +1357,7 @@ object ResolveTests extends TestSuite {
       val dep = dep"com.helger:ph-jaxb-pom:1.0.3"
       test("JDK 1.8") {
         async {
-          val params = resolve.resolutionParams.withJdkVersion("1.8.0_121")
+          val params = resolve.resolutionParams.withJdkVersion(Version("1.8.0_121"))
           val res = await {
             resolve
               .withResolutionParams(params)
@@ -1214,7 +1369,7 @@ object ResolveTests extends TestSuite {
       }
       test("JDK 11") {
         async {
-          val params = resolve.resolutionParams.withJdkVersion("11.0.5")
+          val params = resolve.resolutionParams.withJdkVersion(Version("11.0.5"))
           val res = await {
             resolve
               .withResolutionParams(params)
@@ -1239,12 +1394,23 @@ object ResolveTests extends TestSuite {
 
     test("profile activation with missing property") {
       async {
+        val params = ResolutionParams()
+          .withOsInfo {
+            Activation.Os(
+              Some("x86_64"),
+              Set("mac", "unix"),
+              Some("mac os x"),
+              Some("10.15.1")
+            )
+          }
+          .withJdkVersion(Version("1.8.0_121"))
         val res = await {
           resolve
+            .withResolutionParams(params)
             .addDependencies(dep"org.openjfx:javafx-base:18-ea+2")
             .future()
         }
-        await(validateDependencies(res))
+        await(validateDependencies(res, params))
 
         val artifacts = res.artifacts()
         val urls      = artifacts.map(_.url)
@@ -1277,7 +1443,7 @@ object ResolveTests extends TestSuite {
           .withMapDependenciesOpt(
             Some { dep =>
               if (dep.module.name.value == "scala-library")
-                dep.withVersion("2.12.12")
+                dep.withVersionConstraint(VersionConstraint("2.12.12"))
               else
                 dep
             }
@@ -1305,7 +1471,7 @@ object ResolveTests extends TestSuite {
       ): Future[Unit] =
         async {
           val params = ResolutionParams()
-            .withJdkVersion("8.0")
+            .withJdkVersion(Version("8.0"))
             .withProfiles(profiles)
             .withForceDepMgmtVersions(forceDepMgmtVersions)
           val res = await {
@@ -1317,15 +1483,15 @@ object ResolveTests extends TestSuite {
                     ModuleName(s"spark-core_$scalaBinaryVersion"),
                     Map.empty
                   ),
-                  sparkVersion
+                  VersionConstraint(sparkVersion)
                 )
               )
               .withResolutionParams(params)
               .future()
           }
           // await(validateDependencies(res))
-          val found       = dependenciesWithRetainedVersion(res).map(_.moduleVersion).toMap
-          val scalaLibOpt = found.get(mod"org.scala-lang:scala-library")
+          val found       = res.orderedDependencies.map(_.moduleVersionConstraint).toMap
+          val scalaLibOpt = found.get(mod"org.scala-lang:scala-library").map(_.asString)
           assert(scalaLibOpt.exists(_.startsWith(s"$scalaBinaryVersion.")))
           // !
           await(validateDependencies(res, params))
@@ -1434,10 +1600,24 @@ object ResolveTests extends TestSuite {
 
     test("quarkus") {
       test("rest") {
-        check(dep"io.quarkus:quarkus-rest:3.15.1")
+        doCheck(
+          resolve.withResolutionParams(
+            resolve.resolutionParams.withOsInfo(
+              Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1"))
+            )
+          ),
+          Seq(dep"io.quarkus:quarkus-rest:3.15.1")
+        )
       }
       test("rest-jackson") {
-        check(dep"io.quarkus:quarkus-rest-jackson:3.15.1")
+        doCheck(
+          resolve.withResolutionParams(
+            resolve.resolutionParams.withOsInfo(
+              Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1"))
+            )
+          ),
+          Seq(dep"io.quarkus:quarkus-rest-jackson:3.15.1")
+        )
       }
       test("hibernate-orm-panache") {
         check(dep"io.quarkus:quarkus-hibernate-orm-panache:3.15.1")
@@ -1461,7 +1641,7 @@ object ResolveTests extends TestSuite {
 
     test("android") {
 
-      def androiCheck(dependencies: Dependency*): Future[Unit] =
+      def androidCheck(dependencies: Dependency*): Future[Unit] =
         async {
           val res = await {
             resolve
@@ -1473,46 +1653,35 @@ object ResolveTests extends TestSuite {
         }
 
       test("activity") {
-        androiCheck(dep"androidx.activity:activity:1.8.2")
+        androidCheck(dep"androidx.activity:activity:1.8.2")
       }
       test("activity-compose") {
-        androiCheck(dep"androidx.activity:activity-compose:1.8.2")
+        androidCheck(dep"androidx.activity:activity-compose:1.8.2")
       }
       test("runtime") {
-        androiCheck(dep"androidx.compose.runtime:runtime:1.3.1")
+        androidCheck(dep"androidx.compose.runtime:runtime:1.3.1")
       }
       test("material3") {
-        androiCheck(dep"androidx.compose.material3:material3:1.0.1")
+        androidCheck(dep"androidx.compose.material3:material3:1.0.1")
       }
     }
 
     test("bom") {
 
-      def bomCheck(boms: (Module, String)*)(dependencies: Dependency*): Future[Unit] =
-        async {
-          val res = await {
-            resolve
-              .addDependencies(dependencies: _*)
-              .addBoms(boms: _*)
-              .future()
-          }
-          await(validateDependencies(res))
-        }
-
       test("spark-parent") {
         test {
-          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".moduleVersion)(
-            dep"org.apache.commons:commons-lang3:_"
+          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency)(
+            dep"org.apache.commons:commons-lang3"
           )
         }
         test {
-          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".moduleVersion)(
-            dep"org.glassfish.jaxb:jaxb-runtime:_"
+          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency)(
+            dep"org.glassfish.jaxb:jaxb-runtime"
           )
         }
         test {
-          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".moduleVersion)(
-            dep"org.apache.logging.log4j:log4j-core:_"
+          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency)(
+            dep"org.apache.logging.log4j:log4j-core"
           )
         }
       }
@@ -1522,7 +1691,7 @@ object ResolveTests extends TestSuite {
           check(dep"ch.epfl.scala:bsp4j:2.2.0-M2")
         }
         test("enabled") {
-          bomCheck(dep"io.quarkus:quarkus-bom:3.16.2".moduleVersion)(
+          bomCheck(dep"io.quarkus:quarkus-bom:3.16.2".asBomDependency)(
             dep"ch.epfl.scala:bsp4j:2.2.0-M2"
           )
         }
@@ -1533,8 +1702,8 @@ object ResolveTests extends TestSuite {
       // so this checks that this property is substituted at the right time
       test("google-cloud-bom") {
         test("protobuf-java") {
-          bomCheck(dep"com.google.cloud:libraries-bom:26.50.0".moduleVersion)(
-            dep"com.google.protobuf:protobuf-java:_"
+          bomCheck(dep"com.google.cloud:libraries-bom:26.50.0".asBomDependency)(
+            dep"com.google.protobuf:protobuf-java"
           )
         }
 
@@ -1543,40 +1712,313 @@ object ResolveTests extends TestSuite {
             check(dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8")
           }
           test("bom") {
-            bomCheck(dep"com.google.cloud:libraries-bom:26.50.0".moduleVersion)(
+            bomCheck(dep"com.google.cloud:libraries-bom:26.50.0".asBomDependency)(
               dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
             )
           }
           test("bom-via-dep") {
+            // BOM should bump protobuf-java to 4.28.3
             check(
               dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
-                .addBom(mod"com.google.cloud:libraries-bom", "26.50.0")
+                .addBom(mod"com.google.cloud:libraries-bom", VersionConstraint("26.50.0"))
             )
           }
         }
       }
 
       test("scalatest-play") {
-        bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".moduleVersion)(
-          dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
+        test("default") {
+          bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency)(
+            dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
+          )
+        }
+        test("test") {
+          // BOM should override org.scalatest:scalatest_2.13 version,
+          // as we pull the test entries too
+          bomCheck(
+            dep"org.apache.spark:spark-parent_2.13:3.5.3"
+              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
+              .asBomDependency
+          )(
+            dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
+          )
+        }
+        test("testViaBomDep") {
+          test {
+            // BOM should force org.scalatest:scalatest_2.13 version to 3.2.16
+            // (because we take into account dep mgmt with test scope here)
+            check(
+              dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
+                  .asBomDependency
+              )
+            )
+          }
+          test {
+            // BOM shouldn't force org.scalatest:scalatest_2.13 version to 3.2.16,
+            // leaving it to 3.2.17
+            // (because we don't take into account dep mgmt with test scope here)
+            check(
+              dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .withVariantSelector(
+                    VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
+                  )
+                  .asBomDependency
+              )
+            )
+          }
+        }
+      }
+
+      test("runtime") {
+        bomCheck(
+          dep"io.quarkus:quarkus-bom:3.15.1"
+            .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.runtime))
+            .asBomDependency
+        )(
+          dep"org.mvnpm.at.hpcc-js:wasm"
         )
+      }
+
+      test("provided") {
+        test {
+          // BOM should fill the version, even though
+          // protobuf-java is marked as provided there
+          bomCheck(
+            dep"org.apache.spark:spark-parent_2.13:3.5.3"
+              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
+              .asBomDependency
+          )(
+            dep"com.google.protobuf:protobuf-java"
+          )
+        }
+        test {
+          // BOM should fill the version, even though
+          // protobuf-java is marked as provided there
+          bomCheck(
+            dep"org.apache.spark:spark-parent_2.13:3.5.3"
+              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
+              .asBomDependency
+          )(
+            dep"com.google.protobuf:protobuf-java-util"
+          )
+        }
+        // test("check") {
+        //   async {
+        //
+        //     val params = ResolutionParams()
+        //       .withOsInfo {
+        //         Activation.Os(
+        //           Some("x86_64"),
+        //           Set("mac", "unix"),
+        //           Some("mac os x"),
+        //           Some("10.15.1")
+        //         )
+        //       }
+        //       .withJdkVersion(Version("1.8.0_121"))
+        //
+        //     val res = await {
+        //       resolve
+        //         .withResolutionParams(params)
+        //         .addDependencies(dep"com.google.protobuf:protobuf-java")
+        //         .addBom(
+        //           dep"org.apache.spark:spark-parent_2.13:3.5.3"
+        //             .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.compile))
+        //             .asBomDependency
+        //         )
+        //         .io
+        //         .attempt
+        //         .future()
+        //     }
+        //
+        //     val isLeft = res.isLeft
+        //     assert(isLeft)
+        //
+        //     val error = res.swap.toOption.get
+        //
+        //     error match {
+        //       case e: ResolutionError.CantDownloadModule =>
+        //         assert(e.module == mod"com.google.protobuf:protobuf-java")
+        //       case _ =>
+        //         throw error
+        //     }
+        //   }
+        // }
+
+        test("bom-dep") {
+          test {
+            // BOM should have no effect, no empty version to fill
+            // and no transitive dependency
+            check(
+              dep"com.google.protobuf:protobuf-java:3.7.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
+                  .asBomDependency
+              )
+            )
+          }
+          test {
+            // BOM should override transitive dependency versions,
+            // com.google.protobuf:protobuf-java in particular, but not
+            // com.google.protobuf:protobuf-java-util
+            check(
+              dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
+                  .asBomDependency
+              )
+            )
+          }
+          test("check") {
+            // BOM shouldn't override com.google.protobuf:protobuf-java
+            // version, as it's marked as provided there
+            check(
+              dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .withVariantSelector(
+                    VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
+                  )
+                  .asBomDependency
+              )
+            )
+          }
+        }
+
+        test("bom-dep-force-ver") {
+          test {
+            // BOM should override root dependency version (forceOverrideVersions is true)
+            // and transitive dependencies' versions
+            check(
+              dep"com.google.protobuf:protobuf-java:3.7.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
+                  .asBomDependency
+                  .withForceOverrideVersions(true)
+              )
+            )
+          }
+          test {
+            // BOM should override root dependency version (forceOverrideVersions is true)
+            // and transitive dependencies' versions
+            check(
+              dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
+                  .asBomDependency
+                  .withForceOverrideVersions(true)
+              )
+            )
+          }
+          test("check") {
+            // BOM shouldn't override root dependency version (even though
+            // forceOverrideVersions is true) or transitive dep
+            // com.google.protobuf:protobuf-java version, as these are marked
+            // as provided in the BOM, and we don't ask for this config here
+            check(
+              dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
+                dep"org.apache.spark:spark-parent_2.13:3.5.3"
+                  .asBomDependency
+                  .withForceOverrideVersions(true)
+              )
+            )
+          }
+        }
       }
 
       test("bom-dep") {
         test {
-          // The BOM shouldn't apply to scalapbc in that case
+          // The BOM shouldn't apply to scalapbc in that case,
+          // protobuf-java should stay on 3.7.1
           check(
             dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8",
             dep"com.lihaoyi:pprint_2.13:0.9.0"
-              .addBom(mod"com.google.cloud:libraries-bom", "26.50.0")
+              .addBom(mod"com.google.cloud:libraries-bom", VersionConstraint("26.50.0"))
           )
         }
         test {
+          // The BOM should apply to scalapbc in that case,
+          // protobuf-java should switch to 4.28.3
           check(
             dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
-              .addBom(mod"com.google.cloud:libraries-bom", "26.50.0"),
+              .addBom(mod"com.google.cloud:libraries-bom", VersionConstraint("26.50.0")),
             dep"com.lihaoyi:pprint_2.13:0.9.0"
           )
+        }
+      }
+
+      test("precedence") {
+        test("bomOverride") {
+          test {
+            // protobuf-java 4.28.1 (override)
+            // protobuf-java-util 4.28.3 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.3,bom=com.google.protobuf%protobuf-bom%4.28.0,override=com.google.protobuf%protobuf-java%4.28.1"
+            )
+          }
+          test {
+            // protobuf-java 4.28.3 (override)
+            // protobuf-java-util 4.28.0 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.0,bom=com.google.protobuf%protobuf-bom%4.28.1,override=com.google.protobuf%protobuf-java%4.28.3"
+            )
+          }
+          test {
+            // protobuf-java 4.28.0 (override)
+            // protobuf-java-util 4.28.1 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.1,bom=com.google.protobuf%protobuf-bom%4.28.3,override=com.google.protobuf%protobuf-java%4.28.0"
+            )
+          }
+        }
+
+        test("bomBom") {
+          test {
+            // protobuf-java 4.28.1 (first bom)
+            // protobuf-java-util 4.28.3 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.3,bom=com.google.protobuf%protobuf-bom%4.28.1,bom=com.google.protobuf%protobuf-bom%4.28.0"
+            )
+          }
+          test {
+            // protobuf-java 4.28.3 (first bom)
+            // protobuf-java-util 4.28.0 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.0,bom=com.google.protobuf%protobuf-bom%4.28.3,bom=com.google.protobuf%protobuf-bom%4.28.1"
+            )
+          }
+          test {
+            // protobuf-java 4.28.0 (first bom)
+            // protobuf-java-util 4.28.1 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.1,bom=com.google.protobuf%protobuf-bom%4.28.0,bom=com.google.protobuf%protobuf-bom%4.28.3"
+            )
+          }
+        }
+
+        test("overrideOverride") {
+          test {
+            // protobuf-java 4.28.1 (first override)
+            // protobuf-java-util 4.28.3 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.3,override=com.google.protobuf%protobuf-java%4.28.1,override=com.google.protobuf%protobuf-java%4.28.0"
+            )
+          }
+          test {
+            // protobuf-java 4.28.3 (first override)
+            // protobuf-java-util 4.28.0 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.0,override=com.google.protobuf%protobuf-java%4.28.3,override=com.google.protobuf%protobuf-java%4.28.1"
+            )
+          }
+          test {
+            // protobuf-java 4.28.0 (first override)
+            // protobuf-java-util 4.28.1 (input version)
+            check(
+              dep"com.google.protobuf:protobuf-java-util:4.28.1,override=com.google.protobuf%protobuf-java%4.28.0,override=com.google.protobuf%protobuf-java%4.28.3"
+            )
+          }
         }
       }
     }
@@ -1602,6 +2044,430 @@ object ResolveTests extends TestSuite {
           dep"androidx.compose.animation:animation-core:1.1.1",
           dep"androidx.compose.ui:ui:1.1.1"
         )
+      }
+    }
+
+    test("large resolution") {
+      check(dep"io.trino:trino-hive:467")
+    }
+
+    test("dep import and parent precedence") {
+      // bom has a dep import of a BOM pulling protobuf-java 3.x
+      // and has parents pulling protobuf-java 4.x
+      // The former should have precedence over the latter
+      bomCheck(dep"com.google.cloud:libraries-bom-protobuf3:26.51.0".asBomDependency)(
+        dep"com.google.protobuf:protobuf-java:"
+      )
+    }
+
+    test("gradle modules") {
+      test("kotlinx-html-js") {
+        test("no-support") {
+          check(
+            dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0"
+          )
+        }
+        test("support") {
+          test("variants") {
+            test("dependency") {
+              gradleModuleCheck(
+                dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,variant.org.gradle.usage=kotlin-runtime,variant.org.jetbrains.kotlin.platform.type=js,variant.org.jetbrains.kotlin.js.compiler=ir,variant.org.gradle.category=library"
+              )
+            }
+            test("global") {
+              gradleModuleCheck0(
+                defaultAttributes = Some(
+                  VariantSelector.AttributesBased(Map(
+                    "org.gradle.usage" -> VariantMatcher.Runtime,
+                    "org.jetbrains.kotlin.platform.type" ->
+                      VariantMatcher.Equals("js"),
+                    "org.jetbrains.kotlin.js.compiler" ->
+                      VariantMatcher.Equals("ir"),
+                    "org.gradle.category" -> VariantMatcher.Library
+                  ))
+                )
+              )(
+                dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0"
+              )
+            }
+          }
+          test("missing variants") {
+            async {
+              val res = await {
+                enableModules(resolve)
+                  .addDependencies(
+                    dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,variant.org.gradle.usage=kotlin-runtime"
+                  )
+                  .futureEither()
+              }
+              assert(res.isLeft)
+              assert(
+                res.left.toOption.get.getMessage
+                  .contains(
+                    "Found too many variants in org.jetbrains.kotlin:kotlin-stdlib:1.9.22 for"
+                  )
+              )
+            }
+          }
+        }
+      }
+      test("android") {
+        test("dependency") {
+          def withVariant(dep: Dependency, map: Map[String, VariantMatcher]) =
+            dep.withVariantSelector(VariantSelector.AttributesBased(map))
+
+          def testVariants(
+            config: Configuration,
+            map: Map[String, VariantMatcher]
+          ): Future[Unit] =
+            gradleModuleCheck0(defaultConfiguration = Some(config))(
+              withVariant(dep"androidx.core:core-ktx:1.15.0", map),
+              withVariant(dep"androidx.activity:activity-compose:1.9.3", map),
+              withVariant(dep"androidx.compose.ui:ui:1.7.5", map),
+              withVariant(dep"androidx.compose.material3:material3:1.3.1", map)
+            )
+
+          // needs some extra default attributes for compile scope to work
+
+          test("runtime") {
+            testVariants(
+              Configuration.runtime,
+              Map(
+                "org.gradle.usage"                   -> VariantMatcher.Equals("java-runtime"),
+                "org.gradle.category"                -> VariantMatcher.Equals("library"),
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
+              )
+            )
+          }
+        }
+        test("global") {
+          def testVariants(
+            config: Configuration,
+            map: Map[String, VariantMatcher]
+          ): Future[Unit] =
+            gradleModuleCheck0(
+              defaultConfiguration = Some(config),
+              defaultAttributes = Some(VariantSelector.AttributesBased(map))
+            )(
+              dep"androidx.core:core-ktx:1.15.0",
+              dep"androidx.activity:activity-compose:1.9.3",
+              dep"androidx.compose.ui:ui:1.7.5",
+              dep"androidx.compose.material3:material3:1.3.1"
+            )
+
+          test("compile") {
+            testVariants(
+              Configuration.compile,
+              Map(
+                "org.gradle.usage"                   -> VariantMatcher.Equals("java-api"),
+                "org.gradle.category"                -> VariantMatcher.Equals("library"),
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
+              )
+            )
+          }
+          test("runtime") {
+            testVariants(
+              Configuration.runtime,
+              Map(
+                "org.gradle.usage"                   -> VariantMatcher.Equals("java-runtime"),
+                "org.gradle.category"                -> VariantMatcher.Equals("library"),
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
+              )
+            )
+          }
+        }
+      }
+      test("fallback from config") {
+        test("android") {
+          test("compile") {
+            val attr = VariantSelector.AttributesBased().withMatchers(
+              Map(
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
+              )
+            )
+            gradleModuleCheck0(
+              defaultConfiguration = Some(Configuration.compile),
+              defaultAttributes = Some(attr)
+            )(
+              dep"androidx.core:core-ktx:1.15.0:compile"
+            )
+          }
+          test("runtime") {
+            val attr = VariantSelector.AttributesBased().withMatchers(
+              Map(
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
+              )
+            )
+            gradleModuleCheck0(defaultAttributes = Some(attr))(
+              dep"androidx.core:core-ktx:1.15.0"
+            )
+          }
+        }
+        test("kotlin") {
+          test("runtime") {
+            test("js") {
+              val attr = VariantSelector.AttributesBased().withMatchers(
+                Map(
+                  "org.jetbrains.kotlin.platform.type" ->
+                    VariantMatcher.Equals("js"),
+                  "org.jetbrains.kotlin.js.compiler" -> VariantMatcher.Equals("ir")
+                )
+              )
+              gradleModuleCheck0(defaultAttributes = Some(attr))(
+                dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0"
+              )
+            }
+            test("jvm") {
+              val attr = VariantSelector.AttributesBased().withMatchers(
+                Map(
+                  "org.gradle.jvm.environment" ->
+                    VariantMatcher.Equals("standard-jvm")
+                )
+              )
+              gradleModuleCheck0(defaultAttributes = Some(attr))(
+                dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0"
+              )
+            }
+          }
+        }
+      }
+      test("module-bom") {
+        val resolve0 = resolve.withResolutionParams(
+          resolve.resolutionParams.withOsInfo(
+            Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1"))
+          )
+        )
+        gradleModuleCheck0(resolve0 = resolve0)(
+          dep"io.quarkus:quarkus-rest-jackson:3.15.1"
+        )
+      }
+      test("quarkus-junit5") {
+        val resolve0 = resolve.addVariantAttributes(
+          "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
+        )
+        gradleModuleCheck0(resolve0 = resolve0)(
+          dep"io.quarkus:quarkus-junit5:3.15.1"
+        )
+      }
+      test("quarkus-rest-assured") {
+        gradleModuleCheck(dep"io.rest-assured:rest-assured:5.5.0")
+      }
+
+      test("scalatest-play") {
+        val resolve0 = resolve
+          .addVariantAttributes(
+            "org.gradle.jvm.environment"     -> VariantMatcher.Equals("standard-jvm"),
+            "org.gradle.dependency.bundling" -> VariantMatcher.Equals("external")
+          )
+          .addBomConfigs(
+            dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency
+          )
+        gradleModuleCheck0(resolve0 = resolve0)(
+          dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
+        )
+      }
+      test("bom") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
+            ))
+          )
+        )(
+          dep"org.junit-pioneer:junit-pioneer:1.9.1"
+        )
+      }
+      test("only prefers") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.gradle.category"                -> VariantMatcher.Library,
+              "org.gradle.dependency.bundling"     -> VariantMatcher.Equals("external"),
+              "org.gradle.jvm.environment"         -> VariantMatcher.Equals("non-jvm"),
+              "org.gradle.usage"                   -> VariantMatcher.Runtime,
+              "org.jetbrains.kotlin.js.compiler"   -> VariantMatcher.Equals("ir"),
+              "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("js")
+            ))
+          ),
+          defaultConfiguration = Some(Configuration.runtime),
+          attributesBasedReprAsToString = true
+        )(
+          dep"io.kotest:kotest-framework-engine-js:6.0.0.M3"
+        )
+      }
+      test("wrong module name") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.gradle.category"        -> VariantMatcher.Library,
+              "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
+            ))
+          ),
+          attributesBasedReprAsToString = true
+        )(
+          dep"org.jetbrains.kotlin:kotlin-test-junit:2.0.20"
+        )
+      }
+      test("module BOM") {
+        gradleModuleCheck(
+          dep"org.springframework.data:spring-data-jpa:2.5.4"
+        )
+      }
+      test("any of") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.jetbrains.kotlin.platform.type" ->
+                VariantMatcher.AnyOf(Seq(
+                  VariantMatcher.Equals("androidJvm"),
+                  VariantMatcher.Equals("jvm")
+                ))
+            ))
+          ),
+          attributesBasedReprAsToString = true
+        )(
+          dep"androidx.compose.material3:material3:1.3.1",
+          dep"androidx.collection:collection-ktx:1.4.0",
+          dep"androidx.lifecycle:lifecycle-process:2.8.3",
+          dep"androidx.lifecycle:lifecycle-common-java8:2.8.3"
+        )
+      }
+
+      test("endorseStrictVersions") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
+            ))
+          ),
+          attributesBasedReprAsToString = true
+        )(
+          dep"androidx.test.ext:junit:1.2.1"
+        )
+      }
+
+      test("bom config graph") {
+        val resolve0 = resolve
+          .addVariantAttributes(
+            "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
+          )
+          .addBom(
+            dep"io.micronaut.platform:micronaut-platform:4.9.2".asBomDependency
+          )
+        test("micronaut-inject-kotlin") {
+          gradleModuleCheck0(resolve0 = resolve0)(
+            dep"io.micronaut:micronaut-inject-kotlin:"
+          )
+        }
+        test("micronaut-openapi") {
+          gradleModuleCheck0(resolve0 = resolve0)(
+            dep"io.micronaut.openapi:micronaut-openapi:"
+          )
+        }
+      }
+
+      test("lottie") {
+        val resolve0 = resolve
+          .addVariantAttributes(
+            "org.gradle.jvm.environment"         -> VariantMatcher.Equals("standard-jvm"),
+            "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm"),
+            "ui"                                 -> VariantMatcher.Equals("android")
+          )
+          .addRepositories(
+            Repositories.google,
+            MavenRepository("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+          )
+        gradleModuleCheck0(resolve0 = resolve0, attributesBasedReprAsToString = true)(
+          dep"com.airbnb.android:lottie-compose:6.6.6"
+        )
+      }
+    }
+
+    test("empty version") {
+      async {
+
+        val res = await {
+          resolve
+            .addDependencies(
+              dep"com.google.protobuf:protobuf-java"
+            )
+            .io
+            .attempt
+            .future()
+        }
+
+        val isLeft = res.isLeft
+        assert(isLeft)
+
+        val error = res.swap.toOption.get
+
+        error match {
+          case e: ResolutionError.CantDownloadModule =>
+            assert(e.module == mod"com.google.protobuf:protobuf-java")
+            val message = e.getMessage.toString
+            assert(message.contains("Error downloading com.google.protobuf:protobuf-java:"))
+          case _ =>
+            throw error
+        }
+      }
+    }
+
+    test("scalaOrganizationOverride") {
+
+      test("swapsDepsForScala3") {
+        val params = ResolutionParams()
+          .withScalaVersion("3.8.0")
+          .withScalaOrganizationOverride(Some(org"ch.epfl.lara"))
+
+        val res = Resolve.initialResolution(Nil, params)
+
+        // forceVersions should use the custom org
+        val forceVersionModules = res.forceVersions0.keySet
+        assert(forceVersionModules.contains(mod"ch.epfl.lara:scala3-library_3"))
+        assert(forceVersionModules.contains(mod"ch.epfl.lara:scala3-compiler_3"))
+        assert(forceVersionModules.forall(!_.repr.startsWith("org.scala-lang:scala3-")))
+
+        // mapDependencies should swap org.scala-lang to the custom org
+        val scalaLibDep = dep"org.scala-lang:scala3-library_3:3.3.1"
+        val mapped      = res.mapDependencies.get(scalaLibDep)
+        assert(mapped == dep"ch.epfl.lara:scala3-library_3:3.3.1")
+      }
+
+      test("swapsDepsForScala2") {
+        val params = ResolutionParams()
+          .withScalaVersion("2.12.20")
+          .withScalaOrganizationOverride(Some(org"org.typelevel"))
+
+        val res = Resolve.initialResolution(Nil, params)
+
+        val scalaLibDep = dep"org.scala-lang:scala-library:2.12.18"
+        val mapped      = res.mapDependencies.get(scalaLibDep)
+        assert(mapped == dep"org.typelevel:scala-library:2.12.18")
+      }
+
+      test("noSwapWhenNotSet") {
+        val params = ResolutionParams()
+          .withScalaVersion("3.8.0")
+
+        val res = Resolve.initialResolution(Nil, params)
+
+        val scalaLibDep = dep"org.scala-lang:scala3-library_3:3.3.1"
+        val mapped      = res.mapDependencies.get(scalaLibDep)
+        // org should remain unchanged
+        assert(mapped == scalaLibDep)
+      }
+
+      test("doesNotSwapNonScalaModules") {
+        val params = ResolutionParams()
+          .withScalaVersion("3.8.0")
+          .withScalaOrganizationOverride(Some(org"ch.epfl.lara"))
+
+        val res = Resolve.initialResolution(Nil, params)
+
+        val nonScalaDep = dep"org.scala-lang:some-other-module:1.0.0"
+        val mapped      = res.mapDependencies.get(nonScalaDep)
+        // non-Scala modules under org.scala-lang should NOT be swapped
+        assert(mapped == nonScalaDep)
       }
     }
   }

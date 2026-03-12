@@ -1,11 +1,12 @@
 package coursier
 
 import coursier.cache.Cache
-import coursier.core.{Module, Repository, Version}
+import coursier.core.{Module, Repository}
 import coursier.error.CoursierError
 import coursier.params.{Mirror, MirrorConfFile}
 import coursier.util.{Sync, Task}
 import coursier.util.Monad.ops._
+import coursier.version.Version
 import dataclass._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
@@ -81,19 +82,17 @@ object Versions {
 
   private def merge(versions: Vector[coursier.core.Versions]): coursier.core.Versions =
     if (versions.isEmpty)
-      coursier.core.Versions("", "", Nil, None)
+      coursier.core.Versions(Version.zero, Version.zero, Nil, None)
     else if (versions.lengthCompare(1) == 0)
       versions.head
     else {
-      val latest  = versions.map(v => Version(v.latest)).max.repr
-      val release = versions.map(v => Version(v.release)).max.repr
+      val latest  = versions.map(_.latest0).max
+      val release = versions.map(_.release0).max
 
       val available = versions
-        .flatMap(_.available)
+        .flatMap(_.available0)
         .distinct
-        .map(Version(_))
         .sorted
-        .map(_.repr)
         .toList
 
       val lastUpdated = versions

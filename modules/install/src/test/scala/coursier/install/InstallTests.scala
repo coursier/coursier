@@ -19,7 +19,6 @@ import utest._
 
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
-import coursier.core.Version
 import scala.util.{Properties, Using}
 
 object InstallTests extends TestSuite {
@@ -232,9 +231,15 @@ object InstallTests extends TestSuite {
         assert(appList == expectedAppList)
       }
 
-      test("linux") - run("linux", "x86_84")
-      test("mac") - run("mac", "x86_84")
-      test("windows") - run("windows", "x86_84")
+      test("linux") {
+        run("linux", "x86_84")
+      }
+      test("mac") {
+        run("mac", "x86_84")
+      }
+      test("windows") {
+        run("windows", "x86_84")
+      }
     }
 
     test("generate an echo assembly") {
@@ -265,12 +270,18 @@ object InstallTests extends TestSuite {
         }
       }
 
-      test("linux") - run("linux", "x86_84")
-      test("mac") - run("mac", "x86_84")
-      test("windows") - run("windows", "x86_84")
+      test("linux") {
+        run("linux", "x86_84")
+      }
+      test("mac") {
+        run("mac", "x86_84")
+      }
+      test("windows") {
+        run("windows", "x86_84")
+      }
     }
 
-    test("generate an echo standalone launcher") - {
+    test("generate an echo standalone launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val id = "echo"
@@ -306,9 +317,15 @@ object InstallTests extends TestSuite {
         }
       }
 
-      test("linux") - run("linux", "x86_84")
-      test("mac") - run("mac", "x86_84")
-      test("windows") - run("windows", "x86_84")
+      test("linux") {
+        run("linux", "x86_84")
+      }
+      test("mac") {
+        run("mac", "x86_84")
+      }
+      test("windows") {
+        run("windows", "x86_84")
+      }
     }
 
     test("not update an already up-to-date launcher") {
@@ -346,9 +363,15 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux", "x86_64")
-      test("mac") - run("mac", "x86_64")
-      test("windows") - run("windows", "x86_64")
+      test("linux") {
+        run("linux", "x86_64")
+      }
+      test("mac") {
+        run("mac", "x86_64")
+      }
+      test("windows") {
+        run("windows", "x86_64")
+      }
     }
 
     test("update a launcher") {
@@ -407,7 +430,7 @@ object InstallTests extends TestSuite {
               else
                 Task.fail(new Exception(s"Invalid source: $src")),
             currentTime = now
-          ).unsafeRun()(cache.ec)
+          ).unsafeRun(wrapExceptions = true)(cache.ec)
         }
 
         // randomly seeing the old file on OS X if we don't check that :|
@@ -421,9 +444,15 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux", "x86_64")
-      test("mac") - run("mac", "x86_64")
-      test("windows") - run("windows", "x86_64")
+      test("linux") {
+        run("linux", "x86_64")
+      }
+      test("mac") {
+        run("mac", "x86_64")
+      }
+      test("windows") {
+        run("windows", "x86_64")
+      }
     }
 
     test("try updating a non-installed app") {
@@ -435,16 +464,22 @@ object InstallTests extends TestSuite {
           installDir0.maybeUpdate(
             "dummy-app-id",
             src => sys.error("illegal: that code should not be reached")
-          ).attempt.unsafeRun()(cache.ec)
+          ).attempt.unsafeRun(wrapExceptions = true)(cache.ec)
 
         assert(
           result.contains(Some(false))
         ) // TODO Check the output contains "Cannot find installed application 'dummy-app-id'..."
       }
 
-      test("linux") - run("linux", "x86_64")
-      test("mac") - run("mac", "x86_64")
-      test("windows") - run("windows", "x86_64")
+      test("linux") {
+        run("linux", "x86_64")
+      }
+      test("mac") {
+        run("mac", "x86_64")
+      }
+      test("windows") {
+        run("windows", "x86_64")
+      }
     }
 
     test("install a prebuilt launcher") {
@@ -484,9 +519,15 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux", "x86_64")
-      test("mac") - run("mac", "x86_64")
-      test("windows") - run("windows", "x86_64")
+      test("linux") {
+        run("linux", "x86_64")
+      }
+      test("mac") {
+        run("mac", "x86_64")
+      }
+      test("windows") {
+        run("windows", "x86_64")
+      }
     }
 
     test("install a compressed prebuilt launcher") {
@@ -533,9 +574,15 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux", "x86_64")
-      test("mac") - run("mac", "x86_64")
-      test("windows") - run("windows", "x86_64")
+      test("linux") {
+        run("linux", "x86_64")
+      }
+      test("mac") {
+        run("mac", "x86_64")
+      }
+      test("windows") {
+        run("windows", "x86_64")
+      }
     }
 
     test("install a prebuilt launcher in an archive") {
@@ -584,15 +631,27 @@ object InstallTests extends TestSuite {
       }
 
       test("zip") {
-        test("linux") - run("linux", "x86_64", zipPattern)
-        test("mac") - run("mac", "x86_64", zipPattern)
-        test("windows") - run("windows", "x86_64", zipPattern)
+        test("linux") {
+          run("linux", "x86_64", zipPattern)
+        }
+        test("mac") {
+          run("mac", "x86_64", zipPattern)
+        }
+        test("windows") {
+          run("windows", "x86_64", zipPattern)
+        }
       }
 
       test("tgz") {
-        test("linux") - run("linux", "x86_64", tgzPattern)
-        test("mac") - run("mac", "x86_64", tgzPattern)
-        test("windows") - run("windows", "x86_64", tgzPattern)
+        test("linux") {
+          run("linux", "x86_64", tgzPattern)
+        }
+        test("mac") {
+          run("mac", "x86_64", tgzPattern)
+        }
+        test("windows") {
+          run("windows", "x86_64", tgzPattern)
+        }
       }
     }
 
@@ -606,9 +665,9 @@ object InstallTests extends TestSuite {
             .withLauncherType("graalvm-native-image")
             .withPrebuiltBinaries(
               Map(
-                "x86_64-apple-darwin" -> "gz+https://github.com/alexarchambault/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-apple-darwin.gz",
-                "x86_64-pc-linux" -> "gz+https://github.com/alexarchambault/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-linux.gz",
-                "x86_64-pc-win32" -> "zip+https://github.com/alexarchambault/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-win32.zip"
+                "x86_64-apple-darwin" -> "gz+https://github.com/scala-cli/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-apple-darwin.gz",
+                "x86_64-pc-linux" -> "gz+https://github.com/scala-cli/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-linux.gz",
+                "x86_64-pc-win32" -> "zip+https://github.com/scala-cli/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-win32.zip"
               )
             ),
           id
@@ -639,9 +698,15 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux", "x86_64")
-      test("mac") - run("mac", "x86_64")
-      test("windows") - run("windows", "x86_64")
+      test("linux") {
+        run("linux", "x86_64")
+      }
+      test("mac") {
+        run("mac", "x86_64")
+      }
+      test("windows") {
+        run("windows", "x86_64")
+      }
     }
 
     test("install a prebuilt-only zip-ed launcher") {
@@ -682,49 +747,57 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
-      test("linux") - run("linux", "x86_64")
-      test("mac") - run("mac", "x86_64")
-      test("windows") - run("windows", "x86_64")
+      test("linux") {
+        run("linux", "x86_64")
+      }
+      test("mac") {
+        run("mac", "x86_64")
+      }
+      test("windows") {
+        run("windows", "x86_64")
+      }
     }
 
-    // test("generate a native echo launcher via native-image") - withTempDir { tmpDir =>
-    //   val id = "echo"
-    //   val appInfo0 = appInfo(
-    //     RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
-    //       .withRepositories(List("central"))
-    //       .withLauncherType("graalvm-native-image"),
-    //     id
-    //   )
+    // test("generate a native echo launcher via native-image") {
+    //   withTempDir { tmpDir =>
+    //     val id = "echo"
+    //     val appInfo0 = appInfo(
+    //       RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
+    //         .withRepositories(List("central"))
+    //         .withLauncherType("graalvm-native-image"),
+    //       id
+    //     )
 
-    //   val installDir0 = installDir(tmpDir)
-    //     .withVerbosity(1)
-    //     .withGraalvmParamsOpt {
-    //       Option(System.getenv("GRAALVM_HOME"))
-    //         .orElse {
-    //           val isGraalVM = Option(System.getProperty("java.vm.name"))
-    //             .map(_.toLowerCase(Locale.ROOT))
-    //             .exists(_.contains("graal"))
-    //           if (isGraalVM)
-    //             Option(System.getenv("JAVA_HOME"))
-    //               .orElse(Option(System.getProperty("java.home")))
-    //           else
-    //             None
-    //         }
-    //         .map(GraalvmParams(_, Nil))
-    //     }
-    //   )
+    //     val installDir0 = installDir(tmpDir)
+    //       .withVerbosity(1)
+    //       .withGraalvmParamsOpt {
+    //         Option(System.getenv("GRAALVM_HOME"))
+    //           .orElse {
+    //             val isGraalVM = Option(System.getProperty("java.vm.name"))
+    //               .map(_.toLowerCase(Locale.ROOT))
+    //               .exists(_.contains("graal"))
+    //             if (isGraalVM)
+    //               Option(System.getenv("JAVA_HOME"))
+    //                 .orElse(Option(System.getProperty("java.home")))
+    //             else
+    //               None
+    //           }
+    //           .map(GraalvmParams(_, Nil))
+    //       }
+    //     )
 
-    //   val created = installDir0.createOrUpdate(appInfo0)
-    //   assert(created)
+    //     val created = installDir0.createOrUpdate(appInfo0)
+    //     assert(created)
 
-    //   val launcher = installDir0.actualDest(id)
-    //   assert(Files.isRegularFile(launcher))
+    //     val launcher = installDir0.actualDest(id)
+    //     assert(Files.isRegularFile(launcher))
 
-    //   assertNativeExecutable(launcher.toFile)
+    //     assertNativeExecutable(launcher.toFile)
 
-    //   val output = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
-    //   val expectedOutput = "foo"
-    //   assert(output == expectedOutput)
+    //     val output = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
+    //     val expectedOutput = "foo"
+    //     assert(output == expectedOutput)
+    //   }
     // }
 
     test("refuse to delete a file not created by us") {
@@ -749,9 +822,15 @@ object InstallTests extends TestSuite {
         assert(gotException)
       }
 
-      test("linux") - run("linux", "x86_64")
-      test("mac") - run("mac", "x86_64")
-      test("windows") - run("windows", "x86_64")
+      test("linux") {
+        run("linux", "x86_64")
+      }
+      test("mac") {
+        run("mac", "x86_64")
+      }
+      test("windows") {
+        run("windows", "x86_64")
+      }
     }
 
     test("install and override and update scalac") {
@@ -868,9 +947,15 @@ object InstallTests extends TestSuite {
           testOutput("Scala compiler version 3.3.3 -- Copyright 2002-2024, LAMP/EPFL")
       }
 
-      test("linux") - run("linux", "x86_64")
-      test("mac") - run("mac", "x86_64")
-      test("windows") - run("windows", "x86_64")
+      test("linux") {
+        run("linux", "x86_64")
+      }
+      test("mac") {
+        run("mac", "x86_64")
+      }
+      test("windows") {
+        run("windows", "x86_64")
+      }
     }
 
     test("override prebuilt / prebuiltBinaries") {
@@ -913,28 +998,53 @@ object InstallTests extends TestSuite {
         def testRun(expectedContent: String): Unit = {
           assert(Files.isRegularFile(auxiliaryLauncher))
           val content = new String(Files.readAllBytes(auxiliaryLauncher), StandardCharsets.UTF_8)
-          assert(content == expectedContent)
+          val contentMatches = content == expectedContent
+          assert(contentMatches)
         }
 
         val pf = installDir0.platform.getOrElse(sys.error("No platform?"))
 
-        testRun(s"cs-$pf-2.1.0-M3-1")
+        testRun(
+          if (os == "linux")
+            "https://github.com/coursier/coursier/releases/download/v2.1.25-M3/cs-x86_64-pc-linux.gz!cs-x86_64-pc-linux"
+          else if (os == "mac")
+            "https://github.com/coursier/coursier/releases/download/v2.1.25-M3/cs-x86_64-apple-darwin.gz!cs-x86_64-apple-darwin"
+          else if (os == "windows")
+            "https://github.com/coursier/coursier/releases/download/v2.1.25-M3/cs-x86_64-pc-win32.zip!cs-x86_64-pc-win32.exe"
+          else
+            sys.error(s"Unknown test os: $os")
+        )
 
         val overridenAppInfo = appInfo0.overrideVersion("2.0.13")
         val overridden       = installDir0.createOrUpdate(overridenAppInfo)
         assert(overridden.exists(identity))
 
-        testRun(s"cs-$pf-2.0.13")
+        testRun(s"https://github.com/coursier/coursier/releases/download/v2.0.13/cs-$pf$ext")
 
         val updated = installDir0.createOrUpdate(appInfo0)
         assert(updated.exists(identity))
 
-        testRun(s"cs-$pf-2.1.0-M3-1")
+        testRun(
+          if (os == "linux")
+            "https://github.com/coursier/coursier/releases/download/v2.1.25-M3/cs-x86_64-pc-linux.gz!cs-x86_64-pc-linux"
+          else if (os == "mac")
+            "https://github.com/coursier/coursier/releases/download/v2.1.25-M3/cs-x86_64-apple-darwin.gz!cs-x86_64-apple-darwin"
+          else if (os == "windows")
+            "https://github.com/coursier/coursier/releases/download/v2.1.25-M3/cs-x86_64-pc-win32.zip!cs-x86_64-pc-win32.exe"
+          else
+            sys.error(s"Unknown test os: $os")
+        )
       }
 
-      test("linux") - run("linux", "x86_64")
-      test("mac") - run("mac", "x86_64")
-      test("windows") - run("windows", "x86_64")
+      test("linux") {
+        run("linux", "x86_64")
+      }
+      test("mac") {
+        run("mac", "x86_64")
+      }
+      test("windows") {
+        run("windows", "x86_64")
+      }
     }
   }
 

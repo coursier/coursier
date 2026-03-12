@@ -6,6 +6,7 @@ import coursier.core.compatibility._
 
 object Parse {
 
+  @deprecated("Use coursier.version.VersionParse.version instead", "2.1.25")
   def version(s: String): Option[Version] = {
     val trimmed = s.trim
     val notAVersion = trimmed.isEmpty || trimmed.exists(c =>
@@ -18,6 +19,7 @@ object Parse {
   // matches revisions with a '+' appended, e.g. "1.2.+", "1.2+" or "1.2.3-+"
   private val latestSubRevision = "(.*[^.-])([.-]?)[+]".r
 
+  @deprecated("Unused by coursier", "2.1.25")
   def ivyLatestSubRevisionInterval(s: String): Option[VersionInterval] =
     s match {
       case latestSubRevision(prefix, delim) =>
@@ -33,6 +35,7 @@ object Parse {
         None
     }
 
+  @deprecated("Use coursier.version.VersionParse.versionInterval instead", "2.1.25")
   def versionInterval(s: String): Option[VersionInterval] = {
 
     def parseBounds(fromIncluded: Boolean, toIncluded: Boolean, s: String) = {
@@ -72,6 +75,7 @@ object Parse {
   private val multiVersionIntervalSplit =
     ("(?" + regexLookbehind + "[" + quote("])") + "]),(?=[" + quote("([") + "])").r
 
+  @deprecated("Unused by coursier", "2.1.25")
   def multiVersionInterval(s: String): Option[VersionInterval] = {
 
     // TODO Use a full-fledged (fastparsed-based) parser for this and versionInterval above
@@ -85,6 +89,7 @@ object Parse {
       None
   }
 
+  @deprecated("Use coursier.version.VersionParse.versionConstraint instead", "2.1.25")
   def versionConstraint(s: String): VersionConstraint = {
     def noConstraint = if (s.isEmpty) Some(VersionConstraint.all) else None
 

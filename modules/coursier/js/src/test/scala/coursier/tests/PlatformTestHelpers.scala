@@ -25,7 +25,7 @@ abstract class PlatformTestHelpers {
 
   def cache: Cache[Task] = TestCache.cache
 
-  val handmadeMetadataBase =
+  lazy val handmadeMetadataBase =
     PlatformTestHelpers.process.env
       .asInstanceOf[js.Dictionary[String]]
       .get("COURSIER_TESTS_HANDMADE_METADATA_DIR_URI")
@@ -33,8 +33,10 @@ abstract class PlatformTestHelpers {
         sys.error("COURSIER_TESTS_HANDMADE_METADATA_DIR_URI not set")
       }
 
-  val handmadeMetadataCache: Cache[Task] =
-    MockCache(handmadeMetadataBase.stripPrefix("file://").stripPrefix("file:"))
+  lazy val handmadeMetadataCache: Cache[Task] = {
+    val base = handmadeMetadataBase.stripPrefix("file://").stripPrefix("file:")
+    MockCache(base, base)
+  }
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =
     Platform.textResource(path)

@@ -1,8 +1,24 @@
 package coursier.ivy
 
-import coursier.core._
+import coursier.core.{
+  ArtifactSource,
+  Authentication,
+  Classifier,
+  Configuration,
+  Dependency,
+  Extension,
+  Module,
+  Organization,
+  Project,
+  Publication,
+  Repository,
+  Type,
+  Variant,
+  Versions
+}
 import coursier.maven.{MavenAttributes, MavenComplete}
 import coursier.util.{Artifact, EitherT, Monad}
+import coursier.version.{Version, VersionParse}
 import dataclass._
 
 @data class IvyRepository(
@@ -17,7 +33,7 @@ import dataclass._
   authentication: Option[Authentication] = None,
   @since
   override val versionsCheckHasModule: Boolean = true
-) extends Repository {
+) extends Repository with Repository.VersionApi {
 
   def withMetadataPattern(metadataPattern: Pattern): IvyRepository =
     withMetadataPatternOpt(Some(metadataPattern))
@@ -55,7 +71,7 @@ import dataclass._
   // Some are missing (branch, conf, originalName).
   private def variables(
     module: Module,
-    versionOpt: Option[String],
+    versionOpt: Option[Version],
     `type`: Type,
     artifact: String,
     ext: Extension,
@@ -70,7 +86,7 @@ import dataclass._
       ) ++
       module.attributes ++
       classifierOpt.map("classifier" -> _.value).toSeq ++
-      versionOpt.map("revision" -> _).toSeq
+      versionOpt.map("revision" -> _.asString).toSeq
 
   def artifacts(
     dependency: Dependency,
@@ -95,19 +111,20 @@ import dataclass._
             }
             else if (dependency.attributes.classifier.nonEmpty)
               // FIXME We're ignoring dependency.attributes.`type` in this case
-              project.publications.collect {
+              project.publications0.collect {
                 case (_, p) if p.classifier == dependency.attributes.classifier =>
                   p
               }
             else if (dependency.attributes.`type`.nonEmpty)
-              project.publications.collect {
-                case (conf, p)
-                    if (conf == Configuration.all ||
-                    conf == dependency.configuration ||
-                    project.allConfigurations.getOrElse(
-                      dependency.configuration,
-                      Set.empty
-                    ).contains(conf)) &&
+              project.publications0.collect {
+                case (pubVariant: Variant.Configuration, p)
+                    if (pubVariant.configuration == Configuration.all ||
+                    dependency.variantSelector.asConfiguration.exists { depConfig =>
+                      depConfig == pubVariant.configuration ||
+                      project.allConfigurations
+                        .getOrElse(depConfig, Set.empty)
+                        .contains(pubVariant.configuration)
+                    }) &&
                     (
                       p.`type` == dependency.attributes.`type` ||
                       (p.ext == dependency.attributes.`type`.asExtension && project.packagingOpt
@@ -118,19 +135,22 @@ import dataclass._
                   p
               }
             else
-              project.publications.collect {
-                case (conf, p)
-                    if conf == Configuration.all ||
-                    conf == dependency.configuration ||
-                    project.allConfigurations.getOrElse(
-                      dependency.configuration,
-                      Set.empty
-                    ).contains(conf) =>
+              project.publications0.collect {
+                case (pubVariant: Variant.Configuration, p)
+                    if pubVariant.configuration == Configuration.all ||
+                    dependency.variantSelector.asConfiguration.exists { depConfig =>
+                      pubVariant.configuration == depConfig ||
+                      project.allConfigurations
+                        .getOrElse(depConfig, Set.empty)
+                        .contains(pubVariant.configuration)
+                    } =>
                   p
+                case (attrVariant: Variant.Attributes, p) =>
+                  sys.error("Cannot happen (IvyRepository doesn't return nor handle Gradle Module)")
               }
           case Some(classifiers) =>
             val classifiersSet = classifiers.toSet
-            project.publications.collect {
+            project.publications0.collect {
               case (_, p) if classifiersSet(p.classifier) =>
                 p
             }
@@ -139,7 +159,7 @@ import dataclass._
       val retainedWithUrl = retained.distinct.flatMap { p =>
         pattern.substituteVariables(variables(
           dependency.module,
-          Some(project.actualVersion),
+          Some(project.actualVersion0),
           p.`type`,
           p.name,
           p.ext,
@@ -151,7 +171,7 @@ import dataclass._
         case (p, url) =>
           var artifact = artifactFor(
             url,
-            changing = changingOpt.getOrElse(IvyRepository.isSnapshot(project.version))
+            changing = changingOpt.getOrElse(IvyRepository.isSnapshot(project.version0.asString))
           )
 
           if (withChecksums)
@@ -226,7 +246,7 @@ import dataclass._
       variables(module, None, Type.ivy, "ivy", Extension("xml"), None),
       fetch,
       prefix
-    ).map(_.map(t => t._1 -> t._2.map(Parse.version).collect { case Some(v) => v }))
+    ).map(_.map(t => t._1 -> t._2.map(VersionParse.version).collect { case Some(v) => v }))
 
   override protected def fetchVersions[F[_]](
     module: Module,
@@ -236,18 +256,16 @@ import dataclass._
   ): EitherT[F, String, (Versions, String)] =
     availableVersions(module, fetch, "").map {
       case Some((listingUrl, l)) if l.nonEmpty =>
-        val latest = l.max.repr
+        val latest = l.max
         val release = {
           val l0 = l.filter(!_.repr.endsWith("SNAPSHOT"))
-          if (l0.isEmpty)
-            ""
-          else
-            l0.max.repr
+          if (l0.isEmpty) Version.zero
+          else l0.max
         }
         val v = Versions(
           latest,
           release,
-          l.map(_.repr).toList,
+          l.toList,
           None
         )
         (v, listingUrl)
@@ -257,9 +275,9 @@ import dataclass._
         (Versions.empty, "")
     }
 
-  def find[F[_]](
+  override def find0[F[_]](
     module: Module,
-    version: String,
+    version: Version,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]
@@ -273,7 +291,7 @@ import dataclass._
       } yield {
         var artifact = artifactFor(
           url,
-          changing = changingOpt.getOrElse(IvyRepository.isSnapshot(version))
+          changing = changingOpt.getOrElse(IvyRepository.isSnapshot(version.asString))
         )
 
         if (withChecksums)
@@ -290,7 +308,7 @@ import dataclass._
       proj0 <- EitherT(
         F.point {
           for {
-            xml <- compatibility.xmlParseDom(ivy)
+            xml <- coursier.core.compatibility.xmlParseDom(ivy)
             _   <- if (xml.label == "ivy-module") Right(()) else Left("Module definition not found")
             proj <- IvyXml.project(xml)
           } yield proj
@@ -307,8 +325,8 @@ import dataclass._
                 }
               )
             )
-            .withDependencies(
-              proj0.dependencies.map {
+            .withDependencies0(
+              proj0.dependencies0.map {
                 case (config, dep0) =>
                   val dep = dep0.withModule(
                     dep0.module.withAttributes(
@@ -324,7 +342,7 @@ import dataclass._
         else
           proj0
 
-      this -> proj.withActualVersionOpt(Some(version))
+      this -> proj.withActualVersionOpt0(Some(version))
     }
   }
 

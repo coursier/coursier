@@ -10,6 +10,7 @@ import utest._
 
 import scala.async.Async.{async, await}
 import scala.concurrent.ExecutionContext
+import coursier.version.VersionConstraint
 
 object CentralIndexTests extends TestSuite {
 
@@ -26,7 +27,7 @@ object CentralIndexTests extends TestSuite {
 
   private def channel(os: String, arch: String): JvmChannel =
     JvmChannel.central(os, arch)
-      .withVersion("0.0.4-64-11f282")
+      .withVersionConstraint(VersionConstraint("0.0.4-64-11f282"))
 
   val tests = Tests {
     test("alpine-x64-zulu17") {

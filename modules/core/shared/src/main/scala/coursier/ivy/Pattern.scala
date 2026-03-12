@@ -5,6 +5,8 @@ import coursier.util.ValidationNel
 import dataclass.data
 import fastparse._, NoWhitespace._
 
+import scala.language.implicitConversions
+
 @data class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty]) {
 
   def string: String = chunks.map(_.string).mkString

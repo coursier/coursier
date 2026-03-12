@@ -8,6 +8,7 @@ import org.graalvm.nativeimage.c.function.CFunction;
 import org.graalvm.nativeimage.c.type.CCharPointer;
 import org.graalvm.nativeimage.c.type.CCharPointerPointer;
 
+@Deprecated
 @CContext(PosixDirectives.class)
 @Platforms({Platform.LINUX.class, Platform.DARWIN.class})
 public class GraalvmUnistdExtras {

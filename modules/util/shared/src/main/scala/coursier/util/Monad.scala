@@ -1,5 +1,7 @@
 package coursier.util
 
+import scala.language.implicitConversions
+
 trait Monad[F[_]] extends Serializable {
   def point[A](a: A): F[A]
   def bind[A, B](elem: F[A])(f: A => F[B]): F[B]

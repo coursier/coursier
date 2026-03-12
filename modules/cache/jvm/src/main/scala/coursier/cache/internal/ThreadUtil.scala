@@ -15,16 +15,25 @@ object ThreadUtil {
 
   private val poolNumber = new AtomicInteger(1)
 
-  def daemonThreadFactory(): ThreadFactory = {
+  def daemonThreadFactory(): ThreadFactory =
+    daemonThreadFactory(name = "")
 
-    val poolNumber0 = poolNumber.getAndIncrement()
+  def daemonThreadFactory(name: String): ThreadFactory = {
+
+    val name0 =
+      if (name.isEmpty) {
+        val poolNumber0 = poolNumber.getAndIncrement()
+        s"coursier-pool-$poolNumber0"
+      }
+      else
+        name
 
     val threadNumber = new AtomicInteger(1)
 
     new ThreadFactory {
       def newThread(r: Runnable) = {
         val threadNumber0 = threadNumber.getAndIncrement()
-        val t             = new Thread(r, s"coursier-pool-$poolNumber0-thread-$threadNumber0")
+        val t             = new Thread(r, s"$name0-thread-$threadNumber0")
         t.setDaemon(true)
         t.setPriority(Thread.NORM_PRIORITY)
         t
@@ -32,9 +41,12 @@ object ThreadUtil {
     }
   }
 
-  def fixedThreadPool(size: Int): ExecutorService = {
+  def fixedThreadPool(size: Int): ExecutorService =
+    fixedThreadPool(size, name = "")
 
-    val factory = daemonThreadFactory()
+  def fixedThreadPool(size: Int, name: String): ExecutorService = {
+
+    val factory = daemonThreadFactory(name)
 
     // 1 min keep alive, so that threads get stopped a bit after resolution / downloading is done
     val executor = new ThreadPoolExecutor(
@@ -49,9 +61,12 @@ object ThreadUtil {
     executor
   }
 
-  def fixedScheduledThreadPool(size: Int): ScheduledExecutorService = {
+  def fixedScheduledThreadPool(size: Int): ScheduledExecutorService =
+    fixedScheduledThreadPool(size, name = "")
 
-    val factory = daemonThreadFactory()
+  def fixedScheduledThreadPool(size: Int, name: String): ScheduledExecutorService = {
+
+    val factory = daemonThreadFactory(name)
 
     val executor = new ScheduledThreadPoolExecutor(size, factory)
     executor.setKeepAliveTime(1L, TimeUnit.MINUTES)

@@ -1,0 +1,15 @@
+io.rest-assured:rest-assured:5.5.0:default
+org.apache.groovy:groovy:4.0.22:{ org.gradle.category=library, org.gradle.usage=runtime }
+org.apache.groovy:groovy-xml:4.0.22:{ org.gradle.category=library, org.gradle.usage=runtime }
+org.apache.httpcomponents:httpclient:4.5.13:default
+org.apache.httpcomponents:httpmime:4.5.13:default
+org.hamcrest:hamcrest:2.2:default
+org.ccil.cowan.tagsoup:tagsoup:1.2.1:default
+io.rest-assured:json-path:5.5.0:default
+io.rest-assured:xml-path:5.5.0:default
+org.apache.httpcomponents:httpcore:4.4.13:default
+commons-logging:commons-logging:1.2:default
+commons-codec:commons-codec:1.11:default
+org.apache.groovy:groovy-json:4.0.22:{ org.gradle.category=library, org.gradle.usage=runtime }
+io.rest-assured:rest-assured-common:5.5.0:default
+org.apache.commons:commons-lang3:3.11:default

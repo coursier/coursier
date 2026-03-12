@@ -6,7 +6,7 @@ ARCHITECTURE=$(uname -m)
 ARTIFACTS_DIR="artifacts/"
 mkdir -p "$ARTIFACTS_DIR"
 
-if [[ -z "$OSTYPE" ]]; then
+if [[ -z "$OSTYPE" || "$OSTYPE" == "msys" ]]; then
   mill="./mill.bat"
 else
   mill="./mill"
@@ -33,7 +33,11 @@ generate_sdk() {
 
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     if  [[ "$ARCHITECTURE" == "x86_64" ]]; then
-      sdkDirectory="cs-x86_64-pc-linux-static-sdk"
+      sdkDirectory="cs-x86_64-pc-linux-sdk"
+    elif [[ "$ARCHITECTURE" == "arm64" ]]; then
+      sdkDirectory="cs-aarch64-pc-linux-sdk"
+    elif [[ "$ARCHITECTURE" == "aarch64" ]]; then
+      sdkDirectory="cs-aarch64-pc-linux-sdk"
     else
       echo "cs is not supported on $ARCHITECTURE"
       exit 2
@@ -43,6 +47,8 @@ generate_sdk() {
     if [[ "$ARCHITECTURE" == "x86_64" ]]; then
       sdkDirectory="cs-x86_64-apple-darwin-sdk"
     elif [[ "$ARCHITECTURE" == "arm64" ]]; then
+      sdkDirectory="cs-aarch64-apple-darwin-sdk"
+    elif [[ "$ARCHITECTURE" == "aarch64" ]]; then
       sdkDirectory="cs-aarch64-apple-darwin-sdk"
     else
       echo "cs is not supported on $ARCHITECTURE"

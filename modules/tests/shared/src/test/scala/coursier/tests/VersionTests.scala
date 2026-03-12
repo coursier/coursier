@@ -4,7 +4,7 @@ import utest._
 
 object VersionTests extends TestSuite {
 
-  import coursier.core.Version
+  import coursier.version.Version
 
   def compare(first: String, second: String) =
     Version(first).compare(Version(second))
@@ -21,11 +21,13 @@ object VersionTests extends TestSuite {
     }
 
     test("empty") {
-      val v0 = Version("0")
-      val v  = Version("")
+      val v0   = Version("0")
+      val v    = Version("")
+      val zero = Version.zero
 
       assert(v0.isEmpty)
       assert(v.isEmpty)
+      assert(zero.isEmpty)
     }
 
     test("max") {

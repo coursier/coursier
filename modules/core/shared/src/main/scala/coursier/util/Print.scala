@@ -1,7 +1,16 @@
 package coursier.util
 
-import coursier.core._
+import coursier.core.{
+  Attributes,
+  Configuration,
+  Dependency,
+  Module,
+  Project,
+  Resolution,
+  VariantSelector
+}
 import coursier.graph.{Conflict, DependencyTree, ReverseModuleTree}
+import coursier.version.{Version, VersionConstraint, VersionInterval}
 import dataclass.data
 
 object Print {
@@ -31,19 +40,32 @@ object Print {
       }
       .mkString
 
-    s"${dep.module}:${dep.version}:${dep.configuration.value}" +
+    s"${dep.module}:${dep.versionConstraint.asString}:${dep.variantSelector.repr}" +
       (if (printExclusions) exclusionsStr else "")
   }
 
+  def dependenciesUnknownConfigs0(
+    deps: Seq[Dependency],
+    projects: Map[(Module, VersionConstraint), Project]
+  ): String =
+    dependenciesUnknownConfigs0(deps, projects, printExclusions = false)
+
+  @deprecated("Use dependenciesUnknownConfigs0 instead", "2.1.25")
   def dependenciesUnknownConfigs(
     deps: Seq[Dependency],
     projects: Map[(Module, String), Project]
   ): String =
-    dependenciesUnknownConfigs(deps, projects, printExclusions = false)
+    dependenciesUnknownConfigs0(
+      deps,
+      projects.map {
+        case ((mod, ver), value) =>
+          ((mod, VersionConstraint(ver)), value)
+      }
+    )
 
-  def dependenciesUnknownConfigs(
+  def dependenciesUnknownConfigs0(
     deps: Seq[Dependency],
-    projects: Map[(Module, String), Project],
+    projects: Map[(Module, VersionConstraint), Project],
     printExclusions: Boolean,
     useFinalVersions: Boolean = true,
     reorder: Boolean = false
@@ -52,10 +74,10 @@ object Print {
     val deps0 =
       if (useFinalVersions)
         deps.map { dep =>
-          dep.withVersion(
+          dep.withVersionConstraint(
             projects
-              .get(dep.moduleVersion)
-              .fold(dep.version)(_.version)
+              .get(dep.moduleVersionConstraint)
+              .fold(dep.versionConstraint)(proj => VersionConstraint.fromVersion(proj.version0))
           )
         }
       else
@@ -64,14 +86,38 @@ object Print {
     val deps1 =
       if (reorder)
         deps0
-          .groupBy(_.withConfiguration(Configuration.empty).withAttributes(Attributes.empty))
+          .groupBy { dep =>
+            dep
+              .withVariantSelector(VariantSelector.emptyConfiguration)
+              .withAttributes(Attributes.empty)
+          }
           .toVector
-          .map { case (k, l) =>
-            val conf = Configuration.join(l.toVector.map(_.configuration).sorted.distinct: _*)
-            k.withConfiguration(conf)
+          .flatMap {
+            case (k, l) =>
+              val split = l.map { dep =>
+                dep.variantSelector match {
+                  case c: VariantSelector.ConfigurationBased =>
+                    Left(c.configuration)
+                  case _: VariantSelector.AttributesBased =>
+                    Right(dep)
+                }
+              }
+              val configurations = split.collect {
+                case Left(conf) => conf
+              }
+              val others = split.collect {
+                case Right(dep0) => dep0
+              }
+              val updatedConfDep =
+                if (configurations.isEmpty) Nil
+                else {
+                  val conf = Configuration.join(configurations.toVector.sorted.distinct: _*)
+                  Seq(k.withVariantSelector(VariantSelector.ConfigurationBased(conf)))
+                }
+              updatedConfDep ++ others
           }
           .sortBy { dep =>
-            (dep.module.organization, dep.module.name, dep.module.toString, dep.version)
+            (dep.module.organization, dep.module.name, dep.module.toString, dep.versionConstraint)
           }
       else
         deps0
@@ -81,24 +127,63 @@ object Print {
     l0.mkString(System.lineSeparator())
   }
 
-  def compatibleVersions(compatibleWith: String, selected: String): Boolean = {
+  @deprecated("Use dependenciesUnknownConfigs0 instead", "2.1.25")
+  def dependenciesUnknownConfigs(
+    deps: Seq[Dependency],
+    projects: Map[(Module, String), Project],
+    printExclusions: Boolean,
+    useFinalVersions: Boolean = true,
+    reorder: Boolean = false
+  ): String =
+    dependenciesUnknownConfigs0(
+      deps,
+      projects.map {
+        case ((mod, ver), value) =>
+          ((mod, VersionConstraint(ver)), value)
+      },
+      printExclusions,
+      useFinalVersions,
+      reorder
+    )
+
+  def compatibleVersions(compatibleWith: VersionConstraint, selected: Version): Boolean =
     // too loose for now
     // e.g. RCs and milestones should not be considered compatible with subsequent non-RC or
     // milestone versions - possibly not with each other either
-
-    val c = Parse.versionConstraint(compatibleWith)
-    if (c.interval == VersionInterval.zero)
-      compatibleWith.split('.').take(2).toSeq == selected.split('.').take(2).toSeq
+    if (compatibleWith.interval == VersionInterval.zero)
+      compatibleWith.preferred.exists { v =>
+        v.repr.split('.').take(2).toSeq == selected.repr.split('.').take(2).toSeq
+      }
     else
-      c.interval.contains(Version(selected))
-  }
+      compatibleWith.interval.contains(selected)
 
+  @deprecated("Use the override accepting a VersionConstraint and a Version instead", "2.1.25")
+  def compatibleVersions(compatibleWith: String, selected: String): Boolean =
+    compatibleVersions(VersionConstraint(compatibleWith), Version(selected))
+
+  @deprecated("Use dependencyTree0 instead", "2.1.25")
   def dependencyTree(
     resolution: Resolution,
     roots: Seq[Dependency] = null,
     printExclusions: Boolean = false,
     reverse: Boolean = false,
     colors: Boolean = true
+  ): String =
+    dependencyTree0(
+      resolution,
+      roots,
+      printExclusions,
+      reverse,
+      colors
+    )
+
+  def dependencyTree0(
+    resolution: Resolution,
+    roots: Seq[Dependency] = null,
+    printExclusions: Boolean = false,
+    reverse: Boolean = false,
+    colors: Boolean = true,
+    renderModuleVersion: (Module, String) => String = (mod, ver) => s"${mod.repr}:$ver"
   ): String = {
 
     val colors0 = Colors.get(colors)
@@ -108,26 +193,38 @@ object Print {
 
       val t = ReverseModuleTree.fromDependencyTree(
         roots0.map(_.module).distinct,
-        DependencyTree(resolution, withExclusions = printExclusions)
+        DependencyTree(resolution, withExclusions = printExclusions),
+        resolution.rootDependencies
+          .groupBy(_.module)
+          .map {
+            case (mod, deps0) =>
+              (mod, deps0.map(_.versionConstraint).distinct)
+          }
       )
 
       val tree0 = Tree(
         t.toVector.sortBy(t =>
           (t.module.organization.value, t.module.name.value, t.module.nameWithAttributes)
         )
-      )(_.dependees)
+      ) { tree =>
+        tree.dependees.filter { depTree =>
+          depTree.module != tree.module || depTree.dependees.nonEmpty
+        }
+      }
       tree0.render { node =>
         if (node.excludedDependsOn)
-          s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.reconciledVersion}"
-        else if (node.dependsOnVersion == node.dependsOnReconciledVersion)
-          s"${node.module}:${node.reconciledVersion}"
+          s"${colors0.yellow}(excluded by)${colors0.reset} ${renderModuleVersion(node.module, node.retainedVersion0.asString)}"
+        else if (
+          node.dependsOnVersionConstraint.asString == node.dependsOnRetainedVersion0.asString
+        )
+          renderModuleVersion(node.module, node.retainedVersion0.asString)
         else {
           val assumeCompatibleVersions =
-            compatibleVersions(node.dependsOnVersion, node.dependsOnReconciledVersion)
+            compatibleVersions(node.dependsOnVersionConstraint, node.dependsOnRetainedVersion0)
 
-          s"${node.module}:${node.reconciledVersion} " +
+          s"${renderModuleVersion(node.module, node.retainedVersion0.asString)} " +
             (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
-            s"${node.dependsOnModule}:${node.dependsOnVersion} -> ${node.dependsOnReconciledVersion}" +
+            s"${renderModuleVersion(node.dependsOnModule, node.dependsOnVersionConstraint.asString)} -> ${node.dependsOnRetainedVersion0.asString}" +
             colors0.reset
         }
       }
@@ -139,10 +236,11 @@ object Print {
         .render { t =>
           render(
             t.dependency.module,
-            t.dependency.version,
+            t.dependency.versionConstraint,
             t.excluded,
-            resolution.reconciledVersions.get(t.dependency.module),
-            colors0
+            resolution.retainedVersions.get(t.dependency.module),
+            colors0,
+            renderModuleVersion
           )
         }
     }
@@ -150,41 +248,46 @@ object Print {
 
   private def render(
     module: Module,
-    version: String,
+    version: VersionConstraint,
     excluded: Boolean,
-    reconciledVersionOpt: Option[String],
-    colors: Colors
+    retainedVersionOpt: Option[Version],
+    colors: Colors,
+    renderModuleVersion: (Module, String) => String
   ): String =
     if (excluded)
-      reconciledVersionOpt match {
+      retainedVersionOpt match {
         case None =>
-          s"${colors.yellow}(excluded)${colors.reset} $module:$version"
+          s"${colors.yellow}(excluded)${colors.reset} $module:${version.asString}"
         case Some(version0) =>
           val versionMsg =
-            if (version0 == version)
+            if (version0.asString == version.asString)
               "this version"
             else
-              s"version $version0"
+              s"version ${version0.asString}"
 
-          s"$module:$version " +
-            s"${colors.red}(excluded, $versionMsg present anyway)${colors.reset}"
+          renderModuleVersion(module, version.asString) +
+            s" ${colors.red}(excluded, $versionMsg present anyway)${colors.reset}"
       }
     else {
+      assert(
+        retainedVersionOpt.nonEmpty,
+        s"No retained version found for non-excluded dependency $module"
+      )
+      val retainedVersion = retainedVersionOpt.get
       val versionStr =
-        if (reconciledVersionOpt.forall(_ == version))
-          version
+        if (retainedVersionOpt.forall(_.asString == version.asString))
+          version.asString
         else {
-          val reconciledVersion = reconciledVersionOpt.getOrElse(version)
           val assumeCompatibleVersions =
-            compatibleVersions(version, reconciledVersionOpt.getOrElse(version))
+            compatibleVersions(version, retainedVersion)
 
           (if (assumeCompatibleVersions) colors.yellow else colors.red) +
-            s"$version -> $reconciledVersion" +
+            s"${version.asString} -> ${retainedVersion.asString}" +
             (if (assumeCompatibleVersions) "" else " (possible incompatibility)") +
             colors.reset
         }
 
-      s"$module:$versionStr"
+      renderModuleVersion(module, versionStr)
     }
 
   private def aligned(l: Seq[(String, String)]): Seq[String] =
@@ -216,7 +319,7 @@ object Print {
       }
       .map {
         case (mod, l) =>
-          assert(l.map(_.version).distinct.size == 1)
+          assert(l.map(_.version0).distinct.size == 1)
 
           val messages = l.map { c =>
             val extra =
@@ -225,12 +328,12 @@ object Print {
               else
                 ""
             (
-              s"${c.dependeeModule}:${c.dependeeVersion}",
-              s"wanted version ${c.wantedVersion}" + extra
+              s"${c.dependeeModule}:${c.dependeeVersionConstraint.asString}",
+              s"wanted version ${c.wantedVersionConstraint.asString}" + extra
             )
           }
 
-          s"$mod:${l.head.version} was selected, but" + System.lineSeparator() +
+          s"$mod:${l.head.version0.asString} was selected, but" + System.lineSeparator() +
             aligned(messages).map("  " + _ + System.lineSeparator()).mkString
       }
   }
