@@ -56,7 +56,7 @@ object Deps {
         mvn"org.virtuslab.scala-cli:config_3:1.9.1"
           .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
     def scalaJsDom               = mvn"org.scala-js::scalajs-dom::2.4.0"
-    def scalaJsReact             = mvn"com.github.japgolly.scalajs-react::core::2.1.2"
+    def scalaJsReact             = mvn"com.github.japgolly.scalajs-react::core::2.1.3"
     def scalaNativeTools03       = mvn"org.scala-native::tools:0.3.9"
     def scalaNativeTools040M2    = mvn"org.scala-native::tools:0.4.0-M2"
     def scalaNativeTools040      = mvn"org.scala-native::tools:0.4.17"
