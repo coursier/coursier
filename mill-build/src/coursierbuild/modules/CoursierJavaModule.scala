@@ -4,7 +4,10 @@ import java.io.File
 import com.github.lolgab.mill.mima.Mima
 import coursierbuild.Deps.{Deps, ScalaVersions}
 
-import mill._, mill.scalalib._, mill.scalajslib._
+import mill.*
+import mill.api.*
+import mill.scalalib.*
+import mill.scalajslib.*
 
 import java.util.Locale
 
@@ -44,8 +47,8 @@ trait CoursierJavaModule extends JavaModule {
     else s"adoptium:$jvmRelease"
   }
   def javacSystemJvm = Task {
-    val output = os.proc(csApp(Task.workspace), "java-home", "--jvm", javacSystemJvmId())
-      .call(cwd = Task.workspace)
+    val output = os.proc(csApp(BuildCtx.workspaceRoot), "java-home", "--jvm", javacSystemJvmId())
+      .call(cwd = BuildCtx.workspaceRoot)
       .out.trim()
     val javaHome = os.Path(output)
     assert(os.isDir(javaHome))
