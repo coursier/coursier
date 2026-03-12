@@ -6,8 +6,7 @@ import cats.implicits._
 import coursier.parse.RepositoryParser
 import dataclass.data
 
-/**
-  * Unprocessed source, meaning it's mostly made of strings rather than typed data.
+/** Unprocessed source, meaning it's mostly made of strings rather than typed data.
   *
   * @param repositories
   * @param channel
@@ -46,8 +45,8 @@ object RawSource {
 
   import argonaut.ArgonautShapeless._
 
-  implicit val encoder = EncodeJson.of[RawSource]
-  implicit val decoder = DecodeJson.of[RawSource]
+  lazy val encoder = EncodeJson.of[RawSource]
+  lazy val decoder = DecodeJson.of[RawSource]
 
   def parse(input: String): Either[String, RawSource] =
     Parse.decodeEither(input)(decoder)

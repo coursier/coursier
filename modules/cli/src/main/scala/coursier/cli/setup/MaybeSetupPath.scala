@@ -5,10 +5,8 @@ import java.nio.file.Path
 import coursier.env.{EnvironmentUpdate, FishUpdater, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.install.InstallDir
 import coursier.util.Task
-import dataclass.data
-import coursier.env.FishUpdater
 
-@data class MaybeSetupPath(
+case class MaybeSetupPath(
   installDir: InstallDir,
   envVarUpdaterOpt: Option[Either[WindowsEnvVarUpdater, Either[ProfileUpdater, FishUpdater]]],
   getEnv: String => Option[String],
@@ -38,7 +36,7 @@ import coursier.env.FishUpdater
       envVarUpdaterOpt match {
         case None =>
           Task.delay {
-            println(envUpdate.script)
+            println(envUpdate.bashScript)
           }
         case Some(Left(windowsEnvVarUpdater)) =>
           confirm.confirm(s"Should we add $binDirStr to your PATH?", default = true).flatMap {
@@ -50,7 +48,10 @@ import coursier.env.FishUpdater
           }
         case Some(Right(Left(profileUpdater))) =>
           val profileFilesStr = profileUpdater.profileFiles().map(dirStr)
-          confirm.confirm(s"Should we add $binDirStr to your PATH via ${profileFilesStr.mkString(", ")}?", default = true).flatMap {
+          confirm.confirm(
+            s"Should we add $binDirStr to your PATH via ${profileFilesStr.mkString(", ")}?",
+            default = true
+          ).flatMap {
             case false => Task.point(())
             case true =>
               Task.delay {
@@ -106,7 +107,8 @@ import coursier.env.FishUpdater
 
     revertedTask.flatMap { reverted =>
       val message =
-        if (reverted) s"Removed $binDir from PATH" + profileFilesOpt.fold("")(l => s" in ${l.mkString(", ")}")
+        if (reverted)
+          s"Removed $binDir from PATH" + profileFilesOpt.fold("")(l => s" in ${l.mkString(", ")}")
         else s"$binDir not setup in PATH"
 
       Task.delay(System.err.println(message))

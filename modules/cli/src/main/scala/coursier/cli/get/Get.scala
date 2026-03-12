@@ -1,12 +1,15 @@
 package coursier.cli.get
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cache.ArchiveCache
+import coursier.cli.CoursierCommand
+import coursier.core.Authentication
 import coursier.util.{Artifact, Sync, Task}
 
 import scala.concurrent.ExecutionContext
 
-object Get extends CaseApp[GetOptions] {
+object Get extends CoursierCommand[GetOptions] {
+  override def hidden: Boolean = true
   def run(options: GetOptions, args: RemainingArgs): Unit = {
 
     val params = GetParams(options).toEither match {
@@ -17,18 +20,30 @@ object Get extends CaseApp[GetOptions] {
       case Right(p) => p
     }
 
-    val pool = Sync.fixedThreadPool(params.cache.parallel)
+    val pool  = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
 
+    val archiveCache = ArchiveCache[Task](params.archiveCacheLocation)
+      .withCache(cache)
+
     val artifacts = args.all.map { rawUrl =>
-      if (rawUrl.endsWith("?changing"))
-        Artifact(rawUrl.stripSuffix("?changing")).withChanging(true)
-      else if (rawUrl.endsWith("?changing=true"))
-        Artifact(rawUrl.stripSuffix("?changing=true")).withChanging(true)
-      else if (rawUrl.endsWith("?changing=false"))
-        Artifact(rawUrl.stripSuffix("?changing=false")).withChanging(false)
-      else
-        Artifact(rawUrl).withChanging(params.changing)
+      var artifact = Artifact.fromUrl(rawUrl)
+      for (changing <- params.changing)
+        artifact = artifact.withChanging(changing)
+      if (params.authHeaders.nonEmpty)
+        artifact = artifact.withAuthentication(Some(Authentication(params.authHeaders)))
+      for (referenceUrl <- params.referenceFileUrl) {
+        var referenceArtifact = Artifact.fromUrl(referenceUrl)
+        for (changing <- params.changing)
+          referenceArtifact = referenceArtifact.withChanging(changing)
+        if (params.authHeaders.nonEmpty)
+          referenceArtifact =
+            referenceArtifact.withAuthentication(Some(Authentication(params.authHeaders)))
+        artifact = artifact.withExtra(
+          artifact.extra ++ Seq("metadata" -> referenceArtifact)
+        )
+      }
+      artifact
     }
 
     if (artifacts.isEmpty)
@@ -38,7 +53,11 @@ object Get extends CaseApp[GetOptions] {
 
     val fetchAll =
       artifacts.map { artifact =>
-        cache.file(artifact).run
+        val isArchive = params.archiveOpt.getOrElse(artifact.url.contains("!"))
+        if (isArchive)
+          archiveCache.get(artifact)
+        else
+          cache.file(artifact).run
       }
 
     val initLogger = Task.delay(cache.logger.init())
@@ -46,28 +65,27 @@ object Get extends CaseApp[GetOptions] {
 
     val task =
       for {
-        _ <- initLogger
-        a <- Task.gather.gather(fetchAll).attempt
-        _ <- stopLogger
+        _             <- initLogger
+        a             <- Task.gather.gather(fetchAll).attempt
+        _             <- stopLogger
         pathsOrErrors <- Task.fromEither(a)
       } yield {
         val errorsIt = pathsOrErrors.iterator.collect { case Left(e) => e }
         anyError = errorsIt.hasNext
         if (!anyError || params.force) {
           val pathsIt = pathsOrErrors.iterator.collect { case Right(p) => p }
-          val output = pathsIt.mkString(params.separator)
+          val output  = pathsIt.mkString(params.separator)
           println(output)
         }
-        for (err <- errorsIt) {
+        for (err <- errorsIt)
           if (params.output.verbosity == 0)
             System.err.println(err.getMessage)
           else if (params.output.verbosity >= 1)
             throw err
-        }
       }
 
     val ec = ExecutionContext.fromExecutorService(pool)
-    task.unsafeRun()(ec)
+    task.unsafeRun(wrapExceptions = true)(ec)
 
     if (anyError)
       sys.exit(1)

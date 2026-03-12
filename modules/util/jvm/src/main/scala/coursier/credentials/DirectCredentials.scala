@@ -14,11 +14,11 @@ import dataclass._
   @since
   realm: Option[String] = None,
   @since
-  optional: Boolean = true,
+  optional: Boolean = DirectCredentials.defaultOptional,
   @since
   matchHost: Boolean = DirectCredentials.defaultMatchHost,
   httpsOnly: Boolean = DirectCredentials.defaultHttpsOnly,
-  passOnRedirect: Boolean = false
+  passOnRedirect: Boolean = DirectCredentials.defaultPassOnRedirect
 ) extends Credentials {
 
   def withUsername(username: String): DirectCredentials =
@@ -34,26 +34,26 @@ import dataclass._
   // Can be called during redirections, to check whether these credentials apply to the redirection target
   def autoMatches(url: String, realm0: Option[String]): Boolean =
     nonEmpty && matchHost && {
-      val uriOpt = Try(new URI(url)).toOption
+      val uriOpt    = Try(new URI(url)).toOption
       val schemeOpt = uriOpt.flatMap(uri => Option(uri.getScheme))
-      val hostOpt = uriOpt.flatMap(uri => Option(uri.getHost))
+      val hostOpt   = uriOpt.flatMap(uri => Option(uri.getHost))
       ((schemeOpt.contains("http") && !httpsOnly) || schemeOpt.contains("https")) &&
-        hostOpt.contains(host) &&
-        realm.forall(realm0.contains)
+      hostOpt.contains(host) &&
+      realm.forall(realm0.contains)
     }
 
   // Only called on initial artifact URLs, not on the ones originating from redirections
   def matches(url: String, user: String): Boolean =
     nonEmpty && {
-      val uriOpt = Try(new URI(url)).toOption
-      val schemeOpt = uriOpt.flatMap(uri => Option(uri.getScheme))
-      val hostOpt = uriOpt.flatMap(uri => Option(uri.getHost))
+      val uriOpt      = Try(new URI(url)).toOption
+      val schemeOpt   = uriOpt.flatMap(uri => Option(uri.getScheme))
+      val hostOpt     = uriOpt.flatMap(uri => Option(uri.getHost))
       val userInfoOpt = uriOpt.flatMap(uri => Option(uri.getUserInfo))
       // !matchHost && // ?
       userInfoOpt.isEmpty &&
-        ((schemeOpt.contains("http") && !httpsOnly) || schemeOpt.contains("https")) &&
-        hostOpt.contains(host) &&
-        usernameOpt.contains(user)
+      ((schemeOpt.contains("http") && !httpsOnly) || schemeOpt.contains("https")) &&
+      hostOpt.contains(host) &&
+      usernameOpt.contains(user)
     }
 
   def authentication: Authentication =
@@ -72,11 +72,22 @@ import dataclass._
 }
 object DirectCredentials {
 
-  def apply(host: String, username: String, password: String): DirectCredentials = DirectCredentials(host, Some(username), Some(Password(password)))
-  def apply(host: String, username: String, password: String, realm: Option[String]): DirectCredentials = DirectCredentials(host, Some(username), Some(Password(password)), realm)
+  def apply(host: String, username: String, password: String): DirectCredentials =
+    DirectCredentials(host, Some(username), Some(Password(password)))
+  def apply(
+    host: String,
+    username: String,
+    password: String,
+    realm: Option[String]
+  ): DirectCredentials =
+    DirectCredentials(host, Some(username), Some(Password(password)), realm)
 
+  def defaultOptional: Boolean =
+    true
   def defaultMatchHost: Boolean =
     true
   def defaultHttpsOnly: Boolean =
+    false
+  def defaultPassOnRedirect: Boolean =
     false
 }

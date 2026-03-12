@@ -2,10 +2,9 @@ package coursier.env
 
 import java.io.File
 import java.nio.charset.Charset
-import java.nio.file.{Files, Path, Paths}
+import java.nio.file.{FileAlreadyExistsException, Files, Path, Paths}
 
 import dataclass.data
-import java.nio.file.FileAlreadyExistsException
 
 @data class ProfileUpdater(
   home: Option[Path] = ProfileUpdater.defaultHome,
@@ -14,32 +13,42 @@ import java.nio.file.FileAlreadyExistsException
   pathSeparator: String = File.pathSeparator
 ) extends EnvVarUpdater {
 
-  def profileFiles(): Seq[Path] = {
+  def profileFiles(): Seq[Path] =
+    ShellUtil.shell(getEnv) match {
+      case Some(Shell.Fish) =>
+        val fishConfig = getEnv.flatMap(_("XDG_CONFIG_HOME"))
+          .map(Paths.get(_))
+          .map(_.resolve("fish/config.fish"))
+          .fold(home.map(_.resolve(".config/fish/config.fish")).toSeq)(Seq(_))
 
-    // https://github.com/rust-lang/rustup.rs/blob/15db63918b9a2b11c302e30b97bf9448e2abd3b9/src/cli/self_update.rs#L1067
+        fishConfig
 
-    val main = home.toSeq.map(_.resolve(".profile"))
+      case _ =>
+        // https://github.com/rust-lang/rustup.rs/blob/15db63918b9a2b11c302e30b97bf9448e2abd3b9/src/cli/self_update.rs#L1067
 
-    val zprofile = {
-      val isZsh = getEnv.flatMap(_("SHELL")).exists(_.contains("zsh"))
-      if (isZsh) {
-        val zDotDirOpt = getEnv.flatMap { getEnv0 =>
-          getEnv0("ZDOTDIR")
-            .flatMap(dir => home.map(_.getFileSystem().getPath(dir)))
-            .orElse(home)
+        val main = home.toSeq.map(_.resolve(".profile"))
+
+        val zprofile = {
+          val isZsh = getEnv.flatMap(_("SHELL")).exists(_.contains("zsh"))
+          if (isZsh) {
+            val zDotDirOpt = getEnv.flatMap { getEnv0 =>
+              getEnv0("ZDOTDIR")
+                .flatMap(dir => home.map(_.getFileSystem().getPath(dir)))
+                .orElse(home)
+            }
+            zDotDirOpt.toSeq.map(_.resolve(".zprofile"))
+          }
+          else
+            Nil
         }
-        zDotDirOpt.toSeq.map(_.resolve(".zprofile"))
-      } else
-        Nil
+
+        val bashProfile = home
+          .map(_.resolve(".bash_profile"))
+          .filter(Files.isRegularFile(_))
+          .toSeq
+
+        main ++ zprofile ++ bashProfile
     }
-
-    val bashProfile = home
-      .map(_.resolve(".bash_profile"))
-      .filter(Files.isRegularFile(_))
-      .toSeq
-
-    main ++ zprofile ++ bashProfile
-  }
 
   private def startEndIndices(start: String, end: String, content: String): Option[(Int, Int)] = {
     val startIdx = content.indexOf(start)
@@ -49,7 +58,8 @@ import java.nio.file.FileAlreadyExistsException
         Some(startIdx, endIdx + end.length)
       else
         None
-    } else
+    }
+    else
       None
   }
 
@@ -67,7 +77,7 @@ import java.nio.file.FileAlreadyExistsException
             }
         case Some(title) =>
           val start = s"# >>> $title >>>\n"
-          val end = s"# <<< $title <<<\n"
+          val end   = s"# <<< $title <<<\n"
           val withTags = "\n" +
             start +
             addition.stripSuffix("\n") + "\n" +
@@ -101,7 +111,10 @@ import java.nio.file.FileAlreadyExistsException
     updatedSomething
   }
 
-  private def removeFromProfileFiles(additionOpt: Option[String], titleOpt: Option[String]): Boolean = {
+  private def removeFromProfileFiles(
+    additionOpt: Option[String],
+    titleOpt: Option[String]
+  ): Boolean = {
 
     def updated(content: String): Option[String] =
       titleOpt match {
@@ -114,7 +127,7 @@ import java.nio.file.FileAlreadyExistsException
           }
         case Some(title) =>
           val start = s"# >>> $title >>>\n"
-          val end = s"# <<< $title <<<\n"
+          val end   = s"# <<< $title <<<\n"
           startEndIndices(start, end, content).map {
             case (startIdx, endIdx) =>
               content.take(startIdx).stripSuffix("\n") +
@@ -136,28 +149,48 @@ import java.nio.file.FileAlreadyExistsException
     updatedSomething
   }
 
-  private def contentFor(update: EnvironmentUpdate): String = {
+  private def contentFor(update: EnvironmentUpdate): String =
+    ShellUtil.shell(getEnv) match {
+      case Some(Shell.Fish) =>
+        val set = update
+          .set
+          .map {
+            case (k, v) =>
+              s"""set -gx $k "${v.replace("\"", "\\\"")}"""" + "\n"
+          }
+          .mkString
 
-    val set = update
-      .set
-      .map {
-        case (k, v) =>
-          // FIXME Needs more escaping?
-          s"""export $k="${v.replace("\"", "\\\"")}"""" + "\n"
-      }
-      .mkString
+        val updates = update
+          .pathLikeAppends
+          .map {
+            case (k, v) =>
+              s"""set -gx $k "$$$k$pathSeparator${v.replace("\"", "\\\"")}"""" + "\n"
+          }
+          .mkString
 
-    val updates = update
-      .pathLikeAppends
-      .map {
-        case (k, v) =>
-          // FIXME Needs more escaping?
-          s"""export $k="$$$k$pathSeparator${v.replace("\"", "\\\"")}"""" + "\n"
-      }
-      .mkString
+        set + updates
 
-    set + updates
-  }
+      case _ =>
+        val set = update
+          .set
+          .map {
+            case (k, v) =>
+              // FIXME Needs more escaping?
+              s"""export $k="${v.replace("\"", "\\\"")}"""" + "\n"
+          }
+          .mkString
+
+        val updates = update
+          .pathLikeAppends
+          .map {
+            case (k, v) =>
+              // FIXME Needs more escaping?
+              s"""export $k="$$$k$pathSeparator${v.replace("\"", "\\\"")}"""" + "\n"
+          }
+          .mkString
+
+        set + updates
+    }
 
   def applyUpdate(update: EnvironmentUpdate): Boolean =
     applyUpdate(update, None)
@@ -172,9 +205,8 @@ import java.nio.file.FileAlreadyExistsException
     val addition = contentFor(update)
     removeFromProfileFiles(Some(addition), None)
   }
-  def tryRevertUpdate(title: String): Boolean = {
+  def tryRevertUpdate(title: String): Boolean =
     removeFromProfileFiles(None, Some(title))
-  }
 
 }
 
@@ -186,7 +218,7 @@ object ProfileUpdater {
     try Files.createDirectories(path)
     catch {
       case _: FileAlreadyExistsException if Files.isDirectory(path) =>
-        // Ignored, see https://bugs.openjdk.java.net/browse/JDK-8130464
+      // Ignored, see https://bugs.openjdk.java.net/browse/JDK-8130464
     }
 
 }

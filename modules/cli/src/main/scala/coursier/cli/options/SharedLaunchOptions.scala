@@ -1,26 +1,39 @@
 package coursier.cli.options
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
+import coursier.cli.install.SharedChannelOptions
 import coursier.cli.resolve.SharedResolveOptions
 import coursier.install.RawAppDescriptor
 
+// format: off
 final case class SharedLaunchOptions(
 
-  @Short("M")
-  @Short("main")
+  @Group(OptionGroup.launch)
+  @ExtraName("M")
+  @ExtraName("main")
     mainClass: String = "",
 
-  @Help("Extra JARs to be added to the classpath of the launched application. Directories accepted too.")
+  @Group(OptionGroup.launch)
+  @HelpMessage("Extra JARs to be added to the classpath of the launched application. Directories accepted too.")
     extraJars: List[String] = Nil,
 
-  @Help("Set Java properties before launching the app")
-  @Value("key=value")
-  @Short("D")
+  @Group(OptionGroup.launch)
+  @HelpMessage("Set Java properties before launching the app")
+  @ValueDescription("key=value")
+  @ExtraName("D")
     property: List[String] = Nil,
 
-  fork: Option[Boolean] = None,
+  @Group(OptionGroup.launch)
+  @HelpMessage("Add Java command-line options")
+  @ValueDescription("option")
+    javaOpt: List[String] = Nil,
 
-  python: Option[Boolean] = None,
+  @Group(OptionGroup.launch)
+  @Hidden
+    pythonJep: Option[Boolean] = None,
+  @Group(OptionGroup.launch)
+  @Hidden
+    python: Option[Boolean] = None,
 
   @Recurse
     sharedLoaderOptions: SharedLoaderOptions = SharedLoaderOptions(),
@@ -31,18 +44,21 @@ final case class SharedLaunchOptions(
   @Recurse
     artifactOptions: ArtifactOptions = ArtifactOptions()
 ) {
+  // format: on
+
   def addApp(app: RawAppDescriptor): SharedLaunchOptions =
     copy(
       sharedLoaderOptions = sharedLoaderOptions.addApp(app),
       resolveOptions = resolveOptions.addApp(app),
       artifactOptions = artifactOptions.addApp(app),
-      mainClass = {
+      mainClass =
         if (mainClass.isEmpty)
           app.mainClass.fold("")(_.stripSuffix("?")) // FIXME '?' suffix means optional main class
         else
-          mainClass
-      },
+          mainClass,
+      javaOpt = app.javaOptions ++ javaOpt,
       property = app.properties.props.map { case (k, v) => s"$k=$v" }.toList ++ property,
+      pythonJep = pythonJep.orElse(if (app.jna.contains("python-jep")) Some(true) else None),
       python = python.orElse(if (app.jna.contains("python")) Some(true) else None)
     )
 
@@ -61,9 +77,9 @@ final case class SharedLaunchOptions(
         else "bootstrap"
       }
       .withClassifiers {
-        val l = artifactOptions.classifier
+        val l       = artifactOptions.classifier
         val default = if (artifactOptions.default0) List("_") else Nil
-        val c = default ::: l
+        val c       = default ::: l
         if (c == List("_"))
           Nil
         else
@@ -84,12 +100,13 @@ final case class SharedLaunchOptions(
         }
       )
       .withJna {
-        if (python.getOrElse(false)) List("python")
+        if (pythonJep.getOrElse(false)) List("python-jep")
+        else if (python.getOrElse(false)) List("python")
         else Nil
       }
 }
 
 object SharedLaunchOptions {
-  implicit val parser = Parser[SharedLaunchOptions]
-  implicit val help = caseapp.core.help.Help[SharedLaunchOptions]
+  implicit lazy val parser: Parser[SharedLaunchOptions] = Parser.derive
+  implicit lazy val help: Help[SharedLaunchOptions]     = Help.derive
 }

@@ -43,7 +43,7 @@ goto Win9xApp
 
 @REM Start program
 :runm2
-SET CMDLINE=@COMMAND@ %CMD_LINE_ARGS%
+SET CMDLINE="@COMMAND@" %CMD_LINE_ARGS%
 %CMDLINE%
 if ERRORLEVEL 1 goto error
 goto end

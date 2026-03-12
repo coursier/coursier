@@ -1,5 +1,8 @@
 package coursier.bootstrap.launcher;
 
+import coursier.bootstrap.launcher.jniutils.BootstrapNativeApi;
+import coursier.bootstrap.launcher.proxy.SetupProxy;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -27,7 +30,7 @@ public class Bootstrap {
         if (System.getProperty("coursier.bootstrap.windows-ansi", "").equalsIgnoreCase("false"))
             return;
 
-        boolean useJni = coursier.paths.Util.useJni(() -> { coursier.bootstrap.launcher.jniutils.NativeCalls.setup(); });
+        boolean useJni = coursier.paths.Util.useJni(BootstrapNativeApi::setup);
         try {
             if (useJni)
                 coursier.jniutils.WindowsAnsiTerminal.enableAnsiOutput();
@@ -51,7 +54,10 @@ public class Bootstrap {
         Thread thread = Thread.currentThread();
         ClassLoader contextLoader = thread.getContextClassLoader();
 
-        Python.maybeSetPythonProperties(contextLoader);
+        if (!SetupProxy.setup())
+            Config.maybeLoadConfig();
+
+        Python.maybeSetPythonProperties(classLoaders.sourceJarFileOrNull(), classLoaders.getDownload(), contextLoader);
 
         ClassLoader classLoader = classLoaders.createClassLoader(contextLoader);
 
@@ -96,7 +102,8 @@ public class Bootstrap {
         }
 
         try {
-            Class[] params = { String[].class };
+            Class<?>[] params = { String[].class };
+            assert mainClass != null;
             mainMethod = mainClass.getMethod("main", params);
         }
         catch (NoSuchMethodException ex) {
@@ -106,6 +113,7 @@ public class Bootstrap {
         thread.setContextClassLoader(classLoader);
         try {
             Object[] mainArgs = { args };
+            assert mainMethod != null;
             mainMethod.invoke(null, mainArgs);
         }
         catch (IllegalAccessException ex) {

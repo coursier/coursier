@@ -1,17 +1,20 @@
-package coursier
-package core
+package coursier.core
 
 import coursier.util.{EitherT, Gather, Monad}
 import coursier.util.Monad.ops._
+import coursier.version.{
+  Latest => Latest0,
+  Version => Version0,
+  VersionConstraint => VersionConstraint0
+}
 import dataclass.data
 
 import scala.annotation.tailrec
 import scala.collection.compat.immutable.LazyList
 
-
 sealed abstract class ResolutionProcess extends Product with Serializable {
-  def run[F[_]](
-    fetch: ResolutionProcess.Fetch[F],
+  def run0[F[_]](
+    fetch: ResolutionProcess.Fetch0[F],
     maxIterations: Int = ResolutionProcess.defaultMaxIterations
   )(implicit
     F: Monad[F]
@@ -25,19 +28,37 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
         case done: Done =>
           F.point(done.resolution)
         case missing0: Missing =>
-          ResolutionProcess.fetchAll[F](missing0.missing, fetch).flatMap(result =>
-            missing0.next0(result).run[F](fetch, maxIterations0)
+          ResolutionProcess.fetchAll[F](missing0.missing0, fetch).flatMap(result =>
+            missing0.next0_(result).run0[F](fetch, maxIterations0)
           )
         case cont: Continue =>
           cont
             .nextNoCont
-            .run(fetch, maxIterations0)
+            .run0(fetch, maxIterations0)
       }
     }
 
-  @tailrec
-  final def next[F[_]](
+  @deprecated("Use run0 instead", "2.1.25")
+  def run[F[_]](
     fetch: ResolutionProcess.Fetch[F],
+    maxIterations: Int = ResolutionProcess.defaultMaxIterations
+  )(implicit
+    F: Monad[F]
+  ): F[Resolution] =
+    run0[F](
+      modVersions =>
+        F.map(fetch(modVersions.map { case (mod, ver) => (mod, ver.asString) })) { result =>
+          result.map {
+            case ((mod, ver), res) =>
+              ((mod, VersionConstraint0(ver)), res)
+          }
+        },
+      maxIterations
+    )
+
+  @tailrec
+  final def next_[F[_]](
+    fetch: ResolutionProcess.Fetch0[F],
     fastForward: Boolean = true
   )(implicit
     F: Monad[F]
@@ -46,25 +67,67 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
       case _: Done =>
         F.point(this)
       case missing0: Missing =>
-        ResolutionProcess.fetchAll(missing0.missing, fetch)
-          .map(result => missing0.next0(result))
+        ResolutionProcess.fetchAll(missing0.missing0, fetch)
+          .map(result => missing0.next0_(result))
       case cont: Continue =>
         if (fastForward)
-          cont.nextNoCont.next(fetch, fastForward = fastForward)
+          cont.nextNoCont.next_(fetch, fastForward = fastForward)
         else
           F.point(cont.next)
     }
+
+  @deprecated("Use next_ instead", "2.1.25")
+  final def next[F[_]](
+    fetch: ResolutionProcess.Fetch[F],
+    fastForward: Boolean = true
+  )(implicit
+    F: Monad[F]
+  ): F[ResolutionProcess] =
+    next_[F](
+      modVersions =>
+        F.map(fetch(modVersions.map { case (mod, ver) => (mod, ver.asString) })) { result =>
+          result.map {
+            case ((mod, ver), res) =>
+              ((mod, VersionConstraint0(ver)), res)
+          }
+        },
+      fastForward
+    )
 
   def current: Resolution
 }
 
 @data class Missing(
-  missing: Seq[(Module, String)],
+  missing0: Seq[(Module, VersionConstraint0)],
   current: Resolution,
   cont: Resolution => ResolutionProcess
 ) extends ResolutionProcess {
 
-  def next0(results: ResolutionProcess.MD): ResolutionProcess = {
+  @deprecated("Use missing0 instead", "2.1.25")
+  def missing: Seq[(Module, String)] =
+    missing0.map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    }
+  @deprecated("Use missing0 instead", "2.1.25")
+  def withMissing(newMissing: Seq[(Module, String)]): Missing =
+    withMissing0(
+      newMissing.map {
+        case (mod, ver) =>
+          (mod, VersionConstraint0(ver))
+      }
+    )
+
+  @deprecated("Use next0_ instead", "2.1.25")
+  def next0(results: ResolutionProcess.MD): ResolutionProcess =
+    next0_(
+      results.map {
+        case ((mod, ver), thing) =>
+          ((mod, VersionConstraint0(ver)), thing)
+      }
+    )
+
+  def next0_(results: ResolutionProcess.MD0): ResolutionProcess = {
 
     val errors = results.collect {
       case (modVer, Left(errs)) =>
@@ -79,23 +142,23 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
 
       val remainingSuccesses = successes.filter {
         case (modVer, _) =>
-          !res.projectCache.contains(modVer)
+          !res.projectCache0.contains(modVer)
       }
 
       val depMgmtMissing0 = remainingSuccesses.map {
         case elem @ (_, (_, proj)) =>
-          elem -> res.dependencyManagementMissing(proj)
+          elem -> res.dependencyManagementMissing0(proj)
       }
 
       val depMgmtMissing = depMgmtMissing0.map(_._2).fold(Set.empty)(_ ++ _)
 
       if (depMgmtMissing.isEmpty) {
 
-        type Elem = ((Module, String), (ArtifactSource, Project))
+        type Elem = ((Module, VersionConstraint0), (ArtifactSource, Project))
         val modVer = depMgmtMissing0.map(_._1._1).toSet
 
         @tailrec
-        def order(map: Map[Elem, Set[(Module, String)]], acc: List[Elem]): List[Elem] =
+        def order(map: Map[Elem, Set[(Module, VersionConstraint0)]], acc: List[Elem]): List[Elem] =
           if (map.isEmpty)
             acc.reverse
           else {
@@ -103,8 +166,8 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
             val (toAdd, remaining) = map.partition {
               case (_, v) => v.size == min
             }
-            val acc0 = toAdd.keys.foldLeft(acc)(_.::(_))
-            val remainingKeys = remaining.keySet.map(_._1)
+            val acc0                                             = toAdd.keys.foldLeft(acc)(_.::(_))
+            val remainingKeys: Set[(Module, VersionConstraint0)] = remaining.keySet.map(_._1)
             val map0 = remaining.map {
               case (k, v) =>
                 k -> v.intersect(remainingKeys)
@@ -112,21 +175,25 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
             order(map0, acc0)
           }
 
-        val orderedSuccesses = order(depMgmtMissing0.map { case (k, v) => k -> v.intersect(modVer) }.toMap, Nil)
+        val orderedSuccesses = order(
+          depMgmtMissing0.map { case (k, v) => k -> v.intersect(modVer) }.toMap,
+          Nil
+        )
 
         val res0 = orderedSuccesses.foldLeft(res) {
           case (acc, (modVer0, (source, proj))) =>
-            acc.addToProjectCache(
+            acc.addToProjectCache0(
               modVer0 -> (source, proj)
             )
         }
 
         Continue(res0, cont)
-      } else
+      }
+      else
         Missing(depMgmtMissing.toSeq, res, cont0)
     }
 
-    val current0 = current.addToErrorCache(errors)
+    val current0 = current.addToErrorCache0(errors)
 
     cont0(current0)
   }
@@ -143,7 +210,7 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
   @tailrec def nextNoCont: ResolutionProcess =
     next match {
       case nextCont: Continue => nextCont.nextNoCont
-      case other => other
+      case other              => other
     }
 
 }
@@ -155,24 +222,130 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
 
 object ResolutionProcess {
 
+  @deprecated("Use ResolutionProcess.MD0 instead", "2.1.25")
   type MD = Seq[(
     (Module, String),
     Either[Seq[String], (ArtifactSource, Project)]
   )]
 
+  @deprecated("Use ResolutionProcess.Fetch0 instead", "2.1.25")
   type Fetch[F[_]] = Seq[(Module, String)] => F[MD]
 
-  /**
-    * Try to find `module` among `repositories`.
+  type MD0 = Seq[(
+    (Module, VersionConstraint0),
+    Either[Seq[String], (ArtifactSource, Project)]
+  )]
+
+  type Fetch0[F[_]] = Seq[(Module, VersionConstraint0)] => F[MD0]
+
+  /** Try to find `module` among `repositories`.
     *
-    * Look at `repositories` from the left, one-by-one, and stop at first success.
-    * Else, return all errors, in the same order.
+    * Look at `repositories` from the left, one-by-one, and stop at first success. Else, return all
+    * errors, in the same order.
     *
-    * The `version` field of the returned `Project` in case of success may not be
-    * equal to the provided one, in case the latter is not a specific
-    * version (e.g. version interval). Which version get chosen depends on
-    * the repository implementation.
+    * The `version` field of the returned `Project` in case of success may not be equal to the
+    * provided one, in case the latter is not a specific version (e.g. version interval). Which
+    * version get chosen depends on the repository implementation.
     */
+  def fetchOne[F[_]](
+    repositories: Seq[Repository],
+    module: Module,
+    version: VersionConstraint0,
+    fetch: Repository.Fetch[F],
+    fetchs: Seq[Repository.Fetch[F]]
+  )(implicit
+    F: Gather[F]
+  ): EitherT[F, Seq[String], (ArtifactSource, Project)] =
+    version.latest match {
+      case Some(Latest0.Integration) =>
+
+        val lookups = {
+          val f: Repository.Fetch[F] = { a =>
+            fetchs.foldLeft(fetch(a))((acc, f) => acc.leftFlatMap(_ => f(a)))
+          }
+          F.gather(repositories.map(_.versions(module, f).run))
+        }
+
+        def versionOrError(results: Seq[Either[String, (Versions, String)]])
+          : Either[Seq[String], (Version0, Repository)] = {
+          // FIXME We're sometimes trapping errors here (left elements in results)
+          val found = results.zip(repositories)
+            .collect {
+              case (Right((v, _)), repo) =>
+                (v.latest(Latest0.Integration), repo)
+            }
+            .collect {
+              case (Some(v), repo) =>
+                (v, repo)
+            }
+          if (found.isEmpty)
+            Left(
+              results.map {
+                case Left(e) => e
+                case Right((_, listingUrl)) =>
+                  s"No latest ${Latest0.Integration.name} version found in $listingUrl"
+              }
+            )
+          else {
+            val (selectedVer, repo) = found.maxBy(_._1)
+            if (version.interval.contains(selectedVer))
+              Right((selectedVer, repo))
+            else
+              Left(
+                results.map {
+                  case Left(e) => e
+                  case Right((v, listingUrl)) =>
+                    v.latest(Latest0.Integration) match {
+                      case None =>
+                        s"No latest ${Latest0.Integration.name} version found in $listingUrl"
+                      case Some(v0) =>
+                        if (v0 == selectedVer.repr)
+                          s"Latest ${Latest0.Integration.name} $v0 from $listingUrl not in ${version.interval.repr}"
+                        else
+                          s"Latest ${Latest0.Integration.name} $v0 from $listingUrl not retained"
+                    }
+                }
+              )
+          }
+        }
+
+        def getLatest(v: Version0, repo: Repository, fetch: Repository.Fetch[F]) =
+          repo
+            .find0(module, v, fetch)
+            .leftMap(err => repositories.map(r => if (r == repo) err else "")) // kind of meh
+
+        EitherT[F, Seq[String], (ArtifactSource, Project)] {
+          lookups.flatMap { results =>
+            EitherT(F.point(versionOrError(results))).flatMap {
+              case (v, repo) =>
+                fetchs.foldLeft(getLatest(v, repo, fetch))(_ orElse getLatest(v, repo, _))
+            }.run
+          }
+        }
+
+      case _ =>
+
+        def get(fetch: Repository.Fetch[F]): EitherT[F, Seq[String], (ArtifactSource, Project)] =
+          EitherT {
+            repositories
+              .foldLeft[F[Either[Seq[String], (ArtifactSource, Project)]]](F.point(Left(Nil))) {
+                case (acc, repo) =>
+                  acc.flatMap {
+                    case Left(errors) =>
+                      repo
+                        .findFromVersionConstraint(module, version, fetch)
+                        .run
+                        .map(_.left.map(error => error +: errors))
+                    case res @ Right(_) =>
+                      F.point(res)
+                  }
+              }
+              .map(_.left.map(_.reverse))
+          }
+
+        fetchs.foldLeft(get(fetch))(_ orElse get(_))
+    }
+
   def fetchOne[F[_]](
     repositories: Seq[Repository],
     module: Module,
@@ -181,207 +354,53 @@ object ResolutionProcess {
     fetchs: Seq[Repository.Fetch[F]]
   )(implicit
     F: Gather[F]
-  ): EitherT[F, Seq[String], (ArtifactSource, Project)] = {
+  ): EitherT[F, Seq[String], (ArtifactSource, Project)] =
+    fetchOne(
+      repositories,
+      module,
+      VersionConstraint0(version),
+      fetch,
+      fetchs
+    )(F)
 
-    val f: Repository.Fetch[F] = { a =>
-      fetchs.foldLeft(fetch(a))((acc, f) => acc.leftFlatMap(_ => f(a)))
-    }
-
-    def versionOrError0(results: Either[String, (Versions, String)], ver: Either[VersionInterval, (Latest, Option[VersionInterval])]): Either[String, Version] =
-      results match {
-        case Right((v, listingUrl)) =>
-          val selectedOpt = ver match {
-            case Left(itv) =>
-              v.inInterval(itv)
-            case Right((kind, _)) =>
-              v.latest(kind)
-          }
-          selectedOpt match {
-            case Some(ver0) =>
-              val selectedVer = Version(ver0)
-              ver match {
-                case Right((kind, Some(itv))) if !itv.contains(selectedVer) =>
-                  Left(
-                    v.latest(kind) match {
-                      case None =>
-                        s"No latest ${kind.name} version found in $listingUrl"
-                      case Some(v0) =>
-                        if (v0 == selectedVer.repr)
-                          s"Latest ${kind.name} $v0 from $listingUrl not in ${itv.repr}"
-                        else
-                          s"Latest ${kind.name} $v0 from $listingUrl not retained"
-                    }
-                  )
-                case _ =>
-                  Right(selectedVer)
-              }
-            case None =>
-              Left {
-                ver match {
-                  case Left(itv) =>
-                    s"No version found for ${itv.repr} in $listingUrl"
-                  case Right((kind, _)) =>
-                    s"No latest ${kind.name} version found in $listingUrl"
-                }
-              }
-          }
-        case Left(e) =>
-          Left(e)
-      }
-
-    def versionOrError(results: Seq[Either[String, (Versions, String)]], ver: Either[VersionInterval, (Latest, Option[VersionInterval])]): Either[Seq[String], (Version, Repository)] = {
-      // FIXME We're sometimes trapping errors here (left elements in results)
-      val found = results.zip(repositories)
-        .collect {
-          case (Right((v, listingUrl)), repo) =>
-            val selectedOpt = ver match {
-              case Left(itv) =>
-                v.inInterval(itv)
-              case Right((kind, _)) =>
-                v.latest(kind)
-            }
-            (selectedOpt, repo, listingUrl)
-        }
-        .collect {
-          case (Some(v), repo, listingUrl) =>
-            (Version(v), repo, listingUrl)
-        }
-      if (found.isEmpty)
-        Left(
-          results.map {
-            case Left(e) => e
-            case Right((_, listingUrl)) =>
-              ver match {
-                case Left(itv) =>
-                  s"No version found for ${itv.repr} in $listingUrl"
-                case Right((kind, _)) =>
-                  s"No latest ${kind.name} version found in $listingUrl"
-              }
-          }
-        )
-      else {
-        val (selectedVer, repo, _) = found.maxBy(_._1)
-        ver match {
-          case Right((kind, Some(itv))) if !itv.contains(selectedVer) =>
-            Left(
-              results.map {
-                case Left(e) => e
-                case Right((v, listingUrl)) =>
-                  v.latest(kind) match {
-                    case None =>
-                      s"No latest ${kind.name} version found in $listingUrl"
-                    case Some(v0) =>
-                      if (v0 == selectedVer.repr)
-                        s"Latest ${kind.name} $v0 from $listingUrl not in ${itv.repr}"
-                      else
-                        s"Latest ${kind.name} $v0 from $listingUrl not retained"
-                  }
-              }
-            )
-          case _ =>
-            Right((selectedVer, repo))
-        }
-      }
-    }
-
-    def get(fetch: Repository.Fetch[F], intervalOpt: Option[Either[VersionInterval, (Latest, Option[VersionInterval])]] = None) = {
-
-      val lookups = repositories
-        .map { repo =>
-          intervalOpt match {
-            case None =>
-              repo -> repo.find(module, version, fetch).run
-            case Some(itv) =>
-              repo -> repo.versions(module, fetch, versionsCheckHasModule = false).flatMap {
-                case (v, s) =>
-                  EitherT(F.point(versionOrError0(Right((v, s)), itv))).flatMap { retainedVer =>
-                    repo.find(module, retainedVer.repr, fetch)
-                  }
-              }.run
-          }
-        }
-
-      val task0 = lookups.foldLeft[F[Either[Seq[String], (ArtifactSource, Project)]]](F.point(Left(Nil))) {
-        case (acc, (_, eitherProjTask)) =>
-          acc.flatMap {
-            case Left(errors) =>
-              eitherProjTask.map(_.left.map(error => error +: errors))
-            case res@Right(_) =>
-              F.point(res)
-          }
-      }
-
-      val task = task0.map(e => e.left.map(_.reverse): Either[Seq[String], (ArtifactSource, Project)])
-      EitherT(task)
-    }
-
-    def getLatest0(ver: Either[VersionInterval, (Latest, Option[VersionInterval])]) = {
-      val shouldParallelize = ver.exists(_._1 == Latest.Integration)
-      if (shouldParallelize)
-        EitherT {
-
-          val lookups = F.gather(repositories.map(_.versions(module, f).run))
-
-          def getLatest(v: Version, repo: Repository, fetch: Repository.Fetch[F]) =
-            repo
-              .find(module, v.repr, fetch)
-              .leftMap(err => repositories.map(r => if (r == repo) err else "")) // kind of meh
-
-          lookups.flatMap { results =>
-            EitherT(F.point(versionOrError(results, ver))).flatMap {
-              case (v, repo) =>
-                fetchs.foldLeft(getLatest(v, repo, fetch))(_ orElse getLatest(v, repo, _))
-            }.run
-          }
-        }
-      else
-        fetchs.foldLeft(get(fetch, intervalOpt = Some(ver)))(_ orElse get(_, intervalOpt = Some(ver)))
-    }
-
-    if (version.contains("&")) {
-      val versions = version.split('&').toSeq.distinct
-      assert(versions.length == 2)
-
-      val parsed = versions.map(s => Latest(s).toRight(s))
-      val latest = parsed.collect { case Right(l) => l }
-      val other = parsed.collect { case Left(v) => Parse.versionConstraint(v) }
-      assert(latest.length == 1)
-      assert(other.length == 1)
-
-      val latest0 = latest.head
-      assert(other.head.preferred.isEmpty)
-      val itv = other.head.interval
-
-      getLatest0(Right((latest0, Some(itv))))
-    } else
-      Latest(version) match {
-        case Some(kind) =>
-          getLatest0(Right((kind, None)))
-        case None =>
-          val c = Parse.versionConstraint(version)
-          if (c.interval == VersionInterval.zero)
-            fetchs.foldLeft(get(fetch))(_ orElse get(_))
-          else
-            getLatest0(Left(c.interval))
-      }
-  }
-
-  def fetch[F[_]](
-    repositories: Seq[core.Repository],
+  def fetch0[F[_]](
+    repositories: Seq[Repository],
     fetch: Repository.Fetch[F],
     fetchs: Seq[Repository.Fetch[F]] = Nil
   )(implicit
     F: Gather[F]
-  ): Fetch[F] =
+  ): Fetch0[F] =
     modVers =>
       F.gather {
         modVers.map {
           case (module, version) =>
-            fetchOne(repositories, module, version, fetch, fetchs).run.map(d => (module, version) -> d)
+            fetchOne(repositories, module, version, fetch, fetchs).run.map(d =>
+              (module, version) -> d
+            )
         }
       }.map(_.toSeq)
 
-
+  @deprecated("Use fetch0 instead", "2.1.25")
+  def fetch[F[_]](
+    repositories: Seq[Repository],
+    fetch: Repository.Fetch[F],
+    fetchs: Seq[Repository.Fetch[F]] = Nil
+  )(implicit
+    F: Gather[F]
+  ): Fetch[F] = {
+    val f = fetch0(repositories, fetch, fetchs)
+    modVers =>
+      val modVers0 = modVers.map {
+        case (mod, ver) =>
+          (mod, VersionConstraint0(ver))
+      }
+      F.map(f(modVers0)) { l =>
+        l.map {
+          case ((mod, ver), value) =>
+            ((mod, ver.asString), value)
+        }
+      }
+  }
 
   def defaultMaxIterations: Int = 100
 
@@ -395,18 +414,20 @@ object ResolutionProcess {
   }
 
   private[coursier] def fetchAll[F[_]](
-    modVers: Seq[(Module, String)],
-    fetch: ResolutionProcess.Fetch[F]
-  )(implicit F: Monad[F]): F[Vector[((Module, String), Either[Seq[String], (ArtifactSource, Project)])]] = {
+    modVers: Seq[(Module, VersionConstraint0)],
+    fetch: ResolutionProcess.Fetch0[F]
+  )(implicit
+    F: Monad[F]
+  ): F[Vector[((Module, VersionConstraint0), Either[Seq[String], (ArtifactSource, Project)])]] = {
 
-    def uniqueModules(modVers: Seq[(Module, String)]): LazyList[Seq[(Module, String)]] = {
+    def uniqueModules(modVers: Seq[(Module, VersionConstraint0)])
+      : LazyList[Seq[(Module, VersionConstraint0)]] = {
 
       val res = modVers.groupBy(_._1).toSeq.map(_._2).map {
         case Seq(v) => (v, Nil)
-        case Seq() => sys.error("Cannot happen")
+        case Seq()  => sys.error("Cannot happen")
         case v =>
-          // there might be version intervals in there, but that shouldn't matter...
-          val res = v.maxBy { case (_, v0) => Version(v0) }
+          val res = v.maxBy(_._2)
           (res, v.filter(_ != res))
       }
 
@@ -422,7 +443,9 @@ object ResolutionProcess {
 
     uniqueModules(modVers)
       .toVector
-      .foldLeft(F.point(Vector.empty[((Module, String), Either[Seq[String], (ArtifactSource, Project)])])) {
+      .foldLeft(F.point(
+        Vector.empty[((Module, VersionConstraint0), Either[Seq[String], (ArtifactSource, Project)])]
+      )) {
         (acc, l) =>
           for {
             v <- acc
@@ -432,4 +455,3 @@ object ResolutionProcess {
   }
 
 }
-

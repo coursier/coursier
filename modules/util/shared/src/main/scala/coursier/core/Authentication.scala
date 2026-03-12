@@ -3,21 +3,59 @@ package coursier.core
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 
-import dataclass.data
+import dataclass.{data, since}
 
 @data class Authentication(
-  user: String,
+  userOpt: Option[String],
   passwordOpt: Option[String],
   httpHeaders: Seq[(String, String)],
   optional: Boolean,
   realmOpt: Option[String],
   httpsOnly: Boolean,
-  passOnRedirect: Boolean
+  passOnRedirect: Boolean,
+  @since
+  byNameHttpHeaders: Seq[() => Seq[(String, String)]] = Nil
 ) {
 
-  override def toString: String =
-    s"Authentication($user, ****, ${httpHeaders.map { case (k, v) => (k, "****") }}, $optional, $realmOpt, $httpsOnly, $passOnRedirect)"
+  @deprecated("Use the override accepting an Option[String] as user", "2.1.25")
+  def this(
+    user: String,
+    passwordOpt: Option[String],
+    httpHeaders: Seq[(String, String)],
+    optional: Boolean,
+    realmOpt: Option[String],
+    httpsOnly: Boolean,
+    passOnRedirect: Boolean
+  ) =
+    this(
+      Some(user),
+      passwordOpt,
+      httpHeaders,
+      optional,
+      realmOpt,
+      httpsOnly,
+      passOnRedirect
+    )
 
+  @deprecated("Use userOpt instead", "2.1.25")
+  def user: String =
+    userOpt.getOrElse {
+      sys.error("Deprecated method not supported when userOpt is empty")
+    }
+
+  def withUser(newUser: String): Authentication =
+    withUserOpt(Some(newUser))
+
+  override def toString: String = {
+    val headersStr = httpHeaders.map {
+      case (k, v) =>
+        (k, "****")
+    }
+    val byNameHeadersStr = byNameHttpHeaders.map { _ =>
+      "[lazy]"
+    }
+    s"Authentication($userOpt, ****, $headersStr, $byNameHeadersStr, $optional, $realmOpt, $httpsOnly, $passOnRedirect)"
+  }
 
   def withPassword(password: String): Authentication =
     withPasswordOpt(Some(password))
@@ -25,13 +63,17 @@ import dataclass.data
     withRealmOpt(Some(realm))
 
   def userOnly: Boolean =
-    this == Authentication(user)
+    userOpt.forall { user =>
+      this == Authentication(user)
+    }
 
   def allHttpHeaders: Seq[(String, String)] = {
-    val basicAuthHeader = passwordOpt.toSeq.map { p =>
-      ("Authorization", "Basic " + Authentication.basicAuthenticationEncode(user, p))
-    }
-    basicAuthHeader ++ httpHeaders
+    val basicAuthHeader =
+      for {
+        user     <- userOpt
+        password <- passwordOpt
+      } yield ("Authorization", "Basic " + Authentication.basicAuthenticationEncode(user, password))
+    basicAuthHeader.toSeq ++ httpHeaders ++ byNameHttpHeaders.flatMap(_())
   }
 
 }
@@ -39,9 +81,25 @@ import dataclass.data
 object Authentication {
 
   def apply(user: String): Authentication =
-    Authentication(user, None, Nil, optional = false, None, httpsOnly = true, passOnRedirect = false)
+    Authentication(
+      Some(user),
+      None,
+      Nil,
+      optional = false,
+      None,
+      httpsOnly = true,
+      passOnRedirect = false
+    )
   def apply(user: String, password: String): Authentication =
-    Authentication(user, Some(password), Nil, optional = false, None, httpsOnly = true, passOnRedirect = false)
+    Authentication(
+      Some(user),
+      Some(password),
+      Nil,
+      optional = false,
+      None,
+      httpsOnly = true,
+      passOnRedirect = false
+    )
 
   def apply(
     user: String,
@@ -51,7 +109,7 @@ object Authentication {
     httpsOnly: Boolean,
     passOnRedirect: Boolean
   ): Authentication =
-    new Authentication(user, passwordOpt, Nil, optional, realmOpt, httpsOnly, passOnRedirect)
+    new Authentication(Some(user), passwordOpt, Nil, optional, realmOpt, httpsOnly, passOnRedirect)
 
   def apply(
     user: String,
@@ -61,10 +119,18 @@ object Authentication {
     httpsOnly: Boolean,
     passOnRedirect: Boolean
   ): Authentication =
-    Authentication(user, Some(password), Nil, optional, realmOpt, httpsOnly, passOnRedirect)
+    Authentication(Some(user), Some(password), Nil, optional, realmOpt, httpsOnly, passOnRedirect)
 
   def apply(httpHeaders: Seq[(String, String)]): Authentication =
-    Authentication("", None, httpHeaders, optional = false, None, httpsOnly = true, passOnRedirect = false)
+    Authentication(
+      Some(""),
+      None,
+      httpHeaders,
+      optional = false,
+      None,
+      httpsOnly = true,
+      passOnRedirect = false
+    )
 
   def apply(
     httpHeaders: Seq[(String, String)],
@@ -73,12 +139,60 @@ object Authentication {
     httpsOnly: Boolean,
     passOnRedirect: Boolean
   ): Authentication =
-    Authentication("", None, httpHeaders, optional, realmOpt, httpsOnly, passOnRedirect)
+    Authentication(Some(""), None, httpHeaders, optional, realmOpt, httpsOnly, passOnRedirect)
 
+  @deprecated("Use the override accepting an Option[String] as user", "2.1.25")
+  def apply(
+    user: String,
+    passwordOpt: Option[String],
+    httpHeaders: Seq[(String, String)],
+    optional: Boolean,
+    realmOpt: Option[String],
+    httpsOnly: Boolean,
+    passOnRedirect: Boolean
+  ): Authentication =
+    Authentication(
+      Some(user),
+      passwordOpt,
+      httpHeaders,
+      optional,
+      realmOpt,
+      httpsOnly,
+      passOnRedirect
+    )
 
   private[coursier] def basicAuthenticationEncode(user: String, password: String): String =
     Base64.getEncoder.encodeToString(
       s"$user:$password".getBytes(StandardCharsets.UTF_8)
+    )
+
+  def bearerToken(token: String): Authentication =
+    Authentication(
+      None,
+      None,
+      Seq(
+        "Authorization" -> s"Bearer $token"
+      ),
+      optional = false,
+      None,
+      httpsOnly = true,
+      passOnRedirect = false
+    )
+
+  def byNameBearerToken(token: => String): Authentication =
+    Authentication(
+      None,
+      None,
+      Nil,
+      optional = false,
+      None,
+      httpsOnly = true,
+      passOnRedirect = false,
+      byNameHttpHeaders = Seq(() =>
+        Seq(
+          "Authorization" -> s"Bearer $token"
+        )
+      )
     )
 
 }

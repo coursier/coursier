@@ -3,21 +3,26 @@ package coursier.cli.params
 import java.nio.file.{Path, Paths}
 
 import cats.data.{Validated, ValidatedNel}
+import cats.implicits._
 import coursier.cli.options.EnvOptions
 import coursier.env.{EnvironmentUpdate, FishUpdater, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.launcher.internal.Windows
 import coursier.util.Task
 
+import scala.util.Properties
+
 final case class EnvParams(
   env: Boolean,
   disableEnv: Boolean,
   setup: Boolean,
-  homeOpt: Option[Path]
+  homeOpt: Option[Path],
+  windowsScript: Boolean,
+  windowsPosixScript: Boolean
 ) {
   def anyFlag: Boolean = env || setup
   // TODO Allow to customize some parameters of WindowsEnvVarUpdater / ProfileUpdater?
   def envVarUpdater: Either[WindowsEnvVarUpdater, Either[ProfileUpdater, FishUpdater]] =
-    if (Windows.isWindows)
+    if (Properties.isWin)
       Left(WindowsEnvVarUpdater().withUseJni(Some(coursier.paths.Util.useJni())))
     else if (isFish()){
       Right(Right(FishUpdater()))
@@ -55,7 +60,8 @@ final case class EnvParams(
               }
             case Right(Left(profileUpdater)) =>
               lazy val profileFiles = profileUpdater.profileFiles() // Task.delay(…)
-              val profileFilesStr = profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
+              val profileFilesStr =
+                profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
               val msg = s"Checking if ${profileFilesStr.mkString(", ")} need(s) updating."
               Task.delay {
                 if (verbosity >= 0)
@@ -98,6 +104,10 @@ final case class EnvParams(
 }
 
 object EnvParams {
+
+  def defaultWindowsPosixScript: Boolean =
+    Properties.isWin && Option(System.getenv("OSTYPE")).exists(_.trim.nonEmpty)
+
   def apply(options: EnvOptions): ValidatedNel[String, EnvParams] = {
     val homeOpt = options.userHome.filter(_.nonEmpty).map(Paths.get(_))
 
@@ -108,17 +118,55 @@ object EnvParams {
     )
     val flagsV =
       if (flags.count(identity) > 1)
-        Validated.invalidNel("Error: can only specify one of --env, --disable / --disable-env, --setup.")
+        Validated.invalidNel(
+          "Error: can only specify one of --env, --disable / --disable-env, --setup."
+        )
       else
         Validated.validNel(())
 
-    flagsV.map { _ =>
-      EnvParams(
-        options.env,
-        options.disableEnv,
-        options.setup,
-        homeOpt
-      )
+    val windowsScriptValues0 = (options.windowsScript, options.windowsPosixScript) match {
+      case (Some(true), Some(true)) =>
+        Validated.invalidNel("Cannot specify both --windows-script and --windows-posix-script")
+      case (Some(true), _) =>
+        Validated.validNel(Some(true))
+      case (_, Some(true)) =>
+        Validated.validNel(Some(false))
+      case (Some(false), Some(false)) =>
+        Validated.validNel(None)
+      case (None, Some(false)) =>
+        Validated.validNel {
+          if (Properties.isWin) Some(true)
+          else None
+        }
+      case (Some(false), None) =>
+        Validated.validNel {
+          if (defaultWindowsPosixScript) Some(false)
+          else None
+        }
+      case (None, None) =>
+        Validated.validNel {
+          if (defaultWindowsPosixScript) Some(false)
+          else if (Properties.isWin) Some(true)
+          else None
+        }
+    }
+
+    val windowsScriptValues = windowsScriptValues0.map {
+      case Some(true)  => (true, false)
+      case Some(false) => (false, true)
+      case None        => (false, false)
+    }
+
+    (flagsV, windowsScriptValues).mapN {
+      case (_, (windowsScript, windowsPosixScript)) =>
+        EnvParams(
+          options.env,
+          options.disableEnv,
+          options.setup,
+          homeOpt,
+          windowsScript,
+          windowsPosixScript
+        )
     }
   }
 }

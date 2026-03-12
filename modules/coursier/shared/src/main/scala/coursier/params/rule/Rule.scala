@@ -11,7 +11,10 @@ abstract class Rule extends Product with Serializable {
   def check(res: Resolution): Option[C]
   def tryResolve(res: Resolution, conflict: C): Either[UnsatisfiableRule, Resolution]
 
-  def enforce(res: Resolution, ruleRes: RuleResolution): Either[UnsatisfiableRule, Either[UnsatisfiedRule, Option[Resolution]]] =
+  def enforce(
+    res: Resolution,
+    ruleRes: RuleResolution
+  ): Either[UnsatisfiableRule, Either[UnsatisfiedRule, Option[Resolution]]] =
     check(res) match {
       case None =>
         Right(Right(None))

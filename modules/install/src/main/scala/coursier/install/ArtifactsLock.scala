@@ -1,7 +1,8 @@
 package coursier.install
 
-import java.io.{File, FileInputStream}
+import java.io.{File, InputStream}
 import java.math.BigInteger
+import java.nio.file.Files
 import java.security.MessageDigest
 
 import cats.implicits._
@@ -9,7 +10,7 @@ import coursier.cache.internal.FileUtil
 import coursier.util.Artifact
 import dataclass.data
 
-@data class ArtifactsLock (
+@data class ArtifactsLock(
   entries: Set[ArtifactsLock.Entry]
 ) {
   def repr: String =
@@ -43,14 +44,14 @@ object ArtifactsLock {
           if (idx < 0)
             Left(s"Malformed line ${lineNum + 1}")
           else {
-            val url = line.take(idx)
+            val url          = line.take(idx)
             val checksumPart = line.drop(idx + 1)
-            val idx0 = checksumPart.indexOf(':')
+            val idx0         = checksumPart.indexOf(':')
             if (idx0 < 0)
               Left(s"Malformed line ${lineNum + 1}")
             else {
               val checksumType = checksumPart.take(idx0)
-              val checksum = checksumPart.drop(idx0 + 1)
+              val checksum     = checksumPart.drop(idx0 + 1)
               Right(Entry(url, checksumType, checksum))
             }
           }
@@ -62,11 +63,13 @@ object ArtifactsLock {
   private def sha1(f: File): String = {
     val md = MessageDigest.getInstance("SHA-1")
 
-    var is: FileInputStream = null
+    var is: InputStream = null
     try {
-      is = new FileInputStream(f)
+      is = Files.newInputStream(f.toPath)
       FileUtil.withContent(is, new FileUtil.UpdateDigest(md))
-    } finally is.close()
+    }
+    finally if (is != null)
+        is.close()
 
     val b = md.digest()
     new BigInteger(1, b).toString(16)

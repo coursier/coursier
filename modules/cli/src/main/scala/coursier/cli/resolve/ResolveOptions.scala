@@ -1,50 +1,84 @@
 package coursier.cli.resolve
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
-import coursier.cli.options.{CacheOptions, DependencyOptions, OutputOptions, RepositoryOptions, ResolutionOptions}
+import caseapp._
+import coursier.cli.install.SharedChannelOptions
+import coursier.cli.options.{
+  DependencyOptions,
+  OptionGroup,
+  OutputOptions,
+  RepositoryOptions,
+  ResolutionOptions
+}
 import coursier.install.RawAppDescriptor
 
-@ArgsName("org:name:version|app-name[:version]*")
+// format: off
+@ArgsName("org:name:version*|app-name[:version]")
+@HelpMessage(
+  "Resolve and print the transitive dependencies of one or more dependencies or an application.\n" +
+  "Print the maven coordinates, does not download the artifacts.\n" +
+  "\n" +
+  "Examples:\n" +
+  "$ cs resolve org.http4s:http4s-dsl_2.12:0.18.21\n" +
+  "$ cs resolve --tree org.http4s:http4s-dsl_2.12:0.18.21"
+)
 final case class ResolveOptions(
 
-  @Help("Print the duration of each iteration of the resolution (if negative, doesn't print per iteration benchmark -> less overhead)")
-  @Short("B")
-  @Value("# warm-up resolutions")
+  @Group(OptionGroup.resolution)
+  @HelpMessage("Print the duration of each iteration of the resolution (if negative, doesn't print per iteration benchmark -> less overhead)")
+  @Hidden
+  @ExtraName("B")
+  @ValueDescription("# warm-up resolutions")
     benchmark: Int = 0,
 
-  benchmarkCache: Boolean = false,
+  @Group(OptionGroup.resolution)
+  @Hidden
+    benchmarkCache: Boolean = false,
 
-  @Help("Print dependencies as a tree")
-  @Short("t")
+  @Group(OptionGroup.resolution)
+  @HelpMessage("Print dependencies as a tree")
+  @ExtraName("t")
     tree: Boolean = false,
-  @Help("Print dependencies as a reversed tree (dependees as children)")
-  @Short("T")
+  @Group(OptionGroup.resolution)
+  @HelpMessage("Print dependencies as a reversed tree (dependees as children)")
+  @ExtraName("T")
     reverseTree: Boolean = false,
-  @Help("Print what depends on the passed modules")
-  @Value("org:name")
+  @Group(OptionGroup.resolution)
+  @HelpMessage("Print what depends on the passed modules")
+  @ValueDescription("org:name")
     whatDependsOn: List[String] = Nil,
-  @Help("Print candidate artifact URLs")
+  @Group(OptionGroup.resolution)
+  @HelpMessage("Print candidate artifact URLs")
+  @Hidden
     candidateUrls: Boolean = false,
 
-  @Help("Print conflicts")
+  @Group(OptionGroup.resolution)
+  @HelpMessage("Print conflicts")
+  @Hidden
     conflicts: Boolean = false,
 
   @Recurse
     sharedResolveOptions: SharedResolveOptions = SharedResolveOptions(),
+  @Recurse
+    channelOptions: SharedChannelOptions = SharedChannelOptions(),
 
-  @Help("Force printing / generating results, even if errored")
-  @Short("F")
+  @Group(OptionGroup.resolution)
+  @HelpMessage("Force printing / generating results, even if errored")
+  @ExtraName("F")
     forcePrint: Boolean = false,
-
-  retry: Option[String] = None,
-  attempts: Option[Int] = None
+  @Group(OptionGroup.resolution)
+  @Hidden
+    retry: Option[String] = None,
+  @Group(OptionGroup.resolution)
+  @Hidden
+    attempts: Option[Int] = None
 
 ) {
+  // format: on
   def addApp(app: RawAppDescriptor): ResolveOptions =
     copy(sharedResolveOptions = sharedResolveOptions.addApp(app))
 }
 
 object ResolveOptions {
-  implicit val parser = Parser[ResolveOptions]
-  implicit val help = caseapp.core.help.Help[ResolveOptions]
+  implicit lazy val parser: Parser[ResolveOptions] = Parser.derive
+  implicit lazy val help: Help[ResolveOptions]     = Help.derive
 }

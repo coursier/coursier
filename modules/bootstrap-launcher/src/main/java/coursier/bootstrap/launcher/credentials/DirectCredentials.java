@@ -61,7 +61,7 @@ public final class DirectCredentials extends Credentials {
     this(
       host,
       username,
-      (password != null) ? new Password<String>(password) : null,
+      (password != null) ? new Password<>(password) : null,
       realm,
       optional,
       matchHost,
@@ -257,24 +257,22 @@ public final class DirectCredentials extends Credentials {
 
   @Override
   public String toString() {
-    final StringBuilder b = new StringBuilder("DirectCredentials(");
-    b.append(String.valueOf(host));
-    b.append(", ");
-    b.append(String.valueOf(usernameOpt));
-    b.append(", ");
-    b.append(String.valueOf(passwordOpt));
-    b.append(", ");
-    b.append(String.valueOf(realmOpt));
-    b.append(", ");
-    b.append(String.valueOf(optional));
-    b.append(", ");
-    b.append(String.valueOf(matchHost));
-    b.append(", ");
-    b.append(String.valueOf(httpsOnly));
-    b.append(", ");
-    b.append(String.valueOf(passOnRedirect));
-    b.append(")");
-    return b.toString();
+    return "DirectCredentials(" + host +
+            ", " +
+            usernameOpt +
+            ", " +
+            passwordOpt +
+            ", " +
+            realmOpt +
+            ", " +
+            optional +
+            ", " +
+            matchHost +
+            ", " +
+            httpsOnly +
+            ", " +
+            passOnRedirect +
+            ")";
   }
 
   @Override
@@ -312,9 +310,8 @@ public final class DirectCredentials extends Credentials {
       if (other.realmOpt != null) return false;
     } else if (!realmOpt.equals(other.realmOpt)) return false;
     if (usernameOpt == null) {
-      if (other.usernameOpt != null) return false;
-    } else if (!usernameOpt.equals(other.usernameOpt)) return false;
-    return true;
+      return other.usernameOpt == null;
+    } else return usernameOpt.equals(other.usernameOpt);
   }
  
 }

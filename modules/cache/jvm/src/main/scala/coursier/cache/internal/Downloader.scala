@@ -3,7 +3,8 @@ package coursier.cache.internal
 import java.io.{Serializable => _, _}
 import java.net.{HttpURLConnection, URLConnection, MalformedURLException}
 import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.{Files, StandardCopyOption}
+import java.nio.file.{AccessDeniedException, Files, StandardCopyOption, StandardOpenOption}
+import java.time.Clock
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.zip.GZIPInputStream
@@ -13,14 +14,16 @@ import coursier.cache._
 import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
 import coursier.paths.{CachePath, Util}
-import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
+import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
-import dataclass.data
+import dataclass._
 
 import scala.annotation.tailrec
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.util.Properties
 import scala.util.control.NonFatal
 
+// format: off
 @data class Downloader[F[_]](
   artifact: Artifact,
   cachePolicy: CachePolicy,
@@ -34,31 +37,43 @@ import scala.util.control.NonFatal
   followHttpToHttpsRedirections: Boolean = true,
   followHttpsToHttpRedirections: Boolean = false,
   maxRedirections: Option[Int] = CacheDefaults.maxRedirections,
-  sslRetry: Int = CacheDefaults.sslRetryCount,
+  @deprecated("Unused, use retryCount instead", "2.1.11")
+    sslRetry: Int = CacheDefaults.retryCount,
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   bufferSize: Int = CacheDefaults.bufferSize,
   @since("2.0.16")
-  classLoaders: Seq[ClassLoader] = Nil,
+    classLoaders: Seq[ClassLoader] = Nil,
+  @since("2.1.0-RC3")
+    clock: Clock = Clock.systemDefaultZone(),
+  @since("2.1.11")
+    retryCount: Int = CacheDefaults.retryCount,
+  @since("2.1.11")
+    retryBackoffInitialDelay: FiniteDuration = CacheDefaults.retryBackoffInitialDelay,
+  @since("2.1.11")
+    retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier
 )(implicit
   S: Sync[F]
 ) {
+  // format: on
+
+  private val retry = Retry(retryCount, retryBackoffInitialDelay, retryBackoffMultiplier)
 
   private def blockingIO[T](f: => T): F[T] =
     S.schedule(pool)(f)
   private def blockingIOE[T](f: => Either[ArtifactError, T]): EitherT[F, ArtifactError, T] =
     EitherT(S.schedule(pool)(f))
 
-  private def localFile(url: String, user: Option[String] = None): File =
+  private def localFile(url: String, user: Option[String]): File =
     FileCache.localFile0(url, location, user, localArtifactsShouldBeCached)
 
   // Reference file - if it exists, and we get not found errors on some URLs, we assume
   // we can keep track of these missing, and not try to get them again later.
   private lazy val referenceFileOpt = artifact.extra.get("metadata").map { a =>
-    localFile(a.url, a.authentication.map(_.user))
+    localFile(a.url, a.authentication.flatMap(_.userOpt))
   }
 
-  private val cacheErrors = artifact.changing &&
+  private val cacheErrors = artifact.changing ||
     artifact.extra.contains("cache-errors")
 
   private def cacheErrors0: Boolean = cacheErrors || referenceFileOpt.exists(_.exists())
@@ -107,29 +122,31 @@ import scala.util.control.NonFatal
               logger.checkingUpdatesResult(url, currentLastModifiedOpt, res)
 
               Right(res)
-            } finally {
-              if (!success)
-                logger.checkingUpdatesResult(url, currentLastModifiedOpt, None)
             }
+            finally if (!success)
+                logger.checkingUpdatesResult(url, currentLastModifiedOpt, None)
 
           case other =>
             Left(
-              new ArtifactError.DownloadError(s"Cannot do HEAD request with connection $other ($url)", None)
+              new ArtifactError.DownloadError(
+                s"Cannot do HEAD request with connection $other ($url)",
+                None
+              )
             )
         }
-      } catch {
+      }
+      catch {
         case NonFatal(e) =>
           val ex = new ArtifactError.DownloadError(
             s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url",
             Some(e)
           )
-          if (java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions"))
+          if (Downloader.throwExceptions)
             throw ex
           Left(ex)
-      } finally {
-        if (conn != null)
-          CacheUrl.closeConn(conn)
       }
+      finally if (conn != null)
+          CacheUrl.closeConn(conn)
     }
 
     def lastCheck(file: File): Option[Long] =
@@ -141,34 +158,34 @@ import scala.util.control.NonFatal
       } yield ts
 
     def doTouchCheckFile(file: File, url: String, updateLinks: Boolean): Unit = {
-      val ts = System.currentTimeMillis()
-      val f = ttlFile(file)
-      if (f.exists())
-        f.setLastModified(ts)
-      else {
-        val fos = new FileOutputStream(f)
-        fos.write(Array.empty[Byte])
-        fos.close()
-      }
+      val ts = clock.millis()
+      val f  = ttlFile(file)
+      if (!f.exists())
+        Files.write(f.toPath, Array.emptyByteArray)
+      f.setLastModified(ts)
 
       if (updateLinks && file.getName == ".directory") {
         val linkFile = FileCache.auxiliaryFile(file, "links")
 
         val succeeded =
           try {
-            val content = WebPage.listElements(url, new String(Files.readAllBytes(file.toPath), UTF_8))
-              .mkString("\n")
+            val content =
+              WebPage.listElements(
+                url,
+                new String(
+                  retry.retry {
+                    Files.readAllBytes(file.toPath)
+                  } {
+                    case _: AccessDeniedException if Properties.isWin =>
+                  },
+                  UTF_8
+                )
+              ).mkString("\n")
 
-            var fos: FileOutputStream = null
-            try {
-              fos = new FileOutputStream(linkFile)
-              fos.write(content.getBytes(UTF_8))
-            } finally {
-              if (fos != null)
-                fos.close()
-            }
+            Files.write(linkFile.toPath, content.getBytes(UTF_8))
             true
-          } catch {
+          }
+          catch {
             case NonFatal(_) =>
               false
           }
@@ -193,10 +210,15 @@ import scala.util.control.NonFatal
       val authenticationOpt =
         artifact.authentication match {
           case Some(auth) if auth.userOnly =>
-            allCredentials0
-              .find(_.matches(url, auth.user))
-              .map(_.authentication)
-              .orElse(artifact.authentication) // Default to None instead?
+            auth.userOpt match {
+              case Some(user) =>
+                allCredentials0
+                  .find(_.matches(url, user))
+                  .map(_.authentication)
+                  .orElse(artifact.authentication) // Default to None instead?
+              case None =>
+                artifact.authentication // Default to None instead?
+            }
           case _ =>
             artifact.authentication
         }
@@ -224,6 +246,9 @@ import scala.util.control.NonFatal
           Left(new ArtifactError.Forbidden(url))
         else if (respCodeOpt.contains(401))
           Left(new ArtifactError.Unauthorized(url, realm = CacheUrl.realm(conn)))
+        else if (respCodeOpt.exists(c => c / 100 == 5))
+          // Mark http 500 errors as retryable, to mitigate flakiness
+          Left(new ArtifactError.RetryableServerError(url, respCodeOpt.get))
         else {
           for (len0 <- Option(conn.getContentLengthLong) if len0 >= 0L) {
             val len = len0 + (if (partialDownload) alreadyDownloaded else 0L)
@@ -234,7 +259,7 @@ import scala.util.control.NonFatal
             conn match {
               case conn0: HttpURLConnection if keepHeaderChecksums =>
                 def entries = for {
-                  c <- Downloader.checksumHeader.iterator
+                  c   <- Downloader.checksumHeader.iterator
                   str <- Option(conn0.getHeaderField(s"X-Checksum-$c")).iterator
                 } yield (c, str.getBytes(UTF_8))
                 entries.toMap
@@ -253,17 +278,28 @@ import scala.util.control.NonFatal
           val result =
             try {
               val out = CacheLocks.withStructureLock(location) {
-                Util.createDirectories(tmp.toPath.getParent);
-                new FileOutputStream(tmp, partialDownload)
+                Util.createDirectories(tmp.toPath.getParent)
+                if (partialDownload)
+                  Files.newOutputStream(tmp.toPath, StandardOpenOption.APPEND)
+                else
+                  Files.newOutputStream(tmp.toPath)
               }
-              try Downloader.readFullyTo(in, out, logger, url, if (partialDownload) alreadyDownloaded else 0L, bufferSize)
+              try Downloader.readFullyTo(
+                  in,
+                  out,
+                  logger,
+                  url,
+                  if (partialDownload) alreadyDownloaded else 0L,
+                  bufferSize
+                )
               finally out.close()
-            } finally in.close()
+            }
+            finally in.close()
 
           FileCache.clearAuxiliaryFiles(file)
 
           for ((key, data) <- auxiliaryData) {
-            val dest = FileCache.auxiliaryFile(file, key)
+            val dest    = FileCache.auxiliaryFile(file, key)
             val tmpDest = CachePath.temporaryFile(dest)
             Util.createDirectories(tmpDest.toPath.getParent)
             Files.write(tmpDest.toPath, data)
@@ -285,10 +321,9 @@ import scala.util.control.NonFatal
 
           Right(result)
         }
-      } finally {
-        if (conn != null)
-          CacheUrl.closeConn(conn)
       }
+      finally if (conn != null)
+          CacheUrl.closeConn(conn)
     }
 
     def checkDownload(
@@ -317,7 +352,8 @@ import scala.util.control.NonFatal
           )
           for (o <- lenOpt; len <- o)
             logger.downloadLength(url, len, currentLen, watching = true)
-        } else
+        }
+        else
           logger.downloadProgress(url, currentLen)
 
       def done(): Unit =
@@ -337,7 +373,8 @@ import scala.util.control.NonFatal
           )
           for (o <- lenOpt; len <- o)
             logger.downloadLength(url, len, len, watching = true)
-        } else
+        }
+        else
           for (o <- lenOpt; len <- o)
             logger.downloadProgress(url, len)
 
@@ -354,7 +391,8 @@ import scala.util.control.NonFatal
               Left(new ArtifactError.WrongLength(fileLen, len, file.getAbsolutePath))
         }
         Some(res)
-      } else {
+      }
+      else {
         // yes, Thread.sleep. 'tis our thread pool anyway.
         // (And the various resources make it not straightforward to switch to a more Task-based internal API here.)
         Thread.sleep(20L)
@@ -364,7 +402,8 @@ import scala.util.control.NonFatal
         if (currentLen == 0L && file.exists()) { // check again if file exists in case it was created in the mean time
           done()
           Some(Right(()))
-        } else {
+        }
+        else {
           progress(currentLen)
           None
         }
@@ -375,7 +414,8 @@ import scala.util.control.NonFatal
       file: File,
       url: String,
       keepHeaderChecksums: Boolean,
-      allCredentials0: Seq[DirectCredentials]
+      allCredentials0: Seq[DirectCredentials],
+      proceed: () => Boolean
     ): Either[ArtifactError, Unit] = {
 
       val tmp = CachePath.temporaryFile(file)
@@ -385,17 +425,20 @@ import scala.util.control.NonFatal
       var success = false
 
       try {
-        val res = CacheLocks.withLockOr(location, file)(
-          Downloader.downloading(url, file, sslRetry) {
-            doDownload(file, url, keepHeaderChecksums, allCredentials0, tmp)
-          },
+        val res = Downloader.downloading(url, file, retry)(
+          CacheLocks.withLockOr(location, file, retry)(
+            if (proceed())
+              doDownload(file, url, keepHeaderChecksums, allCredentials0, tmp)
+            else
+              Right(()),
+            checkDownload(file, url, allCredentials0, tmp)
+          ),
           checkDownload(file, url, allCredentials0, tmp)
         )
         success = res.isRight
         res
-      } finally {
-        logger.downloadedArtifact(url, success = success)
       }
+      finally logger.downloadedArtifact(url, success = success)
     }
 
   }
@@ -414,7 +457,47 @@ import scala.util.control.NonFatal
   private def ttlFile(file: File): File =
     new File(file.getParent, s".${file.getName}.checked")
 
-  private def shouldDownload(file: File, url: String, checkRemote: Boolean): EitherT[F, ArtifactError, Boolean] = {
+  private def checkNeeded(file: File) = ttl match {
+    case None                       => S.point(true)
+    case Some(ttl) if !ttl.isFinite => S.point(false)
+    case Some(ttl) =>
+      blockingIO {
+        Blocking.lastCheck(file).fold(true) { ts =>
+          val now = clock.millis()
+          now > ts + ttl.toMillis
+        }
+      }
+  }
+
+  private def checkNeededBlocking(file: File) = ttl match {
+    case None                       => true
+    case Some(ttl) if !ttl.isFinite => false
+    case Some(ttl) =>
+      Blocking.lastCheck(file).fold(true) { ts =>
+        val now = clock.millis()
+        now > ts + ttl.toMillis
+      }
+  }
+
+  private def checkSideArtifact: EitherT[F, ArtifactError, Unit] =
+    artifact.extra.get("check") match {
+      case None => EitherT.point(())
+      case Some(toCheck) =>
+        blockingIOE {
+          val toCheckFile    = localFile(toCheck.url, toCheck.authentication.flatMap(_.userOpt))
+          val toCheckErrFile = errFile(toCheckFile).toPath
+          if (Files.exists(toCheckFile.toPath) || Files.exists(toCheckErrFile))
+            Right(())
+          else
+            Left(new ArtifactError.MissingOtherArtifactCheck(artifact, toCheck))
+        }
+    }
+
+  private def shouldDownload(
+    file: File,
+    url: String,
+    checkRemote: Boolean
+  ): EitherT[F, ArtifactError, Boolean] = {
 
     def checkErrFile: Either[ArtifactError, Unit] = {
       val errFile0 = errFile(file)
@@ -422,35 +505,24 @@ import scala.util.control.NonFatal
       if (referenceFileOpt.exists(_.exists()) && errFile0.exists())
         Left(new ArtifactError.NotFound(url, Some(true)))
       else if (cacheErrors && errFile0.exists()) {
-        val ts = errFile0.lastModified()
-        val now = System.currentTimeMillis()
+        val ts  = errFile0.lastModified()
+        val now = clock.millis()
         if (ts > 0L && (ttl.exists(!_.isFinite) || now < ts + ttl.fold(0L)(_.toMillis)))
           Left(new ArtifactError.NotFound(url))
         else
           Right(())
-      } else
+      }
+      else
         Right(())
-    }
-
-    def checkNeeded = ttl match {
-      case None => S.point(true)
-      case Some(ttl) if !ttl.isFinite => S.point(false)
-      case Some(ttl) =>
-        blockingIO {
-          Blocking.lastCheck(file).fold(true) { ts =>
-            val now = System.currentTimeMillis()
-            now > ts + ttl.toMillis
-          }
-        }
     }
 
     def doCheckRemote = for {
       fileLastModOpt <- blockingIOE(Blocking.fileLastModified(file))
-      urlLastModOpt <- EitherT(urlLastModified(url, fileLastModOpt, logger))
+      urlLastModOpt  <- EitherT(urlLastModified(url, fileLastModOpt, logger))
     } yield {
       val fromDatesOpt = for {
         fileLastMod <- fileLastModOpt
-        urlLastMod <- urlLastModOpt
+        urlLastMod  <- urlLastModOpt
       } yield fileLastMod < urlLastMod
 
       fromDatesOpt.getOrElse(true)
@@ -460,39 +532,51 @@ import scala.util.control.NonFatal
       blockingIO(file.exists()).flatMap {
         case false => S.point(Right(true))
         case true =>
-          checkNeeded.flatMap {
+          checkNeeded(file).flatMap {
             case false => S.point(Right(false))
-            case true if !checkRemote => S.point(Right(true))
-            case true if checkRemote =>
-              doCheckRemote.run.flatMap {
-                case Right(false) =>
-                  blockingIO {
-                    Blocking.doTouchCheckFile(file, url, updateLinks = false)
-                    Right(false)
-                  }
-                case other => S.point(other)
-              }
+            case true =>
+              if (checkRemote)
+                doCheckRemote.run.flatMap {
+                  case Right(false) =>
+                    blockingIO {
+                      Blocking.doTouchCheckFile(file, url, updateLinks = false)
+                      Right(false)
+                    }
+                  case other => S.point(other)
+                }
+              else
+                S.point(Right(true))
           }
       }
 
     for {
-      _ <- blockingIOE(checkErrFile)
+      _   <- blockingIOE(checkErrFile)
+      _   <- checkSideArtifact
       res <- EitherT(checkShouldDownload)
     } yield res
   }
 
+  private def shouldDownloadSecondCheckBlocking(file: File): Boolean =
+    !file.exists() || checkNeededBlocking(file)
+
   private def remote(
     file: File,
     url: String,
-    keepHeaderChecksums: Boolean
+    keepHeaderChecksums: Boolean,
+    proceed: () => Boolean
   ): F[Either[ArtifactError, Unit]] =
     allCredentials.flatMap { allCredentials0 =>
-      blockingIO(Blocking.remote(file, url, keepHeaderChecksums, allCredentials0))
+      blockingIO(Blocking.remote(file, url, keepHeaderChecksums, allCredentials0, proceed))
     }
 
   private def errFile(file: File) = new File(file.getParentFile, "." + file.getName + ".error")
 
-  private def remoteKeepErrors(file: File, url: String, keepHeaderChecksums: Boolean): F[Either[ArtifactError, Unit]] = {
+  private def remoteKeepErrors(
+    file: File,
+    url: String,
+    keepHeaderChecksums: Boolean,
+    proceed: () => Boolean
+  ): F[Either[ArtifactError, Unit]] = {
 
     val errFile0 = errFile(file)
 
@@ -507,12 +591,24 @@ import scala.util.control.NonFatal
       if (errFile0.exists())
         errFile0.delete()
 
-    remote(file, url, keepHeaderChecksums).flatMap { e =>
+    remote(file, url, keepHeaderChecksums, proceed).flatMap { e =>
       blockingIO {
         e match {
           case err @ Left(nf: ArtifactError.NotFound) if nf.permanent.contains(true) =>
             createErrFileBlocking()
             err: Either[ArtifactError, Unit]
+          case err @ Left(err0: ArtifactError.DownloadError)
+              if err0.getCause.isInstanceOf[IOException] =>
+            if (referenceFileOpt.exists(_.exists()) && errFile0.exists())
+              // We got a download error, but we also got a not-found error
+              // in the past. We assume the download error is transient
+              // (user is offline for example), and return the cached
+              // not-found error.
+              Left(new ArtifactError.NotFound(url, permanent = Some(true), causeOpt = Some(err0)))
+            else {
+              deleteErrFileBlocking()
+              err: Either[ArtifactError, Unit]
+            }
           case other =>
             deleteErrFileBlocking()
             other
@@ -521,23 +617,32 @@ import scala.util.control.NonFatal
     }
   }
 
+  private def checkFileExistsBlocking(
+    file: File,
+    url: String
+  ): Boolean =
+    file.exists() && {
+      logger.foundLocally(url)
+      true
+    }
+
   private def checkFileExists(
     file: File,
     url: String,
     log: Boolean = true // ignored???
   ): F[Either[ArtifactError, Unit]] =
     blockingIO {
-      if (file.exists()) {
-        logger.foundLocally(url)
+      if (checkFileExistsBlocking(file, url))
         Right(())
-      } else
+      else
         Left(new ArtifactError.NotFound(file.toString))
     }
 
   private val actualCachePolicy: CachePolicy.Mixed = cachePolicy.acceptChanging match {
     case CachePolicy.UpdateChanging if !artifact.changing =>
       CachePolicy.FetchMissing
-    case CachePolicy.LocalUpdateChanging | CachePolicy.LocalOnlyIfValid if !artifact.changing =>
+    case CachePolicy.LocalUpdateChanging | CachePolicy.LocalOnlyIfValid
+        if !artifact.changing && !artifact.extra.contains("check") =>
       CachePolicy.LocalOnly
     case other =>
       other
@@ -547,7 +652,7 @@ import scala.util.control.NonFatal
 
     logger.checkingArtifact(url, artifact)
 
-    val file = localFile(url, artifact.authentication.map(_.user))
+    val file = localFile(url, artifact.authentication.flatMap(_.userOpt))
 
     def run =
       if (url.startsWith("file:/") && !localArtifactsShouldBeCached)
@@ -564,8 +669,15 @@ import scala.util.control.NonFatal
           needsUpdate <- shouldDownload(file, url, checkRemote = true)
           _ <- {
             val f: F[Either[ArtifactError, Unit]] =
-              if (needsUpdate) remoteKeepErrors(file, url, keepHeaderChecksums)
-              else S.point(Right(()))
+              if (needsUpdate)
+                remoteKeepErrors(
+                  file,
+                  url,
+                  keepHeaderChecksums,
+                  () => shouldDownloadSecondCheckBlocking(file)
+                )
+              else
+                S.point(Right(()))
             EitherT(f)
           }
         } yield ()
@@ -581,7 +693,7 @@ import scala.util.control.NonFatal
             e.run
           case CachePolicy.LocalOnlyIfValid =>
             val e = for {
-              _ <- EitherT(checkFileExists(file, url, log = false))
+              _           <- EitherT(checkFileExists(file, url, log = false))
               needsUpdate <- shouldDownload(file, url, checkRemote = false)
               _ <- {
                 val e: Either[ArtifactError, Unit] =
@@ -594,16 +706,32 @@ import scala.util.control.NonFatal
           case CachePolicy.UpdateChanging | CachePolicy.Update =>
             maybeUpdate.run
           case CachePolicy.FetchMissing =>
-            EitherT(checkFileExists(file, url))
-              .orElse(EitherT(remoteKeepErrors(file, url, keepHeaderChecksums))).run
+            checkSideArtifact
+              .flatMap { _ =>
+                EitherT(checkFileExists(file, url))
+                  .leftFlatMap {
+                    case nf: ArtifactError.NotFound =>
+                      EitherT(
+                        remoteKeepErrors(
+                          file,
+                          url,
+                          keepHeaderChecksums,
+                          () => !checkFileExistsBlocking(file, url)
+                        )
+                      )
+                    case other =>
+                      EitherT.fromEither(Left(other))
+                  }
+              }
+              .run
           case CachePolicy.ForceDownload =>
-            remoteKeepErrors(file, url, keepHeaderChecksums)
+            remoteKeepErrors(file, url, keepHeaderChecksums, () => true)
         }
       }
 
     val run0 =
       if (artifact.changing && !cachePolicy.acceptsChangingArtifacts)
-        S.point(Left(new ArtifactError.ForbiddenChangingArtifact(url)))
+        S.point[Either[ArtifactError, Unit]](Left(new ArtifactError.ForbiddenChangingArtifact(url)))
       else
         run
 
@@ -620,22 +748,24 @@ import scala.util.control.NonFatal
       }
 
     mainTask.flatMap { r =>
-      val l0 = if (r.errorOpt.isEmpty) {
-        val l = actualChecksums.map { c =>
-          val candidate = FileCache.auxiliaryFile(r.file, c)
-          blockingIO(candidate.exists()).map {
-            case false => checksumRes(c)
-            case true =>
-              def fallbackUrl = s"${artifact.url}.${c.toLowerCase(Locale.ROOT).filter(_ != '-')}"
-              val url = artifact.checksumUrls.getOrElse(c, fallbackUrl)
-              Seq(S.point(DownloadResult(url, candidate)))
+      val l0 =
+        if (r.errorOpt.isEmpty) {
+          val l = actualChecksums.map { c =>
+            val candidate = FileCache.auxiliaryFile(r.file, c)
+            blockingIO(candidate.exists()).map {
+              case false => checksumRes(c)
+              case true =>
+                def fallbackUrl = s"${artifact.url}.${c.toLowerCase(Locale.ROOT).filter(_ != '-')}"
+                val url         = artifact.checksumUrls.getOrElse(c, fallbackUrl)
+                Seq(S.point(DownloadResult(url, candidate)))
+            }
           }
+          S.gather(l).flatMap(l => S.gather(l.flatten))
         }
-        S.gather(l).flatMap(l => S.gather(l.flatten))
-      } else {
-        val l = actualChecksums.flatMap(checksumRes)
-        S.gather(l)
-      }
+        else {
+          val l = actualChecksums.flatMap(checksumRes)
+          S.gather(l)
+        }
       l0.map(r +: _)
     }
   }
@@ -643,6 +773,9 @@ import scala.util.control.NonFatal
 }
 
 object Downloader {
+
+  private[cache] lazy val throwExceptions =
+    java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions")
 
   private val checksumHeader = Seq("MD5", "SHA1", "SHA256")
 
@@ -674,69 +807,64 @@ object Downloader {
   private def downloading[T](
     url: String,
     file: File,
-    sslRetry: Int
+    retry: Retry
   )(
-    f: => Either[ArtifactError, T]
-  ): Either[ArtifactError, T] = {
-
-    @tailrec
-    def helper(retry: Int): Either[ArtifactError, T] = {
-
-      val resOpt =
-        try {
-          val res0 = CacheLocks.withUrlLock(url) {
-            try f
-            catch {
-              case nfe: FileNotFoundException if nfe.getMessage != null =>
-                Left(new ArtifactError.NotFound(nfe.getMessage))
-            }
+    f: => Either[ArtifactError, T],
+    ifLocked: => Option[Either[ArtifactError, T]]
+  ): Either[ArtifactError, T] =
+    retry.retryOpt {
+      try {
+        val res0 = CacheLocks.withUrlLock(url) {
+          try f
+          catch {
+            case nfe: FileNotFoundException if nfe.getMessage != null =>
+              Left(new ArtifactError.NotFound(nfe.getMessage))
           }
-
-          val res = res0.getOrElse {
-            Left(new ArtifactError.ConcurrentDownload(url))
-          }
-
-          Some(res)
-        }
-        catch {
-          case _: javax.net.ssl.SSLException if retry >= 1 =>
-            // TODO If Cache is made an (instantiated) class at some point, allow to log that exception.
-            None
-
-          case UnknownProtocol(e, msg0) =>
-            val docUrl = "https://get-coursier.io/docs/extra.html#extra-protocols"
-
-            val msg = List(
-              s"Caught ${e.getClass().getName()} (${msg0}) while downloading $url.",
-              s"Visit $docUrl to learn how to handle custom protocols.",
-            ).mkString(" ")
-
-            val ex = new ArtifactError.DownloadError(msg, Some(e))
-
-            Some(Left(ex))
-
-          case NonFatal(e) =>
-            val ex = new ArtifactError.DownloadError(
-              s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
-              Some(e)
-            )
-            if (java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions"))
-              throw ex
-            Some(Left(ex))
         }
 
-      resOpt match {
-        case Some(res) => res
-        case None => helper(retry - 1)
+        res0.orElse(ifLocked) match {
+          case Some(Left(_: ArtifactError.RetryableServerError)) => None
+          case other                                             => other
+        }
       }
-    }
+      catch {
+        case NonFatal(e) if throwExceptions =>
+          val ex = new ArtifactError.DownloadError(
+            s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
+            Some(e)
+          )
+          throw ex
 
-    helper(sslRetry)
-  }
+        case UnknownProtocol(e, msg0) =>
+          val docUrl = "https://get-coursier.io/docs/extra.html#extra-protocols"
+
+          val msg = List(
+            s"Caught ${e.getClass.getName} ($msg0) while downloading $url.",
+            s"Visit $docUrl to learn how to handle custom protocols."
+          ).mkString(" ")
+
+          val ex = new ArtifactError.DownloadError(msg, Some(e))
+
+          Some(Left(ex))
+
+        case NonFatal(e) =>
+          val ex = new ArtifactError.DownloadError(
+            s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
+            Some(e)
+          )
+          Some(Left(ex))
+      }
+    } {
+      case _: AccessDeniedException if Properties.isWin =>
+      case _: javax.net.ssl.SSLException                =>
+      case _: java.net.SocketException                  =>
+      case _: java.net.ConnectException                 =>
+      // TODO Allow to log that exception.
+    }
 
   private object UnknownProtocol {
     def unapply(t: Throwable): Option[(MalformedURLException, String)] = t match {
-      case ex: MalformedURLException if ex.getMessage.startsWith("unknown protocol: ") => 
+      case ex: MalformedURLException if ex.getMessage.startsWith("unknown protocol: ") =>
         Some((ex, ex.getMessage))
       case _ => None
     }
@@ -781,18 +909,21 @@ object Downloader {
             logger.gettingLengthResult(url, len)
 
             Right(len)
-          } finally {
-            if (!success)
-              logger.gettingLengthResult(url, None)
           }
+          finally if (!success)
+              logger.gettingLengthResult(url, None)
 
         case other =>
-          Left(new ArtifactError.DownloadError(s"Cannot do HEAD request with connection $other ($url)", None))
+          Left(
+            new ArtifactError.DownloadError(
+              s"Cannot do HEAD request with connection $other ($url)",
+              None
+            )
+          )
       }
-    } finally {
-      if (conn != null)
-        CacheUrl.closeConn(conn)
     }
+    finally if (conn != null)
+        CacheUrl.closeConn(conn)
   }
 
 }

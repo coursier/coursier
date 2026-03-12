@@ -2,6 +2,7 @@ package coursier.core
 
 import dataclass.data
 
+@deprecated("Use coursier.version.VersionInterval instead", "2.1.25")
 @data class VersionInterval(
   from: Option[Version],
   to: Option[Version],
@@ -46,7 +47,7 @@ import dataclass.data
 
         case (Some(a), None) => (Some(a), fromIncluded)
         case (None, Some(b)) => (Some(b), other.fromIncluded)
-        case (None, None) => (None, false)
+        case (None, None)    => (None, false)
       }
 
     val (newTo, newToIncluded) =
@@ -59,7 +60,7 @@ import dataclass.data
 
         case (Some(a), None) => (Some(a), toIncluded)
         case (None, Some(b)) => (Some(b), other.toIncluded)
-        case (None, None) => (None, false)
+        case (None, None)    => (None, false)
       }
 
     Some(VersionInterval(newFrom, newTo, newFromIncluded, newToIncluded))
@@ -87,6 +88,7 @@ import dataclass.data
   ).mkString
 }
 
+@deprecated("Use coursier.version.VersionInterval instead", "2.1.25")
 object VersionInterval {
   val zero = VersionInterval(None, None, fromIncluded = false, toIncluded = false)
 }

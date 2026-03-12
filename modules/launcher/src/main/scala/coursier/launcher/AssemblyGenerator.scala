@@ -3,9 +3,9 @@ package coursier.launcher
 import java.io.{ByteArrayInputStream, File, OutputStream}
 import java.nio.file.Path
 import java.util.jar.{Attributes => JarAttributes, JarOutputStream}
-import java.util.zip.{CRC32, ZipEntry, ZipFile, ZipInputStream, ZipOutputStream}
+import java.util.zip.{CRC32, ZipEntry, ZipFile, ZipOutputStream}
 
-import coursier.launcher.internal.{FileUtil, Zip}
+import coursier.launcher.internal.{FileUtil, WrappedZipInputStream, Zip}
 
 import scala.collection.mutable
 
@@ -31,7 +31,6 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
     FileUtil.tryMakeExecutable(output)
   }
 
-
   private def make(
     jars: Seq[File],
     output: OutputStream,
@@ -53,29 +52,28 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
     try {
       zos = new JarOutputStream(output, manifest)
       writeEntries(jars.map(Right(_)), zos, rules, extraZipEntries)
-    } finally {
-      if (zos != null)
-        zos.close()
     }
+    finally if (zos != null)
+        zos.close()
   }
 
   def writeEntries(
-    jars: Seq[Either[() => ZipInputStream, File]],
+    jars: Seq[Either[() => WrappedZipInputStream, File]],
     zos: ZipOutputStream,
     rules: Seq[MergeRule]
   ): Unit =
     writeEntries(jars, zos, rules, Nil)
 
   private def writeEntries(
-    jars: Seq[Either[() => ZipInputStream, File]],
+    jars: Seq[Either[() => WrappedZipInputStream, File]],
     zos: ZipOutputStream,
     rules: Seq[MergeRule],
     extraZipEntries: Seq[(ZipEntry, Array[Byte])]
   ): Unit = {
 
-    val rulesMap = rules.collect { case r: MergeRule.PathRule => r.path -> r }.toMap
+    val rulesMap        = rules.collect { case r: MergeRule.PathRule => r.path -> r }.toMap
     val excludePatterns = rules.collect { case e: MergeRule.ExcludePattern => e.path }
-    val appendPatterns = rules.collect { case a: MergeRule.AppendPattern => a.path }
+    val appendPatterns  = rules.collect { case a: MergeRule.AppendPattern => a.path }
 
     for ((ent, content) <- extraZipEntries) {
       zos.putNextEntry(ent)
@@ -88,15 +86,15 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
     var ignore = Set.empty[String]
 
     for (jar <- jars) {
-      var zif: ZipFile = null
-      var zis: ZipInputStream = null
+      var zif: ZipFile               = null
+      var zis: WrappedZipInputStream = null
 
       try {
         val entries =
           jar match {
             case Left(f) =>
               zis = f()
-              Zip.zipEntries(zis)
+              zis.entriesWithData()
             case Right(f) =>
               zif = new ZipFile(f)
               Zip.zipEntries(zif)
@@ -105,17 +103,20 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
         for ((ent, content) <- entries) {
 
           def append(): Unit =
-            concatenatedEntries += ent.getName -> ::((ent, content), concatenatedEntries.getOrElse(ent.getName, Nil))
+            concatenatedEntries += ent.getName -> ::(
+              (ent, content),
+              concatenatedEntries.getOrElse(ent.getName, Nil)
+            )
 
           rulesMap.get(ent.getName) match {
             case Some(e: MergeRule.Exclude) =>
-              // ignored
+            // ignored
 
             case Some(a: MergeRule.Append) =>
               append()
 
             case None =>
-              if (!excludePatterns.exists(_.matcher(ent.getName).matches())) {
+              if (!excludePatterns.exists(_.matcher(ent.getName).matches()))
                 if (appendPatterns.exists(_.matcher(ent.getName).matches()))
                   append()
                 else if (!ignore(ent.getName)) {
@@ -126,11 +127,11 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
 
                   ignore += ent.getName
                 }
-              }
           }
         }
 
-      } finally {
+      }
+      finally {
         if (zif != null)
           zif.close()
         if (zis != null)

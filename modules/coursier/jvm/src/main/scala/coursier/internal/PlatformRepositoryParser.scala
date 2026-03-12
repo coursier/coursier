@@ -7,7 +7,7 @@ import coursier.LocalRepositories
 import coursier.cache.CacheUrl
 import coursier.core.{Authentication, Repository}
 import coursier.ivy.IvyRepository
-import coursier.maven.MavenRepository
+import coursier.maven.MavenRepositoryLike
 
 abstract class PlatformRepositoryParser {
 
@@ -25,13 +25,13 @@ abstract class PlatformRepositoryParser {
       val repo = SharedRepositoryParser.repository(input)
 
       val url = repo.map {
-        case m: MavenRepository =>
+        case m: MavenRepositoryLike =>
           m.root
         case i: IvyRepository =>
           // FIXME We're not handling metadataPattern here
           i.pattern.chunks.takeWhile {
             case _: coursier.ivy.Pattern.Chunk.Const => true
-            case _ => false
+            case _                                   => false
           }.map(_.string).mkString
         case r =>
           sys.error(s"Unrecognized repository: $r")
@@ -41,8 +41,8 @@ abstract class PlatformRepositoryParser {
         try Right(CacheUrl.url(url0))
         catch {
           case e: MalformedURLException =>
-
-            val urlErrorMsg = "Error parsing URL " + url0 + Option(e.getMessage).fold("")(" (" + _ + ")")
+            val urlErrorMsg =
+              "Error parsing URL " + url0 + Option(e.getMessage).fold("")(" (" + _ + ")")
 
             if (url0.contains(File.separatorChar)) {
               val f = new File(url0)
@@ -50,7 +50,8 @@ abstract class PlatformRepositoryParser {
                 Left(s"$urlErrorMsg, and $url0 not a directory")
               else
                 Right(f.toURI.toURL)
-            } else
+            }
+            else
               Left(urlErrorMsg)
         }
       }
@@ -60,36 +61,34 @@ abstract class PlatformRepositoryParser {
           case None =>
             repo
           case Some(userInfo) =>
-            userInfo.split(":", 2) match {
-              case Array(user, password) =>
-                val baseUrl = new java.net.URL(
-                  url.getProtocol,
-                  url.getHost,
-                  url.getPort,
-                  url.getFile
-                ).toString
+            val authBase = userInfo.split(":", 2) match {
+              case Array(user, password) => Authentication(user, password)
+              case Array(user)           => Authentication(user)
+            }
 
-                val auth = Authentication(user, password)
-                  .withHttpsOnly(url.getProtocol != "http")
+            val auth = authBase.withHttpsOnly(url.getProtocol != "http")
 
-                repo.map {
-                  case m: MavenRepository =>
-                    m.withRoot(baseUrl).withAuthentication(Some(auth))
-                  case i: IvyRepository =>
-                    i.withAuthentication(Some(auth)).withPattern(
-                      coursier.ivy.Pattern(
-                        coursier.ivy.Pattern.Chunk.Const(baseUrl) +: i.pattern.chunks.dropWhile {
-                          case _: coursier.ivy.Pattern.Chunk.Const => true
-                          case _ => false
-                        }
-                      )
-                    )
-                  case r =>
-                    sys.error(s"Unrecognized repository: $r")
-                }
+            val baseUrl = new java.net.URL(
+              url.getProtocol,
+              url.getHost,
+              url.getPort,
+              url.getFile
+            ).toString
 
-              case _ =>
-                Left(s"No password found in user info of URL $url")
+            repo.map {
+              case m: MavenRepositoryLike =>
+                m.withRoot(baseUrl).withAuthentication(Some(auth))
+              case i: IvyRepository =>
+                i.withAuthentication(Some(auth)).withPattern(
+                  coursier.ivy.Pattern(
+                    coursier.ivy.Pattern.Chunk.Const(baseUrl) +: i.pattern.chunks.dropWhile {
+                      case _: coursier.ivy.Pattern.Chunk.Const => true
+                      case _                                   => false
+                    }
+                  )
+                )
+              case r =>
+                sys.error(s"Unrecognized repository: $r")
             }
         }
       }

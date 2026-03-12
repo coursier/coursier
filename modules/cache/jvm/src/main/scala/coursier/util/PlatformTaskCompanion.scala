@@ -1,6 +1,6 @@
 package coursier.util
 
-import java.util.concurrent.{ExecutorService, ScheduledExecutorService}
+import java.util.concurrent.{CompletionException, ExecutorService, ScheduledExecutorService}
 
 import scala.concurrent.{Await, ExecutionContext, ExecutionContextExecutorService, Future}
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -13,7 +13,9 @@ abstract class PlatformTaskCompanion { self =>
 
     val ec0 = pool match {
       case eces: ExecutionContextExecutorService => eces
-      case _ => ExecutionContext.fromExecutorService(pool) // FIXME Is this instantiation costly? Cache it?
+      case _                                     =>
+        // FIXME Is this instantiation costly? Cache it?
+        ExecutionContext.fromExecutorService(pool)
     }
 
     Task(_ => Future(f)(ec0))
@@ -39,6 +41,15 @@ abstract class PlatformTaskCompanion { self =>
   implicit class PlatformTaskOps[T](private val task: Task[T]) {
     def unsafeRun()(implicit ec: ExecutionContext): T =
       Await.result(task.future(), Duration.Inf)
+    def unsafeRun(wrapExceptions: Boolean)(implicit ec: ExecutionContext): T =
+      if (wrapExceptions)
+        try unsafeRun()
+        catch {
+          case t: Throwable =>
+            throw new CompletionException(t)
+        }
+      else
+        unsafeRun()
   }
 
 }

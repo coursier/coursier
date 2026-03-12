@@ -2,14 +2,18 @@ package coursier.cli.install
 
 import java.time.Instant
 
-import caseapp.core.app.CaseApp
 import caseapp.core.RemainingArgs
+import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.install.{Channels, InstallDir}
+import coursier.install.error.InstallDirException
 import coursier.util.{Sync, Task}
 
 import scala.concurrent.duration.Duration
 
-object Update extends CaseApp[UpdateOptions] {
+object Update extends CoursierCommand[UpdateOptions] {
+
+  override def group: String = CommandGroup.install
+
   def run(options: UpdateOptions, args: RemainingArgs): Unit = {
 
     val params = UpdateParams(options).toEither match {
@@ -22,11 +26,12 @@ object Update extends CaseApp[UpdateOptions] {
 
     val now = Instant.now()
 
-    val pool = Sync.fixedThreadPool(params.cache.parallel)
+    val pool  = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
-    val noUpdateCoursierCache = params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
+    val noUpdateCoursierCache =
+      params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
-    val graalvmHome = { version: String =>
+    val graalvmHome = { (version: String) =>
       params.sharedJava.javaHome(
         cache,
         noUpdateCoursierCache,
@@ -36,7 +41,7 @@ object Update extends CaseApp[UpdateOptions] {
         .get(s"graalvm:$version")
     }
 
-    val installDir = params.shared.installDir(cache)
+    val installDir = params.shared.installDir(cache, params.repository.repositories)
       .withVerbosity(params.output.verbosity)
       .withNativeImageJavaHome(Some(graalvmHome))
 
@@ -49,9 +54,10 @@ object Update extends CaseApp[UpdateOptions] {
     val tasks = names.map { name =>
       installDir.maybeUpdate(
         name,
-        source => Channels(Seq(source.channel), params.selectedRepositories(source.repositories), cache)
-          .find(source.id)
-          .map(_.map { data => (data.origin, data.data) }),
+        source =>
+          Channels(Seq(source.channel), params.selectedRepositories(source.repositories), cache)
+            .find(source.id)
+            .map(_.map(data => (data.origin, data.data))),
         now,
         params.force
       ).map {
@@ -69,9 +75,9 @@ object Update extends CaseApp[UpdateOptions] {
       for (_ <- acc; _ <- t) yield ()
     }
 
-    try task.unsafeRun()(cache.ec)
+    try task.unsafeRun(wrapExceptions = true)(cache.ec)
     catch {
-      case e: InstallDir.InstallDirException =>
+      case e: InstallDirException =>
         System.err.println(e.getMessage)
         if (params.output.verbosity >= 2)
           throw e

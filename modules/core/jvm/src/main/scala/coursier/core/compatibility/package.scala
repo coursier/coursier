@@ -2,7 +2,9 @@ package coursier.core
 
 import java.io.CharArrayReader
 import java.util.Locale
+import javax.xml.parsers.ParserConfigurationException
 import javax.xml.parsers.SAXParserFactory
+import javax.xml.XMLConstants
 
 import coursier.util.{SaxHandler, Xml}
 import org.xml.sax
@@ -16,67 +18,61 @@ package object compatibility {
 
   implicit class RichChar(val c: Char) extends AnyVal {
     def letterOrDigit = c.isLetterOrDigit
-    def letter = c.isLetter
+    def letter        = c.isLetter
   }
 
-  private val utf8Bom = "\ufeff"
+  private val utf8Bom              = "\ufeff"
+  private val utf8BomLength        = utf8Bom.length
+  private lazy val throwExceptions = java.lang.Boolean.getBoolean("coursier.core.throw-exceptions")
 
-  private def entityIdx(s: String, fromIdx: Int = 0): Option[(Int, Int)] = {
+  private def entityIdx(s: String, fromIdx: Int): (Int, Int) = {
+    val len = s.length
+    var i   = s.indexOf('&', fromIdx)
 
-    var i = fromIdx
-    var found = Option.empty[(Int, Int)]
-    while (found.isEmpty && i < s.length) {
-      if (s.charAt(i) == '&') {
-        val start = i
-        i += 1
-        var isAlpha = true
-        while (isAlpha && i < s.length) {
-          val c = s.charAt(i)
-          if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z'))
-            isAlpha = false
-          else
-            i += 1
+    while (i >= 0 && i <= len - 3) { // Need at least &X; (3 chars)
+      var j = i + 1
+      while (
+        j < len && {
+          val c = s.charAt(j)
+          (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
         }
-        if (start + 1 < i && i < s.length) {
-          assert(!isAlpha)
-          if (s.charAt(i) == ';') {
-            i += 1
-            found = Some((start, i))
-          }
-        }
-      } else
-        i += 1
+      ) j += 1
+
+      if (j > i + 1 && j < len && s.charAt(j) == ';')
+        return (i, j + 1)
+
+      i = s.indexOf('&', i + 1)
     }
-
-    found
+    null
   }
 
   private def substituteEntities(s: String): String = {
 
-    val b = new StringBuilder
+    val b      = new StringBuilder
     lazy val a = s.toCharArray
 
     var i = 0
 
-    var j = 0
-    while (j < s.length && j < utf8Bom.length && s.charAt(i) == utf8Bom.charAt(j))
+    var j       = 0
+    val sLength = s.length
+    while (j < sLength && j < utf8BomLength && s.charAt(i) == utf8Bom.charAt(j))
       j += 1
 
-    if (j == utf8Bom.length)
+    if (j == utf8BomLength)
       i = j
 
-    var found = Option.empty[(Int, Int)]
+    var found: (Int, Int) = null
     while ({
       found = entityIdx(s, i)
-      found.nonEmpty
+      found ne null
     }) {
-      val from = found.get._1
-      val to = found.get._2
+      val from = found._1
+      val to   = found._2
 
       b.appendAll(a, i, from - i)
 
-      val name = s.substring(from, to)
-      val replacement = Entities.map.getOrElse(name, name)
+      val name        = s.substring(from, to)
+      val replacement = Entities.mapFast(name)
       b.appendAll(replacement)
 
       i = to
@@ -92,7 +88,12 @@ package object compatibility {
     substituteEntities(s)
 
   private final class XmlHandler(handler: SaxHandler) extends DefaultHandler {
-    override def startElement(uri: String, localName: String, qName: String, attributes: sax.Attributes): Unit =
+    override def startElement(
+      uri: String,
+      localName: String,
+      qName: String,
+      attributes: sax.Attributes
+    ): Unit =
       handler.startElement(qName)
     override def characters(ch: Array[Char], start: Int, length: Int): Unit =
       handler.characters(ch, start, length)
@@ -103,6 +104,30 @@ package object compatibility {
   private lazy val spf = {
     val spf0 = SAXParserFactory.newInstance()
     spf0.setNamespaceAware(false)
+
+    // Fixing CVE-2022-46751: External Entity Reference Vulnerability
+    def trySetFeature(feature: String, value: Boolean): Unit = {
+      try spf0.setFeature(feature, value)
+      catch {
+        case _: ParserConfigurationException | _: sax.SAXNotRecognizedException | _: sax.SAXNotSupportedException =>
+          ()
+      }
+    }
+    // Allow doctype processing
+    trySetFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
+    // Process XML in accordance with the XML specification to avoid conditions such as denial of service attacks
+    trySetFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true)
+    // Disallow external entities
+    trySetFeature("http://xml.org/sax/features/external-general-entities", false)
+    trySetFeature("http://xml.org/sax/features/external-parameter-entities", false)
+    // Allow external dtd
+    trySetFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", true)
+    // Disallow XInclude processing
+    try spf0.setXIncludeAware(false)
+    catch {
+      case e: UnsupportedOperationException => ()
+    }
+
     spf0
   }
 
@@ -123,7 +148,10 @@ package object compatibility {
 
     val parse =
       try Right(scala.xml.XML.loadString(content))
-      catch { case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")) }
+      catch {
+        case e: Exception if !throwExceptions =>
+          Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")"))
+      }
 
     parse.map(xmlFromElem)
   }
@@ -139,7 +167,7 @@ package object compatibility {
               case attr =>
                 val pre = attr match {
                   case a: Attribute => Option(node.getNamespace(a.pre)).getOrElse("")
-                  case _ => ""
+                  case _            => ""
                 }
 
                 val value = attr.value.collect {
@@ -151,11 +179,11 @@ package object compatibility {
 
           helper(node.attributes).toVector
         }
-        def label = node.label
-        def children = node.child.map(fromNode).toSeq
-        def isText = node match { case _: scala.xml.Text => true; case _ => false }
+        def label       = node.label
+        def children    = node.child.map(fromNode).toSeq
+        def isText      = node match { case _: scala.xml.Text => true; case _ => false }
         def textContent = node.text
-        def isElement = node match { case _: scala.xml.Elem => true; case _ => false }
+        def isElement   = node match { case _: scala.xml.Elem => true; case _ => false }
 
         override def toString = node.toString
       }
@@ -169,30 +197,36 @@ package object compatibility {
 
     val parse =
       try Right(scala.xml.XML.loadString(content))
-      catch { case e: Exception => Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")")) }
+      catch {
+        case e: Exception if !throwExceptions =>
+          Left(e.toString + Option(e.getMessage).fold("")(" (" + _ + ")"))
+      }
 
     parse.map(xmlFromElem)
   }
 
   def encodeURIComponent(s: String): String =
-    new java.net.URI(null, null, null, -1, s, null, null) .toASCIIString
+    new java.net.URI(null, null, null, -1, s, null, null).toASCIIString
 
   def regexLookbehind: String = "<="
 
   def coloredOutput: Boolean =
     // Same as coursier.paths.Util.useColorOutput()
     System.getenv("INSIDE_EMACS") == null &&
-      Option(System.getenv("COURSIER_PROGRESS"))
-        .map(_.toLowerCase(Locale.ROOT))
-        .collect {
-          case "true" | "1" | "enable" => true
-          case "false" | "0" | "disable" => false
-        }
-        .getOrElse {
-          System.getenv("COURSIER_NO_TERM") == null
-        }
+    Option(System.getenv("COURSIER_PROGRESS"))
+      .map(_.toLowerCase(Locale.ROOT))
+      .collect {
+        case "true" | "1" | "enable"   => true
+        case "false" | "0" | "disable" => false
+      }
+      .getOrElse {
+        System.getenv("COURSIER_NO_TERM") == null
+      }
 
-  @deprecated("Unused internally, likely to be removed in the future", "2.0.0-RC6-19")
+  @deprecated(
+    "Unused internally, returns incorrect result on JDK >= 22, likely to be removed in the future",
+    "2.0.0-RC6-19"
+  )
   def hasConsole: Boolean =
     System.console() != null
 

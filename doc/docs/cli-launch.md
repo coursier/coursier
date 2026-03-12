@@ -2,7 +2,31 @@
 title: launch
 ---
 
-`launch` launches applications from one or more dependencies.
+`launch` launches applications from their name, or directly from one or more Maven dependencies.
+The applications need not be installed with `install`.
+
+```bash
+$ cs launch scalafmt -- --help
+scalafmt 3.0.6
+Usage: scalafmt [options] [<file>...]
+
+  -h, --help               prints this usage text
+  -v, --version            print version
+…
+```
+
+Like the `install` command, `launch` accepts an optional version number.
+A typical use case is to start a Scala REPL with a specific Scala version:
+
+```bash
+$ cs launch scala:2.12.15
+Welcome to Scala 2.12.15 (OpenJDK 64-Bit Server VM, Java 1.8.0_292).
+Type in expressions for evaluation. Or try :help.
+
+scala>
+```
+
+In order to launch an application that does not have a published [application descriptor](cli-appdescriptors.md), `launch` accepts Maven coordinates as well:
 
 ```bash
 $ cs launch org.scalameta::scalafmt-cli:2.4.2 -- --help
@@ -19,7 +43,8 @@ Usage: scalafmt [options] [<file>...]
 Pass arguments to the launched program, by adding `--` after the coursier
 arguments, like
 ```bash
-$ cs launch org.scalameta::scalafmt-cli:2.4.2 -- --version
+$ cs launch scalafmt -- --version
+scalafmt 3.1.1
 ```
 
 ## Main class

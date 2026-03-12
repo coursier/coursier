@@ -91,7 +91,11 @@ object StringInterpolators {
     }
   }
 
-  def safeModuleExclusionMatcher(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[ModuleMatchers] = {
+  def safeModuleExclusionMatcher(
+    c: blackbox.Context
+  )(
+    args: c.Expr[Any]*
+  ): c.Expr[ModuleMatchers] = {
     import c.universe._
     c.Expr(q"""
       _root_.coursier.util.ModuleMatchers(
@@ -102,7 +106,11 @@ object StringInterpolators {
     """)
   }
 
-  def safeModuleInclusionMatcher(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[ModuleMatchers] = {
+  def safeModuleInclusionMatcher(
+    c: blackbox.Context
+  )(
+    args: c.Expr[Any]*
+  ): c.Expr[ModuleMatchers] = {
     import c.universe._
     c.Expr(q"""
       _root_.coursier.util.ModuleMatchers(
@@ -114,12 +122,40 @@ object StringInterpolators {
     """)
   }
 
+  private def matcherTree(c: blackbox.Context)(matcher: VariantSelector.VariantMatcher)
+    : c.Expr[VariantSelector.VariantMatcher] = {
+    import c.universe._
+    matcher match {
+      case VariantSelector.VariantMatcher.Api =>
+        c.Expr(q"_root_.coursier.core.VariantSelector.VariantMatcher.Api")
+      case VariantSelector.VariantMatcher.Runtime =>
+        c.Expr(q"_root_.coursier.core.VariantSelector.VariantMatcher.Runtime")
+      case eq: VariantSelector.VariantMatcher.Equals =>
+        c.Expr(q"_root_.coursier.core.VariantSelector.VariantMatcher.Equals(${eq.value})")
+      case mv: VariantSelector.VariantMatcher.MinimumVersion =>
+        c.Expr(
+          q"_root_.coursier.core.VariantSelector.VariantMatcher.MinimumVersion(_root_.coursier.version.Version(${mv.minimumVersion.asString}))"
+        )
+      case ew: VariantSelector.VariantMatcher.EndsWith =>
+        c.Expr(q"_root_.coursier.core.VariantSelector.VariantMatcher.EndsWith(${ew.suffix})")
+      case anyOf: VariantSelector.VariantMatcher.AnyOf =>
+        val values = anyOf.matchers.map(matcherTree(c)(_))
+        c.Expr(
+          q"_root_.coursier.core.VariantSelector.VariantMatcher.AnyOf(_root_.scala.collection.immutable.Seq(..$values))"
+        )
+    }
+  }
+
   def safeDependency(c: blackbox.Context)(args: c.Expr[Any]*): c.Expr[Dependency] = {
     import c.universe._
     c.prefix.tree match {
       case Apply(_, List(Apply(_, Literal(Constant(modString: String)) :: Nil))) =>
         // same default configuration as coursier.Dependency.apply
-        DependencyParser.dependency(modString, scala.util.Properties.versionNumberString, Configuration.empty) match {
+        DependencyParser.dependency(
+          modString,
+          scala.util.Properties.versionNumberString,
+          Configuration.empty
+        ) match {
           case Left(e) =>
             c.abort(c.enclosingPosition, s"Error parsing module $modString: $e")
           case Right(dep) =>
@@ -127,9 +163,63 @@ object StringInterpolators {
               case (k, v) =>
                 q"_root_.scala.Tuple2($k, $v)"
             }
-            val excls = dep.exclusions.toSeq.map {
+            val excls = dep.minimizedExclusions.toSeq().map {
               case (org, name) =>
                 q"_root_.scala.Tuple2(_root_.coursier.core.Organization(${org.value}), _root_.coursier.core.ModuleName(${name.value}))"
+            }
+            val overrides = dep.overridesMap.flatten.toSeq.sortBy(_._1.repr).map {
+              case (key, values) =>
+                val key0 = q"""_root_.coursier.core.DependencyManagement.Key(
+                  _root_.coursier.core.Organization(${key.organization.value}),
+                  _root_.coursier.core.ModuleName(${key.name.value}),
+                  _root_.coursier.core.Type(${key.`type`.value}),
+                  _root_.coursier.core.Classifier(${key.classifier.value})
+                )"""
+                val excls = values.minimizedExclusions.toSeq().map {
+                  case (org, name) =>
+                    q"_root_.scala.Tuple2(_root_.coursier.core.Organization(${org.value}), _root_.coursier.core.ModuleName(${name.value}))"
+                }
+                val values0 = q"""_root_.coursier.core.DependencyManagement.Values(
+                  _root_.coursier.core.Configuration(${values.config.value}),
+                  _root_.coursier.version.VersionConstraint( // FIXME could be parsed eagerly at compile-time
+                    ${values.versionConstraint.asString}
+                  ),
+                  _root_.coursier.core.MinimizedExclusions(_root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$excls)),
+                  ${values.optional}
+                )"""
+                q"_root_.scala.Tuple2($key0, $values0)"
+            }
+            val boms = dep.bomDependencies.map { bomDep =>
+              val attrs = bomDep.module.attributes.toSeq.map {
+                case (k, v) =>
+                  q"_root_.scala.Tuple2($k, $v)"
+              }
+              q"""_root_.coursier.core.BomDependency(
+                _root_.coursier.core.Module(
+                  _root_.coursier.core.Organization(${bomDep.module.organization.value}),
+                  _root_.coursier.core.ModuleName(${bomDep.module.name.value}),
+                  _root_.scala.collection.immutable.Map(..$attrs)
+                ),
+                _root_.coursier.version.VersionConstraint( // FIXME could be parsed eagerly at compile-time
+                  ${bomDep.versionConstraint.asString}
+                ),
+                _root_.coursier.core.Configuration(${bomDep.config.value}),
+                ${bomDep.forceOverrideVersions}
+              )"""
+            }
+            val variantSelector = dep.variantSelector match {
+              case c: VariantSelector.ConfigurationBased =>
+                q"""_root_.coursier.core.VariantSelector.ConfigurationBased(
+                  _root_.coursier.core.Configuration(${c.configuration.value})
+                )"""
+              case a: VariantSelector.AttributesBased =>
+                val entries = a.matchers.toVector.sortBy(_._1).map {
+                  case (k, v) =>
+                    q"_root_.scala.Tuple2($k, ${matcherTree(c)(v)})"
+                }
+                q"""_root_.coursier.core.VariantSelector.AttributesBased(
+                  _root_.scala.collection.immutable.Map[_root_.java.lang.String, _root_.coursier.core.VariantSelector.VariantMatcher](..$entries)
+                )"""
             }
             c.Expr(q"""
               _root_.coursier.core.Dependency(
@@ -138,9 +228,11 @@ object StringInterpolators {
                   _root_.coursier.core.ModuleName(${dep.module.name.value}),
                   _root_.scala.collection.immutable.Map(..$attrs)
                 ),
-                ${dep.version},
-                _root_.coursier.core.Configuration(${dep.configuration.value}),
-                _root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$excls),
+                _root_.coursier.version.VersionConstraint(
+                  ${dep.versionConstraint.asString}
+                ),
+                $variantSelector,
+                _root_.coursier.core.MinimizedExclusions(_root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$excls)),
                 _root_.coursier.core.Publication(
                   ${dep.publication.name},
                   _root_.coursier.core.Type(${dep.publication.`type`.value}),
@@ -148,7 +240,14 @@ object StringInterpolators {
                   _root_.coursier.core.Classifier(${dep.publication.classifier.value})
                 ),
                 ${dep.optional},
-                ${dep.transitive}
+                ${dep.transitive},
+                _root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.Values](),
+                _root_.scala.collection.immutable.Nil,
+                _root_.scala.collection.immutable.Seq(..$boms),
+                _root_.coursier.core.Overrides(
+                  _root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.Values](..$overrides)
+                ),
+                ${dep.endorseStrictVersions}
               )
             """)
         }
@@ -162,7 +261,7 @@ object StringInterpolators {
     c.prefix.tree match {
       case Apply(_, List(Apply(_, Literal(Constant(root: String)) :: Nil))) =>
         // FIXME Check that there's no query string, fragment, … in uri?
-        val uri = new java.net.URI(root)
+        new java.net.URI(root)
         c.Expr(q"""_root_.coursier.maven.MavenRepository($root)""")
       case _ =>
         c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
@@ -174,14 +273,16 @@ object StringInterpolators {
     c.prefix.tree match {
       case Apply(_, List(Apply(_, Literal(Constant(str: String)) :: Nil))) =>
         // FIXME Check that there's no query string, fragment, … in uri?
-        val r = IvyRepository.parse(str) match {
+        IvyRepository.parse(str) match {
           case Left(e) =>
             c.abort(c.enclosingPosition, s"Malformed Ivy repository '$str': $e")
-          case Right(r0) => r0
+          case Right(r0) =>
         }
         // Here, ideally, we should lift r as an Expr, but this is quite cumbersome to do (it involves lifting
         // Seq[coursier.ivy.Pattern.Chunk], where coursier.ivy.Pattern.Chunk is an ADT, …
-        c.Expr(q"""_root_.coursier.ivy.IvyRepository.parse($str).left.map(e => sys.error("Error parsing Ivy repository: " + e)).merge""")
+        c.Expr(
+          q"""_root_.coursier.ivy.IvyRepository.parse($str).left.map(e => sys.error("Error parsing Ivy repository: " + e)).merge"""
+        )
       case _ =>
         c.abort(c.enclosingPosition, s"Only a single String literal is allowed here")
     }

@@ -1,25 +1,31 @@
 package coursier.cli.options
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import coursier.install.RawAppDescriptor
 
 
+// format: off
 final case class SharedLoaderOptions(
 
   // deprecated, use shared instead
-  @Value("target:dependency")
-  @Short("I")
-  @Short("isolated")
-  @Help("(deprecated) dependencies to be put in shared class loaders")
+  @Group(OptionGroup.launch)
+  @Hidden
+  @ValueDescription("target:dependency")
+  @ExtraName("I")
+  @HelpMessage("(deprecated) dependencies to be put in shared class loaders")
     isolated: List[String] = Nil,
 
-  @Value("dependency[@target]")
-  @Help("Dependencies to be put in shared class loaders")
+  @Group(OptionGroup.launch)
+  @Hidden
+  @ValueDescription("dependency[@target]")
+  @HelpMessage("Dependencies to be put in shared class loaders")
     shared: List[String] = Nil,
 
-  @Help("Comma-separated isolation targets")
-  @Short("i")
-  @Short("isolateTarget") // former deprecated name
+  @Group(OptionGroup.launch)
+  @Hidden
+  @HelpMessage("Comma-separated isolation targets")
+  @ExtraName("i")
+  @ExtraName("isolateTarget") // former deprecated name
     sharedTarget: List[String] = Nil
 
 ) {
@@ -31,8 +37,9 @@ final case class SharedLoaderOptions(
       }
     )
 }
+// format: on
 
 object SharedLoaderOptions {
-  implicit val parser = Parser[SharedLoaderOptions]
-  implicit val help = caseapp.core.help.Help[SharedLoaderOptions]
+  implicit lazy val parser: Parser[SharedLoaderOptions] = Parser.derive
+  implicit lazy val help: Help[SharedLoaderOptions]     = Help.derive
 }

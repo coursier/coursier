@@ -24,7 +24,7 @@ object NativeBuilder {
     parentLoader: ClassLoader = Thread.currentThread().getContextClassLoader
   ): NativeBuilder = {
 
-    val sbv = scala.util.Properties.versionNumberString.split('.').take(2).mkString(".")
+    val sbv             = scala.util.Properties.versionNumberString.split('.').take(2).mkString(".")
     val coursierVersion = coursier.launcher.internal.Properties.version
     val dep = s"io.get-coursier:coursier-launcher-native_${version}_$sbv:$coursierVersion"
 
@@ -33,7 +33,7 @@ object NativeBuilder {
     val loader = new URLClassLoader(files.map(_.toURI.toURL).toArray, parentLoader)
 
     val cls = loader.loadClass("coursier.launcher.NativeBuilderImpl")
-    cls.newInstance().asInstanceOf[NativeBuilder]
+    cls.getDeclaredConstructor().newInstance().asInstanceOf[NativeBuilder]
   }
 
 }

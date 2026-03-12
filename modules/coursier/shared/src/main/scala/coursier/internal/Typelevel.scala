@@ -1,11 +1,10 @@
 package coursier.internal
 
-import coursier.core.{ModuleName, Organization}
-import coursier.{Dependency, Module}
+import coursier.core.{Dependency, Module, ModuleName, Organization}
 
 object Typelevel {
 
-  val mainLineOrg = Organization("org.scala-lang")
+  val mainLineOrg  = Organization("org.scala-lang")
   val typelevelOrg = Organization("org.typelevel")
 
   val modules = Set(

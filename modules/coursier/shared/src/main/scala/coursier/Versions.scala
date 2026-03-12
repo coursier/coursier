@@ -1,11 +1,17 @@
 package coursier
 
 import coursier.cache.Cache
-import coursier.core.Version
+import coursier.core.{Module, Repository}
+import coursier.error.CoursierError
 import coursier.params.{Mirror, MirrorConfFile}
 import coursier.util.{Sync, Task}
 import coursier.util.Monad.ops._
+import coursier.version.Version
 import dataclass._
+import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 @data class Versions[F[_]](
   cache: Cache[F],
@@ -53,11 +59,9 @@ import dataclass._
       finalRepositories.flatMap { repositories =>
         F.gather(
           for {
-            mod <- moduleOpt.toSeq
+            mod  <- moduleOpt.toSeq
             repo <- repositories
-          } yield {
-            repo.versions(mod, cache.fetch).run.map(repo -> _.map(_._1))
-          }
+          } yield repo.versions(mod, cache.fetch).run.map(repo -> _.map(_._1))
         )
       }
 
@@ -78,19 +82,17 @@ object Versions {
 
   private def merge(versions: Vector[coursier.core.Versions]): coursier.core.Versions =
     if (versions.isEmpty)
-      coursier.core.Versions("", "", Nil, None)
+      coursier.core.Versions(Version.zero, Version.zero, Nil, None)
     else if (versions.lengthCompare(1) == 0)
       versions.head
     else {
-      val latest = versions.map(v => Version(v.latest)).max.repr
-      val release = versions.map(v => Version(v.release)).max.repr
+      val latest  = versions.map(_.latest0).max
+      val release = versions.map(_.release0).max
 
       val available = versions
-        .flatMap(_.available)
+        .flatMap(_.available0)
         .distinct
-        .map(Version(_))
         .sorted
-        .map(_.repr)
         .toList
 
       val lastUpdated = versions
@@ -106,5 +108,52 @@ object Versions {
   ) {
     def versions: coursier.core.Versions =
       merge(results.flatMap(_._2.toSeq).toVector)
+  }
+  implicit class VersionsTaskOps(private val versions: Versions[Task]) extends AnyVal {
+
+    def futureResult()(implicit ec: ExecutionContext = versions.cache.ec): Future[Result] =
+      versions.result().future()
+
+    def future()(implicit
+      ec: ExecutionContext = versions.cache.ec
+    ): Future[coursier.core.Versions] =
+      versions.versions().future()
+
+    def eitherResult()(implicit
+      ec: ExecutionContext = versions.cache.ec
+    ): Either[CoursierError, Result] = {
+
+      val f = versions
+        .result()
+        .map(Right(_))
+        .handle { case ex: CoursierError => Left(ex) }
+        .future()
+
+      Await.result(f, Duration.Inf)
+    }
+
+    def either()(implicit
+      ec: ExecutionContext = versions.cache.ec
+    ): Either[CoursierError, coursier.core.Versions] = {
+
+      val f = versions
+        .versions()
+        .map(Right(_))
+        .handle { case ex: CoursierError => Left(ex) }
+        .future()
+
+      Await.result(f, Duration.Inf)
+    }
+
+    def runResult()(implicit ec: ExecutionContext = versions.cache.ec): Result = {
+      val f = versions.result().future()
+      Await.result(f, Duration.Inf)
+    }
+
+    def run()(implicit ec: ExecutionContext = versions.cache.ec): coursier.core.Versions = {
+      val f = versions.versions().future()
+      Await.result(f, Duration.Inf)
+    }
+
   }
 }

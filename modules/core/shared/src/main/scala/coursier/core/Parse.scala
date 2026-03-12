@@ -6,15 +6,20 @@ import coursier.core.compatibility._
 
 object Parse {
 
+  @deprecated("Use coursier.version.VersionParse.version instead", "2.1.25")
   def version(s: String): Option[Version] = {
     val trimmed = s.trim
-    if (trimmed.isEmpty || trimmed.exists(c => c != '.' && c != '-' && c != '_' && c != '+' && !c.letterOrDigit)) None
+    val notAVersion = trimmed.isEmpty || trimmed.exists(c =>
+      c != '.' && c != '-' && c != '_' && c != '+' && !c.letterOrDigit
+    )
+    if (notAVersion) None
     else Some(Version(trimmed))
   }
 
   // matches revisions with a '+' appended, e.g. "1.2.+", "1.2+" or "1.2.3-+"
   private val latestSubRevision = "(.*[^.-])([.-]?)[+]".r
 
+  @deprecated("Unused by coursier", "2.1.25")
   def ivyLatestSubRevisionInterval(s: String): Option[VersionInterval] =
     s match {
       case latestSubRevision(prefix, delim) =>
@@ -30,6 +35,7 @@ object Parse {
         None
     }
 
+  @deprecated("Use coursier.version.VersionParse.versionInterval instead", "2.1.25")
   def versionInterval(s: String): Option[VersionInterval] = {
 
     def parseBounds(fromIncluded: Boolean, toIncluded: Boolean, s: String) = {
@@ -38,13 +44,19 @@ object Parse {
 
       if (commaIdx >= 0) {
         val strFrom = s.take(commaIdx)
-        val strTo = s.drop(commaIdx + 1)
+        val strTo   = s.drop(commaIdx + 1)
 
         for {
           from <- if (strFrom.isEmpty) Some(None) else version(strFrom).map(Some(_))
-          to <- if (strTo.isEmpty) Some(None) else version(strTo).map(Some(_))
-        } yield VersionInterval(from.filterNot(_.isEmpty), to.filterNot(_.isEmpty), from.forall(!_.isEmpty) && fromIncluded, toIncluded)
-      } else if (s.nonEmpty && fromIncluded && toIncluded)
+          to   <- if (strTo.isEmpty) Some(None) else version(strTo).map(Some(_))
+        } yield VersionInterval(
+          from.filterNot(_.isEmpty),
+          to.filterNot(_.isEmpty),
+          from.forall(!_.isEmpty) && fromIncluded,
+          toIncluded
+        )
+      }
+      else if (s.nonEmpty && fromIncluded && toIncluded)
         for (v <- version(s) if !v.isEmpty)
           yield VersionInterval(Some(v), Some(v), fromIncluded, toIncluded)
       else
@@ -52,20 +64,23 @@ object Parse {
     }
 
     for {
-      fromIncluded <- if (s.startsWith("[")) Some(true) else if (s.startsWith("(")) Some(false) else None
+      fromIncluded <-
+        if (s.startsWith("[")) Some(true) else if (s.startsWith("(")) Some(false) else None
       toIncluded <- if (s.endsWith("]")) Some(true) else if (s.endsWith(")")) Some(false) else None
       s0 = s.drop(1).dropRight(1)
       itv <- parseBounds(fromIncluded, toIncluded, s0)
     } yield itv
   }
 
-  private val multiVersionIntervalSplit = ("(?" + regexLookbehind + "[" + quote("])") + "]),(?=[" + quote("([") + "])").r
+  private val multiVersionIntervalSplit =
+    ("(?" + regexLookbehind + "[" + quote("])") + "]),(?=[" + quote("([") + "])").r
 
+  @deprecated("Unused by coursier", "2.1.25")
   def multiVersionInterval(s: String): Option[VersionInterval] = {
 
     // TODO Use a full-fledged (fastparsed-based) parser for this and versionInterval above
 
-    val openCount = s.count(c => c == '[' || c == '(')
+    val openCount  = s.count(c => c == '[' || c == '(')
     val closeCount = s.count(c => c == ']' || c == ')')
 
     if (openCount == closeCount && openCount >= 1)
@@ -74,6 +89,7 @@ object Parse {
       None
   }
 
+  @deprecated("Use coursier.version.VersionParse.versionConstraint instead", "2.1.25")
   def versionConstraint(s: String): VersionConstraint = {
     def noConstraint = if (s.isEmpty) Some(VersionConstraint.all) else None
 
@@ -93,7 +109,7 @@ object Parse {
     Parse.fallbackConfigRegex.findAllMatchIn(config.value).toSeq match {
       case Seq(m) =>
         assert(m.groupCount == 2)
-        val main = Configuration(config.value.substring(m.start(1), m.end(1)))
+        val main     = Configuration(config.value.substring(m.start(1), m.end(1)))
         val fallback = Configuration(config.value.substring(m.start(2), m.end(2)))
         Some((main, fallback))
       case _ =>

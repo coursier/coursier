@@ -2,9 +2,10 @@ package coursier.cli.params
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.dependencyString
 import coursier.cli.options.SharedLoaderOptions
+import coursier.core.{Dependency, Module, ModuleName, Organization}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, ModuleParser}
+import coursier.version.VersionConstraint
 
 final case class SharedLoaderParams(
   loaderNames: Seq[String],
@@ -39,10 +40,14 @@ object SharedLoaderParams {
                 if (params.isEmpty)
                   Validated.validNel(target -> dep0)
                 else
-                  Validated.invalidNel(s"$d: extra dependency parameters not supported for shared loader dependencies")
+                  Validated.invalidNel(
+                    s"$d: extra dependency parameters not supported for shared loader dependencies"
+                  )
             }
           case _ =>
-            Validated.invalidNel(s"$d: malformed shared dependency (expected target:org:name:version)")
+            Validated.invalidNel(
+              s"$d: malformed shared dependency (expected target:org:name:version)"
+            )
         }
       }
 
@@ -61,7 +66,13 @@ object SharedLoaderParams {
           case Left(err) =>
             Validated.invalidNel(s"$d: $err")
           case Right(m) =>
-            val asDep = JavaOrScalaDependency(m, dep"_:_:_") // actual version shouldn't matter
+            val asDep = JavaOrScalaDependency(
+              m,
+              Dependency(
+                Module(Organization("_"), ModuleName("_"), Map.empty),
+                VersionConstraint("_")
+              )
+            ) // actual version shouldn't matter
             Validated.validNel(target -> asDep)
         }
       }
@@ -71,7 +82,7 @@ object SharedLoaderParams {
         val deps0 = depsFromDeprecatedArgs ++ deps
         SharedLoaderParams(
           targetsOpt.getOrElse(deps0.map(_._1).distinct),
-          deps0.groupBy(_._1).mapValues(_.map(_._2)).iterator.toMap
+          deps0.groupBy(_._1).view.mapValues(_.map(_._2)).iterator.toMap
         )
     }
   }

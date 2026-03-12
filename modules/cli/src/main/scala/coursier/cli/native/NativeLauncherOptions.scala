@@ -2,44 +2,76 @@ package coursier.cli.native
 
 import java.nio.file.Paths
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import cats.data.{Validated, ValidatedNel}
+import coursier.cli.options.OptionGroup
 import coursier.launcher.Parameters.ScalaNative.ScalaNativeOptions
 
+// format: off
 final case class NativeLauncherOptions(
-
-  @Value("none|boehm|immix|default")
+  @Group(OptionGroup.native)
+  @Hidden
+  @ValueDescription("none|boehm|immix|default")
     nativeGc: Option[String] = None,
 
-  @Value("release|debug")
+  @Group(OptionGroup.native)
+  @Hidden
+  @ValueDescription("release|debug")
     nativeMode: Option[String] = None,
 
-  nativeLinkStubs: Boolean = true,
+  @Group(OptionGroup.native)
+  @Hidden
+    nativeLinkStubs: Boolean = true,
 
-  nativeClang: Option[String] = None,
+  @Group(OptionGroup.native)
+  @Hidden
+    nativeClang: Option[String] = None,
 
-  nativeClangpp: Option[String] = None,
+  @Group(OptionGroup.native)
+  @Hidden
+    nativeClangpp: Option[String] = None,
 
-  nativeLinkingOption: List[String] = Nil,
-  nativeDefaultLinkingOptions: Boolean = true,
-  nativeUseLdflags: Boolean = true,
+  @Group(OptionGroup.native)
+  @Hidden
+    nativeLinkingOption: List[String] = Nil,
+  @Group(OptionGroup.native)
+  @Hidden
+    nativeDefaultLinkingOptions: Boolean = true,
+  @Group(OptionGroup.native)
+  @Hidden
+    nativeUseLdflags: Boolean = true,
 
-  nativeCompileOption: List[String] = Nil,
-  nativeDefaultCompileOptions: Boolean = true,
+  @Group(OptionGroup.native)
+  @Hidden
+    nativeCompileOption: List[String] = Nil,
+  @Group(OptionGroup.native)
+  @Hidden
+    nativeDefaultCompileOptions: Boolean = true,
 
-  nativeTargetTriple: Option[String] = None,
+  @Group(OptionGroup.native)
+  @Hidden
+    nativeTargetTriple: Option[String] = None,
 
-  nativeLib: Option[String] = None,
+  @Group(OptionGroup.native)
+  @Hidden
+    nativeLib: Option[String] = None,
 
-  nativeVersion: Option[String] = None,
+  @Group(OptionGroup.native)
+  @Hidden
+    nativeVersion: Option[String] = None,
 
-  @Help("Native compilation target directory")
-  @Short("d")
+  @Group(OptionGroup.native)
+  @Hidden
+  @HelpMessage("Native compilation target directory")
+  @ExtraName("d")
     nativeWorkDir: Option[String] = None,
-  @Help("Don't wipe native compilation target directory (for debug purposes)")
+  @Group(OptionGroup.native)
+  @Hidden
+  @HelpMessage("Don't wipe native compilation target directory (for debug purposes)")
     nativeKeepWorkDir: Boolean = false
 
 ) {
+  // format: on
 
   def params: ValidatedNel[String, ScalaNativeOptions] = {
 
@@ -68,7 +100,7 @@ final case class NativeLauncherOptions(
     }
 
     val prependDefaultCompileOptions = nativeDefaultCompileOptions
-    val compileOptions = nativeCompileOption
+    val compileOptions               = nativeCompileOption
 
     val targetTripleOpt = nativeTargetTriple.filter(_.nonEmpty)
 
@@ -76,7 +108,7 @@ final case class NativeLauncherOptions(
       .filter(_.nonEmpty)
       .map(Paths.get(_))
 
-    val workDirOpt = nativeWorkDir.map(Paths.get(_))
+    val workDirOpt  = nativeWorkDir.map(Paths.get(_))
     val keepWorkDir = nativeKeepWorkDir
 
     Validated.validNel(
@@ -99,6 +131,6 @@ final case class NativeLauncherOptions(
 }
 
 object NativeLauncherOptions {
-  implicit val parser = Parser[NativeLauncherOptions]
-  implicit val help = caseapp.core.help.Help[NativeLauncherOptions]
+  implicit lazy val parser: Parser[NativeLauncherOptions] = Parser.derive
+  implicit lazy val help: Help[NativeLauncherOptions]     = Help.derive
 }

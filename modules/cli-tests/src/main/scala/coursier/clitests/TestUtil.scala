@@ -3,7 +3,9 @@ package coursier.clitests
 import java.io.{File, FileWriter}
 import java.nio.file.Files
 
-import coursier.dependencyString
+import coursier.core.{Dependency, Module, ModuleName, Organization}
+import coursier.util.StringInterpolators._
+import coursier.version.VersionConstraint
 
 object TestUtil {
 
@@ -24,16 +26,21 @@ object TestUtil {
         val removedDir = f.delete()
 
         removedContent && removedDir
-      } else
+      }
+      else
         f.delete()
 
     if (!delete(tmpDir))
       Console.err.println(
-        s"Warning: unable to remove temporary directory $tmpDir")
+        s"Warning: unable to remove temporary directory $tmpDir"
+      )
   }
 
-  val propsDep = dep"io.get-coursier:props:1.0.2"
-  val propsDepStr = s"${propsDep.module}:${propsDep.version}"
+  val propsDep = Dependency(
+    Module(Organization("io.get-coursier"), ModuleName("props"), Map.empty),
+    VersionConstraint("1.0.2")
+  )
+  val propsDepStr = s"${propsDep.module}:${propsDep.versionConstraint.asString}"
   lazy val propsCp = coursier.Fetch()
     .addDependencies(propsDep)
     .run()
@@ -55,5 +62,10 @@ object TestUtil {
     if (ngNailgunFound) "ng-nailgun"
     else "ng"
   }
+
+  lazy val scalaCli = sys.props.getOrElse(
+    "coursier-test.scala-cli",
+    sys.error("Java property coursier-test.scala-cli not set")
+  )
 
 }

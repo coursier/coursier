@@ -1,5 +1,6 @@
 package coursier.jvm
 
+import coursier.cache.ArchiveType
 import dataclass.data
 
 @data class JvmIndexEntry(

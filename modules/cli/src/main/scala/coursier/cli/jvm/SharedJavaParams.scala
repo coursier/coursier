@@ -5,18 +5,18 @@ import java.nio.file.{Path, Paths}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.Repository
-import coursier.cache.Cache
+import coursier.cache.{ArchiveCache, Cache}
+import coursier.core.Repository
 import coursier.jvm.{JvmCache, JvmCacheLogger, JvmChannel, JvmIndex}
 import coursier.util.Task
 
 final case class SharedJavaParams(
   jvm: Option[String],
-  jvmDir: Path,
   allowSystemJvm: Boolean,
   requireSystemJvm: Boolean,
-  localOnly: Boolean,
   update: Boolean,
+  os: Option[String],
+  architecture: Option[String],
   jvmChannelOpt: Option[JvmChannel]
 ) {
   def id: String =
@@ -29,22 +29,23 @@ final case class SharedJavaParams(
     verbosity: Int
   ): (JvmCache, coursier.jvm.JavaHome) = {
     def jvmCacheOf(cache: Cache[Task]) = {
-      val c = JvmCache()
-        .withBaseDirectory(jvmDir.toFile)
-        .withCache(cache)
+      val archiveCache = ArchiveCache().withCache(cache)
+      var cache0       = JvmCache().withArchiveCache(archiveCache)
+      for (arch <- architecture)
+        cache0 = cache0.withArchitecture(arch)
+      for (os0 <- os)
+        cache0 = cache0.withOs(os0)
       jvmChannelOpt match {
-        case None => c.withDefaultIndex
-        case Some(jvmChannel) => c.withIndexChannel(repositories, jvmChannel)
+        case None             => cache0.withDefaultIndex
+        case Some(jvmChannel) => cache0.withIndexChannel(repositories, jvmChannel, os, architecture)
       }
     }
     val noUpdateJvmCache = jvmCacheOf(noUpdateCache)
-    val jvmCache = jvmCacheOf(cache)
+    val jvmCache         = jvmCacheOf(cache)
     val javaHome = coursier.jvm.JavaHome()
       .withCache(jvmCache)
       .withNoUpdateCache(Some(noUpdateJvmCache))
-      .withJvmCacheLogger(jvmCacheLogger(verbosity))
       .withAllowSystem(allowSystemJvm)
-      .withInstallIfNeeded(!localOnly)
       .withUpdate(update)
     (jvmCache, javaHome)
   }
@@ -85,13 +86,10 @@ final case class SharedJavaParams(
 object SharedJavaParams {
   def apply(options: SharedJavaOptions): ValidatedNel[String, SharedJavaParams] = {
     val jvm = options.jvm.map(_.trim).filter(_.nonEmpty)
-    val jvmDir = options.jvmDir.filter(_.nonEmpty).map(Paths.get(_)).getOrElse {
-      JvmCache.defaultBaseDirectory.toPath
-    }
     val (allowSystem, requireSystem) = options.systemJvm match {
-      case None => (true, false)
+      case None        => (true, false)
       case Some(false) => (false, false)
-      case Some(true) => (true, true)
+      case Some(true)  => (true, true)
     }
 
     val checkSystemV =
@@ -105,11 +103,11 @@ object SharedJavaParams {
         .jvmIndex
         .map(_.trim)
         .filter(_ != "default")
-        .map(JvmIndex.handleAliases)
-        .map { s => JvmChannel.parse(s) }
+        .map(JvmChannel.handleAliases)
+        .map(s => JvmChannel.parse(s))
       parsed match {
-        case None => Validated.validNel(None)
-        case Some(Left(err)) => Validated.invalidNel(s"Invalid --jvm-index value: $err")
+        case None                 => Validated.validNel(None)
+        case Some(Left(err))      => Validated.invalidNel(s"Invalid --jvm-index value: $err")
         case Some(Right(channel)) => Validated.validNel(Some(channel))
       }
     }
@@ -118,11 +116,11 @@ object SharedJavaParams {
       (_, indexChannelOpt) =>
         SharedJavaParams(
           jvm,
-          jvmDir,
           allowSystem,
           requireSystem,
-          options.localOnly,
           options.update,
+          options.os,
+          options.architecture,
           indexChannelOpt
         )
     }

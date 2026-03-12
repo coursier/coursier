@@ -1,10 +1,12 @@
 package coursier.install
 
+import java.io.File
 import java.nio.file.{FileSystem, FileSystems, Path}
 import java.util.regex.Pattern.quote
 
 import coursier.core.Module
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
+import coursier.version.VersionConstraint
 import dataclass.data
 
 sealed abstract class Channel extends Product with Serializable {
@@ -15,10 +17,38 @@ object Channel {
 
   @data class FromModule(
     module: Module,
-    version: String = "latest.release"
+    versionConstraint: VersionConstraint = VersionConstraint("latest.release")
   ) extends Channel {
+
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def this(
+      module: Module,
+      version: String
+    ) = this(
+      module,
+      VersionConstraint(version)
+    )
+
+    @deprecated("Use versionConstraint instead", "2.1.25")
+    def version: String =
+      versionConstraint.asString
+    @deprecated("Use withVersionConstraint instead", "2.1.25")
+    def withVersion(newVersion: String): FromModule =
+      withVersionConstraint(VersionConstraint(newVersion))
+
     def repr: String =
       module.repr
+  }
+
+  object FromModule {
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def apply(
+      module: Module,
+      version: String
+    ): FromModule = apply(
+      module,
+      VersionConstraint(version)
+    )
   }
 
   @data class FromUrl(url: String) extends Channel {
@@ -38,15 +68,24 @@ object Channel {
 
   def module(module: Module): FromModule =
     FromModule(module)
-  def module(module: Module, version: String): FromModule =
+  def module(module: Module, version: VersionConstraint): FromModule =
     FromModule(module, version)
+  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+  def module(module0: Module, version: String): FromModule =
+    module(module0, VersionConstraint(version))
 
-  private lazy val ghUrlMatcher =
-    (quote("https://github.com/") + "([^/]*)/([^/]*)" + quote("/blob/") + "([^/]*)" + quote("/") + "(.*)").r.pattern
+  private lazy val ghUrlMatcher = (
+    quote("https://github.com/") +
+      "([^/]*)/([^/]*)" +
+      quote("/blob/") +
+      "([^/]*)" +
+      quote("/") +
+      "(.*)"
+  ).r.pattern
 
   private def defaultGhFileName = "apps.json"
-  private def defaultGhPath = defaultGhFileName
-  private def defaultGhBranch = "master"
+  private def defaultGhPath     = defaultGhFileName
+  private def defaultGhBranch   = "master"
 
   private def ghUrl(org: String, name: String, branch: String, path: String): String =
     s"https://raw.githubusercontent.com/$org/$name/$branch/$path"
@@ -57,12 +96,13 @@ object Channel {
 
     val url0 =
       if (m.matches()) {
-        val org = m.group(1)
-        val name = m.group(2)
+        val org    = m.group(1)
+        val name   = m.group(2)
         val branch = m.group(3)
-        val path = m.group(4)
+        val path   = m.group(4)
         ghUrl(org, name, branch, path)
-      } else
+      }
+      else
         url
 
     // https://github.com/coursier/apps/blob/master/apps/resources/ammonite.json
@@ -93,9 +133,9 @@ object Channel {
       }
 
       val orgNameBranchOrError = orgName.split("/", 3) match {
-        case Array(org0, name0) => Right((org0, name0, defaultGhBranch))
+        case Array(org0, name0)          => Right((org0, name0, defaultGhBranch))
         case Array(org0, name0, branch0) => Right((org0, name0, branch0))
-        case _ => Left(s"Malformed github channel '$s'")
+        case _                           => Left(s"Malformed github channel '$s'")
       }
 
       orgNameBranchOrError.map {
@@ -108,19 +148,24 @@ object Channel {
           val url = ghUrl(org, name, branch, path0)
           FromUrl(url)
       }
-    } else if (s.contains(":")) {
+    }
+    else if (s.contains(":") && !s.contains(File.separator) && !s.contains("/")) {
       val hasVersion = s.split(':').count(_.nonEmpty) >= 3
       if (hasVersion)
         DependencyParser.javaOrScalaDependencyParams(s).flatMap {
-          case (j: JavaOrScalaDependency.JavaDependency, _) => Right(Channel.module(j.module.module, j.version))
-          case (s: JavaOrScalaDependency.ScalaDependency, _) => Left(s"Scala dependencies ($s) not accepted as channels")
+          case (j: JavaOrScalaDependency.JavaDependency, _) =>
+            Right(Channel.module(j.module.module, j.versionConstraint))
+          case (s: JavaOrScalaDependency.ScalaDependency, _) =>
+            Left(s"Scala dependencies ($s) not accepted as channels")
         }
       else
         ModuleParser.javaOrScalaModule(s).flatMap {
           case j: JavaOrScalaModule.JavaModule => Right(Channel.module(j.module))
-          case s: JavaOrScalaModule.ScalaModule => Left(s"Scala dependencies ($s) not accepted as channels")
+          case s: JavaOrScalaModule.ScalaModule =>
+            Left(s"Scala dependencies ($s) not accepted as channels")
         }
-    } else
+    }
+    else
       Right(FromDirectory(fs.getPath(s).toAbsolutePath))
 
 }

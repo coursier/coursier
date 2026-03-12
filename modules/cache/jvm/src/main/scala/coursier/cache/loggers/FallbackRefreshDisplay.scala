@@ -8,7 +8,7 @@ import scala.concurrent.duration.{Duration, DurationInt}
 
 class FallbackRefreshDisplay(quiet: Boolean = false) extends RefreshDisplay {
 
-  private var previous = Set.empty[String]
+  private var previous                 = Set.empty[String]
   @volatile private var lastInstantOpt = Option.empty[Long]
 
   private def describe(info: RefreshInfo): String =
@@ -19,7 +19,8 @@ class FallbackRefreshDisplay(quiet: Boolean = false) extends RefreshDisplay {
         if (downloadInfo.length.isEmpty && downloadInfo.downloaded == 0L)
           ""
         else
-          s"(${pctOpt.map(pct => f"$pct%.2f %%, ").mkString}${downloadInfo.downloaded}${downloadInfo.length.map(" / " + _).mkString})"
+          s"(${pctOpt.map(pct => f"$pct%.2f %%, ").mkString}${downloadInfo.downloaded}${downloadInfo
+              .length.map(" / " + _).mkString})"
 
       case _: CheckUpdateInfo =>
         "Checking for updates"
@@ -50,9 +51,11 @@ class FallbackRefreshDisplay(quiet: Boolean = false) extends RefreshDisplay {
       val prefix = if (info.watching) "(watching) " else ""
       val msg = info match {
         case _: DownloadInfo =>
-          s"Downloaded $url\n"
+          if (info.success) s"Downloaded $url\n"
+          else s"Failed to download $url\n"
         case _: CheckUpdateInfo =>
-          s"Checked $url\n"
+          if (info.success) s"Checked $url\n"
+          else s"Failed to check $url\n"
       }
 
       out.write(prefix + msg)

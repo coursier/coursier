@@ -30,7 +30,7 @@ object Run extends CaseApp[RunOptions] {
           printThrowable(err)
           anyError = true
         case Right(_) =>
-          // println(Console.GREEN + namePrefix + res.name + Console.RESET)
+        // println(Console.GREEN + namePrefix + res.name + Console.RESET)
       }
 
     anyError
@@ -42,8 +42,27 @@ object Run extends CaseApp[RunOptions] {
 
     val launchTests = new LaunchTests {
       val launcher = options.launcher
+
+      def acceptsDOptions = true
+      def acceptsJOptions = true
+    }
+    val aboutTests = new AboutTests {
+      val launcher       = options.launcher
+      val assembly       = options.assembly
+      def isNative       = false
+      def isNativeStatic = false
+
+      def acceptsDOptions = true
+      def acceptsJOptions = true
     }
     val bootstrapTests = new BootstrapTests {
+      val launcher = options.launcher
+      val assembly = options.assembly
+
+      def acceptsDOptions = true
+      def acceptsJOptions = true
+    }
+    val fetchTests = new FetchTests {
       val launcher = options.launcher
     }
     val launchResults = TestRunner.runAndPrint(
@@ -51,16 +70,28 @@ object Run extends CaseApp[RunOptions] {
       "LaunchTests",
       executor = launchTests
     )
+    val aboutResults = TestRunner.runAndPrint(
+      aboutTests.tests,
+      "AboutTests",
+      executor = aboutTests
+    )
     val bootstrapResults = TestRunner.runAndPrint(
       bootstrapTests.tests,
       "BootstrapTests",
       executor = bootstrapTests
     )
+    val fetchResults = TestRunner.runAndPrint(
+      fetchTests.tests,
+      "FetchTests",
+      executor = fetchTests
+    )
 
     var anyError = false
 
     anyError = processResults("LaunchTests.", launchResults.leaves) || anyError
+    anyError = processResults("AboutTests.", aboutResults.leaves) || anyError
     anyError = processResults("BootstrapTests.", bootstrapResults.leaves) || anyError
+    anyError = processResults("FetchTests.", fetchResults.leaves) || anyError
 
     if (anyError)
       sys.exit(1)

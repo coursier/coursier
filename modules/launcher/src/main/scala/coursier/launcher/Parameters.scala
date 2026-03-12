@@ -1,12 +1,14 @@
 package coursier.launcher
 
 import java.io.File
-import java.nio.file.{Path, Paths}
+import java.nio.file.Path
 import java.util.jar.{Attributes => JarAttributes}
 import java.util.zip.ZipEntry
 
 import coursier.launcher.internal.Windows
 import dataclass._
+
+import scala.util.Properties
 
 sealed abstract class Parameters extends Product with Serializable {
   def isNative: Boolean = false
@@ -32,7 +34,7 @@ object Parameters {
       mainClass
         .map(c => JarAttributes.Name.MAIN_CLASS -> c)
         .toSeq ++
-      attributes
+        attributes
   }
 
   @data class Bootstrap(
@@ -47,17 +49,22 @@ object Parameters {
     hybridAssembly: Boolean = false,
     extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil,
     @since("2.0.4")
-    python: Boolean = false
+    python: Boolean = false,
+    @since
+    pythonJep: Boolean = false,
+    extraContent: Map[String, Seq[ClassLoaderContent]] = Map(),
+    @since
+    rules: Seq[MergeRule] = MergeRule.default
   ) extends Parameters {
 
     def withPreamble(preamble: Preamble): Bootstrap =
       withPreambleOpt(Some(preamble))
 
     def hasResources: Boolean =
-      content.exists { c =>
+      (content.iterator ++ extraContent.valuesIterator.flatMap(_.iterator)).exists { c =>
         c.entries.exists {
           case _: ClassPathEntry.Resource => true
-          case _ => false
+          case _                          => false
         }
       }
 
@@ -71,6 +78,9 @@ object Parameters {
         }
       else
         preambleOpt
+
+    def addExtraContent(name: String, content: Seq[ClassLoaderContent]): Bootstrap =
+      withExtraContent(extraContent + (name -> content))
   }
 
   @data class ManifestJar(
@@ -95,8 +105,8 @@ object Parameters {
     verbosity: Int = 0,
     intermediateAssembly: Boolean = false,
     windowsPathExtensions: Option[Seq[String]] =
-      if (Windows.isWindows) Some(Windows.pathExtensions) else None,
-    isWindows: Boolean = Windows.isWindows
+      if (Properties.isWin) Some(Windows.pathExtensions) else None,
+    isWindows: Boolean = Properties.isWin
   ) extends Parameters {
     override def isNative: Boolean = true
     def withJavaHome(home: File): NativeImage =
@@ -108,6 +118,10 @@ object Parameters {
       Seq("-Xmx3g")
   }
 
+  @data class Prebuilt() extends Parameters {
+    override def isNative: Boolean = true
+  }
+
   @data class ScalaNative(
     fetch: Seq[String] => Seq[File],
     mainClass: String,
@@ -115,7 +129,9 @@ object Parameters {
     jars: Seq[File] = Nil,
     options: ScalaNative.ScalaNativeOptions = ScalaNative.ScalaNativeOptions(),
     log: String => Unit = s => System.err.println(s),
-    verbosity: Int = 0
+    verbosity: Int = 0,
+    @since
+    python: Boolean = false
   ) extends Parameters {
     override def isNative: Boolean = true
   }

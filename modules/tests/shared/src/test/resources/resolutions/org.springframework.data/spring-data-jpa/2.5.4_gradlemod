@@ -1,0 +1,15 @@
+org.springframework.data:spring-data-jpa:2.5.4:default
+org.springframework.data:spring-data-commons:2.5.4:default
+org.springframework:spring-orm:5.3.9:{ org.gradle.category=library, org.gradle.usage=runtime }
+org.springframework:spring-context:5.3.9:{ org.gradle.category=library, org.gradle.usage=runtime }
+org.springframework:spring-aop:5.3.9:{ org.gradle.category=library, org.gradle.usage=runtime }
+org.springframework:spring-tx:5.3.9:{ org.gradle.category=library, org.gradle.usage=runtime }
+org.springframework:spring-beans:5.3.9:{ org.gradle.category=library, org.gradle.usage=runtime }
+org.springframework:spring-core:5.3.9:{ org.gradle.category=library, org.gradle.usage=runtime }
+org.aspectj:aspectjrt:1.9.6:default
+org.slf4j:slf4j-api:1.7.26:default
+org.springframework:spring-core:5.3.9:{ org.gradle.category=library, org.gradle.usage=runtime }
+org.springframework:spring-jdbc:5.3.9:{ org.gradle.category=library, org.gradle.usage=runtime }
+org.springframework:spring-expression:5.3.9:{ org.gradle.category=library, org.gradle.usage=runtime }
+org.springframework:spring-jcl:5.3.9:{ org.gradle.category=library, org.gradle.usage=runtime }
+org.springframework:spring-jcl:5.3.9:{ org.gradle.category=library, org.gradle.usage=runtime }

@@ -2,7 +2,7 @@ package coursier.cli.options
 
 import java.io.File
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.CacheDefaults
@@ -12,50 +12,70 @@ import coursier.parse.{CachePolicyParser, CredentialsParser}
 
 import scala.concurrent.duration.Duration
 
+// format: off
 final case class CacheOptions(
 
-  @Help("Cache directory (defaults to environment variable COURSIER_CACHE, or ~/.cache/coursier/v1 on Linux and ~/Library/Caches/Coursier/v1 on Mac)")
+  @Group(OptionGroup.cache)
+  @HelpMessage("Cache directory (defaults to environment variable COURSIER_CACHE, or ~/.cache/coursier/v1 on Linux and ~/Library/Caches/Coursier/v1 on Mac)")
     cache: Option[String] = None,
 
-  @Help("Download mode (default: missing, that is fetch things missing from cache)")
-  @Value("offline|update-changing|update|missing|force")
-  @Short("m")
+  @Group(OptionGroup.cache)
+  @Hidden
+  @HelpMessage("Download mode (default: missing, that is fetch things missing from cache)")
+  @ValueDescription("offline|update-changing|update|missing|force")
+  @ExtraName("m")
     mode: String = "",
 
-  @Help("TTL duration (e.g. \"24 hours\")")
-  @Value("duration")
-  @Short("l")
+  @Group(OptionGroup.cache)
+  @HelpMessage("TTL duration (e.g. \"24 hours\")")
+  @ValueDescription("duration")
+  @ExtraName("l")
     ttl: Option[String] = None,
 
-  @Help("Maximum number of parallel downloads (default: 6)")
-  @Short("n")
+  @Group(OptionGroup.cache)
+  @Hidden
+  @HelpMessage("Maximum number of parallel downloads (default: 6)")
+  @ExtraName("n")
     parallel: Int = 6,
 
-  @Help("Checksum types to check - end with none to allow for no checksum validation if no checksum is available, example: SHA-256,SHA-1,none")
-  @Value("checksum1,checksum2,...")
+  @Group(OptionGroup.cache)
+  @Hidden
+  @HelpMessage("Checksum types to check - end with none to allow for no checksum validation if no checksum is available, example: SHA-256,SHA-1,none")
+  @ValueDescription("checksum1,checksum2,...")
     checksum: List[String] = Nil,
 
-  @Help("Retry limit for Checksum error when fetching a file")
+  @Group(OptionGroup.cache)
+  @Hidden
+  @HelpMessage("Retry limit for Checksum error when fetching a file")
     retryCount: Int = 1,
 
-  @Help("Flag that specifies if a local artifact should be cached.")
-  @Short("cfa")
+  @Group(OptionGroup.cache)
+  @Hidden
+  @HelpMessage("Flag that specifies if a local artifact should be cached.")
+  @ExtraName("cfa")
     cacheFileArtifacts: Boolean = false,
 
-  @Help("Whether to follow http to https redirections")
+  @Group(OptionGroup.cache)
+  @Hidden
+  @HelpMessage("Whether to follow http to https redirections")
     followHttpToHttpsRedirect: Boolean = true,
 
-  @Help("Credentials to be used when fetching metadata or artifacts. Specify multiple times to pass multiple credentials. Alternatively, use the COURSIER_CREDENTIALS environment variable")
-  @Value("host(realm) user:pass|host user:pass")
+  @Group(OptionGroup.cache)
+  @HelpMessage("Credentials to be used when fetching metadata or artifacts. Specify multiple times to pass multiple credentials. Alternatively, use the COURSIER_CREDENTIALS environment variable")
+  @ValueDescription("host(realm) user:pass|host user:pass")
     credentials: List[String] = Nil,
 
-  @Help("Path to credential files to read credentials from")
+  @Group(OptionGroup.cache)
+  @HelpMessage("Path to credential files to read credentials from")
     credentialFile: List[String] = Nil,
 
-  @Help("Whether to read credentials from COURSIER_CREDENTIALS (env) or coursier.credentials (Java property), along those passed with --credentials and --credential-file")
+  @Group(OptionGroup.cache)
+  @Hidden
+  @HelpMessage("Whether to read credentials from COURSIER_CREDENTIALS (env) or coursier.credentials (Java property), along those passed with --credentials and --credential-file")
     useEnvCredentials: Boolean = true
 
 ) {
+  // format: on
 
   def params: ValidatedNel[String, CacheParams] =
     params(CacheDefaults.ttl)
@@ -64,7 +84,7 @@ final case class CacheOptions(
 
     val cache0 = cache match {
       case Some(path) => new File(path)
-      case None => CacheDefaults.location
+      case None       => CacheDefaults.location
     }
 
     val cachePoliciesV =
@@ -76,7 +96,9 @@ final case class CacheOptions(
             Validated.validNel(cp)
           case Left(errors) =>
             Validated.invalidNel(
-              s"Error parsing modes:\n${errors.map("  "+_).mkString(System.lineSeparator())}"
+              s"Error parsing modes:" +
+                System.lineSeparator() +
+                errors.map("  " + _).mkString(System.lineSeparator())
             )
         }
 
@@ -87,7 +109,7 @@ final case class CacheOptions(
           Validated.validNel(defaultTtl)
         case Some(ttlStr) =>
           CacheDefaults.parseDuration(ttlStr) match {
-            case Left(e) => Validated.invalidNel(s"Parsing TTL: ${e.getMessage}")
+            case Left(e)  => Validated.invalidNel(s"Parsing TTL: ${e.getMessage}")
             case Right(d) => Validated.validNel(Some(d))
           }
       }
@@ -111,7 +133,7 @@ final case class CacheOptions(
         else
           splitChecksumArgs.map {
             case none if none.toLowerCase == "none" => None
-            case sumType => Some(sumType)
+            case sumType                            => Some(sumType)
           }
 
       Validated.validNel(res)
@@ -142,7 +164,17 @@ final case class CacheOptions(
 
     (cachePoliciesV, ttlV, parallelV, checksumV, retryCountV, credentialsV).mapN {
       (cachePolicy, ttl, parallel, checksum, retryCount, credentials0) =>
-        CacheParams(cache0, cachePolicy, ttl, parallel, checksum, retryCount, cacheFileArtifacts, followHttpToHttpsRedirect)
+        val baseParams = CacheParams(
+          cache0,
+          cachePolicy,
+          ttl,
+          parallel,
+          checksum,
+          retryCount,
+          cacheFileArtifacts,
+          followHttpToHttpsRedirect
+        )
+        baseParams
           .withCredentials(credentials0 ++ credentialFiles)
           .withUseEnvCredentials(useEnvCredentials)
     }
@@ -150,6 +182,6 @@ final case class CacheOptions(
 }
 
 object CacheOptions {
-  implicit val parser = Parser[CacheOptions]
-  implicit val help = caseapp.core.help.Help[CacheOptions]
+  implicit lazy val parser: Parser[CacheOptions] = Parser.derive
+  implicit lazy val help: Help[CacheOptions]     = Help.derive
 }

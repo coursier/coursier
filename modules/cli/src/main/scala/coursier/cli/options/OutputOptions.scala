@@ -1,32 +1,41 @@
 package coursier.cli.options
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, _}
+import caseapp._
 
+// format: off
 final case class OutputOptions(
 
-  @Help("Quiet output")
-  @Short("q")
+  @Group(OptionGroup.verbosity)
+  @HelpMessage("Quiet output")
+  @ExtraName("q")
     quiet: Int @@ Counter = Tag.of(0),
 
-  @Help("Increase verbosity (specify several times to increase more)")
-  @Short("v")
+  @Group(OptionGroup.verbosity)
+  @HelpMessage("Increase verbosity (specify several times to increase more)")
+  @ExtraName("v")
     verbose: Int @@ Counter = Tag.of(0),
 
-  @Help("Force display of progress bars")
-  @Short("P")
+  @Group(OptionGroup.verbosity)
+  @HelpMessage("Force display of progress bars")
+  @ExtraName("P")
     progress: Boolean = false,
 
-  @Help("Log changing artifacts")
+  @Group(OptionGroup.verbosity)
+  @Hidden
+  @HelpMessage("Log changing artifacts")
     logChanging: Boolean = false,
 
-  @Help("Log app channel or JVM index version")
-  @Short("log-index-version")
-  @Short("log-jvm-index-version")
+  @Group(OptionGroup.verbosity)
+  @Hidden
+  @HelpMessage("Log app channel or JVM index version")
+  @ExtraName("log-index-version")
+  @ExtraName("log-jvm-index-version")
     logChannelVersion: Boolean = false
 
 )
+// format: on
 
 object OutputOptions {
-  implicit val parser = Parser[OutputOptions]
-  implicit val help = caseapp.core.help.Help[OutputOptions]
+  implicit lazy val parser: Parser[OutputOptions] = Parser.derive
+  implicit lazy val help: Help[OutputOptions]     = Help.derive
 }

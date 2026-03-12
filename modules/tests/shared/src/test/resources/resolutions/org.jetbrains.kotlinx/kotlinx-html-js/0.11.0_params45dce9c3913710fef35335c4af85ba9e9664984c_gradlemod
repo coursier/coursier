@@ -1,0 +1,4 @@
+org.jetbrains.kotlinx:kotlinx-html-js:0.11.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.js.compiler=ir, org.jetbrains.kotlin.platform.type=js }
+org.jetbrains.kotlin:kotlin-dom-api-compat:1.9.22:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.js.compiler=ir, org.jetbrains.kotlin.platform.type=js }
+org.jetbrains.kotlin:kotlin-stdlib:1.9.22:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.js.compiler=ir, org.jetbrains.kotlin.platform.type=js }
+org.jetbrains.kotlin:kotlin-stdlib-js:1.9.22:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.js.compiler=ir, org.jetbrains.kotlin.platform.type=js }

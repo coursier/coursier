@@ -1,0 +1,6 @@
+com.thesamet.scalapb:scalapbc_2.13:0.9.8:default
+org.scala-lang:scala-library:2.13.1:default
+com.thesamet.scalapb:compilerplugin_2.13:0.9.8:default
+com.github.os72:protoc-jar:3.8.0:default
+com.google.protobuf:protobuf-java:4.28.3:default
+com.thesamet.scalapb:protoc-bridge_2.13:0.7.10:default

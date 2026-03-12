@@ -1,11 +1,11 @@
 import coursier.core._
 import coursier.util.StringInterpolators._
+import coursier.version.{VersionConstraint => VersionConstraint0}
 
 import scala.language.implicitConversions
 
-/**
- * Mainly pulls definitions from coursier.core, sometimes with default arguments.
- */
+/** Mainly pulls definitions from coursier.core, sometimes with default arguments.
+  */
 package object coursier {
 
   // `extends Serializable` added here-or-there for bin compat while switching from 2.12.1 to 2.12.4
@@ -20,10 +20,28 @@ package object coursier {
   object Dependency {
     def apply(
       module: Module,
-      version: String
+      version: VersionConstraint0
     ): Dependency =
       core.Dependency(module, version)
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def apply(
+      module: Module,
+      version: String
+    ): Dependency =
+      core.Dependency(module, VersionConstraint0(version))
   }
+
+  type VersionConstraint = coursier.version.VersionConstraint
+  val VersionConstraint = coursier.version.VersionConstraint
+
+  type Variant = core.Variant
+  val Variant = core.Variant
+
+  type VariantSelector = core.VariantSelector
+  val VariantSelector = core.VariantSelector
+
+  type BomDependency = core.BomDependency
+  val BomDependency = core.BomDependency
 
   type Attributes = core.Attributes
   object Attributes extends Serializable {
@@ -45,7 +63,11 @@ package object coursier {
 
   type Module = core.Module
   object Module extends Serializable {
-    def apply(organization: Organization, name: ModuleName, attributes: Map[String, String] = Map.empty): Module =
+    def apply(
+      organization: Organization,
+      name: ModuleName,
+      attributes: Map[String, String] = Map.empty
+    ): Module =
       core.Module(organization, name, attributes)
   }
 
@@ -68,7 +90,8 @@ package object coursier {
     def apply(dependencies: Seq[Dependency]): Resolution =
       core.Resolution().withRootDependencies(dependencies)
 
-    def defaultTypes: Set[Type] = coursier.core.Resolution.defaultTypes
+    def defaultTypes: Set[Type]          = coursier.core.Resolution.defaultTypes
+    def enableDependencyOverridesDefault = coursier.core.Resolution.enableDependencyOverridesDefault
   }
 
   type Classifier = core.Classifier

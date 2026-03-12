@@ -1,0 +1,13 @@
+[
+  {
+    "name": "com.github.luben.zstd.ZstdInputStreamNoFinalizer",
+    "fields": [
+      {
+        "name": "dstPos"
+      },
+      {
+        "name": "srcPos"
+      }
+    ]
+  }
+]

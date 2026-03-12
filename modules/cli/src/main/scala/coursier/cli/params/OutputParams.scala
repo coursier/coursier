@@ -54,8 +54,8 @@ object OutputParams {
       else
         Validated.validNel(())
 
-    val progressBars = options.progress
-    val logChanging = options.logChanging
+    val progressBars      = options.progress
+    val logChanging       = options.logChanging
     val logPickedVersions = options.logChannelVersion
 
     (verbosityV, verbosityLogChangingCheckV).mapN {

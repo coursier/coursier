@@ -1,21 +1,32 @@
 package coursier.cache
 
-import java.io.{File, FilenameFilter}
-import java.net.URI
+import java.io.File
+import java.nio.file.Path
 
-import coursier.credentials.{Credentials, FileCredentials}
-import coursier.parse.{CachePolicyParser, CredentialsParser}
+import coursier.credentials.Credentials
 import coursier.paths.CachePath
 import coursier.util.Sync
 
-import scala.concurrent.duration.{Duration, DurationInt}
-import scala.util.{Failure, Success, Try}
+import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
+import scala.util.Try
 
 object CacheDefaults {
 
-  lazy val location: File = CachePath.defaultCacheDirectory()
+  lazy val location: File =
+    CacheEnv.defaultCacheLocation(CacheEnv.cache.read()).toFile
 
-  @deprecated("Legacy cache location support was dropped, this method does nothing.", "2.0.0-RC6-22")
+  lazy val archiveCacheLocation: File =
+    CacheEnv.defaultArchiveCacheLocation(CacheEnv.archiveCache.read()).toFile
+
+  lazy val priviledgedArchiveCacheLocation: File =
+    CachePath.defaultPriviledgedArchiveCacheDirectory()
+
+  lazy val digestBasedCacheLocation: File = CachePath.defaultDigestBasedCacheDirectory()
+
+  @deprecated(
+    "Legacy cache location support was dropped, this method does nothing.",
+    "2.0.0-RC6-22"
+  )
   def warnLegacyCacheLocation(): Unit = {}
 
   private def defaultConcurrentDownloadCount = 6
@@ -31,35 +42,48 @@ object CacheDefaults {
   lazy val pool = Sync.fixedThreadPool(concurrentDownloadCount)
 
   def parseDuration(s: String): Either[Throwable, Duration] =
-    if (s.nonEmpty && s.forall(_ == '0'))
-      Right(Duration.Zero)
-    else
-      Try(Duration(s)) match {
-        case Success(s) => Right(s)
-        case Failure(t) => Left(t)
-      }
+    CacheEnv.parseDuration(s)
 
-  lazy val ttl: Option[Duration] = {
-    val fromEnv = Option(System.getenv("COURSIER_TTL")).flatMap(parseDuration(_).toOption)
-    def fromProps = sys.props.get("coursier.ttl").flatMap(parseDuration(_).toOption)
-    def default = 24.hours
-
-    fromEnv
-      .orElse(fromProps)
-      .orElse(Some(default))
-  }
+  lazy val ttl: Option[Duration] =
+    CacheEnv.defaultTtl(CacheEnv.ttl.read())
 
   // Check SHA-1 if available, else be fine with no checksum
   val checksums = Seq(Some("SHA-1"), None)
 
-  private def defaultSslRetryCount = 3
+  def defaultRetryCount                       = 5
+  private def defaultRetryBackoffInitialDelay = 10.milliseconds
+  private def defaultRetryBackoffMultiplier   = 2.0
 
+  lazy val retryCount =
+    sys.props
+      .get("coursier.exception-retry")
+      .flatMap(s => scala.util.Try(s.toInt).toOption)
+      .filter(_ >= 0)
+      .getOrElse(defaultRetryCount)
+
+  lazy val retryBackoffInitialDelay =
+    sys.props
+      .get("coursier.exception-retry-backoff-initial-delay")
+      .flatMap(s => parseDuration(s).toOption)
+      .collect {
+        case f: FiniteDuration => f
+      }
+      .getOrElse(defaultRetryBackoffInitialDelay)
+
+  lazy val retryBackoffMultiplier =
+    sys.props
+      .get("coursier.exception-retry-backoff-multiplier")
+      .flatMap(s => scala.util.Try(s.toDouble).toOption)
+      .filter(_ > 0)
+      .getOrElse(defaultRetryBackoffMultiplier)
+
+  @deprecated("Use retryCount instead", "2.1.11")
   lazy val sslRetryCount =
     sys.props
       .get("coursier.sslexception-retry")
       .flatMap(s => scala.util.Try(s.toInt).toOption)
       .filter(_ >= 0)
-      .getOrElse(defaultSslRetryCount)
+      .getOrElse(retryCount)
 
   private def defaultMaxRedirections = Option(20) // same default as java.net.HttpURLConnection
   lazy val maxRedirections: Option[Int] = {
@@ -73,95 +97,21 @@ object CacheDefaults {
       .orElse(defaultMaxRedirections)
   }
 
-  def defaultRetryCount = 1
-
   val bufferSize = 1024 * 1024
 
-  private def credentialPropOpt =
-    Option(System.getenv("COURSIER_CREDENTIALS"))
-      .orElse(sys.props.get("coursier.credentials"))
-      .map(s => s.dropWhile(_.isSpaceChar))
-
-  private def isPropFile(s: String) =
-    s.startsWith("/") || s.startsWith("file:")
-
-  def credentials: Seq[Credentials] =
-    if (credentialPropOpt.isEmpty) {
-      // Warn if those files have group and others read permissions?
-      val configDirs = coursier.paths.CoursierPaths.configDirectories().toSeq
-      val mainCredentialsFiles = configDirs.map(configDir => new File(configDir, "credentials.properties"))
-      val otherFiles = {
-        // delay listing files until credentials are really needed?
-        val dirs = configDirs.map(configDir => new File(configDir, "credentials"))
-        val files = dirs.flatMap(dir => Option(dir.listFiles(new FilenameFilter {
-          def accept(dir: File, name: String): Boolean =
-            !name.startsWith(".") && name.endsWith(".properties")
-        })).toSeq.flatten)
-        Option(files).toSeq.flatten.map { f =>
-          FileCredentials(f.getAbsolutePath, optional = true) // non optional?
-        }
-      }
-      mainCredentialsFiles.map(f => FileCredentials(f.getAbsolutePath, optional = true)) ++ otherFiles
-    } else
-      credentialPropOpt
-        .filter(isPropFile)
-        .toSeq
-        .flatMap {
-          case path if isPropFile(path) =>
-            // hope Windows users can manage to use file:// URLs fine
-            val path0 =
-              if (path.startsWith("file:"))
-                new File(new URI(path)).getAbsolutePath
-              else
-                path
-            Seq(FileCredentials(path0, optional = true))
-          case s =>
-            CredentialsParser.parseSeq(s).either.toSeq.flatten
-        }
-
-  val noEnvCachePolicies = Seq(
-    // first, try to update changing artifacts that were previously downloaded (follows TTL)
-    CachePolicy.LocalUpdateChanging,
-    // then, use what's available locally
-    CachePolicy.LocalOnly,
-    // lastly, try to download what's missing
-    CachePolicy.Update
-  )
-
-  def cachePolicies: Seq[CachePolicy] = {
-
-    def fromOption(value: Option[String], description: String): Option[Seq[CachePolicy]] =
-      value.filter(_.nonEmpty).flatMap {
-        str =>
-          CachePolicyParser.cachePolicies(str, noEnvCachePolicies).either match {
-            case Right(Seq()) =>
-              Console.err.println(
-                s"Warning: no mode found in $description, ignoring it."
-              )
-              None
-            case Right(policies) =>
-              Some(policies)
-            case Left(_) =>
-              Console.err.println(
-                s"Warning: unrecognized mode in $description, ignoring it."
-              )
-              None
-          }
-      }
-
-    val fromEnv = fromOption(
-      Option(System.getenv("COURSIER_MODE")),
-      "COURSIER_MODE environment variable"
+  lazy val credentials: Seq[Credentials] =
+    CacheEnv.defaultCredentials(
+      CacheEnv.credentials.read(),
+      CacheEnv.scalaCliConfig.read(),
+      CacheEnv.configDir.read()
     )
 
-    def fromProps = fromOption(
-      sys.props.get("coursier.mode"),
-      "Java property coursier.mode"
-    )
+  def credentialsFromConfig(configPath: Path): Seq[Credentials] =
+    CacheEnv.credentialsFromConfig(configPath)
 
-    fromEnv
-      .orElse(fromProps)
-      .getOrElse(noEnvCachePolicies)
-  }
+  def noEnvCachePolicies: Seq[CachePolicy] =
+    CacheEnv.noEnvCachePolicies
 
+  lazy val cachePolicies: Seq[CachePolicy] =
+    CacheEnv.defaultCachePolicies(CacheEnv.cachePolicy.read())
 }

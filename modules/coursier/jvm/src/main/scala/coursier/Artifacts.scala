@@ -4,7 +4,7 @@ import java.io.File
 import java.lang.{Boolean => JBoolean}
 
 import coursier.cache.{ArtifactError, Cache}
-import coursier.core.Publication
+import coursier.core._
 import coursier.error.FetchError
 import coursier.util.{Artifact, Sync, Task}
 import coursier.util.Monad.ops._
@@ -25,15 +25,44 @@ import dataclass._
   extraArtifactsSeq: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]] = Nil,
   classpathOrder: Boolean = true,
   @since
-  transformArtifacts: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]] = Nil,
+  // format: off
+  transformArtifacts:
+    Seq[Seq[(Dependency, Publication, Artifact)] =>
+      Seq[(Dependency, Publication, Artifact)]] =
+    Nil,
+  @since
+  // format: off
+  transformArtifacts0:
+    Seq[Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] =>
+      Seq[(Dependency, Either[VariantPublication, Publication], Artifact)]] =
+    Nil,
+  extraArtifactsSeq0: Seq[Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] => Seq[Artifact]] = Nil,
+  @since("2.1.25")
+  attributes: Seq[VariantSelector.AttributesBased] = Nil
+  // format: on
 )(implicit
   sync: Sync[F]
 ) {
 
   private def S = sync
 
-  private def extraArtifacts: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact] =
-    l => extraArtifactsSeq.flatMap(_(l))
+  private def extraArtifacts
+    : Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] => Seq[Artifact] =
+    l =>
+      extraArtifactsSeq0.flatMap(_(l)) ++ {
+        if (extraArtifactsSeq.isEmpty) Nil
+        else if (l.exists(_._2.isLeft))
+          sys.error(
+            "Cannot use deprecated Artifacts.transformArtifacts along with Gradle Module variants"
+          )
+        else {
+          val l0 = l.collect {
+            case (dep, Right(pub), art) =>
+              (dep, pub, art)
+          }
+          extraArtifactsSeq.flatMap(_(l0))
+        }
+      }
 
   def withResolution(resolution: Resolution): Artifacts[F] =
     withResolutions(Seq(resolution))
@@ -42,27 +71,67 @@ import dataclass._
   def withArtifactTypes(artifactTypes: Set[Type]): Artifacts[F] =
     withArtifactTypesOpt(Option(artifactTypes))
 
-  def addExtraArtifacts(f: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]): Artifacts[F] =
+  def addExtraArtifacts(
+    f: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]
+  ): Artifacts[F] =
     withExtraArtifactsSeq(extraArtifactsSeq :+ f)
   def noExtraArtifacts(): Artifacts[F] =
     withExtraArtifactsSeq(Nil)
-  def withExtraArtifacts(l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]): Artifacts[F] =
+  def withExtraArtifacts(
+    l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]
+  ): Artifacts[F] =
     withExtraArtifactsSeq(l)
-  def addTransformArtifacts(f: Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]): Artifacts[F] =
+  def addTransformArtifacts(
+    f: Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]
+  ): Artifacts[F] =
     withTransformArtifacts(transformArtifacts :+ f)
+  def addTransformArtifacts0(
+    f: Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] => Seq[(
+      Dependency,
+      Either[VariantPublication, Publication],
+      Artifact
+    )]
+  ): Artifacts[F] =
+    withTransformArtifacts0(transformArtifacts0 :+ f)
 
   def io: F[Seq[(Artifact, File)]] =
     ioResult.map(_.artifacts)
 
   def ioResult: F[Artifacts.Result] = {
 
-    val transformArtifacts0 = Function.chain(transformArtifacts)
-    val a = transformArtifacts0 {
+    val transformArtifactsFunc  = Function.chain(transformArtifacts)
+    val transformArtifactsFunc0 = Function.chain(transformArtifacts0)
+    val finalTransformArtifactsFunc: Seq[(
+      Dependency,
+      Either[VariantPublication, Publication],
+      Artifact
+    )] => Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] = {
+      seq =>
+        if (transformArtifacts.nonEmpty && seq.exists(_._2.isLeft))
+          sys.error(
+            "Cannot use deprecated Artifacts.transformArtifacts along with Gradle Module variants"
+          )
+        val seq0 =
+          if (transformArtifacts.isEmpty) seq
+          else
+            transformArtifactsFunc(
+              seq.collect {
+                case (dep, Right(pub), art) =>
+                  (dep, pub, art)
+              }
+            ).map {
+              case (dep, pub, art) =>
+                (dep, Right(pub), art)
+            }
+        transformArtifactsFunc0(seq0)
+    }
+    val a = finalTransformArtifactsFunc {
       resolutions
         .flatMap { r =>
-          Artifacts.artifacts(
+          Artifacts.artifacts0(
             r,
             classifiers,
+            attributes,
             mainArtifactsOpt,
             artifactTypesOpt,
             classpathOrder
@@ -111,11 +180,42 @@ object Artifacts {
   def apply(): Artifacts[Task] =
     new Artifacts(Cache.default)
 
-
   @data class Result(
-    fullDetailedArtifacts: Seq[(Dependency, Publication, Artifact, Option[File])],
+    fullDetailedArtifacts0: Seq[(
+      Dependency,
+      Either[VariantPublication, Publication],
+      Artifact,
+      Option[File]
+    )],
     fullExtraArtifacts: Seq[(Artifact, Option[File])]
   ) {
+
+    @deprecated("Use fullDetailedArtifacts0 instead", "2.1.25")
+    def fullDetailedArtifacts: Seq[(
+      Dependency,
+      Publication,
+      Artifact,
+      Option[File]
+    )] =
+      fullDetailedArtifacts0.map {
+        case (dep, Right(pub), art, fOpt) =>
+          (dep, pub, art, fOpt)
+        case (_, Left(_), _, _) =>
+          sys.error("Deprecated method doesn't support Gradle Module variants")
+      }
+    @deprecated("Use withFullDetailedArtifacts0 instead", "2.1.25")
+    def withFullDetailedArtifacts(artifacts: Seq[(
+      Dependency,
+      Publication,
+      Artifact,
+      Option[File]
+    )]): Result =
+      withFullDetailedArtifacts0(
+        artifacts.map {
+          case (dep, pub, art, fOpt) =>
+            (dep, Right(pub), art, fOpt)
+        }
+      )
 
     def artifacts: Seq[(Artifact, File)] =
       fullArtifacts
@@ -124,13 +224,24 @@ object Artifacts {
             (art, file)
         }
 
-    def detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)] =
-      fullDetailedArtifacts
+    def detailedArtifacts0
+      : Seq[(Dependency, Either[VariantPublication, Publication], Artifact, File)] =
+      fullDetailedArtifacts0
         .collect {
           case (dep, pub, art, Some(file)) =>
             (dep, pub, art, file)
         }
         .distinct
+
+    @deprecated("Use detailedArtifacts0 instead", "2.1.25")
+    def detailedArtifacts
+      : Seq[(Dependency, Publication, Artifact, File)] =
+      detailedArtifacts0.map {
+        case (dep, Right(pub), art, fOpt) =>
+          (dep, pub, art, fOpt)
+        case (_, Left(_), _, _) =>
+          sys.error("Deprecated method doesn't support Gradle Module variants")
+      }
 
     def extraArtifacts: Seq[(Artifact, File)] =
       fullExtraArtifacts.collect {
@@ -144,26 +255,33 @@ object Artifacts {
         .distinct
 
     def fullArtifacts: Seq[(Artifact, Option[File])] = {
-      val artifacts = fullDetailedArtifacts.map { case (_, _, a, f) => (a, f) } ++
+      val artifacts = fullDetailedArtifacts0.map { case (_, _, a, f) => (a, f) } ++
         fullExtraArtifacts
       artifacts.distinct
     }
 
     @deprecated("Use withFullDetailedArtifacts instead", "2.0.0-RC6-15")
-    def withDetailedArtifacts(detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)]): Result =
-      withFullDetailedArtifacts(detailedArtifacts.map { case (dep, pub, art, file) => (dep, pub, art, Some(file)) })
+    def withDetailedArtifacts(
+      detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)]
+    ): Result =
+      withFullDetailedArtifacts0(detailedArtifacts.map { case (dep, pub, art, file) =>
+        (dep, Right(pub), art, Some(file))
+      })
     @deprecated("Use withFullExtraArtifacts instead", "2.0.0-RC6-15")
     def withExtraArtifacts(extraArtifacts: Seq[(Artifact, File)]): Result =
       withFullExtraArtifacts(extraArtifacts.map { case (art, file) => (art, Some(file)) })
   }
 
-
   implicit class ArtifactsTaskOps(private val artifacts: Artifacts[Task]) extends AnyVal {
 
-    def future()(implicit ec: ExecutionContext = artifacts.cache.ec): Future[Seq[(Artifact, File)]] =
+    def future()(implicit
+      ec: ExecutionContext = artifacts.cache.ec
+    ): Future[Seq[(Artifact, File)]] =
       artifacts.io.future()
 
-    def either()(implicit ec: ExecutionContext = artifacts.cache.ec): Either[FetchError, Seq[(Artifact, File)]] = {
+    def either()(implicit
+      ec: ExecutionContext = artifacts.cache.ec
+    ): Either[FetchError, Seq[(Artifact, File)]] = {
 
       val f = artifacts
         .io
@@ -182,7 +300,9 @@ object Artifacts {
     def futureResult()(implicit ec: ExecutionContext = artifacts.cache.ec): Future[Result] =
       artifacts.ioResult.future()
 
-    def eitherResult()(implicit ec: ExecutionContext = artifacts.cache.ec): Either[FetchError, Result] = {
+    def eitherResult()(implicit
+      ec: ExecutionContext = artifacts.cache.ec
+    ): Either[FetchError, Result] = {
 
       val f = artifacts
         .ioResult
@@ -216,50 +336,88 @@ object Artifacts {
     val fromClassifiers = classifiers.flatMap {
       case Classifier.sources => Set(Type.source)
       case Classifier.javadoc => Set(Type.doc)
-      case _ => Set.empty[Type]
+      case _                  => Set.empty[Type]
     }
 
     fromMainArtifacts ++ fromClassifiers
   }
 
-
+  @deprecated("Use artifacts0 instead", "2.1.25")
   def artifacts(
     resolution: Resolution,
     classifiers: Set[Classifier],
     mainArtifactsOpt: Option[Boolean],
     artifactTypesOpt: Option[Set[Type]],
     classpathOrder: Boolean
-  ): Seq[(Dependency, Publication, Artifact)] = {
+  ): Seq[(Dependency, Publication, Artifact)] =
+    artifacts0(
+      resolution,
+      classifiers,
+      Nil,
+      mainArtifactsOpt,
+      artifactTypesOpt,
+      classpathOrder
+    ).collect {
+      case (dep, Right(pub), art) =>
+        (dep, pub, art)
+    }
 
-    val mainArtifacts0 = mainArtifactsOpt.getOrElse(classifiers.isEmpty)
+  def artifacts0(
+    resolution: Resolution,
+    classifiers: Set[Classifier],
+    attributes: Seq[VariantSelector.AttributesBased],
+    mainArtifactsOpt: Option[Boolean],
+    artifactTypesOpt: Option[Set[Type]],
+    classpathOrder: Boolean
+  ): Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] = {
 
-    val artifactTypes0 =
-      artifactTypesOpt
-        .getOrElse(defaultTypes(classifiers, mainArtifactsOpt))
+    val mainArtifacts0 = mainArtifactsOpt.getOrElse {
+      classifiers.isEmpty && attributes.isEmpty
+    }
+
+    val artifactTypes0 = artifactTypesOpt.getOrElse {
+      defaultTypes(classifiers, mainArtifactsOpt)
+    }
 
     val main =
       if (mainArtifacts0)
-        resolution.dependencyArtifacts(None, classpathOrder)
+        resolution.dependencyArtifacts0(None, None, classpathOrder = classpathOrder)
       else
         Nil
 
     val classifiersArtifacts =
-      if (classifiers.isEmpty)
+      if (classifiers.isEmpty || attributes.nonEmpty)
         Nil
       else
-        resolution.dependencyArtifacts(Some(classifiers.toSeq), classpathOrder)
+        resolution.dependencyArtifacts0(Some(classifiers.toSeq), None, classpathOrder)
 
-    val artifacts = (main ++ classifiersArtifacts).map {
-      case (dep, pub, artifact) =>
-        (dep.withAttributes(dep.attributes.withClassifier(pub.classifier)), pub, artifact)
+    val attributesArtifacts =
+      if (attributes.isEmpty)
+        Nil
+      else
+        attributes.flatMap { attr =>
+          resolution.dependencyArtifacts0(
+            Some(classifiers.toSeq).filter(_.nonEmpty),
+            Some(attr),
+            classpathOrder
+          )
+        }
+
+    val artifacts = (main ++ classifiersArtifacts ++ attributesArtifacts).map {
+      case (dep, pub0 @ Right(pub), artifact) =>
+        (dep.withAttributes(dep.attributes.withClassifier(pub.classifier)), pub0, artifact)
+      case (dep, pub0, artifact) =>
+        (dep, pub0, artifact)
     }
 
     if (artifactTypes0(Type.all))
       artifacts
     else
       artifacts.filter {
-        case (_, attr, _) =>
-          artifactTypes0(attr.`type`)
+        case (_, Left(_), _) =>
+          true // ???
+        case (_, Right(pub), _) =>
+          artifactTypes0(pub.`type`)
       }
   }
 
@@ -285,7 +443,7 @@ object Artifacts {
     cache: Cache[F],
     otherCaches: Cache[F]*
   )(implicit
-     S: Sync[F]
+    S: Sync[F]
   ): F[Seq[(Artifact, Option[File])]] = {
 
     val groupedArtifacts = groupArtifacts(artifacts)
@@ -304,24 +462,25 @@ object Artifacts {
     }
 
     // sequential accumulation (we don't have higher level libraries to ease that here…)
-    val gathered = tasks.foldLeft(S.point(Seq.empty[(Artifact, Either[ArtifactError, File])])) { (acc, f) =>
-      for {
-        l <- acc
-        l0 <- f
-      } yield l ++ l0
-    }
+    val gathered =
+      tasks.foldLeft(S.point(Seq.empty[(Artifact, Either[ArtifactError, File])])) { (acc, f) =>
+        for {
+          l  <- acc
+          l0 <- f
+        } yield l ++ l0
+      }
 
     val loggerOpt = cache.loggerOpt
 
     val task = loggerOpt match {
-      case None => gathered
+      case None         => gathered
       case Some(logger) => logger.using(gathered)
     }
 
     task.flatMap { results =>
 
-      val ignoredErrors = new mutable.ListBuffer[(Artifact, ArtifactError)]
-      val errors = new mutable.ListBuffer[(Artifact, ArtifactError)]
+      val ignoredErrors  = new mutable.ListBuffer[(Artifact, ArtifactError)]
+      val errors         = new mutable.ListBuffer[(Artifact, ArtifactError)]
       val artifactToFile = new mutable.ListBuffer[(Artifact, File)]
 
       results.foreach {
@@ -335,23 +494,25 @@ object Artifacts {
 
       def result(withIgnoredErrors: Boolean): Seq[(Artifact, Option[File])] = {
         val withFiles = artifactToFile.toList.map { case (a, f) => (a, Some(f)) }
-        def noFiles = ignoredErrors.map { case (a, _) => (a, None) }
+        def noFiles   = ignoredErrors.map { case (a, _) => (a, None) }
         reorder(if (withIgnoredErrors) withFiles ++ noFiles else withFiles)
       }
 
-      if (otherCaches.isEmpty) {
+      if (otherCaches.isEmpty)
         if (errors.isEmpty)
           S.point(result(true))
         else
           S.fromAttempt(Left(new FetchError.DownloadingArtifacts(errors.toList)))
-      } else {
-        if (errors.isEmpty && ignoredErrors.isEmpty)
-          S.point(result(false))
-        else
-          fetchArtifacts(errors.map(_._1).toSeq ++ ignoredErrors.map(_._1).toSeq, otherCaches.head, otherCaches.tail: _*).map { l =>
-            reorder(result(false) ++ l)
-          }
-      }
+      else if (errors.isEmpty && ignoredErrors.isEmpty)
+        S.point(result(false))
+      else
+        fetchArtifacts(
+          errors.map(_._1).toSeq ++ ignoredErrors.map(_._1).toSeq,
+          otherCaches.head,
+          otherCaches.tail: _*
+        ).map { l =>
+          reorder(result(false) ++ l)
+        }
     }
   }
 

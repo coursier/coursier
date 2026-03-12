@@ -4,12 +4,23 @@ import coursier.core.DependencySet.Sets
 
 import scala.collection.compat._
 import scala.collection.immutable.IntMap
-import scala.collection.mutable
 
 final class DependencySet private (
   val set: Set[Dependency],
   grouped: Map[Dependency, Sets[Dependency]]
-) {
+) extends Product {
+
+  def canEqual(that: Any): Boolean =
+    that.isInstanceOf[DependencySet]
+
+  def productArity: Int = 1
+  //   Add that back if / when dropping Scala 2.12 support
+  // override def productElementName(n: Int): String =
+  //   if (n == 0) "set"
+  //   else throw new NoSuchElementException(s"Element at index $n in DependencySet")
+  def productElement(n: Int): Any =
+    if (n == 0) set
+    else throw new NoSuchElementException(s"Element at index $n in DependencySet")
 
   override def equals(obj: Any): Boolean =
     obj match {
@@ -35,14 +46,18 @@ final class DependencySet private (
 
   def contains(dependency: Dependency): Boolean = {
     val dep0 = dependency.clearExclusions
-    val set = grouped.getOrElse(dep0, Sets.empty[Dependency])
+    val set  = grouped.getOrElse(dep0, Sets.empty[Dependency])
     set.contains(dependency)
   }
 
   def covers(dependency: Dependency): Boolean = {
     val dep0 = dependency.clearExclusions
-    val set = grouped.getOrElse(dep0, Sets.empty[Dependency])
-    set.covers(dependency, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
+    val set  = grouped.getOrElse(dep0, Sets.empty[Dependency])
+    set.covers(
+      dependency,
+      _.minimizedExclusions.size(),
+      (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
+    )
   }
 
   def add(dependency: Dependency): DependencySet =
@@ -55,14 +70,28 @@ final class DependencySet private (
     if (dependencies.isEmpty)
       this
     else {
-      val m = new mutable.HashMap[Dependency, Sets[Dependency]]
-      m ++= grouped
+      var m = grouped
       for (dep <- dependencies) {
         val dep0 = dep.clearExclusions
-        val l = m.getOrElse(dep0, Sets.empty[Dependency]).add(dep, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
-        m(dep0) = l
+        // Optimized map value addition. Only mutate map if we made a change
+        m.get(dep0) match {
+          case None =>
+            m = m + (dep0 -> Sets.empty[Dependency].add(
+              dep,
+              _.minimizedExclusions.size(),
+              (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
+            ))
+          case Some(groupSet) =>
+            val groupSet0 = groupSet.add(
+              dep,
+              _.minimizedExclusions.size(),
+              (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
+            )
+            if (groupSet ne groupSet0)
+              m = m + (dep0 -> groupSet0)
+        }
       }
-      new DependencySet(set ++ dependencies, m.toMap)
+      new DependencySet(set ++ dependencies, m)
     }
 
   def remove(dependencies: Iterable[Dependency]): DependencySet =
@@ -72,36 +101,42 @@ final class DependencySet private (
     if (dependencies.isEmpty)
       this
     else {
-      val m = new mutable.HashMap[Dependency, Sets[Dependency]]
-      m ++= grouped
+      var m = grouped
       for (dep <- dependencies) {
         val dep0 = dep.clearExclusions
-        val prev = m.getOrElse(dep0, Sets.empty) // getOrElse useful if we're passed duplicated stuff in dependencies
-        if (prev.contains(dep)) {
+        // getOrElse useful if we're passed duplicated stuff in dependencies
+        val prev = m.getOrElse(dep0, Sets.empty)
+        if (prev.contains(dep))
           if (prev.size <= 1)
             m -= dep0
           else {
-            val l = prev.remove(dep, _.exclusions.size, (a, b) => a.exclusions.subsetOf(b.exclusions))
+            val l = prev
+              .remove(
+                dep,
+                _.minimizedExclusions.size(),
+                (a, b) => a.minimizedExclusions.subsetOf(b.minimizedExclusions)
+              )
             m += ((dep0, l))
           }
-        }
       }
 
       new DependencySet(set -- dependencies, m.toMap)
     }
 
   def setValues(newSet: Set[Dependency]): DependencySet = {
-    val toAdd = newSet -- set
+    val toAdd    = newSet -- set
     val toRemove = set -- newSet
     addNoCheck(toAdd)
       .removeNoCheck(toRemove)
   }
 
+  private[coursier] def containsModule(mod: Module): Boolean =
+    grouped.exists(_._1.module == mod)
+
 }
 
 object DependencySet {
   val empty = new DependencySet(Set.empty, Map.empty)
-
 
   private object Sets {
     def empty[T]: Sets[T] = Sets(IntMap.empty, Map.empty, Map.empty)
@@ -145,7 +180,7 @@ object DependencySet {
           Sets(required0, children0, parents)
         case Some(subset) =>
           val children0 = children + (subset -> (children.getOrElse(subset, Set.empty) + s))
-          val parents0 = parents + (s -> subset)
+          val parents0  = parents + (s       -> subset)
           Sets(required, children0, parents0)
       }
     }
@@ -167,12 +202,16 @@ object DependencySet {
               required + (size(s) -> elem)
           }
           val parents0 = parents -- children0
-          val sets0 = Sets(required0, children - s, parents0)
+          val sets0    = Sets(required0, children - s, parents0)
           children0.foldLeft(sets0)(_.forceAdd(_, size, subsetOf))
         case None =>
           parents.get(s) match {
             case Some(parent) =>
-              Sets(required, children + (parent -> (children.getOrElse(parent, Set.empty) - s)), parents - s)
+              Sets(
+                required,
+                children + (parent -> (children.getOrElse(parent, Set.empty) - s)),
+                parents - s
+              )
             case None =>
               this
           }

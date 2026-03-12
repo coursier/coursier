@@ -1,75 +1,72 @@
 package coursier.cli
 
-import java.io.InputStream
-import java.nio.charset.StandardCharsets
-import java.util.Scanner
-
-import caseapp.core.RemainingArgs
-import caseapp.core.help.Help
-import caseapp.core.parser.Parser
+import caseapp.core.Scala3Helpers._
+import caseapp.core.app.CommandsEntryPoint
+import caseapp.core.help.HelpFormat
+import caseapp.RemainingArgs
 import coursier.cache.CacheUrl
-import coursier.cli.bootstrap.Bootstrap
-import coursier.cli.channel.Channel
-import coursier.cli.complete.Complete
-import coursier.cli.fetch.Fetch
-import coursier.cli.get.Get
-import coursier.cli.install.{Install, List, Uninstall, Update}
-import coursier.cli.jvm.{Java, JavaHome}
-import coursier.cli.launch.Launch
-import coursier.cli.publish.Publish
-import coursier.cli.resolve.Resolve
+import coursier.cli.internal.{Argv0, PathUtil}
 import coursier.cli.setup.{Setup, SetupOptions}
-import coursier.cli.search.Search
-import coursier.core.Version
 import coursier.install.InstallDir
-import coursier.launcher.internal.{FileUtil, Windows}
-import shapeless._
+import coursier.jniutils.ModuleFileName
+import coursier.paths.CoursierPaths
+import coursier.proxy.SetupProxy
+import io.github.alexarchambault.isterminal.IsTerminal
+
+import java.nio.file.Paths
+import java.util.Scanner
+import sun.misc.{Signal, SignalHandler}
 
 import scala.util.control.NonFatal
+import scala.util.Properties
 
-object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOptions], CoursierCommand.parser, CoursierCommand.help) {
+object Coursier extends CommandsEntryPoint {
 
-  val isGraalvmNativeImage = sys.props.contains("org.graalvm.nativeimage.imagecode")
+  private def isGraalvmNativeImage: Boolean =
+    sys.props.contains("org.graalvm.nativeimage.imagecode")
 
-  if (System.console() != null && Windows.isWindows) {
-    val useJni = coursier.paths.Util.useJni()
-    try {
-      if (useJni)
-        coursier.jniutils.WindowsAnsiTerminal.enableAnsiOutput()
-      else
-        io.github.alexarchambault.windowsansi.WindowsAnsi.setup()
-    } catch {
-      case NonFatal(e) =>
-        val doThrow = java.lang.Boolean.getBoolean("coursier.windows-ansi.throw-exception")
-        if (doThrow || java.lang.Boolean.getBoolean("coursier.windows-ansi.verbose"))
-          System.err.println(s"Error setting up Windows terminal for ANSI escape codes: $e")
-        if (doThrow)
-           throw e
+  lazy val progName = (new Argv0).get("coursier")
+
+  override val description =
+    """|Coursier is the Scala application and artifact manager.
+       |It can install Scala applications and setup your Scala development environment.
+       |It can also download and cache artifacts from the web.""".stripMargin
+
+  val commands = Seq(
+    about.About,
+    bootstrap.Bootstrap,
+    cat.Cat,
+    channel.Channel,
+    config.Config,
+    coursier.cli.complete.Complete,
+    docker.DockerBuildCommand,
+    docker.DockerPullCommand,
+    docker.DockerRunCommand,
+    docker.VmStart,
+    docker.VmStop,
+    fetch.Fetch,
+    get.Get,
+    install.Install,
+    jvm.Java,
+    jvm.JavaHome,
+    launch.Launch,
+    install.List,
+    resolve.Resolve,
+    search.Search,
+    setup.Setup,
+    version.Version,
+    install.Uninstall,
+    install.Update
+  )
+
+  override def enableCompleteCommand    = true
+  override def enableCompletionsCommand = true
+
+  private def isNonInstalledLauncherWindows: Boolean =
+    Properties.isWin && isGraalvmNativeImage && {
+      val p = Paths.get(ModuleFileName.get())
+      !PathUtil.isInPath(p)
     }
-  }
-
-  CacheUrl.setupProxyAuth()
-
-  override val appName = "Coursier"
-  override val progName =
-    if (isGraalvmNativeImage) "cs"
-    else "coursier"
-  override val appVersion = coursier.util.Properties.version
-
-  private def zshCompletions(): String = {
-    var is: InputStream = null
-    val b = try {
-      is = Thread.currentThread()
-        .getContextClassLoader
-        .getResource("completions/zsh")
-        .openStream()
-      FileUtil.readFully(is)
-    } finally {
-      if (is != null)
-        is.close()
-    }
-    new String(b, StandardCharsets.UTF_8)
-  }
 
   private def runSetup(): Unit = {
     Setup.run(SetupOptions(banner = Some(true)), RemainingArgs(Nil, Nil))
@@ -80,10 +77,32 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
     scanner.nextLine()
   }
 
-  private def isInstalledLauncher: Boolean =
-    System.getenv(InstallDir.isInstalledLauncherEnvVar) == "true"
-
   override def main(args: Array[String]): Unit = {
+
+    if (!Properties.isWin && isGraalvmNativeImage)
+      // Ignore SIGPIPE
+      Signal.handle(new Signal("PIPE"), SignalHandler.SIG_IGN)
+
+    if (Properties.isWin && isGraalvmNativeImage)
+      // The DLL loaded by LoadWindowsLibrary is statically linked in
+      // the coursier native image, no need to manually load it.
+      coursier.jniutils.LoadWindowsLibrary.assumeInitialized()
+
+    if (IsTerminal.isTerminal() && Properties.isWin) {
+      val useJni = coursier.paths.Util.useJni()
+      try if (useJni)
+          coursier.jniutils.WindowsAnsiTerminal.enableAnsiOutput()
+        else
+          io.github.alexarchambault.windowsansi.WindowsAnsi.setup()
+      catch {
+        case NonFatal(e) =>
+          val doThrow = java.lang.Boolean.getBoolean("coursier.windows-ansi.throw-exception")
+          if (doThrow || java.lang.Boolean.getBoolean("coursier.windows-ansi.verbose"))
+            System.err.println(s"Error setting up Windows terminal for ANSI escape codes: $e")
+          if (doThrow)
+            throw e
+      }
+    }
 
     val csArgs =
       if (isGraalvmNativeImage) {
@@ -95,7 +114,7 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
           val arg = jvmArg.stripPrefix("-J")
           if (arg.startsWith("-D"))
             arg.stripPrefix("-D").split("=", 2) match {
-              case Array(k) => System.setProperty(k, "")
+              case Array(k)    => System.setProperty(k, "")
               case Array(k, v) => System.setProperty(k, v)
             }
           else
@@ -103,64 +122,23 @@ object Coursier extends CommandAppPreA(Parser[LauncherOptions], Help[LauncherOpt
         }
 
         csArgs0
-      } else
+      }
+      else
         args
+
+    coursier.Resolve.proxySetup()
 
     if (csArgs.nonEmpty)
       super.main(csArgs)
-    else if (Windows.isWindows && !isInstalledLauncher)
+    else if (isNonInstalledLauncherWindows)
       runSetup()
-    else
-      helpAsked()
-  }
-
-  def beforeCommand(options: LauncherOptions, remainingArgs: Seq[String]): Unit = {
-
-    if(options.version) {
-      System.out.println(appVersion)
-      sys.exit(0)
-    }
-
-    for (requiredVersion <- options.require.map(_.trim).filter(_.nonEmpty)) {
-      val requiredVersion0 = Version(requiredVersion)
-      val currentVersion = coursier.util.Properties.version
-      val currentVersion0 = Version(currentVersion)
-      if (currentVersion0.compare(requiredVersion0) < 0) {
-        System.err.println(s"Required version $requiredVersion > $currentVersion")
-        sys.exit(1)
-      }
-    }
-
-    options.completions.foreach {
-      case "zsh" =>
-        System.out.print(zshCompletions())
-        sys.exit(0)
-      case other =>
-        System.err.println(s"Unrecognized or unsupported shell: $other")
-        sys.exit(1)
+    else {
+      println(help.help(helpFormat, showHidden = false))
+      sys.exit(1)
     }
   }
 
-  object runWithOptions extends Poly1 {
-    private def opt[T](run: (T, RemainingArgs) => Unit) = at[T](run.curried)
-    implicit val atBootstrap = opt[bootstrap.BootstrapOptions]    (Bootstrap.run)
-    implicit val atChannel   = opt[channel.ChannelOptions]        (Channel.run)
-    implicit val atComplete  = opt[complete.CompleteOptions]      (Complete.run)
-    implicit val atFetch     = opt[fetch.FetchOptions]            (Fetch.run)
-    implicit val atGet       = opt[get.GetOptions]                (Get.run)
-    implicit val atInstall   = opt[install.InstallOptions]        (Install.run)
-    implicit val atJava      = opt[jvm.JavaOptions]               (Java.run)
-    implicit val atJavaHome  = opt[jvm.JavaHomeOptions]           (JavaHome.run)
-    implicit val atLaunch    = opt[launch.LaunchOptions]          (Launch.run)
-    implicit val atList      = opt[install.ListOptions]           (List.run)
-    implicit val atPublish   = opt[publish.options.PublishOptions](Publish.run)
-    implicit val atResolve   = opt[resolve.ResolveOptions]        (Resolve.run)
-    implicit val atSearch    = opt[search.SearchOptions]          (Search.run)
-    implicit val atSetup     = opt[setup.SetupOptions]            (Setup.run)
-    implicit val atUninstall = opt[install.UninstallOptions]      (Uninstall.run)
-    implicit val atUpdate    = opt[install.UpdateOptions]         (Update.run)
-  }
-
-  def runA = _.fold(runWithOptions)
-
+  override def helpFormat: HelpFormat =
+    HelpFormat.default()
+      .withSortedCommandGroups(Some(CommandGroup.order))
 }

@@ -5,28 +5,34 @@ import java.nio.file.{Path, Paths}
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.fetch.FetchParams
+import coursier.cli.install.SharedChannelParams
 import coursier.cli.options.SharedLaunchOptions
 import coursier.cli.resolve.SharedResolveParams
+import coursier.cputil.ClassPathUtil
 
 final case class SharedLaunchParams(
   resolve: SharedResolveParams,
   artifact: ArtifactParams,
   sharedLoader: SharedLoaderParams,
   mainClassOpt: Option[String],
+  javaOptions: Seq[String],
   properties: Seq[(String, String)],
   extraJars: Seq[Path],
-  fork: Option[Boolean],
-  pythonOpt: Option[Boolean]
+  pythonOpt: Option[Boolean],
+  pythonJepOpt: Option[Boolean]
 ) {
-  def fetch: FetchParams =
+  def fetch(channel: SharedChannelParams): FetchParams =
     FetchParams(
       classpath = false,
       jsonOutputOpt = None,
       resolve = resolve,
-      artifact = artifact
+      artifact = artifact,
+      channel = channel,
+      legacyReport = false
     )
 
-  def python = pythonOpt.getOrElse(false)
+  def python    = pythonOpt.getOrElse(false)
+  def pythonJep = pythonJepOpt.getOrElse(false)
 }
 
 object SharedLaunchParams {
@@ -54,7 +60,7 @@ object SharedLaunchParams {
 
   def apply(options: SharedLaunchOptions): ValidatedNel[String, SharedLaunchParams] = {
 
-    val resolveV = SharedResolveParams(options.resolveOptions)
+    val resolveV  = SharedResolveParams(options.resolveOptions)
     val artifactV = ArtifactParams(options.artifactOptions)
     val sharedLoaderV = resolveV.map(_.resolution).toOption match {
       case None =>
@@ -74,9 +80,7 @@ object SharedLaunchParams {
     }
 
     // check if those exist?
-    val extraJars = options.extraJars.map { p =>
-      Paths.get(p)
-    }
+    val extraJars = options.extraJars.flatMap(ClassPathUtil.classPath(_))
 
     (resolveV, artifactV, sharedLoaderV, propertiesV).mapN {
       (resolve, artifact, sharedLoader, properties) =>
@@ -85,10 +89,11 @@ object SharedLaunchParams {
           artifact,
           sharedLoader,
           mainClassOpt,
+          options.javaOpt,
           properties,
           extraJars,
-          options.fork,
-          options.python
+          options.python,
+          options.pythonJep
         )
     }
   }

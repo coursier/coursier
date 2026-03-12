@@ -1,0 +1,170 @@
+{
+  "conflict_resolution": {},
+  "dependencies": [
+    {
+      "coord": "commons-codec:commons-codec:1.11",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/commons-codec/commons-codec/1.11/commons-codec-1.11.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "commons-logging:commons-logging:1.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/commons-logging/commons-logging/1.2/commons-logging-1.2.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "io.rest-assured:json-path:5.5.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/io/rest-assured/json-path/5.5.0/json-path-5.5.0.jar",
+      "directDependencies": [
+        "io.rest-assured:rest-assured-common:5.5.0",
+        "org.apache.groovy:groovy-json:4.0.22",
+        "org.apache.groovy:groovy:4.0.22"
+      ],
+      "dependencies": [
+        "io.rest-assured:rest-assured-common:5.5.0",
+        "org.apache.commons:commons-lang3:3.11",
+        "org.apache.groovy:groovy-json:4.0.22",
+        "org.apache.groovy:groovy:4.0.22"
+      ]
+    },
+    {
+      "coord": "io.rest-assured:rest-assured-common:5.5.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/io/rest-assured/rest-assured-common/5.5.0/rest-assured-common-5.5.0.jar",
+      "directDependencies": [
+        "org.apache.commons:commons-lang3:3.11",
+        "org.apache.groovy:groovy:4.0.22"
+      ],
+      "dependencies": [
+        "org.apache.commons:commons-lang3:3.11",
+        "org.apache.groovy:groovy:4.0.22"
+      ]
+    },
+    {
+      "coord": "io.rest-assured:rest-assured:5.5.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/io/rest-assured/rest-assured/5.5.0/rest-assured-5.5.0.jar",
+      "directDependencies": [
+        "io.rest-assured:json-path:5.5.0",
+        "io.rest-assured:xml-path:5.5.0",
+        "org.apache.groovy:groovy-xml:4.0.22",
+        "org.apache.groovy:groovy:4.0.22",
+        "org.apache.httpcomponents:httpclient:4.5.13",
+        "org.apache.httpcomponents:httpmime:4.5.13",
+        "org.ccil.cowan.tagsoup:tagsoup:1.2.1",
+        "org.hamcrest:hamcrest:2.2"
+      ],
+      "dependencies": [
+        "commons-codec:commons-codec:1.11",
+        "commons-logging:commons-logging:1.2",
+        "io.rest-assured:json-path:5.5.0",
+        "io.rest-assured:rest-assured-common:5.5.0",
+        "io.rest-assured:xml-path:5.5.0",
+        "org.apache.commons:commons-lang3:3.11",
+        "org.apache.groovy:groovy-json:4.0.22",
+        "org.apache.groovy:groovy-xml:4.0.22",
+        "org.apache.groovy:groovy:4.0.22",
+        "org.apache.httpcomponents:httpclient:4.5.13",
+        "org.apache.httpcomponents:httpcore:4.4.13",
+        "org.apache.httpcomponents:httpmime:4.5.13",
+        "org.ccil.cowan.tagsoup:tagsoup:1.2.1",
+        "org.hamcrest:hamcrest:2.2"
+      ]
+    },
+    {
+      "coord": "io.rest-assured:xml-path:5.5.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/io/rest-assured/xml-path/5.5.0/xml-path-5.5.0.jar",
+      "directDependencies": [
+        "io.rest-assured:rest-assured-common:5.5.0",
+        "org.apache.commons:commons-lang3:3.11",
+        "org.apache.groovy:groovy-xml:4.0.22",
+        "org.apache.groovy:groovy:4.0.22",
+        "org.ccil.cowan.tagsoup:tagsoup:1.2.1"
+      ],
+      "dependencies": [
+        "io.rest-assured:rest-assured-common:5.5.0",
+        "org.apache.commons:commons-lang3:3.11",
+        "org.apache.groovy:groovy-xml:4.0.22",
+        "org.apache.groovy:groovy:4.0.22",
+        "org.ccil.cowan.tagsoup:tagsoup:1.2.1"
+      ]
+    },
+    {
+      "coord": "org.apache.commons:commons-lang3:3.11",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/commons/commons-lang3/3.11/commons-lang3-3.11.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.apache.groovy:groovy-json:4.0.22",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/groovy/groovy-json/4.0.22/groovy-json-4.0.22.jar",
+      "directDependencies": [
+        "org.apache.groovy:groovy:4.0.22"
+      ],
+      "dependencies": [
+        "org.apache.groovy:groovy:4.0.22"
+      ]
+    },
+    {
+      "coord": "org.apache.groovy:groovy-xml:4.0.22",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/groovy/groovy-xml/4.0.22/groovy-xml-4.0.22.jar",
+      "directDependencies": [
+        "org.apache.groovy:groovy:4.0.22"
+      ],
+      "dependencies": [
+        "org.apache.groovy:groovy:4.0.22"
+      ]
+    },
+    {
+      "coord": "org.apache.groovy:groovy:4.0.22",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/groovy/groovy/4.0.22/groovy-4.0.22.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.apache.httpcomponents:httpclient:4.5.13",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5.13/httpclient-4.5.13.jar",
+      "directDependencies": [
+        "commons-codec:commons-codec:1.11",
+        "commons-logging:commons-logging:1.2",
+        "org.apache.httpcomponents:httpcore:4.4.13"
+      ],
+      "dependencies": [
+        "commons-codec:commons-codec:1.11",
+        "commons-logging:commons-logging:1.2",
+        "org.apache.httpcomponents:httpcore:4.4.13"
+      ]
+    },
+    {
+      "coord": "org.apache.httpcomponents:httpcore:4.4.13",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/httpcomponents/httpcore/4.4.13/httpcore-4.4.13.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.apache.httpcomponents:httpmime:4.5.13",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/httpcomponents/httpmime/4.5.13/httpmime-4.5.13.jar",
+      "directDependencies": [
+        "org.apache.httpcomponents:httpclient:4.5.13"
+      ],
+      "dependencies": [
+        "commons-codec:commons-codec:1.11",
+        "commons-logging:commons-logging:1.2",
+        "org.apache.httpcomponents:httpclient:4.5.13",
+        "org.apache.httpcomponents:httpcore:4.4.13"
+      ]
+    },
+    {
+      "coord": "org.ccil.cowan.tagsoup:tagsoup:1.2.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/ccil/cowan/tagsoup/tagsoup/1.2.1/tagsoup-1.2.1.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.hamcrest:hamcrest:2.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/hamcrest/hamcrest/2.2/hamcrest-2.2.jar",
+      "directDependencies": [],
+      "dependencies": []
+    }
+  ],
+  "version": "0.1.0"
+}

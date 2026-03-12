@@ -6,26 +6,28 @@ import java.nio.file.Files
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.{Repositories, moduleString}
-import coursier.cli.install.SharedChannelParams
+import coursier.Repositories
 import coursier.cli.options.RepositoryOptions
 import coursier.core.Repository
 import coursier.install.Channel
 import coursier.ivy.IvyRepository
-import coursier.maven.MavenRepository
+import coursier.maven.{MavenRepository, MavenRepositoryLike, SbtMavenRepository}
 import coursier.parse.RepositoryParser
+import coursier.util.StringInterpolators._
 
 final case class RepositoryParams(
-  repositories: Seq[Repository],
-  channels: SharedChannelParams
+  repositories: Seq[Repository]
 )
 
 object RepositoryParams {
 
-  def apply(options: RepositoryOptions, hasSbtPlugins: Boolean = false): ValidatedNel[String, RepositoryParams] = {
+  def apply(
+    options: RepositoryOptions,
+    hasSbtPlugins: Boolean = false
+  ): ValidatedNel[String, RepositoryParams] = {
 
     val noDefaultShortcut = options.repository.exists(_.startsWith("!"))
-    val repositoryInput = options.repository.map(_.stripPrefix("!")).filter(_.nonEmpty)
+    val repositoryInput   = options.repository.map(_.stripPrefix("!")).filter(_.nonEmpty)
     val repositoriesV = Validated.fromEither(
       RepositoryParser.repositories(repositoryInput)
         .either
@@ -35,39 +37,40 @@ object RepositoryParams {
         }
     )
 
-    val channelsV = SharedChannelParams(options.channelOptions)
+    repositoriesV.map { repos0 =>
+      // preprend defaults
+      val defaults =
+        if (options.noDefault || noDefaultShortcut) Nil
+        else {
+          val extra =
+            if (hasSbtPlugins) Seq(Repositories.sbtPlugin("releases"))
+            else Nil
+          coursier.Resolve.defaultRepositories ++ extra
+        }
+      var repos = defaults ++ repos0
 
-    (repositoriesV, channelsV).mapN {
-      (repos0, channels) =>
-
-        // preprend defaults
-        val defaults =
-          if (options.noDefault || noDefaultShortcut) Nil
-          else {
-            val extra =
-              if (hasSbtPlugins) Seq(Repositories.sbtPlugin("releases"))
-              else Nil
-            coursier.Resolve.defaultRepositories ++ extra
-          }
-        var repos = defaults ++ repos0
-
-        // take sbtPluginHack into account
+      // take sbtPluginHack into account
+      if (options.sbtPluginHack)
         repos = repos.map {
-          case m: MavenRepository => m.withSbtAttrStub(options.sbtPluginHack)
+          case m: MavenRepository => SbtMavenRepository(m)
+          case other              => other
+        }
+
+      if (options.enableGradleModules)
+        repos = repos.map {
+          case m: MavenRepositoryLike.WithModuleSupport =>
+            m.withCheckModule(true)
           case other => other
         }
 
-        // take dropInfoAttr into account
-        if (options.dropInfoAttr)
-          repos = repos.map {
-            case m: IvyRepository => m.withDropInfoAttributes(true)
-            case other => other
-          }
+      // take dropInfoAttr into account
+      if (options.dropInfoAttr)
+        repos = repos.map {
+          case m: IvyRepository => m.withDropInfoAttributes(true)
+          case other            => other
+        }
 
-        RepositoryParams(
-          repos,
-          channels
-        )
+      RepositoryParams(repos)
     }
   }
 }

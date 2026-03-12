@@ -40,7 +40,7 @@ const siteConfig = {
 
   enableUpdateTime: true, // doesn't seem to work
 
-  editUrl: 'https://github.com/coursier/coursier/edit/master/doc/docs/',
+  editUrl: 'https://github.com/coursier/coursier/edit/main/doc/docs/',
 
   twitter: false,
 

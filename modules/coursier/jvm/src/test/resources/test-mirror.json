@@ -1,0 +1,7 @@
+{
+  "repositories": {
+    "mirrors": [
+      "https://jcenter.bintray.com = https://repo1.maven.org/maven2"
+    ]
+  }
+}

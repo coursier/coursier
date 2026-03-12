@@ -3,19 +3,29 @@ package coursier.cli
 import java.io.{ByteArrayOutputStream, File, PrintStream}
 import java.nio.charset.StandardCharsets
 
-import caseapp.core.RemainingArgs
+import caseapp.core.{Indexed, RemainingArgs}
 import cats.data.Validated
-import coursier.cli.options.{DependencyOptions, OutputOptions, ResolutionOptions}
-import coursier.cli.resolve.{Resolve, ResolveException, ResolveOptions, ResolveParams, SharedResolveOptions}
+import coursier.cli.install.SharedChannelOptions
+import coursier.cli.options.{CacheOptions, DependencyOptions, OutputOptions, ResolutionOptions}
+import coursier.cli.resolve.{
+  Resolve,
+  ResolveException,
+  ResolveOptions,
+  ResolveParams,
+  SharedResolveOptions
+}
+import coursier.install.Channels
 import coursier.util.Sync
 import utest._
+
+import java.nio.file.Paths
 
 import scala.concurrent.ExecutionContext
 
 object ResolveTests extends TestSuite {
 
   val pool = Sync.fixedThreadPool(6)
-  val ec = ExecutionContext.fromExecutorService(pool)
+  val ec   = ExecutionContext.fromExecutorService(pool)
 
   override def utestAfterAll(): Unit = {
     pool.shutdown()
@@ -26,30 +36,66 @@ object ResolveTests extends TestSuite {
   def paramsOrThrow(options: ResolveOptions): ResolveParams =
     ResolveParams(options) match {
       case Validated.Invalid(errors) =>
-        sys.error("Got errors:" + System.lineSeparator() + errors.toList.map(e => s"  $e" + System.lineSeparator()).mkString)
+        sys.error(
+          "Got errors:" +
+            System.lineSeparator() +
+            errors
+              .toList
+              .map(e => s"  $e" + System.lineSeparator())
+              .mkString
+        )
       case Validated.Valid(params0) =>
         params0
     }
+
+  def output(options: SharedResolveOptions, args: String*): String =
+    output(ResolveOptions(sharedResolveOptions = options), args: _*)
+
+  def output(options: ResolveOptions, args: String*): String = {
+
+    val stdout = new ByteArrayOutputStream
+
+    // get options and dependencies from apps if any
+
+    val initialParams = paramsOrThrow(options)
+
+    val (options0, deps) = {
+      val initialRepositories = initialParams.repositories.repositories
+      val channels            = initialParams.channel.channels
+      val cache               = initialParams.cache.cache(pool, initialParams.output.logger())
+      val channels0           = Channels(channels, initialRepositories, cache)
+      Resolve.handleApps(options, args, channels0)(_.addApp(_))
+    }
+
+    val params = paramsOrThrow(options0)
+    val ps     = new PrintStream(stdout, true, "UTF-8")
+    Resolve.printTask(params, pool, ps, ps, deps)
+      .unsafeRun()(ec)
+
+    new String(stdout.toByteArray, "UTF-8")
+  }
 
   private implicit class CrLfStringOps(private val s: String) extends AnyVal {
     def noCrLf: String =
       s.replace("\r\n", "\n")
   }
 
-
   val tests = Tests {
     test("print what depends on") {
       val options = ResolveOptions(
         whatDependsOn = List("org.htrace:htrace-core")
       )
-      val args = RemainingArgs(Seq("org.apache.spark:spark-sql_2.12:2.4.0"), Nil)
+      val args = RemainingArgs(
+        Seq(Indexed("org.apache.spark:spark-sql_2.12:2.4.0")),
+        Nil
+      )
 
       val stdout = new ByteArrayOutputStream
 
       val params = paramsOrThrow(options)
 
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
@@ -68,21 +114,24 @@ object ResolveTests extends TestSuite {
           |            └─ org.apache.spark:spark-sql_2.12:2.4.0
           |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("print what depends on with regex") {
       val options = ResolveOptions(
         whatDependsOn = List("*:htrace-*")
       )
-      val args = RemainingArgs(Seq("org.apache.spark:spark-sql_2.12:2.4.0"), Nil)
+      val args = RemainingArgs(
+        Seq(Indexed("org.apache.spark:spark-sql_2.12:2.4.0")),
+        Nil
+      )
 
       val stdout = new ByteArrayOutputStream
 
       val params = paramsOrThrow(options)
 
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
@@ -101,7 +150,7 @@ object ResolveTests extends TestSuite {
           |            └─ org.apache.spark:spark-sql_2.12:2.4.0
           |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("print results anyway") {
@@ -109,7 +158,10 @@ object ResolveTests extends TestSuite {
         forcePrint = true
       )
       val args = RemainingArgs(
-        Seq("ioi.get-coursier:coursier-core_2.12:1.1.0-M9", "io.get-coursier:coursier-cache_2.12:1.1.0-M9"),
+        Seq(
+          Indexed("ioi.get-coursier:coursier-core_2.12:1.1.0-M9"),
+          Indexed("io.get-coursier:coursier-cache_2.12:1.1.0-M9")
+        ),
         Nil
       )
 
@@ -119,22 +171,32 @@ object ResolveTests extends TestSuite {
 
       val ps = new PrintStream(stdout, true, "UTF-8")
       Resolve.printTask(params, pool, ps, ps, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
         .replace(sys.props("user.home"), "HOME")
+      val notFoundPath = Seq(
+        "HOME",
+        ".ivy2",
+        "local",
+        "ioi.get-coursier",
+        "coursier-core_2.12",
+        "1.1.0-M9",
+        "ivys",
+        "ivy.xml"
+      ).mkString(File.separator)
       val expectedOutput =
-       s"""Error downloading ioi.get-coursier:coursier-core_2.12:1.1.0-M9
-          |  not found: ${Seq("HOME", ".ivy2", "local", "ioi.get-coursier", "coursier-core_2.12", "1.1.0-M9", "ivys", "ivy.xml").mkString(File.separator)}
-          |  not found: https://repo1.maven.org/maven2/ioi/get-coursier/coursier-core_2.12/1.1.0-M9/coursier-core_2.12-1.1.0-M9.pom
-          |io.get-coursier:coursier-cache_2.12:1.1.0-M9:default
-          |io.get-coursier:coursier-core_2.12:1.1.0-M9:default
-          |ioi.get-coursier:coursier-core_2.12:1.1.0-M9:default(compile)
-          |org.scala-lang:scala-library:2.12.7:default
-          |org.scala-lang.modules:scala-xml_2.12:1.1.0:default
-          |""".stripMargin
+        s"""Error downloading ioi.get-coursier:coursier-core_2.12:1.1.0-M9
+           |  not found: $notFoundPath
+           |  not found: https://repo1.maven.org/maven2/ioi/get-coursier/coursier-core_2.12/1.1.0-M9/coursier-core_2.12-1.1.0-M9.pom
+           |io.get-coursier:coursier-cache_2.12:1.1.0-M9:default
+           |io.get-coursier:coursier-core_2.12:1.1.0-M9:default
+           |ioi.get-coursier:coursier-core_2.12:1.1.0-M9:default(runtime)
+           |org.scala-lang:scala-library:2.12.7:default
+           |org.scala-lang.modules:scala-xml_2.12:1.1.0:default
+           |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("resolve sbt plugins") {
@@ -153,7 +215,7 @@ object ResolveTests extends TestSuite {
       val params = paramsOrThrow(options)
 
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
@@ -189,7 +251,7 @@ object ResolveTests extends TestSuite {
           |com.squareup.okio:okio:1.12.0:default
           |com.typesafe:config:1.2.0:default
           |com.typesafe:ssl-config-core_2.12:0.2.2:default
-          |com.typesafe.sbt:sbt-native-packager;sbtVersion=1.0;scalaVersion=2.12:1.3.3:compile
+          |com.typesafe.sbt:sbt-native-packager;sbtVersion=1.0;scalaVersion=2.12:1.3.3:runtime
           |commons-codec:commons-codec:1.9:default
           |commons-io:commons-io:2.5:default
           |commons-lang:commons-lang:2.6:default
@@ -274,14 +336,14 @@ object ResolveTests extends TestSuite {
           |org.scalaz:scalaz-core_2.12:7.2.24:default
           |org.scalaz:scalaz-effect_2.12:7.2.24:default
           |org.slf4j:slf4j-api:1.7.25:default
-          |org.sonatype.plexus:plexus-cipher:1.4:default
+          |org.sonatype.plexus:plexus-cipher:1.7:default
           |org.sonatype.plexus:plexus-sec-dispatcher:1.3:default
-          |org.sonatype.sisu:sisu-guice:3.1.0:default
+          |org.sonatype.sisu:sisu-guice:3.1.3:default
           |org.spire-math:jawn-parser_2.12:0.10.4:default
           |org.vafer:jdeb:1.3:default
           |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("resolve sbt 0.13 plugins") {
@@ -298,12 +360,13 @@ object ResolveTests extends TestSuite {
       val params = paramsOrThrow(options)
 
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
-      val expectedOutput = "org.scalameta:sbt-metals;sbtVersion=0.13;scalaVersion=2.10:0.7.0:default\n"
+      val expectedOutput =
+        "org.scalameta:sbt-metals;sbtVersion=0.13;scalaVersion=2.10:0.7.0:default\n"
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("resolve the main artifact first in classpath order") {
@@ -311,7 +374,7 @@ object ResolveTests extends TestSuite {
         classpathOrder = Option(true)
       )
       val args = RemainingArgs(
-        Seq("io.get-coursier:coursier-cli_2.12:1.1.0-M9"),
+        Seq(Indexed("io.get-coursier:coursier-cli_2.12:1.1.0-M9")),
         Nil
       )
 
@@ -321,7 +384,7 @@ object ResolveTests extends TestSuite {
 
       val ps = new PrintStream(stdout, true, "UTF-8")
       Resolve.printTask(params, pool, ps, ps, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       assert(output.startsWith("io.get-coursier:coursier-cli_2.12:1.1.0-M9"))
@@ -331,7 +394,10 @@ object ResolveTests extends TestSuite {
       val options = ResolveOptions(
         candidateUrls = true
       )
-      val args = RemainingArgs(Seq("com.github.alexarchambault:case-app_2.13:2.0.0-M9"), Nil)
+      val args = RemainingArgs(
+        Seq(Indexed("com.github.alexarchambault:case-app_2.13:2.0.0-M9")),
+        Nil
+      )
 
       val stdout = new ByteArrayOutputStream
 
@@ -339,7 +405,7 @@ object ResolveTests extends TestSuite {
 
       val ps = new PrintStream(stdout, true, "UTF-8")
       Resolve.printTask(params, pool, ps, ps, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, StandardCharsets.UTF_8)
       val expectedOutput =
@@ -350,7 +416,7 @@ object ResolveTests extends TestSuite {
           |https://repo1.maven.org/maven2/com/chuusai/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.jar
           |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("exclude root dependencies") {
@@ -364,8 +430,8 @@ object ResolveTests extends TestSuite {
       )
       val args = RemainingArgs(
         Seq(
-          "com.github.alexarchambault::argonaut-shapeless_6.2:1.2.0-M12",
-          "com.chuusai::shapeless:2.3.3"
+          Indexed("com.github.alexarchambault::argonaut-shapeless_6.2:1.2.0-M12"),
+          Indexed("com.chuusai::shapeless:2.3.3")
         ),
         Nil
       )
@@ -376,7 +442,7 @@ object ResolveTests extends TestSuite {
 
       val ps = new PrintStream(stdout, true, "UTF-8")
       Resolve.printTask(params, pool, ps, ps, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
@@ -385,19 +451,7 @@ object ResolveTests extends TestSuite {
           |org.scala-lang:scala-library:2.13.2:default
           |org.scala-lang:scala-reflect:2.13.2:default
           |""".stripMargin
-      assert(output.noCrLf == expectedOutput.noCrLf)
-    }
-
-    def output(options: SharedResolveOptions, args: String*): String = {
-
-      val stdout = new ByteArrayOutputStream
-      val params = paramsOrThrow(options)
-
-      val ps = new PrintStream(stdout, true, "UTF-8")
-      Resolve.printTask(params, pool, ps, ps, args)
-        .unsafeRun()(ec)
-
-      new String(stdout.toByteArray, "UTF-8")
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("ignore binary scala version") {
@@ -499,17 +553,82 @@ object ResolveTests extends TestSuite {
             "com.chuusaiz::shapeless:2.3.3"
           )
           true
-        } catch {
+        }
+        catch {
           case e: ResolveException =>
+            val notFoundPath = Seq(
+              "HOME",
+              ".ivy2",
+              "local",
+              "com.chuusaiz",
+              "shapeless_2.13",
+              "2.3.3",
+              "ivys",
+              "ivy.xml"
+            ).mkString(File.separator)
             val expectedMessage =
-             s"""Resolution error: Error downloading com.chuusaiz:shapeless_2.13:2.3.3
-                |  not found: ${Seq("HOME", ".ivy2", "local", "com.chuusaiz", "shapeless_2.13", "2.3.3", "ivys", "ivy.xml").mkString(File.separator)}
-                |  not found: https://repo1.maven.org/maven2/com/chuusaiz/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.pom""".stripMargin
+              s"""Resolution error: Error downloading com.chuusaiz:shapeless_2.13:2.3.3
+                 |  not found: $notFoundPath
+                 |  not found: https://repo1.maven.org/maven2/com/chuusaiz/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.pom""".stripMargin
             val message = e.message.replace(System.getProperty("user.home"), "HOME")
             assert(message.noCrLf == expectedMessage.noCrLf)
             false
         }
       Predef.assert(!success, "Expected a resolution exception")
+    }
+
+    test("app descriptors version overrides") {
+      val jsonUrl = Thread.currentThread().getContextClassLoader.getResource("test-apps/scala.json")
+      assert(jsonUrl != null)
+      val channelDir = Paths.get(jsonUrl.toURI).getParent.normalize
+      val options = ResolveOptions(
+        channelOptions = SharedChannelOptions(
+          defaultChannels = false,
+          channel = List(channelDir.toString)
+        ),
+        sharedResolveOptions = SharedResolveOptions(
+          cacheOptions = CacheOptions(
+            ttl = Some("0")
+          )
+        )
+      )
+
+      val expectedScala2135Output =
+        """net.java.dev.jna:jna:5.3.1:default
+          |org.jline:jline:3.19.0:default
+          |org.scala-lang:scala-compiler:2.13.5:default
+          |org.scala-lang:scala-library:2.13.5:default
+          |org.scala-lang:scala-reflect:2.13.5:default
+          |""".stripMargin
+      val expectedScala2138Output =
+        """net.java.dev.jna:jna:5.9.0:default
+          |org.jline:jline:3.21.0:default
+          |org.scala-lang:scala-compiler:2.13.8:default
+          |org.scala-lang:scala-library:2.13.8:default
+          |org.scala-lang:scala-reflect:2.13.8:default
+          |""".stripMargin
+      val expectedScala3Output =
+        """com.google.protobuf:protobuf-java:3.7.0:default
+          |net.java.dev.jna:jna:5.3.1:default
+          |org.jline:jline-reader:3.19.0:default
+          |org.jline:jline-terminal:3.19.0:default
+          |org.jline:jline-terminal-jna:3.19.0:default
+          |org.scala-lang:scala-library:2.13.6:default
+          |org.scala-lang:scala3-compiler_3:3.1.1:default
+          |org.scala-lang:scala3-interfaces:3.1.1:default
+          |org.scala-lang:scala3-library_3:3.1.1:default
+          |org.scala-lang:tasty-core_3:3.1.1:default
+          |org.scala-lang.modules:scala-asm:9.1.0-scala-1:default
+          |org.scala-sbt:compiler-interface:1.3.5:default
+          |org.scala-sbt:util-interface:1.3.0:default
+          |""".stripMargin
+
+      val scala2135Output = output(options, "scala:2.13.5")
+      assert(scala2135Output.noCrLf == expectedScala2135Output.noCrLf)
+      val scala2138Output = output(options, "scala:2.13.8")
+      assert(scala2138Output.noCrLf == expectedScala2138Output.noCrLf)
+      val scala3Output = output(options, "scala:3.1.1")
+      assert(scala3Output.noCrLf == expectedScala3Output.noCrLf)
     }
   }
 }

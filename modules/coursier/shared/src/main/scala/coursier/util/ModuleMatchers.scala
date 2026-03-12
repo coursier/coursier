@@ -39,6 +39,10 @@ object ModuleMatchers {
   def only(mod: ModuleMatcher): ModuleMatchers =
     ModuleMatchers(Set.empty, Set(mod), includeByDefault = false)
   def only(org: Organization, name: ModuleName): ModuleMatchers =
-    ModuleMatchers(Set.empty, Set(ModuleMatcher(Module(org, name, Map.empty))), includeByDefault = false)
+    ModuleMatchers(
+      Set.empty,
+      Set(ModuleMatcher(Module(org, name, Map.empty))),
+      includeByDefault = false
+    )
 
 }

@@ -2,7 +2,6 @@ package coursier.cache
 
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
-import java.util.regex.Pattern
 
 object CacheChecksum {
 
@@ -47,7 +46,7 @@ object CacheChecksum {
     if (content.length == 16 || content.length == 20)
       Some(new BigInteger(content))
     else {
-      val s = new String(content, StandardCharsets.UTF_8)
+      val s     = new String(content, StandardCharsets.UTF_8)
       val lines = s.linesIterator.toVector
       parseChecksumLine(lines) orElse parseChecksumAlternative(lines)
     }

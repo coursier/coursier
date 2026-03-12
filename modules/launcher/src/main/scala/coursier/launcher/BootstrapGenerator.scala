@@ -1,11 +1,11 @@
 package coursier.launcher
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, FileNotFoundException}
+import java.io.{ByteArrayInputStream, FileNotFoundException}
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Path}
-import java.util.zip.{CRC32, ZipEntry, ZipException, ZipInputStream, ZipOutputStream}
+import java.nio.file.Path
+import java.util.zip.{CRC32, ZipEntry, ZipException, ZipOutputStream}
 
-import coursier.launcher.internal.{FileUtil, Zip}
+import coursier.launcher.internal.{FileUtil, WrappedZipInputStream}
 
 object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
 
@@ -34,9 +34,12 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
               if (resources.isEmpty)
                 parameters.content
               else {
-                val files = resources.map(r => () => new ZipInputStream(new ByteArrayInputStream(r.content)))
+                val files =
+                  resources.map(r =>
+                    () => WrappedZipInputStream.create(new ByteArrayInputStream(r.content))
+                  )
 
-                AssemblyGenerator.writeEntries(files.map(Left(_)), zos, MergeRule.default)
+                AssemblyGenerator.writeEntries(files.map(Left(_)), zos, parameters.rules)
 
                 val remaining = c.entries.collect { case u: ClassPathEntry.Url => u }
                 if (remaining.isEmpty)
@@ -58,7 +61,9 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
         parameters.deterministic,
         parameters.extraZipEntries,
         parameters.javaProperties,
-        parameters.python
+        parameters.pythonJep,
+        parameters.python,
+        parameters.extraContent
       )
 
       zos.close()
@@ -75,43 +80,61 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
     deterministic: Boolean,
     extraZipEntries: Seq[(ZipEntry, Array[Byte])],
     properties: Seq[(String, String)],
-    python: Boolean
+    pythonJep: Boolean,
+    python: Boolean,
+    extraContent: Map[String, Seq[ClassLoaderContent]]
   ): Unit = {
 
     val content0 = ClassLoaderContent.withUniqueFileNames(content)
+    val extraContent0 = extraContent.toVector.map {
+      case (name, content) =>
+        (name, ClassLoaderContent.withUniqueFileNames(content))
+    }
 
     val bootstrapJar =
       FileUtil.readFully {
-        val is = Thread.currentThread().getContextClassLoader.getResourceAsStream(bootstrapResourcePath)
+        val is =
+          Thread.currentThread().getContextClassLoader.getResourceAsStream(bootstrapResourcePath)
         if (is == null) {
-          val is0 = BootstrapGenerator.getClass.getClassLoader.getResourceAsStream(bootstrapResourcePath)
+          val is0 =
+            BootstrapGenerator.getClass.getClassLoader.getResourceAsStream(bootstrapResourcePath)
           if (is0 == null)
             throw new FileNotFoundException(s"Resource $bootstrapResourcePath")
           else
             is0
-        } else
+        }
+        else
           is
       }
 
-    val bootstrapZip = new ZipInputStream(new ByteArrayInputStream(bootstrapJar))
+    val bootstrapZip = WrappedZipInputStream.create(new ByteArrayInputStream(bootstrapJar))
 
     for ((ent, content) <- extraZipEntries) {
       try outputZip.putNextEntry(ent)
       catch {
         case _: ZipException if ent.isDirectory =>
-          // likely a duplicate entry error, ignoring it for directories
+        // likely a duplicate entry error, ignoring it for directories
       }
       outputZip.write(content)
       outputZip.closeEntry()
     }
 
-    for ((ent, data) <- Zip.zipEntries(bootstrapZip)) {
-      try outputZip.putNextEntry(ent)
-      catch {
-        case _: ZipException if ent.isDirectory =>
-          // likely a duplicate entry error, ignoring it for directories
-      }
-      outputZip.write(data)
+    for ((ent, data) <- bootstrapZip.entriesWithData()) {
+      val writeData =
+        try {
+          outputZip.putNextEntry(ent)
+          true
+        }
+        catch {
+          case _: ZipException if ent.isDirectory =>
+            // likely a duplicate entry error, ignoring it for directories
+            false
+          case e: ZipException if e.getMessage.startsWith("duplicate entry") =>
+            // bootstrap entry already in user entries, assuming the user entry will work fine
+            false
+        }
+      if (writeData)
+        outputZip.write(data)
       outputZip.closeEntry()
     }
 
@@ -130,7 +153,12 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
       outputZip.closeEntry()
     }
 
-    def putBinaryEntry(name: String, lastModified: Long, b: Array[Byte], compressed: Boolean = true): Unit = {
+    def putBinaryEntry(
+      name: String,
+      lastModified: Long,
+      b: Array[Byte],
+      compressed: Boolean = true
+    ): Unit = {
       val entry = new ZipEntry(name)
       entry.setTime(lastModified)
       entry.setSize(b.length)
@@ -147,30 +175,45 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
       outputZip.closeEntry()
     }
 
-    val len = content0.length
-    for ((c, idx) <- content0.zipWithIndex) {
+    val allContent = Seq("bootstrap" -> content0) ++ extraContent0
+    for ((name, content0) <- allContent) {
+      val len = content0.length
+      for ((c, idx) <- content0.zipWithIndex) {
 
-      val urls = c.entries.collect {
-        case u: ClassPathEntry.Url =>
-          u.url
+        val urls = c.entries.collect {
+          case u: ClassPathEntry.Url =>
+            u.url
+        }
+        val resources = c.entries.collect {
+          case r: ClassPathEntry.Resource =>
+            r.fileName
+        }
+
+        val suffix = if (idx == len - 1) "" else "-" + (idx + 1)
+
+        // really needed to sort here?
+        putStringEntry(resourceDir + s"$name-jar-urls" + suffix, urls.mkString("\n"))
+        putStringEntry(
+          resourceDir + s"$name-jar-resources" + suffix,
+          resources.mkString("\n")
+        )
+
+        if (c.loaderName.nonEmpty)
+          putStringEntry(resourceDir + s"$name-loader-name" + suffix, c.loaderName)
       }
-      val resources = c.entries.collect {
-        case r: ClassPathEntry.Resource =>
-          r.fileName
-      }
 
-      val suffix = if (idx == len - 1) "" else "-" + (idx + 1)
-
-      // really needed to sort here?
-      putStringEntry(resourceDir + "bootstrap-jar-urls" + suffix, urls.sorted.mkString("\n"))
-      putStringEntry(resourceDir + "bootstrap-jar-resources" + suffix, resources.sorted.mkString("\n"))
-
-      if (c.loaderName.nonEmpty)
-        putStringEntry(resourceDir + "bootstrap-loader-name" + suffix, c.loaderName)
+      val nameDir =
+        if (name == "bootstrap") ""
+        else name + "/"
+      for (e <- content0.flatMap(_.entries).collect { case e: ClassPathEntry.Resource => e })
+        putBinaryEntry(
+          // FIXME Use name here too
+          s"${resourceDir}jars/$nameDir${e.fileName}",
+          e.lastModified,
+          e.content,
+          compressed = false
+        )
     }
-
-    for (e <- content0.flatMap(_.entries).collect { case e: ClassPathEntry.Resource => e })
-      putBinaryEntry(s"${resourceDir}jars/${e.fileName}", e.lastModified, e.content, compressed = false)
 
     val propFileContent =
       (("bootstrap.mainClass" -> mainClass) +: properties)
@@ -182,28 +225,20 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
         .mkString("\n")
     putStringEntry(resourceDir + "bootstrap.properties", propFileContent)
 
+    if (pythonJep)
+      putBinaryEntry(resourceDir + "set-python-jep-properties", time, Array.emptyByteArray)
     if (python)
       putBinaryEntry(resourceDir + "set-python-properties", time, Array.emptyByteArray)
 
     outputZip.closeEntry()
   }
 
-
   def resourceDir: String = "coursier/bootstrap/launcher/"
-
-  private lazy val proguardedResourcesBootstrapOpt = {
-    val path = "bootstrap-resources.jar"
-    // caching in spite of Thread.currentThread().getContextClassLoader that may change…
-    val found = Thread.currentThread().getContextClassLoader.getResourceAsStream(path) != null
-    if (found) Some(path)
-    else None
-  }
 
   private def bootstrapResourcePath(hasResources: Boolean, proguarded: Boolean) =
     (hasResources, proguarded) match {
       case (true, true) =>
-        // first one may not have been packaged if coursier was built with JDK 11
-        proguardedResourcesBootstrapOpt.getOrElse("bootstrap-resources-orig.jar")
+        "bootstrap-resources.jar"
       case (true, false) =>
         "bootstrap-resources-orig.jar"
       case (false, true) =>

@@ -25,17 +25,22 @@ object Output {
     if (outputParams.verbosity >= 1) {
       stderr.println(
         s"  Dependencies:$nl" +
-          Print.dependenciesUnknownConfigs(
+          Print.dependenciesUnknownConfigs0(
             deps,
             Map.empty,
             printExclusions = outputParams.verbosity >= 2
           )
       )
 
-      if (resolutionParams.forceVersion.nonEmpty) {
+      if (resolutionParams.forceVersion0.nonEmpty) {
         stderr.println("  Force versions:")
-        for ((mod, ver) <- resolutionParams.forceVersion.toVector.sortBy { case (mod, _) => mod.toString })
-          stderr.println(s"$mod:$ver")
+        val ordered = resolutionParams.forceVersion0
+          .toVector
+          .sortBy { case (mod, _) =>
+            mod.toString
+          }
+        for ((mod, ver) <- ordered)
+          stderr.println(s"$mod:${ver.asString}")
       }
     }
 
@@ -50,7 +55,10 @@ object Output {
     colors: Boolean
   ): Unit =
     if (printResultStdout || params.output.verbosity >= 1 || params.anyTree || params.conflicts) {
-      if ((printResultStdout && params.output.verbosity >= 1) || params.output.verbosity >= 2 || params.anyTree)
+      val printHeader = (printResultStdout && params.output.verbosity >= 1) ||
+        params.output.verbosity >= 2 ||
+        params.anyTree
+      if (printHeader)
         stderr.println(s"  Result:")
 
       val withExclusions = params.output.verbosity >= 1
@@ -58,17 +66,23 @@ object Output {
       val depsStr =
         if (params.whatDependsOn.nonEmpty) {
           val matchers = params.whatDependsOn
-            .map(_.module(JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")), scalaVersionOpt.getOrElse("")))
+            .map(_.module(
+              JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")),
+              scalaVersionOpt.getOrElse("")
+            ))
             .map(ModuleMatcher(_))
-          Print.dependencyTree(
+          Print.dependencyTree0(
             res,
-            roots = res.minDependencies.filter(f => matchers.exists(m => m.matches(f.module))).toSeq,
+            roots = res.minDependencies
+              .filter(f => matchers.exists(m => m.matches(f.module)))
+              .toSeq,
             printExclusions = withExclusions,
             reverse = true,
             colors = colors
           )
-        } else if (params.reverseTree || params.tree)
-          Print.dependencyTree(
+        }
+        else if (params.reverseTree || params.tree)
+          Print.dependencyTree0(
             res,
             printExclusions = withExclusions,
             reverse = params.reverseTree,
@@ -76,34 +90,43 @@ object Output {
           )
         else if (params.conflicts) {
           val conflicts = Conflict(res)
-          val messages = Print.conflicts(conflicts)
+          val messages  = Print.conflicts(conflicts)
           if (messages.isEmpty) {
             if ((printResultStdout && params.output.verbosity >= 1) || params.output.verbosity >= 2)
               stderr.println("No conflict found.")
             ""
-          } else
+          }
+          else
             messages.mkString(nl)
-        } else if (params.candidateUrls) {
+        }
+        else if (params.candidateUrls) {
           val classpathOrder = params.classpathOrder.getOrElse(true)
-          // TODO Allow to filter on classifiers / artifact types
-          val urls = res.dependencyArtifacts(None, classpathOrder).map(_._3.url)
+          // TODO Allow to filter on classifiers / attributes / artifact types
+          val urls = res.dependencyArtifacts0(None, None, classpathOrder).map(_._3.url)
           urls.mkString(nl)
-        } else {
+        }
+        else {
           val classpathOrder = params.classpathOrder.getOrElse(false)
-          Print.dependenciesUnknownConfigs(
-            if (classpathOrder) res.orderedDependencies else res.minDependencies.toVector,
-            res.projectCache.mapValues { case (_, p) => p },
+          Print.dependenciesUnknownConfigs0(
+            if (classpathOrder)
+              res.orderedDependencies
+            else {
+              val set =
+                if (res.errors0.nonEmpty || !res.isDone) res.minimizedDependenciesLoose()
+                else res.minDependencies
+              set.toVector
+            },
+            res.projectCache0.map { case ((m, v), (_, p)) => ((m, v), p) },
             printExclusions = withExclusions,
-            reorder = !classpathOrder,
+            reorder = !classpathOrder
           )
         }
 
-      if (depsStr.nonEmpty) {
+      if (depsStr.nonEmpty)
         if (printResultStdout)
           stdout.println(depsStr)
         else
           stderr.println(depsStr)
-      }
     }
 
 }

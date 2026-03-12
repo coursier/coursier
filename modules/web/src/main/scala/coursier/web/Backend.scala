@@ -1,23 +1,24 @@
 package coursier.web
 
 import coursier.cache.{AlwaysDownload, CacheLogger}
-import coursier.core.ResolutionProcess
-import coursier.{Dependency, MavenRepository, Module, Repository, Resolution, moduleNameString, organizationString}
+import coursier.core.{Dependency, Module, Repository, Resolution, ResolutionProcess}
+import coursier.maven.MavenRepository
 import coursier.util.{Artifact, EitherT, Gather, Task}
+import coursier.util.StringInterpolators._
+import coursier.version.VersionConstraint
 import japgolly.scalajs.react._
 import org.scalajs.dom
-import org.scalajs.jquery.jQuery
 
 import scala.scalajs.js
+import scala.scalajs.js.Dynamic.{global => g}
 import scala.util.{Failure, Success}
-import js.Dynamic.{global => g}
 
-final class Backend($: BackendScope[_, State]) {
+final class Backend($ : BackendScope[_, State]) {
 
   def fetch(
     repositories: Seq[Repository],
     fetch: Repository.Fetch[Task]
-  ): ResolutionProcess.Fetch[Task] = {
+  ): ResolutionProcess.Fetch0[Task] = {
 
     val fetch0: Repository.Fetch[Task] = { a =>
       if (a.url.endsWith("/"))
@@ -27,15 +28,15 @@ final class Backend($: BackendScope[_, State]) {
         fetch(a)
     }
 
-    modVers => Gather[Task].gather(
-      modVers.map { case (module, version) =>
-        ResolutionProcess.fetchOne(repositories, module, version, fetch, Nil)
-          .run
-          .map((module, version) -> _)
-      }
-    )
+    modVers =>
+      Gather[Task].gather(
+        modVers.map { case (module, version) =>
+          ResolutionProcess.fetchOne(repositories, module, version, fetch0, Nil)
+            .run
+            .map((module, version) -> _)
+        }
+      )
   }
-
 
   def updateDepGraph(resolution: Resolution) = {
     println("Rendering canvas")
@@ -53,7 +54,7 @@ final class Backend($: BackendScope[_, State]) {
       Seq(
         dep.module.organization,
         dep.module.name,
-        dep.configuration
+        dep.variantSelector.repr
       ).mkString(":")
 
     for {
@@ -61,41 +62,42 @@ final class Backend($: BackendScope[_, State]) {
         .reverseDependencies
         .toList
       from = repr(dep)
-      _ = addNode(from)
+      _    = addNode(from)
       parDep <- parents
       to = repr(parDep)
-      _ = addNode(to)
-    } {
-      graph.addEdge(from, to)
-    }
+      _  = addNode(to)
+    } graph.addEdge(from, to)
 
     val layouter = js.Dynamic.newInstance(Dracula.Layout.Spring)(graph)
     layouter.layout()
 
-    val width = jQuery("#dependencies")
+    val width = g.jQuery("#dependencies")
       .width()
-    val height = jQuery("#dependencies")
+    val height = g.jQuery("#dependencies")
       .height()
       .asInstanceOf[Int]
       .max(400)
 
     println(s"width: $width, height: $height")
 
-    jQuery("#depgraphcanvas")
+    g.jQuery("#depgraphcanvas")
       .html("") // empty()
 
     val renderer = js.Dynamic.newInstance(Dracula.Renderer.Raphael)(
-      "#depgraphcanvas", graph, width, height
+      "#depgraphcanvas",
+      graph,
+      width,
+      height
     )
     renderer.draw()
     println("Rendered canvas")
   }
 
-  def updateDepGraphBtn(resolution: Resolution)(e: raw.SyntheticEvent[_]) = CallbackTo[Unit] {
+  def updateDepGraphBtn(resolution: Resolution)(e: facade.SyntheticEvent[_]) = CallbackTo[Unit] {
     updateDepGraph(resolution)
   }
 
-  def updateTree(resolution: Resolution, target: String, reverse: Boolean) = {
+  def updateTree(resolution: Resolution, target: String, reverse: Boolean): Unit = {
 
     val minDependencies = resolution.minDependencies
 
@@ -103,11 +105,9 @@ final class Backend($: BackendScope[_, State]) {
       var m = Map.empty[Module, Seq[Dependency]]
 
       for {
-        dep <- minDependencies
-        trDep <- resolution.dependenciesOf(dep)
-      } {
-        m += trDep.module -> (m.getOrElse(trDep.module, Nil) :+ dep)
-      }
+        dep   <- minDependencies
+        trDep <- resolution.dependenciesOf0(dep).toTry.get
+      } m += trDep.module -> (m.getOrElse(trDep.module, Nil) :+ dep)
 
       m
     }
@@ -116,7 +116,9 @@ final class Backend($: BackendScope[_, State]) {
       js.Dictionary(Seq(
         "text" -> (s"${dep.module}": js.Any)
       ) ++ {
-        val deps = if (reverse) reverseDeps.getOrElse(dep.module, Nil) else resolution.dependenciesOf(dep)
+        val deps =
+          if (reverse) reverseDeps.getOrElse(dep.module, Nil)
+          else resolution.dependenciesOf0(dep).toTry.get
         if (deps.isEmpty) Seq()
         else Seq("nodes" -> js.Array(deps.map(tree): _*))
       }: _*)
@@ -127,7 +129,7 @@ final class Backend($: BackendScope[_, State]) {
         .map(tree)
         .map(js.JSON.stringify(_))
     )
-    jQuery(target).asInstanceOf[js.Dynamic]
+    g.jQuery(target)
       .treeview(js.Dictionary("data" -> js.Array(minDependencies.toList.map(tree): _*)))
   }
 
@@ -143,19 +145,24 @@ final class Backend($: BackendScope[_, State]) {
       }
       override def downloadedArtifact(url: String, success: Boolean) = {
         println(s"-> $url")
-        val extra = if (success) "" else " (failed)" // FIXME Have CacheLogger be passed more details in case of error
+        val extra =
+          if (success) ""
+          else " (failed)" // FIXME Have CacheLogger be passed more details in case of error
         $.modState(s => s.copy(log = s"-> $url$extra" +: s.log)).runNow()
       }
     }
 
     $.state.map { s =>
 
-      def task =
-        coursier.Resolution()
+      def task = {
+        val res = Resolution()
           .withRootDependencies(s.modules)
           .withFilter(Some(dep => s.options.followOptional || !dep.optional))
-          .process
-          .run(fetch(s.repositories.map { case (_, repo) => repo }, AlwaysDownload(logger).fetch), 100)
+        ResolutionProcess(res).run0(
+          fetch(s.repositories.map { case (_, repo) => repo }, AlwaysDownload(logger).fetch),
+          100
+        )
+      }
 
       implicit val ec = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
@@ -182,12 +189,12 @@ final class Backend($: BackendScope[_, State]) {
       ()
     }
   }
-  def handleResolve(e: raw.SyntheticEvent[_]) = {
+  def handleResolve(e: facade.SyntheticEvent[_]) = {
 
     val c = CallbackTo[Unit] {
       println(s"Resolving")
       e.preventDefault()
-      jQuery("#results").css("display", "block")
+      g.jQuery("#results").css("display", "block")
     }
 
     c.flatMap { _ =>
@@ -195,23 +202,22 @@ final class Backend($: BackendScope[_, State]) {
     }
   }
 
-  def clearLog(e: raw.SyntheticEvent[_]) = {
+  def clearLog(e: facade.SyntheticEvent[_]) =
     $.modState(_.copy(log = Nil))
-  }
 
-  def toggleReverseTree(e: raw.SyntheticEvent[_]) =
+  def toggleReverseTree(e: facade.SyntheticEvent[_]) =
     $.modState { s =>
       for (res <- s.resolutionOpt)
         updateTree(res, "#deptree", reverse = !s.reverseTree)
       s.copy(reverseTree = !s.reverseTree)
     }
 
-  def editModule(idx: Int)(e: raw.SyntheticEvent[_]) = {
+  def editModule(idx: Int)(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState(_.copy(editModuleIdx = idx))
   }
 
-  def removeModule(idx: Int)(e: raw.SyntheticEvent[_]) = {
+  def removeModule(idx: Int)(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState(s =>
       s.copy(
@@ -223,7 +229,10 @@ final class Backend($: BackendScope[_, State]) {
     )
   }
 
-  def updateModule(moduleIdx: Int, update: (Dependency, String) => Dependency)(e: raw.SyntheticEvent[dom.raw.HTMLInputElement]) =
+  def updateModule(
+    moduleIdx: Int,
+    update: (Dependency, String) => Dependency
+  )(e: facade.SyntheticEvent[dom.HTMLInputElement]) =
     if (moduleIdx >= 0) {
       e.persist()
       $.modState { state =>
@@ -233,13 +242,15 @@ final class Backend($: BackendScope[_, State]) {
             .updated(moduleIdx, update(dep, e.target.value))
         )
       }
-    } else
+    }
+    else
       CallbackTo.pure(())
 
-  def addModule(e: raw.SyntheticEvent[_]) = {
+  def addModule(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState { state =>
-      val modules = state.modules :+ Dependency(Module(org"", name""), "")
+      val modules =
+        state.modules :+ Dependency(Module(org"", name"", Map.empty), VersionConstraint(""))
       println(s"Modules:\n${modules.mkString("\n")}")
       state.copy(
         modules = modules,
@@ -248,12 +259,12 @@ final class Backend($: BackendScope[_, State]) {
     }
   }
 
-  def editRepo(idx: Int)(e: raw.SyntheticEvent[_]) = {
+  def editRepo(idx: Int)(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState(_.copy(editRepoIdx = idx))
   }
 
-  def removeRepo(idx: Int)(e: raw.SyntheticEvent[_]) = {
+  def removeRepo(idx: Int)(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState(s =>
       s.copy(
@@ -265,11 +276,11 @@ final class Backend($: BackendScope[_, State]) {
     )
   }
 
-  def moveRepo(idx: Int, up: Boolean)(e: raw.SyntheticEvent[_]) = {
+  def moveRepo(idx: Int, up: Boolean)(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState { s =>
       val idx0 = if (up) idx - 1 else idx + 1
-      val n = s.repositories.length
+      val n    = s.repositories.length
 
       if (idx >= 0 && idx0 >= 0 && idx < n && idx0 < n) {
         val a = s.repositories(idx)
@@ -280,12 +291,16 @@ final class Backend($: BackendScope[_, State]) {
             .updated(idx, b)
             .updated(idx0, a)
         )
-      } else
+      }
+      else
         s
     }
   }
 
-  def updateRepo(repoIdx: Int, update: ((String, MavenRepository), String) => (String, MavenRepository))(e: raw.SyntheticEvent[dom.raw.HTMLInputElement]) =
+  def updateRepo(
+    repoIdx: Int,
+    update: ((String, MavenRepository), String) => (String, MavenRepository)
+  )(e: facade.SyntheticEvent[dom.HTMLInputElement]) =
     if (repoIdx >= 0)
       $.modState { state =>
         val repo = state.repositories(repoIdx)
@@ -297,7 +312,7 @@ final class Backend($: BackendScope[_, State]) {
     else
       CallbackTo.pure(())
 
-  def addRepo(e: raw.SyntheticEvent[_]) = {
+  def addRepo(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState { state =>
       val repositories = state.repositories :+ ("" -> MavenRepository(""))
@@ -309,19 +324,18 @@ final class Backend($: BackendScope[_, State]) {
     }
   }
 
-  def enablePopover(e: raw.SyntheticMouseEvent[_]) = CallbackTo[Unit] {
+  def enablePopover(e: facade.SyntheticMouseEvent[_]) = CallbackTo[Unit] {
     g.$("[data-toggle='popover']")
       .popover()
   }
 
   object options {
-    def toggleOptional(e: raw.SyntheticEvent[_]) = {
+    def toggleOptional(e: facade.SyntheticEvent[_]) =
       $.modState(s =>
         s.copy(
           options = s.options
             .copy(followOptional = !s.options.followOptional)
         )
       )
-    }
   }
 }

@@ -1,15 +1,15 @@
 package coursier.params.rule
 
-import coursier.core.{Module, Resolution, Version}
+import coursier.core.{Module, Resolution}
 import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.util.ModuleMatcher
+import coursier.version.{Version, VersionConstraint}
 import dataclass.data
 
 import scala.collection.compat._
 
-/**
-  * Forces some modules to all have the same version.
+/** Forces some modules to all have the same version.
   *
   * If ever different versions are found, the highest one is currently selected.
   */
@@ -21,9 +21,10 @@ import scala.collection.compat._
 
   def check(res: Resolution): Option[SameVersionConflict] = {
 
-    val deps = res.dependenciesWithRetainedVersions.filter(dep => matchers.exists(_.matches(dep.module)))
-    val modules = deps.map(_.module)
-    val versions = deps.map(_.version)
+    val deps =
+      res.dependenciesWithRetainedVersions.filter(dep => matchers.exists(_.matches(dep.module)))
+    val modules  = deps.map(_.module)
+    val versions = deps.map(_.versionConstraint)
 
     if (versions.size <= 1)
       None
@@ -36,17 +37,27 @@ import scala.collection.compat._
     conflict: SameVersionConflict
   ): Either[UnsatisfiableRule, Resolution] = {
 
-    val deps = res.dependenciesWithRetainedVersions.filter(dep => matchers.exists(_.matches(dep.module)))
-    val versions = deps.map(_.version)
+    val deps =
+      res.dependencies.collect {
+        case dep if matchers.exists(_.matches(dep.module)) =>
+          (
+            dep,
+            res.retainedVersions.getOrElse(
+              dep.module,
+              sys.error(s"${dep.module} not found in retained versions")
+            )
+          )
+      }
+    val versions = deps.map(_._2)
     assert(deps.nonEmpty)
     assert(versions.size > 1)
 
-    val selectedVersion = versions.maxBy(Version(_))
+    val selectedVersion = versions.max
 
     // add stuff to root dependencies instead of forcing versions?
 
     val cantForce = res
-      .forceVersions
+      .forceVersions0
       .view
       .filterKeys(conflict.modules)
       .filter(_._2 != selectedVersion)
@@ -54,9 +65,13 @@ import scala.collection.compat._
       .toMap
 
     if (cantForce.isEmpty) {
-      val res0 = res.withForceVersions(res.forceVersions ++ conflict.modules.toSeq.map(m => m -> selectedVersion))
+      val res0 = res.withForceVersions0 {
+        res.forceVersions0 ++
+          conflict.modules.toSeq.map(m => m -> VersionConstraint.fromVersion(selectedVersion))
+      }
       Right(res0)
-    } else {
+    }
+    else {
       val c = new CantForceSameVersion(
         res,
         this,
@@ -77,12 +92,12 @@ object SameVersion {
   final class SameVersionConflict(
     override val rule: SameVersion,
     val modules: Set[Module],
-    val foundVersions: Set[String]
+    val foundVersions: Set[VersionConstraint]
   ) extends UnsatisfiedRule(
-    rule,
-    s"Found versions ${foundVersions.toVector.sorted.mkString(", ")} " +
-      s"for ${modules.toVector.map(_.toString).sorted.mkString(", ")}"
-  ) {
+        rule,
+        s"Found versions ${foundVersions.toVector.sorted.map(_.asString).mkString(", ")} " +
+          s"for ${modules.toVector.map(_.toString).sorted.mkString(", ")}"
+      ) {
     require(foundVersions.size > 1)
   }
 
@@ -90,15 +105,31 @@ object SameVersion {
     resolution: Resolution,
     override val rule: SameVersion,
     modules: Set[Module],
-    version: String,
+    version: Version,
     conflict: SameVersionConflict
   ) extends UnsatisfiableRule(
-    resolution,
-    rule,
-    conflict,
-    // FIXME More detailed message? (say why it can't be forced)
-    s"Can't force version $version for modules ${modules.toVector.map(_.toString).mkString(", ")}"
-  ) {
+        resolution,
+        rule,
+        conflict,
+        // FIXME More detailed message? (say why it can't be forced)
+        s"Can't force version ${version.asString} for modules ${modules.toVector.map(_.toString).mkString(", ")}"
+      ) {
+
+    @deprecated("Use the override accepting a coursier.version.Version instead", "2.1.25")
+    def this(
+      resolution: Resolution,
+      rule: SameVersion,
+      modules: Set[Module],
+      version: String,
+      conflict: SameVersionConflict
+    ) = this(
+      resolution,
+      rule,
+      modules,
+      Version(version),
+      conflict
+    )
+
     assert(modules.nonEmpty)
     assert(modules.forall(conflict.modules))
   }

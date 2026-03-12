@@ -16,7 +16,7 @@ object UninstallParams {
 
     val dir = options.installDir.filter(_.nonEmpty) match {
       case Some(d) => Paths.get(d)
-      case None => SharedInstallParams.defaultDir
+      case None    => SharedInstallParams.defaultDir
     }
 
     val all = options.all

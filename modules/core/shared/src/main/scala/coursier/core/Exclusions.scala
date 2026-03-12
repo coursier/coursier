@@ -2,22 +2,28 @@ package coursier.core
 
 object Exclusions {
 
-  def partition(exclusions: Set[(Organization, ModuleName)]): (Boolean, Set[Organization], Set[ModuleName], Set[(Organization, ModuleName)]) = {
+  @deprecated(
+    "This method is slow and will be replaced by MinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
+  def partition(
+    exclusions: Set[(Organization, ModuleName)]
+  ): (Boolean, Set[Organization], Set[ModuleName], Set[(Organization, ModuleName)]) = {
 
-    var all0 = false
-    val excludeByOrg0 = Set.newBuilder[Organization]
+    var all0           = false
+    val excludeByOrg0  = Set.newBuilder[Organization]
     val excludeByName0 = Set.newBuilder[ModuleName]
-    val remaining0 = Set.newBuilder[(Organization, ModuleName)]
+    val remaining0     = Set.newBuilder[(Organization, ModuleName)]
 
     val it = exclusions.iterator
     while (it.hasNext) {
       val excl = it.next()
-      if (excl._1 == allOrganizations) {
+      if (excl._1 == allOrganizations)
         if (excl._2 == allNames)
           all0 = true
         else
           excludeByName0 += excl._2
-      } else if (excl._2 == allNames)
+      else if (excl._2 == allNames)
         excludeByOrg0 += excl._1
       else
         remaining0 += excl
@@ -26,19 +32,26 @@ object Exclusions {
     (all0, excludeByOrg0.result(), excludeByName0.result(), remaining0.result())
   }
 
+  @deprecated(
+    "This method is slow and will be replaced by MinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
   def apply(exclusions: Set[(Organization, ModuleName)]): (Organization, ModuleName) => Boolean = {
 
     val (all, excludeByOrg, excludeByName, remaining) = partition(exclusions)
 
     if (all) (_, _) => false
     else
-      (org, name) => {
+      (org, name) =>
         !excludeByName(name) &&
         !excludeByOrg(org) &&
         !remaining((org, name))
-      }
   }
 
+  @deprecated(
+    "This method will be replaced by MinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
   def minimize(exclusions: Set[(Organization, ModuleName)]): Set[(Organization, ModuleName)] = {
 
     val (all, excludeByOrg, excludeByName, remaining) = partition(exclusions)
@@ -69,17 +82,42 @@ object Exclusions {
   }
 
   val allOrganizations = Organization("*")
-  val allNames = ModuleName("*")
+  val allNames         = ModuleName("*")
 
+  @deprecated(
+    "This method will be replaced by MinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
   val zero = Set.empty[(Organization, ModuleName)]
+  @deprecated(
+    "This method will be replaced by MinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
   val one = Set((allOrganizations, allNames))
 
-  def join(x: Set[(Organization, ModuleName)], y: Set[(Organization, ModuleName)]): Set[(Organization, ModuleName)] =
+  @deprecated(
+    "This method will be replaced by MinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
+  def join(
+    x: Set[(Organization, ModuleName)],
+    y: Set[(Organization, ModuleName)]
+  ): Set[(Organization, ModuleName)] =
     minimize(x ++ y)
 
-  def meet(x: Set[(Organization, ModuleName)], y: Set[(Organization, ModuleName)]): Set[(Organization, ModuleName)] = {
+  @deprecated(
+    "This method will be replaced by MinimizedExclusions in a future version",
+    "2.1.0-M6"
+  )
+  def meet(
+    x: Set[(Organization, ModuleName)],
+    y: Set[(Organization, ModuleName)]
+  ): Set[(Organization, ModuleName)] = {
 
-    val ((xAll, xExcludeByOrg, xExcludeByName, xRemaining), (yAll, yExcludeByOrg, yExcludeByName, yRemaining)) =
+    val (
+      (xAll, xExcludeByOrg, xExcludeByName, xRemaining),
+      (yAll, yExcludeByOrg, yExcludeByName, yRemaining)
+    ) =
       (partition(x), partition(y))
 
     val all = xAll && yAll
@@ -96,8 +134,12 @@ object Exclusions {
         else xExcludeByName intersect yExcludeByName
 
       val remaining =
-        xRemaining.filter { case e @ (org, name) => yAll || yExcludeByOrg(org) || yExcludeByName(name) || yRemaining(e) } ++
-          yRemaining.filter { case e @ (org, name) => xAll || xExcludeByOrg(org) || xExcludeByName(name) || xRemaining(e) }
+        xRemaining.filter { case e @ (org, name) =>
+          yAll || yExcludeByOrg(org) || yExcludeByName(name) || yRemaining(e)
+        } ++
+          yRemaining.filter { case e @ (org, name) =>
+            xAll || xExcludeByOrg(org) || xExcludeByName(name) || xRemaining(e)
+          }
 
       excludeByOrg.map((_, allNames)) ++
         excludeByName.map((allOrganizations, _)) ++

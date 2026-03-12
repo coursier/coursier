@@ -41,6 +41,8 @@ not handle publishing for now.
 
 ## Setup
 
+Since `sbt-coursier` is a distinct project, check the latest version at [Github](https://github.com/coursier/sbt-coursier). The below might not be an up-to-date version.
+
 ### Per project
 
 #### No other plugin
@@ -84,6 +86,4 @@ Add the following to `~/.sbt/1.0/global.sbt`,
 // Work around for https://github.com/coursier/coursier/issues/450
 classpathTypes += "maven-plugin"
 ```
-
-#### sbt 1.3.x
 

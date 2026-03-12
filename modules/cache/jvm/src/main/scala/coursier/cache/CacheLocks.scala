@@ -2,17 +2,19 @@ package coursier.cache
 
 import java.io.{File, IOException}
 import java.nio.channels.{FileChannel, FileLock, OverlappingFileLockException}
-import java.nio.file.{Files, Path, StandardOpenOption}
+import java.nio.file.{AccessDeniedException, Files, Path, StandardOpenOption}
 import java.util.concurrent.{Callable, ConcurrentHashMap}
 
+import coursier.cache.internal.Retry
 import coursier.paths.{CachePath, Util}
 
 import scala.annotation.tailrec
+import scala.concurrent.duration.DurationInt
+import scala.util.Properties
 
 object CacheLocks {
 
-  /**
-    * Should be acquired when doing operations changing the file structure of the cache (creating
+  /** Should be acquired when doing operations changing the file structure of the cache (creating
     * new directories, creating / acquiring locks, ...), so that these don't hinder each other.
     *
     * Should hopefully address some transient errors seen on the CI of ensime-server.
@@ -29,6 +31,20 @@ object CacheLocks {
   )(
     f: => T,
     ifLocked: => Option[T]
+  ): T =
+    withLockOr(
+      cache,
+      file,
+      Retry(4, 100.milliseconds, 2.0)
+    )(f, ifLocked)
+
+  def withLockOr[T](
+    cache: File,
+    file: File,
+    retry: Retry
+  )(
+    f: => T,
+    ifLocked: => Option[T]
   ): T = {
 
     val lockFile = CachePath.lockFile(file).toPath
@@ -37,11 +53,15 @@ object CacheLocks {
 
     withStructureLock(cache) {
       Util.createDirectories(lockFile.getParent)
-      channel = FileChannel.open(
-        lockFile,
-        StandardOpenOption.CREATE,
-        StandardOpenOption.WRITE
-      )
+      channel = retry.retry {
+        FileChannel.open(
+          lockFile,
+          StandardOpenOption.CREATE,
+          StandardOpenOption.WRITE
+        )
+      } {
+        case _: AccessDeniedException if Properties.isWin =>
+      }
     }
 
     @tailrec
@@ -58,6 +78,10 @@ object CacheLocks {
           lock =
             try channel.tryLock()
             catch {
+              case _: OverlappingFileLockException =>
+                null
+              case _: AccessDeniedException if Properties.isWin =>
+                null
               case ex: IOException if ex.getMessage == "Resource deadlock avoided" =>
                 deadlockAvoided = true
                 Thread.sleep(200L)
@@ -75,17 +99,14 @@ object CacheLocks {
               lock = null
               channel.close()
               channel = null
-              Files.deleteIfExists(lockFile)
+              try Files.deleteIfExists(lockFile)
+              catch {
+                case _: AccessDeniedException if Properties.isWin =>
+              }
             }
         }
-        catch {
-          case _: OverlappingFileLockException =>
-            ifLocked
-        }
-        finally {
-          if (lock != null)
+        finally if (lock != null)
             lock.release()
-        }
       }
 
       resOpt match {
@@ -96,16 +117,17 @@ object CacheLocks {
     }
 
     try loop()
-    finally {
-      if (channel != null)
+    finally if (channel != null)
         channel.close()
-    }
   }
 
-  def withLockFor[T](cache: File, file: File)(f: => Either[ArtifactError, T]): Either[ArtifactError, T] =
+  def withLockFor[T](
+    cache: File,
+    file: File
+  )(f: => Either[ArtifactError, T]): Either[ArtifactError, T] =
     withLockOr(cache, file)(f, Some(Left(new ArtifactError.Locked(file))))
 
-  private val urlLocks = new ConcurrentHashMap[String, Object]
+  private val urlLocks           = new ConcurrentHashMap[String, Object]
   private val urlLockDummyObject = new Object
 
   def withUrlLock[T](url: String)(f: => T): Option[T] = {
@@ -114,9 +136,7 @@ object CacheLocks {
 
     if (prev == null)
       try Some(f)
-      finally {
-        urlLocks.remove(url)
-      }
+      finally urlLocks.remove(url)
     else
       None
   }

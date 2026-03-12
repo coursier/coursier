@@ -1,20 +1,42 @@
 package coursier.cli.install
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, _}
+import caseapp._
+import coursier.cli.options.OptionGroup
 
+// format: off
+@ArgsName("app-name*")
+@HelpMessage(
+  "Uninstall one or more applications.\n" +
+  "The given name must be the application executable name, which may differ from the descriptor name.\n" +
+  "\n" +
+  "Examples:\n" +
+  "$ cs uninstall amm\n" +
+  "$ cs uninstall bloop scalafix\n" +
+  "$ cs uninstall --all\n"
+)
 final case class UninstallOptions(
 
-  @Short("dir")
+  @Group(OptionGroup.uninstall)
+  @ExtraName("dir")
     installDir: Option[String] = None,
 
-  all: Boolean = false,
+  @Group(OptionGroup.uninstall)
+    all: Boolean = false,
 
-  @Help("Quiet output")
-  @Short("q")
+  @Group(OptionGroup.uninstall)
+  @HelpMessage("Quiet output")
+  @ExtraName("q")
     quiet: Int @@ Counter = Tag.of(0),
 
-  @Help("Increase verbosity (specify several times to increase more)")
-  @Short("v")
+  @Group(OptionGroup.uninstall)
+  @HelpMessage("Increase verbosity (specify several times to increase more)")
+  @ExtraName("v")
     verbose: Int @@ Counter = Tag.of(0)
 
 )
+// format: on
+
+object UninstallOptions {
+  implicit lazy val parser: Parser[UninstallOptions] = Parser.derive
+  implicit lazy val help: Help[UninstallOptions]     = Help.derive
+}

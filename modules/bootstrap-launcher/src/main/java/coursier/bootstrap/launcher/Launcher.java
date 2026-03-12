@@ -1,5 +1,7 @@
 package coursier.bootstrap.launcher;
 
+import coursier.bootstrap.launcher.jniutils.BootstrapNativeApi;
+
 public class Launcher {
 
     public static void main(String[] args) throws Throwable {
@@ -9,12 +11,10 @@ public class Launcher {
                 .contains("windows");
 
         if (isWindows)
-            coursier.paths.Util.useJni(() -> {
-                coursier.bootstrap.launcher.jniutils.NativeCalls.setup();
-            });
+            coursier.paths.Util.useJni(BootstrapNativeApi::setup);
 
         Download download = Download.getDefault();
-        ClassLoaders classLoaders = new ClassLoaders(download);
+        ClassLoaders classLoaders = new ClassLoaders(download, "bootstrap");
 
         Bootstrap.main(args, classLoaders);
     }

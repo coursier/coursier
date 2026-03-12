@@ -1,18 +1,12 @@
-package coursier
+package coursier.maven
 
-import coursier.core.{Classifier, Configuration}
-import coursier.core.compatibility._
-import coursier.util.Traverse.TraverseOps
-import coursier.maven.MavenRepository
-import coursier.maven.Pom
 import utest._
 import coursier.core.Info
-import coursier.core.Info.License
 
 object PomParserTests extends TestSuite {
 
   val tests = Tests {
-    test("scm filed is optional") {
+    test("scm field is optional") {
       val success = MavenRepository.parseRawPomSax(
         """
           |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -86,7 +80,7 @@ object PomParserTests extends TestSuite {
       )
       assert(success.isRight)
       val properties = success.toOption.get.properties
-      val expected = Seq("info.versionScheme" -> "semver-spec")
+      val expected   = Seq("info.versionScheme" -> "semver-spec")
       assert(properties == expected)
     }
 
@@ -102,7 +96,7 @@ object PomParserTests extends TestSuite {
       )
       assert(success.isRight)
       val licenseInfo = success.toOption.get.info.licenseInfo
-      val expected = Seq()
+      val expected    = Seq()
       assert(licenseInfo == expected)
     }
 
@@ -154,8 +148,8 @@ object PomParserTests extends TestSuite {
       assert(success.isRight)
       val licenses = success.toOption.get.info.licenses
       val expected = Seq(
-          "Apache License, Version 2.0" -> Some("https://www.apache.org/licenses/LICENSE-2.0.txt")
-        )
+        "Apache License, Version 2.0" -> Some("https://www.apache.org/licenses/LICENSE-2.0.txt")
+      )
       assert(licenses == expected)
     }
 
@@ -253,6 +247,51 @@ object PomParserTests extends TestSuite {
         "Apache License, Version 2.0" -> Some("https://www.apache.org/licenses/LICENSE-2.0.txt")
       )
       assert(licenses == expected)
+    }
+
+    test("'/' and '\\' are invalid in groupId") {
+      val failure = MavenRepository.parseRawPomSax(
+        """
+          |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+          |    <modelVersion>4.0.0</modelVersion>
+          |    <groupId>com/example</groupId>
+          |    <artifactId>awesome.project</artifactId>
+          |    <version>1.0-SNAPSHOT</version>
+          |</project>""".stripMargin
+      )
+      assert(failure.isLeft)
+      val message = failure.left.toOption.get
+      assert(message.contains("com/example"))
+    }
+
+    test("'/' and '\\' are invalid in artifactId") {
+      val failure = MavenRepository.parseRawPomSax(
+        """
+          |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+          |    <modelVersion>4.0.0</modelVersion>
+          |    <groupId>com.example</groupId>
+          |    <artifactId>awesome\project</artifactId>
+          |    <version>1.0-SNAPSHOT</version>
+          |</project>""".stripMargin
+      )
+      assert(failure.isLeft)
+      val message = failure.left.toOption.get
+      assert(message.contains("awesome\\project"))
+    }
+
+    test("'/' and '\\' are invalid in version") {
+      val failure = MavenRepository.parseRawPomSax(
+        """
+          |<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+          |    <modelVersion>4.0.0</modelVersion>
+          |    <groupId>com.example</groupId>
+          |    <artifactId>awesome_project</artifactId>
+          |    <version>1.0/SNAPSHOT</version>
+          |</project>""".stripMargin
+      )
+      assert(failure.isLeft)
+      val message = failure.left.toOption.get
+      assert(message.contains("1.0/SNAPSHOT"))
     }
   }
 }

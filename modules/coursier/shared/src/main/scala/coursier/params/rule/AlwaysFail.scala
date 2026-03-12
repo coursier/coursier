@@ -5,13 +5,12 @@ import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
 import dataclass.data
 
-/**
-  * Always fails.
+/** Always fails.
   *
   * Mostly for testing.
   *
-  * If `doTryResolve` is true, `tryResolve` will return the current Resolution, as if it was attempting to address the
-  * issue. Else, it will fail early.
+  * If `doTryResolve` is true, `tryResolve` will return the current Resolution, as if it was
+  * attempting to address the issue. Else, it will fail early.
   */
 @data class AlwaysFail(doTryResolve: Boolean = false) extends Rule {
 
@@ -33,6 +32,6 @@ object AlwaysFail {
 
   final class Nope(override val rule: AlwaysFail) extends UnsatisfiedRule(rule, "nope") {}
   final class NopityNope(resolution: Resolution, rule: AlwaysFail, conflict: Nope)
-    extends UnsatisfiableRule(resolution, rule, conflict, "Nopity nope")
+      extends UnsatisfiableRule(resolution, rule, conflict, "Nopity nope")
 
 }

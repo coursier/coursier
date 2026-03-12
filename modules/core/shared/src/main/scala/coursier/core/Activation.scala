@@ -1,12 +1,15 @@
 package coursier.core
 
+import coursier.version.{Version => Version0, VersionInterval => VersionInterval0}
 import dataclass.data
+
+import java.util.Locale
 
 // Maven-specific
 @data class Activation(
   properties: Seq[(String, Option[String])],
   os: Activation.Os,
-  jdk: Option[Either[VersionInterval, Seq[Version]]]
+  jdk: Option[Either[VersionInterval0, Seq[Version0]]]
 ) {
 
   def isEmpty: Boolean = properties.isEmpty && os.isEmpty && jdk.isEmpty
@@ -14,22 +17,24 @@ import dataclass.data
   def isActive(
     currentProperties: Map[String, String],
     osInfo: Activation.Os,
-    jdkVersion: Option[Version]
+    jdkVersion: Option[Version0]
   ): Boolean = {
-
     def fromProperties = properties.forall {
-      case (name, valueOpt) =>
-        if (name.startsWith("!"))
-          currentProperties.get(name.drop(1)).isEmpty
-        else
-          currentProperties.get(name).exists { v =>
-            valueOpt.forall { reqValue =>
-              if (reqValue.startsWith("!"))
-                v != reqValue.drop(1)
-              else
-                v == reqValue
-            }
-          }
+      case (name, _) if name.startsWith("!") =>
+        currentProperties.get(name.drop(1)).isEmpty
+
+      case (name, None) =>
+        currentProperties.contains(name)
+
+      // https://maven.apache.org/guides/introduction/introduction-to-profiles.html
+      // if the value starts with !, this property activates if either
+      // a) the property is missing completely
+      // b) it's value is NOT equal to expected
+      case (name, Some(expected)) if expected.startsWith("!") =>
+        currentProperties.get(name).fold(true)(found => found != expected.drop(1))
+
+      case (name, Some(expected)) =>
+        currentProperties.get(name).contains(expected)
     }
 
     def fromOs = os.isActive(osInfo)
@@ -58,25 +63,32 @@ object Activation {
     name: Option[String],
     version: Option[String] // FIXME Could this be an interval?
   ) {
+    private lazy val archNormalized = arch
+      .map(_.toLowerCase(Locale.US))
+      .map {
+        case "x86-64" => "x86_64" // seems required by org.nd4j:nd4j-native:0.5.0
+        case arch     => arch
+      }
+    private lazy val familiesNormalized = families.map(_.toLowerCase(Locale.US))
+    private lazy val nameNormalized     = name.map(_.toLowerCase(Locale.US))
+    private lazy val versionNormalized  = version.map(_.toLowerCase(Locale.US))
+
     def isEmpty: Boolean =
       arch.isEmpty && families.isEmpty && name.isEmpty && version.isEmpty
 
     def archMatch(current: Option[String]): Boolean =
-      arch.forall(current.toSeq.contains) || {
-        // seems required by org.nd4j:nd4j-native:0.5.0
-        arch.toSeq.contains("x86-64") && current.toSeq.contains("x86_64")
-      }
+      archNormalized.forall(current.contains)
 
     def isActive(osInfo: Os): Boolean =
-      archMatch(osInfo.arch) &&
-        families.forall { f =>
-          if (Os.knownFamilies(f))
-            osInfo.families.contains(f)
-          else
-            osInfo.name.exists(_.contains(f))
-        } &&
-        name.forall(osInfo.name.toSeq.contains) &&
-        version.forall(osInfo.version.toSeq.contains)
+      archMatch(osInfo.archNormalized) &&
+      familiesNormalized.forall { f =>
+        if (Os.knownFamilies(f))
+          osInfo.familiesNormalized.contains(f)
+        else
+          osInfo.nameNormalized.exists(_.contains(f))
+      } &&
+      nameNormalized.forall(osInfo.nameNormalized.contains) &&
+      versionNormalized.forall(osInfo.versionNormalized.contains)
   }
 
   object Os {
@@ -112,10 +124,19 @@ object Activation {
       if (name.indexOf("nonstop_kernel") >= 0)
         families += "tandem"
 
-      if (pathSep == ":" && name.indexOf("openvms") < 0 && (name.indexOf("mac") < 0 || name.endsWith("x")))
+      val isUnix = pathSep == ":" &&
+        name.indexOf("openvms") < 0 &&
+        (name.indexOf("mac") < 0 || name.endsWith("x"))
+      if (isUnix)
         families += "unix"
 
-      if (name.indexOf("windows") >= 0 && (name.indexOf("95") >= 0 || name.indexOf("98") >= 0 || name.indexOf("me") >= 0 || name.indexOf("ce") >= 0))
+      val isWin9x = name.indexOf("windows") >= 0 && (
+        name.indexOf("95") >= 0 ||
+        name.indexOf("98") >= 0 ||
+        name.indexOf("me") >= 0 ||
+        name.indexOf("ce") >= 0
+      )
+      if (isWin9x)
         families += "win9x"
 
       if (name.indexOf("z/os") >= 0 || name.indexOf("os/390") >= 0)
@@ -125,7 +146,6 @@ object Activation {
     }
 
     def fromProperties(properties: Map[String, String]): Os = {
-
       val name = properties.get("os.name").map(_.toLowerCase)
 
       Os(

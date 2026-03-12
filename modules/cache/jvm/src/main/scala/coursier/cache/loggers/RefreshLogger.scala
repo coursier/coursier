@@ -1,11 +1,11 @@
 package coursier.cache.loggers
 
 import java.io.{OutputStream, OutputStreamWriter, Writer}
-import java.util.concurrent._
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, ScheduledExecutorService}
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
 import coursier.cache.CacheLogger
-import coursier.cache.internal.Terminal
+import coursier.cache.internal.ThreadUtil
 import coursier.cache.loggers.RefreshInfo.{CheckUpdateInfo, DownloadInfo}
 import coursier.util.Artifact
 
@@ -13,7 +13,10 @@ import scala.collection.mutable.ArrayBuffer
 
 object RefreshLogger {
 
-  def defaultDisplay(fallbackMode: Boolean = defaultFallbackMode, quiet: Boolean = false): RefreshDisplay =
+  def defaultDisplay(
+    fallbackMode: Boolean = defaultFallbackMode,
+    quiet: Boolean = false
+  ): RefreshDisplay =
     if (fallbackMode)
       new FallbackRefreshDisplay(quiet = quiet)
     else if (quiet)
@@ -37,7 +40,12 @@ object RefreshLogger {
     new RefreshLogger(new OutputStreamWriter(os), display)
 
   def create(os: OutputStream, display: RefreshDisplay, logChanging: Boolean): RefreshLogger =
-    new RefreshLogger(new OutputStreamWriter(os), display, fallbackMode = false, logChanging = logChanging)
+    new RefreshLogger(
+      new OutputStreamWriter(os),
+      display,
+      fallbackMode = false,
+      logChanging = logChanging
+    )
 
   def create(
     os: OutputStream,
@@ -56,7 +64,11 @@ object RefreshLogger {
   def create(writer: OutputStreamWriter, display: RefreshDisplay): RefreshLogger =
     new RefreshLogger(writer, display)
 
-  def create(writer: OutputStreamWriter, display: RefreshDisplay, logChanging: Boolean): RefreshLogger =
+  def create(
+    writer: OutputStreamWriter,
+    display: RefreshDisplay,
+    logChanging: Boolean
+  ): RefreshLogger =
     new RefreshLogger(writer, display, fallbackMode = false, logChanging = logChanging)
 
   def create(
@@ -73,20 +85,18 @@ object RefreshLogger {
       logPickedVersions = logPickedVersions
     )
 
-
   lazy val defaultFallbackMode: Boolean =
     !coursier.paths.Util.useAnsiOutput()
 
-
   private class UpdateDisplayRunnable(out: Writer, val display: RefreshDisplay) extends Runnable {
 
-    private var messages = new ConcurrentLinkedQueue[String]
+    private val messages = new ConcurrentLinkedQueue[String]
 
     def log(message: String): Unit =
       messages.add(message)
     private def flushMessages(): Unit = {
       var printedAnything = false
-      var msg: String = null
+      var msg: String     = null
       while ({
         msg = messages.poll()
         msg != null
@@ -112,7 +122,7 @@ object RefreshLogger {
 
     private val downloads = new ArrayBuffer[String]
     private val doneQueue = new ArrayBuffer[(String, RefreshInfo)]
-    val infos = new ConcurrentHashMap[String, RefreshInfo]
+    val infos             = new ConcurrentHashMap[String, RefreshInfo]
 
     def newEntry(
       url: String,
@@ -148,7 +158,7 @@ object RefreshLogger {
         if (success)
           doneQueue += (url -> update0(info))
 
-        info
+        info.withSuccess(success)
       }
 
       display.removeEntry(out, url, inf)
@@ -179,7 +189,7 @@ object RefreshLogger {
 
               val dw = downloads
                 .toVector
-                .map { url => url -> infos.get(url) }
+                .map(url => url -> infos.get(url))
                 .sortBy { case (_, info) => -info.fraction.sum }
 
               (q, dw)
@@ -192,6 +202,20 @@ object RefreshLogger {
       }
   }
 
+  private final class State(
+    var refCount: Int,
+    val runnable: UpdateDisplayRunnable,
+    val managedSchedulerOpt: Option[ScheduledExecutorService]
+  ) extends AutoCloseable {
+    def close(): Unit = {
+      for (scheduler <- managedSchedulerOpt) {
+        scheduler.shutdown()
+        val refreshInterval = runnable.display.refreshInterval
+        scheduler.awaitTermination(2 * refreshInterval.length, refreshInterval.unit)
+      }
+      runnable.stop()
+    }
+  }
 }
 
 // FIXME Default values should be removed in later versions
@@ -201,49 +225,52 @@ class RefreshLogger(
   display: RefreshDisplay,
   val fallbackMode: Boolean = RefreshLogger.defaultFallbackMode,
   logChanging: Boolean = false,
-  logPickedVersions: Boolean = false
+  logPickedVersions: Boolean = false,
+  schedulerOpt: Option[ScheduledExecutorService] = None
 ) extends CacheLogger {
 
   def this(
     out: Writer,
     display: RefreshDisplay
-  ) = this(out, display, RefreshLogger.defaultFallbackMode, false)
+  ) = this(out, display, RefreshLogger.defaultFallbackMode, false, false, None)
 
   def this(
     out: Writer,
     display: RefreshDisplay,
     fallbackMode: Boolean
-  ) = this(out, display, fallbackMode, false)
+  ) = this(out, display, fallbackMode, false, false, None)
+
+  def this(
+    out: Writer,
+    display: RefreshDisplay,
+    fallbackMode: Boolean,
+    logChanging: Boolean,
+    logPickedVersions: Boolean
+  ) = this(out, display, fallbackMode, false, false, None)
 
   import RefreshLogger._
 
-  private var updateRunnableOpt = Option.empty[UpdateDisplayRunnable]
-  @volatile private var scheduler: ScheduledExecutorService = _
-  private val lock = new Object
+  private val lock               = new Object
+  @volatile private var stateOpt = Option.empty[State]
 
-  private def updateRunnable = updateRunnableOpt.getOrElse {
-    throw new Exception("Uninitialized TermDisplay")
+  private def updateRunnable = stateOpt.map(_.runnable).getOrElse {
+    throw new Exception(s"Uninitialized TermDisplay $this")
   }
 
   override def init(sizeHint: Option[Int]): Unit =
-    if (scheduler == null || updateRunnableOpt.isEmpty)
-      lock.synchronized {
-        if (scheduler == null)
-          scheduler = Executors.newSingleThreadScheduledExecutor(
-            new ThreadFactory {
-              val defaultThreadFactory = Executors.defaultThreadFactory()
-              def newThread(r: Runnable) = {
-                val t = defaultThreadFactory.newThread(r)
-                t.setDaemon(true)
-                t.setName("coursier-progress-bar")
-                t
-              }
-            }
-          )
-
-        if (updateRunnableOpt.isEmpty) {
-
-          updateRunnableOpt = Some(new UpdateDisplayRunnable(out, display))
+    lock.synchronized {
+      stateOpt match {
+        case Some(state) =>
+          state.refCount += 1
+        case None =>
+          val (scheduler, managedSchedulerOpt) = schedulerOpt match {
+            case Some(scheduler0) => (scheduler0, None)
+            case None =>
+              val scheduler0 =
+                ThreadUtil.fixedScheduledThreadPool(1, name = "coursier-progress-bars")
+              (scheduler0, Some(scheduler0))
+          }
+          val updateRunnable = new UpdateDisplayRunnable(out, display)
 
           for (n <- sizeHint)
             display.sizeHint(n)
@@ -256,31 +283,36 @@ class RefreshLogger(
             refreshInterval.length,
             refreshInterval.unit
           )
-        }
+
+          stateOpt = Some(
+            new State(
+              refCount = 1,
+              runnable = updateRunnable,
+              managedSchedulerOpt = managedSchedulerOpt
+            )
+          )
       }
+    }
 
   override def stop(): Unit =
-    if (scheduler != null || updateRunnableOpt.nonEmpty)
-      lock.synchronized {
-        if (scheduler != null) {
-          scheduler.shutdown()
-          for (r <- updateRunnableOpt) {
-            val refreshInterval = r.display.refreshInterval
-            scheduler.awaitTermination(2 * refreshInterval.length, refreshInterval.unit)
-          }
-          scheduler = null
-        }
-
-        if (updateRunnableOpt.nonEmpty) {
-          updateRunnable.stop()
-          updateRunnableOpt = None
-        }
+    lock.synchronized {
+      stateOpt match {
+        case Some(state) =>
+          state.refCount -= 1
+          if (state.refCount <= 0)
+            state.close()
+        case None =>
+        // throw?
       }
+    }
+
+  override def checkInitialized(): Unit = {
+    updateRunnable
+  }
 
   override def checkingArtifact(url: String, artifact: Artifact): Unit =
-    if (logChanging && artifact.changing) {
+    if (logChanging && artifact.changing)
       updateRunnable.log(s"Checking changing artifact $url")
-    }
 
   override def pickedModuleVersion(module: String, version: String): Unit =
     if (logPickedVersions)
@@ -293,7 +325,12 @@ class RefreshLogger(
       s"Downloading $url" + System.lineSeparator()
     )
 
-  override def downloadLength(url: String, totalLength: Long, alreadyDownloaded: Long, watching: Boolean): Unit = {
+  override def downloadLength(
+    url: String,
+    totalLength: Long,
+    alreadyDownloaded: Long,
+    watching: Boolean
+  ): Unit = {
     val info = updateRunnable.infos.get(url)
     assert(info != null, s"Incoherent state ($url)")
     val newInfo = info match {

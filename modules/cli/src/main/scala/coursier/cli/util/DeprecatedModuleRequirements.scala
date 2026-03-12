@@ -1,6 +1,6 @@
 package coursier.cli.util
 
-import coursier.core.{Dependency, ModuleName, Organization}
+import coursier.core.{Dependency, MinimizedExclusions, ModuleName, Organization}
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 
 final case class DeprecatedModuleRequirements(
@@ -8,8 +8,13 @@ final case class DeprecatedModuleRequirements(
   localExcludes: Map[String, Set[(Organization, ModuleName)]]
 ) {
   def apply(dep: Dependency): Dependency =
-    dep.withExclusions(
-      localExcludes.getOrElse(dep.module.orgName, dep.exclusions) | globalExcludes
+    dep.withMinimizedExclusions(
+      MinimizedExclusions(
+        localExcludes.getOrElse(
+          dep.module.orgName,
+          dep.minimizedExclusions.toSet()
+        ) | globalExcludes
+      )
     )
   def apply(deps: Seq[(Dependency, Map[String, String])]): Seq[(Dependency, Map[String, String])] =
     deps.map {
@@ -23,7 +28,9 @@ final case class DeprecatedModuleRequirements0(
 ) {
   def apply(dep: JavaOrScalaDependency): JavaOrScalaDependency =
     dep.addExclude((localExcludes.getOrElse(dep.module, dep.exclude) | globalExcludes).toSeq: _*)
-  def apply(deps: Seq[(JavaOrScalaDependency, Map[String, String])]): Seq[(JavaOrScalaDependency, Map[String, String])] =
+  def apply(
+    deps: Seq[(JavaOrScalaDependency, Map[String, String])]
+  ): Seq[(JavaOrScalaDependency, Map[String, String])] =
     deps.map {
       case (d, p) => (apply(d), p)
     }

@@ -1,9 +1,16 @@
 package coursier.parse
 
-import coursier.core.{Attributes, Classifier, Configuration, Dependency, Extension, Module, ModuleName, Organization, Publication, Type}
+import coursier.core.{Configuration, Dependency, Module}
 import coursier.util.ValidationNel
 import coursier.util.Traverse._
+import coursier.version.VersionConstraint
+import dependency.parser.{DependencyParser => DepParser}
 
+import scala.collection.mutable
+
+/** These are not meant to be used by coursier users. Better coursier/dependency based parsers to
+  * come.
+  */
 object DependencyParser {
 
   def dependency(
@@ -17,7 +24,21 @@ object DependencyParser {
     defaultScalaVersion: String,
     defaultConfiguration: Configuration
   ): Either[String, Dependency] =
-    dependencyParams(input, defaultScalaVersion, defaultConfiguration).map(_._1)
+    dependencyParams(input, defaultScalaVersion, defaultConfiguration).flatMap {
+      case (dep, params) =>
+        if (params.isEmpty) Right(dep)
+        else {
+          val paramsStr = params
+            .toVector
+            .sorted
+            .map {
+              case (k, v) =>
+                s"$k=$v"
+            }
+            .mkString(", ")
+          Left(s"Unexpected parameter(s) not accepted at this point: $paramsStr")
+        }
+    }
 
   def dependencies(
     inputs: Seq[String],
@@ -45,40 +66,58 @@ object DependencyParser {
     javaOrScalaDependenciesParams(inputs, defaultConfiguration)
       .map(_.map(_._1))
 
-
-  /**
-    * Parses coordinates like
-    *   org:name:version
-    *  possibly with attributes, like
-    *    org:name;attr1=val1;attr2=val2:version
+  /** Parses coordinates like org:name:version possibly with attributes, like
+    * org:name;attr1=val1;attr2=val2:version
     */
-  def moduleVersion(input: String, defaultScalaVersion: String): Either[String, (Module, String)] = {
+  def moduleVersion0(
+    input: String,
+    defaultScalaVersion: String
+  ): Either[String, (Module, VersionConstraint)] = {
 
     val parts = input.split(":", 4)
 
     parts match {
       case Array(org, rawName, version) =>
         ModuleParser.module(s"$org:$rawName", defaultScalaVersion)
-          .map((_, version))
+          .map((_, VersionConstraint(version)))
 
       case Array(org, "", rawName, version) =>
         ModuleParser.module(s"$org::$rawName", defaultScalaVersion)
-          .map((_, version))
+          .map((_, VersionConstraint(version)))
 
       case _ =>
         Left(s"Malformed dependency: $input")
     }
   }
 
+  @deprecated("Use moduleVersion0 instead", "2.1.25")
+  def moduleVersion(
+    input: String,
+    defaultScalaVersion: String
+  ): Either[String, (Module, String)] =
+    moduleVersion0(input, defaultScalaVersion).map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    }
+
+  def moduleVersions0(
+    inputs: Seq[String],
+    defaultScalaVersion: String
+  ): ValidationNel[String, Seq[(Module, VersionConstraint)]] =
+    inputs.validationNelTraverse { input =>
+      val e = moduleVersion0(input, defaultScalaVersion)
+      ValidationNel.fromEither(e)
+    }
+
+  @deprecated("Use moduleVersions0 instead", "2.1.25")
   def moduleVersions(
     inputs: Seq[String],
     defaultScalaVersion: String
   ): ValidationNel[String, Seq[(Module, String)]] =
-    inputs.validationNelTraverse { input =>
-      val e = moduleVersion(input, defaultScalaVersion)
-      ValidationNel.fromEither(e)
-    }
-
+    moduleVersions0(inputs, defaultScalaVersion).map(_.map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    })
 
   /*
    * Validates the parsed attributes.
@@ -92,17 +131,23 @@ object DependencyParser {
    * @return A string if there is an error, otherwise None
    */
   private def validateAttributes(
-    attrs: Map[String, Seq[String]],
+    attrs: Set[String],
     dep: String,
     validAttrsKeys: Set[String]
   ): Option[String] = {
-    val extraAttributes = attrs.keys.toSet.diff(validAttrsKeys)
+    val attrs0          = attrs.filter(!_.startsWith("variant."))
+    val extraAttributes = attrs0.diff(validAttrsKeys)
 
-    if (attrs.size > validAttrsKeys.size || extraAttributes.nonEmpty)
-      Some(s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")}. ${
-        if (extraAttributes.nonEmpty) s"The following are invalid: " +
-          s"${extraAttributes.map(_ + s" in "+ dep).mkString(", ")}"
-      }")
+    if (attrs0.size > validAttrsKeys.size || extraAttributes.nonEmpty)
+      Some {
+        val invalidMsg =
+          if (extraAttributes.nonEmpty)
+            s" The following are invalid: " +
+              s"${extraAttributes.map(_ + s" in " + dep).mkString(", ")}"
+          else
+            ""
+        s"The only attributes allowed are: ${validAttrsKeys.mkString(", ")} and variant.* .$invalidMsg"
+      }
     else None
   }
 
@@ -121,227 +166,33 @@ object DependencyParser {
   ): Either[String, (JavaOrScalaDependency, Map[String, String])] =
     javaOrScalaDependencyParams(input, Configuration.empty)
 
-  /**
-    * Parses coordinates like
-    *   org:name:version
-    *  with attributes, like
-    *   org:name:version,attr1=val1,attr2=val2
-    *  and a configuration, like
-    *   org:name:version:config
-    *  or
-    *   org:name:version:config,attr1=val1,attr2=val2
+  /** Parses coordinates like org:name:version with attributes, like
+    * org:name:version,attr1=val1,attr2=val2 and a configuration, like org:name:version:config or
+    * org:name:version:config,attr1=val1,attr2=val2
     *
-    *  Currently only the "classifier" and "url attributes are
-    *  used, and others throw errors.
+    * Currently only the "classifier" and "url attributes are used, and others throw errors.
     */
   def javaOrScalaDependencyParams(
     input: String,
     defaultConfiguration: Configuration
-  ): Either[String, (JavaOrScalaDependency, Map[String, String])] = {
-
-    // FIXME Fails to parse dependencies with version intervals, because of the comma in the interval
-    // e.g. "joda-time:joda-time:[2.2,2.8]"
-
-    // Assume org:name:version,attr1=val1,attr2=val2
-    // That is ',' has to go after ':'.
-    // E.g. "org:name,attr1=val1,attr2=val2:version:config" is illegal.
-    val attrSeparator = ","
-    val argSeparator = ":"
-
-    def splitRest(rest: String): (String, Seq[String]) = {
-
-      def split(rest: String) =
-        // match is total
-        rest.split(attrSeparator) match {
-          case Array(coordsEnd, attrs @ _*) => (coordsEnd, attrs)
-        }
-
-      if (rest.startsWith("[") || rest.startsWith("(")) {
-        val idx = rest.indexWhere(c => c == ']' || c == ')')
-        if (idx < 0)
-          split(rest)
-        else {
-          val (ver, attrsPart) = rest.splitAt(idx + 1)
-          val (coodsEnd, attrs) = split(attrsPart)
-          (ver + coodsEnd, attrs)
-        }
-      } else
-        split(rest)
-    }
-
-    val (coords, rawAttrs) = input.split(":", 6) match {
-      case Array(org, "", "", name, "", rest) =>
-        val (coordsEnd, attrs) = splitRest(rest)
-        (s"$org:::$name::$coordsEnd", attrs)
-      case Array(org, "", name, "", rest) =>
-        val (coordsEnd, attrs) = splitRest(rest)
-        (s"$org::$name::$coordsEnd", attrs)
-      case Array(org, "", "", name, rest) =>
-        val (coordsEnd, attrs) = splitRest(rest)
-        (s"$org:::$name:$coordsEnd", attrs)
-      case Array(org, "", name, rest) =>
-        val (coordsEnd, attrs) = splitRest(rest)
-        (s"$org::$name:$coordsEnd", attrs)
-      case Array(org, name, rest @ _*) =>
-        val (coordsEnd, attrs) = splitRest(rest.mkString(":"))
-        (s"$org:$name:$coordsEnd", attrs)
-    }
-
-    val attrsOrErrors = rawAttrs
-      .map { x =>
-        if (x.contains(argSeparator))
-          Left(s"'$argSeparator' is not allowed in attribute '$x' in '$input'. Please follow the format " +
-            s"'org${argSeparator}name[${argSeparator}version][${argSeparator}config]${attrSeparator}attr1=val1${attrSeparator}attr2=val2'")
-        else
-          x.split("=") match {
-            case Array(k, v) =>
-              Right(k -> v)
-            case _ =>
-              Left(s"Failed to parse attribute '$x' in '$input'. Keyword argument expected such as 'classifier=tests'")
-          }
+  ): Either[String, (JavaOrScalaDependency, Map[String, String])] =
+    for {
+      anyDep <- DepParser.parse(input, acceptInlineConfiguration = true)
+      t      <- JavaOrScalaDependency.from0(anyDep)
+      (dep, userParams) = t
+      map = userParams.map {
+        case (k, v) =>
+          (k, v.reverseIterator.flatMap(_.iterator).find(_ => true).getOrElse(""))
       }
+      _ <- validateAttributes(map.keySet, input, Set("url")).toLeft(())
+    } yield (dep, map)
 
-    attrsOrErrors
-      .collectFirst {
-        case Left(err) =>
-          // FIXME We're dropping other errors here (use validation in return type?)
-          Left(err)
-      }
-      .getOrElse {
-
-        val attrs = attrsOrErrors
-          .collect {
-            case Right(attr) => attr
-          }
-          .groupBy(_._1)
-          .map {
-            case (k, l) =>
-              k -> l.map(_._2)
-          }
-
-        val parts = coords.split(":", -1)
-
-        // Only attributes allowed
-        val validAttrsKeys = Set("classifier", "ext", "type", "url", "exclude")
-
-        validateAttributes(attrs, input, validAttrsKeys) match {
-          case Some(err) => Left(err)
-          case None =>
-
-            val type0 = attrs
-              .get("type")
-              .map(_.last)
-              .map(Type(_))
-              .getOrElse(Type.empty)
-            val ext = attrs
-              .get("ext")
-              .map(_.last)
-              .map(Extension(_))
-              .getOrElse(Extension.empty)
-            val classifier = attrs
-              .get("classifier")
-              .map(_.last)
-              .map(Classifier(_))
-              .getOrElse(Classifier.empty)
-            val publication = Publication("", type0, ext, classifier)
-            val excludeOpt = attrs
-              .get("exclude")
-              .map(_.eitherTraverse { s =>
-                // not using : to split, which would mess up with the parser
-                // Using a proper parsing library would help support ':'.
-                s.split("%", 2) match {
-                  case Array(o, n) => Right((Organization(o), ModuleName(n)))
-                  case _ => Left(s"Malformed exclusion: '$s' (expected 'org%name')")
-                }
-              })
-              .getOrElse(Right(Nil))
-              .map(_.toSet)
-
-            val extraDependencyParams: Map[String, String] = attrs.get("url").map(_.last) match {
-                case Some(url) => Map("url" -> url)
-                case None => Map()
-              }
-
-            val dummyModule = Module(Organization(""), ModuleName(""), Map.empty)
-
-            val parts0 = parts match {
-              case Array(org, "", "", rawName, "", version, config) =>
-                Right((org, rawName, version, Configuration(config), ":::", true))
-
-              case Array(org, "", "", rawName, "", version) =>
-                Right((org, rawName, version, defaultConfiguration, ":::", true))
-
-              case Array(org, "", rawName, "", version, config) =>
-                Right((org, rawName, version, Configuration(config), "::", true))
-
-              case Array(org, "", rawName, "", version) =>
-                Right((org, rawName, version, defaultConfiguration, "::", true))
-
-              case Array(org, "", "", rawName, version, config) =>
-                Right((org, rawName, version, Configuration(config), ":::", false))
-
-              case Array(org, "", "", rawName, version) =>
-                Right((org, rawName, version, defaultConfiguration, ":::", false))
-
-              case Array(org, "", rawName, version, config) =>
-                Right((org, rawName, version, Configuration(config), "::", false))
-
-              case Array(org, "", rawName, version) =>
-                Right((org, rawName, version, defaultConfiguration, "::", false))
-
-              case Array(org, rawName, version, config) =>
-                Right((org, rawName, version, Configuration(config), ":", false))
-
-              case Array(org, rawName, version) =>
-                Right((org, rawName, version, defaultConfiguration, ":", false))
-
-              case _ =>
-                Left(s"Malformed dependency: $input")
-            }
-
-            parts0.flatMap {
-              case (org, rawName, version, config, orgNameSep, withPlatformSuffix) =>
-                excludeOpt.flatMap { exclude =>
-                  ModuleParser.javaOrScalaModule(s"$org$orgNameSep$rawName").map { mod =>
-                    val dep = Dependency(
-                      dummyModule,
-                      version,
-                      config,
-                      exclude,
-                      publication,
-                      optional = false,
-                      transitive = true
-                    )
-                    val dep0 = JavaOrScalaDependency(mod, dep)
-                    val dep1 =
-                      if (withPlatformSuffix)
-                        dep0 match {
-                          case j: JavaOrScalaDependency.JavaDependency => j
-                          case s: JavaOrScalaDependency.ScalaDependency =>
-                            s.withWithPlatformSuffix(true)
-                        }
-                      else
-                        dep0
-                    (dep1, extraDependencyParams)
-                  }
-                }
-            }
-        }
-    }
-  }
-
-  /**
-    * Parses coordinates like
-    *   org:name:version
-    *  with attributes, like
-    *   org:name:version,attr1=val1,attr2=val2
-    *  and a configuration, like
-    *   org:name:version:config
-    *  or
-    *   org:name:version:config,attr1=val1,attr2=val2
+  /** Parses coordinates like org:name:version with attributes, like
+    * org:name:version,attr1=val1,attr2=val2 and a configuration, like org:name:version:config or
+    * org:name:version:config,attr1=val1,attr2=val2
     *
-    *  Currently only the "classifier", "type", "extension", and "url attributes are
-    *  used, and others throw errors.
+    * Currently only the "classifier", "type", "extension", and "url attributes are used, and others
+    * throw errors.
     */
   def dependencyParams(
     input: String,
