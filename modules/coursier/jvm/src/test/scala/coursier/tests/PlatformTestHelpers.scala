@@ -1,15 +1,16 @@
 package coursier.tests
 
+import java.io.File
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 import java.security.MessageDigest
 
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
-import coursier.cache.{Cache, MockCache}
+import coursier.cache.{ArtifactError, Cache, MockCache}
 import coursier.paths.Util
 import coursier.testcache.TestCache
-import coursier.util.Task
+import coursier.util.{Artifact, EitherT, Task}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
@@ -95,4 +96,22 @@ abstract class PlatformTestHelpers {
       )
     }
   }
+
+  def filteringCache(exclude: String, defaultCache: Cache[Task]): Cache[Task] =
+    new Cache[Task] {
+      override def ec: ExecutionContext = defaultCache.ec
+      override def fetch: Cache.Fetch[Task] =
+        artifact =>
+          if (artifact.url.contains(exclude))
+            EitherT.fromEither(Left(s"*$exclude* forbidden here"))
+          else defaultCache.fetch(artifact)
+      override def file(artifact: Artifact): EitherT[Task, ArtifactError, File] =
+        if (artifact.url.contains(exclude))
+          EitherT.fromEither(Left(new ArtifactError.DownloadError(
+            s"*$exclude* forbidden here",
+            None
+          )))
+        else
+          defaultCache.file(artifact)
+    }
 }

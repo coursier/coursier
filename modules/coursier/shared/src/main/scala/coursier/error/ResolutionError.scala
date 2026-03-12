@@ -33,7 +33,7 @@ object ResolutionError {
     val perRepositoryErrors: Seq[String]
   ) extends Simple(
     resolution,
-    s"Error downloading $module:${versionConstraint.asString}" + System.lineSeparator() +
+    s"Error downloading $module:${versionConstraint.asStringOrEmpty}" + System.lineSeparator() +
       perRepositoryErrors
         .map { err =>
           "  " + err.replace(System.lineSeparator(), System.lineSeparator() + "  ")
@@ -75,7 +75,7 @@ object ResolutionError {
           .customRender(assumeTopRoot = false, extraPrefix = "  ", extraSeparator = Some("")) {
             node =>
               if (node.excludedDependsOn)
-                s"${colors.yellow}(excluded by)${colors.reset} ${renderModuleVersion(node.module, node.retainedVersion0.asString)}"
+                s"${colors.yellow}(excluded by)${colors.reset} ${renderModuleVersion(node.module, node.retainedVersion0.asStringOrEmpty)}"
               else if (node.dependsOnModule == t.module) {
                 val (retainedVersion, assumeCompatibleVersions) =
                   if (node.retainedVersion0.asString.isEmpty && node.module == node.dependsOnModule)
@@ -94,7 +94,7 @@ object ResolutionError {
 
                 s"${renderModuleVersion(node.module, retainedVersion)} " +
                   (if (assumeCompatibleVersions) colors.yellow else colors.red) +
-                  s"wants ${node.dependsOnVersionConstraint.asString}" +
+                  s"wants ${node.dependsOnVersionConstraint.asStringOrEmpty}" +
                   (if (node.endorsedDependsOn) " (endorsed dependency)" else "") +
                   colors.reset
               }
@@ -107,14 +107,14 @@ object ResolutionError {
                     node.dependsOnRetainedVersion0
                   )
 
-                s"${renderModuleVersion(node.module, node.retainedVersion0.asString)} " +
+                s"${renderModuleVersion(node.module, node.retainedVersion0.asStringOrEmpty)} " +
                   (if (assumeCompatibleVersions) colors.yellow else colors.red) +
-                  s"wants ${renderModuleVersion(node.dependsOnModule, node.dependsOnVersionConstraint.asString)}" +
+                  s"wants ${renderModuleVersion(node.dependsOnModule, node.dependsOnVersionConstraint.asStringOrEmpty)}" +
                   (if (node.endorsedDependsOn) " (endorsed dependency)" else "") +
                   colors.reset
               }
               else
-                s"${renderModuleVersion(node.module, node.retainedVersion0.asString)}"
+                s"${renderModuleVersion(node.module, node.retainedVersion0.asStringOrEmpty)}"
           }
 
         val dependeesWantVersions = t.dependees
@@ -128,7 +128,7 @@ object ResolutionError {
           }
           .sortBy(_._1)
           .map(_._2)
-        s"${renderModuleVersion(t.module, dependeesWantVersions.map(_.asString).mkString(" or "))} wanted by" +
+        s"${renderModuleVersion(t.module, dependeesWantVersions.map(_.asStringOrEmpty).mkString(" or "))} wanted by" +
           System.lineSeparator() +
           System.lineSeparator() +
           rendered + System.lineSeparator()
@@ -192,4 +192,18 @@ object ResolutionError {
     message: String
   ) extends Simple(resolution, message, conflict)
 
+  private implicit class VersionOps(private val v: Version) {
+    def asStringOrEmpty: String = {
+      val s = v.asString
+      if (s.isEmpty) "\"\""
+      else s
+    }
+  }
+  private implicit class VersionConstraintOps(private val v: VersionConstraint) {
+    def asStringOrEmpty: String = {
+      val s = v.asString
+      if (s.isEmpty) "\"\""
+      else s
+    }
+  }
 }
