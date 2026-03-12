@@ -201,6 +201,7 @@ echo 'autoload -Uz compinit ; compinit' >> ~/.zshrc
 | macOS           | <https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin.gz>                                                           |
 | Windows         | <https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip>                                                              |
 | Linux (ARM64)   | <https://github.com/coursier/launchers/raw/master/cs-aarch64-pc-linux.gz>                                                              |
+| Linux (compat)  | <https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-compat.gz>                                                        |
 | Any (needs JVM) | <https://github.com/coursier/coursier/raw/gh-pages/coursier> (gh-pages branch of coursier repository rather than launchers repository) |
 | Any (needs JVM) | <https://github.com/coursier/launchers/raw/master/coursier> (same launcher as above)                                                   |
 
@@ -217,13 +218,14 @@ echo 'autoload -Uz compinit ; compinit' >> ~/.zshrc
 To download specific versions of the launcher, download them from GitHub release
 assets:
 
-| OS              | URL                                                                                           | Since version           |
-| --------------- | --------------------------------------------------------------------------------------------- | ----------------------- |
-| Linux           | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-linux.gz>     | `2.0.16-158-gbdc8669f9` |
-| macOS           | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-apple-darwin.gz> | `2.0.16-158-gbdc8669f9` |
-| Windows         | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-win32.exe>    | `2.0.16-158-gbdc8669f9` |
-| Linux (ARM64)   | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-aarch64-pc-linux.gz>    | `2.0.16-158-gbdc8669f9` |
-| Any (needs JVM) | <https://github.com/coursier/coursier/releases/download/v@VERSION@/coursier>                  | `1.1.0-M9`              |
+| OS              | URL                                                                                                  | Since version           |
+| --------------- | ---------------------------------------------------------------------------------------------------- | ----------------------- |
+| Linux           | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-linux.gz>           | `2.0.16-158-gbdc8669f9` |
+| macOS           | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-apple-darwin.gz>       | `2.0.16-158-gbdc8669f9` |
+| Windows         | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-win32.exe>          | `2.0.16-158-gbdc8669f9` |
+| Linux (ARM64)   | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-aarch64-pc-linux.gz>          | `2.0.16-158-gbdc8669f9` |
+| Linux (compat)  | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-linux-compat.gz>    | `2.1.24`                |
+| Any (needs JVM) | <https://github.com/coursier/coursier/releases/download/v@VERSION@/coursier>                        | `1.1.0-M9`              |
 
 Former URLs, for information:
 
@@ -416,4 +418,21 @@ downloaded from GitHub release assets, like the standard launchers. Their file n
 
 ```bash
 $ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-container.gz" | gzip -d > cs
+```
+
+### Compat launchers
+
+These are built with `-march=x86-64` (the x86-64 baseline), which means they run on any 64-bit x86 processor,
+including CPUs that lack modern extensions such as AVX or AVX2 (for example, some Intel Celeron / Pentium / Atom
+processors, or low-power embedded chips). If you see an error like
+
+```
+The current machine does not support all of the following CPU features that are required by the image:
+[…AVX, AVX2…]
+```
+
+then use the compat launcher instead. Their file names end with `linux-compat`.
+
+```bash
+$ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-compat.gz" | gzip -d > cs
 ```

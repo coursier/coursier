@@ -5,7 +5,9 @@ import coursierbuild.Shading
 import mill._
 import com.github.lolgab.mill.mima._
 
-trait CoreJvmBase extends Core with CsMima with Shading {
+trait CoreJvmBase extends Core with Shading with CsMima {
+
+  def manifest = super[Shading].manifest
 
   def mimaBinaryIssueFilters =
     super.mimaBinaryIssueFilters() ++ Seq(
@@ -47,7 +49,7 @@ trait CoreJvmBase extends Core with CsMima with Shading {
       ProblemFilter.exclude[Problem]("coursier.core.shaded.*")
     )
 
-  def shadedDependencies = Agg(
+  def shadedDependencies = Seq(
     Deps.fastParse,
     Deps.jsoniterCore,
     Deps.pprint

@@ -60,6 +60,7 @@ object ResolutionError {
 
   private[coursier] def conflictingDependenciesErrorMessage(
     resolution: Resolution,
+    renderModuleVersion: (Module, String) => String = (mod, ver) => s"${mod.repr}:$ver",
     colors: Colors = Colors.get(coursier.core.compatibility.coloredOutput)
   ): String =
     "Conflicting dependencies:" + System.lineSeparator() + {
@@ -74,7 +75,7 @@ object ResolutionError {
           .customRender(assumeTopRoot = false, extraPrefix = "  ", extraSeparator = Some("")) {
             node =>
               if (node.excludedDependsOn)
-                s"${colors.yellow}(excluded by)${colors.reset} ${node.module}:${node.retainedVersion0.asString}"
+                s"${colors.yellow}(excluded by)${colors.reset} ${renderModuleVersion(node.module, node.retainedVersion0.asString)}"
               else if (node.dependsOnModule == t.module) {
                 val (retainedVersion, assumeCompatibleVersions) =
                   if (node.retainedVersion0.asString.isEmpty && node.module == node.dependsOnModule)
@@ -91,7 +92,7 @@ object ResolutionError {
                       )
                     )
 
-                s"${node.module}:$retainedVersion " +
+                s"${renderModuleVersion(node.module, retainedVersion)} " +
                   (if (assumeCompatibleVersions) colors.yellow else colors.red) +
                   s"wants ${node.dependsOnVersionConstraint.asString}" +
                   (if (node.endorsedDependsOn) " (endorsed dependency)" else "") +
@@ -106,14 +107,14 @@ object ResolutionError {
                     node.dependsOnRetainedVersion0
                   )
 
-                s"${node.module}:${node.retainedVersion0.asString} " +
+                s"${renderModuleVersion(node.module, node.retainedVersion0.asString)} " +
                   (if (assumeCompatibleVersions) colors.yellow else colors.red) +
-                  s"wants ${node.dependsOnModule}:${node.dependsOnVersionConstraint.asString}" +
+                  s"wants ${renderModuleVersion(node.dependsOnModule, node.dependsOnVersionConstraint.asString)}" +
                   (if (node.endorsedDependsOn) " (endorsed dependency)" else "") +
                   colors.reset
               }
               else
-                s"${node.module}:${node.retainedVersion0.asString}"
+                s"${renderModuleVersion(node.module, node.retainedVersion0.asString)}"
           }
 
         val dependeesWantVersions = t.dependees
@@ -127,7 +128,7 @@ object ResolutionError {
           }
           .sortBy(_._1)
           .map(_._2)
-        s"${t.module.repr}:${dependeesWantVersions.map(_.asString).mkString(" or ")} wanted by" +
+        s"${renderModuleVersion(t.module, dependeesWantVersions.map(_.asString).mkString(" or "))} wanted by" +
           System.lineSeparator() +
           System.lineSeparator() +
           rendered + System.lineSeparator()
@@ -139,8 +140,22 @@ object ResolutionError {
   // Warning: currently, all conflicts in a resolution end-up in the same ConflictingDependencies instance
   final class ConflictingDependencies(
     resolution: Resolution,
-    val dependencies: Set[Dependency]
-  ) extends Simple(resolution, conflictingDependenciesErrorMessage(resolution))
+    val dependencies: Set[Dependency],
+    renderModuleVersion: (Module, String) => String
+  ) extends Simple(
+        resolution,
+        conflictingDependenciesErrorMessage(resolution, renderModuleVersion)
+      ) {
+    def this(
+      resolution: Resolution,
+      dependencies: Set[Dependency]
+    ) =
+      this(
+        resolution,
+        dependencies,
+        renderModuleVersion = (mod, ver) => s"${mod.repr}:$ver"
+      )
+  }
 
   sealed abstract class Simple(resolution: Resolution, message: String, cause: Throwable = null)
       extends ResolutionError(resolution, message, cause) {

@@ -7,13 +7,15 @@ import coursierbuild.DocHelpers
 
 import java.io.File
 
-import mill._, mill.scalalib._
+import mill.*
+import mill.api.*
+import mill.scalalib.*
 
 trait Doc extends ScalaModule {
   def version: T[String]
   def classPath: T[Seq[PathRef]]
 
-  def ivyDeps = Agg(
+  def mvnDeps = Seq(
     Deps.mdoc
   )
   def mainClass = Some("mdoc.Main")
@@ -23,7 +25,7 @@ trait Doc extends ScalaModule {
     branch: String = "master",
     docusaurusDir: String = "doc/website"
   ) = Task.Command {
-    val dir = os.Path(docusaurusDir, Task.workspace)
+    val dir = os.Path(docusaurusDir, BuildCtx.workspaceRoot)
     DocHelpers.copyDocusaurusVersionedData(repo, branch, dir, Task.dest / "repo")
   }
 
@@ -57,13 +59,13 @@ trait Doc extends ScalaModule {
       if (ver.endsWith("SNAPSHOT")) """resolvers += Resolver.sonatypeRepo("snapshots")""" + "\n"
       else """//""" + "\n"
 
-    val outputDir = Task.workspace / "doc" / "processed-docs"
+    val outputDir = BuildCtx.workspaceRoot / "doc" / "processed-docs"
 
     val allArgs: Seq[String] = Seq(
       "--classpath",
       classPath().map(_.path.toString).mkString(File.pathSeparator),
       "--in",
-      (Task.workspace / "doc" / "docs").toString,
+      (BuildCtx.workspaceRoot / "doc" / "docs").toString,
       "--out",
       outputDir.toString,
       "--site.VERSION",
@@ -80,7 +82,7 @@ trait Doc extends ScalaModule {
 
     // TODO Run yarn run thing right after, add --watch mode
 
-    val websiteDir = Task.workspace / "doc" / "website"
+    val websiteDir = BuildCtx.workspaceRoot / "doc" / "website"
 
     if (npmInstall)
       os.proc("npm", "install").call(
@@ -97,7 +99,7 @@ trait Doc extends ScalaModule {
         classPath = runClasspath().map(_.path),
         jvmArgs = Nil,
         env = forkEnv(),
-        mainArgs = pprint.err.log(allArgs),
+        mainArgs = allArgs,
         cwd = forkWorkingDir(),
         stdout = os.Inherit
       )
@@ -137,7 +139,7 @@ object Doc {
     waitFor: () => Unit = null
   )(f: => T): T = {
 
-    val b = new ProcessBuilder(cmd: _*)
+    val b = new ProcessBuilder(cmd *)
     b.inheritIO()
     b.directory(dir)
     var p: Process = null

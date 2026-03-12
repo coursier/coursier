@@ -7,8 +7,6 @@ import scala.concurrent.duration._
 
 object TestAuthProxy {
 
-  def defaultPort = 9083
-
   private lazy val imageId = sys.props.getOrElse(
     "coursier.test.auth-proxy-image",
     sys.error("coursier.test.auth-proxy-image not set")
@@ -18,7 +16,7 @@ object TestAuthProxy {
     sys.error("coursier.test.auth-proxy-data-dir not set")
   )
 
-  def withAuthProxy[T](f: DockerServer => T): T = {
+  def withAuthProxy[T](port: Int)(f: DockerServer => T): T = {
     var containerId: String = ""
     try {
       containerId =
@@ -30,13 +28,13 @@ object TestAuthProxy {
           "-v",
           s"$dataPath:/data",
           "-p",
-          s"$defaultPort:80",
+          s"$port:80",
           imageId,
           "/bin/sh",
           "/data/run.sh"
         )
           .call().out.trim()
-      val server          = DockerServer("", () => (), s"localhost:$defaultPort")
+      val server          = DockerServer("", () => (), s"localhost:$port")
       var serverListening = false
       var delay           = 1.second
       var count           = 0
@@ -119,7 +117,7 @@ object TestAuthProxy {
        |</settings>
        |""".stripMargin
 
-  def m2Settings(): String =
-    m2Settings(defaultPort, "jack", "insecure")
+  def m2Settings(port: Int): String =
+    m2Settings(port, "jack", "insecure")
 
 }

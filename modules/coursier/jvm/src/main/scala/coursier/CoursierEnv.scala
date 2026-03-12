@@ -52,7 +52,7 @@ object CoursierEnv {
             .toSeq
             .filter(_.nonEmpty)
 
-      RepositoryParser.repositories(l).either match {
+      RepositoryParser.repositories(l, Repositories.hardCodedDefaultRepositories).either match {
         case Left(errs) =>
           System.err.println(
             s"Ignoring $origin, error parsing repositories from it:" + System.lineSeparator() +
@@ -79,15 +79,10 @@ object CoursierEnv {
       .flatMap(confFileRepositories(_).iterator)
       .find(_ => true)
 
-    def default = Seq(
-      LocalRepositories.ivy2Local,
-      Repositories.central
-    )
-
     fromEnvOpt
       .orElse(fromPropsOpt)
       .orElse(fromConfFiles)
-      .getOrElse(default)
+      .getOrElse(Repositories.hardCodedDefaultRepositories)
   }
 
   private[coursier] def confFileRepositories(confFile: Path): Option[Seq[Repository]] = {
