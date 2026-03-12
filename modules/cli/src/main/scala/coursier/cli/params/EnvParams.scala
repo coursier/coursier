@@ -24,14 +24,13 @@ final case class EnvParams(
   def envVarUpdater: Either[WindowsEnvVarUpdater, Either[ProfileUpdater, FishUpdater]] =
     if (Properties.isWin)
       Left(WindowsEnvVarUpdater().withUseJni(Some(coursier.paths.Util.useJni())))
-    else if (isFish()){
+    else if (isFish())
       Right(Right(FishUpdater()))
-    } else {
+    else
       Right(Left(
         ProfileUpdater()
           .withHome(homeOpt.orElse(ProfileUpdater.defaultHome))
       ))
-    }
 
   private def isFish() =
     System.getenv("SHELL").contains("fish")
@@ -70,7 +69,8 @@ final case class EnvParams(
               }
             case Right(Right(fishUpdater)) =>
               lazy val profileFiles = fishUpdater.profileFiles() // Task.delay(…)
-              val profileFilesStr = profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
+              val profileFilesStr =
+                profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
               val msg = s"Checking if ${profileFilesStr.mkString(", ")} need(s) updating."
               Task.delay {
                 if (verbosity >= 0)

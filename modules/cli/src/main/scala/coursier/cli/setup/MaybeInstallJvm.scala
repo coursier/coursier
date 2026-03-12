@@ -76,30 +76,38 @@ case class MaybeInstallJvm(
             else {
               val profileFilesStr =
                 profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
-              confirm.confirm(
-                s"Should we update ${profileFilesStr.mkString(", ")}?",
-                default = true
-              ).flatMap {
-                case false => Task.point(false)
-                case true =>
-                  Task.delay {
-                    profileUpdater.applyUpdate(envUpdate, headerComment)
-                  }
-              }
+              confirm
+                .confirm(
+                  s"Should we update ${profileFilesStr.mkString(", ")}?",
+                  default = true
+                )
+                .flatMap {
+                  case false => Task.point(false)
+                  case true =>
+                    Task.delay {
+                      profileUpdater.applyUpdate(envUpdate, headerComment)
+                    }
+                }
             }
           case Some(Right(Right(fishUpdater))) =>
             lazy val profileFiles = fishUpdater.profileFiles() // Task.delay(…)
-            if (envUpdate.isEmpty || profileFiles.isEmpty /* just in case, should not happen */)
+            if (envUpdate.isEmpty || profileFiles.isEmpty /* just in case, should not happen */ )
               Task.point(false)
             else {
-              val profileFilesStr = profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
-              confirm.confirm(s"Should we update ${profileFilesStr.mkString(", ")}?", default = true).flatMap {
-                case false => Task.point(false)
-                case true =>
-                  Task.delay {
-                    fishUpdater.applyUpdate(envUpdate, headerComment)
-                  }
-              }
+              val profileFilesStr =
+                profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
+              confirm
+                .confirm(
+                  s"Should we update ${profileFilesStr.mkString(", ")}?",
+                  default = true
+                )
+                .flatMap {
+                  case false => Task.point(false)
+                  case true =>
+                    Task.delay {
+                      fishUpdater.applyUpdate(envUpdate, headerComment)
+                    }
+                }
             }
         }
       }
@@ -153,7 +161,7 @@ case class MaybeInstallJvm(
         Task.delay {
           fishUpdater.tryRevertUpdate(headerComment)
         }
-      
+
     }
 
     val profileFilesOpt = envVarUpdaterOpt.flatMap {

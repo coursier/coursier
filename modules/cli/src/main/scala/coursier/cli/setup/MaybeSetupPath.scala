@@ -60,7 +60,10 @@ case class MaybeSetupPath(
           }
         case Some(Right(Right(fishUpdater))) =>
           val profileFilesStr = fishUpdater.profileFiles().map(dirStr)
-          confirm.confirm(s"Should we add $binDirStr to your PATH via ${profileFilesStr.mkString(", ")}?", default = true).flatMap {
+          confirm.confirm(
+            s"Should we add $binDirStr to your PATH via ${profileFilesStr.mkString(", ")}?",
+            default = true
+          ).flatMap {
             case false => Task.point(())
             case true =>
               Task.delay {

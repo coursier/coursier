@@ -9,7 +9,7 @@ import java.nio.file.FileAlreadyExistsException
 
 @data class FishUpdater(
   home: Option[Path] = FishUpdater.defaultHome,
-  getEnv: Option[String => Option[String]] = Some(k => Option(System.getenv(k))),
+  getEnv: String => Option[String] = k => Option(System.getenv(k)),
   charset: Charset = Charset.defaultCharset(),
   pathSeparator: String = File.pathSeparator
 ) extends EnvVarUpdater {
@@ -17,14 +17,15 @@ import java.nio.file.FileAlreadyExistsException
   def profileFiles(): Seq[Path] = {
 
     val fishprofile = {
-      val isFish = getEnv.flatMap(_("SHELL")).exists(_.contains("fish"))
+      val isFish = getEnv("SHELL").exists(_.contains("fish"))
       if (isFish) {
-        val configFish = getEnv.map(env => 
-          env("XDG_CONFIG_HOME").getOrElse(env("HOME").map(_ + "/.config").get) + "/fish/config.fish").get
+        val configFish =
+          getEnv("XDG_CONFIG_HOME").getOrElse(getEnv("HOME").map(_ + "/.config").getOrElse(sys.error("HOME not set"))) +
+            "/fish/config.fish"
         home.map(_.getFileSystem().getPath(configFish)).toSeq
-      } else {
-        Nil
       }
+      else
+        Nil
     }
 
     fishprofile
@@ -38,7 +39,8 @@ import java.nio.file.FileAlreadyExistsException
         Some(startIdx, endIdx + end.length)
       else
         None
-    } else
+    }
+    else
       None
   }
 
@@ -56,7 +58,7 @@ import java.nio.file.FileAlreadyExistsException
             }
         case Some(title) =>
           val start = s"# >>> $title >>>\n"
-          val end = s"# <<< $title <<<\n"
+          val end   = s"# <<< $title <<<\n"
           val withTags = "\n" +
             start +
             addition.stripSuffix("\n") + "\n" +
@@ -90,7 +92,10 @@ import java.nio.file.FileAlreadyExistsException
     updatedSomething
   }
 
-  private def removeFromProfileFiles(additionOpt: Option[String], titleOpt: Option[String]): Boolean = {
+  private def removeFromProfileFiles(
+    additionOpt: Option[String],
+    titleOpt: Option[String]
+  ): Boolean = {
 
     def updated(content: String): Option[String] =
       titleOpt match {
@@ -103,7 +108,7 @@ import java.nio.file.FileAlreadyExistsException
           }
         case Some(title) =>
           val start = s"# >>> $title >>>\n"
-          val end = s"# <<< $title <<<\n"
+          val end   = s"# <<< $title <<<\n"
           startEndIndices(start, end, content).map {
             case (startIdx, endIdx) =>
               content.take(startIdx).stripSuffix("\n") +
@@ -161,9 +166,8 @@ import java.nio.file.FileAlreadyExistsException
     val addition = contentFor(update)
     removeFromProfileFiles(Some(addition), None)
   }
-  def tryRevertUpdate(title: String): Boolean = {
+  def tryRevertUpdate(title: String): Boolean =
     removeFromProfileFiles(None, Some(title))
-  }
 
 }
 
@@ -175,7 +179,7 @@ object FishUpdater {
     try Files.createDirectories(path)
     catch {
       case _: FileAlreadyExistsException if Files.isDirectory(path) =>
-        // Ignored, see https://bugs.openjdk.java.net/browse/JDK-8130464
+      // Ignored, see https://bugs.openjdk.java.net/browse/JDK-8130464
     }
 
 }
