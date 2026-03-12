@@ -17,7 +17,7 @@ trait BootstrapLauncher extends CsModule {
   def proguardClassPath: T[Seq[PathRef]]
 
   def scalaVersion = ScalaVersions.scala213
-  def ivyDeps = super.ivyDeps() ++ Seq(
+  def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.directories,
     Deps.jniUtilsBootstrap
   )
@@ -32,7 +32,7 @@ trait BootstrapLauncher extends CsModule {
     else if (os.isDir(jmods))
       PathRef(jmods)
     else
-      sys.error(s"$rtJar and $jmods not found")
+      sys.error(s"$rtJar and $jmods not found, you might want to use a Zulu JDK")
   }
 
   def sharedProguardConf = Task {
@@ -72,9 +72,9 @@ trait BootstrapLauncher extends CsModule {
   def transitiveRunJars: T[Seq[PathRef]] = Task {
     Task.traverse(transitiveModuleDeps)(_.jar)()
   }
-  def upstreamAssemblyClasspath: T[Agg[PathRef]] = Task {
+  def upstreamAssemblyClasspath: T[Seq[PathRef]] = Task {
     // use JARs instead of directories of upstream deps, to make assembly generation below happy
-    val cp = resolvedRunIvyDeps() ++ transitiveRunJars()
+    val cp = resolvedRunMvnDeps() ++ transitiveRunJars()
     // drop Scala JARs (need refactoring of build so that these are not around here)
     cp.filter(!_.path.last.startsWith("scala-"))
   }

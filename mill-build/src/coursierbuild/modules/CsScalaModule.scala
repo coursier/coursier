@@ -22,11 +22,11 @@ trait CsScalaModule extends ScalaModule with CoursierJavaModule {
       jvmRelease
     )
   }
-  def scalacPluginIvyDeps = Task {
+  def scalacPluginMvnDeps = Task {
     val sv = scalaVersion()
     val scala212Plugins =
-      if (sv.startsWith("2.12.")) Agg(Deps.macroParadise)
+      if (sv.startsWith("2.12.")) Seq(Deps.macroParadise)
       else Nil
-    super.scalacPluginIvyDeps() ++ scala212Plugins
+    super.scalacPluginMvnDeps() ++ scala212Plugins
   }
 }
