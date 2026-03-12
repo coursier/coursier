@@ -1,17 +1,15 @@
-import mill._
-import mill.api.BuildInfo
-import mill.runner.MillBuildRootModule
-import mill.scalalib._
+import mill.*
+import mill.meta.MillBuildRootModule
+import mill.scalalib.*
 
 object `package` extends MillBuildRootModule {
-  override def ivyDeps = Agg(
-    ivy"com.lihaoyi::mill-contrib-bloop:${BuildInfo.millVersion}",
-    ivy"com.github.lolgab::mill-mima::0.1.1",
-    ivy"io.get-coursier.util::get-cs:0.1.1",
-    ivy"com.softwaremill.sttp.client::core:2.3.0",
-    ivy"io.get-coursier::coursier-launcher:2.1.7",
-    ivy"io.github.alexarchambault.mill::mill-native-image::0.1.30",
-    ivy"org.jsoup:jsoup:1.20.1",
-    ivy"com.eed3si9n.jarjarabrams::jarjar-abrams-core:1.14.1"
+  def mvnDeps = Seq(
+    mvn"com.github.lolgab::mill-mima::0.2.0",
+    mvn"io.get-coursier.util:get-cs_2.13:0.1.1",
+    mvn"com.softwaremill.sttp.client4::core:4.0.9",
+    mvn"io.get-coursier:coursier-launcher_2.13:2.1.25-M13",
+    mvn"io.github.alexarchambault.mill::mill-native-image::0.2.2",
+    mvn"org.jsoup:jsoup:1.21.2",
+    mvn"com.eed3si9n.jarjarabrams:jarjar-abrams-core_2.13:1.14.1"
   )
 }

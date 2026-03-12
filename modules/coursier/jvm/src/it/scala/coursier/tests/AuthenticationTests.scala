@@ -93,7 +93,6 @@ object AuthenticationTests extends TestSuite {
       val credentials = allCredentials.head
       testCredentials(credentials)
     }
-
   }
 
 }

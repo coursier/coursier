@@ -75,6 +75,16 @@ object ArtifactError {
   // format: on
 
   // format: off
+  final class RetryableServerError(
+    val url: String,
+    val responseCode: Int
+  ) extends ArtifactError(
+    "retryable server error",
+    s"$url (HTTP $responseCode)"
+  )
+  // format: on
+
+  // format: off
   final class ChecksumNotFound(
     val sumType: String,
     val file: String
