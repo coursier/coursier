@@ -30,7 +30,9 @@ jobs:
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
-    - run: ./mill -i __.compile
+    - run: |
+        ./mill -i -j1 __.js[_].compile
+        ./mill -i __.compile
     - run: ./mill -i __.publishLocal
 
   compile-all-no-package-object:
@@ -54,6 +56,7 @@ jobs:
     - run: |
         test -e modules/coursier/shared/src/main/scala/coursier/package.scala
         rm -f modules/coursier/shared/src/main/scala/coursier/package.scala
+        ./mill -i -j1 __.js[_].compile
         ./mill -i __.compile
 
   test:
@@ -128,7 +131,10 @@ jobs:
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
-    - run: npm install --ignore-scripts && ./mill -i jsTests --scalaVersion "$SCALA_VERSION"
+    - run: |
+        npm install --ignore-scripts
+        ./mill -i -j1 '__.js['"$SCALA_VERSION"'].compile'
+        ./mill -i jsTests --scalaVersion "$SCALA_VERSION"
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
