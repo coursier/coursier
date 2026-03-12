@@ -41,7 +41,8 @@ import dataclass.data
   enableDependencyOverrides: Option[Boolean] = None,
   @since("2.1.25")
   defaultVariantAttributes: Option[VariantSelector.AttributesBased] = None,
-  renderModuleVersion: Option[(Module, String) => String] = None
+  renderModuleVersion: Option[(Module, String) => String] = None,
+  scalaOrganizationOverride: Option[Organization] = None
 ) {
 
   @deprecated("Use forceVersion0 instead", "2.1.25")
