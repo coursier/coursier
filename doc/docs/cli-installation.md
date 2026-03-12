@@ -33,16 +33,16 @@ On Linux, download the coursier installer with
 
 ```bash
 # On x86-64 (aka AMD64)
-$ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
+curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
 # On ARM64
-$ curl -fL "https://github.com/VirtusLab/coursier-m1/releases/latest/download/cs-aarch64-pc-linux.gz" | gzip -d > cs
+curl -fL "https://github.com/VirtusLab/coursier-m1/releases/latest/download/cs-aarch64-pc-linux.gz" | gzip -d > cs
 ```
 
 Then, run it with
 
 ```bash
-$ chmod +x cs
-$ ./cs setup
+chmod +x cs
+./cs setup
 ```
 
 Other flavors of native Linux launchers are available, see [below](#other-native-linux-launchers).
@@ -53,7 +53,7 @@ On macOS, download and run the coursier installer with
 
 ```bash
 # On Apple Silicon (M1, M2, ...):
-$ curl -fL https://github.com/VirtusLab/coursier-m1/releases/latest/download/cs-aarch64-apple-darwin.gz | gzip -d > cs
+$ curl -fL https://github.com/coursier/coursier/releases/latest/download/cs-aarch64-apple-darwin.gz | gzip -d > cs
 # Otherwise:
 $ curl -fL https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin.gz | gzip -d > cs
 $ chmod +x cs
@@ -63,12 +63,15 @@ $ ./cs setup
 ### macOS - brew based installation
 
 Alternatively, the coursier launcher can be installed via [homebrew](https://brew.sh) with
+
 ```bash
 $ brew install coursier/formulas/coursier
 $ cs setup
 ```
 
 ### Windows
+
+> For ARM64 Windows users, please follow **JAR-based launcher** section. The Windows installer currently only installs x86_64 build of Coursier.
 
 On Windows, [download and execute the Windows installer](https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip).
 
@@ -85,10 +88,10 @@ mv cs-x86_64-pc-win32.exe cs.exe
 ```pws
 # PowerShell
 Invoke-WebRequest -Uri "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip" -OutFile "cs-x86_64-pc-win32.zip"
-Expand-Archive -Path "cs-x86_64-pc-win32.zip"
+Expand-Archive -Path "cs-x86_64-pc-win32.zip" -DestinationPath .
 Rename-Item -Path "cs-x86_64-pc-win32.exe" -NewName "cs.exe"
 Remove-Item -Path "cs-x86_64-pc-win32.zip"
-.\cs --help
+.\cs setup
 ```
 
 ```bat
@@ -96,7 +99,7 @@ Remove-Item -Path "cs-x86_64-pc-win32.zip"
 curl -fLo cs-x86_64-pc-win32.zip https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip
 tar -xf cs-x86_64-pc-win32.zip
 move cs-x86_64-pc-win32.exe cs.exe
-.\cs --help
+.\cs setup
 ```
 
 ### Check your setup
@@ -116,11 +119,12 @@ In case you run into any issue with the [native launcher](#native-launcher),
 a JAR-based launcher is available.
 
 > The commands below install the JAR-based launcher as `coursier`, which can be
-substituted to `cs` in the various examples on this website.
+> substituted to `cs` in the various examples on this website.
 
 ### Linux / macOS
 
 Download and run the launcher with
+
 ```bash
 $ curl -fLo coursier https://github.com/coursier/launchers/raw/master/coursier &&
     chmod +x coursier &&
@@ -135,6 +139,7 @@ as is in other projects.
 It downloads the artifacts required to launch coursier on the first run.
 
 Alternatively, on macOS, the JAR-based launcher can be installed via [homebrew](https://brew.sh) with
+
 ```bash
 $ brew install coursier/formulas/coursier
 $ coursier
@@ -143,6 +148,7 @@ $ coursier
 ### Windows
 
 Install and run the JAR-based coursier launcher from the current directory at the Windows prompt, with
+
 ```bat
 # CMD
 > bitsadmin /transfer downloadCoursierCli https://github.com/coursier/launchers/raw/master/coursier "%cd%\coursier"
@@ -154,6 +160,7 @@ Install and run the JAR-based coursier launcher from the current directory at th
 ```
 
 You can then run coursier from the same directory, like
+
 ```bat
 > coursier resolve io.circe:circe-core_2.12:0.10.0
 ```
@@ -161,6 +168,7 @@ You can then run coursier from the same directory, like
 ### Arch Linux
 
 Install it from [AUR](https://aur.archlinux.org/packages/coursier/),
+
 ```bash
 $ pacaur -S coursier
 ```
@@ -168,6 +176,7 @@ $ pacaur -S coursier
 ### FreeBSD
 
 Install it via `pkg` from the [Ports Collection](https://www.freshports.org/devel/coursier/),
+
 ```bash
 $ pkg install coursier
 ```
@@ -177,9 +186,11 @@ $ pkg install coursier
 If you use ZSH, simple tab-completions are available by writing the
 coursier completion data into your completions directory.
 You can install the completions with:
+
 ```bash
 mkdir -p ~/.zsh/completion
 ```
+
 ```bash
 echo '#compdef _cs cs
 
@@ -187,6 +198,7 @@ function _cs {
   eval "$(cs complete zsh-v1 $CURRENT $words[@])"
 }' > ~/.zsh/completion/_cs
 ```
+
 ```bash
 echo 'fpath=(~/.zsh/completion $fpath)' >> ~/.zshrc
 echo 'autoload -Uz compinit ; compinit' >> ~/.zshrc
@@ -196,44 +208,46 @@ echo 'autoload -Uz compinit ; compinit' >> ~/.zshrc
 
 ### Latest launchers
 
-|OS|URL|
-|-|-|
-|Linux|<https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz>|
-|macOS|<https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin.gz>|
-|Windows|<https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip>|
-|Linux (ARM64)|<https://github.com/coursier/launchers/raw/master/cs-aarch64-pc-linux.gz>|
-|Any (needs JVM)|<https://github.com/coursier/coursier/raw/gh-pages/coursier> (gh-pages branch of coursier repository rather than launchers repository)|
-|Any (needs JVM)|<https://github.com/coursier/launchers/raw/master/coursier> (same launcher as above)|
+| OS              | URL                                                                                                                                    |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Linux           | <https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz>                                                               |
+| macOS           | <https://github.com/coursier/launchers/raw/master/cs-x86_64-apple-darwin.gz>                                                           |
+| Windows         | <https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-win32.zip>                                                              |
+| Linux (ARM64)   | <https://github.com/coursier/launchers/raw/master/cs-aarch64-pc-linux.gz>                                                              |
+| Linux (compat)  | <https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-compat.gz>                                                        |
+| Any (needs JVM) | <https://github.com/coursier/coursier/raw/gh-pages/coursier> (gh-pages branch of coursier repository rather than launchers repository) |
+| Any (needs JVM) | <https://github.com/coursier/launchers/raw/master/coursier> (same launcher as above)                                                   |
 
 > Note that most launchers used to be available at short `git.io` URLs, and at long URLs
-*without* compression, that is not ending in `.gz` nor `.zip`.
+> _without_ compression, that is not ending in `.gz` nor `.zip`.
 >
 > These URLs are not updated anymore, and
-point at former coursier versions, as using compressed launchers
-allows to save space and bandwidth (for the long URLs), and as git.io is [about to be
-deprecated](https://github.blog/changelog/2022-01-11-git-io-no-longer-accepts-new-urls).
+> point at former coursier versions, as using compressed launchers
+> allows to save space and bandwidth (for the long URLs), and as git.io is [about to be
+> deprecated](https://github.blog/changelog/2022-01-11-git-io-no-longer-accepts-new-urls).
 
 ### Specific versions
 
 To download specific versions of the launcher, download them from GitHub release
 assets:
 
-|OS|URL|Since version|
-|-|-|-|
-|Linux|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-linux.gz>|`2.0.16-158-gbdc8669f9`|
-|macOS|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-apple-darwin.gz>|`2.0.16-158-gbdc8669f9`|
-|Windows|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-win32.exe>|`2.0.16-158-gbdc8669f9`|
-|Linux (ARM64)|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-aarch64-pc-linux.gz>|`2.0.16-158-gbdc8669f9`|
-|Any (needs JVM)|<https://github.com/coursier/coursier/releases/download/v@VERSION@/coursier>|`1.1.0-M9`|
+| OS              | URL                                                                                                  | Since version           |
+| --------------- | ---------------------------------------------------------------------------------------------------- | ----------------------- |
+| Linux           | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-linux.gz>           | `2.0.16-158-gbdc8669f9` |
+| macOS           | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-apple-darwin.gz>       | `2.0.16-158-gbdc8669f9` |
+| Windows         | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-win32.exe>          | `2.0.16-158-gbdc8669f9` |
+| Linux (ARM64)   | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-aarch64-pc-linux.gz>          | `2.0.16-158-gbdc8669f9` |
+| Linux (compat)  | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-linux-compat.gz>    | `2.1.24`                |
+| Any (needs JVM) | <https://github.com/coursier/coursier/releases/download/v@VERSION@/coursier>                        | `1.1.0-M9`              |
 
 Former URLs, for information:
 
-|OS|URL|Since version|Up to version|
-|-|-|-|-|
-|Linux|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-linux>|`2.0.0-RC3-1`|`2.0.16`|
-|macOS|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-apple-darwin>|`2.0.0-RC3-1`|`2.0.16`|
-|Windows|<https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-win32.exe>|`2.0.0-RC6`|`2.0.16`|
-|Any (needs JVM)|<https://github.com/coursier/coursier/raw/v1.1.0-M9/coursier>| |`1.1.0-M9`|
+| OS              | URL                                                                                        | Since version | Up to version |
+| --------------- | ------------------------------------------------------------------------------------------ | ------------- | ------------- |
+| Linux           | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-linux>     | `2.0.0-RC3-1` | `2.0.16`      |
+| macOS           | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-apple-darwin> | `2.0.0-RC3-1` | `2.0.16`      |
+| Windows         | <https://github.com/coursier/coursier/releases/download/v@VERSION@/cs-x86_64-pc-win32.exe> | `2.0.0-RC6`   | `2.0.16`      |
+| Any (needs JVM) | <https://github.com/coursier/coursier/raw/v1.1.0-M9/coursier>                              |               | `1.1.0-M9`    |
 
 ## Command-line options
 
@@ -246,6 +260,7 @@ installed on your system, and updates your profile files (Linux / macOS) or user
 It asks you to confirm prior to performing any of these actions.
 
 To answer yes to all these questions beforehand, pass `--yes` or `-y` to `setup`:
+
 ```bash
 $ cs setup --yes
 ```
@@ -254,15 +269,19 @@ $ cs setup --yes
 
 If you prefer the `setup` command not to update your profile files (`~/.profile` and the like),
 pass `--env` to it, and call `eval` (from bash or zsh) on its output:
+
 ```bash
 $ eval "$(cs setup --env)"
 ```
+
 This updates `JAVA_HOME` and `PATH` for the duration of the current session.
 
 Pass it a JVM id and a list of applications to
+
 - use that JVM in the current session, and
 - ensure some applications are installed,
   like
+
 ```bash
 $ eval "$(cs setup --env --jvm 11 --apps sbt-launcher,ammonite)"
 $ sbt
@@ -291,6 +310,7 @@ is the same as the [`java` command](cli-java.md), the latest AdoptOpenJDK 8 as o
 writing this.
 
 Pass `--jvm` to ignore the already installed jvm and install a custom one:
+
 ```bash
 $ cs setup --jvm 11
 ```
@@ -301,6 +321,7 @@ JVMs are extracted in
 [the JVM cache directory](cli-java.md#managed-jvm-directory) by default.
 
 Pass a custom directory to extract JVM under with `--jvm-dir`:
+
 ```bash
 $ eval "$(cs setup --jvm 11 --jvm-dir test-jvm)"
 …
@@ -328,6 +349,7 @@ Applications are installed in [the installation directory of coursier](cli-insta
 by default.
 
 Pass a custom directory to install applications in with `--install-dir`:
+
 ```bash
 $ eval "$(cs setup --apps sbt-launcher,ammonite --install-dir tmp-install)"
 …
@@ -340,6 +362,7 @@ $ tmp-install/amm
 #### Profile files directory
 
 Pass a custom directory that contains `.profile` / `.bash_profile` / `.zprofile` files with:
+
 ```bash
 $ cs setup --user-home test-home
 …
@@ -355,6 +378,7 @@ export PATH="$PATH:/Users/alex/Library/Application Support/Coursier/bin"
 ### Linux / macOS
 
 The `setup` command updates the following files:
+
 - `~/.profile` (created if needed),
 - `~/.zprofile` if zsh is the current shell (created if needed, respects `ZDOTDIR`),
 - `~/.bash_profile` (only if it exists).
@@ -363,6 +387,7 @@ For example, if `~/.bash_profile` doesn't exist and you're using zsh, both `~/.p
 and `~/.zprofile` will be updated (and created if needed).
 
 The sections the `setup` command adds to your profile files are clearly delimited, like
+
 ```bash
 # >>> coursier install directory >>>
 export PATH="$PATH:/Users/alex/Library/Application Support/Coursier/bin"
@@ -383,7 +408,6 @@ built for the x86-64 architecture for now (no ARM64).
 These can run in environments where glibc is not available, such as Alpine docker images. These can be
 downloaded from GitHub release assets, like the standard launchers. Their file names end with `linux-static`.
 
-
 ```bash
 $ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-static.gz" | gzip -d > cs
 ```
@@ -393,7 +417,6 @@ $ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-
 These require glibc and libz, but do not need the C++ standard library. They are meant to be used from
 so called ["distroless" Docker images](https://github.com/GoogleContainerTools/distroless). These can be
 downloaded from GitHub release assets, like the standard launchers. Their file names end with `linux-mostly-static`.
-
 
 ```bash
 $ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-mostly-static.gz" | gzip -d > cs
@@ -406,7 +429,23 @@ These are temporary. These are just like the standard launchers, but built witho
 the GraalVM container support, if ever you run into them. These can be
 downloaded from GitHub release assets, like the standard launchers. Their file names end with `linux-container`.
 
-
 ```bash
 $ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-container.gz" | gzip -d > cs
+```
+
+### Compat launchers
+
+These are built with `-march=x86-64` (the x86-64 baseline), which means they run on any 64-bit x86 processor,
+including CPUs that lack modern extensions such as AVX or AVX2 (for example, some Intel Celeron / Pentium / Atom
+processors, or low-power embedded chips). If you see an error like
+
+```
+The current machine does not support all of the following CPU features that are required by the image:
+[…AVX, AVX2…]
+```
+
+then use the compat launcher instead. Their file names end with `linux-compat`.
+
+```bash
+$ curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux-compat.gz" | gzip -d > cs
 ```

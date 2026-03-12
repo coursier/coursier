@@ -1,6 +1,6 @@
 package coursier.cli.install
 
-import caseapp.{ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import coursier.cli.options.OptionGroup
 
 // format: off
@@ -19,12 +19,12 @@ final case class SharedInstallOptions(
     graalvmDefaultVersion: Option[String] = SharedInstallOptions.defaultGraalvmVersion,
 
   @Group(OptionGroup.install)
-  @Short("dir")
+  @ExtraName("dir")
     installDir: Option[String] = None,
 
   @Group(OptionGroup.install)
   @Hidden
-  @Help("Platform for prebuilt binaries (e.g. \"x86_64-pc-linux\", \"x86_64-apple-darwin\", \"x86_64-pc-win32\")")
+  @HelpMessage("Platform for prebuilt binaries (e.g. \"x86_64-pc-linux\", \"x86_64-apple-darwin\", \"x86_64-pc-win32\")")
     installPlatform: Option[String] = None,
 
   @Group(OptionGroup.install)
@@ -33,7 +33,7 @@ final case class SharedInstallOptions(
 
   @Group(OptionGroup.install)
   @Hidden
-  @Help("Require prebuilt artifacts for native applications, don't try to build native executable ourselves")
+  @HelpMessage("Require prebuilt artifacts for native applications, don't try to build native executable ourselves")
     onlyPrebuilt: Boolean = false,
 
   @Group(OptionGroup.install)

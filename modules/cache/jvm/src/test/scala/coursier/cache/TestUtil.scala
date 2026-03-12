@@ -22,11 +22,10 @@ import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.dsl.io._
 import org.http4s.headers.{Authorization, `WWW-Authenticate`}
 import org.http4s.server.Router
-import org.http4s.util.CaseInsensitiveString
 import org.http4s.{BasicCredentials, Challenge, HttpRoutes, Request, Uri}
 import org.typelevel.ci.CIString
 
-import scala.concurrent.ExecutionContext
+import scala.language.implicitConversions
 
 object TestUtil {
 
@@ -104,7 +103,9 @@ object TestUtil {
         case t: org.http4s.Credentials.Token => t
       }
       if token.authScheme == CIString("Basic")
-      c = BasicCredentials(token.token)
+      c = BasicCredentials.fromString(token.token).getOrElse {
+        throw new Exception("Error parsing token in HTTP response")
+      }
       if (c.username, c.password) == userPass
     } yield ()
 

@@ -1,11 +1,11 @@
 package coursier.interop
 
-import coursier.moduleString
 import coursier.interop.scalaz.{coursierGatherFromScalaz => _, _}
-import coursier.test.compatibility.executionContext
-import coursier.test.{TestRunner, compatibility}
+import coursier.tests.compatibility.executionContext
+import coursier.tests.{TestRunner, compatibility}
+import coursier.util.StringInterpolators._
 import _root_.scalaz.concurrent.{Task => ScalazTask}
-import coursier.test.util.ToFuture
+import coursier.tests.util.ToFuture
 import utest._
 
 import scala.concurrent.{ExecutionContext, Promise}
@@ -34,17 +34,23 @@ object ScalazTests extends TestSuite {
   val tests = Tests {
 
     test("spark") {
-      test - runner.resolutionCheck(
-        mod"org.apache.spark:spark-core_2.11",
-        "1.3.1",
-        profiles = Some(Set("hadoop-2.2"))
-      )
+      test {
+        runner.resolutionCheck(
+          mod"org.apache.spark:spark-core_2.11",
+          "1.3.1",
+          profiles = Some(Set("hadoop-2.2", "!scala-2.10", "scala-2.11")),
+          forceDepMgmtVersions = Some(true)
+        )
+      }
 
-      test("scala210") - runner.resolutionCheck(
-        mod"org.apache.spark:spark-core_2.10",
-        "2.1.1",
-        profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11"))
-      )
+      test("scala210") {
+        runner.resolutionCheck(
+          mod"org.apache.spark:spark-core_2.10",
+          "2.1.1",
+          profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11")),
+          forceDepMgmtVersions = Some(true)
+        )
+      }
     }
 
     test("argonautShapeless") {

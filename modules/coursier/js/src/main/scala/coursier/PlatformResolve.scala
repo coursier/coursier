@@ -1,5 +1,6 @@
 package coursier
 
+import coursier.core.Repository
 import coursier.params.{Mirror, MirrorConfFile}
 
 abstract class PlatformResolve {
@@ -9,6 +10,9 @@ abstract class PlatformResolve {
   def defaultConfFiles: Seq[Path] =
     Nil
   def defaultMirrorConfFiles: Seq[MirrorConfFile] =
+    Nil
+
+  def defaultMirrors: Seq[Mirror] =
     Nil
 
   def confFileMirrors(confFile: Path): Seq[Mirror] =

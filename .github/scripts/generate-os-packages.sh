@@ -6,7 +6,7 @@ ARCHITECTURE=$(uname -m)
 ARTIFACTS_DIR="artifacts/"
 mkdir -p "$ARTIFACTS_DIR"
 
-if [[ "$OSTYPE" == "msys" ]]; then
+if [[ -z "$OSTYPE" || "$OSTYPE" == "msys" ]]; then
   mill="./mill.bat"
 else
   mill="./mill"
@@ -17,13 +17,13 @@ launcher() {
   local launcherMillCommand="cliNativeImageLauncher"
   local launcherName
 
-  if [[ "$OSTYPE" == "msys" ]]; then
+  if [[ "${OS-}" == "Windows_NT" ]]; then
     launcherName="cs.exe"
   else
     launcherName="cs"
   fi
 
-  "$mill" -i copyTo "$launcherMillCommand" "$launcherName" 1>&2
+  "$mill" -i copyTo --task "$launcherMillCommand" --dest "$launcherName" 1>&2
   echo "$launcherName"
 }
 
@@ -33,7 +33,11 @@ generate_sdk() {
 
   if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     if  [[ "$ARCHITECTURE" == "x86_64" ]]; then
-      sdkDirectory="cs-x86_64-pc-linux-static-sdk"
+      sdkDirectory="cs-x86_64-pc-linux-sdk"
+    elif [[ "$ARCHITECTURE" == "arm64" ]]; then
+      sdkDirectory="cs-aarch64-pc-linux-sdk"
+    elif [[ "$ARCHITECTURE" == "aarch64" ]]; then
+      sdkDirectory="cs-aarch64-pc-linux-sdk"
     else
       echo "cs is not supported on $ARCHITECTURE"
       exit 2
@@ -42,6 +46,10 @@ generate_sdk() {
   elif [[ "$OSTYPE" == "darwin"* ]]; then
     if [[ "$ARCHITECTURE" == "x86_64" ]]; then
       sdkDirectory="cs-x86_64-apple-darwin-sdk"
+    elif [[ "$ARCHITECTURE" == "arm64" ]]; then
+      sdkDirectory="cs-aarch64-apple-darwin-sdk"
+    elif [[ "$ARCHITECTURE" == "aarch64" ]]; then
+      sdkDirectory="cs-aarch64-apple-darwin-sdk"
     else
       echo "cs is not supported on $ARCHITECTURE"
       exit 2

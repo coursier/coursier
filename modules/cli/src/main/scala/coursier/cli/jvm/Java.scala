@@ -7,11 +7,12 @@ import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.params.EnvParams
 import coursier.cli.setup.MaybeInstallJvm
 import coursier.cli.Util.ValidatedExitOnError
-import coursier.core.Version
 import coursier.env.{Shell, ShellUtil}
-import coursier.jvm.{Execve, JvmCache, JvmCacheLogger}
+import coursier.exec.Execve
+import coursier.jvm.{JvmCache, JvmCacheLogger}
 import coursier.launcher.internal.Windows
 import coursier.util.{Sync, Task}
+import coursier.version.Version
 
 import scala.concurrent.duration.Duration
 import scala.util.Properties
@@ -87,7 +88,7 @@ object Java extends CoursierCommand[JavaOptions] {
           }
         } yield maybeError
 
-      val maybeError = task.unsafeRun()(coursierCache.ec)
+      val maybeError = task.unsafeRun(wrapExceptions = true)(coursierCache.ec)
       maybeError match {
         case Left(error) =>
           System.err.println(error)
@@ -103,7 +104,9 @@ object Java extends CoursierCommand[JavaOptions] {
       // As is, its output gets flushed too late sometimes, resulting in progress bars
       // displayed after actions done after downloads.
       val (isSystem, home) = logger.use {
-        try task.unsafeRun()(coursierCache.ec) // TODO Better error messages for relevant exceptions
+        try task.unsafeRun(wrapExceptions =
+            true
+          )(coursierCache.ec) // TODO Better error messages for relevant exceptions
         catch {
           case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
             System.err.println(e.getMessage)
@@ -144,6 +147,8 @@ object Java extends CoursierCommand[JavaOptions] {
         val script =
           if (params.env.windowsScript)
             coursier.jvm.JavaHome.finalBatScript(envUpdate)
+          else if (params.env.windowsPosixScript)
+            coursier.jvm.JavaHome.finalBashScript(envUpdate).replace('\\', '/')
           else
             ShellUtil.shell() match {
               case Some(Shell.Fish) => coursier.jvm.JavaHome.finalFishScript(envUpdate)
@@ -169,7 +174,7 @@ object Java extends CoursierCommand[JavaOptions] {
           params.output.verbosity,
           MaybeInstallJvm.headerComment
         )
-        task.unsafeRun()(coursierCache.ec)
+        task.unsafeRun(wrapExceptions = true)(coursierCache.ec)
       }
       else if (Execve.available()) {
         val extraEnv = envUpdate.transientUpdates()

@@ -30,12 +30,14 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
       assert(output == expectedOutput)
     }
 
-    test("non static main class") {
+    def nonStaticMainClass(): Unit = {
       val res =
         os.proc(
           launcher,
           "launch",
-          "--fork",
+          // When forking, the JVM prints the main method not found error.
+          // When not forking, coursier does. We want to be in the latter case.
+          "--fork=false",
           "org.scala-lang:scala-compiler:2.13.0",
           "--main-class",
           "scala.tools.nsc.Driver",
@@ -56,9 +58,15 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
       )
       assert(expectedInOutput.forall(output.contains))
     }
+    test("non static main class") {
+      if (acceptsJOptions)
+        nonStaticMainClass()
+      else
+        "Disabled"
+    }
 
     test("java class path in expansion from launch") {
-      import coursier.dependencyString
+      import coursier.util.StringInterpolators._
       val output =
         os.proc(
           launcher,
@@ -184,7 +192,7 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
     }
 
     test("extra jars with properties") {
-      if (acceptsJOptions)
+      if (!Properties.isWin && acceptsJOptions)
         extraJarsWithProperties()
       else
         "Disabled"
@@ -352,7 +360,7 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
         "sh/almond/channels_2.12/0.13.6/channels_2.12-0.13.6.jar",
         "com/thesamet/scalapb/scalapb-runtime_2.12/0.11.11/scalapb-runtime_2.12-0.11.11.jar",
         "org/scalameta/scalameta_2.12/4.6.0/scalameta_2.12-4.6.0.jar",
-        "org/jboss/logging/jboss-logging/3.4.0.Final/jboss-logging-3.4.0.Final.jar",
+        "org/jboss/logging/jboss-logging/3.4.1.Final/jboss-logging-3.4.1.Final.jar",
         "org/jboss/xnio/xnio-api/3.8.0.Final/xnio-api-3.8.0.Final.jar",
         "org/scalameta/mtags-interfaces/0.11.9/mtags-interfaces-0.11.9.jar",
         "com/thoughtworks/qdox/qdox/2.0.2/qdox-2.0.2.jar",
@@ -450,8 +458,6 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
         var zf: ZipFile = null
         try {
           zf = new ZipFile(hybridLauncher.toIO)
-          import scala.collection.JavaConverters._
-          pprint.err.log(zf.entries().asScala.map(_.getName).toVector.sorted)
 
           assert(zf.getEntry("coursier/bootstrap/launcher/Launcher.class") != null)
 
@@ -462,7 +468,8 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
             val s = new String(b, StandardCharsets.UTF_8)
             s.linesIterator.filter(_.nonEmpty).toVector
           }
-          pprint.err.log(urls)
+          if (urls != expectedUrls)
+            pprint.err.log(urls)
           assert(urls == expectedUrls)
         }
         finally

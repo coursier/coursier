@@ -21,7 +21,7 @@ abstract class Cache[F[_]] extends PlatformCache[F] {
   /** Sequence of [[Fetch]] able to fetch an [[Artifact]].
     *
     * Each element correspond to a [[coursier.cache.CachePolicy]] of this [[Cache]]. You may want to
-    * pass each of them to `coursier.core.ResolutionProcess.fetch()`.
+    * pass each of them to `coursier.core.ResolutionProcess.fetch0()`.
     *
     * @return
     *   a non empty sequence

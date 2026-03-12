@@ -11,6 +11,8 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.github.alexarchambault.isterminal.IsTerminal;
+
 public class Util {
 
     // No real reason to put that in the path module, except from the fact that that makes this accessible
@@ -121,7 +123,7 @@ public class Util {
     private static volatile Boolean useAnsiOutput0 = null;
     private static boolean computeUseAnsiOutput() {
 
-        if (System.console() == null)
+        if (!IsTerminal.isTerminal())
             return false;
 
         if (System.getenv("INSIDE_EMACS") != null)

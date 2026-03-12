@@ -1,21 +1,19 @@
 package coursier.jvm
 
 import java.io.File
-import java.time.Instant
-import java.util.concurrent.ScheduledExecutorService
 
-import coursier.Repository
-import coursier.cache.{ArchiveCache, Cache, CacheDefaults, CacheLogger, FileCache, UnArchiver}
+import coursier.cache.{ArchiveCache, CacheLogger}
+import coursier.core.Repository
 import coursier.util.{Artifact, Task}
 import dataclass.data
 
-import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
+import scala.concurrent.duration.Duration
 
 // format: off
 @data class JvmCache(
-  os: String = JvmIndex.defaultOs(),
-  architecture: String = JvmIndex.defaultArchitecture(),
-  defaultJdkNameOpt: Option[String] = Some(JvmCache.defaultJdkName),
+  os: String = JvmChannel.defaultOs(),
+  architecture: String = JvmChannel.defaultArchitecture(),
+  defaultJdkNameOpt: Option[String] = Some(""), // empty value means use the default one for the passed os and architecure
   defaultVersionOpt: Option[String] = Some(JvmCache.defaultVersion),
 
   index: Option[Task[JvmIndex]] = None,
@@ -79,8 +77,14 @@ import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
     task.flatMap(JvmCache.finalDirectory(artifact.url, _, os))
   }
 
+  private lazy val defaultJdkNameOpt0 =
+    defaultJdkNameOpt.map {
+      case ""    => JvmCache.defaultJdkNameFor(os, architecture)
+      case other => other
+    }
+
   def entries(id: String): Task[Either[String, Seq[JvmIndexEntry]]] =
-    JvmCache.idToNameVersion(id, defaultJdkNameOpt, defaultVersionOpt) match {
+    JvmCache.idToNameVersion(id, defaultJdkNameOpt0, defaultVersionOpt) match {
       case None =>
         Task.fail(new JvmCache.MalformedJvmId(id))
       case Some((name, ver)) =>
@@ -123,16 +127,24 @@ import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
     withIndex(indexTask)
   }
 
-  def withIndexChannel(repositories: Seq[Repository], indexChannel: JvmChannel): JvmCache = {
+  def withIndexChannel(
+    repositories: Seq[Repository],
+    indexChannel: JvmChannel,
+    os: Option[String],
+    architecture: Option[String]
+  ): JvmCache = {
     val indexTask = archiveCache.cache
       .loggerOpt
       .filter(_ => handleLoggerLifecycle)
       .getOrElse(CacheLogger.nop)
       .using {
-        JvmIndex.load(archiveCache.cache, repositories, indexChannel)
+        JvmIndex.load(archiveCache.cache, repositories, indexChannel, os, architecture)
       }
     withIndex(indexTask)
   }
+
+  def withIndexChannel(repositories: Seq[Repository], indexChannel: JvmChannel): JvmCache =
+    withIndexChannel(repositories, indexChannel, None, None)
 
   def withDefaultIndex: JvmCache = {
     val indexTask = archiveCache.cache
@@ -150,7 +162,16 @@ import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 object JvmCache {
 
   def defaultJdkName: String =
-    "adoptium"
+    (JvmChannel.currentOs, JvmChannel.currentArchitecture) match {
+      case (Right(os), Right(arch)) => defaultJdkNameFor(os, arch)
+      case _                        => "temurin"
+    }
+  def defaultJdkNameFor(os: String, arch: String): String =
+    // Seems zulu and liberica are the distributions
+    // that support best Mac ARM and Windows ARM respectively
+    if (os == "darwin" && arch == "arm64") "zulu"
+    else if (os == "windows" && arch == "arm64") "liberica"
+    else "temurin"
   def defaultVersion: String =
     "[1,)"
 

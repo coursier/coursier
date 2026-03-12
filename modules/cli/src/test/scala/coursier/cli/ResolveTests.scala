@@ -95,7 +95,7 @@ object ResolveTests extends TestSuite {
       val params = paramsOrThrow(options)
 
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
@@ -114,7 +114,7 @@ object ResolveTests extends TestSuite {
           |            └─ org.apache.spark:spark-sql_2.12:2.4.0
           |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("print what depends on with regex") {
@@ -131,7 +131,7 @@ object ResolveTests extends TestSuite {
       val params = paramsOrThrow(options)
 
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
@@ -150,7 +150,7 @@ object ResolveTests extends TestSuite {
           |            └─ org.apache.spark:spark-sql_2.12:2.4.0
           |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("print results anyway") {
@@ -171,7 +171,7 @@ object ResolveTests extends TestSuite {
 
       val ps = new PrintStream(stdout, true, "UTF-8")
       Resolve.printTask(params, pool, ps, ps, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
         .replace(sys.props("user.home"), "HOME")
@@ -191,12 +191,12 @@ object ResolveTests extends TestSuite {
            |  not found: https://repo1.maven.org/maven2/ioi/get-coursier/coursier-core_2.12/1.1.0-M9/coursier-core_2.12-1.1.0-M9.pom
            |io.get-coursier:coursier-cache_2.12:1.1.0-M9:default
            |io.get-coursier:coursier-core_2.12:1.1.0-M9:default
-           |ioi.get-coursier:coursier-core_2.12:1.1.0-M9:default(compile)
+           |ioi.get-coursier:coursier-core_2.12:1.1.0-M9:default(runtime)
            |org.scala-lang:scala-library:2.12.7:default
            |org.scala-lang.modules:scala-xml_2.12:1.1.0:default
            |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("resolve sbt plugins") {
@@ -215,7 +215,7 @@ object ResolveTests extends TestSuite {
       val params = paramsOrThrow(options)
 
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
@@ -251,7 +251,7 @@ object ResolveTests extends TestSuite {
           |com.squareup.okio:okio:1.12.0:default
           |com.typesafe:config:1.2.0:default
           |com.typesafe:ssl-config-core_2.12:0.2.2:default
-          |com.typesafe.sbt:sbt-native-packager;sbtVersion=1.0;scalaVersion=2.12:1.3.3:compile
+          |com.typesafe.sbt:sbt-native-packager;sbtVersion=1.0;scalaVersion=2.12:1.3.3:runtime
           |commons-codec:commons-codec:1.9:default
           |commons-io:commons-io:2.5:default
           |commons-lang:commons-lang:2.6:default
@@ -336,14 +336,14 @@ object ResolveTests extends TestSuite {
           |org.scalaz:scalaz-core_2.12:7.2.24:default
           |org.scalaz:scalaz-effect_2.12:7.2.24:default
           |org.slf4j:slf4j-api:1.7.25:default
-          |org.sonatype.plexus:plexus-cipher:1.4:default
+          |org.sonatype.plexus:plexus-cipher:1.7:default
           |org.sonatype.plexus:plexus-sec-dispatcher:1.3:default
-          |org.sonatype.sisu:sisu-guice:3.1.0:default
+          |org.sonatype.sisu:sisu-guice:3.1.3:default
           |org.spire-math:jawn-parser_2.12:0.10.4:default
           |org.vafer:jdeb:1.3:default
           |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("resolve sbt 0.13 plugins") {
@@ -360,13 +360,13 @@ object ResolveTests extends TestSuite {
       val params = paramsOrThrow(options)
 
       Resolve.printTask(params, pool, new PrintStream(stdout, true, "UTF-8"), System.err, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
         "org.scalameta:sbt-metals;sbtVersion=0.13;scalaVersion=2.10:0.7.0:default\n"
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("resolve the main artifact first in classpath order") {
@@ -384,7 +384,7 @@ object ResolveTests extends TestSuite {
 
       val ps = new PrintStream(stdout, true, "UTF-8")
       Resolve.printTask(params, pool, ps, ps, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       assert(output.startsWith("io.get-coursier:coursier-cli_2.12:1.1.0-M9"))
@@ -405,7 +405,7 @@ object ResolveTests extends TestSuite {
 
       val ps = new PrintStream(stdout, true, "UTF-8")
       Resolve.printTask(params, pool, ps, ps, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, StandardCharsets.UTF_8)
       val expectedOutput =
@@ -416,7 +416,7 @@ object ResolveTests extends TestSuite {
           |https://repo1.maven.org/maven2/com/chuusai/shapeless_2.13/2.3.3/shapeless_2.13-2.3.3.jar
           |""".stripMargin
 
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("exclude root dependencies") {
@@ -442,7 +442,7 @@ object ResolveTests extends TestSuite {
 
       val ps = new PrintStream(stdout, true, "UTF-8")
       Resolve.printTask(params, pool, ps, ps, args.all)
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val output = new String(stdout.toByteArray, "UTF-8")
       val expectedOutput =
@@ -451,7 +451,7 @@ object ResolveTests extends TestSuite {
           |org.scala-lang:scala-library:2.13.2:default
           |org.scala-lang:scala-reflect:2.13.2:default
           |""".stripMargin
-      assert(output.noCrLf == expectedOutput.noCrLf)
+      assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
     test("ignore binary scala version") {

@@ -12,7 +12,8 @@ private[coursier] object WebPage extends WebPageCompatibility {
       }
       .filter { n =>
         lazy val slashIdx = n.indexOf('/')
-        n != "./" && n != "../" && n != "." && n != ".." && n != "/" && (slashIdx < 0 || slashIdx == n.length - 1)
+        n != "./" && n != "../" && n != "." && n != ".." && n != "/" && (slashIdx < 0 || slashIdx == n
+          .length - 1)
       }
 
   def listDirectories(url: String, page: String): Iterator[String] =

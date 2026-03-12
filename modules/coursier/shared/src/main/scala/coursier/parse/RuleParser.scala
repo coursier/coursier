@@ -7,7 +7,7 @@ import coursier.util.{ModuleMatcher, ModuleMatchers}
 
 object RuleParser {
 
-  private def ruleParser[_: P](defaultResolution: RuleResolution): P[(Rule, RuleResolution)] = {
+  private def ruleParser[X: P](defaultResolution: RuleResolution): P[(Rule, RuleResolution)] = {
 
     def resolution: P[RuleResolution] = {
 
@@ -107,7 +107,7 @@ object RuleParser {
     rule
   }
 
-  private def rulesParser[_: P](
+  private def rulesParser[X: P](
     defaultResolution: RuleResolution
   ): P[Seq[(Rule, RuleResolution)]] = {
 

@@ -5,7 +5,7 @@ import java.nio.file.{Files, Path, Paths}
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.{ArchiveCache, Cache}
-import coursier.jvm.{JvmCache, JvmIndex}
+import coursier.jvm.{JvmCache, JvmChannel, JvmIndex}
 import coursier.launcher.MergeRule
 import coursier.launcher.internal.Windows
 import coursier.util.Task
@@ -131,7 +131,7 @@ object BootstrapSpecificParams {
       .jvmIndex
       .map(_.trim)
       .filter(_ != "default")
-      .map(JvmIndex.handleAliases)
+      .map(JvmChannel.handleAliases)
 
     val baseManifestOptV = options.baseManifest.filter(_.nonEmpty) match {
       case None => Validated.validNel(None)

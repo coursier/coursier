@@ -1,7 +1,8 @@
 package coursier.maven
 
 import coursier.core._
-import coursier.util.{Artifact, EitherT, Monad, Xml}
+import coursier.util.{Artifact, EitherT, Monad}
+import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
 import dataclass._
 
 import scala.collection.compat._
@@ -13,21 +14,30 @@ object SbtMavenRepository {
   def apply(root: String): SbtMavenRepository =
     new SbtMavenRepository(actualRoot(root))
   def apply(root: String, authentication: Option[Authentication]): SbtMavenRepository =
-    new SbtMavenRepository(actualRoot(root), authentication = authentication, None, true)
+    new SbtMavenRepository(
+      actualRoot(root),
+      authentication = authentication,
+      changing = None,
+      versionsCheckHasModule = true,
+      checkModule = false
+    )
 
   def apply(repo: MavenRepository): SbtMavenRepository =
     new SbtMavenRepository(
       repo.root,
       repo.authentication,
       repo.changing,
-      repo.versionsCheckHasModule
+      repo.versionsCheckHasModule,
+      repo.checkModule
     )
 
   private def extraAttributes(s: String)
-    : Either[String, Map[(Module, String), Map[String, String]]] = {
+    : Either[String, Map[(Module, VersionConstraint0), Map[String, String]]] = {
     val lines = s.split('\n').toSeq.map(_.trim).filter(_.nonEmpty)
 
-    lines.foldLeft[Either[String, Map[(Module, String), Map[String, String]]]](Right(Map.empty)) {
+    lines.foldLeft[Either[String, Map[(Module, VersionConstraint0), Map[String, String]]]](
+      Right(Map.empty)
+    ) {
       case (acc, line) =>
         for {
           modVers <- acc
@@ -36,7 +46,8 @@ object SbtMavenRepository {
     }
   }
 
-  private def extraAttribute(s: String): Either[String, ((Module, String), Map[String, String])] = {
+  private def extraAttribute(s: String)
+    : Either[String, ((Module, VersionConstraint0), Map[String, String])] = {
     // vaguely does the same as:
     // https://github.com/apache/ant-ivy/blob/2.2.0/src/java/org/apache/ivy/core/module/id/ModuleRevisionId.java#L291
 
@@ -67,7 +78,8 @@ object SbtMavenRepository {
       attrs = parts
         .grouped(2)
         .collect {
-          case Seq(k, v) if v != "NULL" =>
+          // ignore NULL values and info attributes
+          case Seq(k, v) if v != "NULL" && !k.startsWith("e:info.") =>
             k.stripPrefix(Pom.extraAttributeDropPrefix) -> v
         }
         .toMap
@@ -76,7 +88,7 @@ object SbtMavenRepository {
       version <- attrFrom(attrs, Pom.extraAttributeVersion)
     } yield {
       val remainingAttrs = attrs.view.filterKeys(!Pom.extraAttributeBase(_)).toMap
-      ((Module(org, name, Map.empty), version), remainingAttrs)
+      ((Module(org, name, Map.empty), VersionConstraint0(version)), remainingAttrs)
     }
   }
 
@@ -90,12 +102,12 @@ object SbtMavenRepository {
     for {
       extraAttrs <- project.properties
         .collectFirst { case ("extraDependencyAttributes", s) => extraAttributes(s) }
-        .getOrElse(Right(Map.empty[(Module, String), Map[String, String]]))
+        .getOrElse(Right(Map.empty[(Module, VersionConstraint0), Map[String, String]]))
     } yield {
 
-      val adaptedDependencies = project.dependencies.map {
+      val adaptedDependencies = project.dependencies0.map {
         case (config, dep0) =>
-          val dep = extraAttrs.get(dep0.moduleVersion).fold(dep0) { attrs =>
+          val dep = extraAttrs.get(dep0.moduleVersionConstraint).fold(dep0) { attrs =>
             // For an sbt plugin, we remove the suffix from the name and we add the sbtVersion
             // and scalaVersion attributes.
             val moduleWithAttrs = getSbtCrossVersion(attrs)
@@ -109,7 +121,7 @@ object SbtMavenRepository {
           config -> dep
       }
 
-      project.withDependencies(adaptedDependencies)
+      project.withDependencies0(adaptedDependencies)
     }
 }
 
@@ -117,32 +129,29 @@ object SbtMavenRepository {
   val root: String,
   val authentication: Option[Authentication] = None,
   val changing: Option[Boolean] = None,
-  override val versionsCheckHasModule: Boolean = true
-) extends MavenRepositoryLike { self =>
-  import SbtMavenRepository._
+  override val versionsCheckHasModule: Boolean = true,
+  @since("2.1.25")
+  checkModule: Boolean = false
+) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi { self =>
 
   private val internal =
-    new MavenRepositoryInternal(root, authentication, changing) {
+    new MavenRepositoryInternal(root, authentication, changing, checkModule) {
 
       override def moduleDirectory(module: Module): String =
         self.moduleDirectory(module)
 
       override def postProcessProject(project: Project): Either[String, Project] =
-        SbtMavenRepository.adaptProject(project)
+        super.postProcessProject(project)
+          .flatMap(SbtMavenRepository.adaptProject)
 
       override def fetchArtifact[F[_]](
         module: Module,
-        version: String,
-        versioningValue: Option[String],
+        version: Version0,
+        versioningValue: Option[Version0],
         fetch: Repository.Fetch[F]
       )(implicit F: Monad[F]): EitherT[F, String, Project] = {
-        val directoryPath = moduleVersionPath(module, version)
-
-        def tryFetch(artifactName: String): EitherT[F, String, Project] = {
-          val path     = directoryPath :+ s"$artifactName-${versioningValue.getOrElse(version)}.pom"
-          val artifact = projectArtifact(path, version)
-          fetch(artifact).flatMap(parsePom(_))
-        }
+        def tryFetch(artifactName: String): EitherT[F, String, Project] =
+          fetchArtifactForModuleName(module, artifactName, version, versioningValue, fetch)
 
         SbtMavenRepository.getSbtCrossVersion(module.attributes) match {
           case Some(crossVersion) =>
@@ -167,9 +176,16 @@ object SbtMavenRepository {
   ): Seq[(Publication, Artifact)] =
     internal.artifacts(dependency, project, overrideClassifiers)
 
-  def find[F[_]](
+  def moduleArtifacts(
+    dependency: Dependency,
+    project: Project,
+    overrideAttributes: Option[VariantSelector.AttributesBased]
+  ): Seq[(VariantPublication, Artifact)] =
+    internal.moduleArtifacts(dependency, project, overrideAttributes)
+
+  override def find0[F[_]](
     module: Module,
-    version: String,
+    version: Version0,
     fetch: Repository.Fetch[F]
   )(implicit
     F: Monad[F]

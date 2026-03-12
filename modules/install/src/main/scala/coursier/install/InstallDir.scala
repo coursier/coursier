@@ -1,7 +1,6 @@
 package coursier.install
 
 import java.io.{File, InputStream, OutputStream}
-import java.nio.charset.StandardCharsets
 import java.nio.file.attribute.FileTime
 import java.nio.file.{Files, Path, Paths, StandardCopyOption, StandardOpenOption}
 import java.time.Instant
@@ -9,32 +8,19 @@ import java.util.Locale
 import java.util.stream.Stream
 import java.util.zip.ZipEntry
 
-import coursier.Fetch
 import coursier.cache.{ArchiveCache, ArchiveType, Cache, FileCache}
-import coursier.core.{Dependency, Repository}
+import coursier.core.{Dependency, Module, Repository}
 import coursier.env.EnvironmentUpdate
 import coursier.install.error._
 import coursier.install.internal._
-import coursier.launcher.{
-  AssemblyGenerator,
-  BootstrapGenerator,
-  ClassLoaderContent,
-  ClassPathEntry,
-  Generator,
-  NativeImageGenerator,
-  Parameters,
-  Preamble,
-  ScalaNativeGenerator
-}
+import coursier.launcher.{ClassLoaderContent, ClassPathEntry, Generator, Parameters, Preamble}
 import coursier.launcher.internal.FileUtil
-import coursier.launcher.native.NativeBuilder
 import coursier.launcher.Parameters.ScalaNative
 import coursier.util.{Artifact, Task}
+import coursier.version.VersionConstraint
 import dataclass._
 
 import scala.jdk.CollectionConverters._
-import scala.util.control.NonFatal
-import scala.util.Properties
 
 @data class InstallDir(
   baseDir: Path = InstallDir.defaultDir,
@@ -300,7 +286,6 @@ import scala.util.Properties
       }
 
       (tmpDest, tmpAux) =>
-
         lazy val infoEntries =
           InfoFile.extraEntries(lock0, sharedLockOpt, descRepr, sourceReprOpt0, currentTime)
 
@@ -460,7 +445,8 @@ import scala.util.Properties
           } yield writtenOpt
         else {
           System.err.println(
-            s"""Cannot find installed application '$name' (installation directory is ${launcher.getParent()}).
+            s"""Cannot find installed application '$name' (installation directory is ${launcher
+                .getParent()}).
                |Try running 'cs install $name'.""".stripMargin
           )
           Task.point(Some(false))
@@ -478,7 +464,7 @@ import scala.util.Properties
         s = Files.list(baseDir)
         s.iterator()
           .asScala
-          .filter(p => !p.getFileName.toString.startsWith("."))
+          .filter(p => p.toFile.isFile && !p.getFileName.toString.startsWith("."))
           .filter(InfoFile.isInfoFile)
           .map(actualName)
           .toVector
@@ -546,15 +532,17 @@ object InstallDir {
       .withRepositories(repositories)
 
     deps =>
-      import coursier.core.ModuleName
-      import coursier.{Dependency, Module, organizationString}
+      import coursier.core.{ModuleName, Organization}
+      import coursier.util.StringInterpolators._
       import coursier.util.Task
-      import coursier.core.Organization
 
       val deps0 = deps.map { dep =>
         dep.split(":", 3) match {
           case Array(org, name, ver) =>
-            Dependency(Module(Organization(org), ModuleName(name)), ver)
+            Dependency(
+              Module(Organization(org), ModuleName(name), Map.empty),
+              VersionConstraint(ver)
+            )
           case _ => ???
         }
       }

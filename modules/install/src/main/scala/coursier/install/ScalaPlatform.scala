@@ -1,8 +1,8 @@
 package coursier.install
 
-import coursier.moduleString
 import coursier.cache.Cache
 import coursier.core.Repository
+import coursier.util.StringInterpolators._
 import coursier.util.Task
 
 abstract class ScalaPlatform extends Product with Serializable {

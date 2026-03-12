@@ -1,8 +1,9 @@
 package coursier.paths;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -21,19 +22,16 @@ public class Mirror {
     return new Mirror(from, to, type);
   }
 
-  public static File[] defaultConfigFiles() throws IOException {
-
-    String fromEnv = System.getenv("COURSIER_MIRRORS");
-    if (fromEnv != null && !fromEnv.isEmpty()) {
+  public static File[] defaultConfigFiles(
+    String fromEnv,
+    String fromProps,
+    File[] configDirs
+  ) throws IOException {
+    if (fromEnv != null && !fromEnv.isEmpty())
       return new File[] { new File(fromEnv) };
-    }
-
-    String fromProps = System.getProperty("coursier.mirrors");
-    if (fromProps != null && !fromProps.isEmpty()) {
+    if (fromProps != null && !fromProps.isEmpty())
       return new File[] { new File(fromProps) };
-    }
 
-    File[] configDirs = coursier.paths.CoursierPaths.configDirectories();
     ArrayList<File> configFiles = new ArrayList<>();
     for (File configDir : configDirs) {
       File propFile = new File(configDir, "mirror.properties");
@@ -42,28 +40,34 @@ public class Mirror {
     return configFiles.toArray(new File[configFiles.size()]);
   }
 
+  public static File[] defaultConfigFiles() throws IOException {
+    return defaultConfigFiles(
+      System.getenv("COURSIER_MIRRORS"),
+      System.getProperty("coursier.mirrors"),
+      coursier.paths.CoursierPaths.configDirectories()
+    );
+  }
+
   @Deprecated
   public static File defaultConfigFile() throws IOException {
     return defaultConfigFiles()[0];
   }
 
-  public static File extraConfigFile() throws IOException {
-
-    String fromEnv = System.getenv("COURSIER_EXTRA_MIRRORS");
-    if (fromEnv != null) {
+  public static File extraConfigFile(String fromEnv, String fromProps) throws IOException {
+    if (fromEnv != null)
       return new File(fromEnv);
-    }
-
-    String fromProps = System.getProperty("coursier.mirrors.extra");
-    if (fromProps != null) {
+    if (fromProps != null)
       return new File(fromProps);
-    }
 
     return null;
   }
 
+  public static File extraConfigFile() throws IOException {
+    return extraConfigFile(System.getenv("COURSIER_EXTRA_MIRRORS"), System.getProperty("coursier.mirrors.extra"));
+  }
+
   public static List<Mirror> load() throws MirrorPropertiesException, IOException {
-    File propFile = defaultConfigFile();
+    File propFile = defaultConfigFiles()[0];
     List<Mirror> mirrors = new ArrayList<>();
 
     if (propFile.exists())
@@ -78,8 +82,8 @@ public class Mirror {
 
   public static List<Mirror> parse(File file) throws MirrorPropertiesException, IOException {
     Properties props = new Properties();
-    try (FileInputStream fis = new FileInputStream(file)) {
-      props.load(fis);
+    try (InputStream is = Files.newInputStream(file.toPath())) {
+      props.load(is);
     }
 
     List<Mirror> mirrors;

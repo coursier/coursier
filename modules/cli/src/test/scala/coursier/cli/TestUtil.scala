@@ -3,7 +3,7 @@ package coursier.cli
 import java.io.{File, FileWriter}
 import java.nio.file.Files
 
-import coursier.dependencyString
+import coursier.util.StringInterpolators._
 import scala.util.control.NonFatal
 
 object TestUtil {
@@ -12,7 +12,7 @@ object TestUtil {
     content: String = "",
     fileName: String = "hello",
     suffix: String = "world"
-  )(testCode: (File, FileWriter) => Any) {
+  )(testCode: (File, FileWriter) => Any): Unit = {
     val file   = File.createTempFile(fileName, suffix) // create the fixture
     val writer = new FileWriter(file)
     writer.write(content)

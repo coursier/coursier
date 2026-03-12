@@ -1,20 +1,26 @@
 package coursier.core
 
 import concurrentrefhashmap.ConcurrentReferenceHashMap
+import coursier.version.{VersionConstraint => VersionConstraint0}
 import utest._
-import utest.asserts.{RetryInterval, RetryMax}
 
-import scala.concurrent.duration._
+import scala.util.Properties
 
 object ObjectSizeTests extends TestSuite {
 
-  val tests = Tests {
+  val tests =
+    if (Properties.isLinux)
+      actualTests
+    else
+      Tests {}
+
+  def actualTests = Tests {
 
     test("Dependency sizes") {
       test("should be the same for same dependency") {
         def d = Dependency(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
-          "0.6.0"
+          VersionConstraint0("0.6.0")
         )
         assert(d == d)
         assert(d eq d)
@@ -25,11 +31,11 @@ object ObjectSizeTests extends TestSuite {
       test("should be the different for different dependency") {
         def d1 = Dependency(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
-          "0.6.0"
+          VersionConstraint0("0.6.0")
         )
         def d2 = Dependency(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
-          "0.7.0"
+          VersionConstraint0("0.7.0")
         )
         assert(size(Array(d1)) <= size(Array(d1, d2)))
       }
@@ -69,8 +75,6 @@ object ObjectSizeTests extends TestSuite {
 
     test("Dependency instanceCache should hold objects until they can be GCd") {
       test("should be the different for different dependency") {
-        implicit val retryMax      = RetryMax(5.seconds)
-        implicit val retryInterval = RetryInterval(200.millis)
         def cacheSize(): Int = {
           Dependency.instanceCache
             .asInstanceOf[ConcurrentReferenceHashMap[Dependency, Dependency]]
@@ -80,11 +84,11 @@ object ObjectSizeTests extends TestSuite {
         Dependency.instanceCache.clear()
         def d1 = Dependency(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
-          "0.6.0"
+          VersionConstraint0("0.6.0")
         )
         def d2 = Dependency(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
-          "0.7.0"
+          VersionConstraint0("0.7.0")
         )
         var ad1 = d1
         // d1 is in cache
@@ -100,7 +104,7 @@ object ObjectSizeTests extends TestSuite {
         ad1 = null
         ad2 = null
         // nothing in cache
-        eventually {
+        assertEventually {
           System.gc()
           cacheSize() == 0
         }

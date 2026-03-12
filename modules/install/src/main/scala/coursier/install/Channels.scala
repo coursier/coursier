@@ -1,21 +1,23 @@
 package coursier.install
 
-import java.io.{File, FileInputStream}
+import java.io.File
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths, Path}
+import java.nio.file.{Files, Path}
 import java.util.zip.ZipFile
 
 import argonaut.{DecodeJson, Parse}
-import coursier.{Dependency, Fetch, moduleString}
+import coursier.Fetch
 import coursier.cache.{Cache, FileCache}
 import coursier.cache.internal.FileUtil
-import coursier.core.Repository
+import coursier.core.{Dependency, Repository}
 import coursier.install.Codecs.{decodeObj, encodeObj}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepositoryLike
 import coursier.util.{Artifact, Task}
+import coursier.util.StringInterpolators._
 import dataclass._
-import scala.collection.JavaConverters._
+
+import scala.jdk.CollectionConverters._
 
 @data class Channels(
   channels: Seq[Channel] = Channels.defaultChannels,
@@ -108,7 +110,7 @@ import scala.collection.JavaConverters._
     def fromModule(channel: Channel.FromModule): Task[Option[ChannelData]] =
       for {
         res <- Fetch(cache)
-          .withDependencies(Seq(Dependency(channel.module, channel.version)))
+          .withDependencies(Seq(Dependency(channel.module, channel.versionConstraint)))
           .withRepositories(repositories)
           .ioResult
 
@@ -116,7 +118,10 @@ import scala.collection.JavaConverters._
           for (logger <- cache.loggerOpt)
             logger.use {
               val retainedVersion =
-                res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
+                res.resolution.reconciledVersions
+                  .get(channel.module)
+                  .map(_.asString)
+                  .getOrElse("[unknown]")
               logger.pickedModuleVersion(channel.module.repr, retainedVersion)
             }
         }
@@ -177,7 +182,7 @@ import scala.collection.JavaConverters._
         e <- task
         f <- Task.fromEither(e.left.map(err => new Exception(s"Error getting ${channel.url}", err)))
         content <- Task.delay {
-          val b = FileUtil.readFully(new FileInputStream(f))
+          val b = Files.readAllBytes(f.toPath)
           new String(b, StandardCharsets.UTF_8)
         }
         m <- Task.fromEither {
@@ -255,7 +260,7 @@ import scala.collection.JavaConverters._
     def fromModule(channel: Channel.FromModule): Task[List[String]] =
       for {
         res <- Fetch(cache)
-          .withDependencies(Seq(Dependency(channel.module, channel.version)))
+          .withDependencies(Seq(Dependency(channel.module, channel.versionConstraint)))
           .withRepositories(repositories)
           .ioResult
 
@@ -263,7 +268,10 @@ import scala.collection.JavaConverters._
           for (logger <- cache.loggerOpt)
             logger.use {
               val retainedVersion =
-                res.resolution.reconciledVersions.getOrElse(channel.module, "[unknown]")
+                res.resolution.reconciledVersions
+                  .get(channel.module)
+                  .map(_.asString)
+                  .getOrElse("[unknown]")
               logger.pickedModuleVersion(channel.module.repr, retainedVersion)
             }
         }
@@ -323,7 +331,7 @@ import scala.collection.JavaConverters._
         e <- task
         f <- Task.fromEither(e.left.map(err => new Exception(s"Error getting ${channel.url}", err)))
         content <- Task.delay {
-          val b = FileUtil.readFully(new FileInputStream(f))
+          val b = Files.readAllBytes(f.toPath)
           new String(b, StandardCharsets.UTF_8)
         }
         m <- Task.fromEither {

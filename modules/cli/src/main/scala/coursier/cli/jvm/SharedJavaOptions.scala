@@ -23,6 +23,9 @@ final case class SharedJavaOptions(
     jvmIndex: Option[String] = None,
 
   @Group(OptionGroup.java)
+    os: Option[String] = None,
+
+  @Group(OptionGroup.java)
     architecture: Option[String] = None
 )
 // format: on

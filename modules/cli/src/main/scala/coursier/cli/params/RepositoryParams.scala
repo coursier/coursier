@@ -6,13 +6,14 @@ import java.nio.file.Files
 
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.{Repositories, moduleString}
+import coursier.Repositories
 import coursier.cli.options.RepositoryOptions
 import coursier.core.Repository
 import coursier.install.Channel
 import coursier.ivy.IvyRepository
-import coursier.maven.{MavenRepository, SbtMavenRepository}
+import coursier.maven.{MavenRepository, MavenRepositoryLike, SbtMavenRepository}
 import coursier.parse.RepositoryParser
+import coursier.util.StringInterpolators._
 
 final case class RepositoryParams(
   repositories: Seq[Repository]
@@ -53,6 +54,13 @@ object RepositoryParams {
         repos = repos.map {
           case m: MavenRepository => SbtMavenRepository(m)
           case other              => other
+        }
+
+      if (options.enableGradleModules)
+        repos = repos.map {
+          case m: MavenRepositoryLike.WithModuleSupport =>
+            m.withCheckModule(true)
+          case other => other
         }
 
       // take dropInfoAttr into account

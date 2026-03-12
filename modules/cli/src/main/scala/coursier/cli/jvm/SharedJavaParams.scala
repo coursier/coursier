@@ -5,8 +5,8 @@ import java.nio.file.{Path, Paths}
 
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
-import coursier.Repository
 import coursier.cache.{ArchiveCache, Cache}
+import coursier.core.Repository
 import coursier.jvm.{JvmCache, JvmCacheLogger, JvmChannel, JvmIndex}
 import coursier.util.Task
 
@@ -15,6 +15,7 @@ final case class SharedJavaParams(
   allowSystemJvm: Boolean,
   requireSystemJvm: Boolean,
   update: Boolean,
+  os: Option[String],
   architecture: Option[String],
   jvmChannelOpt: Option[JvmChannel]
 ) {
@@ -29,15 +30,14 @@ final case class SharedJavaParams(
   ): (JvmCache, coursier.jvm.JavaHome) = {
     def jvmCacheOf(cache: Cache[Task]) = {
       val archiveCache = ArchiveCache().withCache(cache)
-      val baseCache = JvmCache()
-        .withArchiveCache(archiveCache)
-      val c = architecture match {
-        case None       => baseCache
-        case Some(arch) => baseCache.withArchitecture(arch)
-      }
+      var cache0       = JvmCache().withArchiveCache(archiveCache)
+      for (arch <- architecture)
+        cache0 = cache0.withArchitecture(arch)
+      for (os0 <- os)
+        cache0 = cache0.withOs(os0)
       jvmChannelOpt match {
-        case None             => c.withDefaultIndex
-        case Some(jvmChannel) => c.withIndexChannel(repositories, jvmChannel)
+        case None             => cache0.withDefaultIndex
+        case Some(jvmChannel) => cache0.withIndexChannel(repositories, jvmChannel, os, architecture)
       }
     }
     val noUpdateJvmCache = jvmCacheOf(noUpdateCache)
@@ -103,7 +103,7 @@ object SharedJavaParams {
         .jvmIndex
         .map(_.trim)
         .filter(_ != "default")
-        .map(JvmIndex.handleAliases)
+        .map(JvmChannel.handleAliases)
         .map(s => JvmChannel.parse(s))
       parsed match {
         case None                 => Validated.validNel(None)
@@ -119,6 +119,7 @@ object SharedJavaParams {
           allowSystem,
           requireSystem,
           options.update,
+          options.os,
           options.architecture,
           indexChannelOpt
         )

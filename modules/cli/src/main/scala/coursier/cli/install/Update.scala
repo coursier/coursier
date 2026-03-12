@@ -31,7 +31,7 @@ object Update extends CoursierCommand[UpdateOptions] {
     val noUpdateCoursierCache =
       params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
-    val graalvmHome = { version: String =>
+    val graalvmHome = { (version: String) =>
       params.sharedJava.javaHome(
         cache,
         noUpdateCoursierCache,
@@ -75,7 +75,7 @@ object Update extends CoursierCommand[UpdateOptions] {
       for (_ <- acc; _ <- t) yield ()
     }
 
-    try task.unsafeRun()(cache.ec)
+    try task.unsafeRun(wrapExceptions = true)(cache.ec)
     catch {
       case e: InstallDirException =>
         System.err.println(e.getMessage)

@@ -4,6 +4,7 @@ import dataclass.data
 
 import scala.annotation.tailrec
 
+@deprecated("Use coursier.version.VersionConstraint instead", "2.1.25")
 @data class VersionConstraint(
   interval: VersionInterval,
   preferred: Seq[Version]
@@ -40,6 +41,7 @@ import scala.annotation.tailrec
     }
 }
 
+@deprecated("Use coursier.version.VersionConstraint instead", "2.1.25")
 object VersionConstraint {
 
   def preferred(version: Version): VersionConstraint =

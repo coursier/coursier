@@ -9,7 +9,7 @@ import coursier.cli.options.{
   OutputOptions,
   RepositoryOptions
 }
-import caseapp.Group
+import caseapp.{Group, Help}
 
 // format: off
 @HelpMessage(
@@ -43,6 +43,6 @@ final case class JavaOptions(
 // format: on
 
 object JavaOptions {
-  implicit val parser = Parser[JavaOptions]
-  implicit val help   = caseapp.core.help.Help[JavaOptions]
+  implicit lazy val parser: Parser[JavaOptions] = Parser.derive
+  implicit lazy val help: Help[JavaOptions]     = Help.derive
 }
