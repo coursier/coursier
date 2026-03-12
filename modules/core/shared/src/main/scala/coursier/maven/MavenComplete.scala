@@ -2,16 +2,14 @@ package coursier.maven
 
 import coursier.core.{Module, Organization, Repository}
 import coursier.util.Monad
+import coursier.version.Version
 import dataclass.data
 
 @data class MavenComplete[F[_]](
-  repo: MavenRepository,
+  repo: MavenRepositoryLike,
   fetch: Repository.Fetch[F],
   F: Monad[F]
 ) extends Repository.Complete[F] {
-
-  override def sbtAttrStub: Boolean =
-    repo.sbtAttrStub
 
   private def fromDirListing(dirUrl: String, prefix: String): F[Either[Throwable, Seq[String]]] =
     F.map(fetch(repo.artifactFor(dirUrl + ".links", changing = true)).run) {
@@ -42,12 +40,16 @@ import dataclass.data
 
     fromDirListing(dirUrl, prefix)
   }
-  def versions(module: Module, prefix: String): F[Either[Throwable, Seq[String]]] =
+
+  override protected def moduleDirectory(module: Module): String =
+    repo.moduleDirectory(module)
+
+  def versions(module: Module, prefix: String): F[Either[Throwable, Seq[Version]]] =
     F.map(repo.versions(module, fetch)(F).run) {
       case Left(e) =>
         Left(new Exception(e))
       case Right((v, _)) =>
-        Right(v.available.filter(_.startsWith(prefix)))
+        Right(v.available0.filter(_.repr.startsWith(prefix)))
     }
 }
 

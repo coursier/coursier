@@ -5,19 +5,19 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.{Executors, ExecutorService, ThreadFactory}
 
 import caseapp._
-import coursier.Resolution
 import coursier.cache.Cache
 import coursier.cache.loggers.RefreshLogger
 import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.install.Install
-import coursier.cli.util.MonadlessTask._
-import coursier.core.{Dependency, Module, Repository}
+import coursier.core.{Dependency, Module, Repository, Resolution}
 import coursier.error.ResolutionError
 import coursier.install.{AppArtifacts, AppDescriptor, Channel, Channels, RawAppDescriptor}
 import coursier.parse.JavaOrScalaModule
 import coursier.util._
+import coursier.version.{Version, VersionConstraint, VersionInterval}
 
 import scala.concurrent.ExecutionContext
+import scala.util.Try
 
 object Resolve extends CoursierCommand[ResolveOptions] {
 
@@ -25,15 +25,12 @@ object Resolve extends CoursierCommand[ResolveOptions] {
     */
   private def benchmark[T](iterations: Int): Task[T] => Task[T] = { run =>
 
-    val res = lift {
-
-      val start = unlift(Task.delay(System.currentTimeMillis()))
-      val res0  = unlift(run)
-      val end   = unlift(Task.delay(System.currentTimeMillis()))
-      Console.err.println(s"${end - start} ms")
-
-      res0
-    }
+    val res = for {
+      start <- Task.delay(System.currentTimeMillis())
+      res0  <- run
+      end   <- Task.delay(System.currentTimeMillis())
+      _ = Console.err.println(s"${end - start} ms")
+    } yield res0
 
     def result(warmUp: Int): Task[T] =
       if (warmUp >= iterations)
@@ -51,13 +48,17 @@ object Resolve extends CoursierCommand[ResolveOptions] {
     result(0)
   }
 
+  private def lift[A](f: => A) =
+    Try(f).toEither
+
+  private def unlift[A](e: => Either[Throwable, A]): A =
+    e.fold(throw _, identity)
+
   private[cli] def depsAndReposOrError(
     params: SharedResolveParams,
     args: Seq[String],
     cache: Cache[Task]
-  ) = {
-    import coursier.cli.util.MonadlessEitherThrowable._
-
+  ) =
     lift {
 
       val fromFilesDependencies = params.dependency.fromFilesDependencies
@@ -80,7 +81,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
           .withDependencies(javaOrScalaDeps)
           .withRepositories(params.repositories.repositories)
           .withScalaVersionOpt(
-            params.resolution.scalaVersionOpt.map { s =>
+            params.resolution.scalaVersionOpt0.map(_.asString).map { s =>
               // add a "+" to partial Scala version numbers such as "2.13", "2.12", "3"
               if (s.count(_ == '.') < 2 && s.forall(c => c.isDigit || c == '.')) s + "+"
               else s
@@ -95,13 +96,13 @@ object Resolve extends CoursierCommand[ResolveOptions] {
       val scalaVersion = scalaVersionOpt
         .getOrElse {
           // we should only have Java dependencies in that case
-          ""
+          VersionConstraint.empty
         }
 
       val extraRepoOpt = Some(urlDeps ++ sbtPluginUrlDeps).filter(_.nonEmpty).map { m =>
         val m0 = m.map {
-          case ((mod, v), url) =>
-            ((mod.module(scalaVersion), v), (url, true))
+          case ((mod, version), url) =>
+            ((mod.module(scalaVersion.asString), version), (url, true))
         }
         InMemoryRepository.privateApply(
           m0,
@@ -111,13 +112,13 @@ object Resolve extends CoursierCommand[ResolveOptions] {
 
       val deps0 = Dependencies.addExclusions(
         deps ++ sbtPluginJavaOrScalaDeps.map(_.dependency(
-          JavaOrScalaModule.scalaBinaryVersion(scalaVersion),
-          scalaVersion,
+          JavaOrScalaModule.scalaBinaryVersion(scalaVersion.asString),
+          scalaVersion.asString,
           platformOpt.getOrElse("")
         )),
         params.dependency.perModuleExclude.map {
           case (k, s) =>
-            k.module(scalaVersion) -> s.map(_.module(scalaVersion))
+            k.module(scalaVersion.asString) -> s.map(_.module(scalaVersion.asString))
         }
       )
 
@@ -127,11 +128,13 @@ object Resolve extends CoursierCommand[ResolveOptions] {
 
       unlift {
         val invalidForced = extraRepoOpt
-          .map(_.fallbacks.toSeq)
+          .map(_.fallbacks0.toSeq)
           .getOrElse(Nil)
           .collect {
             case ((mod, version), _)
-                if params.resolution.forceVersion.get(mod).exists(_ != version) =>
+                if params.resolution.forceVersion0
+                  .get(mod)
+                  .exists(_ != VersionConstraint.fromVersion(version)) =>
               (mod, version)
           }
         if (invalidForced.isEmpty)
@@ -139,15 +142,20 @@ object Resolve extends CoursierCommand[ResolveOptions] {
         else
           Left(
             new ResolveException(
-              s"Cannot force a version that is different from the one specified " +
-                s"for modules ${invalidForced.map { case (mod, ver) => s"$mod:$ver" }.mkString(", ")} with url"
+              s"Cannot force a version that is different from the one specified for modules " +
+                invalidForced
+                  .map {
+                    case (mod, ver) =>
+                      s"${mod.repr}:${ver.asString}"
+                  }
+                  .mkString(", ") +
+                " with url"
             )
           )
       }
 
       (deps0, repositories, scalaVersionOpt, platformOpt)
     }
-  }
 
   def printTask(
     params: ResolveParams,
@@ -261,21 +269,22 @@ object Resolve extends CoursierCommand[ResolveOptions] {
 
     val depsAndReposOrError0 = depsAndReposOrError(params, args, cache)
 
-    lift {
+    for {
 
-      val (deps, repositories, scalaVersionOpt, platformOpt) =
-        unlift(Task.fromEither(depsAndReposOrError0))
-      val params0 = params.copy(
+      res0 <- Task.fromEither(depsAndReposOrError0)
+      (deps, repositories, scalaVersionOpt, platformOpt) = res0
+      params0 = params.copy(
         resolution = params.updatedResolution(scalaVersionOpt)
       )
 
-      Output.printDependencies(params0.output, params0.resolution, deps, stdout, stderr)
+      _ = Output.printDependencies(params0.output, params0.resolution, deps, stdout, stderr)
 
-      val (res, _, errorOpt) = unlift {
+      res1 <-
         coursier.Resolve()
           .withDependencies(deps)
           .withRepositories(repositories)
           .withResolutionParams(params0.resolution)
+          .withBomDependencies(params0.dependency.bomDependencies)
           .withCache(cache)
           .transformResolution { t =>
             if (benchmark == 0) t
@@ -283,7 +292,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
           }
           .transformFetcher { f =>
             if (params0.output.verbosity >= 2) {
-              modVers: Seq[(Module, String)] =>
+              modVers =>
                 val print = Task.delay {
                   Output.errPrintln(s"Getting ${modVers.length} project definition(s)")
                 }
@@ -304,15 +313,18 @@ object Resolve extends CoursierCommand[ResolveOptions] {
             case e =>
               Task.fromEither(e.map { case (r, w) => (r, w, None) })
           }
-      }
+
+      (res, _, errorOpt) = res1
 
       // TODO Print warnings
 
-      for (ex <- errorOpt; err <- ex.errors)
-        stderr.println(err.getMessage)
+      _ = {
+        for (ex <- errorOpt; err <- ex.errors)
+          stderr.println(err.getMessage)
+      }
 
-      (res, scalaVersionOpt, platformOpt, errorOpt)
-    }
+    } yield (res, scalaVersionOpt.map(_.asString), platformOpt, errorOpt)
+
   }
 
   // Add options and dependencies from the app to the passed options / dependencies
@@ -371,7 +383,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
               case Left(e)                             => Task.fail(new Exception(e))
               case Right(res)                          => Task.point(Right(res))
             }
-            .unsafeRun()(channels.cache.ec)
+            .unsafeRun(wrapExceptions = true)(channels.cache.ec)
           rawDesc <- RawAppDescriptor.parse(
             new String(info.appDescriptorBytes, StandardCharsets.UTF_8)
           )
@@ -436,7 +448,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
       benchmarkCache = params.benchmarkCache
     )
 
-    t.attempt.unsafeRun()(ec) match {
+    t.attempt.unsafeRun(wrapExceptions = true)(ec) match {
       case Left(e: ResolveException) if params.output.verbosity <= 1 =>
         Output.errPrintln(e.getMessage)
         sys.exit(1)

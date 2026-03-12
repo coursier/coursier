@@ -29,6 +29,22 @@ object LauncherTestUtil {
       path
   }
 
+  lazy val isNative = {
+    val value = sys.props.getOrElse(
+      "coursier-test-is-native",
+      sys.error("Java property coursier-test-is-native not set")
+    )
+    java.lang.Boolean.parseBoolean(value)
+  }
+
+  lazy val isNativeStatic = {
+    val value = sys.props.getOrElse(
+      "coursier-test-is-native-static",
+      sys.error("Java property coursier-test-is-native-static not set")
+    )
+    java.lang.Boolean.parseBoolean(value)
+  }
+
   private lazy val pathExt = Option(System.getenv("pathext"))
     .toSeq
     .flatMap(_.split(File.pathSeparator))
@@ -39,8 +55,7 @@ object LauncherTestUtil {
         .map(ext => new File(directory, name + ext))
         .filter(_.canExecute())
         .map(_.getCanonicalPath)
-        .toStream
-        .headOption
+        .find(_ => true)
         .getOrElse(name)
     else
       name

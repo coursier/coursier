@@ -13,7 +13,8 @@ final case class FetchParams(
   jsonOutputOpt: Option[Path],
   resolve: SharedResolveParams,
   artifact: ArtifactParams,
-  channel: SharedChannelParams
+  channel: SharedChannelParams,
+  legacyReport: Boolean
 )
 
 object FetchParams {
@@ -38,7 +39,8 @@ object FetchParams {
           jsonOutputOpt,
           resolve,
           artifact,
-          channel
+          channel,
+          options.legacyReportNoGuarantees.getOrElse(false)
         )
     }
   }

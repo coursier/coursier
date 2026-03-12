@@ -5,6 +5,8 @@ import coursier.util.ValidationNel
 import dataclass.data
 import fastparse._, NoWhitespace._
 
+import scala.language.implicitConversions
+
 @data class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty]) {
 
   def string: String = chunks.map(_.string).mkString
@@ -161,7 +163,7 @@ object PropertiesPattern {
     implicit def fromString(s: String): ChunkOrProperty = Const(s)
   }
 
-  private def parser[_: P]: P[Seq[ChunkOrProperty]] = {
+  private def parser[X: P]: P[Seq[ChunkOrProperty]] = {
 
     val notIn         = s"[]{}()$$".toSet
     def chars         = P(CharsWhile(c => !notIn(c)).!)

@@ -73,13 +73,13 @@ Run this command again to re-import the project if you change the build configur
 ### Run the CLI from sources
 
 ```text
-$ ./mill -i cli.run …args…
+$ ./mill -i cli[2.12.18].run …args…
 ```
 
 ### Generate a JVM launcher of the CLI
 
 ```text
-$ ./mill show cli.standaloneLauncher
+$ ./mill show cli[2.12.18].standaloneLauncher
 ```
 
 This should print the path to the generated launcher, that can be copied, or run on other
@@ -88,7 +88,7 @@ machines.
 ### Generate a GraalVM native image of the CLI
 
 ```text
-$ ./mill -i show cli.nativeImage
+$ ./mill -i show cli[2.12.18].nativeImage
 ```
 
 This should print the path to the generated native image.
@@ -110,7 +110,7 @@ $ ./mill jsTests
 ### Run all Scala.JS tests for a specific Scala version
 
 ```text
-$ ./mill jsTests 2.13.3
+$ ./mill jsTests --scalaVersion 2.13.3
 ```
 
 ### Run all JVM-based tests
@@ -122,7 +122,7 @@ $ ./mill jvmTests
 ### Run all JVM-based tests for a specific Scala version
 
 ```text
-$ ./mill jvmTests 2.13.3
+$ ./mill jvmTests --scalaVersion 2.13.3
 ```
 
 ### Validate the documentation markdown files

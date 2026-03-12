@@ -1,12 +1,12 @@
 package coursier.cli.install
 
-import caseapp.{ArgsName, ExtraName => Short, HelpMessage => Help, ValueDescription => Value, _}
+import caseapp._
 import coursier.cli.jvm.SharedJavaOptions
 import coursier.cli.options.{CacheOptions, OptionGroup, OutputOptions, RepositoryOptions}
 
 // format: off
 @ArgsName("app-name*")
-@Help(
+@HelpMessage(
   "Update one or more applications.\n" +
   "\n" +
   "Examples:\n" +
@@ -35,13 +35,13 @@ final case class UpdateOptions(
     overrideRepositories: Boolean = false,
 
   @Group(OptionGroup.update)
-  @Short("f")
+  @ExtraName("f")
     force: Boolean = false
 
 )
 // format: on
 
 object UpdateOptions {
-  implicit val parser = Parser[UpdateOptions]
-  implicit val help   = caseapp.core.help.Help[UpdateOptions]
+  implicit lazy val parser: Parser[UpdateOptions] = Parser.derive
+  implicit lazy val help: Help[UpdateOptions]     = Help.derive
 }

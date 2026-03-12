@@ -1,7 +1,7 @@
 package coursier.launcher
 
 import java.io.File
-import java.nio.file.{Path, Paths}
+import java.nio.file.Path
 import java.util.jar.{Attributes => JarAttributes}
 import java.util.zip.ZipEntry
 
@@ -52,7 +52,9 @@ object Parameters {
     python: Boolean = false,
     @since
     pythonJep: Boolean = false,
-    extraContent: Map[String, Seq[ClassLoaderContent]] = Map()
+    extraContent: Map[String, Seq[ClassLoaderContent]] = Map(),
+    @since
+    rules: Seq[MergeRule] = MergeRule.default
   ) extends Parameters {
 
     def withPreamble(preamble: Preamble): Bootstrap =

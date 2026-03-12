@@ -10,8 +10,7 @@ import coursier.core.{
   Resolution,
   Type,
   Repository,
-  MinimizedExclusions,
-  VersionInterval
+  MinimizedExclusions
 }
 import coursier.parse.{
   DependencyParser,
@@ -20,6 +19,7 @@ import coursier.parse.{
   RepositoryParser,
   JavaOrScalaDependency
 }
+import coursier.version.{VersionInterval, VersionParse}
 import dataclass._
 
 import scala.language.implicitConversions
@@ -168,7 +168,7 @@ import scala.language.implicitConversions
   def overrideVersion(ver: String, useVersionOverrides: Boolean): RawAppDescriptor = {
     val base =
       if (useVersionOverrides) {
-        val ver0 = coursier.core.Version(ver)
+        val ver0 = coursier.version.Version(ver)
         val versionOverrideOpt = versionOverrides
           .iterator
           .flatMap { o =>
@@ -176,7 +176,7 @@ import scala.language.implicitConversions
               case Left(errors) =>
                 // FIXME Log errors
                 Iterator.empty
-              case Right(ov) if ov.versionRange.contains(ver0) =>
+              case Right(ov) if ov.versionRange0.contains(ver0) =>
                 Iterator(o)
               case Right(_) =>
                 Iterator.empty
@@ -289,11 +289,12 @@ object RawAppDescriptor {
     properties: Option[RawAppDescriptor.Properties] = None,
     @since("2.1.0-M4")
     prebuilt: Option[String] = None,
-    prebuiltBinaries: Option[Map[String, String]] = None
+    prebuiltBinaries: Option[Map[String, String]] = None,
+    @since("2.1.10")
+    launcherType: Option[String] = None
   ) {
     def versionOverride: ValidatedNel[String, VersionOverride] = {
-      val versionRangeV = coursier.core.Parse
-        .versionInterval(versionRange)
+      val versionRangeV = VersionParse.versionInterval(versionRange)
         .toValidNel(s"""versionRange "$versionRange" is invalid""")
       val repositoriesV = repositories.map(parseRepositories).sequence
       val dependenciesV = dependencies.map(parseDependenices).sequence
@@ -303,8 +304,13 @@ object RawAppDescriptor {
         case None                          => (None, None)
       }
 
-      (versionRangeV, repositoriesV, dependenciesV).mapN {
-        (versionRange, repositories, dependencies) =>
+      val launcherTypeV: ValidatedNel[String, Option[LauncherType]] =
+        launcherType.map(lt =>
+          Validated.fromEither(LauncherType.parse(lt).left.map(NonEmptyList.one))
+        ).sequence
+
+      (versionRangeV, repositoriesV, dependenciesV, launcherTypeV).mapN {
+        (versionRange, repositories, dependencies, launcherType) =>
           VersionOverride(versionRange)
             .withDependencies(dependencies)
             .withRepositories(repositories)
@@ -313,6 +319,7 @@ object RawAppDescriptor {
             .withJavaProperties(properties.map(_.props.sorted))
             .withPrebuiltLauncher(prebuilt)
             .withPrebuiltBinaries(prebuiltBinaries)
+            .withLauncherType(launcherType)
       }
     }
   }
@@ -325,7 +332,7 @@ object RawAppDescriptor {
   private def parseDependenices(dependencies: Seq[String])
     : ValidatedNel[String, Seq[JavaOrScalaDependency]] =
     validationNelToCats(
-      DependencyParser.javaOrScalaDependencies(dependencies, Configuration.defaultCompile)
+      DependencyParser.javaOrScalaDependencies(dependencies, Configuration.defaultRuntime)
     )
 
   private def parseRepositories(repositories: Seq[String]): ValidatedNel[String, Seq[Repository]] =
@@ -336,7 +343,7 @@ object RawAppDescriptor {
   private[install] def validateRanges(versionOverrides: Seq[VersionOverride])
     : ValidatedNel[String, Seq[VersionOverride]] =
     versionOverrides
-      .map(_.versionRange)
+      .map(_.versionRange0)
       .foldLeft[ValidatedNel[String, Seq[VersionInterval]]](Validated.valid(Seq.empty)) {
         case (validRanges, range) =>
           validRanges.andThen { ranges =>

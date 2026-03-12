@@ -1,8 +1,29 @@
 package coursier.maven
 
-import coursier.core._
+import coursier.core.{
+  Activation,
+  Attributes,
+  Classifier,
+  Configuration,
+  Dependency,
+  Extension,
+  Info,
+  Module,
+  ModuleName,
+  Organization,
+  Overrides,
+  Profile,
+  Project,
+  SnapshotVersion,
+  SnapshotVersioning,
+  Type,
+  Variant,
+  VariantSelector,
+  Versions
+}
 import coursier.core.Validation._
 import coursier.util.Traverse.TraverseOps
+import coursier.version.{Version, VersionConstraint, VersionParse}
 
 import scala.collection.compat._
 
@@ -46,13 +67,16 @@ object Pom {
       }
     } yield Module(organization, name, Map.empty).trim
 
-  private def readVersion(node: Node) =
-    text(node, "version", "Version").getOrElse("").trim
+  private def readVersion(node: Node): Version =
+    Version(text(node, "version", "Version").getOrElse("").trim)
+
+  private def readVersionConstraint(node: Node): VersionConstraint =
+    VersionConstraint(text(node, "version", "Version").getOrElse("").trim)
 
   def dependency(node: Node): Either[String, (Configuration, Dependency)] =
     module(node).flatMap { mod =>
 
-      val version0 = readVersion(node)
+      val version0 = readVersionConstraint(node)
       val scopeOpt = text(node, "scope", "")
         .map(Configuration(_))
         .toOption
@@ -70,14 +94,14 @@ object Pom {
       for {
         exclusions <- xmlExclusions
           .eitherTraverse(module(_, defaultArtifactId = Some(ModuleName("*"))))
-        version <- validateCoordinate(version0, "version")
+        version <- validateCoordinate(version0.asString, "version")
       } yield {
         val optional = text(node, "optional", "").toSeq.contains("true")
 
         scopeOpt.getOrElse(Configuration.empty) -> Dependency(
           mod,
           version0,
-          Configuration.empty,
+          VariantSelector.emptyConfiguration,
           exclusions.map(mod => (mod.organization, mod.name)).toSet,
           Attributes(typeOpt.getOrElse(Type.empty), classifierOpt.getOrElse(Classifier.empty)),
           optional,
@@ -113,10 +137,10 @@ object Pom {
     )
 
     val jdk = text(node, "jdk", "").toOption.flatMap { s =>
-      Parse.versionInterval(s)
-        .orElse(Parse.multiVersionInterval(s))
+      VersionParse.versionInterval(s)
+        .orElse(VersionParse.multiVersionInterval(s))
         .map(Left(_))
-        .orElse(Parse.version(s).map(v => Right(Seq(v))))
+        .orElse(VersionParse.version(s).map(v => Right(Seq(v))))
     }
 
     val activation = Activation(properties, os, jdk)
@@ -188,12 +212,12 @@ object Pom {
       groupId <- Some(projModule.organization).filter(_.value.nonEmpty)
         .orElse(parentModuleOpt.map(_.organization).filter(_.value.nonEmpty))
         .toRight("No organization found")
-      version <- Some(readVersion(pom)).filter(_.nonEmpty)
-        .orElse(parentVersionOpt.filter(_.nonEmpty))
+      version <- Some(readVersion(pom)).filter(_.asString.nonEmpty)
+        .orElse(parentVersionOpt.filter(_.asString.nonEmpty))
         .toRight("No version found")
 
       _ <- parentVersionOpt
-        .map(v => if (v.isEmpty) Left("Parent version missing") else Right(()))
+        .map(v => if (v.asString.isEmpty) Left("Parent version missing") else Right(()))
         .getOrElse(Right(()))
       _ <- parentModuleOpt
         .map { mod =>
@@ -216,18 +240,7 @@ object Pom {
 
       profiles <- xmlProfiles.eitherTraverse(profile)
 
-      extraAttrs <- properties
-        .collectFirst { case ("extraDependencyAttributes", s) => extraAttributes(s) }
-        .getOrElse(Right(Map.empty))
-
     } yield {
-
-      val extraAttrsMap = extraAttrs
-        .map {
-          case (mod, ver) =>
-            (mod.withAttributes(Map.empty), ver) -> mod.attributes
-        }
-        .toMap
 
       val description = pom.children
         .find(_.label == "description")
@@ -293,14 +306,14 @@ object Pom {
           val relocatedArtifactId = text(n, "artifactId", "")
             .map(ModuleName(_))
             .getOrElse(finalProjModule.name)
-          val relocatedVersion = text(n, "version", "").getOrElse(version)
+          val relocatedVersion = text(n, "version", "").map(Version(_)).getOrElse(version)
 
-          Configuration.empty -> Dependency(
+          Variant.emptyConfiguration -> Dependency(
             finalProjModule
               .withOrganization(relocatedGroupId)
               .withName(relocatedArtifactId),
-            relocatedVersion,
-            Configuration.empty,
+            VersionConstraint.fromVersion(relocatedVersion),
+            VariantSelector.emptyConfiguration,
             Set.empty[(Organization, ModuleName)],
             Attributes.empty,
             optional = false,
@@ -311,16 +324,17 @@ object Pom {
       Project(
         finalProjModule,
         version,
-        (relocationDependencyOpt.toSeq ++ deps).map {
-          case (config, dep0) =>
-            val dep = extraAttrsMap.get(dep0.moduleVersion).fold(dep0)(attrs =>
-              dep0.withModule(dep0.module.withAttributes(attrs))
-            )
-            config -> dep
+        relocationDependencyOpt.toSeq ++ deps.map {
+          case (conf, dep) =>
+            (Variant.Configuration(conf), dep)
         },
-        Map.empty,
-        parentModuleOpt.map((_, parentVersionOpt.getOrElse(""))),
-        depMgmts,
+        // this is customized later on in MavenRepositoryInternal
+        Map.empty[Configuration, Seq[Configuration]],
+        parentModuleOpt.map((_, parentVersionOpt.getOrElse(Version.zero))),
+        depMgmts.map {
+          case (conf, dep) =>
+            (Variant.Configuration(conf), dep)
+        },
         properties,
         profiles,
         None,
@@ -336,7 +350,10 @@ object Pom {
           developers,
           None,
           scm
-        )
+        ),
+        Overrides.empty,
+        Map.empty,
+        Map.empty
       )
     }
 
@@ -351,8 +368,12 @@ object Pom {
 
     } yield {
 
-      val latest  = text(xmlVersioning, "latest", "Latest version").getOrElse("")
-      val release = text(xmlVersioning, "release", "Release version").getOrElse("")
+      val latest = text(xmlVersioning, "latest", "Latest version")
+        .map(Version(_))
+        .getOrElse(Version.zero)
+      val release = text(xmlVersioning, "release", "Release version")
+        .map(Version(_))
+        .getOrElse(Version.zero)
 
       val versionsOpt = xmlVersioning.children
         .find(_.label == "versions")
@@ -360,7 +381,7 @@ object Pom {
           node.children
             .filter(_.label == "version")
             .flatMap(_.children.collectFirst {
-              case Text(t) => t
+              case Text(t) => Version(t)
             })
         }
 
@@ -378,7 +399,9 @@ object Pom {
 
     val classifier = Classifier(textOrEmpty("classifier", "Classifier"))
     val ext        = Extension(textOrEmpty("extension", "Extensions"))
-    val value      = textOrEmpty("value", "Value")
+    val value = text(node, "value", "Value")
+      .map(Version(_))
+      .getOrElse(Version.zero)
 
     val updatedOpt = text(node, "updated", "Updated")
       .toOption
@@ -401,7 +424,7 @@ object Pom {
     timestamp: String,
     buildNumber: Int
   ): SnapshotVersion = {
-    val value = s"${version.dropRight("SNAPSHOT".length)}$timestamp-$buildNumber"
+    val value = Version(s"${version.dropRight("SNAPSHOT".length)}$timestamp-$buildNumber")
     SnapshotVersion(Classifier("*"), Extension("*"), value, None)
   }
 
@@ -430,8 +453,12 @@ object Pom {
 
       val version = readVersion(node)
 
-      val latest  = text(xmlVersioning, "latest", "Latest version").getOrElse("")
-      val release = text(xmlVersioning, "release", "Release version").getOrElse("")
+      val latest = text(xmlVersioning, "latest", "Latest version")
+        .map(Version(_))
+        .getOrElse(Version.zero)
+      val release = text(xmlVersioning, "release", "Release version")
+        .map(Version(_))
+        .getOrElse(Version.zero)
 
       val lastUpdatedOpt = text(xmlVersioning, "lastUpdated", "Last update date and time")
         .toOption
@@ -469,7 +496,7 @@ object Pom {
         if (!snapshotVersions.isEmpty)
           snapshotVersions
         else
-          buildNumber.map(bn => guessedSnapshotVersion(version, timestamp, bn)).toList
+          buildNumber.map(bn => guessedSnapshotVersion(version.asString, timestamp, bn)).toList
       )
     }
 
@@ -489,72 +516,15 @@ object Pom {
 
   val extraAttributeDropPrefix = "e:"
 
-  def extraAttribute(s: String): Either[String, (Module, String)] = {
-    // vaguely does the same as:
-    // https://github.com/apache/ant-ivy/blob/2.2.0/src/java/org/apache/ivy/core/module/id/ModuleRevisionId.java#L291
-
-    // dropping the attributes with a value of NULL here...
-
-    val rawParts = s.split(extraAttributeSeparator).toSeq
-
-    val partsOrError =
-      if (rawParts.length % 2 == 0) {
-        val malformed = rawParts.filter(!_.startsWith(extraAttributePrefix))
-        if (malformed.isEmpty)
-          Right(rawParts.map(_.drop(extraAttributePrefix.length)))
-        else
-          Left(
-            s"Malformed attributes ${malformed.map("'" + _ + "'").mkString(", ")} in extra attributes '$s'"
-          )
-      }
-      else
-        Left(s"Malformed extra attributes '$s'")
-
-    def attrFrom(attrs: Map[String, String], name: String): Either[String, String] =
-      attrs
-        .get(name)
-        .toRight(s"$name not found in extra attributes '$s'")
-
-    for {
-      parts <- partsOrError
-      attrs = parts
-        .grouped(2)
-        .collect {
-          case Seq(k, v) if v != "NULL" =>
-            k.stripPrefix(extraAttributeDropPrefix) -> v
-        }
-        .toMap
-      org     <- attrFrom(attrs, extraAttributeOrg).map(Organization(_))
-      name    <- attrFrom(attrs, extraAttributeName).map(ModuleName(_))
-      version <- attrFrom(attrs, extraAttributeVersion)
-    } yield {
-      val remainingAttrs = attrs.view.filterKeys(!extraAttributeBase(_))
-      (Module(org, name, remainingAttrs.toVector.toMap), version)
-    }
-  }
-
-  def extraAttributes(s: String): Either[String, Seq[(Module, String)]] = {
-
-    val lines = s.split('\n').toSeq.map(_.trim).filter(_.nonEmpty)
-
-    lines.foldLeft[Either[String, Seq[(Module, String)]]](Right(Vector.empty)) {
-      case (acc, line) =>
-        for {
-          modVers <- acc
-          modVer  <- extraAttribute(line)
-        } yield modVers :+ modVer
-    }
-  }
-
   def addOptionalDependenciesInConfig(
     proj: Project,
     fromConfigs: Set[Configuration],
     optionalConfig: Configuration
   ): Project = {
 
-    val optionalDeps = proj.dependencies.collect {
-      case (conf, dep) if dep.optional && fromConfigs(conf) =>
-        optionalConfig -> dep.withOptional(false)
+    val optionalDeps = proj.dependencies0.collect {
+      case (c: Variant.Configuration, dep) if dep.optional && fromConfigs(c.configuration) =>
+        Variant.Configuration(optionalConfig) -> dep.withOptional(false)
     }
 
     val optConfigThing = proj.configurations.getOrElse(optionalConfig, Nil) ++
@@ -563,6 +533,6 @@ object Pom {
 
     proj
       .withConfigurations(configurations)
-      .withDependencies(proj.dependencies ++ optionalDeps)
+      .withDependencies0(proj.dependencies0 ++ optionalDeps)
   }
 }

@@ -64,6 +64,7 @@ final class TreeZipper[A: Eq](
           val newPath = NonEmptyChain.fromChainPrepend(item, parents)
           new TreeZipper(newPath, fetchChildren)
         }
+        .toSeq
 
       Chain.fromSeq(seq)
     }

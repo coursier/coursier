@@ -1,6 +1,6 @@
 package coursier.maven
 
-import coursier.core.{Configuration, Dependency, Project}
+import coursier.core.{Configuration, Dependency, Project, Variant}
 
 object WritePom {
 
@@ -12,10 +12,10 @@ object WritePom {
         <groupId>{dep.module.organization}</groupId>
         <artifactId>{dep.module.name}</artifactId>
         {
-          if (dep.version.isEmpty)
+          if (dep.versionConstraint.asString.isEmpty)
             Nil
           else
-            Seq(<version>{dep.version}</version>)
+            Seq(<version>{dep.versionConstraint.asString}</version>)
         }
         {
           if (config.isEmpty)
@@ -37,7 +37,7 @@ object WritePom {
         }
       <description>{proj.info.description}</description>
       <url>{proj.info.homePage}</url>
-      <version>{proj.version}</version>
+      <version>{proj.version0.asString}</version>
       // licenses
       <name>{proj.module.name}</name>
       <organization>
@@ -47,27 +47,35 @@ object WritePom {
       // SCM
       // developers
         {
-          if (proj.dependencies.isEmpty)
+          if (proj.dependencies0.isEmpty)
             Nil
           else
             <dependencies>
               {
-                proj.dependencies.map {
-                  case (config, dep) =>
+                proj.dependencies0.map {
+                  case (variant, dep) =>
+                    val config = variant match {
+                      case c: Variant.Configuration => c.configuration
+                      case _: Variant.Attributes => Configuration.empty
+                    }
                     dependencyNode(config, dep)
                 }
               }
             </dependencies>
         }
         {
-          if (proj.dependencyManagement.isEmpty)
+          if (proj.dependencyManagement0.isEmpty)
             Nil
           else
             <dependencyManagement>
               <dependencies>
                 {
-                  proj.dependencyManagement.map {
-                    case (config, dep) =>
+                  proj.dependencyManagement0.map {
+                    case (variant, dep) =>
+                      val config = variant match {
+                        case c: Variant.Configuration => c.configuration
+                        case _: Variant.Attributes => Configuration.empty
+                      }
                       dependencyNode(config, dep)
                   }
                 }

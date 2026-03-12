@@ -1,10 +1,15 @@
 package coursier.install.internal
 
 import coursier.cache.ArchiveType
-import org.apache.commons.compress.archivers.{ArchiveEntry, ArchiveStreamFactory}
+import org.apache.commons.compress.archivers.{
+  ArchiveEntry,
+  ArchiveInputStream,
+  ArchiveStreamFactory
+}
 import org.apache.commons.compress.compressors.CompressorStreamFactory
 
-import java.io.{BufferedInputStream, File, FileInputStream, InputStream}
+import java.io.{BufferedInputStream, File, InputStream}
+import java.nio.file.Files
 import java.util.zip.{GZIPInputStream, ZipEntry, ZipFile}
 
 import scala.jdk.CollectionConverters._
@@ -18,25 +23,33 @@ object ArchiveUtil {
     f: Iterator[(ArchiveEntry, InputStream)] => T
   ): T = {
 
-    val method = compression match {
-      case ArchiveType.Tgz  => CompressorStreamFactory.GZIP
-      case ArchiveType.Tbz2 => CompressorStreamFactory.BZIP2
+    val methodOpt = compression match {
+      case ArchiveType.Tar  => None
+      case ArchiveType.Tgz  => Some(CompressorStreamFactory.GZIP)
+      case ArchiveType.Tbz2 => Some(CompressorStreamFactory.BZIP2)
+      case ArchiveType.Txz  => Some(CompressorStreamFactory.XZ)
+      case ArchiveType.Tzst => Some(CompressorStreamFactory.ZSTANDARD)
     }
 
     // https://alexwlchan.net/2019/09/unpacking-compressed-archives-in-scala/
-    var fis: FileInputStream = null
+    var fis: InputStream = null
     try {
-      fis = new FileInputStream(archive)
-      val uncompressedInputStream = new CompressorStreamFactory()
-        .createCompressorInputStream(
-          method,
-          if (fis.markSupported()) fis
-          else new BufferedInputStream(fis)
+      fis = Files.newInputStream(archive.toPath)
+      val uncompressedInputStream = methodOpt match {
+        case Some(method) =>
+          new CompressorStreamFactory().createCompressorInputStream(
+            method,
+            if (fis.markSupported()) fis
+            else new BufferedInputStream(fis)
+          )
+        case None =>
+          fis
+      }
+      val archiveInputStream: ArchiveInputStream[_ <: ArchiveEntry] =
+        new ArchiveStreamFactory().createArchiveInputStream(
+          if (uncompressedInputStream.markSupported()) uncompressedInputStream
+          else new BufferedInputStream(uncompressedInputStream)
         )
-      val archiveInputStream = new ArchiveStreamFactory().createArchiveInputStream(
-        if (uncompressedInputStream.markSupported()) uncompressedInputStream
-        else new BufferedInputStream(uncompressedInputStream)
-      )
 
       var nextEntryOrNull: ArchiveEntry = null
 
@@ -49,7 +62,7 @@ object ArchiveUtil {
           }
           def next(): (ArchiveEntry, InputStream) = {
             assert(hasNext)
-            val value = (nextEntryOrNull, archiveInputStream)
+            val value: (ArchiveEntry, InputStream) = (nextEntryOrNull, archiveInputStream)
             nextEntryOrNull = null
             value
           }
@@ -90,10 +103,10 @@ object ArchiveUtil {
     }
 
   def withGzipContent[T](gzFile: File)(f: InputStream => T): T = {
-    var fis: FileInputStream  = null
+    var fis: InputStream      = null
     var gzis: GZIPInputStream = null
     try {
-      fis = new FileInputStream(gzFile)
+      fis = Files.newInputStream(gzFile.toPath)
       gzis = new GZIPInputStream(fis)
       f(gzis)
     }

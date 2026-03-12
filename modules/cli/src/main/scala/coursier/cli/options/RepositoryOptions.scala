@@ -25,12 +25,18 @@ final case class RepositoryOptions(
   @Group(OptionGroup.repository)
   @Hidden
   @HelpMessage("Drop module attributes starting with 'info.' - these are sometimes used by projects built with sbt")
-    dropInfoAttr: Boolean = false
+    dropInfoAttr: Boolean = false,
+
+  @Group(OptionGroup.repository)
+  @Hidden
+  @HelpMessage("Enable Gradle Module support (experimental)")
+  @Name("enableModules")
+    enableGradleModules: Boolean = false
 
 )
 // format: on
 
 object RepositoryOptions {
-  implicit val parser = Parser[RepositoryOptions]
-  implicit val help   = caseapp.core.help.Help[RepositoryOptions]
+  implicit lazy val parser: Parser[RepositoryOptions] = Parser.derive
+  implicit lazy val help: Help[RepositoryOptions]     = Help.derive
 }

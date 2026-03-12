@@ -1,0 +1,24 @@
+{
+  "conflict_resolution": {
+    "org.tukaani:xz:1.1": "org.tukaani:xz:1.2"
+  },
+  "dependencies": [
+    {
+      "coord": "org.apache.commons:commons-compress:1.5",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/commons/commons-compress/1.5/commons-compress-1.5.jar",
+      "directDependencies": [
+        "org.tukaani:xz:1.2"
+      ],
+      "dependencies": [
+        "org.tukaani:xz:1.2"
+      ]
+    },
+    {
+      "coord": "org.tukaani:xz:1.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/tukaani/xz/1.2/xz-1.2.jar",
+      "directDependencies": [],
+      "dependencies": []
+    }
+  ],
+  "version": "0.1.0"
+}

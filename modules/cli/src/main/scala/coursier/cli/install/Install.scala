@@ -10,6 +10,7 @@ import coursier.cli.channel.Channel
 import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.setup.MaybeSetupPath
 import coursier.cli.Util.ValidatedExitOnError
+import coursier.env.ShellUtil
 import coursier.install.{Channels, InstallDir, RawSource}
 import coursier.install.error.InstallDirException
 import coursier.launcher.internal.Windows
@@ -42,7 +43,7 @@ object Install extends CoursierCommand[InstallOptions] {
     val noUpdateCoursierCache =
       params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
-    val graalvmHome = { version: String =>
+    val graalvmHome = { (version: String) =>
       params.sharedJava.javaHome(
         cache,
         noUpdateCoursierCache,
@@ -98,7 +99,7 @@ object Install extends CoursierCommand[InstallOptions] {
         params.output.verbosity,
         MaybeSetupPath.headerComment
       )
-      task.unsafeRun()(cache.ec)
+      task.unsafeRun(wrapExceptions = true)(cache.ec)
     }
     else {
 
@@ -113,13 +114,14 @@ object Install extends CoursierCommand[InstallOptions] {
 
       try for (id <- args.all) {
 
-          val appInfo = channels.appDescriptor(id).attempt.unsafeRun()(cache.ec) match {
-            case Left(err: Channels.ChannelsException) =>
-              System.err.println(err.getMessage)
-              sys.exit(1)
-            case Left(err)      => throw err
-            case Right(appInfo) => appInfo
-          }
+          val appInfo =
+            channels.appDescriptor(id).attempt.unsafeRun(wrapExceptions = true)(cache.ec) match {
+              case Left(err: Channels.ChannelsException) =>
+                System.err.println(err.getMessage)
+                sys.exit(1)
+              case Left(err)      => throw err
+              case Right(appInfo) => appInfo
+            }
 
           val wroteSomethingOpt = installDir.createOrUpdate(
             appInfo,
@@ -159,7 +161,7 @@ object Install extends CoursierCommand[InstallOptions] {
         if (!path(params.shared.dir.toAbsolutePath.toString)) {
           System.err.println(s"Warning: ${params.shared.dir} is not in your PATH")
           if (!Properties.isWin) {
-            val rcFile = ShellUtil.rcFileOpt.getOrElse("your shell configuration file")
+            val rcFile = ShellUtil.rcFileOpt().getOrElse("your shell configuration file")
             System.err.println(
               s"""To fix that, add the following line to $rcFile
                  |

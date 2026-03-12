@@ -1,0 +1,52 @@
+package coursier.tests
+
+import coursier.cache.internal.Platform
+import coursier.cache.{Cache, MockCache}
+import coursier.testcache.TestCache
+import coursier.util.Task
+
+import scala.concurrent.{ExecutionContext, Future}
+import scala.scalajs.js
+import scala.scalajs.js.Dynamic.{global => g}
+
+object PlatformTestHelpers {
+  lazy val process = g.require("process")
+}
+
+abstract class PlatformTestHelpers {
+
+  lazy val testDataDir =
+    PlatformTestHelpers.process.env
+      .asInstanceOf[js.Dictionary[String]]
+      .get("COURSIER_TEST_DATA_DIR")
+      .getOrElse {
+        sys.error("COURSIER_TEST_DATA_DIR not set")
+      }
+
+  def cache: Cache[Task] = TestCache.cache
+
+  lazy val handmadeMetadataBase =
+    PlatformTestHelpers.process.env
+      .asInstanceOf[js.Dictionary[String]]
+      .get("COURSIER_TESTS_HANDMADE_METADATA_DIR_URI")
+      .getOrElse {
+        sys.error("COURSIER_TESTS_HANDMADE_METADATA_DIR_URI not set")
+      }
+
+  lazy val handmadeMetadataCache: Cache[Task] = {
+    val base = handmadeMetadataBase.stripPrefix("file://").stripPrefix("file:")
+    MockCache(base, base)
+  }
+
+  def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =
+    Platform.textResource(path)
+
+  def maybeWriteTextResource(path: String, content: String): Unit = {}
+
+  private lazy val sha1Module = g.require("sha1")
+
+  def sha1(s: String): String =
+    sha1Module(s).asInstanceOf[String].dropWhile(_ == '0')
+
+  def maybePrintConsistencyDiff(fromOrdered: Seq[String], fromMinimized: Seq[String]): Unit = ()
+}

@@ -2,11 +2,11 @@ package coursier.interop
 
 import _root_.cats.effect.IO
 import _root_.cats.effect.unsafe.IORuntime
-import coursier.moduleString
 import coursier.interop.cats.{coursierGatherFromCats => _, _}
-import coursier.test.compatibility.executionContext
-import coursier.test.{TestRunner, compatibility}
-import coursier.test.util.ToFuture
+import coursier.tests.compatibility.executionContext
+import coursier.tests.{TestRunner, compatibility}
+import coursier.tests.util.ToFuture
+import coursier.util.StringInterpolators._
 import utest._
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,17 +30,23 @@ object CatsTests extends TestSuite {
   val tests = Tests {
 
     test("spark") {
-      test - runner.resolutionCheck(
-        mod"org.apache.spark:spark-core_2.11",
-        "1.3.1",
-        profiles = Some(Set("hadoop-2.2"))
-      )
+      test {
+        runner.resolutionCheck(
+          mod"org.apache.spark:spark-core_2.11",
+          "1.3.1",
+          profiles = Some(Set("hadoop-2.2", "!scala-2.10", "scala-2.11")),
+          forceDepMgmtVersions = Some(true)
+        )
+      }
 
-      test("scala210") - runner.resolutionCheck(
-        mod"org.apache.spark:spark-core_2.10",
-        "2.1.1",
-        profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11"))
-      )
+      test("scala210") {
+        runner.resolutionCheck(
+          mod"org.apache.spark:spark-core_2.10",
+          "2.1.1",
+          profiles = Some(Set("hadoop-2.6", "scala-2.10", "!scala-2.11")),
+          forceDepMgmtVersions = Some(true)
+        )
+      }
     }
 
     test("argonautShapeless") {

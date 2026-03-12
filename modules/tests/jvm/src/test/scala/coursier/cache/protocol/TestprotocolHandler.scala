@@ -3,7 +3,7 @@ package coursier.cache.protocol
 import java.io.File
 import java.net.{URL, URLConnection, URLStreamHandler, URLStreamHandlerFactory}
 
-import coursier.test.HandmadeMetadata
+import coursier.tests.HandmadeMetadata
 
 class TestprotocolHandler extends URLStreamHandlerFactory {
 

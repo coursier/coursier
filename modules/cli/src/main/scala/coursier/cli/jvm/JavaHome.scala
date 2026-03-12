@@ -35,7 +35,9 @@ object JavaHome extends CoursierCommand[JavaHomeOptions] {
     val task = javaHome.getWithIsSystem(params.shared.id)
 
     val (isSystem, home) = logger.use {
-      try task.unsafeRun()(coursierCache.ec) // TODO Better error messages for relevant exceptions
+      try task.unsafeRun(wrapExceptions =
+          true
+        )(coursierCache.ec) // TODO Better error messages for relevant exceptions
       catch {
         case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
           System.err.println(e.getMessage)
@@ -48,6 +50,8 @@ object JavaHome extends CoursierCommand[JavaHomeOptions] {
       val script =
         if (params.env.windowsScript)
           coursier.jvm.JavaHome.finalBatScript(envUpdate)
+        else if (params.env.windowsPosixScript)
+          coursier.jvm.JavaHome.finalBashScript(envUpdate).replace('\\', '/')
         else
           coursier.jvm.JavaHome.finalBashScript(envUpdate)
       print(script)
@@ -67,7 +71,7 @@ object JavaHome extends CoursierCommand[JavaHomeOptions] {
         params.output.verbosity,
         MaybeInstallJvm.headerComment
       )
-      setupTask.unsafeRun()(coursierCache.ec)
+      setupTask.unsafeRun(wrapExceptions = true)(coursierCache.ec)
     }
     else
       println(home.getAbsolutePath)

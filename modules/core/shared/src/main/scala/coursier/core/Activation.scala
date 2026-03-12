@@ -1,5 +1,6 @@
 package coursier.core
 
+import coursier.version.{Version => Version0, VersionInterval => VersionInterval0}
 import dataclass.data
 
 import java.util.Locale
@@ -8,7 +9,7 @@ import java.util.Locale
 @data class Activation(
   properties: Seq[(String, Option[String])],
   os: Activation.Os,
-  jdk: Option[Either[VersionInterval, Seq[Version]]]
+  jdk: Option[Either[VersionInterval0, Seq[Version0]]]
 ) {
 
   def isEmpty: Boolean = properties.isEmpty && os.isEmpty && jdk.isEmpty
@@ -16,7 +17,7 @@ import java.util.Locale
   def isActive(
     currentProperties: Map[String, String],
     osInfo: Activation.Os,
-    jdkVersion: Option[Version]
+    jdkVersion: Option[Version0]
   ): Boolean = {
     def fromProperties = properties.forall {
       case (name, _) if name.startsWith("!") =>

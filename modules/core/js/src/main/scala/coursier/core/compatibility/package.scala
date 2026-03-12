@@ -2,7 +2,7 @@ package coursier.core
 
 import scala.scalajs.js
 import js.Dynamic.{global => g}
-import org.scalajs.dom.raw.{Node, NodeList}
+import org.scalajs.dom.{Node, NodeList}
 
 import coursier.util.{SaxHandler, Xml}
 
@@ -41,8 +41,8 @@ package object compatibility {
       g.sax
 
   // Can't find these from node
-  val ELEMENT_NODE = 1 // org.scalajs.dom.raw.Node.ELEMENT_NODE
-  val TEXT_NODE    = 3 // org.scalajs.dom.raw.Node.TEXT_NODE
+  val ELEMENT_NODE = 1 // org.scalajs.dom.Node.ELEMENT_NODE
+  val TEXT_NODE    = 3 // org.scalajs.dom.Node.TEXT_NODE
 
   def fromNode(node: Node): Xml.Node = {
 

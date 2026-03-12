@@ -3,11 +3,9 @@ package coursier.cli
 import java.io._
 import java.net.URLEncoder.encode
 
-import argonaut.Argonaut._
 import caseapp.core.RemainingArgs
 import coursier.cli.options._
 import coursier.cli.options._
-import coursier.cli.util.{DepNode, ReportNode}
 import java.io._
 import java.net.URLClassLoader
 import java.net.URLEncoder.encode
@@ -30,10 +28,8 @@ import scala.io.Source
 
 object FetchTests extends TestSuite {
 
-  def checkPath(file: Option[String], path: String) =
-    file
-      .map(f => assert(f.contains(path.replace("/", File.separator))))
-      .orElse(sys.error("Not Defined"))
+  def checkPath(file: Option[String], path: String): Unit =
+    assert(file.exists(_.contains(path.replace("/", File.separator))))
 
   val pool = Sync.fixedThreadPool(6)
   val ec   = ExecutionContext.fromExecutorService(pool)
@@ -48,28 +44,12 @@ object FetchTests extends TestSuite {
         params0
     }
 
-  def getReportFromJson(f: File): ReportNode = {
-    // Parse back the output json file
-    val source = scala.io.Source.fromFile(f)
-    val str =
-      try source.mkString
-      finally source.close()
-
-    str.decodeEither[ReportNode] match {
-      case Left(error) =>
-        throw new Exception(s"Error while decoding report: $error")
-      case Right(report) => report
-    }
-  }
-
-  private val fileNameLength: DepNode => Int = _.file.getOrElse("").length
-
   val tests = Tests {
     test("get all files") {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
       assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
     }
 
@@ -80,34 +60,38 @@ object FetchTests extends TestSuite {
       val options = FetchOptions(artifactOptions = artifactOpt)
       val params  = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
       assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
     }
 
-    test("fetch dependencies from file") - withFile(
-      "junit:junit:4.12"
-    ) { (file, writer) =>
-      val dependencyOpt = DependencyOptions(dependencyFile = List(file.getAbsolutePath))
-      val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
-      val options       = FetchOptions(resolveOptions = resolveOpt)
-      val params        = paramsOrThrow(options)
+    test("fetch dependencies from file") {
+      withFile(
+        "junit:junit:4.12"
+      ) { (file, writer) =>
+        val dependencyOpt = DependencyOptions(dependencyFile = List(file.getAbsolutePath))
+        val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
+        val options       = FetchOptions(resolveOptions = resolveOpt)
+        val params        = paramsOrThrow(options)
 
-      val (_, _, _, files) = Fetch.task(params, pool, Seq.empty)
-        .unsafeRun()(ec)
+        val (_, _, _, files) = Fetch.task(params, pool, Seq.empty)
+          .unsafeRun(wrapExceptions = true)(ec)
 
-      assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
+        assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
+      }
     }
 
-    test("fail fetching dependencies from file with invalid content") - withFile(
-      "junit:junit:4.12, something_else"
-    ) { (file, writer) =>
-      val dependencyOpt = DependencyOptions(dependencyFile = List(file.getAbsolutePath))
-      val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
-      val options       = FetchOptions(resolveOptions = resolveOpt)
-      val params        = paramsOrThrow(options)
+    test("fail fetching dependencies from file with invalid content") {
+      withFile(
+        "junit:junit:4.12, something_else"
+      ) { (file, writer) =>
+        val dependencyOpt = DependencyOptions(dependencyFile = List(file.getAbsolutePath))
+        val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
+        val options       = FetchOptions(resolveOptions = resolveOpt)
+        val params        = paramsOrThrow(options)
 
-      intercept[ResolveException] {
-        Fetch.task(params, pool, Seq.empty).unsafeRun()(ec)
+        assertThrows[ResolveException] {
+          Fetch.task(params, pool, Seq.empty).unsafeRun()(ec)
+        }
       }
     }
 
@@ -118,7 +102,7 @@ object FetchTests extends TestSuite {
       val options       = FetchOptions(resolveOptions = resolveOpt)
 
       val expectedErrorMessage = s"Error reading dependencies from $path"
-      val thrownException = intercept[Exception] {
+      val thrownException = assertThrows[Exception] {
         paramsOrThrow(options)
       }
       assert(thrownException.getMessage == expectedErrorMessage)
@@ -132,7 +116,7 @@ object FetchTests extends TestSuite {
       val options = FetchOptions(artifactOptions = artifactOpt)
       val params  = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
       assert(files.map(_._2.getName).toSet.equals(Set(
         "junit-4.12.jar",
         "junit-4.12-sources.jar",
@@ -151,7 +135,7 @@ object FetchTests extends TestSuite {
       )
       val params = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
       assert(files.map(_._2.getName).toSet.equals(Set(
         "junit-4.12.jar",
         "junit-4.12-sources.jar",
@@ -164,7 +148,7 @@ object FetchTests extends TestSuite {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"))
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
       assert(MainClass.mainClasses(files.map(_._2)) == Map(
         ("", "")                -> "com.martiansoftware.nailgun.NGServer",
         ("com.geirsson", "cli") -> "org.scalafmt.cli.Cli"
@@ -176,7 +160,7 @@ object FetchTests extends TestSuite {
       val params  = paramsOrThrow(options)
       val (_, _, _, files) =
         Fetch.task(params, pool, Seq("ch.epfl.scala:scalafix-cli_2.12.4:0.5.10"))
-          .unsafeRun()(ec)
+          .unsafeRun(wrapExceptions = true)(ec)
       val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
       assert(MainClass.mainClasses(files.map(_._2)) == Map(
         ("", "")                 -> "com.martiansoftware.nailgun.NGServer",
@@ -188,7 +172,7 @@ object FetchTests extends TestSuite {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("com.lihaoyi:ammonite_2.12.4:1.1.0"))
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
       val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
       assert(MainClass.mainClasses(files.map(_._2)) == Map(
         ("", "Javassist")                -> "javassist.CtClass",
@@ -201,7 +185,7 @@ object FetchTests extends TestSuite {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("lt.dvim.sssio:sssio_2.12:0.0.1"))
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
       val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
       assert(MainClass.mainClasses(files.map(_._2)) == Map(
         ("", "")                   -> "com.kenai.jffi.Main",
@@ -209,1110 +193,333 @@ object FetchTests extends TestSuite {
       ))
     }
 
-    test("Module level should exclude correctly") {
-      withFile("junit:junit--org.hamcrest:hamcrest-core") { (file, _) =>
-        withFile() { (jsonFile, _) =>
-          val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-          val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
-          val options = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
-          val params  = paramsOrThrow(options)
-
-          val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-            .unsafeRun()(ec)
-          val filesFetched = files.map(_._2.getName).toSet
-          val expected     = Set("junit-4.12.jar")
-          Predef.assert(
-            filesFetched.equals(expected),
-            s"files fetched: $filesFetched not matching expected: $expected"
-          )
-
-          val node: ReportNode = getReportFromJson(jsonFile)
-
-          assert(node.dependencies.length == 1)
-          assert(node.dependencies.head.coord == "junit:junit:4.12")
-        }
-      }
-    }
-
-    /* Result without exclusion:
-     * |└─ org.apache.avro:avro:1.7.4
-     * |├─ com.thoughtworks.paranamer:paranamer:2.3
-     * |├─ org.apache.commons:commons-compress:1.4.1
-     * |│ └─ org.tukaani:xz:1.0 // this should be fetched
-     * |├─ org.codehaus.jackson:jackson-core-asl:1.8.8
-     * |├─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
-     * |│ └─ org.codehaus.jackson:jackson-core-asl:1.8.8
-     * |├─ org.slf4j:slf4j-api:1.6.4
-     * |└─ org.xerial.snappy:snappy-java:1.0.4.1
-     */
-    test("avro exclude xz should not fetch xz") - withFile(
-      "org.apache.avro:avro--org.tukaani:xz"
-    ) { (file, writer) =>
-      withFile() { (jsonFile, _) =>
-        val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-        val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
-        val options = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
-        val params  = paramsOrThrow(options)
-
-        val (_, _, _, files) = Fetch.task(params, pool, Seq("org.apache.avro:avro:1.7.4"))
-          .unsafeRun()(ec)
-
-        val filesFetched = files.map(_._2.getName).toSet
-        assert(!filesFetched.contains("xz-1.0.jar"))
-
-        val node: ReportNode = getReportFromJson(jsonFile)
-
-        // assert root level dependencies
-        assert(node.dependencies.map(_.coord).toSet == Set(
-          "org.apache.avro:avro:1.7.4",
-          "com.thoughtworks.paranamer:paranamer:2.3",
-          "org.apache.commons:commons-compress:1.4.1",
-          "org.codehaus.jackson:jackson-core-asl:1.8.8",
-          "org.codehaus.jackson:jackson-mapper-asl:1.8.8",
-          "org.slf4j:slf4j-api:1.6.4",
-          "org.xerial.snappy:snappy-java:1.0.4.1"
-        ))
-
-        // org.apache.commons:commons-compress:1.4.1 should not contain deps underneath it.
-        val compressNode =
-          node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
-        assert(node.dependencies.exists(_.coord == "org.apache.commons:commons-compress:1.4.1"))
-        assert(compressNode.get.dependencies.isEmpty)
-      }
-    }
-
-    /* Result without exclusion:
-     * |├─ org.apache.avro:avro:1.7.4
-     * |│ ├─ com.thoughtworks.paranamer:paranamer:2.3
-     * |│ ├─ org.apache.commons:commons-compress:1.4.1
-     * |│ │ └─ org.tukaani:xz:1.0
-     * |│ ├─ org.codehaus.jackson:jackson-core-asl:1.8.8
-     * |│ ├─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
-     * |│ │ └─ org.codehaus.jackson:jackson-core-asl:1.8.8
-     * |│ ├─ org.slf4j:slf4j-api:1.6.4
-     * |│ └─ org.xerial.snappy:snappy-java:1.0.4.1
-     * |└─ org.apache.commons:commons-compress:1.4.1
-     * | └─ org.tukaani:xz:1.0
-     */
-    test("avro excluding xz + commons-compress should still fetch xz") - withFile(
-      "org.apache.avro:avro--org.tukaani:xz"
-    ) {
-      (file, writer) =>
-
-        withFile() {
-          (jsonFile, _) =>
-            val dependencyOpt = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-            val resolveOpt    = SharedResolveOptions(dependencyOptions = dependencyOpt)
-            val options =
-              FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
-            val params = paramsOrThrow(options)
-
-            val (_, _, _, files) = Fetch.task(
-              params,
-              pool,
-              Seq("org.apache.avro:avro:1.7.4", "org.apache.commons:commons-compress:1.4.1")
-            )
-              .unsafeRun()(ec)
-            val filesFetched = files.map(_._2.getName).toSet
-            assert(filesFetched.contains("xz-1.0.jar"))
-
-            val node: ReportNode = getReportFromJson(jsonFile)
-
-            // Root level org.apache.commons:commons-compress:1.4.1 should have org.tukaani:xz:1.0 underneath it.
-            val compressNode =
-              node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.4.1")
-            assert(compressNode.isDefined)
-            assert(compressNode.get.dependencies.contains("org.tukaani:xz:1.0"))
-
-            val innerCompressNode =
-              node.dependencies.find(_.coord == "org.apache.avro:avro:1.7.4")
-            assert(innerCompressNode.isDefined)
-            assert(!innerCompressNode.get.dependencies.contains("org.tukaani:xz:1.0"))
-        }
-
-    }
-
-    /* Result:
-     * |├─ org.apache.commons:commons-compress:1.4.1
-     * |│ └─ org.tukaani:xz:1.0 -> 1.1
-     * |└─ org.tukaani:xz:1.1
-     */
-    test("requested xz:1.1 should not have conflicts") - withFile() {
-      (excludeFile, writer) =>
-        withFile() {
-          (jsonFile, _) =>
-            val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
-            val params  = paramsOrThrow(options)
-
-            Fetch.task(
-              params,
-              pool,
-              Seq("org.apache.commons:commons-compress:1.4.1", "org.tukaani:xz:1.1")
-            )
-              .unsafeRun()(ec)
-
-            val node: ReportNode = getReportFromJson(jsonFile)
-            assert(node.conflict_resolution.isEmpty)
-        }
-    }
-
-    /* Result:
-     * |├─ org.apache.commons:commons-compress:1.5
-     * |│ └─ org.tukaani:xz:1.2
-     * |└─ org.tukaani:xz:1.1 -> 1.2
-     */
-    test(
-      "org.apache.commons:commons-compress:1.5 org.tukaani:xz:1.1 should have conflicts"
-    ) - withFile() {
-      (excludeFile, _) =>
-        withFile() {
-          (jsonFile, _) =>
-            val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
-            val params  = paramsOrThrow(options)
-
-            Fetch.task(
-              params,
-              pool,
-              Seq("org.apache.commons:commons-compress:1.5", "org.tukaani:xz:1.1")
-            )
-              .unsafeRun()(ec)
-
-            val node: ReportNode = getReportFromJson(jsonFile)
-            assert(node.conflict_resolution == Map("org.tukaani:xz:1.1" -> "org.tukaani:xz:1.2"))
-        }
-    }
-
-    /* Result:
-     * |└─ org.apache.commons:commons-compress:1.5
-     * | └─ org.tukaani:xz:1.2
-     */
-    test("classifier tests should have tests.jar") - withFile() {
-      (excludeFile, _) =>
-        withFile() {
-          (jsonFile, _) =>
-            val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
-            val params  = paramsOrThrow(options)
-
-            Fetch.task(
-              params,
-              pool,
-              Seq("org.apache.commons:commons-compress:1.5,classifier=tests")
-            ).unsafeRun()(ec)
-
-            val node: ReportNode = getReportFromJson(jsonFile)
-
-            val compressNode = node.dependencies.find(
-              _.coord == "org.apache.commons:commons-compress:jar:tests:1.5"
-            )
-
-            assert(compressNode.isDefined)
-            compressNode.get.file.map(f =>
-              assert(f.contains("commons-compress-1.5-tests.jar"))
-            ).orElse(sys.error("Not Defined"))
-            assert(compressNode.get.dependencies.contains("org.tukaani:xz:1.2"))
-        }
-    }
-
-    /* Result:
-     * |├─ org.apache.commons:commons-compress:1.5
-     * |│ └─ org.tukaani:xz:1.2
-     * |└─ org.apache.commons:commons-compress:1.5
-     * | └─ org.tukaani:xz:1.2
-     */
-    test("mixed vanilla and classifier  should have tests.jar and .jar") - withFile() {
-      (excludeFile, _) =>
-        withFile() {
-          (jsonFile, _) =>
-            val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
-            val params  = paramsOrThrow(options)
-
-            Fetch.task(
-              params,
-              pool,
-              Seq(
-                "org.apache.commons:commons-compress:1.5,classifier=tests",
-                "org.apache.commons:commons-compress:1.5"
-              )
-            ).unsafeRun()(ec)
-
-            val node: ReportNode = getReportFromJson(jsonFile)
-
-            val compressNodes: Seq[DepNode] = node.dependencies
-              .filter(_.coord.startsWith("org.apache.commons:commons-compress"))
-              .sortBy(_.coord.length) // sort by coord length
-
-            assert(compressNodes.length == 2)
-            assert(compressNodes.head.coord == "org.apache.commons:commons-compress:1.5")
-            compressNodes.head.file.map(f =>
-              assert(f.contains("commons-compress-1.5.jar"))
-            ).orElse(sys.error("Not Defined"))
-
-            assert(
-              compressNodes.last.coord == "org.apache.commons:commons-compress:jar:tests:1.5"
-            )
-            compressNodes.last.file.map(f =>
-              assert(f.contains("commons-compress-1.5-tests.jar"))
-            ).orElse(sys.error("Not Defined"))
-        }
-    }
-
-    /* Result:
-     * |└─ org.apache.commons:commons-compress:1.5
-     * | └─ org.tukaani:xz:1.2 // should not be fetched
-     */
-    test("intransitive should only fetch a single jar") - withFile() {
-      (_, _) =>
-        withFile() {
-          (jsonFile, _) =>
-            val dependencyOpt =
-              DependencyOptions(intransitive = List("org.apache.commons:commons-compress:1.5"))
-            val resolveOpt = SharedResolveOptions(dependencyOptions = dependencyOpt)
-            val options =
-              FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
-            val params = paramsOrThrow(options)
-
-            Fetch.task(params, pool, Nil)
-              .unsafeRun()(ec)
-
-            val node: ReportNode = getReportFromJson(jsonFile)
-            val compressNode =
-              node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
-            assert(compressNode.isDefined)
-            compressNode.get.file.map(f => assert(f.contains("commons-compress-1.5.jar"))).orElse(
-              sys.error("Not Defined")
-            )
-
-            assert(compressNode.get.dependencies.isEmpty)
-        }
-    }
-
-    /* Result:
-     * |└─ org.apache.commons:commons-compress:1.5
-     * | └─ org.tukaani:xz:1.2
-     */
-    test("intransitive classifier should only fetch a single tests jar") - withFile() {
-      (excludeFile, _) =>
-        withFile() {
-          (jsonFile, _) =>
-            val dependencyOpt = DependencyOptions(
-              intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests")
-            )
-            val resolveOpt = SharedResolveOptions(dependencyOptions = dependencyOpt)
-            val options =
-              FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
-            val params = paramsOrThrow(options)
-
-            Fetch.task(params, pool, Seq())
-              .unsafeRun()(ec)
-
-            val node: ReportNode = getReportFromJson(jsonFile)
-
-            val compressNode = node.dependencies.find(
-              _.coord == "org.apache.commons:commons-compress:jar:tests:1.5"
-            )
-            assert(compressNode.isDefined)
-            compressNode.get.file.map(f =>
-              assert(f.contains("commons-compress-1.5-tests.jar"))
-            ).orElse(sys.error("Not Defined"))
-
-            assert(compressNode.get.dependencies.isEmpty)
-        }
-    }
-
-    /* Result:
-     * |└─ org.apache.commons:commons-compress:1.5 -> 1.4.1
-     * | └─ org.tukaani:xz:1.0
-     */
-    test("classifier with forced version should fetch tests jar") - withFile() {
-      (excludeFile, _) =>
-        withFile() {
-          (jsonFile, _) =>
-            val resolutionOpt =
-              ResolutionOptions(forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
-            val resolveOpt = SharedResolveOptions(resolutionOptions = resolutionOpt)
-            val options =
-              FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
-            val params = paramsOrThrow(options)
-
-            Fetch.task(
-              params,
-              pool,
-              Seq("org.apache.commons:commons-compress:1.5,classifier=tests")
-            ).unsafeRun()(ec)
-
-            val node: ReportNode = getReportFromJson(jsonFile)
-
-            assert(
-              !node.dependencies.exists(_.coord == "org.apache.commons:commons-compress:1.5")
-            )
-
-            val compressNode = node.dependencies.find(
-              _.coord == "org.apache.commons:commons-compress:jar:tests:1.4.1"
-            )
-
-            assert(compressNode.isDefined)
-            compressNode.get.file.map(f =>
-              assert(f.contains("commons-compress-1.4.1-tests.jar"))
-            ).orElse(sys.error("Not Defined"))
-
-            assert(compressNode.get.dependencies.size == 1)
-            assert(compressNode.get.dependencies.head == "org.tukaani:xz:1.0")
-        }
-    }
-
-    /* Result:
-     * |└─ org.apache.commons:commons-compress:1.5 -> 1.4.1
-     * | └─ org.tukaani:xz:1.0 // should not be there
-     */
-    test("intransitive, classifier, forced version should fetch a single tests jar") - withFile() {
-      (excludeFile, _) =>
-        withFile() {
-          (jsonFile, _) =>
-            val resolutionOpt = ResolutionOptions(
-              forceVersion = List("org.apache.commons:commons-compress:1.4.1")
-            )
-            val dependencyOpt = DependencyOptions(
-              intransitive = List("org.apache.commons:commons-compress:1.5,classifier=tests")
-            )
-            val resolveOpt = SharedResolveOptions(
-              resolutionOptions = resolutionOpt,
-              dependencyOptions = dependencyOpt
-            )
-            val options =
-              FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
-            val params = paramsOrThrow(options)
-
-            Fetch.task(params, pool, Seq())
-              .unsafeRun()(ec)
-
-            val node: ReportNode = getReportFromJson(jsonFile)
-
-            assert(
-              !node.dependencies.exists(_.coord == "org.apache.commons:commons-compress:1.5")
-            )
-
-            val compressNode = node.dependencies.find(
-              _.coord == "org.apache.commons:commons-compress:jar:tests:1.4.1"
-            )
-
-            assert(compressNode.isDefined)
-            compressNode.get.file.map(f =>
-              assert(f.contains("commons-compress-1.4.1-tests.jar"))
-            ).orElse(sys.error("Not Defined"))
-
-            assert(compressNode.get.dependencies.isEmpty)
-        }
-    }
-
-    test("profiles should be manually (de)activated") - withFile() {
-      (jsonFile, _) =>
-        val resolutionOpt = ResolutionOptions(profile = List("scala-2.10", "!scala-2.11"))
-        val resolveOpt = SharedResolveOptions(
-          resolutionOptions = resolutionOpt
-        )
-        val options = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
-        val params  = paramsOrThrow(options)
-
-        Fetch.task(
-          params,
-          pool,
-          Seq("org.apache.spark:spark-core_2.10:2.2.1")
-        ).unsafeRun()(ec)
-
-        val node = getReportFromJson(jsonFile)
-
-        assert(node.dependencies.exists(_.coord.startsWith("org.scala-lang:scala-library:2.10.")))
-        assert(!node.dependencies.exists(_.coord.startsWith("org.scala-lang:scala-library:2.11.")))
-    }
-
-    test(
-      "com.spotify:helios-testing:0.9.193 should have dependencies with classifiers"
-    ) - withFile() {
-      (excludeFile, _) =>
-        withFile() {
-          (jsonFile, _) =>
-            val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
-            val params  = paramsOrThrow(options)
-
-            val heliosCoord = "com.spotify:helios-testing:0.9.193"
-
-            Fetch.task(
-              params,
-              pool,
-              Seq(heliosCoord)
-            ).unsafeRun()(ec)
-            val node: ReportNode   = getReportFromJson(jsonFile)
-            val testEntry: DepNode = node.dependencies.find(_.coord == heliosCoord).get
-            assert(
-              testEntry.dependencies.exists(_.startsWith("com.spotify:docker-client:jar:shaded:"))
-            )
-            assert(
-              node.dependencies.exists(
-                _.coord.startsWith("com.spotify:docker-client:jar:shaded:")
-              )
-            )
-        }
-    }
-
     /* Result:
      * |└─ a:b:c
      */
     test(
       "local file dep url should have coursier-fetch-test.jar and cached for second run"
-    ) - withFile() {
-      (jsonFile, _) =>
-        withFile("tada", "coursier-fetch-test", ".jar") {
-          (testFile, _) =>
-            val testFileUri = testFile.toURI.toASCIIString
-            val encodedUrl  = encode(testFileUri, "UTF-8")
+    ) {
+      withFile() {
+        (jsonFile, _) =>
+          withFile("tada", "coursier-fetch-test", ".jar") {
+            (testFile, _) =>
+              val testFileUri: String = testFile.toURI.toASCIIString
+              val encodedUrl: String  = encode(testFileUri, "UTF-8")
 
-            val cacheOpt   = CacheOptions(cacheFileArtifacts = true)
-            val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
-            val options =
-              FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
-            val params = paramsOrThrow(options)
+              val cacheOpt   = CacheOptions(cacheFileArtifacts = true)
+              val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
+              val options    = FetchOptions(resolveOptions = resolveOpt)
+              val params     = paramsOrThrow(options)
 
-            // fetch with encoded url set to temp jar
-            val task = Fetch.task(
-              params,
-              pool,
-              Seq(
-                "a:b:c,url=" + encodedUrl
+              // fetch with encoded url set to temp jar
+              val task = Fetch.task(
+                params,
+                pool,
+                Seq(
+                  "a:b:c,url=" + encodedUrl
+                )
               )
-            )
-            task.unsafeRun()(ec)
+              val (_, _, _, artifactFiles) = task.unsafeRun(wrapExceptions = true)(ec)
 
-            val node1: ReportNode = getReportFromJson(jsonFile)
+              val file = artifactFiles.map(_._2) match {
+                case Seq(f) => f
+                case _      => sys.error("Expected a single artifact")
+              }
 
-            val depNodes1: Seq[DepNode] = node1.dependencies
-              .filter(_.coord == "a:b:c")
-              .sortBy(fileNameLength)
-            assert(depNodes1.length == 1)
+              // open jar and inspect contents
+              val fileContents1 = Source.fromFile(file).getLines().mkString
+              assert(fileContents1 == "tada")
 
-            val urlInJsonFile1 = depNodes1.head.file.get
-            val testFileName   = testFile.getName
-            assert(urlInJsonFile1.contains(testFileName))
+              file.delete()
 
-            // open jar and inspect contents
-            val fileContents1 = Source.fromFile(urlInJsonFile1).getLines.mkString
-            assert(fileContents1 == "tada")
+              val (_, _, _, artifactFiles0) = task.unsafeRun(wrapExceptions = true)(ec)
+              val testFile0 = artifactFiles0.map(_._2) match {
+                case Seq(f) => f
+                case _      => sys.error("Expected a single artifact")
+              }
 
-            testFile.delete()
-
-            task.unsafeRun()(ec)
-
-            val node2: ReportNode = getReportFromJson(jsonFile)
-
-            val depNodes2: Seq[DepNode] = node2.dependencies
-              .filter(_.coord == "a:b:c")
-              .sortBy(fileNameLength)
-            assert(depNodes2.length == 1)
-
-            val urlInJsonFile2 = depNodes2.head.file.get
-            val inCoursierCache =
-              urlInJsonFile2.contains("/coursier/") || // Linux
-              urlInJsonFile2.contains("/Coursier/") || // macOS
-              urlInJsonFile2.contains("\\Coursier\\")  // Windows?
-            assert(inCoursierCache && urlInJsonFile2.contains(testFileName))
-        }
-    }
-
-    /* Result:
-     * |└─ org.apache.commons:commons-compress:1.5
-     */
-    test("external dep url should fetch junit-4.12.jar") - withFile() {
-      (jsonFile, _) =>
-        val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
-        val params  = paramsOrThrow(options)
-
-        // encode path to different jar than requested
-        val externalUrl =
-          encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
-
-        // fetch with different artifact url
-        Fetch.task(
-          params,
-          pool,
-          Seq(
-            "org.apache.commons:commons-compress:1.5,url=" + externalUrl
-          )
-        ).unsafeRun()(ec)
-
-        val node: ReportNode = getReportFromJson(jsonFile)
-
-        val depNodes: Seq[DepNode] = node.dependencies
-          .filter(_.coord == "org.apache.commons:commons-compress:1.5")
-          .sortBy(fileNameLength)
-        assert(depNodes.length == 1)
-        checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
-    }
-
-    /* Result:
-     * |└─ h:i:j
-     */
-    test("external dep url with arbitrary coords should fetch junit-4.12.jar") - withFile() {
-      (jsonFile, _) =>
-        val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
-        val params  = paramsOrThrow(options)
-
-        // encode path to different jar than requested
-        val externalUrl =
-          encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
-
-        // arbitrary coords fail to fetch because... coords need to exist in a repo somewhere to work. fix this.
-        Fetch.task(
-          params,
-          pool,
-          Seq(
-            "h:i:j,url=" + externalUrl
-          )
-        ).unsafeRun()(ec)
-
-        val node: ReportNode = getReportFromJson(jsonFile)
-
-        val depNodes: Seq[DepNode] = node.dependencies
-          .filter(_.coord == "h:i:j")
-          .sortBy(fileNameLength)
-        assert(depNodes.length == 1)
-        checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
-    }
-
-    /* Result:
-     * |└─ org.apache.commons:commons-compress:1.5
-     */
-    test(
-      "external dep url with classifier should fetch junit-4.12.jar and classifier gets thrown away"
-    ) - withFile() {
-      (jsonFile, _) =>
-        val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
-        val params  = paramsOrThrow(options)
-
-        // encode path to different jar than requested
-        val externalUrl =
-          encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
-
-        Fetch.task(
-          params,
-          pool,
-          Seq(
-            "org.apache.commons:commons-compress:1.5,url=" + externalUrl + ",classifier=tests"
-          )
-        ).unsafeRun()(ec)
-
-        val node: ReportNode = getReportFromJson(jsonFile)
-
-        val depNodes: Seq[DepNode] = node.dependencies
-          .filter(_.coord.startsWith("org.apache.commons:commons-compress:"))
-          .sortBy(fileNameLength)
-
-        val coords: Seq[String] = node.dependencies
-          .map(_.coord)
-          .sorted
-
-        assert(depNodes.length == 1)
-        // classifier doesn't matter when we have a url so it is not listed
-        checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
-    }
-
-    /* Result:
-     * |└─ org.apache.commons:commons-compress:1.5
-     * | └─ org.tukaani:xz:1.2
-     * |└─ org.tukaani:xz:1.2 // with the file from the URL
-     */
-    test(
-      "external dep url with classifier that is a transitive dep should fetch junit-4.12.jar and classifier gets thrown away"
-    ) - withFile() {
-      (jsonFile, _) =>
-        val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
-        val params  = paramsOrThrow(options)
-
-        // encode path to different jar than requested
-        val externalUrl =
-          encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
-
-        Fetch.task(
-          params,
-          pool,
-          Seq(
-            "org.apache.commons:commons-compress:1.5",
-            "org.tukaani:xz:1.2,classifier=tests,url=" + externalUrl
-          )
-        ).unsafeRun()(ec)
-
-        val node: ReportNode = getReportFromJson(jsonFile)
-        val depNodes: Seq[DepNode] = node.dependencies
-          .filter(_.coord.startsWith("org.tukaani:xz:"))
-          .sortBy(fileNameLength)
-        val coords: Seq[String] = node.dependencies.map(_.coord).sorted
-
-        assert(coords == Seq("org.apache.commons:commons-compress:1.5", "org.tukaani:xz:1.2"))
-        assert(depNodes.length == 1)
-        assert(depNodes.last.file.isDefined)
-        checkPath(depNodes.last.file, "junit/junit/4.12/junit-4.12.jar")
-    }
-
-    /* Result:
-     * |└─ org.apache.commons:commons-compress:1.5,classifier=sources └─
-     * org.tukaani:xz:1.2,classifier=sources
-     */
-    test("classifier sources should fetch sources jar") - withFile() {
-      (jsonFile, _) =>
-        val artifactOpt = ArtifactOptions(sources = true)
-        val options =
-          FetchOptions(jsonOutputFile = jsonFile.getPath, artifactOptions = artifactOpt)
-        val params = paramsOrThrow(options)
-
-        // encode path to different jar than requested
-
-        Fetch.task(
-          params,
-          pool,
-          Seq(
-            "org.apache.commons:commons-compress:1.5,classifier=sources"
-          )
-        ).unsafeRun()(ec)
-        val node: ReportNode    = getReportFromJson(jsonFile)
-        val coords: Seq[String] = node.dependencies.map(_.coord).sorted
-        val depNodes: Seq[DepNode] = node.dependencies
-          .filter(_.coord.startsWith("org.apache.commons"))
-          .sortBy(fileNameLength)
-
-        assert(depNodes.length == 1)
-        assert(depNodes.head.file.isDefined)
-        checkPath(depNodes.head.file, "1.5-sources.jar")
-        depNodes.head.dependencies.foreach { d =>
-          assert(d.contains(":sources:"))
-        }
-
-        assert(coords == Seq(
-          "org.apache.commons:commons-compress:jar:sources:1.5",
-          "org.tukaani:xz:jar:sources:1.2"
-        ))
-    }
-
-    /* Result:
-     * |└─ org.apache.commons:commons-compress:1.5
-     * |└─ org.codehaus.jackson:jackson-mapper-asl:1.8.8
-     * | └─ org.codehaus.jackson:jackson-core-asl:1.8.8
-     */
-    test(
-      "external dep url with another dep should fetch junit-4.12.jar and jars for jackson-mapper"
-    ) - withFile() {
-      (jsonFile, _) =>
-        val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
-        val params  = paramsOrThrow(options)
-
-        val externalUrl =
-          encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
-
-        Fetch.task(
-          params,
-          pool,
-          Seq(
-            "org.apache.commons:commons-compress:1.5,url=" + externalUrl,
-            "org.codehaus.jackson:jackson-mapper-asl:1.8.8"
-          )
-        ).unsafeRun()(ec)
-
-        val node: ReportNode = getReportFromJson(jsonFile)
-
-        val depNodes: Seq[DepNode] = node.dependencies
-        assert(depNodes.length == 3)
-
-        val compressNodes = depNodes
-          .filter(_.coord == "org.apache.commons:commons-compress:1.5")
-          .sortBy(fileNameLength)
-        assert(compressNodes.length == 1)
-        checkPath(compressNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
-
-        val jacksonMapperNodes = depNodes
-          .filter(_.coord == "org.codehaus.jackson:jackson-mapper-asl:1.8.8")
-          .sortBy(fileNameLength)
-        assert(jacksonMapperNodes.length == 1)
-        checkPath(
-          jacksonMapperNodes.head.file,
-          "org/codehaus/jackson/jackson-mapper-asl/1.8.8/jackson-mapper-asl-1.8.8.jar"
-        )
-        assert(jacksonMapperNodes.head.dependencies.size == 1)
-        assert(
-          jacksonMapperNodes.head.dependencies.head == "org.codehaus.jackson:jackson-core-asl:1.8.8"
-        )
-
-        val jacksonCoreNodes = depNodes
-          .filter(_.coord == "org.codehaus.jackson:jackson-core-asl:1.8.8")
-          .sortBy(fileNameLength)
-        assert(jacksonCoreNodes.length == 1)
-        checkPath(
-          jacksonCoreNodes.head.file,
-          "org/codehaus/jackson/jackson-core-asl/1.8.8/jackson-core-asl-1.8.8.jar"
-        )
+              val inCoursierCache =
+                testFile0.toString.contains("/coursier/") || // Linux
+                testFile0.toString.contains("/Coursier/") || // macOS
+                testFile0.toString.contains("\\Coursier\\")  // Windows?
+              assert(inCoursierCache && testFile0.toString.contains(testFile.getName))
+          }
+      }
     }
 
     /* Result: Error
      */
-    test("external dep url with forced version should throw an error") - withFile() {
-      (jsonFile, _) =>
-        val resolutionOpt =
-          ResolutionOptions(forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
-        val resolveOpt = SharedResolveOptions(
-          resolutionOptions = resolutionOpt
-        )
-        val options = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
-        val params  = paramsOrThrow(options)
-
-        val externalUrl =
-          encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
-
-        val thrownException =
-          try {
-            Fetch.task(
-              params,
-              pool,
-              Seq(
-                "org.apache.commons:commons-compress:1.5,url=" + externalUrl
-              )
-            ).unsafeRun()(ec)
-            false
-          }
-          catch {
-            case _: Exception =>
-              true
-          }
-        assert(thrownException)
-    }
-
-    /* Result:
-     * |└─ org.apache.commons:commons-compress:1.5
-     */
-    test("external dep url with the same forced version should fetch junit-4.12.jar") - withFile() {
-      (jsonFile, _) =>
-        val resolutionOpt =
-          ResolutionOptions(forceVersion = List("org.apache.commons:commons-compress:1.5"))
-        val resolveOpt = SharedResolveOptions(
-          resolutionOptions = resolutionOpt
-        )
-        val options = FetchOptions(jsonOutputFile = jsonFile.getPath, resolveOptions = resolveOpt)
-        val params  = paramsOrThrow(options)
-
-        val externalUrl =
-          encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
-
-        Fetch.task(
-          params,
-          pool,
-          Seq(
-            "org.apache.commons:commons-compress:1.5,url=" + externalUrl
+    test("external dep url with forced version should throw an error") {
+      withFile() {
+        (_, _) =>
+          val resolutionOpt =
+            ResolutionOptions(forceVersion = List("org.apache.commons:commons-compress:1.4.1"))
+          val resolveOpt = SharedResolveOptions(
+            resolutionOptions = resolutionOpt
           )
-        ).unsafeRun()(ec)
+          val options = FetchOptions(resolveOptions = resolveOpt)
+          val params  = paramsOrThrow(options)
 
-        val node: ReportNode = getReportFromJson(jsonFile)
+          val externalUrl =
+            encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
 
-        val depNodes: Seq[DepNode] = node.dependencies
-        assert(depNodes.length == 1)
-        checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
-    }
-
-    /* Result:
-     * |└─ org.apache.commons:commons-compress:1.4.1 -> 1.5
-     */
-    test("external dep url on higher version should fetch junit-4.12.jar") - withFile() {
-      (jsonFile, _) =>
-        val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
-        val params  = paramsOrThrow(options)
-
-        // encode path to different jar than requested
-        val externalUrl =
-          encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
-
-        Fetch.task(
-          params,
-          pool,
-          Seq(
-            "org.apache.commons:commons-compress:1.4.1",
-            "org.apache.commons:commons-compress:1.5,url=" + externalUrl
-          )
-        ).unsafeRun()(ec)
-
-        val node: ReportNode = getReportFromJson(jsonFile)
-
-        val depNodes: Seq[DepNode] = node.dependencies
-          .filter(_.coord == "org.apache.commons:commons-compress:1.5")
-          .sortBy(fileNameLength)
-        assert(depNodes.length == 1)
-        checkPath(depNodes.head.file, "junit/junit/4.12/junit-4.12.jar")
-    }
-
-    /* Result:
-     * |└─ org.apache.commons:commons-compress:1.4.1 -> 1.5
-     * | └─ org.tukaani:xz:1.2
-     */
-    test("external dep url on lower version should fetch higher version") - withFile() {
-      (jsonFile, _) =>
-        val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
-        val params  = paramsOrThrow(options)
-
-        // encode path to different jar than requested
-        val externalUrl =
-          encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
-
-        Fetch.task(
-          params,
-          pool,
-          Seq(
-            "org.apache.commons:commons-compress:1.4.1,url=" + externalUrl,
-            "org.apache.commons:commons-compress:1.5"
-          )
-        ).unsafeRun()(ec)
-
-        val node: ReportNode = getReportFromJson(jsonFile)
-
-        val depNode = node.dependencies.find(_.coord == "org.apache.commons:commons-compress:1.5")
-        assert(depNode.isDefined)
-        checkPath(depNode.get.file, "commons-compress-1.5.jar")
-
-        assert(depNode.get.dependencies.size == 1)
-        assert(depNode.get.dependencies.head.contains("org.tukaani:xz:1.2"))
-    }
-
-    test("grpc-core should have dependencies") {
-      withFile() { (jsonFile, _) =>
-        val options = FetchOptions(jsonOutputFile = jsonFile.getPath)
-        val params  = paramsOrThrow(options)
-
-        Fetch.task(params, pool, Seq("io.grpc:grpc-netty-shaded:1.29.0"))
-          .unsafeRun()(ec)
-
-        val node: ReportNode = getReportFromJson(jsonFile)
-
-        val grpcCoreNode = node
-          .dependencies
-          .find(_.coord == "io.grpc:grpc-core:1.29.0")
-          .getOrElse {
-            sys.error("grpc-core:1.29.0 not found in JSON report")
-          }
-
-        assert(grpcCoreNode.dependencies.toSet == Set(
-          "com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava",
-          "org.codehaus.mojo:animal-sniffer-annotations:1.18",
-          "com.google.j2objc:j2objc-annotations:1.3",
-          "com.google.code.findbugs:jsr305:3.0.2",
-          "com.google.android:annotations:4.1.1.4",
-          "io.grpc:grpc-context:1.29.0",
-          "com.google.code.gson:gson:2.8.6",
-          "io.grpc:grpc-api:1.29.0",
-          "com.google.errorprone:error_prone_annotations:2.3.4",
-          "com.google.guava:failureaccess:1.0.1",
-          "io.perfmark:perfmark-api:0.19.0",
-          "com.google.guava:guava:28.2-android",
-          "org.checkerframework:checker-compat-qual:2.5.5"
-        ))
-
-        assert(grpcCoreNode.directDependencies.toSet == Set(
-          "com.google.android:annotations:4.1.1.4",
-          "com.google.code.gson:gson:2.8.6",
-          "io.grpc:grpc-api:1.29.0",
-          "com.google.errorprone:error_prone_annotations:2.3.4",
-          "io.perfmark:perfmark-api:0.19.0"
-        ))
+          val thrownException =
+            try {
+              Fetch.task(
+                params,
+                pool,
+                Seq(
+                  "org.apache.commons:commons-compress:1.5,url=" + externalUrl
+                )
+              ).unsafeRun(wrapExceptions = true)(ec)
+              false
+            }
+            catch {
+              case _: Exception =>
+                true
+            }
+          assert(thrownException)
       }
     }
 
-    test("Bad pom resolve should succeed with retry") - withTempDir("tmp_dir") {
-      dir =>
-        def runFetchJunit() = {
-          val cacheOpt   = CacheOptions(cache = Some(dir.getAbsolutePath))
-          val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
-          val options    = FetchOptions(resolveOptions = resolveOpt)
-          val params     = paramsOrThrow(options)
-          val (_, _, _, files) = mayThrow {
-            Fetch.task(params, pool, Seq("junit:junit:4.12"))
-              .unsafeRun()(ec)
+    /* Result:
+     * |└─ org.apache.commons:commons-compress:1.4.1 -> 1.5
+     */
+    test("external dep url on higher version should fetch junit-4.12.jar") {
+      withFile() {
+        (_, _) =>
+          val params = paramsOrThrow(FetchOptions())
+
+          // encode path to different jar than requested
+          val externalUrl =
+            encode("https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar", "UTF-8")
+
+          val (_, _, _, artifactFiles) = Fetch.task(
+            params,
+            pool,
+            Seq(
+              "org.apache.commons:commons-compress:1.4.1",
+              "org.apache.commons:commons-compress:1.5,url=" + externalUrl
+            )
+          ).unsafeRun(wrapExceptions = true)(ec)
+
+          val files = artifactFiles.map(_._2)
+          assert(files.length == 1)
+          assert(
+            files
+              .head
+              .toString
+              .endsWith("junit/junit/4.12/junit-4.12.jar".replace("/", File.separator))
+          )
+      }
+    }
+
+    test("Bad pom resolve should succeed with retry") {
+      withTempDir("tmp_dir") {
+        dir =>
+          def runFetchJunit() = {
+            val cacheOpt   = CacheOptions(cache = Some(dir.getAbsolutePath))
+            val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
+            val options    = FetchOptions(resolveOptions = resolveOpt)
+            val params     = paramsOrThrow(options)
+            val (_, _, _, files) = mayThrow {
+              Fetch.task(params, pool, Seq("junit:junit:4.12"))
+                .unsafeRun(wrapExceptions = true)(ec)
+            }
+            assert(files.map(_._2.getName).toSet
+              .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
+            val junitJarPath =
+              files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
+                .head
+            val junitPomFile    = Paths.get(junitJarPath.replace(".jar", ".pom"))
+            val junitPomShaFile = Paths.get(junitJarPath.replace(".jar", ".pom.sha1"))
+            val junitAlternativePomShaFile =
+              FileCache.auxiliaryFile(junitPomFile.toFile, "SHA-1").toPath
+            assert(Files.isRegularFile(junitPomFile))
+            assert(Files.isRegularFile(junitPomShaFile) || Files.isRegularFile(
+              junitAlternativePomShaFile
+            )) // , s"Found ${junitPomShaFile.getParent.toFile.list.toSeq.sorted}")
+            junitPomFile
           }
-          assert(files.map(_._2.getName).toSet
-            .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
-          val junitJarPath =
-            files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
+
+          val junitPomFile       = runFetchJunit()
+          val originalPomContent = Files.readAllBytes(junitPomFile)
+
+          // Corrupt the pom content
+          Files.write(junitPomFile, "bad pom".getBytes(UTF_8))
+
+          // Corrupt the content of the calculated pom checksum
+          val storedDigestFile =
+            FileCache.auxiliaryFile(junitPomFile.toFile, "SHA-1.computed").toPath
+          Files.write(storedDigestFile, Array[Byte](1, 2, 3))
+
+          // Run fetch again and it should pass because of retrying om the bad pom.
+          val pom = runFetchJunit()
+          assert(Files.readAllBytes(pom).sameElements(originalPomContent))
+      }
+    }
+
+    test("Bad pom sha-1 resolve should succeed with retry") {
+      withTempDir("tmp_dir") {
+        dir =>
+          def runFetchJunit() = {
+            val cacheOpt   = CacheOptions(cache = Some(dir.getAbsolutePath))
+            val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
+            val options    = FetchOptions(resolveOptions = resolveOpt)
+            val params     = paramsOrThrow(options)
+            val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+              .unsafeRun(wrapExceptions = true)(ec)
+            assert(files.map(_._2.getName).toSet
+              .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
+            val junitJarPath =
+              files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
+                .head
+            val junitPomFile    = Paths.get(junitJarPath.replace(".jar", ".pom"))
+            val junitPomShaFile = Paths.get(junitJarPath.replace(".jar", ".pom.sha1"))
+            val junitAlternativePomShaFile =
+              FileCache.auxiliaryFile(junitPomFile.toFile, "SHA-1").toPath
+            assert(Files.isRegularFile(junitPomFile))
+            assert(Files.isRegularFile(junitPomShaFile) || Files.isRegularFile(
+              junitAlternativePomShaFile
+            ))
+            if (Files.isRegularFile(junitPomShaFile))
+              junitPomShaFile
+            else if (Files.isRegularFile(junitAlternativePomShaFile))
+              junitAlternativePomShaFile
+            else
+              sys.error(s"Neither $junitPomShaFile nor $junitAlternativePomShaFile found")
+          }
+
+          val junitPomSha1File   = runFetchJunit()
+          val originalShaContent = Files.readAllBytes(junitPomSha1File)
+
+          // Corrupt the pom content
+          System.err.println(s"Corrupting $junitPomSha1File")
+          Files.write(junitPomSha1File, "adc83b19e793491b1c6ea0fd8b46cd9f32e592fc".getBytes(UTF_8))
+
+          // Run fetch again and it should pass because of retrying om the bad pom.
+          val sha = runFetchJunit()
+          assert(Files.readAllBytes(sha).sameElements(originalShaContent))
+      }
+    }
+
+    test("Bad jar resolve should succeed with retry") {
+      withTempDir("tmp_dir") {
+        dir =>
+          def runFetchJunit() = {
+            val cacheOpt   = CacheOptions(cache = Some(dir.getAbsolutePath))
+            val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
+            val options    = FetchOptions(resolveOptions = resolveOpt)
+            val params     = paramsOrThrow(options)
+            val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+              .unsafeRun(wrapExceptions = true)(ec)
+            assert(files.map(_._2.getName).toSet
+              .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
+            val junitJarPath =
+              files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
+                .head
+            Paths.get(junitJarPath)
+          }
+
+          val originalJunitJar        = runFetchJunit()
+          val originalJunitJarContent = Files.readAllBytes(originalJunitJar)
+
+          // Corrupt the jar content
+          Files.write(originalJunitJar, "bad jar".getBytes(UTF_8))
+
+          // Corrupt the content of the calculated jar checksum
+          val storedDigestFile =
+            FileCache.auxiliaryFile(originalJunitJar.toFile, "SHA-1.computed").toPath
+          Files.write(storedDigestFile, Array[Byte](1, 2, 3))
+
+          // Run fetch again and it should pass because of retrying on the bad jar.
+          val jar = runFetchJunit()
+          assert(Files.readAllBytes(jar).sameElements(originalJunitJarContent))
+      }
+    }
+
+    test("Bad jar sha-1 resolve should succeed with retry") {
+      withTempDir("tmp_dir") {
+        dir =>
+          def runFetchJunit() = {
+            val cacheOpt   = CacheOptions(cache = Some(dir.getAbsolutePath))
+            val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
+            val options    = FetchOptions(resolveOptions = resolveOpt)
+            val params     = paramsOrThrow(options)
+            val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
+              .unsafeRun(wrapExceptions = true)(ec)
+            assert(files.map(_._2.getName).toSet
+              .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
+            val junitJarPath =
+              files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
+                .head
+            val junitJarShaFile = Paths.get(junitJarPath.replace(".jar", ".jar.sha1"))
+            val junitAlternativePomShaFile =
+              FileCache.auxiliaryFile(new File(junitJarPath), "SHA-1").toPath
+            if (Files.isRegularFile(junitJarShaFile))
+              junitJarShaFile
+            else if (Files.isRegularFile(junitAlternativePomShaFile))
+              junitAlternativePomShaFile
+            else
+              sys.error(s"Neither $junitJarShaFile nor $junitAlternativePomShaFile found")
+          }
+
+          val originalJunitJarSha1        = runFetchJunit()
+          val originalJunitJarSha1Content = Files.readAllBytes(originalJunitJarSha1)
+
+          // Corrupt the jar content
+          System.err.println(s"Corrupting $originalJunitJarSha1")
+          Files.write(
+            originalJunitJarSha1,
+            "adc83b19e793491b1c6ea0fd8b46cd9f32e592fc".getBytes(UTF_8)
+          )
+
+          // Run fetch again and it should pass because of retrying on the bad jar.
+          val jarSha1 = runFetchJunit()
+          assert(Files.readAllBytes(jarSha1).sameElements(originalJunitJarSha1Content))
+      }
+    }
+
+    test("Wrong range partial artifact resolve should succeed with retry") {
+      withTempDir(
+        "tmp_dir"
+      ) {
+        dir =>
+          def runFetchJunit() = {
+            val cacheOpt   = CacheOptions(mode = "force", cache = Some(dir.getAbsolutePath))
+            val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
+            val options    = FetchOptions(resolveOptions = resolveOpt)
+            val params     = paramsOrThrow(options)
+            val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.6"))
+              .unsafeRun(wrapExceptions = true)(ec)
+            assert(files.map(_._2.getName).toSet
+              .equals(Set("junit-4.6.jar")))
+            val junitJarPath = files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.6.jar"))
               .head
-          val junitPomFile    = Paths.get(junitJarPath.replace(".jar", ".pom"))
-          val junitPomShaFile = Paths.get(junitJarPath.replace(".jar", ".pom.sha1"))
-          val junitAlternativePomShaFile =
-            FileCache.auxiliaryFile(junitPomFile.toFile, "SHA-1").toPath
-          assert(Files.isRegularFile(junitPomFile))
-          assert(Files.isRegularFile(junitPomShaFile) || Files.isRegularFile(
-            junitAlternativePomShaFile
-          )) // , s"Found ${junitPomShaFile.getParent.toFile.list.toSeq.sorted}")
-          junitPomFile
-        }
+            Paths.get(junitJarPath)
+          }
 
-        val junitPomFile       = runFetchJunit()
-        val originalPomContent = Files.readAllBytes(junitPomFile)
+          val originalJunitJar = runFetchJunit()
 
-        // Corrupt the pom content
-        Files.write(junitPomFile, "bad pom".getBytes(UTF_8))
+          val originalJunitJarContent = Files.readAllBytes(originalJunitJar)
 
-        // Corrupt the content of the calculated pom checksum
-        val storedDigestFile =
-          FileCache.auxiliaryFile(junitPomFile.toFile, "SHA-1.computed").toPath
-        Files.write(storedDigestFile, Array[Byte](1, 2, 3))
+          // Move the jar to partial (but complete) download
+          val newJunitJar =
+            originalJunitJar.getParent.resolve(originalJunitJar.getFileName.toString + ".part")
+          Files.move(originalJunitJar, newJunitJar)
 
-        // Run fetch again and it should pass because of retrying om the bad pom.
-        val pom = runFetchJunit()
-        assert(Files.readAllBytes(pom).sameElements(originalPomContent))
+          // Run fetch again and it should pass because of retrying on the partial jar.
+          val jar = runFetchJunit()
+          assert(Files.readAllBytes(jar).sameElements(originalJunitJarContent))
+      }
     }
 
-    test("Bad pom sha-1 resolve should succeed with retry") - withTempDir("tmp_dir") {
-      dir =>
-        def runFetchJunit() = {
-          val cacheOpt   = CacheOptions(cache = Some(dir.getAbsolutePath))
-          val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
-          val options    = FetchOptions(resolveOptions = resolveOpt)
-          val params     = paramsOrThrow(options)
-          val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-            .unsafeRun()(ec)
-          assert(files.map(_._2.getName).toSet
-            .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
-          val junitJarPath =
-            files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
-              .head
-          val junitPomFile    = Paths.get(junitJarPath.replace(".jar", ".pom"))
-          val junitPomShaFile = Paths.get(junitJarPath.replace(".jar", ".pom.sha1"))
-          val junitAlternativePomShaFile =
-            FileCache.auxiliaryFile(junitPomFile.toFile, "SHA-1").toPath
-          assert(Files.isRegularFile(junitPomFile))
-          assert(Files.isRegularFile(junitPomShaFile) || Files.isRegularFile(
-            junitAlternativePomShaFile
-          ))
-          if (Files.isRegularFile(junitPomShaFile))
-            junitPomShaFile
-          else if (Files.isRegularFile(junitAlternativePomShaFile))
-            junitAlternativePomShaFile
-          else
-            sys.error(s"Neither $junitPomShaFile nor $junitAlternativePomShaFile found")
-        }
-
-        val junitPomSha1File   = runFetchJunit()
-        val originalShaContent = Files.readAllBytes(junitPomSha1File)
-
-        // Corrupt the pom content
-        System.err.println(s"Corrupting $junitPomSha1File")
-        Files.write(junitPomSha1File, "adc83b19e793491b1c6ea0fd8b46cd9f32e592fc".getBytes(UTF_8))
-
-        // Run fetch again and it should pass because of retrying om the bad pom.
-        val sha = runFetchJunit()
-        assert(Files.readAllBytes(sha).sameElements(originalShaContent))
-    }
-
-    test("Bad jar resolve should succeed with retry") - withTempDir("tmp_dir") {
-      dir =>
-        def runFetchJunit() = {
-          val cacheOpt   = CacheOptions(cache = Some(dir.getAbsolutePath))
-          val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
-          val options    = FetchOptions(resolveOptions = resolveOpt)
-          val params     = paramsOrThrow(options)
-          val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-            .unsafeRun()(ec)
-          assert(files.map(_._2.getName).toSet
-            .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
-          val junitJarPath =
-            files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
-              .head
-          Paths.get(junitJarPath)
-        }
-
-        val originalJunitJar        = runFetchJunit()
-        val originalJunitJarContent = Files.readAllBytes(originalJunitJar)
-
-        // Corrupt the jar content
-        Files.write(originalJunitJar, "bad jar".getBytes(UTF_8))
-
-        // Corrupt the content of the calculated jar checksum
-        val storedDigestFile =
-          FileCache.auxiliaryFile(originalJunitJar.toFile, "SHA-1.computed").toPath
-        Files.write(storedDigestFile, Array[Byte](1, 2, 3))
-
-        // Run fetch again and it should pass because of retrying on the bad jar.
-        val jar = runFetchJunit()
-        assert(Files.readAllBytes(jar).sameElements(originalJunitJarContent))
-    }
-
-    test("Bad jar sha-1 resolve should succeed with retry") - withTempDir("tmp_dir") {
-      dir =>
-        def runFetchJunit() = {
-          val cacheOpt   = CacheOptions(cache = Some(dir.getAbsolutePath))
-          val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
-          val options    = FetchOptions(resolveOptions = resolveOpt)
-          val params     = paramsOrThrow(options)
-          val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-            .unsafeRun()(ec)
-          assert(files.map(_._2.getName).toSet
-            .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
-          val junitJarPath =
-            files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
-              .head
-          val junitJarShaFile = Paths.get(junitJarPath.replace(".jar", ".jar.sha1"))
-          val junitAlternativePomShaFile =
-            FileCache.auxiliaryFile(new File(junitJarPath), "SHA-1").toPath
-          if (Files.isRegularFile(junitJarShaFile))
-            junitJarShaFile
-          else if (Files.isRegularFile(junitAlternativePomShaFile))
-            junitAlternativePomShaFile
-          else
-            sys.error(s"Neither $junitJarShaFile nor $junitAlternativePomShaFile found")
-        }
-
-        val originalJunitJarSha1        = runFetchJunit()
-        val originalJunitJarSha1Content = Files.readAllBytes(originalJunitJarSha1)
-
-        // Corrupt the jar content
-        System.err.println(s"Corrupting $originalJunitJarSha1")
-        Files.write(
-          originalJunitJarSha1,
-          "adc83b19e793491b1c6ea0fd8b46cd9f32e592fc".getBytes(UTF_8)
-        )
-
-        // Run fetch again and it should pass because of retrying on the bad jar.
-        val jarSha1 = runFetchJunit()
-        assert(Files.readAllBytes(jarSha1).sameElements(originalJunitJarSha1Content))
-    }
-
-    test("Wrong range partial artifact resolve should succeed with retry") - withTempDir(
-      "tmp_dir"
-    ) {
-      dir =>
-        def runFetchJunit() = {
-          val cacheOpt   = CacheOptions(mode = "force", cache = Some(dir.getAbsolutePath))
-          val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
-          val options    = FetchOptions(resolveOptions = resolveOpt)
-          val params     = paramsOrThrow(options)
-          val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.6"))
-            .unsafeRun()(ec)
-          assert(files.map(_._2.getName).toSet
-            .equals(Set("junit-4.6.jar")))
-          val junitJarPath = files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.6.jar"))
-            .head
-          Paths.get(junitJarPath)
-        }
-
-        val originalJunitJar = runFetchJunit()
-
-        val originalJunitJarContent = Files.readAllBytes(originalJunitJar)
-
-        // Move the jar to partial (but complete) download
-        val newJunitJar =
-          originalJunitJar.getParent.resolve(originalJunitJar.getFileName.toString + ".part")
-        Files.move(originalJunitJar, newJunitJar)
-
-        // Run fetch again and it should pass because of retrying on the partial jar.
-        val jar = runFetchJunit()
-        assert(Files.readAllBytes(jar).sameElements(originalJunitJarContent))
-    }
-
-    test("fail because of resolution") - {
+    test("fail because of resolution") {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
       val a = Fetch.task(params, pool, Seq("sh.almond:scala-kernel_2.12.8:0.2.2"))
         .attempt
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       a match {
         case Right(_) =>
@@ -1323,7 +530,7 @@ object FetchTests extends TestSuite {
       }
     }
 
-    test("fail to resolve, but try to fetch artifacts anyway") - {
+    test("fail to resolve, but try to fetch artifacts anyway") {
       val artifactOptions = ArtifactOptions(
         forceFetch = true
       )
@@ -1332,7 +539,7 @@ object FetchTests extends TestSuite {
       )
       val params = paramsOrThrow(options)
       val (_, _, _, l) = Fetch.task(params, pool, Seq("sh.almond:scala-kernel_2.12.8:0.2.2"))
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
 
       val expectedUrls = Seq(
         "co/fs2/fs2-core_2.12/0.10.7/fs2-core_2.12-0.10.7.jar",
@@ -1448,63 +655,65 @@ object FetchTests extends TestSuite {
       assert(urls == expectedUrls)
     }
 
-    test("not delete file in local Maven repo") - withTempDir("tmp_dir") { tmpDir =>
+    test("not delete file in local Maven repo") {
+      withTempDir("tmp_dir") { tmpDir =>
 
-      val pomPath     = new File(tmpDir, "org/name/0.1/name-0.1.pom")
-      val pomSha1Path = new File(pomPath.getParentFile, pomPath.getName + ".sha1")
-      val pomContent =
-        """<?xml version='1.0' encoding='UTF-8'?>
-          |<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
-          |    <modelVersion>4.0.0</modelVersion>
-          |    <groupId>org</groupId>
-          |    <artifactId>name</artifactId>
-          |    <version>0.1</version>
-          |    <organization>
-          |        <name>org</name>
-          |        <url>https://github.com/org/name</url>
-          |    </organization>
-          |    <dependencies>
-          |      <dependency>
-          |        <groupId>org.scala-lang</groupId>
-          |        <artifactId>scala-library</artifactId>
-          |        <version>2.13.0</version>
-          |      </dependency>
-          |    </dependencies>
-          |</project>
-          |""".stripMargin
+        val pomPath     = new File(tmpDir, "org/name/0.1/name-0.1.pom")
+        val pomSha1Path = new File(pomPath.getParentFile, pomPath.getName + ".sha1")
+        val pomContent =
+          """<?xml version='1.0' encoding='UTF-8'?>
+            |<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
+            |    <modelVersion>4.0.0</modelVersion>
+            |    <groupId>org</groupId>
+            |    <artifactId>name</artifactId>
+            |    <version>0.1</version>
+            |    <organization>
+            |        <name>org</name>
+            |        <url>https://github.com/org/name</url>
+            |    </organization>
+            |    <dependencies>
+            |      <dependency>
+            |        <groupId>org.scala-lang</groupId>
+            |        <artifactId>scala-library</artifactId>
+            |        <version>2.13.0</version>
+            |      </dependency>
+            |    </dependencies>
+            |</project>
+            |""".stripMargin
 
-      pomPath.getParentFile.mkdirs()
-      Files.write(pomPath.toPath, pomContent.getBytes(StandardCharsets.UTF_8))
-      // wrong sha-1
-      Files.write(
-        pomSha1Path.toPath,
-        "da39a3ee5e6b4b0d3255bfef95601890afd80709".getBytes(StandardCharsets.UTF_8)
-      )
+        Files.createDirectories(pomPath.getParentFile.toPath)
+        Files.write(pomPath.toPath, pomContent.getBytes(StandardCharsets.UTF_8))
+        // wrong sha-1
+        Files.write(
+          pomSha1Path.toPath,
+          "da39a3ee5e6b4b0d3255bfef95601890afd80709".getBytes(StandardCharsets.UTF_8)
+        )
 
-      assert(pomPath.exists())
-      assert(pomSha1Path.exists())
+        assert(pomPath.exists())
+        assert(pomSha1Path.exists())
 
-      val repositoryOptions = RepositoryOptions(
-        repository = List(tmpDir.toURI.toASCIIString)
-      )
-      val resolveOptions = SharedResolveOptions(repositoryOptions = repositoryOptions)
-      val options        = FetchOptions(resolveOptions = resolveOptions)
-      val params         = paramsOrThrow(options)
-      val a = Fetch.task(params, pool, Seq("org:name:0.1"))
-        .attempt
-        .unsafeRun()(ec)
+        val repositoryOptions = RepositoryOptions(
+          repository = List(tmpDir.toURI.toASCIIString)
+        )
+        val resolveOptions = SharedResolveOptions(repositoryOptions = repositoryOptions)
+        val options        = FetchOptions(resolveOptions = resolveOptions)
+        val params         = paramsOrThrow(options)
+        val a = Fetch.task(params, pool, Seq("org:name:0.1"))
+          .attempt
+          .unsafeRun(wrapExceptions = true)(ec)
 
-      assert(a.isLeft)
+        assert(a.isLeft)
 
-      a.left.toOption.map(_.getCause).foreach {
-        case _: coursier.error.ResolutionError.CantDownloadModule =>
-        // expected
-        case _ =>
-          throw new Exception(s"Unexpected exception type", a.left.toOption.get)
+        a.left.toOption.map(_.getCause).foreach {
+          case _: coursier.error.ResolutionError.CantDownloadModule =>
+          // expected
+          case _ =>
+            throw new Exception(s"Unexpected exception type", a.left.toOption.get)
+        }
+
+        assert(pomPath.exists())
+        assert(pomSha1Path.exists())
       }
-
-      assert(pomPath.exists())
-      assert(pomSha1Path.exists())
     }
 
     test("Scala version range should work with fully cross-versioned dependencies") {
@@ -1517,7 +726,7 @@ object FetchTests extends TestSuite {
       val options = FetchOptions(resolveOptions = resolveOpt)
       val params  = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("com.lihaoyi:::ammonite:1.8.1"))
-        .unsafeRun()(ec)
+        .unsafeRun(wrapExceptions = true)(ec)
       val expectedFiles = Set(
         "ammonite-interp-api_2.12.10-1.8.1.jar",
         "ammonite-interp_2.12.10-1.8.1.jar",
@@ -1556,6 +765,87 @@ object FetchTests extends TestSuite {
         "upickle_2.12-0.8.0.jar"
       )
       assert(files.map(_._2.getName).toSet.equals(expectedFiles))
+    }
+
+    // sbt-plugin-example-diamond is a diamond graph of sbt plugins.
+    // Diamond depends on left and right which both depend on bottom.
+    //             sbt-plugin-example-diamond
+    //                        / \
+    // sbt-plugin-example-left   sbt-plugin-example-right
+    //                        \ /
+    //             sbt-plugin-example-bottom
+    // Depending on the version of sbt-plugin-example-diamond, different patterns
+    // are tested:
+    // - Some plugins are only published to the deprecated Maven path, some to the new
+    // - There may be some conflict resolution to perform on sbt-plugin-example-bottom,
+    //   mixing old and new Maven paths.
+    test("sbt-plugin-example-diamond") {
+
+      def checkResolveDiamond(version: String)(expectedJars: String*): Unit = {
+        val options = FetchOptions(
+          resolveOptions = SharedResolveOptions(
+            dependencyOptions = DependencyOptions(
+              sbtPlugin = List(s"ch.epfl.scala:sbt-plugin-example-diamond:$version")
+            )
+          )
+        )
+        val params = paramsOrThrow(options)
+        val (_, _, _, files) =
+          Fetch.task(params, pool, Seq.empty).unsafeRun(wrapExceptions = true)(ec)
+
+        val obtained = files.map(_._2.getName).toSet
+        assert(obtained == expectedJars.toSet)
+      }
+
+      // only deprecated Maven paths
+      test("0.1.0") {
+        checkResolveDiamond("0.1.0")(
+          "sbt-plugin-example-diamond-0.1.0.jar",
+          "sbt-plugin-example-left-0.1.0.jar",
+          "sbt-plugin-example-right-0.1.0.jar",
+          "sbt-plugin-example-bottom-0.1.0.jar"
+        )
+      }
+
+      // diamond and left use the new Maven path
+      test("0.2.0") {
+        checkResolveDiamond("0.2.0")(
+          "sbt-plugin-example-diamond_2.12_1.0-0.2.0.jar",
+          "sbt-plugin-example-left_2.12_1.0-0.2.0.jar",
+          "sbt-plugin-example-right-0.1.0.jar",
+          "sbt-plugin-example-bottom-0.1.0.jar"
+        )
+      }
+
+      // conflict resolution between new and deprecated Maven paths
+      test("0.3.0") {
+        checkResolveDiamond("0.3.0")(
+          "sbt-plugin-example-diamond_2.12_1.0-0.3.0.jar",
+          "sbt-plugin-example-left_2.12_1.0-0.3.0.jar",
+          "sbt-plugin-example-right-0.1.0.jar",
+          "sbt-plugin-example-bottom_2.12_1.0-0.2.0.jar"
+        )
+      }
+
+      // bottom use the new Maven path but not right
+      test("0.4.0") {
+        checkResolveDiamond("0.4.0")(
+          "sbt-plugin-example-diamond_2.12_1.0-0.4.0.jar",
+          "sbt-plugin-example-left_2.12_1.0-0.3.0.jar",
+          "sbt-plugin-example-right-0.2.0.jar",
+          "sbt-plugin-example-bottom_2.12_1.0-0.2.0.jar"
+        )
+      }
+
+      // only new Maven paths with conflict resolution on bottom
+      test("0.5.0") {
+        checkResolveDiamond("0.5.0")(
+          "sbt-plugin-example-diamond_2.12_1.0-0.5.0.jar",
+          "sbt-plugin-example-left_2.12_1.0-0.3.0.jar",
+          "sbt-plugin-example-right_2.12_1.0-0.3.0.jar",
+          "sbt-plugin-example-bottom_2.12_1.0-0.3.0.jar"
+        )
+      }
     }
   }
 }

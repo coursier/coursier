@@ -2,7 +2,6 @@ package coursier.cache
 
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
-import java.util.regex.Pattern
 
 object CacheChecksum {
 

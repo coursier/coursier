@@ -1,0 +1,10 @@
+com.google.protobuf:protobuf-java-util:4.28.1:default
+com.google.protobuf:protobuf-java:4.28.0:default
+com.google.code.findbugs:jsr305:3.0.2:default
+com.google.code.gson:gson:2.8.9:default
+com.google.errorprone:error_prone_annotations:2.18.0:default
+com.google.guava:guava:32.0.1-jre:default
+com.google.j2objc:j2objc-annotations:2.8:default
+com.google.guava:failureaccess:1.0.1:default
+com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava:default
+org.checkerframework:checker-qual:3.33.0:default

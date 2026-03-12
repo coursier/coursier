@@ -55,7 +55,7 @@ object PrebuiltApp {
           def maybeFileIt: Iterator[File] = {
             cache.loggerOpt.foreach(_.init())
             val maybeFile =
-              try cache.file(artifact).run.unsafeRun()(cache.ec)
+              try cache.file(artifact).run.unsafeRun(wrapExceptions = true)(cache.ec)
               finally cache.loggerOpt.foreach(_.stop())
             handleArtifactErrors(maybeFile, artifact, verbosity)
               .iterator
@@ -63,7 +63,7 @@ object PrebuiltApp {
           def maybeExtractedArchiveIt: Iterator[File] = {
             cache.loggerOpt.foreach(_.init())
             val maybeDir =
-              try archiveCache.get(artifact).unsafeRun()(cache.ec)
+              try archiveCache.get(artifact).unsafeRun(wrapExceptions = true)(cache.ec)
               finally cache.loggerOpt.foreach(_.stop())
             handleArtifactErrors(maybeDir, artifact, verbosity)
               .iterator
@@ -154,8 +154,8 @@ object PrebuiltApp {
     def mainVersionsIterator(): Iterator[String] = {
       val it0 = desc.candidateMainVersions(cache, verbosity)
       val it =
-        if (it0.hasNext) it0
-        else desc.mainVersionOpt.iterator
+        if (it0.hasNext) it0.map(_.asString)
+        else desc.mainVersionOpt.iterator.map(_.asString)
       // check the latest 5 versions if preferPrebuilt is true
       // FIXME Don't hardcode that number?
       it.take(if (preferPrebuilt) 5 else 1)
@@ -206,7 +206,7 @@ object PrebuiltApp {
 
     if (desc.launcherType.isNative)
       desc.prebuiltLauncher
-        .orElse(desc.prebuiltBinaries.get(platform.getOrElse("")))
+        .orElse(platform.flatMap(desc.prebuiltBinaries.get))
         .map(patternArtifacts)
     else
       None

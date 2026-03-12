@@ -1,30 +1,24 @@
 package coursier.web
 
 import coursier.cache.{AlwaysDownload, CacheLogger}
-import coursier.core.ResolutionProcess
-import coursier.{
-  Dependency,
-  MavenRepository,
-  Module,
-  Repository,
-  Resolution,
-  moduleNameString,
-  organizationString
-}
+import coursier.core.{Dependency, Module, Repository, Resolution, ResolutionProcess}
+import coursier.maven.MavenRepository
 import coursier.util.{Artifact, EitherT, Gather, Task}
+import coursier.util.StringInterpolators._
+import coursier.version.VersionConstraint
 import japgolly.scalajs.react._
 import org.scalajs.dom
 
 import scala.scalajs.js
+import scala.scalajs.js.Dynamic.{global => g}
 import scala.util.{Failure, Success}
-import js.Dynamic.{global => g}
 
 final class Backend($ : BackendScope[_, State]) {
 
   def fetch(
     repositories: Seq[Repository],
     fetch: Repository.Fetch[Task]
-  ): ResolutionProcess.Fetch[Task] = {
+  ): ResolutionProcess.Fetch0[Task] = {
 
     val fetch0: Repository.Fetch[Task] = { a =>
       if (a.url.endsWith("/"))
@@ -37,7 +31,7 @@ final class Backend($ : BackendScope[_, State]) {
     modVers =>
       Gather[Task].gather(
         modVers.map { case (module, version) =>
-          ResolutionProcess.fetchOne(repositories, module, version, fetch, Nil)
+          ResolutionProcess.fetchOne(repositories, module, version, fetch0, Nil)
             .run
             .map((module, version) -> _)
         }
@@ -60,7 +54,7 @@ final class Backend($ : BackendScope[_, State]) {
       Seq(
         dep.module.organization,
         dep.module.name,
-        dep.configuration
+        dep.variantSelector.repr
       ).mkString(":")
 
     for {
@@ -112,7 +106,7 @@ final class Backend($ : BackendScope[_, State]) {
 
       for {
         dep   <- minDependencies
-        trDep <- resolution.dependenciesOf(dep)
+        trDep <- resolution.dependenciesOf0(dep).toTry.get
       } m += trDep.module -> (m.getOrElse(trDep.module, Nil) :+ dep)
 
       m
@@ -123,7 +117,8 @@ final class Backend($ : BackendScope[_, State]) {
         "text" -> (s"${dep.module}": js.Any)
       ) ++ {
         val deps =
-          if (reverse) reverseDeps.getOrElse(dep.module, Nil) else resolution.dependenciesOf(dep)
+          if (reverse) reverseDeps.getOrElse(dep.module, Nil)
+          else resolution.dependenciesOf0(dep).toTry.get
         if (deps.isEmpty) Seq()
         else Seq("nodes" -> js.Array(deps.map(tree): _*))
       }: _*)
@@ -159,15 +154,15 @@ final class Backend($ : BackendScope[_, State]) {
 
     $.state.map { s =>
 
-      def task =
-        coursier.Resolution()
+      def task = {
+        val res = Resolution()
           .withRootDependencies(s.modules)
           .withFilter(Some(dep => s.options.followOptional || !dep.optional))
-          .process
-          .run(
-            fetch(s.repositories.map { case (_, repo) => repo }, AlwaysDownload(logger).fetch),
-            100
-          )
+        ResolutionProcess(res).run0(
+          fetch(s.repositories.map { case (_, repo) => repo }, AlwaysDownload(logger).fetch),
+          100
+        )
+      }
 
       implicit val ec = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
@@ -237,7 +232,7 @@ final class Backend($ : BackendScope[_, State]) {
   def updateModule(
     moduleIdx: Int,
     update: (Dependency, String) => Dependency
-  )(e: facade.SyntheticEvent[dom.raw.HTMLInputElement]) =
+  )(e: facade.SyntheticEvent[dom.HTMLInputElement]) =
     if (moduleIdx >= 0) {
       e.persist()
       $.modState { state =>
@@ -254,7 +249,8 @@ final class Backend($ : BackendScope[_, State]) {
   def addModule(e: facade.SyntheticEvent[_]) = {
     e.preventDefault()
     $.modState { state =>
-      val modules = state.modules :+ Dependency(Module(org"", name""), "")
+      val modules =
+        state.modules :+ Dependency(Module(org"", name"", Map.empty), VersionConstraint(""))
       println(s"Modules:\n${modules.mkString("\n")}")
       state.copy(
         modules = modules,
@@ -304,7 +300,7 @@ final class Backend($ : BackendScope[_, State]) {
   def updateRepo(
     repoIdx: Int,
     update: ((String, MavenRepository), String) => (String, MavenRepository)
-  )(e: facade.SyntheticEvent[dom.raw.HTMLInputElement]) =
+  )(e: facade.SyntheticEvent[dom.HTMLInputElement]) =
     if (repoIdx >= 0)
       $.modState { state =>
         val repo = state.repositories(repoIdx)

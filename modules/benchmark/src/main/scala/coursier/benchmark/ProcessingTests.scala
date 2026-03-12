@@ -14,7 +14,7 @@ class ProcessingTests {
 
     var res = state.initialSparkSqlRes
     for ((m, v, p) <- state.forProjectCache)
-      res = res.addToProjectCache((m, v) -> (Repositories.central, p))
+      res = res.addToProjectCache0((m, v) -> (Repositories.central, p))
 
   }
 
