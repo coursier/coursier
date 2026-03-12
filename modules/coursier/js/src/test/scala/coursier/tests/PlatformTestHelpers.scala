@@ -3,7 +3,7 @@ package coursier.tests
 import coursier.cache.internal.Platform
 import coursier.cache.{Cache, MockCache}
 import coursier.testcache.TestCache
-import coursier.util.Task
+import coursier.util.{EitherT, Task}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.scalajs.js
@@ -49,4 +49,14 @@ abstract class PlatformTestHelpers {
     sha1Module(s).asInstanceOf[String].dropWhile(_ == '0')
 
   def maybePrintConsistencyDiff(fromOrdered: Seq[String], fromMinimized: Seq[String]): Unit = ()
+
+  def filteringCache(exclude: String, defaultCache: Cache[Task]): Cache[Task] =
+    new Cache[Task] {
+      override def ec: ExecutionContext = defaultCache.ec
+      override def fetch: Cache.Fetch[Task] =
+        artifact =>
+          if (artifact.url.contains(exclude))
+            EitherT.fromEither(Left(s"*$exclude* forbidden here"))
+          else defaultCache.fetch(artifact)
+    }
 }

@@ -126,11 +126,11 @@ object DependencyTree {
 
     def retainedVersion0: Version =
       resolution
-        .retainedVersions
+        .retainedVersionsLoose
         .getOrElse(
           dependency.module,
           Version.zero
-          // sys.error(s"${dependency.module} not found in retained versions (got ${resolution.retainedVersions.keys.toVector.map(_.repr).sorted})")
+          // sys.error(s"${dependency.module} not found in retained versions (got ${resolution.retainedVersionsLoose.keys.toVector.map(_.repr).sorted})")
         )
 
     // don't make that a val!! issues with cyclic dependencies

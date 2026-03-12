@@ -1607,7 +1607,7 @@ object Resolution {
 
   // same as retainedVersions, but doesn't throw if a module isn't found
   // useful for failed resolutions
-  private lazy val retainedVersionsLoose: Map[Module, Version0] =
+  private[coursier] lazy val retainedVersionsLoose: Map[Module, Version0] =
     nextDependenciesAndConflicts._3.map {
       case k @ (m, v) =>
         val finalVersion = projectCache0.get(k)

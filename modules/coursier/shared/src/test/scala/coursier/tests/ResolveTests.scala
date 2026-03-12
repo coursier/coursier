@@ -1,6 +1,7 @@
 package coursier.tests
 
 import coursier.{Repositories, Resolve}
+import coursier.cache.Cache
 import coursier.core.{
   Activation,
   BomDependency,
@@ -20,14 +21,16 @@ import coursier.error.ResolutionError
 import coursier.ivy.IvyRepository
 import coursier.maven.{MavenRepository, MavenRepositoryLike}
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
-import coursier.util.{ModuleMatchers, Task}
+import coursier.util.{Artifact, EitherT, ModuleMatchers, Task}
 import coursier.util.StringInterpolators._
 import coursier.version.{ConstraintReconciliation, Version, VersionConstraint}
 import utest._
 
 import scala.async.Async.{async, await}
 import scala.collection.compat._
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
+
+import java.io.File
 
 object ResolveTests extends TestSuite {
 
@@ -2468,6 +2471,21 @@ object ResolveTests extends TestSuite {
         val mapped      = res.mapDependencies.get(nonScalaDep)
         // non-Scala modules under org.scala-lang should NOT be swapped
         assert(mapped == nonScalaDep)
+      }
+    }
+
+    test("conflict") {
+      async {
+        val filteringCache = TestHelpers.filteringCache("-parent", resolve.cache)
+        val res = await {
+          resolve
+            .withCache(filteringCache)
+            .addDependencies(dep"org.scala-lang:scala3-repl_3:3.8.2")
+            .futureEither()
+        }
+        assert(res.isLeft)
+        assert(res.left.exists(_.toString.contains("Conflicting dependencies:")))
+        assert(res.left.exists(_.toString.contains("org.jline:jline-terminal-jni:3.29.0")))
       }
     }
   }
