@@ -338,4 +338,12 @@ object Print {
       }
   }
 
+  private implicit class VersionOps(private val v: Version) {
+    def asStringOrEmpty: String = {
+      val s = v.asString
+      if (s.isEmpty) "\"\""
+      else s
+    }
+  }
+
 }

@@ -2486,6 +2486,7 @@ object ResolveTests extends TestSuite {
         assert(res.isLeft)
         assert(res.left.exists(_.toString.contains("Conflicting dependencies:")))
         assert(res.left.exists(_.toString.contains("org.jline:jline-terminal-jni:3.29.0")))
+        assert(res.left.exists(_.toString.contains("wants \"\"")))
       }
     }
   }

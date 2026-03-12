@@ -56,12 +56,29 @@ import dataclass.data
     if (newDependeeVersion == dependeeVersion) this
     else withDependeeVersionConstraint(VersionConstraint0(newDependeeVersion))
 
+  import Conflict.{VersionConstraintOps, VersionOps}
+
   def repr: String =
     // FIXME Say something about wasExcluded?
-    s"$module:${version0.asString} selected, but $dependeeModule:${dependeeVersionConstraint.asString} wanted ${wantedVersionConstraint.asString}"
+    s"$module:${version0.asStringOrEmpty} selected, but $dependeeModule:${dependeeVersionConstraint.asStringOrEmpty} wanted ${wantedVersionConstraint.asStringOrEmpty}"
 }
 
 object Conflict {
+
+  private implicit class VersionOps(private val v: Version0) {
+    def asStringOrEmpty: String = {
+      val s = v.asString
+      if (s.isEmpty) "\"\""
+      else s
+    }
+  }
+  private implicit class VersionConstraintOps(private val v: VersionConstraint0) {
+    def asStringOrEmpty: String = {
+      val s = v.asString
+      if (s.isEmpty) "\"\""
+      else s
+    }
+  }
 
   @data class Conflicted(tree: ReverseModuleTree) {
     def conflict: Conflict =
@@ -85,18 +102,18 @@ object Conflict {
       )(_.dependees)
       val treeRepr = tree0.render { node =>
         if (node.excludedDependsOn)
-          s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.retainedVersion0.asString}"
+          s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.retainedVersion0.asStringOrEmpty}"
         else if (node.dependsOnVersionConstraint != node.dependsOnRetainedVersion0) {
           val assumeCompatibleVersions =
             compatibleVersions(node.dependsOnVersionConstraint, node.dependsOnRetainedVersion0)
 
-          s"${node.module}:${node.retainedVersion0.asString} " +
+          s"${node.module}:${node.retainedVersion0.asStringOrEmpty} " +
             (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
-            s"wants ${node.dependsOnModule}:${node.dependsOnVersionConstraint.asString}" +
+            s"wants ${node.dependsOnModule}:${node.dependsOnVersionConstraint.asStringOrEmpty}" +
             colors0.reset
         }
         else
-          s"${node.module}:${node.retainedVersion0.asString}"
+          s"${node.module}:${node.retainedVersion0.asStringOrEmpty}"
       }
 
       val assumeCompatibleVersions =
@@ -104,8 +121,8 @@ object Conflict {
 
       System.lineSeparator() + s"${tree.dependsOnModule.repr}:" +
         s"${if (assumeCompatibleVersions) colors0.yellow
-          else colors0.red}${tree.dependsOnRetainedVersion0.asString}${colors0.reset} " +
-        s"(${tree.dependsOnVersionConstraint.asString} wanted)" + System.lineSeparator() + treeRepr
+          else colors0.red}${tree.dependsOnRetainedVersion0.asStringOrEmpty}${colors0.reset} " +
+        s"(${tree.dependsOnVersionConstraint.asStringOrEmpty} wanted)" + System.lineSeparator() + treeRepr
     }
   }
 
