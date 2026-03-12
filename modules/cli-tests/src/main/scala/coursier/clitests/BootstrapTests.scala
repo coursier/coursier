@@ -1038,7 +1038,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
     }
 
     test("hybrid with coursier dependency") {
-      TestUtil.withTempDir("hybrid-cs") { tmpDir =>
+      TestUtil.withTempDir[Unit]("hybrid-cs") { tmpDir =>
         os.proc(
           launcher,
           "bootstrap",
