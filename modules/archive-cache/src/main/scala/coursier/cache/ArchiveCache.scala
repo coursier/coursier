@@ -6,11 +6,13 @@ import coursier.util.Monad.ops._
 import dataclass._
 import org.apache.tika.Tika
 
-import java.io.File
+import java.io.{EOFException, File, InputStream}
 import java.math.BigInteger
 import java.nio.file.{Files, Path, StandardCopyOption}
 import java.security.MessageDigest
+import java.util.zip.{GZIPInputStream, ZipException, ZipFile}
 
+import scala.jdk.CollectionConverters._
 import scala.util.Using
 
 @data class ArchiveCache[F[_]](
@@ -32,7 +34,17 @@ import scala.util.Using
     * `{location}\https\github.com\graalvm\graalvm-ce-builds\releases\download\jdk-23.0.1\graalvm-community-jdk-23.0.1_windows-x64_bin.zip\`.
     * The latter directory path is used to compute the hash used in the former one.
     */
-  shortPathDirectory: Option[File] = None
+  shortPathDirectory: Option[File] = None,
+  /** Whether to check the integrity of downloaded archives or not
+    *
+    * This checks for the integrity of archives using their compression format checksums. Only
+    * supported for GZIP and ZIP archives for now.
+    *
+    * If the integrity check fails, a new download is attempted.
+    *
+    * Default: true
+    */
+  integrityCheck: Option[Boolean] = None
 )(implicit
   sync: Sync[F]
 ) {
@@ -226,10 +238,120 @@ import scala.util.Using
     }
   }
 
+  private def integrityCheck0(
+    url: String,
+    file: File
+  ): Option[Boolean] = {
+    def readAndDiscard(is: InputStream): Unit = {
+      val buf  = Array.ofDim[Byte](64 * 1024)
+      var read = 0
+      while ({
+        read = is.read(buf)
+        read >= 0
+      }) {}
+    }
+    ArchiveCache.archiveType(url).collect {
+      case ArchiveType.Gzip | ArchiveType.Tgz =>
+        // read uncompressed content fully to validate GZIP checksum
+        var fis: InputStream = null
+        try {
+          fis = Files.newInputStream(file.toPath)
+          try {
+            readAndDiscard(new GZIPInputStream(fis))
+            true
+          }
+          catch {
+            case _: ZipException =>
+              false
+            case ex: EOFException if ex.getMessage.contains("ZLIB") =>
+              false
+          }
+        }
+        finally
+          if (fis != null)
+            fis.close()
+      case ArchiveType.Zip =>
+        // read all uncompressed entries fully to validate entries' checksums
+        var zf: ZipFile = null
+        try {
+          zf = new ZipFile(file)
+          for (ent <- zf.entries().asScala)
+            readAndDiscard(zf.getInputStream(ent))
+          true
+        }
+        catch {
+          case _: ZipException =>
+            false
+        }
+        finally
+          if (zf != null)
+            zf.close()
+    }
+  }
+
   def get(artifact: Artifact): F[Either[ArtifactError, File]] = {
     val (dir0, subPaths) = localDir(artifact)
     val artifact0        = artifact.withUrl(artifact.url.takeWhile(_ != '!'))
-    val download: F[Either[ArtifactError, File]] = cache.file(artifact0).run
+    val download: F[Either[ArtifactError, File]] = {
+      def doDownload: F[Either[ArtifactError, File]] = cache.file(artifact0).run
+      if (integrityCheck.getOrElse(true)) {
+        val eitherT = for {
+          f <- EitherT(doDownload)
+          invalid <- {
+            val cacheLocationOpt = cache match {
+              case fc: FileCache[F] => Some(fc.location)
+              case _                => None
+            }
+            EitherT(
+              S.delay[Either[ArtifactError, Boolean]] {
+                Right {
+                  cacheLocationOpt match {
+                    case Some(cacheLocation) =>
+                      val invalid0 = CacheLocks.withLockOr(cacheLocation, f)(
+                        {
+                          val integrityFile = FileCache.auxiliaryFile(f, "integrity").toPath
+                          val hasValidIntegrityFile = Files.exists(integrityFile) && {
+                            val lastModified          = Files.getLastModifiedTime(f.toPath)
+                            val integrityLastModified = Files.getLastModifiedTime(integrityFile)
+                            integrityLastModified.toMillis() >= lastModified.toMillis()
+                          }
+                          if (!hasValidIntegrityFile)
+                            Files.deleteIfExists(integrityFile)
+                          !hasValidIntegrityFile && {
+                            val invalid0 = integrityCheck0(artifact0.url, f).contains(false)
+                            if (invalid0) {
+                              Files.delete(f.toPath)
+                              // clear all but the lock file for Windows?
+                              FileCache.clearAuxiliaryFiles(f)
+                            }
+                            else
+                              Files.write(integrityFile, Array.emptyByteArray)
+                            invalid0
+                          }
+                        },
+                        None
+                      )
+                      invalid0
+                    case None =>
+                      val invalid0 = integrityCheck0(artifact0.url, f).contains(false)
+                      if (invalid0)
+                        Files.delete(f.toPath)
+                      invalid0
+                  }
+                }
+              }
+            )
+          }
+          f0 <- EitherT[F, ArtifactError, File](
+            if (invalid) doDownload
+            else S.point(Right(f))
+          )
+        } yield f0
+        eitherT.run
+      }
+      else
+        doDownload
+    }
 
     val main = get0(
       dir0,

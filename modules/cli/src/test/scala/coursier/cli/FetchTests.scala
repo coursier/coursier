@@ -89,7 +89,7 @@ object FetchTests extends TestSuite {
         val options       = FetchOptions(resolveOptions = resolveOpt)
         val params        = paramsOrThrow(options)
 
-        intercept[ResolveException] {
+        assertThrows[ResolveException] {
           Fetch.task(params, pool, Seq.empty).unsafeRun()(ec)
         }
       }
@@ -102,7 +102,7 @@ object FetchTests extends TestSuite {
       val options       = FetchOptions(resolveOptions = resolveOpt)
 
       val expectedErrorMessage = s"Error reading dependencies from $path"
-      val thrownException = intercept[Exception] {
+      val thrownException = assertThrows[Exception] {
         paramsOrThrow(options)
       }
       assert(thrownException.getMessage == expectedErrorMessage)

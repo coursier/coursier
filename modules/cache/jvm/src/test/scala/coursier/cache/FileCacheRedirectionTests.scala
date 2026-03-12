@@ -101,16 +101,26 @@ object FileCacheRedirectionTests extends TestSuite {
             case GET -> Root / "hello"    => Ok("hello")
             case GET -> Root / "redirect" => resp(Location(Uri(path = Uri.Path.empty / "hello")))
           }
-        def test(resp: Location => IO[Response[IO]]): Unit =
+        def test0(resp: Location => IO[Response[IO]]): Unit =
           withHttpServer(routes(resp)) { base =>
             expect(base / "redirect", "hello")
           }
 
-        "301" - test(MovedPermanently("redirecting", _))
-        "302" - test(Found("redirecting", _))
-        "304" - test(loc => NotModified().map(_.putHeaders(loc)))
-        "307" - test(TemporaryRedirect("redirecting", _))
-        "308" - test(PermanentRedirect("redirecting", _))
+        test("301") {
+          test0(MovedPermanently("redirecting", _))
+        }
+        test("302") {
+          test0(Found("redirecting", _))
+        }
+        test("304") {
+          test0(loc => NotModified().map(_.putHeaders(loc)))
+        }
+        test("307") {
+          test0(TemporaryRedirect("redirecting", _))
+        }
+        test("308") {
+          test0(PermanentRedirect("redirecting", _))
+        }
       }
 
       test("httpsToHttps") {
@@ -1179,14 +1189,20 @@ object FileCacheRedirectionTests extends TestSuite {
           )
         }
 
-        "SHA-256" - withHttpServer(routes) { root =>
-          expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("SHA-256"))))
+        test("SHA-256") {
+          withHttpServer(routes) { root =>
+            expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("SHA-256"))))
+          }
         }
-        "SHA-1" - withHttpServer(routes) { root =>
-          expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("SHA-1"))))
+        test("SHA-1") {
+          withHttpServer(routes) { root =>
+            expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("SHA-1"))))
+          }
         }
-        "MD5" - withHttpServer(routes) { root =>
-          expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("MD5"))))
+        test("MD5") {
+          withHttpServer(routes) { root =>
+            expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("MD5"))))
+          }
         }
       }
     }
@@ -1370,7 +1386,7 @@ object FileCacheRedirectionTests extends TestSuite {
     }
 
     test("does not accept redundant path elements like .. or .") {
-      intercept[IllegalArgumentException] {
+      assertThrows[IllegalArgumentException] {
         val localFile = FileCache.localFile0(
           "https://evil-repo.org/com.fake/../../../../../../lib1.jar",
           CacheDefaults.location,

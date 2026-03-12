@@ -221,6 +221,33 @@ object GradleModule {
       }
   }
 
+  final case class StringOrSeqString(value: Either[Seq[String], String])
+  object StringOrSeqString {
+    implicit lazy val codec: JsonValueCodec[StringOrSeqString] =
+      new JsonValueCodec[StringOrSeqString] {
+
+        val stringCodec: JsonValueCodec[String]         = JsonCodecMaker.make
+        val seqStringCodec: JsonValueCodec[Seq[String]] = JsonCodecMaker.make
+
+        def nullValue = StringOrSeqString(Right(stringCodec.nullValue))
+        def encodeValue(x: StringOrSeqString, out: JsonWriter) =
+          x.value match {
+            case Left(seq)  => seqStringCodec.encodeValue(seq, out)
+            case Right(str) => stringCodec.encodeValue(str, out)
+          }
+        def decodeValue(in: JsonReader, default: StringOrSeqString) = {
+          in.setMark()
+          val isString =
+            try in.isNextToken('"')
+            finally in.rollbackToMark()
+          StringOrSeqString {
+            if (isString) Right(stringCodec.decodeValue(in, ""))
+            else Left(seqStringCodec.decodeValue(in, Nil))
+          }
+        }
+      }
+  }
+
   @data class Component(
     group: String,
     module: String,
@@ -258,10 +285,60 @@ object GradleModule {
   @data class ModuleDependency(
     group: String,
     module: String,
-    version: Map[String, String],
+    version0: Map[String, StringOrSeqString],
     attributes: Map[String, StringOrInt],
     endorseStrictVersions: Option[Boolean]
-  )
+  ) {
+    def version: Map[String, String] =
+      version0.collect {
+        case (k, StringOrSeqString(Right(str))) =>
+          k -> str
+      }
+    def withVersion(version: Map[String, String]): ModuleDependency =
+      withVersion0(
+        version.map {
+          case (k, v) =>
+            (k, StringOrSeqString(Right(v)))
+        }
+      )
+  }
+
+  object ModuleDependency {
+    private final case class Helper(
+      group: String,
+      module: String,
+      version: Map[String, StringOrSeqString],
+      attributes: Map[String, StringOrInt],
+      endorseStrictVersions: Option[Boolean]
+    ) {
+      def modDep: ModuleDependency =
+        ModuleDependency(
+          group = group,
+          module = module,
+          version0 = version,
+          attributes = attributes,
+          endorseStrictVersions = endorseStrictVersions
+        )
+    }
+    private def toHelper(modDep: ModuleDependency): Helper =
+      Helper(
+        group = modDep.group,
+        module = modDep.module,
+        version = modDep.version0,
+        attributes = modDep.attributes,
+        endorseStrictVersions = modDep.endorseStrictVersions
+      )
+    private val helperCodec: JsonValueCodec[Helper] =
+      JsonCodecMaker.make
+    implicit lazy val codec: JsonValueCodec[ModuleDependency] =
+      new JsonValueCodec[ModuleDependency] {
+        def nullValue = Option(helperCodec.nullValue).map(_.modDep).orNull
+        def encodeValue(x: ModuleDependency, out: JsonWriter): Unit =
+          helperCodec.encodeValue(toHelper(x), out)
+        def decodeValue(in: JsonReader, default: ModuleDependency): ModuleDependency =
+          helperCodec.decodeValue(in, Option(default).map(toHelper).orNull).modDep
+      }
+  }
 
   @data class ModuleFile(
     name: String,
@@ -291,7 +368,7 @@ object GradleModule {
 
   val defaultConfigurations: Map[Configuration, Seq[Configuration]] = Map(
     Configuration.compile -> Nil,
-    Configuration.runtime -> Nil,
-    Configuration.test    -> Nil
+    Configuration.runtime -> Seq(Configuration.compile),
+    Configuration.test    -> Seq(Configuration.runtime)
   )
 }

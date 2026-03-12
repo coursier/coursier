@@ -114,6 +114,17 @@ object RepositoryParserTests extends TestSuite {
         assert(res.exists(isMavenRepo))
       }
     }
+
+    test("central") {
+      test("maven-snapshots") {
+        val res = RepositoryParser.repository("central:maven-snapshots")
+        assert(res.exists(isMavenRepo))
+      }
+      test("foo") {
+        val res = RepositoryParser.repository("central:foo")
+        assert(res.exists(isMavenRepo))
+      }
+    }
   }
 
 }

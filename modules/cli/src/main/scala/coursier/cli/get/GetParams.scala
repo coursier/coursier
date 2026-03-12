@@ -15,7 +15,8 @@ final case class GetParams(
   changing: Option[Boolean],
   archiveOpt: Option[Boolean],
   archiveCacheLocation: File,
-  authHeaders: Seq[(String, String)]
+  authHeaders: Seq[(String, String)],
+  referenceFileUrl: Option[String]
 )
 
 object GetParams {
@@ -54,7 +55,8 @@ object GetParams {
           options.archiveCache.map(new File(_)).getOrElse {
             CacheDefaults.archiveCacheLocation
           },
-          authHeaders
+          authHeaders,
+          referenceFileUrl = options.referenceUrl.filter(_.trim.nonEmpty)
         )
     }
   }
