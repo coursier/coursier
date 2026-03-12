@@ -2067,7 +2067,11 @@ object Resolution {
     )
 
     project0
-      .withModule(Module(project0.module.organization, project0.module.name.map{ s => substituteProps(s, propertiesMap0) }, project0.module.attributes))
+      .withModule {
+        val maybeNewName = project0.module.name.map(substituteProps(_, propertiesMap0))
+        if (project0.module.name == maybeNewName) project0.module
+        else project0.module.withName(maybeNewName)
+      }
       .withPackagingOpt(project0.packagingOpt.map(_.map(substituteProps(_, propertiesMap0))))
       .withVersion0(Version0(substituteProps(project0.version0.asString, propertiesMap0)))
       .withDependencies0(
