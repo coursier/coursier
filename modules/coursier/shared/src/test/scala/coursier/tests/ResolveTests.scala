@@ -15,9 +15,10 @@ import coursier.core.{
   Type,
   VariantSelector
 }
+import coursier.core.VariantSelector.VariantMatcher
 import coursier.error.ResolutionError
 import coursier.ivy.IvyRepository
-import coursier.maven.MavenRepositoryLike
+import coursier.maven.{MavenRepository, MavenRepositoryLike}
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
 import coursier.util.{ModuleMatchers, Task}
 import coursier.util.StringInterpolators._
@@ -58,23 +59,32 @@ object ResolveTests extends TestSuite {
       }
     }
   def gradleModuleCheck0(
+    resolve0: Resolve[Task] = resolve,
     defaultConfiguration: Option[Configuration] = None,
-    defaultAttributes: Option[VariantSelector.AttributesBased] = None
+    defaultAttributes: Option[VariantSelector.AttributesBased] = None,
+    attributesBasedReprAsToString: Boolean = false
   )(
     dependencies: Dependency*
   ): Future[Unit] =
     async {
-      var resolve0 = enableModules(resolve.addRepositories(Repositories.google))
+      var resolve1 = enableModules(resolve0.addRepositories(Repositories.google))
       for (conf <- defaultConfiguration)
-        resolve0 = resolve0.mapResolutionParams(_.withDefaultConfiguration(conf))
+        resolve1 = resolve1.mapResolutionParams(_.withDefaultConfiguration(conf))
       for (attr <- defaultAttributes)
-        resolve0 = resolve0.mapResolutionParams(_.withDefaultVariantAttributes(attr))
+        resolve1 = resolve1.mapResolutionParams(_.withDefaultVariantAttributes(attr))
       val res = await {
-        resolve0
+        resolve1
           .addDependencies(dependencies: _*)
           .future()
       }
-      await(validateDependencies(res, resolve0.resolutionParams, extraKeyPart = "_gradlemod"))
+      await {
+        validateDependencies(
+          res,
+          resolve1.resolutionParams,
+          extraKeyPart = "_gradlemod",
+          attributesBasedReprAsToString = attributesBasedReprAsToString
+        )
+      }
     }
   def gradleModuleCheck(dependencies: Dependency*): Future[Unit] =
     gradleModuleCheck0()(dependencies: _*)
@@ -181,31 +191,89 @@ object ResolveTests extends TestSuite {
     }
 
     test("addForceVersion") {
-      async {
+      test("simple") {
+        async {
 
-        val resolve0 = resolve
-          .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:1.6.3")
-          .mapResolutionParams { params =>
-            params
-              .withScalaVersion("2.12.8")
-              .addForceVersion0(mod"com.lihaoyi:upickle_2.12" -> VersionConstraint("0.7.0"))
-              .addForceVersion0(mod"io.get-coursier:coursier_2.12" -> VersionConstraint("1.1.0-M6"))
+          val resolve0 = resolve
+            .addDependencies(dep"com.lihaoyi:ammonite_2.12.8:1.6.3")
+            .mapResolutionParams { params =>
+              params
+                .withScalaVersion("2.12.8")
+                .addForceVersion0(mod"com.lihaoyi:upickle_2.12" -> VersionConstraint("0.7.0"))
+                .addForceVersion0(
+                  mod"io.get-coursier:coursier_2.12" -> VersionConstraint("1.1.0-M6")
+                )
+            }
+
+          val res = await {
+            resolve0
+              .future()
           }
 
-        val res = await {
-          resolve0
-            .future()
+          await(validateDependencies(res, resolve0.resolutionParams))
+
+          val upickleVersionOpt      = versionOf(res, mod"com.lihaoyi:upickle_2.12")
+          val expectedUpickleVersion = "0.7.0"
+          assert(upickleVersionOpt.contains(expectedUpickleVersion))
+
+          val coursierVersionOpt      = versionOf(res, mod"io.get-coursier:coursier_2.12")
+          val expectedCoursierVersion = "1.1.0-M6"
+          assert(coursierVersionOpt.contains(expectedCoursierVersion))
         }
+      }
 
-        await(validateDependencies(res, resolve0.resolutionParams))
+      test("whole org") {
+        async {
+          val forcedCollectionVersion = "1.4.2"
+          val forcedLifecycleVersion  = "2.8.7"
+          val baseResolve = enableModules(resolve.addRepositories(Repositories.google))
+            .addDependencies(dep"androidx.customview:customview-poolingcontainer:1.0.0")
+            .mapResolutionParams { params =>
+              params.addVariantAttributes(
+                "org.jetbrains.kotlin.platform.type" ->
+                  VariantMatcher.AnyOf(Seq(
+                    VariantMatcher.Equals("androidJvm"),
+                    VariantMatcher.Equals("jvm")
+                  ))
+              )
+            }
+          val resolve0 = baseResolve
+            .mapResolutionParams { params =>
+              params.addForceVersion0(
+                mod"androidx.collection:*" -> VersionConstraint(forcedCollectionVersion),
+                mod"androidx.lifecycle:*"  -> VersionConstraint(forcedLifecycleVersion)
+              )
+            }
 
-        val upickleVersionOpt      = versionOf(res, mod"com.lihaoyi:upickle_2.12")
-        val expectedUpickleVersion = "0.7.0"
-        assert(upickleVersionOpt.contains(expectedUpickleVersion))
+          val baseRes = await {
+            baseResolve
+              .future()
+          }
+          val res = await {
+            resolve0
+              .future()
+          }
 
-        val coursierVersionOpt      = versionOf(res, mod"io.get-coursier:coursier_2.12")
-        val expectedCoursierVersion = "1.1.0-M6"
-        assert(coursierVersionOpt.contains(expectedCoursierVersion))
+          await(validateDependencies(baseRes, baseResolve.resolutionParams))
+          await(validateDependencies(res, resolve0.resolutionParams))
+
+          val baseCollectionVersionOpt = versionOf(baseRes, mod"androidx.collection:collection")
+          val collectionVersionOpt     = versionOf(res, mod"androidx.collection:collection")
+          assert(baseCollectionVersionOpt.exists(_ != forcedCollectionVersion))
+          assert(collectionVersionOpt.contains(forcedCollectionVersion))
+
+          val baseLifecycleCommonVersionOpt =
+            versionOf(baseRes, mod"androidx.lifecycle:lifecycle-common")
+          val lifecycleCommonVersionOpt = versionOf(res, mod"androidx.lifecycle:lifecycle-common")
+          assert(baseLifecycleCommonVersionOpt.exists(_ != forcedLifecycleVersion))
+          assert(lifecycleCommonVersionOpt.contains(forcedLifecycleVersion))
+
+          val baseLifecycleRuntimeVersionOpt =
+            versionOf(baseRes, mod"androidx.lifecycle:lifecycle-runtime")
+          val lifecycleRuntimeVersionOpt = versionOf(res, mod"androidx.lifecycle:lifecycle-runtime")
+          assert(baseLifecycleRuntimeVersionOpt.exists(_ != forcedLifecycleVersion))
+          assert(lifecycleRuntimeVersionOpt.contains(forcedLifecycleVersion))
+        }
       }
     }
 
@@ -1151,7 +1219,6 @@ object ResolveTests extends TestSuite {
 
         val (_, pub0, artifact) = depArtifacts.head
 
-        val url = artifact.url
         val expectedUrl =
           "https://repo1.maven.org/maven2/io/grpc/protoc-gen-grpc-java/1.23.0/protoc-gen-grpc-java-1.23.0-linux-x86_64.exe"
         assert(artifact.url == expectedUrl)
@@ -2011,12 +2078,12 @@ object ResolveTests extends TestSuite {
               gradleModuleCheck0(
                 defaultAttributes = Some(
                   VariantSelector.AttributesBased(Map(
-                    "org.gradle.usage" -> VariantSelector.VariantMatcher.Runtime,
+                    "org.gradle.usage" -> VariantMatcher.Runtime,
                     "org.jetbrains.kotlin.platform.type" ->
-                      VariantSelector.VariantMatcher.Equals("js"),
+                      VariantMatcher.Equals("js"),
                     "org.jetbrains.kotlin.js.compiler" ->
-                      VariantSelector.VariantMatcher.Equals("ir"),
-                    "org.gradle.category" -> VariantSelector.VariantMatcher.Library
+                      VariantMatcher.Equals("ir"),
+                    "org.gradle.category" -> VariantMatcher.Library
                   ))
                 )
               )(
@@ -2037,7 +2104,7 @@ object ResolveTests extends TestSuite {
               assert(
                 res.left.toOption.get.getMessage
                   .contains(
-                    "Found too many variants in org.jetbrains.kotlinx:kotlinx-html-js:0.11.0 for"
+                    "Found too many variants in org.jetbrains.kotlin:kotlin-stdlib:1.9.22 for"
                   )
               )
             }
@@ -2046,12 +2113,12 @@ object ResolveTests extends TestSuite {
       }
       test("android") {
         test("dependency") {
-          def withVariant(dep: Dependency, map: Map[String, VariantSelector.VariantMatcher]) =
+          def withVariant(dep: Dependency, map: Map[String, VariantMatcher]) =
             dep.withVariantSelector(VariantSelector.AttributesBased(map))
 
           def testVariants(
             config: Configuration,
-            map: Map[String, VariantSelector.VariantMatcher]
+            map: Map[String, VariantMatcher]
           ): Future[Unit] =
             gradleModuleCheck0(defaultConfiguration = Some(config))(
               withVariant(dep"androidx.core:core-ktx:1.15.0", map),
@@ -2066,20 +2133,17 @@ object ResolveTests extends TestSuite {
             testVariants(
               Configuration.runtime,
               Map(
-                "org.gradle.usage"    -> VariantSelector.VariantMatcher.Equals("java-runtime"),
-                "org.gradle.category" -> VariantSelector.VariantMatcher.Equals("library"),
-                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+                "org.gradle.usage"                   -> VariantMatcher.Equals("java-runtime"),
+                "org.gradle.category"                -> VariantMatcher.Equals("library"),
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
               )
             )
           }
         }
         test("global") {
-          def withVariant(dep: Dependency, map: Map[String, VariantSelector.VariantMatcher]) =
-            dep.withVariantSelector(VariantSelector.AttributesBased(map))
-
           def testVariants(
             config: Configuration,
-            map: Map[String, VariantSelector.VariantMatcher]
+            map: Map[String, VariantMatcher]
           ): Future[Unit] =
             gradleModuleCheck0(
               defaultConfiguration = Some(config),
@@ -2095,9 +2159,9 @@ object ResolveTests extends TestSuite {
             testVariants(
               Configuration.compile,
               Map(
-                "org.gradle.usage"    -> VariantSelector.VariantMatcher.Equals("java-api"),
-                "org.gradle.category" -> VariantSelector.VariantMatcher.Equals("library"),
-                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+                "org.gradle.usage"                   -> VariantMatcher.Equals("java-api"),
+                "org.gradle.category"                -> VariantMatcher.Equals("library"),
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
               )
             )
           }
@@ -2105,9 +2169,9 @@ object ResolveTests extends TestSuite {
             testVariants(
               Configuration.runtime,
               Map(
-                "org.gradle.usage"    -> VariantSelector.VariantMatcher.Equals("java-runtime"),
-                "org.gradle.category" -> VariantSelector.VariantMatcher.Equals("library"),
-                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+                "org.gradle.usage"                   -> VariantMatcher.Equals("java-runtime"),
+                "org.gradle.category"                -> VariantMatcher.Equals("library"),
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
               )
             )
           }
@@ -2118,17 +2182,20 @@ object ResolveTests extends TestSuite {
           test("compile") {
             val attr = VariantSelector.AttributesBased().withMatchers(
               Map(
-                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
               )
             )
-            gradleModuleCheck0(Some(Configuration.compile), defaultAttributes = Some(attr))(
+            gradleModuleCheck0(
+              defaultConfiguration = Some(Configuration.compile),
+              defaultAttributes = Some(attr)
+            )(
               dep"androidx.core:core-ktx:1.15.0:compile"
             )
           }
           test("runtime") {
             val attr = VariantSelector.AttributesBased().withMatchers(
               Map(
-                "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+                "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
               )
             )
             gradleModuleCheck0(defaultAttributes = Some(attr))(
@@ -2142,8 +2209,8 @@ object ResolveTests extends TestSuite {
               val attr = VariantSelector.AttributesBased().withMatchers(
                 Map(
                   "org.jetbrains.kotlin.platform.type" ->
-                    VariantSelector.VariantMatcher.Equals("js"),
-                  "org.jetbrains.kotlin.js.compiler" -> VariantSelector.VariantMatcher.Equals("ir")
+                    VariantMatcher.Equals("js"),
+                  "org.jetbrains.kotlin.js.compiler" -> VariantMatcher.Equals("ir")
                 )
               )
               gradleModuleCheck0(defaultAttributes = Some(attr))(
@@ -2154,7 +2221,7 @@ object ResolveTests extends TestSuite {
               val attr = VariantSelector.AttributesBased().withMatchers(
                 Map(
                   "org.gradle.jvm.environment" ->
-                    VariantSelector.VariantMatcher.Equals("standard-jvm")
+                    VariantMatcher.Equals("standard-jvm")
                 )
               )
               gradleModuleCheck0(defaultAttributes = Some(attr))(
@@ -2163,6 +2230,156 @@ object ResolveTests extends TestSuite {
             }
           }
         }
+      }
+      test("module-bom") {
+        val resolve0 = resolve.withResolutionParams(
+          resolve.resolutionParams.withOsInfo(
+            Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1"))
+          )
+        )
+        gradleModuleCheck0(resolve0 = resolve0)(
+          dep"io.quarkus:quarkus-rest-jackson:3.15.1"
+        )
+      }
+      test("quarkus-junit5") {
+        val resolve0 = resolve.addVariantAttributes(
+          "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
+        )
+        gradleModuleCheck0(resolve0 = resolve0)(
+          dep"io.quarkus:quarkus-junit5:3.15.1"
+        )
+      }
+      test("quarkus-rest-assured") {
+        gradleModuleCheck(dep"io.rest-assured:rest-assured:5.5.0")
+      }
+
+      test("scalatest-play") {
+        val resolve0 = resolve
+          .addVariantAttributes(
+            "org.gradle.jvm.environment"     -> VariantMatcher.Equals("standard-jvm"),
+            "org.gradle.dependency.bundling" -> VariantMatcher.Equals("external")
+          )
+          .addBomConfigs(
+            dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency
+          )
+        gradleModuleCheck0(resolve0 = resolve0)(
+          dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
+        )
+      }
+      test("bom") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
+            ))
+          )
+        )(
+          dep"org.junit-pioneer:junit-pioneer:1.9.1"
+        )
+      }
+      test("only prefers") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.gradle.category"                -> VariantMatcher.Library,
+              "org.gradle.dependency.bundling"     -> VariantMatcher.Equals("external"),
+              "org.gradle.jvm.environment"         -> VariantMatcher.Equals("non-jvm"),
+              "org.gradle.usage"                   -> VariantMatcher.Runtime,
+              "org.jetbrains.kotlin.js.compiler"   -> VariantMatcher.Equals("ir"),
+              "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("js")
+            ))
+          ),
+          defaultConfiguration = Some(Configuration.runtime),
+          attributesBasedReprAsToString = true
+        )(
+          dep"io.kotest:kotest-framework-engine-js:6.0.0.M3"
+        )
+      }
+      test("wrong module name") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.gradle.category"        -> VariantMatcher.Library,
+              "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
+            ))
+          ),
+          attributesBasedReprAsToString = true
+        )(
+          dep"org.jetbrains.kotlin:kotlin-test-junit:2.0.20"
+        )
+      }
+      test("module BOM") {
+        gradleModuleCheck(
+          dep"org.springframework.data:spring-data-jpa:2.5.4"
+        )
+      }
+      test("any of") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.jetbrains.kotlin.platform.type" ->
+                VariantMatcher.AnyOf(Seq(
+                  VariantMatcher.Equals("androidJvm"),
+                  VariantMatcher.Equals("jvm")
+                ))
+            ))
+          ),
+          attributesBasedReprAsToString = true
+        )(
+          dep"androidx.compose.material3:material3:1.3.1",
+          dep"androidx.collection:collection-ktx:1.4.0",
+          dep"androidx.lifecycle:lifecycle-process:2.8.3",
+          dep"androidx.lifecycle:lifecycle-common-java8:2.8.3"
+        )
+      }
+
+      test("endorseStrictVersions") {
+        gradleModuleCheck0(
+          defaultAttributes = Some(
+            VariantSelector.AttributesBased(Map(
+              "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
+            ))
+          ),
+          attributesBasedReprAsToString = true
+        )(
+          dep"androidx.test.ext:junit:1.2.1"
+        )
+      }
+
+      test("bom config graph") {
+        val resolve0 = resolve
+          .addVariantAttributes(
+            "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
+          )
+          .addBom(
+            dep"io.micronaut.platform:micronaut-platform:4.9.2".asBomDependency
+          )
+        test("micronaut-inject-kotlin") {
+          gradleModuleCheck0(resolve0 = resolve0)(
+            dep"io.micronaut:micronaut-inject-kotlin:"
+          )
+        }
+        test("micronaut-openapi") {
+          gradleModuleCheck0(resolve0 = resolve0)(
+            dep"io.micronaut.openapi:micronaut-openapi:"
+          )
+        }
+      }
+
+      test("lottie") {
+        val resolve0 = resolve
+          .addVariantAttributes(
+            "org.gradle.jvm.environment"         -> VariantMatcher.Equals("standard-jvm"),
+            "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm"),
+            "ui"                                 -> VariantMatcher.Equals("android")
+          )
+          .addRepositories(
+            Repositories.google,
+            MavenRepository("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+          )
+        gradleModuleCheck0(resolve0 = resolve0, attributesBasedReprAsToString = true)(
+          dep"com.airbnb.android:lottie-compose:6.6.6"
+        )
       }
     }
 
@@ -2192,6 +2409,65 @@ object ResolveTests extends TestSuite {
           case _ =>
             throw error
         }
+      }
+    }
+
+    test("scalaOrganizationOverride") {
+
+      test("swapsDepsForScala3") {
+        val params = ResolutionParams()
+          .withScalaVersion("3.8.0")
+          .withScalaOrganizationOverride(Some(org"ch.epfl.lara"))
+
+        val res = Resolve.initialResolution(Nil, params)
+
+        // forceVersions should use the custom org
+        val forceVersionModules = res.forceVersions0.keySet
+        assert(forceVersionModules.contains(mod"ch.epfl.lara:scala3-library_3"))
+        assert(forceVersionModules.contains(mod"ch.epfl.lara:scala3-compiler_3"))
+        assert(forceVersionModules.forall(!_.repr.startsWith("org.scala-lang:scala3-")))
+
+        // mapDependencies should swap org.scala-lang to the custom org
+        val scalaLibDep = dep"org.scala-lang:scala3-library_3:3.3.1"
+        val mapped      = res.mapDependencies.get(scalaLibDep)
+        assert(mapped == dep"ch.epfl.lara:scala3-library_3:3.3.1")
+      }
+
+      test("swapsDepsForScala2") {
+        val params = ResolutionParams()
+          .withScalaVersion("2.12.20")
+          .withScalaOrganizationOverride(Some(org"org.typelevel"))
+
+        val res = Resolve.initialResolution(Nil, params)
+
+        val scalaLibDep = dep"org.scala-lang:scala-library:2.12.18"
+        val mapped      = res.mapDependencies.get(scalaLibDep)
+        assert(mapped == dep"org.typelevel:scala-library:2.12.18")
+      }
+
+      test("noSwapWhenNotSet") {
+        val params = ResolutionParams()
+          .withScalaVersion("3.8.0")
+
+        val res = Resolve.initialResolution(Nil, params)
+
+        val scalaLibDep = dep"org.scala-lang:scala3-library_3:3.3.1"
+        val mapped      = res.mapDependencies.get(scalaLibDep)
+        // org should remain unchanged
+        assert(mapped == scalaLibDep)
+      }
+
+      test("doesNotSwapNonScalaModules") {
+        val params = ResolutionParams()
+          .withScalaVersion("3.8.0")
+          .withScalaOrganizationOverride(Some(org"ch.epfl.lara"))
+
+        val res = Resolve.initialResolution(Nil, params)
+
+        val nonScalaDep = dep"org.scala-lang:some-other-module:1.0.0"
+        val mapped      = res.mapDependencies.get(nonScalaDep)
+        // non-Scala modules under org.scala-lang should NOT be swapped
+        assert(mapped == nonScalaDep)
       }
     }
   }

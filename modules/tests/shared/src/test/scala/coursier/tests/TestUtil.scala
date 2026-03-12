@@ -108,7 +108,7 @@ object TestUtil {
       version: String,
       dependencies: Seq[(Variant, Dependency)] = Seq.empty,
       parent0: Option[(Module, String)] = None,
-      dependencyManagement: Seq[(Configuration, Dependency)] = Seq.empty,
+      dependencyManagement: Seq[(Variant, Dependency)] = Seq.empty,
       configurations: Map[Configuration, Seq[Configuration]] = Map.empty,
       properties: Seq[(String, String)] = Seq.empty,
       profiles: Seq[Profile] = Seq.empty,
@@ -136,7 +136,10 @@ object TestUtil {
         relocated,
         None,
         publications,
-        Info.empty
+        Info.empty,
+        Overrides.empty,
+        Map.empty,
+        Map.empty
       )
   }
 }

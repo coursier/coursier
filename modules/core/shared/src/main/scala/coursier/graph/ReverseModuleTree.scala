@@ -66,13 +66,19 @@ sealed abstract class ReverseModuleTree {
     */
   def excludedDependsOn: Boolean
 
+  def endorsedDependsOn: Boolean
+
   /** Dependees of this module. */
   def dependees: Seq[ReverseModuleTree]
 }
 
 object ReverseModuleTree {
 
-  def fromModuleTree(roots: Seq[Module], moduleTrees: Seq[ModuleTree]): Seq[ReverseModuleTree] = {
+  def fromModuleTree(
+    roots: Seq[Module],
+    moduleTrees: Seq[ModuleTree],
+    rootDependencies: Map[Module, VersionConstraint]
+  ): Seq[ReverseModuleTree] = {
 
     // Some assumptions about moduleTrees, and the ModuleTree-s we get though their children:
     // - any two ModuleTree-s with the same module are assumed to have the same reconciledVersion
@@ -86,7 +92,7 @@ object ReverseModuleTree {
 
     val alreadySeen = new mutable.HashSet[ModuleTree]
     val dependees =
-      new mutable.HashMap[Module, mutable.HashSet[(Module, VersionConstraint, Boolean)]]
+      new mutable.HashMap[Module, mutable.HashSet[(Module, VersionConstraint, Boolean, Boolean)]]
     val versions = new mutable.HashMap[Module, (VersionConstraint, Version)]
     val toCheck  = new mutable.Queue[ModuleTree]
 
@@ -101,9 +107,9 @@ object ReverseModuleTree {
       for (c <- children) {
         val b = dependees.getOrElseUpdate(
           c.module,
-          new mutable.HashSet[(Module, VersionConstraint, Boolean)]
+          new mutable.HashSet[(Module, VersionConstraint, Boolean, Boolean)]
         )
-        b.add((elem.module, c.reconciledVersionConstraint, false))
+        b.add((elem.module, c.reconciledVersionConstraint, false, false))
       }
     }
 
@@ -128,19 +134,29 @@ object ReverseModuleTree {
       reconciled,
       retained,
       excludedDependsOn = false,
+      endorsedDependsOn = false,
       dependees0,
-      versions0
+      versions0,
+      Map.empty
     )
   }
 
+  @deprecated("Use the override accepting rootDependencies", "2.1.25")
+  def fromModuleTree(
+    roots: Seq[Module],
+    moduleTrees: Seq[ModuleTree]
+  ): Seq[ReverseModuleTree] =
+    fromModuleTree(roots, moduleTrees, Map.empty)
+
   def fromDependencyTree(
     roots: Seq[Module],
-    dependencyTrees: Seq[DependencyTree]
+    dependencyTrees: Seq[DependencyTree],
+    rootDependencies: Map[Module, Seq[VersionConstraint]]
   ): Seq[ReverseModuleTree] = {
 
     val alreadySeen = new mutable.HashSet[DependencyTree]
     val dependees =
-      new mutable.HashMap[Module, mutable.HashSet[(Module, VersionConstraint, Boolean)]]
+      new mutable.HashMap[Module, mutable.HashSet[(Module, VersionConstraint, Boolean, Boolean)]]
     val versions = new mutable.HashMap[Module, (VersionConstraint, Version)]
     val toCheck  = new mutable.Queue[DependencyTree]
 
@@ -158,9 +174,9 @@ object ReverseModuleTree {
       for (c <- children) {
         val b = dependees.getOrElseUpdate(
           c.dependency.module,
-          new mutable.HashSet[(Module, VersionConstraint, Boolean)]
+          new mutable.HashSet[(Module, VersionConstraint, Boolean, Boolean)]
         )
-        b.add((elem.dependency.module, c.dependency.versionConstraint, c.excluded))
+        b.add((elem.dependency.module, c.dependency.versionConstraint, c.excluded, c.endorsed))
       }
     }
 
@@ -185,10 +201,19 @@ object ReverseModuleTree {
       reconciled,
       retained,
       excludedDependsOn = false,
+      endorsedDependsOn = false,
       dependees0,
-      versions0
+      versions0,
+      rootDependencies
     )
   }
+
+  @deprecated("Use the override accepting rootDependencies", "2.1.25")
+  def fromDependencyTree(
+    roots: Seq[Module],
+    dependencyTrees: Seq[DependencyTree]
+  ): Seq[ReverseModuleTree] =
+    fromDependencyTree(roots, dependencyTrees, Map.empty)
 
   def apply(
     resolution: Resolution,
@@ -197,7 +222,16 @@ object ReverseModuleTree {
   ): Seq[ReverseModuleTree] = {
     val t      = DependencyTree(resolution, withExclusions = withExclusions)
     val roots0 = Option(roots).getOrElse(resolution.minDependencies.toVector.map(_.module))
-    fromDependencyTree(roots0, t)
+    fromDependencyTree(
+      roots0,
+      t,
+      resolution.rootDependencies
+        .groupBy(_.module)
+        .map {
+          case (mod, deps0) =>
+            mod -> deps0.map(_.versionConstraint).distinct
+        }
+    )
   }
 
   private[graph] final case class Node(
@@ -208,13 +242,43 @@ object ReverseModuleTree {
     dependsOnVersionConstraint: VersionConstraint,
     dependsOnRetainedVersion0: Version,
     excludedDependsOn: Boolean,
-    allDependees: Map[Module, Seq[(Module, VersionConstraint, Boolean)]],
-    versions: Map[Module, (VersionConstraint, Version)]
+    endorsedDependsOn: Boolean,
+    allDependees: Map[Module, Seq[(Module, VersionConstraint, Boolean, Boolean)]],
+    versions: Map[Module, (VersionConstraint, Version)],
+    rootDependencies: Map[Module, Seq[VersionConstraint]]
   ) extends ReverseModuleTree {
-    def dependees: Seq[Node] =
+    override lazy val hashCode: Int =
+      (
+        module,
+        reconciledVersionConstraint,
+        retainedVersion0,
+        dependsOnModule,
+        dependsOnVersionConstraint,
+        dependsOnRetainedVersion0,
+        excludedDependsOn,
+        endorsedDependsOn
+      ).hashCode()
+    private def dependeesFromRoot =
       for {
-        (m, wantVer, excl)     <- allDependees.getOrElse(module, Nil)
-        (reconciled, retained) <- versions.get(m)
+        wantVer       <- rootDependencies.getOrElse(module, Nil)
+        (_, retained) <- versions.get(module)
+      } yield Node(
+        module,
+        wantVer,
+        retained,
+        module,
+        wantVer,
+        retainedVersion0,
+        excludedDependsOn = false,
+        endorsedDependsOn = false,
+        Map.empty,
+        versions,
+        rootDependencies = Map.empty
+      )
+    private def actualDependees: Seq[Node] =
+      for {
+        (m, wantVer, excl, endorsed) <- allDependees.getOrElse(module, Nil)
+        (reconciled, retained)       <- versions.get(m)
       } yield Node(
         m,
         reconciled,
@@ -223,9 +287,13 @@ object ReverseModuleTree {
         wantVer,
         retainedVersion0,
         excl,
+        endorsed,
         allDependees,
-        versions
+        versions,
+        rootDependencies
       )
+    def dependees: Seq[Node] =
+      dependeesFromRoot ++ actualDependees
   }
 
 }

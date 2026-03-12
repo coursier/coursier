@@ -1,0 +1,91 @@
+[
+  {
+    "name":"com.jcraft.jsch.DH25519",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.DH25519MLKEM768",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.DH25519SNTRUP761",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.DH448",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.DHEC256MLKEM768",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.DHEC384MLKEM1024",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.UserAuthNone",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.UserAuthPublicKey",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.bc.MLKEM1024"
+  },
+  {
+    "name":"com.jcraft.jsch.bc.MLKEM768"
+  },
+  {
+    "name":"com.jcraft.jsch.bc.SNTRUP761"
+  },
+  {
+    "name":"com.jcraft.jsch.jce.AES128CTR",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.HMACSHA1",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.HMACSHA256ETM",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.KeyPairGenRSA",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.Random",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.SHA256",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.SHA384",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.SHA512",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.SignatureEd25519",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.SignatureEd448",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.SignatureRSASHA512",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.XDH",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  }
+]

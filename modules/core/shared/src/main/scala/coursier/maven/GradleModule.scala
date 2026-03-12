@@ -28,25 +28,83 @@ import coursier.core.VariantPublication
   component: GradleModule.Component,
   variants: Seq[GradleModule.Variant] = Nil
 ) {
-  def project: Project = {
+  def project(actualComponentOpt: Option[GradleModule.Component]): Project = {
 
-    def variantDependencies(variant: GradleModule.Variant) = {
+    val actualComponent = actualComponentOpt.getOrElse(component)
+
+    def variantDependencies(variant: GradleModule.Variant, constraints: Boolean = false) = {
       val variant0 = Variant.Attributes(variant.name)
-      variant.dependencies.map { dep =>
-        val version = dep.version.toSeq match {
-          case Seq(("requires", req)) => VersionConstraint(req)
-          case _ => sys.error(s"Unrecognized dependency version shape: ${dep.version}")
+      val deps =
+        if (constraints) variant.dependencyConstraints
+        else variant.dependencies
+      deps.map { dep =>
+        val versionMap = {
+          var map = dep.version
+          if (map.contains("strictly") && map.contains("requires"))
+            map = map - "requires"
+          if (map.contains("strictly") && map.contains("reject"))
+            map = map - "reject"
+          if (map.contains("prefers") && map.contains("reject"))
+            map = map - "reject"
+          map
         }
 
-        variant0 -> Dependency(
+        val finalVersion = {
+          val prefersOpt = versionMap.get("prefers").flatMap { v =>
+            val c = VersionConstraint(v)
+            if (c.preferred.isEmpty) None
+            else Some(c)
+          }
+          prefersOpt match {
+            case Some(prefers) if versionMap.size == 1 =>
+              prefers
+            case _ =>
+              val versionMap0 =
+                if (prefersOpt.isEmpty) versionMap
+                else versionMap - "prefers"
+              val version = versionMap0.toSeq match {
+                case Seq(("requires" | "strictly", req)) => VersionConstraint(req)
+                case Seq()                               => VersionConstraint.empty
+                case _ =>
+                  val mainDep =
+                    s"${actualComponent.group}:${actualComponent.module}:${actualComponent.version}"
+                  val subDep = s"${dep.group}:${dep.module}"
+                  sys.error(
+                    s"Unrecognized dependency version shape for $subDep in $mainDep: $versionMap0"
+                  )
+              }
+              prefersOpt match {
+                case Some(prefers) =>
+                  VersionConstraint.merge(version, prefers).getOrElse {
+                    sys.error(s"Invalid version specification: $versionMap0")
+                  }
+                case None => version
+              }
+          }
+        }
+
+        val dependency = Dependency(
           Module(Organization(dep.group), ModuleName(dep.module), Map.empty),
-          version,
-          VariantSelector.AttributesBased(Map.empty),
+          finalVersion,
+          VariantSelector.AttributesBased(
+            dep.attributes.map {
+              case (k, v) =>
+                VariantSelector.VariantMatcher.fromString(k, v.value)
+            }
+          ),
           MinimizedExclusions.zero,
           publication = Publication("", Type.empty, Extension.empty, Classifier.empty),
           optional = false,
           transitive = true
         )
+
+        val dependency0 =
+          if (dep.endorseStrictVersions.getOrElse(false))
+            dependency.withEndorseStrictVersions(true)
+          else
+            dependency
+
+        variant0 -> dependency0
       }
     }
 
@@ -72,9 +130,19 @@ import coursier.core.VariantPublication
     }
 
     val dependencies = relocationDependencies ++
-      variants.flatMap(variantDependencies)
+      variants.flatMap(variantDependencies(_))
+    val dependencyManagement =
+      variants.flatMap(variantDependencies(_, constraints = true))
 
     val variantsMap = variants
+      .filter { variant =>
+        variant.capabilities.isEmpty ||
+        variant.capabilities.exists { capability =>
+          capability.group == actualComponent.group &&
+          capability.name == actualComponent.module &&
+          (capability.version.isEmpty || capability.version == actualComponent.version)
+        }
+      }
       .map { variant =>
         val relocationEntries =
           if (variant.`available-at`.isEmpty) Nil
@@ -93,12 +161,13 @@ import coursier.core.VariantPublication
       .toMap
 
     val baseProject = Project(
-      module = Module(Organization(component.group), ModuleName(component.module), Map.empty),
-      version0 = Version(component.version),
+      module =
+        Module(Organization(actualComponent.group), ModuleName(actualComponent.module), Map.empty),
+      version0 = Version(actualComponent.version),
       dependencies0 = dependencies,
       configurations = GradleModule.defaultConfigurations,
       parent0 = None,
-      dependencyManagement = Nil,
+      dependencyManagement0 = dependencyManagement,
       properties = Nil,
       profiles = Nil,
       versions = None,
@@ -115,7 +184,9 @@ import coursier.core.VariantPublication
         scm = None,
         licenseInfo = Nil
       ),
-      overrides = Overrides.empty
+      overrides = Overrides.empty,
+      variants = Map.empty,
+      variantPublications = Map.empty
     )
 
     baseProject
@@ -150,6 +221,33 @@ object GradleModule {
       }
   }
 
+  final case class StringOrSeqString(value: Either[Seq[String], String])
+  object StringOrSeqString {
+    implicit lazy val codec: JsonValueCodec[StringOrSeqString] =
+      new JsonValueCodec[StringOrSeqString] {
+
+        val stringCodec: JsonValueCodec[String]         = JsonCodecMaker.make
+        val seqStringCodec: JsonValueCodec[Seq[String]] = JsonCodecMaker.make
+
+        def nullValue = StringOrSeqString(Right(stringCodec.nullValue))
+        def encodeValue(x: StringOrSeqString, out: JsonWriter) =
+          x.value match {
+            case Left(seq)  => seqStringCodec.encodeValue(seq, out)
+            case Right(str) => stringCodec.encodeValue(str, out)
+          }
+        def decodeValue(in: JsonReader, default: StringOrSeqString) = {
+          in.setMark()
+          val isString =
+            try in.isNextToken('"')
+            finally in.rollbackToMark()
+          StringOrSeqString {
+            if (isString) Right(stringCodec.decodeValue(in, ""))
+            else Left(seqStringCodec.decodeValue(in, Nil))
+          }
+        }
+      }
+  }
+
   @data class Component(
     group: String,
     module: String,
@@ -166,8 +264,10 @@ object GradleModule {
     name: String,
     attributes: Map[String, StringOrInt],
     dependencies: Seq[ModuleDependency],
+    dependencyConstraints: Seq[ModuleDependency],
     files: Seq[ModuleFile],
-    `available-at`: Option[AvailableAt] = None
+    `available-at`: Option[AvailableAt] = None,
+    capabilities: Seq[Capability]
   ) {
     lazy val attributesMap = attributes.map {
       case (k, v) =>
@@ -185,17 +285,69 @@ object GradleModule {
   @data class ModuleDependency(
     group: String,
     module: String,
-    version: Map[String, String]
-  )
+    version0: Map[String, StringOrSeqString],
+    attributes: Map[String, StringOrInt],
+    endorseStrictVersions: Option[Boolean]
+  ) {
+    def version: Map[String, String] =
+      version0.collect {
+        case (k, StringOrSeqString(Right(str))) =>
+          k -> str
+      }
+    def withVersion(version: Map[String, String]): ModuleDependency =
+      withVersion0(
+        version.map {
+          case (k, v) =>
+            (k, StringOrSeqString(Right(v)))
+        }
+      )
+  }
+
+  object ModuleDependency {
+    private final case class Helper(
+      group: String,
+      module: String,
+      version: Map[String, StringOrSeqString],
+      attributes: Map[String, StringOrInt],
+      endorseStrictVersions: Option[Boolean]
+    ) {
+      def modDep: ModuleDependency =
+        ModuleDependency(
+          group = group,
+          module = module,
+          version0 = version,
+          attributes = attributes,
+          endorseStrictVersions = endorseStrictVersions
+        )
+    }
+    private def toHelper(modDep: ModuleDependency): Helper =
+      Helper(
+        group = modDep.group,
+        module = modDep.module,
+        version = modDep.version0,
+        attributes = modDep.attributes,
+        endorseStrictVersions = modDep.endorseStrictVersions
+      )
+    private val helperCodec: JsonValueCodec[Helper] =
+      JsonCodecMaker.make
+    implicit lazy val codec: JsonValueCodec[ModuleDependency] =
+      new JsonValueCodec[ModuleDependency] {
+        def nullValue = Option(helperCodec.nullValue).map(_.modDep).orNull
+        def encodeValue(x: ModuleDependency, out: JsonWriter): Unit =
+          helperCodec.encodeValue(toHelper(x), out)
+        def decodeValue(in: JsonReader, default: ModuleDependency): ModuleDependency =
+          helperCodec.decodeValue(in, Option(default).map(toHelper).orNull).modDep
+      }
+  }
 
   @data class ModuleFile(
     name: String,
     url: String,
-    size: Long,
-    sha512: String = "",
-    sha256: String = "",
-    sha1: String = "",
-    md5: String = ""
+    size: Option[Long] = None,
+    sha512: Option[String] = None,
+    sha256: Option[String] = None,
+    sha1: Option[String] = None,
+    md5: Option[String] = None
   )
 
   @data class AvailableAt(
@@ -205,12 +357,18 @@ object GradleModule {
     version: String
   )
 
+  @data class Capability(
+    group: String,
+    name: String,
+    version: String
+  )
+
   implicit lazy val codec: JsonValueCodec[GradleModule] =
     JsonCodecMaker.make
 
   val defaultConfigurations: Map[Configuration, Seq[Configuration]] = Map(
     Configuration.compile -> Nil,
-    Configuration.runtime -> Nil,
-    Configuration.test    -> Nil
+    Configuration.runtime -> Seq(Configuration.compile),
+    Configuration.test    -> Seq(Configuration.runtime)
   )
 }

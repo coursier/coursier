@@ -40,7 +40,9 @@ import dataclass.data
   forceDepMgmtVersions: Option[Boolean] = None,
   enableDependencyOverrides: Option[Boolean] = None,
   @since("2.1.25")
-  defaultVariantAttributes: Option[VariantSelector.AttributesBased] = None
+  defaultVariantAttributes: Option[VariantSelector.AttributesBased] = None,
+  renderModuleVersion: Option[(Module, String) => String] = None,
+  scalaOrganizationOverride: Option[Organization] = None
 ) {
 
   @deprecated("Use forceVersion0 instead", "2.1.25")
@@ -187,4 +189,24 @@ import dataclass.data
 
     rules ++ fromReconciliation
   }
+
+  /** Add variant attributes to be taken into account when picking Gradle Module variants
+    */
+  def addVariantAttributes(attributes: (String, VariantSelector.VariantMatcher)*)
+    : ResolutionParams =
+    withDefaultVariantAttributes(
+      finalDefaultVariantAttributes.addAttributes(attributes: _*)
+    )
+
+  def finalDefaultVariantAttributes: VariantSelector.AttributesBased =
+    defaultVariantAttributes.getOrElse(
+      VariantSelector.ConfigurationBased(defaultConfiguration)
+        .equivalentAttributesSelector
+        .getOrElse(VariantSelector.AttributesBased.empty)
+    )
+}
+
+object ResolutionParams {
+  def defaultRenderModuleVersion(module: Module, version: String): String =
+    s"${module.repr}:$version"
 }

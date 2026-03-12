@@ -142,7 +142,6 @@ http://repository.mapr.com/maven/org/apache/hbase/hbase-annotations/1.1.8-mapr-1
 http://repository.mapr.com/maven/org/apache/hbase/hbase-common/1.1.8-mapr-1901/hbase-common-1.1.8-mapr-1901-tests.jar
 https://repo1.maven.org/maven2/org/jruby/jcodings/jcodings/1.0.8/jcodings-1.0.8.jar
 https://repo1.maven.org/maven2/org/jruby/joni/joni/2.1.2/joni-2.1.2.jar
-https://repo1.maven.org/maven2/org/jboss/netty/netty/3.2.2.Final/netty-3.2.2.Final.jar
 https://repo1.maven.org/maven2/org/apache/yetus/audience-annotations/0.5.0/audience-annotations-0.5.0.jar
 https://repo1.maven.org/maven2/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar
 https://repo1.maven.org/maven2/org/codehaus/jettison/jettison/1.3.3/jettison-1.3.3.jar

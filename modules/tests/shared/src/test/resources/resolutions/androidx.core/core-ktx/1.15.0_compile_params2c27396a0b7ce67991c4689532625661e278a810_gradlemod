@@ -13,7 +13,6 @@ androidx.lifecycle:lifecycle-common:2.6.2:{ org.gradle.category=library, org.gra
 androidx.collection:collection:1.0.0:compile
 org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
 org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
-org.jetbrains.kotlinx:kotlinx-coroutines-bom:1.6.4:compile
 org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.6.21:compile
 org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.6.4:{ org.gradle.category=library, org.gradle.usage=api, org.jetbrains.kotlin.platform.type=jvm }
 org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.6.21:compile

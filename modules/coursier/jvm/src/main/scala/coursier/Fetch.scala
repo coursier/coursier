@@ -13,7 +13,8 @@ import coursier.core.{
   Resolution,
   ResolutionProcess,
   Type,
-  VariantPublication
+  VariantPublication,
+  VariantSelector
 }
 import coursier.error.CoursierError
 import coursier.internal.FetchCache
@@ -201,6 +202,9 @@ import scala.concurrent.{Await, ExecutionContext, Future}
   def allArtifactTypes(): Fetch[F] =
     withArtifacts(artifacts.withArtifactTypesOpt(Some(Set(Type.all))))
 
+  def withArtifactAttributes(attributes: Seq[VariantSelector.AttributesBased]): Fetch[F] =
+    withArtifacts(artifacts.withAttributes(attributes))
+
   def addExtraArtifacts(f: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]): Fetch[F] =
     withArtifacts(artifacts.withExtraArtifactsSeq(artifacts.extraArtifactsSeq :+ f))
   def noExtraArtifacts(): Fetch[F] =
@@ -220,6 +224,15 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 
   def withGradleModuleSupport(enable: Boolean): Fetch[F] =
     withResolve(resolve.withGradleModuleSupport(Some(enable)))
+
+  /** Add variant attributes to be taken into account when picking Gradle Module variants
+    */
+  def addVariantAttributes(attributes: (String, VariantSelector.VariantMatcher)*): Fetch[F] =
+    withResolve {
+      resolve.withResolutionParams(
+        resolve.resolutionParams.addVariantAttributes(attributes: _*)
+      )
+    }
 
   def ioResult: F[Fetch.Result] = {
 

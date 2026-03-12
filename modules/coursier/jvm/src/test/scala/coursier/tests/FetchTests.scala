@@ -1,23 +1,12 @@
 package coursier.tests
 
-import java.io.File
-
 import coursier.{Artifacts, Fetch, Repositories}
-import coursier.core.{
-  Activation,
-  Classifier,
-  Configuration,
-  Dependency,
-  Extension,
-  Type,
-  VariantSelector
-}
+import coursier.core.{Classifier, Configuration, Dependency, Extension, Type, VariantSelector}
 import coursier.maven.{MavenRepository, MavenRepositoryLike}
-import coursier.params.ResolutionParams
 import coursier.ivy.IvyRepository
 import coursier.util.StringInterpolators._
 import coursier.util.{InMemoryRepository, Task}
-import coursier.version.{Version, VersionConstraint}
+import coursier.version.VersionConstraint
 import utest._
 
 import scala.async.Async.{async, await}
@@ -580,7 +569,7 @@ object FetchTests extends TestSuite {
 
         def testVariants(
           config: Option[Configuration] = None,
-          defaultAttributes: Option[VariantSelector.AttributesBased] = None
+          defaultAttributes: Option[VariantSelector.AttributesBased]
         )(
           dependencies: Dependency*
         ): Future[Unit] = async {
@@ -625,6 +614,68 @@ object FetchTests extends TestSuite {
           testVariants(defaultAttributes = Some(attr))(
             dep"androidx.core:core-ktx:1.15.0"
           )
+        }
+      }
+      test("sources") {
+        test("compile") {
+          async {
+            val params = fetch.resolutionParams
+              .withDefaultConfiguration(Configuration.compile)
+              .addVariantAttributes(
+                "org.gradle.jvm.environment" ->
+                  VariantSelector.VariantMatcher.Equals("standard-jvm"),
+                "org.jetbrains.kotlin.platform.type" ->
+                  VariantSelector.VariantMatcher.Equals("jvm")
+              )
+            val classifiers = Set(Classifier.sources)
+            val attr        = Seq(VariantSelector.AttributesBased.sources)
+            val res = await {
+              enableModules(fetch.addRepositories(Repositories.google))
+                .addDependencies(dep"org.jetbrains.kotlin:kotlin-stdlib:2.1.20")
+                .withClassifiers(classifiers)
+                .withArtifactAttributes(attr)
+                .withResolutionParams(params)
+                .futureResult()
+            }
+
+            await(validateArtifacts(
+              res.resolution,
+              res.artifacts.map(_._1),
+              classifiers = classifiers,
+              artifactAttributes = attr,
+              params = params
+            ))
+          }
+        }
+
+        test("default") {
+          async {
+            val params = fetch.resolutionParams.addVariantAttributes(
+              "org.jetbrains.kotlin.platform.type" ->
+                VariantSelector.VariantMatcher.AnyOf(Seq(
+                  VariantSelector.VariantMatcher.Equals("androidJvm"),
+                  VariantSelector.VariantMatcher.Equals("jvm")
+                ))
+            )
+            val classifiers = Set(Classifier.sources)
+            val attr        = Seq(VariantSelector.AttributesBased.sources)
+            val res = await {
+              enableModules(fetch.addRepositories(Repositories.google))
+                .addDependencies(dep"androidx.compose.material3:material3:1.3.1")
+                .withClassifiers(classifiers)
+                .withArtifactAttributes(attr)
+                .withResolutionParams(params)
+                .futureResult()
+            }
+
+            await(validateArtifacts(
+              res.resolution,
+              res.artifacts.map(_._1),
+              classifiers = classifiers,
+              artifactAttributes = attr,
+              params = params
+            ))
+          }
         }
       }
     }

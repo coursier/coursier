@@ -34,7 +34,16 @@ object Platform {
     val p       = Promise[String]()
     val xhrReq0 = xhrReq()
     val f = { _: Event =>
-      p.success(xhrReq0.responseText)
+      if (xhrReq0.status >= 200 && xhrReq0.status < 300)
+        p.success(xhrReq0.responseText)
+      else
+        p.failure(
+          new Exception(
+            url + System.lineSeparator() +
+              s"Status: ${xhrReq0.status}" + System.lineSeparator() +
+              xhrReq0.responseText
+          )
+        )
     }
     xhrReq0.onload = f
 

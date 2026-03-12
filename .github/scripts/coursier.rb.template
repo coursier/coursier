@@ -1,3 +1,6 @@
+# This file is generated from https://github.com/coursier/coursier/blob/main/.github/scripts/coursier.rb.template
+# DO NOT EDIT MANUALLY
+
 # adapted from https://github.com/paulp/homebrew-extras/blob/8184f9a962ce0758f4cf7a07b702bc1c3d16dfaa/coursier.rb
 class Coursier < Formula
   desc "Launcher for Coursier"

@@ -4,7 +4,6 @@ import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 import java.security.MessageDigest
-import java.util.Locale
 
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
 import coursier.cache.{Cache, MockCache}
@@ -46,7 +45,11 @@ abstract class PlatformTestHelpers {
   def cache: Cache[Task] = cache0
 
   lazy val handmadeMetadataCache: Cache[Task] =
-    MockCache.create[Task](handmadeMetadataLocation, pool = cache0.pool)
+    MockCache.create[Task](
+      handmadeMetadataLocation,
+      baseChangingOpt = Some(handmadeMetadataLocation),
+      pool = cache0.pool
+    )
 
   lazy val cacheWithHandmadeMetadata: Cache[Task] =
     cache0

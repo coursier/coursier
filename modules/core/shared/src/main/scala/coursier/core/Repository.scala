@@ -1,13 +1,11 @@
 package coursier.core
 
-import coursier.core.compatibility.encodeURIComponent
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.util.Monad.ops._
 import coursier.version.{
   Latest => Latest0,
   Version => Version0,
-  VersionConstraint => VersionConstraint0,
-  VersionInterval => VersionInterval0
+  VersionConstraint => VersionConstraint0
 }
 import dataclass.data
 

@@ -22,11 +22,9 @@ import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.dsl.io._
 import org.http4s.headers.{Authorization, `WWW-Authenticate`}
 import org.http4s.server.Router
-import org.http4s.util.CaseInsensitiveString
 import org.http4s.{BasicCredentials, Challenge, HttpRoutes, Request, Uri}
 import org.typelevel.ci.CIString
 
-import scala.concurrent.ExecutionContext
 import scala.language.implicitConversions
 
 object TestUtil {

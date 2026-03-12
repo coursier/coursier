@@ -2,7 +2,7 @@ package coursier.maven
 
 import coursier.core._
 import coursier.util.{Artifact, EitherT, Monad}
-import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
+import coursier.version.{Version => Version0}
 import dataclass._
 
 object MavenRepository {
@@ -55,9 +55,10 @@ object MavenRepository {
 
   def moduleArtifacts(
     dependency: Dependency,
-    project: Project
+    project: Project,
+    overrideAttributes: Option[VariantSelector.AttributesBased]
   ): Seq[(VariantPublication, Artifact)] =
-    internal.moduleArtifacts(dependency, project)
+    internal.moduleArtifacts(dependency, project, overrideAttributes)
 
   override def find0[F[_]](
     module: Module,

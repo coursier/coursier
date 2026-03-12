@@ -8,7 +8,6 @@ import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.dsl.io._
 import org.http4s.headers._
 import org.http4s.server.Router
-import scala.concurrent.ExecutionContext
 
 object RedirectingServer {
   def main(args: Array[String]): Unit = {

@@ -71,7 +71,7 @@ object Output {
               scalaVersionOpt.getOrElse("")
             ))
             .map(ModuleMatcher(_))
-          Print.dependencyTree(
+          Print.dependencyTree0(
             res,
             roots = res.minDependencies
               .filter(f => matchers.exists(m => m.matches(f.module)))
@@ -82,7 +82,7 @@ object Output {
           )
         }
         else if (params.reverseTree || params.tree)
-          Print.dependencyTree(
+          Print.dependencyTree0(
             res,
             printExclusions = withExclusions,
             reverse = params.reverseTree,
@@ -101,8 +101,8 @@ object Output {
         }
         else if (params.candidateUrls) {
           val classpathOrder = params.classpathOrder.getOrElse(true)
-          // TODO Allow to filter on classifiers / artifact types
-          val urls = res.dependencyArtifacts0(None, classpathOrder).map(_._3.url)
+          // TODO Allow to filter on classifiers / attributes / artifact types
+          val urls = res.dependencyArtifacts0(None, None, classpathOrder).map(_._3.url)
           urls.mkString(nl)
         }
         else {

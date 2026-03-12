@@ -1,22 +1,9 @@
 package coursier.parse
 
-import coursier.core.{
-  Attributes,
-  Classifier,
-  Configuration,
-  Dependency,
-  Extension,
-  Module,
-  ModuleName,
-  Organization,
-  Publication,
-  Type
-}
-import coursier.core.Validation._
+import coursier.core.{Configuration, Dependency, Module}
 import coursier.util.ValidationNel
 import coursier.util.Traverse._
 import coursier.version.VersionConstraint
-import dependency.{NoAttributes, ScalaNameAttributes}
 import dependency.parser.{DependencyParser => DepParser}
 
 import scala.collection.mutable

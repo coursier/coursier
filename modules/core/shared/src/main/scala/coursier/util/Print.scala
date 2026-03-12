@@ -161,12 +161,29 @@ object Print {
   def compatibleVersions(compatibleWith: String, selected: String): Boolean =
     compatibleVersions(VersionConstraint(compatibleWith), Version(selected))
 
+  @deprecated("Use dependencyTree0 instead", "2.1.25")
   def dependencyTree(
     resolution: Resolution,
     roots: Seq[Dependency] = null,
     printExclusions: Boolean = false,
     reverse: Boolean = false,
     colors: Boolean = true
+  ): String =
+    dependencyTree0(
+      resolution,
+      roots,
+      printExclusions,
+      reverse,
+      colors
+    )
+
+  def dependencyTree0(
+    resolution: Resolution,
+    roots: Seq[Dependency] = null,
+    printExclusions: Boolean = false,
+    reverse: Boolean = false,
+    colors: Boolean = true,
+    renderModuleVersion: (Module, String) => String = (mod, ver) => s"${mod.repr}:$ver"
   ): String = {
 
     val colors0 = Colors.get(colors)
@@ -176,28 +193,38 @@ object Print {
 
       val t = ReverseModuleTree.fromDependencyTree(
         roots0.map(_.module).distinct,
-        DependencyTree(resolution, withExclusions = printExclusions)
+        DependencyTree(resolution, withExclusions = printExclusions),
+        resolution.rootDependencies
+          .groupBy(_.module)
+          .map {
+            case (mod, deps0) =>
+              (mod, deps0.map(_.versionConstraint).distinct)
+          }
       )
 
       val tree0 = Tree(
         t.toVector.sortBy(t =>
           (t.module.organization.value, t.module.name.value, t.module.nameWithAttributes)
         )
-      )(_.dependees)
+      ) { tree =>
+        tree.dependees.filter { depTree =>
+          depTree.module != tree.module || depTree.dependees.nonEmpty
+        }
+      }
       tree0.render { node =>
         if (node.excludedDependsOn)
-          s"${colors0.yellow}(excluded by)${colors0.reset} ${node.module}:${node.retainedVersion0.asString}"
+          s"${colors0.yellow}(excluded by)${colors0.reset} ${renderModuleVersion(node.module, node.retainedVersion0.asString)}"
         else if (
           node.dependsOnVersionConstraint.asString == node.dependsOnRetainedVersion0.asString
         )
-          s"${node.module}:${node.retainedVersion0.asString}"
+          renderModuleVersion(node.module, node.retainedVersion0.asString)
         else {
           val assumeCompatibleVersions =
             compatibleVersions(node.dependsOnVersionConstraint, node.dependsOnRetainedVersion0)
 
-          s"${node.module}:${node.retainedVersion0.asString} " +
+          s"${renderModuleVersion(node.module, node.retainedVersion0.asString)} " +
             (if (assumeCompatibleVersions) colors0.yellow else colors0.red) +
-            s"${node.dependsOnModule}:${node.dependsOnVersionConstraint.asString} -> ${node.dependsOnRetainedVersion0.asString}" +
+            s"${renderModuleVersion(node.dependsOnModule, node.dependsOnVersionConstraint.asString)} -> ${node.dependsOnRetainedVersion0.asString}" +
             colors0.reset
         }
       }
@@ -212,7 +239,8 @@ object Print {
             t.dependency.versionConstraint,
             t.excluded,
             resolution.retainedVersions.get(t.dependency.module),
-            colors0
+            colors0,
+            renderModuleVersion
           )
         }
     }
@@ -223,7 +251,8 @@ object Print {
     version: VersionConstraint,
     excluded: Boolean,
     retainedVersionOpt: Option[Version],
-    colors: Colors
+    colors: Colors,
+    renderModuleVersion: (Module, String) => String
   ): String =
     if (excluded)
       retainedVersionOpt match {
@@ -236,8 +265,8 @@ object Print {
             else
               s"version ${version0.asString}"
 
-          s"$module:$version " +
-            s"${colors.red}(excluded, $versionMsg present anyway)${colors.reset}"
+          renderModuleVersion(module, version.asString) +
+            s" ${colors.red}(excluded, $versionMsg present anyway)${colors.reset}"
       }
     else {
       assert(
@@ -258,7 +287,7 @@ object Print {
             colors.reset
         }
 
-      s"$module:$versionStr"
+      renderModuleVersion(module, versionStr)
     }
 
   private def aligned(l: Seq[(String, String)]): Seq[String] =

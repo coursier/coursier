@@ -4,13 +4,15 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 
-import coursier.clitests.util.TestAuthProxy
+import coursier.clitests.util.{DockerTestUtil, TestAuthProxy}
 import utest._
 import scala.util.Properties
 
 abstract class GetTests extends TestSuite {
 
   def launcher: String
+  def isNative: Boolean
+  def isNativeStatic: Boolean
 
   private def isCI = System.getenv("CI") != null
   def hasDocker: Boolean =
@@ -89,16 +91,18 @@ abstract class GetTests extends TestSuite {
         val tmpDir = os.Path(tmpDir0, os.pwd)
         val cache  = (tmpDir / "cache").toString
 
+        val port = 9098
+
         val okM2Dir = tmpDir / "m2-ok"
-        os.write(okM2Dir / "settings.xml", TestAuthProxy.m2Settings(), createFolders = true)
+        os.write(okM2Dir / "settings.xml", TestAuthProxy.m2Settings(port), createFolders = true)
         val nopeM2Dir = tmpDir / "m2-nope"
         os.write(
           nopeM2Dir / "settings.xml",
-          TestAuthProxy.m2Settings(9083, "wrong", "nope"),
+          TestAuthProxy.m2Settings(port, "wrong", "nope"),
           createFolders = true
         )
 
-        val output = TestAuthProxy.withAuthProxy { _ =>
+        val output = TestAuthProxy.withAuthProxy(port) { _ =>
 
           val proc = os.proc(launcher, "get", pomAscUrl)
 
@@ -162,6 +166,60 @@ abstract class GetTests extends TestSuite {
     }
     test("tbz2 archive") {
       tarArchiveTest(".bz2")
+    }
+
+    test("deb tar zst archive") {
+      if (Properties.isLinux && isNative && isNativeStatic) "Disabled for static launcher"
+      else debTarZstArchiveTest()
+    }
+    def debTarZstArchiveTest(): Unit =
+      TestUtil.withTempDir { tmpDir =>
+        val cache    = new File(tmpDir, "cache").getAbsolutePath
+        val arcCache = new File(tmpDir, "arc-cache").getAbsolutePath
+        val output =
+          os.proc(
+            launcher,
+            "get",
+            s"https://github.com/VirtusLab/scala-cli/releases/download/v1.7.1/scala-cli-x86_64-pc-linux.deb!data.tar.zst!",
+            "--cache",
+            cache,
+            "--archive-cache",
+            arcCache
+          )
+            .call()
+            .out.text()
+        val dir     = os.Path(output.trim)
+        val listing = os.walk(dir).filter(os.isFile).map(_.relativeTo(dir).asSubPath).sorted
+        val expectedListing =
+          Seq(os.sub / "usr/bin/scala-cli", os.sub / "usr/share/scala/scala-cli")
+        assert(expectedListing == listing)
+      }
+
+    test("detect archive type") {
+      val repoName = "library/hello-world"
+      val token    = DockerTestUtil.token(repoName)
+      TestUtil.withTempDir { tmpDir =>
+        val cache    = new File(tmpDir, "cache").getAbsolutePath
+        val arcCache = new File(tmpDir, "arc-cache").getAbsolutePath
+        val output =
+          os.proc(
+            launcher,
+            "get",
+            s"https://registry-1.docker.io/v2/$repoName/blobs/sha256:c9c5fd25a1bdc181cb012bc4fbb1ab272a975728f54064b7ae3ee8e77fd28c46!",
+            "--cache",
+            cache,
+            "--archive-cache",
+            arcCache,
+            "--auth-header",
+            s"Authorization: Bearer $token"
+          )
+            .call()
+            .out.text()
+        val dir             = os.Path(output.trim)
+        val listing         = os.walk(dir).map(_.relativeTo(dir).asSubPath)
+        val expectedListing = Seq(os.sub / "hello")
+        assert(expectedListing == listing)
+      }
     }
   }
 

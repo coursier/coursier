@@ -302,7 +302,7 @@ object IvyXml {
         dependencies0,
         configurations0.toMap,
         parent0 = None,
-        dependencyManagement = Nil,
+        dependencyManagement0 = Nil,
         properties = extraInfo.toSeq,
         profiles = Nil,
         versions = None,
@@ -335,7 +335,10 @@ object IvyXml {
           Nil,
           publicationDate,
           None
-        )
+        ),
+        Overrides.empty,
+        Map.empty,
+        Map.empty
       )
     }
 

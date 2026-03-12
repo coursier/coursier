@@ -2,7 +2,7 @@ package coursier.install
 
 import java.io.File
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Files, Paths, Path}
+import java.nio.file.{Files, Path}
 import java.util.zip.ZipFile
 
 import argonaut.{DecodeJson, Parse}

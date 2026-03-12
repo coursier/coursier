@@ -2,12 +2,9 @@ package coursier.core
 
 import coursier.core.Validation._
 import coursier.version.{VersionConstraint => VersionConstraint0}
-import dataclass.data
-import MinimizedExclusions._
+import dataclass.{data, since}
 
 import java.util.concurrent.ConcurrentMap
-
-import scala.annotation.nowarn
 
 /** Dependencies with the same @module will typically see their @version-s merged.
   *
@@ -34,7 +31,9 @@ import scala.annotation.nowarn
   bomDependencies: Seq[BomDependency] = Nil,
   @since("2.1.23")
   overridesMap: Overrides =
-    Overrides.empty
+    Overrides.empty,
+  @since("2.1.25")
+  endorseStrictVersions: Boolean = false
 ) {
   assertValid(versionConstraint.asString, "version")
   def moduleVersionConstraint: (Module, VersionConstraint0) = (module, versionConstraint)
@@ -313,7 +312,7 @@ import scala.annotation.nowarn
       Overrides.add(overridesMap, Overrides(Map(key -> values)))
     )
   def addOverride(org: Organization, name: ModuleName, version: VersionConstraint0): Dependency = {
-    val key = DependencyManagement.Key(org, name, Type.empty, Classifier.empty)
+    val key = DependencyManagement.Key(org, name, Type.jar, Classifier.empty)
     val values = DependencyManagement.Values(
       Configuration.empty,
       version,
@@ -331,7 +330,7 @@ import scala.annotation.nowarn
     version: VersionConstraint0,
     exclusions: Set[(Organization, ModuleName)]
   ): Dependency = {
-    val key = DependencyManagement.Key(org, name, Type.empty, Classifier.empty)
+    val key = DependencyManagement.Key(org, name, Type.jar, Classifier.empty)
     val values = DependencyManagement.Values(
       Configuration.empty,
       version,
@@ -397,7 +396,8 @@ import scala.annotation.nowarn
     Map.empty[DependencyManagement.Key, DependencyManagement.Values],
     deprecatedBoms,
     bomDependencies,
-    overridesMap
+    overridesMap,
+    endorseStrictVersions
   )
 
   lazy val clearExclusions: Dependency =
@@ -450,6 +450,8 @@ import scala.annotation.nowarn
           bomDep.forceOverrideVersions
         ).mkString("BomDependency(", ", ", ")")
       }.toString
+    if (endorseStrictVersions)
+      fields = fields :+ endorseStrictVersions.toString
     s"Dependency(${fields.mkString(", ")})"
   }
 
@@ -473,7 +475,8 @@ object Dependency {
     overrides: DependencyManagement.Map,
     boms: Seq[(Module, String)],
     bomDependencies: Seq[BomDependency],
-    overridesMap: Overrides
+    overridesMap: Overrides,
+    endorseStrictVersions: Boolean
   ): Dependency =
     coursier.util.Cache.cacheMethod(instanceCache)(
       new Dependency(
@@ -487,7 +490,8 @@ object Dependency {
         overrides,
         boms,
         bomDependencies,
-        overridesMap
+        overridesMap,
+        endorseStrictVersions
       )
     )
 
@@ -516,7 +520,8 @@ object Dependency {
       overrides,
       boms,
       bomDependencies,
-      overridesMap
+      overridesMap,
+      endorseStrictVersions = false
     )
 
   def apply(
@@ -542,7 +547,8 @@ object Dependency {
       Map.empty[DependencyManagement.Key, DependencyManagement.Values],
       boms,
       bomDependencies,
-      Overrides(overrides)
+      Overrides(overrides),
+      endorseStrictVersions = false
     )
 
   @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
@@ -593,7 +599,8 @@ object Dependency {
       Map.empty[DependencyManagement.Key, DependencyManagement.Values],
       boms,
       Nil,
-      Overrides(overrides)
+      Overrides(overrides),
+      endorseStrictVersions = false
     )
 
   @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
@@ -641,7 +648,8 @@ object Dependency {
       Map.empty[DependencyManagement.Key, DependencyManagement.Values],
       Nil,
       Nil,
-      Overrides(overrides)
+      Overrides(overrides),
+      endorseStrictVersions = false
     )
 
   @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
@@ -686,7 +694,8 @@ object Dependency {
       Map.empty[DependencyManagement.Key, DependencyManagement.Values],
       Nil,
       Nil,
-      Overrides.empty
+      Overrides.empty,
+      endorseStrictVersions = false
     )
 
   @deprecated("Use the override accepting a VersionConstraint", "2.1.25")

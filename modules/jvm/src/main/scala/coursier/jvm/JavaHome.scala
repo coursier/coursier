@@ -1,12 +1,10 @@
 package coursier.jvm
 
 import java.io.{File, IOException}
-import java.nio.charset.Charset
 import java.nio.file.{Files, Path}
 import java.util.Locale
 
-import coursier.cache.{ArchiveCache, Cache, CacheLogger}
-import coursier.cache.internal.FileUtil
+import coursier.cache.ArchiveCache
 import coursier.env.EnvironmentUpdate
 import coursier.jvm.util.CommandOutput
 import coursier.util.Task
@@ -176,7 +174,7 @@ object JavaHome {
   def systemId: String =
     "system"
   def defaultJvm: String =
-    "temurin:21"
+    s"${JvmCache.defaultJdkName}:21"
   def defaultId: String =
     s"$systemId|$defaultJvm"
 

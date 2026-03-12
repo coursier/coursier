@@ -1,6 +1,5 @@
 package coursier.core
 
-import coursier.core.MinimizedExclusions._
 import coursier.error.{DependencyError, VariantError}
 import coursier.util.Artifact
 import coursier.version.{
@@ -339,19 +338,35 @@ object Resolution {
         case Some(f) => f(mod)
         case _       => ConstraintReconciliation.Default
       }
+    val constraints = dependencies
+      .iterator
+      .flatMap(_.overridesMap.global.flatten.iterator)
+      .map {
+        case (k, v) =>
+          v.fakeDependency(k)
+      }
+      .toSeq
+      .groupBy(_.module)
+      .map {
+        case (mod, list) =>
+          (mod, list.map(_.versionConstraint))
+      }
     val dependencies0 = dependencies.toVector
     val mergedByModVer = dependencies0
       .groupBy(dep => dep.module)
       .map { case (module, deps) =>
         val forcedVersionOpt = forceVersions.get(module)
           .orElse(forceVersions.get(module.withOrganization(Organization("*"))))
+          .orElse(forceVersions.get(module.withName(ModuleName("*"))))
 
         module -> {
           forcedVersionOpt match {
             case None =>
-              if (deps.lengthCompare(1) == 0) (Right(deps), Some(deps.head.versionConstraint))
+              val fromConstraints = constraints.getOrElse(module, Nil)
+              if (deps.lengthCompare(1) == 0 && fromConstraints.isEmpty)
+                (Right(deps), Some(deps.head.versionConstraint))
               else {
-                val versions0  = deps.map(_.versionConstraint)
+                val versions0  = deps.map(_.versionConstraint) ++ fromConstraints
                 val reconciler = reconcilerByMod(module)
                 val versionOpt = reconciler.reconcile(versions0)
 
@@ -1076,11 +1091,12 @@ object Resolution {
             VariantSelector.ConfigurationBased(actualConfig0)
         }
       case (c: VariantSelector.ConfigurationBased, None) =>
-        c.equivalentAttributesSelector.map(defaultAttributes + _).toRight {
+        val c0 = if (c.isEmpty) VariantSelector.ConfigurationBased(defaultConfig) else c
+        c0.equivalentAttributesSelector.map(defaultAttributes + _).toRight {
           new VariantError.CannotFindEquivalentVariants(
             dep.module,
             dep.versionConstraint,
-            c.configuration
+            c0.configuration
           )
         }
       case (attr: VariantSelector.AttributesBased, Some(configs)) =>
@@ -1787,17 +1803,29 @@ object Resolution {
 
       val modules = withProperties0(
         project0.dependencies0 ++
-          project0.dependencyManagement.map { case (c, d) => (Variant.Configuration(c), d) } ++
+          project0.dependencyManagement0 ++
           profileDependencies.map { case (c, d) => (Variant.Configuration(c), d) },
         propertiesMap0
       ).collect {
-        case (v: Variant.Configuration, dep) if v.configuration == Configuration.`import` =>
+        case (v, dep) if isImport(v, dep) =>
           dep.moduleVersionConstraint
       }
 
       modules.toSet
     }
   }
+
+  private def isImport(variant: Variant, dep: Dependency): Boolean =
+    variant match {
+      case v: Variant.Configuration =>
+        v.configuration == Configuration.`import`
+      case _: Variant.Attributes =>
+        dep.variantSelector match {
+          case _: VariantSelector.ConfigurationBased => false
+          case attr: VariantSelector.AttributesBased =>
+            attr.equivalentConfiguration.exists(_ == Configuration.`import`)
+        }
+    }
 
   @deprecated("Use dependencyManagementRequirements0 instead", "2.1.25")
   def dependencyManagementRequirements(
@@ -1933,9 +1961,9 @@ object Resolution {
 
       val (importDeps0, standardDeps0) = dependencies0
         .map { dep =>
-          val dep0 = withProperties(dep, propertiesMap0)
-          if (dep0._1.asConfiguration.exists(_ == Configuration.`import`))
-            (dep0._2 :: Nil, Nil)
+          val (v0, dep0) = withProperties(dep, propertiesMap0)
+          if (isImport(v0, dep0))
+            (dep0 :: Nil, Nil)
           else
             (Nil, dep :: Nil) // not dep0 (properties with be substituted later)
         }
@@ -1947,13 +1975,18 @@ object Resolution {
     val importDepsMgmt = {
 
       val dependenciesMgmt0 = addDependencies(
-        (project0.dependencyManagement +: profiles.map(_.dependencyManagement))
-          .map(_.map { case (c, d) => (Variant.Configuration(c), d) })
+        project0.dependencyManagement0 +:
+          profiles.map { profile =>
+            profile.dependencyManagement.map {
+              case (c, d) =>
+                (Variant.Configuration(c), d)
+            }
+          }
       )
 
       dependenciesMgmt0.flatMap { dep =>
         val (conf0, dep0) = withProperties(dep, propertiesMap0)
-        if (conf0.asConfiguration.exists(_ == Configuration.`import`))
+        if (isImport(conf0, dep0))
           dep0 :: Nil
         else
           Nil
@@ -1967,19 +2000,45 @@ object Resolution {
       }
       .toSeq // belongs to 1.5 & 1.6
 
-    val allImportDeps =
-      importDeps.map(_.moduleVersionConstraint) ++
-        importDepsMgmt.map(_.moduleVersionConstraint)
+    val allImportDeps = (importDeps ++ importDepsMgmt)
+      .map(dep => (dep.module, dep.versionConstraint, dep.endorseStrictVersions))
 
     val retainedParentDeps = parentDeps.filter(projectCache0.contains)
-    val retainedImportDeps = allImportDeps.filter(projectCache0.contains)
+    val retainedImportDeps = allImportDeps.filter {
+      case (mod, ver, _) =>
+        projectCache0.contains((mod, ver))
+    }
 
     val retainedParentProjects = retainedParentDeps.map(projectCache0(_)._2)
-    val retainedImportProjects = retainedImportDeps.map(projectCache0(_)._2)
+    val retainedImportProjects = retainedImportDeps.map {
+      case (mod, ver, endorseStrictVersions) =>
+        (projectCache0((mod, ver))._2, endorseStrictVersions)
+    }
 
     val depMgmtInputs =
-      (project0.dependencyManagement +: profiles.map(_.dependencyManagement))
-        .map(_.filter(_._1 != Configuration.`import`))
+      (
+        project0
+          .dependencyManagement0
+          .filter {
+            case (variant, dep) =>
+              !isImport(variant, dep)
+          }
+          .map {
+            case (variant, dep) =>
+              val config = variant match {
+                case c: Variant.Configuration =>
+                  c.configuration
+                case attr: Variant.Attributes =>
+                  project0.depMgmtEquivalentConfigurations.getOrElse(attr, Configuration.empty)
+              }
+              config -> dep
+          } +:
+          profiles.map { profile =>
+            profile
+              .dependencyManagement
+              .filter(_._1 != Configuration.`import`)
+          }
+      )
         .filter(_.nonEmpty)
         .map { input =>
           Overrides(
@@ -1996,8 +2055,11 @@ object Resolution {
       // takes precedence over dep imports
       // that takes precedence over parents
       depMgmtInputs ++
-        retainedImportProjects.map { p =>
-          withProperties(p.overrides, projectProperties(p).toMap)
+        retainedImportProjects.map {
+          case (p, endorseStrictVersions) =>
+            val overrides = withProperties(p.overrides, projectProperties(p).toMap)
+            if (endorseStrictVersions) overrides.enforceGlobalStrictVersions
+            else overrides
         } ++
         retainedParentProjects.map { p =>
           withProperties(p.overrides, staticProjectProperties(p).toMap)
@@ -2019,7 +2081,7 @@ object Resolution {
             .toSeq
             .flatMap(projectCache0(_)._2.dependencies0)
       )
-      .withDependencyManagement(Nil)
+      .withDependencyManagement0(Nil)
       .withOverrides(depMgmt)
       .withProperties(
         retainedParentProjects.flatMap(_.properties) ++ project0.properties
@@ -2196,7 +2258,7 @@ object Resolution {
     classifiers: Option[Seq[Classifier]],
     classpathOrder: Boolean
   ): Seq[(Dependency, Publication, Artifact)] =
-    dependencyArtifacts0(classifiers, classpathOrder).collect {
+    dependencyArtifacts0(classifiers, attributes = None, classpathOrder = classpathOrder).collect {
       case (dep, Right(pub), art) =>
         (dep, pub, art)
     }
@@ -2207,10 +2269,11 @@ object Resolution {
   def dependencyArtifacts0(
     classifiers: Option[Seq[Classifier]]
   ): Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] =
-    dependencyArtifacts0(classifiers, classpathOrder = true)
+    dependencyArtifacts0(classifiers, attributes = None, classpathOrder = true)
 
   def dependencyArtifacts0(
     classifiers: Option[Seq[Classifier]],
+    attributes: Option[VariantSelector.AttributesBased],
     classpathOrder: Boolean
   ): Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] =
     for {
@@ -2233,7 +2296,7 @@ object Resolution {
       (pub, artifact) <- {
         val modArtifacts = source match {
           case modBased: ArtifactSource.ModuleBased =>
-            modBased.moduleArtifacts(dep, proj).map {
+            modBased.moduleArtifacts(dep, proj, attributes).map {
               case (variantPub, art) =>
                 (Left(variantPub), art)
             }

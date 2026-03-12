@@ -55,7 +55,7 @@ object PrebuiltApp {
           def maybeFileIt: Iterator[File] = {
             cache.loggerOpt.foreach(_.init())
             val maybeFile =
-              try cache.file(artifact).run.unsafeRun()(cache.ec)
+              try cache.file(artifact).run.unsafeRun(wrapExceptions = true)(cache.ec)
               finally cache.loggerOpt.foreach(_.stop())
             handleArtifactErrors(maybeFile, artifact, verbosity)
               .iterator
@@ -63,7 +63,7 @@ object PrebuiltApp {
           def maybeExtractedArchiveIt: Iterator[File] = {
             cache.loggerOpt.foreach(_.init())
             val maybeDir =
-              try archiveCache.get(artifact).unsafeRun()(cache.ec)
+              try archiveCache.get(artifact).unsafeRun(wrapExceptions = true)(cache.ec)
               finally cache.loggerOpt.foreach(_.stop())
             handleArtifactErrors(maybeDir, artifact, verbosity)
               .iterator

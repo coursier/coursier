@@ -31,7 +31,7 @@ final class Backend($ : BackendScope[_, State]) {
     modVers =>
       Gather[Task].gather(
         modVers.map { case (module, version) =>
-          ResolutionProcess.fetchOne(repositories, module, version, fetch, Nil)
+          ResolutionProcess.fetchOne(repositories, module, version, fetch0, Nil)
             .run
             .map((module, version) -> _)
         }

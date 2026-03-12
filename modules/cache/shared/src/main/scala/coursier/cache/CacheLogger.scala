@@ -1,6 +1,6 @@
 package coursier.cache
 
-import coursier.util.{Artifact, Sync, Task}
+import coursier.util.{Artifact, Sync}
 import coursier.util.Monad.ops._
 
 trait CacheLogger {
@@ -43,6 +43,8 @@ trait CacheLogger {
   // sizeHint: estimated # of artifacts to be downloaded (doesn't include side stuff like checksums)
   def init(sizeHint: Option[Int] = None): Unit = {}
   def stop(): Unit                             = {}
+
+  def checkInitialized(): Unit = {}
 
   final def use[T](f: => T): T = {
     init()

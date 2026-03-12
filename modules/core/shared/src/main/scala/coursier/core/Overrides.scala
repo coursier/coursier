@@ -25,6 +25,15 @@ sealed abstract class Overrides extends Product with Serializable {
   ): Overrides
 
   def hasProperties: Boolean
+
+  final lazy val enforceGlobalStrictVersions: Overrides =
+    map { (k, v) =>
+      (k, v.withGlobal(true))
+    }
+  final lazy val global: Overrides =
+    filter { (_, v) =>
+      v.global
+    }
 }
 
 object Overrides {

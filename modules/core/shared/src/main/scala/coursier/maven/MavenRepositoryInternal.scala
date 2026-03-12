@@ -16,9 +16,9 @@ import coursier.core.{
   VariantPublication,
   Versions
 }
-import coursier.util.{Artifact, EitherT, Monad, WebPage, Xml}
+import coursier.util.{Artifact, EitherT, Monad, WebPage}
 import coursier.util.Monad.ops._
-import coursier.version.{Version, VersionConstraint}
+import coursier.version.Version
 
 import scala.collection.compat._
 import coursier.core.VariantSelector
@@ -289,19 +289,32 @@ private[coursier] class MavenRepositoryInternal(
     val directoryPath = moduleVersionPath(module, version)
     def pathFor(ext: String) =
       directoryPath :+ s"$moduleNameInFileName-${versioningValue.getOrElse(version).asString}.$ext"
-    def pomProjectTask = {
-      val pomArtifact = projectArtifact(pathFor("pom"), version)
-      fetch(pomArtifact).flatMap(parsePom(_))
-    }
+    def baseModuleArtifact = projectArtifact(pathFor("module"), version)
+    def basePomArtifact    = projectArtifact(pathFor("pom"), version)
+    def pomArtifact =
+      if (checkModule)
+        basePomArtifact
+          .withExtra(Map("check" -> baseModuleArtifact))
+      else
+        basePomArtifact
+    def pomProjectTask = fetch(pomArtifact).flatMap(parsePom(_))
     if (checkModule) {
       val moduleProjectTask: EitherT[F, String, Either[String, Project]] =
         EitherT {
-          val moduleArtifact = projectArtifact(pathFor("module"), version)
+          val moduleArtifact = baseModuleArtifact
+            // keep track of missing module files, so that we don't attempt to download
+            // them over and over, and so that we know we can safely use a cached POM
+            .withExtra(Map("cache-errors" -> Artifact("")))
           fetch(moduleArtifact).run.flatMap {
             case Left(err) =>
               F.point(Right(Left(err)))
             case Right(content) =>
-              parseModule(module, content, moduleArtifact.url).run.map(_.map(Right(_)))
+              parseModule(
+                module,
+                version.asString,
+                content,
+                moduleArtifact.url
+              ).run.map(_.map(Right(_)))
           }
         }
       moduleProjectTask.flatMap {
@@ -342,7 +355,7 @@ private[coursier] class MavenRepositoryInternal(
       } yield finalProj
     }
 
-  private def parseModule[F[_]](module: Module, str: String, uri: String)(implicit
+  private def parseModule[F[_]](module: Module, version: String, str: String, uri: String)(implicit
     F: Monad[F]
   ): EitherT[F, String, Project] =
     EitherT.fromEither {
@@ -354,7 +367,15 @@ private[coursier] class MavenRepositoryInternal(
         }
 
       res.map { gradleMod =>
-        val project = gradleMod.project
+        val project = gradleMod.project(
+          Some(
+            GradleModule.Component(
+              group = module.organization.value,
+              module = module.name.value,
+              version = version
+            )
+          )
+        )
         if (project.module == module) project
         else project.withModule(module)
       }
@@ -571,16 +592,23 @@ private[coursier] class MavenRepositoryInternal(
 
   def moduleArtifacts(
     dependency: Dependency,
-    project: Project
+    project: Project,
+    overrideAttributes: Option[VariantSelector.AttributesBased]
   ): Seq[(VariantPublication, Artifact)] =
     dependency.variantSelector match {
       case _: VariantSelector.ConfigurationBased => Nil
       case a: VariantSelector.AttributesBased =>
+        val a0 = a + overrideAttributes.getOrElse(VariantSelector.AttributesBased.empty)
         if (project.variants.isEmpty) Nil
         else {
-          val attr = project.variantFor(a)
-            .toTry.get // things shouldn't throw at this point
-          project.variantPublications.getOrElse(attr, Nil).map { pub =>
+          val attrOpt = {
+            val maybeAttr = project.variantFor(a0)
+            if (overrideAttributes.isEmpty)
+              Some(maybeAttr.toTry.get) // things shouldn't throw at this point
+            else
+              maybeAttr.toOption
+          }
+          attrOpt.toSeq.flatMap(project.variantPublications.getOrElse(_, Nil)).map { pub =>
             val baseUri = new URI(pub.url)
             val uri =
               if (baseUri.isAbsolute) baseUri

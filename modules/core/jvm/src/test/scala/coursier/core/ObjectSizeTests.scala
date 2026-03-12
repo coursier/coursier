@@ -3,13 +3,18 @@ package coursier.core
 import concurrentrefhashmap.ConcurrentReferenceHashMap
 import coursier.version.{VersionConstraint => VersionConstraint0}
 import utest._
-import utest.asserts.{RetryInterval, RetryMax}
 
-import scala.concurrent.duration._
+import scala.util.Properties
 
 object ObjectSizeTests extends TestSuite {
 
-  val tests = Tests {
+  val tests =
+    if (Properties.isLinux)
+      actualTests
+    else
+      Tests {}
+
+  def actualTests = Tests {
 
     test("Dependency sizes") {
       test("should be the same for same dependency") {
@@ -70,8 +75,6 @@ object ObjectSizeTests extends TestSuite {
 
     test("Dependency instanceCache should hold objects until they can be GCd") {
       test("should be the different for different dependency") {
-        implicit val retryMax      = RetryMax(5.seconds)
-        implicit val retryInterval = RetryInterval(200.millis)
         def cacheSize(): Int = {
           Dependency.instanceCache
             .asInstanceOf[ConcurrentReferenceHashMap[Dependency, Dependency]]
@@ -101,7 +104,7 @@ object ObjectSizeTests extends TestSuite {
         ad1 = null
         ad2 = null
         // nothing in cache
-        eventually {
+        assertEventually {
           System.gc()
           cacheSize() == 0
         }

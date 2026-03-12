@@ -37,6 +37,8 @@ import dataclass._
       Seq[(Dependency, Either[VariantPublication, Publication], Artifact)]] =
     Nil,
   extraArtifactsSeq0: Seq[Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] => Seq[Artifact]] = Nil,
+  @since("2.1.25")
+  attributes: Seq[VariantSelector.AttributesBased] = Nil
   // format: on
 )(implicit
   sync: Sync[F]
@@ -129,6 +131,7 @@ import dataclass._
           Artifacts.artifacts0(
             r,
             classifiers,
+            attributes,
             mainArtifactsOpt,
             artifactTypesOpt,
             classpathOrder
@@ -350,6 +353,7 @@ object Artifacts {
     artifacts0(
       resolution,
       classifiers,
+      Nil,
       mainArtifactsOpt,
       artifactTypesOpt,
       classpathOrder
@@ -361,30 +365,45 @@ object Artifacts {
   def artifacts0(
     resolution: Resolution,
     classifiers: Set[Classifier],
+    attributes: Seq[VariantSelector.AttributesBased],
     mainArtifactsOpt: Option[Boolean],
     artifactTypesOpt: Option[Set[Type]],
     classpathOrder: Boolean
   ): Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] = {
 
-    val mainArtifacts0 = mainArtifactsOpt.getOrElse(classifiers.isEmpty)
+    val mainArtifacts0 = mainArtifactsOpt.getOrElse {
+      classifiers.isEmpty && attributes.isEmpty
+    }
 
-    val artifactTypes0 =
-      artifactTypesOpt
-        .getOrElse(defaultTypes(classifiers, mainArtifactsOpt))
+    val artifactTypes0 = artifactTypesOpt.getOrElse {
+      defaultTypes(classifiers, mainArtifactsOpt)
+    }
 
     val main =
       if (mainArtifacts0)
-        resolution.dependencyArtifacts0(None, classpathOrder)
+        resolution.dependencyArtifacts0(None, None, classpathOrder = classpathOrder)
       else
         Nil
 
     val classifiersArtifacts =
-      if (classifiers.isEmpty)
+      if (classifiers.isEmpty || attributes.nonEmpty)
         Nil
       else
-        resolution.dependencyArtifacts0(Some(classifiers.toSeq), classpathOrder)
+        resolution.dependencyArtifacts0(Some(classifiers.toSeq), None, classpathOrder)
 
-    val artifacts = (main ++ classifiersArtifacts).map {
+    val attributesArtifacts =
+      if (attributes.isEmpty)
+        Nil
+      else
+        attributes.flatMap { attr =>
+          resolution.dependencyArtifacts0(
+            Some(classifiers.toSeq).filter(_.nonEmpty),
+            Some(attr),
+            classpathOrder
+          )
+        }
+
+    val artifacts = (main ++ classifiersArtifacts ++ attributesArtifacts).map {
       case (dep, pub0 @ Right(pub), artifact) =>
         (dep.withAttributes(dep.attributes.withClassifier(pub.classifier)), pub0, artifact)
       case (dep, pub0, artifact) =>

@@ -9,7 +9,6 @@ import coursier.core.{
   Configuration,
   Dependency,
   DependencySet,
-  Exclusions,
   MinimizedExclusions,
   Module,
   ModuleName,
@@ -21,14 +20,12 @@ import coursier.core.{
 }
 import coursier.error.ResolutionError
 import coursier.error.conflict.UnsatisfiedRule
-import coursier.graph.ReverseModuleTree
 import coursier.internal.Typelevel
-import coursier.maven.MavenRepository
+import coursier.maven.MavenRepositoryLike
 import coursier.params.{Mirror, MirrorConfFile, ResolutionParams}
 import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
 import coursier.util.Monad.ops._
-import coursier.util.StringInterpolators._
 import coursier.version.{ConstraintReconciliation, VersionConstraint, VersionParse}
 import dataclass.{data, since}
 
@@ -41,15 +38,18 @@ import scala.language.higherKinds
   cache: Cache[F],
   dependencies: Seq[Dependency] = Nil,
   repositories: Seq[Repository] = Resolve.defaultRepositories,
-  mirrorConfFiles: Seq[MirrorConfFile] = Resolve.defaultMirrorConfFiles,
-  mirrors: Seq[Mirror] = Nil,
+  @deprecated("Use MirrorConfFile(...), call mirrors() on it, and set mirrors instead", "2.1.25")
+  mirrorConfFiles: Seq[MirrorConfFile] = Nil,
+  mirrors: Seq[Mirror] = Resolve.defaultMirrors,
   resolutionParams: ResolutionParams = ResolutionParams(),
   throughOpt: Option[F[Resolution] => F[Resolution]] = None,
   transformFetcherOpt: Option[ResolutionProcess.Fetch0[F] => ResolutionProcess.Fetch0[F]] = None,
   @since
     initialResolution: Option[Resolution] = None,
   @since
-    confFiles: Seq[Resolve.Path] = Resolve.defaultConfFiles,
+  @deprecated("For mirrors, use Resolve.confFileMirrors and set mirrors instead; for repositories, use Resolve.confFileRepositories and set repositories", "2.1.25")
+    confFiles: Seq[Resolve.Path] = Nil,
+  @deprecated("Unused now, repositories from default config files are read by Resolve.defaultRepositories. Use Resolve.confFileRepositories and set repositories to adjust the default repositories via config files", "2.1.25")
   preferConfFileDefaultRepositories: Boolean = true,
   @since("2.1.12")
   @deprecated("Workaround for former uses of Resolution.mapDependencies, prefer relying on ResolutionParams", "2.1.12")
@@ -92,27 +92,15 @@ import scala.language.higherKinds
   }
 
   def finalRepositories: F[Seq[Repository]] = {
-    val repositories0 =
-      if (preferConfFileDefaultRepositories) {
-        val defaultFromConfOpt = confFiles
-          .iterator
-          .flatMap(Resolve.confFileRepositories(_).iterator)
-          .take(1)
-          .toList
-          .headOption
-        defaultFromConfOpt.getOrElse(repositories)
-      }
-      else
-        repositories
-    val repositories1 = gradleModuleSupport match {
-      case None => repositories0
+    val repositories0 = gradleModuleSupport match {
+      case None => repositories
       case Some(enable) =>
-        repositories0.map {
-          case m: MavenRepository => m.withCheckModule(enable)
-          case other              => other
+        repositories.map {
+          case m: MavenRepositoryLike.WithModuleSupport => m.withCheckModule(enable)
+          case other                                    => other
         }
     }
-    allMirrors.map(Mirror.replace(repositories1, _))
+    allMirrors.map(Mirror.replace(repositories0, _))
   }
 
   def addDependencies(dependencies: Dependency*): Resolve[F] =
@@ -166,8 +154,16 @@ import scala.language.higherKinds
   def addMirrors(mirrors: Mirror*): Resolve[F] =
     withMirrors(this.mirrors ++ mirrors)
 
+  @deprecated(
+    "Unused now, parse mirror files yourself with Resolve.confFileMirrors and set mirrors instead",
+    "2.1.25"
+  )
   def addMirrorConfFiles(mirrorConfFiles: MirrorConfFile*): Resolve[F] =
     withMirrorConfFiles(this.mirrorConfFiles ++ mirrorConfFiles)
+  @deprecated(
+    "For mirrors, use Resolve.confFileMirrors and set mirrors instead; for repositories, use Resolve.confFileRepositories and set repositories",
+    "2.1.25"
+  )
   def addConfFiles(confFiles: Resolve.Path*): Resolve[F] =
     withConfFiles(this.confFiles ++ confFiles)
 
@@ -191,6 +187,13 @@ import scala.language.higherKinds
 
   def withGradleModuleSupport(enable: Boolean): Resolve[F] =
     withGradleModuleSupport(Some(enable))
+
+  /** Add variant attributes to be taken into account when picking Gradle Module variants
+    */
+  def addVariantAttributes(attributes: (String, VariantSelector.VariantMatcher)*): Resolve[F] =
+    withResolutionParams(
+      resolutionParams.addVariantAttributes(attributes: _*)
+    )
 
   private def allMirrors0 =
     mirrors ++
@@ -225,7 +228,10 @@ import scala.language.higherKinds
     }
 
     def validate0(res: Resolution): F[Resolution] =
-      Resolve.validate(res).either match {
+      Resolve.validate(
+        res,
+        resolutionParams.renderModuleVersion.getOrElse((mod, ver) => s"${mod.repr}:$ver")
+      ).either match {
         case Left(errors) =>
           val err = ResolutionError.from(errors.head, errors.tail: _*)
           S.fromAttempt(Left(err))
@@ -342,8 +348,10 @@ object Resolve extends PlatformResolve {
     import coursier.core.{Resolution => CoreResolution}
 
     val scalaOrg =
-      if (params.typelevel) Organization("org.typelevel")
-      else Organization("org.scala-lang")
+      params.scalaOrganizationOverride.getOrElse {
+        if (params.typelevel) Organization("org.typelevel")
+        else Organization("org.scala-lang")
+      }
 
     val forceScalaVersions =
       if (params.doForceScalaVersion)
@@ -374,8 +382,37 @@ object Resolve extends PlatformResolve {
       else
         Nil
 
+    val scalaOrgSwap: Option[Dependency => Dependency] =
+      if (scalaOrg == Organization("org.scala-lang")) None
+      else {
+        val mainLineOrg = Organization("org.scala-lang")
+        val scala2Modules = Set(
+          ModuleName("scala-library"),
+          ModuleName("scala-library-all"),
+          ModuleName("scala-compiler"),
+          ModuleName("scala-reflect"),
+          ModuleName("scalap")
+        )
+        val scala3Modules = Set(
+          ModuleName("scala3-library_3"),
+          ModuleName("scala3-compiler_3")
+        )
+        val modules = scala2Modules ++ scala3Modules
+        Some { dep =>
+          if (
+            dep.module.organization == mainLineOrg &&
+            modules(dep.module.name) &&
+            dep.module.attributes.isEmpty
+          )
+            dep.withModule(dep.module.withOrganization(scalaOrg))
+          else
+            dep
+        }
+      }
+
     val mapDependencies = {
       val l = mapDependenciesOpt.toSeq ++
+        scalaOrgSwap.toSeq ++
         (if (params.typelevel) Seq(Typelevel.swap) else Nil) ++
         (if (params.doForceScalaVersion)
            Seq(CoreResolution.overrideScalaModule(params.selectedScalaVersionConstraint, scalaOrg))
@@ -448,9 +485,7 @@ object Resolve extends PlatformResolve {
       .withExtraProperties(params.properties)
       .withForceProperties(params.forcedProperties)
       .withDefaultConfiguration(params.defaultConfiguration)
-      .withDefaultVariantAttributes(
-        params.defaultVariantAttributes.getOrElse(VariantSelector.AttributesBased.empty)
-      )
+      .withDefaultVariantAttributes(params.finalDefaultVariantAttributes)
       .withKeepProvidedDependencies(params.keepProvidedDependencies.getOrElse(false))
       .withForceDepMgmtVersions(params.forceDepMgmtVersions.getOrElse(false))
       .withEnableDependencyOverrides(
@@ -474,7 +509,16 @@ object Resolve extends PlatformResolve {
     }
   }
 
-  def validate(res: Resolution): ValidationNel[ResolutionError, Unit] = {
+  def validate(res: Resolution): ValidationNel[ResolutionError, Unit] =
+    validate(
+      res,
+      (mod, ver) => s"${mod.repr}:$ver"
+    )
+
+  def validate(
+    res: Resolution,
+    renderModuleVersion: (Module, String) => String
+  ): ValidationNel[ResolutionError, Unit] = {
 
     val checkDone: ValidationNel[ResolutionError, Unit] =
       if (res.isDone)
@@ -486,7 +530,12 @@ object Resolve extends PlatformResolve {
       .errors0
       .map {
         case ((module, version), errors) =>
-          new ResolutionError.CantDownloadModule(res, module, version, errors)
+          new ResolutionError.CantDownloadModule(
+            res,
+            module,
+            version,
+            errors
+          )
       } match {
       case Seq() =>
         ValidationNel.success(())
@@ -501,7 +550,8 @@ object Resolve extends PlatformResolve {
         ValidationNel.failure(
           new ResolutionError.ConflictingDependencies(
             res,
-            res.conflicts
+            res.conflicts,
+            renderModuleVersion
           )
         )
 

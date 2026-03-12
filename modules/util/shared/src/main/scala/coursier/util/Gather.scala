@@ -4,6 +4,14 @@ import scala.language.implicitConversions
 
 trait Gather[F[_]] extends Monad[F] {
   def gather[A](elems: Seq[F[A]]): F[Seq[A]]
+
+  final def parallel[A, B](a: F[A], b: F[B]): F[(A, B)] =
+    map(gather(Seq[F[Either[A, B]]](map(a)(Left(_)), map(b)(Right(_))))) { seq =>
+      assert(seq.length == 2)
+      assert(seq(0).isLeft)
+      assert(seq(1).isRight)
+      (seq(0).left.toOption.get, seq(1).toOption.get)
+    }
 }
 
 object Gather {

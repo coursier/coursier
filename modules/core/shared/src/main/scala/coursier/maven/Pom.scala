@@ -11,7 +11,7 @@ import coursier.core.{
   Module,
   ModuleName,
   Organization,
-  Parse,
+  Overrides,
   Profile,
   Project,
   SnapshotVersion,
@@ -331,7 +331,10 @@ object Pom {
         // this is customized later on in MavenRepositoryInternal
         Map.empty[Configuration, Seq[Configuration]],
         parentModuleOpt.map((_, parentVersionOpt.getOrElse(Version.zero))),
-        depMgmts,
+        depMgmts.map {
+          case (conf, dep) =>
+            (Variant.Configuration(conf), dep)
+        },
         properties,
         profiles,
         None,
@@ -347,7 +350,10 @@ object Pom {
           developers,
           None,
           scm
-        )
+        ),
+        Overrides.empty,
+        Map.empty,
+        Map.empty
       )
     }
 

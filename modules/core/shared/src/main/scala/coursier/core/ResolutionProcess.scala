@@ -5,8 +5,7 @@ import coursier.util.Monad.ops._
 import coursier.version.{
   Latest => Latest0,
   Version => Version0,
-  VersionConstraint => VersionConstraint0,
-  VersionInterval => VersionInterval0
+  VersionConstraint => VersionConstraint0
 }
 import dataclass.data
 

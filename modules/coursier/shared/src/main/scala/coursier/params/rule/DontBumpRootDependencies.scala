@@ -1,6 +1,6 @@
 package coursier.params.rule
 
-import coursier.core.{Dependency, Module, Parse, Resolution, Version}
+import coursier.core.{Dependency, Module, Resolution}
 import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.util.ModuleMatchers
