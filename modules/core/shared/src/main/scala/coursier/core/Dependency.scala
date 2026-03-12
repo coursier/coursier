@@ -312,7 +312,7 @@ import java.util.concurrent.ConcurrentMap
       Overrides.add(overridesMap, Overrides(Map(key -> values)))
     )
   def addOverride(org: Organization, name: ModuleName, version: VersionConstraint0): Dependency = {
-    val key = DependencyManagement.Key(org, name, Type.empty, Classifier.empty)
+    val key = DependencyManagement.Key(org, name, Type.jar, Classifier.empty)
     val values = DependencyManagement.Values(
       Configuration.empty,
       version,
@@ -330,7 +330,7 @@ import java.util.concurrent.ConcurrentMap
     version: VersionConstraint0,
     exclusions: Set[(Organization, ModuleName)]
   ): Dependency = {
-    val key = DependencyManagement.Key(org, name, Type.empty, Classifier.empty)
+    val key = DependencyManagement.Key(org, name, Type.jar, Classifier.empty)
     val values = DependencyManagement.Values(
       Configuration.empty,
       version,

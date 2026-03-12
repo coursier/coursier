@@ -2,7 +2,7 @@ package coursierbuild.modules
 
 import mill._, mill.scalalib._
 
-trait CoursierPublishModule extends PublishModule with PublishLocalNoFluff
+trait CoursierPublishModule extends PublishModule
     with CoursierJavaModule {
   import mill.scalalib.publish._
   def pomSettings = PomSettings(
@@ -24,17 +24,20 @@ object CoursierPublishModule {
     .call().out
     .trim()
   private def computeBuildVersion() = {
-    val gitHead = os.proc("git", "rev-parse", "HEAD").call().out.trim()
+    // FIXME Print stderr if command fails
+    val gitHead = os.proc("git", "rev-parse", "HEAD").call(stderr = os.Pipe).out.trim()
     val maybeExactTag = scala.util.Try {
+      // FIXME Print stderr if command fails
       os.proc("git", "describe", "--exact-match", "--tags", "--always", gitHead)
-        .call().out
+        .call(stderr = os.Pipe).out
         .trim()
         .stripPrefix("v")
     }
     maybeExactTag.toOption.getOrElse {
+      // FIXME Print stderr if command fails
       val commitsSinceTaggedVersion =
         os.proc("git", "rev-list", gitHead, "--not", latestTaggedVersion, "--count")
-          .call().out.trim()
+          .call(stderr = os.Pipe).out.trim()
           .toInt
       val gitHash = os.proc("git", "rev-parse", "--short", "HEAD").call().out.trim()
       s"${latestTaggedVersion.stripPrefix("v")}-$commitsSinceTaggedVersion-$gitHash-SNAPSHOT"

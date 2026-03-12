@@ -168,6 +168,157 @@ abstract class ArchiveCacheTests extends TestSuite {
         check(useShortBase = false)
       }
     }
+
+    def integrityTest(
+      artifact: Artifact,
+      expectedElems: Seq[os.SubPath],
+      truncate: Boolean
+    ): Unit =
+      withTmpDir { dir =>
+        val cache         = FileCache().withLocation((dir / "cache").toIO)
+        val archiveCache0 = archiveCache(dir / "arc").withCache(cache)
+
+        val localArchivePath = cache.file(artifact).run.unsafeRun()(cache.ec) match {
+          case Left(err) =>
+            throw new Exception(err)
+          case Right(f) =>
+            os.Path(f)
+        }
+
+        val size = os.size(localArchivePath)
+
+        def corrupt(): Unit = {
+          val modifiedTime = os.mtime(localArchivePath)
+          // corrupt the archive
+          val content = os.read.bytes(localArchivePath)
+          os.write.over(
+            localArchivePath,
+            if (truncate)
+              content.take(content.length - 200)
+            else
+              content.take(content.length / 2) ++
+                Array.fill[Byte](10)(0) ++
+                content.drop(content.length / 2)
+          )
+          os.mtime.set(localArchivePath, modifiedTime)
+          val corruptedSize = os.size(localArchivePath)
+          val expectedSize  = if (truncate) size - 200 else size + 10
+          assert(corruptedSize == expectedSize)
+        }
+
+        corrupt()
+
+        val archiveDir = archiveCache0.get(artifact).unsafeRun()(cache.ec) match {
+          case Left(err) =>
+            throw new Exception(err)
+          case Right(path) =>
+            os.Path(path)
+        }
+
+        val finalSize = os.size(localArchivePath)
+        assert(finalSize == size)
+
+        val integrityFile = localArchivePath / os.up / s".${localArchivePath.last}__integrity"
+
+        // For now, the integrity file doesn't exist after a re-download, as we don't do
+        // an integrity check right after a failed one, to avoid going into loops.
+        assert(!os.exists(integrityFile))
+
+        if (os.isDir(archiveDir)) {
+          import scala.math.Ordering.Implicits._
+          val elems = os.walk(archiveDir)
+            .filter(os.isFile)
+            .map(_.relativeTo(archiveDir).asSubPath)
+            // not sure why this ordering isn't the default
+            .sortBy(_.segments)
+          if (elems != expectedElems)
+            pprint.err.log(elems)
+          assert(expectedElems == elems)
+        }
+        else
+          Nil
+
+        archiveCache0.get(artifact).unsafeRun()(cache.ec) match {
+          case Left(err) =>
+            throw new Exception(err)
+          case Right(_) =>
+        }
+
+        // Integrity check should succeed upon second access, and should write a file for it
+        assert(os.exists(integrityFile))
+
+        os.remove.all(archiveDir)
+
+        // Corrupt the archive, but keep the integrity file
+        corrupt()
+
+        val failed =
+          try {
+            archiveCache0.get(artifact).unsafeRun()(cache.ec)
+            false
+          }
+          catch {
+            case err: org.codehaus.plexus.archiver.ArchiverException =>
+              pprint.err.log(err)
+              true
+            case err: java.util.zip.ZipException =>
+              pprint.err.log(err)
+              true
+            case err: java.io.EOFException =>
+              pprint.err.log(err)
+              true
+          }
+        assert(failed)
+      }
+
+    def zipIntegrityTest(truncate: Boolean): Unit =
+      integrityTest(
+        Artifact(
+          "https://repo1.maven.org/maven2/com/lihaoyi/mill-dist/1.0.3/mill-dist-1.0.3-example-androidlib-java-1-hello-world.zip"
+        ),
+        Seq(
+          os.sub / "app/releaseKey.jks",
+          os.sub / "app/src/androidTest/java/com/helloworld/app/ExampleInstrumentedTest.java",
+          os.sub / "app/src/main/AndroidManifest.xml",
+          os.sub / "app/src/main/java/com/helloworld/SampleLogic.java",
+          os.sub / "app/src/main/java/com/helloworld/app/MainActivity.java",
+          os.sub / "app/src/main/res/values/colors.xml",
+          os.sub / "app/src/main/res/values/strings.xml",
+          os.sub / "app/src/test/java/com/helloworld/ExampleUnitTest.java",
+          os.sub / "build.mill",
+          os.sub / "mill",
+          os.sub / "mill.bat"
+        ).map(os.sub / "mill-dist-1.0.3-example-androidlib-java-1-hello-world" / _),
+        truncate = truncate
+      )
+
+    def gzipIntegrityTest(truncate: Boolean): Unit =
+      integrityTest(
+        // random gzip file found on Maven Central
+        Artifact(
+          "https://repo1.maven.org/maven2/org/danbrough/kotlinxtras/curl/binaries/curlLinuxX64/7_86_0/curlLinuxX64-7_86_0.gz"
+        ),
+        Nil,
+        truncate = truncate
+      )
+
+    test("zip integrity") {
+      test("corrupt") {
+        zipIntegrityTest(truncate = false)
+      }
+      test("truncate") {
+        zipIntegrityTest(truncate = true)
+      }
+    }
+
+    test("gzip integrity") {
+      test("corrupt") {
+        gzipIntegrityTest(truncate = false)
+      }
+      test("truncate") {
+        gzipIntegrityTest(truncate = true)
+      }
+    }
   }
 
   val tests =

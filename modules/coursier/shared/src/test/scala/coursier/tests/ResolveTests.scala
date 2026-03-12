@@ -18,7 +18,7 @@ import coursier.core.{
 import coursier.core.VariantSelector.VariantMatcher
 import coursier.error.ResolutionError
 import coursier.ivy.IvyRepository
-import coursier.maven.MavenRepositoryLike
+import coursier.maven.{MavenRepository, MavenRepositoryLike}
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
 import coursier.util.{ModuleMatchers, Task}
 import coursier.util.StringInterpolators._
@@ -2345,6 +2345,42 @@ object ResolveTests extends TestSuite {
           dep"androidx.test.ext:junit:1.2.1"
         )
       }
+
+      test("bom config graph") {
+        val resolve0 = resolve
+          .addVariantAttributes(
+            "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
+          )
+          .addBom(
+            dep"io.micronaut.platform:micronaut-platform:4.9.2".asBomDependency
+          )
+        test("micronaut-inject-kotlin") {
+          gradleModuleCheck0(resolve0 = resolve0)(
+            dep"io.micronaut:micronaut-inject-kotlin:"
+          )
+        }
+        test("micronaut-openapi") {
+          gradleModuleCheck0(resolve0 = resolve0)(
+            dep"io.micronaut.openapi:micronaut-openapi:"
+          )
+        }
+      }
+
+      test("lottie") {
+        val resolve0 = resolve
+          .addVariantAttributes(
+            "org.gradle.jvm.environment"         -> VariantMatcher.Equals("standard-jvm"),
+            "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm"),
+            "ui"                                 -> VariantMatcher.Equals("android")
+          )
+          .addRepositories(
+            Repositories.google,
+            MavenRepository("https://maven.pkg.jetbrains.space/public/p/compose/dev")
+          )
+        gradleModuleCheck0(resolve0 = resolve0, attributesBasedReprAsToString = true)(
+          dep"com.airbnb.android:lottie-compose:6.6.6"
+        )
+      }
     }
 
     test("empty version") {
@@ -2373,6 +2409,65 @@ object ResolveTests extends TestSuite {
           case _ =>
             throw error
         }
+      }
+    }
+
+    test("scalaOrganizationOverride") {
+
+      test("swapsDepsForScala3") {
+        val params = ResolutionParams()
+          .withScalaVersion("3.8.0")
+          .withScalaOrganizationOverride(Some(org"ch.epfl.lara"))
+
+        val res = Resolve.initialResolution(Nil, params)
+
+        // forceVersions should use the custom org
+        val forceVersionModules = res.forceVersions0.keySet
+        assert(forceVersionModules.contains(mod"ch.epfl.lara:scala3-library_3"))
+        assert(forceVersionModules.contains(mod"ch.epfl.lara:scala3-compiler_3"))
+        assert(forceVersionModules.forall(!_.repr.startsWith("org.scala-lang:scala3-")))
+
+        // mapDependencies should swap org.scala-lang to the custom org
+        val scalaLibDep = dep"org.scala-lang:scala3-library_3:3.3.1"
+        val mapped      = res.mapDependencies.get(scalaLibDep)
+        assert(mapped == dep"ch.epfl.lara:scala3-library_3:3.3.1")
+      }
+
+      test("swapsDepsForScala2") {
+        val params = ResolutionParams()
+          .withScalaVersion("2.12.20")
+          .withScalaOrganizationOverride(Some(org"org.typelevel"))
+
+        val res = Resolve.initialResolution(Nil, params)
+
+        val scalaLibDep = dep"org.scala-lang:scala-library:2.12.18"
+        val mapped      = res.mapDependencies.get(scalaLibDep)
+        assert(mapped == dep"org.typelevel:scala-library:2.12.18")
+      }
+
+      test("noSwapWhenNotSet") {
+        val params = ResolutionParams()
+          .withScalaVersion("3.8.0")
+
+        val res = Resolve.initialResolution(Nil, params)
+
+        val scalaLibDep = dep"org.scala-lang:scala3-library_3:3.3.1"
+        val mapped      = res.mapDependencies.get(scalaLibDep)
+        // org should remain unchanged
+        assert(mapped == scalaLibDep)
+      }
+
+      test("doesNotSwapNonScalaModules") {
+        val params = ResolutionParams()
+          .withScalaVersion("3.8.0")
+          .withScalaOrganizationOverride(Some(org"ch.epfl.lara"))
+
+        val res = Resolve.initialResolution(Nil, params)
+
+        val nonScalaDep = dep"org.scala-lang:some-other-module:1.0.0"
+        val mapped      = res.mapDependencies.get(nonScalaDep)
+        // non-Scala modules under org.scala-lang should NOT be swapped
+        assert(mapped == nonScalaDep)
       }
     }
   }

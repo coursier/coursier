@@ -22,7 +22,9 @@ final case class GetOptions(
   @HelpMessage("Archive cache location")
     archiveCache: Option[String] = None,
   @HelpMessage("HTTP headers to use as authentication (\"header: value\"), can be specified multiples times to add multiple headers")
-    authHeader: List[String] = Nil
+    authHeader: List[String] = Nil,
+  @HelpMessage("URL of reference artifact. If this file exists and is in cache, not-found errors for the main artifact are cached.")
+    referenceUrl: Option[String] = None
 )
 // format: on
 

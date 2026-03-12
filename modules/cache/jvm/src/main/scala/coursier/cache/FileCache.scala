@@ -442,7 +442,7 @@ object FileCache {
   private def auxiliaryFilePrefix(file: File): String =
     s".${file.getName}__"
 
-  private[cache] def clearAuxiliaryFiles(file: File): Unit = {
+  private[coursier] def clearAuxiliaryFiles(file: File): Unit = {
     val prefix = auxiliaryFilePrefix(file)
     val filter: FilenameFilter = new FilenameFilter {
       def accept(dir: File, name: String): Boolean =
