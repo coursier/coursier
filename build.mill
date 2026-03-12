@@ -1,4 +1,4 @@
-//| mill-version: 1.1.0-RC3
+//| mill-version: 1.1.3
 
 import coursierbuild.Deps.{Deps, ScalaVersions, scalaCliVersion}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
@@ -1350,7 +1350,7 @@ def jvmTests(scalaVersion: String = defaultScalaVersion) = {
     }
 
   Task.Command {
-    Task.sequence(tasks)()
+    Task.sequence(tasks.map(_.map(_ => ())))()
 
     ()
   }
@@ -1372,28 +1372,28 @@ def jsTests(scalaVersion: String = "*") = {
 
   val tasks = scalaVersions.flatMap(sv => crossTests(sv))
 
-  Task.Command {
+  Task.Command[Unit] {
     Task.sequence(tasks)()
   }
 }
 
-def nativeTests() = Task.Command {
+def nativeTests() = Task.Command[Unit] {
   `cli-tests`.`native-tests`.testForked()()
 }
 
-def nativeCompatTests() = Task.Command {
+def nativeCompatTests() = Task.Command[Unit] {
   `cli-tests`.`native-compat-tests`.testForked()()
 }
 
-def nativeStaticTests() = Task.Command {
+def nativeStaticTests() = Task.Command[Unit] {
   `cli-tests`.`native-static-tests`.testForked()()
 }
 
-def nativeMostlyStaticTests() = Task.Command {
+def nativeMostlyStaticTests() = Task.Command[Unit] {
   `cli-tests`.`native-mostly-static-tests`.testForked()()
 }
 
-def nativeContainerTests() = Task.Command {
+def nativeContainerTests() = Task.Command[Unit] {
   `cli-tests`.`native-container-tests`.testForked()()
 }
 
