@@ -174,7 +174,7 @@ object JavaHome {
   def systemId: String =
     "system"
   def defaultJvm: String =
-    s"${JvmCache.defaultJdkName}:21"
+    s"${JvmCache.defaultJdkName}:17"
   def defaultId: String =
     s"$systemId|$defaultJvm"
 

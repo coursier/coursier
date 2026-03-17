@@ -293,8 +293,7 @@ interested in trying / switching JVM, see the
 #### JVM
 
 The JVM installed if [none is found on your system](cli-java.md#system-jvm-detection)
-is the same as the [`java` command](cli-java.md), the latest AdoptOpenJDK 8 as of
-writing this.
+is the same as the [`java` command](cli-java.md), Temurin 17.
 
 Pass `--jvm` to ignore the already installed jvm and install a custom one:
 

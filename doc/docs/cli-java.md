@@ -26,8 +26,8 @@ $ cs java-home
 
 If no JVM is installed on your system, the default one is automatically
 downloaded and
-extracted in the [JVM cache](#managed-jvm-directory), and used. As of writing
-this, the default JVM is the latest [AdoptOpenJDK](https://adoptopenjdk.net) 8 from the
+extracted in the [JVM cache](#managed-jvm-directory), and used. The
+default JVM is [Temurin](https://adoptium.net) 17 from the
 [JVM index](#jvm-index).
 
 ## Managed JVMs
@@ -234,5 +234,5 @@ In order to find it, they successively:
 - on Linux and Windows, check for a `java` command in `PATH`.
 
 If none of these methods finds a JVM, it is assumed no JVM was installed prior to running `cs java`
-or `cs java-home`. Running one of these command will install the default JVM (as of writing this,
-the latest AdoptOpenJDK 8 in the JVM index).
+or `cs java-home`. Running one of these command will install the default JVM
+(Temurin 17 in the JVM index).
