@@ -1,9 +1,11 @@
 package coursier.exec;
 
 import java.io.FileNotFoundException;
+import java.lang.reflect.Method;
 
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
+import com.oracle.svm.core.jdk.RuntimeSupport;
 import com.oracle.svm.core.posix.headers.LibC;
 import org.graalvm.nativeimage.c.type.CTypeConversion;
 import org.graalvm.nativeimage.Platform;
@@ -20,6 +22,8 @@ final class ExecveGraalvm {
 
   @Substitute
   public static void execve(String path, String[] command, String[] env) throws ErrnoException {
+    ExecveGraalvmHelper.runShutdownHooks();
+
     CTypeConversion.CCharPointerHolder path0 = CTypeConversion.toCString(path);
     CTypeConversion.CCharPointerPointerHolder command0 = CTypeConversion.toCStrings(command);
     CTypeConversion.CCharPointerPointerHolder env0 = CTypeConversion.toCStrings(env);
@@ -30,6 +34,18 @@ final class ExecveGraalvm {
     if (n == GraalvmErrnoExtras.ENOENT() || n == GraalvmErrnoExtras.ENOTDIR())
       cause = new FileNotFoundException(path);
     throw new ErrnoException(n, cause);
+  }
+
+}
+
+final class ExecveGraalvmHelper {
+
+  static void runShutdownHooks() {
+    try {
+      RuntimeSupport.getRuntimeSupport().shutdown();
+    } catch (Exception e) {
+      Execve.runShutdownHooks();
+    }
   }
 
 }

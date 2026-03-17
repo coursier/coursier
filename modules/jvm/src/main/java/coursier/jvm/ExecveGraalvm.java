@@ -20,7 +20,7 @@ final class ExecveGraalvm {
   }
 
   @Substitute
-  public static void execve(String path, String[] command, String[] env) throws ErrnoException {
+  static void execveNative(String path, String[] command, String[] env) throws ErrnoException {
     CTypeConversion.CCharPointerHolder path0 = CTypeConversion.toCString(path);
     CTypeConversion.CCharPointerPointerHolder command0 = CTypeConversion.toCStrings(command);
     CTypeConversion.CCharPointerPointerHolder env0 = CTypeConversion.toCStrings(env);

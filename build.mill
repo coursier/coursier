@@ -5,6 +5,7 @@ import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
 import coursierbuild.Relativize.{relativize => doRelativize}
 import coursierbuild.{DocHelpers, GitHubReleaseAssets, Shading, Sync}
 import coursierbuild.modules._
+import io.github.alexarchambault.millnativeimage.NativeImage
 import mill.contrib.jmh.JmhModule
 
 import _root_.coursier.getcs.GetCs
@@ -241,7 +242,36 @@ object interop extends Module {
   }
 }
 
-object exec extends Exec
+object exec extends Exec {
+  object test extends JavaTests with CsScalaTests {
+    def scalaVersion = ScalaVersions.scala213
+    def forkArgs = Task {
+      super.forkArgs() ++ Seq(
+        s"-Dcoursier.execve.test.assembly=${`execve-test`.assembly().path}",
+        s"-Dcoursier.execve.test.native-image=${`execve-test`.nativeImage().path}"
+      )
+    }
+  }
+}
+
+object `execve-test` extends CoursierJavaModule with coursierbuild.Launchers.CsJniNativeImage {
+  def jvmRelease = "11"
+  def mainClass  = Some("coursier.exec.test.ExecveTestApp")
+  def moduleDeps = Seq(
+    exec
+  )
+  def javacOptions = Task {
+    Seq("--release", jvmRelease, "-Xlint:unchecked")
+  }
+
+  def nativeImageGraalVmJvmId = coursierbuild.Deps.graalVmJvmId
+  def nativeImageClassPath    = runClasspath()
+  def nativeImageMainClass    = mainClass().getOrElse(sys.error("No main class"))
+  def nativeImageName         = "execve-test"
+  def nativeImageOptions = Task {
+    Seq("--no-fallback") ++ super.nativeImageOptions()
+  }
+}
 
 object jvm     extends Cross[Jvm](ScalaVersions.all)
 object install extends Cross[Install](ScalaVersions.all)

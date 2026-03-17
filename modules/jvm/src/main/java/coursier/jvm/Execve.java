@@ -3,6 +3,7 @@ package coursier.jvm;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 
+import java.lang.reflect.Method;
 import java.util.Locale;
 
 // bits of this file were written with OpenAI o3-mini
@@ -30,8 +31,27 @@ public final class Execve {
     return osName.contains("linux") || osName.contains("mac");
   }
 
-  public static void execve(String path, String[] command, String[] env) throws ErrnoException {
+  private static void runShutdownHooks() {
+    try {
+      Class<?> shutdown = Class.forName("java.lang.Shutdown");
+      Method runHooks = shutdown.getDeclaredMethod("runHooks");
+      runHooks.setAccessible(true);
+      synchronized (shutdown) {
+        runHooks.invoke(null);
+      }
+    } catch (Exception e) {
+      // ignore
+    }
+  }
+
+  // Visible for GraalVM substitution in ExecveGraalvm
+  static void execveNative(String path, String[] command, String[] env) throws ErrnoException {
     LibC.INSTANCE.execve(path, command, env);
+  }
+
+  public static void execve(String path, String[] command, String[] env) throws ErrnoException {
+    runShutdownHooks();
+    execveNative(path, command, env);
   }
 
 }
