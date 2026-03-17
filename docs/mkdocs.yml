@@ -39,6 +39,7 @@ nav:
     - Community: 'about-community.md'
     - Funding: 'about-funding.md'
     - Contact: 'about-contact.md'
+    - Security: 'about-security.md'
 
 repo_url: https://github.com/coursier/coursier
 edit_uri: edit/main/docs/pages/
