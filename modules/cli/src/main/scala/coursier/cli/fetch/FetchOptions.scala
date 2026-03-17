@@ -32,6 +32,9 @@ final case class FetchOptions(
   @Hidden
     legacyReportNoGuarantees: Option[Boolean] = None,
 
+  @Group(OptionGroup.fetch)
+  @HelpMessage("Add artifact URLs to the json report")
+    jsonReportAddUrls: Boolean = false,
 
   @Recurse
     resolveOptions: SharedResolveOptions = SharedResolveOptions(),
