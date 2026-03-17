@@ -109,6 +109,34 @@ object JsonReportTests extends TestSuite {
       }
     } yield ()
 
+  def doCheckWithUrls(
+    fetch: Fetch[Task],
+    dependencies: Seq[Dependency],
+    extraKeyPart: String = ""
+  ): Future[Unit] =
+    for {
+      res <- fetch
+        .addDependencies(dependencies: _*)
+        .futureResult()
+      _ <- TestHelpers.validateDependencies(
+        res.resolution,
+        fetch.resolutionParams,
+        extraKeyPart = extraKeyPart
+      )
+      _ <- TestHelpers.validateResult(
+        s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams, extraKeyPart = extraKeyPart)}.json"
+      ) {
+        jsonLines {
+          JsonReport.report(
+            res.resolution,
+            res.fullDetailedArtifacts0,
+            useSlashSeparator = Properties.isWin,
+            addUrls = true
+          )
+        }
+      }
+    } yield ()
+
   def check(dependencies: Dependency*): Future[Unit] =
     doCheck(fetch, dependencies)
 
@@ -411,6 +439,17 @@ object JsonReportTests extends TestSuite {
     test("grpc-core") {
       check(
         dep"io.grpc:grpc-netty-shaded:1.29.0"
+      )
+    }
+
+    test("addUrls") {
+      doCheckWithUrls(
+        fetch,
+        Seq(
+          dep"org.apache.commons:commons-compress:1.5"
+            .withTransitive(false)
+        ),
+        "_addurls"
       )
     }
 
