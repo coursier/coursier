@@ -9,10 +9,10 @@ import java.util.regex.Pattern
 
 import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
-import javax.net.ssl.{HostnameVerifier, HttpsURLConnection, SSLSocketFactory}
+import javax.net.ssl.{HostnameVerifier, HttpsURLConnection, SSLSession, SSLSocketFactory}
 
 import scala.annotation.tailrec
-import scala.util.Try
+import scala.util.{Failure, Success, Try}
 import scala.util.control.NonFatal
 
 object CacheUrl {
@@ -280,7 +280,8 @@ object CacheUrl {
     authRealm: Option[String],
     redirectionCount: Int,
     maxRedirectionsOpt: Option[Int],
-    classLoaders: Seq[ClassLoader]
+    classLoaders: Seq[ClassLoader],
+    connectTimeoutOpt: Option[Int] = None
   )
 
   @deprecated(
@@ -330,6 +331,8 @@ object CacheUrl {
             case Some(proxy) => jnUrl.openConnection(proxy)
           }
         }
+        for (t <- connectTimeoutOpt)
+          conn.setConnectTimeout(t)
         val authOpt = authentication.filter { a =>
           a.realmOpt.forall(authRealm.contains) &&
           !a.optional
@@ -533,5 +536,156 @@ object CacheUrl {
 
   def disableProxyAuth(): Unit =
     Authenticator.setDefault(null)
+
+  /** Wraps an [[SSLSocketFactory]] to substitute the original hostname when creating SSL sockets,
+    * so that SNI and endpoint identification work correctly when connecting to an IP address
+    * instead of the original hostname.
+    */
+  private[cache] class SniOverrideSslSocketFactory(
+    underlying: SSLSocketFactory,
+    originalHostname: String
+  ) extends SSLSocketFactory {
+    // This is the key override: HttpsURLConnection calls this to wrap the existing
+    // TCP socket (connected to an IP address) with SSL. We substitute the original
+    // hostname so that the SSL layer uses the correct SNI and hostname verification.
+    override def createSocket(s: Socket, host: String, port: Int, autoClose: Boolean): Socket =
+      underlying.createSocket(s, originalHostname, port, autoClose)
+
+    override def getDefaultCipherSuites: Array[String] = underlying.getDefaultCipherSuites
+    override def getSupportedCipherSuites: Array[String] = underlying.getSupportedCipherSuites
+    override def createSocket(): Socket = underlying.createSocket()
+    override def createSocket(host: String, port: Int): Socket =
+      underlying.createSocket(host, port)
+    override def createSocket(
+      host: String,
+      port: Int,
+      localHost: InetAddress,
+      localPort: Int
+    ): Socket =
+      underlying.createSocket(host, port, localHost, localPort)
+    override def createSocket(host: InetAddress, port: Int): Socket =
+      underlying.createSocket(host, port)
+    override def createSocket(
+      address: InetAddress,
+      port: Int,
+      localAddress: InetAddress,
+      localPort: Int
+    ): Socket =
+      underlying.createSocket(address, port, localAddress, localPort)
+  }
+
+  private def isRetryableOnDifferentIp(e: Throwable): Boolean = e match {
+    case _: ConnectException       => true
+    case _: NoRouteToHostException => true
+    case _: SocketTimeoutException => true
+    case _                         => false
+  }
+
+  private def isIpAddress(host: String): Boolean =
+    host.matches("""^\d+\.\d+\.\d+\.\d+$""") || // IPv4
+      (host.startsWith("[") && host.endsWith("]"))   // IPv6 bracket notation
+
+  private def argsWithIpAddress(
+    args: Args,
+    originalHostname: String,
+    originalPort: Int,
+    addr: InetAddress,
+    connectTimeoutMs: Int
+  ): Args = {
+    val ipStr = addr match {
+      case a: Inet6Address => s"[${a.getHostAddress}]"
+      case a               => a.getHostAddress
+    }
+
+    // Reconstruct the URL with IP replacing the hostname, preserving all other parts
+    val parsedUrl    = url(args.url0, args.classLoaders)
+    val userInfo     = Option(parsedUrl.getUserInfo)
+    val file         = parsedUrl.getFile
+    val scheme       = parsedUrl.getProtocol
+    val ipWithPort   = if (originalPort == -1) ipStr else s"$ipStr:$originalPort"
+    val userInfoPart = userInfo.map(_ + "@").getOrElse("")
+    val newUrl       = s"$scheme://$userInfoPart$ipWithPort$file"
+
+    val isHttps = scheme == "https"
+
+    val newSslFactory =
+      if (isHttps)
+        Some(new SniOverrideSslSocketFactory(
+          args.sslSocketFactoryOpt.getOrElse(HttpsURLConnection.getDefaultSSLSocketFactory),
+          originalHostname
+        ))
+      else
+        args.sslSocketFactoryOpt
+
+    val newHostnameVerifier: Option[HostnameVerifier] =
+      if (isHttps) {
+        val origVerifier = args.hostnameVerifierOpt.getOrElse(
+          HttpsURLConnection.getDefaultHostnameVerifier
+        )
+        Some(new HostnameVerifier {
+          def verify(hostname: String, session: SSLSession): Boolean =
+            origVerifier.verify(originalHostname, session)
+        })
+      }
+      else
+        args.hostnameVerifierOpt
+
+    args.copy(
+      url0 = newUrl,
+      sslSocketFactoryOpt = newSslFactory,
+      hostnameVerifierOpt = newHostnameVerifier,
+      connectTimeoutOpt = Some(connectTimeoutMs)
+    )
+  }
+
+  /** Attempts a connection and, if it fails due to a connection error, resolves all IP addresses
+    * for the hostname and retries each one in sequence. This handles the case where DNS returns
+    * multiple A-records but the first resolved IP is unreachable.
+    *
+    * Can be disabled by setting the `COURSIER_RETRY_RESOLVED_IPS` environment variable (or
+    * `coursier.retry-resolved-ips` system property) to `false`. The per-IP connection timeout
+    * can be configured via `COURSIER_PER_IP_TIMEOUT_MS` (or `coursier.per-ip-timeout-ms`).
+    */
+  private[cache] def urlConnectionMaybePartialWithIpFallback(
+    args: Args,
+    perIpConnectTimeoutMs: Int
+  ): (URLConnection, Boolean) = {
+    // Attempt the primary connection using default DNS resolution
+    val initialEx: Exception =
+      try return urlConnectionMaybePartial(args)
+      catch {
+        case e: Exception if isRetryableOnDifferentIp(e) => e
+      }
+
+    // Extract hostname from URL
+    val parsedUrl = Try(url(args.url0, args.classLoaders)).getOrElse(throw initialEx)
+    val host      = parsedUrl.getHost
+
+    // Don't retry if already connecting to an IP address or if there's no host
+    if (host == null || host.isEmpty || isIpAddress(host)) throw initialEx
+
+    // Resolve all IP addresses for the hostname
+    val allAddresses: Array[InetAddress] =
+      try InetAddress.getAllByName(host)
+      catch { case _: UnknownHostException => throw initialEx }
+
+    // Nothing to retry if only one IP
+    if (allAddresses.length <= 1) throw initialEx
+
+    val port = parsedUrl.getPort
+
+    // Try each resolved IP address with the per-IP timeout
+    var lastEx: Throwable = initialEx
+    for (addr <- allAddresses) {
+      val ipArgs = argsWithIpAddress(args, host, port, addr, perIpConnectTimeoutMs)
+      Try(urlConnectionMaybePartial(ipArgs)) match {
+        case Success(result) => return result
+        case Failure(e)      => lastEx = e
+      }
+    }
+
+    throw lastEx
+  }
+
 
 }
