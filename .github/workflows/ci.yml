@@ -33,6 +33,8 @@ jobs:
     - run: |
         ./mill -i -j1 __.js[_].compile
         ./mill -i __.compile
+    - name: No test modules with no test classes
+      run: ./mill -i ci.noEmptyDiscoveredTestClasses --tasks __.discoveredTestClasses
     - run: ./mill -i __.publishLocal
 
   compile-all-no-package-object:

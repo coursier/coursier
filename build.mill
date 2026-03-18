@@ -12,6 +12,7 @@ import mill.*
 import mill.api.*
 import mill.scalalib._
 import mill.scalajslib._
+import mill.util.Tasks
 
 import java.io.File
 import java.util.zip.ZipFile
@@ -1420,6 +1421,17 @@ object ci extends Module {
     os.copy(baseJavaHome, destJavaHome, createFolders = true)
     System.err.println(s"New Java home $destJavaHome")
     destJavaHome
+  }
+
+  def noEmptyDiscoveredTestClasses(tasks: Tasks[Seq[String]]) = Task.Command[Unit] {
+    assert(tasks.value.nonEmpty)
+    val results       = tasks.value.zip(Task.sequence(tasks.value)())
+    val noTestClasses = results.filter(_._2.isEmpty)
+    if (noTestClasses.nonEmpty) {
+      for ((task, _) <- noTestClasses)
+        System.err.println(s"$task is empty")
+      Task.fail("Found test modules with no test classes")
+    }
   }
 }
 
