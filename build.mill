@@ -959,6 +959,7 @@ trait CliTests extends CsModule
     }
   }
   trait NativeTests extends SbtTests with CsTests {
+    def testModuleName = "test"
     def cliLauncher: T[PathRef]
     def isStatic: Boolean = false
     def forkArgs = {
