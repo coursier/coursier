@@ -4,9 +4,13 @@
 
 ### Checksum verification
 
-coursier verifies SHA-1 checksums for downloaded artifacts when the corresponding `.sha1`
-files are available on the repository. If no checksum file is available, coursier accepts
-the artifact without checksum verification.
+coursier verifies checksums for downloaded artifacts. It supports MD5, SHA-1, and SHA-256
+checksums, which can be provided either via dedicated checksum files (`.md5`, `.sha1`,
+`.sha256`) available on the repository, or via HTTP response headers (`X-Checksum-MD5`,
+`X-Checksum-SHA1`, `X-Checksum-SHA256`) returned when downloading the artifact. When
+both a header checksum and a checksum file are available, the header checksum takes
+precedence. If no checksum is available at all, coursier accepts the artifact without
+checksum verification.
 
 Which checksum types are checked, and whether missing checksums are accepted, can be
 customized via coursier's API using `FileCache#checksums` and `FileCache#withChecksums`.
@@ -29,7 +33,7 @@ coursier does not support a verification metadata approach comparable to Gradle'
 
 coursier does not currently generate a Software Bill of Materials (SBOM) during
 dependency resolution.
-[Mill](https://mill-build.org), which uses coursier for dependency resolution,
+But the [Mill](https://mill-build.org) build tool, which uses coursier for dependency resolution,
 has [early SBOM support](https://github.com/com-lihaoyi/mill/pull/4757).
 
 ## CVE
