@@ -27,6 +27,11 @@ final case class FetchOptions(
   @ExtraName("j")
     jsonOutputFile: String = "",
 
+  @Group(OptionGroup.fetch)
+  @HelpMessage("Whether to use legacy report generation - might be buggy (defaults to false)")
+  @Hidden
+    legacyReportNoGuarantees: Option[Boolean] = None,
+
 
   @Recurse
     resolveOptions: SharedResolveOptions = SharedResolveOptions(),

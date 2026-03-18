@@ -3,6 +3,7 @@ package coursier.jvm;
 import com.oracle.svm.core.posix.headers.Errno;
 import org.graalvm.nativeimage.c.type.CTypeConversion;
 
+@Deprecated
 public class ErrnoException extends Exception {
 
     private final int errno0;

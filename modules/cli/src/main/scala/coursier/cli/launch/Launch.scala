@@ -18,8 +18,8 @@ import coursier.cli.Util.ValidatedExitOnError
 import coursier.core.{Dependency, Resolution}
 import coursier.env.EnvironmentUpdate
 import coursier.error.ResolutionError
+import coursier.exec.Execve
 import coursier.install.{Channels, MainClass, RawAppDescriptor}
-import coursier.jvm.Execve
 import coursier.launcher.{
   BootstrapGenerator,
   ClassLoaderContent,
@@ -250,11 +250,11 @@ object Launch extends CoursierCommand[LaunchOptions] {
         .loaderNames
         .map { name =>
           val deps = sharedLoaderParams.loaderDependencies.getOrElse(name, Nil)
-          val subRes = res.subset(deps.map(_.dependency(
+          val subRes = res.subset0(deps.map(_.dependency(
             JavaOrScalaModule.scalaBinaryVersion(scalaVersionOpt.getOrElse("")),
             scalaVersionOpt.getOrElse(""),
             platformOpt.getOrElse("")
-          )))
+          ))).toTry.get
           val artifacts = coursier.Artifacts.artifacts(
             subRes,
             artifactParams.classifiers,
@@ -451,7 +451,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
           else
             sys.error(s"Async-profiler not supported on current OS (${sys.props("os.name")})")
 
-        val dir = archiveCache.get(Artifact(url)).unsafeRun()(cache.ec) match {
+        val dir = archiveCache.get(Artifact(url)).unsafeRun(wrapExceptions = true)(cache.ec) match {
           case Left(err)  => throw new Exception(err)
           case Right(res) => res
         }
@@ -557,14 +557,14 @@ object Launch extends CoursierCommand[LaunchOptions] {
       .map(_._1)
       .flatMap {
         case j: JavaOrScalaDependency.JavaDependency =>
-          Some((j.module.module.name.value, j.dependency.moduleVersion))
+          Some((j.module.module.name.value, j.dependency.moduleVersionConstraint))
         case s: JavaOrScalaDependency.ScalaDependency =>
           res.rootDependencies.headOption.filter(dep =>
             dep.module.organization == s.baseDependency.module.organization &&
             dep.module.name.value.startsWith(s.baseDependency.module.name.value) &&
-            dep.version == s.baseDependency.version
+            dep.versionConstraint == s.baseDependency.versionConstraint
           ).map { dep =>
-            (s.baseDependency.module.name.value, dep.moduleVersion)
+            (s.baseDependency.module.name.value, dep.moduleVersionConstraint)
           }
       }
 
@@ -572,10 +572,10 @@ object Launch extends CoursierCommand[LaunchOptions] {
       (name, modVer) <- nameModVerOpt
     } yield {
       val v = res
-        .projectCache
+        .projectCache0
         .get(modVer)
-        .map(_._2.actualVersion)
-        .getOrElse(modVer._2)
+        .map(_._2.actualVersion0.asString)
+        .getOrElse(modVer._2.asString)
       s"$name.version" -> v
     }
   }
@@ -666,7 +666,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
         fetchCacheTask(params, pool, deps, args.unparsed)
 
     val (mainClass, run) =
-      try t.unsafeRun()(ec)
+      try t.unsafeRun(wrapExceptions = true)(ec)
       catch {
         case e: ResolveException if params.shared.resolve.output.verbosity <= 1 =>
           System.err.println(e.message)

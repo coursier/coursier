@@ -1,0 +1,956 @@
+{
+  "conflict_resolution": {},
+  "dependencies": [
+    {
+      "coord": "ch.qos.logback:logback-classic:1.2.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/ch/qos/logback/logback-classic/1.2.1/logback-classic-1.2.1.jar",
+      "directDependencies": [
+        "ch.qos.logback:logback-core:1.2.1",
+        "org.slf4j:slf4j-api:1.7.22"
+      ],
+      "dependencies": [
+        "ch.qos.logback:logback-core:1.2.1",
+        "org.slf4j:slf4j-api:1.7.22"
+      ]
+    },
+    {
+      "coord": "ch.qos.logback:logback-core:1.2.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/ch/qos/logback/logback-core/1.2.1/logback-core-1.2.1.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "com.eaio.uuid:uuid:3.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/eaio/uuid/uuid/3.2/uuid-3.2.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "com.fasterxml.jackson.core:jackson-annotations:2.9.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.9.0/jackson-annotations-2.9.0.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "com.fasterxml.jackson.core:jackson-core:2.9.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-core/2.9.0/jackson-core-2.9.0.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "com.fasterxml.jackson.core:jackson-databind:2.9.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/fasterxml/jackson/core/jackson-databind/2.9.0/jackson-databind-2.9.0.jar",
+      "directDependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.9.0",
+        "com.fasterxml.jackson.core:jackson-core:2.9.0"
+      ],
+      "dependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.9.0",
+        "com.fasterxml.jackson.core:jackson-core:2.9.0"
+      ]
+    },
+    {
+      "coord": "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.9.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/fasterxml/jackson/datatype/jackson-datatype-guava/2.9.0/jackson-datatype-guava-2.9.0.jar",
+      "directDependencies": [
+        "com.fasterxml.jackson.core:jackson-core:2.9.0",
+        "com.fasterxml.jackson.core:jackson-databind:2.9.0",
+        "com.google.guava:guava:20.0"
+      ],
+      "dependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.9.0",
+        "com.fasterxml.jackson.core:jackson-core:2.9.0",
+        "com.fasterxml.jackson.core:jackson-databind:2.9.0",
+        "com.google.guava:guava:20.0"
+      ]
+    },
+    {
+      "coord": "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.9.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/fasterxml/jackson/jaxrs/jackson-jaxrs-base/2.9.0/jackson-jaxrs-base-2.9.0.jar",
+      "directDependencies": [
+        "com.fasterxml.jackson.core:jackson-core:2.9.0",
+        "com.fasterxml.jackson.core:jackson-databind:2.9.0"
+      ],
+      "dependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.9.0",
+        "com.fasterxml.jackson.core:jackson-core:2.9.0",
+        "com.fasterxml.jackson.core:jackson-databind:2.9.0"
+      ]
+    },
+    {
+      "coord": "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/fasterxml/jackson/jaxrs/jackson-jaxrs-json-provider/2.9.0/jackson-jaxrs-json-provider-2.9.0.jar",
+      "directDependencies": [
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.9.0",
+        "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.0"
+      ],
+      "dependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.9.0",
+        "com.fasterxml.jackson.core:jackson-core:2.9.0",
+        "com.fasterxml.jackson.core:jackson-databind:2.9.0",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.9.0",
+        "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.0"
+      ]
+    },
+    {
+      "coord": "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/fasterxml/jackson/module/jackson-module-jaxb-annotations/2.9.0/jackson-module-jaxb-annotations-2.9.0.jar",
+      "directDependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.9.0",
+        "com.fasterxml.jackson.core:jackson-core:2.9.0",
+        "com.fasterxml.jackson.core:jackson-databind:2.9.0"
+      ],
+      "dependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.9.0",
+        "com.fasterxml.jackson.core:jackson-core:2.9.0",
+        "com.fasterxml.jackson.core:jackson-databind:2.9.0"
+      ]
+    },
+    {
+      "coord": "com.github.jnr:jffi:1.2.9",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/github/jnr/jffi/1.2.9/jffi-1.2.9.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "com.github.jnr:jffi:jar:native:1.2.9",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/github/jnr/jffi/1.2.9/jffi-1.2.9-native.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "com.github.jnr:jnr-constants:0.8.7",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/github/jnr/jnr-constants/0.8.7/jnr-constants-0.8.7.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "com.github.jnr:jnr-enxio:0.9",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/github/jnr/jnr-enxio/0.9/jnr-enxio-0.9.jar",
+      "directDependencies": [
+        "com.github.jnr:jnr-constants:0.8.7",
+        "com.github.jnr:jnr-ffi:2.0.3"
+      ],
+      "dependencies": [
+        "com.github.jnr:jffi:1.2.9",
+        "com.github.jnr:jffi:jar:native:1.2.9",
+        "com.github.jnr:jnr-constants:0.8.7",
+        "com.github.jnr:jnr-ffi:2.0.3",
+        "com.github.jnr:jnr-x86asm:1.0.2",
+        "org.ow2.asm:asm-analysis:5.0.3",
+        "org.ow2.asm:asm-commons:5.0.3",
+        "org.ow2.asm:asm-tree:5.0.3",
+        "org.ow2.asm:asm-util:5.0.3",
+        "org.ow2.asm:asm:5.0.3"
+      ]
+    },
+    {
+      "coord": "com.github.jnr:jnr-ffi:2.0.3",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/github/jnr/jnr-ffi/2.0.3/jnr-ffi-2.0.3.jar",
+      "directDependencies": [
+        "com.github.jnr:jffi:1.2.9",
+        "com.github.jnr:jffi:jar:native:1.2.9",
+        "com.github.jnr:jnr-x86asm:1.0.2",
+        "org.ow2.asm:asm-analysis:5.0.3",
+        "org.ow2.asm:asm-commons:5.0.3",
+        "org.ow2.asm:asm-tree:5.0.3",
+        "org.ow2.asm:asm-util:5.0.3",
+        "org.ow2.asm:asm:5.0.3"
+      ],
+      "dependencies": [
+        "com.github.jnr:jffi:1.2.9",
+        "com.github.jnr:jffi:jar:native:1.2.9",
+        "com.github.jnr:jnr-x86asm:1.0.2",
+        "org.ow2.asm:asm-analysis:5.0.3",
+        "org.ow2.asm:asm-commons:5.0.3",
+        "org.ow2.asm:asm-tree:5.0.3",
+        "org.ow2.asm:asm-util:5.0.3",
+        "org.ow2.asm:asm:5.0.3"
+      ]
+    },
+    {
+      "coord": "com.github.jnr:jnr-posix:3.0.12",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/github/jnr/jnr-posix/3.0.12/jnr-posix-3.0.12.jar",
+      "directDependencies": [
+        "com.github.jnr:jnr-constants:0.8.7",
+        "com.github.jnr:jnr-ffi:2.0.3"
+      ],
+      "dependencies": [
+        "com.github.jnr:jffi:1.2.9",
+        "com.github.jnr:jffi:jar:native:1.2.9",
+        "com.github.jnr:jnr-constants:0.8.7",
+        "com.github.jnr:jnr-ffi:2.0.3",
+        "com.github.jnr:jnr-x86asm:1.0.2",
+        "org.ow2.asm:asm-analysis:5.0.3",
+        "org.ow2.asm:asm-commons:5.0.3",
+        "org.ow2.asm:asm-tree:5.0.3",
+        "org.ow2.asm:asm-util:5.0.3",
+        "org.ow2.asm:asm:5.0.3"
+      ]
+    },
+    {
+      "coord": "com.github.jnr:jnr-unixsocket:0.8",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/github/jnr/jnr-unixsocket/0.8/jnr-unixsocket-0.8.jar",
+      "directDependencies": [
+        "com.github.jnr:jnr-constants:0.8.7",
+        "com.github.jnr:jnr-enxio:0.9",
+        "com.github.jnr:jnr-ffi:2.0.3",
+        "com.github.jnr:jnr-posix:3.0.12"
+      ],
+      "dependencies": [
+        "com.github.jnr:jffi:1.2.9",
+        "com.github.jnr:jffi:jar:native:1.2.9",
+        "com.github.jnr:jnr-constants:0.8.7",
+        "com.github.jnr:jnr-enxio:0.9",
+        "com.github.jnr:jnr-ffi:2.0.3",
+        "com.github.jnr:jnr-posix:3.0.12",
+        "com.github.jnr:jnr-x86asm:1.0.2",
+        "org.ow2.asm:asm-analysis:5.0.3",
+        "org.ow2.asm:asm-commons:5.0.3",
+        "org.ow2.asm:asm-tree:5.0.3",
+        "org.ow2.asm:asm-util:5.0.3",
+        "org.ow2.asm:asm:5.0.3"
+      ]
+    },
+    {
+      "coord": "com.github.jnr:jnr-x86asm:1.0.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/github/jnr/jnr-x86asm/1.0.2/jnr-x86asm-1.0.2.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "com.google.auth:google-auth-library-credentials:0.7.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/google/auth/google-auth-library-credentials/0.7.1/google-auth-library-credentials-0.7.1.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "com.google.auth:google-auth-library-oauth2-http:0.7.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/google/auth/google-auth-library-oauth2-http/0.7.1/google-auth-library-oauth2-http-0.7.1.jar",
+      "directDependencies": [
+        "com.google.auth:google-auth-library-credentials:0.7.1",
+        "com.google.guava:guava:20.0",
+        "com.google.http-client:google-http-client-jackson2:1.22.0",
+        "com.google.http-client:google-http-client:1.22.0"
+      ],
+      "dependencies": [
+        "com.fasterxml.jackson.core:jackson-core:2.9.0",
+        "com.google.auth:google-auth-library-credentials:0.7.1",
+        "com.google.code.findbugs:jsr305:3.0.0",
+        "com.google.guava:guava:20.0",
+        "com.google.http-client:google-http-client-jackson2:1.22.0",
+        "com.google.http-client:google-http-client:1.22.0",
+        "commons-codec:commons-codec:1.10",
+        "commons-logging:commons-logging:1.2",
+        "org.apache.httpcomponents:httpclient:4.5",
+        "org.apache.httpcomponents:httpcore:4.4.5"
+      ]
+    },
+    {
+      "coord": "com.google.code.findbugs:jsr305:3.0.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/google/code/findbugs/jsr305/3.0.0/jsr305-3.0.0.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "com.google.guava:guava:20.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/google/guava/guava/20.0/guava-20.0.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "com.google.http-client:google-http-client-jackson2:1.22.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/google/http-client/google-http-client-jackson2/1.22.0/google-http-client-jackson2-1.22.0.jar",
+      "directDependencies": [
+        "com.fasterxml.jackson.core:jackson-core:2.9.0",
+        "com.google.http-client:google-http-client:1.22.0"
+      ],
+      "dependencies": [
+        "com.fasterxml.jackson.core:jackson-core:2.9.0",
+        "com.google.code.findbugs:jsr305:3.0.0",
+        "com.google.http-client:google-http-client:1.22.0",
+        "commons-codec:commons-codec:1.10",
+        "commons-logging:commons-logging:1.2",
+        "org.apache.httpcomponents:httpclient:4.5",
+        "org.apache.httpcomponents:httpcore:4.4.5"
+      ]
+    },
+    {
+      "coord": "com.google.http-client:google-http-client:1.22.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/google/http-client/google-http-client/1.22.0/google-http-client-1.22.0.jar",
+      "directDependencies": [
+        "com.google.code.findbugs:jsr305:3.0.0",
+        "org.apache.httpcomponents:httpclient:4.5"
+      ],
+      "dependencies": [
+        "com.google.code.findbugs:jsr305:3.0.0",
+        "commons-codec:commons-codec:1.10",
+        "commons-logging:commons-logging:1.2",
+        "org.apache.httpcomponents:httpclient:4.5",
+        "org.apache.httpcomponents:httpcore:4.4.5"
+      ]
+    },
+    {
+      "coord": "com.spotify:docker-client:jar:shaded:8.9.0",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/spotify/docker-client/8.9.0/docker-client-8.9.0-shaded.jar",
+      "directDependencies": [
+        "ch.qos.logback:logback-classic:1.2.1",
+        "com.fasterxml.jackson.core:jackson-databind:2.9.0",
+        "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.9.0",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.0",
+        "com.github.jnr:jnr-unixsocket:0.8",
+        "com.google.guava:guava:20.0",
+        "commons-io:commons-io:2.5",
+        "commons-lang:commons-lang:2.6",
+        "org.apache.commons:commons-compress:1.9",
+        "org.apache.httpcomponents:httpclient:4.5",
+        "org.apache.httpcomponents:httpcore:4.4.5",
+        "org.bouncycastle:bcpkix-jdk15on:1.53",
+        "org.glassfish.jersey.connectors:jersey-apache-connector:2.22.2",
+        "org.glassfish.jersey.core:jersey-client:2.22.2",
+        "org.glassfish.jersey.media:jersey-media-json-jackson:2.22.2",
+        "org.slf4j:slf4j-api:1.7.22"
+      ],
+      "dependencies": [
+        "ch.qos.logback:logback-classic:1.2.1",
+        "ch.qos.logback:logback-core:1.2.1",
+        "com.fasterxml.jackson.core:jackson-annotations:2.9.0",
+        "com.fasterxml.jackson.core:jackson-core:2.9.0",
+        "com.fasterxml.jackson.core:jackson-databind:2.9.0",
+        "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.9.0",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.9.0",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.0",
+        "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.0",
+        "com.github.jnr:jffi:1.2.9",
+        "com.github.jnr:jffi:jar:native:1.2.9",
+        "com.github.jnr:jnr-constants:0.8.7",
+        "com.github.jnr:jnr-enxio:0.9",
+        "com.github.jnr:jnr-ffi:2.0.3",
+        "com.github.jnr:jnr-posix:3.0.12",
+        "com.github.jnr:jnr-unixsocket:0.8",
+        "com.github.jnr:jnr-x86asm:1.0.2",
+        "com.google.guava:guava:20.0",
+        "commons-codec:commons-codec:1.10",
+        "commons-io:commons-io:2.5",
+        "commons-lang:commons-lang:2.6",
+        "commons-logging:commons-logging:1.2",
+        "javax.annotation:javax.annotation-api:1.2",
+        "javax.inject:javax.inject:1",
+        "javax.ws.rs:javax.ws.rs-api:2.0.1",
+        "org.apache.commons:commons-compress:1.9",
+        "org.apache.httpcomponents:httpclient:4.5",
+        "org.apache.httpcomponents:httpcore:4.4.5",
+        "org.bouncycastle:bcpkix-jdk15on:1.53",
+        "org.bouncycastle:bcprov-jdk15on:1.53",
+        "org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b34",
+        "org.glassfish.hk2.external:javax.inject:2.4.0-b34",
+        "org.glassfish.hk2:hk2-api:2.4.0-b34",
+        "org.glassfish.hk2:hk2-locator:2.4.0-b34",
+        "org.glassfish.hk2:hk2-utils:2.4.0-b34",
+        "org.glassfish.hk2:osgi-resource-locator:1.0.1",
+        "org.glassfish.jersey.bundles.repackaged:jersey-guava:2.22.2",
+        "org.glassfish.jersey.connectors:jersey-apache-connector:2.22.2",
+        "org.glassfish.jersey.core:jersey-client:2.22.2",
+        "org.glassfish.jersey.core:jersey-common:2.22.2",
+        "org.glassfish.jersey.ext:jersey-entity-filtering:2.22.2",
+        "org.glassfish.jersey.media:jersey-media-json-jackson:2.22.2",
+        "org.javassist:javassist:3.18.1-GA",
+        "org.ow2.asm:asm-analysis:5.0.3",
+        "org.ow2.asm:asm-commons:5.0.3",
+        "org.ow2.asm:asm-tree:5.0.3",
+        "org.ow2.asm:asm-util:5.0.3",
+        "org.ow2.asm:asm:5.0.3",
+        "org.slf4j:slf4j-api:1.7.22"
+      ]
+    },
+    {
+      "coord": "com.spotify:helios-client:0.9.193",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/spotify/helios-client/0.9.193/helios-client-0.9.193.jar",
+      "directDependencies": [
+        "com.eaio.uuid:uuid:3.2",
+        "com.fasterxml.jackson.core:jackson-annotations:2.9.0",
+        "com.fasterxml.jackson.core:jackson-databind:2.9.0",
+        "com.google.auth:google-auth-library-oauth2-http:0.7.1",
+        "com.google.guava:guava:20.0",
+        "com.spotify:ssh-agent-proxy:0.1.5",
+        "com.spotify:ssh-agent-tls:0.0.2",
+        "commons-codec:commons-codec:1.10",
+        "javax.ws.rs:jsr311-api:1.1.1",
+        "joda-time:joda-time:2.9.2",
+        "org.apache.httpcomponents:httpclient:4.5",
+        "org.bouncycastle:bcpkix-jdk15on:1.53",
+        "org.bouncycastle:bcprov-debug-jdk15on:1.53",
+        "org.slf4j:slf4j-api:1.7.22"
+      ],
+      "dependencies": [
+        "com.eaio.uuid:uuid:3.2",
+        "com.fasterxml.jackson.core:jackson-annotations:2.9.0",
+        "com.fasterxml.jackson.core:jackson-core:2.9.0",
+        "com.fasterxml.jackson.core:jackson-databind:2.9.0",
+        "com.github.jnr:jffi:1.2.9",
+        "com.github.jnr:jffi:jar:native:1.2.9",
+        "com.github.jnr:jnr-constants:0.8.7",
+        "com.github.jnr:jnr-enxio:0.9",
+        "com.github.jnr:jnr-ffi:2.0.3",
+        "com.github.jnr:jnr-posix:3.0.12",
+        "com.github.jnr:jnr-unixsocket:0.8",
+        "com.github.jnr:jnr-x86asm:1.0.2",
+        "com.google.auth:google-auth-library-credentials:0.7.1",
+        "com.google.auth:google-auth-library-oauth2-http:0.7.1",
+        "com.google.code.findbugs:jsr305:3.0.0",
+        "com.google.guava:guava:20.0",
+        "com.google.http-client:google-http-client-jackson2:1.22.0",
+        "com.google.http-client:google-http-client:1.22.0",
+        "com.spotify:ssh-agent-proxy:0.1.5",
+        "com.spotify:ssh-agent-tls:0.0.2",
+        "commons-codec:commons-codec:1.10",
+        "commons-logging:commons-logging:1.2",
+        "javax.ws.rs:jsr311-api:1.1.1",
+        "joda-time:joda-time:2.9.2",
+        "org.apache.httpcomponents:httpclient:4.5",
+        "org.apache.httpcomponents:httpcore:4.4.5",
+        "org.bouncycastle:bcpkix-jdk15on:1.53",
+        "org.bouncycastle:bcprov-debug-jdk15on:1.53",
+        "org.bouncycastle:bcprov-jdk15on:1.53",
+        "org.ow2.asm:asm-analysis:5.0.3",
+        "org.ow2.asm:asm-commons:5.0.3",
+        "org.ow2.asm:asm-tree:5.0.3",
+        "org.ow2.asm:asm-util:5.0.3",
+        "org.ow2.asm:asm:5.0.3",
+        "org.slf4j:slf4j-api:1.7.22"
+      ]
+    },
+    {
+      "coord": "com.spotify:helios-testing:0.9.193",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/spotify/helios-testing/0.9.193/helios-testing-0.9.193.jar",
+      "directDependencies": [
+        "com.spotify:docker-client:jar:shaded:8.9.0",
+        "com.spotify:helios-client:0.9.193",
+        "com.typesafe:config:1.2.1",
+        "commons-lang:commons-lang:2.6",
+        "joda-time:joda-time:2.9.2",
+        "junit:junit:4.12"
+      ],
+      "dependencies": [
+        "ch.qos.logback:logback-classic:1.2.1",
+        "ch.qos.logback:logback-core:1.2.1",
+        "com.eaio.uuid:uuid:3.2",
+        "com.fasterxml.jackson.core:jackson-annotations:2.9.0",
+        "com.fasterxml.jackson.core:jackson-core:2.9.0",
+        "com.fasterxml.jackson.core:jackson-databind:2.9.0",
+        "com.fasterxml.jackson.datatype:jackson-datatype-guava:2.9.0",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.9.0",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.0",
+        "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.0",
+        "com.github.jnr:jffi:1.2.9",
+        "com.github.jnr:jffi:jar:native:1.2.9",
+        "com.github.jnr:jnr-constants:0.8.7",
+        "com.github.jnr:jnr-enxio:0.9",
+        "com.github.jnr:jnr-ffi:2.0.3",
+        "com.github.jnr:jnr-posix:3.0.12",
+        "com.github.jnr:jnr-unixsocket:0.8",
+        "com.github.jnr:jnr-x86asm:1.0.2",
+        "com.google.auth:google-auth-library-credentials:0.7.1",
+        "com.google.auth:google-auth-library-oauth2-http:0.7.1",
+        "com.google.code.findbugs:jsr305:3.0.0",
+        "com.google.guava:guava:20.0",
+        "com.google.http-client:google-http-client-jackson2:1.22.0",
+        "com.google.http-client:google-http-client:1.22.0",
+        "com.spotify:docker-client:jar:shaded:8.9.0",
+        "com.spotify:helios-client:0.9.193",
+        "com.spotify:ssh-agent-proxy:0.1.5",
+        "com.spotify:ssh-agent-tls:0.0.2",
+        "com.typesafe:config:1.2.1",
+        "commons-codec:commons-codec:1.10",
+        "commons-io:commons-io:2.5",
+        "commons-lang:commons-lang:2.6",
+        "commons-logging:commons-logging:1.2",
+        "javax.annotation:javax.annotation-api:1.2",
+        "javax.inject:javax.inject:1",
+        "javax.ws.rs:javax.ws.rs-api:2.0.1",
+        "javax.ws.rs:jsr311-api:1.1.1",
+        "joda-time:joda-time:2.9.2",
+        "junit:junit:4.12",
+        "org.apache.commons:commons-compress:1.9",
+        "org.apache.httpcomponents:httpclient:4.5",
+        "org.apache.httpcomponents:httpcore:4.4.5",
+        "org.bouncycastle:bcpkix-jdk15on:1.53",
+        "org.bouncycastle:bcprov-debug-jdk15on:1.53",
+        "org.bouncycastle:bcprov-jdk15on:1.53",
+        "org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b34",
+        "org.glassfish.hk2.external:javax.inject:2.4.0-b34",
+        "org.glassfish.hk2:hk2-api:2.4.0-b34",
+        "org.glassfish.hk2:hk2-locator:2.4.0-b34",
+        "org.glassfish.hk2:hk2-utils:2.4.0-b34",
+        "org.glassfish.hk2:osgi-resource-locator:1.0.1",
+        "org.glassfish.jersey.bundles.repackaged:jersey-guava:2.22.2",
+        "org.glassfish.jersey.connectors:jersey-apache-connector:2.22.2",
+        "org.glassfish.jersey.core:jersey-client:2.22.2",
+        "org.glassfish.jersey.core:jersey-common:2.22.2",
+        "org.glassfish.jersey.ext:jersey-entity-filtering:2.22.2",
+        "org.glassfish.jersey.media:jersey-media-json-jackson:2.22.2",
+        "org.hamcrest:hamcrest-core:1.3",
+        "org.javassist:javassist:3.18.1-GA",
+        "org.ow2.asm:asm-analysis:5.0.3",
+        "org.ow2.asm:asm-commons:5.0.3",
+        "org.ow2.asm:asm-tree:5.0.3",
+        "org.ow2.asm:asm-util:5.0.3",
+        "org.ow2.asm:asm:5.0.3",
+        "org.slf4j:slf4j-api:1.7.22"
+      ]
+    },
+    {
+      "coord": "com.spotify:ssh-agent-proxy:0.1.5",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/spotify/ssh-agent-proxy/0.1.5/ssh-agent-proxy-0.1.5.jar",
+      "directDependencies": [
+        "com.github.jnr:jnr-unixsocket:0.8",
+        "com.google.guava:guava:20.0",
+        "commons-codec:commons-codec:1.10",
+        "org.slf4j:slf4j-api:1.7.22"
+      ],
+      "dependencies": [
+        "com.github.jnr:jffi:1.2.9",
+        "com.github.jnr:jffi:jar:native:1.2.9",
+        "com.github.jnr:jnr-constants:0.8.7",
+        "com.github.jnr:jnr-enxio:0.9",
+        "com.github.jnr:jnr-ffi:2.0.3",
+        "com.github.jnr:jnr-posix:3.0.12",
+        "com.github.jnr:jnr-unixsocket:0.8",
+        "com.github.jnr:jnr-x86asm:1.0.2",
+        "com.google.guava:guava:20.0",
+        "commons-codec:commons-codec:1.10",
+        "org.ow2.asm:asm-analysis:5.0.3",
+        "org.ow2.asm:asm-commons:5.0.3",
+        "org.ow2.asm:asm-tree:5.0.3",
+        "org.ow2.asm:asm-util:5.0.3",
+        "org.ow2.asm:asm:5.0.3",
+        "org.slf4j:slf4j-api:1.7.22"
+      ]
+    },
+    {
+      "coord": "com.spotify:ssh-agent-tls:0.0.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/spotify/ssh-agent-tls/0.0.2/ssh-agent-tls-0.0.2.jar",
+      "directDependencies": [
+        "com.eaio.uuid:uuid:3.2",
+        "com.google.guava:guava:20.0",
+        "com.spotify:ssh-agent-proxy:0.1.5",
+        "commons-codec:commons-codec:1.10",
+        "org.apache.httpcomponents:httpclient:4.5",
+        "org.bouncycastle:bcpkix-jdk15on:1.53",
+        "org.bouncycastle:bcprov-debug-jdk15on:1.53",
+        "org.slf4j:slf4j-api:1.7.22"
+      ],
+      "dependencies": [
+        "com.eaio.uuid:uuid:3.2",
+        "com.github.jnr:jffi:1.2.9",
+        "com.github.jnr:jffi:jar:native:1.2.9",
+        "com.github.jnr:jnr-constants:0.8.7",
+        "com.github.jnr:jnr-enxio:0.9",
+        "com.github.jnr:jnr-ffi:2.0.3",
+        "com.github.jnr:jnr-posix:3.0.12",
+        "com.github.jnr:jnr-unixsocket:0.8",
+        "com.github.jnr:jnr-x86asm:1.0.2",
+        "com.google.guava:guava:20.0",
+        "com.spotify:ssh-agent-proxy:0.1.5",
+        "commons-codec:commons-codec:1.10",
+        "commons-logging:commons-logging:1.2",
+        "org.apache.httpcomponents:httpclient:4.5",
+        "org.apache.httpcomponents:httpcore:4.4.5",
+        "org.bouncycastle:bcpkix-jdk15on:1.53",
+        "org.bouncycastle:bcprov-debug-jdk15on:1.53",
+        "org.bouncycastle:bcprov-jdk15on:1.53",
+        "org.ow2.asm:asm-analysis:5.0.3",
+        "org.ow2.asm:asm-commons:5.0.3",
+        "org.ow2.asm:asm-tree:5.0.3",
+        "org.ow2.asm:asm-util:5.0.3",
+        "org.ow2.asm:asm:5.0.3",
+        "org.slf4j:slf4j-api:1.7.22"
+      ]
+    },
+    {
+      "coord": "com.typesafe:config:1.2.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/com/typesafe/config/1.2.1/config-1.2.1.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "commons-codec:commons-codec:1.10",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/commons-codec/commons-codec/1.10/commons-codec-1.10.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "commons-io:commons-io:2.5",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/commons-io/commons-io/2.5/commons-io-2.5.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "commons-lang:commons-lang:2.6",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/commons-lang/commons-lang/2.6/commons-lang-2.6.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "commons-logging:commons-logging:1.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/commons-logging/commons-logging/1.2/commons-logging-1.2.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "javax.annotation:javax.annotation-api:1.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/javax/annotation/javax.annotation-api/1.2/javax.annotation-api-1.2.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "javax.inject:javax.inject:1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/javax/inject/javax.inject/1/javax.inject-1.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "javax.ws.rs:javax.ws.rs-api:2.0.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/javax/ws/rs/javax.ws.rs-api/2.0.1/javax.ws.rs-api-2.0.1.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "javax.ws.rs:jsr311-api:1.1.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/javax/ws/rs/jsr311-api/1.1.1/jsr311-api-1.1.1.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "joda-time:joda-time:2.9.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/joda-time/joda-time/2.9.2/joda-time-2.9.2.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "junit:junit:4.12",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar",
+      "directDependencies": [
+        "org.hamcrest:hamcrest-core:1.3"
+      ],
+      "dependencies": [
+        "org.hamcrest:hamcrest-core:1.3"
+      ]
+    },
+    {
+      "coord": "org.apache.commons:commons-compress:1.9",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/commons/commons-compress/1.9/commons-compress-1.9.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.apache.httpcomponents:httpclient:4.5",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/httpcomponents/httpclient/4.5/httpclient-4.5.jar",
+      "directDependencies": [
+        "commons-codec:commons-codec:1.10",
+        "commons-logging:commons-logging:1.2",
+        "org.apache.httpcomponents:httpcore:4.4.5"
+      ],
+      "dependencies": [
+        "commons-codec:commons-codec:1.10",
+        "commons-logging:commons-logging:1.2",
+        "org.apache.httpcomponents:httpcore:4.4.5"
+      ]
+    },
+    {
+      "coord": "org.apache.httpcomponents:httpcore:4.4.5",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/apache/httpcomponents/httpcore/4.4.5/httpcore-4.4.5.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.bouncycastle:bcpkix-jdk15on:1.53",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/bouncycastle/bcpkix-jdk15on/1.53/bcpkix-jdk15on-1.53.jar",
+      "directDependencies": [
+        "org.bouncycastle:bcprov-jdk15on:1.53"
+      ],
+      "dependencies": [
+        "org.bouncycastle:bcprov-jdk15on:1.53"
+      ]
+    },
+    {
+      "coord": "org.bouncycastle:bcprov-debug-jdk15on:1.53",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/bouncycastle/bcprov-debug-jdk15on/1.53/bcprov-debug-jdk15on-1.53.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.bouncycastle:bcprov-jdk15on:1.53",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/bouncycastle/bcprov-jdk15on/1.53/bcprov-jdk15on-1.53.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b34",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/glassfish/hk2/external/aopalliance-repackaged/2.4.0-b34/aopalliance-repackaged-2.4.0-b34.jar",
+      "directDependencies": [],
+      "dependencies": [],
+      "exclusions": [
+        "javax.inject:javax.inject"
+      ]
+    },
+    {
+      "coord": "org.glassfish.hk2.external:javax.inject:2.4.0-b34",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/glassfish/hk2/external/javax.inject/2.4.0-b34/javax.inject-2.4.0-b34.jar",
+      "directDependencies": [],
+      "dependencies": [],
+      "exclusions": [
+        "javax.inject:javax.inject"
+      ]
+    },
+    {
+      "coord": "org.glassfish.hk2:hk2-api:2.4.0-b34",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/glassfish/hk2/hk2-api/2.4.0-b34/hk2-api-2.4.0-b34.jar",
+      "directDependencies": [
+        "org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b34",
+        "org.glassfish.hk2:hk2-utils:2.4.0-b34"
+      ],
+      "dependencies": [
+        "org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b34",
+        "org.glassfish.hk2:hk2-utils:2.4.0-b34"
+      ],
+      "exclusions": [
+        "javax.inject:javax.inject"
+      ]
+    },
+    {
+      "coord": "org.glassfish.hk2:hk2-locator:2.4.0-b34",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/glassfish/hk2/hk2-locator/2.4.0-b34/hk2-locator-2.4.0-b34.jar",
+      "directDependencies": [
+        "org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b34",
+        "org.glassfish.hk2.external:javax.inject:2.4.0-b34",
+        "org.glassfish.hk2:hk2-api:2.4.0-b34",
+        "org.glassfish.hk2:hk2-utils:2.4.0-b34",
+        "org.javassist:javassist:3.18.1-GA"
+      ],
+      "dependencies": [
+        "javax.inject:javax.inject:1",
+        "org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b34",
+        "org.glassfish.hk2.external:javax.inject:2.4.0-b34",
+        "org.glassfish.hk2:hk2-api:2.4.0-b34",
+        "org.glassfish.hk2:hk2-utils:2.4.0-b34",
+        "org.javassist:javassist:3.18.1-GA"
+      ]
+    },
+    {
+      "coord": "org.glassfish.hk2:hk2-utils:2.4.0-b34",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/glassfish/hk2/hk2-utils/2.4.0-b34/hk2-utils-2.4.0-b34.jar",
+      "directDependencies": [
+        "javax.inject:javax.inject:1"
+      ],
+      "dependencies": [
+        "javax.inject:javax.inject:1"
+      ],
+      "exclusions": [
+        "javax.inject:javax.inject"
+      ]
+    },
+    {
+      "coord": "org.glassfish.hk2:osgi-resource-locator:1.0.1",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/glassfish/hk2/osgi-resource-locator/1.0.1/osgi-resource-locator-1.0.1.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.glassfish.jersey.bundles.repackaged:jersey-guava:2.22.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/glassfish/jersey/bundles/repackaged/jersey-guava/2.22.2/jersey-guava-2.22.2.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.glassfish.jersey.connectors:jersey-apache-connector:2.22.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/glassfish/jersey/connectors/jersey-apache-connector/2.22.2/jersey-apache-connector-2.22.2.jar",
+      "directDependencies": [
+        "javax.ws.rs:javax.ws.rs-api:2.0.1",
+        "org.apache.httpcomponents:httpclient:4.5",
+        "org.glassfish.jersey.core:jersey-client:2.22.2",
+        "org.glassfish.jersey.core:jersey-common:2.22.2"
+      ],
+      "dependencies": [
+        "commons-codec:commons-codec:1.10",
+        "commons-logging:commons-logging:1.2",
+        "javax.annotation:javax.annotation-api:1.2",
+        "javax.inject:javax.inject:1",
+        "javax.ws.rs:javax.ws.rs-api:2.0.1",
+        "org.apache.httpcomponents:httpclient:4.5",
+        "org.apache.httpcomponents:httpcore:4.4.5",
+        "org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b34",
+        "org.glassfish.hk2.external:javax.inject:2.4.0-b34",
+        "org.glassfish.hk2:hk2-api:2.4.0-b34",
+        "org.glassfish.hk2:hk2-locator:2.4.0-b34",
+        "org.glassfish.hk2:hk2-utils:2.4.0-b34",
+        "org.glassfish.hk2:osgi-resource-locator:1.0.1",
+        "org.glassfish.jersey.bundles.repackaged:jersey-guava:2.22.2",
+        "org.glassfish.jersey.core:jersey-client:2.22.2",
+        "org.glassfish.jersey.core:jersey-common:2.22.2",
+        "org.javassist:javassist:3.18.1-GA"
+      ]
+    },
+    {
+      "coord": "org.glassfish.jersey.core:jersey-client:2.22.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/glassfish/jersey/core/jersey-client/2.22.2/jersey-client-2.22.2.jar",
+      "directDependencies": [
+        "javax.ws.rs:javax.ws.rs-api:2.0.1",
+        "org.glassfish.hk2.external:javax.inject:2.4.0-b34",
+        "org.glassfish.hk2:hk2-api:2.4.0-b34",
+        "org.glassfish.hk2:hk2-locator:2.4.0-b34",
+        "org.glassfish.jersey.core:jersey-common:2.22.2"
+      ],
+      "dependencies": [
+        "javax.annotation:javax.annotation-api:1.2",
+        "javax.inject:javax.inject:1",
+        "javax.ws.rs:javax.ws.rs-api:2.0.1",
+        "org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b34",
+        "org.glassfish.hk2.external:javax.inject:2.4.0-b34",
+        "org.glassfish.hk2:hk2-api:2.4.0-b34",
+        "org.glassfish.hk2:hk2-locator:2.4.0-b34",
+        "org.glassfish.hk2:hk2-utils:2.4.0-b34",
+        "org.glassfish.hk2:osgi-resource-locator:1.0.1",
+        "org.glassfish.jersey.bundles.repackaged:jersey-guava:2.22.2",
+        "org.glassfish.jersey.core:jersey-common:2.22.2",
+        "org.javassist:javassist:3.18.1-GA"
+      ]
+    },
+    {
+      "coord": "org.glassfish.jersey.core:jersey-common:2.22.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/glassfish/jersey/core/jersey-common/2.22.2/jersey-common-2.22.2.jar",
+      "directDependencies": [
+        "javax.annotation:javax.annotation-api:1.2",
+        "javax.ws.rs:javax.ws.rs-api:2.0.1",
+        "org.glassfish.hk2.external:javax.inject:2.4.0-b34",
+        "org.glassfish.hk2:hk2-api:2.4.0-b34",
+        "org.glassfish.hk2:hk2-locator:2.4.0-b34",
+        "org.glassfish.hk2:osgi-resource-locator:1.0.1",
+        "org.glassfish.jersey.bundles.repackaged:jersey-guava:2.22.2"
+      ],
+      "dependencies": [
+        "javax.annotation:javax.annotation-api:1.2",
+        "javax.inject:javax.inject:1",
+        "javax.ws.rs:javax.ws.rs-api:2.0.1",
+        "org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b34",
+        "org.glassfish.hk2.external:javax.inject:2.4.0-b34",
+        "org.glassfish.hk2:hk2-api:2.4.0-b34",
+        "org.glassfish.hk2:hk2-locator:2.4.0-b34",
+        "org.glassfish.hk2:hk2-utils:2.4.0-b34",
+        "org.glassfish.hk2:osgi-resource-locator:1.0.1",
+        "org.glassfish.jersey.bundles.repackaged:jersey-guava:2.22.2",
+        "org.javassist:javassist:3.18.1-GA"
+      ]
+    },
+    {
+      "coord": "org.glassfish.jersey.ext:jersey-entity-filtering:2.22.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/glassfish/jersey/ext/jersey-entity-filtering/2.22.2/jersey-entity-filtering-2.22.2.jar",
+      "directDependencies": [
+        "javax.ws.rs:javax.ws.rs-api:2.0.1"
+      ],
+      "dependencies": [
+        "javax.ws.rs:javax.ws.rs-api:2.0.1"
+      ]
+    },
+    {
+      "coord": "org.glassfish.jersey.media:jersey-media-json-jackson:2.22.2",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/glassfish/jersey/media/jersey-media-json-jackson/2.22.2/jersey-media-json-jackson-2.22.2.jar",
+      "directDependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.9.0",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.9.0",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.0",
+        "org.glassfish.jersey.core:jersey-common:2.22.2",
+        "org.glassfish.jersey.ext:jersey-entity-filtering:2.22.2"
+      ],
+      "dependencies": [
+        "com.fasterxml.jackson.core:jackson-annotations:2.9.0",
+        "com.fasterxml.jackson.core:jackson-core:2.9.0",
+        "com.fasterxml.jackson.core:jackson-databind:2.9.0",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base:2.9.0",
+        "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:2.9.0",
+        "com.fasterxml.jackson.module:jackson-module-jaxb-annotations:2.9.0",
+        "javax.annotation:javax.annotation-api:1.2",
+        "javax.inject:javax.inject:1",
+        "javax.ws.rs:javax.ws.rs-api:2.0.1",
+        "org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b34",
+        "org.glassfish.hk2.external:javax.inject:2.4.0-b34",
+        "org.glassfish.hk2:hk2-api:2.4.0-b34",
+        "org.glassfish.hk2:hk2-locator:2.4.0-b34",
+        "org.glassfish.hk2:hk2-utils:2.4.0-b34",
+        "org.glassfish.hk2:osgi-resource-locator:1.0.1",
+        "org.glassfish.jersey.bundles.repackaged:jersey-guava:2.22.2",
+        "org.glassfish.jersey.core:jersey-common:2.22.2",
+        "org.glassfish.jersey.ext:jersey-entity-filtering:2.22.2",
+        "org.javassist:javassist:3.18.1-GA"
+      ]
+    },
+    {
+      "coord": "org.hamcrest:hamcrest-core:1.3",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/hamcrest/hamcrest-core/1.3/hamcrest-core-1.3.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.javassist:javassist:3.18.1-GA",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/javassist/javassist/3.18.1-GA/javassist-3.18.1-GA.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.ow2.asm:asm-analysis:5.0.3",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/ow2/asm/asm-analysis/5.0.3/asm-analysis-5.0.3.jar",
+      "directDependencies": [
+        "org.ow2.asm:asm-tree:5.0.3"
+      ],
+      "dependencies": [
+        "org.ow2.asm:asm-tree:5.0.3",
+        "org.ow2.asm:asm:5.0.3"
+      ]
+    },
+    {
+      "coord": "org.ow2.asm:asm-commons:5.0.3",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/ow2/asm/asm-commons/5.0.3/asm-commons-5.0.3.jar",
+      "directDependencies": [
+        "org.ow2.asm:asm-tree:5.0.3"
+      ],
+      "dependencies": [
+        "org.ow2.asm:asm-tree:5.0.3",
+        "org.ow2.asm:asm:5.0.3"
+      ]
+    },
+    {
+      "coord": "org.ow2.asm:asm-tree:5.0.3",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/ow2/asm/asm-tree/5.0.3/asm-tree-5.0.3.jar",
+      "directDependencies": [
+        "org.ow2.asm:asm:5.0.3"
+      ],
+      "dependencies": [
+        "org.ow2.asm:asm:5.0.3"
+      ]
+    },
+    {
+      "coord": "org.ow2.asm:asm-util:5.0.3",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/ow2/asm/asm-util/5.0.3/asm-util-5.0.3.jar",
+      "directDependencies": [
+        "org.ow2.asm:asm-tree:5.0.3"
+      ],
+      "dependencies": [
+        "org.ow2.asm:asm-tree:5.0.3",
+        "org.ow2.asm:asm:5.0.3"
+      ]
+    },
+    {
+      "coord": "org.ow2.asm:asm:5.0.3",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/ow2/asm/asm/5.0.3/asm-5.0.3.jar",
+      "directDependencies": [],
+      "dependencies": []
+    },
+    {
+      "coord": "org.slf4j:slf4j-api:1.7.22",
+      "file": "${CACHE}/https/repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.22/slf4j-api-1.7.22.jar",
+      "directDependencies": [],
+      "dependencies": []
+    }
+  ],
+  "version": "0.1.0"
+}

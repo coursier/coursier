@@ -25,6 +25,15 @@ sealed abstract class Overrides extends Product with Serializable {
   ): Overrides
 
   def hasProperties: Boolean
+
+  final lazy val enforceGlobalStrictVersions: Overrides =
+    map { (k, v) =>
+      (k, v.withGlobal(true))
+    }
+  final lazy val global: Overrides =
+    filter { (_, v) =>
+      v.global
+    }
 }
 
 object Overrides {
@@ -74,7 +83,7 @@ object Overrides {
       t._1.classifier.value.contains("$") ||
       t._1.`type`.value.contains("$") ||
       t._2.config.value.contains("$") ||
-      t._2.version.contains("$") ||
+      t._2.versionConstraint.asString.contains("$") ||
       t._2.minimizedExclusions.hasProperties
     }
     def mapMap(

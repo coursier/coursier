@@ -1,7 +1,7 @@
 package coursier.launcher
 
 import java.io.File
-import java.nio.file.{Path, Paths}
+import java.nio.file.Path
 import java.util.jar.{Attributes => JarAttributes}
 import java.util.zip.ZipEntry
 

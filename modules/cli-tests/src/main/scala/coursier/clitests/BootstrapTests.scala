@@ -4,7 +4,7 @@ import java.io._
 import java.net.{ServerSocket, URI}
 import java.nio.charset.Charset
 import java.nio.file.Files
-import java.util.{Locale, UUID}
+import java.util.Locale
 import java.util.regex.Pattern
 import java.util.zip.ZipFile
 
@@ -28,8 +28,9 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
   def enableNailgunTest: Boolean =
     true
 
+  private def isCI = System.getenv("CI") != null
   def hasDocker: Boolean =
-    Properties.isLinux
+    Properties.isLinux || (Properties.isMac && !isCI)
 
   private val extraOptions =
     overrideProguarded match {
@@ -663,16 +664,18 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         val expectedOutput = "foo" + System.lineSeparator()
         assert(output == expectedOutput)
 
+        val port = 9085
+
         val okM2Dir = tmpDir / "m2-ok"
-        os.write(okM2Dir / "settings.xml", TestAuthProxy.m2Settings(), createFolders = true)
+        os.write(okM2Dir / "settings.xml", TestAuthProxy.m2Settings(port), createFolders = true)
         val nopeM2Dir = tmpDir / "m2-nope"
         os.write(
           nopeM2Dir / "settings.xml",
-          TestAuthProxy.m2Settings(9083, "wrong", "nope"),
+          TestAuthProxy.m2Settings(port, "wrong", "nope"),
           createFolders = true
         )
 
-        TestAuthProxy.withAuthProxy { _ =>
+        TestAuthProxy.withAuthProxy(port) { _ =>
 
           val proc = os.proc("./cs-echo", "foo")
 
@@ -710,48 +713,6 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       else "Docker test disabled"
     }
 
-    def withAuthProxy[T](f: (String, String, Int) => T): T = {
-      val networkName = "cs-test-" + UUID.randomUUID().toString
-      var containerId = ""
-      try {
-        os.proc("docker", "network", "create", networkName)
-          .call(stdin = os.Inherit, stdout = os.Inherit)
-        val host = {
-          val res  = os.proc("docker", "network", "inspect", networkName).call(stdin = os.Inherit)
-          val resp = ujson.read(res.out.trim())
-          resp.arr(0).apply("IPAM").apply("Config").arr(0).apply("Gateway").str
-        }
-        val port = {
-          val s = new ServerSocket(0)
-          try s.getLocalPort
-          finally s.close()
-        }
-        val res = os.proc(
-          "docker",
-          "run",
-          "-d",
-          "--rm",
-          "-p",
-          s"$port:80",
-          "--network",
-          networkName,
-          "bahamat/authenticated-proxy@sha256:568c759ac687f93d606866fbb397f39fe1350187b95e648376b971e9d7596e75"
-        )
-          .call(stdin = os.Inherit)
-        containerId = res.out.trim()
-        f(networkName, host, port)
-      }
-      finally {
-        if (containerId.nonEmpty) {
-          System.err.println(s"Removing container $containerId")
-          os.proc("docker", "rm", "-f", containerId)
-            .call(stdin = os.Inherit, stdout = os.Inherit)
-        }
-        os.proc("docker", "network", "rm", networkName)
-          .call(stdin = os.Inherit, stdout = os.Inherit)
-      }
-    }
-
     def configFileAuthenticatedProxyTest(): Unit =
       TestUtil.withTempDir { tmpDir0 =>
         val tmpDir = os.Path(tmpDir0, os.pwd)
@@ -765,7 +726,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         val expectedOutput = "foo" + System.lineSeparator()
         assert(output == expectedOutput)
 
-        withAuthProxy { (networkName, proxyHost, proxyPort) =>
+        TestAuthProxy.withAuthProxy0 { (networkName, proxyHost, proxyPort) =>
           val configContent =
             s"""{
                |  "httpProxy": {
@@ -786,12 +747,14 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
             s"""#!/usr/bin/env bash
                |set -e
                |export PATH="$$(pwd)/bin:$$PATH"
+               |echo "Command should fail first" 1>&2
                |if ./cs-echo a b foo; then
                |  echo "Expected command to fail at first"
                |  exit 1
                |fi
                |export SCALA_CLI_CONFIG="$$(pwd)/config.json"
                |echo "$header"
+               |echo "Command should succeed now" 1>&2
                |exec ./cs-echo ${words.map(w => "\"" + w + "\"").mkString(" ")}
                |""".stripMargin
           os.write(tmpDir / "script.sh", scriptContent)
@@ -1075,7 +1038,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
     }
 
     test("hybrid with coursier dependency") {
-      TestUtil.withTempDir("hybrid-cs") { tmpDir =>
+      TestUtil.withTempDir[Unit]("hybrid-cs") { tmpDir =>
         os.proc(
           launcher,
           "bootstrap",

@@ -14,7 +14,7 @@ import coursier.cache._
 import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
 import coursier.paths.{CachePath, Util}
-import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
+import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
 import dataclass._
 
@@ -64,16 +64,16 @@ import scala.util.control.NonFatal
   private def blockingIOE[T](f: => Either[ArtifactError, T]): EitherT[F, ArtifactError, T] =
     EitherT(S.schedule(pool)(f))
 
-  private def localFile(url: String, user: Option[String] = None): File =
+  private def localFile(url: String, user: Option[String]): File =
     FileCache.localFile0(url, location, user, localArtifactsShouldBeCached)
 
   // Reference file - if it exists, and we get not found errors on some URLs, we assume
   // we can keep track of these missing, and not try to get them again later.
   private lazy val referenceFileOpt = artifact.extra.get("metadata").map { a =>
-    localFile(a.url, a.authentication.map(_.user))
+    localFile(a.url, a.authentication.flatMap(_.userOpt))
   }
 
-  private val cacheErrors = artifact.changing &&
+  private val cacheErrors = artifact.changing ||
     artifact.extra.contains("cache-errors")
 
   private def cacheErrors0: Boolean = cacheErrors || referenceFileOpt.exists(_.exists())
@@ -210,10 +210,15 @@ import scala.util.control.NonFatal
       val authenticationOpt =
         artifact.authentication match {
           case Some(auth) if auth.userOnly =>
-            allCredentials0
-              .find(_.matches(url, auth.user))
-              .map(_.authentication)
-              .orElse(artifact.authentication) // Default to None instead?
+            auth.userOpt match {
+              case Some(user) =>
+                allCredentials0
+                  .find(_.matches(url, user))
+                  .map(_.authentication)
+                  .orElse(artifact.authentication) // Default to None instead?
+              case None =>
+                artifact.authentication // Default to None instead?
+            }
           case _ =>
             artifact.authentication
         }
@@ -241,6 +246,9 @@ import scala.util.control.NonFatal
           Left(new ArtifactError.Forbidden(url))
         else if (respCodeOpt.contains(401))
           Left(new ArtifactError.Unauthorized(url, realm = CacheUrl.realm(conn)))
+        else if (respCodeOpt.exists(c => c / 100 == 5))
+          // Mark http 500 errors as retryable, to mitigate flakiness
+          Left(new ArtifactError.RetryableServerError(url, respCodeOpt.get))
         else {
           for (len0 <- Option(conn.getContentLengthLong) if len0 >= 0L) {
             val len = len0 + (if (partialDownload) alreadyDownloaded else 0L)
@@ -471,6 +479,20 @@ import scala.util.control.NonFatal
       }
   }
 
+  private def checkSideArtifact: EitherT[F, ArtifactError, Unit] =
+    artifact.extra.get("check") match {
+      case None => EitherT.point(())
+      case Some(toCheck) =>
+        blockingIOE {
+          val toCheckFile    = localFile(toCheck.url, toCheck.authentication.flatMap(_.userOpt))
+          val toCheckErrFile = errFile(toCheckFile).toPath
+          if (Files.exists(toCheckFile.toPath) || Files.exists(toCheckErrFile))
+            Right(())
+          else
+            Left(new ArtifactError.MissingOtherArtifactCheck(artifact, toCheck))
+        }
+    }
+
   private def shouldDownload(
     file: File,
     url: String,
@@ -529,6 +551,7 @@ import scala.util.control.NonFatal
 
     for {
       _   <- blockingIOE(checkErrFile)
+      _   <- checkSideArtifact
       res <- EitherT(checkShouldDownload)
     } yield res
   }
@@ -574,6 +597,18 @@ import scala.util.control.NonFatal
           case err @ Left(nf: ArtifactError.NotFound) if nf.permanent.contains(true) =>
             createErrFileBlocking()
             err: Either[ArtifactError, Unit]
+          case err @ Left(err0: ArtifactError.DownloadError)
+              if err0.getCause.isInstanceOf[IOException] =>
+            if (referenceFileOpt.exists(_.exists()) && errFile0.exists())
+              // We got a download error, but we also got a not-found error
+              // in the past. We assume the download error is transient
+              // (user is offline for example), and return the cached
+              // not-found error.
+              Left(new ArtifactError.NotFound(url, permanent = Some(true), causeOpt = Some(err0)))
+            else {
+              deleteErrFileBlocking()
+              err: Either[ArtifactError, Unit]
+            }
           case other =>
             deleteErrFileBlocking()
             other
@@ -606,7 +641,8 @@ import scala.util.control.NonFatal
   private val actualCachePolicy: CachePolicy.Mixed = cachePolicy.acceptChanging match {
     case CachePolicy.UpdateChanging if !artifact.changing =>
       CachePolicy.FetchMissing
-    case CachePolicy.LocalUpdateChanging | CachePolicy.LocalOnlyIfValid if !artifact.changing =>
+    case CachePolicy.LocalUpdateChanging | CachePolicy.LocalOnlyIfValid
+        if !artifact.changing && !artifact.extra.contains("check") =>
       CachePolicy.LocalOnly
     case other =>
       other
@@ -616,7 +652,7 @@ import scala.util.control.NonFatal
 
     logger.checkingArtifact(url, artifact)
 
-    val file = localFile(url, artifact.authentication.map(_.user))
+    val file = localFile(url, artifact.authentication.flatMap(_.userOpt))
 
     def run =
       if (url.startsWith("file:/") && !localArtifactsShouldBeCached)
@@ -670,16 +706,22 @@ import scala.util.control.NonFatal
           case CachePolicy.UpdateChanging | CachePolicy.Update =>
             maybeUpdate.run
           case CachePolicy.FetchMissing =>
-            EitherT(checkFileExists(file, url))
-              .orElse {
-                EitherT(
-                  remoteKeepErrors(
-                    file,
-                    url,
-                    keepHeaderChecksums,
-                    () => !checkFileExistsBlocking(file, url)
-                  )
-                )
+            checkSideArtifact
+              .flatMap { _ =>
+                EitherT(checkFileExists(file, url))
+                  .leftFlatMap {
+                    case nf: ArtifactError.NotFound =>
+                      EitherT(
+                        remoteKeepErrors(
+                          file,
+                          url,
+                          keepHeaderChecksums,
+                          () => !checkFileExistsBlocking(file, url)
+                        )
+                      )
+                    case other =>
+                      EitherT.fromEither(Left(other))
+                  }
               }
               .run
           case CachePolicy.ForceDownload =>
@@ -689,7 +731,7 @@ import scala.util.control.NonFatal
 
     val run0 =
       if (artifact.changing && !cachePolicy.acceptsChangingArtifacts)
-        S.point(Left(new ArtifactError.ForbiddenChangingArtifact(url)))
+        S.point[Either[ArtifactError, Unit]](Left(new ArtifactError.ForbiddenChangingArtifact(url)))
       else
         run
 
@@ -780,7 +822,10 @@ object Downloader {
           }
         }
 
-        res0.orElse(ifLocked)
+        res0.orElse(ifLocked) match {
+          case Some(Left(_: ArtifactError.RetryableServerError)) => None
+          case other                                             => other
+        }
       }
       catch {
         case NonFatal(e) if throwExceptions =>
@@ -812,6 +857,8 @@ object Downloader {
     } {
       case _: AccessDeniedException if Properties.isWin =>
       case _: javax.net.ssl.SSLException                =>
+      case _: java.net.SocketException                  =>
+      case _: java.net.ConnectException                 =>
       // TODO Allow to log that exception.
     }
 

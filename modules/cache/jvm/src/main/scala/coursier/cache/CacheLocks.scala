@@ -80,6 +80,8 @@ object CacheLocks {
             catch {
               case _: OverlappingFileLockException =>
                 null
+              case _: AccessDeniedException if Properties.isWin =>
+                null
               case ex: IOException if ex.getMessage == "Resource deadlock avoided" =>
                 deadlockAvoided = true
                 Thread.sleep(200L)

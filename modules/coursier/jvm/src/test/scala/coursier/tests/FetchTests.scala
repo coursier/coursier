@@ -1,17 +1,16 @@
 package coursier.tests
 
-import java.io.File
-
 import coursier.{Artifacts, Fetch, Repositories}
-import coursier.core.{Activation, Classifier, Configuration, Extension, Type}
-import coursier.maven.MavenRepository
-import coursier.params.ResolutionParams
+import coursier.core.{Classifier, Configuration, Dependency, Extension, Type, VariantSelector}
+import coursier.maven.{MavenRepository, MavenRepositoryLike}
 import coursier.ivy.IvyRepository
 import coursier.util.StringInterpolators._
-import coursier.util.Task
+import coursier.util.{InMemoryRepository, Task}
+import coursier.version.VersionConstraint
 import utest._
 
 import scala.async.Async.{async, await}
+import scala.concurrent.Future
 
 object FetchTests extends TestSuite {
 
@@ -20,18 +19,15 @@ object FetchTests extends TestSuite {
   private val fetch = Fetch()
     .noMirrors
     .withCache(cache)
-    .withResolutionParams(
-      ResolutionParams()
-        .withOsInfo {
-          Activation.Os(
-            Some("x86_64"),
-            Set("mac", "unix"),
-            Some("mac os x"),
-            Some("10.15.1")
-          )
-        }
-        .withJdkVersion("1.8.0_121")
-    )
+
+  def enableModules(fetch: Fetch[Task]): Fetch[Task] =
+    fetch.withRepositories {
+      fetch.repositories.map {
+        case m: MavenRepositoryLike.WithModuleSupport =>
+          m.withCheckModule(true)
+        case other => other
+      }
+    }
 
   val tests = Tests {
 
@@ -217,7 +213,7 @@ object FetchTests extends TestSuite {
               .addRepositories(m2Repo)
               .addDependencies(
                 dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
-                  .withConfiguration(Configuration.test)
+                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
               )
               .futureResult()
           }
@@ -251,7 +247,7 @@ object FetchTests extends TestSuite {
               .addRepositories(ivy2Repo)
               .addDependencies(
                 dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
-                  .withConfiguration(Configuration.test)
+                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
               )
               .futureResult()
           }
@@ -294,8 +290,8 @@ object FetchTests extends TestSuite {
           dep"com.splicemachine:splice_spark:2.8.0.1915-SNAPSHOT"
         )
         .mapResolutionParams(
-          _.addForceVersion(
-            mod"org.apache.hadoop:hadoop-common" -> "2.7.3"
+          _.addForceVersion0(
+            mod"org.apache.hadoop:hadoop-common" -> VersionConstraint("2.7.3")
           )
         )
 
@@ -305,23 +301,21 @@ object FetchTests extends TestSuite {
       // are forced or not
 
       test - async {
+        val fetch = fetch0.mapResolutionParams(_.addForcedProperties(prop))
         val res = await {
-          fetch0
-            .mapResolutionParams(_.addForcedProperties(prop))
-            .futureResult()
+          fetch.futureResult()
         }
 
-        await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), fetch.resolutionParams))
       }
 
       test - async {
+        val fetch = fetch0.mapResolutionParams(_.addProperties(prop))
         val res = await {
-          fetch0
-            .mapResolutionParams(_.addProperties(prop))
-            .futureResult()
+          fetch.futureResult()
         }
 
-        await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1), fetch.resolutionParams))
       }
     }
 
@@ -343,7 +337,7 @@ object FetchTests extends TestSuite {
           }
 
           assert(res.artifacts.nonEmpty)
-          assert(res.detailedArtifacts.count(_._2.ext == Extension("csv")) == 1)
+          assert(res.detailedArtifacts0.count(_._2.exists(_.ext == Extension("csv"))) == 1)
 
           await {
             validateArtifacts(
@@ -356,40 +350,45 @@ object FetchTests extends TestSuite {
       }
     }
 
-    test("subset") - async {
+    test("subset") {
+      async {
 
-      val res = await {
-        fetch
-          .addDependencies(dep"sh.almond:scala-kernel_2.12.8:0.7.0")
-          .addRepositories(Repositories.jitpack)
-          .futureResult()
-      }
+        val res = await {
+          fetch
+            .addDependencies(dep"sh.almond:scala-kernel_2.12.8:0.7.0")
+            .addRepositories(Repositories.jitpack)
+            .futureResult()
+        }
 
-      await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
+        await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
 
-      val subsetRes = res.resolution.subset(Seq(dep"sh.almond:scala-kernel-api_2.12.8"))
+        val subsetRes = res.resolution.subset0(Seq(dep"sh.almond:scala-kernel-api_2.12.8")) match {
+          case Left(ex)    => throw new Exception(ex)
+          case Right(res0) => res0
+        }
 
-      val subsetArtifacts = await {
-        Artifacts()
-          .withResolution(subsetRes)
-          .future()
-      }
+        val subsetArtifacts = await {
+          Artifacts()
+            .withResolution(subsetRes)
+            .future()
+        }
 
-      await(validateArtifacts(subsetRes, subsetArtifacts.map(_._1)))
+        await(validateArtifacts(subsetRes, subsetArtifacts.map(_._1)))
 
-      val subsetSourcesArtifacts = await {
-        Artifacts()
-          .withResolution(subsetRes)
-          .withClassifiers(Set(Classifier.sources))
-          .future()
-      }
+        val subsetSourcesArtifacts = await {
+          Artifacts()
+            .withResolution(subsetRes)
+            .withClassifiers(Set(Classifier.sources))
+            .future()
+        }
 
-      await {
-        validateArtifacts(
-          subsetRes,
-          subsetSourcesArtifacts.map(_._1),
-          classifiers = Set(Classifier.sources)
-        )
+        await {
+          validateArtifacts(
+            subsetRes,
+            subsetSourcesArtifacts.map(_._1),
+            classifiers = Set(Classifier.sources)
+          )
+        }
       }
     }
 
@@ -410,15 +409,274 @@ object FetchTests extends TestSuite {
         catch { case _: coursier.error.FetchError.DownloadingArtifacts => () }
       }
 
-      test("ok") - async {
-        val res = await {
-          val osgeo = MavenRepository("https://repo.osgeo.org/repository/release")
-          fetch
-            .withRepositories(Seq(osgeo, Repositories.central))
-            .addDependencies(dep"javax.media:jai_core:1.1.3")
-            .future()
+      test("ok") {
+        async {
+          val res = await {
+            val osgeo = MavenRepository("https://repo.osgeo.org/repository/release")
+            fetch
+              .withRepositories(Seq(osgeo, Repositories.central))
+              .addDependencies(dep"javax.media:jai_core:1.1.3")
+              .future()
+          }
+          assert(res(0) != null)
         }
-        assert(res(0) != null)
+      }
+    }
+
+    test("url on lower version") {
+      async {
+        val res = await {
+          fetch
+            .addDependencies(
+              dep"org.apache.commons:commons-compress:1.4.1",
+              dep"org.apache.commons:commons-compress:1.5"
+            )
+            .addRepositories(
+              InMemoryRepository.forDependencies(
+                dep"org.apache.commons:commons-compress:1.4.1" ->
+                  "https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
+              )
+            )
+            .futureResult()
+        }
+
+        await {
+          validateArtifacts(
+            res.resolution,
+            res.artifacts.map(_._1),
+            extraKeyPart = "_customurl"
+          )
+        }
+      }
+    }
+
+    test("url and force version") {
+      async {
+        val params = fetch.resolutionParams
+          .addForceVersion0(mod"org.apache.commons:commons-compress" -> VersionConstraint("1.5"))
+        val res = await {
+          fetch
+            .withResolutionParams(params)
+            .addDependencies(
+              dep"org.apache.commons:commons-compress:1.5"
+            )
+            .addRepositories(
+              InMemoryRepository.forDependencies(
+                dep"org.apache.commons:commons-compress:1.5" ->
+                  "https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
+              )
+            )
+            .futureResult()
+        }
+
+        await {
+          validateArtifacts(
+            res.resolution,
+            res.artifacts.map(_._1),
+            params,
+            extraKeyPart = "_customurl2"
+          )
+        }
+      }
+    }
+
+    test("gradle modules") {
+      test("kotlinx-html-js") {
+        test("no-support") {
+          async {
+
+            val res = await {
+              fetch
+                .addDependencies(
+                  dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,variant.org.gradle.usage=kotlin-runtime,variant.org.jetbrains.kotlin.platform.type=js,variant.org.jetbrains.kotlin.js.compiler=ir,variant.org.gradle.category=library"
+                )
+                .futureResult()
+            }
+
+            await(validateArtifacts(res.resolution, res.artifacts.map(_._1)))
+          }
+        }
+
+        test("support") {
+          async {
+
+            val res = await {
+              enableModules(fetch)
+                .addDependencies(
+                  dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,variant.org.gradle.usage=kotlin-runtime,variant.org.jetbrains.kotlin.platform.type=js,variant.org.jetbrains.kotlin.js.compiler=ir,variant.org.gradle.category=library"
+                )
+                .futureResult()
+            }
+
+            await(validateArtifacts(
+              res.resolution,
+              res.artifacts.map(_._1),
+              extraKeyPart = "_gradlemod"
+            ))
+          }
+        }
+      }
+
+      test("android") {
+
+        def withVariant(dep: Dependency, map: Map[String, VariantSelector.VariantMatcher]) =
+          dep.withVariantSelector(VariantSelector.AttributesBased(map))
+
+        def testVariants(map: Map[String, VariantSelector.VariantMatcher]): Future[Unit] = async {
+          val params = fetch.resolutionParams
+          val res = await {
+            enableModules(fetch.addRepositories(Repositories.google))
+              .withResolutionParams(params)
+              .addDependencies(
+                withVariant(dep"androidx.core:core-ktx:1.15.0", map),
+                withVariant(dep"androidx.activity:activity-compose:1.9.3", map),
+                withVariant(dep"androidx.compose.ui:ui:1.7.5", map),
+                withVariant(dep"androidx.compose.material3:material3:1.3.1", map)
+              )
+              .futureResult()
+          }
+
+          await(validateArtifacts(
+            res.resolution,
+            res.artifacts.map(_._1),
+            params = params,
+            extraKeyPart = "_gradlemod"
+          ))
+        }
+
+        test("compile") {
+          testVariants(
+            Map(
+              "org.gradle.usage"    -> VariantSelector.VariantMatcher.Equals("java-api"),
+              "org.gradle.category" -> VariantSelector.VariantMatcher.Equals("library"),
+              "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+            )
+          )
+        }
+
+        test("runtime") {
+          testVariants(
+            Map(
+              "org.gradle.usage"    -> VariantSelector.VariantMatcher.Equals("java-runtime"),
+              "org.gradle.category" -> VariantSelector.VariantMatcher.Equals("library"),
+              "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+            )
+          )
+        }
+      }
+
+      test("fallback from config") {
+
+        def testVariants(
+          config: Option[Configuration] = None,
+          defaultAttributes: Option[VariantSelector.AttributesBased]
+        )(
+          dependencies: Dependency*
+        ): Future[Unit] = async {
+          val params = fetch.resolutionParams
+            .withDefaultConfiguration(
+              config.getOrElse(fetch.resolutionParams.defaultConfiguration)
+            )
+            .withDefaultVariantAttributes(
+              defaultAttributes.orElse(fetch.resolutionParams.defaultVariantAttributes)
+            )
+          val res = await {
+            enableModules(fetch.addRepositories(Repositories.google))
+              .withResolutionParams(params)
+              .addDependencies(dependencies: _*)
+              .futureResult()
+          }
+
+          await(validateArtifacts(
+            res.resolution,
+            res.artifacts.map(_._1),
+            params = params,
+            extraKeyPart = "_gradlemod"
+          ))
+        }
+
+        test("compile") {
+          val attr = VariantSelector.AttributesBased().withMatchers(
+            Map(
+              "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+            )
+          )
+          testVariants(Some(Configuration.compile), defaultAttributes = Some(attr))(
+            dep"androidx.core:core-ktx:1.15.0:compile"
+          )
+        }
+        test("runtime") {
+          val attr = VariantSelector.AttributesBased().withMatchers(
+            Map(
+              "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
+            )
+          )
+          testVariants(defaultAttributes = Some(attr))(
+            dep"androidx.core:core-ktx:1.15.0"
+          )
+        }
+      }
+      test("sources") {
+        test("compile") {
+          async {
+            val params = fetch.resolutionParams
+              .withDefaultConfiguration(Configuration.compile)
+              .addVariantAttributes(
+                "org.gradle.jvm.environment" ->
+                  VariantSelector.VariantMatcher.Equals("standard-jvm"),
+                "org.jetbrains.kotlin.platform.type" ->
+                  VariantSelector.VariantMatcher.Equals("jvm")
+              )
+            val classifiers = Set(Classifier.sources)
+            val attr        = Seq(VariantSelector.AttributesBased.sources)
+            val res = await {
+              enableModules(fetch.addRepositories(Repositories.google))
+                .addDependencies(dep"org.jetbrains.kotlin:kotlin-stdlib:2.1.20")
+                .withClassifiers(classifiers)
+                .withArtifactAttributes(attr)
+                .withResolutionParams(params)
+                .futureResult()
+            }
+
+            await(validateArtifacts(
+              res.resolution,
+              res.artifacts.map(_._1),
+              classifiers = classifiers,
+              artifactAttributes = attr,
+              params = params
+            ))
+          }
+        }
+
+        test("default") {
+          async {
+            val params = fetch.resolutionParams.addVariantAttributes(
+              "org.jetbrains.kotlin.platform.type" ->
+                VariantSelector.VariantMatcher.AnyOf(Seq(
+                  VariantSelector.VariantMatcher.Equals("androidJvm"),
+                  VariantSelector.VariantMatcher.Equals("jvm")
+                ))
+            )
+            val classifiers = Set(Classifier.sources)
+            val attr        = Seq(VariantSelector.AttributesBased.sources)
+            val res = await {
+              enableModules(fetch.addRepositories(Repositories.google))
+                .addDependencies(dep"androidx.compose.material3:material3:1.3.1")
+                .withClassifiers(classifiers)
+                .withArtifactAttributes(attr)
+                .withResolutionParams(params)
+                .futureResult()
+            }
+
+            await(validateArtifacts(
+              res.resolution,
+              res.artifacts.map(_._1),
+              classifiers = classifiers,
+              artifactAttributes = attr,
+              params = params
+            ))
+          }
+        }
       }
     }
   }

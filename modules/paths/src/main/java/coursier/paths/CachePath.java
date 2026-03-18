@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -120,6 +121,14 @@ public class CachePath {
         return CoursierPaths.archiveCacheDirectory();
     }
 
+    public static File defaultPriviledgedArchiveCacheDirectory() throws IOException {
+        return CoursierPaths.priviledgedArchiveCacheDirectory();
+    }
+
+    public static File defaultDigestBasedCacheDirectory() throws IOException {
+        return CoursierPaths.digestBasedCacheDirectory();
+    }
+
     // Trying to limit the calls to String.intern via this map (https://shipilev.net/jvm/anatomy-quarks/10-string-intern/)
     private static ConcurrentHashMap<String, Object> internedStrings = new ConcurrentHashMap<>();
 
@@ -191,6 +200,8 @@ public class CachePath {
                         lock = out.getChannel().lock();
                     } catch (FileNotFoundException ex) {
                         throw throwExceptions ? ex : new StructureLockException(ex);
+                    } catch (OverlappingFileLockException ex) {
+                        throw throwExceptions ? ex : new StructureLockException(ex);
                     }
 
                     try {
@@ -261,6 +272,8 @@ public class CachePath {
                     try {
                         lock = channel.lock();
                     } catch (FileNotFoundException ex) {
+                        throw throwExceptions ? ex : new StructureLockException(ex);
+                    } catch (OverlappingFileLockException ex) {
                         throw throwExceptions ? ex : new StructureLockException(ex);
                     }
 

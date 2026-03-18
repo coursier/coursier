@@ -1,11 +1,13 @@
 package coursier.cli.options
 
 import caseapp._
-import cats.data.{Validated, ValidatedNel}
+import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.core._
+import coursier.core.{Configuration, ResolutionProcess, VariantSelector}
 import coursier.params.ResolutionParams
 import coursier.parse.{DependencyParser, ModuleParser, ReconciliationParser, RuleParser}
+import coursier.version.Version
+import coursier.version.VersionConstraint
 
 // format: off
 final case class ResolutionOptions(
@@ -111,13 +113,18 @@ final case class ResolutionOptions(
 
   @Group(OptionGroup.resolution)
   @Hidden
-    enableDependencyOverrides: Option[Boolean] = None
+    enableDependencyOverrides: Option[Boolean] = None,
+
+  @Group(OptionGroup.resolution)
+  @Hidden
+  @ExtraName("variant")
+    variants: List[String] = Nil
 
 ) {
   // format: on
 
   def scalaVersionOrDefault: String =
-    scalaVersion.getOrElse(ResolutionParams().selectedScalaVersion)
+    scalaVersion.getOrElse(ResolutionParams().selectedScalaVersionConstraint.asString)
 
   def params: ValidatedNel[String, ResolutionParams] = {
 
@@ -127,8 +134,9 @@ final case class ResolutionOptions(
       else
         Validated.invalidNel(s"Max iteration must be > 0 (got $maxIterations")
 
-    val forceVersionV =
-      DependencyParser.moduleVersions(
+    val forceVersionV
+      : ValidatedNel[String, Map[coursier.core.Module, coursier.version.VersionConstraint]] =
+      DependencyParser.moduleVersions0(
         forceVersion,
         scalaVersionOrDefault
       ).either match {
@@ -143,7 +151,7 @@ final case class ResolutionOptions(
               .groupBy(_._1)
               .view.mapValues(_.map(_._2).last)
               .iterator
-              .toMap
+              .toMap: Map[coursier.core.Module, coursier.version.VersionConstraint]
           )
       }
 
@@ -185,10 +193,51 @@ final case class ResolutionOptions(
       .map(_.flatten)
 
     val reconciliationV =
-      ReconciliationParser.reconciliation(reconciliation, scalaVersionOrDefault).either match {
+      ReconciliationParser.reconciliation0(reconciliation, scalaVersionOrDefault).either match {
         case Left(e)      => Validated.invalidNel(e.mkString(System.lineSeparator()))
         case Right(elems) => Validated.validNel(elems)
       }
+
+    val defaultVariantAttributesOptV = {
+      val variantsOrErrors = variants
+        .filter(_.trim.nonEmpty)
+        .map(_.split("=", 2))
+        .map {
+          case Array(k, v)  => Right((k, v))
+          case Array(thing) => Left(s"Malformed variant value: '$thing' (expected 'name=value')")
+        }
+      val errors = variantsOrErrors.collect {
+        case Left(err) => err
+      }
+      errors match {
+        case h :: t =>
+          Validated.Invalid(NonEmptyList(h, t))
+        case Nil =>
+          val values = variantsOrErrors.collect {
+            case Right((k, v)) =>
+              VariantSelector.VariantMatcher.fromString(k, v)
+          }
+          val valuesMap = values.toMap
+          if (values.distinct.length == valuesMap.size)
+            Validated.validNel {
+              if (values.isEmpty) None
+              else Some(VariantSelector.AttributesBased(values.toMap))
+            }
+          else {
+            val desc = values
+              .distinct
+              .groupBy(_._1)
+              .filter(_._2.length > 1)
+              .map(_._1)
+              .toVector
+              .sorted
+              .mkString(", ")
+            Validated.invalidNel(
+              s"Found duplicated variants: $desc"
+            )
+          }
+      }
+    }
 
     (
       maxIterationsV,
@@ -196,33 +245,47 @@ final case class ResolutionOptions(
       extraPropertiesV,
       forcedPropertiesV,
       rulesV,
-      reconciliationV
+      reconciliationV,
+      defaultVariantAttributesOptV
     ).mapN {
-      (maxIterations, forceVersion, extraProperties, forcedProperties, rules, reconciliation) =>
+      (
+        maxIterations,
+        forceVersion: Map[coursier.core.Module, coursier.version.VersionConstraint],
+        extraProperties,
+        forcedProperties,
+        rules,
+        reconciliation,
+        defaultVariantAttributesOpt
+      ) =>
         ResolutionParams()
           .withKeepOptionalDependencies(keepOptional)
           .withMaxIterations(maxIterations)
-          .withForceVersion(forceVersion)
+          .withForceVersion0(forceVersion)
           .withProperties(extraProperties)
           .withForcedProperties(forcedProperties)
           .withProfiles(profiles)
-          .withScalaVersionOpt(scalaVersion.map(_.trim).filter(_.nonEmpty))
+          .withScalaVersionOpt0(
+            scalaVersion
+              .map(_.trim)
+              .filter(_.nonEmpty)
+              .map(VersionConstraint(_))
+          )
           .withForceScalaVersionOpt(forceScalaVersion)
           .withOverrideFullSuffixOpt(overrideFullSuffix)
           .withTypelevel(typelevel)
           .withRules(rules)
-          .withReconciliation(reconciliation)
+          .withReconciliation0(reconciliation)
           .withDefaultConfiguration(Configuration(defaultConfiguration))
           .withKeepProvidedDependencies(keepProvidedDependencies)
-          .withJdkVersionOpt(jdkVersion.map(_.trim).filter(_.nonEmpty).map(Version(_)))
+          .withJdkVersionOpt0(jdkVersion.map(_.trim).filter(_.nonEmpty).map(Version(_)))
           .withForceDepMgmtVersions(forceDepMgmtVersions)
           .withEnableDependencyOverrides(enableDependencyOverrides)
+          .withDefaultVariantAttributes(defaultVariantAttributesOpt)
     }
   }
 }
 
 object ResolutionOptions {
-  lazy val parser: Parser[ResolutionOptions]                           = Parser.derive
-  implicit lazy val parserAux: Parser.Aux[ResolutionOptions, parser.D] = parser
-  implicit lazy val help: Help[ResolutionOptions]                      = Help.derive
+  implicit lazy val parser: Parser[ResolutionOptions] = Parser.derive
+  implicit lazy val help: Help[ResolutionOptions]     = Help.derive
 }

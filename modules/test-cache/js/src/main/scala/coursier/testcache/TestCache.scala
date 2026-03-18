@@ -19,6 +19,9 @@ object TestCache {
 
   def updateSnapshots = false
 
-  lazy val cache = MockCache(dataDirUri.stripPrefix("file://").stripPrefix("file:"))
+  lazy val cache = {
+    val base = dataDirUri.stripPrefix("file://").stripPrefix("file:")
+    MockCache(base, base + "/changing")
+  }
 
 }

@@ -1,4 +1,6 @@
-//> using dep com.lihaoyi::os-lib:0.11.3
+//> using dep com.lihaoyi::os-lib:0.11.4
+
+import java.security.MessageDigest
 
 object UpdateBrewFormula {
   def gitUsername = "Github Actions"
@@ -53,35 +55,52 @@ object UpdateBrewFormula {
       .call(cwd = repoDir, stdout = os.Inherit)
 
     val jarUrl = s"https://github.com/coursier/coursier/releases/download/v$version/coursier"
-    val launcherUrl =
+    val launcherX86_64Url =
       s"https://github.com/coursier/coursier/releases/download/v$version/cs-x86_64-apple-darwin.gz"
+    val launcherAarch64Url =
+      s"https://github.com/coursier/coursier/releases/download/v$version/cs-aarch64-apple-darwin.gz"
 
-    val jarPath      = os.rel / "jar-launcher"
-    val launcherPath = os.rel / "launcher"
+    val jarPath             = repoDir / "jar-launcher"
+    val launcherX86_64Path  = repoDir / "launcher-x86_64"
+    val launcherAarch64Path = repoDir / "launcher-aarch64"
     System.err.println(s"Getting $jarUrl")
     os.proc("curl", "-fLo", jarPath, jarUrl)
       .call(cwd = repoDir, stdout = os.Inherit)
-    System.err.println(s"Getting $launcherUrl")
-    os.proc("curl", "-fLo", "launcher", launcherUrl)
+    System.err.println(s"Getting $launcherX86_64Url")
+    os.proc("curl", "-fLo", launcherX86_64Path, launcherX86_64Url)
+      .call(cwd = repoDir, stdout = os.Inherit)
+    System.err.println(s"Getting $launcherAarch64Url")
+    os.proc("curl", "-fLo", launcherAarch64Path, launcherAarch64Url)
       .call(cwd = repoDir, stdout = os.Inherit)
 
-    def sha256(path: os.RelPath): String =
-      os.proc("/bin/bash", "-c", s"""openssl dgst -sha256 -binary < "$path" | xxd -p -c 256""")
-        .call(cwd = repoDir)
-        .out.text()
-        .trim
-    val jarSha256      = sha256(jarPath)
-    val launcherSha256 = sha256(launcherPath)
+    def sha256(path: os.Path): String = {
+      val digest    = MessageDigest.getInstance("SHA-256")
+      val bytes     = digest.digest(os.read.bytes(path))
+      val hexString = new StringBuilder(2 * bytes.length)
+      for (b <- bytes)
+        hexString.append(String.format("%02x", b & 0xff))
+      hexString.toString
+    }
+    val jarSha256             = sha256(jarPath)
+    val launcherX86_64Sha256  = sha256(launcherX86_64Path)
+    val launcherAarch64Sha256 = sha256(launcherAarch64Path)
 
-    os.remove(repoDir / jarPath)
-    os.remove(repoDir / launcherPath)
+    assert(jarSha256.nonEmpty)
+    assert(launcherX86_64Sha256.nonEmpty)
+    assert(launcherAarch64Sha256.nonEmpty)
+
+    os.remove(jarPath)
+    os.remove(launcherX86_64Path)
+    os.remove(launcherAarch64Path)
 
     val template = os.read(templateFile)
 
     val content = template
       .replace("@LAUNCHER_VERSION@", version)
-      .replace("@LAUNCHER_URL@", launcherUrl)
-      .replace("@LAUNCHER_SHA256@", launcherSha256)
+      .replace("@LAUNCHER_X86_64_URL@", launcherX86_64Url)
+      .replace("@LAUNCHER_X86_64_SHA256@", launcherX86_64Sha256)
+      .replace("@LAUNCHER_AARCH64_URL@", launcherAarch64Url)
+      .replace("@LAUNCHER_AARCH64_SHA256@", launcherAarch64Sha256)
       .replace("@JAR_LAUNCHER_URL@", jarUrl)
       .replace("@JAR_LAUNCHER_SHA256@", jarSha256)
 

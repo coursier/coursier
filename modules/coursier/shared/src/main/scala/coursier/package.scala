@@ -1,5 +1,6 @@
 import coursier.core._
 import coursier.util.StringInterpolators._
+import coursier.version.{VersionConstraint => VersionConstraint0}
 
 import scala.language.implicitConversions
 
@@ -19,10 +20,28 @@ package object coursier {
   object Dependency {
     def apply(
       module: Module,
-      version: String
+      version: VersionConstraint0
     ): Dependency =
       core.Dependency(module, version)
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def apply(
+      module: Module,
+      version: String
+    ): Dependency =
+      core.Dependency(module, VersionConstraint0(version))
   }
+
+  type VersionConstraint = coursier.version.VersionConstraint
+  val VersionConstraint = coursier.version.VersionConstraint
+
+  type Variant = core.Variant
+  val Variant = core.Variant
+
+  type VariantSelector = core.VariantSelector
+  val VariantSelector = core.VariantSelector
+
+  type BomDependency = core.BomDependency
+  val BomDependency = core.BomDependency
 
   type Attributes = core.Attributes
   object Attributes extends Serializable {

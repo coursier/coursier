@@ -3,7 +3,9 @@ package coursier.core
 import java.util.concurrent.ConcurrentMap
 
 import coursier.core.Validation._
+import coursier.error.VariantError
 import coursier.util.Artifact
+import coursier.version.{Version => Version0}
 import dataclass.data
 
 final case class Organization(value: String) extends AnyVal {
@@ -237,6 +239,10 @@ object Configuration {
 
   def isEmpty: Boolean =
     `type`.isEmpty && classifier.isEmpty
+
+  def normalize: Attributes =
+    if (`type` == Type.jar) withType(Type.empty)
+    else this
 }
 
 object Attributes {
@@ -245,15 +251,14 @@ object Attributes {
 
 @data class Project(
   module: Module,
-  version: String,
-  // First String is configuration (scope for Maven)
-  dependencies: Seq[(Configuration, Dependency)],
+  version0: Version0,
+  dependencies0: Seq[(Variant, Dependency)],
   // For Maven, this is the standard scopes as an Ivy configuration
   configurations: Map[Configuration, Seq[Configuration]],
 
   // Maven-specific
-  parent: Option[(Module, String)],
-  dependencyManagement: Seq[(Configuration, Dependency)],
+  parent0: Option[(Module, Version0)],
+  dependencyManagement0: Seq[(Variant, Dependency)],
   properties: Seq[(String, String)],
   profiles: Seq[Profile],
   versions: Option[Versions],
@@ -263,15 +268,197 @@ object Attributes {
   /** Optional exact version used to get this project metadata. May not match `version` for projects
     * having a wrong version in their metadata.
     */
-  actualVersionOpt: Option[String],
-  publications: Seq[(Configuration, Publication)],
+  actualVersionOpt0: Option[Version0],
+  publications0: Seq[(Variant, Publication)],
 
   // Extra infos, not used during resolution
   info: Info,
-  @since("2.1.23")
-  overrides: Overrides = Overrides.empty
+  overrides: Overrides,
+  variants: Map[Variant.Attributes, Map[String, String]],
+  variantPublications: Map[Variant.Attributes, Seq[VariantPublication]]
 ) {
-  lazy val moduleVersion = (module, version)
+
+  @deprecated("Use dependencies0 instead", "2.1.25")
+  def dependencies: Seq[(Configuration, Dependency)] =
+    dependencies0.map {
+      case (c: Variant.Configuration, dep) =>
+        (c.configuration, dep)
+      case (_: Variant.Attributes, _) =>
+        sys.error("Deprecated method doesn't support Gradle Module variant attributes")
+    }
+  @deprecated("Use withDependencies0 instead", "2.1.25")
+  def withDependencies(newDependencies: Seq[(Configuration, Dependency)]): Project =
+    withDependencies0(
+      newDependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      }
+    )
+
+  @deprecated("Use publications0 instead", "2.1.25")
+  def publications: Seq[(Configuration, Publication)] =
+    publications0.map {
+      case (c: Variant.Configuration, pub) =>
+        (c.configuration, pub)
+      case (_: Variant.Attributes, _) =>
+        sys.error("Deprecated method doesn't support Gradle Module variant attributes")
+    }
+  @deprecated("Use withPublications0 instead", "2.1.25")
+  def withPublications(newPublications: Seq[(Configuration, Publication)]): Project =
+    withPublications0(
+      newPublications.map {
+        case (config, pub) =>
+          (Variant.Configuration(config), pub)
+      }
+    )
+
+  @deprecated("Use the override accepting Version-s instead", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    dependencies: Seq[(Configuration, Dependency)],
+    configurations: Map[Configuration, Seq[Configuration]],
+    parent: Option[(Module, String)],
+    dependencyManagement: Seq[(Configuration, Dependency)],
+    properties: Seq[(String, String)],
+    profiles: Seq[Profile],
+    versions: Option[Versions],
+    snapshotVersioning: Option[SnapshotVersioning],
+    packagingOpt: Option[Type],
+    relocated: Boolean,
+    actualVersionOpt: Option[String],
+    publications: Seq[(Configuration, Publication)],
+    info: Info,
+    overrides: Overrides
+  ) =
+    this(
+      module,
+      Version0(version),
+      dependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      configurations,
+      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      dependencyManagement.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      properties,
+      profiles,
+      versions,
+      snapshotVersioning,
+      packagingOpt,
+      relocated,
+      actualVersionOpt.map(Version0(_)),
+      publications.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      info,
+      overrides,
+      Map.empty,
+      Map.empty
+    )
+
+  @deprecated("Use the override accepting Version-s instead", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    dependencies: Seq[(Configuration, Dependency)],
+    configurations: Map[Configuration, Seq[Configuration]],
+    parent: Option[(Module, String)],
+    dependencyManagement: Seq[(Configuration, Dependency)],
+    properties: Seq[(String, String)],
+    profiles: Seq[Profile],
+    versions: Option[Versions],
+    snapshotVersioning: Option[SnapshotVersioning],
+    packagingOpt: Option[Type],
+    relocated: Boolean,
+    actualVersionOpt: Option[String],
+    publications: Seq[(Configuration, Publication)],
+    info: Info
+  ) =
+    this(
+      module,
+      Version0(version),
+      dependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      configurations,
+      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      dependencyManagement.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      properties,
+      profiles,
+      versions,
+      snapshotVersioning,
+      packagingOpt,
+      relocated,
+      actualVersionOpt.map(Version0(_)),
+      publications.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      info,
+      Overrides.empty,
+      Map.empty,
+      Map.empty
+    )
+
+  @deprecated("Use moduleVersion0 instead", "2.1.25")
+  lazy val moduleVersion: (Module, String) = (module, version)
+
+  lazy val moduleVersion0: (Module, Version0) = (module, version0)
+
+  @deprecated("Use version0 instead", "2.1.25")
+  def version: String = version0.repr
+  @deprecated("Use withVersion0 instead", "2.1.25")
+  def withVersion(newVersion: String): Project =
+    if (version == newVersion) this
+    else withVersion0(Version0(newVersion))
+
+  @deprecated("Use parent0 instead", "2.1.25")
+  def parent: Option[(Module, String)] =
+    parent0.map {
+      case (mod, ver) =>
+        (mod, ver.asString)
+    }
+  @deprecated("Use withParent0 instead", "2.1.25")
+  def withParent(newParent: Option[(Module, String)]): Project =
+    withParent0(
+      newParent.map {
+        case (mod, ver) =>
+          (mod, Version0(ver))
+      }
+    )
+
+  @deprecated("Use actualVersionOpt0 instead", "2.1.25")
+  def actualVersionOpt: Option[String] =
+    actualVersionOpt0.map(_.asString)
+  @deprecated("Use withActualVersionOpt0 instead", "2.1.25")
+  def withActualVersionOpt(newParent: Option[String]): Project =
+    withActualVersionOpt0(newParent.map(Version0(_)))
+
+  @deprecated("Use dependencyManagement0 instead", "2.1.25")
+  def dependencyManagement: Seq[(Configuration, Dependency)] =
+    dependencyManagement0.map {
+      case (c: Variant.Configuration, dep) =>
+        (c.configuration, dep)
+      case (_: Variant.Attributes, _) =>
+        sys.error("Deprecated method doesn't support Gradle Module variant attributes")
+    }
+  @deprecated("Use withDependencyManagement0 instead", "2.1.25")
+  def withDependencyManagement(dependencyManagement: Seq[(Configuration, Dependency)]): Project =
+    withDependencyManagement0(
+      dependencyManagement.map {
+        case (c, dep) =>
+          (Variant.Configuration(c), dep)
+      }
+    )
 
   /** All configurations that each configuration extends, including the ones it extends transitively
     */
@@ -282,9 +469,204 @@ object Attributes {
     * not match `version` for projects having a wrong version in their metadata, if the actual
     * version was kept around.
     */
-  def actualVersion: String = actualVersionOpt.getOrElse(version)
+  def actualVersion0: Version0 = actualVersionOpt0.getOrElse(version0)
+
+  @deprecated("Use actualVersion0 instead", "2.1.25")
+  def actualVersion: String = actualVersion0.asString
+
+  def variantFor(attr: VariantSelector.AttributesBased)
+    : Either[VariantError, Variant.Attributes] = {
+    def retainedVariantsFor(attr0: VariantSelector.AttributesBased) = variants
+      .iterator
+      .map {
+        case (name, values) =>
+          (name, attr0.matches(values))
+      }
+      .collect {
+        case (name, Some(score)) =>
+          (name, score)
+      }
+      .toVector
+    val baseRetainedVariants = retainedVariantsFor(attr)
+    def isModuleBasedBom =
+      dependencies0.isEmpty && (dependencyManagement0.nonEmpty || !overrides.isEmpty) &&
+      variants.nonEmpty
+    val (actualAttr, retainedVariants) =
+      if (
+        baseRetainedVariants.isEmpty &&
+        isModuleBasedBom &&
+        attr.matchers.get("org.gradle.category")
+          .contains(VariantSelector.VariantMatcher.Library)
+      ) {
+        val attr0 =
+          attr.addAttributes("org.gradle.category" -> VariantSelector.VariantMatcher.Platform)
+        (attr0, retainedVariantsFor(attr0))
+      }
+      else
+        (attr, baseRetainedVariants)
+    if (retainedVariants.isEmpty)
+      Left(
+        new VariantError.NoVariantFound(
+          module,
+          actualVersion0,
+          actualAttr,
+          variants.toVector.sortBy(_._1.variantName)
+        )
+      )
+    else {
+      val highestScore = retainedVariants.map(_._2).max
+      val retainedVariants0 = retainedVariants.collect {
+        case (name, `highestScore`) => name
+      }
+      assert(retainedVariants0.nonEmpty)
+      if (retainedVariants0.lengthCompare(1) == 0)
+        Right(retainedVariants0.head)
+      else {
+        val retainedVariantsSet = retainedVariants0.toSet
+        Left(
+          new VariantError.FoundTooManyVariants(
+            module,
+            actualVersion0,
+            actualAttr,
+            variants
+              .filter {
+                case (k, v) =>
+                  retainedVariantsSet.contains(k)
+              }
+              .toVector
+              .sortBy(_._1.variantName)
+          )
+        )
+      }
+    }
+  }
+
+  def isRelocatedVariant(variant: Variant.Attributes): Option[Dependency] = {
+    lazy val firstDeps = dependencies0.iterator.filter(_._1 == variant).take(2).toVector
+    val isRelocated = variants.get(variant).exists(_.get("$relocated").contains("true")) &&
+      firstDeps.length == 1
+    if (isRelocated) Some(firstDeps.head._2)
+    else None
+  }
+
+  lazy val depMgmtEquivalentConfigurations = variants.flatMap {
+    case (attr, map) =>
+      val attr0 = VariantSelector.AttributesBased(
+        map
+          .map {
+            case (k, v) =>
+              VariantSelector.VariantMatcher.fromString(k, v)
+          }
+          .map {
+            case ("org.gradle.category", VariantSelector.VariantMatcher.Platform) =>
+              ("org.gradle.category", VariantSelector.VariantMatcher.Library)
+            case other =>
+              other
+          }
+      )
+      attr0.equivalentConfiguration.toSeq.map(attr -> _)
+  }
 
   final override lazy val hashCode = tuple.hashCode
+}
+
+object Project {
+
+  @deprecated("Use the override accepting Version-s instead", "2.1.25")
+  def apply(
+    module: Module,
+    version: String,
+    dependencies: Seq[(Configuration, Dependency)],
+    configurations: Map[Configuration, Seq[Configuration]],
+    parent: Option[(Module, String)],
+    dependencyManagement: Seq[(Configuration, Dependency)],
+    properties: Seq[(String, String)],
+    profiles: Seq[Profile],
+    versions: Option[Versions],
+    snapshotVersioning: Option[SnapshotVersioning],
+    packagingOpt: Option[Type],
+    relocated: Boolean,
+    actualVersionOpt: Option[String],
+    publications: Seq[(Configuration, Publication)],
+    info: Info
+  ): Project =
+    apply(
+      module,
+      Version0(version),
+      dependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      configurations,
+      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      dependencyManagement.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      properties,
+      profiles,
+      versions,
+      snapshotVersioning,
+      packagingOpt,
+      relocated,
+      actualVersionOpt.map(Version0(_)),
+      publications.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      info,
+      Overrides.empty,
+      Map.empty,
+      Map.empty
+    )
+  @deprecated("Use the override accepting Version-s instead", "2.1.25")
+  def apply(
+    module: Module,
+    version: String,
+    dependencies: Seq[(Configuration, Dependency)],
+    configurations: Map[Configuration, Seq[Configuration]],
+    parent: Option[(Module, String)],
+    dependencyManagement: Seq[(Configuration, Dependency)],
+    properties: Seq[(String, String)],
+    profiles: Seq[Profile],
+    versions: Option[Versions],
+    snapshotVersioning: Option[SnapshotVersioning],
+    packagingOpt: Option[Type],
+    relocated: Boolean,
+    actualVersionOpt: Option[String],
+    publications: Seq[(Configuration, Publication)],
+    info: Info,
+    overrides: Overrides
+  ): Project =
+    apply(
+      module,
+      Version0(version),
+      dependencies.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      configurations,
+      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      dependencyManagement.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      properties,
+      profiles,
+      versions,
+      snapshotVersioning,
+      packagingOpt,
+      relocated,
+      actualVersionOpt.map(Version0(_)),
+      publications.map {
+        case (config, dep) =>
+          (Variant.Configuration(config), dep)
+      },
+      info,
+      overrides,
+      Map.empty,
+      Map.empty
+    )
 }
 
 /** Extra project info, not used during resolution */
@@ -379,22 +761,130 @@ object Info {
 @data class SnapshotVersion(
   classifier: Classifier,
   extension: Extension,
-  value: String,
+  value0: Version0,
   updated: Option[Versions.DateTime]
-)
+) {
+  @deprecated("Use the override accepting a Version instead", "2.1.25")
+  def this(
+    classifier: Classifier,
+    extension: Extension,
+    value: String,
+    updated: Option[Versions.DateTime]
+  ) =
+    this(
+      classifier,
+      extension,
+      Version0(value),
+      updated
+    )
+
+  @deprecated("Use value0 instead", "2.1.25")
+  def value: String =
+    value0.asString
+  @deprecated("Use withValue0 instead", "2.1.25")
+  def withValue(newValue: String): SnapshotVersion =
+    if (newValue == value) this
+    else withValue0(Version0(newValue))
+}
+
+object SnapshotVersion {
+  @deprecated("Use the override accepting a Version instead", "2.1.25")
+  def apply(
+    classifier: Classifier,
+    extension: Extension,
+    value: String,
+    updated: Option[Versions.DateTime]
+  ): SnapshotVersion =
+    SnapshotVersion(
+      classifier,
+      extension,
+      Version0(value),
+      updated
+    )
+}
 
 // Maven-specific
 @data class SnapshotVersioning(
   module: Module,
-  version: String,
-  latest: String,
-  release: String,
+  version0: Version0,
+  latest0: Version0,
+  release0: Version0,
   timestamp: String,
   buildNumber: Option[Int],
   localCopy: Option[Boolean],
   lastUpdated: Option[Versions.DateTime],
   snapshotVersions: Seq[SnapshotVersion]
-)
+) {
+  @deprecated("Use the override accepting Version-s instead", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    latest: String,
+    release: String,
+    timestamp: String,
+    buildNumber: Option[Int],
+    localCopy: Option[Boolean],
+    lastUpdated: Option[Versions.DateTime],
+    snapshotVersions: Seq[SnapshotVersion]
+  ) =
+    this(
+      module,
+      Version0(version),
+      Version0(latest),
+      Version0(release),
+      timestamp,
+      buildNumber,
+      localCopy,
+      lastUpdated,
+      snapshotVersions
+    )
+
+  @deprecated("Use version0 instead", "2.1.25")
+  def version: String = version0.asString
+  @deprecated("Use latest0 instead", "2.1.25")
+  def latest: String = latest0.asString
+  @deprecated("Use release0 instead", "2.1.25")
+  def release: String = release0.asString
+
+  @deprecated("Use withVersion0 instead", "2.1.25")
+  def withVersion(newVersion: String): SnapshotVersioning =
+    if (newVersion == version) this
+    else withVersion0(Version0(newVersion))
+  @deprecated("Use withLatest0 instead", "2.1.25")
+  def withLatest(newLatest: String): SnapshotVersioning =
+    if (newLatest == latest) this
+    else withLatest0(Version0(newLatest))
+  @deprecated("Use withRelease0 instead", "2.1.25")
+  def withRelease(newRelease: String): SnapshotVersioning =
+    if (newRelease == release) this
+    else withRelease0(Version0(newRelease))
+}
+
+object SnapshotVersioning {
+  @deprecated("Use the override accepting Version-s instead", "2.1.25")
+  def apply(
+    module: Module,
+    version: String,
+    latest: String,
+    release: String,
+    timestamp: String,
+    buildNumber: Option[Int],
+    localCopy: Option[Boolean],
+    lastUpdated: Option[Versions.DateTime],
+    snapshotVersions: Seq[SnapshotVersion]
+  ): SnapshotVersioning =
+    apply(
+      module,
+      Version0(version),
+      Version0(latest),
+      Version0(release),
+      timestamp,
+      buildNumber,
+      localCopy,
+      lastUpdated,
+      snapshotVersions
+    )
+}
 
 @data(apply = false, settersCallApply = true) class Publication(
   name: String,
@@ -424,12 +914,29 @@ object Publication {
     Publication("", Type.empty, Extension.empty, Classifier.empty)
 }
 
+@data class VariantPublication(
+  name: String,
+  url: String,
+  @since
+  classifier: Option[Classifier] = None
+)
+
 trait ArtifactSource {
   def artifacts(
     dependency: Dependency,
     project: Project,
     overrideClassifiers: Option[Seq[Classifier]]
   ): Seq[(Publication, Artifact)]
+}
+
+object ArtifactSource {
+  trait ModuleBased {
+    def moduleArtifacts(
+      dependency: Dependency,
+      project: Project,
+      overrideAttributes: Option[VariantSelector.AttributesBased]
+    ): Seq[(VariantPublication, Artifact)]
+  }
 }
 
 private[coursier] object Validation {

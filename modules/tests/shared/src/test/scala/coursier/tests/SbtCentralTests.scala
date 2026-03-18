@@ -40,19 +40,29 @@ object SbtCentralTests extends CentralTests {
           mod"ch.epfl.scala:sbt-plugin-example-diamond;scalaVersion=2.12;sbtVersion=1.0"
 
         // only deprecated Maven paths
-        test("0.1.0") - runner.resolutionCheck(diamond, "0.1.0")
+        test("0.1.0") {
+          runner.resolutionCheck(diamond, "0.1.0")
+        }
 
         // diamond and left on the new Maven path
-        test("0.2.0") - runner.resolutionCheck(diamond, "0.2.0")
+        test("0.2.0") {
+          runner.resolutionCheck(diamond, "0.2.0")
+        }
 
         // conflict resolution on bottom between new and deprecated Maven paths
-        test("0.3.0") - runner.resolutionCheck(diamond, "0.3.0")
+        test("0.3.0") {
+          runner.resolutionCheck(diamond, "0.3.0")
+        }
 
         // bottom on new Maven paht, but not righ
-        test("0.4.0") - runner.resolutionCheck(diamond, "0.4.0")
+        test("0.4.0") {
+          runner.resolutionCheck(diamond, "0.4.0")
+        }
 
         // only new Maven paths with conflict resolution on bottom
-        test("0.5.0") - runner.resolutionCheck(diamond, "0.5.0")
+        test("0.5.0") {
+          runner.resolutionCheck(diamond, "0.5.0")
+        }
       }
     }
   }

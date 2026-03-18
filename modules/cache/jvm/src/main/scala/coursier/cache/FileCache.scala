@@ -136,11 +136,11 @@ import scala.util.control.NonFatal
     sumType: String
   ): EitherT[F, ArtifactError, Unit] = {
 
-    val localFile0 = localFile(artifact.url, artifact.authentication.map(_.user))
+    val localFile0 = localFile(artifact.url, artifact.authentication.flatMap(_.userOpt))
 
     val headerSumFile = Seq(auxiliaryFile(localFile0, sumType))
     val downloadedSumFile = artifact.checksumUrls.get(sumType).map { sumUrl =>
-      localFile(sumUrl, artifact.authentication.map(_.user))
+      localFile(sumUrl, artifact.authentication.flatMap(_.userOpt))
     }
 
     EitherT {
@@ -208,7 +208,7 @@ import scala.util.control.NonFatal
   private def filePerPolicy0(
     artifact: Artifact,
     policy: CachePolicy,
-    retry: Int = retry
+    retry: Int
   ): EitherT[F, ArtifactError, File] =
     EitherT {
       download(
@@ -260,7 +260,7 @@ import scala.util.control.NonFatal
         validateChecksum(artifact, c).map(_ => f)
     }.leftFlatMap {
       case err: ArtifactError.WrongChecksum =>
-        val badFile         = localFile(artifact.url, artifact.authentication.map(_.user))
+        val badFile         = localFile(artifact.url, artifact.authentication.flatMap(_.userOpt))
         val badChecksumFile = new File(err.sumFile)
         val foundBadFileInCache = {
           val location0 = location.getCanonicalPath.stripSuffix(File.separator) + File.separator
@@ -295,8 +295,10 @@ import scala.util.control.NonFatal
     file(artifact, retry)
 
   def file(artifact: Artifact, retry: Int): EitherT[F, ArtifactError, File] =
-    cachePolicies.tail.map(filePerPolicy(artifact, _, retry))
-      .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry))(_ orElse _)
+    ensureLoggerIsInitialized[ArtifactError].flatMap { _ =>
+      cachePolicies.tail.map(filePerPolicy(artifact, _, retry))
+        .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry))(_ orElse _)
+    }
 
   private def fetchPerPolicy(
     artifact: Artifact,
@@ -401,10 +403,19 @@ import scala.util.control.NonFatal
     }
   }
 
+  private def ensureLoggerIsInitialized[L]: EitherT[F, L, Unit] =
+    EitherT[F, L, Unit] {
+      S.delay {
+        Right(logger.checkInitialized())
+      }
+    }
+
   def fetch: Cache.Fetch[F] =
     a =>
-      cachePolicies.tail
-        .foldLeft(fetchPerPolicy(a, cachePolicies.head))(_ orElse fetchPerPolicy(a, _))
+      ensureLoggerIsInitialized[String].flatMap { _ =>
+        cachePolicies.tail
+          .foldLeft(fetchPerPolicy(a, cachePolicies.head))(_ orElse fetchPerPolicy(a, _))
+      }
 
   override def fetchs: Seq[Cache.Fetch[F]] =
     // format: off
@@ -431,7 +442,7 @@ object FileCache {
   private def auxiliaryFilePrefix(file: File): String =
     s".${file.getName}__"
 
-  private[cache] def clearAuxiliaryFiles(file: File): Unit = {
+  private[coursier] def clearAuxiliaryFiles(file: File): Unit = {
     val prefix = auxiliaryFilePrefix(file)
     val filter: FilenameFilter = new FilenameFilter {
       def accept(dir: File, name: String): Boolean =

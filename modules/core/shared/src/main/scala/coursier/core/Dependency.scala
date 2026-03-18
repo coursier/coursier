@@ -1,10 +1,10 @@
 package coursier.core
 
-import java.util.concurrent.ConcurrentMap
-
 import coursier.core.Validation._
-import dataclass.data
-import MinimizedExclusions._
+import coursier.version.{VersionConstraint => VersionConstraint0}
+import dataclass.{data, since}
+
+import java.util.concurrent.ConcurrentMap
 
 /** Dependencies with the same @module will typically see their @version-s merged.
   *
@@ -13,8 +13,8 @@ import MinimizedExclusions._
   */
 @data(apply = false, settersCallApply = true) class Dependency(
   module: Module,
-  version: String,
-  configuration: Configuration,
+  versionConstraint: VersionConstraint0,
+  variantSelector: VariantSelector,
   minimizedExclusions: MinimizedExclusions,
   publication: Publication,
   // Maven-specific
@@ -23,7 +23,7 @@ import MinimizedExclusions._
   @since("2.1.17")
   @deprecated("Use overridesMap instead", "2.1.23")
   overrides: DependencyManagement.Map =
-    Map.empty,
+    Map.empty[DependencyManagement.Key, DependencyManagement.Values],
   @since("2.1.18")
   @deprecated("Use bomDependencies instead", "2.1.19")
   boms: Seq[(Module, String)] = Nil,
@@ -31,14 +31,186 @@ import MinimizedExclusions._
   bomDependencies: Seq[BomDependency] = Nil,
   @since("2.1.23")
   overridesMap: Overrides =
-    Overrides.empty
+    Overrides.empty,
+  @since("2.1.25")
+  endorseStrictVersions: Boolean = false
 ) {
-  assertValid(version, "version")
-  lazy val moduleVersion = (module, version)
+  assertValid(versionConstraint.asString, "version")
+  def moduleVersionConstraint: (Module, VersionConstraint0) = (module, versionConstraint)
 
-  def asBomDependency: BomDependency =
-    BomDependency(module, version, configuration)
+  @deprecated("Prefer moduleVersionConstraint instead", "2.1.25")
+  def moduleVersion: (Module, String) = (module, versionConstraint.asString)
 
+  def asBomDependency: BomDependency = {
+    val config = variantSelector match {
+      case c: VariantSelector.ConfigurationBased => c.configuration
+      case _: VariantSelector.AttributesBased    => Configuration.empty
+    }
+    BomDependency(module, versionConstraint, config)
+  }
+
+  @deprecated(
+    "Prefer using versionConstraint instead (versionConstraint.asString to get a printable string)",
+    "2.1.25"
+  )
+  def version: String =
+    versionConstraint.asString
+  @deprecated("Prefer withVersionConstraint instead", "2.1.25")
+  def withVersion(newVersion: String): Dependency =
+    if (newVersion == version) this
+    else withVersionConstraint(VersionConstraint0(newVersion))
+
+  @deprecated("Use variantSelector instead", "2.1.25")
+  def configuration: Configuration =
+    variantSelector match {
+      case c: VariantSelector.ConfigurationBased => c.configuration
+      case _: VariantSelector.AttributesBased =>
+        sys.error("Deprecated method doesn't support Gradle Module variant selectors")
+    }
+  @deprecated("Use withVariantSelector instead", "2.1.25")
+  def withConfiguration(newConfiguration: Configuration): Dependency =
+    if (variantSelector.asConfiguration.contains(newConfiguration)) this
+    else withVariantSelector(VariantSelector.ConfigurationBased(newConfiguration))
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean
+  ) =
+    this(
+      module,
+      VersionConstraint0(version),
+      VariantSelector.ConfigurationBased(configuration),
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map
+  ) =
+    this(
+      module,
+      VersionConstraint0(version),
+      VariantSelector.ConfigurationBased(configuration),
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      overrides
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)]
+  ) =
+    this(
+      module,
+      VersionConstraint0(version),
+      VariantSelector.ConfigurationBased(configuration),
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      overrides,
+      boms
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)],
+    bomDependencies: Seq[BomDependency]
+  ) =
+    this(
+      module,
+      VersionConstraint0(version),
+      VariantSelector.ConfigurationBased(configuration),
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      overrides,
+      boms,
+      bomDependencies
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def this(
+    module: Module,
+    version: String,
+    configuration: Configuration,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)],
+    bomDependencies: Seq[BomDependency],
+    overridesMap: Overrides
+  ) =
+    this(
+      module,
+      VersionConstraint0(version),
+      VariantSelector.ConfigurationBased(configuration),
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      overrides,
+      boms,
+      bomDependencies,
+      overridesMap
+    )
+
+  def this(
+    module: Module,
+    version: VersionConstraint0,
+    configuration: Configuration,
+    minimizedExclusions: Set[(Organization, ModuleName)],
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean
+  ) = this(
+    module,
+    version,
+    VariantSelector.ConfigurationBased(configuration),
+    MinimizedExclusions(minimizedExclusions),
+    publication,
+    optional,
+    transitive
+  )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
   def this(
     module: Module,
     version: String,
@@ -49,19 +221,18 @@ import MinimizedExclusions._
     transitive: Boolean
   ) = this(
     module,
-    version,
-    configuration,
+    VersionConstraint0(version),
+    VariantSelector.ConfigurationBased(configuration),
     MinimizedExclusions(minimizedExclusions),
     publication,
     optional,
     transitive
   )
 
+  private def deprecatedBoms = DependencyInternals.deprecatedBoms(this)
+
   def mavenPrefix: String =
-    if (attributes.isEmpty)
-      module.orgName
-    else
-      s"${module.orgName}:${attributes.packagingAndClassifier}"
+    Dependency.mavenPrefix(module, attributes)
 
   def attributes: Attributes =
     publication.attributes
@@ -95,16 +266,43 @@ import MinimizedExclusions._
   )
   def exclusions(): Set[(Organization, ModuleName)] = minimizedExclusions.toSet()
 
+  def addExclusion(org: Organization, name: ModuleName): Dependency =
+    withMinimizedExclusions(
+      minimizedExclusions.join(
+        MinimizedExclusions(Set((org, name)))
+      )
+    )
+
   def addBom(bomDep: BomDependency): Dependency =
     withBomDependencies(bomDependencies :+ bomDep)
-  def addBom(module: Module, version: String): Dependency =
+  def addBom(module: Module, version: VersionConstraint0): Dependency =
     withBomDependencies(bomDependencies :+ BomDependency(module, version, Configuration.empty))
-  def addBom(module: Module, version: String, config: Configuration): Dependency =
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def addBom(module: Module, version: String): Dependency =
+    withBomDependencies(bomDependencies :+ BomDependency(
+      module,
+      VersionConstraint0(version),
+      Configuration.empty
+    ))
+  def addBom(module: Module, version: VersionConstraint0, config: Configuration): Dependency =
     withBomDependencies(bomDependencies :+ BomDependency(module, version, config))
-  def addBoms(boms: Seq[(Module, String)]): Dependency =
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def addBom(module: Module, version: String, config: Configuration): Dependency =
+    withBomDependencies(bomDependencies :+ BomDependency(
+      module,
+      VersionConstraint0(version),
+      config
+    ))
+  def addBoms0(boms: Seq[(Module, VersionConstraint0)]): Dependency =
     withBomDependencies(
       this.bomDependencies ++
         boms.map(t => BomDependency(t._1, t._2, Configuration.empty))
+    )
+  @deprecated("Prefer addBoms0 instead, that accepts a VersionConstraint", "2.1.25")
+  def addBoms(boms: Seq[(Module, String)]): Dependency =
+    withBomDependencies(
+      this.bomDependencies ++
+        boms.map(t => BomDependency(t._1, VersionConstraint0(t._2), Configuration.empty))
     )
   def addBomDependencies(bomDependencies: Seq[BomDependency]): Dependency =
     withBomDependencies(this.bomDependencies ++ bomDependencies)
@@ -113,6 +311,42 @@ import MinimizedExclusions._
     withOverridesMap(
       Overrides.add(overridesMap, Overrides(Map(key -> values)))
     )
+  def addOverride(org: Organization, name: ModuleName, version: VersionConstraint0): Dependency = {
+    val key = DependencyManagement.Key(org, name, Type.jar, Classifier.empty)
+    val values = DependencyManagement.Values(
+      Configuration.empty,
+      version,
+      MinimizedExclusions.zero,
+      optional = false
+    )
+    addOverride(key, values)
+  }
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def addOverride(org: Organization, name: ModuleName, version: String): Dependency =
+    addOverride(org, name, VersionConstraint0(version))
+  def addOverride(
+    org: Organization,
+    name: ModuleName,
+    version: VersionConstraint0,
+    exclusions: Set[(Organization, ModuleName)]
+  ): Dependency = {
+    val key = DependencyManagement.Key(org, name, Type.jar, Classifier.empty)
+    val values = DependencyManagement.Values(
+      Configuration.empty,
+      version,
+      MinimizedExclusions(exclusions),
+      optional = false
+    )
+    addOverride(key, values)
+  }
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def addOverride(
+    org: Organization,
+    name: ModuleName,
+    version: String,
+    exclusions: Set[(Organization, ModuleName)]
+  ): Dependency =
+    addOverride(org, name, VersionConstraint0(version), exclusions)
   def addOverrides(
     entries: Seq[(DependencyManagement.Key, DependencyManagement.Values)]
   ): Dependency =
@@ -125,10 +359,28 @@ import MinimizedExclusions._
   def addOverrides(newOverrides: Overrides): Dependency =
     withOverridesMap(Overrides.add(overridesMap, newOverrides))
 
+  def isVariantAttributesBased: Boolean =
+    variantSelector match {
+      case _: VariantSelector.ConfigurationBased => false
+      case _: VariantSelector.AttributesBased    => true
+    }
+  def addVariantAttributes(attributes: (String, VariantSelector.VariantMatcher)*): Dependency = {
+    val (attr, force) = variantSelector match {
+      case c: VariantSelector.ConfigurationBased =>
+        (VariantSelector.AttributesBased(), true)
+      case a: VariantSelector.AttributesBased =>
+        (a, false)
+    }
+    if (attributes.isEmpty && !force)
+      this
+    else
+      withVariantSelector(attr.addAttributes(attributes: _*))
+  }
+
   private[core] def copy(
     module: Module = this.module,
-    version: String = this.version,
-    configuration: Configuration = this.configuration,
+    version: VersionConstraint0 = this.versionConstraint,
+    variantSelector: VariantSelector = this.variantSelector,
     minimizedExclusions: MinimizedExclusions = this.minimizedExclusions,
     attributes: Attributes = this.attributes,
     optional: Boolean = this.optional,
@@ -136,15 +388,16 @@ import MinimizedExclusions._
   ) = Dependency(
     module,
     version,
-    configuration,
+    variantSelector,
     minimizedExclusions,
     Publication("", attributes.`type`, Extension.empty, attributes.classifier),
     optional,
     transitive,
-    Map.empty,
-    boms,
+    Map.empty[DependencyManagement.Key, DependencyManagement.Values],
+    deprecatedBoms,
     bomDependencies,
-    overridesMap
+    overridesMap,
+    endorseStrictVersions
   )
 
   lazy val clearExclusions: Dependency =
@@ -154,8 +407,8 @@ import MinimizedExclusions._
     if (overridesMap.isEmpty) this
     else withOverridesMap(Overrides.empty)
   lazy val clearVersion: Dependency =
-    if (version.isEmpty) this
-    else withVersion("")
+    if (versionConstraint.asString.isEmpty) this
+    else withVersionConstraint(VersionConstraint0.empty)
   lazy val depManagementKey: DependencyManagement.Key =
     DependencyManagement.Key(
       module.organization,
@@ -165,17 +418,17 @@ import MinimizedExclusions._
     )
   lazy val hasProperties =
     module.hasProperties ||
-    version.contains("$") ||
+    versionConstraint.asString.contains("$") ||
     publication.attributesHaveProperties ||
-    configuration.value.contains("$") ||
+    variantSelector.asConfiguration.exists(_.value.contains("$")) ||
     minimizedExclusions.hasProperties
 
   // Overriding toString to be backwards compatible with Set-based exclusion representation
   override def toString(): String = {
     var fields = Seq(
       module.toString,
-      version.toString,
-      configuration.toString,
+      versionConstraint.asString,
+      variantSelector.asConfiguration.map(_.toString).getOrElse(variantSelector.repr),
       minimizedExclusions.toSet().toString,
       publication.toString,
       optional.toString,
@@ -185,11 +438,20 @@ import MinimizedExclusions._
       if (overridesMap.isEmpty) fields
       else fields :+ overridesMap.flatten.toMap.toString
     fields =
-      if (boms.isEmpty) fields
-      else fields :+ boms.toString
+      if (deprecatedBoms.isEmpty) fields
+      else fields :+ deprecatedBoms.toString
     fields =
       if (bomDependencies.isEmpty) fields
-      else fields :+ bomDependencies.toString
+      else fields :+ bomDependencies.map { bomDep =>
+        Seq(
+          bomDep.module,
+          bomDep.versionConstraint.asString,
+          bomDep.config,
+          bomDep.forceOverrideVersions
+        ).mkString("BomDependency(", ", ", ")")
+      }.toString
+    if (endorseStrictVersions)
+      fields = fields :+ endorseStrictVersions.toString
     s"Dependency(${fields.mkString(", ")})"
   }
 
@@ -204,6 +466,38 @@ object Dependency {
 
   def apply(
     module: Module,
+    versionConstraint: VersionConstraint0,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)],
+    bomDependencies: Seq[BomDependency],
+    overridesMap: Overrides,
+    endorseStrictVersions: Boolean
+  ): Dependency =
+    coursier.util.Cache.cacheMethod(instanceCache)(
+      new Dependency(
+        module,
+        versionConstraint,
+        variantSelector,
+        minimizedExclusions,
+        publication,
+        optional,
+        transitive,
+        overrides,
+        boms,
+        bomDependencies,
+        overridesMap,
+        endorseStrictVersions
+      )
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def apply(
+    module: Module,
     version: String,
     configuration: Configuration,
     minimizedExclusions: MinimizedExclusions,
@@ -215,22 +509,49 @@ object Dependency {
     bomDependencies: Seq[BomDependency],
     overridesMap: Overrides
   ): Dependency =
-    coursier.util.Cache.cacheMethod(instanceCache)(
-      new Dependency(
-        module,
-        version,
-        configuration,
-        minimizedExclusions,
-        publication,
-        optional,
-        transitive,
-        overrides,
-        boms,
-        bomDependencies,
-        overridesMap
-      )
+    apply(
+      module,
+      VersionConstraint0(version),
+      VariantSelector.ConfigurationBased(configuration),
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      overrides,
+      boms,
+      bomDependencies,
+      overridesMap,
+      endorseStrictVersions = false
     )
 
+  def apply(
+    module: Module,
+    version: VersionConstraint0,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)],
+    bomDependencies: Seq[BomDependency]
+  ): Dependency =
+    Dependency(
+      module,
+      version,
+      variantSelector,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      Map.empty[DependencyManagement.Key, DependencyManagement.Values],
+      boms,
+      bomDependencies,
+      Overrides(overrides),
+      endorseStrictVersions = false
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
   def apply(
     module: Module,
     version: String,
@@ -243,20 +564,46 @@ object Dependency {
     boms: Seq[(Module, String)],
     bomDependencies: Seq[BomDependency]
   ): Dependency =
-    Dependency(
+    apply(
       module,
-      version,
-      configuration,
+      VersionConstraint0(version),
+      VariantSelector.ConfigurationBased(configuration),
       minimizedExclusions,
       publication,
       optional,
       transitive,
-      Map.empty,
+      overrides,
       boms,
-      bomDependencies,
-      Overrides(overrides)
+      bomDependencies
     )
 
+  def apply(
+    module: Module,
+    version: VersionConstraint0,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)]
+  ): Dependency =
+    Dependency(
+      module,
+      version,
+      variantSelector,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      Map.empty[DependencyManagement.Key, DependencyManagement.Values],
+      boms,
+      Nil,
+      Overrides(overrides),
+      endorseStrictVersions = false
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
   def apply(
     module: Module,
     version: String,
@@ -268,20 +615,44 @@ object Dependency {
     overrides: DependencyManagement.Map,
     boms: Seq[(Module, String)]
   ): Dependency =
-    Dependency(
+    apply(
       module,
-      version,
-      configuration,
+      VersionConstraint0(version),
+      VariantSelector.ConfigurationBased(configuration),
       minimizedExclusions,
       publication,
       optional,
       transitive,
-      Map.empty,
-      boms,
-      Nil,
-      Overrides(overrides)
+      overrides,
+      boms
     )
 
+  def apply(
+    module: Module,
+    version: VersionConstraint0,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map
+  ): Dependency =
+    Dependency(
+      module,
+      version,
+      variantSelector,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      Map.empty[DependencyManagement.Key, DependencyManagement.Values],
+      Nil,
+      Nil,
+      Overrides(overrides),
+      endorseStrictVersions = false
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
   def apply(
     module: Module,
     version: String,
@@ -292,20 +663,42 @@ object Dependency {
     transitive: Boolean,
     overrides: DependencyManagement.Map
   ): Dependency =
-    Dependency(
+    apply(
       module,
-      version,
-      configuration,
+      VersionConstraint0(version),
+      VariantSelector.ConfigurationBased(configuration),
       minimizedExclusions,
       publication,
       optional,
       transitive,
-      Map.empty,
-      Nil,
-      Nil,
-      Overrides(overrides)
+      overrides
     )
 
+  def apply(
+    module: Module,
+    version: VersionConstraint0,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean
+  ): Dependency =
+    Dependency(
+      module,
+      version,
+      variantSelector,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      Map.empty[DependencyManagement.Key, DependencyManagement.Values],
+      Nil,
+      Nil,
+      Overrides.empty,
+      endorseStrictVersions = false
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
   def apply(
     module: Module,
     version: String,
@@ -315,20 +708,36 @@ object Dependency {
     optional: Boolean,
     transitive: Boolean
   ): Dependency =
-    Dependency(
+    apply(
       module,
-      version,
-      configuration,
+      VersionConstraint0(version),
+      VariantSelector.ConfigurationBased(configuration),
       minimizedExclusions,
       publication,
       optional,
-      transitive,
-      Map.empty,
-      Nil,
-      Nil,
-      Overrides.empty
+      transitive
     )
 
+  def apply(
+    module: Module,
+    versionConstraint: VersionConstraint0,
+    variantSelector: VariantSelector,
+    exclusions: Set[(Organization, ModuleName)],
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean
+  ): Dependency =
+    Dependency(
+      module,
+      versionConstraint,
+      variantSelector,
+      MinimizedExclusions(exclusions),
+      publication,
+      optional,
+      transitive
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
   def apply(
     module: Module,
     version: String,
@@ -338,11 +747,11 @@ object Dependency {
     optional: Boolean,
     transitive: Boolean
   ): Dependency =
-    Dependency(
+    apply(
       module,
-      version,
-      configuration,
-      MinimizedExclusions(exclusions),
+      VersionConstraint0(version),
+      VariantSelector.ConfigurationBased(configuration),
+      exclusions,
       publication,
       optional,
       transitive
@@ -350,18 +759,48 @@ object Dependency {
 
   def apply(
     module: Module,
-    version: String
+    version: VersionConstraint0
   ): Dependency =
     Dependency(
       module,
       version,
-      Configuration.empty,
+      VariantSelector.emptyConfiguration,
       MinimizedExclusions.zero,
       Publication("", Type.empty, Extension.empty, Classifier.empty),
       optional = false,
       transitive = true
     )
 
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
+  def apply(
+    module: Module,
+    version: String
+  ): Dependency =
+    apply(
+      module,
+      VersionConstraint0(version)
+    )
+
+  def apply(
+    module: Module,
+    version: VersionConstraint0,
+    variantSelector: VariantSelector,
+    exclusions: Set[(Organization, ModuleName)],
+    attributes: Attributes,
+    optional: Boolean,
+    transitive: Boolean
+  ): Dependency =
+    Dependency(
+      module,
+      version,
+      variantSelector,
+      MinimizedExclusions(exclusions),
+      Publication("", attributes.`type`, Extension.empty, attributes.classifier),
+      optional,
+      transitive
+    )
+
+  @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
   def apply(
     module: Module,
     version: String,
@@ -371,14 +810,19 @@ object Dependency {
     optional: Boolean,
     transitive: Boolean
   ): Dependency =
-    Dependency(
+    apply(
       module,
-      version,
-      configuration,
-      MinimizedExclusions(exclusions),
-      Publication("", attributes.`type`, Extension.empty, attributes.classifier),
+      VersionConstraint0(version),
+      VariantSelector.ConfigurationBased(configuration),
+      exclusions,
+      attributes,
       optional,
       transitive
     )
 
+  def mavenPrefix(module: Module, attributes: Attributes): String =
+    if (attributes.isEmpty)
+      module.orgName
+    else
+      s"${module.orgName}:${attributes.packagingAndClassifier}"
 }

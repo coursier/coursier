@@ -1,8 +1,10 @@
 package coursier.core
 
-import dataclass.data
-
-import java.util.concurrent.ConcurrentMap
+import coursier.version.{
+  VersionConstraint => VersionConstraint0,
+  VersionInterval => VersionInterval0
+}
+import dataclass.{data, since}
 
 import scala.collection.mutable
 
@@ -34,6 +36,9 @@ object DependencyManagement {
         this
     }
 
+    def fakeModule: Module =
+      Module(organization, name, Map.empty)
+
     // Mainly there for sorting purposes
     def repr: String =
       s"${organization.value}:${name.value}:${`type`.value}:${classifier.value}"
@@ -46,29 +51,54 @@ object DependencyManagement {
 
   @data class Values(
     config: Configuration,
-    version: String,
+    versionConstraint: VersionConstraint0,
     minimizedExclusions: MinimizedExclusions,
-    optional: Boolean
+    optional: Boolean,
+    @since("2.1.25")
+    global: Boolean = false
   ) {
+
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def this(
+      config: Configuration,
+      version: String,
+      minimizedExclusions: MinimizedExclusions,
+      optional: Boolean
+    ) = this(
+      config,
+      VersionConstraint0(version),
+      minimizedExclusions,
+      optional
+    )
+
+    @deprecated("Use versionConstraint instead", "2.1.25")
+    def version: String =
+      versionConstraint.asString
+    @deprecated("Use withVersionConstraint instead", "2.1.25")
+    def withVersion(newVersion: String): Values =
+      if (newVersion == version) this
+      else withVersionConstraint(VersionConstraint0(newVersion))
+
     def isEmpty: Boolean =
-      config.value.isEmpty && version.isEmpty && minimizedExclusions.isEmpty && !optional
+      config.value.isEmpty && versionConstraint.asString.isEmpty && minimizedExclusions.isEmpty && !optional
     def fakeDependency(key: Key): Dependency =
       Dependency(
-        Module(key.organization, key.name, Map.empty),
-        version,
-        config,
+        key.fakeModule,
+        versionConstraint,
+        VariantSelector.ConfigurationBased(config),
         minimizedExclusions,
         Publication("", key.`type`, Extension.empty, key.classifier),
         optional = optional,
         transitive = true
       )
     def orElse(other: Values): Values = {
-      val newConfig   = if (config.value.isEmpty) other.config else config
-      val newVersion  = if (version.isEmpty) other.version else version
+      val newConfig = if (config.value.isEmpty) other.config else config
+      val newVersion =
+        if (versionConstraint.asString.isEmpty) other.versionConstraint else versionConstraint
       val newExcl     = other.minimizedExclusions.join(minimizedExclusions)
       val newOptional = optional || other.optional
       if (
-        config != newConfig || version != newVersion || minimizedExclusions != newExcl || optional != newOptional
+        config != newConfig || versionConstraint != newVersion || minimizedExclusions != newExcl || optional != newOptional
       )
         Values(
           newConfig,
@@ -85,7 +115,7 @@ object DependencyManagement {
       if (config != newConfig || minimizedExclusions != newExcl)
         Values(
           config = newConfig,
-          version = version,
+          versionConstraint = versionConstraint,
           minimizedExclusions = newExcl,
           // FIXME This might have been a string like "${some-prop}" initially :/
           optional = optional
@@ -94,16 +124,28 @@ object DependencyManagement {
         this
     }
     def mapVersion(f: String => String): Values = {
-      val newVersion = f(version)
-      if (version == newVersion) this
-      else withVersion(newVersion)
+      val newVersion = f(versionConstraint.asString)
+      if (versionConstraint.asString == newVersion) this
+      else withVersionConstraint(VersionConstraint0(newVersion))
+    }
+
+    override def toString(): String = {
+      var fields = Seq(
+        config.toString,
+        versionConstraint.toString,
+        minimizedExclusions.toString,
+        optional.toString
+      )
+      if (global)
+        fields = fields :+ global.toString
+      fields.mkString("Values(", ", ", ")")
     }
   }
 
   object Values {
     val empty = Values(
       config = Configuration.empty,
-      version = "",
+      versionConstraint = VersionConstraint0.empty,
       minimizedExclusions = MinimizedExclusions.zero,
       optional = false
     )
@@ -111,10 +153,23 @@ object DependencyManagement {
     def from(config: Configuration, dep: Dependency): Values =
       Values(
         config,
-        dep.version,
+        dep.versionConstraint,
         dep.minimizedExclusions,
         dep.optional
       )
+
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
+    def apply(
+      config: Configuration,
+      version: String,
+      minimizedExclusions: MinimizedExclusions,
+      optional: Boolean
+    ): Values = apply(
+      config,
+      VersionConstraint0(version),
+      minimizedExclusions,
+      optional
+    )
   }
 
   def entry(config: Configuration, dep: Dependency): (Key, Values) =

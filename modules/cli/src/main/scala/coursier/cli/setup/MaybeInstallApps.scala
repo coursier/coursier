@@ -2,9 +2,8 @@ package coursier.cli.setup
 
 import coursier.install.{Channels, InstallDir}
 import coursier.util.Task
-import dataclass.data
 
-@data class MaybeInstallApps(
+case class MaybeInstallApps(
   installDir: InstallDir,
   channels: Channels,
   appIds: Seq[String]

@@ -13,6 +13,7 @@ import coursier.core.{
   Organization
 }
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule}
+import coursier.version.{Version, VersionInterval}
 
 object Dependencies {
 
@@ -33,7 +34,10 @@ object Dependencies {
   def withExtraRepo(
     rawDependencies: Seq[String],
     extraDependencies: Seq[(JavaOrScalaDependency, Map[String, String])]
-  ): Either[Throwable, (List[JavaOrScalaDependency], Map[(JavaOrScalaModule, String), URL])] =
+  ): Either[
+    Throwable,
+    (List[JavaOrScalaDependency], Map[(JavaOrScalaModule, Version), URL])
+  ] =
     handleDependencies(rawDependencies) match {
       case Validated.Valid(l) =>
         val l0 = l ++ extraDependencies
@@ -47,7 +51,16 @@ object Dependencies {
           l0.flatMap {
             case (dep, extraParams) =>
               extraParams.get("url").map { url =>
-                (dep.module, dep.version) -> new URL(URLDecoder.decode(url, "UTF-8"))
+                if (
+                  dep.versionConstraint.interval != VersionInterval.zero || dep.versionConstraint.latest.nonEmpty
+                )
+                  sys.error(
+                    s"Invalid version ${dep.versionConstraint.asString}: expected simple version like 1.2.3, not an interval or latest.*"
+                  )
+                (
+                  dep.module,
+                  dep.versionConstraint.preferred.getOrElse(Version.zero)
+                ) -> new URL(URLDecoder.decode(url, "UTF-8"))
               }
           }.toMap
 

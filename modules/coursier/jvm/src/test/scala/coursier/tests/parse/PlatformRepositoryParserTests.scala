@@ -9,7 +9,7 @@ import coursier.core.Authentication
 object PlatformRepositoryParserTests extends TestSuite {
 
   val tests = Tests {
-    test("m2Local") - {
+    test("m2Local") {
       test {
         val res         = RepositoryParser.repository("m2Local")
         val expectedRes = Right(LocalRepositories.Dangerous.maven2Local)
@@ -23,13 +23,13 @@ object PlatformRepositoryParserTests extends TestSuite {
       }
     }
 
-    test("Maven Central") - {
+    test("Maven Central") {
       val res         = RepositoryParser.repository("https://repo1.maven.org/maven2")
       val expectedRes = Right(Repositories.central)
       assert(res == expectedRes)
     }
 
-    test("AWS codeartifact with password") - {
+    test("AWS codeartifact with password") {
       val res = RepositoryParser.repository(
         "https://aws:pass@domain.d.codeartifact.us-east-1.amazonaws.com/maven/dir"
       )
@@ -39,7 +39,7 @@ object PlatformRepositoryParserTests extends TestSuite {
       assert(res == expectedRes)
     }
 
-    test("AWS codeartifact without password") - {
+    test("AWS codeartifact without password") {
       val res = RepositoryParser.repository(
         "https://aws@domain.d.codeartifact.us-east-1.amazonaws.com/maven/dir"
       )

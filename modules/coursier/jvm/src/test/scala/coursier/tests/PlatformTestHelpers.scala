@@ -1,16 +1,16 @@
 package coursier.tests
 
+import java.io.File
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Paths}
 import java.security.MessageDigest
-import java.util.Locale
 
 import com.github.difflib.{DiffUtils, UnifiedDiffUtils}
-import coursier.cache.{Cache, MockCache}
+import coursier.cache.{ArtifactError, Cache, MockCache}
 import coursier.paths.Util
 import coursier.testcache.TestCache
-import coursier.util.Task
+import coursier.util.{Artifact, EitherT, Task}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.jdk.CollectionConverters._
@@ -22,7 +22,7 @@ abstract class PlatformTestHelpers {
       sys.error("COURSIER_TEST_DATA_DIR env var not set")
     }
 
-  val handmadeMetadataLocation = {
+  lazy val handmadeMetadataLocation = {
     val dirStr = Option(System.getenv("COURSIER_TESTS_HANDMADE_METADATA_DIR")).getOrElse {
       sys.error("COURSIER_TESTS_HANDMADE_METADATA_DIR not set")
     }
@@ -31,25 +31,30 @@ abstract class PlatformTestHelpers {
     dir
   }
 
-  val handmadeMetadataBase = handmadeMetadataLocation
+  lazy val handmadeMetadataBase = handmadeMetadataLocation
     .toAbsolutePath
     .toFile // .toFile.toURI gives file:/ URIs, whereas .toUri gives file:/// (the former appears in some test fixtures now)
     .toURI
     .toASCIIString
     .stripSuffix("/") + "/"
 
-  private val cache0 = TestCache.cache[Task]
-    .withDummyArtifact(a => a.url.endsWith(".jar") || a.url.endsWith(".klib"))
+  private lazy val cache0 = TestCache.cache[Task]
+    .withDummyArtifact { a =>
+      a.url.endsWith(".jar") || a.url.endsWith(".klib") || a.url.endsWith(".aar")
+    }
 
   def cache: Cache[Task] = cache0
 
-  val handmadeMetadataCache: Cache[Task] =
-    MockCache.create[Task](handmadeMetadataLocation, pool = cache0.pool)
+  lazy val handmadeMetadataCache: Cache[Task] =
+    MockCache.create[Task](
+      handmadeMetadataLocation,
+      baseChangingOpt = Some(handmadeMetadataLocation),
+      pool = cache0.pool
+    )
 
-  val cacheWithHandmadeMetadata: Cache[Task] =
+  lazy val cacheWithHandmadeMetadata: Cache[Task] =
     cache0
       .withExtraData(Seq(handmadeMetadataLocation))
-      .withDummyArtifact(_.url.endsWith(".jar"))
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =
     Future {
@@ -60,6 +65,7 @@ abstract class PlatformTestHelpers {
 
   def maybeWriteTextResource(path: String, content: String): Unit = {
     val p = Paths.get(path)
+    System.err.println(s"Writing $p")
     Util.createDirectories(p.getParent)
     Files.write(p, content.getBytes(StandardCharsets.UTF_8))
   }
@@ -90,4 +96,22 @@ abstract class PlatformTestHelpers {
       )
     }
   }
+
+  def filteringCache(exclude: String, defaultCache: Cache[Task]): Cache[Task] =
+    new Cache[Task] {
+      override def ec: ExecutionContext = defaultCache.ec
+      override def fetch: Cache.Fetch[Task] =
+        artifact =>
+          if (artifact.url.contains(exclude))
+            EitherT.fromEither(Left(s"*$exclude* forbidden here"))
+          else defaultCache.fetch(artifact)
+      override def file(artifact: Artifact): EitherT[Task, ArtifactError, File] =
+        if (artifact.url.contains(exclude))
+          EitherT.fromEither(Left(new ArtifactError.DownloadError(
+            s"*$exclude* forbidden here",
+            None
+          )))
+        else
+          defaultCache.file(artifact)
+    }
 }

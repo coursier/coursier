@@ -1,8 +1,26 @@
 package coursier.ivy
 
-import coursier.core._
-import coursier.util.Xml._
 import coursier.core.Validation._
+import coursier.core.{
+  Classifier,
+  Configuration,
+  Dependency,
+  DependencyManagement,
+  Extension,
+  Info,
+  MinimizedExclusions,
+  Module,
+  ModuleName,
+  Organization,
+  Overrides,
+  Project,
+  Publication,
+  Type,
+  Variant,
+  VariantSelector
+}
+import coursier.util.Xml._
+import coursier.version.{Version, VersionConstraint}
 
 import scala.collection.compat._
 
@@ -10,7 +28,7 @@ object IvyXml {
 
   val attributesNamespace = "http://ant.apache.org/ivy/extra"
 
-  private def info(node: Node): Either[String, (Module, String)] =
+  private def info(node: Node): Either[String, (Module, Version)] =
     for {
       org <- node
         .attribute("organisation")
@@ -25,7 +43,7 @@ object IvyXml {
         .flatMap(validateCoordinate(_, "revision"))
     } yield {
       val attr = node.attributesFromNamespace(attributesNamespace)
-      (Module(org, name, attr.toMap), version)
+      (Module(org, name, attr.toMap), Version(version))
     }
 
   // FIXME Errors are ignored here
@@ -72,7 +90,7 @@ object IvyXml {
     confs.map(_ -> (org, name))
   }
 
-  private def override0(node0: Node): Option[(Organization, ModuleName, String)] = {
+  private def override0(node0: Node): Option[(Organization, ModuleName, VersionConstraint)] = {
     val versionOpt = node0
       .attribute("rev")
       .toOption
@@ -84,7 +102,7 @@ object IvyXml {
           .orElse(node0.attribute("name").toOption)
           .getOrElse("*")
       )
-      (org, name, version)
+      (org, name, VersionConstraint(version))
     }
   }
 
@@ -94,7 +112,7 @@ object IvyXml {
     globalExcludes: Map[Configuration, Set[(Organization, ModuleName)]],
     globalExcludesFilter: (Configuration, Organization, ModuleName) => Boolean,
     globalOverrides: Overrides
-  ): Seq[(Configuration, Dependency)] =
+  ): Seq[(Variant, Dependency)] =
     node.children
       .filter(_.label == "dependency")
       .flatMap { node =>
@@ -148,12 +166,13 @@ object IvyXml {
             .toSeq
           rawConf            <- node.attribute("conf").toOption.toSeq
           (fromConf, toConf) <- mappings(rawConf)
+          fromConf0 = Variant.Configuration(fromConf)
           if globalExcludesFilter(fromConf, org, name)
           pub <- publications
-        } yield fromConf -> Dependency(
+        } yield fromConf0 -> Dependency(
           Module(org, name, attr.toMap),
-          version,
-          toConf,
+          VersionConstraint(version),
+          VariantSelector.ConfigurationBased(toConf),
           globalExcludes.getOrElse(Configuration.all, Set.empty) ++
             globalExcludes.getOrElse(fromConf, Set.empty) ++
             allConfsExcludes ++
@@ -282,18 +301,18 @@ object IvyXml {
         version,
         dependencies0,
         configurations0.toMap,
-        parent = None,
-        dependencyManagement = Nil,
+        parent0 = None,
+        dependencyManagement0 = Nil,
         properties = extraInfo.toSeq,
         profiles = Nil,
         versions = None,
         snapshotVersioning = None,
         packagingOpt = None,
         relocated = false,
-        actualVersionOpt = None,
+        actualVersionOpt0 = None,
         if (publicationsOpt.isEmpty)
           // no publications node -> default JAR artifact
-          Seq(Configuration.all -> Publication(
+          Seq(Variant.Configuration(Configuration.all) -> Publication(
             module.name.value,
             Type.jar,
             Extension.jar,
@@ -303,8 +322,10 @@ object IvyXml {
           // publications node is there -> only its content (if it is empty, no artifacts,
           // as per the Ivy manual)
           val inAllConfs = publicationsOpt.flatMap(_.get(Configuration.all)).getOrElse(Nil)
-          configurations0.flatMap { case (conf, _) =>
-            (publicationsOpt.flatMap(_.get(conf)).getOrElse(Nil) ++ inAllConfs).map(conf -> _)
+          configurations0.flatMap {
+            case (conf, _) =>
+              val conf0 = Variant.Configuration(conf)
+              (publicationsOpt.flatMap(_.get(conf)).getOrElse(Nil) ++ inAllConfs).map(conf0 -> _)
           }
         },
         Info(
@@ -314,7 +335,10 @@ object IvyXml {
           Nil,
           publicationDate,
           None
-        )
+        ),
+        Overrides.empty,
+        Map.empty,
+        Map.empty
       )
     }
 

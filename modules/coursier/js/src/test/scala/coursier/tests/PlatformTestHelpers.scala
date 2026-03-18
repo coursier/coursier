@@ -3,7 +3,7 @@ package coursier.tests
 import coursier.cache.internal.Platform
 import coursier.cache.{Cache, MockCache}
 import coursier.testcache.TestCache
-import coursier.util.Task
+import coursier.util.{EitherT, Task}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.scalajs.js
@@ -25,7 +25,7 @@ abstract class PlatformTestHelpers {
 
   def cache: Cache[Task] = TestCache.cache
 
-  val handmadeMetadataBase =
+  lazy val handmadeMetadataBase =
     PlatformTestHelpers.process.env
       .asInstanceOf[js.Dictionary[String]]
       .get("COURSIER_TESTS_HANDMADE_METADATA_DIR_URI")
@@ -33,8 +33,10 @@ abstract class PlatformTestHelpers {
         sys.error("COURSIER_TESTS_HANDMADE_METADATA_DIR_URI not set")
       }
 
-  val handmadeMetadataCache: Cache[Task] =
-    MockCache(handmadeMetadataBase.stripPrefix("file://").stripPrefix("file:"))
+  lazy val handmadeMetadataCache: Cache[Task] = {
+    val base = handmadeMetadataBase.stripPrefix("file://").stripPrefix("file:")
+    MockCache(base, base)
+  }
 
   def textResource(path: String)(implicit ec: ExecutionContext): Future[String] =
     Platform.textResource(path)
@@ -47,4 +49,14 @@ abstract class PlatformTestHelpers {
     sha1Module(s).asInstanceOf[String].dropWhile(_ == '0')
 
   def maybePrintConsistencyDiff(fromOrdered: Seq[String], fromMinimized: Seq[String]): Unit = ()
+
+  def filteringCache(exclude: String, defaultCache: Cache[Task]): Cache[Task] =
+    new Cache[Task] {
+      override def ec: ExecutionContext = defaultCache.ec
+      override def fetch: Cache.Fetch[Task] =
+        artifact =>
+          if (artifact.url.contains(exclude))
+            EitherT.fromEither(Left(s"*$exclude* forbidden here"))
+          else defaultCache.fetch(artifact)
+    }
 }

@@ -1,11 +1,11 @@
 package coursier.cache.internal
 
 import coursier.util.WebPage
-import org.scalajs.dom.raw.{Event, XMLHttpRequest}
+import org.scalajs.dom.{Event, XMLHttpRequest}
 
 import scala.concurrent.{ExecutionContext, Future, Promise}
 import scala.scalajs.js
-import js.Dynamic.{global => g}
+import scala.scalajs.js.Dynamic.{global => g}
 import scala.scalajs.js.timers._
 
 object Platform {
@@ -34,7 +34,16 @@ object Platform {
     val p       = Promise[String]()
     val xhrReq0 = xhrReq()
     val f = { _: Event =>
-      p.success(xhrReq0.responseText)
+      if (xhrReq0.status >= 200 && xhrReq0.status < 300)
+        p.success(xhrReq0.responseText)
+      else
+        p.failure(
+          new Exception(
+            url + System.lineSeparator() +
+              s"Status: ${xhrReq0.status}" + System.lineSeparator() +
+              xhrReq0.responseText
+          )
+        )
     }
     xhrReq0.onload = f
 
