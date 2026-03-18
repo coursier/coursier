@@ -32,9 +32,10 @@ object RefreshInfo {
     /** Byte / s */
     def rate(): Option[Double] = {
       val currentTime = System.currentTimeMillis()
-      if (currentTime > startTime)
+      val elapsed     = currentTime - startTime
+      if (elapsed > 0)
         Some(
-          (downloaded - previouslyDownloaded).toDouble / (System.currentTimeMillis() - startTime) * 1000.0
+          ((downloaded - previouslyDownloaded).toDouble / elapsed * 1000.0).max(0.0)
         )
       else
         None
