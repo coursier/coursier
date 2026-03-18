@@ -259,7 +259,9 @@ object JsonReport {
           val fileToUrlMap =
             if (addUrls)
               deps
-                .flatMap { case (_, _, art) => fileMap.get(art).map(f => f.getAbsolutePath -> art.url) }
+                .flatMap { case (_, _, art) =>
+                  fileMap.get(art).map(f => f.getAbsolutePath -> art.url)
+                }
                 .toMap
             else
               Map.empty[String, String]
