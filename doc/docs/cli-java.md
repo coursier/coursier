@@ -27,7 +27,7 @@ $ cs java-home
 If no JVM is installed on your system, the default one is automatically
 downloaded and
 extracted in the [JVM cache](#managed-jvm-directory), and used. The
-default JVM is version 17 from the [JVM index](#jvm-index) — [Temurin](https://adoptium.net)
+default JVM is version 21 from the [JVM index](#jvm-index) — [Temurin](https://adoptium.net)
 on most platforms, [Zulu](https://www.azul.com/downloads/) on macOS ARM, and
 [Liberica](https://bell-sw.com/libericajdk/) on Windows ARM.
 
@@ -236,4 +236,4 @@ In order to find it, they successively:
 
 If none of these methods finds a JVM, it is assumed no JVM was installed prior to running `cs java`
 or `cs java-home`. Running one of these command will install the default JVM
-(version 17 in the JVM index — Temurin on most platforms, Zulu on macOS ARM, Liberica on Windows ARM).
+(version 21 in the JVM index — Temurin on most platforms, Zulu on macOS ARM, Liberica on Windows ARM).
