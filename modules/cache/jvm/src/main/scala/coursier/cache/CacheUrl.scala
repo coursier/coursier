@@ -582,6 +582,10 @@ object CacheUrl {
   }
 
   private def isIpAddress(host: String): Boolean =
+    // These patterns don't need to be precise (e.g., checking octet ranges for IPv4) because
+    // isIpAddress is only used to skip DNS resolution when the host is already an IP.
+    // If an invalid IP-like string slips through, InetAddress.getAllByName will fail with
+    // UnknownHostException, which is caught and handled safely.
     host.matches("""^\d+\.\d+\.\d+\.\d+$""") || // IPv4
       (host.startsWith("[") && host.endsWith("]"))   // IPv6 bracket notation
 
@@ -630,8 +634,18 @@ object CacheUrl {
       else
         args.hostnameVerifierOpt
 
+    // Pre-match credentials against the original hostname-based URL, because autoMatches()
+    // checks the URL host, which would be an IP address in the retried connection, not the
+    // configured hostname.
+    val preMatchedAuth = args.authentication.orElse {
+      args.autoCredentials
+        .find(_.autoMatches(args.url0, args.authRealm))
+        .map(_.authentication)
+    }
+
     args.copy(
       url0 = newUrl,
+      authentication = preMatchedAuth,
       sslSocketFactoryOpt = newSslFactory,
       hostnameVerifierOpt = newHostnameVerifier,
       connectTimeoutOpt = Some(connectTimeoutMs)

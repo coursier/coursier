@@ -99,13 +99,22 @@ class Download {
     }
 
     private void doDownloadToUrl(URL url, File tmpDest, File dest) throws IOException {
-        doDownloadToUrl(url, tmpDest, dest, 0);
+        doDownloadToUrl(url, null, tmpDest, dest, 0);
     }
 
     private void doDownloadToUrl(URL url, File tmpDest, File dest, int connectTimeoutMs) throws IOException {
+        doDownloadToUrl(url, null, tmpDest, dest, connectTimeoutMs);
+    }
+
+    /** Downloads from {@code url} to {@code dest}. When {@code originalHost} is non-null it is
+     * used for credentials matching (needed when {@code url} uses an IP address instead of the
+     * original hostname).
+     */
+    private void doDownloadToUrl(URL url, String originalHost, File tmpDest, File dest, int connectTimeoutMs) throws IOException {
         URLConnection conn = url.openConnection();
         if (connectTimeoutMs > 0) conn.setConnectTimeout(connectTimeoutMs);
         if (conn instanceof HttpURLConnection) {
+            final String credentialsHost = (originalHost != null) ? originalHost : url.getHost();
             final Optional<String> userInfoOpt = Optional.ofNullable(url.getUserInfo());
             final Optional<String> userInfoUserOpt = userInfoOpt.map(userInfo -> userInfo.split(":", 2)[0]);
             final Optional<DirectCredentials> directCredentialsOpt = directCredentials.stream()
@@ -113,7 +122,7 @@ class Download {
                 .filter(credentials -> credentials.getUsernameOpt().isPresent() && (!userInfoUserOpt.isPresent() || credentials.getUsernameOpt().get().equals(userInfoUserOpt.get())))
                 .filter(credentials -> credentials.getPasswordOpt().isPresent())
                 .filter(credentials -> ("http".equals(url.getProtocol()) && !credentials.isHttpsOnly()) || "https".equals(url.getProtocol()))
-                .filter(credentials -> credentials.getHost().equals(url.getHost()))
+                .filter(credentials -> credentials.getHost().equals(credentialsHost))
                 .findFirst();
             final Optional<String> userOpt = userInfoUserOpt.map(Optional::of).orElse(directCredentialsOpt.flatMap(credentials -> credentials.getUsernameOpt())); // Java 9: .or(() -> directCredentialsOpt.flatMap(credentials -> credentials.getUsername()));
             final Optional<String> basicAuthOpt = userOpt.flatMap(user ->
@@ -150,6 +159,10 @@ class Download {
     }
 
     private static boolean isIpAddress(String host) {
+        // These patterns don't need to be precise (e.g., checking octet ranges for IPv4) because
+        // isIpAddress is only used to skip DNS resolution when the host is already an IP.
+        // If an invalid IP-like string slips through, InetAddress.getAllByName will fail with
+        // UnknownHostException, which is caught and handled safely.
         return host.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$") || // IPv4
                (host.startsWith("[") && host.endsWith("]"));    // IPv6 bracket notation
     }
@@ -210,7 +223,7 @@ class Download {
         for (InetAddress addr : allAddresses) {
             URL ipUrl = urlWithIp(url, addr);
             try {
-                doDownloadToUrl(ipUrl, tmpDest, dest, perIpTimeoutMs);
+                doDownloadToUrl(ipUrl, host, tmpDest, dest, perIpTimeoutMs);
                 return;
             } catch (IOException e) {
                 lastEx = e;
