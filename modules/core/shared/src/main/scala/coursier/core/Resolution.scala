@@ -207,7 +207,13 @@ object Resolution {
     dependencies: Seq[(Variant, Dependency)],
     properties: Map[String, String]
   ): Seq[(Variant, Dependency)] =
-    dependencies.map(withProperties(_, properties))
+    dependencies
+      .map(withProperties(_, properties))
+      .filter {
+        case (variant, dep) =>
+          !dep.hasProperties &&
+          !variant.asConfiguration.exists(_.value.contains("$"))
+      }
 
   @deprecated("Use withProperties0 instead", "2.1.25")
   def withProperties(
