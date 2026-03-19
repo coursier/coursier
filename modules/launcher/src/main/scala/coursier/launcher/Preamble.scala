@@ -1,7 +1,7 @@
 package coursier.launcher
 
 import java.io.InputStream
-import java.nio.charset.StandardCharsets
+import java.nio.charset.{Charset, StandardCharsets}
 
 import dataclass._
 
@@ -96,7 +96,7 @@ import scala.io.{Codec, Source}
         .mkString
     )
 
-    content0.getBytes(StandardCharsets.UTF_8)
+    content0.getBytes(Charset.defaultCharset())
   }
 
   def value: Array[Byte] =
