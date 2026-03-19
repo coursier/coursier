@@ -82,7 +82,27 @@ import dataclass._
                 }
             }
         case Some(home) =>
-          Task.point(Some(new File(home)))
+          Task.delay {
+            val homeFile = new File(home)
+            val isValid = pathExtensions match {
+              case Some(extensions) =>
+                // Windows: check for bin/java with any PATHEXT extension
+                val binDir = new File(homeFile, "bin")
+                extensions.exists(ext => new File(binDir, s"java$ext").isFile)
+              case None =>
+                // Linux/macOS: check for bin/java that exists and is executable
+                val javaBin = new File(new File(homeFile, "bin"), "java")
+                javaBin.isFile && javaBin.canExecute
+            }
+            if (isValid)
+              Some(homeFile)
+            else {
+              System.err.println(
+                s"Warning: JAVA_HOME is set to an invalid directory: $home (no bin/java found)"
+              )
+              None
+            }
+          }
       }
     else
       Task.point(None)
