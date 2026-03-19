@@ -98,7 +98,7 @@ import dataclass._
               Some(homeFile)
             else {
               System.err.println(
-                s"Warning: JAVA_HOME is set to an invalid directory: $home (no bin/java found)"
+                s"Warning: JAVA_HOME is set to an invalid directory: $home (no bin/java found or invalid)"
               )
               None
             }
