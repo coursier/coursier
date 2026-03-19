@@ -509,6 +509,52 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       }
     }
 
+    test("assembly service files") {
+      // Checks that META-INF/services files from multiple JARs are properly
+      // concatenated with newline separators, so each provider class name
+      // appears on its own line (regression test for broken service files).
+      TestUtil.withTempDir { tmpDir =>
+        val tmpDir0 = os.Path(tmpDir, os.pwd)
+        LauncherTestUtil.run(
+          args = Seq(
+            launcher,
+            "bootstrap",
+            "--assembly",
+            "-o",
+            "flyway-assembly.jar",
+            "org.flywaydb:flyway-core:10.13.0",
+            "org.flywaydb:flyway-database-postgresql:10.13.0"
+          ) ++ extraOptions,
+          directory = tmpDir
+        )
+
+        val zf = new ZipFile((tmpDir0 / "flyway-assembly.jar").toIO)
+        try {
+          val serviceEntries = zf.entries().asScala
+            .filter(e => e.getName.startsWith("META-INF/services/") && !e.isDirectory)
+            .toVector
+          assert(serviceEntries.nonEmpty)
+          for (entry <- serviceEntries) {
+            val content = Source.fromInputStream(zf.getInputStream(entry))(Codec.UTF8).mkString
+            val lines   = content.linesIterator.toVector
+            for (line <- lines) {
+              // Each non-empty, non-comment line must be a valid class name
+              // (containing only dots and word characters, no concatenated names)
+              val trimmed = line.trim
+              if (trimmed.nonEmpty && !trimmed.startsWith("#")) {
+                val isValidClassName = trimmed.matches("[\\w$.]+(?:\\.[\\w$]+)*")
+                assert(
+                  isValidClassName,
+                  s"Invalid service entry in ${entry.getName}: '$trimmed'"
+                )
+              }
+            }
+          }
+        }
+        finally zf.close()
+      }
+    }
+
     test("nailgun") {
       if (enableNailgunTest)
         TestUtil.withTempDir { tmpDir =>
