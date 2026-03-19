@@ -475,6 +475,29 @@ import scala.jdk.CollectionConverters._
     }
     else
       Nil
+
+  def listWithVersions(): Seq[(String, Option[String])] =
+    if (Files.isDirectory(baseDir)) {
+      var s: Stream[Path] = null
+      try {
+        s = Files.list(baseDir)
+        s.iterator()
+          .asScala
+          .filter(p => p.toFile.isFile && !p.getFileName.toString.startsWith("."))
+          .filter(InfoFile.isInfoFile)
+          .map { p =>
+            val name    = actualName(p)
+            val version = InstallDir.versionFromLock(InfoFile.readLock(p))
+            (name, version)
+          }
+          .toVector
+          .sortBy(_._1)
+      }
+      finally if (s != null)
+          s.close()
+    }
+    else
+      Nil
 }
 
 object InstallDir {
@@ -494,6 +517,17 @@ object InstallDir {
 
   def defaultDir: Path =
     defaultDir0
+
+  private[install] def versionFromLock(lockOpt: Option[ArtifactsLock]): Option[String] =
+    lockOpt.flatMap { lock =>
+      lock.entries.toVector.sorted(Ordering.by[ArtifactsLock.Entry, String](_.url)).headOption
+    }.flatMap { entry =>
+      val url     = entry.url
+      val noFrag  = if (url.indexOf('#') >= 0) url.take(url.indexOf('#')) else url
+      val parts   = noFrag.split('/')
+      if (parts.length >= 2) Some(parts(parts.length - 2))
+      else None
+    }
 
   private def classpathEntry(a: Artifact, f: File, forceResource: Boolean = false): ClassPathEntry =
     if (forceResource || a.changing || a.url.startsWith("file:"))
