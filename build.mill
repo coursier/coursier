@@ -1407,8 +1407,8 @@ def qemuCompatTests() = Task.Command[Unit] {
     .call(stdout = os.Inherit, stderr = os.Inherit)
 
   val qemuBin = os.walk(qemuDir)
-    .find(_.last == "qemu-x86_64")
-    .getOrElse(sys.error("qemu-x86_64 not found in downloaded archive"))
+    .find(_.last == "qemu-system-x86_64")
+    .getOrElse(sys.error("qemu-system-x86_64 not found in downloaded archive"))
   os.proc("chmod", "+x", qemuBin).call()
 
   // Run the compat launcher under QEMU emulating a Nehalem CPU.
