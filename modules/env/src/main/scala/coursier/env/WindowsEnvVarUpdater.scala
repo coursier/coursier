@@ -155,26 +155,28 @@ import dataclass._
   }
 
   /** Checks whether the given directory looks like a JVM bin directory eligible for removal.
-    * It must contain a `java` executable (java.exe, java.cmd, java.com, or java.bat) and
-    * its parent directory must contain a `release` file with a `JAVA_VERSION=` line.
+    * It must contain a `java` executable (based on PATHEXT extensions) and its parent directory
+    * must contain a `release` file with a `JAVA_VERSION=` line.
     */
-  private def isJvmBinDir(dir: java.io.File): Boolean = {
-    val javaExts = Seq(".exe", ".cmd", ".com", ".bat")
-    val hasJavaExe = javaExts.exists(ext => new java.io.File(dir, "java" + ext).isFile)
+  private def isJvmBinDir(dir: java.nio.file.Path): Boolean = {
+    val pathExts = Option(System.getenv("PATHEXT"))
+      .map(_.split(";").toSeq)
+      .getOrElse(Seq(".exe", ".cmd", ".com", ".bat"))
+    val hasJavaExe = pathExts.exists { ext =>
+      java.nio.file.Files.isRegularFile(dir.resolve("java" + ext))
+    }
     if (!hasJavaExe) false
     else {
-      val parent = dir.getParentFile
+      val parent = dir.getParent
       if (parent == null) false
       else {
-        val releaseFile = new java.io.File(parent, "release")
-        releaseFile.isFile && {
-          var source: scala.io.Source = null
+        val releaseFile = parent.resolve("release")
+        java.nio.file.Files.isRegularFile(releaseFile) && {
           try {
-            source = scala.io.Source.fromFile(releaseFile)
-            source.getLines().exists(_.startsWith("JAVA_VERSION="))
+            val lines = java.nio.file.Files.readAllLines(releaseFile)
+            lines.stream().anyMatch(_.startsWith("JAVA_VERSION="))
           }
           catch { case _: Exception => false }
-          finally { if (source != null) source.close() }
         }
       }
     }
@@ -199,7 +201,7 @@ import dataclass._
         val parts = formerValue.split(WindowsEnvVarUpdater.windowsPathSeparator, -1)
         val filtered = parts.filterNot { p =>
           p.toLowerCase(java.util.Locale.ROOT).startsWith(normalizedPrefix) &&
-            isJvmBinDir(new java.io.File(p))
+            isJvmBinDir(java.nio.file.Paths.get(p))
         }
         if (filtered.length != parts.length) {
           val newValue = filtered.filter(_.nonEmpty).mkString(WindowsEnvVarUpdater.windowsPathSeparator)
