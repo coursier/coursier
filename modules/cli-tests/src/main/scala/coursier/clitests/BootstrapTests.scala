@@ -16,6 +16,7 @@ import scala.util.Properties
 import coursier.clitests.util.TestAuthProxy
 import coursier.util.StringInterpolators._
 import utest._
+import scala.util.Using
 
 abstract class BootstrapTests extends TestSuite with LauncherOptions {
 
@@ -523,35 +524,20 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
             "-o",
             "flyway-assembly.jar",
             "org.flywaydb:flyway-core:10.13.0",
-            "org.flywaydb:flyway-database-postgresql:10.13.0"
+            "org.flywaydb:flyway-database-postgresql:10.13.0",
+            "-M", "foo" // Required, but ignored
           ) ++ extraOptions,
           directory = tmpDir
         )
 
-        val zf = new ZipFile((tmpDir0 / "flyway-assembly.jar").toIO)
-        try {
-          val serviceEntries = zf.entries().asScala
-            .filter(e => e.getName.startsWith("META-INF/services/") && !e.isDirectory)
-            .toVector
-          assert(serviceEntries.nonEmpty)
-          for (entry <- serviceEntries) {
-            val content = Source.fromInputStream(zf.getInputStream(entry))(Codec.UTF8).mkString
-            val lines   = content.linesIterator.toVector
-            for (line <- lines) {
-              // Each non-empty, non-comment line must be a valid class name
-              // (containing only dots and word characters, no concatenated names)
-              val trimmed = line.trim
-              if (trimmed.nonEmpty && !trimmed.startsWith("#")) {
-                val isValidClassName = trimmed.matches("[\\w$.]+(?:\\.[\\w$]+)*")
-                assert(
-                  isValidClassName,
-                  s"Invalid service entry in ${entry.getName}: '$trimmed'"
-                )
-              }
-            }
-          }
+        Using.resource(new ZipFile((tmpDir0 / "flyway-assembly.jar").toIO)) { zf =>
+          val entry = zf.getEntry("META-INF/services/org.flywaydb.core.extensibility.Plugin")
+          val content = Source.fromInputStream(zf.getInputStream(entry))(Codec.UTF8).mkString
+          val lines   = content.linesIterator.toVector
+          assert(lines.nonEmpty)
+          assert(lines.forall(_.startsWith("org.flywaydb.")))
+          assert(lines.forall(!_.stripPrefix("org.flywaydb.").contains("org.flywaydb")))
         }
-        finally zf.close()
       }
     }
 
