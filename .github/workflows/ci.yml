@@ -33,6 +33,8 @@ jobs:
     - run: |
         ./mill -i -j1 __.js[_].compile
         ./mill -i __.compile
+    - name: No test modules with no test classes
+      run: ./mill -i ci.noEmptyDiscoveredTestClasses --tasks __.discoveredTestClasses
     - run: ./mill -i __.publishLocal
 
   compile-all-no-package-object:
@@ -250,6 +252,7 @@ jobs:
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
         shell: bash
+        timeout-minutes: 20
       - name: Copy artifacts
         run: .github/scripts/maybe-with-graalvm-home.sh copyLauncher --directory artifacts/
         shell: bash
