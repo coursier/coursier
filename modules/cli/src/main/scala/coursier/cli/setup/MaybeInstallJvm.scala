@@ -65,7 +65,15 @@ case class MaybeInstallJvm(
                   case false => Task.point(false)
                   case true =>
                     Task.delay {
-                      windowsEnvVarUpdater.applyUpdate(envUpdate)
+                      // Remove any accumulated old absolute JVM bin paths from PATH before
+                      // applying the new update.  Paths under the JVM archive cache directory
+                      // are all coursier-managed JVM entries; we want only %JAVA_HOME%\bin to
+                      // remain so that changing JAVA_HOME is sufficient to switch JVMs.
+                      val cleaned =
+                        javaHome.cache
+                          .map(_.archiveCache.location.getAbsolutePath)
+                          .fold(false)(prefix => windowsEnvVarUpdater.removePathEntriesWithPrefix(prefix))
+                      windowsEnvVarUpdater.applyUpdate(envUpdate) || cleaned
                     }
                 }
             }
