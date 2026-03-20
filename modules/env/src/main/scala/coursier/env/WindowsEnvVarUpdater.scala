@@ -154,9 +154,36 @@ import dataclass._
     setSomething
   }
 
-  /** Removes all PATH entries that start with the given directory prefix.
-    * This is used to clean up accumulated absolute JVM bin paths added by older coursier
-    * versions before switching to the %JAVA_HOME%\bin reference approach.
+  /** Checks whether the given directory looks like a JVM bin directory eligible for removal.
+    * It must contain a `java` executable (java.exe, java.cmd, java.com, or java.bat) and
+    * its parent directory must contain a `release` file with a `JAVA_VERSION=` line.
+    */
+  private def isJvmBinDir(dir: java.io.File): Boolean = {
+    val javaExts = Seq(".exe", ".cmd", ".com", ".bat")
+    val hasJavaExe = javaExts.exists(ext => new java.io.File(dir, "java" + ext).isFile)
+    if (!hasJavaExe) false
+    else {
+      val parent = dir.getParentFile
+      if (parent == null) false
+      else {
+        val releaseFile = new java.io.File(parent, "release")
+        releaseFile.isFile && {
+          var source: scala.io.Source = null
+          try {
+            source = scala.io.Source.fromFile(releaseFile)
+            source.getLines().exists(_.startsWith("JAVA_VERSION="))
+          }
+          catch { case _: Exception => false }
+          finally { if (source != null) source.close() }
+        }
+      }
+    }
+  }
+
+  /** Removes PATH entries that start with the given directory prefix AND look like JVM bin
+    * directories (contain a java executable and have a sibling `release` file with
+    * `JAVA_VERSION=`).  This is used to clean up accumulated absolute JVM bin paths added by
+    * older coursier versions before switching to the %JAVA_HOME%\bin reference approach.
     * The prefix comparison is case-insensitive and normalised to use backslashes,
     * as expected for Windows paths.
     */
@@ -169,8 +196,11 @@ import dataclass._
         // case-insensitive prefix match regardless of how the path was originally recorded.
         val normalizedPrefix =
           prefix.stripSuffix("\\").stripSuffix("/").toLowerCase(java.util.Locale.ROOT) + "\\"
-        val parts    = formerValue.split(WindowsEnvVarUpdater.windowsPathSeparator, -1)
-        val filtered = parts.filterNot(_.toLowerCase(java.util.Locale.ROOT).startsWith(normalizedPrefix))
+        val parts = formerValue.split(WindowsEnvVarUpdater.windowsPathSeparator, -1)
+        val filtered = parts.filterNot { p =>
+          p.toLowerCase(java.util.Locale.ROOT).startsWith(normalizedPrefix) &&
+            isJvmBinDir(new java.io.File(p))
+        }
         if (filtered.length != parts.length) {
           val newValue = filtered.filter(_.nonEmpty).mkString(WindowsEnvVarUpdater.windowsPathSeparator)
           if (newValue.isEmpty) clearEnvironmentVariable("PATH")
