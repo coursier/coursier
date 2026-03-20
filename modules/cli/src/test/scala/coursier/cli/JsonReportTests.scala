@@ -85,34 +85,8 @@ object JsonReportTests extends TestSuite {
   def doCheck(
     fetch: Fetch[Task],
     dependencies: Seq[Dependency],
-    extraKeyPart: String = ""
-  ): Future[Unit] =
-    for {
-      res <- fetch
-        .addDependencies(dependencies: _*)
-        .futureResult()
-      _ <- TestHelpers.validateDependencies(
-        res.resolution,
-        fetch.resolutionParams,
-        extraKeyPart = extraKeyPart
-      )
-      _ <- TestHelpers.validateResult(
-        s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams, extraKeyPart = extraKeyPart)}.json"
-      ) {
-        jsonLines {
-          JsonReport.report(
-            res.resolution,
-            res.fullDetailedArtifacts0,
-            useSlashSeparator = Properties.isWin
-          )
-        }
-      }
-    } yield ()
-
-  def doCheckWithUrls(
-    fetch: Fetch[Task],
-    dependencies: Seq[Dependency],
-    extraKeyPart: String = ""
+    extraKeyPart: String = "",
+    addUrls: Boolean = false
   ): Future[Unit] =
     for {
       res <- fetch
@@ -131,7 +105,7 @@ object JsonReportTests extends TestSuite {
             res.resolution,
             res.fullDetailedArtifacts0,
             useSlashSeparator = Properties.isWin,
-            addUrls = true
+            addUrls = addUrls
           )
         }
       }
@@ -443,13 +417,14 @@ object JsonReportTests extends TestSuite {
     }
 
     test("addUrls") {
-      doCheckWithUrls(
+      doCheck(
         fetch,
         Seq(
           dep"org.apache.commons:commons-compress:1.5"
             .withTransitive(false)
         ),
-        "_addurls"
+        "_addurls",
+        addUrls = true
       )
     }
 
