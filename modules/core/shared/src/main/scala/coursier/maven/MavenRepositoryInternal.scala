@@ -337,7 +337,9 @@ private[coursier] class MavenRepositoryInternal(
   )(implicit F: Monad[F]): EitherT[F, String, Project] =
     fetchArtifactForModuleName(module, module.name.value, version, versioningValue, fetch)(F)
 
-  def parsePom[F[_]](str: String, source: String = "")(implicit F: Monad[F]): EitherT[F, String, Project] =
+  def parsePom[F[_]](str: String, source: String = "")(implicit
+    F: Monad[F]
+  ): EitherT[F, String, Project] =
     EitherT.fromEither {
       val maybeProj =
         if (useSaxParser)
