@@ -45,16 +45,16 @@ jobs:
       fail-fast: false
       matrix:
         OS: ["ubuntu-latest"]
-        SCALA_VERSION: ["2.13.16"]
+        SCALA_VERSION: ["2.13.18"]
         include:
           - OS: "ubuntu-24.04-arm"
-            SCALA_VERSION: "2.13.16"
+            SCALA_VERSION: "2.13.18"
           - OS: "macos-15-intel"
-            SCALA_VERSION: "2.13.16"
+            SCALA_VERSION: "2.13.18"
           - OS: "macos-14"
-            SCALA_VERSION: "2.13.16"
+            SCALA_VERSION: "2.13.18"
           - OS: "windows-latest"
-            SCALA_VERSION: "2.13.16"
+            SCALA_VERSION: "2.13.18"
           - OS: "ubuntu-latest"
             SCALA_VERSION: "2.12.20"
     steps:
@@ -97,7 +97,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        SCALA_VERSION: ["2.12.20", "2.13.16"]
+        SCALA_VERSION: ["2.12.20", "2.13.18"]
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
