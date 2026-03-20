@@ -95,7 +95,7 @@ object Deps {
   def csDockerVersion = "2.1.23"
 
   object ScalaVersions {
-    def scala3   = "3.3.6"
+    def scala3   = "3.7.4"
     def scala213 = "2.13.18"
     def scala212 = "2.12.20"
     // TODO SCALA_213_BASELINE search for this TODO in the codebase
