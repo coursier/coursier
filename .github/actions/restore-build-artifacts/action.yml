@@ -1,0 +1,27 @@
+name: Restore build artifacts
+description: Download and restore the build output and caches from the compile-all job
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/download-artifact@v4
+      with:
+        name: out
+        path: out
+    - uses: actions/download-artifact@v4
+      with:
+        name: coursier-cache
+        path: coursier-cache
+    - uses: actions/download-artifact@v4
+      with:
+        name: mill-cache
+        path: mill-cache
+    - name: Post-download artifacts
+      shell: bash
+      run: |
+        mkdir -p ~/.cache/coursier
+        mv coursier-cache ~/.cache/coursier/v1
+        mv mill-cache ~/.cache/mill
+        if test -d ~/.cache/mill/download; then
+          chmod +x ~/.cache/mill/download/*
+        fi
