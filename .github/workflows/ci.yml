@@ -101,11 +101,9 @@ jobs:
     #   if: runner.os != 'Windows'
     - run: ./mill -i dockerTests
       env:
-        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
-    - run: ./mill -i jvmTests
+    - run: ./mill -i jvmTests --scalaVersion ${{ matrix.SCALA_VERSION }}
       env:
-        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
 
   js-test:
@@ -138,8 +136,6 @@ jobs:
         ./mill -i -j1 '__.js['"$SCALA_VERSION"'].compile'
         ./mill -i jsTests --scalaVersion "$SCALA_VERSION"
       shell: bash
-      env:
-        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
 
   bin-compat:
     runs-on: ubuntu-latest
