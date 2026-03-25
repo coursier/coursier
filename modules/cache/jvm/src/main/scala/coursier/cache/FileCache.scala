@@ -183,7 +183,30 @@ import scala.util.control.NonFatal
     }
   }
 
-  private def filePerPolicy(
+  private[coursier] def finalLocalPath(artifact: Artifact): F[File] = {
+
+    val artifactTask = allCredentials.map { allCredentials =>
+      if (artifact.authentication.isEmpty) {
+        val authOpt = allCredentials
+          .find(_.autoMatches(artifact.url, None))
+          .map(_.authentication)
+        artifact.withAuthentication(authOpt)
+      }
+      else
+        artifact
+    }
+
+    artifactTask.map { artifact0 =>
+      FileCache.localFile0(
+        artifact0.url,
+        location,
+        artifact0.authentication.flatMap(_.userOpt),
+        localArtifactsShouldBeCached
+      )
+    }
+  }
+
+  def filePerPolicy(
     artifact: Artifact,
     policy: CachePolicy,
     retry: Int = retry
@@ -301,7 +324,7 @@ import scala.util.control.NonFatal
         .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry))(_ orElse _)
     }
 
-  private def fetchPerPolicy(
+  private[coursier] def fetchPerPolicy(
     artifact: Artifact,
     policy: CachePolicy
   ): EitherT[F, String, String] = {

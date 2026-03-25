@@ -9,8 +9,20 @@ abstract class PlatformCacheCompanion {
 
   final type Default[F[_]] = PlatformCacheCompanion.Default[F]
 
-  def defaultFor[F[_]: Sync]: Default[F] =
+  def defaultLocalCacheFor[F[_]: Sync]: FileCache[F] =
     FileCache[F](CacheDefaults.location)
+
+  def defaultFor[F[_]: Sync]: Default[F] =
+    CacheDefaults.cacheServerAddress match {
+      case Some(serverAddress) =>
+        RemoteCache(serverAddress, CacheDefaults.location)
+          .withBasicAuth(CacheDefaults.cacheServerBasicAuth)
+      case None =>
+        defaultLocalCacheFor[F]
+    }
+
+  def defaultLocalCache: FileCache[Task] =
+    defaultLocalCacheFor[Task]
 
   lazy val default: Default[Task] =
     defaultFor[Task]
