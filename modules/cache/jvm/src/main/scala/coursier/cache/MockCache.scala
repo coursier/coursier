@@ -27,11 +27,14 @@ import scala.util.{Failure, Success, Try}
   @since
     proxy: Option[java.net.Proxy] = None,
   @since("2.1.25")
+    // FIXME Needs to be a sub-directory of base
     baseChangingOpt: Option[Path] = None,
   replaceByNames: Artifact => Boolean = _ => false,
   failsWhenWritingMissing: ConcurrentHashMap[String, ArtifactError] = new ConcurrentHashMap[String, ArtifactError]
 ) extends Cache[F] {
 // format: on
+
+  def location = base.toFile
 
   private implicit def S0: Sync[F] = S
 

@@ -2,13 +2,20 @@ package coursier.tests
 
 import java.math.BigInteger
 
-import coursier.cache.{ArtifactError, CacheChecksum, FileCache}
+import coursier.cache.{ArtifactError, Cache, CacheChecksum, FileCache}
 import coursier.util.{Artifact, Gather, Sync, Task}
 import utest._
 
 import scala.concurrent.{ExecutionContext, Future}
 
 object ChecksumTests extends TestSuite {
+
+  private def defaultCache() = Cache.default match {
+    case fc: FileCache[Task] => fc
+    case other =>
+      sys.error(s"Expected default cache to be a FileCache, got $other")
+  }
+
   val tests = Tests {
 
     test("parse") {
@@ -93,7 +100,7 @@ object ChecksumTests extends TestSuite {
       val cache = HandmadeMetadata.repoBase
 
       def validate(artifact: Artifact, sumType: String): Task[Either[ArtifactError, Unit]] =
-        FileCache()
+        defaultCache()
           .noCredentials
           .withLocation(cache)
           .withPool(Sync.fixedThreadPool(4))

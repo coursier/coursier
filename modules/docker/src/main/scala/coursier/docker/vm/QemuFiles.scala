@@ -66,7 +66,7 @@ object QemuFiles {
 
       val biosArtifactOptTask = guestCpu match {
         case Cpu.Arm64 =>
-          val cache = coursier.cache.FileCache()
+          val cache = coursier.cache.Cache.default
           val debIndexArtifact =
             Artifact("https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.gz")
               .withChanging(true)

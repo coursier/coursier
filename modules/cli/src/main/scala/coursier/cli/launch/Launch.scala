@@ -37,6 +37,7 @@ import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
 import scala.util.control.NonFatal
 import scala.util.{Failure, Properties, Success}
+import coursier.cache.Cache
 
 object Launch extends CoursierCommand[LaunchOptions] {
 
@@ -329,7 +330,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
     props: Seq[(String, String)],
     extraEnv: EnvironmentUpdate,
     userArgs: Seq[String],
-    cache: FileCache[Task]
+    cache: Cache[Task]
   ) = {
 
     val (jlp, jepExtraJar) =
