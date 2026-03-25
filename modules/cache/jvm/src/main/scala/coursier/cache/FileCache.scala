@@ -134,6 +134,7 @@ import scala.util.control.NonFatal
       retryBackoffMultiplier = retryBackoffMultiplier
     ).download
 
+  // Should have been private[coursier]
   def validateChecksum(
     artifact: Artifact,
     sumType: String
