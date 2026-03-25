@@ -131,6 +131,7 @@ import scala.util.control.NonFatal
       clock
     ).download
 
+  // Should have been private[coursier]
   def validateChecksum(
     artifact: Artifact,
     sumType: String
