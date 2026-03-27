@@ -1,3 +1,6 @@
 package coursier.cache
 
-abstract class PlatformCache[F[_]]
+abstract class PlatformCache[F[_]] {
+  def loggerOpt: Option[CacheLogger] =
+    None
+}

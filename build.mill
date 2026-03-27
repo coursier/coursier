@@ -62,6 +62,8 @@ object cache extends Module {
   object jvm    extends Cross[CacheJvm](ScalaVersions.all)
   object js     extends Cross[CacheJs](ScalaVersions.all)
 }
+object `cache-server` extends Cross[CacheServer](Seq(ScalaVersions.scala213))
+
 object `archive-cache`      extends Cross[ArchiveCache](ScalaVersions.all)
 object launcher             extends Cross[Launcher](ScalaVersions.all)
 object env                  extends Cross[Env](ScalaVersions.all)
@@ -840,7 +842,8 @@ trait Cli extends CsModule
     install(cliScalaVersion213Compat),
     jvm(cliScalaVersion213Compat),
     docker(cliScalaVersion),
-    launcherModule(cliScalaVersion213Compat)
+    launcherModule(cliScalaVersion213Compat),
+    `cache-server`(cliScalaVersion213Compat)
   )
   def artifactName = "coursier-cli"
   def mvnDeps = super.mvnDeps() ++ Seq(
@@ -1630,4 +1633,18 @@ object docs extends ScalaModule {
 
     ()
   }
+}
+
+trait CacheServer extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
+  def artifactName = "coursier-cache-server"
+  def moduleDeps = super.moduleDeps ++ Seq(
+    cache.jvm()
+  )
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    Deps.osLib,
+    Deps.undertow
+  )
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
+    Deps.jsoniterMacros
+  )
 }

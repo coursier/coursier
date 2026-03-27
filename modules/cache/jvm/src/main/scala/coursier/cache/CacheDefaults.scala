@@ -7,6 +7,7 @@ import coursier.credentials.Credentials
 import coursier.paths.CachePath
 import coursier.util.Sync
 
+import scala.cli.config.Secret
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.util.Try
 
@@ -22,6 +23,19 @@ object CacheDefaults {
     CachePath.defaultPriviledgedArchiveCacheDirectory()
 
   lazy val digestBasedCacheLocation: File = CachePath.defaultDigestBasedCacheDirectory()
+
+  lazy val cacheServerAddress: Option[String] =
+    CacheEnv.defaultServerAddress(CacheEnv.server.read())
+  lazy val cacheServerBasicAuth: Option[Secret[String]] = {
+    val userValues     = CacheEnv.serverUser.read()
+    val passwordValues = CacheEnv.serverPassword.read()
+    val userOpt        = userValues.prop.orElse(userValues.env)
+    val passwordOpt    = passwordValues.prop.orElse(passwordValues.env)
+    if (userOpt.isEmpty && passwordOpt.isEmpty)
+      None
+    else
+      Some(Secret((userOpt.toSeq ++ passwordOpt.toSeq).mkString(":")))
+  }
 
   @deprecated(
     "Legacy cache location support was dropped, this method does nothing.",
@@ -39,7 +53,8 @@ object CacheDefaults {
         defaultConcurrentDownloadCount
       )
 
-  lazy val pool = Sync.fixedThreadPool(concurrentDownloadCount)
+  lazy val pool         = Sync.fixedThreadPool(concurrentDownloadCount)
+  lazy val watchLenPool = Sync.fixedThreadPool(concurrentDownloadCount)
 
   def parseDuration(s: String): Either[Throwable, Duration] =
     CacheEnv.parseDuration(s)

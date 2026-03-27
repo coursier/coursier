@@ -212,7 +212,7 @@ object JvmIndex {
     load(cache, coursier.Resolve().repositories, JvmChannel.default(), None, None)
 
   def load(): Task[JvmIndex] =
-    load(FileCache(), coursier.Resolve().repositories, JvmChannel.default(), None, None)
+    load(Cache.default, coursier.Resolve().repositories, JvmChannel.default(), None, None)
 
   @deprecated("Use JvmChannel.currentOs instead", "2.1.15")
   def currentOs: Either[String, String] =
