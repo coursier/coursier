@@ -880,6 +880,16 @@ object ResolutionTests extends TestSuite {
 
         assert(res == expected)
       }
+
+      test("unresolvedPropertyFiltered") {
+        val res =
+          Resolution.withProperties0(
+            Seq(Variant.emptyConfiguration -> dep"a-company:a-name:$${a.property}"),
+            Map.empty
+          )
+
+        assert(res.isEmpty)
+      }
     }
 
     test("forcedProperties") {
