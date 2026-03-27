@@ -7,6 +7,16 @@ import org.scalajs.dom.{Node, NodeList}
 import coursier.util.{SaxHandler, Xml}
 
 package object compatibility {
+
+  /** Sequential flatMap for JS - Scala.js doesn't support parallel collections. This provides the
+    * same API as the JVM version for cross-platform compatibility.
+    */
+  def parFlatMap[A, B](seq: Seq[A])(f: A => Seq[B]): Seq[B] =
+    seq.flatMap(f)
+
+  def parMap[A, B](seq: Seq[A])(f: A => B): Seq[B] =
+    seq.map(f)
+
   def option[A](a: js.Dynamic): Option[A] =
     if (js.typeOf(a) == "undefined") None
     else Some(a.asInstanceOf[A])
