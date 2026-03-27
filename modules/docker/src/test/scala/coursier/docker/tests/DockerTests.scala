@@ -79,15 +79,15 @@ object DockerTests extends TestSuite {
         val (expectedConfigUrl, expectedManifestUrl, expectedLayerUrl) = Cpu.get() match {
           case Cpu.X86_64 =>
             (
-              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:1b44b5a3e06a9aae883e7bf25e45c100be0bb81a0e01b32de604f3ac44711634",
-              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:2771e37a12b7bcb2902456ecf3f29bf9ee11ec348e66e8eb322d9780ad7fc2df",
-              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:17eec7bbc9d79fa397ac95c7283ecd04d1fe6978516932a3db110c6206430809"
+              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:e2ac70e7319a02c5a477f5825259bd118b94e8b02c279c67afa63adab6d8685b",
+              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:d1a8d0a4eeb63aff09f5f34d4d80505e0ba81905f36158cc3970d8e07179e59e",
+              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:4f55086f7dd096d48b0e49be066971a8ed996521c2e190aa21b2435a847198b4"
             )
           case Cpu.Arm64 =>
             (
-              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:ca9905c726f06de3cb54aaa54d4d1eade5403594e3fbfb050ccc970fd0212983",
-              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:00abdbfd095cf666ff8523d0ac0c5776c617a50907b0c32db3225847b622ec5a",
-              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:198f93fd5094f85a71f793fb8d8f481294d75fb80e6190abb4c6fad2b052a6b6"
+              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:eb84fdc6f2a3a064445bb2a2fbc89c515666c428d6c96b6ab68a4cd218819688",
+              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:5099b89d7666cc2186cad769ddc262ddc7c335b33f5fe79f9ffe50a01282b23e",
+              "https://registry-1.docker.io/v2/library/hello-world/blobs/sha256:58dee6a49ef1c01bb8a00180d70f55b3527c8e7326a05b3c5135c4ff60cfb6d6"
             )
         }
         val expectedIndexUrl =
