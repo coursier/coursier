@@ -2,6 +2,7 @@ package coursier.jvm
 
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.attribute.PosixFilePermissions
 import java.util.concurrent.atomic.AtomicBoolean
 
 import coursier.cache.{ArchiveCache, ArtifactError, Cache, MockCache}
@@ -74,17 +75,43 @@ object JavaHomeTests extends TestSuite {
 
     test("system JVM should respect JAVA_HOME") {
 
-      val env = Map("JAVA_HOME" -> platformPath("/home/foo/jvm/adopt-31"))
+      JvmCacheTests.withTempDir { tmpDir =>
+        val binDir = tmpDir.resolve("bin")
+        Files.createDirectories(binDir)
+        val javaBin = binDir.resolve("java")
+        // An empty file with executable permission is sufficient: we only check
+        // isFile and canExecute (not that it's a real JVM binary).
+        Files.write(javaBin, Array.empty[Byte])
+        if (!Properties.isWin)
+          Files.setPosixFilePermissions(javaBin, PosixFilePermissions.fromString("rwxr-xr-x"))
+
+        val env = Map("JAVA_HOME" -> tmpDir.toAbsolutePath.toString)
+        val home = JavaHome()
+          .withGetEnv(Some(env.get))
+          .withCommandOutput(forbidCommands)
+          .withOs("linux")
+          .withPathExtensions(None) // test non-Windows behavior
+
+        val expectedSystem = Some(tmpDir.toAbsolutePath.toString)
+        val system = home.system()
+          .unsafeRun(wrapExceptions = true)(ExecutionContext.global)
+          .map(_.getAbsolutePath)
+        assert(system == expectedSystem)
+      }
+    }
+
+    test("system JVM should return None for invalid JAVA_HOME") {
+
+      val env = Map("JAVA_HOME" -> platformPath("/outer/space"))
       val home = JavaHome()
         .withGetEnv(Some(env.get))
         .withCommandOutput(forbidCommands)
         .withOs("linux")
+        .withPathExtensions(None) // test non-Windows behavior
 
-      val expectedSystem = Some(platformPath("/home/foo/jvm/adopt-31"))
       val system = home.system()
         .unsafeRun(wrapExceptions = true)(ExecutionContext.global)
-        .map(_.getAbsolutePath)
-      assert(system == expectedSystem)
+      assert(system.isEmpty)
     }
 
     test("system JVM should use /usr/libexec/java_home on macOS") {
