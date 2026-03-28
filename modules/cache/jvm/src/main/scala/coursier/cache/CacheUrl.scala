@@ -333,6 +333,12 @@ object CacheUrl {
         val authOpt = authentication.filter { a =>
           a.realmOpt.forall(authRealm.contains) &&
           !a.optional
+        }.orElse {
+          // Use preemptive credentials on the initial request (no auth yet, no realm challenge yet)
+          if (authentication.isEmpty && authRealm.isEmpty)
+            autoCredentials.find(_.preemptiveMatches(url0)).map(_.authentication)
+          else
+            None
         }
         initialize(conn, authOpt, sslSocketFactoryOpt, hostnameVerifierOpt, method)
 
