@@ -1387,6 +1387,44 @@ def nativeCompatTests() = Task.Command[Unit] {
   `cli-tests`.`native-compat-tests`.testForked()()
 }
 
+// Tests the compat launcher under QEMU with a Nehalem-class CPU (SSE4.2/POPCNT,
+// no AVX/BMI) to verify the binary actually runs on low-power x86-64 hardware
+// such as Intel Jasper Lake / Celeron N4xxx / Pentium Silver.
+// Requires: curl, tar (both available on ubuntu-latest CI runners).
+def qemuCompatTests() = Task.Command[Unit] {
+  val launcher = cli.compatNativeImage().path
+
+  val qemuDir   = Task.dest / "qemu"
+  val qemuTarGz = Task.dest / "qemu-linux-amd64.tar.gz"
+  os.makeDir.all(qemuDir)
+
+  System.err.println("Downloading QEMU static binary…")
+  os.proc(
+    "curl", "-fL",
+    "https://github.com/coursier/qemu/releases/download/nightly/qemu-linux-amd64.tar.gz",
+    "-o", qemuTarGz
+  ).call(stdout = os.Inherit, stderr = os.Inherit)
+
+  os.proc("tar", "xzf", qemuTarGz, "-C", qemuDir)
+    .call(stdout = os.Inherit, stderr = os.Inherit)
+
+  val qemuBin = os.walk(qemuDir)
+    .find(_.last == "qemu-system-x86_64")
+    .getOrElse(sys.error("qemu-system-x86_64 not found in downloaded archive"))
+  os.proc("chmod", "+x", qemuBin).call()
+
+  // Run the compat launcher under QEMU emulating a Nehalem CPU.
+  // Nehalem supports SSE4.2 and POPCNT (x86-64-v2) but NOT AVX/LZCNT/BMI
+  // (x86-64-v3).  A binary built with -march=native on an AVX2 host would
+  // fail here with "does not support all of the following CPU features".
+  System.err.println(
+    s"Testing compat launcher at $launcher with QEMU (Nehalem CPU – no AVX)…"
+  )
+  os.proc(qemuBin, "-cpu", "Nehalem", launcher, "--help")
+    .call(stdout = os.Inherit, stderr = os.Inherit)
+  System.err.println("QEMU compat test passed: launcher works on Nehalem CPU (no AVX).")
+}
+
 def nativeStaticTests() = Task.Command[Unit] {
   `cli-tests`.`native-static-tests`.testForked()()
 }
