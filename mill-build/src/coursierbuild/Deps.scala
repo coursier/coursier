@@ -65,7 +65,7 @@ object Deps {
     def scodec                   = mvn"org.scodec::scodec-core:2.3.3"
     def shapeless                = mvn"com.chuusai::shapeless:2.3.12"
     def slf4JNop                 = mvn"org.slf4j:slf4j-nop:2.0.17"
-    def svm                      = mvn"org.graalvm.nativeimage:svm:21.3.15"
+    def svm                      = mvn"org.graalvm.nativeimage:svm:25.0.2"
     def tika                     = mvn"org.apache.tika:tika-core:3.2.3"
     def ujson                    = mvn"com.lihaoyi::ujson:4.3.2"
     def utest                    = mvn"com.lihaoyi::utest::0.9.1"
@@ -86,7 +86,7 @@ object Deps {
 
   def sbtCoursierVersion = "2.1.4"
 
-  def graalVmJvmId = "liberica-nik:21.0.5"
+  def graalVmJvmId = "liberica-nik:25.0.2"
 
   def scalaCliVersion = "1.5.1"
 
