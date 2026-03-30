@@ -16,6 +16,9 @@ trait CoreJvmBase extends Core with Shading with CsMima {
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.graph.ModuleTree.*"),
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.graph.ReverseModuleTree.*"),
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.core.Reconciliation.*"),
+      ProblemFilter.exclude[ReversedMissingMethodProblem](
+        "coursier.core.MinimizedExclusions#ExclusionData.*"
+      ),
 
       // private case class
       ProblemFilter.exclude[Problem]("coursier.graph.DependencyTree#Node.*"),

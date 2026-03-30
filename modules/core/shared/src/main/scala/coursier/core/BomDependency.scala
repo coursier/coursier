@@ -49,6 +49,15 @@ import dataclass.data
     if (newVersion == version) this
     else withVersionConstraint(VersionConstraint0(newVersion))
 
+  def repr: String = {
+    val base = s"${module.repr}:${versionConstraint.asString}"
+    val withConfig =
+      if (config.isEmpty) base
+      else s"$base:${config.value}"
+    if (forceOverrideVersions) s"$withConfig,forceOverrideVersions"
+    else withConfig
+  }
+
   lazy val moduleVersionConstraint: (Module, VersionConstraint0) =
     (module, versionConstraint)
 

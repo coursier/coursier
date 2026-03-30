@@ -34,6 +34,33 @@ sealed abstract class Overrides extends Product with Serializable {
     filter { (_, v) =>
       v.global
     }
+
+  final def repr: String =
+    if (isEmpty) "Overrides: none"
+    else {
+      def valueRepr(v: DependencyManagement.Values): String = {
+        val parts = Seq.newBuilder[String]
+        parts += v.versionConstraint.asString
+        if (v.config.value.nonEmpty) parts += s"config:${v.config.value}"
+        if (v.optional) parts += "optional"
+        if (v.global) parts += "global"
+        val exclusionsPart =
+          if (v.minimizedExclusions.isEmpty)
+            ""
+          else
+            "\n" + v.minimizedExclusions.repr.linesWithSeparators.map("    " + _).mkString
+        parts.result().mkString(" ") + exclusionsPart
+      }
+
+      val groupEntries: Seq[(DependencyManagement.Key, DependencyManagement.Values)] =
+        flatten.toSeq.sortBy(e => (e._1.repr, e._2.versionConstraint.asString))
+
+      val sectionLines = groupEntries.map {
+        case (key, v) =>
+          s"    ${key.repr}: ${valueRepr(v)}"
+      }
+      "Overrides:\n" + sectionLines.mkString("\n")
+    }
 }
 
 object Overrides {

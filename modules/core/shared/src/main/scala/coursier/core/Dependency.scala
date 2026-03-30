@@ -423,6 +423,34 @@ import java.util.concurrent.ConcurrentMap
     variantSelector.asConfiguration.exists(_.value.contains("$")) ||
     minimizedExclusions.hasProperties
 
+  def repr: String = {
+    val lines = Seq.newBuilder[String]
+    lines += s"${module.repr}:${versionConstraint.asString}"
+    lines += s"variantSelector: ${variantSelector.repr}"
+    if (!minimizedExclusions.isEmpty)
+      lines += minimizedExclusions.repr
+    if (!publication.isEmpty)
+      lines += s"publication: $publication"
+    if (optional)
+      lines += "optional"
+    if (!transitive)
+      lines += "non-transitive"
+    if (overrides.nonEmpty)
+      lines += "overrides (deprecated): non-empty"
+    if (boms.nonEmpty)
+      lines += "boms (deprecated): non-empty"
+    if (bomDependencies.nonEmpty) {
+      lines += "BOM deps:"
+      for (bomDep <- bomDependencies)
+        lines += s"  ${bomDep.repr}"
+    }
+    if (overridesMap.nonEmpty)
+      lines += overridesMap.repr
+    if (endorseStrictVersions)
+      lines += "endorseStrictVersions"
+    lines.result().mkString("\n")
+  }
+
   // Overriding toString to be backwards compatible with Set-based exclusion representation
   override def toString(): String = {
     var fields = Seq(
