@@ -89,7 +89,10 @@ object DependencyManagement {
         minimizedExclusions,
         Publication("", key.`type`, Extension.empty, key.classifier),
         optional = optional,
-        transitive = true
+        transitive = true,
+        Nil,
+        Overrides.empty,
+        endorseStrictVersions = false
       )
     def orElse(other: Values): Values = {
       val newConfig = if (config.value.isEmpty) other.config else config

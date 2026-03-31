@@ -220,10 +220,13 @@ object PomParser {
                 ),
                 relocationVersionOpt.getOrElse(VersionConstraint.fromVersion(finalVersion)),
                 VariantSelector.emptyConfiguration,
-                Set.empty[(Organization, ModuleName)],
-                Attributes.empty,
+                MinimizedExclusions.zero,
+                Publication.empty,
                 optional = false,
-                transitive = true
+                transitive = true,
+                Nil,
+                Overrides.empty,
+                endorseStrictVersions = false
               )
             }
           else
@@ -484,10 +487,13 @@ object PomParser {
             Module(state.dependencyGroupIdOpt.get, state.dependencyArtifactIdOpt.get, Map.empty),
             VersionConstraint(state.dependencyVersion),
             VariantSelector.emptyConfiguration,
-            state.dependencyExclusions,
-            Attributes(state.dependencyType, state.dependencyClassifier),
+            MinimizedExclusions(state.dependencyExclusions),
+            Publication("", state.dependencyType, Extension.empty, state.dependencyClassifier),
             state.dependencyOptional,
-            transitive = true
+            transitive = true,
+            Nil,
+            Overrides.empty,
+            endorseStrictVersions = false
           )
           add(state, state.dependencyScope, d)
         }

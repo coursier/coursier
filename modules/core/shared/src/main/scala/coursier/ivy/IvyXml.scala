@@ -173,13 +173,18 @@ object IvyXml {
           Module(org, name, attr.toMap),
           VersionConstraint(version),
           VariantSelector.ConfigurationBased(toConf),
-          globalExcludes.getOrElse(Configuration.all, Set.empty) ++
-            globalExcludes.getOrElse(fromConf, Set.empty) ++
-            allConfsExcludes ++
-            excludes.getOrElse(fromConf, Set.empty),
+          MinimizedExclusions(
+            globalExcludes.getOrElse(Configuration.all, Set.empty) ++
+              globalExcludes.getOrElse(fromConf, Set.empty) ++
+              allConfsExcludes ++
+              excludes.getOrElse(fromConf, Set.empty)
+          ),
           pub, // should come from possible artifact nodes
           optional = false,
-          transitive = transitive
+          transitive = transitive,
+          Nil,
+          Overrides.empty,
+          endorseStrictVersions = false
         ).withOverridesMap(globalOverrides)
       }
 

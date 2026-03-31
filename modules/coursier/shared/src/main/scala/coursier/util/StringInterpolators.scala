@@ -241,8 +241,6 @@ object StringInterpolators {
                 ),
                 ${dep.optional},
                 ${dep.transitive},
-                _root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.Values](),
-                _root_.scala.collection.immutable.Nil,
                 _root_.scala.collection.immutable.Seq(..$boms),
                 _root_.coursier.core.Overrides(
                   _root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.Values](..$overrides)

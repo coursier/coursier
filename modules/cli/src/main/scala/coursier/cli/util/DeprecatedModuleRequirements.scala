@@ -3,25 +3,6 @@ package coursier.cli.util
 import coursier.core.{Dependency, MinimizedExclusions, ModuleName, Organization}
 import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 
-final case class DeprecatedModuleRequirements(
-  globalExcludes: Set[(Organization, ModuleName)],
-  localExcludes: Map[String, Set[(Organization, ModuleName)]]
-) {
-  def apply(dep: Dependency): Dependency =
-    dep.withMinimizedExclusions(
-      MinimizedExclusions(
-        localExcludes.getOrElse(
-          dep.module.orgName,
-          dep.minimizedExclusions.toSet()
-        ) | globalExcludes
-      )
-    )
-  def apply(deps: Seq[(Dependency, Map[String, String])]): Seq[(Dependency, Map[String, String])] =
-    deps.map {
-      case (d, p) => (apply(d), p)
-    }
-}
-
 final case class DeprecatedModuleRequirements0(
   globalExcludes: Set[JavaOrScalaModule],
   localExcludes: Map[JavaOrScalaModule, Set[JavaOrScalaModule]]

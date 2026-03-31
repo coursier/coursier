@@ -95,7 +95,10 @@ import coursier.core.VariantPublication
           MinimizedExclusions.zero,
           publication = Publication("", Type.empty, Extension.empty, Classifier.empty),
           optional = false,
-          transitive = true
+          transitive = true,
+          Nil,
+          Overrides.empty,
+          endorseStrictVersions = false
         )
 
         val dependency0 =
@@ -123,7 +126,10 @@ import coursier.core.VariantPublication
               MinimizedExclusions.zero,
               publication = Publication("", Type.empty, Extension.empty, Classifier.empty),
               optional = false,
-              transitive = true
+              transitive = true,
+              Nil,
+              Overrides.empty,
+              endorseStrictVersions = false
             )
           )
       }
