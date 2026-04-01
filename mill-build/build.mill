@@ -4,7 +4,7 @@ import mill.scalalib.*
 
 object `package` extends MillBuildRootModule {
   def mvnDeps = Seq(
-    mvn"com.github.lolgab::mill-mima::0.2.0",
+    mvn"com.github.lolgab::mill-mima::0.2.1",
     mvn"io.get-coursier.util:get-cs_2.13:0.1.1",
     mvn"com.softwaremill.sttp.client4::core:4.0.9",
     mvn"io.get-coursier:coursier-launcher_2.13:2.1.25-M13",

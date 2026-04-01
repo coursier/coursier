@@ -54,10 +54,7 @@ org.glassfish.jersey.bundles.repackaged:jersey-guava:2.22.2:default
 org.glassfish.hk2:osgi-resource-locator:1.0.1:default
 org.glassfish.hk2:hk2-utils:2.4.0-b34:default
 org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b34:default
-org.glassfish.hk2.external:aopalliance-repackaged:2.4.0-b34:default
-org.glassfish.hk2:hk2-utils:2.4.0-b34:default
 org.javassist:javassist:3.18.1-GA:default
-com.github.jnr:jffi:1.2.9:default
 com.github.jnr:jffi:1.2.9:default
 org.ow2.asm:asm:5.0.3:default
 org.ow2.asm:asm-commons:5.0.3:default

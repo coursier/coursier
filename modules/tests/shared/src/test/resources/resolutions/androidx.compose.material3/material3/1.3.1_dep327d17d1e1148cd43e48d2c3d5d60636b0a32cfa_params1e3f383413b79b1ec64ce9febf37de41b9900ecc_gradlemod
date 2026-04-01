@@ -71,7 +71,6 @@ androidx.compose.ui:ui-unit-android:1.7.0:{ org.gradle.category=library, org.gra
 androidx.compose.animation:animation-android:1.7.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
 androidx.interpolator:interpolator:1.0.0:runtime
 androidx.versionedparcelable:versionedparcelable:1.1.1:runtime
-androidx.core:core:1.13.1:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
 androidx.compose.ui:ui-geometry-android:1.7.0:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
 androidx.lifecycle:lifecycle-runtime-compose-android:2.8.3:{ org.gradle.category=library, org.gradle.usage=runtime, org.jetbrains.kotlin.platform.type=androidJvm | jvm }
 org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.20:runtime

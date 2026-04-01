@@ -31,6 +31,8 @@ object MinimizedExclusions {
     def toSet(): Set[(Organization, ModuleName)]
 
     def hasProperties: Boolean
+
+    def repr: String
   }
 
   case object ExcludeNone extends ExclusionData {
@@ -48,6 +50,8 @@ object MinimizedExclusions {
     override def toSet(): Set[(Organization, ModuleName)] = Set.empty
 
     def hasProperties: Boolean = false
+
+    def repr: String = "Exclusions: none"
   }
 
   case object ExcludeAll extends ExclusionData {
@@ -66,6 +70,8 @@ object MinimizedExclusions {
     override def toSet(): Set[(Organization, ModuleName)] = Set((allOrganizations, allNames))
 
     def hasProperties: Boolean = false
+
+    def repr: String = "Exclusions: *:*"
   }
 
   @data class ExcludeSpecific(
@@ -151,6 +157,22 @@ object MinimizedExclusions {
       byOrg.exists(_.value.contains("$")) ||
       byModule.exists(_.value.contains("$")) ||
       specific.exists(t => t._1.value.contains("$") || t._2.value.contains("$"))
+
+    def repr: String = {
+      val entries =
+        byOrg.toVector.sortBy(_.value).map(o => s"${o.value}:*") ++
+          byModule.toVector.sortBy(_.value).map(m => s"*:${m.value}") ++
+          specific.toVector
+            .sortBy(e => (e._1.value, e._2.value))
+            .map {
+              case (o, m) =>
+                s"${o.value}:${m.value}"
+            }
+      if (entries.lengthCompare(1) == 0)
+        s"Exclusions: ${entries.head}"
+      else
+        "Exclusions:\n" + entries.map("  " + _).mkString("\n")
+    }
   }
 
   def apply(exclusions: Set[(Organization, ModuleName)]): MinimizedExclusions =
@@ -244,4 +266,6 @@ object MinimizedExclusions {
 
   def hasProperties: Boolean =
     data.hasProperties
+
+  def repr: String = data.repr
 }
