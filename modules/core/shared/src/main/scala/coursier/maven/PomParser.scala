@@ -220,7 +220,6 @@ object PomParser {
                 ),
                 relocationVersionOpt.getOrElse(VersionConstraint.fromVersion(finalVersion)),
                 VariantSelector.emptyConfiguration,
-                MinimizedExclusions.zero,
                 Publication.empty,
                 optional = false,
                 transitive = true,
@@ -256,7 +255,7 @@ object PomParser {
             scmOpt,
             licenseInfo.toSeq
           ),
-          Overrides.empty,
+          SimpleOverrides.empty,
           Map.empty,
           Map.empty
         )
@@ -487,12 +486,11 @@ object PomParser {
             Module(state.dependencyGroupIdOpt.get, state.dependencyArtifactIdOpt.get, Map.empty),
             VersionConstraint(state.dependencyVersion),
             VariantSelector.emptyConfiguration,
-            MinimizedExclusions(state.dependencyExclusions),
             Publication("", state.dependencyType, Extension.empty, state.dependencyClassifier),
             state.dependencyOptional,
             transitive = true,
             Nil,
-            Overrides.empty,
+            Overrides.empty.addExclusions(MinimizedExclusions(state.dependencyExclusions)),
             endorseStrictVersions = false
           )
           add(state, state.dependencyScope, d)

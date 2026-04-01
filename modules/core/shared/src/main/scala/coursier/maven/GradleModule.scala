@@ -15,6 +15,7 @@ import coursier.core.{
   Overrides,
   Project,
   Publication,
+  SimpleOverrides,
   Type,
   Variant,
   VariantSelector
@@ -92,7 +93,6 @@ import coursier.core.VariantPublication
                 VariantSelector.VariantMatcher.fromString(k, v.value)
             }
           ),
-          MinimizedExclusions.zero,
           publication = Publication("", Type.empty, Extension.empty, Classifier.empty),
           optional = false,
           transitive = true,
@@ -123,7 +123,6 @@ import coursier.core.VariantPublication
               Module(Organization(availableAt.group), ModuleName(availableAt.module), Map.empty),
               VersionConstraint.fromVersion(Version(availableAt.version)),
               VariantSelector.AttributesBased(Map.empty),
-              MinimizedExclusions.zero,
               publication = Publication("", Type.empty, Extension.empty, Classifier.empty),
               optional = false,
               transitive = true,
@@ -198,7 +197,7 @@ import coursier.core.VariantPublication
         scm = None,
         licenseInfo = Nil
       ),
-      overrides = Overrides.empty,
+      overrides = SimpleOverrides.empty,
       variants = Map.empty,
       variantPublications = Map.empty
     )

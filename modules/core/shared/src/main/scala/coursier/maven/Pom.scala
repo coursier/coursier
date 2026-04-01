@@ -16,6 +16,7 @@ import coursier.core.{
   Profile,
   Project,
   Publication,
+  SimpleOverrides,
   SnapshotVersion,
   SnapshotVersioning,
   Type,
@@ -104,7 +105,6 @@ object Pom {
           mod,
           version0,
           VariantSelector.emptyConfiguration,
-          MinimizedExclusions(exclusions.map(mod => (mod.organization, mod.name)).toSet),
           Publication(
             "",
             typeOpt.getOrElse(Type.empty),
@@ -114,7 +114,11 @@ object Pom {
           optional,
           transitive = true,
           Nil,
-          Overrides.empty,
+          Overrides.empty.addExclusions(
+            MinimizedExclusions(
+              exclusions.map(mod => (mod.organization, mod.name)).toSet
+            )
+          ),
           endorseStrictVersions = false
         )
       }
@@ -324,7 +328,6 @@ object Pom {
               .withName(relocatedArtifactId),
             VersionConstraint.fromVersion(relocatedVersion),
             VariantSelector.emptyConfiguration,
-            MinimizedExclusions.zero,
             Publication.empty,
             optional = false,
             transitive = true,
@@ -364,7 +367,7 @@ object Pom {
           None,
           scm
         ),
-        Overrides.empty,
+        SimpleOverrides.empty,
         Map.empty,
         Map.empty
       )

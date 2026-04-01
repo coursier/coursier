@@ -15,6 +15,7 @@ import coursier.core.{
   Overrides,
   Project,
   Publication,
+  SimpleOverrides,
   Type,
   Variant,
   VariantSelector
@@ -111,7 +112,7 @@ object IvyXml {
     node: Node,
     globalExcludes: Map[Configuration, Set[(Organization, ModuleName)]],
     globalExcludesFilter: (Configuration, Organization, ModuleName) => Boolean,
-    globalOverrides: Overrides
+    globalOverrides: SimpleOverrides
   ): Seq[(Variant, Dependency)] =
     node.children
       .filter(_.label == "dependency")
@@ -173,19 +174,22 @@ object IvyXml {
           Module(org, name, attr.toMap),
           VersionConstraint(version),
           VariantSelector.ConfigurationBased(toConf),
-          MinimizedExclusions(
-            globalExcludes.getOrElse(Configuration.all, Set.empty) ++
-              globalExcludes.getOrElse(fromConf, Set.empty) ++
-              allConfsExcludes ++
-              excludes.getOrElse(fromConf, Set.empty)
-          ),
           pub, // should come from possible artifact nodes
           optional = false,
           transitive = transitive,
           Nil,
-          Overrides.empty,
+          Overrides(
+            Map(
+              MinimizedExclusions(
+                globalExcludes.getOrElse(Configuration.all, Set.empty) ++
+                  globalExcludes.getOrElse(fromConf, Set.empty) ++
+                  allConfsExcludes ++
+                  excludes.getOrElse(fromConf, Set.empty)
+              ) -> globalOverrides
+            )
+          ),
           endorseStrictVersions = false
-        ).withOverridesMap(globalOverrides)
+        )
       }
 
   private def publication(node: Node): Publication = {
@@ -248,7 +252,7 @@ object IvyXml {
       }
 
       // https://ant.apache.org/ivy/history/2.5.0-rc1/ivyfile/override.html
-      val globalOverrides = Overrides {
+      val globalOverrides = SimpleOverrides(
         dependenciesNodeOpt
           .map(_.children)
           .getOrElse(Nil)
@@ -262,10 +266,10 @@ object IvyXml {
                   ver,
                   MinimizedExclusions.zero,
                   optional = false
-                )
+                ).splitValues
           }
           .toMap
-      }
+      )
       val dependencies0 = dependenciesNodeOpt
         .map(dependencies(_, globalExcludes, filter, globalOverrides))
         .getOrElse(Nil)
@@ -341,7 +345,7 @@ object IvyXml {
           publicationDate,
           None
         ),
-        Overrides.empty,
+        SimpleOverrides.empty,
         Map.empty,
         Map.empty
       )

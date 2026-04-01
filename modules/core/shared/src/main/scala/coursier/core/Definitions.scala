@@ -273,7 +273,7 @@ object Attributes {
 
   // Extra infos, not used during resolution
   info: Info,
-  overrides: Overrides,
+  overrides: SimpleOverrides,
   variants: Map[Variant.Attributes, Map[String, String]],
   variantPublications: Map[Variant.Attributes, Seq[VariantPublication]]
 ) {
@@ -591,7 +591,7 @@ object Project {
           (Variant.Configuration(config), dep)
       },
       info,
-      Overrides.empty,
+      SimpleOverrides.empty,
       Map.empty,
       Map.empty
     )

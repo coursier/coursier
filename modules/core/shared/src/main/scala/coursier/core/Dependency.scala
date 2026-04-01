@@ -6,6 +6,8 @@ import dataclass.{data, since}
 
 import java.util.concurrent.ConcurrentMap
 
+import scala.collection.mutable
+
 /** Dependencies with the same @module will typically see their @version-s merged.
   *
   * The remaining fields are left untouched, some being transitively propagated (exclusions,
@@ -15,7 +17,6 @@ import java.util.concurrent.ConcurrentMap
   module: Module,
   versionConstraint: VersionConstraint0,
   variantSelector: VariantSelector,
-  minimizedExclusions: MinimizedExclusions,
   publication: Publication,
   // Maven-specific
   optional: Boolean,
@@ -62,11 +63,7 @@ import java.util.concurrent.ConcurrentMap
     withPublication(Publication(name, `type`, ext, classifier))
 
   def addExclusion(org: Organization, name: ModuleName): Dependency =
-    withMinimizedExclusions(
-      minimizedExclusions.join(
-        MinimizedExclusions(Set((org, name)))
-      )
-    )
+    withOverridesMap(overridesMap.addExclusions(MinimizedExclusions(Set(org -> name))))
 
   def addBom(bomDep: BomDependency): Dependency =
     withBomDependencies(bomDependencies :+ bomDep)
@@ -83,9 +80,7 @@ import java.util.concurrent.ConcurrentMap
     withBomDependencies(this.bomDependencies ++ bomDependencies)
 
   def addOverride(key: DependencyManagement.Key, values: DependencyManagement.Values): Dependency =
-    withOverridesMap(
-      Overrides.add(overridesMap, Overrides(Map(key -> values)))
-    )
+    withOverridesMap(overridesMap.serialNonCommutativeAddOverride(key, values))
   def addOverride(org: Organization, name: ModuleName, version: VersionConstraint0): Dependency = {
     val key = DependencyManagement.Key(org, name, Type.jar, Classifier.empty)
     val values = DependencyManagement.Values(
@@ -111,17 +106,8 @@ import java.util.concurrent.ConcurrentMap
     )
     addOverride(key, values)
   }
-  def addOverrides(
-    entries: Seq[(DependencyManagement.Key, DependencyManagement.Values)]
-  ): Dependency =
-    withOverridesMap(
-      Overrides.add(
-        overridesMap,
-        Overrides(DependencyManagement.add(Map.empty, entries))
-      )
-    )
-  def addOverrides(newOverrides: Overrides): Dependency =
-    withOverridesMap(Overrides.add(overridesMap, newOverrides))
+  def serialNonCommutativeAddOverrides(newOverrides: SimpleOverrides): Dependency =
+    withOverridesMap(overridesMap.serialNonCommutativeAddOverrides(newOverrides))
 
   def isVariantAttributesBased: Boolean =
     variantSelector match {
@@ -145,15 +131,14 @@ import java.util.concurrent.ConcurrentMap
     module: Module = this.module,
     version: VersionConstraint0 = this.versionConstraint,
     variantSelector: VariantSelector = this.variantSelector,
-    minimizedExclusions: MinimizedExclusions = this.minimizedExclusions,
     attributes: Attributes = this.attributes,
     optional: Boolean = this.optional,
-    transitive: Boolean = this.transitive
+    transitive: Boolean = this.transitive,
+    overridesMap: Overrides = this.overridesMap
   ) = Dependency(
     module,
     version,
     variantSelector,
-    minimizedExclusions,
     Publication("", attributes.`type`, Extension.empty, attributes.classifier),
     optional,
     transitive,
@@ -162,12 +147,11 @@ import java.util.concurrent.ConcurrentMap
     endorseStrictVersions
   )
 
-  lazy val clearExclusions: Dependency =
-    if (minimizedExclusions.isEmpty) this
-    else withMinimizedExclusions(MinimizedExclusions.zero)
   lazy val clearOverrides: Dependency =
-    if (overridesMap.isEmpty) this
-    else withOverridesMap(Overrides.empty)
+    if (overridesMap == Overrides.empty) this
+    else withOverridesMap(overridesMap.clearSimpleOverrides)
+  def split: Iterable[Dependency] =
+    overridesMap.split.map(withOverridesMap(_))
   lazy val clearVersion: Dependency =
     if (versionConstraint.asString.isEmpty) this
     else withVersionConstraint(VersionConstraint0.empty)
@@ -183,14 +167,12 @@ import java.util.concurrent.ConcurrentMap
     versionConstraint.asString.contains("$") ||
     publication.attributesHaveProperties ||
     variantSelector.asConfiguration.exists(_.value.contains("$")) ||
-    minimizedExclusions.hasProperties
+    overridesMap.hasProperties
 
   def repr: String = {
     val lines = Seq.newBuilder[String]
     lines += s"${module.repr}:${versionConstraint.asString}"
     lines += s"variantSelector: ${variantSelector.repr}"
-    if (!minimizedExclusions.isEmpty)
-      lines += minimizedExclusions.repr
     if (!publication.isEmpty)
       lines += s"publication: $publication"
     if (optional)
@@ -202,7 +184,7 @@ import java.util.concurrent.ConcurrentMap
       for (bomDep <- bomDependencies)
         lines += s"  ${bomDep.repr}"
     }
-    if (overridesMap.nonEmpty)
+    if (overridesMap != Overrides.empty)
       lines += overridesMap.repr
     if (endorseStrictVersions)
       lines += "endorseStrictVersions"
@@ -211,18 +193,36 @@ import java.util.concurrent.ConcurrentMap
 
   // Overriding toString to be backwards compatible with Set-based exclusion representation
   override def toString(): String = {
-    var fields = Seq(
-      module.toString,
-      versionConstraint.asString,
-      variantSelector.asConfiguration.map(_.toString).getOrElse(variantSelector.repr),
-      minimizedExclusions.toSet().toString,
-      publication.toString,
-      optional.toString,
-      transitive.toString
-    )
+    var fields =
+      Seq(
+        module.toString,
+        versionConstraint.asString,
+        variantSelector.asConfiguration.map(_.toString).getOrElse(variantSelector.repr)
+      ) ++
+        (if (overridesMap.map.size == 1) Seq(overridesMap.map.head._1.toSet().toString) else Nil) ++
+        Seq(
+          publication.toString,
+          optional.toString,
+          transitive.toString
+        )
     fields =
-      if (overridesMap.isEmpty) fields
-      else fields :+ overridesMap.flatten.toMap.toString
+      if (overridesMap.map.size == 1 && overridesMap.map.head._2.isEmpty) fields
+      else if (overridesMap.map.size == 1)
+        fields :+
+          overridesMap
+            .map
+            .head
+            ._2
+            .map
+            .map {
+              case (k, v) if v.list.size == 1 =>
+                (k, v.list.head)
+              case other =>
+                other
+            }
+            .toString
+      else
+        fields :+ overridesMap.toString
     fields =
       if (bomDependencies.isEmpty) fields
       else fields :+ bomDependencies.map { bomDep =>
@@ -251,7 +251,6 @@ object Dependency {
     module: Module,
     versionConstraint: VersionConstraint0,
     variantSelector: VariantSelector,
-    minimizedExclusions: MinimizedExclusions,
     publication: Publication,
     optional: Boolean,
     transitive: Boolean,
@@ -264,7 +263,6 @@ object Dependency {
         module,
         versionConstraint,
         variantSelector,
-        minimizedExclusions,
         publication,
         optional,
         transitive,
@@ -282,7 +280,6 @@ object Dependency {
       module,
       version,
       VariantSelector.emptyConfiguration,
-      MinimizedExclusions.zero,
       Publication("", Type.empty, Extension.empty, Classifier.empty),
       optional = false,
       transitive = true,

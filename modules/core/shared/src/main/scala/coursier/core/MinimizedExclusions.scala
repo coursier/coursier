@@ -33,6 +33,8 @@ object MinimizedExclusions {
     def hasProperties: Boolean
 
     def repr: String
+
+    def sortKey: Seq[(String, String)]
   }
 
   case object ExcludeNone extends ExclusionData {
@@ -52,6 +54,8 @@ object MinimizedExclusions {
     def hasProperties: Boolean = false
 
     def repr: String = "Exclusions: none"
+
+    def sortKey: Seq[(String, String)] = Nil
   }
 
   case object ExcludeAll extends ExclusionData {
@@ -65,13 +69,16 @@ object MinimizedExclusions {
       (true, Set.empty, Set.empty, Set.empty)
     override def map(f: String => String): ExclusionData = ExcludeAll
 
-    override def size(): Int                              = 1
+    override def size(): Int                              = Int.MaxValue
     override def subsetOf(other: ExclusionData): Boolean  = other == ExcludeAll
     override def toSet(): Set[(Organization, ModuleName)] = Set((allOrganizations, allNames))
 
     def hasProperties: Boolean = false
 
     def repr: String = "Exclusions: *:*"
+
+    def sortKey: Seq[(String, String)] =
+      Seq("*" -> "*")
   }
 
   @data class ExcludeSpecific(
@@ -173,6 +180,11 @@ object MinimizedExclusions {
       else
         "Exclusions:\n" + entries.map("  " + _).mkString("\n")
     }
+
+    lazy val sortKey: Seq[(String, String)] =
+      byOrg.iterator.map(org => (org.value, "*")).toSeq.sorted ++
+        byModule.iterator.map(mod => ("*", mod.value)).toSeq.sorted ++
+        specific.iterator.map { case (org, mod) => (org.value, mod.value) }.toSeq.sorted
   }
 
   def apply(exclusions: Set[(Organization, ModuleName)]): MinimizedExclusions =
@@ -207,6 +219,39 @@ object MinimizedExclusions {
           excludeByName0.result(),
           remaining0.result()
         ))
+    }
+
+  def removeSuperfluous(exclList: Iterable[MinimizedExclusions]): Seq[MinimizedExclusions] =
+    if (exclList.size <= 1) exclList.headOption.toList
+    else {
+      assert(exclList.nonEmpty)
+      val m = exclList
+        .groupBy(_.size())
+        .map {
+          case (n, l) =>
+            import Ordering.Implicits._
+            n -> l.toSeq.sortBy(_.sortKey)
+        }
+        .toVector
+        .sortBy(_._1)
+      assert(m.nonEmpty)
+      assert(m.forall(_._2.nonEmpty))
+
+      m.reverseIterator
+        .flatMap {
+          case (n, l) =>
+            l.map(n -> _)
+        }
+        .filter {
+          case (n, excl) =>
+            !m.iterator
+              .takeWhile(_._1 <= n)
+              .flatMap(_._2)
+              .filter(_ != excl)
+              .exists(_.subsetOf(excl))
+        }
+        .map(_._2)
+        .toSeq
     }
 }
 
@@ -268,4 +313,7 @@ object MinimizedExclusions {
     data.hasProperties
 
   def repr: String = data.repr
+
+  def sortKey: Seq[(String, String)] =
+    data.sortKey
 }

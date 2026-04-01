@@ -5,9 +5,9 @@ import coursier.core.{
   Dependency,
   Info,
   Module,
-  Overrides,
   Profile,
   Resolution,
+  SimpleOverrides,
   Type,
   Variant,
   VariantSelector
@@ -58,7 +58,7 @@ object TestUtil {
         .withFinalDependenciesCache(Map.empty)
     def clearDependencyOverrides: Resolution =
       underlying.withDependencies(
-        underlying.dependencies.map(_.withOverridesMap(Overrides.empty))
+        underlying.dependencies.map(_.clearOverrides)
       )
     def clearFilter: Resolution =
       underlying.withFilter(None)
@@ -137,7 +137,7 @@ object TestUtil {
         None,
         publications,
         Info.empty,
-        Overrides.empty,
+        SimpleOverrides.empty,
         Map.empty,
         Map.empty
       )

@@ -176,7 +176,9 @@ object JsonReport {
       .map {
         case key @ (mod, attr) =>
           val deps = map(key)
-          val excl = deps.map(_._1.minimizedExclusions).foldLeft(MinimizedExclusions.zero)(_ join _)
+          val excl = deps
+            .flatMap(_._1.overridesMap.map.keysIterator)
+            .foldLeft(MinimizedExclusions.zero)(_ join _)
           key -> excl
             .toSeq()
             .map {
