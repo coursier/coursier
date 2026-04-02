@@ -25,6 +25,7 @@ final case class SharedLaunchParams(
     FetchParams(
       classpath = false,
       jsonOutputOpt = None,
+      jsonReportAddUrls = false,
       resolve = resolve,
       artifact = artifact,
       channel = channel,
