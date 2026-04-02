@@ -34,56 +34,78 @@ import dataclass._
     get(JavaHome.defaultId)
 
   def system(): Task[Option[File]] =
-    if (allowSystem)
+    if (allowSystem) {
+      def noJavaHome =
+        if (os == "darwin")
+          Task.delay {
+            // FIXME What happens if no JDK is installed?
+            val outputOrRetCode = commandOutput
+              .run(Seq("/usr/libexec/java_home"), keepErrStream = false)
+            outputOrRetCode
+              .toOption
+              .map(_.trim)
+              .filter(_.nonEmpty)
+              .map(new File(_))
+          }
+        else
+          Task.delay {
+            val outputOrRetCode =
+              try commandOutput
+                  .run(
+                    Seq("java", "-XshowSettings:properties", "-version"),
+                    keepErrStream = true,
+                    // Setting this makes cs-java fail.
+                    // This prevents us (possibly cs-java) to call ourselves,
+                    // which could call ourselves again, etc. indefinitely.
+                    extraEnv = Seq(JavaHome.csJavaFailVariable -> "true")
+                  )
+                  .toOption
+              catch {
+                case _: IOException =>
+                  None
+              }
+
+            outputOrRetCode
+              .flatMap { output =>
+                val it = output
+                  .linesIterator
+                  .map(_.trim)
+                  .filter(_.startsWith("java.home = "))
+                  .map(_.stripPrefix("java.home = "))
+                if (it.hasNext)
+                  Some(it.next())
+                    .map(new File(_))
+                else
+                  None
+              }
+          }
       Task.delay(getEnv.flatMap(_("JAVA_HOME"))).flatMap {
         case None =>
-          if (os == "darwin")
-            Task.delay {
-              // FIXME What happens if no JDK is installed?
-              val outputOrRetCode = commandOutput
-                .run(Seq("/usr/libexec/java_home"), keepErrStream = false)
-              outputOrRetCode
-                .toOption
-                .map(_.trim)
-                .filter(_.nonEmpty)
-                .map(new File(_))
-            }
-          else
-            Task.delay {
-
-              val outputOrRetCode =
-                try commandOutput
-                    .run(
-                      Seq("java", "-XshowSettings:properties", "-version"),
-                      keepErrStream = true,
-                      // Setting this makes cs-java fail.
-                      // This prevents us (possibly cs-java) to call ourselves,
-                      // which could call ourselves again, etc. indefinitely.
-                      extraEnv = Seq(JavaHome.csJavaFailVariable -> "true")
-                    )
-                    .toOption
-                catch {
-                  case _: IOException =>
-                    None
-                }
-
-              outputOrRetCode
-                .flatMap { output =>
-                  val it = output
-                    .linesIterator
-                    .map(_.trim)
-                    .filter(_.startsWith("java.home = "))
-                    .map(_.stripPrefix("java.home = "))
-                  if (it.hasNext)
-                    Some(it.next())
-                      .map(new File(_))
-                  else
-                    None
-                }
-            }
+          noJavaHome
         case Some(home) =>
-          Task.point(Some(new File(home)))
+          Task.delay {
+            val homeFile = new File(home)
+            val isValid = pathExtensions match {
+              case Some(extensions) =>
+                // Windows: check for bin/java with any PATHEXT extension
+                val binDir = new File(homeFile, "bin")
+                extensions.exists(ext => new File(binDir, s"java$ext").isFile)
+              case None =>
+                // Linux/macOS: check for bin/java that exists and is executable
+                val javaBin = new File(new File(homeFile, "bin"), "java")
+                javaBin.isFile && javaBin.canExecute
+            }
+            if (isValid)
+              Task.point(Some(homeFile))
+            else {
+              System.err.println(
+                s"Warning: ignoring JAVA_HOME, that is set to an invalid directory $home (bin/java not found or invalid)"
+              )
+              noJavaHome
+            }
+          }.flatMap(identity)
       }
+    }
     else
       Task.point(None)
 
