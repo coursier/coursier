@@ -1,41 +1,68 @@
 package coursierbuild.modules
 
-import java.io.File
 import com.github.lolgab.mill.mima.Mima
+import coursier.cache.{ArchiveCache, FileCache}
+import coursier.util.Artifact
 import coursierbuild.Deps.{Deps, ScalaVersions}
-
 import mill.*
 import mill.api.*
-import mill.scalalib.*
 import mill.scalajslib.*
+import mill.scalalib.*
 
+import java.io.File
 import java.util.Locale
 
 import scala.util.Properties
 
 trait CoursierJavaModule extends JavaModule {
   def jvmRelease = "8"
-  private def csApp(workspace: os.Path): String =
-    if (Properties.isWin) {
-      def pathEntries = Option(System.getenv("PATH"))
-        .iterator
-        .flatMap(_.split(File.pathSeparator).iterator)
-        .map(os.Path(_, workspace))
-      val pathExts = Option(System.getenv("PATHEXT"))
-        .iterator
-        .flatMap(_.split(File.pathSeparator).iterator)
-        .toSeq
-      pathEntries
-        .flatMap(dir => pathExts.iterator.map(ext => dir / s"cs$ext"))
-        .find(os.isFile)
-        .map(_.toString)
-        .getOrElse {
-          System.err.println("Warning: cannot find cs in PATH")
-          "cs"
-        }
-    }
-    else
-      "cs"
+  private def csApp(workspace: os.Path): os.Shellable = {
+    val csVersion = "2.1.25-M24"
+    val (url, commandPrefix) =
+      if (Properties.isLinux)
+        if (isArm64)
+          (
+            s"https://github.com/coursier/coursier/releases/download/v$csVersion/cs-aarch64-pc-linux.gz!",
+            Nil
+          )
+        else
+          (
+            s"https://github.com/coursier/coursier/releases/download/v$csVersion/cs-x86_64-pc-linux.gz!",
+            Nil
+          )
+      else if (Properties.isMac)
+        if (isArm64)
+          (
+            s"https://github.com/coursier/coursier/releases/download/v$csVersion/cs-aarch64-apple-darwin.gz!",
+            Nil
+          )
+        else
+          (
+            s"https://github.com/coursier/coursier/releases/download/v$csVersion/cs-x86_64-apple-darwin.gz!",
+            Nil
+          )
+      else if (Properties.isWin && !isArm64)
+        (
+          s"https://github.com/coursier/coursier/releases/download/v$csVersion/cs-x86_64-pc-win32.zip!cs-x86_64-pc-win32.exe",
+          Nil
+        )
+      else
+        (
+          s"https://github.com/coursier/coursier/releases/download/v$csVersion/coursier",
+          Seq("java", "-jar")
+        )
+    val cache        = FileCache()
+    val archiveCache = ArchiveCache().withCache(cache)
+    val f = archiveCache.get(Artifact(url)).unsafeRun(true)(using cache.ec)
+      .left.map(e => throw e)
+      .map(os.Path(_))
+      .merge
+
+    if (!Properties.isWin && !f.toIO.canExecute())
+      f.toIO.setExecutable(true)
+
+    (commandPrefix, f)
+  }
   private def isArm64 =
     Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
       case Some("aarch64" | "arm64") => true

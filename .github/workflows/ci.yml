@@ -12,7 +12,46 @@ permissions:
   attestations: write
 
 jobs:
+  compile-all:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - name: Compile everything
+      run: ./mill -i __.compile
+    - name: Pre-upload artifact
+      run: |
+        mv ~/.cache/coursier/v1 coursier-cache
+        mv ~/.cache/mill mill-cache
+        if test -d ~/.cache/mill/download; then
+          chmod +x ~/.cache/mill/download/*
+        fi
+    - name: Upload build output
+      uses: actions/upload-artifact@v4
+      with:
+        name: out
+        path: out
+        if-no-files-found: error
+        retention-days: 3
+    - name: Upload coursier cache
+      uses: actions/upload-artifact@v4
+      with:
+        name: coursier-cache
+        path: coursier-cache
+        if-no-files-found: error
+        retention-days: 3
+    - name: Upload Mill cache
+      uses: actions/upload-artifact@v4
+      with:
+        name: mill-cache
+        path: mill-cache
+        if-no-files-found: error
+        retention-days: 3
+
   compile-publish-all:
+    needs: compile-all
     runs-on: ubuntu-latest
     timeout-minutes: 30
     name: Compile and publish everything locally
@@ -26,10 +65,8 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8.0
-    - uses: coursier/setup-action@v2.0
-      with:
-        jvm: 21
+    - uses: ./.github/actions/restore-build-artifacts
+      if: runner.os == 'Linux'
     - run: |
         ./mill -i -j1 __.js[_].compile
         ./mill -i __.compile
@@ -38,6 +75,7 @@ jobs:
     - run: ./mill -i __.publishLocal
 
   compile-all-no-package-object:
+    needs: compile-all
     runs-on: ubuntu-latest
     timeout-minutes: 30
     name: Compile everything (no package object)
@@ -51,7 +89,8 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8.0
+    - uses: ./.github/actions/restore-build-artifacts
+      if: runner.os == 'Linux'
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
@@ -62,6 +101,7 @@ jobs:
         ./mill -i __.compile
 
   test:
+    needs: compile-all
     runs-on: ${{ matrix.OS }}
     name: ${{ matrix.OS }} Scala ${{ matrix.SCALA_VERSION }}
     timeout-minutes: 35
@@ -91,7 +131,8 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8.0
+    - uses: ./.github/actions/restore-build-artifacts
+      if: runner.os == 'Linux'
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
@@ -101,14 +142,13 @@ jobs:
     #   if: runner.os != 'Windows'
     - run: ./mill -i dockerTests
       env:
-        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
-    - run: ./mill -i jvmTests
+    - run: ./mill -i jvmTests --scalaVersion ${{ matrix.SCALA_VERSION }}
       env:
-        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
 
   js-test:
+    needs: compile-all
     runs-on: ubuntu-latest
     name: Scala.js Scala ${{ matrix.SCALA_VERSION }}
     timeout-minutes: 30
@@ -129,7 +169,8 @@ jobs:
     - uses: actions/setup-node@v6
       with:
         node-version: '18'
-    - uses: coursier/cache-action@v8.0
+    - uses: ./.github/actions/restore-build-artifacts
+      if: runner.os == 'Linux'
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
@@ -138,10 +179,9 @@ jobs:
         ./mill -i -j1 '__.js['"$SCALA_VERSION"'].compile'
         ./mill -i jsTests --scalaVersion "$SCALA_VERSION"
       shell: bash
-      env:
-        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
 
   bin-compat:
+    needs: compile-all
     runs-on: ubuntu-latest
     name: Binary compatibility
     steps:
@@ -149,13 +189,15 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8.0
+    - uses: ./.github/actions/restore-build-artifacts
+      if: runner.os == 'Linux'
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
     - run: ./mill -i -k __.mimaReportBinaryIssues
 
   website-check:
+    needs: compile-all
     runs-on: ubuntu-latest
     name: Website check
     steps:
@@ -171,7 +213,8 @@ jobs:
     - uses: actions/setup-node@v6
       with:
         node-version: '18'
-    - uses: coursier/cache-action@v8.0
+    - uses: ./.github/actions/restore-build-artifacts
+      if: runner.os == 'Linux'
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
@@ -193,15 +236,14 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8.0
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
-        apps: scalafmt:3.8.3
+        apps: scalafmt
     - run: scalafmt --check
 
   publish:
-    needs: ["compile-publish-all", "test", "js-test", "bin-compat", "website-check", "format"]
+    needs: ["compile-all", "compile-publish-all", "test", "js-test", "bin-compat", "website-check", "format"]
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -209,7 +251,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8.0
+      - uses: ./.github/actions/restore-build-artifacts
+        if: runner.os == 'Linux'
       - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
@@ -223,6 +266,7 @@ jobs:
           MILL_SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
 
   generate-native-launchers:
+    needs: compile-all
     name: ${{ matrix.OS }} native
     runs-on: ${{ matrix.OS }}
     strategy:
@@ -244,7 +288,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8.0
+      - uses: ./.github/actions/restore-build-artifacts
+        if: runner.os == 'Linux'
       - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
@@ -271,6 +316,7 @@ jobs:
           retention-days: 2
 
   generate-compat-native-launchers:
+    needs: compile-all
     name: linux compat native
     runs-on: ubuntu-latest
     steps:
@@ -278,7 +324,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8.0
+      - uses: ./.github/actions/restore-build-artifacts
+        if: runner.os == 'Linux'
       - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
@@ -300,6 +347,7 @@ jobs:
           retention-days: 2
 
   generate-native-static-launcher:
+    needs: compile-all
     name: ${{ matrix.OS }} static native
     runs-on: ${{ matrix.OS }}
     strategy:
@@ -315,7 +363,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8.0
+      - uses: ./.github/actions/restore-build-artifacts
+        if: runner.os == 'Linux'
       - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
@@ -338,6 +387,7 @@ jobs:
           retention-days: 2
 
   generate-native-mostly-static-launcher:
+    needs: compile-all
     name: ${{ matrix.OS }} mostly static native
     runs-on: ${{ matrix.OS }}
     strategy:
@@ -353,7 +403,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8.0
+      - uses: ./.github/actions/restore-build-artifacts
+        if: runner.os == 'Linux'
       - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
@@ -376,6 +427,7 @@ jobs:
           retention-days: 2
 
   generate-native-container-launcher:
+    needs: compile-all
     name: ${{ matrix.OS }} container native
     runs-on: ${{ matrix.OS }}
     strategy:
@@ -391,7 +443,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8.0
+      - uses: ./.github/actions/restore-build-artifacts
+        if: runner.os == 'Linux'
       - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
@@ -415,7 +468,7 @@ jobs:
 
   generate-jar-launchers:
     name: Upload JAR launchers
-    needs: publish
+    needs: [compile-all, publish]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     timeout-minutes: 45
@@ -424,7 +477,8 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8.0
+    - uses: ./.github/actions/restore-build-artifacts
+      if: runner.os == 'Linux'
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
@@ -445,7 +499,7 @@ jobs:
 
   upload-launchers:
     name: Upload launchers to GitHub release assets
-    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-mostly-static-launcher, generate-native-container-launcher, generate-jar-launchers]
+    needs: [compile-all, generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-mostly-static-launcher, generate-native-container-launcher, generate-jar-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -453,7 +507,8 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8.0
+    - uses: ./.github/actions/restore-build-artifacts
+      if: runner.os == 'Linux'
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
@@ -515,7 +570,7 @@ jobs:
 
   upload-launchers-special-repo:
     name: Upload launchers to dedicated repository
-    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-mostly-static-launcher, generate-native-container-launcher, generate-jar-launchers]
+    needs: [compile-all, generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-mostly-static-launcher, generate-native-container-launcher, generate-jar-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -523,7 +578,8 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8.0
+    - uses: ./.github/actions/restore-build-artifacts
+      if: runner.os == 'Linux'
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
@@ -585,7 +641,7 @@ jobs:
 
   update-brew-formula:
     name: Update brew formula
-    needs: [upload-launchers]
+    needs: [compile-all, upload-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -593,7 +649,8 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8.0
+      - uses: ./.github/actions/restore-build-artifacts
+        if: runner.os == 'Linux'
       - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
@@ -602,6 +659,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   update-website-latest:
+    needs: compile-all
     name: Update website (snapshot)
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -613,7 +671,8 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '18'
-      - uses: coursier/cache-action@v8.0
+      - uses: ./.github/actions/restore-build-artifacts
+        if: runner.os == 'Linux'
       - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
@@ -624,7 +683,7 @@ jobs:
 
   update-website:
     name: Update website
-    needs: [update-brew-formula, upload-launchers-special-repo]
+    needs: [compile-all, update-brew-formula, upload-launchers-special-repo]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -635,7 +694,8 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '18'
-      - uses: coursier/cache-action@v8.0
+      - uses: ./.github/actions/restore-build-artifacts
+        if: runner.os == 'Linux'
       - uses: coursier/setup-action@v2.0
         with:
           jvm: 21
