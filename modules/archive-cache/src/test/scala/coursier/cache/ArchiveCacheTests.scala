@@ -57,6 +57,13 @@ abstract class ArchiveCacheTests extends TestSuite {
       }
     }
 
+  private def defaultCache() =
+    Cache.default match {
+      case fc: FileCache[Task] => fc
+      case other =>
+        sys.error(s"Expected default cache to be a FileCache, got $other")
+    }
+
   def actualTests = Tests {
     test("jar") {
       checkArchiveHas(
@@ -175,7 +182,7 @@ abstract class ArchiveCacheTests extends TestSuite {
       truncate: Boolean
     ): Unit =
       withTmpDir { dir =>
-        val cache         = FileCache().withLocation((dir / "cache").toIO)
+        val cache         = defaultCache().withLocation((dir / "cache").toIO)
         val archiveCache0 = archiveCache(dir / "arc").withCache(cache)
 
         val localArchivePath = cache.file(artifact).run.unsafeRun()(cache.ec) match {

@@ -1,6 +1,6 @@
 package coursier.docker
 
-import coursier.cache.{Cache, CacheLogger, FileCache}
+import coursier.cache.{Cache, CacheLogger}
 import coursier.cache.util.{Cpu, Os}
 import coursier.core.Authentication
 import coursier.util.{Artifact, Task}
@@ -36,7 +36,7 @@ object DockerPull {
     arch: String = defaultArch,
     archVariant: Option[String] = defaultArchVariant,
     authRegistry: String = defaultAuthRegistry,
-    cache: Cache[Task] = FileCache()
+    cache: Cache[Task] = Cache.default
   ): DockerPull.Result = {
 
     lazy val token = DockerUtil.token(authRegistry, repoName)

@@ -26,6 +26,7 @@ import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
 import java.io.InputStream
 import coursier.cache.util.Cpu
 import coursier.docker.vm.iso.Image
+import coursier.cache.Cache
 
 final class Vm(
   val id: String,
@@ -199,7 +200,7 @@ object Vm {
     def default(
       workDir: os.Path = defaultWorkDir(),
       guestWorkDir: os.SubPath = os.sub / "workdir",
-      cacheLocation: Option[os.Path] = Some(os.Path(FileCache().location, os.pwd)),
+      cacheLocation: Option[os.Path] = Some(os.Path(Cache.default.location, os.pwd)),
       digestCacheLocation: Option[os.Path] = Some(os.Path(DigestBasedCache().location, os.pwd)),
       guestCpu: Cpu = Cpu.get()
     ): Params = Params(
@@ -221,7 +222,7 @@ object Vm {
     def defaultMounts(
       workDir: os.Path = defaultWorkDir(),
       guestWorkDir: os.SubPath = os.sub / "workdir",
-      cacheLocation: Option[os.Path] = Some(os.Path(FileCache().location, os.pwd)),
+      cacheLocation: Option[os.Path] = Some(os.Path(Cache.default.location, os.pwd)),
       digestCacheLocation: Option[os.Path] = Some(os.Path(DigestBasedCache().location, os.pwd))
     ): Seq[Mount] = {
 

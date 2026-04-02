@@ -2,7 +2,7 @@ package coursier.docker.tests
 
 import coursier.cache.TestUtil._
 import coursier.cache.util.Cpu
-import coursier.cache.{ArchiveCache, DigestBasedCache, FileCache}
+import coursier.cache.{ArchiveCache, Cache, DigestBasedCache}
 import coursier.docker.{DockerBuild, DockerPull, DockerRun, DockerUnpack}
 import coursier.docker.vm.Vm
 import io.github.alexarchambault.isterminal.IsTerminal
@@ -13,7 +13,7 @@ import coursier.docker.vm.VmFiles
 
 object DockerTests extends TestSuite {
 
-  val cache = FileCache()
+  val cache = Cache.default
 
   // set to true to speed up tests locally
   // needs 'cs vm start' to have been run before that
