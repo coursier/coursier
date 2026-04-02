@@ -41,10 +41,11 @@ object Deps {
     def mdoc           = mvn"org.scalameta::mdoc:2.7.2"
     def noCrcZis       = mvn"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
     def osLib          = mvn"com.lihaoyi::os-lib:0.11.5"
-    def plexusArchiver = mvn"org.codehaus.plexus:plexus-archiver:4.10.1"
+    def plexusArchiver = mvn"org.codehaus.plexus:plexus-archiver:4.11.0"
     // plexus-archiver needs its loggers
     def plexusContainerDefault = mvn"org.codehaus.plexus:plexus-container-default:2.1.1"
       .exclude("junit" -> "junit")
+    def plexusUtils      = mvn"org.codehaus.plexus:plexus-utils:4.0.3"
     def pprint           = mvn"com.lihaoyi::pprint::0.9.3"
     def proguard         = mvn"com.guardsquare:proguard-base:7.7.0"
     def pythonNativeLibs = mvn"ai.kien::python-native-libs:0.2.4"

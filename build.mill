@@ -401,6 +401,7 @@ trait ArchiveCache extends ArchiveCacheBase {
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.plexusArchiver,
     Deps.plexusContainerDefault,
+    Deps.plexusUtils, // Explicitly bumping that one to >= 4.0.3 to address CVE-2025-67030
     Deps.tika,
     // here only for the sake of bumping it, to work around JNI loading issues with earlier versions on macOS
     Deps.zstdJni
