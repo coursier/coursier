@@ -65,7 +65,7 @@ object MinimizedExclusions {
       (true, Set.empty, Set.empty, Set.empty)
     override def map(f: String => String): ExclusionData = ExcludeAll
 
-    override def size(): Int                              = 1
+    override def size(): Int                              = Int.MaxValue
     override def subsetOf(other: ExclusionData): Boolean  = other == ExcludeAll
     override def toSet(): Set[(Organization, ModuleName)] = Set((allOrganizations, allNames))
 
@@ -79,6 +79,9 @@ object MinimizedExclusions {
     byModule: Set[ModuleName],
     specific: Set[(Organization, ModuleName)]
   ) extends ExclusionData {
+
+    assert(byOrg.nonEmpty || byModule.nonEmpty || specific.nonEmpty)
+
     override def apply(org: Organization, module: ModuleName): Boolean =
       !byModule(module) &&
       !byOrg(org) &&
@@ -138,16 +141,23 @@ object MinimizedExclusions {
         }
       )
 
-    override def size(): Int = byOrg.size + byModule.size + specific.size
+    override def size(): Int =
+      if (byOrg.nonEmpty || byModule.nonEmpty) Int.MaxValue - 1
+      else specific.size
 
     override def subsetOf(other: ExclusionData): Boolean =
       other match {
         case ExcludeNone => false
-        case ExcludeAll  => false
+        case ExcludeAll  => true
         case other: ExcludeSpecific =>
           byOrg.subsetOf(other.byOrg) &&
           byModule.subsetOf(other.byModule) &&
-          specific.subsetOf(other.specific)
+          specific.forall {
+            case orgName @ (org, name) =>
+              other.byOrg.contains(org) ||
+              other.byModule.contains(name) ||
+              other.specific.contains(orgName)
+          }
       }
 
     override def toSet(): Set[(Organization, ModuleName)] =
