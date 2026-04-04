@@ -828,6 +828,10 @@ object Downloader {
         }
       }
       catch {
+        case _: AccessDeniedException if Properties.isWin => None
+        case _: javax.net.ssl.SSLException                => None
+        case _: java.net.SocketException                  => None
+
         case NonFatal(e) if throwExceptions =>
           val ex = new ArtifactError.DownloadError(
             s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
@@ -854,13 +858,7 @@ object Downloader {
           )
           Some(Left(ex))
       }
-    } {
-      case _: AccessDeniedException if Properties.isWin =>
-      case _: javax.net.ssl.SSLException                =>
-      case _: java.net.SocketException                  =>
-      case _: java.net.ConnectException                 =>
-      // TODO Allow to log that exception.
-    }
+    } (PartialFunction.empty)
 
   private object UnknownProtocol {
     def unapply(t: Throwable): Option[(MalformedURLException, String)] = t match {
