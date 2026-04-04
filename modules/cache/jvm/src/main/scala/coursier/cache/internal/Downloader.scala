@@ -828,6 +828,10 @@ object Downloader {
         }
       }
       catch {
+        case _: AccessDeniedException if Properties.isWin => None
+        case _: javax.net.ssl.SSLException                => None
+        case _: java.net.SocketException                  => None
+
         case NonFatal(e) if throwExceptions =>
           val ex = new ArtifactError.DownloadError(
             s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
@@ -847,10 +851,6 @@ object Downloader {
 
           Some(Left(ex))
 
-        case e: AccessDeniedException if Properties.isWin => throw e
-        case e: javax.net.ssl.SSLException                => throw e
-        case e: java.net.SocketException                  => throw e
-
         case NonFatal(e) =>
           val ex = new ArtifactError.DownloadError(
             s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
@@ -862,7 +862,6 @@ object Downloader {
       case _: AccessDeniedException if Properties.isWin =>
       case _: javax.net.ssl.SSLException                =>
       case _: java.net.SocketException                  =>
-      case _: java.net.ConnectException                 =>
       // TODO Allow to log that exception.
     }
 
