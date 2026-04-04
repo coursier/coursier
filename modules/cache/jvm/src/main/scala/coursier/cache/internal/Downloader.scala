@@ -858,12 +858,7 @@ object Downloader {
           )
           Some(Left(ex))
       }
-    } {
-      case _: AccessDeniedException if Properties.isWin =>
-      case _: javax.net.ssl.SSLException                =>
-      case _: java.net.SocketException                  =>
-      // TODO Allow to log that exception.
-    }
+    } (PartialFunction.empty)
 
   private object UnknownProtocol {
     def unapply(t: Throwable): Option[(MalformedURLException, String)] = t match {
