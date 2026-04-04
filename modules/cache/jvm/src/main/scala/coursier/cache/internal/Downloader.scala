@@ -847,6 +847,10 @@ object Downloader {
 
           Some(Left(ex))
 
+        case e: AccessDeniedException if Properties.isWin => throw e
+        case e: javax.net.ssl.SSLException                => throw e
+        case e: java.net.SocketException                  => throw e
+
         case NonFatal(e) =>
           val ex = new ArtifactError.DownloadError(
             s"Caught ${e.getClass().getName()}${Option(e.getMessage).fold("")(" (" + _ + ")")} while downloading $url",
