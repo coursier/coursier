@@ -29,8 +29,13 @@ object Print {
 
   def dependency(dep: Dependency, printExclusions: Boolean): String = {
 
+    assert(!printExclusions || dep.overridesMap.map.size == 1, "Update needed in Print.dependency")
+
     def exclusionsStr = dep
-      .minimizedExclusions
+      .overridesMap
+      .map
+      .head
+      ._1
       .toSet()
       .toVector
       .sorted

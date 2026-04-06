@@ -209,37 +209,30 @@ object Resolution {
   ): Seq[(Variant, Dependency)] =
     dependencies.map(withProperties(_, properties))
 
-  @deprecated("Use withProperties0 instead", "2.1.25")
-  def withProperties(
-    dependencies: Seq[(Configuration, Dependency)],
-    properties: Map[String, String]
-  ): Seq[(Configuration, Dependency)] =
-    withProperties0(
-      dependencies.map {
-        case (config, dep) =>
-          (Variant.Configuration(config), dep)
-      },
-      properties
-    ).map {
-      case (c: Variant.Configuration, dep) =>
-        (c.configuration, dep)
-      case (_: Variant.Attributes, _) =>
-        sys.error("Deprecated method doesn't support Gradle Module variants")
-    }
-
   private def withProperties(
-    map: DependencyManagement.GenericMap,
+    map: Seq[(
+      MinimizedExclusions,
+      Map[DependencyManagement.Key, DependencyManagement.SplitValues]
+    )],
     properties: Map[String, String]
-  ): Option[DependencyManagement.Map] = {
-    val b       = new mutable.HashMap[DependencyManagement.Key, DependencyManagement.Values]
+  ): Option[Seq[(
+    MinimizedExclusions,
+    Map[DependencyManagement.Key, DependencyManagement.SplitValues]
+  )]] = {
     var changed = false
-    for (kv <- map) {
-      val (k0, v0) = withProperties(kv, properties)
-      if (!changed && (k0 != kv._1 || v0 != kv._2))
-        changed = true
-      b(k0) = b.get(k0).fold(v0)(_.orElse(v0))
+    val res = map.toSeq.map {
+      case (excl, m) =>
+        val newKeyMap =
+          new mutable.HashMap[DependencyManagement.Key, DependencyManagement.SplitValues]
+        for ((k, v) <- m) {
+          val (k0, v0) = withProperties((k, v), properties)
+          if (!changed && (k0 != k || v0 != v))
+            changed = true
+          newKeyMap(k0) = newKeyMap.get(k0).map(_.orElse(v0)).getOrElse(v0)
+        }
+        (excl, newKeyMap.toMap)
     }
-    if (changed) Some(b.toMap)
+    if (changed) Some(res)
     else None
   }
 
@@ -247,27 +240,71 @@ object Resolution {
     overrides: Overrides,
     properties: Map[String, String]
   ): Overrides =
-    if (overrides.hasProperties)
-      overrides.mapMap(withProperties(_, properties))
+    if (overrides.hasProperties) {
+      def substituteTrimmedProps(s: String) =
+        substituteProps(s, properties, trim = true)
+      def substituteProps0(s: String) =
+        substituteProps(s, properties, trim = false)
+
+      overrides.map(substituteProps0, substituteTrimmedProps)
+    }
     else
       overrides
 
   private def withProperties(
-    entry: (DependencyManagement.Key, DependencyManagement.Values),
+    simple: SimpleOverrides,
     properties: Map[String, String]
-  ): (DependencyManagement.Key, DependencyManagement.Values) = {
+  ): SimpleOverrides =
+    if (simple.hasProperties)
+      simple.mapEntries((key, valuesMap) => withProperties((key, valuesMap), properties))
+    else
+      simple
+
+  private def withProperties(
+    entry: (DependencyManagement.Key, DependencyManagement.SplitValues),
+    properties: Map[String, String]
+  ): (DependencyManagement.Key, DependencyManagement.SplitValues) = {
 
     def substituteTrimmedProps(s: String) =
       substituteProps(s, properties, trim = true)
     def substituteProps0(s: String) =
       substituteProps(s, properties, trim = false)
 
-    val (key, values) = entry
-
-    (
-      key.map(substituteProps0),
-      values.mapButVersion(substituteProps0).mapVersion(substituteTrimmedProps)
-    )
+    val (key, valuesMap) = entry
+    val newKey           = key.map(substituteProps0)
+    var mapChanged       = false
+    val newMap = valuesMap.map.map {
+      case (core, mergeable) =>
+        val newConfig = core.config.map(substituteProps0)
+        val newCore =
+          if (newConfig != core.config)
+            DependencyManagement.Values.ValuesCore(newConfig, core.global)
+          else core
+        val newVersionConstraints = mergeable.versionConstraints.map(_.map { vc =>
+          val newVer = substituteTrimmedProps(vc.asString)
+          if (newVer == vc.asString) vc else VersionConstraint0(newVer)
+        })
+        val newExcl = mergeable.minimizedExclusions.map(substituteProps0)
+        val newMergeable =
+          if (
+            newVersionConstraints != mergeable.versionConstraints || newExcl != mergeable.minimizedExclusions
+          )
+            DependencyManagement.Values.ValuesMergeable(
+              newVersionConstraints,
+              newExcl,
+              mergeable.optional
+            ).normalizeVersionConstraints
+          else
+            mergeable
+        if (!mapChanged && (newCore != core || newMergeable != mergeable))
+          mapChanged = true
+        newCore -> newMergeable
+    }
+    val newValuesMap = if (mapChanged) DependencyManagement.SplitValues(newMap) else valuesMap
+    if (newKey != key || newValuesMap != valuesMap)
+      (newKey, newValuesMap)
+    else
+      entry
   }
 
   /** Substitutes `properties` in `dependencies`.
@@ -306,7 +343,7 @@ object Resolution {
             .map(_.map(substituteProps0))
             .map(VariantSelector.ConfigurationBased(_))
             .getOrElse(dep.variantSelector),
-          minimizedExclusions = dep.minimizedExclusions.map(substituteProps0)
+          overridesMap = dep.overridesMap.map(substituteProps0, substituteTrimmedProps)
         )
 
       val finalVariant = variant
@@ -340,10 +377,14 @@ object Resolution {
       }
     val constraints = dependencies
       .iterator
-      .flatMap(_.overridesMap.global.flatten.iterator)
-      .map {
+      .flatMap(_.overridesMap.global.map.iterator)
+      .flatMap {
+        case (_, keyMap) =>
+          keyMap.map.iterator
+      }
+      .flatMap {
         case (k, v) =>
-          v.fakeDependency(k)
+          v.list.iterator.map(_.fakeDependency(k))
       }
       .toSeq
       .groupBy(_.module)
@@ -443,201 +484,137 @@ object Resolution {
     * Fill empty version / scope / exclusions, for dependencies found in `dependencyManagement`.
     */
   def depsWithDependencyManagement0(
-    rawDependencies: Seq[(Variant, Dependency)],
-    properties: Map[String, String],
+    dependencies: Seq[(Variant, Dependency)],
     rawOverridesOpt: Option[Overrides],
-    rawDependencyManagement: Overrides,
+    overrides: Overrides,
+    dependencyManagement: SimpleOverrides,
     forceDepMgmtVersions: Boolean,
     keepVariant: Variant => Boolean
   ): Seq[(Variant, Dependency)] = {
 
-    val dependencies         = withProperties0(rawDependencies, properties)
-    val overridesOpt         = rawOverridesOpt.map(withProperties(_, properties))
-    val dependencyManagement = withProperties(rawDependencyManagement, properties)
-
     // See http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Management
 
-    lazy val dict = Overrides.add(
-      overridesOpt.getOrElse(Overrides.empty),
-      dependencyManagement
-    )
+    lazy val dict = overrides.serialNonCommutativeAddOverrides(dependencyManagement)
 
     lazy val dictForOverridesOpt = rawOverridesOpt.map { rawOverrides =>
-      lazy val versions = dependencies
-        .filter {
-          case (variant, _) =>
-            variant.isEmpty || keepVariant(variant)
-        }
-        .groupBy(_._2.depManagementKey)
-        .collect {
-          case (k, l)
-              if !rawOverrides.contains(k) && l.exists(_._2.versionConstraint.asString.nonEmpty) =>
-            k -> l.map(_._2.versionConstraint.asString).filter(_.nonEmpty)
-        }
-      val map = dependencyManagement
-        .filter {
-          case (k, v) =>
-            v.config.isEmpty || keepVariant(Variant.Configuration(v.config))
-        }
-        .map {
-          case (k, v) =>
-            val clearVersion = !forceDepMgmtVersions &&
-              versions
-                .get(k)
-                .getOrElse(Nil)
-                .exists(_ != v.versionConstraint.asString)
-            val newConfig  = Configuration.empty
-            val newVersion = if (clearVersion) VersionConstraint0.empty else v.versionConstraint
-            val values =
-              if (v.config != newConfig || v.versionConstraint != newVersion || v.optional)
+      rawOverrides.serialNonCommutativeAddOverrides {
+
+        lazy val versions = dependencies
+          .filter {
+            case (variant, _) =>
+              variant.isEmpty || keepVariant(variant)
+          }
+          .groupBy(_._2.depManagementKey)
+          .collect {
+            case (k, l)
+                if !rawOverrides.contains(k) &&
+                l.exists(_._2.versionConstraint.asString.nonEmpty) =>
+              k -> l.map(_._2.versionConstraint.asString).filter(_.nonEmpty)
+          }
+
+        dependencyManagement
+          .filterOnValues {
+            case (k, c, _) =>
+              c.config.isEmpty || keepVariant(Variant.Configuration(c.config))
+          }
+          .mapOnValues {
+            case (k0, vals) =>
+              val clearVersion = !forceDepMgmtVersions &&
+                versions
+                  .get(k0)
+                  .getOrElse(Nil)
+                  .exists(_ != vals.versionConstraint.asString)
+              val newConfig = Configuration.empty
+              val newVersion =
+                if (clearVersion) VersionConstraint0.empty else vals.versionConstraint
+              if (vals.config != newConfig || vals.versionConstraint != newVersion || vals.optional)
                 DependencyManagement.Values(
                   newConfig,
                   newVersion,
-                  v.minimizedExclusions,
+                  vals.minimizedExclusions,
                   optional = false
                 )
               else
-                v
-            (k, values)
-        }
-      Overrides.add(
-        rawOverrides,
-        map
-      )
+                vals
+          }
+      }
     }
 
-    dependencies.map {
+    dependencies.flatMap {
       case (variant0, dep0) =>
+        val key = dep0.depManagementKey
+
         var variant = variant0
-        var dep     = dep0
 
-        for (mgmtValues <- dict.get(dep0.depManagementKey)) {
+        dict.forModule(dep0.module.organization, dep0.module.name) match {
+          case Some(depDict) =>
+            val getValues = depDict.values(key).toSeq
 
-          val useManagedVersion = mgmtValues.versionConstraint.asString.nonEmpty && (
-            forceDepMgmtVersions ||
-            overridesOpt.isEmpty ||
-            dep.versionConstraint.asString.isEmpty ||
-            overridesOpt.exists(_.contains(dep0.depManagementKey))
-          )
-          if (useManagedVersion)
-            dep = dep.withVersionConstraint(mgmtValues.versionConstraint)
+            var dep1 = dep0
+            for (valuesMap <- dependencyManagement.map.get(key)) {
+              assert(valuesMap.list.size == 1)
+              val mgmtValues = valuesMap.list.head
 
-          if (mgmtValues.minimizedExclusions.nonEmpty) {
-            val newExcl = dep.minimizedExclusions.join(mgmtValues.minimizedExclusions)
-            if (dep.minimizedExclusions != newExcl)
-              dep = dep.withMinimizedExclusions(newExcl)
-          }
+              if (mgmtValues.config.nonEmpty && variant.isEmpty)
+                variant = Variant.Configuration(mgmtValues.config)
+
+              if (mgmtValues.optional && !dep1.optional)
+                dep1 = dep1.withOptional(mgmtValues.optional)
+
+              val useManagedVersion = mgmtValues.versionConstraint.asString.nonEmpty &&
+                dep1.versionConstraint.asString.isEmpty
+              if (useManagedVersion)
+                dep1 = dep1.withVersionConstraint(mgmtValues.versionConstraint)
+            }
+
+            var deps =
+              if (getValues.isEmpty)
+                Seq(dep1)
+              else
+                getValues.map { mgmtValues =>
+                  var dep = dep1
+                  val useManagedVersion = mgmtValues.versionConstraint.asString.nonEmpty && (
+                    forceDepMgmtVersions ||
+                    dep.versionConstraint.asString.isEmpty ||
+                    overrides.contains(key)
+                  )
+                  if (useManagedVersion)
+                    dep = dep.withVersionConstraint(mgmtValues.versionConstraint)
+
+                  if (mgmtValues.minimizedExclusions.nonEmpty) {
+                    val newOverrides =
+                      dep.overridesMap.addExclusions(mgmtValues.minimizedExclusions)
+                    if (dep.overridesMap != newOverrides)
+                      dep = dep.withOverridesMap(newOverrides)
+                  }
+
+                  dep
+                }
+
+            for (
+              dictForOverrides <-
+                dictForOverridesOpt.flatMap(_.forModule(dep0.module.organization, dep0.module.name))
+              if dictForOverrides != Overrides.empty
+            )
+              deps = deps.flatMap { dep =>
+                // TODO Do that without the split
+                dep.split.map { simpleDep =>
+                  val newOverrides = dictForOverrides
+                    .addExclusions(simpleDep.overridesMap.map.head._1)
+                    .serialNonCommutativeAddOverrides(simpleDep.overridesMap.map.head._2)
+                  if (dep.overridesMap == newOverrides)
+                    simpleDep
+                  else
+                    simpleDep.withOverridesMap(newOverrides)
+                }
+              }
+
+            deps.map((variant, _))
+          case None =>
+            Nil
         }
-
-        for (mgmtValues <- dependencyManagement.get(dep0.depManagementKey)) {
-
-          if (mgmtValues.config.nonEmpty && variant.isEmpty)
-            variant = Variant.Configuration(mgmtValues.config)
-
-          if (mgmtValues.optional && !dep.optional)
-            dep = dep.withOptional(mgmtValues.optional)
-        }
-
-        for (dictForOverrides <- dictForOverridesOpt if dictForOverrides.nonEmpty) {
-          val newOverrides = Overrides.add(dictForOverrides, dep.overridesMap)
-          if (dep.overridesMap != newOverrides)
-            dep = dep.withOverridesMap(newOverrides)
-        }
-
-        (variant, dep)
     }
   }
-
-  @deprecated("Use depsWithDependencyManagement0 instead", "2.1.25")
-  def depsWithDependencyManagement(
-    rawDependencies: Seq[(Configuration, Dependency)],
-    properties: Map[String, String],
-    rawOverridesOpt: Option[Overrides],
-    rawDependencyManagement: Overrides,
-    forceDepMgmtVersions: Boolean,
-    keepVariant: Variant => Boolean
-  ): Seq[(Configuration, Dependency)] =
-    depsWithDependencyManagement0(
-      rawDependencies.map {
-        case (config, dep) =>
-          (Variant.Configuration(config), dep)
-      },
-      properties,
-      rawOverridesOpt,
-      rawDependencyManagement,
-      forceDepMgmtVersions,
-      keepVariant
-    ).map {
-      case (c: Variant.Configuration, dep) =>
-        (c.configuration, dep)
-      case (_: Variant.Attributes, _) =>
-        sys.error("Deprecated method doesn't support Gradle Module variants")
-    }
-
-  @deprecated(
-    "Use the override accepting Overrides and keepConfiguration instead",
-    "2.1.23"
-  )
-  def depsWithDependencyManagement(
-    rawDependencies: Seq[(Configuration, Dependency)],
-    properties: Map[String, String],
-    rawOverridesOpt: Option[DependencyManagement.Map],
-    rawDependencyManagement: Seq[(Configuration, Dependency)],
-    forceDepMgmtVersions: Boolean
-  ): Seq[(Configuration, Dependency)] =
-    depsWithDependencyManagement0(
-      rawDependencies.map {
-        case (config, dep) =>
-          (Variant.Configuration(config), dep)
-      },
-      properties,
-      rawOverridesOpt.map(Overrides(_)),
-      Overrides(DependencyManagement.addDependencies(Map.empty, rawDependencyManagement)),
-      forceDepMgmtVersions,
-      keepVariant = (variant: Variant) =>
-        variant.asConfiguration.exists { config =>
-          config == Configuration.compile ||
-          config == Configuration.runtime ||
-          config == Configuration.default ||
-          config == Configuration.defaultCompile ||
-          config == Configuration.defaultRuntime
-        }
-    ).map {
-      case (variant: Variant.Configuration, dep) =>
-        (variant.configuration, dep)
-      case (other, _) =>
-        sys.error("Deprecated method doesn't handle generic variants")
-    }
-
-  @deprecated(
-    "Use the override accepting an override map, forceDepMgmtVersions, and properties instead",
-    "2.1.17"
-  )
-  def depsWithDependencyManagement(
-    dependencies: Seq[(Configuration, Dependency)],
-    dependencyManagement: Seq[(Configuration, Dependency)]
-  ): Seq[(Configuration, Dependency)] =
-    depsWithDependencyManagement0(
-      dependencies.map {
-        case (config, dep) =>
-          (Variant.Configuration(config), dep)
-      },
-      Map.empty[String, String],
-      Option.empty[Overrides],
-      Overrides(DependencyManagement.addDependencies(Map.empty, dependencyManagement)),
-      forceDepMgmtVersions = false,
-      keepVariant = (variant: Variant) =>
-        variant.asConfiguration.exists { config =>
-          config == Configuration.compile ||
-          config == Configuration.default ||
-          config == Configuration.defaultCompile
-        }
-    ).map {
-      case (variant: Variant.Configuration, dep) =>
-        (variant.configuration, dep)
-      case (other, dep) =>
-        sys.error("Deprecated method doesn't handle generic variants")
-    }
 
   private def withDefaultConfig(dep: Dependency, defaultConfiguration: Configuration): Dependency =
     if (dep.variantSelector.asConfiguration.exists(_.isEmpty))
@@ -649,10 +626,8 @@ object Resolution {
     */
   def withExclusions0(
     dependencies: Seq[(Variant, Dependency)],
-    exclusions: Set[(Organization, ModuleName)]
-  ): Seq[(Variant, Dependency)] = {
-    val minimizedExclusions = MinimizedExclusions(exclusions)
-
+    minimizedExclusions: MinimizedExclusions
+  ): Seq[(Variant, Dependency)] =
     dependencies
       .filter {
         case (_, dep) =>
@@ -660,29 +635,10 @@ object Resolution {
       }
       .map {
         case configDep @ (config, dep) =>
-          val newExcl = dep.minimizedExclusions.join(minimizedExclusions)
-          if (dep.minimizedExclusions == newExcl) configDep
-          else config -> dep.withMinimizedExclusions(newExcl)
+          val newOverrides = dep.overridesMap.addExclusions(minimizedExclusions)
+          if (dep.overridesMap eq newOverrides) configDep
+          else config -> dep.withOverridesMap(newOverrides)
       }
-  }
-
-  @deprecated("Use withExclusions0 instead", "2.1.25")
-  def withExclusions(
-    dependencies: Seq[(Configuration, Dependency)],
-    exclusions: Set[(Organization, ModuleName)]
-  ): Seq[(Configuration, Dependency)] =
-    withExclusions0(
-      dependencies.map {
-        case (config, dep) =>
-          (Variant.Configuration(config), dep)
-      },
-      exclusions
-    ).map {
-      case (c: Variant.Configuration, dep) =>
-        (c.configuration, dep)
-      case (_: Variant.Attributes, _) =>
-        sys.error("Deprecated method doesn't support Gradle Module variants")
-    }
 
   def actualConfiguration(
     config: Configuration,
@@ -891,30 +847,30 @@ object Resolution {
         None
     }
 
-    val rawDeps = withExclusions0(
-      // 2.1 & 2.2
-      depsWithDependencyManagement0(
-        // 1.7
-        project0.dependencies0,
-        properties,
-        Option.when(enableDependencyOverrides)(from.overridesMap),
-        project0.overrides,
-        forceDepMgmtVersions = forceDepMgmtVersions,
-        keepVariant = keepConfigOpt match {
-          case Some((actualConfig, keepConfigOpt0)) =>
-            (variant: Variant) =>
-              variant.asConfiguration.exists { config =>
-                keepConfigOpt0 match {
-                  case Some(keep) => keep.contains(config)
-                  case None       => config == actualConfig
-                }
-              }
-          case None =>
-            // TODO attributes
-            (variant: Variant) => false
-        }
+    val rawDeps = depsWithDependencyManagement0(
+      withProperties0(project0.dependencies0, properties),
+      Option.when(enableDependencyOverrides)(from.overridesMap),
+      // is there a point in calling withProperties here? shouldn't have they been substituted earlier?
+      withProperties(
+        if (enableDependencyOverrides) from.overridesMap
+        else from.overridesMap.clearSimpleOverrides,
+        properties
       ),
-      from.minimizedExclusions.toSet()
+      withProperties(project0.overrides, properties),
+      forceDepMgmtVersions = forceDepMgmtVersions,
+      keepVariant = keepConfigOpt match {
+        case Some((actualConfig, keepConfigOpt0)) =>
+          (variant: Variant) =>
+            variant.asConfiguration.exists { config =>
+              keepConfigOpt0 match {
+                case Some(keep) => keep.contains(config)
+                case None       => config == actualConfig
+              }
+            }
+        case None =>
+          // TODO attributes
+          (variant: Variant) => false
+      }
     )
 
     configurationsOrVariantOrError.map { configurationsOrVariant0 =>
@@ -1323,7 +1279,8 @@ object Resolution {
 
   private[core] val finalDependenciesCache0 = new ConcurrentHashMap[Dependency, Seq[Dependency]]
 
-  private def finalDependencies0(dep: Dependency): Either[DependencyError, Seq[Dependency]] =
+  private[coursier] def finalDependencies0(dep: Dependency)
+    : Either[DependencyError, Seq[Dependency]] =
     if (dep.transitive) {
       val deps = finalDependenciesCache.getOrElse(dep, finalDependenciesCache0.get(dep))
 
@@ -1433,7 +1390,13 @@ object Resolution {
   ): Either[DependencyError, Seq[Dependency]] =
     finalDependencies0(dep).map { deps =>
       if (withRetainedVersions || withFallbackConfig)
-        deps.map(updated(_, withRetainedVersions, withReconciledVersions, withFallbackConfig))
+        deps.map { dep0 =>
+          try updated(dep0, withRetainedVersions, withReconciledVersions, withFallbackConfig)
+          catch {
+            case e: RuntimeException =>
+              throw e
+          }
+        }
       else
         deps
     }
@@ -1483,7 +1446,8 @@ object Resolution {
     */
   lazy val transitiveDependenciesAndErrors
     : (Seq[(Dependency, DependencyError)], Seq[Dependency]) = {
-    val l = (dependencySet.minimizedSet -- conflicts)
+    val minSet = dependencySet.minimizedSet
+    val l = (minSet -- conflicts)
       .toVector
       .map(dep => finalDependencies0(dep).left.map((dep, _)))
     val errors = l.collect {
@@ -1506,8 +1470,8 @@ object Resolution {
       boms
   private lazy val allBomModuleVersions =
     globalBomModuleVersions ++ rootDependencies.flatMap(_.bomDependencies)
-  private def bomEntries(bomDeps: Seq[BomDependency]): Overrides =
-    Overrides.add {
+  private def bomEntries(bomDeps: Seq[BomDependency]): SimpleOverrides =
+    SimpleOverrides.serialNonCommutativeAdd {
       (for {
         bomDep          <- bomDeps
         (_, bomProject) <- projectCache0.get(bomDep.moduleVersionConstraint).toSeq
@@ -1519,16 +1483,14 @@ object Resolution {
         // adding the initial config too in case it's the "provided" config
         keepConfigs = bomProject.allConfigurations.getOrElse(bomConfig0, Set()) + bomConfig0
       } yield {
-        val retainedEntries = bomProject.overrides.filter {
-          (k, v) =>
-            v.config.isEmpty || keepConfigs.contains(v.config)
+        val retainedEntries = bomProject.overrides.filterOnValues {
+          (k, c, _) =>
+            c.config.isEmpty || keepConfigs.contains(c.config)
         }
         withProperties(retainedEntries, projectProperties(bomProject).toMap)
       }): _*
     }
   lazy val bomDepMgmtOverrides = bomEntries(globalBomModuleVersions)
-  @deprecated("Use bomDepMgmtOverrides.flatten instead", "2.1.23")
-  def bomDepMgmt = bomDepMgmtOverrides.flatten.toMap
   lazy val hasAllBoms =
     allBomModuleVersions.forall { bomDep =>
       projectCache0.contains(bomDep.moduleVersionConstraint)
@@ -1540,34 +1502,41 @@ object Resolution {
       val rootDependencies0 =
         if (bomDepMgmtOverrides.isEmpty) rootDependenciesWithDefaultConfig
         else
-          rootDependenciesWithDefaultConfig.map { rootDep =>
-            val rootDep0 = rootDep.addOverrides(bomDepMgmtOverrides)
-            if (rootDep0.versionConstraint.asString.isEmpty)
-              bomDepMgmtOverrides.get(DependencyManagement.Key.from(rootDep0)) match {
-                case Some(values) => rootDep0.withVersionConstraint(values.versionConstraint)
-                case None         => rootDep0
-              }
+          rootDependenciesWithDefaultConfig.flatMap { rootDep =>
+            val rootDep0 = rootDep.serialNonCommutativeAddOverrides(bomDepMgmtOverrides)
+            if (rootDep0.versionConstraint.asString.isEmpty) {
+              val bomValues =
+                bomDepMgmtOverrides.values(DependencyManagement.Key.from(rootDep0)).toSeq
+              if (bomValues.isEmpty)
+                Seq(rootDep0)
+              else
+                bomValues.map { values =>
+                  if (values.versionConstraint.asString.isEmpty) rootDep0
+                  else rootDep0.withVersionConstraint(values.versionConstraint)
+                }
+            }
             else
-              rootDep0
+              Seq(rootDep0)
           }
-      rootDependencies0.map { rootDep =>
+      rootDependencies0.flatMap { rootDep =>
         val depBomDepMgmt = bomEntries(rootDep.bomDependencies)
         val overrideDepBomDepMgmt =
           bomEntries(rootDep.bomDependencies.filter(_.forceOverrideVersions))
-        val rootDep0 = rootDep.addOverrides(depBomDepMgmt)
+        val rootDep0 = rootDep.serialNonCommutativeAddOverrides(depBomDepMgmt)
         val key      = DependencyManagement.Key.from(rootDep0)
-        overrideDepBomDepMgmt.get(key) match {
-          case Some(overrideValues) =>
-            rootDep0.withVersionConstraint(overrideValues.versionConstraint)
-          case None =>
-            if (rootDep0.versionConstraint.asString.isEmpty)
-              depBomDepMgmt.get(key) match {
-                case Some(values) => rootDep0.withVersionConstraint(values.versionConstraint)
-                case None         => rootDep0
-              }
-            else
-              rootDep0
+        val deps = depBomDepMgmt.values(key).toSeq.map { values =>
+          if (rootDep0.versionConstraint.asString.isEmpty)
+            rootDep0.withVersionConstraint(values.versionConstraint)
+          else
+            rootDep0
         }
+        val overrideDeps = overrideDepBomDepMgmt.values(key).toSeq.flatMap { values =>
+          if (values.versionConstraint.asString.isEmpty) deps
+          else deps.map(_.withVersionConstraint(values.versionConstraint))
+        }
+        if (overrideDeps.nonEmpty) overrideDeps
+        else if (deps.nonEmpty) deps
+        else Seq(rootDep0)
       }
     }
     else
@@ -2040,17 +2009,9 @@ object Resolution {
           }
       )
         .filter(_.nonEmpty)
-        .map { input =>
-          Overrides(
-            DependencyManagement.addDependencies(
-              Map.empty,
-              input,
-              composeValues = enableDependencyOverrides
-            )
-          )
-        }
+        .map(SimpleOverrides.fromDependencies)
 
-    val depMgmt = Overrides.add(
+    val depMgmt = SimpleOverrides.serialNonCommutativeAdd(
       // our dep management
       // takes precedence over dep imports
       // that takes precedence over parents
@@ -2104,12 +2065,15 @@ object Resolution {
     * @return
     *   A minimized `dependencies`, applying this kind of substitutions.
     */
-  def minDependencies: Set[Dependency] =
+  lazy val minDependencies: Set[Dependency] =
     minimizedDependencies(
       withRetainedVersions = true,
       withReconciledVersions = false,
       withFallbackConfig = true
     )
+
+  lazy val minModules: Set[Module] =
+    minDependencies.map(_.module)
 
   def minimizedDependencies(
     withRetainedVersions: Boolean = true,
@@ -2158,6 +2122,14 @@ object Resolution {
       deps match {
         case Nil => LazyList.empty
         case h :: t =>
+          assert(
+            !isDone || errors0.nonEmpty || minModules.contains(h.module),
+            s"""Missing module: ${h.module.repr}
+               |
+               |  Minimized modules:
+               |${minModules.toVector.map(_.repr).sorted.mkString("\n")}
+               |""".stripMargin
+          )
           val h0 = if (keepOverrides) h else h.clearOverrides
           if (done.covers(h0))
             helper(t, done)

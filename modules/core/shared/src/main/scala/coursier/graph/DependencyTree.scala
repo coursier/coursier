@@ -1,6 +1,6 @@
 package coursier.graph
 
-import coursier.core.{Dependency, MinimizedExclusions, Resolution, VariantSelector}
+import coursier.core.{Dependency, MinimizedExclusions, Overrides, Resolution, VariantSelector}
 import coursier.version.{Version, VersionConstraint}
 
 import scala.annotation.tailrec
@@ -44,6 +44,7 @@ object DependencyTree {
     val roots0 = Option(roots).getOrElse(resolution.rootDependencies)
 
     roots0
+      .flatMap(_.split)
       .map { dep =>
         Node(dep, excluded = false, endorsed = false, resolution, withExclusions)
       }
@@ -53,8 +54,10 @@ object DependencyTree {
     resolution: Resolution,
     root: Dependency,
     withExclusions: Boolean = false
-  ): DependencyTree =
+  ): DependencyTree = {
+    assert(root.overridesMap.map.size == 1, "split dependency prior to calling that")
     Node(root, excluded = false, endorsed = false, resolution, withExclusions)
+  }
 
   private case class Node(
     initialDependency: Dependency,
@@ -63,6 +66,8 @@ object DependencyTree {
     resolution: Resolution,
     withExclusions: Boolean
   ) extends DependencyTree {
+
+    assert(initialDependency.overridesMap.map.size == 1)
 
     lazy val dependency: Dependency = {
 
@@ -150,28 +155,38 @@ object DependencyTree {
           )
           .toOption // FIXME Swallows errors
           .getOrElse(Nil)
+          .flatMap(_.split)
           .sortBy { trDep =>
             (trDep.module.organization, trDep.module.name, trDep.versionConstraint)
           }
 
         val globalOverrides = resolution.projectCache0
           .get(dependency.moduleVersionConstraint)
-          .map(_._2.overrides.global.flatten.toSeq)
+          .map(_._2.overrides.global.map.toSeq)
           .getOrElse(Nil)
           .collect {
             case (k, v) if resolution.dependencySet.containsModule(k.fakeModule) =>
-              v.fakeDependency(k).withTransitive(false)
+              v.list.map(_.fakeDependency(k).withTransitive(false))
           }
+          .flatten
 
         def excluded = {
           val dependencies0 = dependencies.map(_.moduleVersionConstraint).toSet
           resolution
             .dependenciesOf0(
-              dep0.withMinimizedExclusions(MinimizedExclusions.zero),
+              dep0.withOverridesMap {
+                assert(dep0.overridesMap.map.size == 1)
+                if (dep0.overridesMap.map.head._1 == MinimizedExclusions.zero) dep0.overridesMap
+                else
+                  Overrides(
+                    Map(MinimizedExclusions.zero -> dep0.overridesMap.map.head._2)
+                  )
+              },
               withRetainedVersions = false
             )
             .toOption
             .getOrElse(Nil)
+            .flatMap(_.split)
             .sortBy { trDep =>
               (trDep.module.organization, trDep.module.name, trDep.versionConstraint)
             }
