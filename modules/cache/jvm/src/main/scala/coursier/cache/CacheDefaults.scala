@@ -99,6 +99,22 @@ object CacheDefaults {
 
   val bufferSize = 1024 * 1024
 
+  /** Whether to retry connections across all resolved IP addresses when the first IP fails */
+  lazy val retryResolvedIps: Boolean =
+    sys.props
+      .get(CacheEnv.retryResolvedIps.propName)
+      .orElse(sys.env.get(CacheEnv.retryResolvedIps.envName))
+      .forall(!_.equalsIgnoreCase("false"))
+
+  /** Per-IP connection timeout in milliseconds when retrying resolved IPs (default: 3000 ms) */
+  lazy val perIpTimeoutMs: Int =
+    sys.props
+      .get(CacheEnv.perIpTimeoutMs.propName)
+      .orElse(sys.env.get(CacheEnv.perIpTimeoutMs.envName))
+      .flatMap(s => scala.util.Try(s.toInt).toOption)
+      .filter(_ > 0)
+      .getOrElse(3000)
+
   lazy val credentials: Seq[Credentials] =
     CacheEnv.defaultCredentials(
       CacheEnv.credentials.read(),
