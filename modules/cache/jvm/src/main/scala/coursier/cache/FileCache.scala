@@ -128,7 +128,10 @@ import scala.util.control.NonFatal
       hostnameVerifierOpt,
       bufferSize,
       classLoaders,
-      clock
+      clock,
+      retryCount = retry,
+      retryBackoffInitialDelay = retryBackoffInitialDelay,
+      retryBackoffMultiplier = retryBackoffMultiplier
     ).download
 
   def validateChecksum(

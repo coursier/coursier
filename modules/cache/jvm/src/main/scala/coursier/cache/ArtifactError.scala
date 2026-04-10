@@ -75,11 +75,22 @@ object ArtifactError {
   // format: on
 
   // format: off
+  @deprecated("Scheduled to be removed", "2.1.25")
   final class RetryableServerError(
     val url: String,
     val responseCode: Int
   ) extends ArtifactError(
     "retryable server error",
+    s"$url (HTTP $responseCode)"
+  )
+  // format: on
+
+  // format: off
+  final class InternalServerError(
+    val url: String,
+    val responseCode: Int
+  ) extends ArtifactError(
+    "internal server error",
     s"$url (HTTP $responseCode)"
   )
   // format: on
