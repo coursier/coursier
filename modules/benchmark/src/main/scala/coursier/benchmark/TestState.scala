@@ -2,6 +2,7 @@ package coursier.benchmark
 
 import coursier.cache.Cache
 import coursier.core.{Configuration, ResolutionProcess}
+import coursier.version.Version
 import coursier.{Repositories, Resolve}
 import coursier.internal.InMemoryCachingFetcher
 import coursier.maven.{MavenRepository, Pom}
@@ -27,14 +28,9 @@ class TestState {
     Repositories.central
   )
 
-  val repositoriesDom = {
-    val l = Seq(
-      MavenRepository("https://repo1.maven.org/maven2")
-    )
-    for (r <- l)
-      r.useSaxParser = false
-    l
-  }
+  val repositoriesDom = Seq(
+    MavenRepository("https://repo1.maven.org/maven2")
+  )
 
   val pool = Sync.fixedThreadPool(6)
   val ec   = ExecutionContext.fromExecutorService(pool)
@@ -71,9 +67,9 @@ class TestState {
         val name = m.name.value
         val url  = s"https://repo1.maven.org/maven2/${org.replace('.', '/')}/$name/$v/$name-$v.pom"
         val str  = inMemoryCache.fromCache(url)
-        val p    = MavenRepository.parseRawPomDom(str).toOption.get
+        val p    = MavenRepository.parseRawPomSax(str).toOption.get
         val p0 = Pom.addOptionalDependenciesInConfig(
-          p.withActualVersionOpt0(Some(v))
+          p.withActualVersionOpt0(Some(Version(v)))
             .withConfigurations(MavenRepository.defaultConfigurations),
           Set(Configuration.empty, Configuration.default),
           Configuration.optional

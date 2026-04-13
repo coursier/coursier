@@ -5,6 +5,7 @@ import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
 import coursierbuild.Relativize.{relativize => doRelativize}
 import coursierbuild.{DocHelpers, GitHubReleaseAssets, Shading, Sync, Workers}
 import coursierbuild.modules._
+import mill.contrib.jmh.JmhModule
 
 import _root_.coursier.getcs.GetCs
 
@@ -63,6 +64,17 @@ object cache extends Module {
   object js     extends Cross[CacheJs](ScalaVersions.all)
 }
 object `archive-cache`      extends Cross[ArchiveCache](ScalaVersions.all)
+object `benchmark` extends ScalaModule with JmhModule {
+  def scalaVersion: mill.api.Task.Simple[String] = ScalaVersions.scala213
+  def moduleDeps = Seq(
+    coursier.jvm(ScalaVersions.scala213)
+  )
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    mvn"org.apache.maven:maven-model:3.9.11"
+  )
+  def jmhCoreVersion = "1.35"
+}
+  
 object launcher             extends Cross[Launcher](ScalaVersions.all)
 object env                  extends Cross[Env](ScalaVersions.all)
 object `launcher-native_04` extends LauncherNative04

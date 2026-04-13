@@ -32,7 +32,7 @@ class ParseTests {
     val content = state.inMemoryCache.fromCache(
       "https://repo1.maven.org/maven2/org/apache/spark/spark-parent_2.12/2.4.0/spark-parent_2.12-2.4.0.pom"
     )
-    val res = MavenRepository.parseRawPomDom(content)
+    val res = MavenRepository.parseRawPomSax(content)
     assert(res.isRight)
   }
 
