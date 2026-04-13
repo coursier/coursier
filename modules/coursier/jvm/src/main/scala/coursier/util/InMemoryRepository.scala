@@ -258,7 +258,7 @@ object InMemoryRepository {
                 None,
                 Nil,
                 Info.empty,
-                Overrides.empty,
+                SimpleOverrides.empty,
                 Map.empty,
                 Map.empty
               )

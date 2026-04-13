@@ -325,7 +325,7 @@ object Launchers {
 
     def standaloneLauncher = Task {
 
-      val cachePath = os.Path(coursier.cache.FileCache().location, BuildCtx.workspaceRoot)
+      val cachePath = os.Path(coursier.cache.CacheDefaults.location, BuildCtx.workspaceRoot)
       def urlOf(path: os.Path): Option[String] =
         if (path.startsWith(cachePath)) {
           val segments = path.relativeTo(cachePath).segments

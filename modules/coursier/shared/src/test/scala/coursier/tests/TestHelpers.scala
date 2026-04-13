@@ -256,7 +256,6 @@ object TestHelpers extends PlatformTestHelpers {
       attributesBasedReprAsToString = attributesBasedReprAsToString
     ) {
       res.orderedDependencies
-        .map(_.clearExclusions)
         .map { dep =>
           Seq(
             dep.module.organization.value,

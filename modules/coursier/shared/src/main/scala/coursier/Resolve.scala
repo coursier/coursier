@@ -85,8 +85,8 @@ import scala.language.higherKinds
         exclusions(dep.module.organization, dep.module.name)
       }
       .map { dep =>
-        dep.withMinimizedExclusions(
-          dep.minimizedExclusions.join(exclusions)
+        dep.withOverridesMap(
+          dep.overridesMap.addExclusions(exclusions)
         )
       }
   }

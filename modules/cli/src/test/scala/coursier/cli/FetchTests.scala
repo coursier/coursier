@@ -530,7 +530,7 @@ object FetchTests extends TestSuite {
       }
     }
 
-    test("fail to resolve, but try to fetch artifacts anyway") {
+    test("fail to resolve but try to fetch artifacts anyway") {
       val artifactOptions = ArtifactOptions(
         forceFetch = true
       )
