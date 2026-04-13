@@ -156,7 +156,7 @@ object DependencyTree {
 
         val globalOverrides = resolution.projectCache0
           .get(dependency.moduleVersionConstraint)
-          .map(_._2.overrides.global.flatten.toSeq)
+          .map(_._2.overrides.filter((_, v) => v.global).flatten.toSeq)
           .getOrElse(Nil)
           .collect {
             case (k, v) if resolution.dependencySet.containsModule(k.fakeModule) =>
