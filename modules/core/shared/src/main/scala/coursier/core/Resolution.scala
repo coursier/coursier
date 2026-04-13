@@ -338,18 +338,22 @@ object Resolution {
         case Some(f) => f(mod)
         case _       => ConstraintReconciliation.Default
       }
-    val constraints = dependencies
-      .iterator
-      .flatMap(_.overridesMap.global.flatten.iterator)
-      .map {
-        case (k, v) =>
-          v.fakeDependency(k)
-      }
-      .toSeq
-      .groupBy(_.module)
-      .map {
-        case (mod, list) =>
-          (mod, list.map(_.versionConstraint))
+    // Performance sensitive, hence the use of a mutable map
+    val constraints = mutable.HashMap[Module, mutable.ArrayBuffer[VersionConstraint0]]()
+    for { dep <- dependencies }
+      if (dep.overridesMap.mayContainGlobal) {
+        import scala.collection.compat._
+        dep.overridesMap.map.foreachEntry {
+          (k, v) =>
+            if (v.global) {
+              val fakeDep = v.fakeDependency(k)
+              val b = constraints.getOrElseUpdate(
+                fakeDep.module,
+                mutable.ArrayBuffer[VersionConstraint0]()
+              )
+              b += fakeDep.versionConstraint
+            }
+        }
       }
     val dependencies0 = dependencies.toVector
     val mergedByModVer = dependencies0
@@ -438,6 +442,46 @@ object Resolution {
     )
   }
 
+  private def dictForOverrideMapImpl(
+    rawOverrides: Overrides,
+    versionsGrouped: Map[DependencyManagement.Key, Seq[(Variant, Dependency)]],
+    forceDepMgmtVersions: Boolean,
+    keptDependencyManagement: Overrides
+  ): Overrides = {
+    val versions = versionsGrouped.collect {
+      case (k, l)
+          if !rawOverrides.contains(k) && l.exists(_._2.versionConstraint.asString.nonEmpty) =>
+        k -> l.map(_._2.versionConstraint.asString).filter(_.nonEmpty)
+    }
+    val map = keptDependencyManagement
+      .transform {
+        case (k, v) =>
+          val clearVersion = !forceDepMgmtVersions &&
+            versions
+              .get(k)
+              .getOrElse(Nil)
+              .exists(_ != v.versionConstraint.asString)
+          val newConfig  = Configuration.empty
+          val newVersion = if (clearVersion) VersionConstraint0.empty else v.versionConstraint
+          val values =
+            if (v.config != newConfig || v.versionConstraint != newVersion || v.optional)
+              DependencyManagement.Values(
+                newConfig,
+                newVersion,
+                v.minimizedExclusions,
+                optional = false
+              )
+            else
+              v
+          values
+      }
+    Overrides.add(
+      rawOverrides,
+      map
+    )
+
+  }
+
   /** Applies `dependencyManagement` to `dependencies`.
     *
     * Fill empty version / scope / exclusions, for dependencies found in `dependencyManagement`.
@@ -457,62 +501,55 @@ object Resolution {
 
     // See http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Management
 
-    lazy val dict = Overrides.add(
-      overridesOpt.getOrElse(Overrides.empty),
-      dependencyManagement
-    )
-
-    lazy val dictForOverridesOpt = rawOverridesOpt.map { rawOverrides =>
-      lazy val versions = dependencies
+    lazy val versionsGrouped: Map[DependencyManagement.Key, Seq[(Variant, Dependency)]] =
+      dependencies
         .filter {
           case (variant, _) =>
             variant.isEmpty || keepVariant(variant)
         }
         .groupBy(_._2.depManagementKey)
-        .collect {
-          case (k, l)
-              if !rawOverrides.contains(k) && l.exists(_._2.versionConstraint.asString.nonEmpty) =>
-            k -> l.map(_._2.versionConstraint.asString).filter(_.nonEmpty)
-        }
-      val map = dependencyManagement
-        .filter {
-          case (k, v) =>
-            v.config.isEmpty || keepVariant(Variant.Configuration(v.config))
-        }
-        .map {
-          case (k, v) =>
-            val clearVersion = !forceDepMgmtVersions &&
-              versions
-                .get(k)
-                .getOrElse(Nil)
-                .exists(_ != v.versionConstraint.asString)
-            val newConfig  = Configuration.empty
-            val newVersion = if (clearVersion) VersionConstraint0.empty else v.versionConstraint
-            val values =
-              if (v.config != newConfig || v.versionConstraint != newVersion || v.optional)
-                DependencyManagement.Values(
-                  newConfig,
-                  newVersion,
-                  v.minimizedExclusions,
-                  optional = false
-                )
-              else
-                v
-            (k, values)
-        }
-      Overrides.add(
-        rawOverrides,
-        map
+    lazy val keptDependencyManagement = dependencyManagement
+      .filter {
+        case (k, v) =>
+          v.config.isEmpty || keepVariant(Variant.Configuration(v.config))
+      }
+    lazy val dictForOverridesOpt = rawOverridesOpt.map { rawOverrides =>
+      val key = (
+        "dictForOverridesOpt",
+        versionsGrouped,
+        forceDepMgmtVersions,
+        keptDependencyManagement
       )
+      // Performance hotspot, we repeat this operation with the same inputs so memoisation is beneficial
+      // But `rawOverrides` is typically a large HashMap, so if that were include in the key of a global
+      // cache the equality check before confirming a cache hit is rather large. Instead, we have host
+      // the cache _within_ `rawOverrides`. In practice we get the same instance here for many dependencies
+      // and cache hits are more common that misses.
+      rawOverrides.cached(key)(dictForOverrideMapImpl(
+        rawOverrides,
+        versionsGrouped,
+        forceDepMgmtVersions,
+        keptDependencyManagement
+      ))
     }
+    val overridesOrEmpty = overridesOpt.getOrElse(Overrides.empty)
+
+    def dict(key: DependencyManagement.Key): Option[DependencyManagement.Values] =
+      overridesOrEmpty.map.getOrElse(key, null) match {
+        case null => dependencyManagement.get(key)
+        case prev =>
+          dependencyManagement.map.getOrElse(key, null) match {
+            case null   => Some(prev)
+            case values => Some(prev.orElse(values))
+          }
+      }
 
     dependencies.map {
       case (variant0, dep0) =>
         var variant = variant0
         var dep     = dep0
 
-        for (mgmtValues <- dict.get(dep0.depManagementKey)) {
-
+        for (mgmtValues <- dict(dep0.depManagementKey)) {
           val useManagedVersion = mgmtValues.versionConstraint.asString.nonEmpty && (
             forceDepMgmtVersions ||
             overridesOpt.isEmpty ||
