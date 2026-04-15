@@ -2,6 +2,7 @@ package coursier.maven
 
 import coursier.core._
 import coursier.core.Validation._
+import coursier.core.LazyProperties
 import coursier.util.SaxHandler
 import coursier.version.{VersionConstraint, VersionParse}
 
@@ -163,7 +164,7 @@ object PomParser {
       val versionOpt = Some(version).filter(_.nonEmpty)
         .orElse(Some(parentVersion).filter(_.nonEmpty))
 
-      val properties0 = properties.toList
+      val properties0 = LazyProperties.merge(Seq(properties.toList))
 
       val parentModuleOpt =
         for {

@@ -1,16 +1,21 @@
 package coursier.core
 
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
-
 import coursier.core.Validation._
 import coursier.error.VariantError
 import coursier.util.Artifact
 import coursier.version.{Version => Version0}
 import dataclass.data
+import scala.util.hashing.MurmurHash3
 
 final case class Organization(value: String) extends AnyVal {
-  def map(f: String => String): Organization =
-    Organization(f(value))
+  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  def map(f: String => String): Organization = {
+    val o = PropertyExpr.applySubstitution(value, f)
+    if (o eq value) this
+    else Organization(o)
+  }
 }
 
 object Organization {
@@ -19,8 +24,12 @@ object Organization {
 }
 
 final case class ModuleName(value: String) extends AnyVal {
-  def map(f: String => String): ModuleName =
-    ModuleName(f(value))
+  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  def map(f: String => String): ModuleName = {
+    val newName = PropertyExpr.applySubstitution(value, f)
+    if (newName eq value) this
+    else ModuleName(newName)
+  }
 }
 
 object ModuleName {
@@ -96,8 +105,12 @@ final case class Type(value: String) extends AnyVal {
     value.isEmpty
   def nonEmpty: Boolean =
     value.nonEmpty
-  def map(f: String => String): Type =
-    Type(f(value))
+  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  def map(f: String => String): Type = {
+    val newValue = PropertyExpr.applySubstitution(value, f)
+    if (newValue eq value) this
+    else Type(newValue)
+  }
 
   def asExtension: Extension =
     Extension(value)
@@ -146,8 +159,13 @@ final case class Classifier(value: String) extends AnyVal {
     value.isEmpty
   def nonEmpty: Boolean =
     value.nonEmpty
-  def map(f: String => String): Classifier =
-    Classifier(f(value))
+
+  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  def map(f: String => String): Classifier = {
+    val newValue = PropertyExpr.applySubstitution(value, f)
+    if (newValue eq value) this
+    else Classifier(newValue)
+  }
 }
 
 object Classifier {
@@ -188,8 +206,13 @@ final case class Configuration(value: String) extends AnyVal {
     value.nonEmpty
   def -->(target: Configuration): Configuration =
     Configuration(s"$value->${target.value}")
-  def map(f: String => String): Configuration =
-    Configuration(f(value))
+
+  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  def map(f: String => String): Configuration = {
+    val newValue = PropertyExpr.applySubstitution(value, f)
+    if (newValue eq value) this
+    else Configuration(newValue)
+  }
 }
 
 object Configuration {

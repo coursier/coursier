@@ -282,7 +282,10 @@ trait UtilJs extends CsScalaJsModule with Util {
 
 trait CoreJvm extends Core with CoreJvmBase with Shading {
   def sources = Task {
-    super.sources() ++ core.shared.sources()
+    val versionSources =
+      if (scalaVersion().startsWith("2.13")) core.shared.sourcesScala213()
+      else core.shared.sourcesScala212()
+    super.sources() ++ core.shared.sources() ++ versionSources
   }
   def moduleDeps = super.moduleDeps ++ Seq(
     util.jvm()
@@ -303,7 +306,10 @@ trait CoreJvm extends Core with CoreJvmBase with Shading {
 }
 trait CoreJs extends Core with CsScalaJsModule {
   def sources = Task {
-    super.sources() ++ core.shared.sources()
+    val versionSources =
+      if (scalaVersion().startsWith("2.13")) core.shared.sourcesScala213()
+      else core.shared.sourcesScala212()
+    super.sources() ++ core.shared.sources() ++ versionSources
   }
   def moduleDeps = super.moduleDeps ++ Seq(
     util.js()
