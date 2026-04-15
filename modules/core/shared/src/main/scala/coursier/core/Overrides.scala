@@ -152,15 +152,7 @@ object Overrides {
       try {
         import scala.collection.compat._
         map.foreachEntry { (k, v) =>
-          if (
-            k.organization.value.contains("$") ||
-            k.name.value.contains("$") ||
-            k.classifier.value.contains("$") ||
-            k.`type`.value.contains("$") ||
-            v.config.value.contains("$") ||
-            v.versionConstraint.asString.contains("$") ||
-            v.minimizedExclusions.hasProperties
-          ) throw Found
+          if (k.hasProperties || v.hasProperties) throw Found
         }
         false
       }
