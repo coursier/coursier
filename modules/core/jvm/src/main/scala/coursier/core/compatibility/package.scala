@@ -1,17 +1,18 @@
 package coursier.core
 
-import java.io.CharArrayReader
+import java.io.{CharArrayReader, StringWriter}
 import java.util.Locale
 import javax.xml.parsers.ParserConfigurationException
 import javax.xml.parsers.SAXParserFactory
 import javax.xml.XMLConstants
-
 import coursier.util.{SaxHandler, Xml}
 import org.xml.sax
-import org.xml.sax.InputSource
+import org.xml.sax.{InputSource, XMLReader}
 import org.xml.sax.helpers.DefaultHandler
 
+import java.lang.ThreadLocal
 import scala.collection.compat.immutable.LazyList
+import scala.util.control.NonFatal
 import scala.xml.{Attribute, Elem, MetaData, Null}
 
 package object compatibility {
@@ -45,47 +46,111 @@ package object compatibility {
     }
     null
   }
+  import java.io.{CharArrayReader, Reader, StringReader}
 
-  private def substituteEntities(s: String): String = {
+  object EntitySubstitution {
 
-    val b      = new StringBuilder
-    lazy val a = s.toCharArray
-
-    var i = 0
-
-    var j       = 0
-    val sLength = s.length
-    while (j < sLength && j < utf8BomLength && s.charAt(i) == utf8Bom.charAt(j))
-      j += 1
-
-    if (j == utf8BomLength)
-      i = j
-
-    var found: (Int, Int) = null
-    while ({
-      found = entityIdx(s, i)
-      found ne null
-    }) {
-      val from = found._1
-      val to   = found._2
-
-      b.appendAll(a, i, from - i)
-
-      val name        = s.substring(from, to)
-      val replacement = Entities.mapFast(name)
-      b.appendAll(replacement)
-
-      i = to
+    def processToString(s: String): String = {
+      val reader = process(s)
+      try {
+        val sb  = new StringBuilder(s.length);
+        val buf = new Array[Char](8192);
+        var n   = 0
+        while ({ n = reader.read(buf); n != -1 })
+          sb.appendAll(buf, 0, n)
+        sb.toString
+      }
+      finally
+        reader.close()
     }
+    def process(s: String): Reader = {
+      val len = s.length
+      if (len == 0) return new StringReader("")
 
-    if (i == 0)
-      s
-    else
-      b.appendAll(a, i, s.length - i).result()
+      // Skip BOM if present
+      val hasBom = s.charAt(0) == '\uFEFF'
+      val start  = if (hasBom) 1 else 0
+
+      var dst: Array[Char] = null
+      var readPtr          = start
+      var writePtr         = 0
+
+      // Leapfrog from ampersand to ampersand
+      var nextAmp = s.indexOf('&', readPtr)
+
+      if (nextAmp == -1) {
+        // Fast path: No ampersands at all
+        if (hasBom) {
+          val reader = new StringReader(s)
+          reader.skip(1)
+          reader.mark(len - 1)
+          return reader
+        }
+        return new StringReader(s)
+      }
+
+      while (readPtr < len)
+        if (nextAmp == -1 || readPtr < nextAmp) {
+          // We are between the current readPtr and the next ampersand (or end of string)
+          val limit    = if (nextAmp == -1) len else nextAmp
+          val chunkLen = limit - readPtr
+
+          if (dst != null) {
+            s.getChars(readPtr, limit, dst, writePtr)
+            writePtr += chunkLen
+          }
+          else
+            // If we haven't allocated dst yet, we just "virtually" move the writePtr
+            writePtr += chunkLen
+          readPtr = limit
+        }
+        else {
+          // We are exactly at an ampersand
+          val semiIdx = s.indexOf(';', readPtr + 1)
+
+          // Spec check: entity must close within 11 chars (&...;)
+          if (semiIdx != -1 && (semiIdx - readPtr) <= 11) {
+            val entityNameWithAmpAndSemi = s.substring(readPtr, semiIdx + 1)
+            val replacement              = Entities.mapFast(entityNameWithAmpAndSemi)
+
+            if (replacement != null) {
+              // Lazy initialization on first confirmed substitution
+              if (dst == null) {
+                dst = new Array[Char](len)
+                // Copy everything skipped so far (the clean prefix, after BOM)
+                s.getChars(start, readPtr, dst, 0)
+                // writePtr was already tracking our virtual position
+              }
+
+              replacement.getChars(0, replacement.length, dst, writePtr)
+              writePtr += replacement.length
+              readPtr = semiIdx + 1
+            }
+            else {
+              // Found &...; but not a spec entity, treat '&' as literal
+              if (dst != null) dst(writePtr) = '&'
+              writePtr += 1
+              readPtr += 1
+            }
+          }
+          else {
+            // Lone '&' or ';' too far away
+            if (dst != null) dst(writePtr) = '&'
+            writePtr += 1
+            readPtr += 1
+          }
+
+          // Find the next ampersand for the next iteration
+          nextAmp = s.indexOf('&', readPtr)
+        }
+
+      if (dst == null) new StringReader(s)
+      else new CharArrayReader(dst, 0, writePtr)
+    }
   }
 
   def xmlPreprocess(s: String): String =
-    substituteEntities(s)
+    EntitySubstitution.processToString(s)
 
   private final class XmlHandler(handler: SaxHandler) extends DefaultHandler {
     override def startElement(
@@ -131,15 +196,24 @@ package object compatibility {
     spf0
   }
 
-  def xmlParseSax(str: String, handler: SaxHandler): handler.type = {
-
-    val str0 = xmlPreprocess(str)
-
+  private def newXmlReader = {
     val saxParser = spf.newSAXParser()
-    val xmlReader = saxParser.getXMLReader
-    xmlReader.setContentHandler(new XmlHandler(handler))
-    xmlReader.parse(new InputSource(new CharArrayReader(str0.toCharArray)))
-    handler
+    saxParser.getXMLReader
+  }
+  private val reusedParser = ThreadLocal.withInitial(() => newXmlReader)
+  def xmlParseSax(str: String, handler: SaxHandler): handler.type = {
+    val reader = EntitySubstitution.process(str)
+    try {
+      val xmlReader = reusedParser.get()
+      xmlReader.setContentHandler(new XmlHandler(handler))
+      xmlReader.parse(new org.xml.sax.InputSource(reader))
+      handler
+    }
+    catch {
+      case NonFatal(e) =>
+        reusedParser.remove()
+        throw e
+    }
   }
 
   def xmlParseDom(s: String): Either[String, Xml.Node] = {
@@ -193,7 +267,7 @@ package object compatibility {
 
   def xmlParse(s: String): Either[String, Xml.Node] = {
 
-    val content = substituteEntities(s)
+    val content = EntitySubstitution.processToString(s)
 
     val parse =
       try Right(scala.xml.XML.loadString(content))

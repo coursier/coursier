@@ -63,7 +63,7 @@ object cache extends Module {
   object jvm    extends Cross[CacheJvm](ScalaVersions.all)
   object js     extends Cross[CacheJs](ScalaVersions.all)
 }
-object `archive-cache`      extends Cross[ArchiveCache](ScalaVersions.all)
+object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.all)
 object `benchmark` extends ScalaModule with JmhModule {
   def scalaVersion: mill.api.Task.Simple[String] = ScalaVersions.scala213
   def moduleDeps = Seq(
@@ -74,7 +74,7 @@ object `benchmark` extends ScalaModule with JmhModule {
   )
   def jmhCoreVersion = "1.35"
 }
-  
+
 object launcher             extends Cross[Launcher](ScalaVersions.all)
 object env                  extends Cross[Env](ScalaVersions.all)
 object `launcher-native_04` extends LauncherNative04

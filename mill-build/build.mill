@@ -11,6 +11,6 @@ object `package` extends MillBuildRootModule {
     mvn"io.github.alexarchambault.mill::mill-native-image::0.2.2",
     mvn"org.jsoup:jsoup:1.21.2",
     mvn"com.eed3si9n.jarjarabrams:jarjar-abrams-core_2.13:1.14.1",
-    mvn"com.lihaoyi::mill-contrib-jmh:1.1.3",
+    mvn"com.lihaoyi::mill-contrib-jmh:1.1.3"
   )
 }
