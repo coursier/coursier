@@ -1672,8 +1672,9 @@ object Resolution {
     val nextModules = nextDependenciesAndConflicts._2
       .map(_.moduleVersionConstraint)
 
-    (boms ++ modules ++ nextModules)
-      .filterNot(mod => projectCache0.contains(mod) || errorCache.contains(mod))
+    Seq(boms, modules, nextModules).iterator.flatMap(_.filterNot(mod =>
+      projectCache0.contains(mod) || errorCache.contains(mod)
+    )).toSet
   }
 
   /** Whether the resolution is done.
