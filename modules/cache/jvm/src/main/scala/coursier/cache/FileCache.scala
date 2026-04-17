@@ -58,7 +58,7 @@ import scala.util.control.NonFatal
     retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier
 )(implicit
   sync: Sync[F]
-) extends Cache[F] {
+) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext with Cache.WithLogger[F, FileCache[F]] with Cache.Default[F] {
   // format: on
 
   private def S = sync
@@ -134,6 +134,7 @@ import scala.util.control.NonFatal
       retryBackoffMultiplier = retryBackoffMultiplier
     ).download
 
+  // Should have been private[coursier]
   def validateChecksum(
     artifact: Artifact,
     sumType: String
@@ -185,7 +186,30 @@ import scala.util.control.NonFatal
     }
   }
 
-  private def filePerPolicy(
+  private[coursier] def finalLocalPath(artifact: Artifact): F[File] = {
+
+    val artifactTask = allCredentials.map { allCredentials =>
+      if (artifact.authentication.isEmpty) {
+        val authOpt = allCredentials
+          .find(_.autoMatches(artifact.url, None))
+          .map(_.authentication)
+        artifact.withAuthentication(authOpt)
+      }
+      else
+        artifact
+    }
+
+    artifactTask.map { artifact0 =>
+      FileCache.localFile0(
+        artifact0.url,
+        location,
+        artifact0.authentication.flatMap(_.userOpt),
+        localArtifactsShouldBeCached
+      )
+    }
+  }
+
+  def filePerPolicy(
     artifact: Artifact,
     policy: CachePolicy,
     retry: Int = retry
@@ -303,7 +327,7 @@ import scala.util.control.NonFatal
         .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry))(_ orElse _)
     }
 
-  private def fetchPerPolicy(
+  private[coursier] def fetchPerPolicy(
     artifact: Artifact,
     policy: CachePolicy
   ): EitherT[F, String, String] = {

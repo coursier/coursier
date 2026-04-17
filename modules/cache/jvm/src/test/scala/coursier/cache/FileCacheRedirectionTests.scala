@@ -30,7 +30,14 @@ object FileCacheRedirectionTests extends TestSuite {
   override def utestAfterAll() =
     pool.shutdown()
 
-  private def fileCache0() = FileCache()
+  private def defaultCache() =
+    Cache.default match {
+      case fc: FileCache[Task] => fc
+      case other =>
+        sys.error(s"Expected default cache to be a FileCache, got $other")
+    }
+
+  private def fileCache0() = defaultCache()
     .noCredentials
     .withSslSocketFactory(dummyClientSslContext.getSocketFactory)
     .withHostnameVerifier(dummyHostnameVerifier)
@@ -1021,7 +1028,7 @@ object FileCacheRedirectionTests extends TestSuite {
           val artifact = Artifact("unknown.protocol://hostname/file.txt")
 
           val res = await {
-            FileCache()
+            defaultCache()
               .file(artifact)
               .run
               .future()
@@ -1058,7 +1065,7 @@ object FileCacheRedirectionTests extends TestSuite {
             val artifact = Artifact("customprotocol://hostname/README.md")
 
             val res = await {
-              FileCache()
+              defaultCache()
                 .withClassLoaders(Seq(classloader))
                 .withLocation(dir.toFile)
                 .file(artifact)
@@ -1101,7 +1108,7 @@ object FileCacheRedirectionTests extends TestSuite {
 
         test - async {
           val res = await {
-            FileCache()
+            defaultCache()
               .withChecksums(Seq(Some("SHA-1")))
               .file(artifact)
               .run
@@ -1113,7 +1120,7 @@ object FileCacheRedirectionTests extends TestSuite {
 
         test - async {
           val res = await {
-            FileCache()
+            defaultCache()
               .withChecksums(Seq(Some("SHA-256")))
               .file(artifact)
               .run
@@ -1134,7 +1141,7 @@ object FileCacheRedirectionTests extends TestSuite {
 
         test - async {
           val res = await {
-            FileCache()
+            defaultCache()
               .withChecksums(Seq(Some("SHA-512"), Some("SHA-256")))
               .file(artifact)
               .run
@@ -1246,7 +1253,7 @@ object FileCacheRedirectionTests extends TestSuite {
         )
 
         val res =
-          FileCache()
+          defaultCache()
             .withLocation(dir.toString)
             .withChecksums(Seq(Some("SHA-1")))
             .file(artifact)
@@ -1282,7 +1289,7 @@ object FileCacheRedirectionTests extends TestSuite {
           None
         )
 
-        val res = FileCache()
+        val res = defaultCache()
           .withLocation(dir.toString)
           .withChecksums(Seq(Some("MD5")))
           .file(artifact)
@@ -1319,7 +1326,7 @@ object FileCacheRedirectionTests extends TestSuite {
         )
 
         // use default location so our file is considered outside
-        val _ = FileCache()
+        val _ = defaultCache()
           .withChecksums(Seq(Some("MD5")))
           .file(artifact)
           .run
@@ -1345,7 +1352,7 @@ object FileCacheRedirectionTests extends TestSuite {
             None
           )
 
-          FileCache()
+          defaultCache()
             .withLocation(dir.toString)
             .withChecksums(Seq(Some("SHA-1")))
             .file(artifact)
@@ -1372,7 +1379,7 @@ object FileCacheRedirectionTests extends TestSuite {
         val artifact = Artifact(dummyFileUri)
           .withChecksumUrls(Map("SHA-1" -> s"$dummyFileUri.sha1"))
 
-        val res = FileCache()
+        val res = defaultCache()
           .withLocation(dir.toString)
           .file(artifact)
           .run

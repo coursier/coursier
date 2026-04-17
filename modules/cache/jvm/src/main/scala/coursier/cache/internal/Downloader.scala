@@ -2,6 +2,7 @@ package coursier.cache.internal
 
 import java.io.{Serializable => _, _}
 import java.net.{HttpURLConnection, URLConnection, MalformedURLException}
+import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{AccessDeniedException, Files, StandardCopyOption, StandardOpenOption}
 import java.time.Clock
@@ -250,7 +251,8 @@ import scala.util.control.NonFatal
           // Mark http 500 errors as retryable, to mitigate flakiness
           Left(new ArtifactError.InternalServerError(url, respCodeOpt.get))
         else {
-          for (len0 <- Option(conn.getContentLengthLong) if len0 >= 0L) {
+          val lenOpt = Option(conn.getContentLengthLong).filter(_ >= 0L)
+          for (len0 <- lenOpt) {
             val len = len0 + (if (partialDownload) alreadyDownloaded else 0L)
             logger.downloadLength(url, len, alreadyDownloaded, watching = false)
           }
@@ -275,10 +277,26 @@ import scala.util.control.NonFatal
             new BufferedInputStream(baseStream, bufferSize)
           }
 
+          val tmp0    = tmp.toPath
+          val lenFile = tmp0.getParent.resolve(tmp0.getFileName.toString + ".length")
           val result =
             try {
               val out = CacheLocks.withStructureLock(location) {
-                Util.createDirectories(tmp.toPath.getParent)
+                Util.createDirectories(tmp0.getParent)
+                for (len0 <- lenOpt) {
+                  val lenBytes = ByteBuffer.allocate(8).putLong(len0).array()
+                  val tmpLen = Files.createTempFile(
+                    lenFile.getParent,
+                    lenFile.getFileName.toString.stripSuffix(".length"),
+                    ".length"
+                  )
+                  Files.write(tmpLen, lenBytes)
+                  try Files.move(tmpLen, lenFile, StandardCopyOption.ATOMIC_MOVE)
+                  catch {
+                    case _: java.nio.file.AtomicMoveNotSupportedException =>
+                      Files.move(tmpLen, lenFile)
+                  }
+                }
                 if (partialDownload)
                   Files.newOutputStream(tmp.toPath, StandardOpenOption.APPEND)
                 else
@@ -294,7 +312,11 @@ import scala.util.control.NonFatal
                 )
               finally out.close()
             }
-            finally in.close()
+            finally {
+              in.close()
+              for (len0 <- lenOpt)
+                Files.deleteIfExists(lenFile)
+            }
 
           FileCache.clearAuxiliaryFiles(file)
 

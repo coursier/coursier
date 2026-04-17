@@ -2,10 +2,10 @@ package coursier.docker
 
 import coursier.cache.{
   ArchiveCache,
+  Cache,
   DigestArtifact,
   DigestBasedArchiveCache,
-  DigestBasedCache,
-  FileCache
+  DigestBasedCache
 }
 import coursier.docker.DockerFile.WithLines
 import coursier.util.Task
@@ -75,7 +75,7 @@ object DockerBuild {
     dockerFile: Option[os.Path],
     vmOpt: Option[Vm],
     authRegistry: String = DockerPull.defaultAuthRegistry,
-    cache: FileCache[Task] = FileCache(),
+    cache: Cache[Task] with Cache.HasLocation = Cache.default,
     os0: String = DockerPull.defaultOs,
     arch: String = DockerPull.defaultArch,
     archVariant: Option[String] = DockerPull.defaultArchVariant
@@ -115,7 +115,7 @@ object DockerBuild {
     fromRepoVersion: String,
     contextDir: os.Path,
     authRegistry: String,
-    cache: FileCache[Task],
+    cache: Cache[Task] with Cache.HasLocation,
     instructions: Seq[WithLines[DockerInstruction.NonHead]],
     dockerFile: String, // for error messages
     os0: String,

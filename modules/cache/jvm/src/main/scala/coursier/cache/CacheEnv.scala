@@ -26,6 +26,15 @@ object CacheEnv {
   /** Env var and Java prop names for the archive cache location */
   val archiveCache = EnvEntry("COURSIER_ARCHIVE_CACHE", "coursier.archive.cache")
 
+  /** Env var and Java prop names for the cache server */
+  val server = EnvEntry("COURSIER_CACHE_SERVER", "coursier.cache.server")
+
+  /** Env var and Java prop names for the cache server user */
+  val serverUser = EnvEntry("COURSIER_CACHE_SERVER_USER", "coursier.cache.server.user")
+
+  /** Env var and Java prop names for the cache server password */
+  val serverPassword = EnvEntry("COURSIER_CACHE_SERVER_PASSWORD", "coursier.cache.server.password")
+
   /** Env var and Java prop names for credentials */
   val credentials = EnvEntry("COURSIER_CREDENTIALS", "coursier.credentials")
 
@@ -60,6 +69,11 @@ object CacheEnv {
         "arc"
       )
     )
+
+  /** Computes the default main cache location from the passed env var and Java property */
+  def defaultServerAddress(values: EnvValues): Option[String] =
+    values.prop.map(_.trim).filter(_.nonEmpty)
+      .orElse(values.env.map(_.trim).filter(_.nonEmpty))
 
   private def isPropFile(s: String) =
     s.startsWith("/") || s.startsWith("file:")
