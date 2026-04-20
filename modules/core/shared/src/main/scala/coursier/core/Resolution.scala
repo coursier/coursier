@@ -287,7 +287,7 @@ object Resolution {
         substituteProps(s, properties, trim = false)
 
       val dep0 = dep
-        .withVersionConstraint(
+        .withVersionConstraintConserve(
           if (dep.versionConstraint.asString.contains("$"))
             VersionConstraint0(substituteTrimmedProps(dep.versionConstraint.asString))
           else
@@ -376,7 +376,7 @@ object Resolution {
 
                 (
                   versionOpt match {
-                    case Some(version) => Right(deps.map(_.withVersionConstraint(version)))
+                    case Some(version) => Right(deps.map(_.withVersionConstraintConserve(version)))
                     case None          => Left(deps)
                   },
                   versionOpt
@@ -384,7 +384,7 @@ object Resolution {
               }
 
             case Some(forcedVersion) =>
-              (Right(deps.map(_.withVersionConstraint(forcedVersion))), Some(forcedVersion))
+              (Right(deps.map(_.withVersionConstraintConserve(forcedVersion))), Some(forcedVersion))
           }
         }
       }
@@ -557,7 +557,7 @@ object Resolution {
             overridesOpt.exists(_.contains(dep0.depManagementKey))
           )
           if (useManagedVersion)
-            dep = dep.withVersionConstraint(mgmtValues.versionConstraint)
+            dep = dep.withVersionConstraintConserve(mgmtValues.versionConstraint)
 
           if (mgmtValues.minimizedExclusions.nonEmpty) {
             val newExcl = dep.minimizedExclusions.join(mgmtValues.minimizedExclusions)
@@ -2392,7 +2392,7 @@ object Resolution {
   def dependenciesWithRetainedVersions: Set[Dependency] =
     dependencies.map { dep =>
       retainedVersions.get(dep.module).fold(dep) { v =>
-        dep.withVersionConstraint(VersionConstraint0.fromVersion(v))
+        dep.withVersionConstraintConserve(VersionConstraint0.fromVersion(v))
       }
     }
 
