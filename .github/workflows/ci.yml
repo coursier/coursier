@@ -263,7 +263,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: launchers-${{ matrix.OSSHORT }}
           path: artifacts/
@@ -292,7 +292,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: launchers-linux-compat
           path: artifacts/
@@ -330,7 +330,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: launchers-${{ matrix.OSSHORT }}-static
           path: artifacts/
@@ -368,7 +368,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: launchers-${{ matrix.OSSHORT }}-mostly-static
           path: artifacts/
@@ -406,7 +406,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: launchers-${{ matrix.OSSHORT }}-container
           path: artifacts/
@@ -436,7 +436,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/v')
       with:
         subject-path: 'artifacts/*'
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v7
       with:
         name: launchers-jar
         path: artifacts/
