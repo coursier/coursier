@@ -15,15 +15,17 @@ import dataclass.data
   to: String
 ) extends Mirror {
 
-  private val matchesAll = from.contains("*")
+  private val from0 = if (from.contains("*")) Seq("*") else from.map(_.stripSuffix("/"))
+  private val to0 = to.stripSuffix("/")
+  private val matchesAll = from0.contains("*")
 
   def matches(repo: Repository): Option[Repository] =
     repo match {
       case m: MavenRepositoryLike =>
         val url     = m.root
-        val matches = matchesAll || from.contains(url)
+        val matches = matchesAll || from0.contains(url)
         if (matches)
-          Some(m.withRoot(to).withAuthentication(None).withVersionsCheckHasModule(false))
+          Some(m.withRoot(to0).withAuthentication(None).withVersionsCheckHasModule(false))
         else
           None
       case _ =>

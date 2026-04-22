@@ -202,6 +202,44 @@ object SbtMavenRepository {
   def artifactFor(url: String, changing: Boolean): Artifact =
     internal.artifactFor(url, changing)
 
+  override def withRoot(root: String): SbtMavenRepository =
+    new SbtMavenRepository(
+      root.stripSuffix("/"),
+      authentication,
+      changing,
+      versionsCheckHasModule,
+      checkModule
+    )
+
+  override def withAuthentication(authentication: Option[Authentication]): SbtMavenRepository =
+    new SbtMavenRepository(
+      root,
+      authentication,
+      changing,
+      versionsCheckHasModule,
+      checkModule
+    )
+
+  override def withVersionsCheckHasModule(
+    versionsCheckHasModule: Boolean
+  ): SbtMavenRepository =
+    new SbtMavenRepository(
+      root,
+      authentication,
+      changing,
+      versionsCheckHasModule,
+      checkModule
+    )
+
+  override def withCheckModule(checkModule: Boolean): SbtMavenRepository =
+    new SbtMavenRepository(
+      root,
+      authentication,
+      changing,
+      versionsCheckHasModule,
+      checkModule
+    )
+
   def withChanging(changing: Boolean): SbtMavenRepository =
     withChanging(Some(changing))
 
