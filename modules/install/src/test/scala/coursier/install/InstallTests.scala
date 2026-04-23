@@ -194,6 +194,7 @@ object InstallTests extends TestSuite {
   }
 
   val tests = Tests {
+    /** Verifies the `generate an echo launcher` scenario behaves as the user expects. */
     test("generate an echo launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
@@ -231,17 +232,21 @@ object InstallTests extends TestSuite {
         assert(appList == expectedAppList)
       }
 
+      /** Verifies the `linux` scenario behaves as the user expects. */
       test("linux") {
         run("linux", "x86_84")
       }
+      /** Verifies the `mac` scenario behaves as the user expects. */
       test("mac") {
         run("mac", "x86_84")
       }
+      /** Verifies the `windows` scenario behaves as the user expects. */
       test("windows") {
         run("windows", "x86_84")
       }
     }
 
+    /** Verifies the `generate an echo assembly` scenario behaves as the user expects. */
     test("generate an echo assembly") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
@@ -270,17 +275,21 @@ object InstallTests extends TestSuite {
         }
       }
 
+      /** Verifies the `linux` scenario behaves as the user expects. */
       test("linux") {
         run("linux", "x86_84")
       }
+      /** Verifies the `mac` scenario behaves as the user expects. */
       test("mac") {
         run("mac", "x86_84")
       }
+      /** Verifies the `windows` scenario behaves as the user expects. */
       test("windows") {
         run("windows", "x86_84")
       }
     }
 
+    /** Verifies the `generate an echo standalone launcher` scenario behaves as the user expects. */
     test("generate an echo standalone launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
@@ -317,17 +326,21 @@ object InstallTests extends TestSuite {
         }
       }
 
+      /** Verifies the `linux` scenario behaves as the user expects. */
       test("linux") {
         run("linux", "x86_84")
       }
+      /** Verifies the `mac` scenario behaves as the user expects. */
       test("mac") {
         run("mac", "x86_84")
       }
+      /** Verifies the `windows` scenario behaves as the user expects. */
       test("windows") {
         run("windows", "x86_84")
       }
     }
 
+    /** Verifies the `not update an already up-to-date launcher` scenario behaves as the user expects. */
     test("not update an already up-to-date launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
@@ -363,17 +376,21 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
+      /** Verifies the `linux` scenario behaves as the user expects. */
       test("linux") {
         run("linux", "x86_64")
       }
+      /** Verifies the `mac` scenario behaves as the user expects. */
       test("mac") {
         run("mac", "x86_64")
       }
+      /** Verifies the `windows` scenario behaves as the user expects. */
       test("windows") {
         run("windows", "x86_64")
       }
     }
 
+    /** Verifies the `update a launcher` scenario behaves as the user expects. */
     test("update a launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
@@ -444,17 +461,21 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
+      /** Verifies the `linux` scenario behaves as the user expects. */
       test("linux") {
         run("linux", "x86_64")
       }
+      /** Verifies the `mac` scenario behaves as the user expects. */
       test("mac") {
         run("mac", "x86_64")
       }
+      /** Verifies the `windows` scenario behaves as the user expects. */
       test("windows") {
         run("windows", "x86_64")
       }
     }
 
+    /** Verifies the `try updating a non-installed app` scenario behaves as the user expects. */
     test("try updating a non-installed app") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
         val installDir0 = installDir(tmpDir, os, arch)
@@ -471,17 +492,21 @@ object InstallTests extends TestSuite {
         ) // TODO Check the output contains "Cannot find installed application 'dummy-app-id'..."
       }
 
+      /** Verifies the `linux` scenario behaves as the user expects. */
       test("linux") {
         run("linux", "x86_64")
       }
+      /** Verifies the `mac` scenario behaves as the user expects. */
       test("mac") {
         run("mac", "x86_64")
       }
+      /** Verifies the `windows` scenario behaves as the user expects. */
       test("windows") {
         run("windows", "x86_64")
       }
     }
 
+    /** Verifies the `install a prebuilt launcher` scenario behaves as the user expects. */
     test("install a prebuilt launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
@@ -519,17 +544,21 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
+      /** Verifies the `linux` scenario behaves as the user expects. */
       test("linux") {
         run("linux", "x86_64")
       }
+      /** Verifies the `mac` scenario behaves as the user expects. */
       test("mac") {
         run("mac", "x86_64")
       }
+      /** Verifies the `windows` scenario behaves as the user expects. */
       test("windows") {
         run("windows", "x86_64")
       }
     }
 
+    /** Verifies the `install a compressed prebuilt launcher` scenario behaves as the user expects. */
     test("install a compressed prebuilt launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
@@ -574,17 +603,21 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
+      /** Verifies the `linux` scenario behaves as the user expects. */
       test("linux") {
         run("linux", "x86_64")
       }
+      /** Verifies the `mac` scenario behaves as the user expects. */
       test("mac") {
         run("mac", "x86_64")
       }
+      /** Verifies the `windows` scenario behaves as the user expects. */
       test("windows") {
         run("windows", "x86_64")
       }
     }
 
+    /** Verifies the `install a prebuilt launcher in an archive` scenario behaves as the user expects. */
     test("install a prebuilt launcher in an archive") {
       val zipPattern =
         "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-${platform}"
@@ -630,31 +663,40 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
+      /** Verifies the `zip` scenario behaves as the user expects. */
       test("zip") {
+        /** Verifies the `linux` scenario behaves as the user expects. */
         test("linux") {
           run("linux", "x86_64", zipPattern)
         }
+        /** Verifies the `mac` scenario behaves as the user expects. */
         test("mac") {
           run("mac", "x86_64", zipPattern)
         }
+        /** Verifies the `windows` scenario behaves as the user expects. */
         test("windows") {
           run("windows", "x86_64", zipPattern)
         }
       }
 
+      /** Verifies the `tgz` scenario behaves as the user expects. */
       test("tgz") {
+        /** Verifies the `linux` scenario behaves as the user expects. */
         test("linux") {
           run("linux", "x86_64", tgzPattern)
         }
+        /** Verifies the `mac` scenario behaves as the user expects. */
         test("mac") {
           run("mac", "x86_64", tgzPattern)
         }
+        /** Verifies the `windows` scenario behaves as the user expects. */
         test("windows") {
           run("windows", "x86_64", tgzPattern)
         }
       }
     }
 
+    /** Verifies the `install a prebuilt gzip-ed / zip-ed launcher` scenario behaves as the user expects. */
     test("install a prebuilt gzip-ed / zip-ed launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
@@ -698,17 +740,21 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
+      /** Verifies the `linux` scenario behaves as the user expects. */
       test("linux") {
         run("linux", "x86_64")
       }
+      /** Verifies the `mac` scenario behaves as the user expects. */
       test("mac") {
         run("mac", "x86_64")
       }
+      /** Verifies the `windows` scenario behaves as the user expects. */
       test("windows") {
         run("windows", "x86_64")
       }
     }
 
+    /** Verifies the `install a prebuilt-only zip-ed launcher` scenario behaves as the user expects. */
     test("install a prebuilt-only zip-ed launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
@@ -747,12 +793,15 @@ object InstallTests extends TestSuite {
           testRun()
       }
 
+      /** Verifies the `linux` scenario behaves as the user expects. */
       test("linux") {
         run("linux", "x86_64")
       }
+      /** Verifies the `mac` scenario behaves as the user expects. */
       test("mac") {
         run("mac", "x86_64")
       }
+      /** Verifies the `windows` scenario behaves as the user expects. */
       test("windows") {
         run("windows", "x86_64")
       }
@@ -800,6 +849,7 @@ object InstallTests extends TestSuite {
     //   }
     // }
 
+    /** Verifies the `refuse to delete a file not created by us` scenario behaves as the user expects. */
     test("refuse to delete a file not created by us") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
@@ -822,17 +872,21 @@ object InstallTests extends TestSuite {
         assert(gotException)
       }
 
+      /** Verifies the `linux` scenario behaves as the user expects. */
       test("linux") {
         run("linux", "x86_64")
       }
+      /** Verifies the `mac` scenario behaves as the user expects. */
       test("mac") {
         run("mac", "x86_64")
       }
+      /** Verifies the `windows` scenario behaves as the user expects. */
       test("windows") {
         run("windows", "x86_64")
       }
     }
 
+    /** Verifies the `install and override and update scalac` scenario behaves as the user expects. */
     test("install and override and update scalac") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
         val id = "scalac"
@@ -947,17 +1001,21 @@ object InstallTests extends TestSuite {
           testOutput("Scala compiler version 3.3.3 -- Copyright 2002-2024, LAMP/EPFL")
       }
 
+      /** Verifies the `linux` scenario behaves as the user expects. */
       test("linux") {
         run("linux", "x86_64")
       }
+      /** Verifies the `mac` scenario behaves as the user expects. */
       test("mac") {
         run("mac", "x86_64")
       }
+      /** Verifies the `windows` scenario behaves as the user expects. */
       test("windows") {
         run("windows", "x86_64")
       }
     }
 
+    /** Verifies the `override prebuilt / prebuiltBinaries` scenario behaves as the user expects. */
     test("override prebuilt / prebuiltBinaries") {
       val id = "cs"
       val versionOverride =
@@ -1036,12 +1094,15 @@ object InstallTests extends TestSuite {
         )
       }
 
+      /** Verifies the `linux` scenario behaves as the user expects. */
       test("linux") {
         run("linux", "x86_64")
       }
+      /** Verifies the `mac` scenario behaves as the user expects. */
       test("mac") {
         run("mac", "x86_64")
       }
+      /** Verifies the `windows` scenario behaves as the user expects. */
       test("windows") {
         run("windows", "x86_64")
       }

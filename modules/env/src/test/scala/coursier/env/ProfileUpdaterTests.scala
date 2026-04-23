@@ -26,6 +26,7 @@ object ProfileUpdaterTests extends TestSuite {
   }
 
   val tests = Tests {
+    /** Verifies the `update variable in ~/.profile` scenario behaves as the user expects. */
     test("update variable in ~/.profile") {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex")
@@ -65,6 +66,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(dotProfile.contains(initialContent))
     }
 
+    /** Verifies the `set variable in ~/.profile` scenario behaves as the user expects. */
     test("set variable in ~/.profile") {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex")
@@ -90,6 +92,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(dotProfile.contains(expectedInDotProfile))
     }
 
+    /** Verifies the `set variable in ~/.config/alex/fish/config.fish` scenario behaves as the user expects. */
     test("set variable in ~/.config/alex/fish/config.fish") {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex/")
@@ -121,6 +124,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(fishConfig.contains(expectedInFishConfig))
     }
 
+    /** Verifies the `create ~/.profile and ~/.zprofile` scenario behaves as the user expects. */
     test("create ~/.profile and ~/.zprofile") {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex")
@@ -157,6 +161,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(dotZprofile.contains(expectedInDotProfileFiles))
     }
 
+    /** Verifies the `create ~/.profile and ~/.zprofile and update ~/.bash_profile` scenario behaves as the user expects. */
     test("create ~/.profile and ~/.zprofile and update ~/.bash_profile") {
       val fs = Jimfs.newFileSystem(Configuration.unix())
 
@@ -202,6 +207,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(dotBashProfile.contains(expectedInDotProfileFiles))
     }
 
+    /** Verifies the `take ZDOTDIR into account` scenario behaves as the user expects. */
     test("take ZDOTDIR into account") {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex")
@@ -238,6 +244,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(dotZprofile.contains(expectedInDotProfileFiles))
     }
 
+    /** Verifies the `be idempotent` scenario behaves as the user expects. */
     test("be idempotent") {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex")
@@ -271,6 +278,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(Arrays.equals(dotProfileBytes, newDotProfileBytes))
     }
 
+    /** Verifies the `update the previous section` scenario behaves as the user expects. */
     test("update the previous section") {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex")
@@ -326,6 +334,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(exportPathIndices.length == 1)
     }
 
+    /** Verifies the `update the previous section fish` scenario behaves as the user expects. */
     test("update the previous section fish") {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex")
@@ -384,6 +393,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(exportPathIndices.length == 1)
     }
 
+    /** Verifies the `leave previous content intact` scenario behaves as the user expects. */
     test("leave previous content intact") {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex")

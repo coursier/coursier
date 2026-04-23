@@ -17,12 +17,14 @@ object RawAppDescriptorTests extends TestSuite {
   val vo4 = VersionOverride(it4)
 
   val tests: Tests = Tests {
+    /** Verifies the `validate disjoint version intervals` scenario behaves as the user expects. */
     test("validate disjoint version intervals") {
       val versionOverrides = Seq(vo1, vo2, vo3)
       val validated        = RawAppDescriptor.validateRanges(versionOverrides)
       assert(validated == Validated.validNel(versionOverrides))
     }
 
+    /** Verifies the `invalidate overlapping version intervals` scenario behaves as the user expects. */
     test("invalidate overlapping version intervals") {
       val versionOverrides = Seq(vo1, vo2, vo4)
       val validated        = RawAppDescriptor.validateRanges(versionOverrides)

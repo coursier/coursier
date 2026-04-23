@@ -16,13 +16,16 @@ object SbtCentralTests extends CentralTests {
 
   override def tests = super.tests ++ Tests {
 
+    /** Verifies the `sbtPlugin` scenario behaves as the user expects. */
     test("sbtPlugin") {
+      /** Verifies the `versionRange` scenario behaves as the user expects. */
       test("versionRange") {
         val mod = mod"org.ensime:sbt-ensime;scalaVersion=2.10;sbtVersion=0.13"
         val ver = "1.12.+"
         runner.resolutionCheck(mod, ver)
       }
 
+      /** Verifies the `diamond` scenario behaves as the user expects. */
       test("diamond") {
         // sbt-plugin-example-diamond is a diamond graph of sbt plugins.
         // Diamond depends on left and right which both depend on bottom.

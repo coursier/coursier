@@ -16,7 +16,9 @@ object ObjectSizeTests extends TestSuite {
 
   def actualTests = Tests {
 
+    /** Verifies the `Dependency sizes` scenario behaves as the user expects. */
     test("Dependency sizes") {
+      /** Verifies the `should be the same for same dependency` scenario behaves as the user expects. */
       test("should be the same for same dependency") {
         def d = Dependency(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
@@ -28,6 +30,7 @@ object ObjectSizeTests extends TestSuite {
         assert(size(Array(d)) == size(Array(d, d)))
       }
 
+      /** Verifies the `should be the different for different dependency` scenario behaves as the user expects. */
       test("should be the different for different dependency") {
         def d1 = Dependency(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
@@ -41,7 +44,9 @@ object ObjectSizeTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Module sizes` scenario behaves as the user expects. */
     test("Module sizes") {
+      /** Verifies the `should be the same for same Module` scenario behaves as the user expects. */
       test("should be the same for same Module") {
         def m = Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty)
         assert(m == m)
@@ -50,6 +55,7 @@ object ObjectSizeTests extends TestSuite {
         assert(size(Array(m)) == size(Array(m, m)))
       }
 
+      /** Verifies the `should be the different for different Module` scenario behaves as the user expects. */
       test("should be the different for different Module") {
         def m1 = Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty)
         def m2 = Module(Organization("tpolecat"), ModuleName("doobie-core_2.13"), Map.empty)
@@ -57,7 +63,9 @@ object ObjectSizeTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Publication sizes` scenario behaves as the user expects. */
     test("Publication sizes") {
+      /** Verifies the `should be the same for same Publication` scenario behaves as the user expects. */
       test("should be the same for same Publication") {
         def m = Publication("a", Type.jar, Extension.jar, Classifier.empty)
         assert(m == m)
@@ -66,6 +74,7 @@ object ObjectSizeTests extends TestSuite {
         assert(size(Array(m)) == size(Array(m, m)))
       }
 
+      /** Verifies the `should be the different for different Publication` scenario behaves as the user expects. */
       test("should be the different for different Publication") {
         def m1 = Publication("a", Type.jar, Extension.jar, Classifier.empty)
         def m2 = Publication("a", Type.jar, Extension.jar, Classifier.tests)
@@ -73,7 +82,9 @@ object ObjectSizeTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Dependency instanceCache should hold objects until they can be GCd` scenario behaves as the user expects. */
     test("Dependency instanceCache should hold objects until they can be GCd") {
+      /** Verifies the `should be the different for different dependency` scenario behaves as the user expects. */
       test("should be the different for different dependency") {
         def cacheSize(): Int = {
           Dependency.instanceCache

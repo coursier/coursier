@@ -9,6 +9,7 @@ import coursier.core.Authentication
 object PlatformRepositoryParserTests extends TestSuite {
 
   val tests = Tests {
+    /** Verifies the `m2Local` scenario behaves as the user expects. */
     test("m2Local") {
       test {
         val res         = RepositoryParser.repository("m2Local")
@@ -23,12 +24,14 @@ object PlatformRepositoryParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Maven Central` scenario behaves as the user expects. */
     test("Maven Central") {
       val res         = RepositoryParser.repository("https://repo1.maven.org/maven2")
       val expectedRes = Right(Repositories.central)
       assert(res == expectedRes)
     }
 
+    /** Verifies the `AWS codeartifact with password` scenario behaves as the user expects. */
     test("AWS codeartifact with password") {
       val res = RepositoryParser.repository(
         "https://aws:pass@domain.d.codeartifact.us-east-1.amazonaws.com/maven/dir"
@@ -39,6 +42,7 @@ object PlatformRepositoryParserTests extends TestSuite {
       assert(res == expectedRes)
     }
 
+    /** Verifies the `AWS codeartifact without password` scenario behaves as the user expects. */
     test("AWS codeartifact without password") {
       val res = RepositoryParser.repository(
         "https://aws@domain.d.codeartifact.us-east-1.amazonaws.com/maven/dir"

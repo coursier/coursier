@@ -7,6 +7,7 @@ object JvmIndexTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `version in range` scenario behaves as the user expects. */
     test("version in range") {
       val os     = "the-os"
       val arch   = "the-arch"
@@ -55,6 +56,7 @@ object JvmIndexTests extends TestSuite {
       }
     }
 
+    /** Verifies the `1-dot prefix` scenario behaves as the user expects. */
     test("1-dot prefix") {
       val os   = "the-os"
       val arch = "the-arch"
@@ -102,36 +104,42 @@ object JvmIndexTests extends TestSuite {
         "https://openfoo.com/jdk-20.2.zip"
       )
 
+      /** Verifies the `add prefix` scenario behaves as the user expects. */
       test("add prefix") {
         val res      = index.lookup("openfoo", "19-2", os = Some(os), arch = Some(arch))
         val expected = Right(Seq(open192))
         assert(res == expected)
       }
 
+      /** Verifies the `add prefix with interval` scenario behaves as the user expects. */
       test("add prefix with interval") {
         val res      = index.lookup("openfoo", "19", os = Some(os), arch = Some(arch))
         val expected = Right(Seq(open191, open192))
         assert(res == expected)
       }
 
+      /** Verifies the `accept 1-dot nonetheless` scenario behaves as the user expects. */
       test("accept 1-dot nonetheless") {
         val res      = index.lookup("openfoo", "1.19-2", os = Some(os), arch = Some(arch))
         val expected = Right(Seq(open192))
         assert(res == expected)
       }
 
+      /** Verifies the `accept 1-dot nonetheless with interval` scenario behaves as the user expects. */
       test("accept 1-dot nonetheless with interval") {
         val res      = index.lookup("openfoo", "1.19", os = Some(os), arch = Some(arch))
         val expected = Right(Seq(open191, open192))
         assert(res == expected)
       }
 
+      /** Verifies the `accept just 1` scenario behaves as the user expects. */
       test("accept just 1") {
         val res      = index.lookup("openfoo", "1", os = Some(os), arch = Some(arch))
         val expected = Right(Seq(open191, open192, open201, open202))
         assert(res == expected)
       }
 
+      /** Verifies the `accept 1 plus` scenario behaves as the user expects. */
       test("accept 1 plus") {
         val res      = index.lookup("openfoo", "1+", os = Some(os), arch = Some(arch))
         val expected = Right(Seq(open191, open192, open201, open202))

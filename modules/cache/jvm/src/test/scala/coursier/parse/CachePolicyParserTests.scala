@@ -13,6 +13,7 @@ object CachePolicyParserTests extends TestSuite {
   )
 
   val tests = Tests {
+    /** Verifies the `simple` scenario behaves as the user expects. */
     test("simple") {
       test {
         val res         = CachePolicyParser.cachePolicy("offline")
@@ -26,6 +27,7 @@ object CachePolicyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `several` scenario behaves as the user expects. */
     test("several") {
       test {
         val res         = CachePolicyParser.cachePolicies("offline")
@@ -38,12 +40,14 @@ object CachePolicyParserTests extends TestSuite {
         assert(res == expectedRes)
       }
 
+      /** Verifies the `default` scenario behaves as the user expects. */
       test("default") {
         val res         = CachePolicyParser.cachePolicies("default", defaults)
         val expectedRes = ValidationNel.success(defaults)
         assert(res == expectedRes)
       }
 
+      /** Verifies the `noDefault` scenario behaves as the user expects. */
       test("noDefault") {
         val res = CachePolicyParser.cachePolicies("default")
         assert(!res.isSuccess)

@@ -15,6 +15,7 @@ object SbtPluginResolveTests extends TestSuite {
   )
 
   val tests = Tests {
+    /** Verifies the `config handling` scenario behaves as the user expects. */
     test("config handling") {
       // if config handling gets messed up, like the "default" config of some dependencies ends up being pulled
       // where it shouldn't, this surfaces more easily here, as sbt-ci-release depends on other sbt plugins,

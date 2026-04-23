@@ -64,6 +64,7 @@ object BootstrapTests extends TestSuite {
   }
 
   val tests = Tests {
+    /** Verifies the `not add POMs to the classpath` scenario behaves as the user expects. */
     test("not add POMs to the classpath") {
       withFile() {
 
@@ -131,6 +132,7 @@ object BootstrapTests extends TestSuite {
       }
     }
 
+    /** Verifies the `accept simple modules via --shared` scenario behaves as the user expects. */
     test("accept simple modules via --shared") {
       withFile() {
 
@@ -197,6 +199,7 @@ object BootstrapTests extends TestSuite {
       }
     }
 
+    /** Verifies the `add standard and source JARs to the classpath` scenario behaves as the user expects. */
     test("add standard and source JARs to the classpath") {
       withFile() {
 
@@ -295,16 +298,19 @@ object BootstrapTests extends TestSuite {
           assert(lines.contains("scalameta_2.12-1.7.0-sources.jar"))
       }
 
+    /** Verifies the `add standard and source JARs to the classpath with classloader isolation` scenario behaves as the user expects. */
     test("add standard and source JARs to the classpath with classloader isolation") {
       isolationTest()
     }
 
+    /** Verifies the `add standard and source JARs to the classpath with classloader isolation in standalone bootstrap` scenario behaves as the user expects. */
     test(
       "add standard and source JARs to the classpath with classloader isolation in standalone bootstrap"
     ) {
       isolationTest(standalone = Some(true))
     }
 
+    /** Verifies the `be deterministic when deterministic option is specified` scenario behaves as the user expects. */
     test("be deterministic when deterministic option is specified") {
       withFile() {
         (bootstrapFile, _) =>
@@ -372,6 +378,7 @@ object BootstrapTests extends TestSuite {
       }
     }
 
+    /** Verifies the `rename JAR with the same file name` scenario behaves as the user expects. */
     test("rename JAR with the same file name") {
       withFile() {
 
@@ -464,6 +471,7 @@ object BootstrapTests extends TestSuite {
         assert(unexpected.isEmpty)
     }
 
+    /** Verifies the `put everything under the coursier/bootstrap directory in proguarded bootstrap` scenario behaves as the user expects. */
     test("put everything under the coursier/bootstrap directory in proguarded bootstrap") {
       if (!isJava9Plus)
         namespaceTest()

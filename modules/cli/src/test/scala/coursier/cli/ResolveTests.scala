@@ -81,6 +81,7 @@ object ResolveTests extends TestSuite {
   }
 
   val tests = Tests {
+    /** Verifies the `print what depends on` scenario behaves as the user expects. */
     test("print what depends on") {
       val options = ResolveOptions(
         whatDependsOn = List("org.htrace:htrace-core")
@@ -117,6 +118,7 @@ object ResolveTests extends TestSuite {
       assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
+    /** Verifies the `print what depends on with regex` scenario behaves as the user expects. */
     test("print what depends on with regex") {
       val options = ResolveOptions(
         whatDependsOn = List("*:htrace-*")
@@ -153,6 +155,7 @@ object ResolveTests extends TestSuite {
       assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
+    /** Verifies the `print results anyway` scenario behaves as the user expects. */
     test("print results anyway") {
       val options = ResolveOptions(
         forcePrint = true
@@ -199,6 +202,7 @@ object ResolveTests extends TestSuite {
       assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
+    /** Verifies the `resolve sbt plugins` scenario behaves as the user expects. */
     test("resolve sbt plugins") {
       val options = SharedResolveOptions(
         dependencyOptions = DependencyOptions(
@@ -346,6 +350,7 @@ object ResolveTests extends TestSuite {
       assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
+    /** Verifies the `resolve sbt 0.13 plugins` scenario behaves as the user expects. */
     test("resolve sbt 0.13 plugins") {
       val options = SharedResolveOptions(
         dependencyOptions = DependencyOptions(
@@ -369,6 +374,7 @@ object ResolveTests extends TestSuite {
       assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
+    /** Verifies the `resolve the main artifact first in classpath order` scenario behaves as the user expects. */
     test("resolve the main artifact first in classpath order") {
       val options = SharedResolveOptions(
         classpathOrder = Option(true)
@@ -390,6 +396,7 @@ object ResolveTests extends TestSuite {
       assert(output.startsWith("io.get-coursier:coursier-cli_2.12:1.1.0-M9"))
     }
 
+    /** Verifies the `print candidate artifact URLs` scenario behaves as the user expects. */
     test("print candidate artifact URLs") {
       val options = ResolveOptions(
         candidateUrls = true
@@ -419,6 +426,7 @@ object ResolveTests extends TestSuite {
       assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
+    /** Verifies the `exclude root dependencies` scenario behaves as the user expects. */
     test("exclude root dependencies") {
       val options = SharedResolveOptions(
         dependencyOptions = DependencyOptions(
@@ -454,6 +462,7 @@ object ResolveTests extends TestSuite {
       assert(expectedOutput.noCrLf == output.noCrLf)
     }
 
+    /** Verifies the `ignore binary scala version` scenario behaves as the user expects. */
     test("ignore binary scala version") {
       val options = SharedResolveOptions(
         resolutionOptions = ResolutionOptions(
@@ -470,6 +479,7 @@ object ResolveTests extends TestSuite {
       assert(output0.noCrLf == expectedOutput.noCrLf)
     }
 
+    /** Verifies the `ignore full scala version` scenario behaves as the user expects. */
     test("ignore full scala version") {
       val options = SharedResolveOptions(
         resolutionOptions = ResolutionOptions(
@@ -486,6 +496,7 @@ object ResolveTests extends TestSuite {
       assert(output0.noCrLf == expectedOutput.noCrLf)
     }
 
+    /** Verifies the `use binary scala version` scenario behaves as the user expects. */
     test("use binary scala version") {
       val options = SharedResolveOptions(
         resolutionOptions = ResolutionOptions(
@@ -504,6 +515,7 @@ object ResolveTests extends TestSuite {
       assert(output0.noCrLf == expectedOutput.noCrLf)
     }
 
+    /** Verifies the `use full scala version` scenario behaves as the user expects. */
     test("use full scala version") {
       val options = SharedResolveOptions(
         resolutionOptions = ResolutionOptions(
@@ -521,6 +533,7 @@ object ResolveTests extends TestSuite {
       assert(output0.noCrLf == expectedOutput.noCrLf)
     }
 
+    /** Verifies the `use lower full scala version` scenario behaves as the user expects. */
     test("use lower full scala version") {
       val options = SharedResolveOptions(
         resolutionOptions = ResolutionOptions(
@@ -538,6 +551,7 @@ object ResolveTests extends TestSuite {
       assert(output0.noCrLf == expectedOutput.noCrLf)
     }
 
+    /** Verifies the `use full scala version and not list those available` scenario behaves as the user expects. */
     test("use full scala version and not list those available") {
       val options = SharedResolveOptions(
         resolutionOptions = ResolutionOptions(
@@ -577,6 +591,7 @@ object ResolveTests extends TestSuite {
       Predef.assert(!success, "Expected a resolution exception")
     }
 
+    /** Verifies the `app descriptors version overrides` scenario behaves as the user expects. */
     test("app descriptors version overrides") {
       val jsonUrl = Thread.currentThread().getContextClassLoader.getResource("test-apps/scala.json")
       assert(jsonUrl != null)

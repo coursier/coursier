@@ -50,6 +50,7 @@ object CustomHandlerFactoryTests extends TestSuite {
 
   val tests = Tests {
     
+    /** Verifies the `CacheUrl.url with custom handler factory` scenario behaves as the user expects. */
     test("CacheUrl.url with custom handler factory") {
       val customHandler = new CustomTestHandler()
       
@@ -66,6 +67,7 @@ object CustomHandlerFactoryTests extends TestSuite {
       assert(conn.getInputStream() != null)
     }
     
+    /** Verifies the `CacheUrl.url falls back to classloader resolution` scenario behaves as the user expects. */
     test("CacheUrl.url falls back to classloader resolution") {
       val customHandler = new CustomTestHandler()
       
@@ -74,6 +76,7 @@ object CustomHandlerFactoryTests extends TestSuite {
       assert(url.getProtocol == "testprotocol")
     }
     
+    /** Verifies the `FileCache with custom handler factory` scenario behaves as the user expects. */
     test("FileCache with custom handler factory") {
       val customHandler = new CustomTestHandler()
       val tmpDir = java.nio.file.Files.createTempDirectory("coursier-test")
@@ -90,6 +93,7 @@ object CustomHandlerFactoryTests extends TestSuite {
       java.nio.file.Files.deleteIfExists(tmpDir)
     }
     
+    /** Verifies the `Fetch task with custom handler factory` scenario behaves as the user expects. */
     test("Fetch task with custom handler factory") {
       implicit val ec: ExecutionContext = ExecutionContext.global
       val pool = Sync.fixedThreadPool(1)

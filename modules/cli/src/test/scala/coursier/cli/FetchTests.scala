@@ -45,6 +45,7 @@ object FetchTests extends TestSuite {
     }
 
   val tests = Tests {
+    /** Verifies the `get all files` scenario behaves as the user expects. */
     test("get all files") {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
@@ -53,6 +54,7 @@ object FetchTests extends TestSuite {
       assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
     }
 
+    /** Verifies the `fetch default files` scenario behaves as the user expects. */
     test("fetch default files") {
       val artifactOpt = ArtifactOptions(
         classifier = List("_")
@@ -64,6 +66,7 @@ object FetchTests extends TestSuite {
       assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
     }
 
+    /** Verifies the `fetch dependencies from file` scenario behaves as the user expects. */
     test("fetch dependencies from file") {
       withFile(
         "junit:junit:4.12"
@@ -80,6 +83,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `fail fetching dependencies from file with invalid content` scenario behaves as the user expects. */
     test("fail fetching dependencies from file with invalid content") {
       withFile(
         "junit:junit:4.12, something_else"
@@ -95,6 +99,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `fail fetching dependencies from non-existing file` scenario behaves as the user expects. */
     test("fail fetching dependencies from non-existing file") {
       val path          = "non-existing-file-path"
       val dependencyOpt = DependencyOptions(dependencyFile = List(path))
@@ -108,6 +113,7 @@ object FetchTests extends TestSuite {
       assert(thrownException.getMessage == expectedErrorMessage)
     }
 
+    /** Verifies the `Underscore and source classifier should fetch default and source files` scenario behaves as the user expects. */
     test("Underscore and source classifier should fetch default and source files") {
       val artifactOpt = ArtifactOptions(
         classifier = List("_"),
@@ -125,6 +131,7 @@ object FetchTests extends TestSuite {
       )))
     }
 
+    /** Verifies the `Default and source options should fetch default and source files` scenario behaves as the user expects. */
     test("Default and source options should fetch default and source files") {
       val artifactOpt = ArtifactOptions(
         default = Some(true),
@@ -144,6 +151,7 @@ object FetchTests extends TestSuite {
       )))
     }
 
+    /** Verifies the `scalafmt-cli fetch should discover all main classes` scenario behaves as the user expects. */
     test("scalafmt-cli fetch should discover all main classes") {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
@@ -155,6 +163,7 @@ object FetchTests extends TestSuite {
       ))
     }
 
+    /** Verifies the `scalafix-cli fetch should discover all main classes` scenario behaves as the user expects. */
     test("scalafix-cli fetch should discover all main classes") {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
@@ -168,6 +177,7 @@ object FetchTests extends TestSuite {
       ))
     }
 
+    /** Verifies the `ammonite fetch should discover all main classes` scenario behaves as the user expects. */
     test("ammonite fetch should discover all main classes") {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
@@ -181,6 +191,7 @@ object FetchTests extends TestSuite {
       ))
     }
 
+    /** Verifies the `sssio fetch should discover all main classes` scenario behaves as the user expects. */
     test("sssio fetch should discover all main classes") {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
@@ -314,6 +325,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Bad pom resolve should succeed with retry` scenario behaves as the user expects. */
     test("Bad pom resolve should succeed with retry") {
       withTempDir("tmp_dir") {
         dir =>
@@ -359,6 +371,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Bad pom sha-1 resolve should succeed with retry` scenario behaves as the user expects. */
     test("Bad pom sha-1 resolve should succeed with retry") {
       withTempDir("tmp_dir") {
         dir =>
@@ -403,6 +416,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Bad jar resolve should succeed with retry` scenario behaves as the user expects. */
     test("Bad jar resolve should succeed with retry") {
       withTempDir("tmp_dir") {
         dir =>
@@ -438,6 +452,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Bad jar sha-1 resolve should succeed with retry` scenario behaves as the user expects. */
     test("Bad jar sha-1 resolve should succeed with retry") {
       withTempDir("tmp_dir") {
         dir =>
@@ -480,6 +495,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Wrong range partial artifact resolve should succeed with retry` scenario behaves as the user expects. */
     test("Wrong range partial artifact resolve should succeed with retry") {
       withTempDir(
         "tmp_dir"
@@ -514,6 +530,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `fail because of resolution` scenario behaves as the user expects. */
     test("fail because of resolution") {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
@@ -530,6 +547,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `fail to resolve, but try to fetch artifacts anyway` scenario behaves as the user expects. */
     test("fail to resolve, but try to fetch artifacts anyway") {
       val artifactOptions = ArtifactOptions(
         forceFetch = true
@@ -655,6 +673,7 @@ object FetchTests extends TestSuite {
       assert(urls == expectedUrls)
     }
 
+    /** Verifies the `not delete file in local Maven repo` scenario behaves as the user expects. */
     test("not delete file in local Maven repo") {
       withTempDir("tmp_dir") { tmpDir =>
 
@@ -716,6 +735,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Scala version range should work with fully cross-versioned dependencies` scenario behaves as the user expects. */
     test("Scala version range should work with fully cross-versioned dependencies") {
       val resolutionOpt = ResolutionOptions(
         scalaVersion = Some("2.12.+")

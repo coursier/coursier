@@ -29,6 +29,7 @@ object CatsTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `spark` scenario behaves as the user expects. */
     test("spark") {
       test {
         runner.resolutionCheck(
@@ -39,6 +40,7 @@ object CatsTests extends TestSuite {
         )
       }
 
+      /** Verifies the `scala210` scenario behaves as the user expects. */
       test("scala210") {
         runner.resolutionCheck(
           mod"org.apache.spark:spark-core_2.10",
@@ -49,6 +51,7 @@ object CatsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `argonautShapeless` scenario behaves as the user expects. */
     test("argonautShapeless") {
       runner.resolutionCheck(
         mod"com.github.alexarchambault:argonaut-shapeless_6.1_2.11",

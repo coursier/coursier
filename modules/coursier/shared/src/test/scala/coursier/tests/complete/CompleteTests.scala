@@ -30,6 +30,7 @@ object CompleteTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `maven` scenario behaves as the user expects. */
     test("maven") {
 
       val complete = Complete(cache)
@@ -670,6 +671,7 @@ object CompleteTests extends TestSuite {
       test - simple("io.get-coursier::coursier-cache:1.1.0-M14-2", 32 -> Seq("1.1.0-M14-2"))
     }
 
+    /** Verifies the `ivy` scenario behaves as the user expects. */
     test("ivy") {
 
       val repo = IvyRepository.fromPattern(
@@ -698,6 +700,7 @@ object CompleteTests extends TestSuite {
       test - simple("com.example:a_2.11:0.1", 19 -> Seq("0.1.0-SNAPSHOT"))
     }
 
+    /** Verifies the `should use 3 as binary version when binary version not specified and full version scala 3` scenario behaves as the user expects. */
     test(
       "should use 3 as binary version when binary version not specified and full version scala 3"
     ) {

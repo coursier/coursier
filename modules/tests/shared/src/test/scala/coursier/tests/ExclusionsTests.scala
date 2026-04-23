@@ -20,7 +20,9 @@ object ExclusionsTests extends TestSuite {
     val eob = Set((org"*", name"name1"))
     val eb  = Set((org"*", name"*"))
 
+    /** Verifies the `add` scenario behaves as the user expects. */
     test("add") {
+      /** Verifies the `basicZero` scenario behaves as the user expects. */
       test("basicZero") {
         val result1l = exclusionsAdd(e1, Set.empty)
         val result1r = exclusionsAdd(Set.empty, e1)
@@ -31,6 +33,7 @@ object ExclusionsTests extends TestSuite {
         assert(result2l == e2)
         assert(result2r == e2)
       }
+      /** Verifies the `basic` scenario behaves as the user expects. */
       test("basic") {
         val expected = e1 ++ e2
         val result12 = exclusionsAdd(e1, e2)
@@ -39,6 +42,7 @@ object ExclusionsTests extends TestSuite {
         assert(result21 == expected)
       }
 
+      /** Verifies the `nameBlob` scenario behaves as the user expects. */
       test("nameBlob") {
         val result1b = exclusionsAdd(e1, enb)
         val resultb1 = exclusionsAdd(enb, e1)
@@ -50,6 +54,7 @@ object ExclusionsTests extends TestSuite {
         assert(resultb2 == (e2 ++ enb))
       }
 
+      /** Verifies the `orgBlob` scenario behaves as the user expects. */
       test("orgBlob") {
         val result1b = exclusionsAdd(e1, eob)
         val resultb1 = exclusionsAdd(eob, e1)
@@ -61,6 +66,7 @@ object ExclusionsTests extends TestSuite {
         assert(resultb2 == (e2 ++ eob))
       }
 
+      /** Verifies the `blob` scenario behaves as the user expects. */
       test("blob") {
         val result1b = exclusionsAdd(e1, eb)
         val resultb1 = exclusionsAdd(eb, e1)

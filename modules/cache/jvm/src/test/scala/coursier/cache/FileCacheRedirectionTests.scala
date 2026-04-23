@@ -92,8 +92,10 @@ object FileCacheRedirectionTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `redirections` scenario behaves as the user expects. */
     test("redirections") {
 
+      /** Verifies the `httpToHttp` scenario behaves as the user expects. */
       test("httpToHttp") {
 
         def routes(resp: Location => IO[Response[IO]]): HttpRoutes[IO] =
@@ -106,23 +108,29 @@ object FileCacheRedirectionTests extends TestSuite {
             expect(base / "redirect", "hello")
           }
 
+        /** Verifies the `301` scenario behaves as the user expects. */
         test("301") {
           test0(MovedPermanently("redirecting", _))
         }
+        /** Verifies the `302` scenario behaves as the user expects. */
         test("302") {
           test0(Found("redirecting", _))
         }
+        /** Verifies the `304` scenario behaves as the user expects. */
         test("304") {
           test0(loc => NotModified().map(_.putHeaders(loc)))
         }
+        /** Verifies the `307` scenario behaves as the user expects. */
         test("307") {
           test0(TemporaryRedirect("redirecting", _))
         }
+        /** Verifies the `308` scenario behaves as the user expects. */
         test("308") {
           test0(PermanentRedirect("redirecting", _))
         }
       }
 
+      /** Verifies the `httpsToHttps` scenario behaves as the user expects. */
       test("httpsToHttps") {
         val routes = HttpRoutes.of[IO] {
           case GET -> Root / "hello" => Ok("hello")
@@ -134,6 +142,7 @@ object FileCacheRedirectionTests extends TestSuite {
         }
       }
 
+      /** Verifies the `httpToHttps` scenario behaves as the user expects. */
       test("httpToHttps") {
 
         def withServers[T](f: (Uri, Uri) => T): T = {
@@ -157,6 +166,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `enabled` scenario behaves as the user expects. */
         test("enabled") {
           withServers { (httpBaseUri, _) =>
             expect(
@@ -166,6 +176,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `disabled` scenario behaves as the user expects. */
         test("disabled") {
           withServers { (httpBaseUri, _) =>
             expect(
@@ -177,6 +188,7 @@ object FileCacheRedirectionTests extends TestSuite {
         }
       }
 
+      /** Verifies the `httpToAuthHttps` scenario behaves as the user expects. */
       test("httpToAuthHttps") {
 
         val realm    = "secure realm"
@@ -210,6 +222,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `enabled` scenario behaves as the user expects. */
         test("enabled") {
           withServers { (httpBaseUri, httpsBaseUri) =>
             expect(
@@ -224,6 +237,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `disabled` scenario behaves as the user expects. */
         test("disabled") {
           withServers { (httpBaseUri, _) =>
             expect(
@@ -235,6 +249,7 @@ object FileCacheRedirectionTests extends TestSuite {
         }
       }
 
+      /** Verifies the `httpToAuthHttp` scenario behaves as the user expects. */
       test("httpToAuthHttp") {
 
         val realm    = "simple realm"
@@ -253,6 +268,7 @@ object FileCacheRedirectionTests extends TestSuite {
               unauth(realm)
         }
 
+        /** Verifies the `enabled` scenario behaves as the user expects. */
         test("enabled") {
           withHttpServer(routes) { base =>
 
@@ -269,6 +285,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `enabledAllRealms` scenario behaves as the user expects. */
         test("enabledAllRealms") {
           withHttpServer(routes) { base =>
             expect(
@@ -284,6 +301,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `disabled` scenario behaves as the user expects. */
         test("disabled") {
           test {
             withHttpServer(routes) { base =>
@@ -311,6 +329,7 @@ object FileCacheRedirectionTests extends TestSuite {
         }
       }
 
+      /** Verifies the `authHttpToAuthHttp` scenario behaves as the user expects. */
       test("authHttpToAuthHttp") {
         val realm    = "simple realm"
         val userPass = ("simple", "SiMpLe")
@@ -384,39 +403,50 @@ object FileCacheRedirectionTests extends TestSuite {
             )
           }
 
+        /** Verifies the `oldRfc2617` scenario behaves as the user expects. */
         test("oldRfc2617") {
+          /** Verifies the `enabled` scenario behaves as the user expects. */
           test("enabled") {
             testEnabled()
           }
+          /** Verifies the `enabledAllRealms` scenario behaves as the user expects. */
           test("enabledAllRealms") {
             testEnabledAllRealms()
           }
+          /** Verifies the `enabledSeveralCreds` scenario behaves as the user expects. */
           test("enabledSeveralCreds") {
             testEnabledSeveralCreds()
           }
+          /** Verifies the `disabled` scenario behaves as the user expects. */
           test("disabled") {
             testDisabled()
           }
         }
 
+        /** Verifies the `rfc7617WithCharset` scenario behaves as the user expects. */
         test("rfc7617WithCharset") {
           // current (2020/2021) Sonatype Nexus Repository Manager implements this
           val challengeParams = Map("charset" -> "UTF-8") // RFC 7617 only allows UTF-8
 
+          /** Verifies the `enabled` scenario behaves as the user expects. */
           test("enabled") {
             testEnabled(challengeParams)
           }
+          /** Verifies the `enabledAllRealms` scenario behaves as the user expects. */
           test("enabledAllRealms") {
             testEnabledAllRealms(challengeParams)
           }
+          /** Verifies the `enabledSeveralCreds` scenario behaves as the user expects. */
           test("enabledSeveralCreds") {
             testEnabledSeveralCreds(challengeParams)
           }
+          /** Verifies the `disabled` scenario behaves as the user expects. */
           test("disabled") {
             testDisabled(challengeParams)
           }
         }
 
+        /** Verifies the `beyondRfc7617` scenario behaves as the user expects. */
         test("beyondRfc7617") {
           // this tests that the underlying challenge-parsing code is robust enough
           val challengeParams = Map(
@@ -424,21 +454,26 @@ object FileCacheRedirectionTests extends TestSuite {
             "charset"    -> "iso-8859-15", // out of RFC 7617
             "abc"        -> "def"
           )
+          /** Verifies the `enabled` scenario behaves as the user expects. */
           test("enabled") {
             testEnabled(challengeParams)
           }
+          /** Verifies the `enabledAllRealms` scenario behaves as the user expects. */
           test("enabledAllRealms") {
             testEnabledAllRealms(challengeParams)
           }
+          /** Verifies the `enabledSeveralCreds` scenario behaves as the user expects. */
           test("enabledSeveralCreds") {
             testEnabledSeveralCreds(challengeParams)
           }
+          /** Verifies the `disabled` scenario behaves as the user expects. */
           test("disabled") {
             testDisabled(challengeParams)
           }
         }
       }
 
+      /** Verifies the `httpsToAuthHttps` scenario behaves as the user expects. */
       test("httpsToAuthHttps") {
 
         val realm    = "secure realm"
@@ -457,6 +492,7 @@ object FileCacheRedirectionTests extends TestSuite {
               unauth(realm)
         }
 
+        /** Verifies the `enabled` scenario behaves as the user expects. */
         test("enabled") {
           withHttpServer(routes, withSsl = true) { base =>
             expect(
@@ -471,6 +507,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `enabledAllRealms` scenario behaves as the user expects. */
         test("enabledAllRealms") {
           withHttpServer(routes, withSsl = true) { base =>
             expect(
@@ -485,6 +522,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `disabled` scenario behaves as the user expects. */
         test("disabled") {
           withHttpServer(routes, withSsl = true) { base =>
             error(
@@ -495,6 +533,7 @@ object FileCacheRedirectionTests extends TestSuite {
         }
       }
 
+      /** Verifies the `authHttpsToAuthHttps` scenario behaves as the user expects. */
       test("authHttpsToAuthHttps") {
 
         val realm    = "secure realm"
@@ -513,6 +552,7 @@ object FileCacheRedirectionTests extends TestSuite {
               unauth(realm)
         }
 
+        /** Verifies the `enabled` scenario behaves as the user expects. */
         test("enabled") {
           withHttpServer(routes, withSsl = true) { base =>
             expect(
@@ -527,6 +567,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `enabledAllRealms` scenario behaves as the user expects. */
         test("enabledAllRealms") {
           withHttpServer(routes, withSsl = true) { base =>
             expect(
@@ -541,6 +582,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `disabled` scenario behaves as the user expects. */
         test("disabled") {
           withHttpServer(routes, withSsl = true) { base =>
             error(
@@ -551,6 +593,7 @@ object FileCacheRedirectionTests extends TestSuite {
         }
       }
 
+      /** Verifies the `authHttpToNoAuthHttps` scenario behaves as the user expects. */
       test("authHttpToNoAuthHttps") {
 
         val httpRealm  = "simple realm"
@@ -588,6 +631,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `enabled` scenario behaves as the user expects. */
         test("enabled") {
           test {
             withServers { (httpBaseUri, httpsBaseUri) =>
@@ -630,6 +674,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `enabledAllRealms` scenario behaves as the user expects. */
         test("enabledAllRealms") {
           withServers { (httpBaseUri, _) =>
             expect(
@@ -646,6 +691,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `disabled` scenario behaves as the user expects. */
         test("disabled") {
           withServers { (httpBaseUri, httpsBaseUri) =>
             error(
@@ -663,6 +709,7 @@ object FileCacheRedirectionTests extends TestSuite {
         }
       }
 
+      /** Verifies the `credentialFile` scenario behaves as the user expects. */
       test("credentialFile") {
 
         val httpRealm  = "simple realm"
@@ -738,6 +785,7 @@ object FileCacheRedirectionTests extends TestSuite {
 
       }
 
+      /** Verifies the `randomCase` scenario behaves as the user expects. */
       test("randomCase") {
 
         val httpRealm  = "simple realm"
@@ -792,6 +840,7 @@ object FileCacheRedirectionTests extends TestSuite {
         val confFile = TestUtil.resourceFile("/credentials.json")
         assert(confFile.exists())
 
+        /** Verifies the `cred file https` scenario behaves as the user expects. */
         test("cred file https") {
           withServers { (httpBaseUri, _) =>
             expect(
@@ -803,6 +852,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `cred file http` scenario behaves as the user expects. */
         test("cred file http") {
           withServers { (httpBaseUri, _) =>
             expect(
@@ -813,6 +863,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `conf file https` scenario behaves as the user expects. */
         test("conf file https") {
           withServers { (httpBaseUri, _) =>
             expect(
@@ -824,6 +875,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `conf file http` scenario behaves as the user expects. */
         test("conf file http") {
           withServers { (httpBaseUri, _) =>
             expect(
@@ -836,6 +888,7 @@ object FileCacheRedirectionTests extends TestSuite {
 
       }
 
+      /** Verifies the `maxRedirects` scenario behaves as the user expects. */
       test("maxRedirects") {
 
         val httpRoutes = HttpRoutes.of[IO] {
@@ -849,6 +902,7 @@ object FileCacheRedirectionTests extends TestSuite {
             TemporaryRedirect("redirecting", Location(Uri(path = dest)))
         }
 
+        /** Verifies the `should be followed` scenario behaves as the user expects. */
         test("should be followed") {
           test - withHttpServer(httpRoutes) { base =>
             error(
@@ -875,6 +929,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `should not stackoverflow` scenario behaves as the user expects. */
         test("should not stackoverflow") {
           test - withHttpServer(httpRoutes) { base =>
             expect(
@@ -886,6 +941,7 @@ object FileCacheRedirectionTests extends TestSuite {
         }
       }
 
+      /** Verifies the `passCredentialsOnRedirect` scenario behaves as the user expects. */
       test("passCredentialsOnRedirect") {
         val realm    = "secure realm"
         val userPass = ("secure", "sEcUrE")
@@ -922,6 +978,7 @@ object FileCacheRedirectionTests extends TestSuite {
 
         // both servers have the same host here, so we're passing an Authentication ourselves via an Artifact
 
+        /** Verifies the `enabled` scenario behaves as the user expects. */
         test("enabled") {
           test {
             withServers() { (base, _) =>
@@ -947,6 +1004,7 @@ object FileCacheRedirectionTests extends TestSuite {
           }
         }
 
+        /** Verifies the `disabled` scenario behaves as the user expects. */
         test("disabled") {
           test {
             withServers() { (base, _) =>
@@ -970,6 +1028,7 @@ object FileCacheRedirectionTests extends TestSuite {
         }
       }
 
+      /** Verifies the `decodeGzip` scenario behaves as the user expects. */
       test("decodeGzip") {
         val data       = new ByteArrayOutputStream
         val gzipStream = new GZIPOutputStream(data)
@@ -988,6 +1047,7 @@ object FileCacheRedirectionTests extends TestSuite {
         }
       }
 
+      /** Verifies the `authThenNotFound` scenario behaves as the user expects. */
       test("authThenNotFound") {
 
         val realm    = "secure realm"
@@ -1015,7 +1075,9 @@ object FileCacheRedirectionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `custom protocols` scenario behaves as the user expects. */
     test("custom protocols") {
+      /** Verifies the `unknown` scenario behaves as the user expects. */
       test("unknown") {
         async {
           val artifact = Artifact("unknown.protocol://hostname/file.txt")
@@ -1043,6 +1105,7 @@ object FileCacheRedirectionTests extends TestSuite {
         }
       }
 
+      /** Verifies the `with classloader` scenario behaves as the user expects. */
       test("with classloader") {
         withTmpDir0 { dir =>
           async {
@@ -1080,8 +1143,10 @@ object FileCacheRedirectionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `checksums` scenario behaves as the user expects. */
     test("checksums") {
 
+      /** Verifies the `simple` scenario behaves as the user expects. */
       test("simple") {
         val dummyFileUri = TestUtil.resourceFile("/data/foo.xml").toURI.toASCIIString
 
@@ -1155,6 +1220,7 @@ object FileCacheRedirectionTests extends TestSuite {
         }
       }
 
+      /** Verifies the `fromHeader` scenario behaves as the user expects. */
       test("fromHeader") {
 
         val content = "ok\n"
@@ -1189,16 +1255,19 @@ object FileCacheRedirectionTests extends TestSuite {
           )
         }
 
+        /** Verifies the `SHA-256` scenario behaves as the user expects. */
         test("SHA-256") {
           withHttpServer(routes) { root =>
             expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("SHA-256"))))
           }
         }
+        /** Verifies the `SHA-1` scenario behaves as the user expects. */
         test("SHA-1") {
           withHttpServer(routes) { root =>
             expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("SHA-1"))))
           }
         }
+        /** Verifies the `MD5` scenario behaves as the user expects. */
         test("MD5") {
           withHttpServer(routes) { root =>
             expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("MD5"))))
@@ -1207,6 +1276,7 @@ object FileCacheRedirectionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `lastModifiedEx` scenario behaves as the user expects. */
     test("lastModifiedEx") {
       withTmpDir0 { dir =>
         val url       = "https://foo-does-no-exist-zzzzzzz/a.pom"
@@ -1227,6 +1297,7 @@ object FileCacheRedirectionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `stored digests work - SHA1` scenario behaves as the user expects. */
     test("stored digests work - SHA1") {
       withTmpDir0 { dir =>
         val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
@@ -1264,6 +1335,7 @@ object FileCacheRedirectionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `stored digests work - MD5` scenario behaves as the user expects. */
     test("stored digests work - MD5") {
       withTmpDir0 { dir =>
         val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
@@ -1300,6 +1372,7 @@ object FileCacheRedirectionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `stored digests should not be stored outside of cache` scenario behaves as the user expects. */
     test("stored digests should not be stored outside of cache") {
       withTmpDir0 { dir =>
         val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
@@ -1330,6 +1403,7 @@ object FileCacheRedirectionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `wrong stored digest should delete file in cache` scenario behaves as the user expects. */
     test("wrong stored digest should delete file in cache") {
       withTmpDir0 { dir =>
         val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
@@ -1362,6 +1436,7 @@ object FileCacheRedirectionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `un-escape characters in file URL` scenario behaves as the user expects. */
     test("un-escape characters in file URL") {
       withTmpDir0 { baseDir =>
         val dir = baseDir.resolve("le repository")
@@ -1385,6 +1460,7 @@ object FileCacheRedirectionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `does not accept redundant path elements like .. or .` scenario behaves as the user expects. */
     test("does not accept redundant path elements like .. or .") {
       assertThrows[IllegalArgumentException] {
         val localFile = FileCache.localFile0(

@@ -49,6 +49,7 @@ object FetchCacheTests extends TestSuite {
 
     import TestHelpers.ec
 
+    /** Verifies the `simple` scenario behaves as the user expects. */
     test("simple") {
       async {
 

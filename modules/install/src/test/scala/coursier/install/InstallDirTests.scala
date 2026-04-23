@@ -14,6 +14,7 @@ import java.util.zip.{ZipEntry, ZipOutputStream}
 object InstallDirTests extends TestSuite {
 
   val tests = Tests {
+    /** Verifies the `fallback to JVM when pass the GraalVM params` scenario behaves as the user expects. */
     test("fallback to JVM when pass the GraalVM params") {
       // https://github.com/coursier/coursier/pull/2652
 
@@ -33,6 +34,7 @@ object InstallDirTests extends TestSuite {
       assert(bootstrapParams.mainClass == mainClass)
     }
 
+    /** Verifies the `assume SSL handshake exceptions are not found errors` scenario behaves as the user expects. */
     test("assume SSL handshake exceptions are not found errors") {
       PrebuiltApp.handleArtifactErrors(
         Left(new ArtifactError.DownloadError(
@@ -46,6 +48,7 @@ object InstallDirTests extends TestSuite {
       )
     }
 
+    /** Verifies the `list should return the list of installed apps and skip directories` scenario behaves as the user expects. */
     test("list should return the list of installed apps and skip directories") {
       def createApp(dir: Path, name: String): Unit = {
         val app = dir.resolve(name)

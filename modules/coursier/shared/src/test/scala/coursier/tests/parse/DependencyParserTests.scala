@@ -26,6 +26,7 @@ object DependencyParserTests extends TestSuite {
 
     val url = "file%3A%2F%2Fsome%2Fencoded%2Furl"
 
+    /** Verifies the `org:name:version` scenario behaves as the user expects. */
     test("org:name:version") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4", "2.11.11") match {
         case Left(err) => assert(false)
@@ -38,6 +39,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `org:name` scenario behaves as the user expects. */
     test("org:name") {
       DependencyParser.dependencyParams("org.apache.avro:avro", "2.11.11") match {
         case Left(err) => assert(false)
@@ -50,6 +52,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `org:name:version:config` scenario behaves as the user expects. */
     test("org:name:version:config") {
       DependencyParser.dependencyParams("org.apache.avro:avro:1.7.4:runtime", "2.11.11") match {
         case Left(err) => assert(false)
@@ -62,6 +65,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `org:name: :config` scenario behaves as the user expects. */
     test("org:name: :config") {
       DependencyParser.dependencyParams("org.apache.avro:avro: :runtime", "2.11.11") match {
         case Left(err) => assert(false)
@@ -74,6 +78,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `org:name:interval:config` scenario behaves as the user expects. */
     test("org:name:interval:config") {
       DependencyParser.dependencyParams("org.apache.avro:avro:[1.7,1.8):runtime", "2.11.11") match {
         case Left(err) => assert(false)
@@ -86,6 +91,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `single attr` scenario behaves as the user expects. */
     test("single attr") {
       DependencyParser.dependencyParams(
         "org.apache.avro:avro:1.7.4:runtime,classifier=tests",
@@ -101,6 +107,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `single attr empty version` scenario behaves as the user expects. */
     test("single attr empty version") {
       DependencyParser.dependencyParams(
         "org.apache.avro:avro: :runtime,classifier=tests",
@@ -116,6 +123,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `extension` scenario behaves as the user expects. */
     test("extension") {
       DependencyParser.dependencyParams(
         "org.apache.avro:avro:1.7.4:runtime,ext=exe",
@@ -131,6 +139,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `type` scenario behaves as the user expects. */
     test("type") {
       DependencyParser.dependencyParams(
         "org.apache.avro:avro:1.7.4:runtime,type=typetype",
@@ -152,6 +161,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `extension and type` scenario behaves as the user expects. */
     test("extension and type") {
       DependencyParser.dependencyParams(
         "org.apache.avro:avro:1.7.4:runtime,ext=exe,type=typetype",
@@ -173,6 +183,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `single attr with interval` scenario behaves as the user expects. */
     test("single attr with interval") {
       DependencyParser.dependencyParams(
         "org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests",
@@ -188,6 +199,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `single attr with url` scenario behaves as the user expects. */
     test("single attr with url") {
       DependencyParser.dependencyParams(
         "org.apache.avro:avro:1.7.4:runtime,url=" + url,
@@ -205,6 +217,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `multiple attrs with url` scenario behaves as the user expects. */
     test("multiple attrs with url") {
       DependencyParser.dependencyParams(
         "org.apache.avro:avro:1.7.4:runtime,classifier=tests,url=" + url,
@@ -222,6 +235,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `multiple attrs with interval and url` scenario behaves as the user expects. */
     test("multiple attrs with interval and url") {
       DependencyParser.dependencyParams(
         "org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests,url=" + url,
@@ -239,6 +253,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `multiple attrs with interval url and exclusions` scenario behaves as the user expects. */
     test("multiple attrs with interval url and exclusions") {
       DependencyParser.dependencyParams(
         "org.apache.avro:avro:[1.7,1.8):runtime,classifier=tests,url=" + url + ",exclude=org%nme",
@@ -257,6 +272,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `single attr with org::name:version` scenario behaves as the user expects. */
     test("single attr with org::name:version") {
       DependencyParser.dependencyParams(
         "io.get-coursier.scala-native::sandbox_native0.3:0.3.0-coursier-1,classifier=tests",
@@ -272,6 +288,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `single attr with org::name:interval` scenario behaves as the user expects. */
     test("single attr with org::name:interval") {
       DependencyParser.dependencyParams(
         "io.get-coursier.scala-native::sandbox_native0.3:[0.3.0,0.4.0),classifier=tests",
@@ -287,6 +304,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `multiple attr with org::name:interval and exclusion` scenario behaves as the user expects. */
     test("multiple attr with org::name:interval and exclusion") {
       DependencyParser.dependencyParams(
         "io.get-coursier.scala-native::sandbox_native0.3:[0.3.0,0.4.0),classifier=tests,exclude=foo%bar",
@@ -303,6 +321,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `single bom` scenario behaves as the user expects. */
     test("single bom") {
       val expectedDep = Dependency(
         module = Module(
@@ -322,6 +341,7 @@ object DependencyParserTests extends TestSuite {
       assert(fromMacro == expectedDep)
     }
 
+    /** Verifies the `multiple boms` scenario behaves as the user expects. */
     test("multiple boms") {
       val expectedDep = Dependency(
         module = Module(
@@ -342,6 +362,7 @@ object DependencyParserTests extends TestSuite {
       assert(fromMacro == expectedDep)
     }
 
+    /** Verifies the `single override` scenario behaves as the user expects. */
     test("single override") {
       val expectedDep = Dependency(
         module = Module(
@@ -374,6 +395,7 @@ object DependencyParserTests extends TestSuite {
       assert(fromMacro == expectedDep)
     }
 
+    /** Verifies the `several overrides` scenario behaves as the user expects. */
     test("several overrides") {
       val expectedDep = Dependency(
         module = Module(
@@ -424,6 +446,7 @@ object DependencyParserTests extends TestSuite {
       assert(fromMacro == expectedDep)
     }
 
+    /** Verifies the `full cross versioned org:::name:version` scenario behaves as the user expects. */
     test("full cross versioned org:::name:version") {
       DependencyParser.dependencyParams("com.lihaoyi:::ammonite:1.6.7", "2.12.8") match {
         case Left(err) => assert(false)
@@ -434,6 +457,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `full cross versioned org:::name:version with exclusion` scenario behaves as the user expects. */
     test("full cross versioned org:::name:version with exclusion") {
       DependencyParser.dependencyParams(
         "com.lihaoyi:::ammonite:1.6.7,exclude=aa%*",
@@ -448,6 +472,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `illegal 1` scenario behaves as the user expects. */
     test("illegal 1") {
       DependencyParser.dependencyParams("junit:junit:4.12,classifier", "2.11.11") match {
         case Left(err)  => assert(err.contains("Invalid empty classifier attribute"))
@@ -455,6 +480,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `illegal 2` scenario behaves as the user expects. */
     test("illegal 2") {
       DependencyParser.dependencyParams("a:b:c,batman=robin", "2.11.11") match {
         case Left(err)  => assert(err.contains("The only attributes allowed are:"))
@@ -462,6 +488,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `illegal 3 malformed exclude` scenario behaves as the user expects. */
     test("illegal 3 malformed exclude") {
       DependencyParser.dependencyParams("a:b:c,exclude=aaa", "2.11.11") match {
         case Left(err)  => assert(err.contains("Unrecognized excluded module"))
@@ -469,6 +496,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `scala module` scenario behaves as the user expects. */
     test("scala module") {
       DependencyParser.javaOrScalaDependencyParams("org::name:ver") match {
         case Left(err) => sys.error(err)
@@ -485,6 +513,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `scala module empty version` scenario behaves as the user expects. */
     test("scala module empty version") {
       DependencyParser.javaOrScalaDependencyParams("org::name") match {
         case Left(err) => sys.error(err)
@@ -501,6 +530,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `full cross versioned scala module` scenario behaves as the user expects. */
     test("full cross versioned scala module") {
       DependencyParser.javaOrScalaDependencyParams("org:::name:ver") match {
         case Left(err) => sys.error(err)
@@ -517,6 +547,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `full cross versioned scala module empty version` scenario behaves as the user expects. */
     test("full cross versioned scala module empty version") {
       DependencyParser.javaOrScalaDependencyParams("org:::name") match {
         case Left(err) => sys.error(err)
@@ -533,6 +564,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `full cross versioned scala module with config` scenario behaves as the user expects. */
     test("full cross versioned scala module with config") {
       DependencyParser.javaOrScalaDependencyParams("org:::name:ver:conf") match {
         case Left(err) => sys.error(err)
@@ -549,6 +581,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `full cross versioned scala module with config and empty version` scenario behaves as the user expects. */
     test("full cross versioned scala module with config and empty version") {
       DependencyParser.javaOrScalaDependencyParams("org:::name: :conf") match {
         case Left(err) => sys.error(err)
@@ -565,6 +598,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `'/' and '\' are invalid in organization` scenario behaves as the user expects. */
     test("'/' and '\\' are invalid in organization") {
       DependencyParser.dependencyParams("org/apache/avro:avro:1.7.4", "2.11.11") match {
         case Left(err)       => assert(err.contains("org/apache/avro"))
@@ -572,6 +606,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `'/' and '\' are invalid in module name` scenario behaves as the user expects. */
     test("'/' and '\\' are invalid in module name") {
       DependencyParser.dependencyParams("org-apache-avro:avro\\avro:1.7.4", "2.11.11") match {
         case Left(err)       => assert(err.contains("avro\\avro"))
@@ -579,6 +614,7 @@ object DependencyParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `'/' and '\' are invalid in version` scenario behaves as the user expects. */
     test("'/' and '\\' are invalid in version") {
       DependencyParser.dependencyParams("org-apache-avro:avro:1.7.4/SNAPSHOT", "2.11.11") match {
         case Left(err)       => assert(err.contains("1.7.4/SNAPSHOT"))

@@ -10,9 +10,12 @@ object JsonRuleParserTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `rule` scenario behaves as the user expects. */
     test("rule") {
+      /** Verifies the `alwaysFail` scenario behaves as the user expects. */
       test("alwaysFail") {
 
+        /** Verifies the `simple` scenario behaves as the user expects. */
         test("simple") {
           val rule =
             """{
@@ -24,6 +27,7 @@ object JsonRuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
+        /** Verifies the `defaultAction` scenario behaves as the user expects. */
         test("defaultAction") {
           val rule =
             """{
@@ -38,6 +42,7 @@ object JsonRuleParserTests extends TestSuite {
 
       }
 
+      /** Verifies the `sameVersion` scenario behaves as the user expects. */
       test("sameVersion") {
 
         test {
@@ -78,6 +83,7 @@ object JsonRuleParserTests extends TestSuite {
 
       }
 
+      /** Verifies the `dontBumpRootDependencies` scenario behaves as the user expects. */
       test("dontBumpRootDependencies") {
 
         test {
@@ -140,8 +146,10 @@ object JsonRuleParserTests extends TestSuite {
 
       }
 
+      /** Verifies the `strict` scenario behaves as the user expects. */
       test("strict") {
 
+        /** Verifies the `simple` scenario behaves as the user expects. */
         test("simple") {
           test {
             val rule =
@@ -170,6 +178,7 @@ object JsonRuleParserTests extends TestSuite {
           }
         }
 
+        /** Verifies the `exclude` scenario behaves as the user expects. */
         test("exclude") {
           test {
             val rule =
@@ -196,6 +205,7 @@ object JsonRuleParserTests extends TestSuite {
           }
         }
 
+        /** Verifies the `defaultAction` scenario behaves as the user expects. */
         test("defaultAction") {
           val rule =
             """{
@@ -211,7 +221,9 @@ object JsonRuleParserTests extends TestSuite {
       }
     }
 
+    /** Verifies the `rules` scenario behaves as the user expects. */
     test("rules") {
+      /** Verifies the `empty` scenario behaves as the user expects. */
       test("empty") {
         val rules       = "[]"
         val res         = JsonRuleParser.parseRules(rules, "2.12.8")
@@ -219,6 +231,7 @@ object JsonRuleParserTests extends TestSuite {
         assert(res == expectedRes)
       }
 
+      /** Verifies the `one` scenario behaves as the user expects. */
       test("one") {
 
         test {
@@ -250,6 +263,7 @@ object JsonRuleParserTests extends TestSuite {
 
       }
 
+      /** Verifies the `two` scenario behaves as the user expects. */
       test("two") {
 
         test {

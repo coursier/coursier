@@ -46,6 +46,7 @@ object JavaHomeTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `environment update should be empty for system JVM` scenario behaves as the user expects. */
     test("environment update should be empty for system JVM") {
       val edit = JavaHome.environmentFor(
         true,
@@ -55,6 +56,7 @@ object JavaHomeTests extends TestSuite {
       assert(edit.isEmpty)
     }
 
+    /** Verifies the `environment update should update both JAVA_HOME and PATH on Linux or Windows` scenario behaves as the user expects. */
     test("environment update should update both JAVA_HOME and PATH on Linux or Windows") {
       val expectedEdit = EnvironmentUpdate()
         .withSet(Seq("JAVA_HOME" -> platformPath("/home/foo/jvm/openjdk-27")))
@@ -64,6 +66,7 @@ object JavaHomeTests extends TestSuite {
       assert(edit == expectedEdit)
     }
 
+    /** Verifies the `environment update should update only JAVA_HOME on macOS` scenario behaves as the user expects. */
     test("environment update should update only JAVA_HOME on macOS") {
       val expectedEdit = EnvironmentUpdate()
         .withSet(Seq("JAVA_HOME" -> platformPath("/home/foo/jvm/openjdk-27")))
@@ -72,6 +75,7 @@ object JavaHomeTests extends TestSuite {
       assert(edit == expectedEdit)
     }
 
+    /** Verifies the `system JVM should respect JAVA_HOME` scenario behaves as the user expects. */
     test("system JVM should respect JAVA_HOME") {
 
       val env = Map("JAVA_HOME" -> platformPath("/home/foo/jvm/adopt-31"))
@@ -87,6 +91,7 @@ object JavaHomeTests extends TestSuite {
       assert(system == expectedSystem)
     }
 
+    /** Verifies the `system JVM should use /usr/libexec/java_home on macOS` scenario behaves as the user expects. */
     test("system JVM should use /usr/libexec/java_home on macOS") {
 
       val commandOutput: CommandOutput =
@@ -114,6 +119,7 @@ object JavaHomeTests extends TestSuite {
       assert(system == expectedSystem)
     }
 
+    /** Verifies the `system JVM should use get Java home via -XshowSettings:properties on Linux and Windows` scenario behaves as the user expects. */
     test("system JVM should use get Java home via -XshowSettings:properties on Linux and Windows") {
 
       val commandOutput: CommandOutput =
@@ -155,6 +161,7 @@ object JavaHomeTests extends TestSuite {
       assert(system == expectedSystem)
     }
 
+    /** Verifies the `prefer installed JVM over more recent one in index` scenario behaves as the user expects. */
     test("prefer installed JVM over more recent one in index") {
       val strIndex =
         """{

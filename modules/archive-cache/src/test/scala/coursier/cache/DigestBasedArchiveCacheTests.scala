@@ -11,6 +11,7 @@ object DigestBasedArchiveCacheTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `simple` scenario behaves as the user expects. */
     test("simple") {
       withTmpDir { tmpDir =>
         val archiveCache0 = ArchiveCacheTests.archiveCache(tmpDir / "arc")

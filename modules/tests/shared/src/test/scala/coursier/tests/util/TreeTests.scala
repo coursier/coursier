@@ -73,6 +73,7 @@ object TreeTests extends TestSuite {
   e.addChild(f)
 
   val tests = Tests {
+    /** Verifies the `basic` scenario behaves as the user expects. */
     test("basic") {
       val str = Tree[MutableTree](roots)(_.children.toSeq)
         .render(_.label)
@@ -85,6 +86,7 @@ object TreeTests extends TestSuite {
           #   └─ c4""".stripMargin('#'))
     }
 
+    /** Verifies the `moreNested` scenario behaves as the user expects. */
     test("moreNested") {
       val str = Tree[MutableTree](moreNestedRoots)(_.children.toSeq)
         .render(_.label)
@@ -96,6 +98,7 @@ object TreeTests extends TestSuite {
           #   └─ d1""".stripMargin('#'))
     }
 
+    /** Verifies the `cyclic1` scenario behaves as the user expects. */
     test("cyclic1") {
       val str: String = Tree[MutableTree](Vector(a, e))(_.children.toSeq)
         .render(_.label)
@@ -109,6 +112,7 @@ object TreeTests extends TestSuite {
           #   └─ f""".stripMargin('#'))
     }
 
+    /** Verifies the `cyclic2` scenario behaves as the user expects. */
     test("cyclic2") {
       val str: String = Tree[MutableTree](Vector(a, c))(_.children.toSeq)
         .render(_.label)

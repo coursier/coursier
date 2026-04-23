@@ -36,6 +36,7 @@ object ParamsTests extends TestSuite {
   }
 
   val tests = Tests {
+    /** Verifies the `Normal text should parse correctly` scenario behaves as the user expects. */
     test("Normal text should parse correctly") {
       withFile(
         "org1:name1--org2:name2"
@@ -50,6 +51,7 @@ object ParamsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Multiple excludes should be combined` scenario behaves as the user expects. */
     test("Multiple excludes should be combined") {
       withFile(
         "org1:name1--org2:name2\n" +
@@ -73,6 +75,7 @@ object ParamsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `extra -- should error` scenario behaves as the user expects. */
     test("extra -- should error") {
       withFile(
         "org1:name1--org2:name2--xxx\n" +
@@ -89,6 +92,7 @@ object ParamsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `child has no name should error` scenario behaves as the user expects. */
     test("child has no name should error") {
       withFile(
         "org1:name1--org2:"
@@ -103,6 +107,7 @@ object ParamsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `child has nothing should error` scenario behaves as the user expects. */
     test("child has nothing should error") {
       withFile(
         "org1:name1--:"

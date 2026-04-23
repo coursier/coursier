@@ -7,6 +7,7 @@ object JavaOrScalaModuleTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `scalaBinaryVersion` scenario behaves as the user expects. */
     test("scalaBinaryVersion") {
       import JavaOrScalaModule.scalaBinaryVersion
 

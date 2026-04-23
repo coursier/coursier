@@ -15,6 +15,7 @@ object VersionsTests extends TestSuite {
     .withCache(cache)
 
   val tests = Tests {
+    /** Verifies the `simple` scenario behaves as the user expects. */
     test("simple") {
       async {
         val shapelessVersions =

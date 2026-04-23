@@ -10,6 +10,7 @@ import utest._
 object InterpolatorsTests extends TestSuite {
 
   val tests = Tests {
+    /** Verifies the `module` scenario behaves as the user expects. */
     test("module") {
       test {
         val m        = mod"org.scala-lang:scala-library"
@@ -25,6 +26,7 @@ object InterpolatorsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `dependency` scenario behaves as the user expects. */
     test("dependency") {
       test {
         val dep = dep"ch.qos.logback:logback-classic:1.1.3"
@@ -44,6 +46,7 @@ object InterpolatorsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `maven repository` scenario behaves as the user expects. */
     test("maven repository") {
       test {
         val repo         = mvn"https://foo.com/a/b/c"
@@ -52,6 +55,7 @@ object InterpolatorsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `ivy repository` scenario behaves as the user expects. */
     test("ivy repository") {
       test {
         val repo = ivy"https://foo.com/a/b/c/[defaultPattern]"

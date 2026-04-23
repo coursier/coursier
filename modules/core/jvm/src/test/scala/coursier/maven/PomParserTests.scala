@@ -6,6 +6,7 @@ import coursier.core.Info
 object PomParserTests extends TestSuite {
 
   val tests = Tests {
+    /** Verifies the `scm field is optional` scenario behaves as the user expects. */
     test("scm field is optional") {
       val success = MavenRepository.parseRawPomSax(
         """
@@ -21,6 +22,7 @@ object PomParserTests extends TestSuite {
       assert(scm.isEmpty)
     }
 
+    /** Verifies the `all fields in scm is optional` scenario behaves as the user expects. */
     test("all fields in scm is optional") {
       val success = MavenRepository.parseRawPomSax(
         """
@@ -41,6 +43,7 @@ object PomParserTests extends TestSuite {
       assert(scm.exists(_.developerConnection.isEmpty))
     }
 
+    /** Verifies the `can parse scm info` scenario behaves as the user expects. */
     test("can parse scm info") {
       val success = MavenRepository.parseRawPomSax(
         """
@@ -64,6 +67,7 @@ object PomParserTests extends TestSuite {
       assert(scm.exists(_.developerConnection.contains("foo")))
     }
 
+    /** Verifies the `properties are parsed` scenario behaves as the user expects. */
     test("properties are parsed") {
       val success = MavenRepository.parseRawPomSax(
         """
@@ -84,6 +88,7 @@ object PomParserTests extends TestSuite {
       assert(properties == expected)
     }
 
+    /** Verifies the `licenses are optional` scenario behaves as the user expects. */
     test("licenses are optional") {
       val success = MavenRepository.parseRawPomSax(
         """
@@ -100,6 +105,7 @@ object PomParserTests extends TestSuite {
       assert(licenseInfo == expected)
     }
 
+    /** Verifies the `licenses with just name and url` scenario behaves as the user expects. */
     test("licenses with just name and url") {
       val success = MavenRepository.parseRawPomSax(
         """
@@ -129,6 +135,7 @@ object PomParserTests extends TestSuite {
       assert(licenseInfo == expected)
     }
 
+    /** Verifies the `licenses with just name and url (binary compat test)` scenario behaves as the user expects. */
     test("licenses with just name and url (binary compat test)") {
       val success = MavenRepository.parseRawPomSax(
         """
@@ -153,6 +160,7 @@ object PomParserTests extends TestSuite {
       assert(licenses == expected)
     }
 
+    /** Verifies the `multiple licenses with just name and url` scenario behaves as the user expects. */
     test("multiple licenses with just name and url") {
       val success = MavenRepository.parseRawPomSax(
         """
@@ -192,6 +200,7 @@ object PomParserTests extends TestSuite {
       assert(licenseInfo == expected)
     }
 
+    /** Verifies the `license with maven distribution and comments` scenario behaves as the user expects. */
     test("license with maven distribution and comments") {
       val success = MavenRepository.parseRawPomSax(
         """
@@ -223,6 +232,7 @@ object PomParserTests extends TestSuite {
       assert(licenseInfo == expected)
     }
 
+    /** Verifies the `license with maven distribution and comments (binary compat test)` scenario behaves as the user expects. */
     test("license with maven distribution and comments (binary compat test)") {
       val success = MavenRepository.parseRawPomSax(
         """
@@ -249,6 +259,7 @@ object PomParserTests extends TestSuite {
       assert(licenses == expected)
     }
 
+    /** Verifies the `'/' and '\' are invalid in groupId` scenario behaves as the user expects. */
     test("'/' and '\\' are invalid in groupId") {
       val failure = MavenRepository.parseRawPomSax(
         """
@@ -264,6 +275,7 @@ object PomParserTests extends TestSuite {
       assert(message.contains("com/example"))
     }
 
+    /** Verifies the `'/' and '\' are invalid in artifactId` scenario behaves as the user expects. */
     test("'/' and '\\' are invalid in artifactId") {
       val failure = MavenRepository.parseRawPomSax(
         """
@@ -279,6 +291,7 @@ object PomParserTests extends TestSuite {
       assert(message.contains("awesome\\project"))
     }
 
+    /** Verifies the `'/' and '\' are invalid in version` scenario behaves as the user expects. */
     test("'/' and '\\' are invalid in version") {
       val failure = MavenRepository.parseRawPomSax(
         """

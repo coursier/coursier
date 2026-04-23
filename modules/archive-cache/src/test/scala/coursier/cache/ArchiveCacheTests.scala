@@ -58,6 +58,7 @@ abstract class ArchiveCacheTests extends TestSuite {
     }
 
   def actualTests = Tests {
+    /** Verifies the `jar` scenario behaves as the user expects. */
     test("jar") {
       checkArchiveHas(
         "https://repo1.maven.org/maven2/org/fusesource/jansi/jansi/2.4.1/jansi-2.4.1.jar",
@@ -65,6 +66,7 @@ abstract class ArchiveCacheTests extends TestSuite {
       )
     }
 
+    /** Verifies the `txz` scenario behaves as the user expects. */
     test("txz") {
       checkArchiveHas(
         "https://ftp.gnu.org/gnu/hello/hello-2.7.tar.xz",
@@ -72,6 +74,7 @@ abstract class ArchiveCacheTests extends TestSuite {
       )
     }
 
+    /** Verifies the `txz` scenario behaves as the user expects. */
     test("txz") {
       checkArchiveHas(
         "https://europe.mirror.pkgbuild.com/extra/os/x86_64/busybox-1.36.1-2-x86_64.pkg.tar.zst",
@@ -79,6 +82,7 @@ abstract class ArchiveCacheTests extends TestSuite {
       )
     }
 
+    /** Verifies the `deb` scenario behaves as the user expects. */
     test("deb") {
       checkArchiveHas(
         "https://github.com/VirtusLab/scala-cli/releases/download/v1.7.1/scala-cli-x86_64-pc-linux.deb",
@@ -86,6 +90,7 @@ abstract class ArchiveCacheTests extends TestSuite {
       )
     }
 
+    /** Verifies the `xz` scenario behaves as the user expects. */
     test("xz") {
       checkArchiveHas(
         "https://github.com/xz-mirror/xz/raw/refs/heads/master/tests/files/good-1-check-sha256.xz",
@@ -93,6 +98,7 @@ abstract class ArchiveCacheTests extends TestSuite {
       )
     }
 
+    /** Verifies the `detect tgz` scenario behaves as the user expects. */
     test("detect tgz") {
 
       val repoName = "library/hello-world"
@@ -109,6 +115,7 @@ abstract class ArchiveCacheTests extends TestSuite {
       )
     }
 
+    /** Verifies the `archive in archive` scenario behaves as the user expects. */
     test("archive in archive") {
       checkArchiveHas(
         "https://github.com/VirtusLab/scala-cli/releases/download/v1.7.1/scala-cli-x86_64-pc-linux.deb!data.tar.zst!usr/bin/scala-cli"
@@ -126,6 +133,7 @@ abstract class ArchiveCacheTests extends TestSuite {
       // )
     }
 
+    /** Verifies the `short path dir` scenario behaves as the user expects. */
     test("short path dir") {
       val archive =
         Artifact("https://repo1.maven.org/maven2/org/fusesource/jansi/jansi/2.4.1/jansi-2.4.1.jar")
@@ -222,6 +230,7 @@ abstract class ArchiveCacheTests extends TestSuite {
           Nil
       }
 
+    /** Verifies the `zip integrity` scenario behaves as the user expects. */
     test("zip integrity") {
       integrityTest(
         Artifact(
@@ -243,6 +252,7 @@ abstract class ArchiveCacheTests extends TestSuite {
       )
     }
 
+    /** Verifies the `gzip integrity` scenario behaves as the user expects. */
     test("gzip integrity") {
       integrityTest(
         // random gzip file found on Maven Central

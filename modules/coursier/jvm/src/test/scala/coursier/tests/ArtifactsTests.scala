@@ -16,6 +16,7 @@ object ArtifactsTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `severalResolutions` scenario behaves as the user expects. */
     test("severalResolutions") {
       async {
 
@@ -62,6 +63,7 @@ object ArtifactsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `extraArtifacts` scenario behaves as the user expects. */
     test("extraArtifacts") {
       async {
 
@@ -101,6 +103,7 @@ object ArtifactsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `transformArtifacts` scenario behaves as the user expects. */
     test("transformArtifacts") {
       async {
 
@@ -141,6 +144,7 @@ object ArtifactsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `noDuplicatedArtifacts` scenario behaves as the user expects. */
     test("noDuplicatedArtifacts") {
       async {
 
@@ -171,6 +175,7 @@ object ArtifactsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `no two versions of a dependency` scenario behaves as the user expects. */
     test("no two versions of a dependency") {
       async {
 
@@ -216,6 +221,7 @@ object ArtifactsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `in memory repo` scenario behaves as the user expects. */
     test("in memory repo") {
       async {
 
@@ -257,7 +263,9 @@ object ArtifactsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Take Ivy dependency artifacts into account` scenario behaves as the user expects. */
     test("Take Ivy dependency artifacts into account") {
+      /** Verifies the `to maven` scenario behaves as the user expects. */
       test("to maven") {
         async {
 
@@ -298,6 +306,7 @@ object ArtifactsTests extends TestSuite {
         }
       }
 
+      /** Verifies the `to ivy` scenario behaves as the user expects. */
       test("to ivy") {
         async {
 
@@ -338,6 +347,7 @@ object ArtifactsTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Don't group artifacts with same URL` scenario behaves as the user expects. */
     test("Don't group artifacts with same URL") {
       async {
 

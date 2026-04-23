@@ -119,6 +119,7 @@ object ResolveTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `simple` scenario behaves as the user expects. */
     test("simple") {
       async {
 
@@ -132,6 +133,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `simple sttp with forced Scala 3` scenario behaves as the user expects. */
     test("simple sttp with forced Scala 3") {
       async {
 
@@ -150,6 +152,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `forceScalaVersion` scenario behaves as the user expects. */
     test("forceScalaVersion") {
       async {
 
@@ -170,6 +173,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `typelevel` scenario behaves as the user expects. */
     test("typelevel") {
       async {
 
@@ -190,7 +194,9 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `addForceVersion` scenario behaves as the user expects. */
     test("addForceVersion") {
+      /** Verifies the `simple` scenario behaves as the user expects. */
       test("simple") {
         async {
 
@@ -222,6 +228,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `whole org` scenario behaves as the user expects. */
       test("whole org") {
         async {
           val forcedCollectionVersion = "1.4.2"
@@ -277,6 +284,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `mirrors` scenario behaves as the user expects. */
     test("mirrors") {
 
       def run(mirror: Mirror) = async {
@@ -293,7 +301,9 @@ object ResolveTests extends TestSuite {
         assert(artifacts.forall(_.url.startsWith("https://jcenter.bintray.com")))
       }
 
+      /** Verifies the `mavenMirror` scenario behaves as the user expects. */
       test("mavenMirror") {
+        /** Verifies the `specific` scenario behaves as the user expects. */
         test("specific") {
           run {
             MavenMirror(
@@ -302,11 +312,14 @@ object ResolveTests extends TestSuite {
             )
           }
         }
+        /** Verifies the `all` scenario behaves as the user expects. */
         test("all") {
           run(MavenMirror("https://jcenter.bintray.com", "*"))
         }
 
+        /** Verifies the `trailingSlash` scenario behaves as the user expects. */
         test("trailingSlash") {
+          /** Verifies the `specific` scenario behaves as the user expects. */
           test("specific") {
             test {
               run {
@@ -333,16 +346,19 @@ object ResolveTests extends TestSuite {
               }
             }
           }
+          /** Verifies the `all` scenario behaves as the user expects. */
           test("all") {
             run(MavenMirror("https://jcenter.bintray.com/", "*"))
           }
         }
       }
 
+      /** Verifies the `treeMirror` scenario behaves as the user expects. */
       test("treeMirror") {
         test {
           run(TreeMirror("https://jcenter.bintray.com", "https://repo1.maven.org/maven2"))
         }
+        /** Verifies the `trailingSlash` scenario behaves as the user expects. */
         test("trailingSlash") {
           test {
             run(TreeMirror("https://jcenter.bintray.com/", "https://repo1.maven.org/maven2"))
@@ -357,7 +373,9 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `latest` scenario behaves as the user expects. */
     test("latest") {
+      /** Verifies the `maven` scenario behaves as the user expects. */
       test("maven") {
 
         val resolve0 = resolve
@@ -366,6 +384,7 @@ object ResolveTests extends TestSuite {
             Repositories.central
           ))
 
+        /** Verifies the `integration` scenario behaves as the user expects. */
         test("integration") {
           async {
 
@@ -379,6 +398,7 @@ object ResolveTests extends TestSuite {
           }
         }
 
+        /** Verifies the `release` scenario behaves as the user expects. */
         test("release") {
           async {
 
@@ -392,6 +412,7 @@ object ResolveTests extends TestSuite {
           }
         }
 
+        /** Verifies the `stable` scenario behaves as the user expects. */
         test("stable") {
           async {
 
@@ -410,7 +431,9 @@ object ResolveTests extends TestSuite {
           }
         }
 
+        /** Verifies the `withInterval` scenario behaves as the user expects. */
         test("withInterval") {
+          /** Verifies the `in` scenario behaves as the user expects. */
           test("in") {
             async {
 
@@ -427,6 +450,7 @@ object ResolveTests extends TestSuite {
             }
           }
 
+          /** Verifies the `out` scenario behaves as the user expects. */
           test("out") {
             async {
 
@@ -459,6 +483,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `ivy` scenario behaves as the user expects. */
       test("ivy") {
 
         val resolve0 = resolve
@@ -468,6 +493,7 @@ object ResolveTests extends TestSuite {
               .fold(sys.error, identity)
           ))
 
+        /** Verifies the `integration` scenario behaves as the user expects. */
         test("integration") {
           async {
 
@@ -491,6 +517,7 @@ object ResolveTests extends TestSuite {
           }
         }
 
+        /** Verifies the `release` scenario behaves as the user expects. */
         test("release") {
           async {
 
@@ -512,7 +539,9 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `ivyLatestSubRevision` scenario behaves as the user expects. */
     test("ivyLatestSubRevision") {
+      /** Verifies the `zero` scenario behaves as the user expects. */
       test("zero") {
         test {
           async {
@@ -541,6 +570,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `nonZero` scenario behaves as the user expects. */
       test("nonZero") {
         async {
 
@@ -554,6 +584,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `plusInVersion` scenario behaves as the user expects. */
       test("plusInVersion") {
         async {
 
@@ -581,11 +612,13 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `exclusions` scenario behaves as the user expects. */
     test("exclusions") {
 
       val resolve0 = resolve
         .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M11")
 
+      /** Verifies the `check` scenario behaves as the user expects. */
       test("check") {
         async {
           val res = await {
@@ -600,6 +633,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `test` scenario behaves as the user expects. */
       test("test") {
         async {
           val resolve = resolve0
@@ -615,6 +649,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `no org` scenario behaves as the user expects. */
       test("no org") {
         async {
 
@@ -634,7 +669,9 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `beam` scenario behaves as the user expects. */
     test("beam") {
+      /** Verifies the `default` scenario behaves as the user expects. */
       test("default") {
         async {
 
@@ -648,6 +685,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `compile` scenario behaves as the user expects. */
       test("compile") {
         async {
 
@@ -667,6 +705,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `conflict` scenario behaves as the user expects. */
       test("conflict") {
         async {
 
@@ -709,6 +748,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `parent / import scope` scenario behaves as the user expects. */
     test("parent / import scope") {
       test {
         async {
@@ -727,7 +767,9 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `properties` scenario behaves as the user expects. */
     test("properties") {
+      /** Verifies the `in packaging` scenario behaves as the user expects. */
       test("in packaging") {
         async {
           val res = await {
@@ -748,7 +790,9 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `ivy` scenario behaves as the user expects. */
     test("ivy") {
+      /** Verifies the `publication name` scenario behaves as the user expects. */
       test("publication name") {
         async {
 
@@ -798,6 +842,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `global excludes` scenario behaves as the user expects. */
       test("global excludes") {
         async {
 
@@ -831,6 +876,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `global overrides` scenario behaves as the user expects. */
       test("global overrides") {
         async {
 
@@ -873,7 +919,9 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `version intervals` scenario behaves as the user expects. */
     test("version intervals") {
+      /** Verifies the `0 lower bound` scenario behaves as the user expects. */
       test("0 lower bound") {
         async {
 
@@ -887,6 +935,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `conflict with specific version` scenario behaves as the user expects. */
       test("conflict with specific version") {
         test {
           async {
@@ -956,6 +1005,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `override dependency from profile` scenario behaves as the user expects. */
     test("override dependency from profile") {
 
       test {
@@ -1039,6 +1089,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `runtime dependencies` scenario behaves as the user expects. */
     test("runtime dependencies") {
       async {
 
@@ -1065,6 +1116,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `relaxed reconciliation` scenario behaves as the user expects. */
     test("relaxed reconciliation") {
       test {
         async {
@@ -1098,6 +1150,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `subset` scenario behaves as the user expects. */
     test("subset") {
       async {
         val json4s = dep"org.json4s:json4s-native_2.12:[3.3.0,3.5.0)"
@@ -1120,6 +1173,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `initial resolution` scenario behaves as the user expects. */
     test("initial resolution") {
       async {
 
@@ -1170,6 +1224,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `source artifact type if sources classifier` scenario behaves as the user expects. */
     test("source artifact type if sources classifier") {
       async {
         val dep = dep"org.apache.commons:commons-compress:1.5,classifier=sources"
@@ -1198,6 +1253,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `user-supplied artifact type` scenario behaves as the user expects. */
     test("user-supplied artifact type") {
       async {
         val dep =
@@ -1231,6 +1287,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `new line in properties` scenario behaves as the user expects. */
     test("new line in properties") {
       async {
         val res = await {
@@ -1247,6 +1304,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `default value for pom project_packaging property` scenario behaves as the user expects. */
     test("default value for pom project_packaging property") {
       async {
         val dep = dep"org.nd4j:nd4j-native-platform:1.0.0-beta4"
@@ -1278,6 +1336,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `pom project.packaging property` scenario behaves as the user expects. */
     test("pom project.packaging property") {
       async {
         val dep = dep"org.apache.zookeeper:zookeeper:3.5.0-alpha"
@@ -1298,6 +1357,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `child property substitution in parent POM` scenario behaves as the user expects. */
     test("child property substitution in parent POM") {
       async {
         val deps = Seq(
@@ -1334,6 +1394,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Artifacts with classifier are non optional` scenario behaves as the user expects. */
     test("Artifacts with classifier are non optional") {
       async {
         val dep = dep"io.netty:netty-transport-native-epoll:4.1.44.Final,classifier=woops"
@@ -1353,8 +1414,10 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `JDK profile activation` scenario behaves as the user expects. */
     test("JDK profile activation") {
       val dep = dep"com.helger:ph-jaxb-pom:1.0.3"
+      /** Verifies the `JDK 1.8` scenario behaves as the user expects. */
       test("JDK 1.8") {
         async {
           val params = resolve.resolutionParams.withJdkVersion(Version("1.8.0_121"))
@@ -1367,6 +1430,7 @@ object ResolveTests extends TestSuite {
           await(validateDependencies(res, params))
         }
       }
+      /** Verifies the `JDK 11` scenario behaves as the user expects. */
       test("JDK 11") {
         async {
           val params = resolve.resolutionParams.withJdkVersion(Version("11.0.5"))
@@ -1381,6 +1445,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `parent properties of import scope dependency` scenario behaves as the user expects. */
     test("parent properties of import scope dependency") {
       async {
         val res = await {
@@ -1392,6 +1457,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `profile activation with missing property` scenario behaves as the user expects. */
     test("profile activation with missing property") {
       async {
         val params = ResolutionParams()
@@ -1422,6 +1488,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `keep provided dependencies` scenario behaves as the user expects. */
     test("keep provided dependencies") {
       async {
 
@@ -1435,6 +1502,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `mapDependencies` scenario behaves as the user expects. */
     test("mapDependencies") {
       async {
 
@@ -1461,6 +1529,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `spark` scenario behaves as the user expects. */
     test("spark") {
 
       def check(
@@ -1497,22 +1566,29 @@ object ResolveTests extends TestSuite {
           await(validateDependencies(res, params))
         }
 
+      /** Verifies the `scala 2_10` scenario behaves as the user expects. */
       test("scala 2_10") {
+        /** Verifies the `spark 1_2_1` scenario behaves as the user expects. */
         test("spark 1_2_1") {
           check("1.2.1", "2.10", forceDepMgmtVersions = Some(true))
         }
+        /** Verifies the `spark 1_6_3` scenario behaves as the user expects. */
         test("spark 1_6_3") {
           check("1.6.3", "2.10")
         }
+        /** Verifies the `spark 2_1_0` scenario behaves as the user expects. */
         test("spark 2_1_0") {
           check("2.1.0", "2.10", profiles = Set("scala-2.10", "!scala-2.11"))
         }
+        /** Verifies the `spark 2_2_3` scenario behaves as the user expects. */
         test("spark 2_2_3") {
           check("2.2.3", "2.10", profiles = Set("scala-2.10", "!scala-2.11"))
         }
       }
 
+      /** Verifies the `scala 2_11` scenario behaves as the user expects. */
       test("scala 2_11") {
+        /** Verifies the `spark 1_2_1` scenario behaves as the user expects. */
         test("spark 1_2_1") {
           check(
             "1.2.1",
@@ -1521,84 +1597,109 @@ object ResolveTests extends TestSuite {
             profiles = Set("!scala-2.10", "scala-2.11")
           )
         }
+        /** Verifies the `spark 1_6_3` scenario behaves as the user expects. */
         test("spark 1_6_3") {
           check("1.6.3", "2.11", profiles = Set("!scala-2.10", "scala-2.11"))
         }
+        /** Verifies the `spark 2_1_0` scenario behaves as the user expects. */
         test("spark 2_1_0") {
           check("2.1.0", "2.11")
         }
+        /** Verifies the `spark 2_2_3` scenario behaves as the user expects. */
         test("spark 2_2_3") {
           check("2.2.3", "2.11")
         }
 
+        /** Verifies the `spark 2_3_4` scenario behaves as the user expects. */
         test("spark 2_3_4") {
           check("2.3.4", "2.11")
         }
 
+        /** Verifies the `spark 2_4_8` scenario behaves as the user expects. */
         test("spark 2_4_8") {
           check("2.4.8", "2.11")
         }
       }
 
+      /** Verifies the `scala 2_12` scenario behaves as the user expects. */
       test("scala 2_12") {
+        /** Verifies the `spark 2_4_8` scenario behaves as the user expects. */
         test("spark 2_4_8") {
           check("2.4.8", "2.12")
         }
 
+        /** Verifies the `spark 3_1_3` scenario behaves as the user expects. */
         test("spark 3_1_3") {
           check("3.1.3", "2.12")
         }
 
+        /** Verifies the `spark 3_2_4` scenario behaves as the user expects. */
         test("spark 3_2_4") {
           check("3.2.4", "2.12")
         }
+        /** Verifies the `spark 3_5_3` scenario behaves as the user expects. */
         test("spark 3_5_3") {
           check("3.5.3", "2.12")
         }
       }
 
+      /** Verifies the `scala 2_13` scenario behaves as the user expects. */
       test("scala 2_13") {
+        /** Verifies the `spark 3_2_4` scenario behaves as the user expects. */
         test("spark 3_2_4") {
           check("3.2.4", "2.13")
         }
+        /** Verifies the `spark 3_5_3` scenario behaves as the user expects. */
         test("spark 3_5_3") {
           check("3.5.3", "2.13")
         }
 
+        /** Verifies the `spark 4.0.0-preview2` scenario behaves as the user expects. */
         test("spark 4.0.0-preview2") {
           check("4.0.0-preview2", "2.13")
         }
       }
     }
 
+    /** Verifies the `spring` scenario behaves as the user expects. */
     test("spring") {
+      /** Verifies the `data-rest` scenario behaves as the user expects. */
       test("data-rest") {
         check(dep"org.springframework.boot:spring-boot-starter-data-rest:3.3.4")
       }
+      /** Verifies the `graphql` scenario behaves as the user expects. */
       test("graphql") {
         check(dep"org.springframework.boot:spring-boot-starter-graphql:3.3.4")
       }
+      /** Verifies the `integration` scenario behaves as the user expects. */
       test("integration") {
         check(dep"org.springframework.boot:spring-boot-starter-integration:3.3.4")
       }
+      /** Verifies the `oauth2-client` scenario behaves as the user expects. */
       test("oauth2-client") {
         check(dep"org.springframework.boot:spring-boot-starter-oauth2-client:3.3.4")
       }
+      /** Verifies the `web` scenario behaves as the user expects. */
       test("web") {
         check(dep"org.springframework.boot:spring-boot-starter-web:3.3.4")
       }
+      /** Verifies the `web-services` scenario behaves as the user expects. */
       test("web-services") {
         check(dep"org.springframework.boot:spring-boot-starter-web-services:3.3.4")
       }
+      /** Verifies the `webflux` scenario behaves as the user expects. */
       test("webflux") {
         check(dep"org.springframework.boot:spring-boot-starter-webflux:3.3.4")
       }
+      /** Verifies the `security-test` scenario behaves as the user expects. */
       test("security-test") {
         check(dep"org.springframework.security:spring-security-test:6.3.4")
       }
     }
 
+    /** Verifies the `quarkus` scenario behaves as the user expects. */
     test("quarkus") {
+      /** Verifies the `rest` scenario behaves as the user expects. */
       test("rest") {
         doCheck(
           resolve.withResolutionParams(
@@ -1609,6 +1710,7 @@ object ResolveTests extends TestSuite {
           Seq(dep"io.quarkus:quarkus-rest:3.15.1")
         )
       }
+      /** Verifies the `rest-jackson` scenario behaves as the user expects. */
       test("rest-jackson") {
         doCheck(
           resolve.withResolutionParams(
@@ -1619,26 +1721,33 @@ object ResolveTests extends TestSuite {
           Seq(dep"io.quarkus:quarkus-rest-jackson:3.15.1")
         )
       }
+      /** Verifies the `hibernate-orm-panache` scenario behaves as the user expects. */
       test("hibernate-orm-panache") {
         check(dep"io.quarkus:quarkus-hibernate-orm-panache:3.15.1")
       }
+      /** Verifies the `jdbc-postgresql` scenario behaves as the user expects. */
       test("jdbc-postgresql") {
         check(dep"io.quarkus:quarkus-jdbc-postgresql:3.15.1")
       }
+      /** Verifies the `arc` scenario behaves as the user expects. */
       test("arc") {
         check(dep"io.quarkus:quarkus-arc:3.15.1")
       }
+      /** Verifies the `hibernate-orm` scenario behaves as the user expects. */
       test("hibernate-orm") {
         check(dep"io.quarkus:quarkus-hibernate-orm:3.15.1")
       }
+      /** Verifies the `junit5` scenario behaves as the user expects. */
       test("junit5") {
         check(dep"io.quarkus:quarkus-junit5:3.15.1")
       }
+      /** Verifies the `rest-assured` scenario behaves as the user expects. */
       test("rest-assured") {
         check(dep"io.rest-assured:rest-assured:5.5.0")
       }
     }
 
+    /** Verifies the `android` scenario behaves as the user expects. */
     test("android") {
 
       def androidCheck(dependencies: Dependency*): Future[Unit] =
@@ -1652,22 +1761,28 @@ object ResolveTests extends TestSuite {
           await(validateDependencies(res))
         }
 
+      /** Verifies the `activity` scenario behaves as the user expects. */
       test("activity") {
         androidCheck(dep"androidx.activity:activity:1.8.2")
       }
+      /** Verifies the `activity-compose` scenario behaves as the user expects. */
       test("activity-compose") {
         androidCheck(dep"androidx.activity:activity-compose:1.8.2")
       }
+      /** Verifies the `runtime` scenario behaves as the user expects. */
       test("runtime") {
         androidCheck(dep"androidx.compose.runtime:runtime:1.3.1")
       }
+      /** Verifies the `material3` scenario behaves as the user expects. */
       test("material3") {
         androidCheck(dep"androidx.compose.material3:material3:1.0.1")
       }
     }
 
+    /** Verifies the `bom` scenario behaves as the user expects. */
     test("bom") {
 
+      /** Verifies the `spark-parent` scenario behaves as the user expects. */
       test("spark-parent") {
         test {
           bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency)(
@@ -1686,10 +1801,13 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `quarkus-bom` scenario behaves as the user expects. */
       test("quarkus-bom") {
+        /** Verifies the `disabled` scenario behaves as the user expects. */
         test("disabled") {
           check(dep"ch.epfl.scala:bsp4j:2.2.0-M2")
         }
+        /** Verifies the `enabled` scenario behaves as the user expects. */
         test("enabled") {
           bomCheck(dep"io.quarkus:quarkus-bom:3.16.2".asBomDependency)(
             dep"ch.epfl.scala:bsp4j:2.2.0-M2"
@@ -1701,21 +1819,26 @@ object ResolveTests extends TestSuite {
       // these tend to use the `project.version` Java property fairly often,
       // so this checks that this property is substituted at the right time
       test("google-cloud-bom") {
+        /** Verifies the `protobuf-java` scenario behaves as the user expects. */
         test("protobuf-java") {
           bomCheck(dep"com.google.cloud:libraries-bom:26.50.0".asBomDependency)(
             dep"com.google.protobuf:protobuf-java"
           )
         }
 
+        /** Verifies the `scalapbc` scenario behaves as the user expects. */
         test("scalapbc") {
+          /** Verifies the `no-bom` scenario behaves as the user expects. */
           test("no-bom") {
             check(dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8")
           }
+          /** Verifies the `bom` scenario behaves as the user expects. */
           test("bom") {
             bomCheck(dep"com.google.cloud:libraries-bom:26.50.0".asBomDependency)(
               dep"com.thesamet.scalapb:scalapbc_2.13:0.9.8"
             )
           }
+          /** Verifies the `bom-via-dep` scenario behaves as the user expects. */
           test("bom-via-dep") {
             // BOM should bump protobuf-java to 4.28.3
             check(
@@ -1726,12 +1849,15 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `scalatest-play` scenario behaves as the user expects. */
       test("scalatest-play") {
+        /** Verifies the `default` scenario behaves as the user expects. */
         test("default") {
           bomCheck(dep"org.apache.spark:spark-parent_2.13:3.5.3".asBomDependency)(
             dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
           )
         }
+        /** Verifies the `test` scenario behaves as the user expects. */
         test("test") {
           // BOM should override org.scalatest:scalatest_2.13 version,
           // as we pull the test entries too
@@ -1743,6 +1869,7 @@ object ResolveTests extends TestSuite {
             dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
           )
         }
+        /** Verifies the `testViaBomDep` scenario behaves as the user expects. */
         test("testViaBomDep") {
           test {
             // BOM should force org.scalatest:scalatest_2.13 version to 3.2.16
@@ -1772,6 +1899,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `runtime` scenario behaves as the user expects. */
       test("runtime") {
         bomCheck(
           dep"io.quarkus:quarkus-bom:3.15.1"
@@ -1782,6 +1910,7 @@ object ResolveTests extends TestSuite {
         )
       }
 
+      /** Verifies the `provided` scenario behaves as the user expects. */
       test("provided") {
         test {
           // BOM should fill the version, even though
@@ -1847,6 +1976,7 @@ object ResolveTests extends TestSuite {
         //   }
         // }
 
+        /** Verifies the `bom-dep` scenario behaves as the user expects. */
         test("bom-dep") {
           test {
             // BOM should have no effect, no empty version to fill
@@ -1871,6 +2001,7 @@ object ResolveTests extends TestSuite {
               )
             )
           }
+          /** Verifies the `check` scenario behaves as the user expects. */
           test("check") {
             // BOM shouldn't override com.google.protobuf:protobuf-java
             // version, as it's marked as provided there
@@ -1886,6 +2017,7 @@ object ResolveTests extends TestSuite {
           }
         }
 
+        /** Verifies the `bom-dep-force-ver` scenario behaves as the user expects. */
         test("bom-dep-force-ver") {
           test {
             // BOM should override root dependency version (forceOverrideVersions is true)
@@ -1911,6 +2043,7 @@ object ResolveTests extends TestSuite {
               )
             )
           }
+          /** Verifies the `check` scenario behaves as the user expects. */
           test("check") {
             // BOM shouldn't override root dependency version (even though
             // forceOverrideVersions is true) or transitive dep
@@ -1927,6 +2060,7 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `bom-dep` scenario behaves as the user expects. */
       test("bom-dep") {
         test {
           // The BOM shouldn't apply to scalapbc in that case,
@@ -1948,7 +2082,9 @@ object ResolveTests extends TestSuite {
         }
       }
 
+      /** Verifies the `precedence` scenario behaves as the user expects. */
       test("precedence") {
+        /** Verifies the `bomOverride` scenario behaves as the user expects. */
         test("bomOverride") {
           test {
             // protobuf-java 4.28.1 (override)
@@ -1973,6 +2109,7 @@ object ResolveTests extends TestSuite {
           }
         }
 
+        /** Verifies the `bomBom` scenario behaves as the user expects. */
         test("bomBom") {
           test {
             // protobuf-java 4.28.1 (first bom)
@@ -1997,6 +2134,7 @@ object ResolveTests extends TestSuite {
           }
         }
 
+        /** Verifies the `overrideOverride` scenario behaves as the user expects. */
         test("overrideOverride") {
           test {
             // protobuf-java 4.28.1 (first override)
@@ -2023,15 +2161,19 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `delayed-properties` scenario behaves as the user expects. */
     test("delayed-properties") {
       check(dep"org.apache.logging.log4j:log4j-slf4j-impl:2.22.0")
     }
 
+    /** Verifies the `scalatest-play` scenario behaves as the user expects. */
     test("scalatest-play") {
       check(dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1")
     }
 
+    /** Verifies the `scope` scenario behaves as the user expects. */
     test("scope") {
+      /** Verifies the `compile` scenario behaves as the user expects. */
       test("compile") {
         scopeCheck(Configuration.compile, Seq(Repositories.google))(
           dep"androidx.compose.animation:animation-core:1.1.1",
@@ -2039,6 +2181,7 @@ object ResolveTests extends TestSuite {
         )
       }
 
+      /** Verifies the `defaultCompile` scenario behaves as the user expects. */
       test("defaultCompile") {
         scopeCheck(Configuration.defaultCompile, Seq(Repositories.google))(
           dep"androidx.compose.animation:animation-core:1.1.1",
@@ -2047,10 +2190,12 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `large resolution` scenario behaves as the user expects. */
     test("large resolution") {
       check(dep"io.trino:trino-hive:467")
     }
 
+    /** Verifies the `dep import and parent precedence` scenario behaves as the user expects. */
     test("dep import and parent precedence") {
       // bom has a dep import of a BOM pulling protobuf-java 3.x
       // and has parents pulling protobuf-java 4.x
@@ -2060,20 +2205,27 @@ object ResolveTests extends TestSuite {
       )
     }
 
+    /** Verifies the `gradle modules` scenario behaves as the user expects. */
     test("gradle modules") {
+      /** Verifies the `kotlinx-html-js` scenario behaves as the user expects. */
       test("kotlinx-html-js") {
+        /** Verifies the `no-support` scenario behaves as the user expects. */
         test("no-support") {
           check(
             dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0"
           )
         }
+        /** Verifies the `support` scenario behaves as the user expects. */
         test("support") {
+          /** Verifies the `variants` scenario behaves as the user expects. */
           test("variants") {
+            /** Verifies the `dependency` scenario behaves as the user expects. */
             test("dependency") {
               gradleModuleCheck(
                 dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,variant.org.gradle.usage=kotlin-runtime,variant.org.jetbrains.kotlin.platform.type=js,variant.org.jetbrains.kotlin.js.compiler=ir,variant.org.gradle.category=library"
               )
             }
+            /** Verifies the `global` scenario behaves as the user expects. */
             test("global") {
               gradleModuleCheck0(
                 defaultAttributes = Some(
@@ -2091,6 +2243,7 @@ object ResolveTests extends TestSuite {
               )
             }
           }
+          /** Verifies the `missing variants` scenario behaves as the user expects. */
           test("missing variants") {
             async {
               val res = await {
@@ -2111,7 +2264,9 @@ object ResolveTests extends TestSuite {
           }
         }
       }
+      /** Verifies the `android` scenario behaves as the user expects. */
       test("android") {
+        /** Verifies the `dependency` scenario behaves as the user expects. */
         test("dependency") {
           def withVariant(dep: Dependency, map: Map[String, VariantMatcher]) =
             dep.withVariantSelector(VariantSelector.AttributesBased(map))
@@ -2129,6 +2284,7 @@ object ResolveTests extends TestSuite {
 
           // needs some extra default attributes for compile scope to work
 
+          /** Verifies the `runtime` scenario behaves as the user expects. */
           test("runtime") {
             testVariants(
               Configuration.runtime,
@@ -2140,6 +2296,7 @@ object ResolveTests extends TestSuite {
             )
           }
         }
+        /** Verifies the `global` scenario behaves as the user expects. */
         test("global") {
           def testVariants(
             config: Configuration,
@@ -2155,6 +2312,7 @@ object ResolveTests extends TestSuite {
               dep"androidx.compose.material3:material3:1.3.1"
             )
 
+          /** Verifies the `compile` scenario behaves as the user expects. */
           test("compile") {
             testVariants(
               Configuration.compile,
@@ -2165,6 +2323,7 @@ object ResolveTests extends TestSuite {
               )
             )
           }
+          /** Verifies the `runtime` scenario behaves as the user expects. */
           test("runtime") {
             testVariants(
               Configuration.runtime,
@@ -2177,8 +2336,11 @@ object ResolveTests extends TestSuite {
           }
         }
       }
+      /** Verifies the `fallback from config` scenario behaves as the user expects. */
       test("fallback from config") {
+        /** Verifies the `android` scenario behaves as the user expects. */
         test("android") {
+          /** Verifies the `compile` scenario behaves as the user expects. */
           test("compile") {
             val attr = VariantSelector.AttributesBased().withMatchers(
               Map(
@@ -2192,6 +2354,7 @@ object ResolveTests extends TestSuite {
               dep"androidx.core:core-ktx:1.15.0:compile"
             )
           }
+          /** Verifies the `runtime` scenario behaves as the user expects. */
           test("runtime") {
             val attr = VariantSelector.AttributesBased().withMatchers(
               Map(
@@ -2203,8 +2366,11 @@ object ResolveTests extends TestSuite {
             )
           }
         }
+        /** Verifies the `kotlin` scenario behaves as the user expects. */
         test("kotlin") {
+          /** Verifies the `runtime` scenario behaves as the user expects. */
           test("runtime") {
+            /** Verifies the `js` scenario behaves as the user expects. */
             test("js") {
               val attr = VariantSelector.AttributesBased().withMatchers(
                 Map(
@@ -2217,6 +2383,7 @@ object ResolveTests extends TestSuite {
                 dep"org.jetbrains.kotlinx:kotlinx-html-js:0.11.0"
               )
             }
+            /** Verifies the `jvm` scenario behaves as the user expects. */
             test("jvm") {
               val attr = VariantSelector.AttributesBased().withMatchers(
                 Map(
@@ -2231,6 +2398,7 @@ object ResolveTests extends TestSuite {
           }
         }
       }
+      /** Verifies the `module-bom` scenario behaves as the user expects. */
       test("module-bom") {
         val resolve0 = resolve.withResolutionParams(
           resolve.resolutionParams.withOsInfo(
@@ -2241,6 +2409,7 @@ object ResolveTests extends TestSuite {
           dep"io.quarkus:quarkus-rest-jackson:3.15.1"
         )
       }
+      /** Verifies the `quarkus-junit5` scenario behaves as the user expects. */
       test("quarkus-junit5") {
         val resolve0 = resolve.addVariantAttributes(
           "org.gradle.jvm.environment" -> VariantMatcher.Equals("standard-jvm")
@@ -2249,10 +2418,12 @@ object ResolveTests extends TestSuite {
           dep"io.quarkus:quarkus-junit5:3.15.1"
         )
       }
+      /** Verifies the `quarkus-rest-assured` scenario behaves as the user expects. */
       test("quarkus-rest-assured") {
         gradleModuleCheck(dep"io.rest-assured:rest-assured:5.5.0")
       }
 
+      /** Verifies the `scalatest-play` scenario behaves as the user expects. */
       test("scalatest-play") {
         val resolve0 = resolve
           .addVariantAttributes(
@@ -2266,6 +2437,7 @@ object ResolveTests extends TestSuite {
           dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
         )
       }
+      /** Verifies the `bom` scenario behaves as the user expects. */
       test("bom") {
         gradleModuleCheck0(
           defaultAttributes = Some(
@@ -2277,6 +2449,7 @@ object ResolveTests extends TestSuite {
           dep"org.junit-pioneer:junit-pioneer:1.9.1"
         )
       }
+      /** Verifies the `only prefers` scenario behaves as the user expects. */
       test("only prefers") {
         gradleModuleCheck0(
           defaultAttributes = Some(
@@ -2295,6 +2468,7 @@ object ResolveTests extends TestSuite {
           dep"io.kotest:kotest-framework-engine-js:6.0.0.M3"
         )
       }
+      /** Verifies the `wrong module name` scenario behaves as the user expects. */
       test("wrong module name") {
         gradleModuleCheck0(
           defaultAttributes = Some(
@@ -2308,11 +2482,13 @@ object ResolveTests extends TestSuite {
           dep"org.jetbrains.kotlin:kotlin-test-junit:2.0.20"
         )
       }
+      /** Verifies the `module BOM` scenario behaves as the user expects. */
       test("module BOM") {
         gradleModuleCheck(
           dep"org.springframework.data:spring-data-jpa:2.5.4"
         )
       }
+      /** Verifies the `any of` scenario behaves as the user expects. */
       test("any of") {
         gradleModuleCheck0(
           defaultAttributes = Some(
@@ -2333,6 +2509,7 @@ object ResolveTests extends TestSuite {
         )
       }
 
+      /** Verifies the `endorseStrictVersions` scenario behaves as the user expects. */
       test("endorseStrictVersions") {
         gradleModuleCheck0(
           defaultAttributes = Some(
@@ -2347,6 +2524,7 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    /** Verifies the `empty version` scenario behaves as the user expects. */
     test("empty version") {
       async {
 

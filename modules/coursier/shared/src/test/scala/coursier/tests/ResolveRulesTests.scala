@@ -24,7 +24,9 @@ object ResolveRulesTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `alwaysFail` scenario behaves as the user expects. */
     test("alwaysFail") {
+      /** Verifies the `wrongRuleTryResolve` scenario behaves as the user expects. */
       test("wrongRuleTryResolve") {
         async {
 
@@ -55,6 +57,7 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
+      /** Verifies the `failRuleTryResolve` scenario behaves as the user expects. */
       test("failRuleTryResolve") {
         async {
 
@@ -85,6 +88,7 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
+      /** Verifies the `failRuleResolution` scenario behaves as the user expects. */
       test("failRuleResolution") {
         async {
 
@@ -115,6 +119,7 @@ object ResolveRulesTests extends TestSuite {
       }
     }
 
+    /** Verifies the `sameVersionRule` scenario behaves as the user expects. */
     test("sameVersionRule") {
       test {
         async {
@@ -169,7 +174,9 @@ object ResolveRulesTests extends TestSuite {
       }
     }
 
+    /** Verifies the `strict` scenario behaves as the user expects. */
     test("strict") {
+      /** Verifies the `fail` scenario behaves as the user expects. */
       test("fail") {
         async {
 
@@ -199,6 +206,7 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
+      /** Verifies the `for roots` scenario behaves as the user expects. */
       test("for roots") {
         async {
 
@@ -251,6 +259,7 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
+      /** Verifies the `with intervals` scenario behaves as the user expects. */
       test("with intervals") {
         async {
 
@@ -306,7 +315,9 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
+      /** Verifies the `ignore if forced version` scenario behaves as the user expects. */
       test("ignore if forced version") {
+        /** Verifies the `do ignore` scenario behaves as the user expects. */
         test("do ignore") {
           async {
 
@@ -336,6 +347,7 @@ object ResolveRulesTests extends TestSuite {
           }
         }
 
+        /** Verifies the `do not ignore` scenario behaves as the user expects. */
         test("do not ignore") {
           async {
 
@@ -390,6 +402,7 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
+      /** Verifies the `viaReconciliation` scenario behaves as the user expects. */
       test("viaReconciliation") {
         async {
 
@@ -416,7 +429,9 @@ object ResolveRulesTests extends TestSuite {
       }
     }
 
+    /** Verifies the `semVer reconciliation` scenario behaves as the user expects. */
     test("semVer reconciliation") {
+      /** Verifies the `strict check` scenario behaves as the user expects. */
       test("strict check") {
         async {
 
@@ -455,6 +470,7 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
+      /** Verifies the `conflict` scenario behaves as the user expects. */
       test("conflict") {
         async {
 
@@ -497,6 +513,7 @@ object ResolveRulesTests extends TestSuite {
         }
       }
 
+      /** Verifies the `no conflict` scenario behaves as the user expects. */
       test("no conflict") {
         async {
 
@@ -522,6 +539,7 @@ object ResolveRulesTests extends TestSuite {
       }
     }
 
+    /** Verifies the `dontBumpRootDependencies` scenario behaves as the user expects. */
     test("dontBumpRootDependencies") {
       test {
         async {

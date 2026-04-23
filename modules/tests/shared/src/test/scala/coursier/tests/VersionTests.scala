@@ -14,12 +14,14 @@ object VersionTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `stackOverflow` scenario behaves as the user expects. */
     test("stackOverflow") {
       val s = "." * 100000
       val v = Version(s)
       assert(v.isEmpty)
     }
 
+    /** Verifies the `empty` scenario behaves as the user expects. */
     test("empty") {
       val v0   = Version("0")
       val v    = Version("")
@@ -30,6 +32,7 @@ object VersionTests extends TestSuite {
       assert(zero.isEmpty)
     }
 
+    /** Verifies the `max` scenario behaves as the user expects. */
     test("max") {
       val v21  = Version("2.1")
       val v22  = Version("2.2")
@@ -43,6 +46,7 @@ object VersionTests extends TestSuite {
       assert(max == v241)
     }
 
+    /** Verifies the `buildMetadata` scenario behaves as the user expects. */
     test("buildMetadata") {
       test {
         assert(compare("1.2", "1.2+foo") == 0)
@@ -54,6 +58,7 @@ object VersionTests extends TestSuite {
         assert(compare("1.2+bar.1", "1.2+bar.2") == 0)
       }
 
+      /** Verifies the `shouldNotParseMetadata` scenario behaves as the user expects. */
       test("shouldNotParseMetadata") {
         test {
           val items = Version("1.2+bar.2").items
@@ -88,10 +93,12 @@ object VersionTests extends TestSuite {
     // Adapted from aether-core/aether-util/src/test/java/org/eclipse/aether/util/version/GenericVersionTest.java
     // Only one test doesn't pass (see FIXME below)
 
+    /** Verifies the `emptyVersion` scenario behaves as the user expects. */
     test("emptyVersion") {
       assert(compare("0", "") == 0)
     }
 
+    /** Verifies the `numericOrdering` scenario behaves as the user expects. */
     test("numericOrdering") {
       assert(compare("2", "10") < 0)
       assert(compare("1.2", "1.10") < 0)
@@ -101,12 +108,14 @@ object VersionTests extends TestSuite {
       assert(compare("1.0.20101206.111434.2", "1.0.20101206.111434.10") < 0)
     }
 
+    /** Verifies the `delimiters` scenario behaves as the user expects. */
     test("delimiters") {
       assert(compare("1.0", "1-0") == 0)
       assert(compare("1.0", "1_0") == 0)
       assert(compare("1.a", "1a") == 0)
     }
 
+    /** Verifies the `leadingZerosAreSemanticallyIrrelevant` scenario behaves as the user expects. */
     test("leadingZerosAreSemanticallyIrrelevant") {
       assert(compare("1", "01") == 0)
       assert(compare("1.2", "1.002") == 0)
@@ -114,6 +123,7 @@ object VersionTests extends TestSuite {
       assert(compare("1.2.3.4", "1.2.3.00004") == 0)
     }
 
+    /** Verifies the `trailingZerosAreSemanticallyIrrelevant` scenario behaves as the user expects. */
     test("trailingZerosAreSemanticallyIrrelevant") {
       assert(compare("1", "1.0.0.0.0.0.0.0.0.0.0.0.0.0") == 0)
       assert(compare("1", "1-0-0-0-0-0-0-0-0-0-0-0-0-0") == 0)
@@ -122,6 +132,7 @@ object VersionTests extends TestSuite {
       assert(compare("1.0", "1.0.0") == 0)
     }
 
+    /** Verifies the `trailingZerosBeforeQualifierAreSemanticallyIrrelevant` scenario behaves as the user expects. */
     test("trailingZerosBeforeQualifierAreSemanticallyIrrelevant") {
       assert(compare("1.0-ga", "1.0.0-ga") == 0)
       assert(compare("1.0.ga", "1.0.0.ga") == 0)
@@ -145,6 +156,7 @@ object VersionTests extends TestSuite {
       assert(compare("4.1.0-173", "4.1.1-178") < 0)
     }
 
+    /** Verifies the `trailingDelimitersAreSemanticallyIrrelevant` scenario behaves as the user expects. */
     test("trailingDelimitersAreSemanticallyIrrelevant") {
       assert(compare("1", "1.............") == 0)
       assert(compare("1", "1-------------") == 0)
@@ -152,6 +164,7 @@ object VersionTests extends TestSuite {
       assert(compare("1.0", "1-------------") == 0)
     }
 
+    /** Verifies the `initialDelimiters` scenario behaves as the user expects. */
     test("initialDelimiters") {
       assert(compare("0.1", ".1") == 0)
       assert(compare("0.0.1", "..1") == 0)
@@ -159,6 +172,7 @@ object VersionTests extends TestSuite {
       assert(compare("0.0.1", "--1") == 0)
     }
 
+    /** Verifies the `consecutiveDelimiters` scenario behaves as the user expects. */
     test("consecutiveDelimiters") {
       assert(compare("1.0.1", "1..1") == 0)
       assert(compare("1.0.0.1", "1...1") == 0)
@@ -166,14 +180,17 @@ object VersionTests extends TestSuite {
       assert(compare("1.0.0.1", "1---1") == 0)
     }
 
+    /** Verifies the `unlimitedNumberOfVersionComponents` scenario behaves as the user expects. */
     test("unlimitedNumberOfVersionComponents") {
       assert(compare("1.0.1.2.3.4.5.6.7.8.9.0.1.2.10", "1.0.1.2.3.4.5.6.7.8.9.0.1.2.3") > 0)
     }
 
+    /** Verifies the `unlimitedNumberOfDigitsInNumericComponent` scenario behaves as the user expects. */
     test("unlimitedNumberOfDigitsInNumericComponent") {
       assert(compare("1.1234567890123456789012345678901", "1.123456789012345678901234567891") > 0)
     }
 
+    /** Verifies the `transitionFromDigitToLetterAndViceVersaIsEqualivantToDelimiter` scenario behaves as the user expects. */
     test("transitionFromDigitToLetterAndViceVersaIsEqualivantToDelimiter") {
       assert(compare("1alpha10", "1.alpha.10") == 0)
       assert(compare("1alpha10", "1-alpha-10") == 0)
@@ -182,6 +199,7 @@ object VersionTests extends TestSuite {
       assert(compare("10alpha", "1alpha") > 0)
     }
 
+    /** Verifies the `wellKnownQualifierOrdering` scenario behaves as the user expects. */
     test("wellKnownQualifierOrdering") {
       assert(compare("1-dev1", "1-alpha1") < 0)
       assert(compare("1-alpha1", "1-a1") == 0)
@@ -211,6 +229,7 @@ object VersionTests extends TestSuite {
       assert(compare("A.sp.x", "A.ga.x") > 0)
     }
 
+    /** Verifies the `wellKnownQualifierVersusUnknownQualifierOrdering` scenario behaves as the user expects. */
     test("wellKnownQualifierVersusUnknownQualifierOrdering") {
       assert(compare("1-milestone", "1-rc") < 0)
       assert(compare("1-milestone", "1-beta") < 0)
@@ -245,6 +264,7 @@ object VersionTests extends TestSuite {
       assert(compare("1.0.1-SNAP12", "1.0.2") < 0)
     }
 
+    /** Verifies the `wellKnownSingleCharQualifiersOnlyRecognizedIfImmediatelyFollowedByNumber` scenario behaves as the user expects. */
     test("wellKnownSingleCharQualifiersOnlyRecognizedIfImmediatelyFollowedByNumber") {
       assert(compare("1.0a", "1.0") < 0)
       assert(compare("1.0-a", "1.0") < 0)
@@ -274,12 +294,14 @@ object VersionTests extends TestSuite {
       assert(compare("1.0m-1", "1.0") < 0)
     }
 
+    /** Verifies the `unknownQualifierOrdering` scenario behaves as the user expects. */
     test("unknownQualifierOrdering") {
       assert(compare("1-abc", "1-abcd") < 0)
       assert(compare("1-abc", "1-bcd") < 0)
       assert(compare("1-abc", "1-aac") > 0)
     }
 
+    /** Verifies the `caseInsensitiveOrderingOfQualifiers` scenario behaves as the user expects. */
     test("caseInsensitiveOrderingOfQualifiers") {
       assert(compare("1.alpha", "1.ALPHA") == 0)
       assert(compare("1.alpha", "1.Alpha") == 0)
@@ -310,6 +332,7 @@ object VersionTests extends TestSuite {
       assert(compare("1.unknown", "1.Unknown") == 0)
     }
 
+    /** Verifies the `qualifierVersusNumberOrdering` scenario behaves as the user expects. */
     test("qualifierVersusNumberOrdering") {
       assert(compare("1-ga", "1-1") < 0)
       assert(compare("1.ga", "1.1") < 0)
@@ -329,6 +352,7 @@ object VersionTests extends TestSuite {
       assert(compare("1.xyz", "1.1") < 0)
     }
 
+    /** Verifies the `minimumSegment` scenario behaves as the user expects. */
     test("minimumSegment") {
       assert(compare("1.min", "1.0-alpha-1") < 0)
       assert(compare("1.min", "1.0-SNAPSHOT") < 0)
@@ -341,6 +365,7 @@ object VersionTests extends TestSuite {
       assert(compare("1.min", "0.max") > 0)
     }
 
+    /** Verifies the `maximumSegment` scenario behaves as the user expects. */
     test("maximumSegment") {
       assert(compare("1.max", "1.0-alpha-1") > 0)
       assert(compare("1.max", "1.0-SNAPSHOT") > 0)
@@ -357,6 +382,7 @@ object VersionTests extends TestSuite {
       assert(compare("1.max", "2.min") < 0)
     }
 
+    /** Verifies the `versionEvolution` scenario behaves as the user expects. */
     test("versionEvolution") {
       assert(
         increasing(
@@ -426,6 +452,7 @@ object VersionTests extends TestSuite {
 //      finally Locale.setDefault( orig )
 //    }
 
+    /** Verifies the `specialStartChar` scenario behaves as the user expects. */
     test("specialStartChar") {
       val items = Version("[1.2.0]").items
       val expectedItems = Seq(
@@ -438,6 +465,7 @@ object VersionTests extends TestSuite {
       assert(items == expectedItems)
     }
 
+    /** Verifies the `xhandling` scenario behaves as the user expects. */
     test("xhandling") {
       val items = Version("1.x.0-alpha").items
       val expectedItems =

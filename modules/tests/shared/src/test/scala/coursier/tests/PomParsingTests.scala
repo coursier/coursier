@@ -11,6 +11,7 @@ import utest._
 object PomParsingTests extends TestSuite {
 
   val tests = Tests {
+    /** Verifies the `readClassifier` scenario behaves as the user expects. */
     test("readClassifier") {
       val depNode = """
         <dependency>
@@ -31,6 +32,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
+    /** Verifies the `readProfileWithNoActivation` scenario behaves as the user expects. */
     test("readProfileWithNoActivation") {
       val profileNode = """
         <profile>
@@ -44,6 +46,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
+    /** Verifies the `beFineWithProfilesWithNoId` scenario behaves as the user expects. */
     test("beFineWithProfilesWithNoId") {
       val profileNode = """
         <profile>
@@ -59,6 +62,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
+    /** Verifies the `readProfileActivatedByDefault` scenario behaves as the user expects. */
     test("readProfileActivatedByDefault") {
       val profileNode = """
         <profile>
@@ -76,6 +80,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
+    /** Verifies the `readProfileActiveByPropertyWithoutValue` scenario behaves as the user expects. */
     test("readProfileActiveByPropertyWithoutValue") {
       val profileNode = """
         <profile>
@@ -102,6 +107,7 @@ object PomParsingTests extends TestSuite {
       assert(result == expected)
     }
 
+    /** Verifies the `readProfileActiveByPropertyWithValue` scenario behaves as the user expects. */
     test("readProfileActiveByPropertyWithValue") {
       val profileNode = """
         <profile>
@@ -129,6 +135,7 @@ object PomParsingTests extends TestSuite {
       assert(result == expected)
     }
 
+    /** Verifies the `readProfileDependencies` scenario behaves as the user expects. */
     test("readProfileDependencies") {
       val profileNode = """
         <profile>
@@ -160,6 +167,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
+    /** Verifies the `readProfileDependenciesMgmt` scenario behaves as the user expects. */
     test("readProfileDependenciesMgmt") {
       val profileNode = """
         <profile>
@@ -194,6 +202,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
+    /** Verifies the `readProfileProperties` scenario behaves as the user expects. */
     test("readProfileProperties") {
       val profileNode = """
         <profile>
@@ -219,6 +228,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
+    /** Verifies the `propertyWithSpaces` scenario behaves as the user expects. */
     test("propertyWithSpaces") {
       val profileNode = """
         <profile>
@@ -244,6 +254,7 @@ object PomParsingTests extends TestSuite {
 
       assert(result == expected)
     }
+    /** Verifies the `beFineWithCommentsInProperties` scenario behaves as the user expects. */
     test("beFineWithCommentsInProperties") {
 
       val properties =
@@ -300,6 +311,7 @@ object PomParsingTests extends TestSuite {
       assert(props("commons.osgi.export").contains("org.apache.commons.io.input;"))
     }
 
+    /** Verifies the `projectWithScm` scenario behaves as the user expects. */
     test("projectWithScm") {
       val profileNode =
         """
@@ -334,6 +346,7 @@ object PomParsingTests extends TestSuite {
       assert(result == expected)
     }
 
+    /** Verifies the `caseInsensitiveOperatingSystemActivation` scenario behaves as the user expects. */
     test("caseInsensitiveOperatingSystemActivation") {
       val profileNode = """
         <profile>

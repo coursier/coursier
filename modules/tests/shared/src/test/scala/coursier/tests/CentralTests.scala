@@ -36,6 +36,7 @@ abstract class CentralTests extends TestSuite {
   protected lazy val runner = new TestRunner(repositories = Seq(central))
 
   def tests = Tests {
+    /** Verifies the `logback` scenario behaves as the user expects. */
     test("logback") {
       async {
         val dep = dep"ch.qos.logback:logback-classic:1.1.3"
@@ -55,6 +56,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `asm` scenario behaves as the user expects. */
     test("asm") {
       async {
         val dep = dep"org.ow2.asm:asm-commons:5.0.2"
@@ -74,6 +76,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `jodaVersionInterval` scenario behaves as the user expects. */
     test("jodaVersionInterval") {
       async {
         val dep  = dep"joda-time:joda-time:[2.2,2.8]"
@@ -92,6 +95,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `spark` scenario behaves as the user expects. */
     test("spark") {
       test - runner.resolutionCheck(
         mod"org.apache.spark:spark-core_2.11",
@@ -100,6 +104,7 @@ abstract class CentralTests extends TestSuite {
         forceDepMgmtVersions = Some(true)
       )
 
+      /** Verifies the `scala210` scenario behaves as the user expects. */
       test("scala210") {
         runner.resolutionCheck(
           mod"org.apache.spark:spark-core_2.10",
@@ -110,6 +115,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `argonautShapeless` scenario behaves as the user expects. */
     test("argonautShapeless") {
       runner.resolutionCheck(
         mod"com.github.alexarchambault:argonaut-shapeless_6.1_2.11",
@@ -117,7 +123,9 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `snapshotMetadata` scenario behaves as the user expects. */
     test("snapshotMetadata") {
+      /** Verifies the `simple` scenario behaves as the user expects. */
       test("simple") {
         val mod       = mod"com.github.fommil:java-logging"
         val version   = "1.2-SNAPSHOT"
@@ -157,6 +165,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `versionProperty` scenario behaves as the user expects. */
     test("versionProperty") {
       // nasty one - in its POM, its version contains "${parent.project.version}"
       runner.resolutionCheck(
@@ -165,6 +174,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `parentProjectProperties` scenario behaves as the user expects. */
     test("parentProjectProperties") {
       runner.resolutionCheck(
         mod"com.github.fommil.netlib:all",
@@ -172,6 +182,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `projectProperties` scenario behaves as the user expects. */
     test("projectProperties") {
       runner.resolutionCheck(
         mod"org.glassfish.jersey.core:jersey-client",
@@ -179,6 +190,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `parentDependencyManagementProperties` scenario behaves as the user expects. */
     test("parentDependencyManagementProperties") {
       runner.resolutionCheck(
         mod"com.nativelibs4java:jnaerator-runtime",
@@ -186,6 +198,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `propertySubstitution` scenario behaves as the user expects. */
     test("propertySubstitution") {
       runner.resolutionCheck(
         mod"org.drools:drools-compiler",
@@ -193,6 +206,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `artifactIdProperties` scenario behaves as the user expects. */
     test("artifactIdProperties") {
       runner.resolutionCheck(
         mod"cc.factorie:factorie_2.11",
@@ -200,6 +214,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `versionInterval` scenario behaves as the user expects. */
     test("versionInterval") {
       if (isActualCentral)
         // that one involves version intervals, thus changing versions, so only
@@ -212,6 +227,7 @@ abstract class CentralTests extends TestSuite {
         Future.successful(())
     }
 
+    /** Verifies the `latestRevision` scenario behaves as the user expects. */
     test("latestRevision") {
       test - runner.resolutionCheck(
         mod"com.chuusai:shapeless_2.11",
@@ -234,6 +250,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `versionFromDependency` scenario behaves as the user expects. */
     test("versionFromDependency") {
       val mod     = mod"org.apache.ws.commons:XmlSchema"
       val version = "1.1"
@@ -248,6 +265,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `fixedVersionDependency` scenario behaves as the user expects. */
     test("fixedVersionDependency") {
       val mod     = mod"io.grpc:grpc-netty"
       val version = "0.14.1"
@@ -255,6 +273,7 @@ abstract class CentralTests extends TestSuite {
       runner.resolutionCheck(mod, version)
     }
 
+    /** Verifies the `mavenScopes` scenario behaves as the user expects. */
     test("mavenScopes") {
       def check(config: Configuration) = runner.resolutionCheck(
         mod"com.android.tools:sdklib",
@@ -262,14 +281,17 @@ abstract class CentralTests extends TestSuite {
         configuration = config
       )
 
+      /** Verifies the `compile` scenario behaves as the user expects. */
       test("compile") {
         check(Configuration.compile)
       }
+      /** Verifies the `runtime` scenario behaves as the user expects. */
       test("runtime") {
         check(Configuration.runtime)
       }
     }
 
+    /** Verifies the `optionalScope` scenario behaves as the user expects. */
     test("optionalScope") {
 
       def intransitiveCompiler(config: Configuration) =
@@ -295,7 +317,9 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `packaging` scenario behaves as the user expects. */
     test("packaging") {
+      /** Verifies the `aar` scenario behaves as the user expects. */
       test("aar") {
         // random aar-based module found on Central
         val module  = mod"com.yandex.android:speechkit"
@@ -315,6 +339,7 @@ abstract class CentralTests extends TestSuite {
         )
       }
 
+      /** Verifies the `bundle` scenario behaves as the user expects. */
       test("bundle") {
         // has packaging bundle - ensuring coursier gives its artifact the .jar extension
         test - runner.ensureHasArtifactWithExtension(
@@ -333,6 +358,7 @@ abstract class CentralTests extends TestSuite {
         )
       }
 
+      /** Verifies the `mavenPlugin` scenario behaves as the user expects. */
       test("mavenPlugin") {
         // has packaging maven-plugin - ensuring coursier gives its artifact the .jar extension
         runner.ensureHasArtifactWithExtension(
@@ -343,6 +369,7 @@ abstract class CentralTests extends TestSuite {
         )
       }
 
+      /** Verifies the `ejb` scenario behaves as the user expects. */
       test("ejb") {
         // has packaging ejb - ensuring coursier gives its artifact the .jar extension
         runner.ensureHasArtifactWithExtension(
@@ -354,8 +381,10 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `classifier` scenario behaves as the user expects. */
     test("classifier") {
 
+      /** Verifies the `vanilla` scenario behaves as the user expects. */
       test("vanilla") {
         async {
           val deps                   = Seq(dep"org.apache.avro:avro:1.8.1")
@@ -366,6 +395,7 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
+      /** Verifies the `tests` scenario behaves as the user expects. */
       test("tests") {
         async {
           val deps = Seq(
@@ -379,6 +409,7 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
+      /** Verifies the `mixed` scenario behaves as the user expects. */
       test("mixed") {
         async {
           val deps = Seq(
@@ -394,7 +425,9 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `artifacts` scenario behaves as the user expects. */
     test("artifacts") {
+      /** Verifies the `uniqueness` scenario behaves as the user expects. */
       test("uniqueness") {
         async {
           val deps = Seq(
@@ -429,6 +462,7 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
+      /** Verifies the `testJarType` scenario behaves as the user expects. */
       test("testJarType") {
         // dependencies with type "test-jar" should be given the classifier "tests" by default
 
@@ -464,6 +498,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `ignoreUtf8Bom` scenario behaves as the user expects. */
     test("ignoreUtf8Bom") {
       runner.resolutionCheck(
         mod"dk.brics.automaton:automaton",
@@ -471,6 +506,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `ignoreWhitespaces` scenario behaves as the user expects. */
     test("ignoreWhitespaces") {
       runner.resolutionCheck(
         mod"org.jboss.resteasy:resteasy-jaxrs",
@@ -478,6 +514,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `nd4jNative` scenario behaves as the user expects. */
     test("nd4jNative") {
       // In particular:
       // - uses OS-based activation,
@@ -489,6 +526,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `scalaCompilerJLine` scenario behaves as the user expects. */
     test("scalaCompilerJLine") {
 
       // optional should bring jline
@@ -505,6 +543,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `deepLearning4j` scenario behaves as the user expects. */
     test("deepLearning4j") {
       runner.resolutionCheck(
         mod"org.deeplearning4j:deeplearning4j-core",
@@ -512,6 +551,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `tarGzZipArtifacts` scenario behaves as the user expects. */
     test("tarGzZipArtifacts") {
       val mod     = mod"org.apache.maven:apache-maven"
       val version = "3.3.9"
@@ -523,6 +563,7 @@ abstract class CentralTests extends TestSuite {
       val mainZipUrl =
         s"$centralBase/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.zip"
 
+      /** Verifies the `tarGz` scenario behaves as the user expects. */
       test("tarGz") {
         test {
           runner.withArtifacts(
@@ -551,6 +592,7 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
+      /** Verifies the `zip` scenario behaves as the user expects. */
       test("zip") {
         test {
           runner.withArtifacts(
@@ -580,6 +622,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `groupIdVersionProperties` scenario behaves as the user expects. */
     test("groupIdVersionProperties") {
       runner.resolutionCheck(
         mod"org.apache.directory.shared:shared-ldap",
@@ -587,12 +630,14 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `relocation` scenario behaves as the user expects. */
     test("relocation") {
       test - runner.resolutionCheck(
         mod"bouncycastle:bctsp-jdk14",
         "138"
       )
 
+      /** Verifies the `ignoreRelocationJars` scenario behaves as the user expects. */
       test("ignoreRelocationJars") {
         val mod = mod"org.apache.commons:commons-io"
         val ver = "1.3.2"
@@ -607,7 +652,9 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `entities` scenario behaves as the user expects. */
     test("entities") {
+      /** Verifies the `odash` scenario behaves as the user expects. */
       test("odash") {
         runner.resolutionCheck(
           mod"org.codehaus.plexus:plexus",
@@ -616,6 +663,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `parentVersionInPom` scenario behaves as the user expects. */
     test("parentVersionInPom") {
       runner.resolutionCheck(
         mod"io.swagger.parser.v3:swagger-parser-v3",
@@ -623,6 +671,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `parentBeforeImports` scenario behaves as the user expects. */
     test("parentBeforeImports") {
       runner.resolutionCheck(
         mod"org.kie:kie-api",
@@ -632,6 +681,7 @@ abstract class CentralTests extends TestSuite {
       )
     }
 
+    /** Verifies the `signaturesOfSignatures` scenario behaves as the user expects. */
     test("signaturesOfSignatures") {
       val mod = mod"org.yaml:snakeyaml"
       val ver = VersionConstraint("1.17")
@@ -677,6 +727,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `multiVersionRanges` scenario behaves as the user expects. */
     test("multiVersionRanges") {
       val mod = mod"org.webjars.bower:dgrid"
       val ver = "1.0.0"
@@ -690,6 +741,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `dependencyManagementScopeOverriding` scenario behaves as the user expects. */
     test("dependencyManagementScopeOverriding") {
       val mod = mod"org.apache.tika:tika-app"
       val ver = "1.13"
@@ -697,6 +749,7 @@ abstract class CentralTests extends TestSuite {
       test - runner.resolutionCheck(mod, ver)
     }
 
+    /** Verifies the `optionalArtifacts` scenario behaves as the user expects. */
     test("optionalArtifacts") {
       val mod = mod"io.monix:monix_2.12"
       val ver = "2.3.0"
@@ -725,6 +778,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `packagingTpe` scenario behaves as the user expects. */
     test("packagingTpe") {
       val mod = mod"android.arch.lifecycle:extensions"
       val ver = "1.0.0-alpha3"
@@ -758,6 +812,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `noArtifactIdExclusion` scenario behaves as the user expects. */
     test("noArtifactIdExclusion") {
       val mod = mod"org.datavec:datavec-api"
       val ver = "0.9.1"
@@ -765,6 +820,7 @@ abstract class CentralTests extends TestSuite {
       test - runner.resolutionCheck(mod, ver)
     }
 
+    /** Verifies the `snapshotVersioningBundlePackaging` scenario behaves as the user expects. */
     test("snapshotVersioningBundlePackaging") {
       val mod = mod"org.talend.daikon:daikon"
       val ver = "0.19.0-SNAPSHOT"
@@ -812,7 +868,9 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `trees` scenario behaves as the user expects. */
     test("trees") {
+      /** Verifies the `cycle` scenario behaves as the user expects. */
       test("cycle") {
         async {
           val res = await(runner.resolution(
@@ -837,6 +895,7 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
+      /** Verifies the `reverse` scenario behaves as the user expects. */
       test("reverse") {
         async {
           val res = await {
@@ -1007,6 +1066,7 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
+      /** Verifies the `module` scenario behaves as the user expects. */
       test("module") {
         async {
           val res = await(
@@ -1083,6 +1143,7 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
+      /** Verifies the `conflicts` scenario behaves as the user expects. */
       test("conflicts") {
         async {
           val res = await {
@@ -1203,6 +1264,7 @@ abstract class CentralTests extends TestSuite {
       }
     }
 
+    /** Verifies the `overrideScalaModule` scenario behaves as the user expects. */
     test("overrideScalaModule") {
 
       val sharedDeps = Set(
@@ -1318,7 +1380,9 @@ abstract class CentralTests extends TestSuite {
           sys.error("sets differ")
         }
 
+      /** Verifies the `force` scenario behaves as the user expects. */
       test("force") {
+        /** Verifies the `2.12.7` scenario behaves as the user expects. */
         test("2.12.7") {
           async {
             val res = await(
@@ -1357,6 +1421,7 @@ abstract class CentralTests extends TestSuite {
           }
         }
 
+        /** Verifies the `overrideFullSuffix` scenario behaves as the user expects. */
         test("overrideFullSuffix") {
           async {
             val res = await(
@@ -1395,7 +1460,9 @@ abstract class CentralTests extends TestSuite {
         }
       }
 
+      /** Verifies the `dontForce` scenario behaves as the user expects. */
       test("dontForce") {
+        /** Verifies the `2.12.7` scenario behaves as the user expects. */
         test("2.12.7") {
           async {
             val res = await(
@@ -1433,6 +1500,7 @@ abstract class CentralTests extends TestSuite {
           }
         }
 
+        /** Verifies the `2.12.8` scenario behaves as the user expects. */
         test("2.12.8") {
           async {
             val res = await(

@@ -30,6 +30,7 @@ object CentralIndexTests extends TestSuite {
       .withVersionConstraint(VersionConstraint("0.0.4-64-11f282"))
 
   val tests = Tests {
+    /** Verifies the `alpine-x64-zulu17` scenario behaves as the user expects. */
     test("alpine-x64-zulu17") {
       val os   = "linux-musl"
       val arch = "amd64"
@@ -53,6 +54,7 @@ object CentralIndexTests extends TestSuite {
       }
     }
 
+    /** Verifies the `macos-arm-temurin21` scenario behaves as the user expects. */
     test("macos-arm-temurin21") {
       val os   = "darwin"
       val arch = "arm64"

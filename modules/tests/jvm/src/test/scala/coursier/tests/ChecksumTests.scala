@@ -11,6 +11,7 @@ import scala.concurrent.{ExecutionContext, Future}
 object ChecksumTests extends TestSuite {
   val tests = Tests {
 
+    /** Verifies the `parse` scenario behaves as the user expects. */
     test("parse") {
 
       def sha1ParseTest(clean: String, others: String*): Unit = {
@@ -21,6 +22,7 @@ object ChecksumTests extends TestSuite {
           assert(CacheChecksum.parseChecksum(other) == expected)
       }
 
+      /** Verifies the `junk` scenario behaves as the user expects. */
       test("junk") {
         // https://repo1.maven.org/maven2/org/apache/spark/spark-core_2.11/1.2.0/spark-core_2.11-1.2.0.pom.sha1
         // as of 2016-03-02
@@ -33,6 +35,7 @@ object ChecksumTests extends TestSuite {
         sha1ParseTest(cleanSha1, junkSha1)
       }
 
+      /** Verifies the `singleLine` scenario behaves as the user expects. */
       test("singleLine") {
         // https://repo1.maven.org/maven2/org/json/json/20080701/json-20080701.pom.sha1
         // as of 2016-03-05
@@ -45,6 +48,7 @@ object ChecksumTests extends TestSuite {
         sha1ParseTest(cleanSha1, dirtySha1)
       }
 
+      /** Verifies the `singleLineEndingWithChunkedSha1` scenario behaves as the user expects. */
       test("singleLineEndingWithChunkedSha1") {
         // http://www-eu.apache.org/dist/kafka/0.10.1.0/kafka_2.11-0.10.1.0.tgz.sha1
         // as of 2017-08-17
@@ -56,30 +60,35 @@ object ChecksumTests extends TestSuite {
         sha1ParseTest(cleanSha1, dirtySha1)
       }
 
+      /** Verifies the `nonHexValue` scenario behaves as the user expects. */
       test("nonHexValue") {
         val content = "0000000000000000000000000000000z"
         val res     = CacheChecksum.parseChecksum(content)
         assert(res.isEmpty)
       }
 
+      /** Verifies the `binarySha1` scenario behaves as the user expects. */
       test("binarySha1") {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha1").openStream())
         val res     = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
 
+      /** Verifies the `binarySha256` scenario behaves as the user expects. */
       test("binarySha256") {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha256").openStream())
         val res     = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
 
+      /** Verifies the `binarySha512` scenario behaves as the user expects. */
       test("binarySha512") {
         val content = Platform.readFullySync(getClass.getResource("/empty.sha512").openStream())
         val res     = CacheChecksum.parseRawChecksum(content)
         assert(res.nonEmpty)
       }
 
+      /** Verifies the `binaryMd5` scenario behaves as the user expects. */
       test("binaryMd5") {
         val content = Platform.readFullySync(getClass.getResource("/empty.md5").openStream())
         val res     = CacheChecksum.parseRawChecksum(content)
@@ -87,6 +96,7 @@ object ChecksumTests extends TestSuite {
       }
     }
 
+    /** Verifies the `artifact` scenario behaves as the user expects. */
     test("artifact") {
 
       // not sure we should that directory as cache...
@@ -128,15 +138,19 @@ object ChecksumTests extends TestSuite {
           }
         ).map(_ => ()).future()(ExecutionContext.global)
 
+      /** Verifies the `sha1` scenario behaves as the user expects. */
       test("sha1") {
         validateAll("SHA-1")
       }
+      /** Verifies the `sha256` scenario behaves as the user expects. */
       test("sha256") {
         validateAll("SHA-256")
       }
+      /** Verifies the `sha512` scenario behaves as the user expects. */
       test("sha512") {
         validateAll("SHA-512")
       }
+      /** Verifies the `md5` scenario behaves as the user expects. */
       test("md5") {
         validateAll("MD5")
       }

@@ -16,6 +16,7 @@ object MavenTests extends TestSuite {
   private val runner = new TestRunner
 
   val tests = Tests {
+    /** Verifies the `testSnapshotNoVersioning` scenario behaves as the user expects. */
     test("testSnapshotNoVersioning") {
 
       val dep = Dependency(mod"com.abc:test-snapshot-special", VersionConstraint("0.1.0-SNAPSHOT"))

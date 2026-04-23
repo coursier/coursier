@@ -400,6 +400,7 @@ object ResolutionTests extends TestSuite {
   )
 
   val tests = Tests {
+    /** Verifies the `empty` scenario behaves as the user expects. */
     test("empty") {
       async {
         val res = await(resolve0(
@@ -409,6 +410,7 @@ object ResolutionTests extends TestSuite {
         assert(res == Resolution())
       }
     }
+    /** Verifies the `notFound` scenario behaves as the user expects. */
     test("notFound") {
       async {
         val dep = dep"acme:playy:2.4.0"
@@ -424,6 +426,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
+    /** Verifies the `missingPom` scenario behaves as the user expects. */
     test("missingPom") {
       async {
         val dep = dep"acme:module-with-missing-pom:1.0.0"
@@ -450,6 +453,7 @@ object ResolutionTests extends TestSuite {
         )
       }
     }
+    /** Verifies the `single` scenario behaves as the user expects. */
     test("single") {
       async {
         val dep = dep"acme:config:1.3.0"
@@ -470,6 +474,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
+    /** Verifies the `oneTransitiveDependency` scenario behaves as the user expects. */
     test("oneTransitiveDependency") {
       async {
         val dep   = dep"acme:play:2.4.0"
@@ -491,6 +496,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
+    /** Verifies the `twoTransitiveDependencyWithProps` scenario behaves as the user expects. */
     test("twoTransitiveDependencyWithProps") {
       async {
         val dep = dep"acme:play:2.4.1"
@@ -509,6 +515,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
+    /** Verifies the `exclude` scenario behaves as the user expects. */
     test("exclude") {
       async {
         val dep = dep"acme:play-extra-no-config:2.4.1"
@@ -529,6 +536,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
+    /** Verifies the `excludeOrgWildcard` scenario behaves as the user expects. */
     test("excludeOrgWildcard") {
       async {
         val dep = dep"acme:play-extra-no-config-no:2.4.1"
@@ -549,6 +557,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
+    /** Verifies the `filter` scenario behaves as the user expects. */
     test("filter") {
       async {
         val dep = dep"hudsucker:mail:10.0"
@@ -563,6 +572,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
+    /** Verifies the `parentDepMgmt` scenario behaves as the user expects. */
     test("parentDepMgmt") {
       async {
         val dep = dep"se.ikea:billy:18.0"
@@ -581,6 +591,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
+    /** Verifies the `parentDependencies` scenario behaves as the user expects. */
     test("parentDependencies") {
       async {
         val dep = dep"org.gnome:panel-legacy:7.0"
@@ -599,6 +610,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
+    /** Verifies the `propertiesInExclusions` scenario behaves as the user expects. */
     test("propertiesInExclusions") {
       async {
         val dep = dep"com.mailapp:mail-client:2.1"
@@ -617,6 +629,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
+    /** Verifies the `depMgmtInParentDeps` scenario behaves as the user expects. */
     test("depMgmtInParentDeps") {
       async {
         val dep = dep"com.thoughtworks.paranamer:paranamer:2.6"
@@ -631,6 +644,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
+    /** Verifies the `depsFromDefaultProfile` scenario behaves as the user expects. */
     test("depsFromDefaultProfile") {
       async {
         val dep = dep"com.github.dummy:libb:0.3.3"
@@ -648,6 +662,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
+    /** Verifies the `depsFromPropertyActivatedProfile` scenario behaves as the user expects. */
     test("depsFromPropertyActivatedProfile") {
       val f =
         for (version <- Seq("0.5.3", "0.5.4", "0.5.5", "0.5.6", "0.5.8")) yield async {
@@ -668,6 +683,7 @@ object ResolutionTests extends TestSuite {
 
       scala.concurrent.Future.sequence(f).map(_ => ())
     }
+    /** Verifies the `depsFromProfileDisactivatedByPropertyAbsence` scenario behaves as the user expects. */
     test("depsFromProfileDisactivatedByPropertyAbsence") {
       // A build profile only activates in the absence of some property should
       // not be activated when that property is present.
@@ -691,6 +707,7 @@ object ResolutionTests extends TestSuite {
         assert(res == expected)
       }
     }
+    /** Verifies the `depsScopeOverrideFromProfile` scenario behaves as the user expects. */
     test("depsScopeOverrideFromProfile") {
       async {
         // Like com.google.inject:guice:3.0 with org.sonatype.sisu.inject:cglib
@@ -710,6 +727,7 @@ object ResolutionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `exclusionsAndOptionalShouldGoAlong` scenario behaves as the user expects. */
     test("exclusionsAndOptionalShouldGoAlong") {
       async {
         val dep = dep"an-org:an-app:1.0"
@@ -732,6 +750,7 @@ object ResolutionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `exclusionsOfDependenciesFromDifferentPathsShouldNotCollide` scenario behaves as the user expects. */
     test("exclusionsOfDependenciesFromDifferentPathsShouldNotCollide") {
       async {
         val deps = Seq(
@@ -757,6 +776,7 @@ object ResolutionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `dependencyOverrides` scenario behaves as the user expects. */
     test("dependencyOverrides") {
       test {
         async {
@@ -868,7 +888,9 @@ object ResolutionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `parts` scenario behaves as the user expects. */
     test("parts") {
+      /** Verifies the `propertySubstitution` scenario behaves as the user expects. */
       test("propertySubstitution") {
         val res =
           Resolution.withProperties0(
@@ -882,6 +904,7 @@ object ResolutionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `forcedProperties` scenario behaves as the user expects. */
     test("forcedProperties") {
       async {
         val deps = Seq(
@@ -909,6 +932,7 @@ object ResolutionTests extends TestSuite {
       }
     }
 
+    /** Verifies the `mergingTransitiveDeps` scenario behaves as the user expects. */
     test("mergingTransitiveDeps") {
       test - async {
         val dep = dep"an-org:my-app:1.0"

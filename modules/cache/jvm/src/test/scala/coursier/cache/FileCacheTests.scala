@@ -16,6 +16,7 @@ object FileCacheTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `check for updates once` scenario behaves as the user expects. */
     test("check for updates once") {
 
       val start       = LocalDateTime.of(2022, 12, 12, 9, 0, 0)
@@ -70,6 +71,7 @@ object FileCacheTests extends TestSuite {
       }
     }
 
+    /** Verifies the `check extra artifact` scenario behaves as the user expects. */
     test("check extra artifact") {
 
       def routes(enableModule: Boolean) = HttpRoutes.of[IO] {

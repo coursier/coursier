@@ -12,6 +12,7 @@ import utest._
   */
 object VersionRangeTests extends TestSuite {
   val tests = Tests {
+    /** Verifies the `<=1.2.3` scenario behaves as the user expects. */
     test("<=1.2.3") {
       checkRange(
         "(,1.2.3]",
@@ -20,6 +21,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `<=1.2` scenario behaves as the user expects. */
     test("<=1.2") {
       checkRange(
         "(,1.2.max]",
@@ -36,6 +38,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `<=1` scenario behaves as the user expects. */
     test("<=1") {
       checkRange(
         "(,1.max]",
@@ -52,6 +55,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `<1.2.3` scenario behaves as the user expects. */
     test("<1.2.3") {
       checkRange(
         "(,1.2.3)",
@@ -60,6 +64,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `<1.2` scenario behaves as the user expects. */
     test("<1.2") {
       checkRange(
         "(,1.2)",
@@ -68,6 +73,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `<1` scenario behaves as the user expects. */
     test("<1") {
       checkRange(
         "(,1)",
@@ -76,6 +82,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `>=1.2.3` scenario behaves as the user expects. */
     test(">=1.2.3") {
       checkRange(
         "[1.2.3,)",
@@ -84,6 +91,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `>=1.2` scenario behaves as the user expects. */
     test(">=1.2") {
       checkRange(
         "[1.2,)",
@@ -92,6 +100,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `>=1` scenario behaves as the user expects. */
     test(">=1") {
       checkRange(
         "[1,)",
@@ -100,6 +109,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `>1.2.3` scenario behaves as the user expects. */
     test(">1.2.3") {
       checkRange(
         "(1.2.3,)",
@@ -108,6 +118,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `>1.2` scenario behaves as the user expects. */
     test(">1.2") {
       checkRange(
         "(1.2.max,)",
@@ -121,6 +132,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `>1` scenario behaves as the user expects. */
     test(">1") {
       checkRange(
         "(1.max,)",
@@ -134,6 +146,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `1.2.3` scenario behaves as the user expects. */
     test("1.2.3") {
       checkRange(
         "[1.2.3]",
@@ -142,6 +155,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `1.x` scenario behaves as the user expects. */
     test("1.x") {
       checkRange(
         "[1,1.max]",
@@ -150,6 +164,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `1.2.x` scenario behaves as the user expects. */
     test("1.2.x") {
       checkRange(
         "[1.2, 1.2.max]",
@@ -158,6 +173,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `=1.2.3` scenario behaves as the user expects. */
     test("=1.2.3") {
       checkRange(
         "[1.2.3]",
@@ -166,6 +182,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `=1.2` scenario behaves as the user expects. */
     test("=1.2") {
       checkRange(
         "[1.2.0, 1.2.max]",
@@ -174,6 +191,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `=1` scenario behaves as the user expects. */
     test("=1") {
       checkRange(
         "[1.0.0, 1.max]",
@@ -198,6 +216,7 @@ object VersionRangeTests extends TestSuite {
     //   )
     // }
 
+    /** Verifies the `>=1.2.3 <2.0.0` scenario behaves as the user expects. */
     test(">=1.2.3 <2.0.0") {
       checkRange(
         "[1.2.3,2.0.0)",
@@ -214,6 +233,7 @@ object VersionRangeTests extends TestSuite {
     //   )
     // }
 
+    /** Verifies the `1.2.3 - 2.0.0` scenario behaves as the user expects. */
     test("1.2.3 - 2.0.0") {
       checkRange(
         "[1.2.3,2.0.0]",
@@ -222,6 +242,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `1.2 - 2` scenario behaves as the user expects. */
     test("1.2 - 2") {
       checkRange(
         "[1.2,2.max]",
@@ -235,6 +256,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `1.2.3 - 2.0.0 1.5.0 - 2.4.0` scenario behaves as the user expects. */
     test("1.2.3 - 2.0.0 1.5.0 - 2.4.0") {
       checkRange(
         "[1.5.0,2.0.0]",
@@ -251,6 +273,7 @@ object VersionRangeTests extends TestSuite {
     //   )
     // }
 
+    /** Verifies the `>=1.x` scenario behaves as the user expects. */
     test(">=1.x") {
       checkRange(
         "[1,)",
@@ -259,6 +282,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `>=1.2.3-beta` scenario behaves as the user expects. */
     test(">=1.2.3-beta") {
       checkRange(
         "[1.2.3-beta,)",
@@ -275,6 +299,7 @@ object VersionRangeTests extends TestSuite {
       )
     }
 
+    /** Verifies the `>=1.2.3-beta-2` scenario behaves as the user expects. */
     test(">=1.2.3-beta-2") {
       checkRange(
         "[1.2.3-beta-2,)",

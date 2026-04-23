@@ -9,6 +9,7 @@ object DigestBasedCacheTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `simple` scenario behaves as the user expects. */
     test("simple") {
       withTmpDir { dir =>
         // To force re-download things, use this instead:

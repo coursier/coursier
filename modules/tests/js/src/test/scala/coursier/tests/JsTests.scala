@@ -12,12 +12,14 @@ import scala.concurrent.{Future, Promise}
 object JsTests extends TestSuite {
 
   val tests = Tests {
+    /** Verifies the `promise` scenario behaves as the user expects. */
     test("promise") {
       val p = Promise[Unit]()
       Future(p.success(()))
       p.future
     }
 
+    /** Verifies the `get` scenario behaves as the user expects. */
     test("get") {
       coursier.cache.internal.Platform.get(
         "https://repo1.maven.org/maven2/ch/qos/logback/logback-classic/1.1.3/logback-classic-1.1.3.pom"
@@ -28,6 +30,7 @@ object JsTests extends TestSuite {
         }
     }
 
+    /** Verifies the `getProj` scenario behaves as the user expects. */
     test("getProj") {
       MavenRepository("https://repo1.maven.org/maven2/")
         .find0(mod"ch.qos.logback:logback-classic", Version("1.1.3"), Platform.artifact)

@@ -20,6 +20,7 @@ object IvyLocalTests extends TestSuite {
   lazy val localVersion = VersionConstraint("0.1.2-publish-local")
 
   val tests = TestSuite {
+    /** Verifies the `coursier` scenario behaves as the user expects. */
     test("coursier") {
       val module = mod"io.get-coursier:coursier-core_2.12"
 
@@ -38,6 +39,7 @@ object IvyLocalTests extends TestSuite {
         )
       }
 
+      /** Verifies the `uniqueArtifacts` scenario behaves as the user expects. */
       test("uniqueArtifacts") {
         async {
 
@@ -59,6 +61,7 @@ object IvyLocalTests extends TestSuite {
         }
       }
 
+      /** Verifies the `javadocSources` scenario behaves as the user expects. */
       test("javadocSources") {
         async {
           val res = await(runner.resolve(

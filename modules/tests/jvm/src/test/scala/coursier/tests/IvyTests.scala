@@ -27,6 +27,7 @@ object IvyTests extends TestSuite {
   private val runner = new TestRunner
 
   val tests = Tests {
+    /** Verifies the `dropInfoAttributes` scenario behaves as the user expects. */
     test("dropInfoAttributes") {
       runner.resolutionCheck0(
         module = Module(
@@ -40,6 +41,7 @@ object IvyTests extends TestSuite {
       )
     }
 
+    /** Verifies the `versionIntervals` scenario behaves as the user expects. */
     test("versionIntervals") {
       // will likely break if new 0.6.x versions are published :-)
 
@@ -80,7 +82,9 @@ object IvyTests extends TestSuite {
       dropInfoAttributes = true
     )
 
+    /** Verifies the `changing` scenario behaves as the user expects. */
     test("changing") {
+      /** Verifies the `-SNAPSHOT suffix` scenario behaves as the user expects. */
       test("-SNAPSHOT suffix") {
 
         val dep = Dependency(mod"com.example:a_2.11", VersionConstraint("0.1.0-SNAPSHOT"))
@@ -101,6 +105,7 @@ object IvyTests extends TestSuite {
         }
       }
 
+      /** Verifies the `-SNAPSHOT suffix` scenario behaves as the user expects. */
       test("-SNAPSHOT suffix") {
 
         val dep = Dependency(mod"com.example:a_2.11", VersionConstraint("0.2.0.SNAPSHOT"))
@@ -122,6 +127,7 @@ object IvyTests extends TestSuite {
       }
     }
 
+    /** Verifies the `testArtifacts` scenario behaves as the user expects. */
     test("testArtifacts") {
 
       val dep = Dependency(mod"com.example:a_2.11", VersionConstraint("0.1.0-SNAPSHOT"))
@@ -131,6 +137,7 @@ object IvyTests extends TestSuite {
       val mainJarUrl = repoBase + "com.example/a_2.11/0.1.0-SNAPSHOT/jars/a_2.11.jar"
       val testJarUrl = repoBase + "com.example/a_2.11/0.1.0-SNAPSHOT/jars/a_2.11-tests.jar"
 
+      /** Verifies the `no conf or classifier` scenario behaves as the user expects. */
       test("no conf or classifier") {
         runner.withArtifacts(
           dep = dep.withAttributes(Attributes(Type.jar, Classifier.empty)),
@@ -146,7 +153,9 @@ object IvyTests extends TestSuite {
         }
       }
 
+      /** Verifies the `test conf` scenario behaves as the user expects. */
       test("test conf") {
+        /** Verifies the `no attributes` scenario behaves as the user expects. */
         test("no attributes") {
           runner.withArtifacts(
             dep = dep.withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test)),
@@ -159,6 +168,7 @@ object IvyTests extends TestSuite {
           }
         }
 
+        /** Verifies the `attributes` scenario behaves as the user expects. */
         test("attributes") {
           runner.withArtifacts(
             dep = dep
@@ -174,6 +184,7 @@ object IvyTests extends TestSuite {
         }
       }
 
+      /** Verifies the `tests classifier` scenario behaves as the user expects. */
       test("tests classifier") {
         val testsDep = dep.withAttributes(Attributes(Type.jar, Classifier.tests))
 

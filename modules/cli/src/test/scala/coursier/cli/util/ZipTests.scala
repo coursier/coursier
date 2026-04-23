@@ -10,6 +10,7 @@ import utest._
 object ZipTests extends TestSuite {
 
   val tests = Tests {
+    /** Verifies the `zipEntries should be fine with custom deflaters` scenario behaves as the user expects. */
     test("zipEntries should be fine with custom deflaters") {
 
       // Inspired by https://github.com/spring-projects/spring-boot/commit/a50646b7cc3ad941e748dfb450077e3a73706205#diff-2297c301250b25e3b80301c58daf3ea0R621

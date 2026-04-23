@@ -30,11 +30,13 @@ object IvyParserTests extends TestSuite {
   }
 
   val tests: Tests = Tests {
+    /** Verifies the `project can be parsed` scenario behaves as the user expects. */
     test("project can be parsed") {
       val success = IvyXml.project(result)
       assert(success.isRight)
     }
 
+    /** Verifies the `licenses are available` scenario behaves as the user expects. */
     test("licenses are available") {
       val success = IvyXml.project(result)
       assert(success.isRight)

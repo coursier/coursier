@@ -18,6 +18,7 @@ object UtilTests extends TestSuite {
   }
 
   val tests = Tests {
+    /** Verifies the `createDirectories fine with sym links` scenario behaves as the user expects. */
     test("createDirectories fine with sym links") {
       if (scala.util.Properties.isWin) "disabled"
       else {
@@ -32,7 +33,9 @@ object UtilTests extends TestSuite {
       }
     }
 
+    /** Verifies the `property expansion` scenario behaves as the user expects. */
     test("property expansion") {
+      /** Verifies the `simple` scenario behaves as the user expects. */
       test("simple") {
         val map      = Map("something" -> "value", "other" -> "a")
         val sysProps = new Properties
@@ -45,6 +48,7 @@ object UtilTests extends TestSuite {
         assert(toSet == expected)
       }
 
+      /** Verifies the `substitution` scenario behaves as the user expects. */
       test("substitution") {
         val map      = Map("something" -> "value ${foo}", "other" -> "a")
         val sysProps = new Properties
@@ -57,6 +61,7 @@ object UtilTests extends TestSuite {
         assert(toSet == expected)
       }
 
+      /** Verifies the `optional value` scenario behaves as the user expects. */
       test("optional value") {
         val map      = Map("something" -> "value", "foo?" -> "A")
         val sysProps = new Properties

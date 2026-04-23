@@ -23,6 +23,7 @@ object ResolutionProcessTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `fetchAll` scenario behaves as the user expects. */
     test("fetchAll") {
 
       // check that tasks fetching different versions of the same module are spawned sequentially

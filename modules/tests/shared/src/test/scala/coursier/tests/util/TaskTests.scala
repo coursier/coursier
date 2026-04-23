@@ -9,6 +9,7 @@ import scala.concurrent.duration.Duration
 object TaskTests extends TestSuite {
 
   val tests = Tests {
+    /** Verifies the `tailRecM` scenario behaves as the user expects. */
     test("tailRecM") {
       import ExecutionContext.Implicits.global
 

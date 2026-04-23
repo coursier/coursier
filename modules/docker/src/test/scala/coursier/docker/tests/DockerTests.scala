@@ -62,6 +62,7 @@ object DockerTests extends TestSuite {
       actualTests
     else
       Tests {
+        /** Verifies the `disabled on Windows` scenario behaves as the user expects. */
         test("disabled on Windows") {
           "disabled"
         }
@@ -69,7 +70,9 @@ object DockerTests extends TestSuite {
 
   def actualTests = Tests {
 
+    /** Verifies the `hello-world` scenario behaves as the user expects. */
     test("hello-world") {
+      /** Verifies the `pull` scenario behaves as the user expects. */
       test("pull") {
         val res = DockerPull.pull(
           "library/hello-world",
@@ -103,6 +106,7 @@ object DockerTests extends TestSuite {
         assert(Seq(expectedLayerUrl) == layerUrls)
       }
 
+      /** Verifies the `run` scenario behaves as the user expects. */
       test("run") {
         val pullRes = DockerPull.pull(
           "library/hello-world",
@@ -134,7 +138,9 @@ object DockerTests extends TestSuite {
       }
     }
 
+    /** Verifies the `build` scenario behaves as the user expects. */
     test("build") {
+      /** Verifies the `simple` scenario behaves as the user expects. */
       test("simple") {
         withTmpDir { dir =>
           val dockerFileContent =

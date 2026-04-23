@@ -31,7 +31,9 @@ object FetchTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `artifactTypes` scenario behaves as the user expects. */
     test("artifactTypes") {
+      /** Verifies the `default` scenario behaves as the user expects. */
       test("default") {
         async {
 
@@ -45,6 +47,7 @@ object FetchTests extends TestSuite {
         }
       }
 
+      /** Verifies the `sources` scenario behaves as the user expects. */
       test("sources") {
         async {
 
@@ -64,6 +67,7 @@ object FetchTests extends TestSuite {
         }
       }
 
+      /** Verifies the `mainAndSources` scenario behaves as the user expects. */
       test("mainAndSources") {
         async {
 
@@ -88,6 +92,7 @@ object FetchTests extends TestSuite {
         }
       }
 
+      /** Verifies the `javadoc` scenario behaves as the user expects. */
       test("javadoc") {
         async {
 
@@ -107,6 +112,7 @@ object FetchTests extends TestSuite {
         }
       }
 
+      /** Verifies the `mainAndJavadoc` scenario behaves as the user expects. */
       test("mainAndJavadoc") {
         async {
 
@@ -131,6 +137,7 @@ object FetchTests extends TestSuite {
         }
       }
 
+      /** Verifies the `sourcesAndJavadoc` scenario behaves as the user expects. */
       test("sourcesAndJavadoc") {
         async {
 
@@ -150,7 +157,9 @@ object FetchTests extends TestSuite {
         }
       }
 
+      /** Verifies the `exotic` scenario behaves as the user expects. */
       test("exotic") {
+        /** Verifies the `orbit` scenario behaves as the user expects. */
         test("orbit") {
           async {
             // should be in the default artifact types
@@ -171,6 +180,7 @@ object FetchTests extends TestSuite {
           }
         }
 
+        /** Verifies the `klib` scenario behaves as the user expects. */
         test("klib") {
           async {
             // should be in the default artifact types
@@ -195,6 +205,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `testScope` scenario behaves as the user expects. */
     test("testScope") {
 
       val m2Local   = handmadeMetadataBase + "http/abc.com"
@@ -206,6 +217,7 @@ object FetchTests extends TestSuite {
       val fetch0 = fetch
         .withRepositories(Seq(Repositories.central))
 
+      /** Verifies the `m2Local` scenario behaves as the user expects. */
       test("m2Local") {
         async {
           val res = await {
@@ -240,6 +252,7 @@ object FetchTests extends TestSuite {
         }
       }
 
+      /** Verifies the `ivy2Local` scenario behaves as the user expects. */
       test("ivy2Local") {
         async {
           val res = await {
@@ -278,6 +291,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `properties` scenario behaves as the user expects. */
     test("properties") {
 
       val fetch0 = fetch
@@ -319,7 +333,9 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `publications` scenario behaves as the user expects. */
     test("publications") {
+      /** Verifies the `ivy` scenario behaves as the user expects. */
       test("ivy") {
         async {
           val artifactTypes = Seq(Type("info"))
@@ -350,6 +366,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `subset` scenario behaves as the user expects. */
     test("subset") {
       async {
 
@@ -392,7 +409,9 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `jai_core` scenario behaves as the user expects. */
     test("jai_core") {
+      /** Verifies the `ko` scenario behaves as the user expects. */
       test("ko") {
         val cache1 = cache match {
           case cache: coursier.cache.MockCache[Task] =>
@@ -409,6 +428,7 @@ object FetchTests extends TestSuite {
         catch { case _: coursier.error.FetchError.DownloadingArtifacts => () }
       }
 
+      /** Verifies the `ok` scenario behaves as the user expects. */
       test("ok") {
         async {
           val res = await {
@@ -423,6 +443,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `url on lower version` scenario behaves as the user expects. */
     test("url on lower version") {
       async {
         val res = await {
@@ -450,6 +471,7 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `url and force version` scenario behaves as the user expects. */
     test("url and force version") {
       async {
         val params = fetch.resolutionParams
@@ -480,8 +502,11 @@ object FetchTests extends TestSuite {
       }
     }
 
+    /** Verifies the `gradle modules` scenario behaves as the user expects. */
     test("gradle modules") {
+      /** Verifies the `kotlinx-html-js` scenario behaves as the user expects. */
       test("kotlinx-html-js") {
+        /** Verifies the `no-support` scenario behaves as the user expects. */
         test("no-support") {
           async {
 
@@ -497,6 +522,7 @@ object FetchTests extends TestSuite {
           }
         }
 
+        /** Verifies the `support` scenario behaves as the user expects. */
         test("support") {
           async {
 
@@ -517,6 +543,7 @@ object FetchTests extends TestSuite {
         }
       }
 
+      /** Verifies the `android` scenario behaves as the user expects. */
       test("android") {
 
         def withVariant(dep: Dependency, map: Map[String, VariantSelector.VariantMatcher]) =
@@ -544,6 +571,7 @@ object FetchTests extends TestSuite {
           ))
         }
 
+        /** Verifies the `compile` scenario behaves as the user expects. */
         test("compile") {
           testVariants(
             Map(
@@ -554,6 +582,7 @@ object FetchTests extends TestSuite {
           )
         }
 
+        /** Verifies the `runtime` scenario behaves as the user expects. */
         test("runtime") {
           testVariants(
             Map(
@@ -565,6 +594,7 @@ object FetchTests extends TestSuite {
         }
       }
 
+      /** Verifies the `fallback from config` scenario behaves as the user expects. */
       test("fallback from config") {
 
         def testVariants(
@@ -595,6 +625,7 @@ object FetchTests extends TestSuite {
           ))
         }
 
+        /** Verifies the `compile` scenario behaves as the user expects. */
         test("compile") {
           val attr = VariantSelector.AttributesBased().withMatchers(
             Map(
@@ -605,6 +636,7 @@ object FetchTests extends TestSuite {
             dep"androidx.core:core-ktx:1.15.0:compile"
           )
         }
+        /** Verifies the `runtime` scenario behaves as the user expects. */
         test("runtime") {
           val attr = VariantSelector.AttributesBased().withMatchers(
             Map(
@@ -616,7 +648,9 @@ object FetchTests extends TestSuite {
           )
         }
       }
+      /** Verifies the `sources` scenario behaves as the user expects. */
       test("sources") {
+        /** Verifies the `compile` scenario behaves as the user expects. */
         test("compile") {
           async {
             val params = fetch.resolutionParams
@@ -648,6 +682,7 @@ object FetchTests extends TestSuite {
           }
         }
 
+        /** Verifies the `default` scenario behaves as the user expects. */
         test("default") {
           async {
             val params = fetch.resolutionParams.addVariantAttributes(

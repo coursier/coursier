@@ -10,10 +10,13 @@ object RuleParserTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `rule` scenario behaves as the user expects. */
     test("rule") {
 
+      /** Verifies the `alwaysFail` scenario behaves as the user expects. */
       test("alwaysFail") {
 
+        /** Verifies the `ok` scenario behaves as the user expects. */
         test("ok") {
           val s           = "AlwaysFail"
           val expectedRes = Right((AlwaysFail(), RuleResolution.TryResolve))
@@ -21,6 +24,7 @@ object RuleParserTests extends TestSuite {
           assert(res == expectedRes)
         }
 
+        /** Verifies the `trailingChars` scenario behaves as the user expects. */
         test("trailingChars") {
           val s   = "AlwaysFailz"
           val res = RuleParser.rule(s)
@@ -29,6 +33,7 @@ object RuleParserTests extends TestSuite {
 
       }
 
+      /** Verifies the `sameVersion` scenario behaves as the user expects. */
       test("sameVersion") {
 
         test {
@@ -75,8 +80,10 @@ object RuleParserTests extends TestSuite {
 
       }
 
+      /** Verifies the `strict` scenario behaves as the user expects. */
       test("strict") {
 
+        /** Verifies the `simple` scenario behaves as the user expects. */
         test("simple") {
           test {
             val s           = "Strict"
@@ -101,6 +108,7 @@ object RuleParserTests extends TestSuite {
           }
         }
 
+        /** Verifies the `excludes` scenario behaves as the user expects. */
         test("excludes") {
           test {
             val s = "Strict(org:*, !org:name, !org:foo)"
@@ -120,8 +128,10 @@ object RuleParserTests extends TestSuite {
 
     }
 
+    /** Verifies the `explicitRuleResolution` scenario behaves as the user expects. */
     test("explicitRuleResolution") {
 
+      /** Verifies the `resolve` scenario behaves as the user expects. */
       test("resolve") {
         val s = "resolve:SameVersion(com.michael:jackson-core)"
         val expectedRes =
@@ -130,6 +140,7 @@ object RuleParserTests extends TestSuite {
         assert(res == expectedRes)
       }
 
+      /** Verifies the `fail` scenario behaves as the user expects. */
       test("fail") {
         val s           = "fail:SameVersion(com.michael:jackson-core)"
         val expectedRes = Right((SameVersion(mod"com.michael:jackson-core"), RuleResolution.Fail))
@@ -137,6 +148,7 @@ object RuleParserTests extends TestSuite {
         assert(res == expectedRes)
       }
 
+      /** Verifies the `warn` scenario behaves as the user expects. */
       test("warn") {
         val s           = "warn:SameVersion(com.michael:jackson-core)"
         val expectedRes = Right((SameVersion(mod"com.michael:jackson-core"), RuleResolution.Warn))
@@ -146,6 +158,7 @@ object RuleParserTests extends TestSuite {
 
     }
 
+    /** Verifies the `rules` scenario behaves as the user expects. */
     test("rules") {
 
       test {
@@ -254,6 +267,7 @@ object RuleParserTests extends TestSuite {
         assert(res == expectedRes)
       }
 
+      /** Verifies the `trailingCharacters` scenario behaves as the user expects. */
       test("trailingCharacters") {
         test {
           val s   = "AlwaysFail, AlwaysFailzzz"

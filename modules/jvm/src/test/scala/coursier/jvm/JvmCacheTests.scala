@@ -105,6 +105,7 @@ object JvmCacheTests extends TestSuite {
   )
 
   val tests = Tests {
+    /** Verifies the `specific version` scenario behaves as the user expects. */
     test("specific version") {
       withTempDir { tmpDir =>
         val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
@@ -125,6 +126,7 @@ object JvmCacheTests extends TestSuite {
       }
     }
 
+    /** Verifies the `version range` scenario behaves as the user expects. */
     test("version range") {
       withTempDir { tmpDir =>
         val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
@@ -144,6 +146,7 @@ object JvmCacheTests extends TestSuite {
       }
     }
 
+    /** Verifies the `Contents/Home directory on macOS` scenario behaves as the user expects. */
     test("Contents/Home directory on macOS") {
       withTempDir { tmpDir =>
         val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
@@ -190,6 +193,7 @@ object JvmCacheTests extends TestSuite {
       }
     }
 
+    /** Verifies the `no Contents/Home directory on macOS` scenario behaves as the user expects. */
     test("no Contents/Home directory on macOS") {
       withTempDir { tmpDir =>
         val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
@@ -216,6 +220,7 @@ object JvmCacheTests extends TestSuite {
       }
     }
 
+    /** Verifies the `URL id` scenario behaves as the user expects. */
     test("URL id") {
       withTempDir0 { tmpDir =>
         val archiveCache = ArchiveCache[Task](tmpDir.toIO).withCache(cache)

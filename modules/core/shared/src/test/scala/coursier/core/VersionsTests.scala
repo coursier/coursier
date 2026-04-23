@@ -7,7 +7,9 @@ object VersionsTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `latest_stable` scenario behaves as the user expects. */
     test("latest_stable") {
+      /** Verifies the `should ignore alpha versions` scenario behaves as the user expects. */
       test("should ignore alpha versions") {
         val v =
           Versions(
@@ -30,6 +32,7 @@ object VersionsTests extends TestSuite {
         assert(candidates == expected)
       }
 
+      /** Verifies the `should ignore milestones` scenario behaves as the user expects. */
       test("should ignore milestones") {
         val v = Versions(
           Version0("1.1-M1"),

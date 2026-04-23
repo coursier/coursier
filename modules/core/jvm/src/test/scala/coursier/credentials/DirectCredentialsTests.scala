@@ -5,6 +5,7 @@ import utest._
 object DirectCredentialsTests extends TestSuite {
 
   val tests = Tests {
+    /** Verifies the `no password in toString` scenario behaves as the user expects. */
     test("no password in toString") {
       val cred = DirectCredentials("host", "alex", "1234")
       assert(cred.usernameOpt.contains("alex"))

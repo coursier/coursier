@@ -17,6 +17,7 @@ object Iso9669Tests extends TestSuite {
       Tests {}
 
   def actualTests = Tests {
+    /** Verifies the `mount` scenario behaves as the user expects. */
     test("mount") {
       val metaDataContent =
         """#cloud-config

@@ -7,6 +7,7 @@ import scala.compat.java8.OptionConverters._
 object DirectCredentialsTests extends TestSuite {
 
   val tests = Tests {
+    /** Verifies the `no password in toString` scenario behaves as the user expects. */
     test("no password in toString") {
       val cred = new DirectCredentials("host", "alex", "1234")
       assert(cred.getUsernameOpt.asScala.contains("alex"))

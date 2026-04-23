@@ -7,6 +7,7 @@ import utest._
 
 object IvyXmlParsingTests extends TestSuite {
   val tests = Tests {
+    /** Verifies the `infoWithHomePage` scenario behaves as the user expects. */
     test("infoWithHomePage") {
       // slice of https://dl.bintray.com/sbt/sbt-plugin-releases/com.github.gseitz/sbt-release/scala_2.12/sbt_1.0/1.0.12/ivys/ivy.xml
       val node =
@@ -34,6 +35,7 @@ object IvyXmlParsingTests extends TestSuite {
       assert(result == expected)
     }
 
+    /** Verifies the `infoWithoutHomePage` scenario behaves as the user expects. */
     test("infoWithoutHomePage") {
       val node =
         """
@@ -52,6 +54,7 @@ object IvyXmlParsingTests extends TestSuite {
       assert(result == expected)
     }
 
+    /** Verifies the `infoWithExtraInfo` scenario behaves as the user expects. */
     test("infoWithExtraInfo") {
       val node =
         """
@@ -68,6 +71,7 @@ object IvyXmlParsingTests extends TestSuite {
       assert(result == expected)
     }
 
+    /** Verifies the `'/' and '\' are invalid in organisation` scenario behaves as the user expects. */
     test("'/' and '\\' are invalid in organisation") {
       val node =
         """
@@ -84,6 +88,7 @@ object IvyXmlParsingTests extends TestSuite {
       assert(message.contains("com\\github\\gseitz"))
     }
 
+    /** Verifies the `'/' and '\' are invalid in module` scenario behaves as the user expects. */
     test("'/' and '\\' are invalid in module") {
       val node =
         """
@@ -100,6 +105,7 @@ object IvyXmlParsingTests extends TestSuite {
       assert(message.contains("sbt/release"))
     }
 
+    /** Verifies the `'/' and '\' are invalid in revision` scenario behaves as the user expects. */
     test("'/' and '\\' are invalid in revision") {
       val node =
         """

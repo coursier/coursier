@@ -12,6 +12,7 @@ object DependencyTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `hadoopClient` scenario behaves as the user expects. */
     test("hadoopClient") {
       async {
         val res = await {

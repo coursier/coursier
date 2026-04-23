@@ -15,6 +15,7 @@ object MirrorTests extends TestSuite {
   import TestHelpers.{ec, cache, validateDependencies}
 
   val tests = Tests {
+    /** Verifies the `read` scenario behaves as the user expects. */
     test("read") {
       val path = Option(getClass.getResource("/empty-mirror.properties"))
         .map(u => new File(u.toURI).getAbsolutePath)
@@ -27,6 +28,7 @@ object MirrorTests extends TestSuite {
       assert(mirrors == expectedMirrors)
     }
 
+    /** Verifies the `resolve` scenario behaves as the user expects. */
     test("resolve") {
 
       def run(file: MirrorConfFile) = async {
@@ -45,6 +47,7 @@ object MirrorTests extends TestSuite {
         assert(artifacts.forall(_.url.startsWith("https://jcenter.bintray.com")))
       }
 
+      /** Verifies the `property file` scenario behaves as the user expects. */
       test("property file") {
         val mirrorFilePath = Option(getClass.getResource("/test-mirror.properties"))
           .map(u => new File(u.toURI).getAbsolutePath)
@@ -70,6 +73,7 @@ object MirrorTests extends TestSuite {
         assert(artifacts.forall(_.url.startsWith("https://jcenter.bintray.com")))
       }
 
+      /** Verifies the `conf file` scenario behaves as the user expects. */
       test("conf file") {
         val confFilePath = Option(getClass.getResource("/test-mirror.json"))
           .map(u => Paths.get(u.toURI))

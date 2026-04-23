@@ -24,8 +24,11 @@ object ActivationTests extends TestSuite {
   // - negated OS infos (starting with "!") - not implemented yet
 
   val tests = Tests {
+    /** Verifies the `OS` scenario behaves as the user expects. */
     test("OS") {
+      /** Verifies the `fromProperties` scenario behaves as the user expects. */
       test("fromProperties") {
+        /** Verifies the `MacOSX` scenario behaves as the user expects. */
         test("MacOSX") {
           val props = Map(
             "os.arch"        -> "x86_64",
@@ -46,6 +49,7 @@ object ActivationTests extends TestSuite {
           assert(os == expectedOs)
         }
 
+        /** Verifies the `linuxPi` scenario behaves as the user expects. */
         test("linuxPi") {
           val props = Map(
             "os.arch"        -> "arm",
@@ -67,8 +71,10 @@ object ActivationTests extends TestSuite {
         }
       }
 
+      /** Verifies the `active` scenario behaves as the user expects. */
       test("active") {
 
+        /** Verifies the `arch` scenario behaves as the user expects. */
         test("arch") {
           val activation = Os(Some("x86_64"), Set(), None, None)
 
@@ -77,6 +83,7 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
+        /** Verifies the `wrongArch` scenario behaves as the user expects. */
         test("wrongArch") {
           val activation = Os(Some("arm"), Set(), None, None)
 
@@ -85,6 +92,7 @@ object ActivationTests extends TestSuite {
           assert(!isActive)
         }
 
+        /** Verifies the `family` scenario behaves as the user expects. */
         test("family") {
           val activation = Os(None, Set("mac"), None, None)
 
@@ -93,6 +101,7 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
+        /** Verifies the `wrongFamily` scenario behaves as the user expects. */
         test("wrongFamily") {
           val activation = Os(None, Set("windows"), None, None)
 
@@ -101,6 +110,7 @@ object ActivationTests extends TestSuite {
           assert(!isActive)
         }
 
+        /** Verifies the `name` scenario behaves as the user expects. */
         test("name") {
           val activation = Os(None, Set(), Some("mac os x"), None)
 
@@ -109,6 +119,7 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
+        /** Verifies the `wrongName` scenario behaves as the user expects. */
         test("wrongName") {
           val activation = Os(None, Set(), Some("linux"), None)
 
@@ -117,6 +128,7 @@ object ActivationTests extends TestSuite {
           assert(!isActive)
         }
 
+        /** Verifies the `version` scenario behaves as the user expects. */
         test("version") {
           val activation = Os(None, Set(), None, Some("10.12"))
 
@@ -125,6 +137,7 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
+        /** Verifies the `wrongVersion` scenario behaves as the user expects. */
         test("wrongVersion") {
           val activation = Os(None, Set(), None, Some("10.11"))
 
@@ -135,6 +148,7 @@ object ActivationTests extends TestSuite {
       }
     }
 
+    /** Verifies the `properties` scenario behaves as the user expects. */
     test("properties") {
       val activation = Activation.empty.withProperties(
         Seq(
@@ -144,6 +158,7 @@ object ActivationTests extends TestSuite {
         )
       )
 
+      /** Verifies the `match` scenario behaves as the user expects. */
       test("match") {
         val isActive = activation.isActive(
           Map(
@@ -158,6 +173,7 @@ object ActivationTests extends TestSuite {
         assert(isActive)
       }
 
+      /** Verifies the `match with missing property` scenario behaves as the user expects. */
       test("match with missing property") {
         val isActive = activation.isActive(
           Map(
@@ -171,6 +187,7 @@ object ActivationTests extends TestSuite {
         assert(isActive)
       }
 
+      /** Verifies the `noMatch` scenario behaves as the user expects. */
       test("noMatch") {
         test {
           val isActive = activation.isActive(
@@ -215,9 +232,12 @@ object ActivationTests extends TestSuite {
       }
     }
 
+    /** Verifies the `jdkVersion` scenario behaves as the user expects. */
     test("jdkVersion") {
 
+      /** Verifies the `match` scenario behaves as the user expects. */
       test("match") {
+        /** Verifies the `exactVersion` scenario behaves as the user expects. */
         test("exactVersion") {
           val activation = Activation(
             Nil,
@@ -230,6 +250,7 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
+        /** Verifies the `exactVersionSeveral` scenario behaves as the user expects. */
         test("exactVersionSeveral") {
           val activation = Activation(
             Nil,
@@ -242,6 +263,7 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
+        /** Verifies the `wrongExactVersion` scenario behaves as the user expects. */
         test("wrongExactVersion") {
           val activation = Activation(
             Nil,
@@ -254,6 +276,7 @@ object ActivationTests extends TestSuite {
           assert(!isActive)
         }
 
+        /** Verifies the `wrongExactVersionSeveral` scenario behaves as the user expects. */
         test("wrongExactVersionSeveral") {
           val activation = Activation(
             Nil,
@@ -266,6 +289,7 @@ object ActivationTests extends TestSuite {
           assert(!isActive)
         }
 
+        /** Verifies the `versionInterval` scenario behaves as the user expects. */
         test("versionInterval") {
           val activation = Activation(
             Nil,
@@ -278,6 +302,7 @@ object ActivationTests extends TestSuite {
           assert(isActive)
         }
 
+        /** Verifies the `wrongVersionInterval` scenario behaves as the user expects. */
         test("wrongVersionInterval") {
           val activation = Activation(
             Nil,
@@ -292,6 +317,7 @@ object ActivationTests extends TestSuite {
       }
     }
 
+    /** Verifies the `all` scenario behaves as the user expects. */
     test("all") {
       val activation = Activation(
         Seq(
@@ -303,6 +329,7 @@ object ActivationTests extends TestSuite {
         Some(Left(parseVersionInterval("[1.8,)")))
       )
 
+      /** Verifies the `match` scenario behaves as the user expects. */
       test("match") {
         val isActive = activation.isActive(
           Map(
@@ -317,6 +344,7 @@ object ActivationTests extends TestSuite {
         assert(isActive)
       }
 
+      /** Verifies the `noMatch` scenario behaves as the user expects. */
       test("noMatch") {
         val isActive = activation.isActive(
           Map(

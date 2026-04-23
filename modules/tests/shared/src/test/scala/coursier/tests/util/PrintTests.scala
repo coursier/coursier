@@ -33,6 +33,7 @@ object PrintTests extends TestSuite {
   private val runner = new TestRunner
 
   val tests = Tests {
+    /** Verifies the `ignoreAttributes` scenario behaves as the user expects. */
     test("ignoreAttributes") {
       val dep = dep"org:name:0.1"
         .withVariantSelector(VariantSelector.ConfigurationBased(Configuration("foo")))
@@ -48,6 +49,7 @@ object PrintTests extends TestSuite {
       assert(res == expectedRes)
     }
 
+    /** Verifies the `reverseTree` scenario behaves as the user expects. */
     test("reverseTree") {
       test - async {
         val junit        = mod"junit:junit"

@@ -84,12 +84,15 @@ object CacheFetchTests extends TestSuite {
 
   val tests = Tests {
 
+    /** Verifies the `ensure everything's fine with basic file protocol` scenario behaves as the user expects. */
     test("ensure everything's fine with basic file protocol") {
       val f = new File(HandmadeMetadata.repoBase, "http/abc.com").getAbsoluteFile
       check(MavenRepository(f.toURI.toString))
     }
 
+    /** Verifies the `customProtocol` scenario behaves as the user expects. */
     test("customProtocol") {
+      /** Verifies the `Cache.url method` scenario behaves as the user expects. */
       test("Cache.url method") {
         val shouldFail = Try(CacheUrl.url("notfoundzzzz://foo/bar"))
         assert(shouldFail.isFailure)
@@ -97,6 +100,7 @@ object CacheFetchTests extends TestSuite {
         CacheUrl.url("testprotocol://foo/bar")
       }
 
+      /** Verifies the `actual custom protocol test` scenario behaves as the user expects. */
       test("actual custom protocol test") {
         check(MavenRepository(s"${TestprotocolHandler.protocol}://foo/"))
       }

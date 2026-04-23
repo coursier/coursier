@@ -68,6 +68,7 @@ object ModuleMatcherTests extends TestSuite {
         assert(!matcher.matches(m))
     }
 
+    /** Verifies the `all` scenario behaves as the user expects. */
     test("all") {
       val matcher = ModuleMatcher(org"*", name"*")
       val shouldMatch = Seq(

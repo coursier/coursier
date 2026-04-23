@@ -17,6 +17,7 @@ object TreeTests extends TestSuite {
     .withCache(cache)
 
   def tests = Tests {
+    /** Verifies the `root conflict` scenario behaves as the user expects. */
     test("root conflict") {
       async {
         val res = await {
