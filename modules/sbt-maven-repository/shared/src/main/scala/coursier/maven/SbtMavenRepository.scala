@@ -231,15 +231,6 @@ object SbtMavenRepository {
       checkModule
     )
 
-  override def withCheckModule(checkModule: Boolean): SbtMavenRepository =
-    new SbtMavenRepository(
-      root,
-      authentication,
-      changing,
-      versionsCheckHasModule,
-      checkModule
-    )
-
   def withChanging(changing: Boolean): SbtMavenRepository =
     withChanging(Some(changing))
 
