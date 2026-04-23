@@ -18,7 +18,9 @@ import dataclass._
   @since
   matchHost: Boolean = DirectCredentials.defaultMatchHost,
   httpsOnly: Boolean = DirectCredentials.defaultHttpsOnly,
-  passOnRedirect: Boolean = DirectCredentials.defaultPassOnRedirect
+  passOnRedirect: Boolean = DirectCredentials.defaultPassOnRedirect,
+  @since
+  preemptive: Boolean = DirectCredentials.defaultPreemptive
 ) extends Credentials {
 
   def withUsername(username: String): DirectCredentials =
@@ -30,6 +32,16 @@ import dataclass._
 
   private def nonEmpty: Boolean =
     usernameOpt.nonEmpty && passwordOpt.nonEmpty
+
+  // Can be called on initial requests when preemptive auth is enabled
+  def preemptiveMatches(url: String): Boolean =
+    nonEmpty && matchHost && preemptive && {
+      val uriOpt    = Try(new URI(url)).toOption
+      val schemeOpt = uriOpt.flatMap(uri => Option(uri.getScheme))
+      val hostOpt   = uriOpt.flatMap(uri => Option(uri.getHost))
+      ((schemeOpt.contains("http") && !httpsOnly) || schemeOpt.contains("https")) &&
+      hostOpt.contains(host)
+    }
 
   // Can be called during redirections, to check whether these credentials apply to the redirection target
   def autoMatches(url: String, realm0: Option[String]): Boolean =
@@ -89,5 +101,7 @@ object DirectCredentials {
   def defaultHttpsOnly: Boolean =
     false
   def defaultPassOnRedirect: Boolean =
+    false
+  def defaultPreemptive: Boolean =
     false
 }
