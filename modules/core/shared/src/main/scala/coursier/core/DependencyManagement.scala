@@ -210,36 +210,49 @@ object DependencyManagement {
       b.result().toMap
     }
 
+  case class AddAllResult(map: Map, globalCount: Int)
+
   def addAll(
     initialMap: Map,
     entries: Seq[GenericMap],
     composeValues: Boolean = true
-  ): GenericMap =
-    if (entries.forall(_.isEmpty))
-      initialMap
-    else {
-      val b = new mutable.HashMap[Key, Values]
-      b.sizeHint(entries.iterator.map(_.size).sum)
-      val it = entries.iterator.flatMap(_.iterator)
-      while (it.hasNext) {
-        val (key0, incomingValues) = it.next()
-        val newValuesOpt = b.get(key0).orElse(initialMap.get(key0)) match {
-          case Some(previousValues) =>
-            if (composeValues)
-              Some(previousValues.orElse(incomingValues))
-                .filter(_ != previousValues)
-            else
-              None
-          case None =>
-            Some(incomingValues)
-        }
-        for (newValues <- newValuesOpt)
-          b += ((key0, newValues))
-      }
-      if (b.isEmpty) initialMap
-      else if (initialMap.isEmpty) b
-      else initialMap ++ b
+  ): AddAllResult = {
+    var globalCount = 0
+    val builder: coursier.util.HashMapBuilder[Key, Values] =
+      coursier.util.HashMapBuilderFactory.apply
+
+    val allEntries = if (initialMap.isEmpty) entries.toList else initialMap :: entries.toList
+    allEntries match {
+      case head :: tail =>
+        builder ++= head
+
+        val it = tail.iterator
+        while (it.hasNext)
+          it.next().foreachEntry {
+            case (key, incoming) =>
+
+              val prev = builder.getOrNull(key)
+
+              if (prev != null) {
+                if (composeValues) {
+                  val composed = prev.orElse(incoming)
+                  if (composed != prev) {
+                    if (composed.global) globalCount += 1
+                    builder += (key -> composed)
+                  }
+                }
+              }
+              else {
+                if (incoming.global) globalCount += 1
+                builder += (key -> incoming)
+              }
+          }
+
+      case Nil =>
+
     }
+    AddAllResult(builder.result(), globalCount)
+  }
 
   def addDependencies(
     map: Map,
