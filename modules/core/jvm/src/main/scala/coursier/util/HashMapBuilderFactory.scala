@@ -4,10 +4,9 @@ import java.lang.invoke.{MethodHandle, MethodHandles, MethodType}
 import scala.collection.immutable.HashMap
 
 private[coursier] object HashMapBuilderFactory {
-  def apply[A, B <: AnyRef]: HashMapBuilder[A, B] = {
+  def apply[A, B <: AnyRef]: HashMapBuilder[A, B] =
     if (getOrElseMH == null || addOneMH == null) new CompatibleHashMapBuilder[A, B]
     else new FastHashMapBuilder[A, B]
-  }
   // Uses non-public API of scala.collection.immutable.HashMapBuilder
   // to allow lookup of values mid-build and to enable tuple-free addOne.
   final class FastHashMapBuilder[A, B <: AnyRef] extends HashMapBuilder[A, B] {
@@ -19,9 +18,8 @@ private[coursier] object HashMapBuilderFactory {
 
     override def result(): HashMap[A, B] = delegate.result()
 
-    def getOrNull(a: A): B = {
+    def getOrNull(a: A): B =
       getOrElseMH.invoke(delegate, a, null).asInstanceOf[B]
-    }
 
     override def add(a: A, b: B): FastHashMapBuilder.this.type = {
       addOneMH.invoke(delegate, a, b)
@@ -41,7 +39,7 @@ private[coursier] object HashMapBuilderFactory {
 
   private val lookup = MethodHandles.lookup()
   private final val getOrElseMH: MethodHandle =
-    try {
+    try
       lookup.findVirtual(
         Class.forName("scala.collection.immutable.HashMapBuilder"),
         "getOrElse",
@@ -51,7 +49,7 @@ private[coursier] object HashMapBuilderFactory {
           classOf[java.lang.Object]
         )
       )
-    } catch {
+    catch {
       case e: ReflectiveOperationException => null
     }
   private final val addOneMH: MethodHandle =
@@ -63,10 +61,11 @@ private[coursier] object HashMapBuilderFactory {
         MethodType.methodType(
           builderClass,
           classOf[java.lang.Object],
-          classOf[java.lang.Object],
+          classOf[java.lang.Object]
         )
       )
-    } catch {
+    }
+    catch {
       case e: ReflectiveOperationException => null
     }
 }

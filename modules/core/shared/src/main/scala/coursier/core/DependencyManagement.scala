@@ -212,9 +212,14 @@ object DependencyManagement {
 
   case class AddAllResult(map: Map, globalCount: Int)
 
-  def addAll(initialMap: Map, entries: Seq[GenericMap], composeValues: Boolean = true): AddAllResult = {
+  def addAll(
+    initialMap: Map,
+    entries: Seq[GenericMap],
+    composeValues: Boolean = true
+  ): AddAllResult = {
     var globalCount = 0
-    val builder: coursier.util.HashMapBuilder[Key, Values] = coursier.util.HashMapBuilderFactory.apply
+    val builder: coursier.util.HashMapBuilder[Key, Values] =
+      coursier.util.HashMapBuilderFactory.apply
 
     val allEntries = if (initialMap.isEmpty) entries.toList else initialMap :: entries.toList
     allEntries match {
@@ -222,7 +227,7 @@ object DependencyManagement {
         builder ++= head
 
         val it = tail.iterator
-        while (it.hasNext) {
+        while (it.hasNext)
           it.next().foreachEntry {
             case (key, incoming) =>
 
@@ -236,12 +241,12 @@ object DependencyManagement {
                     builder += (key -> composed)
                   }
                 }
-              } else {
+              }
+              else {
                 if (incoming.global) globalCount += 1
                 builder += (key -> incoming)
               }
           }
-        }
 
       case Nil =>
 

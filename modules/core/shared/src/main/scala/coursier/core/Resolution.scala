@@ -340,18 +340,19 @@ object Resolution {
       }
     // Performance sensitive, hence the use of a mutable map
     val constraints = mutable.HashMap[Module, mutable.ArrayBuffer[VersionConstraint0]]()
-    for { dep <- dependencies} {
-      if (dep.overridesMap.globalCount.exists(_ > 0)) {
+    for { dep <- dependencies }
+      if (dep.overridesMap.globalCount.exists(_ > 0))
         dep.overridesMap.map.foreachEntry {
           (k, v) =>
             if (v.global) {
               val fakeDep = v.fakeDependency(k)
-              val b = constraints.getOrElseUpdate(fakeDep.module, mutable.ArrayBuffer[VersionConstraint0]())
+              val b = constraints.getOrElseUpdate(
+                fakeDep.module,
+                mutable.ArrayBuffer[VersionConstraint0]()
+              )
               b += fakeDep.versionConstraint
             }
         }
-      }
-    }
     val dependencies0 = dependencies.toVector
     val mergedByModVer = dependencies0
       .groupBy(dep => dep.module)
@@ -459,18 +460,17 @@ object Resolution {
     // See http://maven.apache.org/guides/introduction/introduction-to-dependency-mechanism.html#Dependency_Management
 
     val overridesOrEmpty = overridesOpt.getOrElse(Overrides.empty)
-    def dict(key: DependencyManagement.Key): Option[DependencyManagement.Values] = {
-      overridesOrEmpty.map.getOrElse(key, null) match{
+    def dict(key: DependencyManagement.Key): Option[DependencyManagement.Values] =
+      overridesOrEmpty.map.getOrElse(key, null) match {
         case null => dependencyManagement.get(key)
         case prev =>
           dependencyManagement.map.getOrElse(key, null) match {
-            case null => Some(prev)
+            case null   => Some(prev)
             case values => Some(prev.orElse(values))
           }
       }
-    }
 
-    lazy val versionsGrouped =  dependencies
+    lazy val versionsGrouped = dependencies
       .filter {
         case (variant, _) =>
           variant.isEmpty || keepVariant(variant)
@@ -481,7 +481,7 @@ object Resolution {
       rawOverrides.cached(("dictForOverridesOpt", versionsGrouped)) {
         val versions = versionsGrouped.collect {
           case (k, l)
-            if !rawOverrides.contains(k) && l.exists(_._2.versionConstraint.asString.nonEmpty) =>
+              if !rawOverrides.contains(k) && l.exists(_._2.versionConstraint.asString.nonEmpty) =>
             k -> l.map(_._2.versionConstraint.asString).filter(_.nonEmpty)
         }
         val map = dependencyManagement
@@ -496,7 +496,7 @@ object Resolution {
                   .get(k)
                   .getOrElse(Nil)
                   .exists(_ != v.versionConstraint.asString)
-              val newConfig = Configuration.empty
+              val newConfig  = Configuration.empty
               val newVersion = if (clearVersion) VersionConstraint0.empty else v.versionConstraint
               val values =
                 if (v.config != newConfig || v.versionConstraint != newVersion || v.optional)
