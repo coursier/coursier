@@ -198,7 +198,7 @@ object Overrides {
       case (false, true) => overrides1
       case _ =>
         val temp =
-          DependencyManagement.addAll(
+          DependencyManagement.addAll0(
             Map.empty,
             Seq(overrides1.map, overrides2.map)
           )
@@ -215,7 +215,7 @@ object Overrides {
       case Seq()     => empty
       case Seq(elem) => elem
       case more =>
-        val addAllResult = DependencyManagement.addAll(
+        val addAllResult = DependencyManagement.addAll0(
           Map.empty[DependencyManagement.Key, DependencyManagement.Values],
           more.map(_.map)
         )

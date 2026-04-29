@@ -210,9 +210,14 @@ object DependencyManagement {
       b.result().toMap
     }
 
-  case class AddAllResult(map: Map, mayContainGlobal: Boolean)
-
   def addAll(
+    initialMap: Map,
+    entries: Seq[GenericMap],
+    composeValues: Boolean = true
+  ): GenericMap = addAll0(initialMap, entries.map(_.toMap), composeValues).map
+
+  private[coursier] case class AddAllResult(map: Map, mayContainGlobal: Boolean)
+  private[coursier] def addAll0(
     initialMap: Map,
     entries: Seq[GenericMap],
     composeValues: Boolean = true

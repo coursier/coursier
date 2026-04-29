@@ -66,9 +66,6 @@ trait CoreJvmBase extends Core with Shading with CsMima {
       ),
 
       // new methods added private[coursier]
-      ProblemFilter.exclude[IncompatibleResultTypeProblem](
-        "coursier.core.DependencyManagement.addAll"
-      ),
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.core.Overrides.map"),
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.core.Overrides.transform"),
       ProblemFilter.exclude[ReversedMissingMethodProblem](
