@@ -582,7 +582,7 @@ trait TestsJvm extends TestsModule { self =>
       `test-cache`.jvm()
     )
   }
-  object it extends CrossSbtTests with CsTests with CsResourcesTests
+  object it extends CrossSbtTests with CsScalaTests with CsResourcesTests
       with Workers.UsesRedirectingServer {
     def testDataDir = tests.shared.testDataDir
     def redirectingServerCp =
