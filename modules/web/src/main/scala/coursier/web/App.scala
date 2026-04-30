@@ -46,7 +46,8 @@ object App {
             label
           )
 
-        def depItem(dep: Dependency, finalVersionOpt: Option[Version]) =
+        def depItem(dep: Dependency, finalVersionOpt: Option[Version]) = {
+          assert(dep.overridesMap.map.size == 1, "Tweaking needed in web/.../App.scala")
           <.tr(
             ^.`class` := (
               if (res.errorCache.contains(dep.moduleVersionConstraint)) "danger"
@@ -65,7 +66,7 @@ object App {
               else TagMod(infoLabel(dep.attributes.`type`.value)),
               if (dep.attributes.classifier.isEmpty) TagMod()
               else TagMod(infoLabel(dep.attributes.classifier.value)),
-              Some(dep.minimizedExclusions.toSeq())
+              Some(dep.overridesMap.map.head._1.toSeq())
                 .filter(_.nonEmpty)
                 .map { excls =>
                   infoPopOver(
@@ -113,6 +114,7 @@ object App {
               }
             ))
           )
+        }
 
         val sortedDeps = res.minDependencies.toList
           .sortBy { dep =>

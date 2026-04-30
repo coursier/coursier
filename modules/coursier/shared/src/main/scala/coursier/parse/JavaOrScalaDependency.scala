@@ -18,6 +18,7 @@ import dataclass.data
 import dependency.{CovariantSet, DependencyLike, ModuleLike}
 
 import scala.collection.mutable
+import coursier.core.SimpleOverrides
 
 sealed abstract class JavaOrScalaDependency extends Product with Serializable {
   def module: JavaOrScalaModule
@@ -65,8 +66,8 @@ object JavaOrScalaDependency {
       scalaVersion: String,
       platformName: String
     ): Dependency =
-      dependency.withMinimizedExclusions(
-        dependency.minimizedExclusions.join(
+      dependency.withOverridesMap(
+        dependency.overridesMap.addExclusions(
           MinimizedExclusions(
             exclude.map(_.module(scalaBinaryVersion, scalaVersion)).map { mod =>
               (mod.organization, mod.name)
@@ -113,8 +114,8 @@ object JavaOrScalaDependency {
 
       baseDependency
         .withModule(baseDependency.module.withName(ModuleName(newName)))
-        .withMinimizedExclusions(
-          baseDependency.minimizedExclusions.join(
+        .withOverridesMap(
+          baseDependency.overridesMap.addExclusions(
             MinimizedExclusions(
               exclude.map(_.module(scalaBinaryVersion, scalaVersion)).map { mod =>
                 (mod.organization, mod.name)
@@ -343,7 +344,7 @@ object JavaOrScalaDependency {
                 VersionConstraint(overrideDep.version),
                 MinimizedExclusions.zero,
                 optional = false
-              )
+              ).splitValues
             ))
           else
             Left(s"Invalid override value '$v' (expected org%name%version)")
@@ -358,7 +359,14 @@ object JavaOrScalaDependency {
       case Right(entry) => entry
     }
 
-    csDep = csDep.addOverrides(overrides)
+    csDep = csDep.serialNonCommutativeAddOverrides(
+      SimpleOverrides.serialNonCommutativeAdd(
+        overrides.map {
+          case (k, v) =>
+            SimpleOverrides(Map(k -> v))
+        }: _*
+      )
+    )
 
     if (errors.isEmpty) {
       val dep0 = dep.module.nameAttributes match {

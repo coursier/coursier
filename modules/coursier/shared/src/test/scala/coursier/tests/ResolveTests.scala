@@ -1525,7 +1525,11 @@ object ResolveTests extends TestSuite {
           )
         }
         test("spark 1_6_3") {
-          check("1.6.3", "2.11", profiles = Set("!scala-2.10", "scala-2.11"))
+          check(
+            "1.6.3",
+            "2.11",
+            profiles = Set("!scala-2.10", "scala-2.11")
+          )
         }
         test("spark 2_1_0") {
           check("2.1.0", "2.11")

@@ -13,6 +13,7 @@ import coursier.core.{
   ModuleName,
   Organization,
   Publication,
+  SimpleOverrides,
   Type,
   VariantSelector
 }
@@ -253,7 +254,10 @@ object DependencyParserTests extends TestSuite {
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
           assert(extraParams.isDefinedAt("url"))
           assert(extraParams.getOrElse("url", "") == url)
-          assert(dep.minimizedExclusions.toSet() == Set((org"org", name"nme")))
+          assert(
+            dep.overridesMap.map.keys.toSeq ==
+              Seq(MinimizedExclusions(Set(org"org" -> name"nme")))
+          )
       }
     }
 
@@ -299,7 +303,10 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.name.value.contains("sandbox_native0.3"))
           assert(dep.versionConstraint.asString == "[0.3.0,0.4.0)")
           assert(dep.attributes == Attributes(Type.empty, Classifier.tests))
-          assert(dep.minimizedExclusions.toSet() == Set((org"foo", name"bar")))
+          assert(
+            dep.overridesMap.map.keys.toSeq ==
+              Seq(MinimizedExclusions(Set(org"foo" -> name"bar")))
+          )
       }
     }
 
@@ -382,34 +389,36 @@ object DependencyParserTests extends TestSuite {
           attributes = Map()
         ),
         version = VersionConstraint("0.4.0")
-      ).addOverrides(
-        Seq(
-          (
-            DependencyManagement.Key(
-              Organization("io.get-coursier"),
-              ModuleName("coursier-thing"),
-              Type.jar,
-              Classifier.empty
+      ).serialNonCommutativeAddOverrides(
+        SimpleOverrides(
+          Map(
+            (
+              DependencyManagement.Key(
+                Organization("io.get-coursier"),
+                ModuleName("coursier-thing"),
+                Type.jar,
+                Classifier.empty
+              ),
+              DependencyManagement.Values(
+                Configuration.empty,
+                VersionConstraint("1.2"),
+                MinimizedExclusions.zero,
+                optional = false
+              ).splitValues
             ),
-            DependencyManagement.Values(
-              Configuration.empty,
-              VersionConstraint("1.2"),
-              MinimizedExclusions.zero,
-              optional = false
-            )
-          ),
-          (
-            DependencyManagement.Key(
-              Organization("io.get-coursierz"),
-              ModuleName("coursier-other-thing"),
-              Type.jar,
-              Classifier.empty
-            ),
-            DependencyManagement.Values(
-              Configuration.empty,
-              VersionConstraint("2.1"),
-              MinimizedExclusions.zero,
-              optional = false
+            (
+              DependencyManagement.Key(
+                Organization("io.get-coursierz"),
+                ModuleName("coursier-other-thing"),
+                Type.jar,
+                Classifier.empty
+              ),
+              DependencyManagement.Values(
+                Configuration.empty,
+                VersionConstraint("2.1"),
+                MinimizedExclusions.zero,
+                optional = false
+              ).splitValues
             )
           )
         )
@@ -444,7 +453,10 @@ object DependencyParserTests extends TestSuite {
           assert(dep.module.organization == org"com.lihaoyi")
           assert(dep.module.name.value == "ammonite_2.12.8")
           assert(dep.versionConstraint.asString == "1.6.7")
-          assert(dep.minimizedExclusions.toSet() == Set((org"aa", name"*")))
+          assert(
+            dep.overridesMap.map.keys.toSeq ==
+              Seq(MinimizedExclusions(Set(org"aa" -> name"*")))
+          )
       }
     }
 

@@ -8,12 +8,15 @@ import coursier.core.{
   Dependency,
   Extension,
   Info,
+  MinimizedExclusions,
   Module,
   ModuleName,
   Organization,
   Overrides,
   Profile,
   Project,
+  Publication,
+  SimpleOverrides,
   SnapshotVersion,
   SnapshotVersioning,
   Type,
@@ -102,10 +105,21 @@ object Pom {
           mod,
           version0,
           VariantSelector.emptyConfiguration,
-          exclusions.map(mod => (mod.organization, mod.name)).toSet,
-          Attributes(typeOpt.getOrElse(Type.empty), classifierOpt.getOrElse(Classifier.empty)),
+          Publication(
+            "",
+            typeOpt.getOrElse(Type.empty),
+            Extension.empty,
+            classifierOpt.getOrElse(Classifier.empty)
+          ),
           optional,
-          transitive = true
+          transitive = true,
+          Nil,
+          Overrides.empty.addExclusions(
+            MinimizedExclusions(
+              exclusions.map(mod => (mod.organization, mod.name)).toSet
+            )
+          ),
+          endorseStrictVersions = false
         )
       }
     }
@@ -314,10 +328,12 @@ object Pom {
               .withName(relocatedArtifactId),
             VersionConstraint.fromVersion(relocatedVersion),
             VariantSelector.emptyConfiguration,
-            Set.empty[(Organization, ModuleName)],
-            Attributes.empty,
+            Publication.empty,
             optional = false,
-            transitive = true
+            transitive = true,
+            Nil,
+            Overrides.empty,
+            endorseStrictVersions = false
           )
         }
 
@@ -351,7 +367,7 @@ object Pom {
           None,
           scm
         ),
-        Overrides.empty,
+        SimpleOverrides.empty,
         Map.empty,
         Map.empty
       )

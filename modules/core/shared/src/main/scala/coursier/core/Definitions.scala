@@ -273,7 +273,7 @@ object Attributes {
 
   // Extra infos, not used during resolution
   info: Info,
-  overrides: Overrides,
+  overrides: SimpleOverrides,
   variants: Map[Variant.Attributes, Map[String, String]],
   variantPublications: Map[Variant.Attributes, Seq[VariantPublication]]
 ) {
@@ -311,106 +311,6 @@ object Attributes {
           (Variant.Configuration(config), pub)
       }
     )
-
-  @deprecated("Use the override accepting Version-s instead", "2.1.25")
-  def this(
-    module: Module,
-    version: String,
-    dependencies: Seq[(Configuration, Dependency)],
-    configurations: Map[Configuration, Seq[Configuration]],
-    parent: Option[(Module, String)],
-    dependencyManagement: Seq[(Configuration, Dependency)],
-    properties: Seq[(String, String)],
-    profiles: Seq[Profile],
-    versions: Option[Versions],
-    snapshotVersioning: Option[SnapshotVersioning],
-    packagingOpt: Option[Type],
-    relocated: Boolean,
-    actualVersionOpt: Option[String],
-    publications: Seq[(Configuration, Publication)],
-    info: Info,
-    overrides: Overrides
-  ) =
-    this(
-      module,
-      Version0(version),
-      dependencies.map {
-        case (config, dep) =>
-          (Variant.Configuration(config), dep)
-      },
-      configurations,
-      parent.map { case (mod, ver) => (mod, Version0(ver)) },
-      dependencyManagement.map {
-        case (config, dep) =>
-          (Variant.Configuration(config), dep)
-      },
-      properties,
-      profiles,
-      versions,
-      snapshotVersioning,
-      packagingOpt,
-      relocated,
-      actualVersionOpt.map(Version0(_)),
-      publications.map {
-        case (config, dep) =>
-          (Variant.Configuration(config), dep)
-      },
-      info,
-      overrides,
-      Map.empty,
-      Map.empty
-    )
-
-  @deprecated("Use the override accepting Version-s instead", "2.1.25")
-  def this(
-    module: Module,
-    version: String,
-    dependencies: Seq[(Configuration, Dependency)],
-    configurations: Map[Configuration, Seq[Configuration]],
-    parent: Option[(Module, String)],
-    dependencyManagement: Seq[(Configuration, Dependency)],
-    properties: Seq[(String, String)],
-    profiles: Seq[Profile],
-    versions: Option[Versions],
-    snapshotVersioning: Option[SnapshotVersioning],
-    packagingOpt: Option[Type],
-    relocated: Boolean,
-    actualVersionOpt: Option[String],
-    publications: Seq[(Configuration, Publication)],
-    info: Info
-  ) =
-    this(
-      module,
-      Version0(version),
-      dependencies.map {
-        case (config, dep) =>
-          (Variant.Configuration(config), dep)
-      },
-      configurations,
-      parent.map { case (mod, ver) => (mod, Version0(ver)) },
-      dependencyManagement.map {
-        case (config, dep) =>
-          (Variant.Configuration(config), dep)
-      },
-      properties,
-      profiles,
-      versions,
-      snapshotVersioning,
-      packagingOpt,
-      relocated,
-      actualVersionOpt.map(Version0(_)),
-      publications.map {
-        case (config, dep) =>
-          (Variant.Configuration(config), dep)
-      },
-      info,
-      Overrides.empty,
-      Map.empty,
-      Map.empty
-    )
-
-  @deprecated("Use moduleVersion0 instead", "2.1.25")
-  lazy val moduleVersion: (Module, String) = (module, version)
 
   lazy val moduleVersion0: (Module, Version0) = (module, version0)
 
@@ -691,55 +591,7 @@ object Project {
           (Variant.Configuration(config), dep)
       },
       info,
-      Overrides.empty,
-      Map.empty,
-      Map.empty
-    )
-  @deprecated("Use the override accepting Version-s instead", "2.1.25")
-  def apply(
-    module: Module,
-    version: String,
-    dependencies: Seq[(Configuration, Dependency)],
-    configurations: Map[Configuration, Seq[Configuration]],
-    parent: Option[(Module, String)],
-    dependencyManagement: Seq[(Configuration, Dependency)],
-    properties: Seq[(String, String)],
-    profiles: Seq[Profile],
-    versions: Option[Versions],
-    snapshotVersioning: Option[SnapshotVersioning],
-    packagingOpt: Option[Type],
-    relocated: Boolean,
-    actualVersionOpt: Option[String],
-    publications: Seq[(Configuration, Publication)],
-    info: Info,
-    overrides: Overrides
-  ): Project =
-    apply(
-      module,
-      Version0(version),
-      dependencies.map {
-        case (config, dep) =>
-          (Variant.Configuration(config), dep)
-      },
-      configurations,
-      parent.map { case (mod, ver) => (mod, Version0(ver)) },
-      dependencyManagement.map {
-        case (config, dep) =>
-          (Variant.Configuration(config), dep)
-      },
-      properties,
-      profiles,
-      versions,
-      snapshotVersioning,
-      packagingOpt,
-      relocated,
-      actualVersionOpt.map(Version0(_)),
-      publications.map {
-        case (config, dep) =>
-          (Variant.Configuration(config), dep)
-      },
-      info,
-      overrides,
+      SimpleOverrides.empty,
       Map.empty,
       Map.empty
     )

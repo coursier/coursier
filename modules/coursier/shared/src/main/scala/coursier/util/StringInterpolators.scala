@@ -163,31 +163,46 @@ object StringInterpolators {
               case (k, v) =>
                 q"_root_.scala.Tuple2($k, $v)"
             }
-            val excls = dep.minimizedExclusions.toSeq().map {
-              case (org, name) =>
-                q"_root_.scala.Tuple2(_root_.coursier.core.Organization(${org.value}), _root_.coursier.core.ModuleName(${name.value}))"
-            }
-            val overrides = dep.overridesMap.flatten.toSeq.sortBy(_._1.repr).map {
-              case (key, values) =>
-                val key0 = q"""_root_.coursier.core.DependencyManagement.Key(
-                  _root_.coursier.core.Organization(${key.organization.value}),
-                  _root_.coursier.core.ModuleName(${key.name.value}),
-                  _root_.coursier.core.Type(${key.`type`.value}),
-                  _root_.coursier.core.Classifier(${key.classifier.value})
-                )"""
-                val excls = values.minimizedExclusions.toSeq().map {
+            val overrides = dep.overridesMap.map.toSeq.map {
+              case (excl, keyMap) =>
+                val exclSeq = excl.toSeq().map {
                   case (org, name) =>
                     q"_root_.scala.Tuple2(_root_.coursier.core.Organization(${org.value}), _root_.coursier.core.ModuleName(${name.value}))"
                 }
-                val values0 = q"""_root_.coursier.core.DependencyManagement.Values(
-                  _root_.coursier.core.Configuration(${values.config.value}),
-                  _root_.coursier.version.VersionConstraint( // FIXME could be parsed eagerly at compile-time
-                    ${values.versionConstraint.asString}
-                  ),
-                  _root_.coursier.core.MinimizedExclusions(_root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$excls)),
-                  ${values.optional}
-                )"""
-                q"_root_.scala.Tuple2($key0, $values0)"
+                val excl0 =
+                  q"""_root_.coursier.core.MinimizedExclusions(_root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$exclSeq))"""
+                val keyEntries = keyMap.map.toSeq.sortBy(_._1.repr).map {
+                  case (key, values) =>
+                    val key0 = q"""_root_.coursier.core.DependencyManagement.Key(
+                      _root_.coursier.core.Organization(${key.organization.value}),
+                      _root_.coursier.core.ModuleName(${key.name.value}),
+                      _root_.coursier.core.Type(${key.`type`.value}),
+                      _root_.coursier.core.Classifier(${key.classifier.value})
+                    )"""
+                    val valEntries = values.list.toSeq.map { v =>
+                      val valExcls = v.minimizedExclusions.toSeq().map {
+                        case (org, name) =>
+                          q"_root_.scala.Tuple2(_root_.coursier.core.Organization(${org.value}), _root_.coursier.core.ModuleName(${name.value}))"
+                      }
+                      q"""_root_.coursier.core.DependencyManagement.Values(
+                        _root_.coursier.core.Configuration(${v.config.value}),
+                        _root_.coursier.version.VersionConstraint( // FIXME could be parsed eagerly at compile-time
+                          ${v.versionConstraint.asString}
+                        ),
+                        _root_.coursier.core.MinimizedExclusions(_root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$valExcls)),
+                        ${v.optional}
+                      ).splitValues"""
+                    }
+                    val values0: c.universe.Tree =
+                      valEntries.foldLeft(Option.empty[c.universe.Tree]) {
+                        case (None, a)      => Some(a)
+                        case (Some(acc), b) => Some(q"$acc.orElse($b)")
+                      }.get
+                    q"_root_.scala.Tuple2($key0, $values0)"
+                }
+                val keyMap0 =
+                  q"""_root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.SplitValues](..$keyEntries)"""
+                q"_root_.scala.Tuple2($excl0, _root_.coursier.core.SimpleOverrides($keyMap0))"
             }
             val boms = dep.bomDependencies.map { bomDep =>
               val attrs = bomDep.module.attributes.toSeq.map {
@@ -232,7 +247,6 @@ object StringInterpolators {
                   ${dep.versionConstraint.asString}
                 ),
                 $variantSelector,
-                _root_.coursier.core.MinimizedExclusions(_root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$excls)),
                 _root_.coursier.core.Publication(
                   ${dep.publication.name},
                   _root_.coursier.core.Type(${dep.publication.`type`.value}),
@@ -241,11 +255,9 @@ object StringInterpolators {
                 ),
                 ${dep.optional},
                 ${dep.transitive},
-                _root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.Values](),
-                _root_.scala.collection.immutable.Nil,
                 _root_.scala.collection.immutable.Seq(..$boms),
                 _root_.coursier.core.Overrides(
-                  _root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.Values](..$overrides)
+                  _root_.scala.collection.immutable.Map[_root_.coursier.core.MinimizedExclusions, _root_.coursier.core.SimpleOverrides](..$overrides)
                 ),
                 ${dep.endorseStrictVersions}
               )
