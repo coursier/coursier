@@ -1303,14 +1303,7 @@ def dockerTests(): Task.Command[Unit] = {
   }
 }
 
-def defaultScalaVersion = {
-  val isCI = System.getenv("CI") != null
-  val fromEnvOpt =
-    if (isCI) Option(System.getenv("SCALA_VERSION"))
-    else None
-  fromEnvOpt.getOrElse(ScalaVersions.scala213)
-}
-def jvmTests(scalaVersion: String = defaultScalaVersion) = {
+def jvmTests(scalaVersion: String) = {
 
   def crossTests(sv: String) = Seq(
     // format: off
@@ -1371,7 +1364,7 @@ def jvmTests(scalaVersion: String = defaultScalaVersion) = {
   }
 }
 
-def jsTests(scalaVersion: String = "*") = {
+def jsTests(scalaVersion: String) = {
 
   def crossTests(sv: String) = Seq(
     // format: off
