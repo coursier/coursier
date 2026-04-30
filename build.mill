@@ -582,21 +582,17 @@ trait TestsJvm extends TestsModule { self =>
       `test-cache`.jvm()
     )
   }
-  object it extends CrossSbtTests with CsScalaTests with CsResourcesTests
-      with Workers.UsesRedirectingServer {
+  object it extends CrossSbtTests with CsScalaTests with CsResourcesTests {
     def testDataDir = tests.shared.testDataDir
-    def redirectingServerCp =
-      `redirecting-server`.runClasspath()
-    def redirectingServerMainClass =
-      `redirecting-server`.mainClass().getOrElse(sys.error("no main class"))
     def forkArgs = Task {
-      val redirectingServer0 = redirectingServer()
-      val testRepoServer0    = buildWorkers.testRepoServer()
+      val testRepoServer0 = buildWorkers.testRepoServer()
+      val redirectingServerCp =
+        `redirecting-server`.runClasspath().map(_.path.toString).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
-        s"-Dtest.redirect.repository=${redirectingServer0.url}",
         s"-Dtest.repository=${testRepoServer0.url}",
         s"-Dtest.repository.user=${testRepoServer0.user}",
-        s"-Dtest.repository.password=${testRepoServer0.password}"
+        s"-Dtest.repository.password=${testRepoServer0.password}",
+        s"-Dtest.redirecting-server.classpath=$redirectingServerCp"
       )
     }
     def sources = Task.Sources(
@@ -605,6 +601,7 @@ trait TestsJvm extends TestsModule { self =>
     )
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm(),
+      `redirecting-server`,
       self.test
     )
   }
