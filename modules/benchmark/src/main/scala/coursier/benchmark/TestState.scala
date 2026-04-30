@@ -28,9 +28,11 @@ class TestState {
     Repositories.central
   )
 
-  val repositoriesDom = Seq(
-    MavenRepository("https://repo1.maven.org/maven2")
-  )
+  val repositoriesDom = Seq {
+    val r = MavenRepository("https://repo1.maven.org/maven2")
+    r.internal.useSaxParser = false
+    r
+  }
 
   val pool = Sync.fixedThreadPool(6)
   val ec   = ExecutionContext.fromExecutorService(pool)
