@@ -4,79 +4,9 @@ import coursierbuild.Deps.ScalaVersions
 
 import mill._, scalalib._
 
-import java.io.{File, InputStream, IOException}
+import java.io.{InputStream, IOException}
 
 object Workers {
-  final class RedirectingServer(
-    val host: String = "localhost",
-    val port: Int = randomPort(),
-    var proc: os.SubProcess = null
-  ) extends AutoCloseable {
-    def url = s"http://$host:$port"
-
-    def healthCheck(): Boolean = {
-      val url0            = new java.net.URL(s"$url/health-check")
-      var is: InputStream = null
-      try {
-        println(s"Checking $url0")
-        is = url0.openStream()
-        scala.io.Source.fromInputStream(is).mkString
-        true
-      }
-      catch {
-        case _: IOException =>
-          false
-      }
-      finally if (is != null)
-          is.close()
-    }
-
-    override def close(): Unit =
-      proc.destroy(shutdownGracePeriod = 0)
-  }
-
-  trait UsesRedirectingServer extends Module {
-    def redirectingServerCp: T[Seq[PathRef]]
-    def redirectingServerMainClass: T[String]
-
-    def redirectingServer = Task.Worker {
-      val cp        = redirectingServerCp().map(_.path)
-      val mainClass = redirectingServerMainClass()
-
-      val server = new RedirectingServer
-
-      if (server.healthCheck())
-        sys.error("Server already running")
-
-      server.proc = os.proc(
-        "java",
-        "-Xmx128m",
-        "-cp",
-        cp.mkString(File.pathSeparator),
-        mainClass,
-        server.host,
-        server.port.toString
-      ).spawn(
-        stdin = os.Pipe,
-        stdout = os.Inherit,
-        stderr = os.Inherit
-      )
-      server.proc.stdin.close()
-      var serverRunning = false
-      var countDown     = 30
-      while (!serverRunning && server.proc.isAlive() && countDown > 0) {
-        serverRunning = server.healthCheck()
-        if (!serverRunning)
-          Thread.sleep(500L)
-        countDown -= 1
-      }
-      if (serverRunning && server.proc.isAlive())
-        server
-      else
-        sys.error("Cannot run redirecting server")
-    }
-  }
-
   final class TestRepoServer(
     val host: String = "localhost",
     val port: Int = randomPort(),
