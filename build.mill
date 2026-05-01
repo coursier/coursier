@@ -3,7 +3,7 @@
 import coursierbuild.Deps.{Deps, ScalaVersions, scalaCliVersion}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
 import coursierbuild.Relativize.{relativize => doRelativize}
-import coursierbuild.{DocHelpers, GitHubReleaseAssets, Shading, Sync, Workers}
+import coursierbuild.{DocHelpers, GitHubReleaseAssets, Shading, Sync}
 import coursierbuild.modules._
 import mill.contrib.jmh.JmhModule
 
@@ -199,14 +199,13 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
       os.sub / "src/it/java"
     )
     def moduleDeps = Seq(
+      `test-cache`.jvm(ScalaVersions.scala213),
       self.test
     )
     def forkArgs = Task {
-      val testRepoServer0 = buildWorkers.testRepoServer()
+      val testRepositoryDataDir = (tests.handmadeMetadata().path / "http/abc.com").toString
       super.forkArgs() ++ Seq(
-        s"-Dtest.repository=${testRepoServer0.url}",
-        s"-Dtest.repository.user=${testRepoServer0.user}",
-        s"-Dtest.repository.password=${testRepoServer0.password}"
+        s"-Dtest.repository.data-dir=$testRepositoryDataDir"
       )
     }
   }
@@ -527,20 +526,18 @@ trait CoursierJvm extends CoursierJvmBase { self =>
     )
   }
   object it extends CrossSbtTests with CoursierTests {
-    def testDataDir = tests.shared.testDataDir
     def sources = Task.Sources(
       os.sub / "src/it/scala",
       os.sub / "src/it/java"
     )
     def moduleDeps = super.moduleDeps ++ Seq(
+      `test-cache`.jvm(),
       self.test
     )
     def forkArgs = Task {
-      val testRepoServer0 = buildWorkers.testRepoServer()
+      val testRepositoryDataDir = (tests.handmadeMetadata().path / "http/abc.com").toString
       super.forkArgs() ++ Seq(
-        s"-Dtest.repository=${testRepoServer0.url}",
-        s"-Dtest.repository.user=${testRepoServer0.user}",
-        s"-Dtest.repository.password=${testRepoServer0.password}"
+        s"-Dtest.repository.data-dir=$testRepositoryDataDir"
       )
     }
   }
@@ -600,13 +597,11 @@ trait TestsJvm extends TestsModule { self =>
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
     def forkArgs = Task {
-      val testRepoServer0 = buildWorkers.testRepoServer()
+      val testRepositoryDataDir = (testHandmadeMetadataDir().path / "http/abc.com").toString
       val redirectingServerCp =
         `redirecting-server`.runClasspath().map(_.path.toString).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
-        s"-Dtest.repository=${testRepoServer0.url}",
-        s"-Dtest.repository.user=${testRepoServer0.user}",
-        s"-Dtest.repository.password=${testRepoServer0.password}",
+        s"-Dtest.repository.data-dir=$testRepositoryDataDir",
         s"-Dtest.redirecting-server.classpath=$redirectingServerCp"
       )
     }
@@ -616,6 +611,7 @@ trait TestsJvm extends TestsModule { self =>
     )
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm(),
+      `test-cache`.jvm(),
       `redirecting-server`,
       self.test
     )
@@ -1076,6 +1072,12 @@ trait TestCacheJvm extends Cross.Module[String] with CsCrossJvmJsModule {
   def moduleDeps = Seq(
     cache.jvm()
   )
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    Deps.utest
+  )
+  def scalacOptions = Task {
+    CsScalaTests.removeReleaseOption(super.scalacOptions())
+  }
 }
 trait TestCacheJs extends Cross.Module[String] with CsCrossJvmJsModule with CsScalaJsModule {
   def scalaVersion = crossValue
@@ -1469,57 +1471,6 @@ object ci extends Module {
       Task.fail("Found test modules with no test classes")
     }
   }
-}
-
-object buildWorkers extends Module {
-
-  def testRepoServer = Task.Worker {
-    val server = new Workers.TestRepoServer
-
-    if (server.healthCheck())
-      sys.error("Test repo server already running")
-
-    server.proc = os.proc(
-      "cs",
-      "launch",
-      "io.get-coursier:http-server_2.12:1.0.0",
-      "--",
-      "-d",
-      "modules/tests/handmade-metadata/data/http/abc.com",
-      "-u",
-      server.user,
-      "-P",
-      server.password,
-      "-r",
-      "realm",
-      "-v",
-      "--host",
-      server.host,
-      "--port",
-      server.port.toString
-    ).spawn(
-      cwd = BuildCtx.workspaceRoot,
-      stdin = os.Pipe,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
-    server.proc.stdin.close()
-    var serverRunning = false
-    var countDown     = 20
-    while (!serverRunning && server.proc.isAlive() && countDown > 0) {
-      serverRunning = server.healthCheck()
-      if (!serverRunning)
-        Thread.sleep(500L)
-      countDown -= 1
-    }
-    if (serverRunning && server.proc.isAlive()) {
-      System.err.println(s"Test repository listening on ${server.url}")
-      server
-    }
-    else
-      sys.error("Cannot run test repo server")
-  }
-
 }
 
 object `build-util` extends Module {

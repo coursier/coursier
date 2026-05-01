@@ -3,6 +3,7 @@ package coursier.bootstrap.launcher
 import utest._
 
 import coursier.bootstrap.launcher.credentials.DirectCredentials
+import coursier.testcache.TestRepositoryServer
 
 import scala.jdk.CollectionConverters._
 import java.nio.file.Files
@@ -13,18 +14,12 @@ import java.nio.file.Paths
 import java.net.URI
 import java.util.Collections
 
-object DownloadTests extends TestSuite {
+object DownloadTests extends TestSuite with TestRepositoryServer.Test {
 
-  private val testRepository = Option(System.getenv("TEST_REPOSITORY"))
-    .orElse(sys.props.get("test.repository"))
-    .getOrElse(sys.error("TEST_REPOSITORY not set"))
-  private val testRepositoryUser = Option(System.getenv("TEST_REPOSITORY_USER"))
-    .orElse(sys.props.get("test.repository.user"))
-    .getOrElse(sys.error("TEST_REPOSITORY_USER not set"))
-  private val testRepositoryPassword = Option(System.getenv("TEST_REPOSITORY_PASSWORD"))
-    .orElse(sys.props.get("test.repository.password"))
-    .getOrElse(sys.error("TEST_REPOSITORY_PASSWORD not set"))
-  private val testRepositoryHost = new URI(testRepository).getHost
+  private def testRepository         = localTestRepo().url
+  private def testRepositoryUser     = localTestRepo().user
+  private def testRepositoryPassword = localTestRepo().password
+  private def testRepositoryHost     = new URI(testRepository).getHost
 
   private def deleteRecursive(f: File): Unit = {
     if (f.isDirectory)
