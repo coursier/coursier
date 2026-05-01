@@ -214,32 +214,56 @@ object DependencyManagement {
     initialMap: Map,
     entries: Seq[GenericMap],
     composeValues: Boolean = true
-  ): GenericMap =
-    if (entries.forall(_.isEmpty))
-      initialMap
-    else {
-      val b = new mutable.HashMap[Key, Values]
-      b.sizeHint(entries.iterator.map(_.size).sum)
-      val it = entries.iterator.flatMap(_.iterator)
-      while (it.hasNext) {
-        val (key0, incomingValues) = it.next()
-        val newValuesOpt = b.get(key0).orElse(initialMap.get(key0)) match {
-          case Some(previousValues) =>
-            if (composeValues)
-              Some(previousValues.orElse(incomingValues))
-                .filter(_ != previousValues)
-            else
-              None
-          case None =>
-            Some(incomingValues)
+  ): GenericMap = addAll0(initialMap, entries.map(_.toMap), composeValues).map
+
+  private[coursier] case class AddAllResult(map: Map, mayContainGlobal: Boolean)
+  private[coursier] def addAll0(
+    initialMap: Map,
+    entries: Seq[GenericMap],
+    composeValues: Boolean = true
+  ): AddAllResult = {
+    var mayContainGlobal = false
+    val builder: coursier.util.HashMapBuilder[Key, Values] =
+      coursier.util.HashMapBuilderFactory.apply
+
+    val allEntries = if (initialMap.isEmpty) entries.toList else initialMap :: entries.toList
+    allEntries match {
+      case head :: tail =>
+        builder.addAll(head)
+        val headValuesIt = head.valuesIterator
+        while (headValuesIt.hasNext && !mayContainGlobal)
+          if (headValuesIt.next().global)
+            mayContainGlobal = true
+        val it = tail.iterator
+        while (it.hasNext) {
+          val map: collection.Map[Key, Values] = it.next()
+          import scala.collection.compat._
+          map.foreachEntry {
+            (key, incoming) =>
+
+              val prev = builder.getOrNull(key)
+
+              if (prev != null) {
+                if (composeValues) {
+                  val composed = prev.orElse(incoming)
+                  if (composed != prev) {
+                    mayContainGlobal ||= composed.global
+                    builder.add(key, composed)
+                  }
+                }
+              }
+              else {
+                mayContainGlobal ||= incoming.global
+                builder.add(key, incoming)
+              }
+          }
         }
-        for (newValues <- newValuesOpt)
-          b += ((key0, newValues))
-      }
-      if (b.isEmpty) initialMap
-      else if (initialMap.isEmpty) b
-      else initialMap ++ b
+
+      case Nil =>
+
     }
+    AddAllResult(builder.result(), mayContainGlobal)
+  }
 
   def addDependencies(
     map: Map,
