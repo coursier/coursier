@@ -1,0 +1,8 @@
+# Print JVM ergonomics flags (heap size, GC choice, etc.) at startup
+-XX:+PrintCommandLineFlags
+# Write a heap dump alongside the mill output directory when the JVM runs out of heap
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:HeapDumpPath=out/mill-heap.hprof
+# Continuous JFR recording: flush to disk as chunks (disk=true), dump the final
+# chunk on normal exit or OOME so the recording survives a crashed JVM.
+# -XX:StartFlightRecording=name=continuous,disk=true,dumponexit=true,maxage=1h,maxsize=256m,settings=profile

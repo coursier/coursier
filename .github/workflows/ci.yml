@@ -31,11 +31,11 @@ jobs:
       with:
         jvm: 21
     - run: |
-        ./mill -i -j1 __.js[_].compile
-        ./mill -i __.compile
+        ./mill --no-daemon -j1 __.js[_].compile
+        ./mill --no-daemon __.compile
     - name: No test modules with no test classes
-      run: ./mill -i ci.noEmptyDiscoveredTestClasses --tasks __.discoveredTestClasses
-    - run: ./mill -i __.publishLocal
+      run: ./mill --no-daemon ci.noEmptyDiscoveredTestClasses --tasks __.discoveredTestClasses
+    - run: ./mill --no-daemon __.publishLocal
 
   test:
     runs-on: ${{ matrix.OS }}
@@ -75,14 +75,25 @@ jobs:
       if: runner.os == 'Linux'
     # - run: .github/scripts/scala-native-setup.sh
     #   if: runner.os != 'Windows'
-    - run: ./mill -i dockerTests
+    - run: ./mill --no-daemon dockerTests
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
-    - run: ./mill -i jvmTests
+    - run: ./mill --no-daemon jvmTests
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
+    - name: Upload JVM diagnostics (heap dumps + JFR recordings)
+      if: always()
+      uses: actions/upload-artifact@v5
+      with:
+        name: jvm-diagnostics-test-${{ matrix.OS }}-scala${{ matrix.SCALA_VERSION }}
+        path: |
+          hotspot-pid-*.jfr
+          out/mill-heap.hprof
+          out/**/*.hprof
+          out/**/*.jfr
+        if-no-files-found: ignore
 
   js-test:
     runs-on: ubuntu-latest
@@ -111,11 +122,22 @@ jobs:
         jvm: 21
     - run: |
         npm install --ignore-scripts
-        ./mill -i -j1 '__.js['"$SCALA_VERSION"'].compile'
-        ./mill -i jsTests --scalaVersion "$SCALA_VERSION"
+        ./mill --no-daemon -j1 '__.js['"$SCALA_VERSION"'].compile'
+        ./mill --no-daemon jsTests --scalaVersion "$SCALA_VERSION"
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+    - name: Upload JVM diagnostics (heap dumps + JFR recordings)
+      if: always()
+      uses: actions/upload-artifact@v5
+      with:
+        name: jvm-diagnostics-js-test-scala${{ matrix.SCALA_VERSION }}
+        path: |
+          hotspot-pid-*.jfr
+          out/mill-heap.hprof
+          out/**/*.hprof
+          out/**/*.jfr
+        if-no-files-found: ignore
 
   bin-compat:
     runs-on: ubuntu-latest
@@ -129,7 +151,7 @@ jobs:
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
-    - run: ./mill -i -k __.mimaReportBinaryIssues
+    - run: ./mill --no-daemon -k __.mimaReportBinaryIssues
 
   website-check:
     runs-on: ubuntu-latest
@@ -151,14 +173,14 @@ jobs:
     - uses: coursier/setup-action@v2.0
       with:
         jvm: 21
-    - run: ./mill -i docs.mdoc
+    - run: ./mill --no-daemon docs.mdoc
       env:
         COURSIER_JNI: force
     - run: .github/scripts/setup-mkdocs.sh
-    - run: ./mill -i docs.mkdocsBuild
+    - run: ./mill --no-daemon docs.mkdocsBuild
       env:
         COURSIER_JNI: force
-    - run: ./mill -i doc.generate --npm-install --yarn-run-build
+    - run: ./mill --no-daemon doc.generate --npm-install --yarn-run-build
       env:
         COURSIER_JNI: force
 
@@ -191,7 +213,7 @@ jobs:
           jvm: 21
       - name: Publish
         run: |
-          ./mill -i mill.scalalib.SonatypeCentralPublishModule/
+          ./mill --no-daemon mill.scalalib.SonatypeCentralPublishModule/
         env:
           MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}
           MILL_PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
@@ -405,9 +427,9 @@ jobs:
       with:
         jvm: 21
     - name: Wait for sync to Central
-      run: ./mill -i waitForSync
+      run: ./mill --no-daemon waitForSync
     - name: Copy artifacts
-      run: ./mill -i copyJarLaunchers
+      run: ./mill --no-daemon copyJarLaunchers
     - uses: actions/attest-build-provenance@v4
       if: startsWith(github.ref, 'refs/tags/v')
       with:
@@ -485,7 +507,7 @@ jobs:
       with:
         name: launchers-jar
         path: artifacts/
-    - run: ./mill -i uploadLaunchers --directory artifacts/
+    - run: ./mill --no-daemon uploadLaunchers --directory artifacts/
       env:
         UPLOAD_GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
@@ -555,7 +577,7 @@ jobs:
       with:
         name: launchers-jar
         path: artifacts/
-    - run: ./mill -i uploadLaunchersSpecialRepo --directory artifacts/
+    - run: ./mill --no-daemon uploadLaunchersSpecialRepo --directory artifacts/
       env:
         UPLOAD_GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
@@ -594,7 +616,7 @@ jobs:
         with:
           jvm: 21
       - run: .github/scripts/setup-mkdocs.sh
-      - run: npm install --ignore-scripts && ./mill -i updateWebsite
+      - run: npm install --ignore-scripts && ./mill --no-daemon updateWebsite
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
@@ -616,6 +638,6 @@ jobs:
         with:
           jvm: 21
       - run: .github/scripts/setup-mkdocs.sh
-      - run: npm install --ignore-scripts && ./mill -i updateWebsite
+      - run: npm install --ignore-scripts && ./mill --no-daemon updateWebsite
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
