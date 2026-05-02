@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration version="2.0" label="diag" description="profile with reduced rates for smaller files" provider="coursier-build">
+  <!-- CPU profiling: 100 ms instead of profile default 10 ms -->
+  <event name="jdk.ExecutionSample">
+    <setting name="enabled">true</setting>
+    <setting name="period">100 ms</setting>
+  </event>
+  <event name="jdk.NativeMethodSample">
+    <setting name="enabled">true</setting>
+    <setting name="period">100 ms</setting>
+  </event>
+  <!-- Allocation: throttled sampled event (JDK 16+) instead of per-TLAB events -->
+  <event name="jdk.ObjectAllocationSample">
+    <setting name="enabled">true</setting>
+    <setting name="stackTrace">true</setting>
+    <setting name="throttle">10/s</setting>
+  </event>
+  <event name="jdk.ObjectAllocationInNewTLAB">
+    <setting name="enabled">false</setting>
+  </event>
+  <event name="jdk.ObjectAllocationOutsideTLAB">
+    <setting name="enabled">false</setting>
+  </event>
+</configuration>
