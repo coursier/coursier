@@ -1004,9 +1004,6 @@ trait CliTests extends CsModule
     def cliLauncher = cli.`static-image`.nativeImage
     def isStatic    = true
   }
-  object `native-mostly-static-tests` extends NativeTests {
-    def cliLauncher = cli.`mostly-static-image`.nativeImage
-  }
   object `native-container-tests` extends NativeTests {
     def cliLauncher = cli.containerImage
   }
@@ -1116,15 +1113,6 @@ def copyStaticLauncher(directory: String = "artifacts") = Task.Command {
     nativeLauncher,
     os.Path(directory, BuildCtx.workspaceRoot),
     suffix = "-static"
-  )
-}
-
-def copyMostlyStaticLauncher(directory: String = "artifacts") = Task.Command {
-  val nativeLauncher = cli.`mostly-static-image`.nativeImage().path
-  GitHubReleaseAssets.copyLauncher(
-    nativeLauncher,
-    os.Path(directory, BuildCtx.workspaceRoot),
-    suffix = "-mostly-static"
   )
 }
 
@@ -1402,10 +1390,6 @@ def nativeCompatTests() = Task.Command[Unit] {
 
 def nativeStaticTests() = Task.Command[Unit] {
   `cli-tests`.`native-static-tests`.testForked()()
-}
-
-def nativeMostlyStaticTests() = Task.Command[Unit] {
-  `cli-tests`.`native-mostly-static-tests`.testForked()()
 }
 
 def nativeContainerTests() = Task.Command[Unit] {

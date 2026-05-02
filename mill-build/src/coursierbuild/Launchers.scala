@@ -216,17 +216,6 @@ object Launchers {
       }
     }
 
-    object `mostly-static-image` extends CliNativeImage {
-      def nativeImageDockerParams = Task {
-        val baseDockerParams = NativeImage.linuxMostlyStaticParams(
-          if (arch == "aarch64") "ubuntu:20.04" else "ubuntu:18.04", // TODO Pin that
-          linuxCsLauncher
-        )
-        val dockerParams = setupLocaleAndOptions(baseDockerParams)
-        Some(dockerParams)
-      }
-    }
-
     object `container-image` extends CliNativeImage {
       def nativeImageOptions = super.nativeImageOptions() ++ Seq(
         "-H:-UseContainerSupport"

@@ -313,44 +313,6 @@ jobs:
           if-no-files-found: error
           retention-days: 2
 
-  generate-native-mostly-static-launcher:
-    name: ${{ matrix.OS }} mostly static native
-    runs-on: ${{ matrix.OS }}
-    strategy:
-      fail-fast: false
-      matrix:
-        OS: ["ubuntu-latest"]
-        OSSHORT: ["linux"]
-        include:
-          - OS: "ubuntu-24.04-arm"
-            OSSHORT: "linux-arm"
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-          submodules: true
-      - uses: coursier/cache-action@v8.0
-      - uses: coursier/setup-action@v2.0
-        with:
-          jvm: 21
-      - run: sudo apt-get install -y nailgun
-        if: runner.os == 'Linux'
-      - run: .github/scripts/maybe-with-graalvm-home.sh nativeMostlyStaticTests
-        shell: bash
-      - name: Copy artifacts
-        run: .github/scripts/maybe-with-graalvm-home.sh copyMostlyStaticLauncher --directory artifacts/
-        shell: bash
-      - uses: actions/attest-build-provenance@v4
-        if: startsWith(github.ref, 'refs/tags/v')
-        with:
-          subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v5
-        with:
-          name: launchers-${{ matrix.OSSHORT }}-mostly-static
-          path: artifacts/
-          if-no-files-found: error
-          retention-days: 2
-
   generate-native-container-launcher:
     name: ${{ matrix.OS }} container native
     runs-on: ${{ matrix.OS }}
@@ -421,7 +383,7 @@ jobs:
 
   upload-launchers:
     name: Upload launchers to GitHub release assets
-    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-mostly-static-launcher, generate-native-container-launcher, generate-jar-launchers]
+    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-container-launcher, generate-jar-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -464,14 +426,6 @@ jobs:
     - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-arm-static
-        path: artifacts/
-    - uses: actions/download-artifact@v6
-      with:
-        name: launchers-linux-mostly-static
-        path: artifacts/
-    - uses: actions/download-artifact@v6
-      with:
-        name: launchers-linux-arm-mostly-static
         path: artifacts/
     - uses: actions/download-artifact@v6
       with:
@@ -491,7 +445,7 @@ jobs:
 
   upload-launchers-special-repo:
     name: Upload launchers to dedicated repository
-    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-mostly-static-launcher, generate-native-container-launcher, generate-jar-launchers]
+    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-container-launcher, generate-jar-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -534,14 +488,6 @@ jobs:
     - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-arm-static
-        path: artifacts/
-    - uses: actions/download-artifact@v6
-      with:
-        name: launchers-linux-mostly-static
-        path: artifacts/
-    - uses: actions/download-artifact@v6
-      with:
-        name: launchers-linux-arm-mostly-static
         path: artifacts/
     - uses: actions/download-artifact@v6
       with:
