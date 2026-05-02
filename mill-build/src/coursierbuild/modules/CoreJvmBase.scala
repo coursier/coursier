@@ -11,6 +11,13 @@ trait CoreJvmBase extends Core with Shading with CsMima {
 
   def mimaBinaryIssueFilters =
     super.mimaBinaryIssueFilters() ++ Seq(
+      ProblemFilter.exclude[DirectMissingMethodProblem](
+        "coursier.core.Resolution.remainingDependencies"
+      ),
+      ProblemFilter.exclude[DirectMissingMethodProblem](
+        "coursier.core.Resolution.reverseDependencies"
+      ),
+
       // new abstract methods added on sealed class, ought to be fine
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.graph.DependencyTree.*"),
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.graph.ModuleTree.*"),

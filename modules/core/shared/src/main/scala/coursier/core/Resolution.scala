@@ -1360,7 +1360,8 @@ object Resolution {
 
   private[core] val finalDependenciesCache0 = new ConcurrentHashMap[Dependency, Seq[Dependency]]
 
-  private def finalDependencies0(dep: Dependency): Either[DependencyError, Seq[Dependency]] =
+  private[coursier] def finalDependencies0(dep: Dependency)
+    : Either[DependencyError, Seq[Dependency]] =
     if (dep.transitive) {
       val deps = finalDependenciesCache.getOrElse(dep, finalDependenciesCache0.get(dep))
 
@@ -1689,77 +1690,9 @@ object Resolution {
     missingFromCache.isEmpty && isFixPoint
   }
 
-  /** Returns a map giving the dependencies that brought each of the dependency of the "next"
-    * dependency set.
-    *
-    * The versions of all the dependencies returned are erased (emptied).
-    */
-  lazy val reverseDependencies: Map[Dependency, Vector[Dependency]] = {
-    val (updatedConflicts, updatedDeps, _) = nextDependenciesAndConflicts
-
-    val trDepsSeq =
-      for {
-        dep   <- updatedDeps
-        trDep <- finalDependencies0(dep).toOption.getOrElse(Nil)
-      } yield trDep.clearVersion -> dep.clearVersion
-
-    val knownDeps = (updatedDeps ++ updatedConflicts)
-      .map(_.clearVersion)
-      .toSet
-
-    trDepsSeq
-      .groupBy(_._1)
-      .view
-      .mapValues(_.map(_._2).toVector)
-      .filterKeys(knownDeps)
-      .toMap // Eagerly evaluate filterKeys/mapValues
-  }
-
-  /** Returns dependencies from the "next" dependency set, filtering out those that are no more
-    * required.
-    *
-    * The versions of all the dependencies returned are erased (emptied).
-    */
-  lazy val remainingDependencies: Set[Dependency] = {
-    val rootDependencies0 = processedRootDependencies.map(_.clearVersion).toSet
-
-    @tailrec
-    def helper(
-      reverseDeps: Map[Dependency, Vector[Dependency]]
-    ): Map[Dependency, Vector[Dependency]] = {
-
-      val (toRemove, remaining) = reverseDeps
-        .partition(kv => kv._2.isEmpty && !rootDependencies0(kv._1))
-
-      if (toRemove.isEmpty)
-        reverseDeps
-      else
-        helper(
-          remaining
-            .view
-            .mapValues(broughtBy =>
-              broughtBy
-                .filter(x => remaining.contains(x) || rootDependencies0(x))
-            )
-            .iterator
-            .toMap
-        )
-    }
-
-    val filteredReverseDependencies = helper(reverseDependencies)
-
-    rootDependencies0 ++ filteredReverseDependencies.keys
-  }
-
   /** The final next dependency set, stripped of no more required ones.
     */
-  lazy val newDependencies: Set[Dependency] = {
-    val remainingDependencies0 = remainingDependencies
-
-    nextDependenciesAndConflicts._2
-      .filter(dep => remainingDependencies0(dep.clearVersion))
-      .toSet
-  }
+  lazy val newDependencies: Set[Dependency] = nextDependenciesAndConflicts._2.toSet
 
   private lazy val nextNoMissingUnsafe: Resolution = {
     val (newConflicts, _, _) = nextDependenciesAndConflicts
