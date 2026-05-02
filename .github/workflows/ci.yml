@@ -261,6 +261,9 @@ jobs:
       - run: sudo apt-get install -y nailgun
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeCompatTests
         shell: bash
+      - name: Test compat launcher under QEMU (Nehalem CPU, no AVX)
+        run: .github/scripts/maybe-with-graalvm-home.sh qemuCompatTests
+        shell: bash
       - name: Copy artifacts
         run: .github/scripts/maybe-with-graalvm-home.sh copyCompatLauncher --directory artifacts/
         shell: bash
