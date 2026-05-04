@@ -1767,6 +1767,7 @@ object Resolution {
       .toSet
   }
 
+  // Lazy val here was a performance issue
   private def nextNoMissingUnsafe: Resolution = {
     val (newConflicts, _, _) = nextDependenciesAndConflicts
 
