@@ -132,9 +132,18 @@ abstract class ArchiveCacheTests extends TestSuite {
     }
 
     test("archive in archive") {
-      checkArchiveHas(
-        "https://github.com/VirtusLab/scala-cli/releases/download/v1.7.1/scala-cli-x86_64-pc-linux.deb!data.tar.zst!usr/bin/scala-cli"
-      )
+      test {
+        checkArchiveHas(
+          "https://github.com/VirtusLab/scala-cli/releases/download/v1.7.1/scala-cli-x86_64-pc-linux.deb!data.tar.zst!usr/bin/scala-cli"
+        )
+      }
+
+      test {
+        checkArchiveHas(
+          "https://github.com/VirtusLab/scala-cli/releases/download/v1.7.1/scala-cli-x86_64-pc-linux.deb!data.tar.zst!",
+          os.sub / "usr/bin/scala-cli"
+        )
+      }
 
       // TODO Add that back after having factored some Debian index related helpers from QemuFiles,
       // so that we can get from the index the latest URL of the package. Hard-coded addresses tend
