@@ -93,6 +93,28 @@ abstract class ArchiveCacheTests extends TestSuite {
       )
     }
 
+    test("aar") {
+      checkArchiveHas(
+        "https://maven.google.com/com/android/support/support-fragment/25.3.1/support-fragment-25.3.1.aar",
+        os.sub / "classes.jar"
+      )
+    }
+
+    test("jar-in-aar") {
+      test {
+        checkArchiveHas(
+          "https://maven.google.com/com/android/support/support-fragment/25.3.1/support-fragment-25.3.1.aar!classes.jar!android/support/v4/app/ListFragment.class"
+        )
+      }
+
+      test {
+        checkArchiveHas(
+          "https://maven.google.com/com/android/support/support-fragment/25.3.1/support-fragment-25.3.1.aar!classes.jar!",
+          os.sub / "android/support/v4/app/ListFragment.class"
+        )
+      }
+    }
+
     test("detect tgz") {
 
       val repoName = "library/hello-world"
