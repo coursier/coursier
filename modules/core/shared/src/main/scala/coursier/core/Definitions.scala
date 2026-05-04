@@ -1040,9 +1040,12 @@ object ArtifactSource {
 
 private[coursier] object Validation {
   def validateCoordinate(value: String, name: String): Either[String, String] =
-    Seq('/', '\\').foldLeft[Either[String, String]](Right(value)) { (acc, char) =>
-      acc.filterOrElse(value => !value.contains(char), s"$name $value contains invalid '$char'")
-    }
+    if (value.contains('/'))
+      Left(s"$name $value contains invalid '/' character")
+    else if (value.contains('\\'))
+      Left(s"$name $value contains invalid '\\' character")
+    else
+      Right(value)
 
   def assertValid(value: String, name: String): Unit =
     validateCoordinate(value, name).fold(msg => throw new AssertionError(msg), identity)
