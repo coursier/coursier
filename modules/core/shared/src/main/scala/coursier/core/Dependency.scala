@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentMap
   * The remaining fields are left untouched, some being transitively propagated (exclusions,
   * optional, in particular).
   */
-@data(apply = false, settersCallApply = true) class Dependency(
+@data(apply = false, settersCallApply = true, cachedHashCode = true) class Dependency(
   module: Module,
   versionConstraint: VersionConstraint0,
   variantSelector: VariantSelector,
@@ -482,9 +482,6 @@ import java.util.concurrent.ConcurrentMap
       fields = fields :+ endorseStrictVersions.toString
     s"Dependency(${fields.mkString(", ")})"
   }
-
-  override lazy val hashCode: Int =
-    tuple.hashCode()
 }
 
 object Dependency {
