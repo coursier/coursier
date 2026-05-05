@@ -8,6 +8,7 @@ import coursier.core.{
   Dependency,
   Extension,
   Info,
+  LazyProperties,
   Module,
   ModuleName,
   Organization,
@@ -335,7 +336,7 @@ object Pom {
           case (conf, dep) =>
             (Variant.Configuration(conf), dep)
         },
-        properties,
+        LazyProperties.merge(Seq(properties)),
         profiles,
         None,
         None,

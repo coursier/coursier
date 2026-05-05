@@ -869,16 +869,55 @@ object ResolutionTests extends TestSuite {
     }
 
     test("parts") {
-      test("propertySubstitution") {
-        val res =
-          Resolution.withProperties0(
-            Seq(Variant.emptyConfiguration -> dep"a-company:a-name:$${a.property}"),
-            Map("a.property"               -> "a-version")
-          )
-        val expected =
-          Seq(Variant.emptyConfiguration -> dep"a-company:a-name:a-version")
+      test("missingPropertyIsPreserved") {
+        val res = Resolution.substituteProps(
+          "prefix-$${missing}-suffix",
+          Map.empty
+        )
 
-        assert(res == expected)
+        assert(res == "prefix-$${missing}-suffix")
+      }
+
+      test("malformedPropertyReferenceIsPreserved") {
+        val res = Resolution.substituteProps(
+          "prefix-$${missing",
+          Map("missing" -> "value")
+        )
+
+        assert(res == "prefix-$${missing")
+      }
+
+      test("duplicateProjectPropertiesPreferenceLastOne") {
+        val props = Resolution.projectProperties(
+          Project(
+            mod"acme:dupe-props",
+            "1.0",
+            properties = Seq(
+              "a" -> "1",
+              "a" -> "2",
+              "b" -> "${a}"
+            )
+          )
+        )
+
+        assert(props.take(3) == List("a" -> "1", "a" -> "2", "b" -> "${a}"))
+        assert(props.toMap.apply("a") == "2")
+      }
+
+      test("duplicateProjectPropertiesCycleReachFixpoint") {
+        val props = Resolution.projectProperties(
+          Project(
+            mod"acme:dupe-props",
+            "1.0",
+            properties = Seq(
+              "a" -> "1",
+              "a" -> "${a}2"
+            )
+          )
+        )
+
+        assert(props.take(2) == Seq("a" -> "1", "a" -> "${a}2"))
+        assert(props.toMap.apply("a") == "${a}2")
       }
     }
 
