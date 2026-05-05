@@ -35,7 +35,7 @@ object ModuleName {
   *
   * Using the same terminology as Ivy.
   */
-@data(apply = false, settersCallApply = true) class Module(
+@data(apply = false, settersCallApply = true, cachedHashCode = true) class Module(
   organization: Organization,
   name: ModuleName,
   attributes: Map[String, String]
@@ -72,8 +72,6 @@ object ModuleName {
       case (k, v) =>
         k.contains("$") || v.contains("$")
     }
-
-  final override lazy val hashCode = tuple.hashCode()
 
   private[core] def copy(
     organization: Organization = this.organization,
@@ -962,7 +960,7 @@ object SnapshotVersioning {
     )
 }
 
-@data(apply = false, settersCallApply = true) class Publication(
+@data(apply = false, settersCallApply = true, cachedHashCode = true) class Publication(
   name: String,
   `type`: Type,
   ext: Extension,
@@ -975,8 +973,6 @@ object SnapshotVersioning {
   lazy val attributesHaveProperties =
     `type`.value.contains("$") ||
     classifier.value.contains("$")
-
-  final override lazy val hashCode = tuple.hashCode
 }
 
 object Publication {
