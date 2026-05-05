@@ -70,7 +70,7 @@ object Deps {
     def tika                     = mvn"org.apache.tika:tika-core:3.2.3"
     def ujson                    = mvn"com.lihaoyi::ujson:4.3.2"
     def utest                    = mvn"com.lihaoyi::utest::0.9.1"
-    def versions                 = mvn"io.get-coursier::versions::0.5.1"
+    def versions                 = mvn"io.get-coursier::versions::0.5.3"
     def windowsAnsi              = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
     def windowsAnsiPs =
       mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
@@ -101,7 +101,7 @@ object Deps {
     // for cleanup tasks when we move to Scala 2.13 as as the baseline
     val all = Seq(scala213, scala212)
 
-    def scalaJs = "1.19.0"
+    def scalaJs = "1.20.0"
   }
 
   object Docker {
