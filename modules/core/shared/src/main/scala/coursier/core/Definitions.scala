@@ -1,7 +1,6 @@
 package coursier.core
 
-import java.util.concurrent.ConcurrentMap
-
+import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap}
 import coursier.core.Validation._
 import coursier.error.VariantError
 import coursier.util.Artifact
@@ -462,8 +461,14 @@ object Attributes {
 
   /** All configurations that each configuration extends, including the ones it extends transitively
     */
-  lazy val allConfigurations: Map[Configuration, Set[Configuration]] =
-    Orders.allConfigurations0(configurations)
+  lazy val allConfigurations: Map[Configuration, Set[Configuration]] = {
+    val result = Project.allConfigurationsCache.computeIfAbsent(
+      configurations,
+      (configs: Map[Configuration, Seq[Configuration]]) =>
+        Orders.allConfigurations0(configs)
+    )
+    result
+  }
 
   /** Version used to get this project metadata if available, else the version from metadata. May
     * not match `version` for projects having a wrong version in their metadata, if the actual
@@ -647,6 +652,10 @@ object Attributes {
 }
 
 object Project {
+  private val allConfigurationsCache = new ConcurrentHashMap[
+    Map[Configuration, Seq[Configuration]],
+    Map[Configuration, Set[Configuration]]
+  ]()
 
   @deprecated("Use the override accepting Version-s instead", "2.1.25")
   def apply(
