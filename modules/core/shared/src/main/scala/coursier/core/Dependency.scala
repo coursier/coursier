@@ -380,23 +380,20 @@ import java.util.concurrent.ConcurrentMap
       withVariantSelector(attr.addAttributes(attributes: _*))
   }
 
-  private[core] def copy(
-    module: Module = this.module,
-    version: VersionConstraint0 = this.versionConstraint,
-    variantSelector: VariantSelector = this.variantSelector,
-    minimizedExclusions: MinimizedExclusions = this.minimizedExclusions,
-    attributes: Attributes = this.attributes,
-    optional: Boolean = this.optional,
-    transitive: Boolean = this.transitive
+  private[core] def copy0(
+    module: Module,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    attributes: Attributes
   ) = Dependency(
     module,
-    version,
+    versionConstraint,
     variantSelector,
     minimizedExclusions,
-    Publication("", attributes.`type`, Extension.empty, attributes.classifier),
+    Publication(publication.name, attributes.`type`, publication.ext, attributes.classifier),
     optional,
     transitive,
-    Map.empty[DependencyManagement.Key, DependencyManagement.Values],
+    overrides,
     deprecatedBoms,
     bomDependencies,
     overridesMap,

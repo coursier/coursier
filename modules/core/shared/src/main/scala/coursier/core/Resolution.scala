@@ -293,7 +293,7 @@ object Resolution {
           else
             dep.versionConstraint
         )
-        .copy(
+        .copy0(
           module = dep.module.copy(
             organization = dep.module.organization.map(substituteProps0),
             name = dep.module.name.map(substituteProps0)
