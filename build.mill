@@ -175,7 +175,7 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
         val nonIgnoredFiles = os.walk(dir)
           .filter(os.isFile(_))
           .map(_.relativeTo(dir))
-          .filter(!_.startsWith(os.sub / "META-INF" / "native-image"))
+          .filter(!_.startsWith(os.sub / "META-INF/native-image"))
         if (nonIgnoredFiles.isEmpty) Nil
         else
           sys.error(s"Resource directory $dir contains unexpected resources $nonIgnoredFiles")
@@ -1238,7 +1238,7 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command 
 
   val rootDir0 =
     if (rootDir.isEmpty) BuildCtx.workspaceRoot else os.Path(rootDir, BuildCtx.workspaceRoot)
-  val docusaurusDir       = rootDir0 / "doc" / "website"
+  val docusaurusDir       = rootDir0 / "doc/website"
   val versionedDocsRepo   = "coursier/versioned-docs"
   val versionedDocsBranch = "master"
 
@@ -1273,7 +1273,7 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command 
   // copyDemoFiles()
 
   val newSiteDir = docs.mkdocsBuild()().path
-  os.copy(newSiteDir, docusaurusDir / "build" / "coursier" / "upcoming")
+  os.copy(newSiteDir, docusaurusDir / "build/coursier/upcoming")
 
   DocHelpers.updateGhPages(
     docusaurusDir / "build",

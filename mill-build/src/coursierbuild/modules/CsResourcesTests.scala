@@ -19,12 +19,12 @@ trait CsResourcesTests extends TestModule {
     "COURSIER_TEST_DATA_DIR" ->
       testDataDir().path.toString,
     "COURSIER_TESTS_METADATA_DIR" ->
-      (BuildCtx.workspaceRoot / "modules" / "tests" / "metadata").toString,
+      (BuildCtx.workspaceRoot / "modules/tests/metadata").toString,
     "COURSIER_TESTS_HANDMADE_METADATA_DIR" ->
-      (BuildCtx.workspaceRoot / "modules" / "tests" / "handmade-metadata" / "data").toString,
+      (BuildCtx.workspaceRoot / "modules/tests/handmade-metadata/data").toString,
     "COURSIER_TESTS_METADATA_DIR_URI" ->
-      (BuildCtx.workspaceRoot / "modules" / "tests" / "metadata").toNIO.toUri.toASCIIString,
+      (BuildCtx.workspaceRoot / "modules/tests/metadata").toNIO.toUri.toASCIIString,
     "COURSIER_TESTS_HANDMADE_METADATA_DIR_URI" ->
-      (BuildCtx.workspaceRoot / "modules" / "tests" / "handmade-metadata" / "data").toNIO.toUri.toASCIIString
+      (BuildCtx.workspaceRoot / "modules/tests/handmade-metadata/data").toNIO.toUri.toASCIIString
   )
 }
