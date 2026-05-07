@@ -222,6 +222,9 @@ object tests extends Module {
   object shared extends TestsShared
   object jvm    extends Cross[TestsJvm](ScalaVersions.all)
   object js     extends Cross[TestsJs](ScalaVersions.all)
+
+  def handmadeMetadata = Task.Source("handmade-metadata/data")
+  def metadata         = Task.Source("metadata")
 }
 
 object `proxy-tests` extends Cross[ProxyTests](ScalaVersions.all)
@@ -248,7 +251,9 @@ object docker extends Cross[Docker](Seq(ScalaVersions.scala3))
 
 object cli extends Cli {
   object test extends SbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm(cliScalaVersion213Compat).test
     )
@@ -313,7 +318,9 @@ trait CoreJs extends Core with CsScalaJsModule {
   )
   def commitHash = `build-util`.commitHash
   object test extends SbtTests with ScalaJSTests with CsResourcesTests with CsTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ core.shared.testSources()
     }
@@ -509,7 +516,9 @@ trait CoursierJvm extends CoursierJvmBase { self =>
   )
   // Put CoursierTests right after TestModule, and see what happens
   object test extends CrossSbtTests with CoursierTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ coursier.shared.testSources()
     }
@@ -545,7 +554,9 @@ trait CoursierJs extends Coursier with CsScalaJsModule {
     cache.js()
   )
   object test extends SbtTests with ScalaJSTests with CsResourcesTests with CoursierTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ coursier.shared.testSources()
     }
@@ -573,7 +584,9 @@ trait TestsJvm extends TestsModule { self =>
     Deps.jsoup
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ tests.shared.testSources()
     }
@@ -583,7 +596,9 @@ trait TestsJvm extends TestsModule { self =>
     )
   }
   object it extends CrossSbtTests with CsScalaTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def forkArgs = Task {
       val testRepoServer0 = buildWorkers.testRepoServer()
       val redirectingServerCp =
@@ -616,7 +631,9 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
   )
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
   object test extends SbtTests with ScalaJSTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ tests.shared.testSources()
     }
@@ -665,7 +682,9 @@ trait ScalazJvm extends Scalaz with CsMima {
     Deps.scalazConcurrent
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
@@ -691,7 +710,9 @@ trait CatsJvm extends Cats with CsMima {
     cache.jvm()
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
@@ -726,7 +747,9 @@ trait Install extends CrossSbtModule with CsModule
     Deps.catsCore
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.jvm()
     )
@@ -758,7 +781,9 @@ trait Jvm extends CrossSbtModule with CsModule
     Deps.jsoniterCore
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.jvm()
     )

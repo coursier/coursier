@@ -15,16 +15,18 @@ import scala.util.Properties
 
 trait CsResourcesTests extends TestModule {
   def testDataDir: T[PathRef]
+  def testHandmadeMetadataDir: T[PathRef]
+  def testMetadataDir: T[PathRef]
   def forkEnv = super.forkEnv() ++ Seq(
     "COURSIER_TEST_DATA_DIR" ->
       testDataDir().path.toString,
     "COURSIER_TESTS_METADATA_DIR" ->
-      (BuildCtx.workspaceRoot / "modules/tests/metadata").toString,
+      testMetadataDir().path.toString,
     "COURSIER_TESTS_HANDMADE_METADATA_DIR" ->
-      (BuildCtx.workspaceRoot / "modules/tests/handmade-metadata/data").toString,
+      testHandmadeMetadataDir().path.toString,
     "COURSIER_TESTS_METADATA_DIR_URI" ->
-      (BuildCtx.workspaceRoot / "modules/tests/metadata").toNIO.toUri.toASCIIString,
+      testMetadataDir().path.toNIO.toUri.toASCIIString,
     "COURSIER_TESTS_HANDMADE_METADATA_DIR_URI" ->
-      (BuildCtx.workspaceRoot / "modules/tests/handmade-metadata/data").toNIO.toUri.toASCIIString
+      testHandmadeMetadataDir().path.toNIO.toUri.toASCIIString
   )
 }
