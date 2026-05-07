@@ -259,7 +259,10 @@ import java.util.concurrent.ConcurrentMap
   )
   def withExclusions(newExclusions: Set[(Organization, ModuleName)]): Dependency =
     withMinimizedExclusions(MinimizedExclusions(newExclusions))
-
+  private[core] def withVersionConstraintConserve(versionConstraint: VersionConstraint0)
+    : Dependency =
+    if (versionConstraint == this.versionConstraint) this
+    else withVersionConstraint(versionConstraint)
   @deprecated(
     "This method will be dropped in favor of minimizedExclusions() in a future version",
     "2.1.0-M6"
