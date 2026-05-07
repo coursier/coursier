@@ -4,6 +4,7 @@ import coursier.core.{Dependency, MinimizedExclusions, Resolution, VariantSelect
 import coursier.version.{Version, VersionConstraint}
 
 import scala.annotation.tailrec
+import scala.collection.mutable
 
 /** Simple dependency tree. */
 sealed abstract class DependencyTree {
@@ -65,9 +66,11 @@ object DependencyTree {
   ) extends DependencyTree {
 
     lazy val dependency: Dependency = {
-
+      val seenRelocations = new mutable.HashSet[Dependency]
       @tailrec
-      def relocation(dep: Dependency): Dependency = {
+      def relocation(dep: Dependency): Dependency = if (!seenRelocations.add(dep))
+        initialDependency // Bail out! see: https://github.com/coursier/coursier/issues/3578#issuecomment-4083094617
+      else {
         val reconciledVersion = resolution.reconciledVersions.getOrElse(
           dep.module,
           sys.error(s"Cannot find ${dep.module.repr} in reconciled versions")
