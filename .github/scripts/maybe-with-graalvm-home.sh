@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-if [[ "$OSTYPE" == "msys" ]]; then
+if [[ "$OSTYPE" == msys* || "$OSTYPE" == mingw* || "$OSTYPE" == cygwin* ]]; then
   if [[ ! -e jvm ]]; then
     ./mill.bat -i ci.copyJvm --dest jvm
   fi
