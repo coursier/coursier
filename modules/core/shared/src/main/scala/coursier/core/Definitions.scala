@@ -35,7 +35,7 @@ object ModuleName {
   *
   * Using the same terminology as Ivy.
   */
-@data(apply = false, settersCallApply = true) class Module(
+@data(apply = false, settersCallApply = true, cachedHashCode = true) class Module(
   organization: Organization,
   name: ModuleName,
   attributes: Map[String, String]
@@ -72,8 +72,6 @@ object ModuleName {
       case (k, v) =>
         k.contains("$") || v.contains("$")
     }
-
-  final override lazy val hashCode = tuple.hashCode()
 
   private[core] def copy(
     organization: Organization = this.organization,
@@ -962,7 +960,7 @@ object SnapshotVersioning {
     )
 }
 
-@data(apply = false, settersCallApply = true) class Publication(
+@data(apply = false, settersCallApply = true, cachedHashCode = true) class Publication(
   name: String,
   `type`: Type,
   ext: Extension,
@@ -975,8 +973,6 @@ object SnapshotVersioning {
   lazy val attributesHaveProperties =
     `type`.value.contains("$") ||
     classifier.value.contains("$")
-
-  final override lazy val hashCode = tuple.hashCode
 }
 
 object Publication {
@@ -1017,9 +1013,12 @@ object ArtifactSource {
 
 private[coursier] object Validation {
   def validateCoordinate(value: String, name: String): Either[String, String] =
-    Seq('/', '\\').foldLeft[Either[String, String]](Right(value)) { (acc, char) =>
-      acc.filterOrElse(value => !value.contains(char), s"$name $value contains invalid '$char'")
-    }
+    if (value.contains('/'))
+      Left(s"$name $value contains invalid '/' character")
+    else if (value.contains('\\'))
+      Left(s"$name $value contains invalid '\\' character")
+    else
+      Right(value)
 
   def assertValid(value: String, name: String): Unit =
     validateCoordinate(value, name).fold(msg => throw new AssertionError(msg), identity)
