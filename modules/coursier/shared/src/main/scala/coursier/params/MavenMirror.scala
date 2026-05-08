@@ -15,8 +15,8 @@ import dataclass.data
   to: String
 ) extends Mirror {
 
-  private val from0 = if (from.contains("*")) Seq("*") else from.map(_.stripSuffix("/"))
-  private val to0 = to.stripSuffix("/")
+  private val from0      = if (from.contains("*")) Seq("*") else from.map(_.stripSuffix("/"))
+  private val to0        = to.stripSuffix("/")
   private val matchesAll = from0.contains("*")
 
   def matches(repo: Repository): Option[Repository] =
