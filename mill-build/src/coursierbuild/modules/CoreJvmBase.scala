@@ -16,6 +16,9 @@ trait CoreJvmBase extends Core with Shading with CsMima {
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.graph.ModuleTree.*"),
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.graph.ReverseModuleTree.*"),
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.core.Reconciliation.*"),
+      ProblemFilter.exclude[ReversedMissingMethodProblem](
+        "coursier.core.MinimizedExclusions#ExclusionData.*"
+      ),
 
       // private case class
       ProblemFilter.exclude[Problem]("coursier.graph.DependencyTree#Node.*"),
@@ -46,7 +49,28 @@ trait CoreJvmBase extends Core with Shading with CsMima {
       ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser#State.licenses"),
 
       // ignore shaded-stuff related errors
-      ProblemFilter.exclude[Problem]("coursier.core.shaded.*")
+      ProblemFilter.exclude[Problem]("coursier.core.shaded.*"),
+
+      // Impl is private[coursier]
+      ProblemFilter.exclude[DirectMissingMethodProblem](
+        "coursier.core.Overrides#Impl.copy"
+      ),
+      ProblemFilter.exclude[DirectMissingMethodProblem](
+        "coursier.core.Overrides#Impl.this"
+      ),
+      ProblemFilter.exclude[DirectMissingMethodProblem](
+        "coursier.core.Overrides#Impl.apply"
+      ),
+      ProblemFilter.exclude[MissingTypesProblem](
+        "coursier.core.Overrides$Impl$"
+      ),
+
+      // new methods added private[coursier]
+      ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.core.Overrides.map"),
+      ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.core.Overrides.transform"),
+      ProblemFilter.exclude[ReversedMissingMethodProblem](
+        "coursier.core.Overrides.mayContainGlobal"
+      )
     )
 
   def shadedDependencies = Seq(

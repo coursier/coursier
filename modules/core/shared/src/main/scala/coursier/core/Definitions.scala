@@ -35,7 +35,7 @@ object ModuleName {
   *
   * Using the same terminology as Ivy.
   */
-@data(apply = false, settersCallApply = true) class Module(
+@data(apply = false, settersCallApply = true, cachedHashCode = true) class Module(
   organization: Organization,
   name: ModuleName,
   attributes: Map[String, String]
@@ -72,8 +72,6 @@ object ModuleName {
       case (k, v) =>
         k.contains("$") || v.contains("$")
     }
-
-  final override lazy val hashCode = tuple.hashCode()
 
   private[core] def copy(
     organization: Organization = this.organization,
@@ -567,6 +565,82 @@ object Attributes {
       attr0.equivalentConfiguration.toSeq.map(attr -> _)
   }
 
+  def repr: String = {
+    def variantStr(v: Variant): String = v match {
+      case c: Variant.Configuration => c.configuration.value
+      case a: Variant.Attributes    => s"@${a.variantName}"
+    }
+
+    val lines = Seq.newBuilder[String]
+    lines += s"module: ${module.repr}"
+    lines += s"version: ${version0.asString}"
+    for ((parentMod, parentVer) <- parent0)
+      lines += s"parent: ${parentMod.repr}:${parentVer.asString}"
+    for (v <- actualVersionOpt0)
+      lines += s"actualVersion: ${v.asString}"
+    for (p <- packagingOpt)
+      lines += s"packaging: ${p.value}"
+    if (relocated)
+      lines += "relocated: true"
+    if (dependencies0.nonEmpty) {
+      lines += "dependencies:"
+      for ((variant, dep) <- dependencies0) {
+        val it = dep.repr.linesIterator
+        lines += s"  ${it.next()}"
+        lines += s"    variant: ${variantStr(variant)}"
+        for (line <- it)
+          lines += s"    $line"
+      }
+    }
+    if (dependencyManagement0.nonEmpty) {
+      lines += "dependencyManagement:"
+      for ((variant, dep) <- dependencyManagement0) {
+        lines += s"  (${variantStr(variant)}):"
+        for (line <- dep.repr.linesIterator)
+          lines += s"    $line"
+      }
+    }
+    if (configurations.nonEmpty)
+      lines += s"configurations: $configurations"
+    if (properties.nonEmpty) {
+      lines += "Properties:"
+      for ((k, v) <- properties.sorted)
+        lines += s"  $k=$v"
+    }
+    if (profiles.nonEmpty)
+      lines += s"profiles: $profiles"
+    for (v <- versions)
+      lines += s"versions: $v"
+    for (sv <- snapshotVersioning)
+      lines += s"snapshotVersioning: $sv"
+    if (publications0.nonEmpty) {
+      lines += "publications:"
+      for ((variant, pub) <- publications0)
+        lines += s"  (${variantStr(variant)}): $pub"
+    }
+    if (info != Info.empty)
+      lines += s"info: $info"
+    if (!overrides.isEmpty)
+      for (line <- overrides.repr.linesIterator)
+        lines += line
+    if (variants.nonEmpty) {
+      lines += "variants:"
+      for ((attr, map) <- variants.toSeq.sortBy(_._1.variantName)) {
+        val attrs = map.toSeq.sortBy(_._1).map { case (k, v) => s"$k=$v" }.mkString(", ")
+        lines += s"  ${attr.variantName}: $attrs"
+      }
+    }
+    if (variantPublications.nonEmpty) {
+      lines += "variantPublications:"
+      for ((attr, pubs) <- variantPublications.toSeq.sortBy(_._1.variantName)) {
+        lines += s"  ${attr.variantName}:"
+        for (pub <- pubs)
+          lines += s"    $pub"
+      }
+    }
+    lines.result().mkString("\n")
+  }
+
   final override lazy val hashCode = tuple.hashCode
 }
 
@@ -886,7 +960,7 @@ object SnapshotVersioning {
     )
 }
 
-@data(apply = false, settersCallApply = true) class Publication(
+@data(apply = false, settersCallApply = true, cachedHashCode = true) class Publication(
   name: String,
   `type`: Type,
   ext: Extension,
@@ -899,8 +973,6 @@ object SnapshotVersioning {
   lazy val attributesHaveProperties =
     `type`.value.contains("$") ||
     classifier.value.contains("$")
-
-  final override lazy val hashCode = tuple.hashCode
 }
 
 object Publication {
@@ -941,9 +1013,12 @@ object ArtifactSource {
 
 private[coursier] object Validation {
   def validateCoordinate(value: String, name: String): Either[String, String] =
-    Seq('/', '\\').foldLeft[Either[String, String]](Right(value)) { (acc, char) =>
-      acc.filterOrElse(value => !value.contains(char), s"$name $value contains invalid '$char'")
-    }
+    if (value.contains('/'))
+      Left(s"$name $value contains invalid '/' character")
+    else if (value.contains('\\'))
+      Left(s"$name $value contains invalid '\\' character")
+    else
+      Right(value)
 
   def assertValid(value: String, name: String): Unit =
     validateCoordinate(value, name).fold(msg => throw new AssertionError(msg), identity)

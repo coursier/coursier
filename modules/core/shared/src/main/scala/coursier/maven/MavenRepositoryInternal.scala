@@ -195,7 +195,7 @@ private[coursier] class MavenRepositoryInternal(
     }
 
     if (tryListVersions(module))
-      versionsFromListing(module, fetch).orElse(viaMetadata)
+      viaMetadata.orElse(versionsFromListing(module, fetch))
     else viaMetadata
   }
 
