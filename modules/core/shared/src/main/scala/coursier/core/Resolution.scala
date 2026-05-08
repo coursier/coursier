@@ -293,7 +293,7 @@ object Resolution {
           else
             dep.versionConstraint
         )
-        .copy(
+        .copy0(
           module = dep.module.copy(
             organization = dep.module.organization.map(substituteProps0),
             name = dep.module.name.map(substituteProps0)
@@ -1672,9 +1672,10 @@ object Resolution {
     val nextModules = nextDependenciesAndConflicts._2
       .map(_.moduleVersionConstraint)
 
-    Seq(boms, modules, nextModules).iterator.flatMap(_.filterNot(mod =>
-      projectCache0.contains(mod) || errorCache.contains(mod)
-    )).toSet
+    Iterator(boms, modules, nextModules)
+      .flatten
+      .filterNot(mod => projectCache0.contains(mod) || errorCache.contains(mod))
+      .toSet
   }
 
   /** Whether the resolution is done.
