@@ -13,6 +13,8 @@ import coursier.paths.CoursierPaths
 import coursier.proxy.SetupProxy
 import io.github.alexarchambault.isterminal.IsTerminal
 
+import java.lang.reflect.Field
+import java.nio.charset.Charset
 import java.nio.file.Paths
 import java.util.Scanner
 import sun.misc.{Signal, SignalHandler}
@@ -68,6 +70,31 @@ object Coursier extends CommandsEntryPoint {
       !PathUtil.isInPath(p)
     }
 
+  // In GraalVM native images, the default charset may be baked in from the build machine
+  // rather than detected from the running OS. On Windows, the 'native.encoding' system
+  // property (JDK 17+) reflects the actual OS code page at runtime. We apply it here so
+  // that runtime string operations (e.g. bat file generation, JNI string conversion) use
+  // the correct encoding for the running system rather than the build machine's encoding.
+  private def setupWindowsCharset(): Unit = {
+    val nativeEncoding = System.getProperty("native.encoding")
+    if (nativeEncoding != null) {
+      System.setProperty("file.encoding", nativeEncoding)
+      // Reset the cached Charset.defaultCharset() so it re-reads file.encoding.
+      // Requires the 'java.nio.charset.Charset.defaultCharset' field to be registered
+      // in reflect-config.json with write access for the GraalVM native image.
+      // Best-effort: if reflection is unavailable, newly-set system properties still
+      // take effect for any code that reads file.encoding directly.
+      try {
+        val f: Field = classOf[Charset].getDeclaredField("defaultCharset")
+        f.setAccessible(true)
+        f.set(null, null)
+      }
+      catch {
+        case _: NoSuchFieldException | _: IllegalAccessException => ()
+      }
+    }
+  }
+
   private def runSetup(): Unit = {
     Setup.run(SetupOptions(banner = Some(true)), RemainingArgs(Nil, Nil))
 
@@ -78,6 +105,11 @@ object Coursier extends CommandsEntryPoint {
   }
 
   override def main(args: Array[String]): Unit = {
+
+    if (Properties.isWin && isGraalvmNativeImage)
+      // Reset the default charset to the actual runtime OS encoding.
+      // Must happen before any string operations that depend on the default charset.
+      setupWindowsCharset()
 
     if (!Properties.isWin && isGraalvmNativeImage)
       // Ignore SIGPIPE
