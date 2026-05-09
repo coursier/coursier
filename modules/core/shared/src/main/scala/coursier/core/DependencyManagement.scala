@@ -112,7 +112,7 @@ object DependencyManagement {
       else
         this
     }
-    private def parsedConfig = PropertyExpr.parse(config.value)
+    private lazy val parsedConfig = PropertyExpr.parse(config.value)
     def mapButVersion(f: String => String): Values = {
       val newConfig = Configuration(parsedConfig.applySubstitution(config.value, f))
       val newExcl   = minimizedExclusions.map(f)
