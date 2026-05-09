@@ -35,6 +35,12 @@ object CacheEnv {
   /** Env var and Java prop names for the cache TTL */
   val ttl = EnvEntry("COURSIER_TTL", "coursier.ttl")
 
+  /** Env var and Java prop names to enable/disable retrying resolved IPs on connection failure */
+  val retryResolvedIps = EnvEntry("COURSIER_RETRY_RESOLVED_IPS", "coursier.retry-resolved-ips")
+
+  /** Env var and Java prop names for the per-IP connection timeout (in ms) when retrying IPs */
+  val perIpTimeoutMs = EnvEntry("COURSIER_PER_IP_TIMEOUT_MS", "coursier.per-ip-timeout-ms")
+
   /** Env var and Java prop names for the cache policies */
   val cachePolicy = EnvEntry("COURSIER_MODE", "coursier.mode")
 

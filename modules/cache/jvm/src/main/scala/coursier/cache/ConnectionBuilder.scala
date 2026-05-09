@@ -31,8 +31,8 @@ import dataclass.data
     c
   }
 
-  def connectionMaybePartial(): (URLConnection, Boolean) =
-    CacheUrl.urlConnectionMaybePartial(CacheUrl.Args(
+  def connectionMaybePartial(): (URLConnection, Boolean) = {
+    val args = CacheUrl.Args(
       url,
       url,
       authentication,
@@ -48,5 +48,10 @@ import dataclass.data
       redirectionCount = 0,
       maxRedirectionsOpt,
       classLoaders
-    ))
+    )
+    if (CacheDefaults.retryResolvedIps)
+      CacheUrl.urlConnectionMaybePartialWithIpFallback(args, CacheDefaults.perIpTimeoutMs)
+    else
+      CacheUrl.urlConnectionMaybePartial(args)
+  }
 }
