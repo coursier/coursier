@@ -85,7 +85,8 @@ object JsonReportTests extends TestSuite {
   def doCheck(
     fetch: Fetch[Task],
     dependencies: Seq[Dependency],
-    extraKeyPart: String = ""
+    extraKeyPart: String = "",
+    addUrls: Boolean = false
   ): Future[Unit] =
     for {
       res <- fetch
@@ -103,7 +104,8 @@ object JsonReportTests extends TestSuite {
           JsonReport.report(
             res.resolution,
             res.fullDetailedArtifacts0,
-            useSlashSeparator = Properties.isWin
+            useSlashSeparator = Properties.isWin,
+            addUrls = addUrls
           )
         }
       }
@@ -411,6 +413,18 @@ object JsonReportTests extends TestSuite {
     test("grpc-core") {
       check(
         dep"io.grpc:grpc-netty-shaded:1.29.0"
+      )
+    }
+
+    test("addUrls") {
+      doCheck(
+        fetch,
+        Seq(
+          dep"org.apache.commons:commons-compress:1.5"
+            .withTransitive(false)
+        ),
+        "_addurls",
+        addUrls = true
       )
     }
 
