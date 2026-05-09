@@ -8,7 +8,7 @@ object Deps {
     def caseApp           = mvn"com.github.alexarchambault::case-app:2.1.0"
     def catsCore          = mvn"org.typelevel::cats-core:${Versions.cats}"
     def catsFree213       = mvn"org.typelevel:cats-free_2.13:${Versions.cats}"
-    def catsEffect        = mvn"org.typelevel::cats-effect::3.6.1"
+    def catsEffect        = mvn"org.typelevel::cats-effect::3.6.3"
     def classPathUtil     = mvn"io.get-coursier::class-path-util:0.1.4"
     def collectionCompat  = mvn"org.scala-lang.modules::scala-collection-compat::2.13.0"
     def concurrentReferenceHashMap =
