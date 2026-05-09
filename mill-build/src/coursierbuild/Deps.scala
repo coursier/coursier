@@ -16,7 +16,7 @@ object Deps {
     def dataClass         = mvn"io.github.alexarchambault::data-class:0.2.7"
     def dependency        = mvn"io.get-coursier::dependency::0.3.2"
     def directories       = mvn"io.get-coursier.util:directories-jni:0.1.4"
-    def diffUtils         = mvn"io.github.java-diff-utils:java-diff-utils:4.15"
+    def diffUtils         = mvn"io.github.java-diff-utils:java-diff-utils:4.16"
     def dockerClient      = mvn"com.spotify:docker-client:8.16.0"
     def fastParse         = mvn"com.lihaoyi::fastparse::3.1.1"
     def http4sBlazeServer = mvn"org.http4s::http4s-blaze-server:0.23.17"
