@@ -18,7 +18,7 @@ final case class Retry(
     @tailrec
     def loop(attempt: Int, delay: FiniteDuration): T = {
       val resOpt =
-        if (attempt >= count || Downloader.throwExceptions) f
+        if (attempt >= count) f
         else
           try f
           catch catchEx.andThen(_ => None)
