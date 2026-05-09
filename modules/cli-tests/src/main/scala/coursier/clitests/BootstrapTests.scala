@@ -1077,6 +1077,51 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         "disabled"
     }
 
+    test("bat multi-line arg") {
+      if (Properties.isWin)
+        batMultiLineArgTest()
+      else
+        "disabled"
+    }
+
+    def batMultiLineArgTest(): Unit =
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0)
+        os.proc(
+          launcher,
+          "bootstrap",
+          "-o",
+          "cs-echo",
+          "io.get-coursier:echo:1.0.1",
+          extraOptions
+        ).call(cwd = tmpDir)
+
+        val bootstrap = tmpDir / "cs-echo.bat"
+
+        // Simulate passing a multi-line argument via PowerShell, which mirrors the
+        // scenario where Get-Content -Raw returns a multi-line string passed as a
+        // single argument to a .bat launcher (issue: bat ignores all lines but first).
+        // Note: in PowerShell strings, `n is the escape sequence for a newline character.
+        val psScript =
+          s"""$$arg = "first line`nsecond line`nthird line"
+             |& '${bootstrap.toString.replace("'", "''")}' $$arg""".stripMargin
+        val output = os.proc(
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          psScript
+        ).call(cwd = tmpDir).out.text()
+
+        assert(
+          output.contains("second line"),
+          s"Expected 'second line' in output but got: $output"
+        )
+        assert(
+          output.contains("third line"),
+          s"Expected 'third line' in output but got: $output"
+        )
+      }
+
     def jniUtilFromBootstrapTest(extraOpts: String*): Unit = {
       TestUtil.withTempDir("jni-cs") { tmpDir0 =>
         val tmpDir = os.Path(tmpDir0, os.pwd)
