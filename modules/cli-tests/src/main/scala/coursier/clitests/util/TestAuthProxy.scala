@@ -95,6 +95,7 @@ object TestAuthProxy {
       )
         .call(stdin = os.Inherit)
       containerId = res.out.trim()
+      pprint.err.log(s"$host:$port")
       f(networkName, host, port)
     }
     finally {
