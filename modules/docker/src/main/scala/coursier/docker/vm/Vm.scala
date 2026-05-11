@@ -17,7 +17,6 @@ import com.jcraft.jsch.Logger
 import com.jcraft.jsch.Channel
 import com.jcraft.jsch.ChannelExec
 import com.jcraft.jsch.ChannelShell
-import com.jcraft.jsch.Session
 import scala.util.control.NonFatal
 import coursier.cache.DigestBasedCache
 import coursier.cache.FileCache
@@ -28,6 +27,7 @@ import java.io.InputStream
 import coursier.cache.util.Cpu
 import coursier.docker.vm.iso.Image
 import java.util.concurrent.TimeoutException
+import scala.annotation.tailrec
 
 final class Vm(
   val id: String,
@@ -89,29 +89,32 @@ final class Vm(
   }
 
   def withSession[T](f: Session => T): T = {
-    val session = jsch.getSession(params.user, "127.0.0.1", params.sshLocalPort)
-    val props   = new JProperties
-    props.setProperty("StrictHostKeyChecking", "no")
-    session.setConfig(props)
-    session.setDaemonThread(true)
-    session.setLogger(
-      new Logger {
-        def isEnabled(level: Int): Boolean =
-          debug
-        def levelStr(level: Int): String =
-          level match {
-            case 0 => "debug"
-            case 1 => "info"
-            case 2 => "warn"
-            case 3 => "error"
-            case 4 => "fatal"
-            case _ => "???"
-          }
-        def log(level: Int, message: String): Unit =
-          if (debug)
-            System.err.println(s"[${levelStr(level)}] $message")
-      }
-    )
+    def newSession(): Session = {
+      val session = jsch.getSession(params.user, "127.0.0.1", params.sshLocalPort)
+      val props   = new JProperties
+      props.setProperty("StrictHostKeyChecking", "no")
+      session.setConfig(props)
+      session.setDaemonThread(true)
+      session.setLogger(
+        new Logger {
+          def isEnabled(level: Int): Boolean =
+            debug
+          def levelStr(level: Int): String =
+            level match {
+              case 0 => "debug"
+              case 1 => "info"
+              case 2 => "warn"
+              case 3 => "error"
+              case 4 => "fatal"
+              case _ => "???"
+            }
+          def log(level: Int, message: String): Unit =
+            if (debug)
+              System.err.println(s"[${levelStr(level)}] $message")
+        }
+      )
+      session
+    }
 
     val delay =
       if (System.getenv("CI") == null) 2.seconds
@@ -120,8 +123,10 @@ final class Vm(
       if (System.getenv("CI") == null) 2.minutes
       else 4.minutes
     val deadline = System.nanoTime() + maxWait.toNanos
-    def connect(): Unit = {
-      val success =
+    @tailrec
+    def connect(): Session = {
+      val session = newSession()
+      val connected =
         try {
           session.connect(delay.toMillis.toInt)
           true
@@ -136,6 +141,7 @@ final class Vm(
             }
             if (retry) {
               val remainingNanos = deadline - System.nanoTime()
+              session.disconnect()
               if (remainingNanos <= 0L)
                 throw new Exception(s"Timed out connecting to VM ${params.name} after $maxWait", e)
               else {
@@ -146,14 +152,18 @@ final class Vm(
                 false
               }
             }
-            else
+            else {
+              session.disconnect()
               throw e
+            }
         }
-      if (!success)
+      if (connected)
+        session
+      else
         connect()
     }
 
-    connect()
+    val session = connect()
     if (debug)
       System.err.println("Connected")
 
