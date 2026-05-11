@@ -4,6 +4,7 @@ import utest._
 
 import java.io.File
 
+import scala.annotation.tailrec
 import scala.concurrent.duration.DurationInt
 import scala.util.Properties
 import scala.util.control.NonFatal
@@ -22,6 +23,9 @@ abstract class DockerTests extends TestSuite {
   private val vmStartTimeout = 5.minutes.toMillis
   private val vmStopTimeout  = 2.minutes.toMillis
   private val dockerTimeout  = 5.minutes.toMillis
+  private val vmStartAttempts =
+    if (System.getenv("CI") == null) 1
+    else 3
 
   private var vmOpt0: Option[(String, Option[os.Path])] =
     if (debugUseDefaultVm && !Properties.isLinux) Some(("default", None))
@@ -35,54 +39,64 @@ abstract class DockerTests extends TestSuite {
       check = false
     )
 
+  @tailrec
+  private def startVm(id: String, attempt: Int = 1): (String, Option[os.Path]) = {
+    val tmpDir = os.temp.dir(prefix = "cs-cli-tests-docker")
+    os.makeDir.all(tmpDir / "cache")
+    os.makeDir.all(tmpDir / "arc")
+    os.makeDir.all(tmpDir / "digest")
+    os.makeDir.all(tmpDir / "priv")
+    try {
+      os.proc(
+        launcher,
+        "vm",
+        "start",
+        "--id",
+        id,
+        "--memory",
+        "2g",
+        s"--virtualization=$useVirtualization",
+        "--cache",
+        tmpDir / "cache",
+        "--default-cache-for-vm-files"
+      ).call(
+        stdin = os.Inherit,
+        stdout = os.Inherit,
+        env = Map(
+          "COURSIER_PRIVILEDGED_ARCHIVE_CACHE" -> (tmpDir / "priv").toString,
+          "COURSIER_DIGEST_BASED_CACHE"        -> (tmpDir / "digest").toString,
+          "COURSIER_ARCHIVE_CACHE"             -> (tmpDir / "arc").toString
+        ),
+        timeout = vmStartTimeout
+      )
+      (id, Some(tmpDir))
+    }
+    catch {
+      case NonFatal(t) =>
+        try stopVm(id)
+        catch {
+          case NonFatal(e) =>
+            System.err.println(s"Error stopping VM $id after failed start: $e")
+        }
+        finally os.remove.all(tmpDir)
+
+        if (attempt < vmStartAttempts) {
+          System.err.println(s"VM $id failed to start on attempt $attempt, retrying: $t")
+          startVm(id, attempt + 1)
+        }
+        else
+          throw t
+    }
+  }
+
   private def vmOpt: Option[(String, Option[os.Path])] =
     vmOpt0.orElse {
       if (Properties.isLinux) None
       else
         synchronized {
           vmOpt0.orElse {
-            val id     = "cs-cli-tests"
-            val tmpDir = os.temp.dir(prefix = "cs-cli-tests-docker")
-            os.makeDir.all(tmpDir / "cache")
-            os.makeDir.all(tmpDir / "arc")
-            os.makeDir.all(tmpDir / "digest")
-            os.makeDir.all(tmpDir / "priv")
-            try {
-              os.proc(
-                launcher,
-                "vm",
-                "start",
-                "--id",
-                id,
-                "--memory",
-                "2g",
-                s"--virtualization=$useVirtualization",
-                "--cache",
-                tmpDir / "cache",
-                "--default-cache-for-vm-files"
-              ).call(
-                stdin = os.Inherit,
-                stdout = os.Inherit,
-                env = Map(
-                  "COURSIER_PRIVILEDGED_ARCHIVE_CACHE" -> (tmpDir / "priv").toString,
-                  "COURSIER_DIGEST_BASED_CACHE"        -> (tmpDir / "digest").toString,
-                  "COURSIER_ARCHIVE_CACHE"             -> (tmpDir / "arc").toString
-                ),
-                timeout = vmStartTimeout
-              )
-              vmOpt0 = Some((id, Some(tmpDir)))
-              vmOpt0
-            }
-            catch {
-              case NonFatal(t) =>
-                try stopVm(id)
-                catch {
-                  case NonFatal(e) =>
-                    System.err.println(s"Error stopping VM $id after failed start: $e")
-                }
-                finally os.remove.all(tmpDir)
-                throw t
-            }
+            vmOpt0 = Some(startVm("cs-cli-tests"))
+            vmOpt0
           }
         }
     }
