@@ -18,6 +18,7 @@ import com.jcraft.jsch.Channel
 import com.jcraft.jsch.ChannelExec
 import com.jcraft.jsch.ChannelShell
 import com.jcraft.jsch.Session
+import scala.util.control.NonFatal
 import coursier.cache.DigestBasedCache
 import coursier.cache.FileCache
 import coursier.paths.CoursierPaths
@@ -26,6 +27,7 @@ import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
 import java.io.InputStream
 import coursier.cache.util.Cpu
 import coursier.docker.vm.iso.Image
+import java.util.concurrent.TimeoutException
 
 final class Vm(
   val id: String,
@@ -114,6 +116,10 @@ final class Vm(
     val delay =
       if (System.getenv("CI") == null) 2.seconds
       else 10.seconds
+    val maxWait =
+      if (System.getenv("CI") == null) 2.minutes
+      else 4.minutes
+    val deadline = System.nanoTime() + maxWait.toNanos
     def connect(): Unit = {
       val success =
         try {
@@ -129,11 +135,16 @@ final class Vm(
               case _                         => e.getMessage.contains("channel is not opened")
             }
             if (retry) {
-              System.err.println(s"Caught $e, waiting $delay")
-              if (debug)
-                e.printStackTrace(System.err)
-              Thread.sleep(delay.toMillis)
-              false
+              val remainingNanos = deadline - System.nanoTime()
+              if (remainingNanos <= 0L)
+                throw new Exception(s"Timed out connecting to VM ${params.name} after $maxWait", e)
+              else {
+                System.err.println(s"Caught $e, waiting $delay")
+                if (debug)
+                  e.printStackTrace(System.err)
+                Thread.sleep(math.min(delay.toMillis, remainingNanos / 1000000L))
+                false
+              }
             }
             else
               throw e
@@ -338,8 +349,19 @@ object Vm {
       else params.copy(sshLocalPort = port)
 
     val vm = new Vm(id, params0, Right(qemuProc))
-    vm.setupMounts()
-    vm
+    try {
+      vm.setupMounts()
+      vm
+    }
+    catch {
+      case NonFatal(t) =>
+        try vm.close()
+        catch {
+          case NonFatal(e) =>
+            System.err.println(s"Error closing VM $id after failed setup: $e")
+        }
+        throw t
+    }
   }
 
   def seedIso(
