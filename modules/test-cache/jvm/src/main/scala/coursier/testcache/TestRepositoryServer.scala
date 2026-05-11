@@ -3,8 +3,11 @@ package coursier.testcache
 import java.io.{IOException, InputStream}
 import java.net.{ServerSocket, URL}
 import java.nio.file.Paths
+import java.util.concurrent.{TimeUnit, TimeoutException}
 
-import scala.util.Properties
+import scala.collection.mutable.ListBuffer
+import scala.jdk.CollectionConverters._
+import scala.util.{Properties, Using}
 
 abstract class TestRepositoryServer extends AutoCloseable {
   def url: String
@@ -13,6 +16,56 @@ abstract class TestRepositoryServer extends AutoCloseable {
 }
 
 object TestRepositoryServer {
+
+  private def processTree(process: Process): Seq[ProcessHandle] = {
+    val handles = ListBuffer.empty[ProcessHandle]
+    val root    = process.toHandle
+    handles += root
+
+    Using.resource(root.descendants()) { descendants =>
+      handles ++= descendants.iterator().asScala
+    }
+
+    handles.toVector
+  }
+
+  private def waitForExit(handle: ProcessHandle, timeoutMillis: Long): Boolean =
+    !handle.isAlive() || {
+      try {
+        handle.onExit().get(timeoutMillis, TimeUnit.MILLISECONDS)
+        true
+      }
+      catch {
+        case _: TimeoutException =>
+          false
+        case _: InterruptedException =>
+          Thread.currentThread().interrupt()
+          false
+      }
+    }
+
+  private[coursier] def destroyProcessTree(process: Process, label: String): Unit = {
+    val handles = processTree(process)
+    System.err.println(s"Stopping $label (${handles.length} process(es))")
+
+    handles.foreach(_.destroy())
+    val stillAlive = handles.filter(h => h.isAlive() && !waitForExit(h, 5000L))
+
+    if (stillAlive.isEmpty)
+      System.err.println(s"Stopped $label")
+    else {
+      System.err.println(s"Forcibly stopping $label (${stillAlive.length} process(es))")
+      stillAlive.foreach(_.destroyForcibly())
+
+      val remaining = stillAlive.filter(h => h.isAlive() && !waitForExit(h, 5000L))
+      System.err.println(
+        if (remaining.isEmpty)
+          s"Stopped $label after forcing termination"
+        else
+          s"$label still has ${remaining.length} live process(es) after shutdown"
+      )
+    }
+  }
 
   private final class RunningServer(
     val host: String = "localhost",
@@ -99,8 +152,10 @@ object TestRepositoryServer {
     }
 
     override def close(): Unit =
-      if (proc != null)
-        proc.destroy()
+      if (proc != null) {
+        TestRepositoryServer.destroyProcessTree(proc, s"test repository server at $url")
+        proc = null
+      }
   }
 
   lazy val repository: TestRepositoryServer =
@@ -131,9 +186,15 @@ object TestRepositoryServer {
         }
       }
 
-    override def utestAfterAll(): Unit = {
-      localTestRepoOpt.foreach(_.close())
-      super.utestAfterAll()
-    }
+    override def utestAfterAll(): Unit =
+      try
+        localTestRepoOpt.foreach { repo =>
+          System.err.println("Shutting down local test repository server")
+          repo.close()
+        }
+      finally {
+        localTestRepoOpt = None
+        super.utestAfterAll()
+      }
   }
 }
