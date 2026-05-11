@@ -48,7 +48,13 @@ object TestAuthProxy {
           count += 1
         }
       }
-      Thread.sleep(5000L) // give the server a few seconds to start just in case
+
+      // give the server a few seconds to start just in case
+      val waitingTime =
+        if (System.getenv("CI") == null) 5.seconds
+        else 20.seconds
+      Thread.sleep(waitingTime.toMillis)
+
       f(server)
     }
     finally
