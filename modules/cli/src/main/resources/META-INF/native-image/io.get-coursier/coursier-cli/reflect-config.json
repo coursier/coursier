@@ -9,6 +9,30 @@
     "allPublicClasses" : true
   },
   {
+    "name":"io.undertow.UndertowLogger_$logger",
+    "methods":[{"name":"<init>","parameterTypes":["org.jboss.logging.Logger"] }]
+  },
+  {
+    "name":"io.undertow.server.protocol.http.HttpRequestParser$$generated",
+    "methods":[{"name":"<init>","parameterTypes":["org.xnio.OptionMap"] }]
+  },
+  {
+    "name":"io.undertow.util.Headers",
+    "allDeclaredFields":true
+  },
+  {
+    "name":"io.undertow.util.HttpString",
+    "fields":[{"name":"hashCode"}]
+  },
+  {
+    "name":"io.undertow.util.Methods",
+    "allDeclaredFields":true
+  },
+  {
+    "name":"io.undertow.util.Protocols",
+    "allDeclaredFields":true
+  },
+  {
     "name" : "org.apache.commons.compress.archivers.zip.AsiExtraField",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
@@ -133,5 +157,37 @@
     "allPublicMethods" : true,
     "allDeclaredClasses" : true,
     "allPublicClasses" : true
+  },
+  {
+    "name":"org.xnio._private.Messages_$logger",
+    "methods":[{"name":"<init>","parameterTypes":["org.jboss.logging.Logger"] }]
+  },
+  {
+    "name":"org.xnio.management.XnioProviderMXBean",
+    "allPublicMethods":true
+  },
+  {
+    "name":"org.xnio.management.XnioServerMXBean",
+    "allPublicMethods":true
+  },
+  {
+    "name":"org.xnio.management.XnioWorkerMXBean",
+    "allPublicMethods":true
+  },
+  {
+    "name":"org.xnio.nio.Log_$logger",
+    "methods":[{"name":"<init>","parameterTypes":["org.jboss.logging.Logger"] }]
+  },
+  {
+    "name":"org.xnio.nio.NioTcpServer$1",
+    "allPublicConstructors":true
+  },
+  {
+    "name":"org.xnio.nio.NioXnio$3",
+    "allPublicConstructors":true
+  },
+  {
+    "name":"org.xnio.nio.NioXnioWorker$NioWorkerMetrics",
+    "allPublicConstructors":true
   }
 ]

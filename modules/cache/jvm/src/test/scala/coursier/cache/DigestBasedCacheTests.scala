@@ -13,7 +13,7 @@ object DigestBasedCacheTests extends TestSuite {
       withTmpDir { dir =>
         // To force re-download things, use this instead:
         // ArchiveCacheTests.sandboxedCache
-        val cache       = FileCache()
+        val cache       = Cache.default
         val digestBased = DigestBasedCache[Task]((dir / "digest").toNIO)
 
         val repoName = "library/hello-world"

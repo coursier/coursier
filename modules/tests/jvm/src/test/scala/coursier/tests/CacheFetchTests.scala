@@ -3,19 +3,26 @@ package coursier.tests
 import java.io.File
 import java.nio.file.Files
 
-import coursier.cache.{CacheUrl, FileCache}
+import coursier.cache.{Cache, CacheUrl, FileCache}
 import coursier.cache.protocol.TestprotocolHandler
 import coursier.core.{Dependency, Repository, Resolution, ResolutionProcess}
 import coursier.maven.MavenRepository
 import coursier.util.StringInterpolators._
+import coursier.util.Task
+import coursier.version.VersionConstraint
 import utest._
 
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.Duration
 import scala.util.Try
-import coursier.version.VersionConstraint
 
 object CacheFetchTests extends TestSuite {
+
+  private def defaultCache() = Cache.default match {
+    case fc: FileCache[Task] => fc
+    case other =>
+      sys.error(s"Expected default cache to be a FileCache, got $other")
+  }
 
   def check(
     extraRepo: Repository,
@@ -47,7 +54,7 @@ object CacheFetchTests extends TestSuite {
         Console.err.println(s"Warning: unable to remove temporary directory $tmpDir")
     }
 
-    val fetchs = FileCache()
+    val fetchs = defaultCache()
       .noCredentials
       .withLocation(tmpDir)
       .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)

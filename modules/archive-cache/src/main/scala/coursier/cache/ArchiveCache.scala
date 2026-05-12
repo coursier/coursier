@@ -17,7 +17,7 @@ import scala.util.Using
 
 @data class ArchiveCache[F[_]](
   location: File,
-  cache: Cache[F] = FileCache(),
+  cache: Cache[F] = Cache.defaultFor[F],
   unArchiver: UnArchiver = UnArchiver.default(),
   @since("2.1.25")
   openStream: UnArchiver.OpenStream = UnArchiver.default(),

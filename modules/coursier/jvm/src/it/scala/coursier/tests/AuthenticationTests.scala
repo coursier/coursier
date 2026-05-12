@@ -5,12 +5,13 @@ import java.net.URI
 import java.nio.file.{Files, Path}
 
 import coursier.{Repositories, Resolve}
-import coursier.cache.FileCache
+import coursier.cache.{Cache, FileCache}
 import coursier.credentials.{DirectCredentials, FileCredentials}
 import coursier.maven.MavenRepository
 import coursier.parse.CredentialsParser
 import coursier.testcache.TestRepositoryServer
 import coursier.util.StringInterpolators._
+import coursier.util.Task
 import utest._
 
 object AuthenticationTests extends TestSuite with TestRepositoryServer.Test {
@@ -33,6 +34,12 @@ object AuthenticationTests extends TestSuite with TestRepositoryServer.Test {
     finally deleteRecursive(dir.toFile)
   }
 
+  private def defaultCache() = Cache.default match {
+    case fc: FileCache[Task] => fc
+    case other =>
+      sys.error(s"Expected default cache to be a FileCache, got $other")
+  }
+
   private def testCredentials(credentials: DirectCredentials): Unit = {
     val result = withTmpDir { dir =>
       Resolve()
@@ -43,7 +50,7 @@ object AuthenticationTests extends TestSuite with TestRepositoryServer.Test {
         ))
         .addDependencies(dep"com.abc:test:0.1".withTransitive(false))
         .withCache(
-          FileCache()
+          defaultCache()
             .noCredentials
             .withLocation(dir.toFile)
             .addCredentials(credentials)

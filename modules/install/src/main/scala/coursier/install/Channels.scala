@@ -7,7 +7,7 @@ import java.util.zip.ZipFile
 
 import argonaut.{DecodeJson, Parse}
 import coursier.Fetch
-import coursier.cache.{Cache, FileCache}
+import coursier.cache.Cache
 import coursier.cache.internal.FileUtil
 import coursier.core.{Dependency, Repository}
 import coursier.install.Codecs.{decodeObj, encodeObj}
@@ -22,7 +22,7 @@ import scala.jdk.CollectionConverters._
 @data class Channels(
   channels: Seq[Channel] = Channels.defaultChannels,
   repositories: Seq[Repository] = coursier.Resolve.defaultRepositories,
-  cache: Cache[Task] = FileCache(),
+  cache: Cache[Task] = Cache.default,
   @since
   verbosity: Int = 0,
   @since("2.0.10")
