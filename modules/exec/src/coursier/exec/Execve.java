@@ -3,6 +3,7 @@ package coursier.exec;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 
+import java.lang.reflect.Method;
 import java.util.Locale;
 
 // bits of this file were written with OpenAI o3-mini
@@ -29,7 +30,24 @@ public final class Execve {
     return osName.contains("linux") || osName.contains("mac");
   }
 
+  static void runShutdownHooks() {
+    try {
+      Class<?> shutdown = Class.forName("java.lang.Shutdown");
+      Method runHooks = shutdown.getDeclaredMethod("runHooks");
+      runHooks.setAccessible(true);
+      synchronized (shutdown) {
+        runHooks.invoke(null);
+      }
+    } catch (Exception e) {
+      // ignore
+    }
+  }
+
   public static void execve(String path, String[] command, String[] env) throws ErrnoException {
+    // Mainly ensuring LibC is initialized here
+    if (LibC.INSTANCE == null)
+      throw new RuntimeException("Should not happen");
+    runShutdownHooks();
     LibC.INSTANCE.execve(path, command, env);
   }
 
