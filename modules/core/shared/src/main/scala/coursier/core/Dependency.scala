@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentMap
   * The remaining fields are left untouched, some being transitively propagated (exclusions,
   * optional, in particular).
   */
-@data(apply = false, settersCallApply = true) class Dependency(
+@data(apply = false, settersCallApply = true, cachedHashCode = true) class Dependency(
   module: Module,
   versionConstraint: VersionConstraint0,
   variantSelector: VariantSelector,
@@ -259,7 +259,10 @@ import java.util.concurrent.ConcurrentMap
   )
   def withExclusions(newExclusions: Set[(Organization, ModuleName)]): Dependency =
     withMinimizedExclusions(MinimizedExclusions(newExclusions))
-
+  private[core] def withVersionConstraintConserve(versionConstraint: VersionConstraint0)
+    : Dependency =
+    if (versionConstraint == this.versionConstraint) this
+    else withVersionConstraint(versionConstraint)
   @deprecated(
     "This method will be dropped in favor of minimizedExclusions() in a future version",
     "2.1.0-M6"
@@ -377,23 +380,20 @@ import java.util.concurrent.ConcurrentMap
       withVariantSelector(attr.addAttributes(attributes: _*))
   }
 
-  private[core] def copy(
-    module: Module = this.module,
-    version: VersionConstraint0 = this.versionConstraint,
-    variantSelector: VariantSelector = this.variantSelector,
-    minimizedExclusions: MinimizedExclusions = this.minimizedExclusions,
-    attributes: Attributes = this.attributes,
-    optional: Boolean = this.optional,
-    transitive: Boolean = this.transitive
+  private[core] def copy0(
+    module: Module,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    attributes: Attributes
   ) = Dependency(
     module,
-    version,
+    versionConstraint,
     variantSelector,
     minimizedExclusions,
-    Publication("", attributes.`type`, Extension.empty, attributes.classifier),
+    Publication(publication.name, attributes.`type`, publication.ext, attributes.classifier),
     optional,
     transitive,
-    Map.empty[DependencyManagement.Key, DependencyManagement.Values],
+    overrides,
     deprecatedBoms,
     bomDependencies,
     overridesMap,
@@ -422,6 +422,34 @@ import java.util.concurrent.ConcurrentMap
     publication.attributesHaveProperties ||
     variantSelector.asConfiguration.exists(_.value.contains("$")) ||
     minimizedExclusions.hasProperties
+
+  def repr: String = {
+    val lines = Seq.newBuilder[String]
+    lines += s"${module.repr}:${versionConstraint.asString}"
+    lines += s"variantSelector: ${variantSelector.repr}"
+    if (!minimizedExclusions.isEmpty)
+      lines += minimizedExclusions.repr
+    if (!publication.isEmpty)
+      lines += s"publication: $publication"
+    if (optional)
+      lines += "optional"
+    if (!transitive)
+      lines += "non-transitive"
+    if (overrides.nonEmpty)
+      lines += "overrides (deprecated): non-empty"
+    if (boms.nonEmpty)
+      lines += "boms (deprecated): non-empty"
+    if (bomDependencies.nonEmpty) {
+      lines += "BOM deps:"
+      for (bomDep <- bomDependencies)
+        lines += s"  ${bomDep.repr}"
+    }
+    if (overridesMap.nonEmpty)
+      lines += overridesMap.repr
+    if (endorseStrictVersions)
+      lines += "endorseStrictVersions"
+    lines.result().mkString("\n")
+  }
 
   // Overriding toString to be backwards compatible with Set-based exclusion representation
   override def toString(): String = {
@@ -454,9 +482,6 @@ import java.util.concurrent.ConcurrentMap
       fields = fields :+ endorseStrictVersions.toString
     s"Dependency(${fields.mkString(", ")})"
   }
-
-  override lazy val hashCode: Int =
-    tuple.hashCode()
 }
 
 object Dependency {

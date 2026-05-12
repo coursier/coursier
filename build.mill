@@ -3,8 +3,10 @@
 import coursierbuild.Deps.{Deps, ScalaVersions, scalaCliVersion}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
 import coursierbuild.Relativize.{relativize => doRelativize}
-import coursierbuild.{DocHelpers, GitHubReleaseAssets, Shading, Sync, Workers}
+import coursierbuild.{DocHelpers, GitHubReleaseAssets, Shading, Sync}
 import coursierbuild.modules._
+import io.github.alexarchambault.millnativeimage.NativeImage
+import mill.contrib.jmh.JmhModule
 
 import _root_.coursier.getcs.GetCs
 
@@ -62,7 +64,18 @@ object cache extends Module {
   object jvm    extends Cross[CacheJvm](ScalaVersions.all)
   object js     extends Cross[CacheJs](ScalaVersions.all)
 }
-object `archive-cache`      extends Cross[ArchiveCache](ScalaVersions.all)
+object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.all)
+object `benchmark` extends ScalaModule with JmhModule {
+  def scalaVersion: mill.api.Task.Simple[String] = ScalaVersions.scala213
+  def moduleDeps = Seq(
+    coursier.jvm(ScalaVersions.scala213)
+  )
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    mvn"org.apache.maven:maven-model:3.9.11"
+  )
+  def jmhCoreVersion = "1.35"
+}
+
 object launcher             extends Cross[Launcher](ScalaVersions.all)
 object env                  extends Cross[Env](ScalaVersions.all)
 object `launcher-native_04` extends LauncherNative04
@@ -163,7 +176,7 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
         val nonIgnoredFiles = os.walk(dir)
           .filter(os.isFile(_))
           .map(_.relativeTo(dir))
-          .filter(!_.startsWith(os.sub / "META-INF" / "native-image"))
+          .filter(!_.startsWith(os.sub / "META-INF/native-image"))
         if (nonIgnoredFiles.isEmpty) Nil
         else
           sys.error(s"Resource directory $dir contains unexpected resources $nonIgnoredFiles")
@@ -187,14 +200,13 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
       os.sub / "src/it/java"
     )
     def moduleDeps = Seq(
+      `test-cache`.jvm(ScalaVersions.scala213),
       self.test
     )
     def forkArgs = Task {
-      val testRepoServer0 = buildWorkers.testRepoServer()
+      val testRepositoryDataDir = (tests.handmadeMetadata().path / "http/abc.com").toString
       super.forkArgs() ++ Seq(
-        s"-Dtest.repository=${testRepoServer0.url}",
-        s"-Dtest.repository.user=${testRepoServer0.user}",
-        s"-Dtest.repository.password=${testRepoServer0.password}"
+        s"-Dtest.repository.data-dir=$testRepositoryDataDir"
       )
     }
   }
@@ -210,6 +222,9 @@ object tests extends Module {
   object shared extends TestsShared
   object jvm    extends Cross[TestsJvm](ScalaVersions.all)
   object js     extends Cross[TestsJs](ScalaVersions.all)
+
+  def handmadeMetadata = Task.Source("handmade-metadata/data")
+  def metadata         = Task.Source("metadata")
 }
 
 object `proxy-tests` extends Cross[ProxyTests](ScalaVersions.all)
@@ -227,7 +242,36 @@ object interop extends Module {
   }
 }
 
-object exec extends Exec
+object exec extends Exec {
+  object test extends JavaTests with CsScalaTests {
+    def scalaVersion = ScalaVersions.scala213
+    def forkArgs = Task {
+      super.forkArgs() ++ Seq(
+        s"-Dcoursier.execve.test.assembly=${`execve-test`.assembly().path}",
+        s"-Dcoursier.execve.test.native-image=${`execve-test`.nativeImage().path}"
+      )
+    }
+  }
+}
+
+object `execve-test` extends CoursierJavaModule with coursierbuild.Launchers.CsJniNativeImage {
+  def jvmRelease = "11"
+  def mainClass  = Some("coursier.exec.test.ExecveTestApp")
+  def moduleDeps = Seq(
+    exec
+  )
+  def javacOptions = Task {
+    Seq("--release", jvmRelease, "-Xlint:unchecked")
+  }
+
+  def nativeImageGraalVmJvmId = coursierbuild.Deps.graalVmJvmId
+  def nativeImageClassPath    = runClasspath()
+  def nativeImageMainClass    = mainClass().getOrElse(sys.error("No main class"))
+  def nativeImageName         = "execve-test"
+  def nativeImageOptions = Task {
+    Seq("--no-fallback") ++ super.nativeImageOptions()
+  }
+}
 
 object jvm     extends Cross[Jvm](ScalaVersions.all)
 object install extends Cross[Install](ScalaVersions.all)
@@ -236,7 +280,9 @@ object docker extends Cross[Docker](Seq(ScalaVersions.scala3))
 
 object cli extends Cli {
   object test extends SbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm(cliScalaVersion213Compat).test
     )
@@ -301,7 +347,9 @@ trait CoreJs extends Core with CsScalaJsModule {
   )
   def commitHash = `build-util`.commitHash
   object test extends SbtTests with ScalaJSTests with CsResourcesTests with CsTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ core.shared.testSources()
     }
@@ -369,8 +417,6 @@ trait CacheJvm extends CacheJvmBase {
       Deps.http4sBlazeServer,
       Deps.http4sDsl,
       Deps.logbackClassic,
-      Deps.osLib,
-      Deps.pprint,
       Deps.scalaAsync
     )
     def compileMvnDeps = super.compileMvnDeps() ++ Seq(
@@ -401,14 +447,13 @@ trait ArchiveCache extends ArchiveCacheBase {
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.plexusArchiver,
     Deps.plexusContainerDefault,
+    Deps.plexusUtils, // Explicitly bumping that one to >= 4.0.3 to address CVE-2025-67030
     Deps.tika,
     // here only for the sake of bumping it, to work around JNI loading issues with earlier versions on macOS
     Deps.zstdJni
   )
   object test extends CrossSbtTests with CsTests {
     def mvnDeps = super.mvnDeps() ++ Seq(
-      Deps.osLib,
-      Deps.pprint,
       Deps.scalaAsync
     )
     def compileMvnDeps = super.compileMvnDeps() ++ Seq(
@@ -496,7 +541,9 @@ trait CoursierJvm extends CoursierJvmBase { self =>
   )
   // Put CoursierTests right after TestModule, and see what happens
   object test extends CrossSbtTests with CoursierTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ coursier.shared.testSources()
     }
@@ -505,20 +552,18 @@ trait CoursierJvm extends CoursierJvmBase { self =>
     )
   }
   object it extends CrossSbtTests with CoursierTests {
-    def testDataDir = tests.shared.testDataDir
     def sources = Task.Sources(
       os.sub / "src/it/scala",
       os.sub / "src/it/java"
     )
     def moduleDeps = super.moduleDeps ++ Seq(
+      `test-cache`.jvm(),
       self.test
     )
     def forkArgs = Task {
-      val testRepoServer0 = buildWorkers.testRepoServer()
+      val testRepositoryDataDir = (tests.handmadeMetadata().path / "http/abc.com").toString
       super.forkArgs() ++ Seq(
-        s"-Dtest.repository=${testRepoServer0.url}",
-        s"-Dtest.repository.user=${testRepoServer0.user}",
-        s"-Dtest.repository.password=${testRepoServer0.password}"
+        s"-Dtest.repository.data-dir=$testRepositoryDataDir"
       )
     }
   }
@@ -532,7 +577,9 @@ trait CoursierJs extends Coursier with CsScalaJsModule {
     cache.js()
   )
   object test extends SbtTests with ScalaJSTests with CsResourcesTests with CoursierTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ coursier.shared.testSources()
     }
@@ -560,7 +607,9 @@ trait TestsJvm extends TestsModule { self =>
     Deps.jsoup
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ tests.shared.testSources()
     }
@@ -569,21 +618,17 @@ trait TestsJvm extends TestsModule { self =>
       `test-cache`.jvm()
     )
   }
-  object it extends CrossSbtTests with CsTests with CsResourcesTests
-      with Workers.UsesRedirectingServer {
-    def testDataDir = tests.shared.testDataDir
-    def redirectingServerCp =
-      `redirecting-server`.runClasspath()
-    def redirectingServerMainClass =
-      `redirecting-server`.mainClass().getOrElse(sys.error("no main class"))
+  object it extends CrossSbtTests with CsScalaTests with CsResourcesTests {
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def forkArgs = Task {
-      val redirectingServer0 = redirectingServer()
-      val testRepoServer0    = buildWorkers.testRepoServer()
+      val testRepositoryDataDir = (testHandmadeMetadataDir().path / "http/abc.com").toString
+      val redirectingServerCp =
+        `redirecting-server`.runClasspath().map(_.path.toString).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
-        s"-Dtest.redirect.repository=${redirectingServer0.url}",
-        s"-Dtest.repository=${testRepoServer0.url}",
-        s"-Dtest.repository.user=${testRepoServer0.user}",
-        s"-Dtest.repository.password=${testRepoServer0.password}"
+        s"-Dtest.repository.data-dir=$testRepositoryDataDir",
+        s"-Dtest.redirecting-server.classpath=$redirectingServerCp"
       )
     }
     def sources = Task.Sources(
@@ -592,6 +637,8 @@ trait TestsJvm extends TestsModule { self =>
     )
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm(),
+      `test-cache`.jvm(),
+      `redirecting-server`,
       self.test
     )
   }
@@ -606,7 +653,9 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
   )
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
   object test extends SbtTests with ScalaJSTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ tests.shared.testSources()
     }
@@ -655,7 +704,9 @@ trait ScalazJvm extends Scalaz with CsMima {
     Deps.scalazConcurrent
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
@@ -681,7 +732,9 @@ trait CatsJvm extends Cats with CsMima {
     cache.jvm()
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
@@ -716,7 +769,9 @@ trait Install extends CrossSbtModule with CsModule
     Deps.catsCore
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.jvm()
     )
@@ -748,13 +803,13 @@ trait Jvm extends CrossSbtModule with CsModule
     Deps.jsoniterCore
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.jvm()
     )
     def mvnDeps = super.mvnDeps() ++ Seq(
-      Deps.osLib,
-      Deps.pprint,
       Deps.scalaAsync
     )
     def forkEnv = super.forkEnv() ++ Seq(
@@ -822,10 +877,6 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
   object test extends CrossSbtTests with CsTests {
     def moduleDeps = super.moduleDeps ++ Seq(
       cache.jvm(cliScalaVersion213Compat).test
-    )
-    def mvnDeps = super.mvnDeps() ++ Seq(
-      Deps.osLib,
-      Deps.pprint
     )
   }
 }
@@ -1038,6 +1089,13 @@ trait TestCacheJvm extends Cross.Module[String] with CsCrossJvmJsModule {
   def moduleDeps = Seq(
     cache.jvm()
   )
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    Deps.osLib,
+    Deps.utest
+  )
+  def scalacOptions = Task {
+    CsScalaTests.removeReleaseOption(super.scalacOptions())
+  }
 }
 trait TestCacheJs extends Cross.Module[String] with CsCrossJvmJsModule with CsScalaJsModule {
   def scalaVersion = crossValue
@@ -1216,7 +1274,7 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command 
 
   val rootDir0 =
     if (rootDir.isEmpty) BuildCtx.workspaceRoot else os.Path(rootDir, BuildCtx.workspaceRoot)
-  val docusaurusDir       = rootDir0 / "doc" / "website"
+  val docusaurusDir       = rootDir0 / "doc/website"
   val versionedDocsRepo   = "coursier/versioned-docs"
   val versionedDocsBranch = "master"
 
@@ -1251,7 +1309,7 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command 
   // copyDemoFiles()
 
   val newSiteDir = docs.mkdocsBuild()().path
-  os.copy(newSiteDir, docusaurusDir / "build" / "coursier" / "upcoming")
+  os.copy(newSiteDir, docusaurusDir / "build/coursier/upcoming")
 
   DocHelpers.updateGhPages(
     docusaurusDir / "build",
@@ -1418,57 +1476,6 @@ object ci extends Module {
       Task.fail("Found test modules with no test classes")
     }
   }
-}
-
-object buildWorkers extends Module {
-
-  def testRepoServer = Task.Worker {
-    val server = new Workers.TestRepoServer
-
-    if (server.healthCheck())
-      sys.error("Test repo server already running")
-
-    server.proc = os.proc(
-      "cs",
-      "launch",
-      "io.get-coursier:http-server_2.12:1.0.0",
-      "--",
-      "-d",
-      "modules/tests/handmade-metadata/data/http/abc.com",
-      "-u",
-      server.user,
-      "-P",
-      server.password,
-      "-r",
-      "realm",
-      "-v",
-      "--host",
-      server.host,
-      "--port",
-      server.port.toString
-    ).spawn(
-      cwd = BuildCtx.workspaceRoot,
-      stdin = os.Pipe,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
-    server.proc.stdin.close()
-    var serverRunning = false
-    var countDown     = 20
-    while (!serverRunning && server.proc.isAlive() && countDown > 0) {
-      serverRunning = server.healthCheck()
-      if (!serverRunning)
-        Thread.sleep(500L)
-      countDown -= 1
-    }
-    if (serverRunning && server.proc.isAlive()) {
-      System.err.println(s"Test repository listening on ${server.url}")
-      server
-    }
-    else
-      sys.error("Cannot run test repo server")
-  }
-
 }
 
 object `build-util` extends Module {

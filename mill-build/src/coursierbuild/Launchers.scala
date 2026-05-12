@@ -38,9 +38,53 @@ object Launchers {
     s"$arch-$os"
   }
 
+  trait CsJniNativeImage extends NativeImage {
+    private def copyCsjniutilTo(destDir: os.Path, workspace: os.Path): Unit = {
+      val jniUtilsVersion = Deps.jniUtils.dep.versionConstraint.asString
+      val libRes = os.proc(
+        coursierbuild.Cs.cs,
+        "fetch",
+        "--intransitive",
+        s"io.get-coursier.jniutils:windows-jni-utils:$jniUtilsVersion,classifier=x86_64-pc-win32,ext=lib,type=lib",
+        "-A",
+        "lib"
+      ).call()
+      val libPath = os.Path(libRes.out.text().trim(), workspace)
+      os.copy.over(libPath, destDir / "csjniutils.lib")
+    }
+
+    protected def staticLibDirName = "native-libs"
+
+    def staticLibDir = Task {
+      BuildCtx.withFilesystemCheckerDisabled {
+        val dir = nativeImageDockerWorkingDir() / staticLibDirName
+        os.makeDir.all(dir)
+
+        if (Properties.isWin)
+          copyCsjniutilTo(dir, BuildCtx.workspaceRoot)
+
+        PathRef(dir)
+      }
+    }
+
+    def nativeImageOptions = Task {
+      val usesDocker = nativeImageDockerParams().nonEmpty
+      val cLibPath =
+        if (usesDocker) s"/data/$staticLibDirName"
+        else staticLibDir().path.toString
+      super.nativeImageOptions() ++
+        Seq(
+          s"-H:CLibraryPath=$cLibPath",
+          "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.core.jdk=ALL-UNNAMED",
+          "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted=ALL-UNNAMED",
+          "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c=ALL-UNNAMED"
+        )
+    }
+  }
+
   trait Launchers extends CsModule {
 
-    trait CliNativeImage extends NativeImage {
+    trait CliNativeImage extends CsJniNativeImage {
 
       def nativeImageClassPath = runClasspath()
       def nativeImageMainClass = mainClass().getOrElse(sys.error("No main class"))
@@ -51,39 +95,9 @@ object Launchers {
       def nativeImagePersist      = System.getenv("CI") != null
       def nativeImageGraalVmJvmId = graalVmJvmId
 
-      def nativeImageName          = "cs"
-      private def staticLibDirName = "native-libs"
-      private def copyCsjniutilTo(destDir: os.Path, workspace: os.Path): Unit = {
-        val jniUtilsVersion = Deps.jniUtils.dep.versionConstraint.asString
-        val libRes = os.proc(
-          coursierbuild.Cs.cs,
-          "fetch",
-          "--intransitive",
-          s"io.get-coursier.jniutils:windows-jni-utils:$jniUtilsVersion,classifier=x86_64-pc-win32,ext=lib,type=lib",
-          "-A",
-          "lib"
-        ).call()
-        val libPath = os.Path(libRes.out.text().trim(), workspace)
-        os.copy.over(libPath, destDir / "csjniutils.lib")
-      }
-
-      def staticLibDir = Task {
-        BuildCtx.withFilesystemCheckerDisabled {
-          val dir = nativeImageDockerWorkingDir() / staticLibDirName
-          os.makeDir.all(dir)
-
-          if (Properties.isWin)
-            copyCsjniutilTo(dir, BuildCtx.workspaceRoot)
-
-          PathRef(dir)
-        }
-      }
+      def nativeImageName = "cs"
 
       def nativeImageOptions = Task {
-        val usesDocker = nativeImageDockerParams().nonEmpty
-        val cLibPath =
-          if (usesDocker) s"/data/$staticLibDirName"
-          else staticLibDir().path.toString
         val zstdOpt =
           if (Properties.isWin && (arch == "x86_64" || arch == "amd64"))
             Seq(s"-H:IncludeResources=win/amd64/libzstd-jni-.*\\.dll")
@@ -108,12 +122,7 @@ object Launchers {
             )
           else
             Nil
-        Seq(
-          s"-H:CLibraryPath=$cLibPath",
-          "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.core.jdk=ALL-UNNAMED",
-          "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted=ALL-UNNAMED",
-          "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c=ALL-UNNAMED"
-        ) ++
+        super.nativeImageOptions() ++
           extraOpts ++
           zstdOpt
       }

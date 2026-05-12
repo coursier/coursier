@@ -81,7 +81,6 @@ io.netty:netty-resolver-dns:4.1.111.Final:default
 com.fasterxml.jackson.core:jackson-core:2.17.2:default
 org.jctools:jctools-core:4.0.5:default
 io.smallrye:smallrye-context-propagation:2.1.2:default
-io.smallrye:smallrye-context-propagation:2.1.2:default
 io.netty:netty-codec:4.1.111.Final:default
 com.aayushatharva.brotli4j:brotli4j:1.16.0:default
 io.vertx:vertx-codegen:4.5.10:default
@@ -100,13 +99,8 @@ io.netty:netty-codec-dns:4.1.111.Final:default
 org.eclipse.microprofile.config:microprofile-config-api:3.1:default
 io.smallrye:smallrye-context-propagation-api:2.1.2:default
 io.smallrye:smallrye-context-propagation-storage:2.1.2:default
-org.eclipse.microprofile.config:microprofile-config-api:3.1:default
-io.smallrye:smallrye-context-propagation-api:2.1.2:default
-io.smallrye:smallrye-context-propagation-storage:2.1.2:default
 com.aayushatharva.brotli4j:native-osx-x86_64:1.16.0:default
 com.aayushatharva.brotli4j:service:1.16.0:default
-io.smallrye.common:smallrye-common-expression:2.6.0:default
 io.smallrye.common:smallrye-common-classloader:2.6.0:default
 io.smallrye.config:smallrye-config-common:3.9.1:default
-io.smallrye.common:smallrye-common-function:2.6.0:default
 io.smallrye.common:smallrye-common-function:2.6.0:default

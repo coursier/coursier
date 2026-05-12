@@ -9,7 +9,7 @@ import java.net.URI
 import java.nio.file.{Path, Paths}
 
 import scala.cli.config.{ConfigDb, Keys}
-import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.util.{Failure, Success, Try}
 
 /** Helpers meant to help compute default cache-related parameters, with the environment and Java
@@ -34,6 +34,12 @@ object CacheEnv {
 
   /** Env var and Java prop names for the cache TTL */
   val ttl = EnvEntry("COURSIER_TTL", "coursier.ttl")
+
+  /** Env var and Java prop names for the maximum HTTP Retry-After duration */
+  val maxHttpRetryAfter = EnvEntry(
+    "COURSIER_MAX_HTTP_RETRY_AFTER",
+    "coursier.max-http-retry-after"
+  )
 
   /** Env var and Java prop names for the cache policies */
   val cachePolicy = EnvEntry("COURSIER_MODE", "coursier.mode")
@@ -150,6 +156,21 @@ object CacheEnv {
     val fromEnv   = values.env.flatMap(parseDuration(_).toOption)
     def fromProps = values.prop.flatMap(parseDuration(_).toOption)
     def default   = 24.hours
+
+    fromEnv
+      .orElse(fromProps)
+      .orElse(Some(default))
+  }
+
+  /** Computes the maximum HTTP Retry-After duration from the passed env var and Java property */
+  def defaultMaxHttpRetryAfter(values: EnvValues): Option[FiniteDuration] = {
+    val fromEnv = values.env.flatMap(parseDuration(_).toOption).collect {
+      case duration: FiniteDuration => duration
+    }
+    def fromProps = values.prop.flatMap(parseDuration(_).toOption).collect {
+      case duration: FiniteDuration => duration
+    }
+    def default = if (System.getenv("CI") == null) 5.seconds else 1.minute
 
     fromEnv
       .orElse(fromProps)
