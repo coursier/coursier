@@ -108,6 +108,9 @@ object TestRepositoryServer {
         )
       )
 
+      os.proc("cs", "fetch", "io.get-coursier:http-server_2.12:1.0.0")
+        .call(stdin = os.Inherit, stdout = os.Inherit)
+
       val builder = new ProcessBuilder(
         "cs",
         "launch",
