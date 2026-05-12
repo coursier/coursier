@@ -15,6 +15,8 @@ By default, they will install the following applications:
 
 They will also install a JVM if none is found on the system.
 
+> **Note:** [Mill](https://mill-build.org) is not included in the default setup. To install Mill, use the [official Mill launcher](https://mill-build.org/mill/Installation_IDE_Support.html) — installing Mill via `cs install mill` is not a supported method and is known to not work.
+
 If you want more control over what gets installed and how, please check out
 the [Command-line options](#command-line-options) section.
 
