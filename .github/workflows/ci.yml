@@ -79,6 +79,12 @@ jobs:
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
+    - uses: actions/upload-artifact@v5
+      if: failure()
+      with:
+        name: docker-vm-output-${{ matrix.OS }}-${{ matrix.SCALA_VERSION }}
+        path: ~/Library/Application Support/Coursier/vm/output/
+        if-no-files-found: ignore
     - run: ./mill -i jvmTests
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
