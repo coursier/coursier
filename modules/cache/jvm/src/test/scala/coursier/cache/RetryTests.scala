@@ -70,6 +70,43 @@ object RetryTests extends TestSuite {
       }
     }
 
+    // Is that case really necessary?
+    test("retry on HTTP 429 IOException") {
+      val failCount = retryCount - 2
+      assert(failCount > 2)
+      TestretryHandler.reset(failUntil = failCount)
+      TestretryHandler.createException =
+        _ =>
+          new java.io.IOException(
+            "Server returned HTTP response code: 429 for URL: https://example.com/file.txt"
+          )
+
+      withTmpDir { dir =>
+        val result = get(dir)
+        assert(result.isRight)
+        assert(TestretryHandler.attempts.get() == failCount + 1)
+      }
+    }
+
+    test("read Retry-After when retrying on HTTP 429") {
+      TestretryHandler.reset()
+      TestretryHandler.responseCode = 429
+      TestretryHandler.responseHeaders = Map("Retry-After" -> "0")
+
+      withTmpDir { dir =>
+        val result = get(dir)
+        assert(result.isLeft)
+        assert(TestretryHandler.attempts.get() == retryCount)
+        result match {
+          case Left(e: ArtifactError.RetryableHttpError) =>
+            assert(e.responseCode == 429)
+            assert(e.retryAfterOpt.contains(0.seconds))
+          case other =>
+            throw new Exception(s"Unexpected result: $other", other.left.toOption.orNull)
+        }
+      }
+    }
+
     test("throw the actual SSLException at some point") {
       TestretryHandler.reset()
       TestretryHandler.createException = _ => new SSLException("foo SSLException")
