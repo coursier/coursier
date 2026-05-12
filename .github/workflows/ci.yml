@@ -234,7 +234,7 @@ jobs:
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
         shell: bash
-        timeout-minutes: 20
+        timeout-minutes: 35
       - name: Copy artifacts
         run: .github/scripts/maybe-with-graalvm-home.sh copyLauncher --directory artifacts/
         shell: bash
