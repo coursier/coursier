@@ -4,7 +4,10 @@ import utest._
 
 import java.io.File
 
+import scala.annotation.tailrec
+import scala.concurrent.duration.DurationInt
 import scala.util.Properties
+import scala.util.control.NonFatal
 
 abstract class DockerTests extends TestSuite {
 
@@ -17,9 +20,74 @@ abstract class DockerTests extends TestSuite {
   private def useVirtualization =
     System.getenv("CI") == null
 
+  private val vmStartTimeout = 5.minutes.toMillis
+  private val vmStopTimeout  = 2.minutes.toMillis
+  private val dockerTimeout  = 5.minutes.toMillis
+  private val vmStartAttempts =
+    if (System.getenv("CI") == null) 1
+    else 3
+
   private var vmOpt0: Option[(String, Option[os.Path])] =
     if (debugUseDefaultVm && !Properties.isLinux) Some(("default", None))
     else None
+
+  private def stopVm(id: String): Unit =
+    os.proc(launcher, "vm", "stop", "--id", id).call(
+      stdin = os.Inherit,
+      stdout = os.Inherit,
+      timeout = vmStopTimeout,
+      check = false
+    )
+
+  @tailrec
+  private def startVm(id: String, attempt: Int = 1): (String, Option[os.Path]) = {
+    val tmpDir = os.temp.dir(prefix = "cs-cli-tests-docker")
+    os.makeDir.all(tmpDir / "cache")
+    os.makeDir.all(tmpDir / "arc")
+    os.makeDir.all(tmpDir / "digest")
+    os.makeDir.all(tmpDir / "priv")
+    try {
+      os.proc(
+        launcher,
+        "vm",
+        "start",
+        "--id",
+        id,
+        "--memory",
+        "2g",
+        s"--virtualization=$useVirtualization",
+        "--cache",
+        tmpDir / "cache",
+        "--default-cache-for-vm-files"
+      ).call(
+        stdin = os.Inherit,
+        stdout = os.Inherit,
+        env = Map(
+          "COURSIER_PRIVILEDGED_ARCHIVE_CACHE" -> (tmpDir / "priv").toString,
+          "COURSIER_DIGEST_BASED_CACHE"        -> (tmpDir / "digest").toString,
+          "COURSIER_ARCHIVE_CACHE"             -> (tmpDir / "arc").toString
+        ),
+        timeout = vmStartTimeout
+      )
+      (id, Some(tmpDir))
+    }
+    catch {
+      case NonFatal(t) =>
+        try stopVm(id)
+        catch {
+          case NonFatal(e) =>
+            System.err.println(s"Error stopping VM $id after failed start: $e")
+        }
+        finally os.remove.all(tmpDir)
+
+        if (attempt < vmStartAttempts) {
+          System.err.println(s"VM $id failed to start on attempt $attempt, retrying: $t")
+          startVm(id, attempt + 1)
+        }
+        else
+          throw t
+    }
+  }
 
   private def vmOpt: Option[(String, Option[os.Path])] =
     vmOpt0.orElse {
@@ -27,34 +95,7 @@ abstract class DockerTests extends TestSuite {
       else
         synchronized {
           vmOpt0.orElse {
-            val id     = "cs-cli-tests"
-            val tmpDir = os.temp.dir(prefix = "cs-cli-tests-docker")
-            os.makeDir.all(tmpDir / "cache")
-            os.makeDir.all(tmpDir / "arc")
-            os.makeDir.all(tmpDir / "digest")
-            os.makeDir.all(tmpDir / "priv")
-            os.proc(
-              launcher,
-              "vm",
-              "start",
-              "--id",
-              id,
-              "--memory",
-              "2g",
-              s"--virtualization=$useVirtualization",
-              "--cache",
-              tmpDir / "cache",
-              "--default-cache-for-vm-files"
-            ).call(
-              stdin = os.Inherit,
-              stdout = os.Inherit,
-              env = Map(
-                "COURSIER_PRIVILEDGED_ARCHIVE_CACHE" -> (tmpDir / "priv").toString,
-                "COURSIER_DIGEST_BASED_CACHE"        -> (tmpDir / "digest").toString,
-                "COURSIER_ARCHIVE_CACHE"             -> (tmpDir / "arc").toString
-              )
-            )
-            vmOpt0 = Some((id, Some(tmpDir)))
+            vmOpt0 = Some(startVm("cs-cli-tests"))
             vmOpt0
           }
         }
@@ -87,8 +128,7 @@ abstract class DockerTests extends TestSuite {
   override def utestAfterAll(): Unit =
     for ((id, tmpDirOpt) <- vmOpt0 if !debugUseDefaultVm) {
       System.err.println(s"Stopping VM $id")
-      os.proc(launcher, "vm", "stop", "--id", id)
-        .call(stdin = os.Inherit, stdout = os.Inherit)
+      stopVm(id)
       for (tmpDir <- tmpDirOpt)
         os.remove.all(tmpDir)
     }
@@ -111,7 +151,7 @@ abstract class DockerTests extends TestSuite {
         "pull",
         "library/hello-world:latest",
         vmArgs
-      ).call(env = vmEnv)
+      ).call(env = vmEnv, timeout = dockerTimeout)
       pprint.err.log(res.out.text())
     }
 
@@ -122,7 +162,7 @@ abstract class DockerTests extends TestSuite {
         "run",
         "library/hello-world:latest",
         vmArgs
-      ).call(env = vmEnv)
+      ).call(env = vmEnv, timeout = dockerTimeout)
       val output = res.out.text()
       assert(output.contains("Hello from Docker!"))
     }

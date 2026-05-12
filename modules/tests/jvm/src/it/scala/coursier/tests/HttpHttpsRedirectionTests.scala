@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets
 
 import coursier.core.Dependency
 import coursier.maven.MavenRepository
+import coursier.testcache.TestRepositoryServer
 import coursier.util.StringInterpolators._
 import coursier.version.VersionConstraint
 import utest._
@@ -89,14 +90,20 @@ object HttpHttpsRedirectionTests extends TestSuite {
     }
 
     override def close(): Unit =
-      if (proc != null)
-        proc.destroy()
+      if (proc != null) {
+        TestRepositoryServer.destroyProcessTree(proc, s"redirecting server at $url")
+        proc = null
+      }
   }
 
   private lazy val redirectingServer = new RedirectingServer().start()
 
   override def utestAfterAll(): Unit =
-    redirectingServer.close()
+    try {
+      System.err.println("Shutting down redirecting server")
+      redirectingServer.close()
+    }
+    finally super.utestAfterAll()
 
   val tests = Tests {
 

@@ -10,15 +10,17 @@ object TestretryHandler {
 
   private def defaultCreateException: Int => Throwable =
     n => new SocketException(s"Simulated SocketException on attempt $n")
-  var createException: Int => Throwable = defaultCreateException
-  private def defaultResponseCode       = 200
-  var responseCode: Int                 = defaultResponseCode
+  var createException: Int => Throwable    = defaultCreateException
+  private def defaultResponseCode          = 200
+  var responseCode: Int                    = defaultResponseCode
+  var responseHeaders: Map[String, String] = Map.empty
 
   def reset(failUntil: Int = -1): Unit = {
     attempts.set(0)
     failUntilAttempt = Some(failUntil).filter(_ >= 0)
     createException = defaultCreateException
     responseCode = defaultResponseCode
+    responseHeaders = Map.empty
   }
 }
 
@@ -40,6 +42,9 @@ class TestretryHandler extends URLStreamHandlerFactory {
             def usingProxy(): Boolean = false
 
             override def getResponseCode: Int = TestretryHandler.responseCode
+
+            override def getHeaderField(name: String): String =
+              TestretryHandler.responseHeaders.getOrElse(name, null)
 
             override def getInputStream: InputStream =
               new ByteArrayInputStream(

@@ -4,6 +4,8 @@ import coursier.util.Artifact
 
 import java.io.File
 
+import scala.concurrent.duration.FiniteDuration
+
 sealed abstract class ArtifactError(
   val `type`: String,
   val message: String,
@@ -88,11 +90,33 @@ object ArtifactError {
   // format: off
   final class InternalServerError(
     val url: String,
-    val responseCode: Int
+    val responseCode: Int,
+    val retryAfterOpt: Option[FiniteDuration]
   ) extends ArtifactError(
     "internal server error",
     s"$url (HTTP $responseCode)"
-  )
+  ) {
+    def this(
+      url: String,
+      responseCode: Int
+    ) = this(url, responseCode, None)
+  }
+  // format: on
+
+  // format: off
+  final class RetryableHttpError(
+    val url: String,
+    val responseCode: Int,
+    val retryAfterOpt: Option[FiniteDuration]
+  ) extends ArtifactError(
+    "retryable HTTP error",
+    s"$url (HTTP $responseCode)"
+  ) {
+    def this(
+      url: String,
+      responseCode: Int
+    ) = this(url, responseCode, None)
+  }
   // format: on
 
   // format: off

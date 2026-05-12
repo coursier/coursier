@@ -9,22 +9,17 @@ import coursier.cache.FileCache
 import coursier.credentials.{DirectCredentials, FileCredentials}
 import coursier.maven.MavenRepository
 import coursier.parse.CredentialsParser
+import coursier.testcache.TestRepositoryServer
 import coursier.util.StringInterpolators._
 import utest._
 
-object AuthenticationTests extends TestSuite {
+object AuthenticationTests extends TestSuite with TestRepositoryServer.Test {
 
-  private val testRepo = Option(System.getenv("TEST_REPOSITORY"))
-    .orElse(sys.props.get("test.repository"))
-    .getOrElse(sys.error("TEST_REPOSITORY not set"))
-  private val user = Option(System.getenv("TEST_REPOSITORY_USER"))
-    .orElse(sys.props.get("test.repository.user"))
-    .getOrElse(sys.error("TEST_REPOSITORY_USER not set"))
-  private val password = Option(System.getenv("TEST_REPOSITORY_PASSWORD"))
-    .orElse(sys.props.get("test.repository.password"))
-    .getOrElse(sys.error("TEST_REPOSITORY_PASSWORD not set"))
+  private def testRepo = localTestRepo().url
+  private def user     = localTestRepo().user
+  private def password = localTestRepo().password
 
-  private val testHost = new URI(testRepo).getHost
+  private lazy val testHost = new URI(testRepo).getHost
 
   private def deleteRecursive(f: File): Unit = {
     if (f.isDirectory)

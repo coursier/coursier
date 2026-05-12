@@ -5,11 +5,16 @@ import mill.scalalib.*
 
 trait CsScalaTests extends CsTests with ScalaModule {
   def scalacOptions = Task {
-    val baseOptions = super.scalacOptions()
-    val releaseIdx  = baseOptions.indexOf("--release")
+    CsScalaTests.removeReleaseOption(super.scalacOptions())
+  }
+}
+
+object CsScalaTests {
+  def removeReleaseOption(scalacOptions: Seq[String]): Seq[String] = {
+    val releaseIdx = scalacOptions.indexOf("--release")
     if (releaseIdx >= 0)
-      baseOptions.take(releaseIdx) ++ baseOptions.drop(releaseIdx + 2)
+      scalacOptions.take(releaseIdx) ++ scalacOptions.drop(releaseIdx + 2)
     else
-      baseOptions
+      scalacOptions
   }
 }
