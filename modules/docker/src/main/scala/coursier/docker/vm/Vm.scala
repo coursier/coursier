@@ -137,7 +137,10 @@ final class Vm(
               case _: ConnectException       => true
               case _: SocketTimeoutException => true
               case _: SocketException        => true
-              case _                         => e.getMessage.contains("channel is not opened")
+              case _ =>
+                val message = Option(e.getMessage).getOrElse("")
+                message.contains("channel is not opened") ||
+                message.contains("connection is closed by foreign host")
             }
             if (retry) {
               val remainingNanos = deadline - System.nanoTime()
