@@ -58,7 +58,7 @@ import scala.util.control.NonFatal
     retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier
 )(implicit
   sync: Sync[F]
-) extends Cache[F] {
+) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext with Cache.WithLogger[F, FileCache[F]] with Cache.Default[F] {
   // format: on
 
   private def S = sync

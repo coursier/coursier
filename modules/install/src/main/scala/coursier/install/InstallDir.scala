@@ -8,7 +8,7 @@ import java.util.Locale
 import java.util.stream.Stream
 import java.util.zip.ZipEntry
 
-import coursier.cache.{ArchiveCache, ArchiveType, Cache, FileCache}
+import coursier.cache.{ArchiveCache, ArchiveType, Cache}
 import coursier.core.{Dependency, Module, Repository}
 import coursier.env.EnvironmentUpdate
 import coursier.install.error._
@@ -24,7 +24,8 @@ import scala.jdk.CollectionConverters._
 
 @data class InstallDir(
   baseDir: Path = InstallDir.defaultDir,
-  cache: Cache[Task] = FileCache(),
+  @since
+  cache: Cache[Task] = Cache.default,
   @since
   verbosity: Int = 0,
   graalvmParamsOpt: Option[GraalvmParams] = None,
