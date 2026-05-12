@@ -102,7 +102,7 @@ object Deps {
     // for cleanup tasks when we move to Scala 2.13 as as the baseline
     val all = Seq(scala213, scala212)
 
-    def scalaJs = "1.20.0"
+    def scalaJs = "1.21.0"
   }
 
   object Docker {
