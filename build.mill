@@ -1473,9 +1473,11 @@ def qemuCompatTests() = Task.Command[Unit] {
   System.err.println(
     s"Testing compat launcher at $launcher with QEMU launcher $qemuBin (Nehalem CPU – no AVX)…"
   )
-  os.proc(qemuBin, "-cpu", "Nehalem", launcher, "version")
-    .call(stdout = os.Inherit, stderr = os.Inherit)
-  System.err.println("QEMU compat test passed: launcher works on Nehalem CPU (no AVX).")
+  val output = os.proc(qemuBin, "-cpu", "Nehalem", launcher, "version").call().out.trim()
+  pprint.err.log(output)
+  val expectedOutput = cli.publishVersion()
+  assert(output == expectedOutput, s"Expected output '$expectedOutput'")
+  System.err.println("QEMU compat test passed: launcher works on Nehalem CPU (no AVX)")
 }
 
 def nativeStaticTests() = Task.Command[Unit] {
