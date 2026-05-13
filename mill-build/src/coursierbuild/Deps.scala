@@ -95,14 +95,14 @@ object Deps {
   def csDockerVersion = "2.1.23"
 
   object ScalaVersions {
-    def scala3   = "3.3.6"
-    def scala213 = "2.13.16"
+    def scala3   = "3.7.4"
+    def scala213 = "2.13.18"
     def scala212 = "2.12.20"
     // TODO SCALA_213_BASELINE search for this TODO in the codebase
     // for cleanup tasks when we move to Scala 2.13 as as the baseline
     val all = Seq(scala213, scala212)
 
-    def scalaJs = "1.20.0"
+    def scalaJs = "1.21.0"
   }
 
   object Docker {
