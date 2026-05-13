@@ -1,8 +1,14 @@
 package coursier.install
 
-import argonaut.{DecodeJson, EncodeJson, Parse}
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
+import com.github.plokhotnyuk.jsoniter_scala.core.{
+  JsonReaderError,
+  JsonValueCodec,
+  readFromString,
+  writeToString
+}
+import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
 import coursier.parse.RepositoryParser
 import dataclass.data
 
@@ -38,17 +44,18 @@ import dataclass.data
     }
   }
   def repr: String =
-    RawSource.encoder.encode(this).nospaces
+    writeToString(this)(RawSource.codec)
 }
 
 object RawSource {
 
-  import argonaut.ArgonautShapeless._
-
-  lazy val encoder = EncodeJson.of[RawSource]
-  lazy val decoder = DecodeJson.of[RawSource]
+  lazy val codec: JsonValueCodec[RawSource] = JsonCodecMaker.make
 
   def parse(input: String): Either[String, RawSource] =
-    Parse.decodeEither(input)(decoder)
+    try Right(readFromString(input)(codec))
+    catch {
+      case err: JsonReaderError =>
+        Left(err.toString)
+    }
 
 }

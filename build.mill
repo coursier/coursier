@@ -768,10 +768,11 @@ trait Install extends CrossSbtModule with CsModule
     launcherModule()
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.dataClass
+    Deps.dataClass,
+    Deps.jsoniterMacros
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
-    Deps.argonautShapeless,
+    Deps.jsoniterCore,
     Deps.catsCore
   )
   object test extends CrossSbtTests with CsScalaTests with CsResourcesTests {
