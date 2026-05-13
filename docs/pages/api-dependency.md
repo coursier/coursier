@@ -17,6 +17,26 @@ than [on the CLI](cli-dependency.md):
 dep"my-org:my-name:1.2.3"
 ```
 
+## Fetching artifacts without POM files
+
+Some artifacts do not have a POM or Ivy file in the repository. One can fetch such artifacts
+directly from a URL using `InMemoryRepository`:
+```scala mdoc:silent
+import coursier.util.InMemoryRepository
+val dep = Dependency(
+  Module(Organization("com.example"), ModuleName("my-lib"), Map.empty),
+  VersionConstraint("1.0")
+)
+val repo = InMemoryRepository.forDependencies(
+  dep -> "https://example.com/my-lib/1.0/my-lib-1.0.jar"
+)
+Fetch()
+  .addDependencies(dep)
+  .addRepositories(repo)
+```
+
+This is equivalent to using the [`url=` parameter on the CLI](cli-dependency.md#fetching-artifacts-without-pom-files).
+
 ## Bill Of Material
 
 ```scala mdoc:reset-object:invisible
