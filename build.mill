@@ -1453,9 +1453,11 @@ def qemuCompatTests() = Task.Command[Unit] {
 
   System.err.println("Downloading QEMU static binary…")
   os.proc(
-    "curl", "-fL",
+    "curl",
+    "-fL",
     "https://github.com/coursier/qemu/releases/download/nightly/qemu-linux-amd64.tar.gz",
-    "-o", qemuTarGz
+    "-o",
+    qemuTarGz
   ).call(stdout = os.Inherit, stderr = os.Inherit)
 
   os.proc("tar", "xzf", qemuTarGz, "-C", qemuDir)
