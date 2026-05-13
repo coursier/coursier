@@ -5,54 +5,58 @@ import coursier.core.Validation._
 import coursier.util.SaxHandler
 import coursier.version.{VersionConstraint, VersionParse}
 
+import java.util.Objects
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 final class PomParser extends SaxHandler {
-
   import PomParser._
 
   private[this] val state = new State
+  private[this] val b     = new java.lang.StringBuilder
 
-  private[this] var paths: CustomList[String] = CustomList.Nil
-  private[this] var handlers                  = List.empty[Option[Handler]]
-
-  private[this] val b = new java.lang.StringBuilder
+  private val nodeStack = new java.util.ArrayDeque[HandlerMapNode]()
+  nodeStack.push(HandlerMapNode.rootHandlerNode)
 
   def startElement(tagName: String): Unit = {
-    paths = tagName :: paths
-    val handlerOpt = handlerMap.get(paths).orElse(handlerMap.get("*" :: paths.tail))
-    handlers = handlerOpt :: handlers
+    val next = nodeStack.peek().next(tagName)
+    nodeStack.push(next)
+
     b.setLength(0)
 
-    handlerOpt.foreach {
+    next.handler match {
       case _: ContentHandler =>
       case s: SectionHandler =>
         s.start(state)
       case p: PropertyHandler =>
         p.name(state, tagName)
+      case _ =>
     }
   }
   def characters(ch: Array[Char], start: Int, length: Int): Unit = {
-    val readContent = handlers.headOption.exists(_.exists {
-      case _: PropertyHandler => true
-      case _: ContentHandler  => true
-      case _: SectionHandler  => false
-    })
-    if (readContent)
-      b.append(ch, start, length)
+    val parent = nodeStack.peek()
+    if (parent ne null) {
+      val readContent = parent.handler match {
+        case _: PropertyHandler => true
+        case _: ContentHandler  => true
+        case _: SectionHandler  => false
+        case _                  => false
+      }
+      if (readContent)
+        b.append(ch, start, length)
+    }
   }
   def endElement(tagName: String): Unit = {
-    val handlerOpt = handlers.headOption.flatten
-    paths = paths.tail
-    handlers = handlers.tail
+    val node = nodeStack.pop()
 
-    handlerOpt.foreach {
+    node.handler match {
       case p: PropertyHandler =>
         p.content(state, b.toString)
       case c: ContentHandler =>
         c.content(state, b.toString.trim)
       case s: SectionHandler =>
         s.end(state)
+      case _ =>
     }
 
     b.setLength(0)
@@ -262,6 +266,7 @@ object PomParser {
   }
 
   private sealed abstract class Handler(val path: List[String])
+  private object NoHandler extends Handler(Nil)
 
   private abstract class SectionHandler(path: List[String]) extends Handler(path) {
     def start(state: State): Unit
@@ -283,7 +288,7 @@ object PomParser {
         f(state, content)
     }
 
-  private val handlers = Seq[Handler](
+  private val handlers: Seq[Handler] = Seq[Handler](
     content("groupId" :: "project" :: Nil) {
       (state, content) =>
         state.groupId = content
@@ -552,11 +557,99 @@ object PomParser {
       }
     )
 
-  private val handlerMap = handlers
-    .map { h =>
-      CustomList(h.path) -> h
+  private object HandlerMapNode {
+    // This is called once at class-load time to build the immutable tree
+    def build(paths: Seq[(Seq[String], Handler)]): HandlerMapNode = {
+      val rootBuilder = new Builder
+      for ((path, h) <- paths) rootBuilder.add(path.reverse.toList, h)
+      rootBuilder.freeze()
     }
-    .toMap
+
+    // Temporary mutable class used ONLY during the build phase
+    private class Builder {
+      private val children                  = new mutable.HashMap[String, Builder]
+      private var wildcard: Option[Builder] = None
+      private var handler: Handler          = NoHandler
+
+      def add(path: List[String], h: Handler): Unit = path match {
+        case Nil =>
+          if (this.handler ne NoHandler) throw new Exception("Handler already set")
+          this.handler = h
+        case "*" :: tail =>
+          val w = wildcard.getOrElse(new Builder)
+          wildcard = Some(w)
+          w.add(tail, h)
+        case head :: tail =>
+          val child = children.getOrElseUpdate(head, new Builder)
+          child.add(tail, h)
+      }
+
+      def freeze(): HandlerMapNode = {
+        val frozenWildcard = wildcard.map(_.freeze()).getOrElse(EmptyHandlerMapNode)
+        if (children.isEmpty && wildcard.isEmpty && handler == NoHandler)
+          EmptyHandlerMapNode
+        else if (children.size <= 8) {
+          val k = children.keys.toArray
+          val v = k.map(children(_).freeze())
+          new SmallArrayNode(handler, k, v, frozenWildcard)
+        }
+        else
+          new HashMapNode(
+            handler,
+            children.map { case (k, v) => k -> v.freeze() }.toMap,
+            frozenWildcard
+          )
+      }
+    }
+    final val rootHandlerNode = build(handlers.map(h => (h.path, h)))
+
+  }
+  private sealed abstract class HandlerMapNode {
+    def handler: Handler
+    def next(tag: String): HandlerMapNode
+  }
+
+  private case object EmptyHandlerMapNode extends HandlerMapNode {
+    val handler: Handler                  = NoHandler
+    def next(tag: String): HandlerMapNode = this
+  }
+
+  /** Specialized node for 1-8 children: faster than HashMap due to cache locality */
+  private final class SmallArrayNode(
+    val handler: Handler,
+    keys: Array[String],
+    values: Array[HandlerMapNode],
+    wildcard: HandlerMapNode
+  ) extends HandlerMapNode {
+    private val hashes = keys.map(_.hashCode)
+    def next(tag: String): HandlerMapNode = {
+      Objects.requireNonNull(tag)
+      val h   = tag.hashCode
+      val len = keys.length
+      var i   = 0
+
+      while (i < len) {
+        // Identity check (hashes(i) == h) is significantly faster than string equals.
+        // We only perform the full .equals check if the hash matches.
+        if (hashes(i) == h && keys(i) == tag)
+          return values(i)
+        i += 1
+      }
+
+      // 3. Fallback to wildcard (e.g., the "*" or EmptyNode)
+      wildcard
+    }
+  }
+
+  /** Fallback for very large branches (unlikely in POM, but safe) */
+  private final class HashMapNode(
+    val handler: Handler,
+    children: Map[String, HandlerMapNode],
+    wildcard: HandlerMapNode
+  ) extends HandlerMapNode {
+    def next(tag: String): HandlerMapNode =
+      children.getOrElse(tag, wildcard)
+  }
 
   private def scmHandlers(prefix: List[String], add: (State, Info.Scm) => Unit) =
     Seq(

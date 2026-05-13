@@ -9,6 +9,8 @@ import utest._
 
 import scala.async.Async.{async, await}
 import scala.jdk.CollectionConverters._
+import coursier.cache.Cache
+import coursier.util.Task
 
 object FetchCacheTests extends TestSuite {
 
@@ -45,6 +47,12 @@ object FetchCacheTests extends TestSuite {
     else
       Files.deleteIfExists(d)
 
+  private def defaultCache() = Cache.default match {
+    case fc: FileCache[Task] => fc
+    case other =>
+      sys.error(s"Expected default cache to be a FileCache, got $other")
+  }
+
   val tests = Tests {
 
     import TestHelpers.ec
@@ -75,7 +83,7 @@ object FetchCacheTests extends TestSuite {
             .noMirrors
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
             .withCache(
-              FileCache()
+              defaultCache()
                 .noCredentials
                 .withLocation(tmpCache.toFile)
             )

@@ -13,6 +13,9 @@ object MavenRepository {
     coursier.core.compatibility.xmlParseSax(str, new PomParser)
       .project
 
+  private[coursier] def parseRawPomDom(str: String): Either[String, Project] =
+    Pom.project(coursier.core.compatibility.xmlParseDom(str).toOption.get)
+
   private def actualRoot(root: String): String =
     root.stripSuffix("/")
 
@@ -39,7 +42,7 @@ object MavenRepository {
   override val checkModule: Boolean = false
 ) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi {
 
-  private val internal = new MavenRepositoryInternal(
+  private[coursier] val internal = new MavenRepositoryInternal(
     root,
     authentication,
     changing,

@@ -9,7 +9,7 @@ import java.net.URI
 import java.nio.file.{Path, Paths}
 
 import scala.cli.config.{ConfigDb, Keys}
-import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.util.{Failure, Success, Try}
 
 /** Helpers meant to help compute default cache-related parameters, with the environment and Java
@@ -26,6 +26,15 @@ object CacheEnv {
   /** Env var and Java prop names for the archive cache location */
   val archiveCache = EnvEntry("COURSIER_ARCHIVE_CACHE", "coursier.archive.cache")
 
+  /** Env var and Java prop names for the cache server */
+  val server = EnvEntry("COURSIER_CACHE_SERVER", "coursier.cache.server")
+
+  /** Env var and Java prop names for the cache server user */
+  val serverUser = EnvEntry("COURSIER_CACHE_SERVER_USER", "coursier.cache.server.user")
+
+  /** Env var and Java prop names for the cache server password */
+  val serverPassword = EnvEntry("COURSIER_CACHE_SERVER_PASSWORD", "coursier.cache.server.password")
+
   /** Env var and Java prop names for credentials */
   val credentials = EnvEntry("COURSIER_CREDENTIALS", "coursier.credentials")
 
@@ -34,6 +43,12 @@ object CacheEnv {
 
   /** Env var and Java prop names for the cache TTL */
   val ttl = EnvEntry("COURSIER_TTL", "coursier.ttl")
+
+  /** Env var and Java prop names for the maximum HTTP Retry-After duration */
+  val maxHttpRetryAfter = EnvEntry(
+    "COURSIER_MAX_HTTP_RETRY_AFTER",
+    "coursier.max-http-retry-after"
+  )
 
   /** Env var and Java prop names for the cache policies */
   val cachePolicy = EnvEntry("COURSIER_MODE", "coursier.mode")
@@ -60,6 +75,11 @@ object CacheEnv {
         "arc"
       )
     )
+
+  /** Computes the default main cache location from the passed env var and Java property */
+  def defaultServerAddress(values: EnvValues): Option[String] =
+    values.prop.map(_.trim).filter(_.nonEmpty)
+      .orElse(values.env.map(_.trim).filter(_.nonEmpty))
 
   private def isPropFile(s: String) =
     s.startsWith("/") || s.startsWith("file:")
@@ -150,6 +170,21 @@ object CacheEnv {
     val fromEnv   = values.env.flatMap(parseDuration(_).toOption)
     def fromProps = values.prop.flatMap(parseDuration(_).toOption)
     def default   = 24.hours
+
+    fromEnv
+      .orElse(fromProps)
+      .orElse(Some(default))
+  }
+
+  /** Computes the maximum HTTP Retry-After duration from the passed env var and Java property */
+  def defaultMaxHttpRetryAfter(values: EnvValues): Option[FiniteDuration] = {
+    val fromEnv = values.env.flatMap(parseDuration(_).toOption).collect {
+      case duration: FiniteDuration => duration
+    }
+    def fromProps = values.prop.flatMap(parseDuration(_).toOption).collect {
+      case duration: FiniteDuration => duration
+    }
+    def default = if (System.getenv("CI") == null) 5.seconds else 1.minute
 
     fromEnv
       .orElse(fromProps)

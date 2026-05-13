@@ -44,7 +44,9 @@ object QemuFiles {
     ): Task[Artifacts] = {
       val qemuArchive = (hostOs, hostCpu) match {
         case (Os.Mac, Cpu.Arm64) =>
-          if (hostOsVersion.startsWith("15."))
+          if (hostOsVersion.startsWith("26."))
+            "https://github.com/coursier/qemu/releases/download/nightly/qemu-macos-tahoe-aarch64.tar.gz"
+          else if (hostOsVersion.startsWith("15."))
             "https://github.com/coursier/qemu/releases/download/nightly/qemu-macos-sequoia-aarch64.tar.gz"
           else if (hostOsVersion.startsWith("14."))
             "https://github.com/coursier/qemu/releases/download/nightly/qemu-macos-sonoma-aarch64.tar.gz"
@@ -66,7 +68,7 @@ object QemuFiles {
 
       val biosArtifactOptTask = guestCpu match {
         case Cpu.Arm64 =>
-          val cache = coursier.cache.FileCache()
+          val cache = coursier.cache.Cache.default
           val debIndexArtifact =
             Artifact("https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.gz")
               .withChanging(true)

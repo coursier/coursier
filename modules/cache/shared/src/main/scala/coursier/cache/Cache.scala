@@ -30,9 +30,6 @@ abstract class Cache[F[_]] extends PlatformCache[F] {
     Seq(fetch)
 
   def ec: ExecutionContext
-
-  def loggerOpt: Option[CacheLogger] =
-    None
 }
 
 object Cache extends PlatformCacheCompanion {

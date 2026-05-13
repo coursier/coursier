@@ -13,19 +13,23 @@ final case class Retry(
     retryOpt(Some(f))(catchEx)
 
   // This may try more than retry times, if f returns None too many times
-  def retryOpt[T](f: => Option[T])(catchEx: PartialFunction[Throwable, Unit]): T = {
+  def retryOpt[T](f: => Option[T])(catchEx: PartialFunction[Throwable, Unit]): T =
+    retryOpt0(f)(catchEx.andThen(_ => None))
+
+  def retryOpt0[T](f: => Option[T])(catchEx: PartialFunction[Throwable, Option[FiniteDuration]])
+    : T = {
 
     @tailrec
     def loop(attempt: Int, delay: FiniteDuration): T = {
       val resOpt =
-        if (attempt >= count || Downloader.throwExceptions) f
+        if (attempt >= count || Downloader.throwExceptions) f.toRight(None)
         else
-          try f
-          catch catchEx.andThen(_ => None)
+          try f.toRight(None)
+          catch catchEx.andThen(delayOpt => Left(delayOpt))
       resOpt match {
-        case Some(res) => res
-        case None =>
-          Thread.sleep(delay.toMillis)
+        case Right(res) => res
+        case Left(forcedDelayOpt) =>
+          Thread.sleep(forcedDelayOpt.getOrElse(delay).toMillis)
           loop(
             attempt + 1,
             delayMultiplier * delay match {
