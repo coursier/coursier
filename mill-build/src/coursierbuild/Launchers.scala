@@ -154,10 +154,10 @@ object Launchers {
         `base-image`.nativeImage
 
     def compatNativeImage =
-      if (Properties.isLinux && isCI)
-        `linux-compat-docker-image`.nativeImage
-      else
+      if (Properties.isLinux && !isCI)
         `compat-image`.nativeImage
+      else
+        `linux-compat-docker-image`.nativeImage
 
     object `linux-docker-image` extends CliNativeImage {
       def nativeImageDockerParams = Some(
