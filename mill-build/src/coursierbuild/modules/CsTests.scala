@@ -5,6 +5,7 @@ import mill._, mill.scalalib._
 
 trait CsTests extends TestModule with JavaModule {
   def mvnDeps = super.mvnDeps() ++ Seq(
+    Deps.osLib,
     Deps.pprint,
     Deps.utest
   )

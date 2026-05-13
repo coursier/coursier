@@ -9,6 +9,10 @@ trait CacheJvmBase extends Cache with CsMima {
 
   def mimaBinaryIssueFilters =
     super.mimaBinaryIssueFilters() ++ Seq(
+      ProblemFilter.exclude[IncompatibleResultTypeProblem](
+        "coursier.cache.PlatformCacheCompanion.default"
+      ),
+      ProblemFilter.exclude[IncompatibleResultTypeProblem]("coursier.cache.Cache.default"),
       // moved a different module (archive-cache, NOT pulled transitively)
       ProblemFilter.exclude[MissingClassProblem]("coursier.cache.ArchiveCache"),
       ProblemFilter.exclude[MissingClassProblem]("coursier.cache.ArchiveCache$"),

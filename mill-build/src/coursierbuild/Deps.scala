@@ -41,10 +41,11 @@ object Deps {
     def mdoc           = mvn"org.scalameta::mdoc:2.7.2"
     def noCrcZis       = mvn"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
     def osLib          = mvn"com.lihaoyi::os-lib:0.11.5"
-    def plexusArchiver = mvn"org.codehaus.plexus:plexus-archiver:4.10.1"
+    def plexusArchiver = mvn"org.codehaus.plexus:plexus-archiver:4.11.0"
     // plexus-archiver needs its loggers
     def plexusContainerDefault = mvn"org.codehaus.plexus:plexus-container-default:2.1.1"
       .exclude("junit" -> "junit")
+    def plexusUtils      = mvn"org.codehaus.plexus:plexus-utils:4.0.3"
     def pprint           = mvn"com.lihaoyi::pprint::0.9.3"
     def proguard         = mvn"com.guardsquare:proguard-base:7.7.0"
     def pythonNativeLibs = mvn"ai.kien::python-native-libs:0.2.4"
@@ -67,9 +68,10 @@ object Deps {
     def slf4JNop                 = mvn"org.slf4j:slf4j-nop:2.0.17"
     def svm                      = mvn"org.graalvm.nativeimage:svm:21.3.15"
     def tika                     = mvn"org.apache.tika:tika-core:3.2.3"
+    def undertow                 = mvn"io.undertow:undertow-core:2.3.18.Final"
     def ujson                    = mvn"com.lihaoyi::ujson:4.3.2"
     def utest                    = mvn"com.lihaoyi::utest::0.9.1"
-    def versions                 = mvn"io.get-coursier::versions::0.5.1"
+    def versions                 = mvn"io.get-coursier::versions::0.5.3"
     def windowsAnsi              = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
     def windowsAnsiPs =
       mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
@@ -93,12 +95,14 @@ object Deps {
   def csDockerVersion = "2.1.23"
 
   object ScalaVersions {
-    def scala3   = "3.3.6"
-    def scala213 = "2.13.16"
+    def scala3   = "3.7.4"
+    def scala213 = "2.13.18"
     def scala212 = "2.12.20"
-    val all      = Seq(scala213, scala212)
+    // TODO SCALA_213_BASELINE search for this TODO in the codebase
+    // for cleanup tasks when we move to Scala 2.13 as as the baseline
+    val all = Seq(scala213, scala212)
 
-    def scalaJs = "1.19.0"
+    def scalaJs = "1.21.0"
   }
 
   object Docker {

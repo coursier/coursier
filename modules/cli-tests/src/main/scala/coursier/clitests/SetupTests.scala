@@ -45,7 +45,7 @@ abstract class SetupTests extends TestSuite {
         // See coursier.cli.setup.DefaultAppList
         for (
           app <-
-            List("amm", "cs", "coursier", "scala", "scalac", "scala-cli", "sbt", "sbtn", "scalafmt")
+            List("cs", "coursier", "scala", "scalac", "scala-cli", "sbt", "sbtn", "scalafmt")
         )
           assert(os.exists(installDir / app) || os.exists(installDir / s"$app.bat"))
       }

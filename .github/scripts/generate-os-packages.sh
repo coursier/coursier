@@ -6,7 +6,7 @@ ARCHITECTURE=$(uname -m)
 ARTIFACTS_DIR="artifacts/"
 mkdir -p "$ARTIFACTS_DIR"
 
-if [[ -z "$OSTYPE" || "$OSTYPE" == "msys" ]]; then
+if [[ -z "$OSTYPE" || "$OSTYPE" == msys* || "$OSTYPE" == mingw* || "$OSTYPE" == cygwin* ]]; then
   mill="./mill.bat"
 else
   mill="./mill"
@@ -55,7 +55,7 @@ generate_sdk() {
       exit 2
     fi
     binName="cs"
-  elif [[ "$OSTYPE" == "msys" ]]; then
+  elif [[ "$OSTYPE" == msys* || "$OSTYPE" == mingw* || "$OSTYPE" == cygwin* ]]; then
     sdkDirectory="cs-x86_64-pc-win32-sdk"
     binName="cs.exe"
   else
@@ -66,7 +66,7 @@ generate_sdk() {
   mkdir -p "$sdkDirectory"/bin
   cp "$(launcher)" "$sdkDirectory"/bin/"$binName"
 
-  if [[ "$OSTYPE" == "msys" ]]; then
+  if [[ "$OSTYPE" == msys* || "$OSTYPE" == mingw* || "$OSTYPE" == cygwin* ]]; then
     7z a "$sdkDirectory".zip "$sdkDirectory"
   else
     zip -r "$sdkDirectory".zip "$sdkDirectory"
@@ -79,7 +79,7 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
   generate_sdk
 elif [[ "$OSTYPE" == "darwin"* ]]; then
   generate_sdk
-elif [[ "$OSTYPE" == "msys" ]]; then
+elif [[ "$OSTYPE" == msys* || "$OSTYPE" == mingw* || "$OSTYPE" == cygwin* ]]; then
   generate_sdk
 else
   echo "Unrecognized operating system: $OSTYPE" 1>&2

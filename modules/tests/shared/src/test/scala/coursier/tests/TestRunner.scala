@@ -186,10 +186,12 @@ class TestRunner[F[_]: Gather: ToFuture](
             Seq(org, name, ver, cfg).mkString(":")
         }
 
-      validateSnapshot(
-        pathFor(module, version, configuration),
-        result
-      )
+      await {
+        validateSnapshot(
+          pathFor(module, version, configuration),
+          result
+        )
+      }
 
       res
     }

@@ -2,7 +2,7 @@ package coursier.docker
 
 import com.github.plokhotnyuk.jsoniter_scala.core.{JsonValueCodec, writeToArray}
 import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
-import coursier.cache.{ArchiveCache, DigestBasedCache, FileCache}
+import coursier.cache.{ArchiveCache, Cache, DigestBasedCache}
 import coursier.exec.Execve
 import coursier.util.{Artifact, Task}
 import io.github.alexarchambault.isterminal.IsTerminal
@@ -170,7 +170,7 @@ object DockerRun {
     JsonCodecMaker.make
 
   def run(
-    cache: FileCache[Task],
+    cache: Cache[Task] with Cache.HasLocation,
     digestCache: DigestBasedCache[Task],
     config: DockerImageConfig.Config,
     layerFiles: () => Seq[os.Path],

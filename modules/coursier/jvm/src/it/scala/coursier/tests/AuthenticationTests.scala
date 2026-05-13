@@ -5,26 +5,22 @@ import java.net.URI
 import java.nio.file.{Files, Path}
 
 import coursier.{Repositories, Resolve}
-import coursier.cache.FileCache
+import coursier.cache.{Cache, FileCache}
 import coursier.credentials.{DirectCredentials, FileCredentials}
 import coursier.maven.MavenRepository
 import coursier.parse.CredentialsParser
+import coursier.testcache.TestRepositoryServer
 import coursier.util.StringInterpolators._
+import coursier.util.Task
 import utest._
 
-object AuthenticationTests extends TestSuite {
+object AuthenticationTests extends TestSuite with TestRepositoryServer.Test {
 
-  private val testRepo = Option(System.getenv("TEST_REPOSITORY"))
-    .orElse(sys.props.get("test.repository"))
-    .getOrElse(sys.error("TEST_REPOSITORY not set"))
-  private val user = Option(System.getenv("TEST_REPOSITORY_USER"))
-    .orElse(sys.props.get("test.repository.user"))
-    .getOrElse(sys.error("TEST_REPOSITORY_USER not set"))
-  private val password = Option(System.getenv("TEST_REPOSITORY_PASSWORD"))
-    .orElse(sys.props.get("test.repository.password"))
-    .getOrElse(sys.error("TEST_REPOSITORY_PASSWORD not set"))
+  private def testRepo = localTestRepo().url
+  private def user     = localTestRepo().user
+  private def password = localTestRepo().password
 
-  private val testHost = new URI(testRepo).getHost
+  private lazy val testHost = new URI(testRepo).getHost
 
   private def deleteRecursive(f: File): Unit = {
     if (f.isDirectory)
@@ -38,6 +34,12 @@ object AuthenticationTests extends TestSuite {
     finally deleteRecursive(dir.toFile)
   }
 
+  private def defaultCache() = Cache.default match {
+    case fc: FileCache[Task] => fc
+    case other =>
+      sys.error(s"Expected default cache to be a FileCache, got $other")
+  }
+
   private def testCredentials(credentials: DirectCredentials): Unit = {
     val result = withTmpDir { dir =>
       Resolve()
@@ -48,7 +50,7 @@ object AuthenticationTests extends TestSuite {
         ))
         .addDependencies(dep"com.abc:test:0.1".withTransitive(false))
         .withCache(
-          FileCache()
+          defaultCache()
             .noCredentials
             .withLocation(dir.toFile)
             .addCredentials(credentials)
