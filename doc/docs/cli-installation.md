@@ -10,8 +10,10 @@ By default, they will install the following applications:
 - `scala`, the Scala REPL
 - `scalac`, the Scala compiler
 - `sbt` and `sbtn`, the [sbt build toold](https://www.scala-sbt.org/)
-- `ammonite`, [an enhanced REPL](https://ammonite.io/) for Scala
 - `scalafmt`, the [Scala code formatter](https://scalameta.org/scalafmt/)
+
+> **Note:** `ammonite` used to be installed by default but is now deprecated and no longer included.
+> Use `scala-cli` or `scala-cli repl` instead to get a Scala REPL.
 
 They will also install a JVM if none is found on the system.
 
@@ -272,10 +274,10 @@ Pass it a JVM id and a list of applications to
   like
 
 ```bash
-$ eval "$(cs setup --env --jvm 11 --apps sbt-launcher,ammonite)"
+$ eval "$(cs setup --env --jvm 11 --apps sbt-launcher,scala-cli)"
 $ sbt
 …
-$ amm
+$ scala-cli repl
 …
 $ java -version
 openjdk version "11.0.6" 2020-01-14
@@ -323,7 +325,7 @@ The `setup` command installs a number of standard Scala CLI applications by defa
 Pass a custom list of applications to install instead with `--apps`.
 
 ```bash
-$ cs setup --apps sbt-launcher,ammonite
+$ cs setup --apps sbt-launcher,scala-cli
 ```
 
 `--apps` can be specified multiple times, and expects a `,`-separared list of applications.
@@ -339,11 +341,11 @@ by default.
 Pass a custom directory to install applications in with `--install-dir`:
 
 ```bash
-$ eval "$(cs setup --apps sbt-launcher,ammonite --install-dir tmp-install)"
+$ eval "$(cs setup --apps sbt-launcher,scala-cli --install-dir tmp-install)"
 …
 $ tmp-install/sbt
 …
-$ tmp-install/amm
+$ tmp-install/scala-cli repl
 …
 ```
 
