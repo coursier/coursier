@@ -1453,7 +1453,9 @@ def qemuCompatTests() = Task.Command[Unit] {
 
   val archiveCache = ArchiveCache()
   val qemuDir = archiveCache
-    .get(Artifact(s"https://github.com/coursier/qemu/releases/download/v$csQemuVersion/qemu-linux-amd64.tar.gz!"))
+    .get(Artifact(
+      s"https://github.com/coursier/qemu/releases/download/v$csQemuVersion/qemu-linux-amd64.tar.gz!"
+    ))
     .unsafeRun(true)(using archiveCache.cache.ec)
     .fold(err => throw err, os.Path(_))
 
