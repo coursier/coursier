@@ -1460,8 +1460,8 @@ def qemuCompatTests() = Task.Command[Unit] {
     .fold(err => throw err, os.Path(_))
 
   val qemuBin = os.walk(qemuDir)
-    .find(_.last == "qemu-system-x86_64")
-    .getOrElse(sys.error("qemu-system-x86_64 not found in downloaded archive"))
+    .find(_.last == "qemu-x86_64")
+    .getOrElse(sys.error("qemu-x86_64 not found in downloaded archive"))
 
   // just in case
   os.proc("chmod", "+x", qemuBin).call()
