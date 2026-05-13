@@ -1,6 +1,6 @@
 //| mill-version: 1.1.3
 
-import coursierbuild.Deps.{Deps, ScalaVersions, scalaCliVersion}
+import coursierbuild.Deps.{Deps, ScalaVersions, csQemuVersion, scalaCliVersion}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
 import coursierbuild.Relativize.{relativize => doRelativize}
 import coursierbuild.{DocHelpers, GitHubReleaseAssets, Shading, Sync}
@@ -1455,7 +1455,7 @@ def qemuCompatTests() = Task.Command[Unit] {
   os.proc(
     "curl",
     "-fL",
-    "https://github.com/coursier/qemu/releases/download/nightly/qemu-linux-amd64.tar.gz",
+    s"https://github.com/coursier/qemu/releases/download/v$csQemuVersion/qemu-linux-amd64.tar.gz",
     "-o",
     qemuTarGz
   ).call(stdout = os.Inherit, stderr = os.Inherit)

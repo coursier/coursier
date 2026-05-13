@@ -94,6 +94,8 @@ object Deps {
 
   def csDockerVersion = "2.1.23"
 
+  def csQemuVersion = "9.2.1-1"
+
   object ScalaVersions {
     def scala3   = "3.7.4"
     def scala213 = "2.13.18"
