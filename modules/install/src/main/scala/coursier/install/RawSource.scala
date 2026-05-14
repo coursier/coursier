@@ -3,7 +3,7 @@ package coursier.install
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import com.github.plokhotnyuk.jsoniter_scala.core.{
-  JsonReaderError,
+  JsonReaderException,
   JsonValueCodec,
   readFromString,
   writeToString
@@ -54,8 +54,8 @@ object RawSource {
   def parse(input: String): Either[String, RawSource] =
     try Right(readFromString(input)(codec))
     catch {
-      case err: JsonReaderError =>
-        Left(err.toString)
+      case e: JsonReaderException =>
+        Left(e.toString)
     }
 
 }

@@ -5,13 +5,19 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 import java.util.zip.ZipFile
 
-import com.github.plokhotnyuk.jsoniter_scala.core.readFromString
+import com.github.plokhotnyuk.jsoniter_scala.core.{
+  JsonReaderException,
+  JsonValueCodec,
+  readFromString
+}
+import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
 import coursier.Fetch
 import coursier.cache.Cache
 import coursier.cache.internal.FileUtil
 import coursier.core.{Dependency, Repository}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepositoryLike
+import coursier.parse.RawJson
 import coursier.util.{Artifact, Task}
 import coursier.util.StringInterpolators._
 import dataclass._
@@ -27,6 +33,19 @@ import scala.jdk.CollectionConverters._
   @since("2.0.10")
   logChannelVersion: Boolean = false
 ) {
+
+  private lazy val channelIndexCodec: JsonValueCodec[Map[String, RawJson]] =
+    JsonCodecMaker.make
+
+  private def parseChannelIndex(
+    content: String,
+    origin: String
+  ): Either[Exception, Map[String, RawJson]] =
+    try Right(readFromString(content)(channelIndexCodec))
+    catch {
+      case e: JsonReaderException =>
+        Left(new Exception(s"Error decoding $origin: ${e.getMessage}", e))
+    }
 
   def appDescriptor(id: String): Task[AppInfo] = {
 
@@ -184,18 +203,12 @@ import scala.jdk.CollectionConverters._
           val b = Files.readAllBytes(f.toPath)
           new String(b, StandardCharsets.UTF_8)
         }
-        m <- Task.fromEither {
-          Parse.decodeEither(content)(DecodeJson.MapDecodeJson(
-            DecodeJson.StringDecodeJson,
-            decodeObj
-          ))
-            .left.map(err => new Exception(s"Error decoding $f (${channel.url}): $err"))
-        }
+        m <- Task.fromEither(parseChannelIndex(content, s"$f (${channel.url})"))
       } yield m.get(id).map { obj =>
         ChannelData(
           channel,
           s"$f#$id",
-          encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8)
+          obj.value
         )
       }
     }
@@ -324,13 +337,7 @@ import scala.jdk.CollectionConverters._
           val b = Files.readAllBytes(f.toPath)
           new String(b, StandardCharsets.UTF_8)
         }
-        m <- Task.fromEither {
-          Parse.decodeEither(content)(DecodeJson.MapDecodeJson(
-            DecodeJson.StringDecodeJson,
-            decodeObj
-          ))
-            .left.map(err => new Exception(s"Error decoding $f (${channel.url}): $err"))
-        }
+        m <- Task.fromEither(parseChannelIndex(content, s"$f (${channel.url})"))
       } yield m.keys.filter(matchQuery).toList
 
     }

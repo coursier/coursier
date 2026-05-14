@@ -3,8 +3,11 @@ package coursier.install
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import com.github.plokhotnyuk.jsoniter_scala.core.{
-  JsonReaderError,
+  JsonReader,
+  JsonReaderException,
   JsonValueCodec,
+  JsonWriter,
+  WriterConfig,
   readFromString,
   writeToString
 }
@@ -170,7 +173,12 @@ import scala.language.implicitConversions
     }
   }
   def repr: String =
-    RawAppDescriptor.encoder.encode(this).nospaces
+    writeToString(RawAppDescriptor.descriptorJson(this))(RawAppDescriptor.codec)
+  def prettyRepr: String =
+    writeToString(
+      RawAppDescriptor.descriptorJson(this),
+      WriterConfig.withIndentionStep(2)
+    )(RawAppDescriptor.codec)
 
   def overrideVersion(ver: String, useVersionOverrides: Boolean): RawAppDescriptor = {
     val base =
@@ -239,7 +247,7 @@ object RawAppDescriptor {
       new JsonValueCodec[Properties] {
         def nullValue = Properties(Nil)
         def encodeValue(x: Properties, out: JsonWriter) =
-          mapCodec.encodeValue(x.s.to(ListMap), out)
+          mapCodec.encodeValue(ListMap(x.props: _*), out)
         def decodeValue(in: JsonReader, default: Properties) =
           Properties(mapCodec.decodeValue(in, mapCodec.nullValue).iterator.toSeq)
       }
@@ -269,7 +277,7 @@ object RawAppDescriptor {
     private def optionsJson(opt: RawGraalvmOptions): RawGraalvmOptionsJson =
       RawGraalvmOptionsJson(opt.options)
 
-    implicit lazy val codec: JsonValueCodec[RawGraalvmOptionsJson] =
+    private implicit lazy val codec: JsonValueCodec[RawGraalvmOptionsJson] =
       JsonCodecMaker.make
   }
 
@@ -425,10 +433,14 @@ object RawAppDescriptor {
       versionOverrides = desc.versionOverrides
     )
 
-  implicit lazy val codec: JsonValueCodec[RawAppDescriptorJson] =
+  private implicit lazy val codec: JsonValueCodec[RawAppDescriptorJson] =
     JsonCodecMaker.make
 
   def parse(input: String): Either[String, RawAppDescriptor] =
-    readFromString(input)(codec).map(_.get)
+    try Right(readFromString(input)(codec).get)
+    catch {
+      case e: JsonReaderException =>
+        Left(s"Error decoding app descriptor: ${e.getMessage}")
+    }
 
 }
