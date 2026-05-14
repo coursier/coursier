@@ -45,6 +45,14 @@ object LauncherTestUtil {
     java.lang.Boolean.parseBoolean(value)
   }
 
+  lazy val canRunWithoutJvm = {
+    val value = sys.props.getOrElse(
+      "coursier-test-can-run-without-jvm",
+      "false"
+    )
+    java.lang.Boolean.parseBoolean(value)
+  }
+
   private lazy val pathExt = Option(System.getenv("pathext"))
     .toSeq
     .flatMap(_.split(File.pathSeparator))

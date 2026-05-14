@@ -211,7 +211,7 @@ object GitHubReleaseAssets {
   ): Unit = {
     val name = s"cs-$platformSuffix$suffix$platformExtension"
     if (Properties.isWin)
-      writeInZip(name, nativeLauncher, directory / s"cs-$platformSuffix.zip")
+      writeInZip(name, nativeLauncher, directory / s"cs-$platformSuffix$suffix.zip")
     else {
       val dest = directory / name
       os.copy(nativeLauncher, dest, createFolders = true, replaceExisting = true)

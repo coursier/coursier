@@ -5,4 +5,5 @@ object PackSetupTests extends SetupTests {
   val assembly       = LauncherTestUtil.assembly
   def isNative       = LauncherTestUtil.isNative
   def isNativeStatic = LauncherTestUtil.isNativeStatic
+  override def canRunWithoutJvm = LauncherTestUtil.canRunWithoutJvm
 }

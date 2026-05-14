@@ -366,5 +366,47 @@ object Launchers {
 
       PathRef(dest)
     }
+
+    def standaloneJvmLauncher = Task {
+      val assemblyPath = assembly().path
+      val mainClass0   = mainClass().getOrElse(sys.error("No main class"))
+
+      val inputDir  = Task.dest / "input"
+      val outputDir = Task.dest / "output"
+      os.makeDir.all(inputDir)
+      os.remove.all(outputDir)
+      os.copy(assemblyPath, inputDir / "coursier.jar", replaceExisting = true)
+
+      val javaHome = os.Path(sys.props("java.home"), BuildCtx.workspaceRoot)
+      val jpackage =
+        javaHome / "bin" / (if (Properties.isWin) "jpackage.exe" else "jpackage")
+
+      if (!os.exists(jpackage))
+        sys.error(s"jpackage not found at $jpackage")
+
+      os.proc(
+        jpackage,
+        "--type",
+        "app-image",
+        "--name",
+        "cs",
+        "--dest",
+        outputDir.toString,
+        "--input",
+        inputDir.toString,
+        "--main-jar",
+        "coursier.jar",
+        "--main-class",
+        mainClass0
+      ).call(stdin = os.Inherit, stdout = os.Inherit, stderr = os.Inherit)
+
+      val launcherName = if (Properties.isWin) "cs.exe" else "cs"
+      val launcherPath = outputDir / "cs" / "bin" / launcherName
+
+      if (!os.exists(launcherPath))
+        sys.error(s"Generated jpackage launcher not found at $launcherPath")
+
+      PathRef(launcherPath)
+    }
   }
 }

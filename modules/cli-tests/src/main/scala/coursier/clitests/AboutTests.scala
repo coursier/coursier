@@ -11,6 +11,9 @@ abstract class AboutTests extends TestSuite with LauncherOptions {
   def isNative: Boolean
   def isNativeStatic: Boolean
 
+  def canRunWithoutJvm: Boolean =
+    isNative && isNativeStatic
+
   def hasDocker: Boolean =
     Properties.isLinux
 
@@ -34,8 +37,8 @@ abstract class AboutTests extends TestSuite with LauncherOptions {
     }
 
     test("alpine-linux") {
-      if (hasDocker && !isNative) alpineLinuxTest(isNative = false)
-      else if (hasDocker && isNative && isNativeStatic) alpineLinuxTest(isNative = true)
+      if (hasDocker && canRunWithoutJvm) alpineLinuxTest(isNative = true)
+      else if (hasDocker && !isNative) alpineLinuxTest(isNative = false)
       else "Docker test disabled"
     }
 
