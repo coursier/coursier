@@ -53,7 +53,7 @@ jobs:
             SCALA_VERSION: "2.13.18"
           - OS: "macos-14"
             SCALA_VERSION: "2.13.18"
-          - OS: "windows-latest"
+          - OS: "windows-2025-vs2026"
             SCALA_VERSION: "2.13.18"
           - OS: "ubuntu-latest"
             SCALA_VERSION: "2.12.20"
@@ -213,7 +213,7 @@ jobs:
         OS: ["ubuntu-latest"]
         OSSHORT: ["linux"]
         include:
-          - OS: "windows-latest"
+          - OS: "windows-2025-vs2026"
             OSSHORT: "windows"
           - OS: "macos-15-intel"
             OSSHORT: "mac"
