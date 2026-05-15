@@ -1713,10 +1713,17 @@ has <a href="https://github.com/com-lihaoyi/mill/pull/4757">early SBOM support</
 <p>See <a href="../about-contact/">the contact page</a> if you need to reach coursier maintainers
 for urgent non-public security-related issues.</p>
 <h2 id="artifact-attestations">Artifact attestations<a class="headerlink" href="#artifact-attestations" title="Permanent link">&para;</a></h2>
-<p>coursier use the <a href="https://github.com/actions/attest-build-provenance">actions/attest-build-provenance</a>
+<p>coursier uses the <a href="https://github.com/actions/attest-build-provenance">actions/attest-build-provenance</a>
 GitHub action to attest that the binaries it distributes on its release pages were indeed built
 by the GitHub Action runners themselves. Attestations can be found
 <a href="https://github.com/coursier/coursier/attestations">here</a>.</p>
+<p>Users can validate a downloaded binary attestation with the GitHub CLI:</p>
+<div class="language-bash highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>gh<span class="w"> </span>attestation<span class="w"> </span>verify<span class="w"> </span>/path/to/cs<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>-R<span class="w"> </span>coursier/coursier
+</span></code></pre></div>
+<p>If verification succeeds, the downloaded file digest matches an attested build subject and the
+attestation signature and certificate chain validate. You can add <code>--format json</code> to inspect the
+provenance details from the verified statement.</p>
 
 
 
