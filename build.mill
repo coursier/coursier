@@ -774,7 +774,7 @@ trait Install extends CrossSbtModule with CsModule
     Deps.argonautShapeless,
     Deps.catsCore
   )
-  object test extends CrossSbtTests with CsTests with CsResourcesTests {
+  object test extends CrossSbtTests with CsScalaTests with CsResourcesTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata

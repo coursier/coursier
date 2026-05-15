@@ -15,20 +15,12 @@ object RawAppDescriptorTests extends TestSuite {
   private def readResource(path: String): String = {
     val is = Option(getClass.getResourceAsStream(path))
       .getOrElse(sys.error(s"Resource $path not found"))
-    try {
-      val baos = new java.io.ByteArrayOutputStream
-      val buf  = Array.ofDim[Byte](16384)
-      var read = -1
-      while ({ read = is.read(buf); read >= 0 })
-        baos.write(buf, 0, read)
-      new String(baos.toByteArray, StandardCharsets.UTF_8)
-    }
-    finally is.close()
+    new String(is.readAllBytes(), StandardCharsets.UTF_8)
   }
 
-  private def parseJson(path: String, content: String): Json =
+  private def parseJson(content: String): Json =
     Parse.parse(content) match {
-      case Left(error) => sys.error(s"Error parsing $path as JSON: $error")
+      case Left(error) => sys.error(s"Error parsing JSON: $error")
       case Right(json) => json
     }
 
@@ -45,8 +37,9 @@ object RawAppDescriptorTests extends TestSuite {
         }
     }
 
-  private def checkGolden[T](path: String, decode: String => Either[String, T])(
-    implicit encoder: EncodeJson[T]
+  private def checkGolden[T: EncodeJson](
+    path: String,
+    decode: String => Either[String, T]
   ): Unit = {
     val content = readResource(path)
     val value = decode(content) match {
@@ -54,8 +47,8 @@ object RawAppDescriptorTests extends TestSuite {
       case Right(value) => value
     }
 
-    val actualJson   = normalized(parseJson(path, encoder.encode(value).nospaces))
-    val expectedJson = normalized(parseJson(path, content))
+    val actualJson   = normalized(parseJson(EncodeJson.of[T].encode(value).nospaces))
+    val expectedJson = normalized(parseJson(content))
     assert(actualJson == expectedJson)
   }
 
