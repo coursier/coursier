@@ -1,6 +1,6 @@
 //| mill-version: 1.1.3
 
-import coursierbuild.Deps.{Deps, ScalaVersions, scalaCliVersion}
+import coursierbuild.Deps.{Deps, ScalaVersions, csQemuVersion, scalaCliVersion}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
 import coursierbuild.Relativize.{relativize => doRelativize}
 import coursierbuild.{DocHelpers, GitHubReleaseAssets, Shading, Sync}
@@ -1470,6 +1470,46 @@ def nativeTests() = Task.Command[Unit] {
 
 def nativeCompatTests() = Task.Command[Unit] {
   `cli-tests`.`native-compat-tests`.testForked()()
+}
+
+// Tests the compat launcher under QEMU with a Nehalem-class CPU (SSE4.2/POPCNT,
+// no AVX/BMI) to verify the binary actually runs on low-power x86-64 hardware
+// such as Intel Jasper Lake / Celeron N4xxx / Pentium Silver.
+// Requires: curl, tar (both available on ubuntu-latest CI runners).
+def qemuCompatTests() = Task.Command[Unit] {
+
+  import _root_.coursier.cache.ArchiveCache
+  import _root_.coursier.util.Artifact
+
+  val launcher = cli.compatNativeImage().path
+
+  val archiveCache = ArchiveCache()
+  val qemuDir = archiveCache
+    .get(Artifact(
+      s"https://github.com/coursier/qemu/releases/download/v$csQemuVersion/qemu-linux-amd64.tar.gz!"
+    ))
+    .unsafeRun(true)(using archiveCache.cache.ec)
+    .fold(err => throw err, os.Path(_))
+
+  val qemuBin = os.walk(qemuDir)
+    .find(_.last == "qemu-x86_64")
+    .getOrElse(sys.error("qemu-x86_64 not found in downloaded archive"))
+
+  // just in case
+  os.proc("chmod", "+x", qemuBin).call()
+
+  // Run the compat launcher under QEMU emulating a Nehalem CPU.
+  // Nehalem supports SSE4.2 and POPCNT (x86-64-v2) but NOT AVX/LZCNT/BMI
+  // (x86-64-v3).  A binary built with -march=native on an AVX2 host would
+  // fail here with "does not support all of the following CPU features".
+  System.err.println(
+    s"Testing compat launcher at $launcher with QEMU launcher $qemuBin (Nehalem CPU – no AVX)…"
+  )
+  val output = os.proc(qemuBin, "-cpu", "Nehalem", launcher, "version").call().out.trim()
+  pprint.err.log(output)
+  val expectedOutput = cli.publishVersion()
+  assert(output == expectedOutput, s"Expected output '$expectedOutput'")
+  System.err.println("QEMU compat test passed: launcher works on Nehalem CPU (no AVX)")
 }
 
 def nativeStaticTests() = Task.Command[Unit] {

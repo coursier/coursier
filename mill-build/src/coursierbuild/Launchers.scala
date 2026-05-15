@@ -131,6 +131,13 @@ object Launchers {
     object `base-image` extends CliNativeImage
 
     private def compatNativeImageOptions = Seq(
+      // Tell the GraalVM Substrate VM compiler to target the x86-64 baseline
+      // (equivalent to x86-64-v1), so the generated image runs on any 64-bit
+      // x86 processor — including CPUs that lack AVX/BMI (e.g. Intel Jasper Lake).
+      // Without this flag native-image defaults to "native" and uses the build
+      // host's CPU features (often AVX2/BMI), breaking on older hardware.
+      "-march=compatibility",
+      // Restrict the C-code compilation stage (GCC/Clang) to the same baseline.
       "--native-compiler-options=-march=x86-64",
       "--native-compiler-options=-mtune=generic"
     )
@@ -147,10 +154,10 @@ object Launchers {
         `base-image`.nativeImage
 
     def compatNativeImage =
-      if (Properties.isLinux && isCI)
-        `linux-compat-docker-image`.nativeImage
-      else
+      if (Properties.isLinux && !isCI)
         `compat-image`.nativeImage
+      else
+        `linux-compat-docker-image`.nativeImage
 
     object `linux-docker-image` extends CliNativeImage {
       def nativeImageDockerParams = Some(
