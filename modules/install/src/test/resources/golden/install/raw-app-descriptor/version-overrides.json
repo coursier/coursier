@@ -1,0 +1,41 @@
+{
+  "properties": {
+  },
+  "name": "echo",
+  "launcherType": "bootstrap",
+  "dependencies": [
+    "io.get-coursier:echo:1.0.0"
+  ],
+  "versionOverrides": [
+    {
+      "versionRange": "[1.0.0,2.0.0)",
+      "dependencies": [
+        "io.get-coursier:echo:1.5.0"
+      ],
+      "repositories": [
+        "central"
+      ],
+      "mainClass": "coursier.echo.Echo?",
+      "properties": {
+        "echo.mode": "compat"
+      },
+      "prebuilt": "https://example.com/echo-1",
+      "prebuiltBinaries": {
+        "linux-x86_64": "https://example.com/echo-1-linux-x86_64"
+      },
+      "launcherType": "bootstrap"
+    },
+    {
+      "versionRange": "[2.0.0,)",
+      "dependencies": [
+        "io.get-coursier:echo:2.0.0"
+      ],
+      "repositories": null,
+      "mainClass": null,
+      "properties": null,
+      "prebuilt": null,
+      "prebuiltBinaries": null,
+      "launcherType": null
+    }
+  ]
+}

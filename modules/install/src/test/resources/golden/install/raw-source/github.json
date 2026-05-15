@@ -1,0 +1,7 @@
+{
+  "repositories": [
+    "central"
+  ],
+  "channel": "gh:coursier/apps:apps/resources",
+  "id": "ammonite"
+}
