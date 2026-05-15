@@ -1042,6 +1042,7 @@ trait CliTests extends CsModule
     }
   }
   object `standalone-jvm-tests` extends SbtTests with CsTests {
+    def testModuleName = "test"
     def forkArgs = {
       val launcherTask = cli.standaloneJvmLauncher.map(_.path)
       Task {
