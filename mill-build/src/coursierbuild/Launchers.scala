@@ -410,8 +410,13 @@ object Launchers {
       val launcherName = if (Properties.isWin) "cs.exe" else "cs"
       val launcherPath = outputDir / "cs" / "bin" / launcherName
 
-      if (!os.exists(launcherPath))
+      if (!os.exists(launcherPath)) {
+        val files = os.walk(outputDir)
+          .map(_.subRelativeTo(outputDir))
+          .sorted
+        pprint.err.log(files)
         sys.error(s"Generated jpackage launcher not found at $launcherPath")
+      }
 
       PathRef(launcherPath)
     }
