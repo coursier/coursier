@@ -15,8 +15,7 @@ import java.nio.file.attribute.PosixFilePermission
 import java.util.zip.GZIPOutputStream
 
 import scala.jdk.CollectionConverters.*
-import scala.util.Properties
-import scala.util.Using
+import scala.util.{Properties, Using}
 
 object Launchers {
   private def writeTarGz(sourceDir: os.Path, dest: os.Path): os.Path = {
