@@ -371,6 +371,8 @@ jobs:
         include:
           - OS: "windows-latest"
             OSSHORT: "windows"
+          - OS: "windows-11-arm"
+            OSSHORT: "windows-arm"
           - OS: "macos-15-intel"
             OSSHORT: "mac"
           - OS: "macos-14"
