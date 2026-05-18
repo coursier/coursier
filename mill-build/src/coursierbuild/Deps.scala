@@ -4,13 +4,12 @@ import mill._, scalalib._
 
 object Deps {
   object Deps {
-    def argonautShapeless = mvn"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.1"
-    def caseApp           = mvn"com.github.alexarchambault::case-app:2.1.0"
-    def catsCore          = mvn"org.typelevel::cats-core:${Versions.cats}"
-    def catsFree213       = mvn"org.typelevel:cats-free_2.13:${Versions.cats}"
-    def catsEffect        = mvn"org.typelevel::cats-effect::3.6.1"
-    def classPathUtil     = mvn"io.get-coursier::class-path-util:0.1.4"
-    def collectionCompat  = mvn"org.scala-lang.modules::scala-collection-compat::2.13.0"
+    def caseApp          = mvn"com.github.alexarchambault::case-app:2.1.0"
+    def catsCore         = mvn"org.typelevel::cats-core:${Versions.cats}"
+    def catsFree213      = mvn"org.typelevel:cats-free_2.13:${Versions.cats}"
+    def catsEffect       = mvn"org.typelevel::cats-effect::3.6.1"
+    def classPathUtil    = mvn"io.get-coursier::class-path-util:0.1.4"
+    def collectionCompat = mvn"org.scala-lang.modules::scala-collection-compat::2.13.0"
     def concurrentReferenceHashMap =
       mvn"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
     def dataClass         = mvn"io.github.alexarchambault::data-class:0.2.7"
@@ -64,7 +63,6 @@ object Deps {
     def scalazCore               = mvn"org.scalaz::scalaz-core::${Versions.scalaz}"
     def scalazConcurrent         = mvn"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
     def scodec                   = mvn"org.scodec::scodec-core:2.3.3"
-    def shapeless                = mvn"com.chuusai::shapeless:2.3.12"
     def slf4JNop                 = mvn"org.slf4j:slf4j-nop:2.0.17"
     def svm                      = mvn"org.graalvm.nativeimage:svm:21.3.15"
     def tika                     = mvn"org.apache.tika:tika-core:3.2.3"

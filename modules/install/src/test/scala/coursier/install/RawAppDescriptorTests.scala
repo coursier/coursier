@@ -2,15 +2,16 @@ package coursier.install
 
 import java.nio.charset.StandardCharsets
 
-import argonaut.{EncodeJson, Json, Parse}
+import scala.util.Try
+
 import cats.data.Validated
+import com.github.plokhotnyuk.jsoniter_scala.core.{JsonValueCodec, readFromString}
+import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
+import coursier.parse.RawJson
 import coursier.version.{Version, VersionInterval}
 import utest._
 
 object RawAppDescriptorTests extends TestSuite {
-
-  private implicit val rawSourceEncoder: EncodeJson[RawSource] =
-    RawSource.encoder
 
   private def readResource(path: String): String = {
     val is = Option(getClass.getResourceAsStream(path))
@@ -18,37 +19,62 @@ object RawAppDescriptorTests extends TestSuite {
     new String(is.readAllBytes(), StandardCharsets.UTF_8)
   }
 
-  private def parseJson(content: String): Json =
-    Parse.parse(content) match {
-      case Left(error) => sys.error(s"Error parsing JSON: $error")
-      case Right(json) => json
-    }
+  private sealed abstract class NormalizedJson extends Product with Serializable
+  private final case class JsonObject(values: Seq[(String, NormalizedJson)]) extends NormalizedJson
+  private final case class JsonArray(values: Seq[NormalizedJson])            extends NormalizedJson
+  private final case class JsonString(value: String)                         extends NormalizedJson
+  private final case class JsonBoolean(value: Boolean)                       extends NormalizedJson
+  private case object JsonNull                                               extends NormalizedJson
 
-  private def normalized(json: Json): Any =
-    json.obj match {
-      case Some(obj) =>
-        obj.toList
-          .map { case (key, value) => key -> normalized(value) }
-          .sortBy(_._1)
-      case None =>
-        json.array match {
-          case Some(values) => values.map(normalized)
-          case None         => json.nospaces
+  private val mapCodec: JsonValueCodec[Map[String, RawJson]] = JsonCodecMaker.make
+  private val listCodec: JsonValueCodec[List[RawJson]]       = JsonCodecMaker.make
+  private val stringCodec: JsonValueCodec[String]            = JsonCodecMaker.make
+  private val booleanCodec: JsonValueCodec[Boolean]          = JsonCodecMaker.make
+
+  private def normalized(input: String): NormalizedJson = {
+    def parse[T: com.github.plokhotnyuk.jsoniter_scala.core.JsonValueCodec]: Option[T] =
+      Try(readFromString[T](input)).toOption
+
+    if (input.trim == "null") JsonNull
+    else
+      parse(mapCodec)
+        .map { obj =>
+          JsonObject(
+            obj.toSeq
+              .map { case (key, value) => key -> normalized(value.toString) }
+              .sortBy(_._1)
+          )
         }
-    }
+        .orElse {
+          parse(listCodec).map(values =>
+            JsonArray(values.map(value => normalized(value.toString)))
+          )
+        }
+        .orElse(parse(stringCodec).map(JsonString))
+        .orElse(parse(booleanCodec).map(JsonBoolean))
+        .getOrElse(sys.error(s"Error parsing JSON: $input"))
+  }
 
-  private def checkGolden[T: EncodeJson](
+  private def checkGolden[T](
     path: String,
     decode: String => Either[String, T]
+  )(
+    encode: T => String
   ): Unit = {
-    val content = readResource(path)
+    val path0   = s"/golden/install/$path"
+    val content = readResource(path0)
     val value = decode(content) match {
-      case Left(error)  => sys.error(s"Error decoding $path: $error")
+      case Left(error)  => sys.error(s"Error decoding $path0: $error")
       case Right(value) => value
     }
 
-    val actualJson   = normalized(parseJson(EncodeJson.of[T].encode(value).nospaces))
-    val expectedJson = normalized(parseJson(content))
+    val actualJson   = normalized(encode(value))
+    val expectedJson = normalized(content)
+    if (actualJson != expectedJson) {
+      pprint.err.log(expectedJson)
+      pprint.err.log(actualJson)
+      Thread.sleep(2000L)
+    }
     assert(actualJson == expectedJson)
   }
 
@@ -76,25 +102,27 @@ object RawAppDescriptorTests extends TestSuite {
     }
 
     test("RawAppDescriptor JSON golden files") {
-      val goldenFiles = Seq(
-        "/golden/install/raw-app-descriptor/minimal.json",
-        "/golden/install/raw-app-descriptor/full.json",
-        "/golden/install/raw-app-descriptor/version-overrides.json"
-      )
-
-      for (path <- goldenFiles)
-        checkGolden(path, RawAppDescriptor.parse)
+      test("minimal") {
+        checkGolden("raw-app-descriptor/minimal.json", RawAppDescriptor.parse)(_.repr)
+      }
+      test("full") {
+        checkGolden("raw-app-descriptor/full.json", RawAppDescriptor.parse)(_.repr)
+      }
+      test("version-overrides") {
+        checkGolden("raw-app-descriptor/version-overrides.json", RawAppDescriptor.parse)(_.repr)
+      }
     }
 
     test("RawSource JSON golden files") {
-      val goldenFiles = Seq(
-        "/golden/install/raw-source/inline.json",
-        "/golden/install/raw-source/url.json",
-        "/golden/install/raw-source/github.json"
-      )
-
-      for (path <- goldenFiles)
-        checkGolden(path, RawSource.parse)
+      test("inline") {
+        checkGolden("raw-source/inline.json", RawSource.parse)(_.repr)
+      }
+      test("url") {
+        checkGolden("raw-source/url.json", RawSource.parse)(_.repr)
+      }
+      test("github") {
+        checkGolden("raw-source/github.json", RawSource.parse)(_.repr)
+      }
     }
   }
 }
