@@ -51,6 +51,7 @@ object Run extends CaseApp[RunOptions] {
       val assembly       = options.assembly
       def isNative       = false
       def isNativeStatic = false
+      def isStandalone   = false
 
       def acceptsDOptions = true
       def acceptsJOptions = true

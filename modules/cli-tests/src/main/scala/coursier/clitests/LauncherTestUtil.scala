@@ -45,10 +45,10 @@ object LauncherTestUtil {
     java.lang.Boolean.parseBoolean(value)
   }
 
-  lazy val canRunWithoutJvm = {
+  lazy val isStandalone = {
     val value = sys.props.getOrElse(
-      "coursier-test-can-run-without-jvm",
-      "false"
+      "coursier-test-is-standalone",
+      sys.error("Java property coursier-test-is-standalone not set")
     )
     java.lang.Boolean.parseBoolean(value)
   }
