@@ -7,9 +7,10 @@ import scala.util.Properties
 abstract class SetupTests extends TestSuite {
 
   def launcher: String
-  def assembly: String
+  def assembly: os.Path
   def isNative: Boolean
   def isNativeStatic: Boolean
+  def isStandalone: Boolean
 
   def hasDocker: Boolean =
     Properties.isLinux
@@ -52,9 +53,12 @@ abstract class SetupTests extends TestSuite {
     }
 
     test("alpine-linux") {
-      if (hasDocker && !isNative) alpineLinuxTest(isNative = false)
-      else if (hasDocker && isNative && isNativeStatic) alpineLinuxTest(isNative = true)
-      else "Docker test disabled"
+      if (hasDocker)
+        if (isNativeStatic) alpineLinuxTest(isNative = true)
+        else if (!isNative && !isStandalone) alpineLinuxTest(isNative = false)
+        else "Docker test disabled (native non-static launcher)"
+      else
+        "Docker test disabled (docker unavailable)"
     }
   }
 
@@ -62,7 +66,7 @@ abstract class SetupTests extends TestSuite {
     TestUtil.withTempDir { tmpDir0 =>
       val tmpDir = os.Path(tmpDir0, os.pwd)
       os.copy(
-        os.Path(if (isNative) launcher else assembly),
+        if (isNative) os.Path(launcher) else assembly,
         tmpDir / (if (isNative) "cs" else "cs.jar")
       )
 

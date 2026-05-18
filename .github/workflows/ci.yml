@@ -360,6 +360,80 @@ jobs:
           if-no-files-found: error
           retention-days: 2
 
+  generate-standalone-launchers:
+    name: ${{ matrix.OS }} standalone jvm
+    runs-on: ${{ matrix.OS }}
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest"]
+        OSSHORT: ["linux"]
+        include:
+          - OS: "windows-latest"
+            OSSHORT: "windows"
+          # uncomment once coursier/setup-action support Windows ARM
+          # - OS: "windows-11-arm"
+          #   OSSHORT: "windows-arm"
+          - OS: "macos-15-intel"
+            OSSHORT: "mac"
+          - OS: "macos-14"
+            OSSHORT: "mac-arm"
+          - OS: "ubuntu-24.04-arm"
+            OSSHORT: "linux-arm"
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v8
+      - uses: coursier/setup-action@v3
+        with:
+          jvm: 21
+      - run: sudo apt-get install -y nailgun
+        if: runner.os == 'Linux'
+      - run: ./mill -i standaloneJvmTests
+        timeout-minutes: 35
+      - name: Copy artifacts
+        run: ./mill -i copyStandaloneJvmLauncher --directory artifacts/
+      - uses: actions/attest-build-provenance@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          subject-path: 'artifacts/*'
+      - uses: actions/upload-artifact@v5
+        with:
+          name: launchers-${{ matrix.OSSHORT }}-standalone
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 2
+
+  generate-standalone-launcher-windows-arm-tmp:
+    name: windows-11-arm standalone jvm
+    runs-on: windows-11-arm
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v8
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - run: ./mill -i standaloneJvmTests
+        timeout-minutes: 35
+      - name: Copy artifacts
+        run: ./mill -i copyStandaloneJvmLauncher --directory artifacts/
+      - uses: actions/attest-build-provenance@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          subject-path: 'artifacts/*'
+      - uses: actions/upload-artifact@v5
+        with:
+          name: launchers-windows-arm-standalone
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 2
+
   generate-jar-launchers:
     name: Upload JAR launchers
     needs: publish
@@ -392,7 +466,7 @@ jobs:
 
   upload-launchers:
     name: Upload launchers to GitHub release assets
-    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-container-launcher, generate-jar-launchers]
+    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-container-launcher, generate-standalone-launchers, generate-standalone-launcher-windows-arm-tmp, generate-jar-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -443,6 +517,30 @@ jobs:
     - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-arm-container
+        path: artifacts/
+    - uses: actions/download-artifact@v6
+      with:
+        name: launchers-linux-standalone
+        path: artifacts/
+    - uses: actions/download-artifact@v6
+      with:
+        name: launchers-linux-arm-standalone
+        path: artifacts/
+    - uses: actions/download-artifact@v6
+      with:
+        name: launchers-windows-standalone
+        path: artifacts/
+    - uses: actions/download-artifact@v6
+      with:
+        name: launchers-windows-arm-standalone
+        path: artifacts/
+    - uses: actions/download-artifact@v6
+      with:
+        name: launchers-mac-standalone
+        path: artifacts/
+    - uses: actions/download-artifact@v6
+      with:
+        name: launchers-mac-arm-standalone
         path: artifacts/
     - uses: actions/download-artifact@v6
       with:

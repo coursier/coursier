@@ -997,23 +997,20 @@ trait CliTests extends CsModule
     PathRef(dest)
   }
   object test extends SbtTests with CsTests {
-    def forkArgs = {
-      val launcherTask = cli.launcher.map(_.path)
-      val assemblyTask = cli.assembly.map(_.path)
-      Task {
-        super.forkArgs() ++ sharedTestArgs ++ Seq(
-          s"-Dcoursier-test-launcher=${launcherTask()}",
-          s"-Dcoursier-test-assembly=${assemblyTask()}",
-          "-Dcoursier-test-launcher-accepts-D=false",
-          "-Dcoursier-test-launcher-accepts-J=true",
-          "-Dcoursier-test-is-native=false",
-          "-Dcoursier-test-is-native-static=false",
-          s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
-          s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
-          s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
-          s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
-        )
-      }
+    def forkArgs = Task {
+      super.forkArgs() ++ sharedTestArgs ++ Seq(
+        s"-Dcoursier-test-launcher=${cli.launcher().path}",
+        s"-Dcoursier-test-assembly=${cli.assembly().path}",
+        "-Dcoursier-test-launcher-accepts-D=false",
+        "-Dcoursier-test-launcher-accepts-J=true",
+        "-Dcoursier-test-is-native=false",
+        "-Dcoursier-test-is-native-static=false",
+        "-Dcoursier-test-is-standalone=false",
+        s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
+        s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
+      )
     }
   }
   trait NativeTests extends SbtTests with CsTests {
@@ -1031,12 +1028,35 @@ trait CliTests extends CsModule
           "-Dcoursier-test-launcher-accepts-J=false",
           "-Dcoursier-test-is-native=true",
           s"-Dcoursier-test-is-native-static=$isStatic",
+          "-Dcoursier-test-is-standalone=false",
           s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
           s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
           s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
           s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
         )
       }
+    }
+  }
+  object `standalone-jvm-tests` extends SbtTests with CsTests {
+    def testModuleName = "test"
+    def forkArgs = Task {
+      val launcherDir = cli.standaloneJvmLauncherDir().path
+      val launcher    = launcherDir / cli.launcherSubPath
+      super.forkArgs() ++ sharedTestArgs ++ Seq(
+        s"-Dcoursier-test-launcher=$launcher",
+        s"-Dcoursier-test-assembly=$launcher",
+        "-Dcoursier-test-launcher-accepts-D=false",
+        "-Dcoursier-test-launcher-accepts-J=false",
+        "-Dcoursier-test-is-native=false",
+        "-Dcoursier-test-is-native-static=false",
+        "-Dcoursier-test-is-standalone=true",
+        s"-Dcoursier-test-launcher-dir=$launcherDir",
+        s"-Dcoursier-test-launcher-sub-path=${cli.launcherSubPath}",
+        s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
+        s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
+      )
     }
   }
   object `native-tests` extends NativeTests {
@@ -1174,6 +1194,15 @@ def copyContainerLauncher(directory: String = "artifacts") = Task.Command {
     nativeLauncher,
     os.Path(directory, BuildCtx.workspaceRoot),
     suffix = "-container"
+  )
+}
+
+def copyStandaloneJvmLauncher(directory: String = "artifacts") = Task.Command {
+  val nativeLauncher = cli.standaloneJvmLauncherArchive().path
+  GitHubReleaseAssets.copyLauncher(
+    nativeLauncher,
+    os.Path(directory, BuildCtx.workspaceRoot),
+    suffix = "-jvm"
   )
 }
 
@@ -1486,6 +1515,10 @@ def nativeStaticTests() = Task.Command[Unit] {
 
 def nativeContainerTests() = Task.Command[Unit] {
   `cli-tests`.`native-container-tests`.testForked()()
+}
+
+def standaloneJvmTests() = Task.Command[Unit] {
+  `cli-tests`.`standalone-jvm-tests`.testForked()()
 }
 
 def cliNativeImageLauncher() = Task.Command {
