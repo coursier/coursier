@@ -779,6 +779,9 @@ trait Install extends CrossSbtModule with CsModule
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
+    def compileMvnDeps = super.compileMvnDeps() ++ Seq(
+      Deps.jsoniterMacros
+    )
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.jvm()
     )

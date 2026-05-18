@@ -434,7 +434,7 @@ object RawAppDescriptor {
     )
 
   private implicit lazy val codec: JsonValueCodec[RawAppDescriptorJson] =
-    JsonCodecMaker.make
+    JsonCodecMaker.makeWithRequiredCollectionFields
 
   def parse(input: String): Either[String, RawAppDescriptor] =
     try Right(readFromString(input)(codec).get)

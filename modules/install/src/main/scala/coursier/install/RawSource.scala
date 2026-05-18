@@ -49,7 +49,7 @@ import dataclass.data
 
 object RawSource {
 
-  lazy val codec: JsonValueCodec[RawSource] = JsonCodecMaker.make
+  lazy val codec: JsonValueCodec[RawSource] = JsonCodecMaker.makeWithRequiredCollectionFields
 
   def parse(input: String): Either[String, RawSource] =
     try Right(readFromString(input)(codec))
