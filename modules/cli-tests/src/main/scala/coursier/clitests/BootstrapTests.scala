@@ -795,19 +795,28 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
                |""".stripMargin
           os.write(tmpDir / "script.sh", scriptContent)
 
-          val launcherContent =
-            s"""#!/usr/bin/env bash
-               |set -e
-               |exec /data/launcher/$launcherSubPath "$$@"
-               |""".stripMargin
-          os.write(tmpDir / "bin/cs", launcherContent, createFolders = true, perms = "rwxr-xr-x")
+          if (isStandalone) {
+            val launcherContent =
+              s"""#!/usr/bin/env bash
+                 |set -e
+                 |exec /data/launcher/$launcherSubPath "$$@"
+                 |""".stripMargin
+            os.write(tmpDir / "bin/cs", launcherContent, createFolders = true, perms = "rwxr-xr-x")
 
-          os.copy(
-            launcherDir,
-            tmpDir / "launcher",
-            createFolders = true,
-            copyAttributes = true
-          )
+            os.copy(
+              launcherDir,
+              tmpDir / "launcher",
+              createFolders = true,
+              copyAttributes = true
+            )
+          }
+          else
+            os.copy(
+              launcherDir / launcherSubPath,
+              tmpDir / "bin" / "cs",
+              createFolders = true,
+              copyAttributes = true
+            )
 
           val res = os.proc(
             "docker",
