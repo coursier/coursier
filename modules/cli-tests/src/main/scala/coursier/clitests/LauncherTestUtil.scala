@@ -50,6 +50,22 @@ object LauncherTestUtil {
     java.lang.Boolean.parseBoolean(value)
   }
 
+  lazy val launcherDir = {
+    val path = sys.props.getOrElse(
+      "coursier-test-launcher-dir",
+      sys.error("Java property coursier-test-launcher-dir not set")
+    )
+    os.Path(path, os.pwd)
+  }
+
+  lazy val launcherSubPath = {
+    val path = sys.props.getOrElse(
+      "coursier-test-launcher-sub-path",
+      sys.error("Java property coursier-test-launcher-sub-path not set")
+    )
+    os.SubPath(path)
+  }
+
   private lazy val pathExt = Option(System.getenv("pathext"))
     .toSeq
     .flatMap(_.split(File.pathSeparator))

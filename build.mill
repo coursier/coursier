@@ -1043,24 +1043,24 @@ trait CliTests extends CsModule
   }
   object `standalone-jvm-tests` extends SbtTests with CsTests {
     def testModuleName = "test"
-    def forkArgs = {
-      val launcherTask = cli.standaloneJvmLauncher.map(_.path)
-      Task {
-        val launcher = launcherTask()
-        super.forkArgs() ++ sharedTestArgs ++ Seq(
-          s"-Dcoursier-test-launcher=$launcher",
-          s"-Dcoursier-test-assembly=$launcher",
-          "-Dcoursier-test-launcher-accepts-D=false",
-          "-Dcoursier-test-launcher-accepts-J=false",
-          "-Dcoursier-test-is-native=false",
-          "-Dcoursier-test-is-native-static=false",
-          "-Dcoursier-test-is-standalone=true",
-          s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
-          s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
-          s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
-          s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
-        )
-      }
+    def forkArgs = Task {
+      val launcherDir = cli.standaloneJvmLauncherDir().path
+      val launcher    = launcherDir / cli.launcherSubPath
+      super.forkArgs() ++ sharedTestArgs ++ Seq(
+        s"-Dcoursier-test-launcher=$launcher",
+        s"-Dcoursier-test-assembly=$launcher",
+        "-Dcoursier-test-launcher-accepts-D=false",
+        "-Dcoursier-test-launcher-accepts-J=false",
+        "-Dcoursier-test-is-native=false",
+        "-Dcoursier-test-is-native-static=false",
+        "-Dcoursier-test-is-standalone=true",
+        s"-Dcoursier-test-launcher-dir=$launcherDir",
+        s"-Dcoursier-test-launcher-sub-path=${cli.launcherSubPath}",
+        s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
+        s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
+      )
     }
   }
   object `native-tests` extends NativeTests {
@@ -1202,7 +1202,7 @@ def copyContainerLauncher(directory: String = "artifacts") = Task.Command {
 }
 
 def copyStandaloneJvmLauncher(directory: String = "artifacts") = Task.Command {
-  val nativeLauncher = cli.standaloneJvmLauncher().path
+  val nativeLauncher = cli.standaloneJvmLauncherZip().path
   GitHubReleaseAssets.copyLauncher(
     nativeLauncher,
     os.Path(directory, BuildCtx.workspaceRoot),

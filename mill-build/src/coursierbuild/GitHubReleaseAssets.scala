@@ -15,7 +15,7 @@ import sttp.client4.quick._
 
 import scala.annotation.tailrec
 import scala.util.control.NonFatal
-import scala.util.Properties
+import scala.util.{Properties, Using}
 
 object GitHubReleaseAssets {
   def ghOrg  = "coursier"
@@ -179,28 +179,16 @@ object GitHubReleaseAssets {
 
     os.makeDir.all(zip / os.up)
 
-    var fis: InputStream     = null
-    var fos: OutputStream    = null
-    var zos: ZipOutputStream = null
-
-    try {
-      fis = os.read.inputStream(file)
-      fos = Files.newOutputStream(zip.toNIO)
-      zos = new ZipOutputStream(new BufferedOutputStream(fos))
-
-      val ent = new ZipEntry(name)
-      ent.setLastModifiedTime(FileTime.fromMillis(os.mtime(file)))
-      ent.setSize(os.size(file))
-      zos.putNextEntry(ent)
-      readInto(fis, zos)
-      zos.closeEntry()
-
-      zos.finish()
-    }
-    finally {
-      if (zos != null) zos.close()
-      if (fos != null) fos.close()
-      if (fis != null) fis.close()
+    Using.resources(os.read.inputStream(file), Files.newOutputStream(zip.toNIO)) { (fis, fos) =>
+      Using.resource(new ZipOutputStream(new BufferedOutputStream(fos))) { zos =>
+        val ent = new ZipEntry(name)
+        ent.setLastModifiedTime(FileTime.fromMillis(os.mtime(file)))
+        ent.setSize(os.size(file))
+        zos.putNextEntry(ent)
+        readInto(fis, zos)
+        zos.closeEntry()
+        zos.finish()
+      }
     }
   }
 
@@ -210,7 +198,9 @@ object GitHubReleaseAssets {
     suffix: String = ""
   ): Unit = {
     val name = s"cs-$platformSuffix$suffix$platformExtension"
-    if (Properties.isWin)
+    if (nativeLauncher.last.endsWith(".zip"))
+      os.copy(nativeLauncher, directory / s"cs-$platformSuffix$suffix.zip")
+    else if (Properties.isWin)
       writeInZip(name, nativeLauncher, directory / s"cs-$platformSuffix$suffix.zip")
     else {
       val dest = directory / name

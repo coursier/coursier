@@ -3,8 +3,10 @@ package coursier.clitests
 import scala.util.Properties
 
 object PackBootstrapTests extends BootstrapTests with PackLauncherOptions {
-  val launcher = LauncherTestUtil.launcher
-  val assembly = LauncherTestUtil.assembly
+  val launcher        = LauncherTestUtil.launcher
+  def launcherDir     = LauncherTestUtil.launcherDir
+  def launcherSubPath = LauncherTestUtil.launcherSubPath
+  def isStandalone    = LauncherTestUtil.isStandalone
   override lazy val overrideProguarded: Option[Boolean] =
     if (sys.props.get("java.version").exists(!_.startsWith("1.")))
       // It seems bootstrap JARs built on Java 11 fail at runtime with some obscure

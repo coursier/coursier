@@ -374,7 +374,7 @@ object Launchers {
       PathRef(dest)
     }
 
-    def standaloneJvmLauncher = Task {
+    def standaloneJvmLauncherDir = Task {
       val assemblyPath = assembly().path
       val mainClass0   = mainClass().getOrElse(sys.error("No main class"))
 
@@ -407,10 +407,6 @@ object Launchers {
         mainClass0
       ).call(stdin = os.Inherit, stdout = os.Inherit, stderr = os.Inherit)
 
-      val launcherSubPath =
-        if (Properties.isMac) os.sub / "cs.app/Contents/MacOS/cs"
-        else if (Properties.isWin) os.sub / "cs/cs.exe"
-        else os.sub / "cs/bin/cs"
       val launcherPath = outputDir / launcherSubPath
 
       if (!os.exists(launcherPath)) {
@@ -421,7 +417,17 @@ object Launchers {
         sys.error(s"Generated jpackage launcher not found at $launcherPath")
       }
 
-      PathRef(launcherPath)
+      PathRef(outputDir)
     }
+
+    def standaloneJvmLauncherZip = Task {
+      val dir = standaloneJvmLauncherDir().path
+      PathRef(os.zip(Task.dest / "cs.zip", os.list(dir)))
+    }
+
+    def launcherSubPath: os.SubPath =
+      if (Properties.isMac) os.sub / "cs.app/Contents/MacOS/cs"
+      else if (Properties.isWin) os.sub / "cs/cs.exe"
+      else os.sub / "cs/bin/cs"
   }
 }

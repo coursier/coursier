@@ -20,7 +20,10 @@ import utest._
 abstract class BootstrapTests extends TestSuite with LauncherOptions {
 
   def launcher: String
-  def assembly: os.Path
+  def launcherDir: os.Path
+  def launcherSubPath: os.SubPath
+
+  def isStandalone: Boolean
 
   def overrideProguarded: Option[Boolean] =
     None
@@ -37,6 +40,39 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       case None        => Nil
       case Some(value) => Seq(s"--proguarded=$value")
     }
+
+  private def putLauncherIn(binDir: os.Path): Unit = {
+
+    val ext = if (Properties.isWin) ".bat" else ""
+
+    if (isStandalone) {
+      val scriptContent =
+        if (Properties.isWin)
+          s"""@echo off
+             |setlocal
+             |"${launcherDir / launcherSubPath}" %*
+             |exit /b %ERRORLEVEL%
+             |""".stripMargin
+        else
+          s"""#!/usr/bin/env bash
+             |set -e
+             |exec "${launcherDir / launcherSubPath}" "$$@"
+             |""".stripMargin
+      os.write(
+        binDir / s"cs$ext",
+        scriptContent,
+        createFolders = true,
+        perms = if (Properties.isWin) null else "rwxr-xr-x": os.PermSet
+      )
+    }
+    else
+      os.copy(
+        os.Path(launcher, os.pwd),
+        binDir / s"cs$ext",
+        createFolders = true,
+        copyAttributes = true
+      )
+  }
 
   val tests = Tests {
     test("simple") {
@@ -759,9 +795,16 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
                |""".stripMargin
           os.write(tmpDir / "script.sh", scriptContent)
 
+          val launcherContent =
+            s"""#!/usr/bin/env bash
+               |set -e
+               |exec /data/launcher/$launcherSubPath "$$@"
+               |""".stripMargin
+          os.write(tmpDir / "bin/cs", launcherContent, createFolders = true, perms = "rwxr-xr-x")
+
           os.copy(
-            assembly,
-            tmpDir / "bin" / "cs",
+            launcherDir,
+            tmpDir / "launcher",
             createFolders = true,
             copyAttributes = true
           )
@@ -829,13 +872,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         os.write(configFile, configContent)
 
         val binDir = tmpDir / "bin"
-        val ext    = if (Properties.isWin) ".bat" else ""
-        os.copy(
-          assembly,
-          binDir / s"cs$ext",
-          createFolders = true,
-          copyAttributes = true
-        )
+        putLauncherIn(binDir)
 
         val (pathVarName, pathValue) = sys.env
           .find(_._1.toLowerCase(java.util.Locale.ROOT) == "path")
@@ -890,13 +927,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
           if (useConfig) {
 
             val binDir = root / "bin"
-            val ext    = if (Properties.isWin) ".bat" else ""
-            os.copy(
-              assembly,
-              binDir / s"cs$ext",
-              createFolders = true,
-              copyAttributes = true
-            )
+            putLauncherIn(binDir)
 
             val (pathKey, currentPath) =
               sys.env.find(_._1.toLowerCase(Locale.ROOT) == "path").getOrElse(("PATH", ""))
