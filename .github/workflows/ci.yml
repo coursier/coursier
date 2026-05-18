@@ -400,7 +400,7 @@ jobs:
           subject-path: 'artifacts/*'
       - uses: actions/upload-artifact@v5
         with:
-          name: launchers-${{ matrix.OSSHORT }}-jvm
+          name: launchers-${{ matrix.OSSHORT }}-standalone
           path: artifacts/
           if-no-files-found: error
           retention-days: 2
@@ -491,27 +491,27 @@ jobs:
         path: artifacts/
     - uses: actions/download-artifact@v6
       with:
-        name: launchers-linux-jvm
+        name: launchers-linux-standalone
         path: artifacts/
     - uses: actions/download-artifact@v6
       with:
-        name: launchers-linux-arm-jvm
+        name: launchers-linux-arm-standalone
         path: artifacts/
     - uses: actions/download-artifact@v6
       with:
-        name: launchers-windows-jvm
+        name: launchers-windows-standalone
         path: artifacts/
     - uses: actions/download-artifact@v6
       with:
-        name: launchers-windows-arm-jvm
+        name: launchers-windows-arm-standalone
         path: artifacts/
     - uses: actions/download-artifact@v6
       with:
-        name: launchers-mac-jvm
+        name: launchers-mac-standalone
         path: artifacts/
     - uses: actions/download-artifact@v6
       with:
-        name: launchers-mac-arm-jvm
+        name: launchers-mac-arm-standalone
         path: artifacts/
     - uses: actions/download-artifact@v6
       with:
