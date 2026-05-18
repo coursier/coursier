@@ -10,7 +10,7 @@ sealed abstract class Variant extends Product with Serializable {
 
 object Variant {
   @data class Configuration(configuration: Configuration0) extends Variant {
-    def asConfiguration: Option[Configuration0] =
+    lazy val asConfiguration: Option[Configuration0] =
       Some(configuration)
     def isEmpty: Boolean =
       configuration.isEmpty
