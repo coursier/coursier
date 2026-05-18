@@ -503,6 +503,10 @@ jobs:
         path: artifacts/
     - uses: actions/download-artifact@v6
       with:
+        name: launchers-windows-arm-jvm
+        path: artifacts/
+    - uses: actions/download-artifact@v6
+      with:
         name: launchers-mac-jvm
         path: artifacts/
     - uses: actions/download-artifact@v6
