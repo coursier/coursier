@@ -200,6 +200,8 @@ object GitHubReleaseAssets {
     val name = s"cs-$platformSuffix$suffix$platformExtension"
     if (nativeLauncher.last.endsWith(".zip"))
       os.copy(nativeLauncher, directory / s"cs-$platformSuffix$suffix.zip")
+    else if (nativeLauncher.last.endsWith(".tar.gz"))
+      os.copy(nativeLauncher, directory / s"cs-$platformSuffix$suffix.tar.gz")
     else if (Properties.isWin)
       writeInZip(name, nativeLauncher, directory / s"cs-$platformSuffix$suffix.zip")
     else {

@@ -7,12 +7,73 @@ import io.github.alexarchambault.millnativeimage.NativeImage
 import mill.*
 import mill.api.*
 import mill.scalalib.*
+import org.apache.commons.compress.archivers.tar.{TarArchiveEntry, TarArchiveOutputStream}
 
-import java.io.File
+import java.io.{BufferedOutputStream, File}
+import java.nio.file.{Files, LinkOption, Path}
+import java.nio.file.attribute.PosixFilePermission
+import java.util.zip.GZIPOutputStream
 
+import scala.jdk.CollectionConverters.*
 import scala.util.Properties
+import scala.util.Using
 
 object Launchers {
+  private def writeTarGz(sourceDir: os.Path, dest: os.Path): os.Path = {
+    def permissionsMode(path: os.Path, defaultMode: Int): Int =
+      try {
+        val perms = Files.getPosixFilePermissions(path.toNIO, LinkOption.NOFOLLOW_LINKS).asScala
+        Seq(
+          PosixFilePermission.OWNER_READ     -> 0x100,
+          PosixFilePermission.OWNER_WRITE    -> 0x080,
+          PosixFilePermission.OWNER_EXECUTE  -> 0x040,
+          PosixFilePermission.GROUP_READ     -> 0x020,
+          PosixFilePermission.GROUP_WRITE    -> 0x010,
+          PosixFilePermission.GROUP_EXECUTE  -> 0x008,
+          PosixFilePermission.OTHERS_READ    -> 0x004,
+          PosixFilePermission.OTHERS_WRITE   -> 0x002,
+          PosixFilePermission.OTHERS_EXECUTE -> 0x001
+        ).iterator
+          .collect { case (perm, bit) if perms.contains(perm) => bit }
+          .sum
+      }
+      catch {
+        case _: UnsupportedOperationException => defaultMode
+      }
+
+    os.makeDir.all(dest / os.up)
+    Using.resource(
+      new TarArchiveOutputStream(
+        new GZIPOutputStream(new BufferedOutputStream(Files.newOutputStream(dest.toNIO)))
+      )
+    ) { tar =>
+      tar.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX)
+      tar.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX)
+      val entries = os.walk(sourceDir)
+        .filter(_ != sourceDir) // needed?
+        .sorted
+
+      for (path <- entries) {
+        val isDirectory = os.isDir(path)
+        val entry = new TarArchiveEntry(
+          path.toNIO,
+          path.subRelativeTo(sourceDir).toString + (if (isDirectory) "/" else ""),
+          LinkOption.NOFOLLOW_LINKS
+        )
+        entry.setMode(permissionsMode(path, if (isDirectory) 0x1ed else 0x1a4))
+        tar.putArchiveEntry(entry)
+        if (!isDirectory)
+          Using.resource(os.read.inputStream(path)) { is =>
+            is.transferTo(tar)
+          }
+        tar.closeArchiveEntry()
+      }
+
+      tar.finish()
+    }
+    dest
+  }
+
   def platformExtension: String =
     if (Properties.isWin) ".exe"
     else ""
@@ -420,9 +481,14 @@ object Launchers {
       PathRef(outputDir)
     }
 
-    def standaloneJvmLauncherZip = Task {
+    def standaloneJvmLauncherArchive = Task {
       val dir = standaloneJvmLauncherDir().path
-      PathRef(os.zip(Task.dest / "cs.zip", os.list(dir)))
+      val archive =
+        if (Properties.isWin)
+          os.zip(Task.dest / "cs.zip", os.list(dir))
+        else
+          writeTarGz(dir, Task.dest / "cs.tar.gz")
+      PathRef(archive)
     }
 
     def launcherSubPath: os.SubPath =

@@ -1202,7 +1202,7 @@ def copyContainerLauncher(directory: String = "artifacts") = Task.Command {
 }
 
 def copyStandaloneJvmLauncher(directory: String = "artifacts") = Task.Command {
-  val nativeLauncher = cli.standaloneJvmLauncherZip().path
+  val nativeLauncher = cli.standaloneJvmLauncherArchive().path
   GitHubReleaseAssets.copyLauncher(
     nativeLauncher,
     os.Path(directory, BuildCtx.workspaceRoot),
