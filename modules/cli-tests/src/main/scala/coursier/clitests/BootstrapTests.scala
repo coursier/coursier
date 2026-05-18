@@ -19,6 +19,8 @@ import utest._
 
 abstract class BootstrapTests extends TestSuite with LauncherOptions {
 
+  def assembly: os.Path
+
   def launcher: String
   def launcherDir: os.Path
   def launcherSubPath: os.SubPath
@@ -67,7 +69,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
     }
     else
       os.copy(
-        os.Path(launcher, os.pwd),
+        assembly,
         binDir / s"cs$ext",
         createFolders = true,
         copyAttributes = true

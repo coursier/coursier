@@ -58,6 +58,7 @@ object Run extends CaseApp[RunOptions] {
     }
     val bootstrapTests = new BootstrapTests {
       val launcher        = options.launcher
+      val assembly        = os.Path(options.assembly, os.pwd)
       val launcherDir     = os.Path(options.assembly, os.pwd)
       val launcherSubPath = os.sub
       def isStandalone    = false

@@ -3,6 +3,7 @@ package coursier.clitests
 import scala.util.Properties
 
 object PackBootstrapTests extends BootstrapTests with PackLauncherOptions {
+  val assembly    = LauncherTestUtil.assembly
   val launcher    = LauncherTestUtil.launcher
   def launcherDir = if (isStandalone) LauncherTestUtil.launcherDir else LauncherTestUtil.assembly
   def launcherSubPath = if (isStandalone) LauncherTestUtil.launcherSubPath else os.sub

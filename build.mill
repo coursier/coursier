@@ -997,24 +997,20 @@ trait CliTests extends CsModule
     PathRef(dest)
   }
   object test extends SbtTests with CsTests {
-    def forkArgs = {
-      val launcherTask = cli.launcher.map(_.path)
-      val assemblyTask = cli.assembly.map(_.path)
-      Task {
-        super.forkArgs() ++ sharedTestArgs ++ Seq(
-          s"-Dcoursier-test-launcher=${launcherTask()}",
-          s"-Dcoursier-test-assembly=${assemblyTask()}",
-          "-Dcoursier-test-launcher-accepts-D=false",
-          "-Dcoursier-test-launcher-accepts-J=true",
-          "-Dcoursier-test-is-native=false",
-          "-Dcoursier-test-is-native-static=false",
-          "-Dcoursier-test-is-standalone=false",
-          s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
-          s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
-          s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
-          s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
-        )
-      }
+    def forkArgs = Task {
+      super.forkArgs() ++ sharedTestArgs ++ Seq(
+        s"-Dcoursier-test-launcher=${cli.launcher().path}",
+        s"-Dcoursier-test-assembly=${cli.assembly().path}",
+        "-Dcoursier-test-launcher-accepts-D=false",
+        "-Dcoursier-test-launcher-accepts-J=true",
+        "-Dcoursier-test-is-native=false",
+        "-Dcoursier-test-is-native-static=false",
+        "-Dcoursier-test-is-standalone=false",
+        s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
+        s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
+      )
     }
   }
   trait NativeTests extends SbtTests with CsTests {

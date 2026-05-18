@@ -18,6 +18,8 @@ object LauncherTestUtil {
       path
   }
 
+  // Unlike launcher, this one never consists in a coursier bootstrap
+  // It can be put in PATH as "cs", and be used by bootstraps when they read config files (by shelling out to it)
   lazy val assembly = {
     val path = sys.props.getOrElse(
       "coursier-test-assembly",
