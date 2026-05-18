@@ -407,8 +407,11 @@ object Launchers {
         mainClass0
       ).call(stdin = os.Inherit, stdout = os.Inherit, stderr = os.Inherit)
 
-      val launcherName = if (Properties.isWin) "cs.exe" else "cs"
-      val launcherPath = outputDir / "cs" / "bin" / launcherName
+      val launcherSubPath =
+        if (Properties.isMac) os.sub / "cs.app/Contents/MacOS/cs"
+        else if (Properties.isWin) os.sub / "cs/cs.exe"
+        else os.sub / "cs/bin/cs"
+      val launcherPath = outputDir / launcherSubPath
 
       if (!os.exists(launcherPath)) {
         val files = os.walk(outputDir)
