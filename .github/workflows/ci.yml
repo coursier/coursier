@@ -360,7 +360,7 @@ jobs:
           if-no-files-found: error
           retention-days: 2
 
-  generate-standalone-jvm-launchers:
+  generate-standalone-launchers:
     name: ${{ matrix.OS }} standalone jvm
     runs-on: ${{ matrix.OS }}
     strategy:
@@ -437,7 +437,7 @@ jobs:
 
   upload-launchers:
     name: Upload launchers to GitHub release assets
-    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-container-launcher, generate-standalone-jvm-launchers, generate-jar-launchers]
+    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-container-launcher, generate-standalone-launchers, generate-jar-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -523,7 +523,7 @@ jobs:
 
   upload-launchers-special-repo:
     name: Upload launchers to dedicated repository
-    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-container-launcher, generate-standalone-jvm-launchers, generate-jar-launchers]
+    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-container-launcher, generate-jar-launchers]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
