@@ -577,26 +577,6 @@ jobs:
         path: artifacts/
     - uses: actions/download-artifact@v6
       with:
-        name: launchers-linux-jvm
-        path: artifacts/
-    - uses: actions/download-artifact@v6
-      with:
-        name: launchers-linux-arm-jvm
-        path: artifacts/
-    - uses: actions/download-artifact@v6
-      with:
-        name: launchers-windows-jvm
-        path: artifacts/
-    - uses: actions/download-artifact@v6
-      with:
-        name: launchers-mac-jvm
-        path: artifacts/
-    - uses: actions/download-artifact@v6
-      with:
-        name: launchers-mac-arm-jvm
-        path: artifacts/
-    - uses: actions/download-artifact@v6
-      with:
         name: launchers-jar
         path: artifacts/
     - run: ./mill -i uploadLaunchersSpecialRepo --directory artifacts/
