@@ -7,7 +7,7 @@ import scala.util.Properties
 abstract class SetupTests extends TestSuite {
 
   def launcher: String
-  def assembly: String
+  def assembly: os.Path
   def isNative: Boolean
   def isNativeStatic: Boolean
   def isStandalone: Boolean
@@ -66,7 +66,7 @@ abstract class SetupTests extends TestSuite {
     TestUtil.withTempDir { tmpDir0 =>
       val tmpDir = os.Path(tmpDir0, os.pwd)
       os.copy(
-        os.Path(if (isNative) launcher else assembly),
+        if (isNative) os.Path(launcher) else assembly,
         tmpDir / (if (isNative) "cs" else "cs.jar")
       )
 

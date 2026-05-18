@@ -48,7 +48,7 @@ object Run extends CaseApp[RunOptions] {
     }
     val aboutTests = new AboutTests {
       val launcher       = options.launcher
-      val assembly       = options.assembly
+      val assembly       = os.Path(options.assembly, os.pwd)
       def isNative       = false
       def isNativeStatic = false
       def isStandalone   = false
@@ -58,7 +58,7 @@ object Run extends CaseApp[RunOptions] {
     }
     val bootstrapTests = new BootstrapTests {
       val launcher = options.launcher
-      val assembly = options.assembly
+      val assembly = os.Path(options.assembly, os.pwd)
 
       def acceptsDOptions = true
       def acceptsJOptions = true

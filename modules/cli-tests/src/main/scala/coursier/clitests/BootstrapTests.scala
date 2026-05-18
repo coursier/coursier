@@ -20,7 +20,7 @@ import utest._
 abstract class BootstrapTests extends TestSuite with LauncherOptions {
 
   def launcher: String
-  def assembly: String
+  def assembly: os.Path
 
   def overrideProguarded: Option[Boolean] =
     None
@@ -760,7 +760,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
           os.write(tmpDir / "script.sh", scriptContent)
 
           os.copy(
-            os.Path(assembly, os.pwd),
+            assembly,
             tmpDir / "bin" / "cs",
             createFolders = true,
             copyAttributes = true
@@ -831,7 +831,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         val binDir = tmpDir / "bin"
         val ext    = if (Properties.isWin) ".bat" else ""
         os.copy(
-          os.Path(assembly, os.pwd),
+          assembly,
           binDir / s"cs$ext",
           createFolders = true,
           copyAttributes = true
@@ -892,7 +892,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
             val binDir = root / "bin"
             val ext    = if (Properties.isWin) ".bat" else ""
             os.copy(
-              os.Path(assembly, os.pwd),
+              assembly,
               binDir / s"cs$ext",
               createFolders = true,
               copyAttributes = true

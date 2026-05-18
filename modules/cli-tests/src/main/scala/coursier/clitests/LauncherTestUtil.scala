@@ -23,10 +23,7 @@ object LauncherTestUtil {
       "coursier-test-assembly",
       sys.error("Java property coursier-test-assembly not set")
     )
-    if (path.startsWith("./") || path.startsWith(".\\"))
-      os.Path(path, os.pwd).toString
-    else
-      path
+    os.Path(path, os.pwd)
   }
 
   lazy val isNative = {
