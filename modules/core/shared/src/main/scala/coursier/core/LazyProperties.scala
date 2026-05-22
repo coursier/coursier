@@ -126,15 +126,6 @@ private[coursier] object LazyProperties {
     }
   }
 
-  def substitute(
-    s: String,
-    lookup: PropertyValueLookup,
-    trim: Boolean = false
-  ): String = {
-    val props = PropertyExpr.parse(s)
-    props.substitute(s, lookup, trim)
-  }
-
   final class PropertyEntry(val value: String) {
     lazy val parsed: PropertyExpr =
       PropertyExpr.parse(value)
@@ -180,9 +171,6 @@ private[coursier] object LazyProperties {
 
   }
 
-  private def layerFromSeq(layer: collection.Seq[(String, String)]): PropertyLayer =
-    new SeqPropertyLayer(layer.toVector)
-
   private def layerCount(properties: collection.Seq[(String, String)]): Int =
     properties match {
       case concat: ConcatProperties     => concat.layers.length
@@ -207,7 +195,7 @@ private[coursier] object LazyProperties {
       case other if other.isEmpty =>
         offset
       case other =>
-        dest(offset) = layerFromSeq(other)
+        dest(offset) = new SeqPropertyLayer(other.toVector)
         offset + 1
     }
 
@@ -325,18 +313,16 @@ private[coursier] object LazyProperties {
       if (!includeKey(key)) default
       else
         owner.winnerEntryForKeyOrNull(key) match {
-          case null => default
-          case entry =>
-            entry.parsed.substitute(entry.value, this, false)
+          case null  => default
+          case entry => entry.parsed.substitute(this, false)
         }
 
     override def get(key: String): Option[String] =
       if (!includeKey(key)) None
       else
         owner.winnerEntryForKeyOrNull(key) match {
-          case null => None
-          case entry =>
-            Some(entry.parsed.substitute(entry.value, this, false))
+          case null  => None
+          case entry => Some(entry.parsed.substitute(this, false))
         }
 
     override def iterator: Iterator[(String, String)] =

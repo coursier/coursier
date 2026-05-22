@@ -119,11 +119,13 @@ object Resolution {
   @deprecated
   def hasProps(s: String): Boolean = PropertyExpr.parse(s).hasProperties
 
+  @deprecated("Not used by coursier any more", "2.1.25")
   def substituteProps(s: String, properties: Map[String, String]): String =
     substituteProps(s, properties, trim = false)
 
+  @deprecated("Not used by coursier any more", "2.1.25")
   def substituteProps(s: String, properties: Map[String, String], trim: Boolean): String =
-    LazyProperties.substitute(s, new PropertiesWrapper(properties).lookup, trim)
+    PropertyExpr.parse(s).substitute(PropertyValueLookup.fromMap(properties), trim)
 
   def withProperties0(
     dependencies: Seq[(Variant, Dependency)],
@@ -150,18 +152,7 @@ object Resolution {
     }
 
   private final class PropertiesWrapper(val properties: Map[String, String]) {
-    val lookup = properties match {
-      case pvl: PropertyValueLookup => pvl
-      case _ => new PropertyValueLookup {
-          override def lookup(key: String): Option[PropertyExpr] = Option(lookupOrNull(key))
-
-          override def lookupOrNull(key: String): PropertyExpr =
-            properties.getOrElse(key, null) match {
-              case null => null
-              case x    => PropertyExpr.parse(x)
-            }
-        }
-    }
+    val lookup              = PropertyValueLookup.fromMap(properties)
     val substitutionTrimmed = new PropertyExpr.Substitution(lookup, true)
     val substitution        = new PropertyExpr.Substitution(lookup, false)
   }
@@ -266,10 +257,9 @@ object Resolution {
       val dep0 = dep
         .withVersionConstraintConserve(
           if (dep.parsedVersionConstraint.hasProperties)
-            VersionConstraint0(dep.parsedVersionConstraint.applySubstitution(
-              dep.versionConstraint.asString,
-              properties.substitutionTrimmed
-            ))
+            VersionConstraint0(
+              dep.parsedVersionConstraint.applySubstitution(properties.substitutionTrimmed)
+            )
           else
             dep.versionConstraint
         )
@@ -289,7 +279,7 @@ object Resolution {
           minimizedExclusions = dep.minimizedExclusions.map(properties.substitution)
         )
       val finalVariant = variant.asConfiguration match {
-        case s @ Some(x) =>
+        case Some(x) =>
           val newConfig = x.map(properties.substitution)
           Variant.Configuration(newConfig)
         case None =>

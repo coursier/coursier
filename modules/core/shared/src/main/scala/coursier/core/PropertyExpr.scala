@@ -1,31 +1,37 @@
 package coursier.core
 
-import coursier.core.PropertyExpr.Substitution
-
 import java.util.concurrent.atomic.AtomicLong
+
 import scala.collection.mutable
 
 private[coursier] sealed abstract class PropertyExpr {
   def hasProperties: Boolean = this match {
-    case PropertyLiteral(_)   => false
-    case PropertyReference(_) => true
-    case Composite(_)         => true
+    case PropertyLiteral(_)      => false
+    case PropertyReference(_, _) => true
+    case Composite(_, _)         => true
   }
-  final def substitute(s: String, lookup: PropertyValueLookup, trim: Boolean): String =
+
+  private def rawValue0: String = this match {
+    case PropertyLiteral(value)         => value
+    case PropertyReference(_, rawValue) => rawValue
+    case Composite(_, rawValue)         => rawValue
+  }
+
+  final def substitute(lookup: PropertyValueLookup, trim: Boolean): String =
     try
       this match {
         case PropertyLiteral(value) =>
           value
-        case PropertyReference(name) =>
+        case PropertyReference(name, rawValue) =>
           val resolvedExpr = lookup.lookupOrNull(name)
-          if (resolvedExpr == null) s
+          if (resolvedExpr == null) rawValue
           else {
             val result = resolvedExpr match {
               case PropertyLiteral(v) => v
               case spe: SimplePropertyExpr =>
                 PropertyExpr.resolvePartToString(spe, lookup, trim, Nil, 1)
-              case Composite(ps) => PropertyExpr.renderSubstitutions(
-                  s,
+              case Composite(ps, _) => PropertyExpr.renderSubstitutions(
+                  rawValue,
                   ps,
                   lookup,
                   trim,
@@ -36,48 +42,48 @@ private[coursier] sealed abstract class PropertyExpr {
             }
             if (trim) result.trim else result
           }
-        case Composite(parts) =>
-          PropertyExpr.renderSubstitutions(s, parts, lookup, trim)
+        case Composite(parts, rawValue) =>
+          PropertyExpr.renderSubstitutions(rawValue, parts, lookup, trim)
       }
     catch {
       case _: PropertyExpr.CyclicPropertyException =>
-        s
+        rawValue0
     }
-  final def applySubstitution(value: String, f: (String => String)): String = f match {
-    case s: Substitution =>
-      s.applyWithPropertyExpr(value, this)
-    case _ => f(value)
-  }
+
+  final def applySubstitution(f: String => String): String =
+    f match {
+      case s: PropertyExpr.Substitution =>
+        s.applyWithPropertyExpr(this)
+      case _ =>
+        f(rawValue0)
+    }
 }
 
 private sealed abstract class SimplePropertyExpr extends PropertyExpr
 
 private final case class PropertyLiteral(value: String) extends SimplePropertyExpr
 
-private final case class PropertyReference(name: String) extends SimplePropertyExpr
+private final case class PropertyReference(name: String, rawValue: String)
+    extends SimplePropertyExpr
 
-private final case class Composite(parts: Array[SimplePropertyExpr]) extends PropertyExpr
+private final case class Composite(parts: Array[SimplePropertyExpr], rawValue: String)
+    extends PropertyExpr
 
 private[coursier] object PropertyExpr {
   private val InterpolationStartToken = "${"
   private val InterpolationEndToken   = "}"
 
-  def applySubstitution(value: String, f: (String => String)): String = f match {
+  def applySubstitution(value: String, f: String => String): String = f match {
     case s: Substitution =>
       s.apply(value)
     case _ => f(value)
   }
 
-  def parse(s: String): PropertyExpr =
-    if (s.indexOf(InterpolationStartToken) < 0)
-      PropertyLiteral(s)
-    else parseSubstituteProps(s)
-
   final class Substitution(lookup: PropertyValueLookup, trim: Boolean) extends (String => String) {
     override def apply(v1: String): String =
-      PropertyExpr.parse(v1).substitute(v1, lookup, trim)
-    def applyWithPropertyExpr(v1: String, propertyExpr: PropertyExpr): String =
-      propertyExpr.substitute(v1, lookup, trim)
+      PropertyExpr.parse(v1).substitute(lookup, trim)
+    def applyWithPropertyExpr(propertyExpr: PropertyExpr): String =
+      propertyExpr.substitute(lookup, trim)
   }
 
   private val CycleTrackingDepthStart = 8
@@ -88,8 +94,8 @@ private[coursier] object PropertyExpr {
     seen: List[String],
     depth: Int
   ): String = part match {
-    case PropertyLiteral(value)  => value
-    case PropertyReference(name) =>
+    case PropertyLiteral(value)     => value
+    case PropertyReference(name, _) =>
       // Skip cycle tracking below depth CycleTrackingDepthStart: no allocation, no list scan
       val isCycle = depth >= CycleTrackingDepthStart && seen.contains(name)
       val resolvedExpr =
@@ -102,7 +108,7 @@ private[coursier] object PropertyExpr {
           case PropertyLiteral(v) => v
           case spe: SimplePropertyExpr =>
             resolvePartToString(spe, lookup, trim, nextSeen, depth + 1)
-          case Composite(ps) =>
+          case Composite(ps, _) =>
             renderSubstitutions("", ps, lookup, trim, nextSeen, forceSubstitute = true, depth + 1)
         }
         if (trim) result.trim else result
@@ -129,7 +135,7 @@ private[coursier] object PropertyExpr {
       var j        = 0
       while (j < n && !hasSubst) {
         parts(j) match {
-          case PropertyReference(name) =>
+          case PropertyReference(name, _) =>
             if (lookup.lookupOrNull(name) != null) hasSubst = true
           case _ =>
         }
@@ -152,7 +158,7 @@ private[coursier] object PropertyExpr {
     sb.toString
   }
 
-  private def parseSubstituteProps(s: String): PropertyExpr = {
+  def parse(s: String): PropertyExpr = {
     // Fast path: Check if any interpolation exists at all
     val firstTokenIdx = s.indexOf(InterpolationStartToken)
 
@@ -182,13 +188,16 @@ private[coursier] object PropertyExpr {
           val endIdx = s.indexOf(InterpolationEndToken, startIdx + startLen)
 
           if (endIdx != -1) {
-            builder += PropertyReference(s.substring(startIdx + startLen, endIdx))
+            builder += PropertyReference(
+              s.substring(startIdx + startLen, endIdx),
+              s.substring(startIdx, endIdx + endLen)
+            )
             idx = endIdx + endLen
           }
           else {
-            // Unclosed token: append first char and move on
-            appendLiteralToArray(builder, InterpolationStartToken.substring(0, 1))
-            idx = startIdx + 1
+            // Unclosed token: append start token and move on
+            appendLiteralToArray(builder, InterpolationStartToken)
+            idx = startIdx + startLen
           }
         }
       }
@@ -199,7 +208,7 @@ private[coursier] object PropertyExpr {
       resultParts.length match {
         case 0 => PropertyLiteral(s)
         case 1 => resultParts(0)
-        case _ => Composite(resultParts)
+        case _ => Composite(resultParts, s)
       }
     }
   }
@@ -207,13 +216,7 @@ private[coursier] object PropertyExpr {
   private def appendLiteralToArray(
     builder: mutable.ArrayBuilder[SimplePropertyExpr],
     value: String
-  ): Unit = {
+  ): Unit =
     if (value.nonEmpty)
       builder += PropertyLiteral(value)
-  }
-}
-
-private[coursier] trait PropertyValueLookup {
-  def lookup(key: String): Option[PropertyExpr] = Option(lookupOrNull(key))
-  def lookupOrNull(key: String): PropertyExpr
 }

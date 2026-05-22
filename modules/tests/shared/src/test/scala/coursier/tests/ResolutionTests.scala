@@ -7,6 +7,8 @@ import coursier.core.{
   Dependency,
   MinimizedExclusions,
   Module,
+  PropertyExpr,
+  PropertyValueLookup,
   Repository,
   Resolution,
   ResolutionProcess,
@@ -870,18 +872,18 @@ object ResolutionTests extends TestSuite {
 
     test("parts") {
       test("missingPropertyIsPreserved") {
-        val res = Resolution.substituteProps(
-          "prefix-$${missing}-suffix",
-          Map.empty
+        val res = PropertyExpr.parse("prefix-$${missing}-suffix").substitute(
+          PropertyValueLookup.fromMap(Map.empty),
+          trim = false
         )
 
         assert(res == "prefix-$${missing}-suffix")
       }
 
       test("malformedPropertyReferenceIsPreserved") {
-        val res = Resolution.substituteProps(
-          "prefix-$${missing",
-          Map("missing" -> "value")
+        val res = PropertyExpr.parse("prefix-$${missing").substitute(
+          PropertyValueLookup.fromMap(Map("missing" -> "value")),
+          trim = false
         )
 
         assert(res == "prefix-$${missing")
