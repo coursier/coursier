@@ -503,6 +503,7 @@ object Dependency {
     overridesMap: Overrides,
     endorseStrictVersions: Boolean
   ): Dependency =
+    // TODO benchmark with/without this
     coursier.util.Cache.cacheMethod(instanceCache)(
       new Dependency(
         module,
