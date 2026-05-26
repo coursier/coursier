@@ -27,6 +27,8 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
     - uses: coursier/setup-action@v3
       with:
         jvm: 21
@@ -68,6 +70,8 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
     - uses: coursier/setup-action@v3
       with:
         jvm: 21
@@ -112,6 +116,8 @@ jobs:
       with:
         node-version: '18'
     - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
     - uses: coursier/setup-action@v3
       with:
         jvm: 21
@@ -132,6 +138,8 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
     - uses: coursier/setup-action@v3
       with:
         jvm: 21
@@ -154,6 +162,8 @@ jobs:
       with:
         node-version: '18'
     - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
     - uses: coursier/setup-action@v3
       with:
         jvm: 21
@@ -176,6 +186,8 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
     - uses: coursier/setup-action@v3
       with:
         jvm: 21
@@ -192,6 +204,8 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v8
+        with:
+          disableFallback: true
       - uses: coursier/setup-action@v3
         with:
           jvm: 21
@@ -227,6 +241,8 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v8
+        with:
+          disableFallback: true
       - uses: coursier/setup-action@v3
         with:
           jvm: 21
@@ -261,6 +277,8 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v8
+        with:
+          disableFallback: true
       - uses: coursier/setup-action@v3
         with:
           jvm: 21
@@ -301,6 +319,8 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v8
+        with:
+          disableFallback: true
       - uses: coursier/setup-action@v3
         with:
           jvm: 21
@@ -339,6 +359,8 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v8
+        with:
+          disableFallback: true
       - uses: coursier/setup-action@v3
         with:
           jvm: 21
@@ -372,6 +394,8 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
     - uses: coursier/setup-action@v3
       with:
         jvm: 21
@@ -401,6 +425,8 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
     - uses: coursier/setup-action@v3
       with:
         jvm: 21
@@ -463,6 +489,8 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
     - uses: coursier/setup-action@v3
       with:
         jvm: 21
@@ -525,6 +553,8 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v8
+        with:
+          disableFallback: true
       - uses: coursier/setup-action@v3
         with:
           jvm: 21
@@ -545,6 +575,8 @@ jobs:
         with:
           node-version: '18'
       - uses: coursier/cache-action@v8
+        with:
+          disableFallback: true
       - uses: coursier/setup-action@v3
         with:
           jvm: 21
@@ -567,6 +599,8 @@ jobs:
         with:
           node-version: '18'
       - uses: coursier/cache-action@v8
+        with:
+          disableFallback: true
       - uses: coursier/setup-action@v3
         with:
           jvm: 21
