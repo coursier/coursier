@@ -32,6 +32,7 @@ trait CoursierJavaModule extends JavaModule {
       .withCache(
         JvmCache()
           .withArchiveCache(ArchiveCache().withCache(cache))
+          .withDefaultIndex
       )
       .get(javacSystemJvmId())
       .map(os.Path(_))
