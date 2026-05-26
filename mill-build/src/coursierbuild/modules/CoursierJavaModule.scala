@@ -1,7 +1,8 @@
 package coursierbuild.modules
 
-import java.io.File
 import com.github.lolgab.mill.mima.Mima
+import coursier.cache.ArchiveCache
+import coursier.jvm.{JavaHome, JvmCache}
 import coursierbuild.Deps.{Deps, ScalaVersions}
 
 import mill.*
@@ -15,27 +16,6 @@ import scala.util.Properties
 
 trait CoursierJavaModule extends JavaModule {
   def jvmRelease = "8"
-  private def csApp(workspace: os.Path): String =
-    if (Properties.isWin) {
-      def pathEntries = Option(System.getenv("PATH"))
-        .iterator
-        .flatMap(_.split(File.pathSeparator).iterator)
-        .map(os.Path(_, workspace))
-      val pathExts = Option(System.getenv("PATHEXT"))
-        .iterator
-        .flatMap(_.split(File.pathSeparator).iterator)
-        .toSeq
-      pathEntries
-        .flatMap(dir => pathExts.iterator.map(ext => dir / s"cs$ext"))
-        .find(os.isFile)
-        .map(_.toString)
-        .getOrElse {
-          System.err.println("Warning: cannot find cs in PATH")
-          "cs"
-        }
-    }
-    else
-      "cs"
   private def isArm64 =
     Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
       case Some("aarch64" | "arm64") => true
@@ -47,10 +27,15 @@ trait CoursierJavaModule extends JavaModule {
     else s"adoptium:$jvmRelease"
   }
   def javacSystemJvm = Task {
-    val output = os.proc(csApp(BuildCtx.workspaceRoot), "java-home", "--jvm", javacSystemJvmId())
-      .call(cwd = BuildCtx.workspaceRoot)
-      .out.trim()
-    val javaHome = os.Path(output)
+    val cache = coursier.cache.Cache.default
+    val javaHome = JavaHome()
+      .withCache(
+        JvmCache()
+          .withArchiveCache(ArchiveCache().withCache(cache))
+      )
+      .get(javacSystemJvmId())
+      .map(os.Path(_))
+      .unsafeRun(true)(using cache.ec)
     assert(os.isDir(javaHome))
     PathRef(javaHome, quick = true)
   }
