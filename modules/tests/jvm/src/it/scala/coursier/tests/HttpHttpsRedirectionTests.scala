@@ -73,7 +73,7 @@ object HttpHttpsRedirectionTests extends TestSuite {
       proc.getOutputStream.close()
 
       var serverRunning = false
-      var countDown     = 30
+      var countDown     = if (Properties.isWin) 120 else 30
       while (!serverRunning && isAlive() && countDown > 0) {
         serverRunning = healthCheck()
         if (!serverRunning)
@@ -113,10 +113,11 @@ object HttpHttpsRedirectionTests extends TestSuite {
     test {
       // no redirections -> should fail
 
+      val repo = MavenRepository(testRepo)
       val failed =
         try {
           CacheFetchTests.check(
-            MavenRepository(testRepo),
+            repo,
             addCentral = false,
             deps = deps
           )
