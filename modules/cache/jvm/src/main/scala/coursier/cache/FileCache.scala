@@ -528,6 +528,10 @@ object FileCache {
                 catch {
                   // In case of multiple processes/threads which all compute this digest, first thread wins
                   case _: FileAlreadyExistsException =>
+                  // On Windows, replacing or racing with a just-created file can surface as
+                  // AccessDeniedException rather than FileAlreadyExistsException.
+                  case _: AccessDeniedException
+                      if Properties.isWin && Files.exists(cacheFilePath) =>
                 }
               } {
                 case _: AccessDeniedException if Properties.isWin =>
