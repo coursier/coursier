@@ -36,6 +36,10 @@ import java.util.concurrent.ConcurrentMap
   endorseStrictVersions: Boolean = false
 ) {
   assertValid(versionConstraint.asString, "version")
+
+  private[coursier] lazy val parsedVersionConstraint =
+    PropertyExpr.parse(versionConstraint.asString)
+
   def moduleVersionConstraint: (Module, VersionConstraint0) = (module, versionConstraint)
 
   @deprecated("Prefer moduleVersionConstraint instead", "2.1.25")
@@ -503,6 +507,7 @@ object Dependency {
     overridesMap: Overrides,
     endorseStrictVersions: Boolean
   ): Dependency =
+    // TODO benchmark with/without this
     coursier.util.Cache.cacheMethod(instanceCache)(
       new Dependency(
         module,

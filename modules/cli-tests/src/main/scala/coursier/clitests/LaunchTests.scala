@@ -56,6 +56,10 @@ abstract class LaunchTests extends TestSuite with LauncherOptions {
         "in class scala.tools.nsc.Driver",
         "is not static"
       )
+      if (!expectedInOutput.forall(output.contains)) {
+        pprint.err.log(expectedInOutput)
+        pprint.err.log(output)
+      }
       assert(expectedInOutput.forall(output.contains))
     }
     test("non static main class") {
