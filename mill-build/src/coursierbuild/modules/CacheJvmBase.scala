@@ -48,10 +48,16 @@ trait CacheJvmBase extends Cache with CsMima {
     )
 
   trait CacheJvmBaseTests extends CrossSbtTests {
+    // Mill >= 1.1.6 reports classpath paths relative to the per-daemon sandbox
+    // (`out/mill-daemon/sandbox/../mill-{workspace,home}/...`). Those only resolve while
+    // that exact daemon session/sandbox layout is alive, which isn't guaranteed in the
+    // forked test JVM (and breaks in CI). getCanonicalFile gives a stable, machine-absolute
+    // path (resolving symlinks) without requiring the entry to exist on disk (some, e.g.
+    // `compile-resources`, may not).
     def sources = Task {
       val dest = Task.dest / "CustomLoaderClasspath.scala"
       val customLoaderCp0 = customLoaderCp()
-        .map("\"" + _.path.toNIO.toUri.toASCIIString + "\"")
+        .map(ref => "\"" + ref.path.toNIO.toFile.getCanonicalFile.toURI.toASCIIString + "\"")
         .mkString("Seq(", ", ", ")")
       val content =
         s"""package coursier.cache
