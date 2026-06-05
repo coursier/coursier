@@ -36,16 +36,28 @@ abstract class SetupTests extends TestSuite {
       TestUtil.withTempDir { tempDir =>
         val homeDir    = os.Path(tempDir, os.pwd)
         val installDir = homeDir / "bin"
+        // TODO Temporary diagnostics: run verbosely and stream the command's output live
+        // (rather than capturing it), with timestamps around the call, so that if `cs setup`
+        // stalls again we can tell from the CI logs where it got stuck. Remove once the
+        // standalone setup hang is understood.
+        System.err.println(s"[${java.time.Instant.now()}] Running cs setup")
         val result = os.proc(
           launcher,
           "setup",
           "--yes",
+          "-v",
+          "-v",
           "--user-home",
           homeDir.toString,
           "--install-dir",
           installDir.toString
-        ).call(timeout = setupTimeout)
-        assert(result.exitCode == 0)
+        ).call(
+          timeout = setupTimeout,
+          stdout = os.Inherit
+        )
+        System.err.println(
+          s"[${java.time.Instant.now()}] cs setup done"
+        )
 
         // See coursier.cli.setup.DefaultAppList
         for (
