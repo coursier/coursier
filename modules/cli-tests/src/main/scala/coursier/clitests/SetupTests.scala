@@ -2,9 +2,14 @@ package coursier.clitests
 
 import utest._
 
+import scala.concurrent.duration.DurationInt
 import scala.util.Properties
 
 abstract class SetupTests extends TestSuite {
+
+  // Fail eagerly rather than letting a stuck process hang until the whole CI
+  // job times out (and gets force-killed, leaving orphan processes behind).
+  private val setupTimeout = 10.minutes.toMillis
 
   def launcher: String
   def assembly: String
@@ -39,7 +44,7 @@ abstract class SetupTests extends TestSuite {
           homeDir.toString,
           "--install-dir",
           installDir.toString
-        ).call()
+        ).call(timeout = setupTimeout)
         assert(result.exitCode == 0)
 
         // See coursier.cli.setup.DefaultAppList
@@ -94,7 +99,12 @@ abstract class SetupTests extends TestSuite {
             "-jar",
             "/shared/cs.jar"
           )
-      os.proc(baseCommand, args).call(cwd = tmpDir, stdin = os.Inherit, stdout = os.Inherit)
+      os.proc(baseCommand, args).call(
+        cwd = tmpDir,
+        stdin = os.Inherit,
+        stdout = os.Inherit,
+        timeout = setupTimeout
+      )
     }
 
 }
