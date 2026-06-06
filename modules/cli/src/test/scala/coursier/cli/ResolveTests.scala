@@ -108,10 +108,7 @@ object ResolveTests extends TestSuite {
           |   │        └─ org.apache.spark:spark-sql_2.12:2.4.0
           |   └─ org.apache.hadoop:hadoop-hdfs:2.6.5
           |      └─ org.apache.hadoop:hadoop-client:2.6.5
-          |         └─ org.apache.spark:spark-core_2.12:2.4.0
-          |            ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
-          |            │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |            └─ org.apache.spark:spark-sql_2.12:2.4.0
+          |         └─ org.apache.spark:spark-core_2.12:2.4.0 (*)
           |""".stripMargin
 
       assert(expectedOutput.noCrLf == output.noCrLf)
@@ -144,10 +141,7 @@ object ResolveTests extends TestSuite {
           |   │        └─ org.apache.spark:spark-sql_2.12:2.4.0
           |   └─ org.apache.hadoop:hadoop-hdfs:2.6.5
           |      └─ org.apache.hadoop:hadoop-client:2.6.5
-          |         └─ org.apache.spark:spark-core_2.12:2.4.0
-          |            ├─ org.apache.spark:spark-catalyst_2.12:2.4.0
-          |            │  └─ org.apache.spark:spark-sql_2.12:2.4.0
-          |            └─ org.apache.spark:spark-sql_2.12:2.4.0
+          |         └─ org.apache.spark:spark-core_2.12:2.4.0 (*)
           |""".stripMargin
 
       assert(expectedOutput.noCrLf == output.noCrLf)

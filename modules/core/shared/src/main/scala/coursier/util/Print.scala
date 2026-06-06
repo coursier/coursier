@@ -211,7 +211,7 @@ object Print {
           depTree.module != tree.module || depTree.dependees.nonEmpty
         }
       }
-      tree0.render { node =>
+      tree0.customRender0(deduplicateNodes = true) { node =>
         if (node.excludedDependsOn)
           s"${colors0.yellow}(excluded by)${colors0.reset} ${renderModuleVersion(node.module, node.retainedVersion0.asString)}"
         else if (
