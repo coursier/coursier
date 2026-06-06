@@ -774,16 +774,20 @@ trait Install extends CrossSbtModule with CsModule
     launcherModule()
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.dataClass
+    Deps.dataClass,
+    Deps.jsoniterMacros
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
-    Deps.argonautShapeless,
+    Deps.jsoniterCore,
     Deps.catsCore
   )
   object test extends CrossSbtTests with CsScalaTests with CsResourcesTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
+    def compileMvnDeps = super.compileMvnDeps() ++ Seq(
+      Deps.jsoniterMacros
+    )
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.jvm()
     )
