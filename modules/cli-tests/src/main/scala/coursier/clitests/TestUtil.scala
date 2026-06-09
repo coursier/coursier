@@ -63,6 +63,11 @@ object TestUtil {
     else "ng"
   }
 
+  lazy val jniUtilsVersion = sys.props.getOrElse(
+    "coursier-test.jni-utils-version",
+    sys.error("Java property coursier-test.jni-utils-version not set")
+  )
+
   lazy val scalaCli = sys.props.getOrElse(
     "coursier-test.scala-cli",
     sys.error("Java property coursier-test.scala-cli not set")
