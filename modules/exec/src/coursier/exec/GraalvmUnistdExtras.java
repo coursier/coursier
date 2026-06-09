@@ -15,4 +15,7 @@ public class GraalvmUnistdExtras {
     @CFunction
     public static native int execve(CCharPointer path, CCharPointerPointer argv, CCharPointerPointer envp);
 
+    @CFunction
+    public static native int chdir(CCharPointer path);
+
 }
