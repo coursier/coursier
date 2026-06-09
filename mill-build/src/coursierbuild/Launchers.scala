@@ -7,12 +7,72 @@ import io.github.alexarchambault.millnativeimage.NativeImage
 import mill.*
 import mill.api.*
 import mill.scalalib.*
+import org.apache.commons.compress.archivers.tar.{TarArchiveEntry, TarArchiveOutputStream}
 
-import java.io.File
+import java.io.{BufferedOutputStream, File}
+import java.nio.file.{Files, LinkOption, Path}
+import java.nio.file.attribute.PosixFilePermission
+import java.util.zip.GZIPOutputStream
 
-import scala.util.Properties
+import scala.jdk.CollectionConverters.*
+import scala.util.{Properties, Using}
 
 object Launchers {
+  private def writeTarGz(sourceDir: os.Path, dest: os.Path): os.Path = {
+    def permissionsMode(path: os.Path, defaultMode: Int): Int =
+      try {
+        val perms = Files.getPosixFilePermissions(path.toNIO, LinkOption.NOFOLLOW_LINKS).asScala
+        Seq(
+          PosixFilePermission.OWNER_READ     -> 0x100,
+          PosixFilePermission.OWNER_WRITE    -> 0x080,
+          PosixFilePermission.OWNER_EXECUTE  -> 0x040,
+          PosixFilePermission.GROUP_READ     -> 0x020,
+          PosixFilePermission.GROUP_WRITE    -> 0x010,
+          PosixFilePermission.GROUP_EXECUTE  -> 0x008,
+          PosixFilePermission.OTHERS_READ    -> 0x004,
+          PosixFilePermission.OTHERS_WRITE   -> 0x002,
+          PosixFilePermission.OTHERS_EXECUTE -> 0x001
+        ).iterator
+          .collect { case (perm, bit) if perms.contains(perm) => bit }
+          .sum
+      }
+      catch {
+        case _: UnsupportedOperationException => defaultMode
+      }
+
+    os.makeDir.all(dest / os.up)
+    Using.resource(
+      new TarArchiveOutputStream(
+        new GZIPOutputStream(new BufferedOutputStream(Files.newOutputStream(dest.toNIO)))
+      )
+    ) { tar =>
+      tar.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX)
+      tar.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX)
+      val entries = os.walk(sourceDir)
+        .filter(_ != sourceDir) // needed?
+        .sorted
+
+      for (path <- entries) {
+        val isDirectory = os.isDir(path)
+        val entry = new TarArchiveEntry(
+          path.toNIO,
+          path.subRelativeTo(sourceDir).toString + (if (isDirectory) "/" else ""),
+          LinkOption.NOFOLLOW_LINKS
+        )
+        entry.setMode(permissionsMode(path, if (isDirectory) 0x1ed else 0x1a4))
+        tar.putArchiveEntry(entry)
+        if (!isDirectory)
+          Using.resource(os.read.inputStream(path)) { is =>
+            is.transferTo(tar)
+          }
+        tar.closeArchiveEntry()
+      }
+
+      tar.finish()
+    }
+    dest
+  }
+
   def platformExtension: String =
     if (Properties.isWin) ".exe"
     else ""
@@ -373,5 +433,74 @@ object Launchers {
 
       PathRef(dest)
     }
+
+    def standaloneJvmLauncherDir = Task {
+      val assemblyPath = assembly().path
+      val mainClass0   = mainClass().getOrElse(sys.error("No main class"))
+
+      val inputDir  = Task.dest / "input"
+      val outputDir = Task.dest / "output"
+      os.makeDir.all(inputDir)
+      os.remove.all(outputDir)
+      os.copy(assemblyPath, inputDir / "coursier.jar", replaceExisting = true)
+
+      val javaHome = os.Path(sys.props("java.home"), BuildCtx.workspaceRoot)
+      val jpackage =
+        javaHome / "bin" / (if (Properties.isWin) "jpackage.exe" else "jpackage")
+
+      if (!os.exists(jpackage))
+        sys.error(s"jpackage not found at $jpackage")
+
+      // On Windows, app-image launchers default to the GUI subsystem (no console).
+      // As a console application, cs needs --win-console so that it keeps a console,
+      // its standard streams stay connected, and child processes it spawns don't end
+      // up hanging on inherited handles.
+      val winConsoleArgs =
+        if (Properties.isWin) Seq("--win-console") else Nil
+
+      os.proc(
+        jpackage,
+        "--type",
+        "app-image",
+        "--name",
+        "cs",
+        "--dest",
+        outputDir.toString,
+        "--input",
+        inputDir.toString,
+        "--main-jar",
+        "coursier.jar",
+        "--main-class",
+        mainClass0,
+        winConsoleArgs
+      ).call(stdin = os.Inherit, stdout = os.Inherit, stderr = os.Inherit)
+
+      val launcherPath = outputDir / launcherSubPath
+
+      if (!os.exists(launcherPath)) {
+        val files = os.walk(outputDir)
+          .map(_.subRelativeTo(outputDir))
+          .sorted
+        pprint.err.log(files)
+        sys.error(s"Generated jpackage launcher not found at $launcherPath")
+      }
+
+      PathRef(outputDir)
+    }
+
+    def standaloneJvmLauncherArchive = Task {
+      val dir = standaloneJvmLauncherDir().path
+      val archive =
+        if (Properties.isWin)
+          os.zip(Task.dest / "cs.zip", os.list(dir))
+        else
+          writeTarGz(dir, Task.dest / "cs.tar.gz")
+      PathRef(archive)
+    }
+
+    def launcherSubPath: os.SubPath =
+      if (Properties.isMac) os.sub / "cs.app/Contents/MacOS/cs"
+      else if (Properties.isWin) os.sub / "cs/cs.exe"
+      else os.sub / "cs/bin/cs"
   }
 }
