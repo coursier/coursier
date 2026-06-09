@@ -390,15 +390,6 @@ jobs:
       matrix:
         OS: ["ubuntu-latest"]
         OSSHORT: ["linux"]
-        include:
-          - OS: "windows-latest"
-            OSSHORT: "windows"
-          - OS: "macos-15-intel"
-            OSSHORT: "mac"
-          - OS: "macos-14"
-            OSSHORT: "mac-arm"
-          - OS: "ubuntu-24.04-arm"
-            OSSHORT: "linux-arm"
     steps:
       - uses: actions/checkout@v6
         with:
@@ -550,22 +541,6 @@ jobs:
     - uses: actions/download-artifact@v6
       with:
         name: launchers-linux-standalone
-        path: artifacts/
-    - uses: actions/download-artifact@v6
-      with:
-        name: launchers-linux-arm-standalone
-        path: artifacts/
-    - uses: actions/download-artifact@v6
-      with:
-        name: launchers-windows-standalone
-        path: artifacts/
-    - uses: actions/download-artifact@v6
-      with:
-        name: launchers-mac-standalone
-        path: artifacts/
-    - uses: actions/download-artifact@v6
-      with:
-        name: launchers-mac-arm-standalone
         path: artifacts/
     - uses: actions/download-artifact@v6
       with:
