@@ -414,9 +414,43 @@ jobs:
         if-no-files-found: error
         retention-days: 2
 
+  generate-bat-launcher:
+    name: Upload bat launcher
+    needs: publish
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - uses: coursier/setup-action@v3
+      with:
+        jvm: 21
+    - name: Wait for sync to Central
+      run: ./mill -i waitForSync
+      shell: bash
+    - name: Copy artifacts
+      run: ./mill -i copyBatLauncher
+      shell: bash
+    - uses: actions/attest-build-provenance@v4
+      if: startsWith(github.ref, 'refs/tags/v')
+      with:
+        subject-path: 'artifacts/*'
+    - uses: actions/upload-artifact@v5
+      with:
+        name: launchers-bat
+        path: artifacts/
+        if-no-files-found: error
+        retention-days: 2
+
   upload-launchers:
     name: Upload launchers to GitHub release assets
-    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-container-launcher, generate-jar-launchers]
+    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-container-launcher, generate-jar-launchers, generate-bat-launcher]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -473,6 +507,10 @@ jobs:
     - uses: actions/download-artifact@v6
       with:
         name: launchers-jar
+        path: artifacts/
+    - uses: actions/download-artifact@v6
+      with:
+        name: launchers-bat
         path: artifacts/
     - run: ./mill -i uploadLaunchers --directory artifacts/
       env:

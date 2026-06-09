@@ -1199,14 +1199,17 @@ def uploadLaunchersSpecialRepo(directory: String = "artifacts") = Task.Command {
 
 def bootstrapLauncher(
   version: String = CoursierPublishModule.buildVersion,
-  dest: String = s"coursier$platformBootstrapExtension"
+  dest: String = s"coursier$platformBootstrapExtension",
+  bat: Boolean = false
 ) = Task.Command {
   cli.run(Task.Anon {
     val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
+    val batArgs   = if (bat) Seq("--bat") else Nil
     Args(Seq(
       "bootstrap",
       "-o",
-      dest,
+      dest
+    ) ++ batArgs ++ Seq(
       "-f",
       s"$mavenOrg::coursier-cli:$version",
       "--scala",
@@ -1267,6 +1270,15 @@ def copyJarLaunchers(
     replaceExisting = true
   )
   os.copy(assembly, dir / "coursier.jar", createFolders = true, replaceExisting = true)
+}
+
+def copyBatLauncher(
+  version: String = CoursierPublishModule.buildVersion,
+  directory: String = "artifacts"
+) = Task.Command {
+  val bootstrap: os.Path = bootstrapLauncher(version = version, dest = "coursier.bat", bat = true)()
+  val dir                = os.Path(directory, BuildCtx.workspaceRoot)
+  os.copy(bootstrap, dir / "coursier.bat", createFolders = true, replaceExisting = true)
 }
 
 private val docScalaVersion = ScalaVersions.scala213
