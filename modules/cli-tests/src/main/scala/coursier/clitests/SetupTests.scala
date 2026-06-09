@@ -2,6 +2,8 @@ package coursier.clitests
 
 import utest._
 
+import java.nio.file.Paths
+
 import scala.concurrent.duration.DurationInt
 import scala.util.Properties
 
@@ -32,40 +34,16 @@ abstract class SetupTests extends TestSuite {
 
   def tests = Tests {
 
-    test("setup") {
-      TestUtil.withTempDir { tempDir =>
-        val homeDir    = os.Path(tempDir, os.pwd)
-        val installDir = homeDir / "bin"
-        // TODO Temporary diagnostics: run verbosely and stream the command's output live
-        // (rather than capturing it), with timestamps around the call, so that if `cs setup`
-        // stalls again we can tell from the CI logs where it got stuck. Remove once the
-        // standalone setup hang is understood.
-        System.err.println(s"[${java.time.Instant.now()}] Running cs setup")
-        val result = os.proc(
-          launcher,
-          "setup",
-          "--yes",
-          "-v",
-          "-v",
-          "--user-home",
-          homeDir.toString,
-          "--install-dir",
-          installDir.toString
-        ).call(
-          timeout = setupTimeout,
-          stdout = os.Inherit
-        )
-        System.err.println(
-          s"[${java.time.Instant.now()}] cs setup done"
-        )
+    // Run the same setup test twice: once against a local snapshot of the
+    // io.get-coursier:apps channel (so that it doesn't depend on the
+    // coursier/apps repository being reachable), and once against the live
+    // default channel.
+    test("setup-local-channel") {
+      setupTest(useLocalChannel = true)
+    }
 
-        // See coursier.cli.setup.DefaultAppList
-        for (
-          app <-
-            List("cs", "coursier", "scala", "scalac", "scala-cli", "sbt", "sbtn", "scalafmt")
-        )
-          assert(os.exists(installDir / app) || os.exists(installDir / s"$app.bat"))
-      }
+    test("setup") {
+      setupTest(useLocalChannel = false)
     }
 
     test("alpine-linux") {
@@ -74,6 +52,64 @@ abstract class SetupTests extends TestSuite {
       else "Docker test disabled"
     }
   }
+
+  // Apps installed by `cs setup`, see coursier.cli.setup.DefaultAppList
+  private def setupApps =
+    List("cs", "coursier", "scala", "scalac", "scala-cli", "sbt", "sbtn", "scalafmt")
+
+  // Directory containing a snapshot of the io.get-coursier:apps channel
+  // (bundled as test resources under setup-channel/). Lets the setup test use a
+  // local channel instead of depending on the coursier/apps repository.
+  private def localChannelDir: os.Path = {
+    val resourcePath = "setup-channel/cs.json"
+    val url          = Thread.currentThread().getContextClassLoader.getResource(resourcePath)
+    Predef.assert(url != null, s"Resource $resourcePath not found")
+    Predef.assert(url.getProtocol == "file", s"Resource $resourcePath is not a file ($url)")
+    os.Path(Paths.get(url.toURI)) / os.up
+  }
+
+  def setupTest(useLocalChannel: Boolean): Unit =
+    TestUtil.withTempDir { tempDir =>
+      val homeDir    = os.Path(tempDir, os.pwd)
+      val installDir = homeDir / "bin"
+
+      val channelArgs =
+        if (useLocalChannel)
+          Seq[os.Shellable](
+            "--channel",
+            localChannelDir.toString,
+            "--default-channels=false"
+          )
+        else
+          Nil
+
+      // TODO Temporary diagnostics: run verbosely and stream the command's output live
+      // (rather than capturing it), with timestamps around the call, so that if `cs setup`
+      // stalls again we can tell from the CI logs where it got stuck. Remove once the
+      // standalone setup hang is understood.
+      System.err.println(s"[${java.time.Instant.now()}] Running cs setup")
+      os.proc(
+        launcher,
+        "setup",
+        "--yes",
+        "-v",
+        "-v",
+        "--user-home",
+        homeDir.toString,
+        "--install-dir",
+        installDir.toString,
+        channelArgs
+      ).call(
+        timeout = setupTimeout,
+        stdout = os.Inherit
+      )
+      System.err.println(
+        s"[${java.time.Instant.now()}] cs setup done"
+      )
+
+      for (app <- setupApps)
+        assert(os.exists(installDir / app) || os.exists(installDir / s"$app.bat"))
+    }
 
   def alpineLinuxTest(isNative: Boolean): Unit =
     TestUtil.withTempDir { tmpDir0 =>
