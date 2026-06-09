@@ -988,7 +988,7 @@ trait CliTests extends CsModule
   )
   private def sharedTestArgs = {
     val arch = sys.props.getOrElse("os.arch", "").toLowerCase(java.util.Locale.ROOT)
-    val scalaCli = GetCs.scalaCliUrl(
+    val (scalaCli, scalaCliIsJar) = GetCs.scalaCliUrl(
       arch,
       scalaCliVersion,
       Properties.isWin,
@@ -996,9 +996,24 @@ trait CliTests extends CsModule
       Properties.isLinux
     )
       .map(GetCs.download)
-      .getOrElse(GetCs.fromPath("scala-cli"))
+      .map((_, false))
+      .getOrElse {
+        if (Properties.isWin && (arch == "aarch64" || arch == "arm64")) {
+          val url =
+            s"https://github.com/VirtusLab/scala-cli/releases/download/v$scalaCliVersion/scala-cli"
+          val cache = _root_.coursier.cache.Cache.default
+          val path = cache
+            .file(_root_.coursier.util.Artifact(url))
+            .run.unsafeRun(true)(using cache.ec)
+            .fold(ex => throw ex, _.toString)
+          (path, true)
+        }
+        else
+          (GetCs.fromPath("scala-cli"), false)
+      }
     Seq(
       s"-Dcoursier-test.scala-cli=$scalaCli",
+      s"-Dcoursier-test.scala-cli.is-jar=$scalaCliIsJar",
       s"-Dcoursier-test.jni-utils-version=${Deps.jniUtils.dep.versionConstraint.asString}"
     )
   }

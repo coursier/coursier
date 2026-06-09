@@ -5,6 +5,7 @@
   "dependencies": [
     "org.scala-sbt:sbt:latest.stable"
   ],
+  "mainClass": "sbt.internal.client.NetworkClient",
   "launcherType": "graalvm-native-image",
   "prebuiltBinaries": {
     "x86_64-pc-linux": "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-x86_64-pc-linux",
