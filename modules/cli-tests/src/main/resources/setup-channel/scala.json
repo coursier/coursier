@@ -1,0 +1,54 @@
+{
+  "repositories": [
+    "central"
+  ],
+  "dependencies": [
+    "org.scala-lang:scala3-compiler_3:latest.stable"
+  ],
+  "properties": {
+    "scala.usejavacp": "true"
+  },
+  "launcherType": "prebuilt",
+  "prebuiltBinaries": {
+    "x86_64-pc-linux": "gz+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}-x86_64-pc-linux.tar.gz!scala3-${version}-x86_64-pc-linux/bin/scala",
+    "aarch64-pc-linux": "gz+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}-aarch64-pc-linux.tar.gz!scala3-${version}-aarch64-pc-linux/bin/scala",
+    "x86_64-pc-win32": "zip+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}-x86_64-pc-win32.zip!scala3-${version}-x86_64-pc-win32/bin/scala",
+    "x86_64-apple-darwin": "gz+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}-x86_64-apple-darwin.tar.gz!scala3-${version}-x86_64-apple-darwin/bin/scala",
+    "aarch64-apple-darwin": "gz+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}-aarch64-apple-darwin.tar.gz!scala3-${version}-aarch64-apple-darwin/bin/scala"
+  },
+  "versionOverrides": [
+    {
+      "versionRange": "[3.6.0,3.6.2-RC3]",
+      "prebuiltBinaries": {
+        "x86_64-pc-linux": "gz+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}-x86_64-pc-linux.tar.gz!bin/scala",
+        "aarch64-pc-linux": "gz+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}-aarch64-pc-linux.tar.gz!bin/scala",
+        "x86_64-pc-win32": "zip+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}-x86_64-pc-win32.zip!bin/scala",
+        "x86_64-apple-darwin": "gz+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}-x86_64-apple-darwin.tar.gz!bin/scala",
+        "aarch64-apple-darwin": "gz+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}-aarch64-apple-darwin.tar.gz!bin/scala"
+      }
+    },
+    {
+      "versionRange": "[3.5.0-RC1,3.5.0-RC1]",
+      "launcherType": "prebuilt",
+      "prebuilt": "zip+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}.zip!scala3-${version}/bin/scala"
+    },
+    {
+      "versionRange": "[3.1.0,3.5.0-RC1)",
+      "launcherType": "bootstrap",
+      "mainClass": "dotty.tools.MainGenericRunner"
+    },
+    {
+      "versionRange": "[3.0.0,3.0.2]",
+      "launcherType": "bootstrap",
+      "mainClass": "dotty.tools.repl.Main"
+    },
+    {
+      "versionRange": "(,2.max]",
+      "launcherType": "bootstrap",
+      "mainClass": "scala.tools.nsc.MainGenericRunner",
+      "dependencies": [
+        "org.scala-lang:scala-compiler:latest.stable"
+      ]
+    }
+  ]
+}

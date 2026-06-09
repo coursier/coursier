@@ -1,0 +1,25 @@
+{
+  "mainClass": "dotty.tools.MainGenericCompiler",
+  "repositories": [
+    "central"
+  ],
+  "dependencies": [
+    "org.scala-lang:scala3-compiler_3:latest.stable"
+  ],
+  "properties": {
+    "scala.usejavacp": "true"
+  },
+  "versionOverrides": [
+    {
+      "versionRange": "[3.0.0,3.1.2]",
+      "mainClass": "dotty.tools.dotc.Main"
+    },
+    {
+      "versionRange": "(,2.max]",
+      "mainClass": "scala.tools.nsc.Main",
+      "dependencies": [
+        "org.scala-lang:scala-compiler:latest.stable"
+      ]
+    }
+  ]
+}

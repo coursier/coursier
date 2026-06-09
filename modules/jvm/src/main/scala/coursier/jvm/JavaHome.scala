@@ -4,6 +4,8 @@ import java.io.{File, IOException}
 import java.nio.file.{Files, Path}
 import java.util.Locale
 
+import scala.concurrent.duration.{Duration, DurationInt}
+
 import coursier.cache.ArchiveCache
 import coursier.env.EnvironmentUpdate
 import coursier.jvm.util.CommandOutput
@@ -41,7 +43,12 @@ import dataclass._
             Task.delay {
               // FIXME What happens if no JDK is installed?
               val outputOrRetCode = commandOutput
-                .run(Seq("/usr/libexec/java_home"), keepErrStream = false)
+                .run(
+                  Seq("/usr/libexec/java_home"),
+                  keepErrStream = false,
+                  extraEnv = Nil,
+                  timeout = Some(JavaHome.systemCommandTimeout)
+                )
               outputOrRetCode
                 .toOption
                 .map(_.trim)
@@ -59,7 +66,10 @@ import dataclass._
                       // Setting this makes cs-java fail.
                       // This prevents us (possibly cs-java) to call ourselves,
                       // which could call ourselves again, etc. indefinitely.
-                      extraEnv = Seq(JavaHome.csJavaFailVariable -> "true")
+                      extraEnv = Seq(JavaHome.csJavaFailVariable -> "true"),
+                      // Kill the process rather than hanging forever if it never returns
+                      // (e.g. a misbehaving java wrapper on the PATH).
+                      timeout = Some(JavaHome.systemCommandTimeout)
                     )
                     .toOption
                 catch {
@@ -177,6 +187,11 @@ object JavaHome {
     s"${JvmCache.defaultJdkName}:21"
   def defaultId: String =
     s"$systemId|$defaultJvm"
+
+  // Detecting the system JVM only runs quick commands (java -version, /usr/libexec/java_home);
+  // bound them so a stuck process can't hang the whole 'cs setup' run indefinitely.
+  private[coursier] def systemCommandTimeout: Duration =
+    1.minute
 
   def environmentFor(
     isSystem: Boolean,

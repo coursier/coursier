@@ -1090,24 +1090,24 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         val appSource = tmpDir / "TestApp.scala"
         os.write(
           appSource,
-          """//> using scala "2.13.10"
-            |//> using jvm "17"
-            |//> using lib "io.get-coursier.jniutils:windows-jni-utils:0.3.3"
-            |//> using publish.organization "io.get-coursier.tests"
-            |//> using publish.name "test-app"
-            |//> using publish.version "0.1.0"
-            |
-            |package testapp
-            |
-            |import coursier.jniutils.WindowsEnvironmentVariables
-            |
-            |object TestApp {
-            |  def main(args: Array[String]): Unit = {
-            |    val path = WindowsEnvironmentVariables.get("PATH")
-            |    System.err.println(s"PATH=$path")
-            |  }
-            |}
-            |""".stripMargin
+          s"""//> using scala "2.13.10"
+             |//> using jvm "17"
+             |//> using lib "io.get-coursier.jniutils:windows-jni-utils:${TestUtil.jniUtilsVersion}"
+             |//> using publish.organization "io.get-coursier.tests"
+             |//> using publish.name "test-app"
+             |//> using publish.version "0.1.0"
+             |
+             |package testapp
+             |
+             |import coursier.jniutils.WindowsEnvironmentVariables
+             |
+             |object TestApp {
+             |  def main(args: Array[String]): Unit = {
+             |    val path = WindowsEnvironmentVariables.get("PATH")
+             |    System.err.println(s"PATH=$$path")
+             |  }
+             |}
+             |""".stripMargin
         )
 
         os.proc(

@@ -1,0 +1,28 @@
+{
+  "repositories": [
+    "central"
+  ],
+  "dependencies": [
+    "org.scala-sbt:sbt:latest.stable"
+  ],
+  "launcherType": "graalvm-native-image",
+  "prebuiltBinaries": {
+    "x86_64-pc-linux": "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-x86_64-pc-linux",
+    "aarch64-pc-linux": "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-aarch64-pc-linux",
+    "x86_64-apple-darwin": "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-universal-apple-darwin",
+    "aarch64-apple-darwin": "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-universal-apple-darwin",
+    "x86_64-pc-win32": "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-x86_64-pc-win32.exe"
+  },
+  "versionOverrides": [
+    {
+      "versionRange": "(,1.10.0)",
+      "prebuiltBinaries": {
+        "x86_64-pc-linux": "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-x86_64-pc-linux",
+        "aarch64-pc-linux": "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-aarch64-pc-linux",
+        "x86_64-apple-darwin": "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-x86_64-apple-darwin",
+        "aarch64-apple-darwin": "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-aarch64-apple-darwin",
+        "x86_64-pc-win32": "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbtn-x86_64-pc-win32.exe"
+      }
+    }
+  ]
+}
