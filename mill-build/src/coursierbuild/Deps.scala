@@ -92,7 +92,7 @@ object Deps {
 
   def scalaCliVersion = "1.14.0"
 
-  def csDockerVersion = "2.1.23"
+  def csDockerVersion = "2.1.25-M25"
 
   def csQemuVersion = "9.2.1-1"
 

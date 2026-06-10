@@ -263,11 +263,11 @@ object Launchers {
       def nativeImageOptions = super.nativeImageOptions() ++ compatNativeImageOptions
     }
 
-    private def linuxCsLauncher =
-      if (arch == "aarch64")
-        s"https://github.com/VirtusLab/coursier-m1/releases/download/v${coursierbuild.Deps.csDockerVersion}/cs-aarch64-pc-linux.gz"
-      else
-        s"https://github.com/coursier/coursier/releases/download/v${coursierbuild.Deps.csDockerVersion}/cs-x86_64-pc-linux.gz"
+    private def linuxCsLauncher = {
+      val version  = coursierbuild.Deps.csDockerVersion
+      val archPart = if (arch == "aarch64") "aarch64" else "x86_64"
+      s"https://github.com/coursier/coursier/releases/download/v$version/cs-$archPart-pc-linux.gz"
+    }
 
     private def setupLocaleAndOptions(params: NativeImage.DockerParams): NativeImage.DockerParams =
       params.copy(
