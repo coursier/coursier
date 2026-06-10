@@ -112,6 +112,6 @@ object Deps {
     def muslBuilder                = s"$customMuslBuilderImageName:latest"
     def alpineImage                = "alpine:3.21.2"
     def alpineJavaImage            = "eclipse-temurin:21-jre-alpine"
-    def linuxBinaryBaseImage       = "ubuntu:20.04"
+    def linuxBinaryBaseImage       = "ubuntu:22.04"
   }
 }
