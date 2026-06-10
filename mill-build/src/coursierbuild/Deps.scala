@@ -90,7 +90,7 @@ object Deps {
 
   def graalVmJvmId = "liberica-nik:21.0.5"
 
-  def scalaCliVersion = "1.5.1"
+  def scalaCliVersion = "1.14.0"
 
   def csDockerVersion = "2.1.23"
 
