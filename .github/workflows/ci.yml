@@ -375,6 +375,8 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v8
+        with:
+          disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: ./mill -i standaloneJvmTests
