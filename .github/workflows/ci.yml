@@ -197,7 +197,13 @@ jobs:
     - run: scalafmt --check
 
   publish:
-    needs: ["compile-publish-all", "test", "js-test", "bin-compat", "website-check", "format"]
+    needs:
+      - "compile-publish-all"
+      - "test"
+      - "js-test"
+      - "bin-compat"
+      - "website-check"
+      - "format"
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -518,7 +524,15 @@ jobs:
 
   upload-launchers:
     name: Upload launchers to GitHub release assets
-    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-container-launcher, generate-standalone-launchers, generate-standalone-launcher-windows-arm-tmp, generate-jar-launchers, generate-bat-launcher]
+    needs:
+      - generate-native-launchers
+      - generate-compat-native-launchers
+      - generate-native-static-launcher
+      - generate-native-container-launcher
+      - generate-standalone-launchers
+      - generate-standalone-launcher-windows-arm-tmp
+      - generate-jar-launchers
+      - generate-bat-launcher
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -594,7 +608,12 @@ jobs:
 
   upload-launchers-special-repo:
     name: Upload launchers to dedicated repository
-    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-container-launcher, generate-jar-launchers]
+    needs:
+      - generate-native-launchers
+      - generate-compat-native-launchers
+      - generate-native-static-launcher
+      - generate-native-container-launcher
+      - generate-jar-launchers
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -658,7 +677,8 @@ jobs:
 
   update-brew-formula:
     name: Update brew formula
-    needs: [upload-launchers]
+    needs:
+      - upload-launchers
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -701,7 +721,9 @@ jobs:
 
   update-website:
     name: Update website
-    needs: [update-brew-formula, upload-launchers-special-repo]
+    needs:
+      - update-brew-formula
+      - upload-launchers-special-repo
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
