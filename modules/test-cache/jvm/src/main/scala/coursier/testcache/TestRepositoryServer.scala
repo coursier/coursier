@@ -108,14 +108,21 @@ object TestRepositoryServer {
         )
       )
 
-      os.proc("cs", "fetch", "io.get-coursier:http-server_2.12:1.0.0")
-        .call(stdin = os.Inherit, stdout = os.Inherit)
+      val javaBin = Paths.get(
+        sys.props("java.home"),
+        "bin",
+        if (Properties.isWin) "java.exe" else "java"
+      ).toString
+      val httpServerCp = sys.props.getOrElse(
+        "test.http-server.classpath",
+        sys.error("test.http-server.classpath not set")
+      )
 
       val builder = new ProcessBuilder(
-        "cs",
-        "launch",
-        "io.get-coursier:http-server_2.12:1.0.0",
-        "--",
+        javaBin,
+        "-cp",
+        httpServerCp,
+        "coursier.HttpServerApp",
         "-d",
         dataDir.toString,
         "-u",
