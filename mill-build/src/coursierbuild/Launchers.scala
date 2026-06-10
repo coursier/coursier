@@ -332,13 +332,13 @@ object Launchers {
       val cp         = jarClassPath().map(_.path).mkString(File.pathSeparator)
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
       val graalVmHome = Option(System.getenv("GRAALVM_HOME")).getOrElse {
-        import sys.process._
-        Seq(
-          coursierbuild.Cs.cs,
-          "java-home",
-          "--jvm",
-          `base-image`.nativeImageGraalVmJvmId()
-        ).!!.trim
+        import coursier.jvm.{JavaHome, JvmCache}
+        val jvmCache = JvmCache()
+        JavaHome()
+          .withCache(jvmCache)
+          .get(`base-image`.nativeImageGraalVmJvmId())
+          .unsafeRun()(using jvmCache.archiveCache.cache.ec)
+          .getAbsolutePath
       }
       val outputDir = Task.dest / "config"
       val command = Seq(

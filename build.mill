@@ -1654,18 +1654,14 @@ def cliNativeImageLauncher() = Task.Command {
 
 object ci extends Module {
   def copyJvm(jvm: String = coursierbuild.Deps.graalVmJvmId, dest: String = "jvm") = Task.Command {
-    import sys.process._
-    val cs = if (Properties.isWin) "cs.exe" else "cs"
-    val command = Seq(
-      cs,
-      "java-home",
-      "--jvm",
-      jvm,
-      "--update",
-      "--ttl",
-      "0"
-    )
-    val baseJavaHome = os.Path(command.!!.trim, BuildCtx.workspaceRoot)
+    import _root_.coursier.cache.{ArchiveCache, FileCache}
+    import _root_.coursier.jvm.{JavaHome, JvmCache}
+    val fileCache = FileCache().withTtl(Duration.Zero)
+    val jvmCache = JvmCache()
+      .withArchiveCache(ArchiveCache().withCache(fileCache))
+      .withDefaultIndex
+    val javaHome     = JavaHome().withCache(jvmCache).withUpdate(true)
+    val baseJavaHome = os.Path(javaHome.get(jvm).unsafeRun()(using fileCache.ec).getAbsolutePath)
     System.err.println(s"Initial Java home $baseJavaHome")
     val destJavaHome = os.Path(dest, BuildCtx.workspaceRoot)
     os.copy(baseJavaHome, destJavaHome, createFolders = true)
