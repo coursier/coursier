@@ -83,7 +83,7 @@ jobs:
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v7
       if: failure()
       with:
         name: docker-vm-output-${{ matrix.OS }}-${{ matrix.SCALA_VERSION }}
@@ -263,7 +263,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: launchers-${{ matrix.OSSHORT }}
           path: artifacts/
@@ -297,7 +297,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: launchers-linux-compat
           path: artifacts/
@@ -337,7 +337,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: launchers-${{ matrix.OSSHORT }}-static
           path: artifacts/
@@ -377,7 +377,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: launchers-${{ matrix.OSSHORT }}-container
           path: artifacts/
@@ -415,7 +415,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: launchers-${{ matrix.OSSHORT }}-standalone
           path: artifacts/
@@ -443,7 +443,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: launchers-windows-arm-standalone
           path: artifacts/
@@ -475,7 +475,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/v')
       with:
         subject-path: 'artifacts/*'
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v7
       with:
         name: launchers-jar
         path: artifacts/
@@ -509,7 +509,7 @@ jobs:
       if: startsWith(github.ref, 'refs/tags/v')
       with:
         subject-path: 'artifacts/*'
-    - uses: actions/upload-artifact@v5
+    - uses: actions/upload-artifact@v7
       with:
         name: launchers-bat
         path: artifacts/
@@ -532,59 +532,59 @@ jobs:
     - uses: coursier/setup-action@v3
       with:
         jvm: 21
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux-compat
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux-arm
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-windows
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-mac
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-mac-arm
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux-static
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux-arm-static
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux-container
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux-arm-container
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux-standalone
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-windows-arm-standalone
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-jar
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-bat
         path: artifacts/
@@ -608,47 +608,47 @@ jobs:
     - uses: coursier/setup-action@v3
       with:
         jvm: 21
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux-compat
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux-arm
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-windows
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-mac
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-mac-arm
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux-static
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux-arm-static
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux-container
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-linux-arm-container
         path: artifacts/
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v8
       with:
         name: launchers-jar
         path: artifacts/
