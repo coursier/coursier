@@ -82,7 +82,7 @@ object DownloadTests extends TestSuite with TestRepositoryServer.Test {
       }
     }
 
-    test("priavte URL with configured credentials") {
+    test("private URL with configured credentials") {
       withTmpDir { dir =>
         val remoteUrls = Seq(
           new URL(s"$testRepository/com/abc/test/0.1/test-0.1.pom")
