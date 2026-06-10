@@ -1152,8 +1152,13 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
              |""".stripMargin
         )
 
+        val scalaCliCmd: os.Shellable =
+          if (TestUtil.scalaCliIsJar)
+            Seq("java", "-jar", TestUtil.scalaCli)
+          else
+            TestUtil.scalaCli
         os.proc(
-          TestUtil.scalaCli,
+          scalaCliCmd,
           "--power",
           "publish",
           "--server=false",

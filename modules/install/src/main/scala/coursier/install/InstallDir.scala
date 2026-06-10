@@ -282,7 +282,7 @@ import scala.jdk.CollectionConverters._
           .orElse(foundMainClassOpt0)
           .orElse(desc.defaultMainClass)
           .getOrElse {
-            throw new NoMainClassFound
+            throw new NoMainClassFound(actualName(dest0))
           }
       }
 
@@ -311,7 +311,7 @@ import scala.jdk.CollectionConverters._
               if (
                 (onlyPrebuilt && desc.launcherType.isNative) || desc.launcherType == LauncherType.Prebuilt
               )
-                throw new NoPrebuiltBinaryAvailable(notFoundUrls)
+                throw new NoPrebuiltBinaryAvailable(actualName(dest0), notFoundUrls)
 
               val params0 = params(desc, appArtifacts, infoEntries, mainClass)
 

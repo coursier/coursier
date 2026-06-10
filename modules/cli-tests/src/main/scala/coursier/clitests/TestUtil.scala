@@ -73,4 +73,14 @@ object TestUtil {
     sys.error("Java property coursier-test.scala-cli not set")
   )
 
+  lazy val scalaCliIsJar = {
+    val str = sys.props.getOrElse(
+      "coursier-test.scala-cli.is-jar",
+      sys.error("Java property coursier-test.scala-cli.is-jar not set")
+    )
+    str.toBooleanOption.getOrElse {
+      sys.error(s"Java property coursier-test.scala-cli.is-jar '$str' is not a boolean")
+    }
+  }
+
 }

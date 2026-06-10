@@ -15,7 +15,8 @@ import java.util.Locale
 import scala.util.Properties
 
 trait CoursierJavaModule extends JavaModule {
-  def jvmRelease = "8"
+  def jvmRelease: String =
+    if (Properties.isWin && isArm64) "11" else "8"
   private def isArm64 =
     Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
       case Some("aarch64" | "arm64") => true
