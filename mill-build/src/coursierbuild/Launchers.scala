@@ -163,7 +163,6 @@ object Launchers {
 
       def generateNativeImageWithFileSystemChecker = false
 
-      def nativeImageCsCommand    = Seq(coursierbuild.Cs.cs)
       def nativeImagePersist      = System.getenv("CI") != null
       def nativeImageGraalVmJvmId = graalVmJvmId
 
