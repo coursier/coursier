@@ -233,7 +233,7 @@ object Launchers {
     object `linux-docker-image` extends CliNativeImage {
       def nativeImageDockerParams = Some(
         NativeImage.DockerParams(
-          imageName = "ubuntu:20.04",
+          imageName = Docker.linuxBinaryBaseImage,
           prepareCommand =
             """apt-get update -q -y &&\
               |apt-get install -q -y build-essential libz-dev zlib1g-dev git python3-pip curl zip
@@ -249,7 +249,7 @@ object Launchers {
     object `linux-compat-docker-image` extends CliNativeImage {
       def nativeImageDockerParams = Some(
         NativeImage.DockerParams(
-          imageName = "ubuntu:20.04",
+          imageName = Docker.linuxBinaryBaseImage,
           prepareCommand =
             """apt-get update -q -y &&\
               |apt-get install -q -y build-essential libz-dev zlib1g-dev git python3-pip curl zip
