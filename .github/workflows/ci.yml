@@ -30,7 +30,7 @@ jobs:
       with:
         disableFallback: true
     - run: |
-        ./mill -i -j1 __.js._.compile
+        ./mill -i -j1 __.js.__.compile
         ./mill -i __.compile
     - name: No test modules with no test classes
       run: ./mill -i ci.noEmptyDiscoveredTestClasses --tasks __.discoveredTestClasses
@@ -97,7 +97,7 @@ jobs:
       matrix:
         SCALA_VERSION:
           - "2.12.20"
-          # - "2.13.18" # Disabled until Mill can bump to a more memory efficient coursier version
+          - "2.13.18"
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
@@ -116,7 +116,7 @@ jobs:
         disableFallback: true
     - run: |
         npm install --ignore-scripts
-        ./mill -i -j1 '__.js['"$SCALA_VERSION"'].compile'
+        ./mill -i -j1 '__.js['"$SCALA_VERSION"'].__.compile'
         ./mill -i jsTests --scalaVersion "$SCALA_VERSION"
       shell: bash
       env:
