@@ -17,6 +17,7 @@ import mill.scalajslib._
 import mill.util.Tasks
 
 import java.io.File
+import java.util.Locale
 import java.util.zip.ZipFile
 
 import scala.concurrent.duration._
@@ -207,9 +208,15 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
     )
     def forkArgs = Task {
       val testRepositoryDataDir = (tests.handmadeMetadata().path / "http/abc.com").toString
+      val httpServerCp = `test-cache`.jvm(ScalaVersions.scala213).httpServerClassPath()
+        .map(_.path.toString).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
-        s"-Dtest.repository.data-dir=$testRepositoryDataDir"
+        s"-Dtest.repository.data-dir=$testRepositoryDataDir",
+        s"-Dtest.http-server.classpath=$httpServerCp"
       )
+    }
+    def forkEnv = Task {
+      super.forkEnv() ++ Seq(cli.csInPathForkEnv())
     }
   }
 }
@@ -562,6 +569,13 @@ trait CoursierJvm extends CoursierJvmBase { self =>
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.jvm()
     )
+    def forkArgs = Task {
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
+        .map(_.path.toString).mkString(File.pathSeparator)
+      super.forkArgs() ++ Seq(
+        s"-Dtest.http-server.classpath=$httpServerCp"
+      )
+    }
   }
   object it extends CrossSbtTests with CoursierTests {
     def sources = Task.Sources(
@@ -574,8 +588,11 @@ trait CoursierJvm extends CoursierJvmBase { self =>
     )
     def forkArgs = Task {
       val testRepositoryDataDir = (tests.handmadeMetadata().path / "http/abc.com").toString
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
+        .map(_.path.toString).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
-        s"-Dtest.repository.data-dir=$testRepositoryDataDir"
+        s"-Dtest.repository.data-dir=$testRepositoryDataDir",
+        s"-Dtest.http-server.classpath=$httpServerCp"
       )
     }
   }
@@ -629,6 +646,13 @@ trait TestsJvm extends TestsModule { self =>
       coursier.jvm(),
       `test-cache`.jvm()
     )
+    def forkArgs = Task {
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
+        .map(_.path.toString).mkString(File.pathSeparator)
+      super.forkArgs() ++ Seq(
+        s"-Dtest.http-server.classpath=$httpServerCp"
+      )
+    }
   }
   object it extends CrossSbtTests with CsScalaTests with CsResourcesTests {
     def testDataDir             = tests.shared.testDataDir
@@ -638,9 +662,12 @@ trait TestsJvm extends TestsModule { self =>
       val testRepositoryDataDir = (testHandmadeMetadataDir().path / "http/abc.com").toString
       val redirectingServerCp =
         `redirecting-server`.runClasspath().map(_.path.toString).mkString(File.pathSeparator)
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
+        .map(_.path.toString).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.repository.data-dir=$testRepositoryDataDir",
-        s"-Dtest.redirecting-server.classpath=$redirectingServerCp"
+        s"-Dtest.redirecting-server.classpath=$redirectingServerCp",
+        s"-Dtest.http-server.classpath=$httpServerCp"
       )
     }
     def sources = Task.Sources(
@@ -790,6 +817,13 @@ trait Install extends CrossSbtModule with CsModule
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.pprint
     )
+    def forkArgs = Task {
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
+        .map(_.path.toString).mkString(File.pathSeparator)
+      super.forkArgs() ++ Seq(
+        s"-Dtest.http-server.classpath=$httpServerCp"
+      )
+    }
   }
 }
 
@@ -824,6 +858,13 @@ trait Jvm extends CrossSbtModule with CsModule
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.scalaAsync
     )
+    def forkArgs = Task {
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
+        .map(_.path.toString).mkString(File.pathSeparator)
+      super.forkArgs() ++ Seq(
+        s"-Dtest.http-server.classpath=$httpServerCp"
+      )
+    }
     def forkEnv = super.forkEnv() ++ Seq(
       "COURSIER_JVM_TESTS_MOCK_CACHE" -> mockCache().path.toString
     )
@@ -968,6 +1009,16 @@ trait Cli extends CsModule
 
     ()
   }
+
+  def csInPathForkEnv = Task {
+    val ext = if (Properties.isWin) ".bat" else ""
+    os.copy(cli.assembly().path, Task.dest / s"cs$ext")
+    val (pathVarName, pathBaseValue) = System.getenv()
+      .asScala
+      .find(_._1.toLowerCase(Locale.ROOT) == "path")
+      .getOrElse(("PATH", ""))
+    pathVarName -> s"${Task.dest}${File.pathSeparator}$pathBaseValue"
+  }
 }
 
 trait CliTests extends CsModule
@@ -1031,6 +1082,9 @@ trait CliTests extends CsModule
     PathRef(dest)
   }
   object test extends SbtTests with CsTests {
+    def forkEnv = Task {
+      super.forkEnv() ++ Seq(cli.csInPathForkEnv())
+    }
     def forkArgs = Task {
       super.forkArgs() ++ sharedTestArgs ++ Seq(
         s"-Dcoursier-test-launcher=${cli.launcher().path}",
@@ -1051,6 +1105,15 @@ trait CliTests extends CsModule
     def testModuleName = "test"
     def cliLauncher: T[PathRef]
     def isStatic: Boolean = false
+    def forkEnv = Task {
+      val ext = if (Properties.isWin) ".bat" else ""
+      os.copy(cliLauncher().path, Task.dest / s"cs$ext")
+      val (pathVarName, pathBaseValue) = System.getenv()
+        .asScala
+        .find(_._1.toLowerCase(Locale.ROOT) == "path")
+        .getOrElse(("PATH", ""))
+      super.forkEnv() ++ Seq(pathVarName -> s"${Task.dest}${File.pathSeparator}$pathBaseValue")
+    }
     def forkArgs = {
       val launcherTask = cliLauncher.map(_.path)
       Task {
@@ -1073,6 +1136,17 @@ trait CliTests extends CsModule
   }
   object `standalone-jvm-tests` extends SbtTests with CsTests {
     def testModuleName = "test"
+    def forkEnv = Task {
+      val ext = if (Properties.isWin) ".bat" else ""
+      os.copy(cli.standaloneJvmLauncherDir().path, Task.dest / "cs")
+      val (pathVarName, pathBaseValue) = System.getenv()
+        .asScala
+        .find(_._1.toLowerCase(Locale.ROOT) == "path")
+        .getOrElse(("PATH", ""))
+      super.forkEnv() ++ Seq(
+        pathVarName -> s"${Task.dest / "cs" / (cli.launcherSubPath / os.up)}${File.pathSeparator}$pathBaseValue"
+      )
+    }
     def forkArgs = Task {
       val launcherDir = cli.standaloneJvmLauncherDir().path
       val launcher    = launcherDir / cli.launcherSubPath
@@ -1156,6 +1230,13 @@ trait TestCacheJvm extends Cross.Module[String] with CsCrossJvmJsModule {
   )
   def scalacOptions = Task {
     CsScalaTests.removeReleaseOption(super.scalacOptions())
+  }
+  def httpServerClassPath = Task {
+    defaultResolver().classpath(
+      Seq(mvn"io.get-coursier:http-server_2.12:1.0.0"),
+      // Clear forced Scala version in particular
+      resolutionParamsMapOpt = Some(_ => _root_.coursier.params.ResolutionParams())
+    )
   }
 }
 trait TestCacheJs extends Cross.Module[String] with CsCrossJvmJsModule with CsScalaJsModule {
@@ -1573,18 +1654,14 @@ def cliNativeImageLauncher() = Task.Command {
 
 object ci extends Module {
   def copyJvm(jvm: String = coursierbuild.Deps.graalVmJvmId, dest: String = "jvm") = Task.Command {
-    import sys.process._
-    val cs = if (Properties.isWin) "cs.exe" else "cs"
-    val command = Seq(
-      cs,
-      "java-home",
-      "--jvm",
-      jvm,
-      "--update",
-      "--ttl",
-      "0"
-    )
-    val baseJavaHome = os.Path(command.!!.trim, BuildCtx.workspaceRoot)
+    import _root_.coursier.cache.{ArchiveCache, FileCache}
+    import _root_.coursier.jvm.{JavaHome, JvmCache}
+    val fileCache = FileCache().withTtl(Duration.Zero)
+    val jvmCache = JvmCache()
+      .withArchiveCache(ArchiveCache().withCache(fileCache))
+      .withDefaultIndex
+    val javaHome     = JavaHome().withCache(jvmCache).withUpdate(true)
+    val baseJavaHome = os.Path(javaHome.get(jvm).unsafeRun()(using fileCache.ec).getAbsolutePath)
     System.err.println(s"Initial Java home $baseJavaHome")
     val destJavaHome = os.Path(dest, BuildCtx.workspaceRoot)
     os.copy(baseJavaHome, destJavaHome, createFolders = true)

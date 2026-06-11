@@ -29,11 +29,8 @@ jobs:
     - uses: coursier/cache-action@v8
       with:
         disableFallback: true
-    - uses: coursier/setup-action@v3
-      with:
-        jvm: 21
     - run: |
-        ./mill -i -j1 __.js[_].compile
+        ./mill -i -j1 __.js._.compile
         ./mill -i __.compile
     - name: No test modules with no test classes
       run: ./mill -i ci.noEmptyDiscoveredTestClasses --tasks __.discoveredTestClasses
@@ -72,9 +69,6 @@ jobs:
     - uses: coursier/cache-action@v8
       with:
         disableFallback: true
-    - uses: coursier/setup-action@v3
-      with:
-        jvm: 21
     - run: sudo apt-get install -y nailgun
       if: runner.os == 'Linux'
     # - run: .github/scripts/scala-native-setup.sh
@@ -120,9 +114,6 @@ jobs:
     - uses: coursier/cache-action@v8
       with:
         disableFallback: true
-    - uses: coursier/setup-action@v3
-      with:
-        jvm: 21
     - run: |
         npm install --ignore-scripts
         ./mill -i -j1 '__.js['"$SCALA_VERSION"'].compile'
@@ -142,9 +133,6 @@ jobs:
     - uses: coursier/cache-action@v8
       with:
         disableFallback: true
-    - uses: coursier/setup-action@v3
-      with:
-        jvm: 21
     - run: ./mill -i -k __.mimaReportBinaryIssues
 
   website-check:
@@ -166,9 +154,6 @@ jobs:
     - uses: coursier/cache-action@v8
       with:
         disableFallback: true
-    - uses: coursier/setup-action@v3
-      with:
-        jvm: 21
     - run: ./mill -i docs.mdoc
       env:
         COURSIER_JNI: force
@@ -191,13 +176,16 @@ jobs:
       with:
         disableFallback: true
     - uses: coursier/setup-action@v3
-      with:
-        jvm: 21
-        apps: scalafmt:3.8.3
-    - run: scalafmt --check
+    - run: cs launch scalafmt -- --check
 
   publish:
-    needs: ["compile-publish-all", "test", "js-test", "bin-compat", "website-check", "format"]
+    needs:
+      - "compile-publish-all"
+      - "test"
+      - "js-test"
+      - "bin-compat"
+      - "website-check"
+      - "format"
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -208,9 +196,6 @@ jobs:
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
-      - uses: coursier/setup-action@v3
-        with:
-          jvm: 21
       - name: Publish
         run: |
           ./mill -i mill.scalalib.SonatypeCentralPublishModule/
@@ -245,9 +230,6 @@ jobs:
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
-      - uses: coursier/setup-action@v3
-        with:
-          jvm: 21
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
@@ -281,9 +263,6 @@ jobs:
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
-      - uses: coursier/setup-action@v3
-        with:
-          jvm: 21
       - run: sudo apt-get install -y nailgun
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeCompatTests
         shell: bash
@@ -323,9 +302,6 @@ jobs:
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
-      - uses: coursier/setup-action@v3
-        with:
-          jvm: 21
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeStaticTests
@@ -363,9 +339,6 @@ jobs:
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
-      - uses: coursier/setup-action@v3
-        with:
-          jvm: 21
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeContainerTests
@@ -402,9 +375,8 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v8
-      - uses: coursier/setup-action@v3
         with:
-          jvm: 21
+          disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: ./mill -i standaloneJvmTests
@@ -464,9 +436,6 @@ jobs:
     - uses: coursier/cache-action@v8
       with:
         disableFallback: true
-    - uses: coursier/setup-action@v3
-      with:
-        jvm: 21
     - name: Wait for sync to Central
       run: ./mill -i waitForSync
     - name: Copy artifacts
@@ -496,9 +465,6 @@ jobs:
     - uses: coursier/cache-action@v8
       with:
         disableFallback: true
-    - uses: coursier/setup-action@v3
-      with:
-        jvm: 21
     - name: Wait for sync to Central
       run: ./mill -i waitForSync
       shell: bash
@@ -518,7 +484,15 @@ jobs:
 
   upload-launchers:
     name: Upload launchers to GitHub release assets
-    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-container-launcher, generate-standalone-launchers, generate-standalone-launcher-windows-arm-tmp, generate-jar-launchers, generate-bat-launcher]
+    needs:
+      - generate-native-launchers
+      - generate-compat-native-launchers
+      - generate-native-static-launcher
+      - generate-native-container-launcher
+      - generate-standalone-launchers
+      - generate-standalone-launcher-windows-arm-tmp
+      - generate-jar-launchers
+      - generate-bat-launcher
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -529,9 +503,6 @@ jobs:
     - uses: coursier/cache-action@v8
       with:
         disableFallback: true
-    - uses: coursier/setup-action@v3
-      with:
-        jvm: 21
     - uses: actions/download-artifact@v8
       with:
         name: launchers-linux
@@ -594,7 +565,12 @@ jobs:
 
   upload-launchers-special-repo:
     name: Upload launchers to dedicated repository
-    needs: [generate-native-launchers, generate-compat-native-launchers, generate-native-static-launcher, generate-native-container-launcher, generate-jar-launchers]
+    needs:
+      - generate-native-launchers
+      - generate-compat-native-launchers
+      - generate-native-static-launcher
+      - generate-native-container-launcher
+      - generate-jar-launchers
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -605,9 +581,6 @@ jobs:
     - uses: coursier/cache-action@v8
       with:
         disableFallback: true
-    - uses: coursier/setup-action@v3
-      with:
-        jvm: 21
     - uses: actions/download-artifact@v8
       with:
         name: launchers-linux
@@ -658,7 +631,8 @@ jobs:
 
   update-brew-formula:
     name: Update brew formula
-    needs: [upload-launchers]
+    needs:
+      - upload-launchers
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -669,9 +643,6 @@ jobs:
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
-      - uses: coursier/setup-action@v3
-        with:
-          jvm: 21
       - run: .github/scripts/scala-cli.sh .github/scripts/UpdateBrewFormula.scala
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -691,9 +662,6 @@ jobs:
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
-      - uses: coursier/setup-action@v3
-        with:
-          jvm: 21
       - run: .github/scripts/setup-mkdocs.sh
       - run: npm install --ignore-scripts && ./mill -i updateWebsite
         env:
@@ -701,7 +669,9 @@ jobs:
 
   update-website:
     name: Update website
-    needs: [update-brew-formula, upload-launchers-special-repo]
+    needs:
+      - update-brew-formula
+      - upload-launchers-special-repo
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
@@ -715,9 +685,6 @@ jobs:
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
-      - uses: coursier/setup-action@v3
-        with:
-          jvm: 21
       - run: .github/scripts/setup-mkdocs.sh
       - run: npm install --ignore-scripts && ./mill -i updateWebsite
         env:

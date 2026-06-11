@@ -99,17 +99,29 @@ object Launchers {
   }
 
   trait CsJniNativeImage extends NativeImage {
-    private def copyCsjniutilTo(destDir: os.Path, workspace: os.Path): Unit = {
-      val jniUtilsVersion = Deps.jniUtils.dep.versionConstraint.asString
-      val libRes = os.proc(
-        coursierbuild.Cs.cs,
-        "fetch",
-        "--intransitive",
-        s"io.get-coursier.jniutils:windows-jni-utils:$jniUtilsVersion,classifier=x86_64-pc-win32,ext=lib,type=lib",
-        "-A",
-        "lib"
-      ).call()
-      val libPath = os.Path(libRes.out.text().trim(), workspace)
+    private def copyCsjniutilTo(destDir: os.Path): Unit = {
+      import coursier.*
+      import coursier.core.Extension
+      val dep = Dependency(
+        Module(Organization("io.get-coursier.jniutils"), ModuleName("windows-jni-utils")),
+        Deps.jniUtils.dep.versionConstraint
+      )
+      val dep0 = dep
+        .withPublication(
+          "windows-jni-utils",
+          Type("lib"),
+          Extension("lib"),
+          Classifier("x86_64-pc-win32")
+        )
+        .withTransitive(false)
+
+      val files = Fetch()
+        .addDependencies(dep0)
+        .addArtifactTypes(Type("lib"))
+        .run()
+      assert(files.length == 1)
+
+      val libPath = os.Path(files.head.getAbsolutePath)
       os.copy.over(libPath, destDir / "csjniutils.lib")
     }
 
@@ -121,7 +133,7 @@ object Launchers {
         os.makeDir.all(dir)
 
         if (Properties.isWin)
-          copyCsjniutilTo(dir, BuildCtx.workspaceRoot)
+          copyCsjniutilTo(dir)
 
         PathRef(dir)
       }
@@ -151,7 +163,6 @@ object Launchers {
 
       def generateNativeImageWithFileSystemChecker = false
 
-      def nativeImageCsCommand    = Seq(coursierbuild.Cs.cs)
       def nativeImagePersist      = System.getenv("CI") != null
       def nativeImageGraalVmJvmId = graalVmJvmId
 
@@ -320,13 +331,13 @@ object Launchers {
       val cp         = jarClassPath().map(_.path).mkString(File.pathSeparator)
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
       val graalVmHome = Option(System.getenv("GRAALVM_HOME")).getOrElse {
-        import sys.process._
-        Seq(
-          coursierbuild.Cs.cs,
-          "java-home",
-          "--jvm",
-          `base-image`.nativeImageGraalVmJvmId()
-        ).!!.trim
+        import coursier.jvm.{JavaHome, JvmCache}
+        val jvmCache = JvmCache()
+        JavaHome()
+          .withCache(jvmCache)
+          .get(`base-image`.nativeImageGraalVmJvmId())
+          .unsafeRun()(using jvmCache.archiveCache.cache.ec)
+          .getAbsolutePath
       }
       val outputDir = Task.dest / "config"
       val command = Seq(
