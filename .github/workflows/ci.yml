@@ -97,7 +97,7 @@ jobs:
       matrix:
         SCALA_VERSION:
           - "2.12.20"
-          # - "2.13.18" # Disabled until Mill can bump to a more memory efficient coursier version
+          - "2.13.18"
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
