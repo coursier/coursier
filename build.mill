@@ -1,4 +1,4 @@
-//| mill-version: 1.1.5
+//| mill-version: 1.1.6
 
 import coursierbuild.Deps.{Deps, ScalaVersions, csQemuVersion, scalaCliVersion}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
