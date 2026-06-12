@@ -43,8 +43,13 @@ goto Win9xApp
 
 @REM Start program
 :runm2
+if "%OS%"=="Windows_NT" goto WinNTExec
 SET CMDLINE="@COMMAND@" %CMD_LINE_ARGS%
 %CMDLINE%
+if ERRORLEVEL 1 goto error
+goto end
+:WinNTExec
+"@COMMAND@" %*
 if ERRORLEVEL 1 goto error
 goto end
 
