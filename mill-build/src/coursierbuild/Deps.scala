@@ -65,7 +65,7 @@ object Deps {
     def scalazConcurrent         = mvn"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
     def scodec                   = mvn"org.scodec::scodec-core:2.3.3"
     def shapeless                = mvn"com.chuusai::shapeless:2.3.12"
-    def slf4JNop                 = mvn"org.slf4j:slf4j-nop:2.0.17"
+    def slf4JNop                 = mvn"org.slf4j:slf4j-nop:2.0.18"
     def svm                      = mvn"org.graalvm.nativeimage:svm:21.3.15"
     def tika                     = mvn"org.apache.tika:tika-core:3.2.3"
     def undertow                 = mvn"io.undertow:undertow-core:2.3.18.Final"
