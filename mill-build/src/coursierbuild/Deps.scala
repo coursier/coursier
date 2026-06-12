@@ -75,7 +75,7 @@ object Deps {
     def windowsAnsi              = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
     def windowsAnsiPs =
       mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
-    def zstdJni = mvn"com.github.luben:zstd-jni:1.5.7-4"
+    def zstdJni = mvn"com.github.luben:zstd-jni:1.5.7-10"
   }
 
   object Versions {
