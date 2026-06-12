@@ -55,7 +55,7 @@ jobs:
           - OS: "windows-latest"
             SCALA_VERSION: "2.13.18"
           - OS: "ubuntu-latest"
-            SCALA_VERSION: "2.12.20"
+            SCALA_VERSION: "2.12.21"
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
