@@ -57,10 +57,29 @@ final class Backend($ : BackendScope[_, State]) {
         dep.variantSelector.repr
       ).mkString(":")
 
-    for {
-      (dep, parents) <- resolution
-        .reverseDependencies
+    val reverseDependencies = {
+      val (updatedConflicts, updatedDeps, _) = resolution.nextDependenciesAndConflicts
+
+      val trDepsSeq =
+        for {
+          dep   <- updatedDeps
+          trDep <- resolution.finalDependencies0(dep).toOption.getOrElse(Nil)
+        } yield trDep.clearVersion -> dep.clearVersion
+
+      val knownDeps = (updatedDeps ++ updatedConflicts)
+        .map(_.clearVersion)
+        .toSet
+
+      trDepsSeq
+        .groupBy(_._1)
+        .view
+        .mapValues(_.map(_._2).toVector)
+        .filterKeys(knownDeps)
         .toList
+    }
+
+    for {
+      (dep, parents) <- reverseDependencies
       from = repr(dep)
       _    = addNode(from)
       parDep <- parents
