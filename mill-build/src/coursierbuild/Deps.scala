@@ -25,7 +25,7 @@ object Deps {
     def isTerminal        = mvn"io.github.alexarchambault:is-terminal:0.1.2"
     def java8Compat       = mvn"org.scala-lang.modules::scala-java8-compat:1.0.2"
     def jimfs             = mvn"com.google.jimfs:jimfs:1.3.1"
-    def jna               = mvn"net.java.dev.jna:jna:5.17.0"
+    def jna               = mvn"net.java.dev.jna:jna:5.19.0"
     def jniUtils          = mvn"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
     def jniUtilsBootstrap =
       mvn"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
