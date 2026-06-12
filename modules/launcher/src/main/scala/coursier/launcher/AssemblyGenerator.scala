@@ -144,10 +144,14 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
 
       ent.setCompressedSize(-1L)
 
-      val content = entries.reverse.toArray.flatMap(_._2)
+      val content = entries.reverse.toArray.foldLeft(Array.emptyByteArray) {
+        case (acc, (_, bytes)) =>
+          if (acc.isEmpty || acc.last == '\n'.toByte) acc ++ bytes
+          else (acc :+ '\n'.toByte) ++ bytes
+      }
 
       if (entries.tail.nonEmpty) {
-        ent.setSize(entries.map(_._2.length).sum)
+        ent.setSize(content.length)
         val crc = new CRC32
         crc.update(content)
         ent.setCrc(crc.getValue)
