@@ -15,6 +15,7 @@ public final class DirectCredentials extends Credentials {
   public static final boolean DEFAULT_MATCH_HOST = true;
   public static final boolean DEFAULT_HTTPS_ONLY = false;
   public static final boolean DEFAULT_PASS_ON_REDIRECT = false;
+  public static final boolean DEFAULT_PREEMPTIVE = false;
 
   private static final String DEFAULT_HOST = "";
   private static final boolean DEFAULT_OPTIONAL = true;
@@ -27,6 +28,7 @@ public final class DirectCredentials extends Credentials {
   private final boolean matchHost;
   private final boolean httpsOnly;
   private final boolean passOnRedirect;
+  private final boolean preemptive;
 
   private DirectCredentials(
     String host,
@@ -36,7 +38,8 @@ public final class DirectCredentials extends Credentials {
     boolean optional,
     boolean matchHost,
     boolean httpsOnly,
-    boolean passOnRedirect
+    boolean passOnRedirect,
+    boolean preemptive
   ) {
     this.host = (host != null) ? host : DEFAULT_HOST;
     this.usernameOpt = username;
@@ -46,6 +49,7 @@ public final class DirectCredentials extends Credentials {
     this.matchHost = matchHost;
     this.httpsOnly = httpsOnly;
     this.passOnRedirect = passOnRedirect;
+    this.preemptive = preemptive;
   }
 
   public DirectCredentials(
@@ -66,7 +70,8 @@ public final class DirectCredentials extends Credentials {
       optional,
       matchHost,
       httpsOnly,
-      passOnRedirect);
+      passOnRedirect,
+      DEFAULT_PREEMPTIVE);
   }
 
   public DirectCredentials(
@@ -77,12 +82,13 @@ public final class DirectCredentials extends Credentials {
     this(
       host,
       username,
-      password,
+      (password != null) ? new Password<>(password) : null,
       null,
       DEFAULT_OPTIONAL,
       DEFAULT_MATCH_HOST,
       DEFAULT_HTTPS_ONLY,
-      DEFAULT_PASS_ON_REDIRECT);
+      DEFAULT_PASS_ON_REDIRECT,
+      DEFAULT_PREEMPTIVE);
   }
 
   public DirectCredentials(
@@ -94,12 +100,13 @@ public final class DirectCredentials extends Credentials {
     this(
       host,
       username,
-      password,
+      (password != null) ? new Password<>(password) : null,
       realm,
       DEFAULT_OPTIONAL,
       DEFAULT_MATCH_HOST,
       DEFAULT_HTTPS_ONLY,
-      DEFAULT_PASS_ON_REDIRECT);
+      DEFAULT_PASS_ON_REDIRECT,
+      DEFAULT_PREEMPTIVE);
   }
 
   @Override
@@ -139,6 +146,10 @@ public final class DirectCredentials extends Credentials {
     return passOnRedirect;
   }
 
+  public boolean isPreemptive() {
+    return preemptive;
+  }
+
   public DirectCredentials withHost(String host) {
     return new DirectCredentials(
       host,
@@ -148,7 +159,8 @@ public final class DirectCredentials extends Credentials {
       this.optional,
       this.matchHost,
       this.httpsOnly,
-      this.passOnRedirect
+      this.passOnRedirect,
+      this.preemptive
     );
   }
 
@@ -161,7 +173,8 @@ public final class DirectCredentials extends Credentials {
       this.optional,
       this.matchHost,
       this.httpsOnly,
-      this.passOnRedirect
+      this.passOnRedirect,
+      this.preemptive
     );
   }
 
@@ -173,12 +186,13 @@ public final class DirectCredentials extends Credentials {
     return new DirectCredentials(
       this.host,
       this.usernameOpt,
-      password,
+      (password != null) ? new Password<>(password) : null,
       this.realmOpt,
       this.optional,
       this.matchHost,
       this.httpsOnly,
-      this.passOnRedirect
+      this.passOnRedirect,
+      this.preemptive
     );
   }
 
@@ -195,7 +209,8 @@ public final class DirectCredentials extends Credentials {
       this.optional,
       this.matchHost,
       this.httpsOnly,
-      this.passOnRedirect
+      this.passOnRedirect,
+      this.preemptive
     );
   }
 
@@ -212,7 +227,8 @@ public final class DirectCredentials extends Credentials {
       optional,
       this.matchHost,
       this.httpsOnly,
-      this.passOnRedirect
+      this.passOnRedirect,
+      this.preemptive
     );
   }
 
@@ -225,7 +241,8 @@ public final class DirectCredentials extends Credentials {
       this.optional,
       matchHost,
       this.httpsOnly,
-      this.passOnRedirect
+      this.passOnRedirect,
+      this.preemptive
     );
   }
 
@@ -238,7 +255,8 @@ public final class DirectCredentials extends Credentials {
       this.optional,
       this.matchHost,
       httpsOnly,
-      this.passOnRedirect
+      this.passOnRedirect,
+      this.preemptive
     );
   }
 
@@ -251,7 +269,22 @@ public final class DirectCredentials extends Credentials {
       this.optional,
       this.matchHost,
       this.httpsOnly,
-      passOnRedirect
+      passOnRedirect,
+      this.preemptive
+    );
+  }
+
+  public DirectCredentials withPreemptive(boolean preemptive) {
+    return new DirectCredentials(
+      this.host,
+      this.usernameOpt,
+      this.passwordOpt,
+      this.realmOpt,
+      this.optional,
+      this.matchHost,
+      this.httpsOnly,
+      this.passOnRedirect,
+      preemptive
     );
   }
 
@@ -272,6 +305,8 @@ public final class DirectCredentials extends Credentials {
             httpsOnly +
             ", " +
             passOnRedirect +
+            ", " +
+            preemptive +
             ")";
   }
 
@@ -284,6 +319,7 @@ public final class DirectCredentials extends Credentials {
     result = prime * result + (matchHost ? 1231 : 1237);
     result = prime * result + (optional ? 1231 : 1237);
     result = prime * result + (passOnRedirect ? 1231 : 1237);
+    result = prime * result + (preemptive ? 1231 : 1237);
     result = prime * result + ((passwordOpt == null) ? 0 : passwordOpt.hashCode());
     result = prime * result + ((realmOpt == null) ? 0 : realmOpt.hashCode());
     result = prime * result + ((usernameOpt == null) ? 0 : usernameOpt.hashCode());
@@ -303,6 +339,7 @@ public final class DirectCredentials extends Credentials {
     if (matchHost != other.matchHost) return false;
     if (optional != other.optional) return false;
     if (passOnRedirect != other.passOnRedirect) return false;
+    if (preemptive != other.preemptive) return false;
     if (passwordOpt == null) {
       if (other.passwordOpt != null) return false;
     } else if (!passwordOpt.equals(other.passwordOpt)) return false;
