@@ -67,7 +67,8 @@ object Fetch extends CoursierCommand[FetchOptions] {
                   (art, fileOpt) <- artifactFiles
                   depPubs        <- byArtifacts.get(art).toSeq
                   (dep, pub)     <- depPubs
-                } yield (dep, pub, art, fileOpt)
+                } yield (dep, pub, art, fileOpt),
+                addUrls = params.jsonReportAddUrls
               )
 
               Files.write(output, report.getBytes(StandardCharsets.UTF_8))

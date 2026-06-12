@@ -33,6 +33,7 @@ object JsonReport {
   final case class DependencyEntry(
     coord: String,
     file: Option[String] = None,
+    url: Option[String] = None,
     directDependencies: Seq[String],
     dependencies: Seq[String],
     exclusions: Seq[String] = Nil
@@ -46,7 +47,8 @@ object JsonReport {
   def report(
     resolution: Resolution,
     artifacts: Seq[(Dependency, Either[VariantPublication, Publication], Artifact, Option[File])],
-    useSlashSeparator: Boolean = false
+    useSlashSeparator: Boolean = false,
+    addUrls: Boolean = false
   ): String = {
 
     val fileMap = artifacts
@@ -206,7 +208,12 @@ object JsonReport {
           .flatten
           .map(_.getAbsolutePath)
           .distinct
-        if (files.lengthCompare(1) <= 0)
+        if (files.lengthCompare(1) <= 0) {
+          val url =
+            if (addUrls)
+              deps.flatMap { case (_, _, art) => fileMap.get(art).map(_ => art.url) }.headOption
+            else
+              None
           Seq(
             DependencyEntry(
               coords(key),
@@ -216,6 +223,7 @@ object JsonReport {
                 else
                   path
               },
+              url,
               directDependenciesMap(key).map(coords).sorted,
               fromDepTrees
                 .get(key)
@@ -228,6 +236,7 @@ object JsonReport {
               exclusionsMap(key)
             )
           )
+        }
         else {
           val attributesMap = deps
             .flatMap {
@@ -247,6 +256,15 @@ object JsonReport {
               case (k, l) =>
                 (k.getAbsolutePath, l.map(_._2.normalize).sortBy(_.packagingAndClassifier).head)
             }
+          val fileToUrlMap =
+            if (addUrls)
+              deps
+                .flatMap { case (_, _, art) =>
+                  fileMap.get(art).map(f => f.getAbsolutePath -> art.url)
+                }
+                .toMap
+            else
+              Map.empty[String, String]
           files.map { f =>
             val attr = attributesMap(f)
             DependencyEntry(
@@ -257,6 +275,7 @@ object JsonReport {
                 else
                   f
               },
+              fileToUrlMap.get(f),
               directDependenciesMap(key).map(coords).sorted,
               fromDepTrees
                 .get(key)
