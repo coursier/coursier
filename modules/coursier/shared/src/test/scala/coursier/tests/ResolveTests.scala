@@ -2438,7 +2438,7 @@ object ResolveTests extends TestSuite {
 
       test("swapsDepsForScala2") {
         val params = ResolutionParams()
-          .withScalaVersion("2.12.20")
+          .withScalaVersion("2.12.21")
           .withScalaOrganizationOverride(Some(org"org.typelevel"))
 
         val res = Resolve.initialResolution(Nil, params)
