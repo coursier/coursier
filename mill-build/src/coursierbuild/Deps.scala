@@ -80,7 +80,7 @@ object Deps {
 
   object Versions {
     def cats          = "2.13.0"
-    def http4s        = "0.23.30"
+    def http4s        = "0.23.34"
     def jniUtils      = "0.3.4"
     def jsoniterScala = "2.13.5"
     def scalaz        = "7.2.36"
