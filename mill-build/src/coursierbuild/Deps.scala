@@ -10,7 +10,7 @@ object Deps {
     def catsFree213       = mvn"org.typelevel:cats-free_2.13:${Versions.cats}"
     def catsEffect        = mvn"org.typelevel::cats-effect::3.6.1"
     def classPathUtil     = mvn"io.get-coursier::class-path-util:0.1.4"
-    def collectionCompat  = mvn"org.scala-lang.modules::scala-collection-compat::2.13.0"
+    def collectionCompat  = mvn"org.scala-lang.modules::scala-collection-compat::2.14.0"
     def concurrentReferenceHashMap =
       mvn"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
     def dataClass         = mvn"io.github.alexarchambault::data-class:0.2.7"
