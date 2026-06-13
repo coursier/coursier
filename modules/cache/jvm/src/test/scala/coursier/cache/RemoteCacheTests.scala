@@ -94,7 +94,7 @@ object RemoteCacheTests extends TestSuite {
           "org.scala-lang:scala-compiler:2.13.16",
           "org.scala-lang:scala-library:2.13.16",
           "org.scala-lang:scala-reflect:2.13.16",
-          "io.github.java-diff-utils:java-diff-utils:4.15",
+          "io.github.java-diff-utils:java-diff-utils:4.17",
           "org.jline:jline:3.27.1"
         )
 
