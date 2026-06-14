@@ -25,7 +25,7 @@ object CoursierPublishModule {
     .trim()
   private def computeBuildVersion() = {
     // FIXME Print stderr if command fails
-    val gitHead = os.proc("git", "rev-parse", "HEAD").call(stderr = os.Pipe).out.trim()
+    val gitHead       = os.proc("git", "rev-parse", "HEAD").call(stderr = os.Pipe).out.trim()
     val maybeExactTag = scala.util.Try {
       // FIXME Print stderr if command fails
       os.proc("git", "describe", "--exact-match", "--tags", "--always", gitHead)

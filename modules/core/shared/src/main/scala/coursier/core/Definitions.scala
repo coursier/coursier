@@ -9,7 +9,7 @@ import dataclass.data
 import scala.util.hashing.MurmurHash3
 
 final case class Organization(value: String) extends AnyVal {
-  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  private[coursier] def parsedValue          = PropertyExpr.parse(value)
   def map(f: String => String): Organization = {
     val o = PropertyExpr.applySubstitution(value, f)
     if (o eq value) this
@@ -23,7 +23,7 @@ object Organization {
 }
 
 final case class ModuleName(value: String) extends AnyVal {
-  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  private[coursier] def parsedValue        = PropertyExpr.parse(value)
   def map(f: String => String): ModuleName = {
     val newName = PropertyExpr.applySubstitution(value, f)
     if (newName eq value) this
@@ -102,7 +102,7 @@ final case class Type(value: String) extends AnyVal {
     value.isEmpty
   def nonEmpty: Boolean =
     value.nonEmpty
-  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  private[coursier] def parsedValue  = PropertyExpr.parse(value)
   def map(f: String => String): Type = {
     val newValue = PropertyExpr.applySubstitution(value, f)
     if (newValue eq value) this
@@ -157,7 +157,7 @@ final case class Classifier(value: String) extends AnyVal {
   def nonEmpty: Boolean =
     value.nonEmpty
 
-  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  private[coursier] def parsedValue        = PropertyExpr.parse(value)
   def map(f: String => String): Classifier = {
     val newValue = PropertyExpr.applySubstitution(value, f)
     if (newValue eq value) this
@@ -204,7 +204,7 @@ final case class Configuration(value: String) extends AnyVal {
   def -->(target: Configuration): Configuration =
     Configuration(s"$value->${target.value}")
 
-  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  private[coursier] def parsedValue           = PropertyExpr.parse(value)
   def map(f: String => String): Configuration = {
     val newValue = PropertyExpr.applySubstitution(value, f)
     if (newValue eq value) this
@@ -514,7 +514,7 @@ object Attributes {
       }
       .toVector
     val baseRetainedVariants = retainedVariantsFor(attr)
-    def isModuleBasedBom =
+    def isModuleBasedBom     =
       dependencies0.isEmpty && (dependencyManagement0.nonEmpty || !overrides.isEmpty) &&
       variants.nonEmpty
     val (actualAttr, retainedVariants) =
@@ -540,7 +540,7 @@ object Attributes {
         )
       )
     else {
-      val highestScore = retainedVariants.map(_._2).max
+      val highestScore      = retainedVariants.map(_._2).max
       val retainedVariants0 = retainedVariants.collect {
         case (name, `highestScore`) => name
       }
@@ -569,7 +569,7 @@ object Attributes {
 
   def isRelocatedVariant(variant: Variant.Attributes): Option[Dependency] = {
     lazy val firstDeps = dependencies0.iterator.filter(_._1 == variant).take(2).toVector
-    val isRelocated = variants.get(variant).exists(_.get("$relocated").contains("true")) &&
+    val isRelocated    = variants.get(variant).exists(_.get("$relocated").contains("true")) &&
       firstDeps.length == 1
     if (isRelocated) Some(firstDeps.head._2)
     else None
@@ -999,7 +999,7 @@ object SnapshotVersioning {
   classifier: Classifier
 ) {
   def attributes: Attributes = Attributes(`type`, classifier)
-  def isEmpty: Boolean =
+  def isEmpty: Boolean       =
     name.isEmpty && `type`.isEmpty && ext.isEmpty && classifier.isEmpty
 
   lazy val attributesHaveProperties =

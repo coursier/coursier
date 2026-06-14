@@ -21,7 +21,7 @@ object ModuleParser {
       ) match {
         case (Right(org), Right(name)) =>
           val csMod = Module(Organization(org), ModuleName(name), anyMod.attributes)
-          val res = anyMod.nameAttributes match {
+          val res   = anyMod.nameAttributes match {
             case NoAttributes =>
               JavaOrScalaModule.JavaModule(csMod)
             case scalaAttr: ScalaNameAttributes =>

@@ -54,7 +54,7 @@ object Launchers {
 
       for (path <- entries) {
         val isDirectory = os.isDir(path)
-        val entry = new TarArchiveEntry(
+        val entry       = new TarArchiveEntry(
           path.toNIO,
           path.subRelativeTo(sourceDir).toString + (if (isDirectory) "/" else ""),
           LinkOption.NOFOLLOW_LINKS
@@ -141,7 +141,7 @@ object Launchers {
 
     def nativeImageOptions = Task {
       val usesDocker = nativeImageDockerParams().nonEmpty
-      val cLibPath =
+      val cLibPath   =
         if (usesDocker) s"/data/$staticLibDirName"
         else staticLibDir().path.toString
       super.nativeImageOptions() ++
@@ -218,7 +218,7 @@ object Launchers {
 
     private val arch = sys.props.getOrElse("os.arch", "").toLowerCase(java.util.Locale.ROOT)
     private def isCI = System.getenv("CI") != null
-    def nativeImage =
+    def nativeImage  =
       if (Properties.isLinux && isCI)
         `linux-docker-image`.nativeImage
       else
@@ -312,7 +312,7 @@ object Launchers {
     // Same as container-image, but built from docker to avoid glibc version issues
     object `container-image-from-docker` extends CliNativeImage {
       def nativeImageDockerParams = `linux-docker-image`.nativeImageDockerParams()
-      def nativeImageOptions = super.nativeImageOptions() ++ Seq(
+      def nativeImageOptions      = super.nativeImageOptions() ++ Seq(
         "-H:-UseContainerSupport"
       )
     }
@@ -328,8 +328,8 @@ object Launchers {
     }
 
     def runWithAssistedConfig(args: String*) = Task.Command {
-      val cp         = jarClassPath().map(_.path).mkString(File.pathSeparator)
-      val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
+      val cp          = jarClassPath().map(_.path).mkString(File.pathSeparator)
+      val mainClass0  = mainClass().getOrElse(sys.error("No main class"))
       val graalVmHome = Option(System.getenv("GRAALVM_HOME")).getOrElse {
         import coursier.jvm.{JavaHome, JvmCache}
         val jvmCache = JvmCache()
@@ -340,7 +340,7 @@ object Launchers {
           .getAbsolutePath
       }
       val outputDir = Task.dest / "config"
-      val command = Seq(
+      val command   = Seq(
         s"$graalVmHome/bin/java",
         s"-agentlib:native-image-agent=config-output-dir=$outputDir",
         "-cp",
@@ -390,7 +390,7 @@ object Launchers {
         .callsItself(isWin)
       val entries       = cp.map(path => ClassPathEntry.Url(path.toNIO.toUri.toASCIIString))
       val loaderContent = coursier.launcher.ClassLoaderContent(entries)
-      val params = Parameters.Bootstrap(Seq(loaderContent), mainClass0)
+      val params        = Parameters.Bootstrap(Seq(loaderContent), mainClass0)
         .withDeterministic(true)
         .withPreamble(preamble)
 
@@ -436,7 +436,7 @@ object Launchers {
         }
       }
       val loaderContent = coursier.launcher.ClassLoaderContent(entries)
-      val params = Parameters.Bootstrap(Seq(loaderContent), mainClass0)
+      val params        = Parameters.Bootstrap(Seq(loaderContent), mainClass0)
         .withDeterministic(true)
         .withPreamble(preamble)
 
@@ -500,7 +500,7 @@ object Launchers {
     }
 
     def standaloneJvmLauncherArchive = Task {
-      val dir = standaloneJvmLauncherDir().path
+      val dir     = standaloneJvmLauncherDir().path
       val archive =
         if (Properties.isWin)
           os.zip(Task.dest / "cs.zip", os.list(dir))

@@ -7,10 +7,10 @@ import scala.util.control.compat.ControlThrowable
 sealed abstract class Overrides extends Product with Serializable {
   private val cache: ConcurrentMap[Any, Any] =
     new java.util.concurrent.ConcurrentHashMap[Any, Any]()
-  private val cacheHits   = new AtomicInteger(0)
-  private val cacheMisses = new AtomicInteger(0)
+  private val cacheHits                             = new AtomicInteger(0)
+  private val cacheMisses                           = new AtomicInteger(0)
   private[core] def cached[T](key: Any)(f: => T): T = {
-    var computed = false
+    var computed  = false
     val fromCache = cache.computeIfAbsent(
       key,
       _ => { computed = true; f }
@@ -116,7 +116,7 @@ object Overrides {
     ): Overrides = {
       var changed          = false
       var mayContainGlobal = false
-      val updatedMap = map.map {
+      val updatedMap       = map.map {
         case kv @ (k, v) =>
           // FIXME Key collisions after applying f?
           val updated = f(k, v)
@@ -138,7 +138,7 @@ object Overrides {
               DependencyManagement.Values
             ] =>
           var mayContainGlobal = false
-          val transformed = immMap.transform { (k, v) =>
+          val transformed      = immMap.transform { (k, v) =>
             val newV = f(k, v)
             mayContainGlobal ||= newV.global
             newV
@@ -167,7 +167,7 @@ object Overrides {
         .getOrElse(this)
   }
 
-  private val empty0 = Impl(Map.empty, false)
+  private val empty0   = Impl(Map.empty, false)
   def empty: Overrides =
     empty0
 
@@ -188,7 +188,7 @@ object Overrides {
       case (true, true)  => empty0
       case (true, false) => overrides2
       case (false, true) => overrides1
-      case _ =>
+      case _             =>
         val temp =
           DependencyManagement.addAll0(
             Map.empty,
@@ -206,7 +206,7 @@ object Overrides {
     overrides.filter(_.nonEmpty) match {
       case Seq()     => empty
       case Seq(elem) => elem
-      case more =>
+      case more      =>
         val addAllResult = DependencyManagement.addAll0(
           Map.empty[DependencyManagement.Key, DependencyManagement.Values],
           more.map(_.map)

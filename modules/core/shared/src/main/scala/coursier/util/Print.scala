@@ -274,7 +274,7 @@ object Print {
         s"No retained version found for non-excluded dependency $module"
       )
       val retainedVersion = retainedVersionOpt.get
-      val versionStr =
+      val versionStr      =
         if (retainedVersionOpt.forall(_.asString == version.asString))
           version.asString
         else {

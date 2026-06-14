@@ -151,7 +151,7 @@ object PomParser {
     var profileActivationOsFamilyOpt  = Option.empty[String]
     var profileActivationOsNameOpt    = Option.empty[String]
     var profileActivationOsVersionOpt = Option.empty[String]
-    var profileActivationJdkOpt =
+    var profileActivationJdkOpt       =
       Option.empty[Either[coursier.version.VersionInterval, Seq[coursier.version.Version]]]
 
     val profiles = new ListBuffer[Profile]
@@ -622,7 +622,7 @@ object PomParser {
     values: Array[HandlerMapNode],
     wildcard: HandlerMapNode
   ) extends HandlerMapNode {
-    private val hashes = keys.map(_.hashCode)
+    private val hashes                    = keys.map(_.hashCode)
     def next(tag: String): HandlerMapNode = {
       Objects.requireNonNull(tag)
       val h   = tag.hashCode
@@ -656,7 +656,7 @@ object PomParser {
     Seq(
       new SectionHandler(prefix) {
         def start(state: State) = {}
-        def end(state: State) = {
+        def end(state: State)   = {
           val d = Info.Scm(
             url = state.scmUrl,
             connection = state.scmConnection,
@@ -683,7 +683,7 @@ object PomParser {
     Seq(
       new SectionHandler(prefix) {
         def start(state: State): Unit = {}
-        def end(state: State): Unit = {
+        def end(state: State): Unit   = {
           val license = Info.License(
             state.licenseName,
             state.licenseUrl,
