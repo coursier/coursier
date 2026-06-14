@@ -4,13 +4,13 @@ import mill._, scalalib._
 
 object Deps {
   object Deps {
-    def argonautShapeless = mvn"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.1"
-    def caseApp           = mvn"com.github.alexarchambault::case-app:2.1.0"
-    def catsCore          = mvn"org.typelevel::cats-core:${Versions.cats}"
-    def catsFree213       = mvn"org.typelevel:cats-free_2.13:${Versions.cats}"
-    def catsEffect        = mvn"org.typelevel::cats-effect::3.6.1"
-    def classPathUtil     = mvn"io.get-coursier::class-path-util:0.1.4"
-    def collectionCompat  = mvn"org.scala-lang.modules::scala-collection-compat::2.13.0"
+    def argonautShapeless          = mvn"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.1"
+    def caseApp                    = mvn"com.github.alexarchambault::case-app:2.1.0"
+    def catsCore                   = mvn"org.typelevel::cats-core:${Versions.cats}"
+    def catsFree213                = mvn"org.typelevel:cats-free_2.13:${Versions.cats}"
+    def catsEffect                 = mvn"org.typelevel::cats-effect::3.6.1"
+    def classPathUtil              = mvn"io.get-coursier::class-path-util:0.1.4"
+    def collectionCompat           = mvn"org.scala-lang.modules::scala-collection-compat::2.13.0"
     def concurrentReferenceHashMap =
       mvn"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
     def dataClass         = mvn"io.github.alexarchambault::data-class:0.2.7"
@@ -29,8 +29,8 @@ object Deps {
     def jniUtils          = mvn"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
     def jniUtilsBootstrap =
       mvn"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
-    def jol  = mvn"org.openjdk.jol:jol-core:0.17"
-    def jsch = mvn"com.github.mwiede:jsch:2.27.9"
+    def jol          = mvn"org.openjdk.jol:jol-core:0.17"
+    def jsch         = mvn"com.github.mwiede:jsch:2.27.9"
     def jsoniterCore =
       mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${Versions.jsoniterScala}"
     def jsoniterMacros =
@@ -45,11 +45,11 @@ object Deps {
     // plexus-archiver needs its loggers
     def plexusContainerDefault = mvn"org.codehaus.plexus:plexus-container-default:2.1.1"
       .exclude("junit" -> "junit")
-    def plexusUtils      = mvn"org.codehaus.plexus:plexus-utils:4.0.3"
-    def pprint           = mvn"com.lihaoyi::pprint::0.9.6"
-    def proguard         = mvn"com.guardsquare:proguard-base:7.9.1"
-    def pythonNativeLibs = mvn"ai.kien::python-native-libs:0.2.4"
-    def scalaAsync       = mvn"org.scala-lang.modules::scala-async::1.0.1"
+    def plexusUtils                = mvn"org.codehaus.plexus:plexus-utils:4.0.3"
+    def pprint                     = mvn"com.lihaoyi::pprint::0.9.6"
+    def proguard                   = mvn"com.guardsquare:proguard-base:7.9.1"
+    def pythonNativeLibs           = mvn"ai.kien::python-native-libs:0.2.4"
+    def scalaAsync                 = mvn"org.scala-lang.modules::scala-async::1.0.1"
     def scalaCliConfig(sv: String) =
       if (sv.startsWith("2.12"))
         mvn"org.virtuslab.scala-cli::config:1.1.3"
@@ -73,7 +73,7 @@ object Deps {
     def utest                    = mvn"com.lihaoyi::utest::0.9.5"
     def versions                 = mvn"io.get-coursier::versions::0.5.3"
     def windowsAnsi              = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
-    def windowsAnsiPs =
+    def windowsAnsiPs            =
       mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
     def zstdJni = mvn"com.github.luben:zstd-jni:1.5.7-4"
   }

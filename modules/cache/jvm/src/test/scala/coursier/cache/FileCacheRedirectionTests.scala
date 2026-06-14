@@ -33,7 +33,7 @@ object FileCacheRedirectionTests extends TestSuite {
   private def defaultCache() =
     Cache.default match {
       case fc: FileCache[Task] => fc
-      case other =>
+      case other               =>
         sys.error(s"Expected default cache to be a FileCache, got $other")
     }
 
@@ -132,7 +132,7 @@ object FileCacheRedirectionTests extends TestSuite {
 
       test("httpsToHttps") {
         val routes = HttpRoutes.of[IO] {
-          case GET -> Root / "hello" => Ok("hello")
+          case GET -> Root / "hello"    => Ok("hello")
           case GET -> Root / "redirect" =>
             TemporaryRedirect("redirecting", Location(Uri(path = Uri.Path.empty / "hello")))
         }
@@ -849,7 +849,7 @@ object FileCacheRedirectionTests extends TestSuite {
           case GET -> Root / "hello" =>
             Ok("hello")
           case GET -> Root / "redirect" / n if Try(n.toInt).isSuccess =>
-            val n0 = n.toInt
+            val n0   = n.toInt
             val dest =
               if (n0 <= 0) Uri.Path.empty / "hello"
               else Uri.Path.empty / "redirect" / s"${n0 - 1}"
@@ -1075,7 +1075,7 @@ object FileCacheRedirectionTests extends TestSuite {
 
             res match {
               case Right(file) =>
-                val actual = new String(Files.readAllBytes(file.toPath))
+                val actual   = new String(Files.readAllBytes(file.toPath))
                 val expected =
                   new String(Files.readAllBytes(Paths.get(customProtocolBase).resolve("README.md")))
                 assert(actual == expected)
@@ -1238,7 +1238,7 @@ object FileCacheRedirectionTests extends TestSuite {
       withTmpDir0 { dir =>
         val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
-        val artifact = Artifact(
+        val artifact     = Artifact(
           dummyFileUri,
           Map(
             "SHA-512" -> s"$dummyFileUri.sha512", // should not exist
@@ -1275,7 +1275,7 @@ object FileCacheRedirectionTests extends TestSuite {
       withTmpDir0 { dir =>
         val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
-        val artifact = Artifact(
+        val artifact     = Artifact(
           dummyFileUri,
           Map(
             "SHA-512" -> s"$dummyFileUri.sha512", // should not exist
@@ -1311,7 +1311,7 @@ object FileCacheRedirectionTests extends TestSuite {
       withTmpDir0 { dir =>
         val dummyFile    = TestUtil.copiedWithMetaTo(TestUtil.resourceFile("/data/foo.xml"), dir)
         val dummyFileUri = dummyFile.toUri.toASCIIString
-        val artifact = Artifact(
+        val artifact     = Artifact(
           dummyFileUri,
           Map(
             "SHA-512" -> s"$dummyFileUri.sha512", // should not exist

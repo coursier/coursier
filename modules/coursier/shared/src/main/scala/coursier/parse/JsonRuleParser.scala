@@ -174,7 +174,7 @@ class JsonRuleParser(
     val ruleNameOpt = decodeRuleName(b)
 
     ruleNameOpt match {
-      case None => Left("No rule name found")
+      case None       => Left("No rule name found")
       case Some(name) =>
         ruleCodecs.get(name) match {
           case None => Left(

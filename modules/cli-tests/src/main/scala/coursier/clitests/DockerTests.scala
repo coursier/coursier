@@ -20,9 +20,9 @@ abstract class DockerTests extends TestSuite {
   private def useVirtualization =
     System.getenv("CI") == null
 
-  private val vmStartTimeout = 10.minutes.toMillis
-  private val vmStopTimeout  = 2.minutes.toMillis
-  private val dockerTimeout  = 5.minutes.toMillis
+  private val vmStartTimeout  = 10.minutes.toMillis
+  private val vmStopTimeout   = 2.minutes.toMillis
+  private val dockerTimeout   = 5.minutes.toMillis
   private val vmStartAttempts =
     if (System.getenv("CI") == null) 1
     else 3

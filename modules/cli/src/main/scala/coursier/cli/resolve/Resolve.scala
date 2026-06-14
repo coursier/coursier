@@ -61,7 +61,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
   ) =
     lift {
 
-      val fromFilesDependencies = params.dependency.fromFilesDependencies
+      val fromFilesDependencies      = params.dependency.fromFilesDependencies
       val (javaOrScalaDeps, urlDeps) = unlift {
         Dependencies.withExtraRepo(
           args ++ fromFilesDependencies,
@@ -185,7 +185,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
           // meh
           val scheduler = Executors.newSingleThreadScheduledExecutor(
             new ThreadFactory {
-              val defaultThreadFactory = Executors.defaultThreadFactory()
+              val defaultThreadFactory   = Executors.defaultThreadFactory()
               def newThread(r: Runnable) = {
                 val t = defaultThreadFactory.newThread(r)
                 t.setDaemon(true)
@@ -273,7 +273,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
 
       res0 <- Task.fromEither(depsAndReposOrError0)
       (deps, repositories, scalaVersionOpt, platformOpt) = res0
-      params0 = params.copy(
+      params0                                            = params.copy(
         resolution = params.updatedResolution(scalaVersionOpt)
       )
 

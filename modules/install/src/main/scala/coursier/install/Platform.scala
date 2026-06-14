@@ -6,7 +6,7 @@ object Platform {
 
   def get(os: String, arch: String): Option[String] = {
 
-    val os0 = os.toLowerCase(Locale.ROOT)
+    val os0   = os.toLowerCase(Locale.ROOT)
     val arch0 =
       if (arch == "amd64") "x86_64"
       else if (arch == "arm64") "aarch64"

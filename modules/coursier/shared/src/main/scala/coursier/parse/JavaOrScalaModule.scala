@@ -16,11 +16,11 @@ sealed abstract class JavaOrScalaModule extends Product with Serializable {
 object JavaOrScalaModule {
 
   // Copied from https://github.com/sbt/librarymanagement/blob/5ef0af2486d19cc237684000ef34c99191b88dfd/core/src/main/scala/sbt/internal/librarymanagement/cross/CrossVersionUtil.scala#L23-L32
-  private val longPattern  = """\d{1,19}"""
-  private val basicVersion = raw"""($longPattern)\.($longPattern)\.($longPattern)"""
-  private val tagPattern   = raw"""(?:\w+(?:\.\w+)*)"""
-  private val ReleaseV     = raw"""$basicVersion""".r
-  private val BinCompatV   = raw"""$basicVersion(-$tagPattern)?-bin(-.*)?""".r
+  private val longPattern   = """\d{1,19}"""
+  private val basicVersion  = raw"""($longPattern)\.($longPattern)\.($longPattern)"""
+  private val tagPattern    = raw"""(?:\w+(?:\.\w+)*)"""
+  private val ReleaseV      = raw"""$basicVersion""".r
+  private val BinCompatV    = raw"""$basicVersion(-$tagPattern)?-bin(-.*)?""".r
   private val NonReleaseV_n =
     raw"""$basicVersion((?:-$tagPattern)*)""".r // 0-n word suffixes, with leading dashes
   private val NonReleaseV_1 = raw"""$basicVersion(-$tagPattern)""".r // 1 word suffix, after a dash
@@ -53,7 +53,7 @@ object JavaOrScalaModule {
 
   @data class JavaModule(module: Module) extends JavaOrScalaModule {
     def attributes: Map[String, String] = module.attributes
-    override def toString =
+    override def toString               =
       module.toString
     def module(scalaBinaryVersion: String, scalaVersion: String): Module =
       module
@@ -63,7 +63,7 @@ object JavaOrScalaModule {
     fullCrossVersion: Boolean
   ) extends JavaOrScalaModule {
     def attributes: Map[String, String] = baseModule.attributes
-    override def toString = {
+    override def toString               = {
       val sep = if (fullCrossVersion) ":::" else "::"
       s"${baseModule.organization.value}$sep${baseModule.nameWithAttributes}"
     }

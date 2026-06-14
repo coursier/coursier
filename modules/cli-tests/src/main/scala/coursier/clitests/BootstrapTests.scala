@@ -33,7 +33,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
   def enableNailgunTest: Boolean =
     true
 
-  private def isCI = System.getenv("CI") != null
+  private def isCI       = System.getenv("CI") != null
   def hasDocker: Boolean =
     Properties.isLinux || (Properties.isMac && !isCI)
 
@@ -415,7 +415,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
           extraOptions
         ).call(cwd = tmpDir0)
 
-        val zf = new ZipFile((tmpDir0 / "cs-props-hybrid-shared").toIO)
+        val zf                 = new ZipFile((tmpDir0 / "cs-props-hybrid-shared").toIO)
         val nativeImageEntries = zf.entries()
           .asScala
           .filter(_.getName.startsWith("META-INF/native-image/"))
@@ -565,7 +565,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
             directory = tmpDir
           )
           var bgProc: Process = null
-          val output =
+          val output          =
             try {
               bgProc = new ProcessBuilder("java", "-jar", "./echo-ng")
                 .directory(tmpDir)
@@ -926,7 +926,7 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       val password = "secure1234"
       val realm    = "therealm"
       val host     = "127.0.0.1"
-      val port = {
+      val port     = {
         val s = new ServerSocket(0)
         try s.getLocalPort()
         finally s.close()
@@ -1123,8 +1123,8 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       TestUtil.withTempDir("jni-cs") { tmpDir0 =>
         val tmpDir = os.Path(tmpDir0, os.pwd)
 
-        val repo        = tmpDir / "repo"
-        val appLauncher = tmpDir / "app"
+        val repo              = tmpDir / "repo"
+        val appLauncher       = tmpDir / "app"
         val actualAppLauncher =
           if (Properties.isWin) tmpDir / "app.bat"
           else appLauncher

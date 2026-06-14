@@ -28,7 +28,7 @@ trait CoursierJavaModule extends JavaModule {
     else s"adoptium:$jvmRelease"
   }
   def javacSystemJvm = Task {
-    val cache = coursier.cache.Cache.default
+    val cache    = coursier.cache.Cache.default
     val javaHome = JavaHome()
       .withCache(
         JvmCache()

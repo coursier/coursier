@@ -76,8 +76,8 @@ import dataclass.data
                 addition.stripSuffix("\n") + "\n"
             }
         case Some(title) =>
-          val start = s"# >>> $title >>>\n"
-          val end   = s"# <<< $title <<<\n"
+          val start    = s"# >>> $title >>>\n"
+          val end      = s"# <<< $title <<<\n"
           val withTags = "\n" +
             start +
             addition.stripSuffix("\n") + "\n" +

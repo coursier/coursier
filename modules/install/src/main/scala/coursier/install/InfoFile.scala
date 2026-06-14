@@ -46,7 +46,7 @@ object InfoFile {
 
       entOpt.map { ent =>
         val content = FileUtil.readFully(zf.getInputStream(ent))
-        val e = RawSource.parse(new String(content, StandardCharsets.UTF_8))
+        val e       = RawSource.parse(new String(content, StandardCharsets.UTF_8))
           .left.map(err => new ErrorParsingSource(s"$f!$jsonSourceFilePath", err))
           .flatMap { r =>
             r.source

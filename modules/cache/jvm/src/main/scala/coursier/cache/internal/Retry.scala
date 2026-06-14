@@ -27,7 +27,7 @@ final case class Retry(
           try f.toRight(None)
           catch catchEx.andThen(delayOpt => Left(delayOpt))
       resOpt match {
-        case Right(res) => res
+        case Right(res)           => res
         case Left(forcedDelayOpt) =>
           Thread.sleep(forcedDelayOpt.getOrElse(delay).toMillis)
           loop(
