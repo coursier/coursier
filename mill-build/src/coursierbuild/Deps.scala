@@ -40,7 +40,7 @@ object Deps {
     def macroParadise  = mvn"org.scalamacros:::paradise:2.1.1"
     def mdoc           = mvn"org.scalameta::mdoc:2.9.0"
     def noCrcZis       = mvn"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
-    def osLib          = mvn"com.lihaoyi::os-lib:0.11.5"
+    def osLib          = mvn"com.lihaoyi::os-lib:0.11.8"
     def plexusArchiver = mvn"org.codehaus.plexus:plexus-archiver:4.12.0"
     // plexus-archiver needs its loggers
     def plexusContainerDefault = mvn"org.codehaus.plexus:plexus-container-default:2.1.1"
