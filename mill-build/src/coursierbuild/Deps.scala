@@ -30,23 +30,23 @@ object Deps {
     def jniUtilsBootstrap =
       mvn"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
     def jol  = mvn"org.openjdk.jol:jol-core:0.17"
-    def jsch = mvn"com.github.mwiede:jsch:2.27.0"
+    def jsch = mvn"com.github.mwiede:jsch:2.28.3"
     def jsoniterCore =
       mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${Versions.jsoniterScala}"
     def jsoniterMacros =
       mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
-    def jsoup          = mvn"org.jsoup:jsoup:1.21.2"
-    def logbackClassic = mvn"ch.qos.logback:logback-classic:1.5.18"
+    def jsoup          = mvn"org.jsoup:jsoup:1.22.2"
+    def logbackClassic = mvn"ch.qos.logback:logback-classic:1.5.34"
     def macroParadise  = mvn"org.scalamacros:::paradise:2.1.1"
-    def mdoc           = mvn"org.scalameta::mdoc:2.7.2"
+    def mdoc           = mvn"org.scalameta::mdoc:2.9.0"
     def noCrcZis       = mvn"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
-    def osLib          = mvn"com.lihaoyi::os-lib:0.11.5"
-    def plexusArchiver = mvn"org.codehaus.plexus:plexus-archiver:4.11.0"
+    def osLib          = mvn"com.lihaoyi::os-lib:0.11.8"
+    def plexusArchiver = mvn"org.codehaus.plexus:plexus-archiver:4.12.0"
     // plexus-archiver needs its loggers
     def plexusContainerDefault = mvn"org.codehaus.plexus:plexus-container-default:2.1.1"
       .exclude("junit" -> "junit")
     def plexusUtils      = mvn"org.codehaus.plexus:plexus-utils:4.0.3"
-    def pprint           = mvn"com.lihaoyi::pprint::0.9.3"
+    def pprint           = mvn"com.lihaoyi::pprint::0.9.6"
     def proguard         = mvn"com.guardsquare:proguard-base:7.9.1"
     def pythonNativeLibs = mvn"ai.kien::python-native-libs:0.2.4"
     def scalaAsync       = mvn"org.scala-lang.modules::scala-async::1.0.1"
@@ -66,11 +66,11 @@ object Deps {
     def scodec                   = mvn"org.scodec::scodec-core:2.3.3"
     def shapeless                = mvn"com.chuusai::shapeless:2.3.12"
     def slf4JNop                 = mvn"org.slf4j:slf4j-nop:2.0.18"
-    def svm                      = mvn"org.graalvm.nativeimage:svm:21.3.15"
-    def tika                     = mvn"org.apache.tika:tika-core:3.2.3"
-    def undertow                 = mvn"io.undertow:undertow-core:2.3.18.Final"
+    def svm                      = mvn"org.graalvm.nativeimage:svm:21.3.18"
+    def tika                     = mvn"org.apache.tika:tika-core:3.3.1"
+    def undertow                 = mvn"io.undertow:undertow-core:2.3.24.Final"
     def ujson                    = mvn"com.lihaoyi::ujson:4.3.2"
-    def utest                    = mvn"com.lihaoyi::utest::0.9.1"
+    def utest                    = mvn"com.lihaoyi::utest::0.9.5"
     def versions                 = mvn"io.get-coursier::versions::0.5.3"
     def windowsAnsi              = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
     def windowsAnsiPs =
@@ -80,7 +80,7 @@ object Deps {
 
   object Versions {
     def cats          = "2.13.0"
-    def http4s        = "0.23.30"
+    def http4s        = "0.23.34"
     def jniUtils      = "0.3.4"
     def jsoniterScala = "2.13.5"
     def scalaz        = "7.2.36"
