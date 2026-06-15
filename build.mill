@@ -1681,6 +1681,36 @@ object ci extends Module {
   }
 }
 
+lazy val allPublishJars: Task[Seq[(PathRef, String)]] =
+  Task.traverse(moduleInternal.modules.collect { case m: PublishModule => m }) { m =>
+    val jvmRel = m match {
+      case cjm: CoursierJavaModule => cjm.jvmRelease
+      case _                       => CoursierJavaModule.defaultJvmRelease
+    }
+    Task.Anon((m.jar(), jvmRel))
+  }
+
+object `class-file-version-check` extends Module {
+  object test extends CsScalaTests {
+    def scalaVersion = ScalaVersions.scala213
+    def mvnDeps      = super.mvnDeps() ++ Seq(Deps.asm)
+    def forkArgs = Task {
+      val jars = allPublishJars()
+        .map {
+          case (ref, jvmRel) =>
+            val path = ref.path.toString
+            if (jvmRel == CoursierJavaModule.defaultJvmRelease) path
+            else s"$path($jvmRel)"
+        }
+        .mkString(java.io.File.pathSeparator)
+      super.forkArgs() ++ Seq(
+        s"-Dcoursier.class-file-version-check.jars=$jars",
+        s"-Dcoursier.class-file-version-check.max-jvm=${CoursierJavaModule.defaultJvmRelease}"
+      )
+    }
+  }
+}
+
 object `build-util` extends Module {
 
   def commitHash = Task {

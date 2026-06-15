@@ -4,6 +4,7 @@ import mill._, scalalib._
 
 object Deps {
   object Deps {
+    def asm               = mvn"org.ow2.asm:asm:9.7.1"
     def argonautShapeless = mvn"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.1"
     def caseApp           = mvn"com.github.alexarchambault::case-app:2.1.0"
     def catsCore          = mvn"org.typelevel::cats-core:${Versions.cats}"
