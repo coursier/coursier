@@ -49,10 +49,10 @@ trait CoursierJavaModule extends JavaModule {
     val hasModules = os.isDir(javaHome / "jmods")
     val hasRtJar   = os.isFile(rtJar)
     assert(hasModules || hasRtJar)
-    if (hasModules)
-      Seq("--system", javaHome.toString)
-    else
-      Seq("-source", jvmRelease, "-target", jvmRelease, "-bootclasspath", rtJar.toString)
+    val extraOpts =
+      if (hasModules) Seq("--system", javaHome.toString)
+      else Seq("-bootclasspath", rtJar.toString)
+    Seq("-source", jvmRelease, "-target", jvmRelease) ++ extraOpts
   }
   def javacOptions = Task {
     super.javacOptions() ++ maybeJdkJavacOpt() ++ Seq(
