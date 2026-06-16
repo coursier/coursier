@@ -26,9 +26,6 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
-      with:
-        disableFallback: true
     - run: |
         ./mill -i -j1 __.js.__.compile
         ./mill -i __.compile
@@ -66,9 +63,6 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
-      with:
-        disableFallback: true
     - run: sudo apt-get install -y nailgun
       if: runner.os == 'Linux'
     # - run: .github/scripts/scala-native-setup.sh
@@ -111,9 +105,6 @@ jobs:
     - uses: actions/setup-node@v6
       with:
         node-version: '18'
-    - uses: coursier/cache-action@v8
-      with:
-        disableFallback: true
     - run: |
         npm install --ignore-scripts
         ./mill -i -j1 '__.js['"$SCALA_VERSION"'].__.compile'
@@ -130,9 +121,6 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
-      with:
-        disableFallback: true
     - run: ./mill -i -k __.mimaReportBinaryIssues
 
   website-check:
@@ -151,9 +139,6 @@ jobs:
     - uses: actions/setup-node@v6
       with:
         node-version: '18'
-    - uses: coursier/cache-action@v8
-      with:
-        disableFallback: true
     - run: ./mill -i docs.mdoc
       env:
         COURSIER_JNI: force
@@ -172,9 +157,6 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
-      with:
-        disableFallback: true
     - uses: coursier/setup-action@v3
     - run: cs launch scalafmt -- --check
 
@@ -193,9 +175,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8
-        with:
-          disableFallback: true
       - name: Publish
         run: |
           ./mill -i mill.scalalib.SonatypeCentralPublishModule/
@@ -227,9 +206,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8
-        with:
-          disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
@@ -260,9 +236,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8
-        with:
-          disableFallback: true
       - run: sudo apt-get install -y nailgun
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeCompatTests
         shell: bash
@@ -299,9 +272,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8
-        with:
-          disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeStaticTests
@@ -336,9 +306,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8
-        with:
-          disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeContainerTests
@@ -374,9 +341,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8
-        with:
-          disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
       - run: ./mill -i standaloneJvmTests
@@ -402,7 +366,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8
       - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
@@ -433,9 +396,6 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
-      with:
-        disableFallback: true
     - name: Wait for sync to Central
       run: ./mill -i waitForSync
     - name: Copy artifacts
@@ -462,9 +422,6 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
-      with:
-        disableFallback: true
     - name: Wait for sync to Central
       run: ./mill -i waitForSync
       shell: bash
@@ -500,9 +457,6 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
-      with:
-        disableFallback: true
     - uses: actions/download-artifact@v8
       with:
         name: launchers-linux
@@ -578,9 +532,6 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
-      with:
-        disableFallback: true
     - uses: actions/download-artifact@v8
       with:
         name: launchers-linux
@@ -640,9 +591,6 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8
-        with:
-          disableFallback: true
       - run: .github/scripts/scala-cli.sh .github/scripts/UpdateBrewFormula.scala
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -659,9 +607,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '18'
-      - uses: coursier/cache-action@v8
-        with:
-          disableFallback: true
       - run: .github/scripts/setup-mkdocs.sh
       - run: npm install --ignore-scripts && ./mill -i updateWebsite
         env:
@@ -682,9 +627,6 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '18'
-      - uses: coursier/cache-action@v8
-        with:
-          disableFallback: true
       - run: .github/scripts/setup-mkdocs.sh
       - run: npm install --ignore-scripts && ./mill -i updateWebsite
         env:
