@@ -1,6 +1,8 @@
 package coursierbuild.modules
 
-import mill._, mill.scalalib._
+import mill.*
+import mill.api.*
+import mill.scalalib.*
 
 trait CoursierPublishModule extends PublishModule
     with CoursierJavaModule {
@@ -25,11 +27,13 @@ object CoursierPublishModule {
     .trim()
   private def computeBuildVersion() = {
     // FIXME Print stderr if command fails
-    val gitHead = os.proc("git", "rev-parse", "HEAD").call(stderr = os.Pipe).out.trim()
+    val gitHead = os.proc("git", "rev-parse", "HEAD")
+      .call(cwd = BuildCtx.workspaceRoot, stderr = os.Pipe)
+      .out.trim()
     val maybeExactTag = scala.util.Try {
       // FIXME Print stderr if command fails
       os.proc("git", "describe", "--exact-match", "--tags", "--always", gitHead)
-        .call(stderr = os.Pipe).out
+        .call(cwd = BuildCtx.workspaceRoot, stderr = os.Pipe).out
         .trim()
         .stripPrefix("v")
     }
@@ -37,9 +41,11 @@ object CoursierPublishModule {
       // FIXME Print stderr if command fails
       val commitsSinceTaggedVersion =
         os.proc("git", "rev-list", gitHead, "--not", latestTaggedVersion, "--count")
-          .call(stderr = os.Pipe).out.trim()
+          .call(cwd = BuildCtx.workspaceRoot, stderr = os.Pipe).out.trim()
           .toInt
-      val gitHash = os.proc("git", "rev-parse", "--short", "HEAD").call().out.trim()
+      val gitHash = os.proc("git", "rev-parse", "--short", "HEAD")
+        .call(cwd = BuildCtx.workspaceRoot)
+        .out.trim()
       s"${latestTaggedVersion.stripPrefix("v")}-$commitsSinceTaggedVersion-$gitHash-SNAPSHOT"
     }
   }
