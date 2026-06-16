@@ -19,6 +19,7 @@ object FetchTests extends TestSuite {
   private val fetch = Fetch()
     .noMirrors
     .withCache(cache)
+    .withRepositories(Seq(Repositories.central))
 
   def enableModules(fetch: Fetch[Task]): Fetch[Task] =
     fetch.withRepositories {
@@ -205,13 +206,10 @@ object FetchTests extends TestSuite {
       val m2Repo   = MavenRepository(m2Local)
       val ivy2Repo = IvyRepository.parse(ivy2Local + "/[defaultPattern]").toOption.get
 
-      val fetch0 = fetch
-        .withRepositories(Seq(Repositories.central))
-
       test("m2Local") {
         async {
           val res = await {
-            fetch0
+            fetch
               .addRepositories(m2Repo)
               .addDependencies(
                 dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
@@ -245,7 +243,7 @@ object FetchTests extends TestSuite {
       test("ivy2Local") {
         async {
           val res = await {
-            fetch0
+            fetch
               .addRepositories(ivy2Repo)
               .addDependencies(
                 dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
@@ -283,11 +281,10 @@ object FetchTests extends TestSuite {
     test("properties") {
 
       val fetch0 = fetch
-        .withRepositories(Seq(
-          Repositories.central,
+        .addRepositories(
           mvn"http://repository.splicemachine.com/nexus/content/groups/public",
           mvn"http://repository.mapr.com/maven"
-        ))
+        )
         .addDependencies(
           dep"com.splicemachine:splice_spark:2.8.0.1915-SNAPSHOT"
         )
@@ -329,10 +326,9 @@ object FetchTests extends TestSuite {
           val res = await {
             fetch
               .withCache(cacheWithHandmadeMetadata)
-              .withRepositories(Seq(
-                Repositories.central,
+              .addRepositories(
                 IvyRepository.parse("http://ivy.abc.com/[defaultPattern]").toOption.get
-              ))
+              )
               .addDependencies(dep"test:a_2.12:1.0.0")
               .addArtifactTypes(artifactTypes: _*)
               .futureResult()
@@ -416,7 +412,7 @@ object FetchTests extends TestSuite {
           val res = await {
             val osgeo = MavenRepository("https://repo.osgeo.org/repository/release")
             fetch
-              .withRepositories(Seq(osgeo, Repositories.central))
+              .withRepositories(Seq(osgeo) ++ fetch.repositories)
               .addDependencies(dep"javax.media:jai_core:1.1.3")
               .future()
           }
