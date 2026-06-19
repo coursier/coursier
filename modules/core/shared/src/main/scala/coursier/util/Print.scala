@@ -183,7 +183,8 @@ object Print {
     printExclusions: Boolean = false,
     reverse: Boolean = false,
     colors: Boolean = true,
-    renderModuleVersion: (Module, String) => String = (mod, ver) => s"${mod.repr}:$ver"
+    renderModuleVersion: (Module, String) => String = (mod, ver) => s"${mod.repr}:$ver",
+    reverseDeduplicateNodes: Boolean = false
   ): String = {
 
     val colors0 = Colors.get(colors)
@@ -211,7 +212,7 @@ object Print {
           depTree.module != tree.module || depTree.dependees.nonEmpty
         }
       }
-      tree0.render { node =>
+      tree0.customRender0(deduplicateNodes = reverseDeduplicateNodes) { node =>
         if (node.excludedDependsOn)
           s"${colors0.yellow}(excluded by)${colors0.reset} ${renderModuleVersion(node.module, node.retainedVersion0.asString)}"
         else if (
