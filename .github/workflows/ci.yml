@@ -196,21 +196,21 @@ jobs:
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
-      - name: Publish
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --bundleName "coursier-${GITHUB_REF#refs/tags/v}"
-          else
-            for tag in $(git tag --points-at HEAD); do
-              git tag -d "$tag"
-            done
-            ./mill -i mill.scalalib.SonatypeCentralPublishModule/
-          fi
-        env:
-          MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}
-          MILL_PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
-          MILL_SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          MILL_SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+      # - name: Publish
+      #   run: |
+      #     if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+      #       ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --bundleName "coursier-${GITHUB_REF#refs/tags/v}"
+      #     else
+      #       for tag in $(git tag --points-at HEAD); do
+      #         git tag -d "$tag"
+      #       done
+      #       ./mill -i mill.scalalib.SonatypeCentralPublishModule/
+      #     fi
+      #   env:
+      #     MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}
+      #     MILL_PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
+      #     MILL_SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+      #     MILL_SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
 
   generate-native-launchers:
     name: ${{ matrix.OS }} native
