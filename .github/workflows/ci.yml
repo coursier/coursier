@@ -201,6 +201,9 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --bundleName "coursier-${GITHUB_REF#refs/tags/v}"
           else
+            for tag in $(git tag --points-at HEAD); do
+              git tag -d "$tag"
+            done
             ./mill -i mill.scalalib.SonatypeCentralPublishModule/
           fi
         env:
