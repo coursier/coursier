@@ -98,17 +98,13 @@ object Deps {
     def jsoniterScala = "2.13.5"
     def junit         = "4.13.2"
     def scalaz        = "7.2.36"
+
+    def sbtCoursier  = "2.1.4"
+    def graalVmJvmId = "liberica-nik:25.0.2"
+    def scalaCli     = "1.14.0"
+    def csDocker     = "2.1.25-M25"
+    def csQemu       = "9.2.1-1"
   }
-
-  def sbtCoursierVersion = "2.1.4"
-
-  def graalVmJvmId = "liberica-nik:25.0.2"
-
-  def scalaCliVersion = "1.14.0"
-
-  def csDockerVersion = "2.1.25-M25"
-
-  def csQemuVersion = "9.2.1-1"
 
   object ScalaVersions {
     def scala3   = "3.9.0"

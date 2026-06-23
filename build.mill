@@ -2,7 +2,7 @@
 //| mill-jvm-version: 21
 
 import com.github.lolgab.mill.mima.{DirectMissingMethodProblem, InterfaceMima, ProblemFilter}
-import coursierbuild.Deps.{Deps, ScalaVersions, Versions, csQemuVersion, scalaCliVersion}
+import coursierbuild.Deps.{Deps, ScalaVersions, Versions}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
 import coursierbuild.Relativize.{relativize => doRelativize}
 import coursierbuild.{
@@ -303,7 +303,7 @@ object `execve-test` extends CoursierJavaModule with coursierbuild.Launchers.CsJ
     Seq("--release", jvmRelease, "-Xlint:unchecked")
   }
 
-  def nativeImageGraalVmJvmId = coursierbuild.Deps.graalVmJvmId
+  def nativeImageGraalVmJvmId = Versions.graalVmJvmId
   def nativeImageClassPath    = runClasspath()
   def nativeImageMainClass    = mainClass().getOrElse(sys.error("No main class"))
   def nativeImageName         = "execve-test"
@@ -1097,7 +1097,7 @@ trait CliTests extends CsModule
     val arch = sys.props.getOrElse("os.arch", "").toLowerCase(java.util.Locale.ROOT)
     val (scalaCli, scalaCliIsJar) = GetCs.scalaCliUrl(
       arch,
-      scalaCliVersion,
+      Versions.scalaCli,
       Properties.isWin,
       Properties.isMac,
       Properties.isLinux
@@ -1107,7 +1107,7 @@ trait CliTests extends CsModule
       .getOrElse {
         if (Properties.isWin && (arch == "aarch64" || arch == "arm64")) {
           val url =
-            s"https://github.com/VirtusLab/scala-cli/releases/download/v$scalaCliVersion/scala-cli"
+            s"https://github.com/VirtusLab/scala-cli/releases/download/v${Versions.scalaCli}/scala-cli"
           val cache = _root_.coursier.cache.Cache.default
           val path = cache
             .file(_root_.coursier.util.Artifact(url))
@@ -1676,7 +1676,7 @@ def qemuCompatTests() = Task.Command[Unit] {
   val archiveCache = ArchiveCache()
   val qemuDir = archiveCache
     .get(Artifact(
-      s"https://github.com/coursier/qemu/releases/download/v$csQemuVersion/qemu-linux-amd64.tar.gz!"
+      s"https://github.com/coursier/qemu/releases/download/v${Versions.csQemu}/qemu-linux-amd64.tar.gz!"
     ))
     .unsafeRun(true)(using archiveCache.cache.ec)
     .fold(err => throw err, os.Path(_))
@@ -1728,7 +1728,7 @@ def cliNativeImageLauncher() = Task.Command {
 }
 
 object ci extends Module {
-  def copyJvm(jvm: String = coursierbuild.Deps.graalVmJvmId, dest: String = "jvm") = Task.Command {
+  def copyJvm(jvm: String = Versions.graalVmJvmId, dest: String = "jvm") = Task.Command {
     import _root_.coursier.cache.{ArchiveCache, FileCache}
     import _root_.coursier.jvm.{JavaHome, JvmCache}
     val fileCache = FileCache().withTtl(Duration.Zero)
