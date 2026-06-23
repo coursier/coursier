@@ -1,6 +1,6 @@
 package coursierbuild.modules
 
-import coursierbuild.Deps.{Deps, Versions}
+import coursierbuild.{Deps, Versions}
 import coursierbuild.Relativize.{relativize => doRelativize}
 import coursierbuild.modules.CoursierPublishModule.latestTaggedVersion
 import coursierbuild.DocHelpers

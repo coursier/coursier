@@ -1,6 +1,6 @@
 package coursierbuild
 
-import coursierbuild.Deps.{Deps, Docker, Versions}
+import coursierbuild.{Deps, Docker, Versions}
 import coursierbuild.modules.CsModule
 
 import io.github.alexarchambault.millnativeimage.NativeImage

@@ -2,7 +2,7 @@
 //| mill-jvm-version: 21
 
 import com.github.lolgab.mill.mima.{DirectMissingMethodProblem, InterfaceMima, ProblemFilter}
-import coursierbuild.Deps.{Deps, ScalaVersions, Versions}
+import coursierbuild.{Deps, ScalaVersions, Versions}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
 import coursierbuild.Relativize.{relativize => doRelativize}
 import coursierbuild.{
@@ -1138,9 +1138,9 @@ trait CliTests extends CsModule
         "-Dcoursier-test-is-native-static=false",
         "-Dcoursier-test-is-standalone=false",
         s"-Dcoursier.test.auth-proxy-data-dir=${PathRef.toResolvedPathString(BuildCtx.workspaceRoot / "project/authenticated-proxy")}",
-        s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
-        s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
-        s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
+        s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-image=${coursierbuild.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-java-image=${coursierbuild.Docker.alpineJavaImage}"
       )
     }
   }
@@ -1172,9 +1172,9 @@ trait CliTests extends CsModule
           s"-Dcoursier-test-is-native-static=$isStatic",
           "-Dcoursier-test-is-standalone=false",
           s"-Dcoursier.test.auth-proxy-data-dir=${PathRef.toResolvedPathString(BuildCtx.workspaceRoot / "project/authenticated-proxy")}",
-          s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
-          s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
-          s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
+          s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Docker.alpineImage}",
+          s"-Dcoursier.test.alpine-image=${coursierbuild.Docker.alpineImage}",
+          s"-Dcoursier.test.alpine-java-image=${coursierbuild.Docker.alpineJavaImage}"
         )
       }
     }
@@ -1207,9 +1207,9 @@ trait CliTests extends CsModule
         s"-Dcoursier-test-launcher-dir=$launcherDir",
         s"-Dcoursier-test-launcher-sub-path=${cli.launcherSubPath}",
         s"-Dcoursier.test.auth-proxy-data-dir=${PathRef.toResolvedPathString(BuildCtx.workspaceRoot / "project/authenticated-proxy")}",
-        s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
-        s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
-        s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
+        s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-image=${coursierbuild.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-java-image=${coursierbuild.Docker.alpineJavaImage}"
       )
     }
   }

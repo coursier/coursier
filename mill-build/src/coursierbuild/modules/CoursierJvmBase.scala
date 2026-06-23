@@ -1,6 +1,6 @@
 package coursierbuild.modules
 
-import coursierbuild.Deps.Deps
+import coursierbuild.Deps
 import coursierbuild.Shading
 import com.github.lolgab.mill.mima._
 

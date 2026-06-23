@@ -1,6 +1,6 @@
 package coursierbuild.modules
 
-import coursierbuild.Deps.Deps
+import coursierbuild.Deps
 import mill._, mill.scalalib._, mill.scalajslib._
 
 trait CsTests extends TestModule with JavaModule {

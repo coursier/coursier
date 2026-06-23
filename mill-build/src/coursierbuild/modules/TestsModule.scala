@@ -1,6 +1,6 @@
 package coursierbuild.modules
 
-import coursierbuild.Deps.Deps
+import coursierbuild.Deps
 import mill._
 
 trait TestsModule extends CsCrossJvmJsModule {

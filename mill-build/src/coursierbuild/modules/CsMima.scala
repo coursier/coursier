@@ -2,7 +2,7 @@ package coursierbuild.modules
 
 import java.io.File
 import com.github.lolgab.mill.mima.Mima
-import coursierbuild.Deps.{Deps, ScalaVersions}
+import coursierbuild.{Deps, ScalaVersions}
 
 import mill.*
 import mill.api.*

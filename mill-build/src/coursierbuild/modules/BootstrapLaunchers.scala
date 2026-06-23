@@ -1,6 +1,6 @@
 package coursierbuild.modules
 
-import coursierbuild.Deps.{Deps, ScalaVersions}
+import coursierbuild.{Deps, ScalaVersions}
 
 import coursier.launcher.{AssemblyGenerator, ClassPathEntry, Parameters, Preamble}
 import mill._, mill.scalalib._
