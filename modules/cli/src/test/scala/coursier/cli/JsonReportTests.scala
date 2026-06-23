@@ -179,7 +179,9 @@ object JsonReportTests extends TestSuite {
         assert(direct.exists(_.startsWith("org.jetbrains.kotlin:kotlin-stdlib")))
         assert(!direct.exists(_.startsWith("org.jetbrains.kotlinx:kotlinx-coroutines-core:")))
         assert(!direct.exists(_.startsWith("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:")))
-        assert(!transitive.exists(_.startsWith("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:")))
+        assert(
+          !transitive.exists(_.startsWith("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:"))
+        )
       }
     }
 
