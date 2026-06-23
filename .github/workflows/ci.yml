@@ -377,10 +377,13 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
+      - uses: coursier/setup-action@v3
+        with:
+          apps: scala-cli
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
-      - run: .github/scripts/scala-cli.sh .github/scripts/UpdateBrewFormula.scala
+      - run: scala-cli run --server=false .github/scripts/UpdateBrewFormula.scala
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
