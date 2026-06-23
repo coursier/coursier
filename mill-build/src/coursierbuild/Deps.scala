@@ -1,6 +1,7 @@
 package coursierbuild
 
-import mill._, scalalib._
+import mill.*
+import mill.scalalib.*
 
 object Deps {
   object Deps {
