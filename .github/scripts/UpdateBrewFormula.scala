@@ -1,5 +1,5 @@
 //> using dep com.lihaoyi::os-lib:0.11.8
-//> using scala "3.8.3"
+//> using scala "3.8.4"
 //> using jvm "17"
 
 import java.security.MessageDigest
