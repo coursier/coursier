@@ -193,6 +193,12 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
+      - name: Delete tag if building from a branch
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          for tag in $(git tag --points-at HEAD); do
+            git tag -d "$tag"
+          done
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
