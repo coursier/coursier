@@ -540,9 +540,6 @@ object Resolution {
 
           if (mgmtValues.config.nonEmpty && variant.isEmpty)
             variant = Variant.Configuration(mgmtValues.config)
-
-          if (mgmtValues.optional && !dep.optional)
-            dep = dep.withOptional(mgmtValues.optional)
         }
 
         for (dictForOverrides <- dictForOverridesOpt if dictForOverrides.nonEmpty) {
