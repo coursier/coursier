@@ -33,6 +33,9 @@ final case class BootstrapSpecificOptions(
   @HelpMessage("Generate a JAR with the classpath as manifest rather than a bootstrap jar")
     manifestJar: Option[Boolean] = None,
   @Group(OptionGroup.bootstrap)
+  @HelpMessage("Allow the generated assembly to have no main class (implies --preamble=false by default)")
+    noMainClass: Boolean = false,
+  @Group(OptionGroup.bootstrap)
   @HelpMessage("Generate a Windows bat file along the bootstrap JAR (default: true on Windows, false otherwise)")
     bat: Option[Boolean] = None,
   @Group(OptionGroup.bootstrap)
@@ -51,8 +54,8 @@ final case class BootstrapSpecificOptions(
     baseManifest: Option[String] = None,
   @Group(OptionGroup.bootstrap)
   @Hidden
-  @HelpMessage("Add preamble")
-    preamble: Boolean = true,
+  @HelpMessage("Add preamble (default: true if the launcher has a main class, false otherwise)")
+    preamble: Option[Boolean] = None,
   @Group(OptionGroup.bootstrap)
   @Hidden
   @HelpMessage("Ensure that the output jar is deterministic, set the instant of the added files to Jan 1st 1970")
