@@ -19,10 +19,11 @@ final case class BootstrapSpecificParams(
   embedFiles: Boolean,
   assembly: Boolean,
   manifestJar: Boolean,
+  noMainClass: Boolean,
   createBatFile: Boolean,
   assemblyRules: Seq[MergeRule],
   baseManifestOpt: Option[Array[Byte]],
-  withPreamble: Boolean,
+  preambleOpt: Option[Boolean],
   deterministicOutput: Boolean,
   proguarded: Boolean,
   hybrid: Boolean,
@@ -98,6 +99,14 @@ object BootstrapSpecificParams {
         Validated.validNel(())
     }
 
+    val validateNoMainClass =
+      if (options.noMainClass && !assembly)
+        Validated.invalidNel(
+          "--no-main-class can only be used along with --assembly (or -a)"
+        )
+      else
+        Validated.validNel(())
+
     val output = Paths.get {
       options
         .output
@@ -145,8 +154,8 @@ object BootstrapSpecificParams {
           Validated.invalidNel(s"Base manifest $path not found")
     }
 
-    (validateOutputType, rulesV, baseManifestOptV).mapN {
-      (_, rules, baseManifestOpt) =>
+    (validateOutputType, validateNoMainClass, rulesV, baseManifestOptV).mapN {
+      (_, _, rules, baseManifestOpt) =>
         BootstrapSpecificParams(
           output,
           options.force,
@@ -154,6 +163,7 @@ object BootstrapSpecificParams {
           options.embedFiles,
           assembly,
           manifestJar,
+          options.noMainClass,
           createBatFile,
           prependRules ++ rules,
           baseManifestOpt,

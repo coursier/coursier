@@ -5,13 +5,14 @@ import java.net.{ServerSocket, URI}
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.util.Locale
+import java.util.jar.JarFile
 import java.util.regex.Pattern
 import java.util.zip.ZipFile
 
 import scala.concurrent.duration.Duration
 import scala.io.{Codec, Source}
 import scala.jdk.CollectionConverters._
-import scala.util.Properties
+import scala.util.{Properties, Using}
 
 import coursier.clitests.util.TestAuthProxy
 import coursier.util.StringInterpolators._
@@ -343,6 +344,36 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         )
         val expectedOutput = "foo" + System.lineSeparator()
         assert(output == expectedOutput)
+      }
+    }
+
+    test("assembly without main class") {
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0)
+        os.proc(
+          launcher,
+          "bootstrap",
+          "--assembly",
+          "--no-main-class",
+          "-o",
+          "lib-assembly.jar",
+          "io.get-coursier:echo:1.0.1",
+          extraOptions
+        ).call(cwd = tmpDir)
+
+        val jar = tmpDir / "lib-assembly.jar"
+
+        // --no-main-class makes --preamble default to false, so the assembly must be a
+        // plain JAR (a ZIP, starting with the "PK" magic bytes) rather than a launcher
+        // with a shell / bat preamble prepended to it.
+        val firstBytes = new String(os.read.bytes(jar).take(2), "UTF-8")
+        assert(firstBytes == "PK")
+
+        // and the resulting manifest must not reference any main class
+        val mainClassOpt = Using.resource(new JarFile(jar.toIO)) { jarFile =>
+          Option(jarFile.getManifest.getMainAttributes.getValue("Main-Class"))
+        }
+        assert(mainClassOpt.isEmpty)
       }
     }
 
