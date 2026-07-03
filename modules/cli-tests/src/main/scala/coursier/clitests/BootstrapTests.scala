@@ -578,6 +578,59 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       }
     }
 
+    test("assembly relocation") {
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0)
+        os.proc(
+          launcher,
+          "bootstrap",
+          "--assembly",
+          "-o",
+          "echo-relocated.jar",
+          "io.get-coursier:echo:1.0.1",
+          "--relocate",
+          "coursier.echo=shaded.coursier.echo",
+          "-M",
+          "shaded.coursier.echo.Echo",
+          extraOptions
+        ).call(cwd = tmpDir)
+
+        // the classes of the relocated package were moved, and nothing remains under the
+        // original package
+        val zf = new ZipFile((tmpDir / "echo-relocated.jar").toIO)
+        val names =
+          try zf.entries().asScala.map(_.getName).toSet
+          finally zf.close()
+        assert(names.contains("shaded/coursier/echo/Echo.class"))
+        assert(!names.exists(_.startsWith("coursier/echo/")))
+
+        // the relocated assembly still runs (its Main-Class points at the relocated class)
+        val output = os.proc("java", "-jar", "echo-relocated.jar", "foo")
+          .call(cwd = tmpDir)
+          .out.text()
+        val expectedOutput = "foo" + System.lineSeparator()
+        assert(output == expectedOutput)
+      }
+    }
+
+    test("assembly relocation requires assembly") {
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0)
+        val res = os.proc(
+          launcher,
+          "bootstrap",
+          "-o",
+          "echo-relocated",
+          "io.get-coursier:echo:1.0.1",
+          "--relocate",
+          "coursier.echo=shaded.coursier.echo",
+          extraOptions
+        ).call(cwd = tmpDir, check = false, mergeErrIntoOut = true)
+        assert(res.exitCode != 0)
+        assert(res.out.text().contains("--relocate can only be used along with --assembly"))
+      }
+    }
+
     test("nailgun") {
       if (enableNailgunTest)
         TestUtil.withTempDir { tmpDir =>

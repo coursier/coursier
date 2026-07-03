@@ -6,7 +6,7 @@ import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cache.{ArchiveCache, Cache}
 import coursier.jvm.{JvmCache, JvmChannel, JvmIndex}
-import coursier.launcher.MergeRule
+import coursier.launcher.{MergeRule, ShadingRule}
 import coursier.launcher.internal.Windows
 import coursier.util.Task
 
@@ -22,6 +22,7 @@ final case class BootstrapSpecificParams(
   noMainClass: Boolean,
   createBatFile: Boolean,
   assemblyRules: Seq[MergeRule],
+  shadingRules: Seq[ShadingRule],
   baseManifestOpt: Option[Array[Byte]],
   preambleOpt: Option[Boolean],
   deterministicOutput: Boolean,
@@ -136,6 +137,38 @@ object BootstrapSpecificParams {
 
     val prependRules = if (options.defaultAssemblyRules) MergeRule.default else Nil
 
+    val shadingRulesV = options.relocate.traverse { s =>
+      val (kind, rest) = {
+        val idx = s.indexOf(':')
+        if (idx < 0) ("rename", s)
+        else (s.substring(0, idx), s.substring(idx + 1))
+      }
+      val eqIdx = rest.indexOf('=')
+      if (eqIdx < 0)
+        Validated.invalidNel(
+          s"Malformed relocation rule '$s' (expected 'from=to' or 'move-under:from=to')"
+        )
+      else {
+        val from = rest.substring(0, eqIdx).trim
+        val to   = rest.substring(eqIdx + 1).trim
+        if (from.isEmpty || to.isEmpty)
+          Validated.invalidNel(s"Malformed relocation rule '$s' (empty 'from' or 'to')")
+        else
+          kind match {
+            case "rename"     => Validated.validNel(ShadingRule.rename(from, to))
+            case "move-under" => Validated.validNel(ShadingRule.moveUnder(from, to))
+            case _ =>
+              Validated.invalidNel(s"Unrecognized relocation kind '$kind' in rule '$s'")
+          }
+      }
+    }
+
+    val validateRelocate =
+      if (options.relocate.nonEmpty && !assembly)
+        Validated.invalidNel("--relocate can only be used along with --assembly (or -a)")
+      else
+        Validated.validNel(())
+
     val jvmIndex = options
       .jvmIndex
       .map(_.trim)
@@ -154,8 +187,8 @@ object BootstrapSpecificParams {
           Validated.invalidNel(s"Base manifest $path not found")
     }
 
-    (validateOutputType, validateNoMainClass, rulesV, baseManifestOptV).mapN {
-      (_, _, rules, baseManifestOpt) =>
+    (validateOutputType, validateNoMainClass, validateRelocate, rulesV, shadingRulesV, baseManifestOptV).mapN {
+      (_, _, _, rules, shadingRules, baseManifestOpt) =>
         BootstrapSpecificParams(
           output,
           options.force,
@@ -166,6 +199,7 @@ object BootstrapSpecificParams {
           options.noMainClass,
           createBatFile,
           prependRules ++ rules,
+          shadingRules,
           baseManifestOpt,
           options.preamble,
           options.deterministic,
