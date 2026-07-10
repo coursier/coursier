@@ -536,11 +536,10 @@ object Resolution {
           }
         }
 
-        for (mgmtValues <- dependencyManagement.get(dep0.depManagementKey)) {
+        for (mgmtValues <- dependencyManagement.get(dep0.depManagementKey))
 
           if (mgmtValues.config.nonEmpty && variant.isEmpty)
             variant = Variant.Configuration(mgmtValues.config)
-        }
 
         for (dictForOverrides <- dictForOverridesOpt if dictForOverrides.nonEmpty) {
           // Memoized for the same reason as `dictForOverridesOpt` above: many dependencies
