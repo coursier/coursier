@@ -45,6 +45,14 @@ final case class BootstrapSpecificOptions(
   @ExtraName("R")
     assemblyRule: List[String] = Nil,
   @Group(OptionGroup.bootstrap)
+  @HelpMessage(
+    "Relocate (shade) classes when generating an assembly. " +
+      "By default, classes under the package `from` are renamed to be under `to` " +
+      "(`--relocate from=to`). Pass `move-under:from=to` to instead move them under `to.from`."
+  )
+  @ValueDescription("from=to|move-under:from=to")
+    relocate: List[String] = Nil,
+  @Group(OptionGroup.bootstrap)
   @Hidden
   @HelpMessage("Add default rules to assembly rule list")
     defaultAssemblyRules: Boolean = true,
