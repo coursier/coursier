@@ -603,13 +603,18 @@ import java.util.concurrent.ConcurrentMap
 
   // Overriding toString to be backwards compatible with Set-based exclusion representation
   override def toString(): String = {
+    val optionalString = optional match {
+      case None        => "false"
+      case Some(true)  => "true"
+      case Some(false) => "Some(false)"
+    }
     var fields = Seq(
       module.toString,
       versionConstraint.asString,
       variantSelector.asConfiguration.map(_.toString).getOrElse(variantSelector.repr),
       minimizedExclusions.toSet().toString,
       publication.toString,
-      optional.toString,
+      optionalString,
       transitive.toString
     )
     fields =
@@ -996,7 +1001,7 @@ object Dependency {
       VariantSelector.emptyConfiguration,
       MinimizedExclusions.zero,
       Publication("", Type.empty, Extension.empty, Classifier.empty),
-      optional = false,
+      optional = None,
       transitive = true
     )
 
