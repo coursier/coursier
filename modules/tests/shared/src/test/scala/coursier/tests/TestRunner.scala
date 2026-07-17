@@ -41,7 +41,8 @@ class TestRunner[F[_]: Gather: ToFuture](
     forceVersions: Map[Module, VersionConstraint] = Map.empty,
     defaultConfiguration: Configuration = Configuration.defaultRuntime,
     reconciliation: Option[Module => ConstraintReconciliation] = None,
-    forceDepMgmtVersions: Option[Boolean] = None
+    forceDepMgmtVersions: Option[Boolean] = None,
+    ignoreOptionalFromDepMgmt: Boolean = false
   ): Future[Resolution] = {
 
     val repositories0 = extraRepos ++ repositories
@@ -64,6 +65,7 @@ class TestRunner[F[_]: Gather: ToFuture](
       .withDefaultConfiguration(defaultConfiguration)
       .withReconciliation0(reconciliation)
       .withForceDepMgmtVersions(forceDepMgmtVersions.getOrElse(false))
+      .withIgnoreOptionalFromDepMgmt(ignoreOptionalFromDepMgmt)
     val r = ResolutionProcess(res).run0(fetch0)
 
     val t = Gather[F].map(r) { res =>
@@ -84,7 +86,8 @@ class TestRunner[F[_]: Gather: ToFuture](
   def pathFor(
     module: Module,
     version: VersionConstraint,
-    configuration: Configuration
+    configuration: Configuration,
+    ignoreOptionalFromDepMgmt: Boolean = false
   ): String = {
 
     val attrPathPart =
@@ -100,12 +103,12 @@ class TestRunner[F[_]: Gather: ToFuture](
       module.organization.value,
       module.name.value,
       attrPathPart,
-      version.asString + (
-        if (configuration.isEmpty)
-          ""
-        else
-          "_" + configuration.value.replace('(', '_').replace(')', '_')
-      )
+      version.asString +
+        (if (ignoreOptionalFromDepMgmt) "_ignore-optional-from-dep-mgmt" else "") +
+        (if (configuration.isEmpty)
+           ""
+         else
+           "_" + configuration.value.replace('(', '_').replace(')', '_'))
       // FIXME Take forceVersions, forceDepMgmtVersions into account too
     ).filter(_.nonEmpty).mkString("/")
   }
@@ -145,7 +148,8 @@ class TestRunner[F[_]: Gather: ToFuture](
     profiles: Option[Set[String]] = None,
     forceVersions: Map[Module, VersionConstraint] = Map.empty,
     defaultConfiguration: Configuration = Configuration.defaultRuntime,
-    forceDepMgmtVersions: Option[Boolean] = None
+    forceDepMgmtVersions: Option[Boolean] = None,
+    ignoreOptionalFromDepMgmt: Boolean = false
   ): Future[Resolution] =
     async {
 
@@ -158,7 +162,8 @@ class TestRunner[F[_]: Gather: ToFuture](
           profiles = profiles,
           forceVersions = forceVersions,
           defaultConfiguration = defaultConfiguration,
-          forceDepMgmtVersions = forceDepMgmtVersions
+          forceDepMgmtVersions = forceDepMgmtVersions,
+          ignoreOptionalFromDepMgmt = ignoreOptionalFromDepMgmt
         )
       }
 
@@ -188,7 +193,7 @@ class TestRunner[F[_]: Gather: ToFuture](
 
       await {
         validateSnapshot(
-          pathFor(module, version, configuration),
+          pathFor(module, version, configuration, ignoreOptionalFromDepMgmt),
           result
         )
       }
@@ -203,7 +208,8 @@ class TestRunner[F[_]: Gather: ToFuture](
     configuration: Configuration = Configuration.empty,
     profiles: Option[Set[String]] = None,
     forceVersions: Map[Module, VersionConstraint] = Map.empty,
-    forceDepMgmtVersions: Option[Boolean] = None
+    forceDepMgmtVersions: Option[Boolean] = None,
+    ignoreOptionalFromDepMgmt: Boolean = false
   ): Future[Unit] =
     resolution(
       module,
@@ -212,7 +218,8 @@ class TestRunner[F[_]: Gather: ToFuture](
       configuration,
       profiles,
       forceVersions,
-      forceDepMgmtVersions = forceDepMgmtVersions
+      forceDepMgmtVersions = forceDepMgmtVersions,
+      ignoreOptionalFromDepMgmt = ignoreOptionalFromDepMgmt
     ).map(_ => ())
 
   def resolutionCheck(
@@ -222,7 +229,8 @@ class TestRunner[F[_]: Gather: ToFuture](
     configuration: Configuration = Configuration.empty,
     profiles: Option[Set[String]] = None,
     forceVersions: Map[Module, VersionConstraint] = Map.empty,
-    forceDepMgmtVersions: Option[Boolean] = None
+    forceDepMgmtVersions: Option[Boolean] = None,
+    ignoreOptionalFromDepMgmt: Boolean = false
   ): Future[Unit] =
     resolution(
       module,
@@ -231,7 +239,8 @@ class TestRunner[F[_]: Gather: ToFuture](
       configuration,
       profiles,
       forceVersions,
-      forceDepMgmtVersions = forceDepMgmtVersions
+      forceDepMgmtVersions = forceDepMgmtVersions,
+      ignoreOptionalFromDepMgmt = ignoreOptionalFromDepMgmt
     ).map(_ => ())
 
   def resolutionCheckDep(

@@ -516,7 +516,12 @@ abstract class CentralTests extends TestSuite {
       val mod     = mod"org.apache.maven:apache-maven"
       val version = "3.3.9"
 
-      test - runner.resolutionCheck(mod, version)
+      test("default") - runner.resolutionCheck(mod, version)
+      test("ignoreOptionalFromDepMgmt") - runner.resolutionCheck(
+        mod,
+        version,
+        ignoreOptionalFromDepMgmt = true
+      )
 
       val mainTarGzUrl =
         s"$centralBase/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.tar.gz"

@@ -462,6 +462,25 @@ object Resolution {
     rawDependencyManagement: Overrides,
     forceDepMgmtVersions: Boolean,
     keepVariant: Variant => Boolean
+  ): Seq[(Variant, Dependency)] =
+    depsWithDependencyManagement0(
+      rawDependencies,
+      properties,
+      rawOverridesOpt,
+      rawDependencyManagement,
+      forceDepMgmtVersions,
+      ignoreOptionalFromDepMgmt = false,
+      keepVariant
+    )
+
+  def depsWithDependencyManagement0(
+    rawDependencies: Seq[(Variant, Dependency)],
+    properties: Map[String, String],
+    rawOverridesOpt: Option[Overrides],
+    rawDependencyManagement: Overrides,
+    forceDepMgmtVersions: Boolean,
+    ignoreOptionalFromDepMgmt: Boolean,
+    keepVariant: Variant => Boolean
   ): Seq[(Variant, Dependency)] = {
 
     val propertiesWrapper    = new PropertiesWrapper(properties)
@@ -541,8 +560,8 @@ object Resolution {
           if (mgmtValues.config.nonEmpty && variant.isEmpty)
             variant = Variant.Configuration(mgmtValues.config)
 
-          if (mgmtValues.optional && !dep.optional)
-            dep = dep.withOptional(mgmtValues.optional)
+          if (!ignoreOptionalFromDepMgmt && mgmtValues.optional && !dep.optional)
+            dep = dep.withOptional(true)
         }
 
         for (dictForOverrides <- dictForOverridesOpt if dictForOverrides.nonEmpty) {
@@ -852,6 +871,7 @@ object Resolution {
     projectCache: ((Module, VersionConstraint0)) => Option[Project],
     keepProvidedDependencies: Boolean,
     forceDepMgmtVersions: Boolean,
+    ignoreOptionalFromDepMgmt: Boolean,
     enableDependencyOverrides: Boolean
   ): Either[DependencyError, Seq[Dependency]] = {
 
@@ -931,6 +951,7 @@ object Resolution {
         Option.when(enableDependencyOverrides)(from.overridesMap),
         project0.overrides,
         forceDepMgmtVersions = forceDepMgmtVersions,
+        ignoreOptionalFromDepMgmt = ignoreOptionalFromDepMgmt,
         keepVariant = keepConfigOpt match {
           case Some((actualConfig, keepConfigOpt0)) =>
             (variant: Variant) =>
@@ -1207,7 +1228,9 @@ object Resolution {
   boms: Seq[BomDependency] = Nil,
   @since("2.1.25")
   defaultVariantAttributes: VariantSelector.AttributesBased =
-    VariantSelector.AttributesBased.empty
+    VariantSelector.AttributesBased.empty,
+  @since
+  ignoreOptionalFromDepMgmt: Boolean = false
 ) {
 
   lazy val dependencies: Set[Dependency] =
@@ -1373,6 +1396,7 @@ object Resolution {
               k => projectCache0.get(k).map(_._2),
               keepProvidedDependencies,
               forceDepMgmtVersions,
+              ignoreOptionalFromDepMgmt,
               enableDependencyOverrides
             ).map(_.filter(filter getOrElse defaultFilter))
               .map(res0 => mapDependencies.fold(res0)(res0.map(_)))
