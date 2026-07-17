@@ -187,7 +187,14 @@ object BootstrapSpecificParams {
           Validated.invalidNel(s"Base manifest $path not found")
     }
 
-    (validateOutputType, validateNoMainClass, validateRelocate, rulesV, shadingRulesV, baseManifestOptV).mapN {
+    (
+      validateOutputType,
+      validateNoMainClass,
+      validateRelocate,
+      rulesV,
+      shadingRulesV,
+      baseManifestOptV
+    ).mapN {
       (_, _, _, rules, shadingRules, baseManifestOpt) =>
         BootstrapSpecificParams(
           output,
