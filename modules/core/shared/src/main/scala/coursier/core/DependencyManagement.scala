@@ -137,11 +137,16 @@ object DependencyManagement {
       versionConstraint.asString.contains("$") ||
       minimizedExclusions.hasProperties
     override def toString(): String = {
+      val optionalString = optional match {
+        case None        => "false"
+        case Some(true)  => "true"
+        case Some(false) => "Some(false)"
+      }
       var fields = Seq(
         config.toString,
         versionConstraint.toString,
         minimizedExclusions.toString,
-        optional.toString
+        optionalString
       )
       if (global)
         fields = fields :+ global.toString

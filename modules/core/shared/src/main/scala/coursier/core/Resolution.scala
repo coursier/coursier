@@ -434,13 +434,15 @@ object Resolution {
           val newVersion = if (clearVersion) VersionConstraint0.empty else v.versionConstraint
           val values =
             if (
-              v.config != newConfig || v.versionConstraint != newVersion || v.optional.contains(true)
+              v.config != newConfig ||
+              v.versionConstraint != newVersion ||
+              v.optional.contains(true)
             )
               DependencyManagement.Values(
                 newConfig,
                 newVersion,
                 v.minimizedExclusions,
-                optional = false
+                optional = None
               )
             else
               v

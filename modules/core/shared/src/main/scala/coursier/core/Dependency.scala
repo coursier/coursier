@@ -470,7 +470,7 @@ import java.util.concurrent.ConcurrentMap
       Configuration.empty,
       version,
       MinimizedExclusions.zero,
-      optional = false
+      optional = None
     )
     addOverride(key, values)
   }
@@ -488,7 +488,7 @@ import java.util.concurrent.ConcurrentMap
       Configuration.empty,
       version,
       MinimizedExclusions(exclusions),
-      optional = false
+      optional = None
     )
     addOverride(key, values)
   }
