@@ -47,7 +47,7 @@ implicit def millModuleBasePath: ModuleCtx.Nested =
 object util extends Module {
   object shared extends SharedScalaSources
   // Migrated off data-class's `@data` to the experimental `@unroll` annotation,
-  // which requires Scala 3.7+. The 2.13/2.12 cross values are kept so the rest of
+  // which requires Scala 3.7+. The 2.13 cross value is kept so the rest of
   // the (not-yet-migrated) build still evaluates; only the Scala 3 variant compiles.
   object jvm extends Cross[UtilJvm](ScalaVersions.all :+ ScalaVersions.scala3Unroll)
   object js  extends Cross[UtilJs](ScalaVersions.all :+ ScalaVersions.scala3Unroll)
@@ -328,10 +328,7 @@ trait UtilJs extends CsScalaJsModule with Util {
 
 trait CoreJvm extends Core with CoreJvmBase with Shading {
   def sources = Task {
-    val versionSources =
-      if (scalaVersion().startsWith("2.12")) core.shared.sourcesScala212()
-      else core.shared.sourcesScala213()
-    super.sources() ++ core.shared.sources() ++ versionSources
+    super.sources() ++ core.shared.sources() ++ core.shared.sourcesScala213()
   }
   def moduleDeps = super.moduleDeps ++ Seq(
     util.jvm()
@@ -352,10 +349,7 @@ trait CoreJvm extends Core with CoreJvmBase with Shading {
 }
 trait CoreJs extends Core with CsScalaJsModule {
   def sources = Task {
-    val versionSources =
-      if (scalaVersion().startsWith("2.12")) core.shared.sourcesScala212()
-      else core.shared.sourcesScala213()
-    super.sources() ++ core.shared.sources() ++ versionSources
+    super.sources() ++ core.shared.sources() ++ core.shared.sourcesScala213()
   }
   def moduleDeps = super.moduleDeps ++ Seq(
     util.js()
@@ -417,7 +411,7 @@ trait CacheJvm extends CacheJvmBase {
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoniterCore, // required alongside scalaCliConfig, given we exclude its version of jsoniter-scala
-    Deps.scalaCliConfig(scalaVersion()),
+    Deps.scalaCliConfig,
     Deps.windowsAnsi
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(

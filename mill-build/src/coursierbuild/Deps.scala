@@ -42,7 +42,6 @@ object Deps {
       mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
     def jsoup          = mvn"org.jsoup:jsoup:1.22.2"
     def logbackClassic = mvn"ch.qos.logback:logback-classic:1.5.38"
-    def macroParadise  = mvn"org.scalamacros:::paradise:2.1.1"
     def mdoc           = mvn"org.scalameta::mdoc:2.9.1"
     def noCrcZis       = mvn"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
     def osLib          = mvn"com.lihaoyi::os-lib:0.11.8"
@@ -55,12 +54,9 @@ object Deps {
     def proguard         = mvn"com.guardsquare:proguard-base:7.9.1"
     def pythonNativeLibs = mvn"ai.kien::python-native-libs:0.2.5"
     def scalaAsync       = mvn"org.scala-lang.modules::scala-async::1.0.1"
-    def scalaCliConfig(sv: String) =
-      if (sv.startsWith("2.12"))
-        mvn"org.virtuslab.scala-cli::config:1.1.3"
-      else
-        mvn"org.virtuslab.scala-cli:config_3:1.15.0"
-          .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
+    def scalaCliConfig =
+      mvn"org.virtuslab.scala-cli:config_3:1.15.0"
+        .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
     def scalaJsDom               = mvn"org.scala-js::scalajs-dom::2.4.0"
     def scalaJsReact             = mvn"com.github.japgolly.scalajs-react::core::2.1.4"
     def scalaNativeTools040      = mvn"org.scala-native::tools:0.4.17"
@@ -110,10 +106,9 @@ object Deps {
     // Used by modules migrated off the data-class `@data` annotation.
     def scala3Unroll = "3.7.0"
     def scala213     = "2.13.18"
-    def scala212     = "2.12.20"
     // TODO SCALA_213_BASELINE search for this TODO in the codebase
     // for cleanup tasks when we move to Scala 2.13 as as the baseline
-    val all = Seq(scala213, scala212)
+    val all = Seq(scala213)
 
     def scalaJs = "1.21.0"
   }
