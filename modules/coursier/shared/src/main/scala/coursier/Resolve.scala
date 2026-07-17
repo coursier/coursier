@@ -455,7 +455,9 @@ object Resolve extends PlatformResolve {
       .withDependencySet(DependencySet.empty)
       .withForceVersions0(params.forceVersion0 ++ forceScalaVersions)
       .withConflicts(Set.empty)
-      .withFilter(Some((dep: Dependency) => params.keepOptionalDependencies || !dep.optional))
+      .withFilter(
+        Some((dep: Dependency) => params.keepOptionalDependencies || !dep.optional.contains(true))
+      )
       .withReconciliation0(reconciliation)
       .withOsInfo(
         params.osInfoOpt.getOrElse {

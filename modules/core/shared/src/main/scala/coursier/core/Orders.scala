@@ -193,7 +193,9 @@ object Orders {
       for {
         List(((xOpt, xVariant), xDep), ((yOpt, yVariant), yDep)) <-
           groupedDependencies.combinations(2)
-        optCmp   <- optionalPartialOrder.tryCompare(xOpt, yOpt).iterator
+        optCmp <- optionalPartialOrder
+          .tryCompare(xOpt.getOrElse(false), yOpt.getOrElse(false))
+          .iterator
         xScope   <- xVariant.asConfiguration.iterator
         yScope   <- yVariant.asConfiguration.iterator
         scopeCmp <- configurationPartialOrder0(configs).tryCompare(xScope, yScope).iterator
