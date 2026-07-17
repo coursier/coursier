@@ -19,7 +19,7 @@ final case class MockCache(
 
       val (artifact0, links) =
         if (artifact.url.endsWith("/.links"))
-          (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
+          (artifact.copy(url = artifact.url.stripSuffix(".links")), true)
         else
           (artifact, false)
 
