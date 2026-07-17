@@ -538,14 +538,10 @@ object Resolution {
           }
         }
 
-        for (mgmtValues <- dependencyManagement.get(dep0.depManagementKey)) {
+        for (mgmtValues <- dependencyManagement.get(dep0.depManagementKey))
 
           if (mgmtValues.config.nonEmpty && variant.isEmpty)
             variant = Variant.Configuration(mgmtValues.config)
-
-          if (mgmtValues.optional && !dep.optional)
-            dep = dep.withOptional(mgmtValues.optional)
-        }
 
         for (dictForOverrides <- dictForOverridesOpt if dictForOverrides.nonEmpty) {
           val newOverrides = Overrides.add(dictForOverrides, dep.overridesMap)
