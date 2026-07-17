@@ -5,28 +5,28 @@ import java.net.URI
 import coursier.core.Authentication
 
 import scala.util.Try
-import dataclass._
+import scala.annotation.unroll
 
-@data class DirectCredentials(
+final case class DirectCredentials(
   host: String = "",
   usernameOpt: Option[String] = None,
   passwordOpt: Option[Password[String]] = None,
-  @since
+  @unroll
   realm: Option[String] = None,
-  @since
+  @unroll
   optional: Boolean = DirectCredentials.defaultOptional,
-  @since
+  @unroll
   matchHost: Boolean = DirectCredentials.defaultMatchHost,
   httpsOnly: Boolean = DirectCredentials.defaultHttpsOnly,
   passOnRedirect: Boolean = DirectCredentials.defaultPassOnRedirect
 ) extends Credentials {
 
   def withUsername(username: String): DirectCredentials =
-    withUsernameOpt(Some(username))
+    copy(usernameOpt = Some(username))
   def withPassword(password: String): DirectCredentials =
-    withPasswordOpt(Some(Password(password)))
+    copy(passwordOpt = Some(Password(password)))
   def withRealm(realm: String): DirectCredentials =
-    withRealm(Option(realm))
+    copy(realm = Option(realm))
 
   private def nonEmpty: Boolean =
     usernameOpt.nonEmpty && passwordOpt.nonEmpty
@@ -57,7 +57,7 @@ import dataclass._
     }
 
   def authentication: Authentication =
-    Authentication(
+    Authentication.create(
       usernameOpt.getOrElse(""),
       passwordOpt.map(_.value),
       realmOpt = realm,
@@ -72,9 +72,9 @@ import dataclass._
 }
 object DirectCredentials {
 
-  def apply(host: String, username: String, password: String): DirectCredentials =
+  def create(host: String, username: String, password: String): DirectCredentials =
     DirectCredentials(host, Some(username), Some(Password(password)))
-  def apply(
+  def create(
     host: String,
     username: String,
     password: String,

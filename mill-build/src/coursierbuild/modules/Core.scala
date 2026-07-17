@@ -6,14 +6,18 @@ import mill._
 trait Core extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-core"
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.dataClass,
     Deps.jsoniterMacros
   )
-  def mvnDeps = super.mvnDeps() ++ Seq(
-    Deps.fastParse,
-    Deps.jsoniterCore,
-    Deps.versions
-  )
+  def mvnDeps = Task {
+    val versionsDep =
+      if (scalaVersion().startsWith("3.")) Deps.versionsScala2Jvm
+      else Deps.versions
+    super.mvnDeps() ++ Seq(
+      Deps.fastParse,
+      Deps.jsoniterCore,
+      versionsDep
+    )
+  }
 
   def commitHash: T[String]
 

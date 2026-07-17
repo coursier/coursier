@@ -6,7 +6,6 @@ import java.net.{URL, URLConnection}
 import coursier.cache.{CacheUrl, ConnectionBuilder, FileCache}
 import coursier.core._
 import coursier.version.{Version => Version0, VersionInterval => VersionInterval0}
-import dataclass.data
 
 object InMemoryRepository {
 
@@ -63,16 +62,16 @@ object InMemoryRepository {
         var conn: URLConnection = null
         try {
           conn = ConnectionBuilder(url.toString)
-            .withFollowHttpToHttpsRedirections(
+            .copy(followHttpToHttpsRedirections = 
               cacheOpt.fold(false)(_.followHttpToHttpsRedirections)
             )
-            .withFollowHttpsToHttpRedirections(
+            .copy(followHttpsToHttpRedirections = 
               cacheOpt.fold(false)(_.followHttpsToHttpRedirections)
             )
-            .withSslSocketFactoryOpt(cacheOpt.flatMap(_.sslSocketFactoryOpt))
-            .withHostnameVerifierOpt(cacheOpt.flatMap(_.hostnameVerifierOpt))
-            .withMethod("HEAD")
-            .withMaxRedirectionsOpt(cacheOpt.flatMap(_.maxRedirections))
+            .copy(sslSocketFactoryOpt = cacheOpt.flatMap(_.sslSocketFactoryOpt))
+            .copy(hostnameVerifierOpt = cacheOpt.flatMap(_.hostnameVerifierOpt))
+            .copy(method = "HEAD")
+            .copy(maxRedirectionsOpt = cacheOpt.flatMap(_.maxRedirections))
             .connection()
           // Even though the finally clause handles this too, this has to be run here, so that we return Some(true)
           // iff this doesn't throw.
@@ -187,7 +186,7 @@ object InMemoryRepository {
 
 }
 
-@data class InMemoryRepository(
+final case class InMemoryRepository(
   fallbacks0: Map[(Module, Version0), (URL, Boolean)],
   cacheOpt: Option[FileCache[Nothing]],
   localArtifactsShouldBeCached: Boolean
@@ -214,7 +213,7 @@ object InMemoryRepository {
     }
   @deprecated("Use withFallbacks0 instead", "2.1.25")
   def withFallbacks(newFallbacks: Map[(Module, String), (URL, Boolean)]): InMemoryRepository =
-    withFallbacks0(
+    copy(fallbacks0 = 
       newFallbacks.map {
         case ((mod, ver), value) =>
           ((mod, Version0(ver)), value)

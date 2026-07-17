@@ -15,7 +15,11 @@ trait CsScalaModule extends ScalaModule with CoursierJavaModule {
     val scala2Opts =
       if (sv.startsWith("2.")) Seq("-Xasync")
       else Nil
-    super.scalacOptions() ++ scala212Opts ++ scala213Opts ++ scala2Opts ++ Seq(
+    // Enable experimental language features (needed for the `@unroll` annotation, SIP-61)
+    val scala3Opts =
+      if (sv.startsWith("3.")) Seq("-experimental")
+      else Nil
+    super.scalacOptions() ++ scala212Opts ++ scala213Opts ++ scala2Opts ++ scala3Opts ++ Seq(
       "-deprecation",
       "-feature",
       "--release",

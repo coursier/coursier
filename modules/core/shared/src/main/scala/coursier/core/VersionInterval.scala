@@ -1,9 +1,8 @@
 package coursier.core
 
-import dataclass.data
 
 @deprecated("Use coursier.version.VersionInterval instead", "2.1.25")
-@data class VersionInterval(
+final case class VersionInterval(
   from: Option[Version],
   to: Option[Version],
   fromIncluded: Boolean,

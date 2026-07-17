@@ -7,17 +7,17 @@ import coursier.params.{Mirror, MirrorConfFile}
 import coursier.util.{Sync, Task}
 import coursier.util.Monad.ops._
 import coursier.version.Version
-import dataclass._
+import scala.annotation.unroll
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-@data class Versions[F[_]](
+final case class Versions[F[_]](
   cache: Cache[F],
   moduleOpt: Option[Module] = None,
   repositories: Seq[Repository] = Resolve.defaultRepositories,
-  @since
+  @unroll
   mirrorConfFiles: Seq[MirrorConfFile] = Resolve.defaultMirrorConfFiles,
   mirrors: Seq[Mirror] = Nil
 )(implicit
@@ -27,19 +27,19 @@ import scala.concurrent.duration.Duration
   private def F = sync
 
   def addRepositories(repository: Repository*): Versions[F] =
-    withRepositories(repositories ++ repository)
+    copy(repositories = repositories ++ repository)
 
   def noMirrors: Versions[F] =
-    withMirrors(Nil).withMirrorConfFiles(Nil)
+    copy(mirrors = Nil).copy(mirrorConfFiles = Nil)
 
   def addMirrors(mirrors: Mirror*): Versions[F] =
-    withMirrors(this.mirrors ++ mirrors)
+    copy(mirrors = this.mirrors ++ mirrors)
 
   def addMirrorConfFiles(mirrorConfFiles: MirrorConfFile*): Versions[F] =
-    withMirrorConfFiles(this.mirrorConfFiles ++ mirrorConfFiles)
+    copy(mirrorConfFiles = this.mirrorConfFiles ++ mirrorConfFiles)
 
   def withModule(module: Module): Versions[F] =
-    withModuleOpt(Some(module))
+    copy(moduleOpt = Some(module))
 
   def versions(): F[coursier.core.Versions] =
     result().map(_.versions)
@@ -77,7 +77,7 @@ import scala.concurrent.duration.Duration
 
 object Versions {
 
-  def apply(): Versions[Task] =
+  def create(): Versions[Task] =
     Versions(Cache.default)
 
   private def merge(versions: Vector[coursier.core.Versions]): coursier.core.Versions =
@@ -103,7 +103,7 @@ object Versions {
       coursier.core.Versions(latest, release, available, lastUpdated)
     }
 
-  @data class Result(
+  final case class Result(
     results: Seq[(Repository, Either[String, coursier.core.Versions])]
   ) {
     def versions: coursier.core.Versions =

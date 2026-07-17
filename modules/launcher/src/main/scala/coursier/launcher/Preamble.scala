@@ -3,22 +3,22 @@ package coursier.launcher
 import java.io.InputStream
 import java.nio.charset.{Charset, StandardCharsets}
 
-import dataclass._
+import scala.annotation.unroll
 
 import scala.io.{Codec, Source}
 
-@data class Preamble(
+final case class Preamble(
   kind: Preamble.Kind = Preamble.Kind.Sh,
   javaOpts: Seq[String] = Nil,
   jarPath: Option[String] = None,
   command: Option[String] = None,
   extraEnv: Map[String, String] = Map.empty,
-  @since
+  @unroll
   jvmOptionFile: Option[String] = None
 ) {
 
   def withOsKind(isWindows: Boolean): Preamble =
-    withKind(if (isWindows) Preamble.Kind.Bat else Preamble.Kind.Sh)
+    copy(kind = if (isWindows) Preamble.Kind.Bat else Preamble.Kind.Sh)
 
   def callsItself(isWindows: Boolean): Preamble = {
     val updatedJarPath =
@@ -28,12 +28,12 @@ import scala.io.{Codec, Source}
   }
 
   def withJarPath(path: String): Preamble =
-    withJarPath(Some(path))
+    copy(jarPath = Some(path))
   def withCommand(command: String): Preamble =
-    withCommand(Some(command))
+    copy(command = Some(command))
 
   def addExtraEnvVar(key: String, value: String): Preamble =
-    withExtraEnv(extraEnv + (key -> value))
+    copy(extraEnv = extraEnv + (key -> value))
 
   def sh: Array[Byte] = {
     val setVars = extraEnv

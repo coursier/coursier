@@ -62,11 +62,11 @@ abstract class PlatformRepositoryParser {
             repo
           case Some(userInfo) =>
             val authBase = userInfo.split(":", 2) match {
-              case Array(user, password) => Authentication(user, password)
-              case Array(user)           => Authentication(user)
+              case Array(user, password) => Authentication.create(user, password)
+              case Array(user)           => Authentication.create(user)
             }
 
-            val auth = authBase.withHttpsOnly(url.getProtocol != "http")
+            val auth = authBase.copy(httpsOnly = url.getProtocol != "http")
 
             val baseUrl = new java.net.URL(
               url.getProtocol,
@@ -79,7 +79,7 @@ abstract class PlatformRepositoryParser {
               case m: MavenRepositoryLike =>
                 m.withRoot(baseUrl).withAuthentication(Some(auth))
               case i: IvyRepository =>
-                i.withAuthentication(Some(auth)).withPattern(
+                i.copy(authentication = Some(auth)).copy(pattern = 
                   coursier.ivy.Pattern(
                     coursier.ivy.Pattern.Chunk.Const(baseUrl) +: i.pattern.chunks.dropWhile {
                       case _: coursier.ivy.Pattern.Chunk.Const => true

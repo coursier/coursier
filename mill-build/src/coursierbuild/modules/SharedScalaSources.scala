@@ -14,4 +14,6 @@ trait SharedScalaSources extends Module {
 
   def sourcesScala213 = Task.Sources(os.sub / "src/main/scala-2.13")
   def sourcesScala212 = Task.Sources(os.sub / "src/main/scala-2.12")
+  def sourcesScala3   = Task.Sources(os.sub / "src/main/scala-3")
+  def sourcesScala2   = Task.Sources(os.sub / "src/main/scala-2")
 }

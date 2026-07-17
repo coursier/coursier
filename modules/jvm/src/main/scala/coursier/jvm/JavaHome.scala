@@ -10,26 +10,26 @@ import coursier.cache.ArchiveCache
 import coursier.env.EnvironmentUpdate
 import coursier.jvm.util.CommandOutput
 import coursier.util.Task
-import dataclass._
+import scala.annotation.unroll
 
-@data class JavaHome(
+final case class JavaHome(
   cache: Option[JvmCache] = None,
   getEnv: Option[String => Option[String]] = Some(k => Option(System.getenv(k))),
   os: String = JvmChannel.defaultOs(),
   commandOutput: CommandOutput = CommandOutput.default(),
   pathExtensions: Option[Seq[String]] = JavaHome.defaultPathExtensions,
   allowSystem: Boolean = true,
-  @since
+  @unroll
   update: Boolean = false,
   noUpdateCache: Option[JvmCache] = None
 ) {
 
   def withCache(cache: JvmCache): JavaHome =
-    withCache(Some(cache))
+    copy(cache = Some(cache))
 
   def withArchiveCache(archiveCache: ArchiveCache[Task]): JavaHome =
-    withCache(
-      this.cache.map(_.withArchiveCache(archiveCache))
+    copy(cache =
+      this.cache.map(_.copy(archiveCache = archiveCache))
     )
 
   def default(): Task[File] =
@@ -205,11 +205,11 @@ object JavaHome {
       val pathEnv =
         if (addPath) {
           val binDir = new File(javaHome, "bin").getAbsolutePath
-          EnvironmentUpdate.empty.withPathLikeAppends(Seq("PATH" -> binDir))
+          EnvironmentUpdate.empty.copy(pathLikeAppends = Seq("PATH" -> binDir))
         }
         else
           EnvironmentUpdate.empty
-      EnvironmentUpdate.empty.withSet(Seq("JAVA_HOME" -> javaHome.getAbsolutePath)) + pathEnv
+      EnvironmentUpdate.empty.copy(set = Seq("JAVA_HOME" -> javaHome.getAbsolutePath)) + pathEnv
     }
 
   private def executable(

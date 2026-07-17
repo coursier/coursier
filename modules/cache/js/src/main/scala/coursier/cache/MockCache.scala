@@ -2,11 +2,10 @@ package coursier.cache
 
 import coursier.cache.internal.{MockCacheEscape, Platform}
 import coursier.util.{EitherT, Task}
-import dataclass.data
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@data class MockCache(
+final case class MockCache(
   base: String,
   baseChanging: String
 ) extends Cache[Task] {

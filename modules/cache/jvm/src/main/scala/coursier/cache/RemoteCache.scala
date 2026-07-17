@@ -4,7 +4,6 @@ import com.github.plokhotnyuk.jsoniter_scala.core._
 import coursier.cache.server.Model.{Artifact => ModelArtifact, _}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
-import dataclass.data
 
 import java.io.{ByteArrayOutputStream, File}
 import java.net.{HttpURLConnection, URI, URL}
@@ -18,7 +17,7 @@ import scala.cli.config.Secret
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.util.Try
 
-@data class RemoteCache[F[_]: Sync](
+final case class RemoteCache[F[_]: Sync](
   serverUrl: String,
   location: File,
   basicAuth: Option[Secret[String]] = None, // user:password
@@ -29,6 +28,9 @@ import scala.util.Try
   fileFallback: Option[FileCache[F]] = None
 ) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext
     with Cache.WithLogger[F, RemoteCache[F]] with Cache.Default[F] {
+
+  def withLogger(logger: CacheLogger): RemoteCache[F] =
+    copy(logger = logger)
 
   lazy val ec: ExecutionContextExecutorService =
     ExecutionContext.fromExecutorService(pool)
@@ -239,7 +241,7 @@ import scala.util.Try
 
   def file(artifact: Artifact): EitherT[F, ArtifactError, File] = {
     val artifact0 =
-      if (artifact.url.endsWith("/.links")) artifact.withUrl(artifact.url.stripSuffix(".links"))
+      if (artifact.url.endsWith("/.links")) artifact.copy(url = artifact.url.stripSuffix(".links"))
       else artifact
     fileFallback.filter(_ => artifact0.url.startsWith("file:/")) match {
       case Some(fallback) =>
@@ -253,7 +255,7 @@ import scala.util.Try
     artifact => {
       val (artifact0, links) =
         if (artifact.url.endsWith("/.links"))
-          (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
+          (artifact.copy(url = artifact.url.stripSuffix(".links")), true)
         else (artifact, false)
       fileWithPolicy(artifact0, cachePolicy).leftMap(_.describe).flatMap { f =>
         EitherT {

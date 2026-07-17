@@ -3,9 +3,9 @@ package coursier.core
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 
-import dataclass.{data, since}
+import scala.annotation.unroll
 
-@data class Authentication(
+final case class Authentication(
   userOpt: Option[String],
   passwordOpt: Option[String],
   httpHeaders: Seq[(String, String)],
@@ -13,29 +13,9 @@ import dataclass.{data, since}
   realmOpt: Option[String],
   httpsOnly: Boolean,
   passOnRedirect: Boolean,
-  @since
+  @unroll
   byNameHttpHeaders: Seq[() => Seq[(String, String)]] = Nil
 ) {
-
-  @deprecated("Use the override accepting an Option[String] as user", "2.1.25")
-  def this(
-    user: String,
-    passwordOpt: Option[String],
-    httpHeaders: Seq[(String, String)],
-    optional: Boolean,
-    realmOpt: Option[String],
-    httpsOnly: Boolean,
-    passOnRedirect: Boolean
-  ) =
-    this(
-      Some(user),
-      passwordOpt,
-      httpHeaders,
-      optional,
-      realmOpt,
-      httpsOnly,
-      passOnRedirect
-    )
 
   @deprecated("Use userOpt instead", "2.1.25")
   def user: String =
@@ -44,7 +24,7 @@ import dataclass.{data, since}
     }
 
   def withUser(newUser: String): Authentication =
-    withUserOpt(Some(newUser))
+    copy(userOpt = Some(newUser))
 
   override def toString: String = {
     val headersStr = httpHeaders.map {
@@ -58,13 +38,13 @@ import dataclass.{data, since}
   }
 
   def withPassword(password: String): Authentication =
-    withPasswordOpt(Some(password))
+    copy(passwordOpt = Some(password))
   def withRealm(realm: String): Authentication =
-    withRealmOpt(Some(realm))
+    copy(realmOpt = Some(realm))
 
   def userOnly: Boolean =
     userOpt.forall { user =>
-      this == Authentication(user)
+      this == Authentication.create(user)
     }
 
   def allHttpHeaders: Seq[(String, String)] = {
@@ -80,7 +60,7 @@ import dataclass.{data, since}
 
 object Authentication {
 
-  def apply(user: String): Authentication =
+  def create(user: String): Authentication =
     Authentication(
       Some(user),
       None,
@@ -90,7 +70,7 @@ object Authentication {
       httpsOnly = true,
       passOnRedirect = false
     )
-  def apply(user: String, password: String): Authentication =
+  def create(user: String, password: String): Authentication =
     Authentication(
       Some(user),
       Some(password),
@@ -101,7 +81,7 @@ object Authentication {
       passOnRedirect = false
     )
 
-  def apply(
+  def create(
     user: String,
     passwordOpt: Option[String],
     optional: Boolean,
@@ -111,7 +91,7 @@ object Authentication {
   ): Authentication =
     new Authentication(Some(user), passwordOpt, Nil, optional, realmOpt, httpsOnly, passOnRedirect)
 
-  def apply(
+  def create(
     user: String,
     password: String,
     optional: Boolean,
@@ -121,7 +101,7 @@ object Authentication {
   ): Authentication =
     Authentication(Some(user), Some(password), Nil, optional, realmOpt, httpsOnly, passOnRedirect)
 
-  def apply(httpHeaders: Seq[(String, String)]): Authentication =
+  def create(httpHeaders: Seq[(String, String)]): Authentication =
     Authentication(
       Some(""),
       None,
@@ -132,7 +112,7 @@ object Authentication {
       passOnRedirect = false
     )
 
-  def apply(
+  def create(
     httpHeaders: Seq[(String, String)],
     optional: Boolean,
     realmOpt: Option[String],
@@ -140,26 +120,6 @@ object Authentication {
     passOnRedirect: Boolean
   ): Authentication =
     Authentication(Some(""), None, httpHeaders, optional, realmOpt, httpsOnly, passOnRedirect)
-
-  @deprecated("Use the override accepting an Option[String] as user", "2.1.25")
-  def apply(
-    user: String,
-    passwordOpt: Option[String],
-    httpHeaders: Seq[(String, String)],
-    optional: Boolean,
-    realmOpt: Option[String],
-    httpsOnly: Boolean,
-    passOnRedirect: Boolean
-  ): Authentication =
-    Authentication(
-      Some(user),
-      passwordOpt,
-      httpHeaders,
-      optional,
-      realmOpt,
-      httpsOnly,
-      passOnRedirect
-    )
 
   private[coursier] def basicAuthenticationEncode(user: String, password: String): String =
     Base64.getEncoder.encodeToString(

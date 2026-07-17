@@ -6,6 +6,9 @@ object Deps {
   object Deps {
     def asm               = mvn"org.ow2.asm:asm:9.10.1"
     def argonautShapeless = mvn"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.1"
+    // argonaut-shapeless is Scala 2 only (shapeless macros); modules migrated to Scala 3 use
+    // plain argonaut with hand-written codecs instead.
+    def argonaut = mvn"io.argonaut::argonaut:6.3.9"
     def caseApp           = mvn"com.github.alexarchambault::case-app:2.1.0"
     def catsCore          = mvn"org.typelevel::cats-core:${Versions.cats}"
     def catsFree213       = mvn"org.typelevel:cats-free_2.13:${Versions.cats}"
@@ -74,6 +77,9 @@ object Deps {
     def ujson                    = mvn"com.lihaoyi::ujson:4.3.2"
     def utest                    = mvn"com.lihaoyi::utest::0.9.5"
     def versions                 = mvn"io.get-coursier::versions::0.5.3"
+    // `versions` is not published for Scala 3; consume the 2.13 JVM artifact from Scala 3
+    // (Scala 2.13 / 3 compatibility) in modules migrated to Scala 3.
+    def versionsScala2Jvm = mvn"io.get-coursier:versions_2.13:0.5.3"
     def windowsAnsi              = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
     def windowsAnsiPs =
       mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
@@ -100,8 +106,11 @@ object Deps {
 
   object ScalaVersions {
     def scala3   = "3.7.4"
-    def scala213 = "2.13.18"
-    def scala212 = "2.12.20"
+    // Minimum Scala 3 version supporting the experimental `@unroll` annotation (SIP-61).
+    // Used by modules migrated off the data-class `@data` annotation.
+    def scala3Unroll = "3.7.0"
+    def scala213     = "2.13.18"
+    def scala212     = "2.12.20"
     // TODO SCALA_213_BASELINE search for this TODO in the codebase
     // for cleanup tasks when we move to Scala 2.13 as as the baseline
     val all = Seq(scala213, scala212)

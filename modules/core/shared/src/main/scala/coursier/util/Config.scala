@@ -79,7 +79,7 @@ object Config {
           deps.map { dep =>
             dep.variantSelector match {
               case c: VariantSelector.ConfigurationBased =>
-                dep.withVariantSelector(
+                dep.copy(variantSelector = 
                   VariantSelector.ConfigurationBased(config --> c.configuration)
                 )
               case _: VariantSelector.AttributesBased =>
@@ -87,7 +87,7 @@ object Config {
             }
           }
       }
-      .groupBy(_.withVariantSelector(VariantSelector.emptyConfiguration))
+      .groupBy(_.copy(variantSelector = VariantSelector.emptyConfiguration))
       .flatMap {
         case (dep, l) =>
           val split = l.map { dep0 =>
@@ -108,7 +108,7 @@ object Config {
             if (configBased.isEmpty) Nil
             else
               Seq(
-                dep.withVariantSelector(
+                dep.copy(variantSelector = 
                   VariantSelector.ConfigurationBased(
                     Configuration.join(configBased.toVector.distinct.sorted: _*)
                   )

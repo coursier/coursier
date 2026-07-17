@@ -3,7 +3,7 @@ package coursier.maven
 import coursier.core._
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version => Version0}
-import dataclass._
+import scala.annotation.unroll
 
 object MavenRepository {
 
@@ -19,9 +19,9 @@ object MavenRepository {
   private def actualRoot(root: String): String =
     root.stripSuffix("/")
 
-  def apply(root: String): MavenRepository =
+  def create(root: String): MavenRepository =
     new MavenRepository(actualRoot(root))
-  def apply(root: String, authentication: Option[Authentication]): MavenRepository =
+  def create(root: String, authentication: Option[Authentication]): MavenRepository =
     new MavenRepository(
       actualRoot(root),
       authentication,
@@ -31,14 +31,14 @@ object MavenRepository {
     )
 }
 
-@data(apply = false) class MavenRepository(
+final case class MavenRepository(
   root: String,
   authentication: Option[Authentication] = None,
-  @since
+  @unroll
   changing: Option[Boolean] = None,
-  @since
+  @unroll
   override val versionsCheckHasModule: Boolean = true,
-  @since("2.1.25")
+  @unroll
   override val checkModule: Boolean = false
 ) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi {
 
@@ -48,6 +48,15 @@ object MavenRepository {
     changing,
     checkModule
   )
+
+  def withRoot(root: String): MavenRepository =
+    copy(root = root)
+  def withAuthentication(authentication: Option[Authentication]): MavenRepository =
+    copy(authentication = authentication)
+  def withVersionsCheckHasModule(versionsCheckHasModule: Boolean): MavenRepository =
+    copy(versionsCheckHasModule = versionsCheckHasModule)
+  def withCheckModule(checkModule: Boolean): MavenRepository =
+    copy(checkModule = checkModule)
 
   def artifacts(
     dependency: Dependency,
@@ -82,7 +91,7 @@ object MavenRepository {
     internal.artifactFor(url, changing)
 
   def withChanging(changing: Boolean): MavenRepository =
-    withChanging(Some(changing))
+    copy(changing = Some(changing))
 
   override def fetchVersions[F[_]](
     module: Module,

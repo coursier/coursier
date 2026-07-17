@@ -66,7 +66,7 @@ class FileTypeRefreshDisplay(
     out.write('\n')
   }
 
-  private def extension(url: String): String = {
+  private def `extension`(url: String): String = {
     val idx = url.lastIndexOf('.')
     if (idx < 0)
       "unknown"
@@ -90,7 +90,7 @@ class FileTypeRefreshDisplay(
       }
       .groupBy {
         case (url, _) =>
-          extension(url)
+          `extension`(url)
       }
       .view
       .mapValues(_.size)

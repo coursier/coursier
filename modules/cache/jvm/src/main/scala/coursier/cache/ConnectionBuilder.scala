@@ -5,10 +5,10 @@ import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
 import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
-import dataclass.data
+import scala.annotation.unroll
 
 // format: off
-@data class ConnectionBuilder(
+final case class ConnectionBuilder(
   url: String,
   authentication: Option[Authentication] = None,
   alreadyDownloaded: Long = 0L,
@@ -20,7 +20,7 @@ import dataclass.data
   method: String = "GET",
   maxRedirectionsOpt: Option[Int] = Some(20),
   proxy: Option[Proxy] = None,
-  @since("2.0.16")
+  @unroll
     classLoaders: Seq[ClassLoader] = Nil
 ) {
   // format: on

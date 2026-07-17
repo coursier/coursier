@@ -6,7 +6,7 @@ import java.util.jar.{Attributes => JarAttributes}
 import java.util.zip.ZipEntry
 
 import coursier.launcher.internal.Windows
-import dataclass._
+import scala.annotation.unroll
 
 import scala.util.Properties
 
@@ -16,22 +16,22 @@ sealed abstract class Parameters extends Product with Serializable {
 
 object Parameters {
 
-  @data class Assembly(
+  final case class Assembly(
     files: Seq[File] = Nil,
     mainClass: Option[String] = None,
     attributes: Seq[(JarAttributes.Name, String)] = Nil,
     rules: Seq[MergeRule] = MergeRule.default,
     preambleOpt: Option[Preamble] = Some(Preamble()),
     extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil,
-    @since("2.0.0-RC6-27")
+    @unroll
     baseManifest: Option[Array[Byte]] = None,
-    @since
+    @unroll
     shadingRules: Seq[ShadingRule] = Nil
   ) extends Parameters {
     def withMainClass(mainClass: String): Assembly =
-      withMainClass(Some(mainClass))
+      copy(mainClass = Some(mainClass))
     def withPreamble(preamble: Preamble): Assembly =
-      withPreambleOpt(Some(preamble))
+      copy(preambleOpt = Some(preamble))
     def finalAttributes: Seq[(JarAttributes.Name, String)] =
       mainClass
         .map(c => JarAttributes.Name.MAIN_CLASS -> c)
@@ -39,7 +39,7 @@ object Parameters {
         attributes
   }
 
-  @data class Bootstrap(
+  final case class Bootstrap(
     content: Seq[ClassLoaderContent],
     mainClass: String,
     javaProperties: Seq[(String, String)] = Nil,
@@ -50,17 +50,17 @@ object Parameters {
     disableJarChecking: Option[Boolean] = None,
     hybridAssembly: Boolean = false,
     extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil,
-    @since("2.0.4")
+    @unroll
     python: Boolean = false,
-    @since
+    @unroll
     pythonJep: Boolean = false,
     extraContent: Map[String, Seq[ClassLoaderContent]] = Map(),
-    @since
+    @unroll
     rules: Seq[MergeRule] = MergeRule.default
   ) extends Parameters {
 
     def withPreamble(preamble: Preamble): Bootstrap =
-      withPreambleOpt(Some(preamble))
+      copy(preambleOpt = Some(preamble))
 
     def hasResources: Boolean =
       (content.iterator ++ extraContent.valuesIterator.flatMap(_.iterator)).exists { c =>
@@ -76,26 +76,26 @@ object Parameters {
     def finalPreambleOpt: Option[Preamble] =
       if (finalDisableJarChecking)
         preambleOpt.map { p =>
-          p.withJavaOpts("-Dsun.misc.URLClassPath.disableJarChecking" +: p.javaOpts)
+          p.copy(javaOpts = "-Dsun.misc.URLClassPath.disableJarChecking" +: p.javaOpts)
         }
       else
         preambleOpt
 
     def addExtraContent(name: String, content: Seq[ClassLoaderContent]): Bootstrap =
-      withExtraContent(extraContent + (name -> content))
+      copy(extraContent = extraContent + (name -> content))
   }
 
-  @data class ManifestJar(
+  final case class ManifestJar(
     classpath: Seq[File],
     mainClass: String,
     preambleOpt: Option[Preamble] = Some(Preamble())
   ) extends Parameters {
 
     def withPreamble(preamble: Preamble): ManifestJar =
-      withPreambleOpt(Some(preamble))
+      copy(preambleOpt = Some(preamble))
   }
 
-  @data class NativeImage(
+  final case class NativeImage(
     mainClass: String,
     fetch: Seq[String] => Seq[File],
     jars: Seq[File] = Nil,
@@ -112,7 +112,7 @@ object Parameters {
   ) extends Parameters {
     override def isNative: Boolean = true
     def withJavaHome(home: File): NativeImage =
-      withJavaHome(Some(home))
+      copy(javaHome = Some(home))
   }
 
   object NativeImage {
@@ -120,11 +120,11 @@ object Parameters {
       Seq("-Xmx3g")
   }
 
-  @data class Prebuilt() extends Parameters {
+  final case class Prebuilt() extends Parameters {
     override def isNative: Boolean = true
   }
 
-  @data class ScalaNative(
+  final case class ScalaNative(
     fetch: Seq[String] => Seq[File],
     mainClass: String,
     nativeVersion: String,
@@ -132,7 +132,7 @@ object Parameters {
     options: ScalaNative.ScalaNativeOptions = ScalaNative.ScalaNativeOptions(),
     log: String => Unit = s => System.err.println(s),
     verbosity: Int = 0,
-    @since
+    @unroll
     python: Boolean = false
   ) extends Parameters {
     override def isNative: Boolean = true
@@ -140,7 +140,7 @@ object Parameters {
 
   object ScalaNative {
 
-    @data class ScalaNativeOptions(
+    final case class ScalaNativeOptions(
       gcOpt: Option[String] = None,
       modeOpt: Option[String] = None,
       linkStubs: Boolean = true,
@@ -159,7 +159,7 @@ object Parameters {
   }
 
   /** For test purposes */
-  @data class DummyNative() extends Parameters {
+  final case class DummyNative() extends Parameters {
     override def isNative: Boolean = true
   }
 

@@ -5,11 +5,9 @@ import java.nio.charset.Charset
 import java.nio.file.{Files, Paths}
 import java.util.Properties
 
-import dataclass.data
-
 import scala.jdk.CollectionConverters._
 
-@data class FileCredentials(
+final case class FileCredentials(
   path: String,
   optional: Boolean = true
 ) extends Credentials {
@@ -64,11 +62,13 @@ object FileCredentials {
       val passOnRedirect = Option(props.getProperty(s"$prefix.pass-on-redirect"))
         .fold(false)(_.toBoolean)
 
-      DirectCredentials(host, user, password)
-        .withRealm(realmOpt)
-        .withMatchHost(matchHost)
-        .withHttpsOnly(httpsOnly)
-        .withPassOnRedirect(passOnRedirect)
+      DirectCredentials.create(host, user, password)
+        .copy(
+          realm = realmOpt,
+          matchHost = matchHost,
+          httpsOnly = httpsOnly,
+          passOnRedirect = passOnRedirect
+        )
     }
   }
 

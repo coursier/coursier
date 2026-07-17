@@ -1,8 +1,7 @@
 package coursier.install
 
-import dataclass.data
 
-@data class AppInfo(
+final case class AppInfo(
   appDescriptor: AppDescriptor,
   appDescriptorBytes: Array[Byte],
   source: Source,
@@ -10,8 +9,8 @@ import dataclass.data
   overrideVersionOpt: Option[String] = None
 ) {
   def overrideVersion(version: String): AppInfo =
-    withAppDescriptor(appDescriptor.overrideVersion(version))
-      .withOverrideVersionOpt(Some(version))
+    copy(appDescriptor = appDescriptor.overrideVersion(version))
+      .copy(overrideVersionOpt = Some(version))
   def overrideVersion(versionOpt: Option[String]): AppInfo =
     versionOpt.fold(this)(overrideVersion(_))
 }

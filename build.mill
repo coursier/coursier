@@ -46,26 +46,29 @@ implicit def millModuleBasePath: ModuleCtx.Nested =
 
 object util extends Module {
   object shared extends SharedScalaSources
-  object jvm    extends Cross[UtilJvm](ScalaVersions.all)
-  object js     extends Cross[UtilJs](ScalaVersions.all)
+  // Migrated off data-class's `@data` to the experimental `@unroll` annotation,
+  // which requires Scala 3.7+. The 2.13/2.12 cross values are kept so the rest of
+  // the (not-yet-migrated) build still evaluates; only the Scala 3 variant compiles.
+  object jvm extends Cross[UtilJvm](ScalaVersions.all :+ ScalaVersions.scala3Unroll)
+  object js  extends Cross[UtilJs](ScalaVersions.all :+ ScalaVersions.scala3Unroll)
 }
 object core extends Module {
   object shared extends SharedScalaSources
-  object jvm    extends Cross[CoreJvm](ScalaVersions.all)
+  object jvm    extends Cross[CoreJvm](ScalaVersions.all :+ ScalaVersions.scala3Unroll)
   object js     extends Cross[CoreJs](ScalaVersions.all)
 }
 object `sbt-maven-repository` extends Module {
   object shared extends SharedScalaSources
-  object jvm    extends Cross[SbtMavenRepositoryJvm](ScalaVersions.all)
+  object jvm    extends Cross[SbtMavenRepositoryJvm](ScalaVersions.all :+ ScalaVersions.scala3Unroll)
   object js     extends Cross[SbtMavenRepositoryJs](ScalaVersions.all)
 }
 object `cache-util` extends CacheUtil
 object cache extends Module {
   object shared extends SharedScalaSources
-  object jvm    extends Cross[CacheJvm](ScalaVersions.all)
+  object jvm    extends Cross[CacheJvm](ScalaVersions.all :+ ScalaVersions.scala3Unroll)
   object js     extends Cross[CacheJs](ScalaVersions.all)
 }
-object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.all)
+object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.all :+ ScalaVersions.scala3Unroll)
 object `benchmark` extends ScalaModule with JmhModule {
   def scalaVersion: mill.api.Task.Simple[String] = ScalaVersions.scala213
   def moduleDeps = Seq(
@@ -79,13 +82,13 @@ object `benchmark` extends ScalaModule with JmhModule {
 
 object `cache-server` extends Cross[CacheServer](ScalaVersions.all)
 
-object launcher             extends Cross[Launcher](ScalaVersions.all)
-object env                  extends Cross[Env](ScalaVersions.all)
+object launcher             extends Cross[Launcher](ScalaVersions.all :+ ScalaVersions.scala3Unroll)
+object env                  extends Cross[Env](ScalaVersions.all :+ ScalaVersions.scala3Unroll)
 object `launcher-native_04` extends LauncherNative04
 
 object coursier extends Module {
   object shared extends SharedScalaSources
-  object jvm    extends Cross[CoursierJvm](ScalaVersions.all)
+  object jvm    extends Cross[CoursierJvm](ScalaVersions.all :+ ScalaVersions.scala3Unroll)
   object js     extends Cross[CoursierJs](ScalaVersions.all)
 }
 
@@ -282,8 +285,8 @@ object `execve-test` extends CoursierJavaModule with coursierbuild.Launchers.CsJ
   }
 }
 
-object jvm     extends Cross[Jvm](ScalaVersions.all)
-object install extends Cross[Install](ScalaVersions.all)
+object jvm     extends Cross[Jvm](ScalaVersions.all :+ ScalaVersions.scala3Unroll)
+object install extends Cross[Install](ScalaVersions.all :+ ScalaVersions.scala3Unroll)
 
 object docker extends Cross[Docker](Seq(ScalaVersions.scala3))
 
@@ -504,9 +507,6 @@ trait Launcher extends LauncherBase {
     Deps.noCrcZis,
     Deps.pythonNativeLibs
   )
-  def compileMvnDeps = Seq(
-    Deps.dataClass
-  )
   def commitHash = `build-util`.commitHash
 
   def bootstrap                   = `bootstrap-launcher`.proguardedAssembly()
@@ -523,9 +523,6 @@ trait Env extends CrossSbtModule with CsModule
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
   def artifactName = "coursier-env"
-  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.dataClass
-  )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.collectionCompat,
     Deps.jniUtils
@@ -554,7 +551,10 @@ trait LauncherNative04 extends CsModule
 
 trait CoursierJvm extends CoursierJvmBase { self =>
   def sources = Task {
-    super.sources() ++ coursier.shared.sources()
+    val versionSources =
+      if (scalaVersion().startsWith("3.")) coursier.shared.sourcesScala3()
+      else coursier.shared.sourcesScala2()
+    super.sources() ++ coursier.shared.sources() ++ versionSources
   }
   def moduleDeps = Seq(
     core.jvm(),
@@ -602,7 +602,10 @@ trait CoursierJvm extends CoursierJvmBase { self =>
 }
 trait CoursierJs extends Coursier with CsScalaJsModule {
   def sources = Task {
-    super.sources() ++ coursier.shared.sources()
+    val versionSources =
+      if (scalaVersion().startsWith("3.")) coursier.shared.sourcesScala3()
+      else coursier.shared.sourcesScala2()
+    super.sources() ++ coursier.shared.sources() ++ versionSources
   }
   def moduleDeps = Seq(
     core.js(),
@@ -803,13 +806,15 @@ trait Install extends CrossSbtModule with CsModule
     jvm(),
     launcherModule()
   )
-  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.dataClass
-  )
-  def mvnDeps = super.mvnDeps() ++ Seq(
-    Deps.argonautShapeless,
-    Deps.catsCore
-  )
+  def mvnDeps = Task {
+    val jsonDep =
+      if (scalaVersion().startsWith("3.")) Deps.argonaut // hand-written codecs
+      else Deps.argonautShapeless
+    super.mvnDeps() ++ Seq(
+      jsonDep,
+      Deps.catsCore
+    )
+  }
   object test extends CrossSbtTests with CsScalaTests with CsResourcesTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
@@ -844,7 +849,6 @@ trait Jvm extends CrossSbtModule with CsModule
     exec
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.dataClass,
     Deps.jsoniterMacros,
     Deps.svm
   )

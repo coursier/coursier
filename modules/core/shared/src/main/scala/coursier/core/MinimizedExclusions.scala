@@ -1,7 +1,6 @@
 package coursier.core
 
 import coursier.core.Exclusions.{allOrganizations, allNames}
-import dataclass.data
 
 /** This file defines a special-purpose structure for exclusions that has the following
   * properties/goals:
@@ -75,7 +74,7 @@ object MinimizedExclusions {
     def repr: String = "Exclusions: *:*"
   }
 
-  @data class ExcludeSpecific(
+  final case class ExcludeSpecific(
     byOrg: Set[Organization],
     byModule: Set[ModuleName],
     specific: Set[(Organization, ModuleName)]
@@ -228,7 +227,7 @@ object MinimizedExclusions {
     }
 }
 
-@data class MinimizedExclusions(data: MinimizedExclusions.ExclusionData) {
+final case class MinimizedExclusions(data: MinimizedExclusions.ExclusionData) {
   def apply(org: Organization, module: ModuleName): Boolean = data(org, module)
 
   def join(other: MinimizedExclusions): MinimizedExclusions = {

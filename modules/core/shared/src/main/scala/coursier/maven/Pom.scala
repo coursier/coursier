@@ -99,7 +99,7 @@ object Pom {
       } yield {
         val optional = text(node, "optional", "").toSeq.contains("true")
 
-        scopeOpt.getOrElse(Configuration.empty) -> Dependency(
+        scopeOpt.getOrElse(Configuration.empty) -> Dependency.create(
           mod,
           version0,
           VariantSelector.emptyConfiguration,
@@ -292,7 +292,7 @@ object Pom {
           )
         }
 
-      val finalProjModule = projModule.withOrganization(groupId)
+      val finalProjModule = projModule.copy(organization = groupId)
 
       val relocationDependencyOpt = pom
         .children
@@ -309,10 +309,10 @@ object Pom {
             .getOrElse(finalProjModule.name)
           val relocatedVersion = text(n, "version", "").map(Version(_)).getOrElse(version)
 
-          Variant.emptyConfiguration -> Dependency(
+          Variant.emptyConfiguration -> Dependency.create(
             finalProjModule
-              .withOrganization(relocatedGroupId)
-              .withName(relocatedArtifactId),
+              .copy(organization = relocatedGroupId)
+              .copy(name = relocatedArtifactId),
             VersionConstraint.fromVersion(relocatedVersion),
             VariantSelector.emptyConfiguration,
             Set.empty[(Organization, ModuleName)],
@@ -525,7 +525,7 @@ object Pom {
 
     val optionalDeps = proj.dependencies0.collect {
       case (c: Variant.Configuration, dep) if dep.optional && fromConfigs(c.configuration) =>
-        Variant.Configuration(optionalConfig) -> dep.withOptional(false)
+        Variant.Configuration(optionalConfig) -> dep.copy(optional = false)
     }
 
     val optConfigThing = proj.configurations.getOrElse(optionalConfig, Nil) ++
@@ -533,7 +533,7 @@ object Pom {
     val configurations = proj.configurations + (optionalConfig -> optConfigThing.distinct)
 
     proj
-      .withConfigurations(configurations)
-      .withDependencies0(proj.dependencies0 ++ optionalDeps)
+      .copy(configurations = configurations)
+      .copy(dependencies0 = proj.dependencies0 ++ optionalDeps)
   }
 }

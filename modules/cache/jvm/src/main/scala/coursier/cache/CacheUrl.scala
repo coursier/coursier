@@ -381,7 +381,7 @@ object CacheUrl {
                 if (is4xx(conn)) {
                   val realmOpt = realm(conn)
                   val authentication0 = authentication
-                    .map(_.withOptional(false))
+                    .map(_.copy(optional = false))
                     .orElse(
                       autoCredentials.find(_.autoMatches(url0, realmOpt)).map(_.authentication)
                     )

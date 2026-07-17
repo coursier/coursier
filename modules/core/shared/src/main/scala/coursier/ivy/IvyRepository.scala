@@ -19,9 +19,9 @@ import coursier.core.{
 import coursier.maven.{MavenAttributes, MavenComplete}
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version, VersionParse}
-import dataclass._
+import scala.annotation.unroll
 
-@data class IvyRepository(
+final case class IvyRepository(
   pattern: Pattern,
   metadataPatternOpt: Option[Pattern] = None,
   changingOpt: Option[Boolean] = None,
@@ -31,14 +31,14 @@ import dataclass._
   // hack for sbt putting infos in properties
   dropInfoAttributes: Boolean = false,
   authentication: Option[Authentication] = None,
-  @since
+  @unroll
   override val versionsCheckHasModule: Boolean = true
 ) extends Repository with Repository.VersionApi {
 
   def withMetadataPattern(metadataPattern: Pattern): IvyRepository =
-    withMetadataPatternOpt(Some(metadataPattern))
+    copy(metadataPatternOpt = Some(metadataPattern))
   def withChanging(changing: Boolean): IvyRepository =
-    withChangingOpt(Some(changing))
+    copy(changingOpt = Some(changing))
 
   override def repr: String =
     "ivy:" + pattern.string + metadataPatternOpt.fold("")("|" + _.string)
@@ -106,7 +106,7 @@ import dataclass._
                 if (dependency.publication.ext.isEmpty) MavenAttributes.typeExtension(tpe)
                 else dependency.publication.ext
               Seq(
-                dependency.publication.withType(tpe).withExt(ext)
+                dependency.publication.copy(`type` = tpe).copy(ext = ext)
               )
             }
             else if (dependency.attributes.classifier.nonEmpty)
@@ -318,18 +318,18 @@ import dataclass._
       val proj =
         if (dropInfoAttributes)
           proj0
-            .withModule(
-              proj0.module.withAttributes(
+            .copy(module = 
+              proj0.module.copy(attributes = 
                 proj0.module.attributes.filter {
                   case (k, _) => !k.startsWith("info.")
                 }
               )
             )
-            .withDependencies0(
+            .copy(dependencies0 = 
               proj0.dependencies0.map {
                 case (config, dep0) =>
-                  val dep = dep0.withModule(
-                    dep0.module.withAttributes(
+                  val dep = dep0.copy(module = 
+                    dep0.module.copy(attributes = 
                       dep0.module.attributes.filter {
                         case (k, _) => !k.startsWith("info.")
                       }
@@ -342,7 +342,7 @@ import dataclass._
         else
           proj0
 
-      this -> proj.withActualVersionOpt0(Some(version))
+      this -> proj.copy(actualVersionOpt0 = Some(version))
     }
   }
 

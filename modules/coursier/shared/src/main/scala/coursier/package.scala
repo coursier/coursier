@@ -22,13 +22,13 @@ package object coursier {
       module: Module,
       version: VersionConstraint0
     ): Dependency =
-      core.Dependency(module, version)
+      core.Dependency.create(module, version)
     @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
     def apply(
       module: Module,
       version: String
     ): Dependency =
-      core.Dependency(module, VersionConstraint0(version))
+      core.Dependency.create(module, VersionConstraint0(version))
   }
 
   type VersionConstraint = coursier.version.VersionConstraint
@@ -88,7 +88,7 @@ package object coursier {
     def apply(): Resolution =
       core.Resolution()
     def apply(dependencies: Seq[Dependency]): Resolution =
-      core.Resolution().withRootDependencies(dependencies)
+      core.Resolution().copy(rootDependencies = dependencies)
 
     def defaultTypes: Set[Type]          = coursier.core.Resolution.defaultTypes
     def enableDependencyOverridesDefault = coursier.core.Resolution.enableDependencyOverridesDefault
@@ -108,21 +108,9 @@ package object coursier {
     def process: ResolutionProcess = ResolutionProcess(underlying)
   }
 
-  implicit def organizationString(sc: StringContext): SafeOrganization =
-    SafeOrganization(sc)
-  implicit def moduleNameString(sc: StringContext): SafeModuleName =
-    SafeModuleName(sc)
-  implicit def moduleString(sc: StringContext): SafeModule =
-    SafeModule(sc)
-  implicit def moduleExclString(sc: StringContext): SafeModuleExclusionMatcher =
-    SafeModuleExclusionMatcher(sc)
-  implicit def moduleInclString(sc: StringContext): SafeModuleInclusionMatcher =
-    SafeModuleInclusionMatcher(sc)
-  implicit def dependencyString(sc: StringContext): SafeDependency =
-    SafeDependency(sc)
-  implicit def mavenRepositoryString(sc: StringContext): SafeMavenRepository =
-    SafeMavenRepository(sc)
-  implicit def ivyRepositoryString(sc: StringContext): SafeIvyRepository =
-    SafeIvyRepository(sc)
+  // The string interpolators (org"…", mod"…", dep"…", mvn"…", ivy"…", …) are provided by
+  // coursier.util.StringInterpolators (a Scala 2 macro / Scala 3 extension methods). Import
+  // them from there directly. They used to be re-exported here via Scala 2 implicit classes,
+  // which have no Scala 3 equivalent.
 
 }

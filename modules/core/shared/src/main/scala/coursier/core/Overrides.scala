@@ -69,7 +69,7 @@ sealed abstract class Overrides extends Product with Serializable {
 
   final lazy val enforceGlobalStrictVersions: Overrides =
     map { (k, v) =>
-      (k, v.withGlobal(true))
+      (k, v.copy(global = true))
     }
 
   final def repr: String =

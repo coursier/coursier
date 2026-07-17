@@ -8,9 +8,8 @@ import java.security.MessageDigest
 import cats.implicits._
 import coursier.cache.internal.FileUtil
 import coursier.util.Artifact
-import dataclass.data
 
-@data class ArtifactsLock(
+final case class ArtifactsLock(
   entries: Set[ArtifactsLock.Entry]
 ) {
   def repr: String =
@@ -25,7 +24,7 @@ import dataclass.data
 
 object ArtifactsLock {
 
-  @data class Entry(
+  final case class Entry(
     url: String,
     checksumType: String,
     checksum: String

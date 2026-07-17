@@ -4,7 +4,6 @@ import argonaut.{DecodeJson, EncodeJson, Parse}
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import coursier.parse.RepositoryParser
-import dataclass.data
 
 /** Unprocessed source, meaning it's mostly made of strings rather than typed data.
   *
@@ -12,7 +11,7 @@ import dataclass.data
   * @param channel
   * @param id
   */
-@data class RawSource(
+final case class RawSource(
   repositories: List[String],
   channel: String,
   id: String
@@ -43,12 +42,18 @@ import dataclass.data
 
 object RawSource {
 
-  import argonaut.ArgonautShapeless._
+  import argonaut.Argonaut._
 
-  lazy val encoder = EncodeJson.of[RawSource]
-  lazy val decoder = DecodeJson.of[RawSource]
+  lazy val codec: argonaut.CodecJson[RawSource] =
+    argonaut.CodecJson.casecodec3(RawSource.apply, (s: RawSource) => Some((s.repositories, s.channel, s.id)))(
+      "repositories",
+      "channel",
+      "id"
+    )
+  lazy val encoder: EncodeJson[RawSource] = codec.Encoder
+  lazy val decoder: DecodeJson[RawSource] = codec.Decoder
 
   def parse(input: String): Either[String, RawSource] =
-    Parse.decodeEither(input)(decoder)
+    Parse.decodeEither(input)(using decoder)
 
 }

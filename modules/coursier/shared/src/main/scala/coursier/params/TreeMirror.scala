@@ -3,7 +3,6 @@ package coursier.params
 import coursier.core.Repository
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepositoryLike
-import dataclass.data
 
 /** Assumes any tree with a prefix in `from` is mirrored under `to`.
   *
@@ -12,7 +11,7 @@ import dataclass.data
   * `"https://mirror.c.com/maven/a/b/c"`, and `"https://artifacts.b.com/foo/e/f/g"` also exists at
   * `"https://mirror.c.com/maven/foo/e/f/g"`.
   */
-@data class TreeMirror(
+final case class TreeMirror(
   from: Seq[String],
   to: String
 ) extends Mirror {
@@ -31,9 +30,9 @@ import dataclass.data
         from
           .find(f => i.pattern.startsWith(f) && i.metadataPatternOpt.forall(_.startsWith(f)))
           .map { f =>
-            i.withPattern(i.pattern.stripPrefix(f).addPrefix(to))
-              .withMetadataPatternOpt(i.metadataPatternOpt.map(_.stripPrefix(f).addPrefix(to)))
-              .withAuthentication(None)
+            i.copy(pattern = i.pattern.stripPrefix(f).addPrefix(to))
+              .copy(metadataPatternOpt = i.metadataPatternOpt.map(_.stripPrefix(f).addPrefix(to)))
+              .copy(authentication = None)
           }
       case _ =>
         None

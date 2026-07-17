@@ -11,22 +11,22 @@ import coursier.cache.internal.MockCacheEscape
 import coursier.paths.Util
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
-import dataclass._
+import scala.annotation.unroll
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
 // format: off
-@data class MockCache[F[_]](
+final case class MockCache[F[_]](
   base: Path,
   extraData: Seq[Path],
   writeMissing: Boolean,
   pool: ExecutorService,
   S: Sync[F],
   dummyArtifact: Artifact => Boolean = _ => false,
-  @since
+  @unroll
     proxy: Option[java.net.Proxy] = None,
-  @since("2.1.25")
+  @unroll
     // FIXME Needs to be a sub-directory of base
     baseChangingOpt: Option[Path] = None,
   replaceByNames: Artifact => Boolean = _ => false,
@@ -42,15 +42,15 @@ import scala.util.{Failure, Success, Try}
 
     val (artifact0, links) =
       if (artifact.url.endsWith("/.links"))
-        (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
+        (artifact.copy(url = artifact.url.stripSuffix(".links")), true)
       else
         (artifact, false)
 
     if (proxy.nonEmpty || artifact0.url.startsWith("http://localhost:"))
       EitherT(MockCache.readFully(
         ConnectionBuilder(artifact0.url)
-          .withAuthentication(artifact0.authentication)
-          .withProxy(proxy)
+          .copy(authentication = artifact0.authentication)
+          .copy(proxy = proxy)
           .connection()
           .getInputStream,
         if (links) Some(artifact0.url) else None
@@ -118,7 +118,7 @@ import scala.util.{Failure, Success, Try}
                           new ByteArrayInputStream(Array.emptyByteArray)
                         else
                           ConnectionBuilder(artifact.url)
-                            .withAuthentication(artifact.authentication)
+                            .copy(authentication = artifact.authentication)
                             .connection()
                             .getInputStream
                       val b = MockCache.readFullySync(is())

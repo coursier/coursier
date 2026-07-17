@@ -1,9 +1,8 @@
 package coursier.util
 
 import coursier.core.Authentication
-import dataclass.data
 
-@data(cachedHashCode = true) class Artifact(
+final case class Artifact(
   url: String,
   checksumUrls: Map[String, String] = Map.empty,
   extra: Map[String, Artifact] = Map.empty,
@@ -21,6 +20,6 @@ object Artifact {
       else if (url.endsWith("?changing=true")) (url.stripSuffix("?changing=true"), true)
       else if (url.endsWith("?changing=false")) (url.stripSuffix("?changing=false"), false)
       else (url, false)
-    Artifact(url).withChanging(changing)
+    Artifact(url).copy(changing = changing)
   }
 }

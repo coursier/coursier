@@ -90,7 +90,7 @@ object RuleParser {
           val include0 =
             if (include.isEmpty) Set(ModuleMatcher.all) else include.map(ModuleMatcher(_)).toSet
           val exclude0 = exclude.map(m =>
-            m.withOrganization(Organization(m.organization.value.stripPrefix("!")))
+            m.copy(organization = Organization(m.organization.value.stripPrefix("!")))
           )
           Strict(
             include0,
@@ -123,7 +123,7 @@ object RuleParser {
     input: String,
     defaultResolution: RuleResolution
   ): Either[String, (Rule, RuleResolution)] =
-    fastparse.parse(input, ruleParser(defaultResolution)(_)) match {
+    fastparse.parse(input, ruleParser(defaultResolution)(using _)) match {
       case f: Parsed.Failure =>
         Left(f.msg)
       case Parsed.Success(_, idx) if idx < input.length =>
@@ -139,7 +139,7 @@ object RuleParser {
     input: String,
     defaultResolution: RuleResolution
   ): Either[String, Seq[(Rule, RuleResolution)]] =
-    fastparse.parse(input, rulesParser(defaultResolution)(_)) match {
+    fastparse.parse(input, rulesParser(defaultResolution)(using _)) match {
       case f: Parsed.Failure =>
         Left(f.msg)
       case Parsed.Success(_, idx) if idx < input.length =>

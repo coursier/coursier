@@ -3,13 +3,12 @@ package coursier.util
 import java.util.regex.Pattern
 
 import coursier.core.{Module, ModuleName, Organization}
-import dataclass.data
 
 import scala.annotation.tailrec
 import scala.collection.compat._
 import scala.util.matching.Regex
 
-@data class ModuleMatcher(matcher: Module) {
+final case class ModuleMatcher(matcher: Module) {
 
   import ModuleMatcher.blobToPattern
 

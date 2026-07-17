@@ -12,7 +12,6 @@ import coursier.cache.internal.FileUtil
 import coursier.core.{Module, ModuleName, Organization}
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
 import coursier.util.StringInterpolators._
-import dataclass.data
 import coursier.version.VersionConstraint
 
 // FIXME Initially copied from coursier.install.Channel, there's some duplication with it…
@@ -23,7 +22,7 @@ sealed abstract class JvmChannel extends Product with Serializable {
 
 object JvmChannel {
 
-  @data class FromModule(
+  final case class FromModule(
     module: Module,
     versionConstraint: VersionConstraint = VersionConstraint("latest.release")
   ) extends JvmChannel {
@@ -44,7 +43,7 @@ object JvmChannel {
     @deprecated("Use withVersionConstraint instead", "2.1.25")
     def withVersion(newVersion: String): FromModule =
       if (newVersion == versionConstraint.asString) this
-      else withVersionConstraint(VersionConstraint(newVersion))
+      else copy(versionConstraint = VersionConstraint(newVersion))
   }
 
   object FromModule {
@@ -58,12 +57,12 @@ object JvmChannel {
     )
   }
 
-  @data class FromUrl(url: String) extends JvmChannel {
+  final case class FromUrl(url: String) extends JvmChannel {
     def repr: String =
       url
   }
 
-  @data class FromFile(path: Path) extends JvmChannel {
+  final case class FromFile(path: Path) extends JvmChannel {
     def repr: String =
       path.toString
   }

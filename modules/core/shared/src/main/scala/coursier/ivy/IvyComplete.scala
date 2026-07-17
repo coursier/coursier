@@ -3,9 +3,8 @@ package coursier.ivy
 import coursier.core.{Module, Organization, Repository}
 import coursier.util.Monad
 import coursier.version.Version
-import dataclass.data
 
-@data class IvyComplete[F[_]](
+final case class IvyComplete[F[_]](
   repo: IvyRepository,
   fetch: Repository.Fetch[F],
   F: Monad[F]

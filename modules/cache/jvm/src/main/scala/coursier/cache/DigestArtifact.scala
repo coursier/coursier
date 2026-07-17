@@ -1,10 +1,9 @@
 package coursier.cache
 
-import dataclass.data
 
 import java.nio.file.Path
 
-@data class DigestArtifact(
+final case class DigestArtifact(
   digest: String,
   path: Path
 )

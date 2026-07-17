@@ -14,7 +14,6 @@ import coursier.core.{
   VariantSelector
 }
 import coursier.version.VersionConstraint
-import dataclass.data
 import dependency.{CovariantSet, DependencyLike, ModuleLike}
 
 import scala.collection.mutable
@@ -44,17 +43,17 @@ object JavaOrScalaDependency {
   def apply(mod: JavaOrScalaModule, dep: Dependency): JavaOrScalaDependency =
     mod match {
       case j: JavaOrScalaModule.JavaModule =>
-        JavaDependency(dep.withModule(j.module), Set.empty)
+        JavaDependency(dep.copy(module = j.module), Set.empty)
       case s: JavaOrScalaModule.ScalaModule =>
         ScalaDependency(
-          dep.withModule(s.baseModule),
+          dep.copy(module = s.baseModule),
           s.fullCrossVersion,
           withPlatformSuffix = false,
           Set.empty
         )
     }
 
-  @data class JavaDependency(dependency: Dependency, exclude: Set[JavaOrScalaModule])
+  final case class JavaDependency(dependency: Dependency, exclude: Set[JavaOrScalaModule])
       extends JavaOrScalaDependency {
     def module: JavaOrScalaModule.JavaModule =
       JavaOrScalaModule.JavaModule(dependency.module)
@@ -65,7 +64,7 @@ object JavaOrScalaDependency {
       scalaVersion: String,
       platformName: String
     ): Dependency =
-      dependency.withMinimizedExclusions(
+      dependency.copy(minimizedExclusions = 
         dependency.minimizedExclusions.join(
           MinimizedExclusions(
             exclude.map(_.module(scalaBinaryVersion, scalaVersion)).map { mod =>
@@ -79,11 +78,11 @@ object JavaOrScalaDependency {
       this
 
     def addExclude(excl: JavaOrScalaModule*): JavaDependency =
-      withExclude(exclude ++ excl)
+      copy(exclude = exclude ++ excl)
     def withUnderlyingDependency(f: Dependency => Dependency): JavaDependency =
-      withDependency(f(dependency))
+      copy(dependency = f(dependency))
   }
-  @data class ScalaDependency(
+  final case class ScalaDependency(
     baseDependency: Dependency,
     fullCrossVersion: Boolean,
     withPlatformSuffix: Boolean,
@@ -112,8 +111,8 @@ object JavaOrScalaDependency {
       val newName = baseDependency.module.name.value + platformSuffix + scalaSuffix
 
       baseDependency
-        .withModule(baseDependency.module.withName(ModuleName(newName)))
-        .withMinimizedExclusions(
+        .copy(module = baseDependency.module.copy(name = ModuleName(newName)))
+        .copy(minimizedExclusions = 
           baseDependency.minimizedExclusions.join(
             MinimizedExclusions(
               exclude.map(_.module(scalaBinaryVersion, scalaVersion)).map { mod =>
@@ -127,8 +126,8 @@ object JavaOrScalaDependency {
     def withPlatform(platformSuffix: String): ScalaDependency =
       if (withPlatformSuffix)
         withUnderlyingDependency { dep =>
-          dep.withModule(
-            dep.module.withName(
+          dep.copy(module = 
+            dep.module.copy(name = 
               ModuleName(dep.module.name.value + platformSuffix)
             )
           )
@@ -137,9 +136,9 @@ object JavaOrScalaDependency {
         this
 
     def addExclude(excl: JavaOrScalaModule*): ScalaDependency =
-      withExclude(exclude ++ excl)
+      copy(exclude = exclude ++ excl)
     def withUnderlyingDependency(f: Dependency => Dependency): ScalaDependency =
-      withBaseDependency(f(baseDependency))
+      copy(baseDependency = f(baseDependency))
   }
 
   private def inlineConfigKey = "$inlineConfiguration"
@@ -172,7 +171,7 @@ object JavaOrScalaDependency {
 
     var userParams = dep.userParamsMap
 
-    var csDep = Dependency(
+    var csDep = Dependency.create(
       Module(
         Organization(dep.module.organization),
         ModuleName(dep.module.name),
@@ -211,7 +210,7 @@ object JavaOrScalaDependency {
           }
       }
     for (variantSelector <- variantSelectorOpt)
-      csDep = csDep.withVariantSelector(variantSelector)
+      csDep = csDep.copy(variantSelector = variantSelector)
 
     val excludes = dep.exclude.map { mod =>
       mod.nameAttributes match {
@@ -240,8 +239,8 @@ object JavaOrScalaDependency {
       classifierOpt match {
         case Some(classifier) =>
           userParams = userParams - classifierKey
-          csDep = csDep.withPublication(
-            csDep.publication.withClassifier(Classifier(classifier))
+          csDep = csDep.copy(publication = 
+            csDep.publication.copy(classifier = Classifier(classifier))
           )
         case None =>
           errors += "Invalid empty classifier attribute"
@@ -250,8 +249,8 @@ object JavaOrScalaDependency {
       extOpt match {
         case Some(ext) =>
           userParams = userParams - extKey
-          csDep = csDep.withPublication(
-            csDep.publication.withExt(Extension(ext))
+          csDep = csDep.copy(publication = 
+            csDep.publication.copy(ext = Extension(ext))
           )
         case None =>
           errors += "Invalid empty classifier attribute"
@@ -260,8 +259,8 @@ object JavaOrScalaDependency {
       typeOpt match {
         case Some(tpe) =>
           userParams = userParams - typeKey
-          csDep = csDep.withPublication(
-            csDep.publication.withType(Type(tpe))
+          csDep = csDep.copy(publication = 
+            csDep.publication.copy(`type` = Type(tpe))
           )
         case None =>
           errors += "Invalid empty classifier attribute"

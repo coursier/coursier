@@ -20,10 +20,9 @@ import coursier.core.{
   VariantSelector
 }
 import coursier.version.{Version, VersionConstraint}
-import dataclass.data
 import coursier.core.VariantPublication
 
-@data class GradleModule(
+final case class GradleModule(
   formatVersion: String,
   component: GradleModule.Component,
   variants: Seq[GradleModule.Variant] = Nil
@@ -100,7 +99,7 @@ import coursier.core.VariantPublication
 
         val dependency0 =
           if (dep.endorseStrictVersions.getOrElse(false))
-            dependency.withEndorseStrictVersions(true)
+            dependency.copy(endorseStrictVersions = true)
           else
             dependency
 
@@ -198,8 +197,8 @@ import coursier.core.VariantPublication
     )
 
     baseProject
-      .withVariants(variantsMap)
-      .withVariantPublications(variantPublications)
+      .copy(variants = variantsMap)
+      .copy(variantPublications = variantPublications)
   }
 }
 
@@ -256,7 +255,7 @@ object GradleModule {
       }
   }
 
-  @data class Component(
+  final case class Component(
     group: String,
     module: String,
     version: String,
@@ -268,7 +267,7 @@ object GradleModule {
     }
   }
 
-  @data class Variant(
+  final case class Variant(
     name: String,
     attributes: Map[String, StringOrInt],
     dependencies: Seq[ModuleDependency],
@@ -290,7 +289,7 @@ object GradleModule {
       }
   }
 
-  @data class ModuleDependency(
+  final case class ModuleDependency(
     group: String,
     module: String,
     version0: Map[String, StringOrSeqString],
@@ -303,7 +302,7 @@ object GradleModule {
           k -> str
       }
     def withVersion(version: Map[String, String]): ModuleDependency =
-      withVersion0(
+      copy(version0 = 
         version.map {
           case (k, v) =>
             (k, StringOrSeqString(Right(v)))
@@ -348,7 +347,7 @@ object GradleModule {
       }
   }
 
-  @data class ModuleFile(
+  final case class ModuleFile(
     name: String,
     url: String,
     size: Option[Long] = None,
@@ -358,14 +357,14 @@ object GradleModule {
     md5: Option[String] = None
   )
 
-  @data class AvailableAt(
+  final case class AvailableAt(
     url: String,
     group: String,
     module: String,
     version: String
   )
 
-  @data class Capability(
+  final case class Capability(
     group: String,
     name: String,
     version: String
