@@ -341,7 +341,7 @@ private[coursier] class MavenRepositoryInternal(
     EitherT.fromEither {
       val maybeProj =
         if (useSaxParser)
-          coursier.core.compatibility.xmlParseSax(str, new PomParser).project
+          MavenRepositoryInternal.parseRawPomSaxMemoized(str)
         else
           for {
             xml  <- coursier.core.compatibility.xmlParseDom(str)
@@ -628,6 +628,17 @@ private[coursier] class MavenRepositoryInternal(
 
 private[coursier] object MavenRepositoryInternal {
   val SnapshotTimestamp = "(.*-)?[0-9]{8}\\.[0-9]{6}-[0-9]+".r
+
+  // Parsing a POM is a pure function of its content, and the same content is routinely
+  // parsed several times in a same JVM (parent POMs and BOMs in particular). Softly
+  // referenced keys let the entries be dropped upon memory pressure.
+  private val pomParseCache
+    : java.util.concurrent.ConcurrentMap[String, Either[String, Project]] =
+    coursier.util.Cache.createMemoCache()
+  private def parseRawPomSax(str: String): Either[String, Project] =
+    coursier.core.compatibility.xmlParseSax(str, new PomParser).project
+  private[maven] def parseRawPomSaxMemoized(str: String): Either[String, Project] =
+    coursier.util.Cache.memoizeMethod(pomParseCache)(str)(parseRawPomSax)
 
   def isSnapshot(version: Version): Boolean =
     version.repr.endsWith("SNAPSHOT") || SnapshotTimestamp.pattern.matcher(version.repr).matches()
