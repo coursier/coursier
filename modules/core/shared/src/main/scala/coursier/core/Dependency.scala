@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentMap
   minimizedExclusions: MinimizedExclusions,
   publication: Publication,
   // Maven-specific
-  optional: Boolean,
+  optional: Option[Boolean],
   transitive: Boolean,
   @since("2.1.17")
   @deprecated("Use overridesMap instead", "2.1.23")
@@ -36,6 +36,152 @@ import java.util.concurrent.ConcurrentMap
   endorseStrictVersions: Boolean = false
 ) {
   assertValid(versionConstraint.asString, "version")
+
+  def withOptional(optional: Boolean): Dependency =
+    withOptional(Some(optional))
+
+  def this(
+    module: Module,
+    versionConstraint: VersionConstraint0,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)],
+    bomDependencies: Seq[BomDependency],
+    overridesMap: Overrides,
+    endorseStrictVersions: Boolean
+  ) = this(
+    module,
+    versionConstraint,
+    variantSelector,
+    minimizedExclusions,
+    publication,
+    Some(optional),
+    transitive,
+    overrides,
+    boms,
+    bomDependencies,
+    overridesMap,
+    endorseStrictVersions
+  )
+
+  private def this(
+    module: Module,
+    versionConstraint: VersionConstraint0,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)],
+    bomDependencies: Seq[BomDependency],
+    overridesMap: Overrides
+  ) = this(
+    module,
+    versionConstraint,
+    variantSelector,
+    minimizedExclusions,
+    publication,
+    optional,
+    transitive,
+    overrides,
+    boms,
+    bomDependencies,
+    overridesMap,
+    endorseStrictVersions = false
+  )
+
+  private def this(
+    module: Module,
+    versionConstraint: VersionConstraint0,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)],
+    bomDependencies: Seq[BomDependency]
+  ) = this(
+    module,
+    versionConstraint,
+    variantSelector,
+    minimizedExclusions,
+    publication,
+    optional,
+    transitive,
+    overrides,
+    boms,
+    bomDependencies,
+    Overrides(overrides)
+  )
+
+  private def this(
+    module: Module,
+    versionConstraint: VersionConstraint0,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)]
+  ) = this(
+    module,
+    versionConstraint,
+    variantSelector,
+    minimizedExclusions,
+    publication,
+    optional,
+    transitive,
+    overrides,
+    boms,
+    Nil
+  )
+
+  private def this(
+    module: Module,
+    versionConstraint: VersionConstraint0,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map
+  ) = this(
+    module,
+    versionConstraint,
+    variantSelector,
+    minimizedExclusions,
+    publication,
+    optional,
+    transitive,
+    overrides,
+    Nil
+  )
+
+  private def this(
+    module: Module,
+    versionConstraint: VersionConstraint0,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean
+  ) = this(
+    module,
+    versionConstraint,
+    variantSelector,
+    minimizedExclusions,
+    publication,
+    optional,
+    transitive,
+    Map.empty[DependencyManagement.Key, DependencyManagement.Values]
+  )
 
   private[coursier] lazy val parsedVersionConstraint =
     PropertyExpr.parse(versionConstraint.asString)
@@ -324,7 +470,7 @@ import java.util.concurrent.ConcurrentMap
       Configuration.empty,
       version,
       MinimizedExclusions.zero,
-      optional = false
+      optional = None
     )
     addOverride(key, values)
   }
@@ -342,7 +488,7 @@ import java.util.concurrent.ConcurrentMap
       Configuration.empty,
       version,
       MinimizedExclusions(exclusions),
-      optional = false
+      optional = None
     )
     addOverride(key, values)
   }
@@ -435,7 +581,7 @@ import java.util.concurrent.ConcurrentMap
       lines += minimizedExclusions.repr
     if (!publication.isEmpty)
       lines += s"publication: $publication"
-    if (optional)
+    if (optional.contains(true))
       lines += "optional"
     if (!transitive)
       lines += "non-transitive"
@@ -457,13 +603,18 @@ import java.util.concurrent.ConcurrentMap
 
   // Overriding toString to be backwards compatible with Set-based exclusion representation
   override def toString(): String = {
+    val optionalString = optional match {
+      case None        => "false"
+      case Some(true)  => "true"
+      case Some(false) => "Some(false)"
+    }
     var fields = Seq(
       module.toString,
       versionConstraint.asString,
       variantSelector.asConfiguration.map(_.toString).getOrElse(variantSelector.repr),
       minimizedExclusions.toSet().toString,
       publication.toString,
-      optional.toString,
+      optionalString,
       transitive.toString
     )
     fields =
@@ -499,7 +650,7 @@ object Dependency {
     variantSelector: VariantSelector,
     minimizedExclusions: MinimizedExclusions,
     publication: Publication,
-    optional: Boolean,
+    optional: Option[Boolean],
     transitive: Boolean,
     overrides: DependencyManagement.Map,
     boms: Seq[(Module, String)],
@@ -523,6 +674,59 @@ object Dependency {
         overridesMap,
         endorseStrictVersions
       )
+    )
+
+  def apply(
+    module: Module,
+    versionConstraint: VersionConstraint0,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Option[Boolean],
+    transitive: Boolean
+  ): Dependency =
+    apply(
+      module,
+      versionConstraint,
+      variantSelector,
+      minimizedExclusions,
+      publication,
+      optional,
+      transitive,
+      Map.empty[DependencyManagement.Key, DependencyManagement.Values],
+      Nil: Seq[(Module, String)],
+      Nil: Seq[BomDependency],
+      Overrides.empty,
+      endorseStrictVersions = false
+    )
+
+  def apply(
+    module: Module,
+    versionConstraint: VersionConstraint0,
+    variantSelector: VariantSelector,
+    minimizedExclusions: MinimizedExclusions,
+    publication: Publication,
+    optional: Boolean,
+    transitive: Boolean,
+    overrides: DependencyManagement.Map,
+    boms: Seq[(Module, String)],
+    bomDependencies: Seq[BomDependency],
+    overridesMap: Overrides,
+    endorseStrictVersions: Boolean
+  ): Dependency =
+    apply(
+      module,
+      versionConstraint,
+      variantSelector,
+      minimizedExclusions,
+      publication,
+      Some(optional),
+      transitive,
+      overrides,
+      boms,
+      bomDependencies,
+      overridesMap,
+      endorseStrictVersions
     )
 
   @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
@@ -797,7 +1001,7 @@ object Dependency {
       VariantSelector.emptyConfiguration,
       MinimizedExclusions.zero,
       Publication("", Type.empty, Extension.empty, Classifier.empty),
-      optional = false,
+      optional = None,
       transitive = true
     )
 
@@ -809,6 +1013,25 @@ object Dependency {
     apply(
       module,
       VersionConstraint0(version)
+    )
+
+  def apply(
+    module: Module,
+    version: VersionConstraint0,
+    variantSelector: VariantSelector,
+    exclusions: Set[(Organization, ModuleName)],
+    attributes: Attributes,
+    optional: Option[Boolean],
+    transitive: Boolean
+  ): Dependency =
+    Dependency(
+      module,
+      version,
+      variantSelector,
+      MinimizedExclusions(exclusions),
+      Publication("", attributes.`type`, Extension.empty, attributes.classifier),
+      optional,
+      transitive
     )
 
   def apply(

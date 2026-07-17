@@ -79,7 +79,7 @@ sealed abstract class Overrides extends Product with Serializable {
         val parts = Seq.newBuilder[String]
         parts += v.versionConstraint.asString
         if (v.config.value.nonEmpty) parts += s"config:${v.config.value}"
-        if (v.optional) parts += "optional"
+        if (v.optional.contains(true)) parts += "optional"
         if (v.global) parts += "global"
         val exclusionsPart =
           if (v.minimizedExclusions.isEmpty)

@@ -979,7 +979,7 @@ object ResolveTests extends TestSuite {
 
           val unixCommonDepOpt =
             res.minDependencies.find(_.module == mod"io.netty:netty-transport-native-unix-common")
-          assert(unixCommonDepOpt.exists(!_.optional))
+          assert(unixCommonDepOpt.exists(!_.optional.contains(true)))
 
           await(validateDependencies(res, resolve0.resolutionParams))
         }
@@ -1007,7 +1007,7 @@ object ResolveTests extends TestSuite {
 
           val unixCommonDepOpt =
             res.minDependencies.find(_.module == mod"io.netty:netty-transport-native-unix-common")
-          assert(unixCommonDepOpt.exists(!_.optional))
+          assert(unixCommonDepOpt.exists(!_.optional.contains(true)))
 
           await(validateDependencies(res, resolve0.resolutionParams))
         }
@@ -1035,7 +1035,7 @@ object ResolveTests extends TestSuite {
 
           val unixCommonDepOpt =
             res.minDependencies.find(_.module == mod"io.netty:netty-transport-native-unix-common")
-          assert(unixCommonDepOpt.exists(!_.optional))
+          assert(unixCommonDepOpt.exists(!_.optional.contains(true)))
 
           await(validateDependencies(res, resolve0.resolutionParams))
         }

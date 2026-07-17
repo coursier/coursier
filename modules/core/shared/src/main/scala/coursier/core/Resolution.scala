@@ -433,12 +433,16 @@ object Resolution {
           val newConfig  = Configuration.empty
           val newVersion = if (clearVersion) VersionConstraint0.empty else v.versionConstraint
           val values =
-            if (v.config != newConfig || v.versionConstraint != newVersion || v.optional)
+            if (
+              v.config != newConfig ||
+              v.versionConstraint != newVersion ||
+              v.optional.contains(true)
+            )
               DependencyManagement.Values(
                 newConfig,
                 newVersion,
                 v.minimizedExclusions,
-                optional = false
+                optional = None
               )
             else
               v
@@ -541,7 +545,7 @@ object Resolution {
           if (mgmtValues.config.nonEmpty && variant.isEmpty)
             variant = Variant.Configuration(mgmtValues.config)
 
-          if (mgmtValues.optional && !dep.optional)
+          if (mgmtValues.optional.contains(true) && !dep.optional.contains(true))
             dep = dep.withOptional(mgmtValues.optional)
         }
 
@@ -956,7 +960,7 @@ object Resolution {
           // and expect dep.configuration to be filled here
 
           val dep =
-            if (from.optional && !dep0.optional)
+            if (from.optional.contains(true) && !dep0.optional.contains(true))
               dep0.withOptional(true)
             else
               dep0
@@ -1008,7 +1012,7 @@ object Resolution {
     * Does not follow optional dependencies.
     */
   def defaultFilter(dep: Dependency): Boolean =
-    !dep.optional
+    !dep.optional.contains(true)
 
   // Same types as sbt, see
   // https://github.com/sbt/sbt/blob/47cd001eea8ef42b7c1db9ffdf48bec16b8f733b/main/src/main/scala/sbt/Defaults.scala#L227
