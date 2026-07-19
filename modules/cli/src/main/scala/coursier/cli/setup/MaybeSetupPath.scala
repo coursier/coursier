@@ -2,13 +2,13 @@ package coursier.cli.setup
 
 import java.nio.file.Path
 
-import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
+import coursier.env.{EnvironmentUpdate, FishUpdater, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.install.InstallDir
 import coursier.util.Task
 
 case class MaybeSetupPath(
   installDir: InstallDir,
-  envVarUpdaterOpt: Option[Either[WindowsEnvVarUpdater, ProfileUpdater]],
+  envVarUpdaterOpt: Option[Either[WindowsEnvVarUpdater, Either[ProfileUpdater, FishUpdater]]],
   getEnv: String => Option[String],
   pathSeparator: String,
   confirm: Confirm
@@ -46,7 +46,7 @@ case class MaybeSetupPath(
                 windowsEnvVarUpdater.applyUpdate(envUpdate)
               }
           }
-        case Some(Right(profileUpdater)) =>
+        case Some(Right(Left(profileUpdater))) =>
           val profileFilesStr = profileUpdater.profileFiles().map(dirStr)
           confirm.confirm(
             s"Should we add $binDirStr to your PATH via ${profileFilesStr.mkString(", ")}?",
@@ -56,6 +56,18 @@ case class MaybeSetupPath(
             case true =>
               Task.delay {
                 profileUpdater.applyUpdate(envUpdate, MaybeSetupPath.headerComment)
+              }
+          }
+        case Some(Right(Right(fishUpdater))) =>
+          val profileFilesStr = fishUpdater.profileFiles().map(dirStr)
+          confirm.confirm(
+            s"Should we add $binDirStr to your PATH via ${profileFilesStr.mkString(", ")}?",
+            default = true
+          ).flatMap {
+            case false => Task.point(())
+            case true =>
+              Task.delay {
+                fishUpdater.applyUpdate(envUpdate, MaybeSetupPath.headerComment)
               }
           }
       }
@@ -73,18 +85,26 @@ case class MaybeSetupPath(
         Task.delay {
           windowsEnvVarUpdater.tryRevertUpdate(envUpdate)
         }
-      case Some(Right(profileUpdater)) =>
+      case Some(Right(Left(profileUpdater))) =>
         val profileFilesStr = profileUpdater.profileFiles().map(dirStr)
         Task.delay {
           profileUpdater.tryRevertUpdate(MaybeSetupPath.headerComment)
+        }
+      case Some(Right(Right(fishUpdater))) =>
+        val profileFilesStr = fishUpdater.profileFiles().map(dirStr)
+        Task.delay {
+          fishUpdater.tryRevertUpdate(MaybeSetupPath.headerComment)
         }
     }
 
     val profileFilesOpt = envVarUpdaterOpt.flatMap {
       case Left(windowsEnvVarUpdater) =>
         None
-      case Right(profileUpdater) =>
+      case Right(Left(profileUpdater)) =>
         val profileFilesStr = profileUpdater.profileFiles().map(dirStr)
+        Some(profileFilesStr)
+      case Right(Right(fishUpdater)) =>
+        val profileFilesStr = fishUpdater.profileFiles().map(dirStr)
         Some(profileFilesStr)
     }
 

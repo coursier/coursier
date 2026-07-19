@@ -5,7 +5,7 @@ import java.nio.file.{Path, Paths}
 import cats.data.{Validated, ValidatedNel}
 import cats.implicits._
 import coursier.cli.options.EnvOptions
-import coursier.env.{EnvironmentUpdate, ProfileUpdater, WindowsEnvVarUpdater}
+import coursier.env.{EnvironmentUpdate, FishUpdater, ProfileUpdater, WindowsEnvVarUpdater}
 import coursier.launcher.internal.Windows
 import coursier.util.Task
 
@@ -21,18 +21,23 @@ final case class EnvParams(
 ) {
   def anyFlag: Boolean = env || setup
   // TODO Allow to customize some parameters of WindowsEnvVarUpdater / ProfileUpdater?
-  def envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater] =
+  def envVarUpdater: Either[WindowsEnvVarUpdater, Either[ProfileUpdater, FishUpdater]] =
     if (Properties.isWin)
       Left(WindowsEnvVarUpdater().withUseJni(Some(coursier.paths.Util.useJni())))
+    else if (isFish())
+      Right(Right(FishUpdater()))
     else
-      Right(
+      Right(Left(
         ProfileUpdater()
           .withHome(homeOpt.orElse(ProfileUpdater.defaultHome))
-      )
+      ))
+
+  private def isFish() =
+    System.getenv("SHELL").contains("fish")
 
   def setupTask(
     envUpdate: EnvironmentUpdate,
-    envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater],
+    envVarUpdater: Either[WindowsEnvVarUpdater, Either[ProfileUpdater, FishUpdater]],
     verbosity: Int,
     headerComment: String
   ): Task[Unit] =
@@ -52,7 +57,7 @@ final case class EnvParams(
                   System.err.println(msg)
                 windowsEnvVarUpdater.applyUpdate(envUpdate)
               }
-            case Right(profileUpdater) =>
+            case Right(Left(profileUpdater)) =>
               lazy val profileFiles = profileUpdater.profileFiles() // Task.delay(…)
               val profileFilesStr =
                 profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
@@ -61,6 +66,16 @@ final case class EnvParams(
                 if (verbosity >= 0)
                   System.err.println(msg)
                 profileUpdater.applyUpdate(envUpdate, headerComment)
+              }
+            case Right(Right(fishUpdater)) =>
+              lazy val profileFiles = fishUpdater.profileFiles() // Task.delay(…)
+              val profileFilesStr =
+                profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
+              val msg = s"Checking if ${profileFilesStr.mkString(", ")} need(s) updating."
+              Task.delay {
+                if (verbosity >= 0)
+                  System.err.println(msg)
+                fishUpdater.applyUpdate(envUpdate, headerComment)
               }
           }
       }
