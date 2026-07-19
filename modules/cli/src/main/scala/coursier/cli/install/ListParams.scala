@@ -3,7 +3,8 @@ package coursier.cli.install
 import java.nio.file.{Path, Paths}
 
 final case class ListParams(
-  installPath: Path
+  installPath: Path,
+  versions: Boolean
 )
 
 object ListParams {
@@ -12,6 +13,6 @@ object ListParams {
       case Some(d) => Paths.get(d)
       case None    => SharedInstallParams.defaultDir
     }
-    ListParams(dir)
+    ListParams(dir, options.versions)
   }
 }
