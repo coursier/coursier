@@ -76,11 +76,14 @@ public final class FileCredentials extends Credentials {
         .map(Boolean::parseBoolean).orElse(DirectCredentials.DEFAULT_HTTPS_ONLY);
       final boolean passOnRedirect = Optional.ofNullable(props.getProperty(prefix + ".pass-on-redirect"))
         .map(Boolean::parseBoolean).orElse(DirectCredentials.DEFAULT_PASS_ON_REDIRECT);
+      final boolean preemptive = Optional.ofNullable(props.getProperty(prefix + ".preemptive"))
+        .map(Boolean::parseBoolean).orElse(DirectCredentials.DEFAULT_PREEMPTIVE);
 
       return new DirectCredentials(host, user, password, realmOpt)
         .withMatchHost(matchHost)
         .withHttpsOnly(httpsOnly)
-        .withPassOnRedirect(passOnRedirect);
+        .withPassOnRedirect(passOnRedirect)
+        .withPreemptive(preemptive);
     }).collect(Collectors.toList());
   }
 

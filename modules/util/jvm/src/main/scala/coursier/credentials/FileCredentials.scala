@@ -63,12 +63,15 @@ object FileCredentials {
         .fold(DirectCredentials.defaultHttpsOnly)(_.toBoolean)
       val passOnRedirect = Option(props.getProperty(s"$prefix.pass-on-redirect"))
         .fold(false)(_.toBoolean)
+      val preemptive = Option(props.getProperty(s"$prefix.preemptive"))
+        .fold(DirectCredentials.defaultPreemptive)(_.toBoolean)
 
       DirectCredentials(host, user, password)
         .withRealm(realmOpt)
         .withMatchHost(matchHost)
         .withHttpsOnly(httpsOnly)
         .withPassOnRedirect(passOnRedirect)
+        .withPreemptive(preemptive)
     }
   }
 
