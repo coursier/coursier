@@ -223,13 +223,20 @@ object DependencyManagement {
     composeValues: Boolean = true
   ): GenericMap = addAll0(initialMap, entries.map(_.toMap), composeValues).map
 
-  private[coursier] case class AddAllResult(map: Map, mayContainGlobal: Boolean)
+  private[coursier] case class AddAllResult(
+    map: Map,
+    mayContainGlobal: Boolean,
+    changedFromHead: Boolean
+  )
   private[coursier] def addAll0(
     initialMap: Map,
     entries: Seq[GenericMap],
     composeValues: Boolean = true
   ): AddAllResult = {
     var mayContainGlobal = false
+    // whether the result differs from the first non-empty map, allowing callers to
+    // keep the original instance (and skip a full map comparison) when it doesn't
+    var changedFromHead = false
     val builder: coursier.util.HashMapBuilder[Key, Values] =
       coursier.util.HashMapBuilderFactory.apply
 
@@ -255,12 +262,14 @@ object DependencyManagement {
                   val composed = prev.orElse(incoming)
                   if (composed != prev) {
                     mayContainGlobal ||= composed.global
+                    changedFromHead = true
                     builder.add(key, composed)
                   }
                 }
               }
               else {
                 mayContainGlobal ||= incoming.global
+                changedFromHead = true
                 builder.add(key, incoming)
               }
           }
@@ -269,7 +278,7 @@ object DependencyManagement {
       case Nil =>
 
     }
-    AddAllResult(builder.result(), mayContainGlobal)
+    AddAllResult(builder.result(), mayContainGlobal, changedFromHead)
   }
 
   def addDependencies(

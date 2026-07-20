@@ -388,6 +388,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
             .withFiles(files.map(_._2))
             .withMainClass(mainClassOpt)
             .withRules(params.specific.assemblyRules)
+            .withShadingRules(params.specific.shadingRules)
             .withBaseManifest(params.specific.baseManifestOpt)
             .withPreambleOpt(preambleOpt)
         else if (params.specific.manifestJar)

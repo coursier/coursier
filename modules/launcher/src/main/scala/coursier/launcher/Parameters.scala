@@ -24,7 +24,9 @@ object Parameters {
     preambleOpt: Option[Preamble] = Some(Preamble()),
     extraZipEntries: Seq[(ZipEntry, Array[Byte])] = Nil,
     @since("2.0.0-RC6-27")
-    baseManifest: Option[Array[Byte]] = None
+    baseManifest: Option[Array[Byte]] = None,
+    @since
+    shadingRules: Seq[ShadingRule] = Nil
   ) extends Parameters {
     def withMainClass(mainClass: String): Assembly =
       withMainClass(Some(mainClass))
