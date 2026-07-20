@@ -47,6 +47,9 @@ final case class ResolveOptions(
   @ValueDescription("org:name")
     whatDependsOn: List[String] = Nil,
   @Group(OptionGroup.resolution)
+  @HelpMessage("Deduplicate nodes in the reversed dependency tree (--reverse-tree / --what-depends-on)")
+    deduplicateTree: Boolean = false,
+  @Group(OptionGroup.resolution)
   @HelpMessage("Print candidate artifact URLs")
   @Hidden
     candidateUrls: Boolean = false,

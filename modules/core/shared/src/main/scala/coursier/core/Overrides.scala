@@ -50,6 +50,23 @@ sealed abstract class Overrides extends Product with Serializable {
   def hasProperties: Boolean
   private[coursier] def mayContainGlobal: Boolean
 
+  /** Global version constraints entries, extracted once per instance
+    *
+    * `Overrides` instances are typically shared by many dependencies, so caching this extraction
+    * saves a full map traversal (and fake module creations) per dependency in `Resolution.merge0`.
+    */
+  private[core] final def globalVersionConstraints
+    : Vector[(Module, coursier.version.VersionConstraint)] =
+    cached("globalVersionConstraints") {
+      val b = Vector.newBuilder[(Module, coursier.version.VersionConstraint)]
+      import scala.collection.compat._
+      map.foreachEntry { (k, v) =>
+        if (v.global)
+          b += k.fakeModule -> v.versionConstraint
+      }
+      b.result()
+    }
+
   final lazy val enforceGlobalStrictVersions: Overrides =
     map { (k, v) =>
       (k, v.withGlobal(true))
@@ -125,7 +142,7 @@ object Overrides {
           mayContainGlobal ||= updated._2.global
           updated
       }
-      if (changed) Overrides.Impl(updatedMap, mayContainGlobal)
+      if (changed) Overrides.make(updatedMap.toMap, mayContainGlobal)
       else this
     }
     private[coursier] def transform(f: (
@@ -144,7 +161,7 @@ object Overrides {
             newV
           }
           if (transformed eq map) this
-          else Overrides.Impl(transformed, mayContainGlobal)
+          else Overrides.make(transformed, mayContainGlobal)
         case _ =>
           map((k, v) => (k, f(k, v)))
       }
@@ -171,11 +188,26 @@ object Overrides {
   def empty: Overrides =
     empty0
 
+  // Interning `Overrides` instances makes equality checks between equal instances cheap
+  // (reference equality fast path), in particular when comparing the `Dependency` instances
+  // holding them, and lets equal instances share their internal memoization cache.
+  private[coursier] val instanceCache: java.util.concurrent.ConcurrentMap[Overrides, Overrides] =
+    coursier.util.Cache.createCache()
+  private def intern(overrides: Overrides): Overrides =
+    coursier.util.Cache.cacheMethod(instanceCache)(overrides)
+
+  private[core] def make(
+    map: DependencyManagement.Map,
+    mayContainGlobal: Boolean
+  ): Overrides =
+    if (map.isEmpty) empty0
+    else intern(Impl(map, mayContainGlobal))
+
   def apply(map: DependencyManagement.GenericMap): Overrides = {
     val emptyCount = map.valuesIterator.count(_.isEmpty)
     if (emptyCount == map.size) empty
-    else if (emptyCount == 0) Impl(map.toMap)
-    else Impl(map.filter(!_._2.isEmpty).toMap)
+    else if (emptyCount == 0) intern(Impl(map.toMap))
+    else intern(Impl(map.filter(!_._2.isEmpty).toMap))
   }
 
   def add(overrides: Overrides): Overrides =
@@ -194,12 +226,12 @@ object Overrides {
             Map.empty,
             Seq(overrides1.map, overrides2.map)
           )
-        if (temp.map == overrides1.map)
+        if (!temp.changedFromHead)
           overrides1
         else if (temp.map == overrides2.map)
           overrides2
         else
-          Overrides.Impl(temp.map, temp.mayContainGlobal)
+          make(temp.map, temp.mayContainGlobal)
     }
   }
   def add(overrides: Overrides*): Overrides =
@@ -211,6 +243,9 @@ object Overrides {
           Map.empty[DependencyManagement.Key, DependencyManagement.Values],
           more.map(_.map)
         )
-        Overrides.Impl(addAllResult.map, addAllResult.mayContainGlobal)
+        if (!addAllResult.changedFromHead)
+          more.head
+        else
+          make(addAllResult.map, addAllResult.mayContainGlobal)
     }
 }
