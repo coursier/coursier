@@ -193,12 +193,25 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
+      - name: Delete tag if building from a branch
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          for tag in $(git tag --points-at HEAD); do
+            git tag -d "$tag"
+          done
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
       - name: Publish
         run: |
-          ./mill -i mill.scalalib.SonatypeCentralPublishModule/
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --bundleName "coursier-${GITHUB_REF#refs/tags/v}"
+          else
+            for tag in $(git tag --points-at HEAD); do
+              git tag -d "$tag"
+            done
+            ./mill -i mill.scalalib.SonatypeCentralPublishModule/
+          fi
         env:
           MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}
           MILL_PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
@@ -467,10 +480,8 @@ jobs:
         disableFallback: true
     - name: Wait for sync to Central
       run: ./mill -i waitForSync
-      shell: bash
     - name: Copy artifacts
       run: ./mill -i copyBatLauncher
-      shell: bash
     - uses: actions/attest-build-provenance@v4
       if: startsWith(github.ref, 'refs/tags/v')
       with:
@@ -640,10 +651,13 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
+      - uses: coursier/setup-action@v3
+        with:
+          apps: scala-cli
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
-      - run: .github/scripts/scala-cli.sh .github/scripts/UpdateBrewFormula.scala
+      - run: scala-cli run --server=false .github/scripts/UpdateBrewFormula.scala
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
