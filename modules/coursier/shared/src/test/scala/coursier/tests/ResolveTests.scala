@@ -21,7 +21,7 @@ import coursier.error.ResolutionError
 import coursier.ivy.IvyRepository
 import coursier.maven.{MavenRepository, MavenRepositoryLike}
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
-import coursier.util.{Artifact, EitherT, ModuleMatchers, Task}
+import coursier.util.{Artifact, EitherT, ModuleMatchers, Print, Task}
 import coursier.util.StringInterpolators._
 import coursier.version.{ConstraintReconciliation, Version, VersionConstraint}
 import utest._
@@ -2347,6 +2347,33 @@ object ResolveTests extends TestSuite {
         )(
           dep"androidx.test.ext:junit:1.2.1"
         )
+      }
+
+      test("endorseStrictVersions tree") {
+        async {
+          val resolve0 = enableModules(resolve.addRepositories(Repositories.google))
+            .mapResolutionParams(
+              _.withDefaultVariantAttributes(
+                VariantSelector.AttributesBased(Map(
+                  "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
+                ))
+              )
+            )
+            .addDependencies(dep"androidx.test.ext:junit:1.2.1")
+          val res = await(resolve0.future())
+          val coreJvm = res.minDependencies
+            .find { dep =>
+              dep.module.organization.value == "org.jetbrains.kotlinx" &&
+              dep.module.name.value == "kotlinx-coroutines-core-jvm"
+            }
+            .getOrElse(sys.error("kotlinx-coroutines-core-jvm not in resolution"))
+          val tree = Print
+            .dependencyTree0(res, roots = Seq(coreJvm), colors = false)
+            .replace("\r\n", "\n")
+          val lines = tree.linesIterator.toVector
+          assert(lines.headOption.exists(_.contains("kotlinx-coroutines-core-jvm")))
+          assert(!lines.tail.exists(_.contains("kotlinx-coroutines-core")))
+        }
       }
 
       test("bom config graph") {

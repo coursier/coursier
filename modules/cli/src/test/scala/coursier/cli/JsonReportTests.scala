@@ -13,14 +13,19 @@ import coursier.core.{
   ModuleName,
   Organization,
   Resolution,
-  Type
+  Type,
+  VariantSelector
 }
+import coursier.core.VariantSelector.VariantMatcher
+import coursier.maven.MavenRepositoryLike
 import coursier.parse.{DependencyParser, ModuleParser}
 import coursier.testcache.TestCache
 import coursier.tests.TestHelpers
 import coursier.util.{InMemoryRepository, Task}
 import coursier.version.{Version, VersionConstraint}
 import utest._
+
+import java.io.File
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Properties
@@ -134,6 +139,49 @@ object JsonReportTests extends TestSuite {
       }
       test("material3") {
         androidCheck(dep"androidx.compose.material3:material3:1.0.1")
+      }
+    }
+
+    test("endorseStrictVersions") {
+      val withGoogle = resolve.addRepositories(Repositories.google)
+      val gradleResolve = withGoogle
+        .withRepositories(withGoogle.repositories.map {
+          case m: MavenRepositoryLike.WithModuleSupport => m.withCheckModule(true)
+          case other                                    => other
+        })
+        .mapResolutionParams(
+          _.withDefaultVariantAttributes(
+            VariantSelector.AttributesBased(Map(
+              "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
+            ))
+          )
+        )
+      for {
+        res <- gradleResolve
+          .addDependencies(dep"androidx.test.ext:junit:1.2.1")
+          .future()
+      } yield {
+        val artifacts = res.dependencyArtifacts0().map {
+          case (dep0, pub, art) => (dep0, pub, art, Option.empty[File])
+        }
+        val report = JsonReport.report(
+          res,
+          artifacts,
+          useSlashSeparator = Properties.isWin
+        )
+        val deps = ujson.read(report)("dependencies").arr
+        val coreJvm = deps
+          .find(_("coord").str.startsWith("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:"))
+          .getOrElse(sys.error("kotlinx-coroutines-core-jvm entry not found in report"))
+        val direct     = coreJvm("directDependencies").arr.map(_.str).toVector
+        val transitive = coreJvm("dependencies").arr.map(_.str).toVector
+        assert(direct.exists(_.startsWith("org.jetbrains:annotations:")))
+        assert(direct.exists(_.startsWith("org.jetbrains.kotlin:kotlin-stdlib")))
+        assert(!direct.exists(_.startsWith("org.jetbrains.kotlinx:kotlinx-coroutines-core:")))
+        assert(!direct.exists(_.startsWith("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:")))
+        assert(
+          !transitive.exists(_.startsWith("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:"))
+        )
       }
     }
 
