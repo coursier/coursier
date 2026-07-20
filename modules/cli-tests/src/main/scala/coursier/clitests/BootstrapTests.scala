@@ -5,13 +5,14 @@ import java.net.{ServerSocket, URI}
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.util.Locale
+import java.util.jar.JarFile
 import java.util.regex.Pattern
 import java.util.zip.ZipFile
 
 import scala.concurrent.duration.Duration
 import scala.io.{Codec, Source}
 import scala.jdk.CollectionConverters._
-import scala.util.Properties
+import scala.util.{Properties, Using}
 
 import coursier.clitests.util.TestAuthProxy
 import coursier.util.StringInterpolators._
@@ -346,6 +347,36 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       }
     }
 
+    test("assembly without main class") {
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0)
+        os.proc(
+          launcher,
+          "bootstrap",
+          "--assembly",
+          "--no-main-class",
+          "-o",
+          "lib-assembly.jar",
+          "io.get-coursier:echo:1.0.1",
+          extraOptions
+        ).call(cwd = tmpDir)
+
+        val jar = tmpDir / "lib-assembly.jar"
+
+        // --no-main-class makes --preamble default to false, so the assembly must be a
+        // plain JAR (a ZIP, starting with the "PK" magic bytes) rather than a launcher
+        // with a shell / bat preamble prepended to it.
+        val firstBytes = new String(os.read.bytes(jar).take(2), "UTF-8")
+        assert(firstBytes == "PK")
+
+        // and the resulting manifest must not reference any main class
+        val mainClassOpt = Using.resource(new JarFile(jar.toIO)) { jarFile =>
+          Option(jarFile.getManifest.getMainAttributes.getValue("Main-Class"))
+        }
+        assert(mainClassOpt.isEmpty)
+      }
+    }
+
     test("hybrid") {
       TestUtil.withTempDir { tmpDir =>
         LauncherTestUtil.run(
@@ -544,6 +575,59 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
           Seq("./coursier-test.jar", "--help"),
           directory = tmpDir
         )
+      }
+    }
+
+    test("assembly relocation") {
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0)
+        os.proc(
+          launcher,
+          "bootstrap",
+          "--assembly",
+          "-o",
+          "echo-relocated.jar",
+          "io.get-coursier:echo:1.0.1",
+          "--relocate",
+          "coursier.echo=shaded.coursier.echo",
+          "-M",
+          "shaded.coursier.echo.Echo",
+          extraOptions
+        ).call(cwd = tmpDir)
+
+        // the classes of the relocated package were moved, and nothing remains under the
+        // original package
+        val zf = new ZipFile((tmpDir / "echo-relocated.jar").toIO)
+        val names =
+          try zf.entries().asScala.map(_.getName).toSet
+          finally zf.close()
+        assert(names.contains("shaded/coursier/echo/Echo.class"))
+        assert(!names.exists(_.startsWith("coursier/echo/")))
+
+        // the relocated assembly still runs (its Main-Class points at the relocated class)
+        val output = os.proc("java", "-jar", "echo-relocated.jar", "foo")
+          .call(cwd = tmpDir)
+          .out.text()
+        val expectedOutput = "foo" + System.lineSeparator()
+        assert(output == expectedOutput)
+      }
+    }
+
+    test("assembly relocation requires assembly") {
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0)
+        val res = os.proc(
+          launcher,
+          "bootstrap",
+          "-o",
+          "echo-relocated",
+          "io.get-coursier:echo:1.0.1",
+          "--relocate",
+          "coursier.echo=shaded.coursier.echo",
+          extraOptions
+        ).call(cwd = tmpDir, check = false, mergeErrIntoOut = true)
+        assert(res.exitCode != 0)
+        assert(res.out.text().contains("--relocate can only be used along with --assembly"))
       }
     }
 

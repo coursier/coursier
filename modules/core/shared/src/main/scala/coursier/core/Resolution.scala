@@ -313,17 +313,15 @@ object Resolution {
     val constraints = mutable.HashMap[Module, mutable.ArrayBuffer[VersionConstraint0]]()
     for { dep <- dependencies }
       if (dep.overridesMap.mayContainGlobal) {
-        import scala.collection.compat._
-        dep.overridesMap.map.foreachEntry {
-          (k, v) =>
-            if (v.global) {
-              val fakeDep = v.fakeDependency(k)
-              val b = constraints.getOrElseUpdate(
-                fakeDep.module,
-                mutable.ArrayBuffer[VersionConstraint0]()
-              )
-              b += fakeDep.versionConstraint
-            }
+        val globalEntries = dep.overridesMap.globalVersionConstraints
+        val it            = globalEntries.iterator
+        while (it.hasNext) {
+          val (mod, constraint) = it.next()
+          val b = constraints.getOrElseUpdate(
+            mod,
+            mutable.ArrayBuffer[VersionConstraint0]()
+          )
+          b += constraint
         }
       }
     val dependencies0 = dependencies.toVector
@@ -548,7 +546,12 @@ object Resolution {
         }
 
         for (dictForOverrides <- dictForOverridesOpt if dictForOverrides.nonEmpty) {
-          val newOverrides = Overrides.add(dictForOverrides, dep.overridesMap)
+          // Memoized for the same reason as `dictForOverridesOpt` above: many dependencies
+          // share the same (interned) `overridesMap` instances, making cache hits frequent,
+          // while the merge itself requires a full map copy.
+          val newOverrides = dictForOverrides.cached(("addOverrides", dep.overridesMap)) {
+            Overrides.add(dictForOverrides, dep.overridesMap)
+          }
           if (dep.overridesMap != newOverrides)
             dep = dep.withOverridesMap(newOverrides)
         }
@@ -1694,22 +1697,27 @@ object Resolution {
   lazy val reverseDependencies: Map[Dependency, Vector[Dependency]] = {
     val (updatedConflicts, updatedDeps, _) = nextDependenciesAndConflicts
 
-    val trDepsSeq =
-      for {
-        dep   <- updatedDeps
-        trDep <- finalDependencies0(dep).toOption.getOrElse(Nil)
-      } yield trDep.clearVersion -> dep.clearVersion
-
     val knownDeps = (updatedDeps ++ updatedConflicts)
       .map(_.clearVersion)
       .toSet
 
-    trDepsSeq
-      .groupBy(_._1)
-      .view
-      .mapValues(_.map(_._2).toVector)
-      .filterKeys(knownDeps)
-      .toMap // Eagerly evaluate filterKeys/mapValues
+    // Equivalent to grouping (trDep.clearVersion, dep.clearVersion) pairs by their first
+    // element, then filtering keys with knownDeps, but in a single pass without
+    // intermediate collections
+    val grouped =
+      new mutable.HashMap[Dependency, mutable.Builder[Dependency, Vector[Dependency]]]()
+    for {
+      dep   <- updatedDeps
+      trDep <- finalDependencies0(dep).toOption.getOrElse(Nil)
+      key = trDep.clearVersion
+      if knownDeps(key)
+    }
+      grouped.getOrElseUpdate(key, Vector.newBuilder[Dependency]) += dep.clearVersion
+
+    val b = Map.newBuilder[Dependency, Vector[Dependency]]
+    for ((key, valuesBuilder) <- grouped)
+      b += key -> valuesBuilder.result()
+    b.result()
   }
 
   /** Returns dependencies from the "next" dependency set, filtering out those that are no more

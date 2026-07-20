@@ -16,15 +16,10 @@ import scala.util.Properties
 
 trait CoursierJavaModule extends JavaModule {
   def jvmRelease: String =
-    if (Properties.isWin && isArm64) "11" else "8"
-  private def isArm64 =
-    Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
-      case Some("aarch64" | "arm64") => true
-      case _                         => false
-    }
+    CoursierJavaModule.defaultJvmRelease
   def javacSystemJvmId = Task {
-    if (Properties.isMac && isArm64) s"zulu:$jvmRelease"
-    else if (Properties.isWin && isArm64) s"liberica:$jvmRelease"
+    if (Properties.isMac && CoursierJavaModule.isArm64) s"zulu:$jvmRelease"
+    else if (Properties.isWin && CoursierJavaModule.isArm64) s"liberica:$jvmRelease"
     else s"adoptium:$jvmRelease"
   }
   def javacSystemJvm = Task {
@@ -49,14 +44,23 @@ trait CoursierJavaModule extends JavaModule {
     val hasModules = os.isDir(javaHome / "jmods")
     val hasRtJar   = os.isFile(rtJar)
     assert(hasModules || hasRtJar)
-    if (hasModules)
-      Seq("--system", javaHome.toString)
-    else
-      Seq("-source", jvmRelease, "-target", jvmRelease, "-bootclasspath", rtJar.toString)
+    val extraOpts =
+      if (hasModules) Seq("--system", javaHome.toString)
+      else Seq("-bootclasspath", rtJar.toString)
+    Seq("-source", jvmRelease, "-target", jvmRelease) ++ extraOpts
   }
   def javacOptions = Task {
     super.javacOptions() ++ maybeJdkJavacOpt() ++ Seq(
       "-Xlint:unchecked"
     )
   }
+}
+
+object CoursierJavaModule {
+  def defaultJvmRelease = if (Properties.isWin && isArm64) "11" else "8"
+  private def isArm64 =
+    Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
+      case Some("aarch64" | "arm64") => true
+      case _                         => false
+    }
 }

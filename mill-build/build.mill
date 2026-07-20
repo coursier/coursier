@@ -9,7 +9,7 @@ object `package` extends MillBuildRootModule {
     mvn"com.softwaremill.sttp.client4::core:4.0.9",
     mvn"io.get-coursier:coursier-launcher_2.13:2.1.25-M13",
     mvn"io.github.alexarchambault.mill::mill-native-image::0.2.6",
-    mvn"org.jsoup:jsoup:1.21.2",
+    mvn"org.jsoup:jsoup:1.22.2",
     mvn"com.eed3si9n.jarjarabrams:jarjar-abrams-core_2.13:1.14.1",
     mvn"com.lihaoyi::mill-contrib-jmh:1.1.3",
     mvn"org.apache.commons:commons-compress:1.27.0"

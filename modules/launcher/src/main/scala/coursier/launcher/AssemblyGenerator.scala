@@ -1,7 +1,7 @@
 package coursier.launcher
 
 import java.io.{ByteArrayInputStream, File, OutputStream}
-import java.nio.file.Path
+import java.nio.file.{Files, Path}
 import java.util.jar.{Attributes => JarAttributes, JarOutputStream}
 import java.util.zip.{CRC32, ZipEntry, ZipFile, ZipOutputStream}
 
@@ -13,22 +13,60 @@ object AssemblyGenerator extends Generator[Parameters.Assembly] {
 
   def generate(parameters: Parameters.Assembly, output: Path): Unit = {
 
-    FileUtil.withOutputStream(output) { os =>
+    if (parameters.shadingRules.isEmpty)
+      FileUtil.withOutputStream(output) { os =>
 
-      for (p <- parameters.preambleOpt.map(_.value))
-        os.write(p)
+        for (p <- parameters.preambleOpt.map(_.value))
+          os.write(p)
 
-      make(
-        parameters.files,
-        os,
-        parameters.finalAttributes,
-        parameters.rules,
-        parameters.extraZipEntries,
-        parameters.baseManifest
-      )
-    }
+        make(
+          parameters.files,
+          os,
+          parameters.finalAttributes,
+          parameters.rules,
+          parameters.extraZipEntries,
+          parameters.baseManifest
+        )
+      }
+    else
+      generateShaded(parameters, output)
 
     FileUtil.tryMakeExecutable(output)
+  }
+
+  private def generateShaded(parameters: Parameters.Assembly, output: Path): Unit = {
+
+    // First build the assembly (merging all the input JARs) without any preamble, then relocate
+    // classes in the resulting JAR, and finally prepend the preamble.
+
+    val mergedJar = Files.createTempFile("assembly-", ".jar")
+    val shadedJar = Files.createTempFile("assembly-shaded-", ".jar")
+
+    try {
+      FileUtil.withOutputStream(mergedJar) { os =>
+        make(
+          parameters.files,
+          os,
+          parameters.finalAttributes,
+          parameters.rules,
+          parameters.extraZipEntries,
+          parameters.baseManifest
+        )
+      }
+
+      Files.deleteIfExists(shadedJar)
+      Shading.shadeJars(Seq(mergedJar.toFile), shadedJar, parameters.shadingRules)
+
+      FileUtil.withOutputStream(output) { os =>
+        for (p <- parameters.preambleOpt.map(_.value))
+          os.write(p)
+        Files.copy(shadedJar, os)
+      }
+    }
+    finally {
+      Files.deleteIfExists(mergedJar)
+      Files.deleteIfExists(shadedJar)
+    }
   }
 
   private def make(
