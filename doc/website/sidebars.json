@@ -33,6 +33,7 @@
       "cache",
       "ttl",
       "other-repositories",
+      "other-mirrors",
       "other-credentials",
       "other-proxy",
       "json-report",
