@@ -3,4 +3,4 @@ switching from [docusaurus](https://v1.docusaurus.io/) to [Material for MkDocs](
 
 Please note that this directory contains the **new** website for coursier, published to <https://get-coursier.io/upcoming>.
 
-The upcoming website sources live under [`../doc`](../doc)
+The legacy website sources live under [`../doc`](../doc)
