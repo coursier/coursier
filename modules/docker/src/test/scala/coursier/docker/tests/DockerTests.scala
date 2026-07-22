@@ -9,6 +9,7 @@ import io.github.alexarchambault.isterminal.IsTerminal
 import utest._
 
 import scala.util.Properties
+import scala.util.control.NonFatal
 import coursier.docker.vm.VmFiles
 
 object DockerTests extends TestSuite {
@@ -38,7 +39,7 @@ object DockerTests extends TestSuite {
               memory = "2g",
               useVirtualization = useVirtualization
             )
-            vmOpt0 = Some {
+            def spawn(): Vm =
               Vm.spawn(
                 "cs-tests",
                 vmFiles,
@@ -46,7 +47,25 @@ object DockerTests extends TestSuite {
                 Nil,
                 outputTo = Some(Vm.defaultVmOutputDir() / "cs-tests")
               )
+
+            def spawnConnected(attemptsLeft: Int): Vm = {
+              val vm = spawn()
+              try {
+                vm.withSession(_ => ())
+                vm
+              }
+              catch {
+                case NonFatal(e) if attemptsLeft > 1 =>
+                  System.err.println(s"VM startup failed, retrying with a fresh VM: $e")
+                  vm.close()
+                  spawnConnected(attemptsLeft - 1)
+                case NonFatal(e) =>
+                  vm.close()
+                  throw e
+              }
             }
+
+            vmOpt0 = Some(spawnConnected(if (System.getenv("CI") == null) 1 else 2))
             vmOpt0
           }
         }
