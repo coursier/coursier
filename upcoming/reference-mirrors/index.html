@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../features-bom/">
+        <link rel="prev" href="../reference-repositories/">
       
       
-        <link rel="next" href="../features-docker/">
+        <link rel="next" href="../contrib/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -20,7 +20,7 @@
     
     
       
-        <title>Gradle Modules - coursier</title>
+        <title>Repository mirrors - coursier</title>
       
     
     
@@ -72,7 +72,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#gradle-modules-support" class="md-skip">
+        <a href="#repository-mirrors" class="md-skip">
           Skip to content
         </a>
       
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Gradle Modules
+              Repository mirrors
             
           </span>
         </div>
@@ -244,12 +244,10 @@
         
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
+      <li class="md-tabs__item">
         <a href="../features/" class="md-tabs__link">
           
   
@@ -336,10 +334,12 @@
         
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../reference-repositories/" class="md-tabs__link">
           
   
@@ -456,28 +456,23 @@
       
   
   
-    
   
   
-  
     
     
     
       
-        
-        
-      
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
         
           
-          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -488,7 +483,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             Features
@@ -604,30 +599,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Gradle Modules
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../features-gradle-modules/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -636,95 +611,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#attributes-matching" class="md-nav__link">
-    <span class="md-ellipsis">
-      Attributes matching
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#attribute-value-comparisons" class="md-nav__link">
-    <span class="md-ellipsis">
-      Attribute value comparisons
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#variant-attributes-as-a-substitute-to-maven-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      Variant attributes as a substitute to Maven configuration
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Variant attributes as a substitute to Maven configuration">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#fallback-from-maven-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      Fallback from Maven configuration
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fallback-to-maven-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      Fallback to Maven configuration
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#consistency-between-maven-configuration-and-variant-attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Consistency between Maven configuration and variant attributes
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#transitiveness-of-variant-attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Transitiveness of variant attributes
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -1299,23 +1185,28 @@
       
   
   
+    
   
   
+  
     
     
     
-      
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
-          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
             
   
   <span class="md-ellipsis">
@@ -1326,7 +1217,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
             Reference
@@ -1358,10 +1249,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../reference-mirrors/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Repository mirrors
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -1370,6 +1281,53 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#mirror-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mirror types
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#legacy-properties-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      Legacy properties files
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api" class="md-nav__link">
+    <span class="md-ellipsis">
+      API
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1604,69 +1562,27 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#attributes-matching" class="md-nav__link">
+  <a href="#mirror-types" class="md-nav__link">
     <span class="md-ellipsis">
-      Attributes matching
+      Mirror types
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#attribute-value-comparisons" class="md-nav__link">
+  <a href="#legacy-properties-files" class="md-nav__link">
     <span class="md-ellipsis">
-      Attribute value comparisons
+      Legacy properties files
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#variant-attributes-as-a-substitute-to-maven-configuration" class="md-nav__link">
+  <a href="#api" class="md-nav__link">
     <span class="md-ellipsis">
-      Variant attributes as a substitute to Maven configuration
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Variant attributes as a substitute to Maven configuration">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#fallback-from-maven-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      Fallback from Maven configuration
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fallback-to-maven-configuration" class="md-nav__link">
-    <span class="md-ellipsis">
-      Fallback to Maven configuration
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#consistency-between-maven-configuration-and-variant-attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Consistency between Maven configuration and variant attributes
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#transitiveness-of-variant-attributes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Transitiveness of variant attributes
+      API
     </span>
   </a>
   
@@ -1687,7 +1603,7 @@
                   
 
   
-    <a href="https://github.com/coursier/coursier/edit/main/docs/pages/features-gradle-modules.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/coursier/coursier/edit/main/docs/pages/reference-mirrors.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4v-2m10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1 2.1 2.1Z"/></svg>
     </a>
@@ -1696,188 +1612,78 @@
     
       
     
-    <a href="https://github.com/coursier/coursier/raw/main/docs/pages/features-gradle-modules.md" title="View source of this page" class="md-content__button md-icon">
+    <a href="https://github.com/coursier/coursier/raw/main/docs/pages/reference-mirrors.md" title="View source of this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 18c.56 0 1 .44 1 1s-.44 1-1 1-1-.44-1-1 .44-1 1-1m0-3c-2.73 0-5.06 1.66-6 4 .94 2.34 3.27 4 6 4s5.06-1.66 6-4c-.94-2.34-3.27-4-6-4m0 6.5a2.5 2.5 0 0 1-2.5-2.5 2.5 2.5 0 0 1 2.5-2.5 2.5 2.5 0 0 1 2.5 2.5 2.5 2.5 0 0 1-2.5 2.5M9.27 20H6V4h7v5h5v4.07c.7.08 1.36.25 2 .49V8l-6-6H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h4.5a8.15 8.15 0 0 1-1.23-2Z"/></svg>
     </a>
   
 
 
-<h1 id="gradle-modules-support">Gradle Modules support<a class="headerlink" href="#gradle-modules-support" title="Permanent link">&para;</a></h1>
-<p>coursier has some support for <a href="https://docs.gradle.org/current/userguide/publishing_gradle_module_metadata.html">Gradle Modules</a>. Gradle Modules allow resolutions to be more precise,
-fetching artifacts and dependencies more adapted to your environment. These are especially
-used in the Kotlin and Android ecosystems.</p>
-<p>Gradle Modules are <code>.module</code> files, like <a href="https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-dom-api-compat/2.1.10/">this one</a>, that are pushed alongside <code>.pom</code> files to Maven
-repositories by some Gradle projects. They contain richer metadata that POM files,
-allowing users to specify different dependency sets and artifacts depending on the
-platform being used (JVM, Android, native, …), in particular.</p>
-<p>Coursier is able to read and take into account <code>.module</code> files. Support for Gradle Modules needs
-to be explicitly enabled for now. See how that can be done <a href="../api-dependency/#gradle-module-variant">via the API</a>
-and <a href="../cli-dependency/#gradle-module-variant">via the CLI</a>.</p>
-<h2 id="attributes-matching">Attributes matching<a class="headerlink" href="#attributes-matching" title="Permanent link">&para;</a></h2>
-<p>When fetching dependencies with Gradle Module support enabled, you should pass variant attributes
-to coursier. These attributes specify details about the environment you want to fetch dependencies for.</p>
-<p>For example, from the command-line, resolving some dependencies with Gradle Module support enabled can fail at first if we don't pass variant attributes:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>$ cs resolve org.jetbrains.kotlinx:kotlinx-html-js:0.11.0 --enable-modules
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Resolution error: Error downloading org.jetbrains.kotlin:kotlin-stdlib:1.9.22
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  Found too many variants in org.jetbrains.kotlin:kotlin-stdlib:1.9.22 for { org.gradle.category=library, org.gradle.usage=runtime }:
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>jsRuntimeElements: {
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  org.gradle.category: library
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  org.gradle.jvm.environment: non-jvm
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>  org.gradle.usage: kotlin-runtime
-</span><span id="__span-0-8"><a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  org.jetbrains.kotlin.js.compiler: ir
-</span><span id="__span-0-9"><a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>  org.jetbrains.kotlin.platform.type: js
-</span><span id="__span-0-10"><a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>  $relocated: true
-</span><span id="__span-0-11"><a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>}
-</span><span id="__span-0-12"><a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>jsV1RuntimeElements: {
-</span><span id="__span-0-13"><a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>  org.gradle.category: library
-</span><span id="__span-0-14"><a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>  org.gradle.jvm.environment: non-jvm
-</span><span id="__span-0-15"><a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>  org.gradle.usage: kotlin-runtime
-</span><span id="__span-0-16"><a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>  org.jetbrains.kotlin.js.compiler: legacy
-</span><span id="__span-0-17"><a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>  org.jetbrains.kotlin.platform.type: js
-</span><span id="__span-0-18"><a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  $relocated: true
-</span><span id="__span-0-19"><a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>}
-</span><span id="__span-0-20"><a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>jvmRuntimeElements: {
-</span><span id="__span-0-21"><a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>  org.gradle.category: library
-</span><span id="__span-0-22"><a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>  org.gradle.jvm.environment: standard-jvm
-</span><span id="__span-0-23"><a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>  org.gradle.libraryelements: jar
-</span><span id="__span-0-24"><a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>  org.gradle.usage: java-runtime
-</span><span id="__span-0-25"><a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>  org.jetbrains.kotlin.platform.type: jvm
-</span><span id="__span-0-26"><a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>}
-</span><span id="__span-0-27"><a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>wasmJsRuntimeElements: {
-</span><span id="__span-0-28"><a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>  org.gradle.category: library
-</span><span id="__span-0-29"><a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>  org.gradle.jvm.environment: non-jvm
-</span><span id="__span-0-30"><a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>  org.gradle.usage: kotlin-runtime
-</span><span id="__span-0-31"><a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>  org.jetbrains.kotlin.platform.type: wasm
-</span><span id="__span-0-32"><a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>  org.jetbrains.kotlin.wasm.target: js
-</span><span id="__span-0-33"><a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>  $relocated: true
-</span><span id="__span-0-34"><a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>}
-</span><span id="__span-0-35"><a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>wasmWasiRuntimeElements: {
-</span><span id="__span-0-36"><a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>  org.gradle.category: library
-</span><span id="__span-0-37"><a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>  org.gradle.jvm.environment: non-jvm
-</span><span id="__span-0-38"><a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>  org.gradle.usage: kotlin-runtime
-</span><span id="__span-0-39"><a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>  org.jetbrains.kotlin.platform.type: wasm
-</span><span id="__span-0-40"><a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>  org.jetbrains.kotlin.wasm.target: wasi
-</span><span id="__span-0-41"><a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>  $relocated: true
-</span><span id="__span-0-42"><a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>}
-</span></code></pre></div></p>
-<p>The error implies that coursier wasn't able to pick a variant among the ones it found, that are displayed.
-In order to address that, we must pass variant attributes, that are going to be matched against those of the
-variants proposed by each module.</p>
-<p>Passing variant attributes resolves that issue:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>$ cs resolve org.jetbrains.kotlinx:kotlinx-html-js:0.11.0 --enable-modules --variant org.gradle.category=library --variant org.gradle.jvm.environment=standard-jvm
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>org.jetbrains:annotations:13.0:default
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>org.jetbrains.kotlin:kotlin-dom-api-compat:1.9.22:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>org.jetbrains.kotlin:kotlin-stdlib:1.9.22:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>org.jetbrains.kotlinx:kotlinx-html-js:0.11.0:{ org.gradle.category=library, org.gradle.jvm.environment=standard-jvm, org.gradle.usage=runtime }
-</span></code></pre></div></p>
-<p>In order to pick the variant of a module, coursier looks at the variant attributes it is passed as input
-(in the command above, <code>org.gradle.category</code> with value <code>library</code>, and <code>org.gradle.jvm.environment</code> with value
-<code>standard-jvm</code>). coursier iterates on each of those input attributes, and a variant is retained if
-and only if:</p>
-<ul>
-<li>it either doesn't have that attribute, or</li>
-<li>it has that attribute, and its value is the same as the one in the user input (matching of the values is actually more refined, see below)</li>
-</ul>
-<p>For a variant to be retained, either of those conditions have to be met for all input attributes.</p>
-<p>If only a single variant remains after that selection, it is picked. If none remain, resolution fails.
-If several variants remain, coursier keeps the one(s) that match(es) the most input values (second condition above
-met for the most input attributes); if that still corresponds to several variants, then resolution fails.</p>
-<h2 id="attribute-value-comparisons">Attribute value comparisons<a class="headerlink" href="#attribute-value-comparisons" title="Permanent link">&para;</a></h2>
-<p>Most of the time, values of input versus incoming module attributes are directly compared, and match
-if they're equal. For some attributes, the matching can be more loose:</p>
-<ul>
-<li>for <code>org.gradle.usage</code>, if users pass <code>api</code> as a value, then things like <code>java-api</code> or <code>kotlin-api</code>
-also match - more generally, anything ending in <code>-api</code> is accepted, alongside just <code>api</code></li>
-<li>still for <code>org.gradle.usage</code>, if users pass <code>runtime</code> as a value, then things like <code>java-runtime</code> or <code>kotlin-runtime</code>
-also match - more generally, anything ending in <code>-runtime</code> is accepted, alongside just <code>runtime</code></li>
-<li>for <code>org.gradle.jvm.version</code>, users can pass a JVM major version, like <code>8</code> or <code>17</code>, and any version
-higher or equal to that is accepted</li>
-</ul>
-<p>Note that this list may evolve in the future, as Gradle Module support in coursier gets refined.</p>
-<h2 id="variant-attributes-as-a-substitute-to-maven-configuration">Variant attributes as a substitute to Maven configuration<a class="headerlink" href="#variant-attributes-as-a-substitute-to-maven-configuration" title="Permanent link">&para;</a></h2>
-<p>This section describes the interplay between Maven configurations (<code>compile</code>, <code>runtime</code>, …) and
-variant attributes. This point is important to understand if you're obtaining surprising results
-in resolutions involving both modules having <code>.module</code> files and modules having only POM files.</p>
-<p>During resolution, variant attributes play the same role as Maven configurations: they help
-pick the exact dependency set and artifacts of a given dependency. Internally, a dependency
-has either variant attributes or a Maven configuration, but not both.</p>
-<p>Note that the variant attribute set or the Maven configuration can be empty,
-and these are assumed to be equivalent - and empty - in that case. By default, dependencies created via the API
-or on the command-line have an empty configuration.</p>
-<p>When a <code>.module</code> file is available for a dependency, 3 cases can happen:</p>
-<ul>
-<li>the dependency has an empty configuration or an empty variant attribute set. Then the default attribute
-  set is used. It's the one passed via <code>--variant</code> on the command-line or with <code>Resolve.withDefaultVariantAttributes</code>
-  or <code>Fetch.withDefaultVariantAttributes</code> via the API</li>
-<li>the dependency has variant attributes. In that case, these are used.</li>
-<li>the dependency has a configuration. In that case, an equivalent attribute set is computed <a href="#fallback-from-maven-configuration">as below</a>, and added
-  to the default attribute set (the entries of former taking precedence over those of the latter)</li>
-</ul>
-<p>When no module file is available, and a <code>.pom</code> file is used, 3 cases can happen:</p>
-<ul>
-<li>the dependency has an empty configuration or an empty variant attribute set. Then the default configuration
-  is used. It can be passed on the command-line via <code>--configuration</code> or <code>-c</code>, like <code>-c compile</code>, and with
-  <code>Resolve.withDefaultConfiguration</code> or <code>Fetch.withDefaultConfiguration</code> via the API. It defaults
-  to <code>default(runtime)</code>, which is equivalent to <code>runtime</code> in practice.</li>
-<li>the dependency has variant attributes. In that case, an equivalent configuration is computed from the attributes
-  <a href="#fallback-to-maven-configuration">as below</a>, or the default configuration is used if no configuration can be
-  computed from variant attributes.</li>
-<li>the dependency has a configuration. In that case, its configuration is used.</li>
-</ul>
-<h3 id="fallback-from-maven-configuration">Fallback from Maven configuration<a class="headerlink" href="#fallback-from-maven-configuration" title="Permanent link">&para;</a></h3>
-<p>When all we have is a Maven configuration when variant attributes are needed, the following variant attributes
-are used:</p>
-<ul>
-<li><code>compile</code> configuration<ul>
-<li><code>org.gradle.category=library</code></li>
-<li><code>org.gradle.usage=api</code></li>
-</ul>
-</li>
-<li>
-<p><code>runtime</code> or <code>default</code> configuration</p>
-<ul>
-<li><code>org.gradle.category=library</code></li>
-<li><code>org.gradle.usage=runtime</code></li>
-</ul>
-</li>
-<li>
-<p>other configurations: no variant attributes</p>
-</li>
-</ul>
-<p>Note that the default attributes (passed on the command-line via <code>--variant</code>) are added to those, but
-do not take precedence over them.</p>
-<h3 id="fallback-to-maven-configuration">Fallback to Maven configuration<a class="headerlink" href="#fallback-to-maven-configuration" title="Permanent link">&para;</a></h3>
-<p>When all we have is variant attributes when a Maven configuration is needed, the following configuration is used:</p>
-<ul>
-<li>if <code>org.gradle.usage</code> is in the attribute set, and its value is <code>api</code> or ends with <code>-api</code>, then the
-  <code>compile</code> configuration is used</li>
-<li>if <code>org.gradle.usage</code> is in the attribute set, and its value is <code>runtime</code> or ends with <code>-runtime</code>, then the
-  <code>runtime</code> configuration is used</li>
-<li>in all other cases, no configuration is deduced from the variant attributes, and the default configuration
-  ends up being used</li>
-</ul>
-<h2 id="consistency-between-maven-configuration-and-variant-attributes">Consistency between Maven configuration and variant attributes<a class="headerlink" href="#consistency-between-maven-configuration-and-variant-attributes" title="Permanent link">&para;</a></h2>
-<p>When passing default attributes and a default configuration to coursier, you should make sure that these are
-consistent. That is, the fallback configuration of the default attributes should correspond to the
-configuration, and the fallback attributes of the configuration ought to be contained in the default attributes.</p>
-<p>That helps get a consistent set of dependencies (compile time dependencies, or runtime dependencies), rather
-than a mix of both depending on whether dependencies have <code>.module</code> files available or not.</p>
-<p>In practice, that means that if the <code>org.gradle.usage</code> attribute is <code>api</code>, you should ask for
-<code>compile</code> as the default configuration; if the <code>org.gradle.usage</code> attribute is <code>runtime</code>, you should ask for
-<code>runtime</code> as the default configuration (which is the default for the default configuration).</p>
-<h2 id="transitiveness-of-variant-attributes">Transitiveness of variant attributes<a class="headerlink" href="#transitiveness-of-variant-attributes" title="Permanent link">&para;</a></h2>
-<p>Note that the user-specified input attributes above aren't the only input attributes taken into account.
-When a variant is picked during resolution, all its attributes are passed to its dependencies, which helps
-disambiguate variants of these dependencies. The user-specified attributes are part of those, because
-of the way these are passed around during resolution (see above), unless users manually specified variants
-for specific root dependencies, using a syntax like this for dependencies
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,variant.org.gradle.usage=kotlin-runtime,variant.org.jetbrains.kotlin.platform.type=js,variant.org.jetbrains.kotlin.js.compiler=ir,variant.org.gradle.category=library
-</span></code></pre></div></p>
-<p>Note that you shouldn't use this syntax, unless you really know what you are doing. If its
-attributes aren't part of the default attributes, and some transitive dependencies have only POM
-files, the <a href="#variant-attributes-as-a-substitute-to-maven-configuration">interplay between variant attributes and Maven configuration</a> may modify the resolution
-result in unexpected way, with the variant being unexpectedly lost during resolution sometimes.</p>
+<h1 id="repository-mirrors">Repository mirrors<a class="headerlink" href="#repository-mirrors" title="Permanent link">&para;</a></h1>
+<p>Repository mirrors replace repositories before coursier starts resolving dependencies. They are
+useful when an organization proxies public repositories through an internal repository manager, or
+when a geographically closer copy of a repository is available.</p>
+<p>For example, this makes requests that would go to Maven Central use an internal repository instead:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>cs config repositories.mirrors \
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  &quot;https://nexus.example.com/repository/maven-public=https://repo1.maven.org/maven2&quot;
+</span></code></pre></div>
+<p>The value has the form <code>destination=source1;source2;...</code>. Multiple mirror definitions can be passed
+as separate arguments:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cs config repositories.mirrors \
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>  &quot;https://nexus.example.com/repository/maven-public=https://repo1.maven.org/maven2&quot; \
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>  &quot;https://plugins.example.com/maven=https://plugins.gradle.org/m2&quot;
+</span></code></pre></div>
+<p>The <code>cs config</code> command writes these values to the shared Scala CLI configuration file. Coursier's
+JVM API and CLI read mirrors from that file automatically. Set <code>SCALA_CLI_CONFIG</code>, or the
+<code>scala-cli.config</code> Java property, to use another file.</p>
+<h2 id="mirror-types">Mirror types<a class="headerlink" href="#mirror-types" title="Permanent link">&para;</a></h2>
+<p>Coursier supports Maven mirrors and tree mirrors.</p>
+<p>A <strong>Maven mirror</strong> replaces the root of a matching Maven repository. It is the default type in the
+<code>repositories.mirrors</code> configuration:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>https://nexus.example.com/repository/maven-public=https://repo1.maven.org/maven2
+</span></code></pre></div>
+<p>Prefix the definition with <code>maven:</code> to make the type explicit. A source of <code>*</code> matches every Maven
+repository, but does not match Ivy repositories:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>maven:https://nexus.example.com/repository/maven-public=*
+</span></code></pre></div>
+<p>A <strong>tree mirror</strong> replaces a URL prefix and keeps the rest of the repository path. It works for both
+Maven and Ivy repositories. For example:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>tree:https://mirror.example.com/repositories=https://repo.example.com
+</span></code></pre></div>
+<p>With this definition, a Maven repository rooted at
+<code>https://repo.example.com/releases</code> is changed to
+<code>https://mirror.example.com/repositories/releases</code>.</p>
+<p>Mirror definitions are checked in order. The first matching definition is used for each repository.
+Authentication attached to the source repository is not copied to the mirror, so configure
+credentials for the mirror host separately when it requires authentication.</p>
+<h2 id="legacy-properties-files">Legacy properties files<a class="headerlink" href="#legacy-properties-files" title="Permanent link">&para;</a></h2>
+<p>Mirrors can also be declared in a <code>mirror.properties</code> file:</p>
+<div class="language-properties highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="na">internal.from</span><span class="o">=</span><span class="s">https://repo1.maven.org/maven2;https://plugins.gradle.org/m2</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="na">internal.to</span><span class="o">=</span><span class="s">https://nexus.example.com/repository/maven-public</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="na">internal.type</span><span class="o">=</span><span class="s">maven</span>
+</span></code></pre></div>
+<p>Each mirror has an arbitrary name (<code>internal</code> above), a semicolon-separated <code>.from</code> value, a <code>.to</code>
+value, and an optional <code>.type</code>. In properties files, <code>.type</code> defaults to <code>tree</code>; accepted values are
+<code>maven</code> and <code>tree</code>.</p>
+<p>By default, coursier looks for <code>mirror.properties</code> in its platform-specific configuration
+directories. <code>COURSIER_CONFIG_DIR</code> (or the <code>coursier.config-dir</code> Java property) changes those
+directories. <code>COURSIER_MIRRORS</code> (or <code>coursier.mirrors</code>) selects a properties file instead, while
+<code>COURSIER_EXTRA_MIRRORS</code> (or <code>coursier.mirrors.extra</code>) adds another properties file.</p>
+<h2 id="api">API<a class="headerlink" href="#api" title="Permanent link">&para;</a></h2>
+<p>The high-level API loads configured mirrors by default. Mirrors can also be supplied explicitly:</p>
+<div class="language-scala highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">import</span><span class="w"> </span><span class="nn">coursier</span><span class="p">.</span><span class="nc">Resolve</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">import</span><span class="w"> </span><span class="nn">coursier</span><span class="p">.</span><span class="nn">params</span><span class="p">.</span><span class="nc">MavenMirror</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="kd">val</span><span class="w"> </span><span class="n">resolve</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Resolve</span><span class="p">()</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="p">.</span><span class="n">addMirrors</span><span class="p">(</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span><span class="nc">MavenMirror</span><span class="p">(</span>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">      </span><span class="nc">Seq</span><span class="p">(</span><span class="s">&quot;https://repo1.maven.org/maven2&quot;</span><span class="p">),</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">      </span><span class="s">&quot;https://nexus.example.com/repository/maven-public&quot;</span>
+</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="p">)</span>
+</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">  </span><span class="p">)</span>
+</span></code></pre></div>
+<p>Use <code>.noMirrors</code> when a resolution must ignore both the default mirrors and mirror configuration
+files. <code>TreeMirror</code> provides the prefix-preserving behavior described above.</p>
 
 
 
@@ -1913,7 +1719,7 @@ result in unexpected way, with the variant being unexpectedly lost during resolu
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../features-bom/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Bill of Material">
+          <a href="../reference-repositories/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Repositories">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
@@ -1923,20 +1729,20 @@ result in unexpected way, with the variant being unexpectedly lost during resolu
                 Previous
               </span>
               <div class="md-ellipsis">
-                Bill of Material
+                Repositories
               </div>
             </div>
           </a>
         
         
           
-          <a href="../features-docker/" class="md-footer__link md-footer__link--next" aria-label="Next: Docker">
+          <a href="../contrib/" class="md-footer__link md-footer__link--next" aria-label="Next: Contributing">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Docker
+                Contributing
               </div>
             </div>
             <div class="md-footer__button md-icon">
