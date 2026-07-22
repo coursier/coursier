@@ -121,7 +121,7 @@ final class Vm(
       else 10.seconds
     val maxWait =
       if (System.getenv("CI") == null) 2.minutes
-      else 10.minutes
+      else 3.minutes
     val deadline = System.nanoTime() + maxWait.toNanos
     @tailrec
     def connect(): Session = {
