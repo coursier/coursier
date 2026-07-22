@@ -68,7 +68,7 @@ object Deps {
     def scodec                   = mvn"org.scodec::scodec-core:2.3.3"
     def shapeless                = mvn"com.chuusai::shapeless:2.3.12"
     def slf4JNop                 = mvn"org.slf4j:slf4j-nop:2.0.18"
-    def svm                      = mvn"org.graalvm.nativeimage:svm:21.3.18"
+    def svm                      = mvn"org.graalvm.nativeimage:svm:21.3.19"
     def tika                     = mvn"org.apache.tika:tika-core:3.3.1"
     def undertow                 = mvn"io.undertow:undertow-core:2.4.2.Final"
     def ujson                    = mvn"com.lihaoyi::ujson:4.3.2"
