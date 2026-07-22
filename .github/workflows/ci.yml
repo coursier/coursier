@@ -90,6 +90,7 @@ jobs:
         COURSIER_JNI: force
     - uses: actions/upload-artifact@v7
       if: steps.docker-tests.outcome == 'failure'
+      continue-on-error: true
       with:
         name: docker-vm-output-${{ matrix.OS }}-${{ matrix.SCALA_VERSION }}
         path: ~/Library/Application Support/Coursier/vm/output/
