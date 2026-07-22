@@ -97,7 +97,7 @@ object TestHelpers extends PlatformTestHelpers {
 
         val bomElements = res.boms match {
           case boms if boms.isEmpty => ""
-          case boms =>
+          case boms                 =>
             boms
               .map {
                 // quick hack to recycle former sha-1 values when config is empty
@@ -147,7 +147,7 @@ object TestHelpers extends PlatformTestHelpers {
         }
 
       val variantPart = rootDep.variantSelector match {
-        case _: VariantSelector.ConfigurationBased => ""
+        case _: VariantSelector.ConfigurationBased  => ""
         case other: VariantSelector.AttributesBased =>
           "_variant" + sha1(other.repr).take(7)
       }

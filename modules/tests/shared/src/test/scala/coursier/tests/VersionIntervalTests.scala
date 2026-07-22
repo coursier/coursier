@@ -180,8 +180,8 @@ object VersionIntervalTests extends TestSuite {
         assert(itv5 == None)
       }
       test("basic") {
-        val s1   = "[1.1,1.3]"
-        val itv1 = VersionParse.versionInterval(s1)
+        val s1                = "[1.1,1.3]"
+        val itv1              = VersionParse.versionInterval(s1)
         val expectedInterval1 = VersionInterval(
           Some(Version("1.1")),
           Some(Version("1.3")),
@@ -190,8 +190,8 @@ object VersionIntervalTests extends TestSuite {
         )
         assert(itv1 == Some(expectedInterval1))
 
-        val s2   = "(1.1,1.3]"
-        val itv2 = VersionParse.versionInterval(s2)
+        val s2                = "(1.1,1.3]"
+        val itv2              = VersionParse.versionInterval(s2)
         val expectedInterval2 = VersionInterval(
           Some(Version("1.1")),
           Some(Version("1.3")),
@@ -200,8 +200,8 @@ object VersionIntervalTests extends TestSuite {
         )
         assert(itv2 == Some(expectedInterval2))
 
-        val s3   = "[1.1,1.3)"
-        val itv3 = VersionParse.versionInterval(s3)
+        val s3                = "[1.1,1.3)"
+        val itv3              = VersionParse.versionInterval(s3)
         val expectedInterval3 = VersionInterval(
           Some(Version("1.1")),
           Some(Version("1.3")),
@@ -210,8 +210,8 @@ object VersionIntervalTests extends TestSuite {
         )
         assert(itv3 == Some(expectedInterval3))
 
-        val s4   = "(1.1,1.3)"
-        val itv4 = VersionParse.versionInterval(s4)
+        val s4                = "(1.1,1.3)"
+        val itv4              = VersionParse.versionInterval(s4)
         val expectedInterval4 = VersionInterval(
           Some(Version("1.1")),
           Some(Version("1.3")),
@@ -220,8 +220,8 @@ object VersionIntervalTests extends TestSuite {
         )
         assert(itv4 == Some(expectedInterval4))
 
-        val s5   = "(1.11.0, 1.12.0]"
-        val itv5 = VersionParse.versionInterval(s5)
+        val s5                = "(1.11.0, 1.12.0]"
+        val itv5              = VersionParse.versionInterval(s5)
         val expectedInterval5 = VersionInterval(
           Some(Version("1.11.0")),
           Some(Version("1.12.0")),
@@ -296,7 +296,7 @@ object VersionIntervalTests extends TestSuite {
 
       test("fixedVersion") {
         test {
-          val itv = VersionParse.versionInterval("[1.2]")
+          val itv              = VersionParse.versionInterval("[1.2]")
           val expectedInterval = VersionInterval(
             Some(Version("1.2")),
             Some(Version("1.2")),
@@ -334,7 +334,7 @@ object VersionIntervalTests extends TestSuite {
 
       test("multiRange") {
         test {
-          val itv = VersionParse.multiVersionInterval("[1.0,2.0)")
+          val itv              = VersionParse.multiVersionInterval("[1.0,2.0)")
           val expectedInterval = VersionInterval(
             Some(Version("1.0")),
             Some(Version("2.0")),
@@ -345,7 +345,7 @@ object VersionIntervalTests extends TestSuite {
         }
 
         test {
-          val itv = VersionParse.multiVersionInterval("[1.0,2.0),[3.0,4.0)")
+          val itv              = VersionParse.multiVersionInterval("[1.0,2.0),[3.0,4.0)")
           val expectedInterval = VersionInterval(
             Some(Version("3.0")),
             Some(Version("4.0")),
@@ -356,7 +356,7 @@ object VersionIntervalTests extends TestSuite {
         }
 
         test {
-          val itv = VersionParse.multiVersionInterval("[1.0,2.0),[3.0,4.0),[5.0,6.0)")
+          val itv              = VersionParse.multiVersionInterval("[1.0,2.0),[3.0,4.0),[5.0,6.0)")
           val expectedInterval = VersionInterval(
             Some(Version("5.0")),
             Some(Version("6.0")),
@@ -367,7 +367,7 @@ object VersionIntervalTests extends TestSuite {
         }
 
         test {
-          val itv = VersionParse.multiVersionInterval("(1.0,2.0),[3.0,4.0),(5.0,6.0)")
+          val itv              = VersionParse.multiVersionInterval("(1.0,2.0),[3.0,4.0),(5.0,6.0)")
           val expectedInterval = VersionInterval(
             Some(Version("5.0")),
             Some(Version("6.0")),

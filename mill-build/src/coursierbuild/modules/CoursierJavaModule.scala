@@ -23,7 +23,7 @@ trait CoursierJavaModule extends JavaModule {
     else s"adoptium:$jvmRelease"
   }
   def javacSystemJvm = Task {
-    val cache = coursier.cache.Cache.default
+    val cache    = coursier.cache.Cache.default
     val javaHome = JavaHome()
       .withCache(
         JvmCache()
@@ -58,7 +58,7 @@ trait CoursierJavaModule extends JavaModule {
 
 object CoursierJavaModule {
   def defaultJvmRelease = if (Properties.isWin && isArm64) "11" else "8"
-  private def isArm64 =
+  private def isArm64   =
     Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
       case Some("aarch64" | "arm64") => true
       case _                         => false

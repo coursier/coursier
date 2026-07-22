@@ -110,7 +110,7 @@ object Parameters {
       if (Properties.isWin) Some(Windows.pathExtensions) else None,
     isWindows: Boolean = Properties.isWin
   ) extends Parameters {
-    override def isNative: Boolean = true
+    override def isNative: Boolean            = true
     def withJavaHome(home: File): NativeImage =
       withJavaHome(Some(home))
   }

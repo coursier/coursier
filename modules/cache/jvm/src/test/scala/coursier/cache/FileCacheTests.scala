@@ -31,7 +31,7 @@ object FileCacheTests extends TestSuite {
       val fourthContent = "fourth pom"
 
       var serverContent = firstContent
-      val routes = HttpRoutes.of[IO] {
+      val routes        = HttpRoutes.of[IO] {
         case GET -> Root / "dir" / "foo.pom" =>
           Ok(serverContent)
       }
@@ -96,7 +96,7 @@ object FileCacheTests extends TestSuite {
             fileOrError match {
               case Left(_: ArtifactError.NotFound)                  =>
               case Left(_: ArtifactError.MissingOtherArtifactCheck) =>
-              case Left(other) =>
+              case Left(other)                                      =>
                 throw new Exception(other)
               case Right(content) =>
                 sys.error(s"Unexpected content at ${artifact.url}: ${os.read(os.Path(content))}")

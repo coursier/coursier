@@ -476,7 +476,7 @@ object ResolutionTests extends TestSuite {
       async {
         val dep   = dep"acme:play:2.4.0"
         val trDep = dep"acme:play-json:2.4.0"
-        val res = await(resolve0(
+        val res   = await(resolve0(
           Seq(dep)
         )).clearFinalDependenciesCache.clearProjectProperties
 
@@ -495,7 +495,7 @@ object ResolutionTests extends TestSuite {
     }
     test("twoTransitiveDependencyWithProps") {
       async {
-        val dep = dep"acme:play:2.4.1"
+        val dep    = dep"acme:play:2.4.1"
         val trDeps = Seq(
           dep"acme:play-json:2.4.0",
           dep"acme:config:1.3.0"
@@ -513,7 +513,7 @@ object ResolutionTests extends TestSuite {
     }
     test("exclude") {
       async {
-        val dep = dep"acme:play-extra-no-config:2.4.1"
+        val dep    = dep"acme:play-extra-no-config:2.4.1"
         val trDeps = Seq(
           dep"acme:play:2.4.1"
             .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"config")))),
@@ -533,7 +533,7 @@ object ResolutionTests extends TestSuite {
     }
     test("excludeOrgWildcard") {
       async {
-        val dep = dep"acme:play-extra-no-config-no:2.4.1"
+        val dep    = dep"acme:play-extra-no-config-no:2.4.1"
         val trDeps = Seq(
           dep"acme:play:2.4.1"
             .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"config")))),
@@ -567,7 +567,7 @@ object ResolutionTests extends TestSuite {
     }
     test("parentDepMgmt") {
       async {
-        val dep = dep"se.ikea:billy:18.0"
+        val dep    = dep"se.ikea:billy:18.0"
         val trDeps = Seq(
           dep"acme:play:2.4.0"
             .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"play-json"))))
@@ -585,7 +585,7 @@ object ResolutionTests extends TestSuite {
     }
     test("parentDependencies") {
       async {
-        val dep = dep"org.gnome:panel-legacy:7.0"
+        val dep    = dep"org.gnome:panel-legacy:7.0"
         val trDeps = Seq(
           dep"org.gnu:glib:13.4",
           dep"org.gnome:desktop:7.0"
@@ -603,7 +603,7 @@ object ResolutionTests extends TestSuite {
     }
     test("propertiesInExclusions") {
       async {
-        val dep = dep"com.mailapp:mail-client:2.1"
+        val dep    = dep"com.mailapp:mail-client:2.1"
         val trDeps = Seq(
           dep"gov.nsa:secure-pgp:10.0"
             .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"crypto"))))
@@ -635,7 +635,7 @@ object ResolutionTests extends TestSuite {
     }
     test("depsFromDefaultProfile") {
       async {
-        val dep = dep"com.github.dummy:libb:0.3.3"
+        val dep    = dep"com.github.dummy:libb:0.3.3"
         val trDeps = Seq(
           dep"org.escalier:librairie-standard:2.11.6"
         )
@@ -653,7 +653,7 @@ object ResolutionTests extends TestSuite {
     test("depsFromPropertyActivatedProfile") {
       val f =
         for (version <- Seq("0.5.3", "0.5.4", "0.5.5", "0.5.6", "0.5.8")) yield async {
-          val dep = Dependency(mod"com.github.dummy:libb", VersionConstraint(version))
+          val dep    = Dependency(mod"com.github.dummy:libb", VersionConstraint(version))
           val trDeps = Seq(
             dep"org.escalier:librairie-standard:2.11.6"
           )
@@ -696,7 +696,7 @@ object ResolutionTests extends TestSuite {
     test("depsScopeOverrideFromProfile") {
       async {
         // Like com.google.inject:guice:3.0 with org.sonatype.sisu.inject:cglib
-        val dep = dep"com.github.dummy:libb:0.4.2"
+        val dep    = dep"com.github.dummy:libb:0.4.2"
         val trDeps = Seq(
           dep"org.escalier:librairie-standard:2.11.6"
         )
@@ -714,7 +714,7 @@ object ResolutionTests extends TestSuite {
 
     test("exclusionsAndOptionalShouldGoAlong") {
       async {
-        val dep = dep"an-org:an-app:1.0"
+        val dep    = dep"an-org:an-app:1.0"
         val trDeps = Seq(
           dep"an-org:a-lib:1.0"
             .withMinimizedExclusions(MinimizedExclusions(Set((org"an-org", name"a-name")))),
@@ -952,7 +952,7 @@ object ResolutionTests extends TestSuite {
 
     test("mergingTransitiveDeps") {
       test - async {
-        val dep = dep"an-org:my-app:1.0"
+        val dep    = dep"an-org:my-app:1.0"
         val trDeps = Seq(
           dep"an-org:my-lib-1:1.1.0+build.018",
           dep"an-org:my-lib-2:1.0",
@@ -970,7 +970,7 @@ object ResolutionTests extends TestSuite {
       }
 
       test - async {
-        val dep = dep"an-org:my-app:1.1"
+        val dep    = dep"an-org:my-app:1.1"
         val trDeps = Seq(
           dep"an-org:my-lib-1:1.2.0",
           dep"an-org:my-lib-2:1.0",

@@ -11,9 +11,9 @@ object Search extends CoursierCommand[SearchOptions] {
   override def group: String = CommandGroup.channel
 
   override def run(options: SearchOptions, args: RemainingArgs): Unit = {
-    val params = SearchParams(options, args.all.nonEmpty).exitOnError()
-    val pool   = Sync.fixedThreadPool(params.cache.parallel)
-    val cache  = params.cache.cache(pool, params.output.logger())
+    val params   = SearchParams(options, args.all.nonEmpty).exitOnError()
+    val pool     = Sync.fixedThreadPool(params.cache.parallel)
+    val cache    = params.cache.cache(pool, params.output.logger())
     val channels = Channels(params.channels.channels, params.repositories.repositories, cache)
       .withVerbosity(params.output.verbosity)
     channels.searchAppName(args.all).attempt.unsafeRun(wrapExceptions = true)(cache.ec) match {

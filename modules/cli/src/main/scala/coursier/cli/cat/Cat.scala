@@ -11,7 +11,7 @@ import scala.concurrent.ExecutionContext
 import scala.util.Using
 
 object Cat extends CoursierCommand[CatOptions] {
-  override def hidden: Boolean = true
+  override def hidden: Boolean                            = true
   def run(options: CatOptions, args: RemainingArgs): Unit = {
 
     val params = CatParams(options).toEither match {

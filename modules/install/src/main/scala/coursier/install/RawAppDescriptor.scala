@@ -93,7 +93,7 @@ import scala.language.implicitConversions
       if (types0(Type.all))
         Set(Type.all)
       else {
-        val default0 = types0.isEmpty || types0(Type("_"))
+        val default0     = types0.isEmpty || types0(Type("_"))
         val defaultTypes =
           if (default0) {
             val sourceTypes  = Some(Type.source).filter(_ => classifiers0(Classifier.sources)).toSet
@@ -168,7 +168,7 @@ import scala.language.implicitConversions
   def overrideVersion(ver: String, useVersionOverrides: Boolean): RawAppDescriptor = {
     val base =
       if (useVersionOverrides) {
-        val ver0 = coursier.version.Version(ver)
+        val ver0               = coursier.version.Version(ver)
         val versionOverrideOpt = versionOverrides
           .iterator
           .flatMap { o =>
@@ -233,7 +233,7 @@ object RawAppDescriptor {
     implicit val decoder: DecodeJson[Properties] =
       DecodeJson { c =>
         c.focus.obj match {
-          case None => DecodeResult.fail("Expected JSON object", c.history)
+          case None      => DecodeResult.fail("Expected JSON object", c.history)
           case Some(obj) =>
             obj
               .toList
@@ -296,8 +296,8 @@ object RawAppDescriptor {
     def versionOverride: ValidatedNel[String, VersionOverride] = {
       val versionRangeV = VersionParse.versionInterval(versionRange)
         .toValidNel(s"""versionRange "$versionRange" is invalid""")
-      val repositoriesV = repositories.map(parseRepositories).sequence
-      val dependenciesV = dependencies.map(parseDependenices).sequence
+      val repositoriesV                       = repositories.map(parseRepositories).sequence
+      val dependenciesV                       = dependencies.map(parseDependenices).sequence
       val (mainClassOpt, defaultMainClassOpt) = mainClass.map(parseMainClass) match {
         case Some(Left(mainClass))         => (Some(mainClass), Some(""))
         case Some(Right(defaultMainClass)) => (Some(""), Some(defaultMainClass))
