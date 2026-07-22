@@ -42,7 +42,7 @@ object RawAppDescriptorTests extends TestSuite {
     decode: String => Either[String, T]
   ): Unit = {
     val content = readResource(path)
-    val value = decode(content) match {
+    val value   = decode(content) match {
       case Left(error)  => sys.error(s"Error decoding $path: $error")
       case Right(value) => value
     }

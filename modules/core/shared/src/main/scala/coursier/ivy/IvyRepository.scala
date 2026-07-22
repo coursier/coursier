@@ -256,7 +256,7 @@ import dataclass._
   ): EitherT[F, String, (Versions, String)] =
     availableVersions(module, fetch, "").map {
       case Some((listingUrl, l)) if l.nonEmpty =>
-        val latest = l.max
+        val latest  = l.max
         val release = {
           val l0 = l.filter(!_.repr.endsWith("SNAPSHOT"))
           if (l0.isEmpty) Version.zero
@@ -305,7 +305,7 @@ import dataclass._
     for {
       artifact <- EitherT(F.point(eitherArtifact))
       ivy      <- fetch(artifact)
-      proj0 <- EitherT(
+      proj0    <- EitherT(
         F.point {
           for {
             xml <- coursier.core.compatibility.xmlParseDom(ivy)
@@ -370,13 +370,13 @@ object IvyRepository {
     substituteDefault: Boolean = true
   ): Either[String, IvyRepository] =
     for {
-      propertiesPattern <- PropertiesPattern.parse(pattern)
+      propertiesPattern            <- PropertiesPattern.parse(pattern)
       metadataPropertiesPatternOpt <- metadataPatternOpt
         .fold[Either[String, Option[PropertiesPattern]]](Right(None))(
           PropertiesPattern.parse(_).map(Some(_))
         )
 
-      pattern <- propertiesPattern.substituteProperties(properties)
+      pattern            <- propertiesPattern.substituteProperties(properties)
       metadataPatternOpt <- metadataPropertiesPatternOpt
         .fold[Either[String, Option[Pattern]]](Right(None))(
           _.substituteProperties(properties).map(Some(_))

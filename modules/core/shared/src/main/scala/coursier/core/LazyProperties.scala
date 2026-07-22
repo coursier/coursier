@@ -53,7 +53,7 @@ private[coursier] sealed abstract class LazyProperties
   protected def resolvedMap: immutable.Map[String, String]
 
   override def toMap[K, V](
-    implicit ev: ((String, String)) <:< (K, V)
+    implicit ev: (String, String) <:< (K, V)
   ): immutable.Map[K, V] =
     resolvedMap.asInstanceOf[immutable.Map[K, V]]
 }
@@ -208,7 +208,7 @@ private[coursier] object LazyProperties {
       case (k, values: collection.Seq[_]) =>
         values.foreach {
           case s: String => b += ((k, s))
-          case other =>
+          case other     =>
             throw new IllegalArgumentException(
               s"Property value sequences must contain only strings, got ${other.getClass.getName}"
             )
@@ -216,7 +216,7 @@ private[coursier] object LazyProperties {
       case (k, values: Iterable[_]) =>
         values.foreach {
           case s: String => b += ((k, s))
-          case other =>
+          case other     =>
             throw new IllegalArgumentException(
               s"Property value collections must contain only strings, got ${other.getClass.getName}"
             )
@@ -279,7 +279,7 @@ private[coursier] object LazyProperties {
   ) extends AbstractMap[String, String] with PropertyValueLookup {
     override def lookupOrNull(key: String): PropertyExpr =
       owner.winnerEntryForKeyOrNull(key) match {
-        case null => null
+        case null  => null
         case entry =>
           entry.parsed
       }

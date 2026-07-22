@@ -153,7 +153,7 @@ object PrebuiltApp {
 
     def mainVersionsIterator(): Iterator[String] = {
       val it0 = desc.candidateMainVersions(cache, verbosity)
-      val it =
+      val it  =
         if (it0.hasNext) it0.map(_.asString)
         else desc.mainVersionOpt.iterator.map(_.asString)
       // check the latest 5 versions if preferPrebuilt is true
@@ -187,7 +187,7 @@ object PrebuiltApp {
       val artifactsIt = for {
         version <- mainVersionsIterator()
         isSnapshot = version.endsWith("SNAPSHOT")
-        baseUrl0 = pattern
+        baseUrl0   = pattern
           .replace("${version}", version)
           .replace("${platform}", platform.getOrElse(""))
         (baseUrl, archiveTypeAndPathOpt) = urlArchiveType(baseUrl0)

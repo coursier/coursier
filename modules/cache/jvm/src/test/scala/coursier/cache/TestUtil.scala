@@ -153,7 +153,7 @@ object TestUtil {
   }
 
   def withTmpDir0[T](f: Path => T): T = {
-    val dir = Files.createTempDirectory("coursier-test")
+    val dir                  = Files.createTempDirectory("coursier-test")
     val shutdownHook: Thread =
       new Thread {
         override def run() =

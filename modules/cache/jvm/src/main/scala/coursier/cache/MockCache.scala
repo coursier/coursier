@@ -92,7 +92,7 @@ import scala.util.{Failure, Success, Try}
         (acc, p) =>
           acc.flatMap {
             case Some(_) => acc
-            case None =>
+            case None    =>
               val path = p.resolve(MockCacheEscape.urlAsPath(artifact.url))
               S.schedule(pool)(Files.exists(path)).map {
                 case true  => Some(path)
@@ -102,7 +102,7 @@ import scala.util.{Failure, Success, Try}
       }
 
       val init0 = S.schedule(pool)(Files.exists(path)).flatMap {
-        case true => S.point(Right(path)): F[Either[ArtifactError, Path]]
+        case true  => S.point(Right(path)): F[Either[ArtifactError, Path]]
         case false =>
           val res: F[Either[ArtifactError, Path]] =
             if (writeMissing) {
@@ -121,7 +121,7 @@ import scala.util.{Failure, Success, Try}
                             .withAuthentication(artifact.authentication)
                             .connection()
                             .getInputStream
-                      val b = MockCache.readFullySync(is())
+                      val b            = MockCache.readFullySync(is())
                       val finalContent =
                         if (replaceByNames(artifact)) {
                           val name = artifact.url.drop(artifact.url.lastIndexOf("/") + 1)
@@ -257,20 +257,20 @@ object MockCache {
     Sync[F].delay {
       val t = Try {
         val is0 = is
-        val b =
+        val b   =
           try readFullySync(is0)
           finally is0.close()
 
         val s = new String(b, StandardCharsets.UTF_8)
         parseLinksUrl match {
-          case None => s
+          case None      => s
           case Some(url) =>
             WebPage.listElements(url, s).mkString("\n")
         }
       }
 
       t match {
-        case Success(r) => Right(r)
+        case Success(r)                                                        => Right(r)
         case Failure(e: java.io.FileNotFoundException) if e.getMessage != null =>
           Left(s"Not found: ${e.getMessage}")
         case Failure(e) =>

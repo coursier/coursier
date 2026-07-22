@@ -15,7 +15,7 @@ object CatsTests extends TestSuite {
 
   // few basic tests from CentralTests, to ensure everything is wired correctly with cats.effect.IO
 
-  private implicit def ioRuntime: IORuntime = IORuntime.global
+  private implicit def ioRuntime: IORuntime     = IORuntime.global
   private implicit val ioToFuture: ToFuture[IO] =
     new ToFuture[IO] {
       def toFuture[T](ec: ExecutionContext, f: IO[T]) =

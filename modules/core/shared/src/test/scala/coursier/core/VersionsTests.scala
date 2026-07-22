@@ -22,7 +22,7 @@ object VersionsTests extends TestSuite {
             None
           )
         val candidates = v.candidates(Latest0.Stable).toSeq
-        val expected = Seq(
+        val expected   = Seq(
           Version0("1.0.2"),
           Version0("1.0.1"),
           Version0("1.0.0")
@@ -43,7 +43,7 @@ object VersionsTests extends TestSuite {
           None
         )
         val candidates = v.candidates(Latest0.Stable).toSeq
-        val expected = Seq(
+        val expected   = Seq(
           Version0("1.0.2"),
           Version0("1.0.1"),
           Version0("1.0.0")

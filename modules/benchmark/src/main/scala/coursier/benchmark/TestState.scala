@@ -70,7 +70,7 @@ class TestState {
         val url  = s"https://repo1.maven.org/maven2/${org.replace('.', '/')}/$name/$v/$name-$v.pom"
         val str  = inMemoryCache.fromCache(url)
         val p    = MavenRepository.parseRawPomSax(str).toOption.get
-        val p0 = Pom.addOptionalDependenciesInConfig(
+        val p0   = Pom.addOptionalDependenciesInConfig(
           p.withActualVersionOpt0(Some(Version(v)))
             .withConfigurations(MavenRepository.defaultConfigurations),
           Set(Configuration.empty, Configuration.default),

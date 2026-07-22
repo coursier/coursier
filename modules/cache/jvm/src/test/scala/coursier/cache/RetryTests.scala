@@ -134,7 +134,7 @@ object RetryTests extends TestSuite {
         assert(TestretryHandler.attempts.get() == retryCount)
         result match {
           case Left(e: ArtifactError.InternalServerError) =>
-          case other =>
+          case other                                      =>
             throw new Exception(s"Unexpected result: $other", other.left.toOption.orNull)
         }
       }

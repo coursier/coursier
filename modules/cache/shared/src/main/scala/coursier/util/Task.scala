@@ -26,7 +26,7 @@ final case class Task[+T](value: ExecutionContext => Future[T]) extends AnyVal {
 
   def schedule(duration: Duration, es: ScheduledExecutorService): Task[T] =
     Task { implicit ec =>
-      val p = Promise[T]()
+      val p           = Promise[T]()
       val r: Runnable =
         new Runnable {
           def run() = value(ec).onComplete(p.complete)

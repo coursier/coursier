@@ -443,7 +443,7 @@ object ResolveRulesTests extends TestSuite {
               assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
               val evicted = f.conflict.asInstanceOf[Strict.EvictedDependencies]
               assert(evicted.evicted.length == 2)
-              val conflictedModules = evicted.evicted.map(_.conflict.module).toSet
+              val conflictedModules         = evicted.evicted.map(_.conflict.module).toSet
               val expectedConflictedModules = Set(
                 mod"io.argonaut:argonaut_2.11",
                 mod"org.scala-lang:scala-library"
@@ -481,7 +481,7 @@ object ResolveRulesTests extends TestSuite {
               assert(f.conflict.isInstanceOf[Strict.EvictedDependencies])
               val evicted = f.conflict.asInstanceOf[Strict.EvictedDependencies]
               assert(evicted.evicted.length == 1)
-              val conflict = evicted.evicted.head.conflict
+              val conflict         = evicted.evicted.head.conflict
               val expectedConflict = Conflict(
                 mod"io.argonaut:argonaut_2.11",
                 Version("6.2.3"),

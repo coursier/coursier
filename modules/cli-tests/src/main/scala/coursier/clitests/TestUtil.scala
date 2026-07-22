@@ -40,7 +40,7 @@ object TestUtil {
     Module(Organization("io.get-coursier"), ModuleName("props"), Map.empty),
     VersionConstraint("1.0.2")
   )
-  val propsDepStr = s"${propsDep.module}:${propsDep.versionConstraint.asString}"
+  val propsDepStr  = s"${propsDep.module}:${propsDep.versionConstraint.asString}"
   lazy val propsCp = coursier.Fetch()
     .addDependencies(propsDep)
     .run()
