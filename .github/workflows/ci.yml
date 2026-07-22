@@ -73,16 +73,32 @@ jobs:
       if: runner.os == 'Linux'
     # - run: .github/scripts/scala-native-setup.sh
     #   if: runner.os != 'Windows'
-    - run: ./mill -i dockerTests
+    - name: Run Docker tests
+      id: docker-tests
+      continue-on-error: true
+      run: ./mill -i dockerTests
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        COURSIER_JNI: force
+    - name: Retry Docker tests with a fresh VM
+      id: docker-tests-retry
+      if: steps.docker-tests.outcome == 'failure' && matrix.OS == 'macos-15-intel'
+      continue-on-error: true
+      run: ./mill -i dockerTests
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
     - uses: actions/upload-artifact@v7
-      if: failure()
+      if: steps.docker-tests.outcome == 'failure'
       with:
         name: docker-vm-output-${{ matrix.OS }}-${{ matrix.SCALA_VERSION }}
         path: ~/Library/Application Support/Coursier/vm/output/
         if-no-files-found: ignore
+    - name: Propagate Docker test failure
+      if: >-
+        steps.docker-tests.outcome == 'failure' &&
+        (matrix.OS != 'macos-15-intel' || steps.docker-tests-retry.outcome == 'failure')
+      run: exit 1
     - run: ./mill -i jvmTests
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
