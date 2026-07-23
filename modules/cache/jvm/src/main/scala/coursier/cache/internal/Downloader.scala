@@ -918,6 +918,7 @@ object Downloader {
         case e: ArtifactError.RetryableHttpError          => e.retryAfterOpt.map(retryAfterValue)
         case _: AccessDeniedException if Properties.isWin => None
         case _: javax.net.ssl.SSLException                => None
+        case _: java.net.UnknownHostException             => None
         case _: java.net.SocketException                  => None
         // Is that case really necessary?
         case e: IOException

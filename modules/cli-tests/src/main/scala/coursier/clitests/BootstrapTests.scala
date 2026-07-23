@@ -983,8 +983,17 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
               "SCALA_CLI_CONFIG" -> configFile.toString,
               "COURSIER_CACHE"   -> cache.toString,
               pathVarName        -> fullPath
-            )
+            ),
+            check = false,
+            stdout = os.Pipe
           )
+        if (res1.exitCode != 0) {
+          System.err.println(s"Failed to run $propsLauncher0 java.class.path")
+          System.err.println(s"Exit code: ${res1.exitCode}")
+          System.err.println("Standard output:")
+          System.err.print(res1.out.text())
+        }
+        assert(res1.exitCode == 0)
         val jars1 = res1.out.trim()
           .split(File.pathSeparator)
           .toVector
