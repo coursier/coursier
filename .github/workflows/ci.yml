@@ -73,7 +73,7 @@ jobs:
             SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
           - OS: "macos-15-intel"
             SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
-          - OS: "macos-14"
+          - OS: "macos-15"
             SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
           - OS: "windows-latest"
             SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
@@ -265,7 +265,7 @@ jobs:
         include:
           - OS: "ubuntu-24.04-arm"
           - OS: "macos-15-intel"
-          - OS: "macos-14"
+          - OS: "macos-15"
           - OS: "windows-latest"
     steps:
     - name: Don't convert LF to CRLF during checkout
@@ -342,7 +342,7 @@ jobs:
             OSSHORT: "windows"
           - OS: "macos-15-intel"
             OSSHORT: "mac"
-          - OS: "macos-14"
+          - OS: "macos-15"
             OSSHORT: "mac-arm"
           - OS: "ubuntu-24.04-arm"
             OSSHORT: "linux-arm"
