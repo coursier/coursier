@@ -1,18 +1,18 @@
 package coursier.core
 
+import dataclass.{data, since => unroll}
+
 import coursier.version.{
   VersionConstraint => VersionConstraint0,
   VersionInterval => VersionInterval0
 }
-import scala.annotation.unroll
-
 import scala.collection.mutable
 
 object DependencyManagement {
   type Map        = scala.collection.immutable.Map[Key, Values]
   type GenericMap = scala.collection.Map[Key, Values]
 
-  final case class Key(
+  @data case class Key(
     organization: Organization,
     name: ModuleName,
     `type`: Type,
@@ -52,7 +52,7 @@ object DependencyManagement {
       dep.depManagementKey
   }
 
-  final case class Values(
+  @data case class Values(
     config: Configuration,
     versionConstraint: VersionConstraint0,
     minimizedExclusions: MinimizedExclusions,

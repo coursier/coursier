@@ -1,5 +1,7 @@
 package coursier.install
 
+import dataclass.data
+
 import argonaut.{DecodeJson, EncodeJson, Parse}
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
@@ -11,7 +13,7 @@ import coursier.parse.RepositoryParser
   * @param channel
   * @param id
   */
-final case class RawSource(
+@data case class RawSource(
   repositories: List[String],
   channel: String,
   id: String

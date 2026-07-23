@@ -1,5 +1,7 @@
 package coursier.install
 
+import dataclass.{data, since => unroll}
+
 import java.io.{File, InputStream, OutputStream}
 import java.nio.file.attribute.FileTime
 import java.nio.file.{Files, Path, Paths, StandardCopyOption, StandardOpenOption}
@@ -18,11 +20,9 @@ import coursier.launcher.internal.FileUtil
 import coursier.launcher.Parameters.ScalaNative
 import coursier.util.{Artifact, Task}
 import coursier.version.VersionConstraint
-import scala.annotation.unroll
-
 import scala.jdk.CollectionConverters._
 
-final case class InstallDir(
+@data case class InstallDir(
   baseDir: Path = InstallDir.defaultDir,
   @unroll
   cache: Cache[Task] = Cache.default,

@@ -1,5 +1,7 @@
 package coursier.jvm
 
+import dataclass.data
+
 import java.io.IOException
 import java.nio.charset.Charset
 import java.nio.file.{FileSystem, FileSystems, Files, Path, Paths}
@@ -22,7 +24,7 @@ sealed abstract class JvmChannel extends Product with Serializable {
 
 object JvmChannel {
 
-  final case class FromModule(
+  @data case class FromModule(
     module: Module,
     versionConstraint: VersionConstraint = VersionConstraint("latest.release")
   ) extends JvmChannel {
@@ -57,12 +59,12 @@ object JvmChannel {
     )
   }
 
-  final case class FromUrl(url: String) extends JvmChannel {
+  @data case class FromUrl(url: String) extends JvmChannel {
     def repr: String =
       url
   }
 
-  final case class FromFile(path: Path) extends JvmChannel {
+  @data case class FromFile(path: Path) extends JvmChannel {
     def repr: String =
       path.toString
   }

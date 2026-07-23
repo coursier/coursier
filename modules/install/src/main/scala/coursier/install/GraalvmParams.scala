@@ -1,7 +1,10 @@
 package coursier.install
 
+import dataclass.data
 
-final case class GraalvmParams(
+
+
+@data case class GraalvmParams(
   defaultVersion: Option[String],
   extraNativeImageOptions: Seq[String]
 )

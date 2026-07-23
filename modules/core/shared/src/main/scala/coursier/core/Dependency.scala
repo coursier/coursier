@@ -1,9 +1,9 @@
 package coursier.core
 
+import dataclass.{data, since => unroll}
+
 import coursier.core.Validation._
 import coursier.version.{VersionConstraint => VersionConstraint0}
-import scala.annotation.unroll
-
 import java.util.concurrent.ConcurrentMap
 
 /** Dependencies with the same @module will typically see their @version-s merged.
@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentMap
   * The remaining fields are left untouched, some being transitively propagated (exclusions,
   * optional, in particular).
   */
-final case class Dependency(
+@data case class Dependency(
   module: Module,
   versionConstraint: VersionConstraint0,
   variantSelector: VariantSelector,

@@ -1,5 +1,7 @@
 package coursier.complete
 
+import dataclass.data
+
 import coursier.Resolve
 import coursier.cache.Cache
 import coursier.core.Repository
@@ -7,7 +9,7 @@ import coursier.util.Monad.ops._
 import coursier.util.Sync
 import coursier.util.Task
 
-final case class Complete[F[_]](
+@data case class Complete[F[_]](
   cache: Cache[F],
   repositories: Seq[Repository] = Resolve.defaultRepositories,
   scalaVersionOpt: Option[String] = None,
@@ -91,7 +93,7 @@ object Complete {
     else
       scalaVersion.split('.').take(2).mkString(".")
 
-  final case class Result(
+  @data case class Result(
     input: Repository.Complete.Input,
     results: Seq[(Repository, Either[Throwable, Seq[String]])]
   ) {

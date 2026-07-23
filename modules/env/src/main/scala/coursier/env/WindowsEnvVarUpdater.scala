@@ -1,8 +1,8 @@
 package coursier.env
 
-import scala.annotation.unroll
+import dataclass.{data, since => unroll}
 
-final case class WindowsEnvVarUpdater(
+@data case class WindowsEnvVarUpdater(
   powershellRunner: PowershellRunner = PowershellRunner(),
   target: String = "User",
   @unroll

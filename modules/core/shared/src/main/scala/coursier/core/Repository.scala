@@ -1,5 +1,7 @@
 package coursier.core
 
+import dataclass.data
+
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.util.Monad.ops._
 import coursier.version.{
@@ -384,15 +386,15 @@ object Repository {
       def from: Int
     }
     object Input {
-      final case class Org(input: String) extends Input {
+      @data case class Org(input: String) extends Input {
         def from: Int = 0
       }
-      final case class Name(organization: Organization, input: String, from: Int, requiredSuffix: String)
+      @data case class Name(organization: Organization, input: String, from: Int, requiredSuffix: String)
           extends Input {
         def orgInput: Org =
           Org(organization.value)
       }
-      final case class Ver(module: Module, input: String, from: Int) extends Input {
+      @data case class Ver(module: Module, input: String, from: Int) extends Input {
         def orgInput: Org =
           nameInput.orgInput
         def nameInput: Name = {
@@ -442,7 +444,7 @@ object Repository {
         }
     }
 
-    final case class Result(input: Input, completions: Seq[String])
+    @data case class Result(input: Input, completions: Seq[String])
 
     final class CompletingOrgException(input: String, cause: Throwable = null)
         extends Exception(s"Completing organization '$input'", cause)

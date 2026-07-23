@@ -1,16 +1,16 @@
 package coursier.jvm
 
+import dataclass.{data, since => unroll}
+
 import java.io.File
 
 import coursier.cache.{ArchiveCache, CacheLogger}
 import coursier.core.Repository
 import coursier.util.{Artifact, Task}
-import scala.annotation.unroll
-
 import scala.concurrent.duration.Duration
 
 // format: off
-final case class JvmCache(
+@data case class JvmCache(
   os: String = JvmChannel.defaultOs(),
   architecture: String = JvmChannel.defaultArchitecture(),
   defaultJdkNameOpt: Option[String] = Some(""), // empty value means use the default one for the passed os and architecure

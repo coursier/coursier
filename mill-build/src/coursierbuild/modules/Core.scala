@@ -6,6 +6,7 @@ import mill._
 trait Core extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-core"
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
+    Deps.dataClass,
     Deps.jsoniterMacros
   )
   def mvnDeps = Task {

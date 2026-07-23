@@ -1,5 +1,7 @@
 package coursier.install
 
+import dataclass.data
+
 import java.io.File
 import java.nio.file.{FileSystem, FileSystems, Path}
 import java.util.regex.Pattern.quote
@@ -14,7 +16,7 @@ sealed abstract class Channel extends Product with Serializable {
 
 object Channel {
 
-  final case class FromModule(
+  @data case class FromModule(
     module: Module,
     versionConstraint: VersionConstraint = VersionConstraint("latest.release")
   ) extends Channel {
@@ -50,17 +52,17 @@ object Channel {
     )
   }
 
-  final case class FromUrl(url: String) extends Channel {
+  @data case class FromUrl(url: String) extends Channel {
     def repr: String =
       url
   }
 
-  final case class FromDirectory(path: Path) extends Channel {
+  @data case class FromDirectory(path: Path) extends Channel {
     def repr: String =
       path.toString
   }
 
-  final case class Inline() extends Channel {
+  @data case class Inline() extends Channel {
     def repr: String =
       "inline"
   }

@@ -1,5 +1,7 @@
 package coursier
 
+import dataclass.{data, since => unroll}
+
 import java.util.concurrent.ConcurrentHashMap
 
 import coursier.cache.{Cache, CacheLogger}
@@ -27,14 +29,12 @@ import coursier.params.rule.{Rule, RuleResolution}
 import coursier.util._
 import coursier.util.Monad.ops._
 import coursier.version.{ConstraintReconciliation, VersionConstraint, VersionParse}
-import scala.annotation.unroll
-
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.higherKinds
 
 // format: off
-final case class Resolve[F[_]](
+@data case class Resolve[F[_]](
   cache: Cache[F],
   dependencies: Seq[Dependency] = Nil,
   repositories: Seq[Repository] = Resolve.defaultRepositories,

@@ -1,5 +1,7 @@
 package coursier.install
 
+import dataclass.{data, since => unroll}
+
 import java.io.File
 
 import coursier.cache.{Cache, CacheLogger}
@@ -10,9 +12,7 @@ import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Task}
 import coursier.util.StringInterpolators._
 import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
-import scala.annotation.unroll
-
-final case class AppDescriptor(
+@data case class AppDescriptor(
   repositories: Seq[Repository] = Nil,
   dependencies: Seq[JavaOrScalaDependency] = Nil,
   sharedDependencies: Seq[JavaOrScalaModule] = Nil,
@@ -357,7 +357,7 @@ final case class AppDescriptor(
 
 object AppDescriptor {
 
-  final case class GraalvmOptions(
+  @data case class GraalvmOptions(
     version: Option[String] = None,
     options: Seq[String] = Nil
   )

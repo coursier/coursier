@@ -1,5 +1,7 @@
 package coursier.params
 
+import dataclass.{data, since => unroll}
+
 import coursier.core.{
   Activation,
   Configuration,
@@ -12,9 +14,7 @@ import coursier.core.{
 import coursier.params.rule.{Rule, RuleResolution, Strict}
 import coursier.util.ModuleMatchers
 import coursier.version.{ConstraintReconciliation, Version, VersionConstraint}
-import scala.annotation.unroll
-
-final case class ResolutionParams(
+@data case class ResolutionParams(
   keepOptionalDependencies: Boolean = false,
   maxIterations: Int = 200,
   forceVersion0: Map[Module, VersionConstraint] = Map.empty,

@@ -1,5 +1,7 @@
 package coursier.jvm
 
+import dataclass.{data, since => unroll}
+
 import java.io.{File, IOException}
 import java.nio.file.{Files, Path}
 import java.util.Locale
@@ -10,9 +12,7 @@ import coursier.cache.ArchiveCache
 import coursier.env.EnvironmentUpdate
 import coursier.jvm.util.CommandOutput
 import coursier.util.Task
-import scala.annotation.unroll
-
-final case class JavaHome(
+@data case class JavaHome(
   cache: Option[JvmCache] = None,
   getEnv: Option[String => Option[String]] = Some(k => Option(System.getenv(k))),
   os: String = JvmChannel.defaultOs(),

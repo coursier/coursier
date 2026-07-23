@@ -1,13 +1,13 @@
 package coursier.launcher
 
+import dataclass.{data, since => unroll}
+
 import java.io.InputStream
 import java.nio.charset.{Charset, StandardCharsets}
 
-import scala.annotation.unroll
-
 import scala.io.{Codec, Source}
 
-final case class Preamble(
+@data case class Preamble(
   kind: Preamble.Kind = Preamble.Kind.Sh,
   javaOpts: Seq[String] = Nil,
   jarPath: Option[String] = None,

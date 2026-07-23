@@ -1,5 +1,7 @@
 package coursier.jvm
 
+import dataclass.data
+
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -243,7 +245,7 @@ object JvmIndex {
   }
 }
 
-final case class JvmIndex(
+@data case class JvmIndex(
   content: Map[String, Map[String, Map[String, Map[String, String]]]],
   jdkNamePrefix: Option[String] = Some("jdk@")
 ) {

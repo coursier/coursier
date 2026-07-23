@@ -1,5 +1,7 @@
 package coursier.parse
 
+import dataclass.data
+
 import coursier.core.{
   Classifier,
   Configuration,
@@ -53,7 +55,7 @@ object JavaOrScalaDependency {
         )
     }
 
-  final case class JavaDependency(dependency: Dependency, exclude: Set[JavaOrScalaModule])
+  @data case class JavaDependency(dependency: Dependency, exclude: Set[JavaOrScalaModule])
       extends JavaOrScalaDependency {
     def module: JavaOrScalaModule.JavaModule =
       JavaOrScalaModule.JavaModule(dependency.module)
@@ -82,7 +84,7 @@ object JavaOrScalaDependency {
     def withUnderlyingDependency(f: Dependency => Dependency): JavaDependency =
       copy(dependency = f(dependency))
   }
-  final case class ScalaDependency(
+  @data case class ScalaDependency(
     baseDependency: Dependency,
     fullCrossVersion: Boolean,
     withPlatformSuffix: Boolean,

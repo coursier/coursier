@@ -1,5 +1,6 @@
 package coursier.cache
 
+
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import coursier.cache.server.Model.{Artifact => ModelArtifact, _}
 import coursier.paths.CachePath
@@ -17,7 +18,7 @@ import scala.cli.config.Secret
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.util.Try
 
-final case class RemoteCache[F[_]: Sync](
+case class RemoteCache[F[_]: Sync](
   serverUrl: String,
   location: File,
   basicAuth: Option[Secret[String]] = None, // user:password

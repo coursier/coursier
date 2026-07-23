@@ -1,10 +1,10 @@
 package coursier.maven
 
+import dataclass.{since => unroll}
+
 import coursier.core._
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
-import scala.annotation.unroll
-
 import scala.collection.compat._
 
 object SbtMavenRepository {
@@ -163,7 +163,7 @@ object SbtMavenRepository {
     }
 }
 
-final case class SbtMavenRepository(
+case class SbtMavenRepository(
   val root: String,
   val authentication: Option[Authentication] = None,
   val changing: Option[Boolean] = None,

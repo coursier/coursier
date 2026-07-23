@@ -1,5 +1,7 @@
 package coursier.core
 
+import dataclass.data
+
 import coursier.util.{EitherT, Gather, Monad}
 import coursier.util.Monad.ops._
 import coursier.version.{
@@ -96,7 +98,7 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
   def current: Resolution
 }
 
-final case class Missing(
+@data case class Missing(
   missing0: Seq[(Module, VersionConstraint0)],
   current: Resolution,
   cont: Resolution => ResolutionProcess
@@ -199,14 +201,14 @@ final case class Missing(
 
 }
 
-final case class Continue(
+@data case class Continue(
   current: Resolution,
   cont: Resolution => ResolutionProcess
 ) extends ResolutionProcess {
 
   def next: ResolutionProcess = cont(current)
 
-  @tailrec def nextNoCont: ResolutionProcess =
+  @tailrec final def nextNoCont: ResolutionProcess =
     next match {
       case nextCont: Continue => nextCont.nextNoCont
       case other              => other
@@ -214,7 +216,7 @@ final case class Continue(
 
 }
 
-final case class Done(resolution: Resolution) extends ResolutionProcess {
+@data case class Done(resolution: Resolution) extends ResolutionProcess {
 
   def current: Resolution = resolution
 }

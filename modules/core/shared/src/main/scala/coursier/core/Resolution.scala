@@ -1,5 +1,7 @@
 package coursier.core
 
+import dataclass.{data, since => unroll}
+
 import coursier.core.LazyProperties.{PropertyEntry, PropertyLayer}
 import coursier.error.{DependencyError, VariantError}
 import coursier.util.Artifact
@@ -8,8 +10,6 @@ import coursier.version.{
   Version => Version0,
   VersionConstraint => VersionConstraint0
 }
-import scala.annotation.unroll
-
 import java.util.concurrent.ConcurrentHashMap
 import scala.annotation.tailrec
 import scala.collection.compat._
@@ -863,7 +863,7 @@ object Resolution {
         .map(_.properties)
     )
 
-    val projectWithProperties = withFinalProperties(
+    val projectWithProperties: Project = withFinalProperties(
       project.copy(properties = LazyProperties.merge(parentProperties0, project.properties))
     )
 
@@ -1176,7 +1176,7 @@ object Resolution {
   * @param errorCache:
   *   keeps track of the modules whose project definition could not be found
   */
-final case class Resolution(
+@data case class Resolution(
   rootDependencies: Seq[Dependency] = Nil,
   dependencySet: DependencySet = DependencySet.empty,
   forceVersions0: Map[Module, VersionConstraint0] = Map.empty,

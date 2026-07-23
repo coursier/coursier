@@ -1,9 +1,9 @@
 package coursier.util
 
-import coursier.core.{Module, ModuleName, Organization}
-import scala.annotation.unroll
+import dataclass.{data, since => unroll}
 
-final case class ModuleMatchers(
+import coursier.core.{Module, ModuleName, Organization}
+@data case class ModuleMatchers(
   exclude: Set[ModuleMatcher],
   include: Set[ModuleMatcher] = Set(),
   @unroll

@@ -1,5 +1,7 @@
 package coursier.params.rule
 
+import dataclass.data
+
 import coursier.core.Resolution
 import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
@@ -11,7 +13,7 @@ import coursier.error.conflict.UnsatisfiedRule
   * If `doTryResolve` is true, `tryResolve` will return the current Resolution, as if it was
   * attempting to address the issue. Else, it will fail early.
   */
-final case class AlwaysFail(doTryResolve: Boolean = false) extends Rule {
+@data case class AlwaysFail(doTryResolve: Boolean = false) extends Rule {
 
   import AlwaysFail._
 

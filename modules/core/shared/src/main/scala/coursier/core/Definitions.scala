@@ -1,11 +1,12 @@
 package coursier.core
 
+import dataclass.{data, since => unroll}
+
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap}
 import coursier.core.Validation._
 import coursier.error.VariantError
 import coursier.util.Artifact
 import coursier.version.{Version => Version0}
-import scala.annotation.unroll
 import scala.util.hashing.MurmurHash3
 
 final case class Organization(value: String) extends AnyVal {
@@ -43,7 +44,7 @@ object ModuleName {
   *
   * Using the same terminology as Ivy.
   */
-final case class Module(
+@data case class Module(
   organization: Organization,
   name: ModuleName,
   attributes: Map[String, String]
@@ -80,21 +81,9 @@ final case class Module(
       case (k, v) =>
         k.contains("$") || v.contains("$")
     }
-
-  def copy(
-    organization: Organization = this.organization,
-    name: ModuleName = this.name,
-    attributes: Map[String, String] = this.attributes
-  ) = Module(organization, name, attributes)
 }
 
 object Module {
-
-  private[core] val instanceCache: ConcurrentMap[Module, Module] =
-    coursier.util.Cache.createCache()
-
-  def apply(organization: Organization, name: ModuleName, attributes: Map[String, String]): Module =
-    coursier.util.Cache.cacheMethod(instanceCache)(new Module(organization, name, attributes))
 }
 
 final case class Type(value: String) extends AnyVal {
@@ -236,7 +225,7 @@ object Configuration {
     Configuration(confs.map(_.value).mkString(";"))
 }
 
-final case class Attributes(
+@data case class Attributes(
   `type`: Type,
   classifier: Classifier
 ) {
@@ -269,7 +258,7 @@ object Attributes {
   val empty = Attributes(Type.empty, Classifier.empty)
 }
 
-final case class Project(
+@data case class Project(
   module: Module,
   version0: Version0,
   dependencies0: Seq[(Variant, Dependency)],
@@ -776,7 +765,7 @@ object Project {
 }
 
 /** Extra project info, not used during resolution */
-final case class Info(
+@data case class Info(
   description: String,
   homePage: String,
   developers: Seq[Info.Developer],
@@ -831,19 +820,19 @@ object Info {
     licenseInfo = licenses.map(l => License(l._1, l._2, None, None))
   )
 
-  final case class Developer(
+  @data case class Developer(
     id: String,
     name: String,
     url: String
   )
 
-  final case class Scm(
+  @data case class Scm(
     url: Option[String],
     connection: Option[String],
     developerConnection: Option[String]
   )
 
-  final case class License(
+  @data case class License(
     name: String,
     url: Option[String],
     distribution: Option[String], // Maven-specific
@@ -854,7 +843,7 @@ object Info {
 }
 
 // Maven-specific
-final case class Profile(
+@data case class Profile(
   id: String,
   activeByDefault: Option[Boolean],
   activation: Activation,
@@ -864,7 +853,7 @@ final case class Profile(
 )
 
 // Maven-specific
-final case class SnapshotVersion(
+@data case class SnapshotVersion(
   classifier: Classifier,
   extension: Extension,
   value0: Version0,
@@ -910,7 +899,7 @@ object SnapshotVersion {
 }
 
 // Maven-specific
-final case class SnapshotVersioning(
+@data case class SnapshotVersioning(
   module: Module,
   version0: Version0,
   latest0: Version0,
@@ -992,7 +981,7 @@ object SnapshotVersioning {
     )
 }
 
-final case class Publication(
+@data case class Publication(
   name: String,
   `type`: Type,
   ext: Extension,
@@ -1008,17 +997,11 @@ final case class Publication(
 }
 
 object Publication {
-  private[core] val instanceCache: ConcurrentMap[Publication, Publication] =
-    coursier.util.Cache.createCache()
-
-  def apply(name: String, `type`: Type, ext: Extension, classifier: Classifier): Publication =
-    coursier.util.Cache.cacheMethod(instanceCache)(new Publication(name, `type`, ext, classifier))
-
   val empty: Publication =
     Publication("", Type.empty, Extension.empty, Classifier.empty)
 }
 
-final case class VariantPublication(
+@data case class VariantPublication(
   name: String,
   url: String,
   @unroll

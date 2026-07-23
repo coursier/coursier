@@ -1,12 +1,14 @@
 package coursier.ivy
 
+import dataclass.data
+
 import coursier.util.Traverse.TraverseOps
 import coursier.util.ValidationNel
 import fastparse._, NoWhitespace._
 
 import scala.language.implicitConversions
 
-final case class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty]) {
+@data case class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty]) {
 
   def string: String = chunks.map(_.string).mkString
 
@@ -53,7 +55,7 @@ final case class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty
   }
 }
 
-final case class Pattern(chunks: Seq[Pattern.Chunk]) {
+@data case class Pattern(chunks: Seq[Pattern.Chunk]) {
 
   def +:(chunk: Pattern.Chunk): Pattern =
     Pattern(chunk +: chunks)
@@ -136,15 +138,15 @@ object PropertiesPattern {
   }
 
   object ChunkOrProperty {
-    final case class Prop(name: String, alternative: Option[Seq[ChunkOrProperty]])
+    @data case class Prop(name: String, alternative: Option[Seq[ChunkOrProperty]])
         extends ChunkOrProperty {
       def string: String =
         s"$${" + name + alternative.fold("")(alt => "-" + alt.map(_.string).mkString) + "}"
     }
-    final case class Var(name: String) extends ChunkOrProperty {
+    @data case class Var(name: String) extends ChunkOrProperty {
       def string: String = "[" + name + "]"
     }
-    final case class Opt(content: Seq[ChunkOrProperty]) extends ChunkOrProperty {
+    @data case class Opt(content: Seq[ChunkOrProperty]) extends ChunkOrProperty {
       def string: String = "(" + content.map(_.string).mkString + ")"
     }
     object Opt {
@@ -155,7 +157,7 @@ object PropertiesPattern {
       def apply(elem: ChunkOrProperty, elem1: ChunkOrProperty, elem2: ChunkOrProperty): Opt =
         Opt(Seq(elem, elem1, elem2))
     }
-    final case class Const(value: String) extends ChunkOrProperty {
+    @data case class Const(value: String) extends ChunkOrProperty {
       def string: String = value
     }
 
@@ -208,10 +210,10 @@ object Pattern {
   }
 
   object Chunk {
-    final case class Var(name: String) extends Chunk {
+    @data case class Var(name: String) extends Chunk {
       def string: String = "[" + name + "]"
     }
-    final case class Opt(content: Seq[Chunk]) extends Chunk {
+    @data case class Opt(content: Seq[Chunk]) extends Chunk {
       def string: String = "(" + content.map(_.string).mkString + ")"
     }
     object Opt {
@@ -222,7 +224,7 @@ object Pattern {
       def apply(chunk: Chunk, chunk1: Chunk, chunk2: Chunk): Opt =
         Opt(Seq(chunk, chunk1, chunk2))
     }
-    final case class Const(value: String) extends Chunk {
+    @data case class Const(value: String) extends Chunk {
       def string: String = value
     }
 

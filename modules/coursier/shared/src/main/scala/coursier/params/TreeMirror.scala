@@ -1,5 +1,7 @@
 package coursier.params
 
+import dataclass.data
+
 import coursier.core.Repository
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepositoryLike
@@ -11,7 +13,7 @@ import coursier.maven.MavenRepositoryLike
   * `"https://mirror.c.com/maven/a/b/c"`, and `"https://artifacts.b.com/foo/e/f/g"` also exists at
   * `"https://mirror.c.com/maven/foo/e/f/g"`.
   */
-final case class TreeMirror(
+@data case class TreeMirror(
   from: Seq[String],
   to: String
 ) extends Mirror {

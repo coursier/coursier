@@ -1,11 +1,13 @@
 package coursier.core
 
+import dataclass.data
+
 import coursier.version.{Version => Version0, VersionInterval => VersionInterval0}
 
 import java.util.Locale
 
 // Maven-specific
-final case class Activation(
+@data case class Activation(
   properties: Seq[(String, Option[String])],
   os: Activation.Os,
   jdk: Option[Either[VersionInterval0, Seq[Version0]]]
@@ -56,7 +58,7 @@ final case class Activation(
 
 object Activation {
 
-  final case class Os(
+  @data case class Os(
     arch: Option[String],
     families: Set[String],
     name: Option[String],

@@ -1,8 +1,10 @@
 package coursier.jvm
 
+import dataclass.data
+
 import coursier.cache.ArchiveType
 
-final case class JvmIndexEntry(
+@data case class JvmIndexEntry(
   os: String,
   architecture: String,
   name: String,

@@ -1,5 +1,7 @@
 package coursier.credentials
 
+import dataclass.data
+
 import java.io.StringReader
 import java.nio.charset.Charset
 import java.nio.file.{Files, Paths}
@@ -7,7 +9,7 @@ import java.util.Properties
 
 import scala.jdk.CollectionConverters._
 
-final case class FileCredentials(
+@data case class FileCredentials(
   path: String,
   optional: Boolean = true
 ) extends Credentials {

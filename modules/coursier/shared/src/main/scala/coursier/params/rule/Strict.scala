@@ -1,12 +1,12 @@
 package coursier.params.rule
 
+import dataclass.{data, since => unroll}
+
 import coursier.core.Resolution
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.graph.Conflict.Conflicted
 import coursier.util.ModuleMatcher
-import scala.annotation.unroll
-
-final case class Strict(
+@data case class Strict(
   include: Set[ModuleMatcher] = Set(ModuleMatcher.all),
   @unroll
   exclude: Set[ModuleMatcher] = Set.empty,

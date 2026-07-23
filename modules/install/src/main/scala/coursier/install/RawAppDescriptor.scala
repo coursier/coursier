@@ -1,5 +1,7 @@
 package coursier.install
 
+import dataclass.{data, since => unroll}
+
 import argonaut._
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
@@ -20,11 +22,9 @@ import coursier.parse.{
   JavaOrScalaDependency
 }
 import coursier.version.{VersionInterval, VersionParse}
-import scala.annotation.unroll
-
 import scala.language.implicitConversions
 
-final case class RawAppDescriptor(
+@data case class RawAppDescriptor(
   dependencies: List[String],
   repositories: List[String] = Nil,
   shared: List[String] = Nil,
@@ -248,7 +248,7 @@ object RawAppDescriptor {
 
   import argonaut.Argonaut._
 
-  final case class RawGraalvmOptions(
+  @data case class RawGraalvmOptions(
     options: List[String] = Nil,
     version: Option[String] = None
   ) {
@@ -274,7 +274,7 @@ object RawAppDescriptor {
 
   }
 
-  final case class RawVersionOverride(
+  @data case class RawVersionOverride(
     versionRange: String,
     dependencies: Option[List[String]] = None,
     repositories: Option[List[String]] = None,
@@ -496,8 +496,7 @@ object RawAppDescriptor {
         "jvmOptionFile"    := j.jvmOptionFile,
         "prebuiltBinaries" := j.prebuiltBinaries,
         "jna"              := j.jna,
-        "versionOverrides" := j.versionOverrides,
-        "prebuiltFallback" := j.prebuiltFallback
+        "versionOverrides" := j.versionOverrides
       )
     }
   implicit val decoder: DecodeJson[RawAppDescriptor] =
@@ -521,7 +520,6 @@ object RawAppDescriptor {
         prebuiltBinaries <- (c --\ "prebuiltBinaries").as[Option[Map[String, String]]]
         jna              <- (c --\ "jna").as[Option[List[String]]]
         versionOverrides <- (c --\ "versionOverrides").as[Option[List[RawVersionOverride]]]
-        prebuiltFallback <- (c --\ "prebuiltFallback").as[Option[String]]
       } yield RawAppDescriptorJson(
         dependencies.getOrElse(Nil),
         repositories.getOrElse(Nil),
@@ -540,8 +538,7 @@ object RawAppDescriptor {
         jvmOptionFile,
         prebuiltBinaries.getOrElse(Map.empty),
         jna.getOrElse(Nil),
-        versionOverrides.getOrElse(Nil),
-        prebuiltFallback
+        versionOverrides.getOrElse(Nil)
       ).get
     }
 

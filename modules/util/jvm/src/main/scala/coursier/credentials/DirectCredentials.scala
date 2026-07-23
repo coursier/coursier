@@ -1,13 +1,14 @@
 package coursier.credentials
 
+import dataclass.{data, since => unroll}
+
 import java.net.URI
 
 import coursier.core.Authentication
 
 import scala.util.Try
-import scala.annotation.unroll
 
-final case class DirectCredentials(
+@data case class DirectCredentials(
   host: String = "",
   usernameOpt: Option[String] = None,
   passwordOpt: Option[Password[String]] = None,

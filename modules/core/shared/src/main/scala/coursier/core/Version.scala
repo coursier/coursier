@@ -1,5 +1,7 @@
 package coursier.core
 
+import dataclass.data
+
 import coursier.core.compatibility._
 
 import scala.annotation.tailrec
@@ -11,7 +13,7 @@ import scala.collection.compat.immutable.LazyList
   * aether-util/src/main/java/org/eclipse/aether/util/version/GenericVersion.java
   */
 @deprecated("Use coursier.version.Version instead", "2.1.25")
-final case class Version(repr: String) extends Ordered[Version] {
+@data case class Version(repr: String) extends Ordered[Version] {
   lazy val items: Vector[Version.Item] = Version.items(repr)
   def compare(other: Version)          = Version.listCompare(items, other.items)
   def isEmpty                          = items.forall(_.isEmpty)
@@ -46,13 +48,13 @@ object Version {
     def repr: String
     def next: Numeric
   }
-  final case class Number(value: Int) extends Numeric {
+  @data case class Number(value: Int) extends Numeric {
     val order                   = 0
     def next: Number            = Number(value + 1)
     def repr: String            = value.toString
     override def compareToEmpty = value.compare(0)
   }
-  final case class BigNumber(value: BigInt) extends Numeric {
+  @data case class BigNumber(value: BigInt) extends Numeric {
     val order                   = 0
     def next: BigNumber         = BigNumber(value + 1)
     def repr: String            = value.toString
@@ -61,7 +63,7 @@ object Version {
 
   /** Tags represent prerelease tags, typically appearing after - for SemVer compatible versions.
     */
-  final case class Tag(value: String) extends Item {
+  @data case class Tag(value: String) extends Item {
     val order              = -1
     private val otherLevel = -5
     lazy val level: Int =
@@ -84,7 +86,7 @@ object Version {
       else levelComp
     }
   }
-  final case class BuildMetadata(value: String) extends Item {
+  @data case class BuildMetadata(value: String) extends Item {
     val order                   = 1
     override def compareToEmpty = 0
   }

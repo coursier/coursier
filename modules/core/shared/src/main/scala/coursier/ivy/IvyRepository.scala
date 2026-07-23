@@ -1,5 +1,7 @@
 package coursier.ivy
 
+import dataclass.{data, since => unroll}
+
 import coursier.core.{
   ArtifactSource,
   Authentication,
@@ -19,9 +21,7 @@ import coursier.core.{
 import coursier.maven.{MavenAttributes, MavenComplete}
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version, VersionParse}
-import scala.annotation.unroll
-
-final case class IvyRepository(
+@data case class IvyRepository(
   pattern: Pattern,
   metadataPatternOpt: Option[Pattern] = None,
   changingOpt: Option[Boolean] = None,

@@ -1,14 +1,14 @@
 package coursier.cache
 
+import dataclass.{data, since => unroll}
+
 import java.net.{Proxy, URLConnection}
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
 import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
-import scala.annotation.unroll
-
 // format: off
-final case class ConnectionBuilder(
+@data case class ConnectionBuilder(
   url: String,
   authentication: Option[Authentication] = None,
   alreadyDownloaded: Long = 0L,

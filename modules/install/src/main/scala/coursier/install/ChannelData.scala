@@ -1,9 +1,11 @@
 package coursier.install
 
+import dataclass.data
+
 import java.nio.charset.StandardCharsets
 
 
-final case class ChannelData(
+@data case class ChannelData(
   channel: Channel,
   origin: String,
   data: Array[Byte]

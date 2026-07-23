@@ -1,5 +1,7 @@
 package coursier.core
 
+import dataclass.data
+
 import coursier.version.{Version => Version0}
 
 import scala.annotation.tailrec
@@ -13,7 +15,7 @@ sealed abstract class VariantSelector extends Product with Serializable {
 }
 
 object VariantSelector {
-  final case class ConfigurationBased(configuration: Configuration) extends VariantSelector {
+  @data case class ConfigurationBased(configuration: Configuration) extends VariantSelector {
     def asConfiguration: Option[Configuration] = Some(configuration)
     def isEmpty: Boolean                       = configuration.isEmpty
     def repr: String                           = configuration.value
@@ -40,7 +42,7 @@ object VariantSelector {
       }
   }
 
-  final case class AttributesBased(
+  @data case class AttributesBased(
     matchers: Map[String, VariantMatcher] = Map.empty
   ) extends VariantSelector {
     def asConfiguration: Option[Configuration] = None
@@ -170,19 +172,19 @@ object VariantSelector {
         else None
       def repr: String = "runtime"
     }
-    final case class Equals(value: String) extends VariantMatcher {
+    @data case class Equals(value: String) extends VariantMatcher {
       def matches(inputValue: String): Option[Int] =
         if (inputValue == value) Some(0)
         else None
       def repr: String = value
     }
-    final case class MinimumVersion(minimumVersion: Version0) extends VariantMatcher {
+    @data case class MinimumVersion(minimumVersion: Version0) extends VariantMatcher {
       def matches(value: String): Option[Int] =
         if (Version0(value).compareTo(minimumVersion) >= 0) Some(0)
         else None
       def repr: String = s">= ${minimumVersion.asString}"
     }
-    final case class AnyOf(matchers: Seq[VariantMatcher]) extends VariantMatcher {
+    @data case class AnyOf(matchers: Seq[VariantMatcher]) extends VariantMatcher {
       def matches(value: String): Option[Int] =
         matchers
           .iterator
@@ -193,7 +195,7 @@ object VariantSelector {
           }
       def repr: String = matchers.map(_.repr).mkString(" | ")
     }
-    final case class EndsWith(suffix: String) extends VariantMatcher {
+    @data case class EndsWith(suffix: String) extends VariantMatcher {
       def matches(value: String): Option[Int] =
         if (value.endsWith(suffix)) Some(0)
         else None

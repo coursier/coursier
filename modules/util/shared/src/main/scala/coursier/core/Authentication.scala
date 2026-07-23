@@ -1,11 +1,12 @@
 package coursier.core
 
+import dataclass.{data, since => unroll}
+
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 
-import scala.annotation.unroll
 
-final case class Authentication(
+@data case class Authentication(
   userOpt: Option[String],
   passwordOpt: Option[String],
   httpHeaders: Seq[(String, String)],

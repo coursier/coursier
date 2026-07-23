@@ -1,9 +1,9 @@
 package coursier.core
 
-import coursier.version.{VersionConstraint => VersionConstraint0}
-import scala.annotation.unroll
+import dataclass.{data, since => unroll}
 
-final case class BomDependency(
+import coursier.version.{VersionConstraint => VersionConstraint0}
+@data case class BomDependency(
   module: Module,
   versionConstraint: VersionConstraint0,
   config: Configuration = Configuration.empty,

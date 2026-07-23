@@ -1,5 +1,7 @@
 package coursier
 
+import dataclass.{data, since => unroll}
+
 import coursier.cache.Cache
 import coursier.core.{Module, Repository}
 import coursier.error.CoursierError
@@ -7,13 +9,12 @@ import coursier.params.{Mirror, MirrorConfFile}
 import coursier.util.{Sync, Task}
 import coursier.util.Monad.ops._
 import coursier.version.Version
-import scala.annotation.unroll
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-final case class Versions[F[_]](
+@data case class Versions[F[_]](
   cache: Cache[F],
   moduleOpt: Option[Module] = None,
   repositories: Seq[Repository] = Resolve.defaultRepositories,
@@ -103,7 +104,7 @@ object Versions {
       coursier.core.Versions(latest, release, available, lastUpdated)
     }
 
-  final case class Result(
+  @data case class Result(
     results: Seq[(Repository, Either[String, coursier.core.Versions])]
   ) {
     def versions: coursier.core.Versions =

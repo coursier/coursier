@@ -1,9 +1,10 @@
 package coursier.cache
 
+import dataclass.{data, since => unroll}
+
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task}
 import coursier.util.Monad.ops._
-import scala.annotation.unroll
 import org.apache.tika.Tika
 
 import java.io.{EOFException, File, InputStream}
@@ -15,7 +16,7 @@ import java.util.zip.{GZIPInputStream, ZipException, ZipFile}
 import scala.jdk.CollectionConverters._
 import scala.util.Using
 
-final case class ArchiveCache[F[_]](
+@data case class ArchiveCache[F[_]](
   location: File,
   cache: Cache[F],
   unArchiver: UnArchiver = UnArchiver.default(),

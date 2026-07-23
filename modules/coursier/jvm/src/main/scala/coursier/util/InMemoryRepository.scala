@@ -1,5 +1,7 @@
 package coursier.util
 
+import dataclass.data
+
 import java.io.{File, FileNotFoundException, IOException}
 import java.net.{URL, URLConnection}
 
@@ -186,7 +188,7 @@ object InMemoryRepository {
 
 }
 
-final case class InMemoryRepository(
+@data case class InMemoryRepository(
   fallbacks0: Map[(Module, Version0), (URL, Boolean)],
   cacheOpt: Option[FileCache[Nothing]],
   localArtifactsShouldBeCached: Boolean

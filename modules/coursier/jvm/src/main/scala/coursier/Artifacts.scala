@@ -1,5 +1,7 @@
 package coursier
 
+import dataclass.{data, since => unroll}
+
 import java.io.File
 import java.lang.{Boolean => JBoolean}
 
@@ -13,9 +15,7 @@ import scala.collection.compat._
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
-import scala.annotation.unroll
-
-final case class Artifacts[F[_]](
+@data case class Artifacts[F[_]](
   cache: Cache[F],
   resolutions: Seq[Resolution] = Nil,
   classifiers: Set[Classifier] = Set.empty,
@@ -180,7 +180,7 @@ object Artifacts {
   def create(): Artifacts[Task] =
     new Artifacts(Cache.default)
 
-  final case class Result(
+  @data case class Result(
     fullDetailedArtifacts0: Seq[(
       Dependency,
       Either[VariantPublication, Publication],

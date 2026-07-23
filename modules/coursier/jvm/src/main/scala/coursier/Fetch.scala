@@ -1,5 +1,7 @@
 package coursier
 
+import dataclass.data
+
 import java.io.File
 import java.lang.{Boolean => JBoolean}
 
@@ -25,7 +27,7 @@ import coursier.util.Monad.ops._
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-final case class Fetch[F[_]](
+@data case class Fetch[F[_]](
   private val resolve: Resolve[F],
   private val artifacts: Artifacts[F],
   fetchCacheOpt: Option[File]
@@ -285,7 +287,7 @@ final case class Fetch[F[_]](
 
 object Fetch {
 
-  final case class Result(
+  @data case class Result(
     resolution: Resolution = Resolution(),
     fullDetailedArtifacts0: Seq[(
       Dependency,

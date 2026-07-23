@@ -1,5 +1,7 @@
 package coursier.maven
 
+import dataclass.data
+
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import coursier.core.{
@@ -22,7 +24,7 @@ import coursier.core.{
 import coursier.version.{Version, VersionConstraint}
 import coursier.core.VariantPublication
 
-final case class GradleModule(
+@data case class GradleModule(
   formatVersion: String,
   component: GradleModule.Component,
   variants: Seq[GradleModule.Variant] = Nil
@@ -255,7 +257,7 @@ object GradleModule {
       }
   }
 
-  final case class Component(
+  @data case class Component(
     group: String,
     module: String,
     version: String,
@@ -267,7 +269,7 @@ object GradleModule {
     }
   }
 
-  final case class Variant(
+  @data case class Variant(
     name: String,
     attributes: Map[String, StringOrInt],
     dependencies: Seq[ModuleDependency],
@@ -289,7 +291,7 @@ object GradleModule {
       }
   }
 
-  final case class ModuleDependency(
+  @data case class ModuleDependency(
     group: String,
     module: String,
     version0: Map[String, StringOrSeqString],
@@ -347,7 +349,7 @@ object GradleModule {
       }
   }
 
-  final case class ModuleFile(
+  @data case class ModuleFile(
     name: String,
     url: String,
     size: Option[Long] = None,
@@ -357,14 +359,14 @@ object GradleModule {
     md5: Option[String] = None
   )
 
-  final case class AvailableAt(
+  @data case class AvailableAt(
     url: String,
     group: String,
     module: String,
     version: String
   )
 
-  final case class Capability(
+  @data case class Capability(
     group: String,
     name: String,
     version: String

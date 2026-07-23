@@ -1,5 +1,7 @@
 package coursier.params.rule
 
+import dataclass.data
+
 import coursier.core.{Module, Resolution}
 import coursier.error.ResolutionError.UnsatisfiableRule
 import coursier.error.conflict.UnsatisfiedRule
@@ -12,7 +14,7 @@ import scala.collection.compat._
   *
   * If ever different versions are found, the highest one is currently selected.
   */
-final case class SameVersion(matchers: Set[ModuleMatcher]) extends Rule {
+@data case class SameVersion(matchers: Set[ModuleMatcher]) extends Rule {
 
   import SameVersion._
 

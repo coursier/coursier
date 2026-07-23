@@ -27,8 +27,8 @@ object VmStart extends CoursierCommand[VmStartOptions] {
     val logger = params.output.logger()
     val cache  = params.cache.cache(pool, logger)
     val archiveCacheForVmFiles =
-      if (params.defaultCacheForVmFiles) ArchiveCache()
-      else ArchiveCache().withCache(cache)
+      if (params.defaultCacheForVmFiles) ArchiveCache.create()
+      else ArchiveCache.create().withCache(cache)
 
     val vmsDir = Vm.defaultVmDir()
 

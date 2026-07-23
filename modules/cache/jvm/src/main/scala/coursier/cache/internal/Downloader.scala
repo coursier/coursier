@@ -1,5 +1,7 @@
 package coursier.cache.internal
 
+import dataclass.{data, since => unroll}
+
 import java.io.{Serializable => _, _}
 import java.net.{HttpURLConnection, URLConnection, MalformedURLException}
 import java.nio.ByteBuffer
@@ -19,8 +21,6 @@ import coursier.credentials.DirectCredentials
 import coursier.paths.{CachePath, Util}
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
-import scala.annotation.unroll
-
 import scala.annotation.tailrec
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Try
@@ -28,7 +28,7 @@ import scala.util.Properties
 import scala.util.control.NonFatal
 
 // format: off
-final case class Downloader[F[_]](
+@data case class Downloader[F[_]](
   artifact: Artifact,
   cachePolicy: CachePolicy,
   location: File,

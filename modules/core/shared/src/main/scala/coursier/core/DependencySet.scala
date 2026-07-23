@@ -14,9 +14,10 @@ final class DependencySet private (
     that.isInstanceOf[DependencySet]
 
   def productArity: Int = 1
-  override def productElementName(n: Int): String =
-    if (n == 0) "set"
-    else throw new NoSuchElementException(s"Element at index $n in DependencySet")
+  //   Add that back if / when dropping Scala 2.12 support
+  // override def productElementName(n: Int): String =
+  //   if (n == 0) "set"
+  //   else throw new NoSuchElementException(s"Element at index $n in DependencySet")
   def productElement(n: Int): Any =
     if (n == 0) set
     else throw new NoSuchElementException(s"Element at index $n in DependencySet")

@@ -1,5 +1,7 @@
 package coursier.params
 
+import dataclass.data
+
 import coursier.core.Repository
 import coursier.maven.MavenRepositoryLike
 
@@ -9,7 +11,7 @@ import coursier.maven.MavenRepositoryLike
   * `to`. Only _Maven_ repositories, not Ivy ones for example. See [[TreeMirror]] to mirror both
   * types of repository.
   */
-final case class MavenMirror(
+@data case class MavenMirror(
   from: Seq[String],
   to: String
 ) extends Mirror {

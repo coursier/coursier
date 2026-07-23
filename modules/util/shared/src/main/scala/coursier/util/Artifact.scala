@@ -1,8 +1,10 @@
 package coursier.util
 
+import dataclass.data
+
 import coursier.core.Authentication
 
-final case class Artifact(
+@data case class Artifact(
   url: String,
   checksumUrls: Map[String, String] = Map.empty,
   extra: Map[String, Artifact] = Map.empty,

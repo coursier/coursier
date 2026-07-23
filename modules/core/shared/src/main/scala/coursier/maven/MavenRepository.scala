@@ -1,10 +1,13 @@
 package coursier.maven
 
+// NOTE: this class keeps `@unroll` for native Scala 3 unrolling but intentionally omits `@data`:
+// its `withCheckModule` etc. implement abstract members of `MavenRepositoryLike.WithModuleSupport`,
+// which clash with the setters data-class would generate for the last `@unroll` field on Scala 2.
+import dataclass.{since => unroll}
+
 import coursier.core._
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version => Version0}
-import scala.annotation.unroll
-
 object MavenRepository {
 
   def defaultConfigurations = MavenRepositoryInternal.defaultConfigurations
@@ -31,7 +34,7 @@ object MavenRepository {
     )
 }
 
-final case class MavenRepository(
+case class MavenRepository(
   root: String,
   authentication: Option[Authentication] = None,
   @unroll

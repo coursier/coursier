@@ -1,6 +1,6 @@
 package coursier.cache.loggers
 
-import scala.annotation.unroll
+import dataclass.{since => unroll}
 
 sealed abstract class RefreshInfo extends Product with Serializable {
   def fraction: Option[Double]
@@ -15,7 +15,7 @@ sealed abstract class RefreshInfo extends Product with Serializable {
 
 object RefreshInfo {
 
-  final case class DownloadInfo(
+  case class DownloadInfo(
     downloaded: Long,
     previouslyDownloaded: Long,
     length: Option[Long],
@@ -44,7 +44,7 @@ object RefreshInfo {
     }
   }
 
-  final case class CheckUpdateInfo(
+  case class CheckUpdateInfo(
     currentTimeOpt: Option[Long],
     remoteTimeOpt: Option[Long],
     isDone: Boolean,

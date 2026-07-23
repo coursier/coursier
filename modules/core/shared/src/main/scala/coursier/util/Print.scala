@@ -1,5 +1,7 @@
 package coursier.util
 
+import dataclass.data
+
 import coursier.core.{
   Attributes,
   Configuration,
@@ -21,7 +23,7 @@ object Print {
     def get(colors: Boolean): Colors = if (colors) `with` else `without`
   }
 
-  final case class Colors private (red: String, yellow: String, reset: String)
+  @data case class Colors private (red: String, yellow: String, reset: String)
 
   def dependency(dep: Dependency): String =
     dependency(dep, printExclusions = false)

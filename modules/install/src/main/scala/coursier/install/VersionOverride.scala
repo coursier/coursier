@@ -1,12 +1,12 @@
 package coursier.install
 
+import dataclass.{data, since => unroll}
+
 import coursier.core.Repository
 import coursier.parse.JavaOrScalaDependency
 import coursier.version.{Version, VersionInterval}
-import scala.annotation.unroll
-
 // format: off
-final case class VersionOverride(
+@data case class VersionOverride(
   versionRange0: VersionInterval,
   dependencies: Option[Seq[JavaOrScalaDependency]] = None,
   repositories: Option[Seq[Repository]] = None,

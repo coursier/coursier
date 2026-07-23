@@ -46,31 +46,30 @@ implicit def millModuleBasePath: ModuleCtx.Nested =
 
 object util extends Module {
   object shared extends SharedScalaSources
-  object jvm extends Cross[UtilJvm](Seq(ScalaVersions.scala3Unroll))
-  object js  extends Cross[UtilJs](Seq(ScalaVersions.scala3Unroll))
+  object jvm    extends Cross[UtilJvm](ScalaVersions.allWithUnroll)
+  object js     extends Cross[UtilJs](ScalaVersions.allWithUnroll)
 }
 object core extends Module {
   object shared extends SharedScalaSources
-  object jvm    extends Cross[CoreJvm](Seq(ScalaVersions.scala3Unroll))
-  object js     extends Cross[CoreJs](Seq(ScalaVersions.scala3Unroll))
+  object jvm    extends Cross[CoreJvm](ScalaVersions.allWithUnroll)
+  object js     extends Cross[CoreJs](ScalaVersions.allWithUnroll)
 }
 object `sbt-maven-repository` extends Module {
   object shared extends SharedScalaSources
-  object jvm    extends Cross[SbtMavenRepositoryJvm](Seq(ScalaVersions.scala3Unroll))
-  object js     extends Cross[SbtMavenRepositoryJs](Seq(ScalaVersions.scala3Unroll))
+  object jvm    extends Cross[SbtMavenRepositoryJvm](ScalaVersions.allWithUnroll)
+  object js     extends Cross[SbtMavenRepositoryJs](ScalaVersions.allWithUnroll)
 }
 object `cache-util` extends CacheUtil
 object cache extends Module {
   object shared extends SharedScalaSources
-  object jvm    extends Cross[CacheJvm](Seq(ScalaVersions.scala3Unroll))
-  object js     extends Cross[CacheJs](ScalaVersions.all)
+  object jvm    extends Cross[CacheJvm](ScalaVersions.allWithUnroll)
+  object js     extends Cross[CacheJs](ScalaVersions.allWithUnroll)
 }
-object `archive-cache` extends Cross[ArchiveCache](Seq(ScalaVersions.scala3Unroll))
+object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.allWithUnroll)
 object `benchmark` extends ScalaModule with JmhModule {
-  def scalaVersion: mill.api.Task.Simple[String] = ScalaVersions.scala3Unroll
-  def scalacOptions = super.scalacOptions() ++ Seq("-experimental")
+  def scalaVersion: mill.api.Task.Simple[String] = ScalaVersions.scala213
   def moduleDeps = Seq(
-    coursier.jvm(ScalaVersions.scala3Unroll)
+    coursier.jvm(ScalaVersions.scala213)
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     mvn"org.apache.maven:maven-model:3.9.16"
@@ -80,14 +79,14 @@ object `benchmark` extends ScalaModule with JmhModule {
 
 object `cache-server` extends Cross[CacheServer](ScalaVersions.all)
 
-object launcher             extends Cross[Launcher](Seq(ScalaVersions.scala3Unroll))
-object env                  extends Cross[Env](Seq(ScalaVersions.scala3Unroll))
+object launcher             extends Cross[Launcher](ScalaVersions.allWithUnroll)
+object env                  extends Cross[Env](ScalaVersions.allWithUnroll)
 object `launcher-native_04` extends LauncherNative04
 
 object coursier extends Module {
   object shared extends SharedScalaSources
-  object jvm    extends Cross[CoursierJvm](Seq(ScalaVersions.scala3Unroll))
-  object js     extends Cross[CoursierJs](Seq(ScalaVersions.scala3Unroll))
+  object jvm    extends Cross[CoursierJvm](ScalaVersions.allWithUnroll)
+  object js     extends Cross[CoursierJs](ScalaVersions.allWithUnroll)
 }
 
 object `proxy-setup` extends JavaModule with CoursierPublishModule with CsMima {
@@ -283,8 +282,8 @@ object `execve-test` extends CoursierJavaModule with coursierbuild.Launchers.CsJ
   }
 }
 
-object jvm     extends Cross[Jvm](Seq(ScalaVersions.scala3Unroll))
-object install extends Cross[Install](Seq(ScalaVersions.scala3Unroll))
+object jvm     extends Cross[Jvm](ScalaVersions.all)
+object install extends Cross[Install](ScalaVersions.all)
 
 object docker extends Cross[Docker](Seq(ScalaVersions.scala3))
 
@@ -294,7 +293,7 @@ object cli extends Cli {
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
-      coursier.jvm(ScalaVersions.scala3Unroll).test
+      coursier.jvm(cliScalaVersion213Compat).test
     )
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.ujson
@@ -326,10 +325,13 @@ trait UtilJs extends CsScalaJsModule with Util {
 
 trait CoreJvm extends Core with CoreJvmBase with Shading {
   def sources = Task {
-    super.sources() ++ core.shared.sources() ++ core.shared.sourcesScala213()
+    val versionSources =
+      if (scalaVersion().startsWith("2.12")) core.shared.sourcesScala212()
+      else core.shared.sourcesScala213()
+    super.sources() ++ core.shared.sources() ++ versionSources
   }
   def moduleDeps = super.moduleDeps ++ Seq(
-    util.jvm(ScalaVersions.scala3Unroll)
+    util.jvm()
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.concurrentReferenceHashMap,
@@ -347,10 +349,13 @@ trait CoreJvm extends Core with CoreJvmBase with Shading {
 }
 trait CoreJs extends Core with CsScalaJsModule {
   def sources = Task {
-    super.sources() ++ core.shared.sources() ++ core.shared.sourcesScala213()
+    val versionSources =
+      if (scalaVersion().startsWith("2.12")) core.shared.sourcesScala212()
+      else core.shared.sourcesScala213()
+    super.sources() ++ core.shared.sources() ++ versionSources
   }
   def moduleDeps = super.moduleDeps ++ Seq(
-    util.js(ScalaVersions.scala3Unroll)
+    util.js()
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalaJsDom
@@ -374,7 +379,7 @@ trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase {
     super.sources() ++ `sbt-maven-repository`.shared.sources()
   }
   def moduleDeps = super.moduleDeps ++ Seq(
-    core.jvm(ScalaVersions.scala3Unroll)
+    core.jvm()
   )
 }
 trait SbtMavenRepositoryJs extends SbtMavenRepository
@@ -383,7 +388,7 @@ trait SbtMavenRepositoryJs extends SbtMavenRepository
     super.sources() ++ `sbt-maven-repository`.shared.sources()
   }
   def moduleDeps = super.moduleDeps ++ Seq(
-    core.js(ScalaVersions.scala3Unroll)
+    core.js()
   )
 }
 
@@ -405,11 +410,11 @@ trait CacheJvm extends CacheJvmBase {
   def moduleDeps = Seq(
     `cache-util`,
     paths,
-    util.jvm(ScalaVersions.scala3Unroll)
+    util.jvm()
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoniterCore, // required alongside scalaCliConfig, given we exclude its version of jsoniter-scala
-    Deps.scalaCliConfig,
+    Deps.scalaCliConfig(scalaVersion()),
     Deps.windowsAnsi
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
@@ -424,8 +429,8 @@ trait CacheJvm extends CacheJvmBase {
       super.sources() ++ cache.shared.testSources()
     }
     def moduleDeps = super.moduleDeps ++ Seq(
-      coursier.jvm(ScalaVersions.scala3Unroll),
-      `cache-server`(ScalaVersions.scala213)
+      coursier.jvm(),
+      `cache-server`(crossValue)
     )
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.http4sBlazeServer,
@@ -446,7 +451,7 @@ trait CacheJs extends Cache with CsScalaJsModule {
     super.sources() ++ cache.shared.sources()
   }
   def moduleDeps = Seq(
-    util.js(ScalaVersions.scala3Unroll)
+    util.js()
   )
   def artifactName = "fetch-js"
   def mvnDeps = super.mvnDeps() ++ Seq(
@@ -456,7 +461,7 @@ trait CacheJs extends Cache with CsScalaJsModule {
 
 trait ArchiveCache extends ArchiveCacheBase {
   def moduleDeps = Seq(
-    cache.jvm(ScalaVersions.scala3Unroll)
+    cache.jvm()
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.plexusArchiver,
@@ -499,6 +504,9 @@ trait Launcher extends LauncherBase {
     Deps.noCrcZis,
     Deps.pythonNativeLibs
   )
+  def compileMvnDeps = Seq(
+    Deps.dataClass
+  )
   def commitHash = `build-util`.commitHash
 
   def bootstrap                   = `bootstrap-launcher`.proguardedAssembly()
@@ -515,6 +523,9 @@ trait Env extends CrossSbtModule with CsModule
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
   def artifactName = "coursier-env"
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
+    Deps.dataClass
+  )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.collectionCompat,
     Deps.jniUtils
@@ -534,7 +545,7 @@ trait LauncherNative04 extends CsModule
   def scalaVersion = cliScalaVersion
   def artifactName = "coursier-launcher-native_0.4"
   def compileModuleDeps = Seq(
-    launcherModule(ScalaVersions.scala3Unroll)
+    launcherModule(cliScalaVersion213Compat)
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalaNativeTools040
@@ -549,8 +560,8 @@ trait CoursierJvm extends CoursierJvmBase { self =>
     super.sources() ++ coursier.shared.sources() ++ versionSources
   }
   def moduleDeps = Seq(
-    core.jvm(ScalaVersions.scala3Unroll),
-    cache.jvm(ScalaVersions.scala3Unroll),
+    core.jvm(),
+    cache.jvm(),
     `proxy-setup`
   )
   // Put CoursierTests right after TestModule, and see what happens
@@ -562,10 +573,10 @@ trait CoursierJvm extends CoursierJvmBase { self =>
       super.sources() ++ coursier.shared.testSources()
     }
     def moduleDeps = super.moduleDeps ++ Seq(
-      `test-cache`.jvm(ScalaVersions.scala213)
+      `test-cache`.jvm()
     )
     def forkArgs = Task {
-      val httpServerCp = `test-cache`.jvm(ScalaVersions.scala213).httpServerClassPath()
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
         .map(_.path.toString).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.http-server.classpath=$httpServerCp"
@@ -578,12 +589,12 @@ trait CoursierJvm extends CoursierJvmBase { self =>
       os.sub / "src/it/java"
     )
     def moduleDeps = super.moduleDeps ++ Seq(
-      `test-cache`.jvm(ScalaVersions.scala213),
+      `test-cache`.jvm(),
       self.test
     )
     def forkArgs = Task {
       val testRepositoryDataDir = (tests.handmadeMetadata().path / "http/abc.com").toString
-      val httpServerCp = `test-cache`.jvm(ScalaVersions.scala213).httpServerClassPath()
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
         .map(_.path.toString).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.repository.data-dir=$testRepositoryDataDir",
@@ -600,8 +611,8 @@ trait CoursierJs extends Coursier with CsScalaJsModule {
     super.sources() ++ coursier.shared.sources() ++ versionSources
   }
   def moduleDeps = Seq(
-    core.js(ScalaVersions.scala3Unroll),
-    cache.js(ScalaVersions.scala213)
+    core.js(),
+    cache.js()
   )
   object test extends SbtTests with ScalaJSTests with CsResourcesTests with CoursierTests {
     def testDataDir             = tests.shared.testDataDir
@@ -611,7 +622,7 @@ trait CoursierJs extends Coursier with CsScalaJsModule {
       super.sources() ++ coursier.shared.testSources()
     }
     def moduleDeps = super.moduleDeps ++ Seq(
-      `test-cache`.js(ScalaVersions.scala213)
+      `test-cache`.js()
     )
     def jsEnvConfig = Task {
       JsTests.jsEnvConfig(super.jsEnvConfig(), forkEnv())
@@ -627,8 +638,8 @@ trait TestsJvm extends TestsModule { self =>
     super.sources() ++ tests.shared.sources()
   }
   def moduleDeps = super.moduleDeps ++ Seq(
-    core.jvm(ScalaVersions.scala3Unroll),
-    `sbt-maven-repository`.jvm(ScalaVersions.scala3Unroll)
+    core.jvm(),
+    `sbt-maven-repository`.jvm()
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoup
@@ -641,11 +652,11 @@ trait TestsJvm extends TestsModule { self =>
       super.sources() ++ tests.shared.testSources()
     }
     def moduleDeps = super.moduleDeps ++ Seq(
-      coursier.jvm(ScalaVersions.scala3Unroll),
-      `test-cache`.jvm(ScalaVersions.scala213)
+      coursier.jvm(),
+      `test-cache`.jvm()
     )
     def forkArgs = Task {
-      val httpServerCp = `test-cache`.jvm(ScalaVersions.scala213).httpServerClassPath()
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
         .map(_.path.toString).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.http-server.classpath=$httpServerCp"
@@ -660,7 +671,7 @@ trait TestsJvm extends TestsModule { self =>
       val testRepositoryDataDir = (testHandmadeMetadataDir().path / "http/abc.com").toString
       val redirectingServerCp =
         `redirecting-server`.runClasspath().map(_.path.toString).mkString(File.pathSeparator)
-      val httpServerCp = `test-cache`.jvm(ScalaVersions.scala213).httpServerClassPath()
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
         .map(_.path.toString).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.repository.data-dir=$testRepositoryDataDir",
@@ -673,8 +684,8 @@ trait TestsJvm extends TestsModule { self =>
       os.sub / "src/it/java"
     )
     def moduleDeps = super.moduleDeps ++ Seq(
-      coursier.jvm(ScalaVersions.scala3Unroll),
-      `test-cache`.jvm(ScalaVersions.scala213),
+      coursier.jvm(),
+      `test-cache`.jvm(),
       `redirecting-server`,
       self.test
     )
@@ -685,8 +696,8 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
     super.sources() ++ tests.shared.sources()
   }
   def moduleDeps = super.moduleDeps ++ Seq(
-    core.js(ScalaVersions.scala3Unroll),
-    `sbt-maven-repository`.js(ScalaVersions.scala3Unroll)
+    core.js(),
+    `sbt-maven-repository`.js()
   )
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
   object test extends SbtTests with ScalaJSTests with CsTests with CsResourcesTests {
@@ -697,8 +708,8 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
       super.sources() ++ tests.shared.testSources()
     }
     def moduleDeps = super.moduleDeps ++ Seq(
-      coursier.js(ScalaVersions.scala3Unroll),
-      `test-cache`.js(ScalaVersions.scala213)
+      coursier.js(),
+      `test-cache`.js()
     )
     def jsEnvConfig = Task {
       JsTests.jsEnvConfig(super.jsEnvConfig(), forkEnv())
@@ -735,7 +746,7 @@ trait ScalazJvm extends Scalaz with CsMima {
     super.sources() ++ interop.scalaz.shared.sources()
   }
   def moduleDeps = Seq(
-    cache.jvm(ScalaVersions.scala3Unroll)
+    cache.jvm()
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalazConcurrent
@@ -766,7 +777,7 @@ trait CatsJvm extends Cats with CsMima {
     super.sources() ++ interop.cats.shared.sources()
   }
   def moduleDeps = Seq(
-    cache.jvm(ScalaVersions.scala3Unroll)
+    cache.jvm()
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
     def testDataDir             = tests.shared.testDataDir
@@ -793,32 +804,30 @@ trait Install extends CrossSbtModule with CsModule
   }
   def artifactName = "coursier-install"
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(ScalaVersions.scala3Unroll),
-    env(ScalaVersions.scala3Unroll),
-    jvm(ScalaVersions.scala3Unroll),
-    launcherModule(ScalaVersions.scala3Unroll)
+    coursier.jvm(),
+    env(),
+    jvm(),
+    launcherModule()
   )
-  def mvnDeps = Task {
-    val jsonDep =
-      if (scalaVersion().startsWith("3.")) Deps.argonaut // hand-written codecs
-      else Deps.argonautShapeless
-    super.mvnDeps() ++ Seq(
-      jsonDep,
-      Deps.catsCore
-    )
-  }
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
+    Deps.dataClass
+  )
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    Deps.argonautShapeless,
+    Deps.catsCore
+  )
   object test extends CrossSbtTests with CsScalaTests with CsResourcesTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
-      `test-cache`.jvm(ScalaVersions.scala213)
+      `test-cache`.jvm()
     )
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.pprint
     )
     def forkArgs = Task {
-      val httpServerCp = `test-cache`.jvm(ScalaVersions.scala213).httpServerClassPath()
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
         .map(_.path.toString).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.http-server.classpath=$httpServerCp"
@@ -835,12 +844,13 @@ trait Jvm extends CrossSbtModule with CsModule
   }
   def artifactName = "coursier-jvm"
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(ScalaVersions.scala3Unroll),
-    `archive-cache`(ScalaVersions.scala3Unroll),
-    env(ScalaVersions.scala3Unroll),
+    coursier.jvm(),
+    `archive-cache`(),
+    env(),
     exec
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
+    Deps.dataClass,
     Deps.jsoniterMacros,
     Deps.svm
   )
@@ -852,13 +862,13 @@ trait Jvm extends CrossSbtModule with CsModule
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
-      `test-cache`.jvm(ScalaVersions.scala213)
+      `test-cache`.jvm()
     )
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.scalaAsync
     )
     def forkArgs = Task {
-      val httpServerCp = `test-cache`.jvm(ScalaVersions.scala213).httpServerClassPath()
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
         .map(_.path.toString).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.http-server.classpath=$httpServerCp"
@@ -900,8 +910,8 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
   def jvmRelease   = "11"
   def artifactName = "coursier-docker"
   def moduleDeps = super.moduleDeps ++ Seq(
-    cache.jvm(ScalaVersions.scala3Unroll),
-    `archive-cache`(ScalaVersions.scala3Unroll),
+    cache.jvm(cliScalaVersion213Compat),
+    `archive-cache`(cliScalaVersion213Compat),
     exec
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
@@ -928,7 +938,7 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
   }
   object test extends CrossSbtTests with CsTests {
     def moduleDeps = super.moduleDeps ++ Seq(
-      cache.jvm(ScalaVersions.scala3Unroll).test
+      cache.jvm(cliScalaVersion213Compat).test
     )
   }
 }
@@ -938,12 +948,12 @@ trait Cli extends CsModule
   def jvmRelease   = "11"
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(ScalaVersions.scala3Unroll),
-    `sbt-maven-repository`.jvm(ScalaVersions.scala3Unroll),
-    install(ScalaVersions.scala3Unroll),
-    jvm(ScalaVersions.scala3Unroll),
+    coursier.jvm(cliScalaVersion213Compat),
+    `sbt-maven-repository`.jvm(cliScalaVersion213Compat),
+    install(cliScalaVersion213Compat),
+    jvm(cliScalaVersion213Compat),
     docker(cliScalaVersion),
-    launcherModule(ScalaVersions.scala3Unroll),
+    launcherModule(cliScalaVersion213Compat),
     `cache-server`(cliScalaVersion213Compat)
   )
   def artifactName = "coursier-cli"
@@ -1024,7 +1034,7 @@ trait CliTests extends CsModule
     with CoursierPublishModule { self =>
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(ScalaVersions.scala3Unroll)
+    coursier.jvm(cliScalaVersion213Compat)
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.jsoniterMacros
@@ -1186,7 +1196,7 @@ trait Web extends CsScalaJsModule {
   def scalaVersion = webScalaVersion
   // ScalaJSBundlerPlugin
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.js(ScalaVersions.scala3Unroll)
+    coursier.js(webScalaVersion)
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalaJsReact
@@ -1221,7 +1231,7 @@ object `redirecting-server` extends CsModule {
 trait TestCacheJvm extends Cross.Module[String] with CsCrossJvmJsModule {
   def scalaVersion = crossValue
   def moduleDeps = Seq(
-    cache.jvm(ScalaVersions.scala3Unroll)
+    cache.jvm()
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.osLib,
@@ -1421,14 +1431,14 @@ private val docScalaVersion = ScalaVersions.scala213
 object `doc-deps` extends ScalaModule {
   def scalaVersion = docScalaVersion
   def moduleDeps = Seq(
-    coursier.jvm(ScalaVersions.scala3Unroll),
+    coursier.jvm(docScalaVersion),
     interop.cats.jvm(docScalaVersion)
   )
 }
 
 object doc extends Doc {
   def scalaVersion = docScalaVersion
-  def version      = coursier.jvm(ScalaVersions.scala3Unroll).publishVersion()
+  def version      = coursier.jvm(docScalaVersion).publishVersion()
   def classPath    = `doc-deps`.runClasspath()
 }
 
@@ -1509,21 +1519,21 @@ def jvmTests(scalaVersion: String = defaultScalaVersion) = {
 
   def crossTests(sv: String) = Seq(
     // format: off
-    core.jvm           .valuesToModules.get(List(ScalaVersions.scala3Unroll)).map(_.test.testForked()),
-    cache.jvm          .valuesToModules.get(List(ScalaVersions.scala3Unroll)).map(_.test.testForked()),
-    env                .valuesToModules.get(List(ScalaVersions.scala3Unroll)).map(_.test.testForked()),
-    coursier.jvm       .valuesToModules.get(List(ScalaVersions.scala3Unroll)).map(_.test.testForked()),
+    core.jvm           .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    cache.jvm          .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    env                .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    coursier.jvm       .valuesToModules.get(List(sv)).map(_.test.testForked()),
     tests.jvm          .valuesToModules.get(List(sv)).map(_.test.testForked()),
     interop.scalaz.jvm .valuesToModules.get(List(sv)).map(_.test.testForked()),
     interop.cats.jvm   .valuesToModules.get(List(sv)).map(_.test.testForked()),
-    install            .valuesToModules.get(List(ScalaVersions.scala3Unroll)).map(_.test.testForked()),
-    jvm                .valuesToModules.get(List(ScalaVersions.scala3Unroll)).map(_.test.testForked())
+    install            .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    jvm                .valuesToModules.get(List(sv)).map(_.test.testForked())
     // format: on
   ).flatten
 
   def crossIts(sv: String) = Seq(
     // format: off
-    coursier.jvm .valuesToModules.get(List(ScalaVersions.scala3Unroll)).map(_.it.testForked()),
+    coursier.jvm .valuesToModules.get(List(sv)).map(_.it.testForked()),
     tests.jvm    .valuesToModules.get(List(sv)).map(_.it.testForked())
     // format: on
   ).flatten
@@ -1570,8 +1580,8 @@ def jsTests(scalaVersion: String = "*") = {
 
   def crossTests(sv: String) = Seq(
     // format: off
-    core.js            .valuesToModules.get(List(ScalaVersions.scala3Unroll)).map(_.test.testForked()),
-    coursier.js        .valuesToModules.get(List(ScalaVersions.scala3Unroll)).map(_.test.testForked()),
+    core.js            .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    coursier.js        .valuesToModules.get(List(sv)).map(_.test.testForked()),
     tests.js           .valuesToModules.get(List(sv)).map(_.test.testForked())
     // format: on
   ).flatten
@@ -1723,8 +1733,8 @@ object docs extends ScalaModule {
   private def sv   = ScalaVersions.scala213
   def scalaVersion = sv
   def moduleDeps = Seq(
-    coursier.jvm(ScalaVersions.scala3Unroll),
-    `archive-cache`(ScalaVersions.scala3Unroll)
+    coursier.jvm(sv),
+    `archive-cache`(sv)
   )
   def mvnDeps = Seq(
     Deps.mdoc
@@ -1744,7 +1754,7 @@ object docs extends ScalaModule {
       "--out",
       mdocOutput().path,
       "--site.VERSION",
-      coursier.jvm(ScalaVersions.scala3Unroll).publishVersion(),
+      coursier.jvm(sv).publishVersion(),
       "--classpath",
       runClasspath().map(_.path).mkString(File.pathSeparator)
     )
@@ -1858,7 +1868,7 @@ object docs extends ScalaModule {
 trait CacheServer extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
   def artifactName = "coursier-cache-server"
   def moduleDeps = super.moduleDeps ++ Seq(
-    cache.jvm(ScalaVersions.scala3Unroll)
+    cache.jvm()
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.osLib,

@@ -32,7 +32,7 @@ object VmFiles {
   def default(
     artifactsTask: Task[QemuFiles.Artifacts] = QemuFiles.Artifacts.default(),
     imageArtifact: Artifact = defaultImageArtifact(),
-    archiveCache: ArchiveCache[Task] = ArchiveCache()
+    archiveCache: ArchiveCache[Task] = ArchiveCache.create()
   ): Task[VmFiles] =
     // FIXME Quite some duplication with QemuFiles.default
     artifactsTask.flatMap { artifacts =>

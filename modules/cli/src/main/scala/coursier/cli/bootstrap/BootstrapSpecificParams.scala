@@ -47,7 +47,7 @@ final case class BootstrapSpecificParams(
     )
 
   def jvmCache(cache: Cache[Task]): JvmCache = {
-    val archiveCache = ArchiveCache().withCache(cache)
+    val archiveCache = ArchiveCache.create().withCache(cache)
     val c = JvmCache()
       .withArchiveCache(archiveCache)
     jvmIndexUrlOpt match {

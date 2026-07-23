@@ -1,9 +1,11 @@
 package coursier.launcher
 
+import dataclass.data
+
 
 import scala.collection.mutable
 
-final case class ClassLoaderContent(
+@data case class ClassLoaderContent(
   entries: Seq[ClassPathEntry],
   loaderName: String = ""
 )

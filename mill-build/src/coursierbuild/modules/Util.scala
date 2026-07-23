@@ -8,4 +8,7 @@ trait Util extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def mvnDeps = Seq(
     Deps.collectionCompat
   )
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
+    Deps.dataClass
+  )
 }

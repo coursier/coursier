@@ -1,11 +1,13 @@
 package coursier.env
 
+import dataclass.data
+
 import java.io.File
 
 
 import scala.collection.mutable
 
-final case class EnvironmentUpdate(
+@data case class EnvironmentUpdate(
   set: Seq[(String, String)] = Nil,
   pathLikeAppends: Seq[(String, String)] = Nil
 ) {

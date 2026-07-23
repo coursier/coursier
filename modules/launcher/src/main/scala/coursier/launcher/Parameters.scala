@@ -1,13 +1,13 @@
 package coursier.launcher
 
+import dataclass.{data, since => unroll}
+
 import java.io.File
 import java.nio.file.Path
 import java.util.jar.{Attributes => JarAttributes}
 import java.util.zip.ZipEntry
 
 import coursier.launcher.internal.Windows
-import scala.annotation.unroll
-
 import scala.util.Properties
 
 sealed abstract class Parameters extends Product with Serializable {
@@ -16,7 +16,7 @@ sealed abstract class Parameters extends Product with Serializable {
 
 object Parameters {
 
-  final case class Assembly(
+  @data case class Assembly(
     files: Seq[File] = Nil,
     mainClass: Option[String] = None,
     attributes: Seq[(JarAttributes.Name, String)] = Nil,
@@ -39,7 +39,7 @@ object Parameters {
         attributes
   }
 
-  final case class Bootstrap(
+  @data case class Bootstrap(
     content: Seq[ClassLoaderContent],
     mainClass: String,
     javaProperties: Seq[(String, String)] = Nil,
@@ -85,7 +85,7 @@ object Parameters {
       copy(extraContent = extraContent + (name -> content))
   }
 
-  final case class ManifestJar(
+  @data case class ManifestJar(
     classpath: Seq[File],
     mainClass: String,
     preambleOpt: Option[Preamble] = Some(Preamble())
@@ -95,7 +95,7 @@ object Parameters {
       copy(preambleOpt = Some(preamble))
   }
 
-  final case class NativeImage(
+  @data case class NativeImage(
     mainClass: String,
     fetch: Seq[String] => Seq[File],
     jars: Seq[File] = Nil,
@@ -120,11 +120,11 @@ object Parameters {
       Seq("-Xmx3g")
   }
 
-  final case class Prebuilt() extends Parameters {
+  @data case class Prebuilt() extends Parameters {
     override def isNative: Boolean = true
   }
 
-  final case class ScalaNative(
+  @data case class ScalaNative(
     fetch: Seq[String] => Seq[File],
     mainClass: String,
     nativeVersion: String,
@@ -140,7 +140,7 @@ object Parameters {
 
   object ScalaNative {
 
-    final case class ScalaNativeOptions(
+    @data case class ScalaNativeOptions(
       gcOpt: Option[String] = None,
       modeOpt: Option[String] = None,
       linkStubs: Boolean = true,
@@ -159,7 +159,7 @@ object Parameters {
   }
 
   /** For test purposes */
-  final case class DummyNative() extends Parameters {
+  @data case class DummyNative() extends Parameters {
     override def isNative: Boolean = true
   }
 

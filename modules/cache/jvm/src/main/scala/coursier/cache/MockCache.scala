@@ -1,5 +1,7 @@
 package coursier.cache
 
+import dataclass.{data, since => unroll}
+
 import java.io._
 import java.net.URI
 import java.nio.charset.StandardCharsets
@@ -11,13 +13,11 @@ import coursier.cache.internal.MockCacheEscape
 import coursier.paths.Util
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
-import scala.annotation.unroll
-
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
 // format: off
-final case class MockCache[F[_]](
+@data case class MockCache[F[_]](
   base: Path,
   extraData: Seq[Path],
   writeMissing: Boolean,

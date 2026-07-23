@@ -1,6 +1,9 @@
 package coursier.params
 
-final case class MirrorConfFile(
+import dataclass.data
+
+
+@data case class MirrorConfFile(
   path: String,
   optional: Boolean = true
 ) extends coursier.internal.PlatformMirrorConfFile

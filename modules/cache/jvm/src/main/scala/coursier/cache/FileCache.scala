@@ -1,5 +1,7 @@
 package coursier.cache
 
+import dataclass.{since => unroll}
+
 import java.io.{Serializable => _, _}
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets.UTF_8
@@ -22,15 +24,13 @@ import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
 import coursier.util.Monad.ops._
-import scala.annotation.unroll
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Properties
 import scala.util.control.NonFatal
 
 // format: off
-final case class FileCache[F[_]](
+case class FileCache[F[_]](
   location: File,
   cachePolicies: Seq[CachePolicy] = CacheDefaults.cachePolicies,
   checksums: Seq[Option[String]] = CacheDefaults.checksums,
