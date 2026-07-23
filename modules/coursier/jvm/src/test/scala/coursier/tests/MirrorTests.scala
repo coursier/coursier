@@ -31,7 +31,7 @@ object MirrorTests extends TestSuite {
 
       def run(file: MirrorConfFile) = async {
         val res = await {
-          Resolve()
+          Resolve.create()
             .noMirrors
             .withCache(cache)
             .addMirrorConfFiles(file)
@@ -56,7 +56,7 @@ object MirrorTests extends TestSuite {
 
       def runConfFile(file: Path) = async {
         val res = await {
-          Resolve()
+          Resolve.create()
             .noMirrors
             .withCache(cache)
             .addConfFiles(file)

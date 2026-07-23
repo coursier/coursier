@@ -79,7 +79,7 @@ object Config {
           deps.map { dep =>
             dep.variantSelector match {
               case c: VariantSelector.ConfigurationBased =>
-                dep.copy(variantSelector = 
+                dep.copy(variantSelector =
                   VariantSelector.ConfigurationBased(config --> c.configuration)
                 )
               case _: VariantSelector.AttributesBased =>
@@ -108,7 +108,7 @@ object Config {
             if (configBased.isEmpty) Nil
             else
               Seq(
-                dep.copy(variantSelector = 
+                dep.copy(variantSelector =
                   VariantSelector.ConfigurationBased(
                     Configuration.join(configBased.toVector.distinct.sorted: _*)
                   )

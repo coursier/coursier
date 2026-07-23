@@ -1,6 +1,5 @@
 package coursier.cache
 
-
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import coursier.cache.server.Model.{Artifact => ModelArtifact, _}
 import coursier.paths.CachePath
@@ -32,6 +31,16 @@ case class RemoteCache[F[_]: Sync](
 
   def withLogger(logger: CacheLogger): RemoteCache[F] =
     copy(logger = logger)
+  // Setters that data-class used to generate; kept manually since `@data` is dropped here
+  // (it cannot generate `withX` setters on Scala 3 - see the WithLogger trait requirement).
+  def withPool(pool: ExecutorService): RemoteCache[F] =
+    copy(pool = pool)
+  def withCachePolicies(cachePolicies: Seq[CachePolicy]): RemoteCache[F] =
+    copy(cachePolicies = cachePolicies)
+  def withWatchLenPool(watchLenPool: ExecutorService): RemoteCache[F] =
+    copy(watchLenPool = watchLenPool)
+  def withFileFallback(fileFallback: Option[FileCache[F]]): RemoteCache[F] =
+    copy(fileFallback = fileFallback)
 
   lazy val ec: ExecutionContextExecutorService =
     ExecutionContext.fromExecutorService(pool)

@@ -79,7 +79,7 @@ abstract class PlatformRepositoryParser {
               case m: MavenRepositoryLike =>
                 m.withRoot(baseUrl).withAuthentication(Some(auth))
               case i: IvyRepository =>
-                i.copy(authentication = Some(auth)).copy(pattern = 
+                i.copy(authentication = Some(auth)).copy(pattern =
                   coursier.ivy.Pattern(
                     coursier.ivy.Pattern.Chunk.Const(baseUrl) +: i.pattern.chunks.dropWhile {
                       case _: coursier.ivy.Pattern.Chunk.Const => true

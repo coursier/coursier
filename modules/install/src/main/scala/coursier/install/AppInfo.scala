@@ -2,8 +2,6 @@ package coursier.install
 
 import dataclass.data
 
-
-
 @data case class AppInfo(
   appDescriptor: AppDescriptor,
   appDescriptorBytes: Array[Byte],

@@ -210,7 +210,7 @@ object Artifacts {
       Artifact,
       Option[File]
     )]): Result =
-      copy(fullDetailedArtifacts0 = 
+      copy(fullDetailedArtifacts0 =
         artifacts.map {
           case (dep, pub, art, fOpt) =>
             (dep, Right(pub), art, fOpt)

@@ -75,7 +75,7 @@ object Print {
     val deps0 =
       if (useFinalVersions)
         deps.map { dep =>
-          dep.copy(versionConstraint = 
+          dep.copy(versionConstraint =
             projects
               .get(dep.moduleVersionConstraint)
               .fold(dep.versionConstraint)(proj => VersionConstraint.fromVersion(proj.version0))

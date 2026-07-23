@@ -47,7 +47,10 @@ object RawSource {
   import argonaut.Argonaut._
 
   lazy val codec: argonaut.CodecJson[RawSource] =
-    argonaut.CodecJson.casecodec3(RawSource.apply, (s: RawSource) => Some((s.repositories, s.channel, s.id)))(
+    argonaut.CodecJson.casecodec3(
+      RawSource.apply,
+      (s: RawSource) => Some((s.repositories, s.channel, s.id))
+    )(
       "repositories",
       "channel",
       "id"

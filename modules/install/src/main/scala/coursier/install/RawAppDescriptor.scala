@@ -134,7 +134,7 @@ import scala.language.implicitConversions
       ) =>
         AppDescriptor()
           .copy(repositories = repositories)
-          .copy(dependencies = {
+          .copy(dependencies =
             dependencies.map { dep =>
               dep.withUnderlyingDependency { dep0 =>
                 dep0.copy(minimizedExclusions =
@@ -142,7 +142,7 @@ import scala.language.implicitConversions
                 )
               }
             }
-          })
+          )
           .copy(sharedDependencies = sharedDependencies)
           .copy(launcherType = launcherType)
           .copy(classifiers = classifiers0)
@@ -196,7 +196,7 @@ import scala.language.implicitConversions
 
   // version substitution possibly a bit flaky…
   def overrideVersion(ver: String): RawAppDescriptor =
-    copy(dependencies = {
+    copy(dependencies =
       if (dependencies.isEmpty)
         dependencies
       else {
@@ -210,7 +210,7 @@ import scala.language.implicitConversions
         }
         dep +: dependencies.tail
       }
-    })
+    )
 
   def overrideVersion(verOpt: Option[String]): RawAppDescriptor =
     verOpt.fold(this)(overrideVersion(_))
@@ -269,7 +269,9 @@ object RawAppDescriptor {
       }
     implicit val decoder: DecodeJson[RawGraalvmOptions] =
       DecodeJson { c =>
-        (c --\ "options").as[Option[List[String]]].map(o => RawGraalvmOptions().copy(options = o.getOrElse(Nil)))
+        (c --\ "options").as[Option[List[String]]].map(o =>
+          RawGraalvmOptions().copy(options = o.getOrElse(Nil))
+        )
       }
 
   }

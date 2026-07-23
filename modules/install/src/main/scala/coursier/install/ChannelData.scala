@@ -4,7 +4,6 @@ import dataclass.data
 
 import java.nio.charset.StandardCharsets
 
-
 @data case class ChannelData(
   channel: Channel,
   origin: String,

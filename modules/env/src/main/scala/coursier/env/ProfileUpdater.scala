@@ -6,7 +6,6 @@ import java.io.File
 import java.nio.charset.Charset
 import java.nio.file.{FileAlreadyExistsException, Files, Path, Paths}
 
-
 @data case class ProfileUpdater(
   home: Option[Path] = ProfileUpdater.defaultHome,
   getEnv: Option[String => Option[String]] = Some(k => Option(System.getenv(k))),

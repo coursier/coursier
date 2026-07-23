@@ -2,7 +2,6 @@ package coursier.launcher
 
 import dataclass.data
 
-
 import scala.collection.mutable
 
 @data case class ClassLoaderContent(
@@ -20,7 +19,7 @@ object ClassLoaderContent {
     val seen = new mutable.HashMap[String, Int]
 
     content.map { c =>
-      c.copy(entries = 
+      c.copy(entries =
         c.entries.map {
           case r: ClassPathEntry.Resource =>
             val n = seen.getOrElse(r.fileName, 0)

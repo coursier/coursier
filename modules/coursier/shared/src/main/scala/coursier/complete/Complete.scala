@@ -26,7 +26,7 @@ import coursier.util.Task
 
   def withScalaVersion(version: String, adjustBinaryVersion: Boolean): Complete[F] =
     copy(scalaVersionOpt = Some(version))
-      .copy(scalaBinaryVersionOpt = 
+      .copy(scalaBinaryVersionOpt =
         if (adjustBinaryVersion) Some(Complete.scalaBinaryVersion(version))
         else scalaBinaryVersionOpt
       )
@@ -34,7 +34,7 @@ import coursier.util.Task
     withScalaVersion(version, adjustBinaryVersion = true)
   def withScalaVersionOpt(versionOpt: Option[String], adjustBinaryVersion: Boolean): Complete[F] =
     copy(scalaVersionOpt = versionOpt)
-      .copy(scalaBinaryVersionOpt = 
+      .copy(scalaBinaryVersionOpt =
         if (adjustBinaryVersion) versionOpt.map(Complete.scalaBinaryVersion)
         else scalaBinaryVersionOpt
       )

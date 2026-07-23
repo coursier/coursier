@@ -318,18 +318,18 @@ import coursier.version.{Version, VersionParse}
       val proj =
         if (dropInfoAttributes)
           proj0
-            .copy(module = 
-              proj0.module.copy(attributes = 
+            .copy(module =
+              proj0.module.copy(attributes =
                 proj0.module.attributes.filter {
                   case (k, _) => !k.startsWith("info.")
                 }
               )
             )
-            .copy(dependencies0 = 
+            .copy(dependencies0 =
               proj0.dependencies0.map {
                 case (config, dep0) =>
-                  val dep = dep0.copy(module = 
-                    dep0.module.copy(attributes = 
+                  val dep = dep0.copy(module =
+                    dep0.module.copy(attributes =
                       dep0.module.attributes.filter {
                         case (k, _) => !k.startsWith("info.")
                       }

@@ -879,7 +879,7 @@ object Resolution {
 
     val project0 = actualConfigOrError match {
       case Right(attr: VariantSelector.AttributesBased) =>
-        projectWithProperties.copy(dependencies0 = {
+        projectWithProperties.copy(dependencies0 =
           projectWithProperties.dependencies0.map {
             case (v: Variant.Attributes, dep) =>
               val variantSelectorOverride = dep.variantSelector match {
@@ -892,7 +892,7 @@ object Resolution {
               (v, dep0)
             case other => other
           }
-        })
+        )
       case Right(_: VariantSelector.ConfigurationBased) => projectWithProperties
       case Left(_)                                      => projectWithProperties
     }
@@ -1223,7 +1223,7 @@ object Resolution {
     }
   @deprecated("Use withForceVersions0 instead", "2.1.25")
   def withForceVersions(newForceVersions: Map[Module, String]): Resolution =
-    copy(forceVersions0 = 
+    copy(forceVersions0 =
       newForceVersions.map {
         case (mod, ver) =>
           (mod, VersionConstraint0(ver))
@@ -1239,7 +1239,7 @@ object Resolution {
   @deprecated("Use withProjectCache0 instead", "2.1.25")
   def withProjectCache(newProjectCache: Map[(Module, String), (ArtifactSource, Project)])
     : Resolution =
-    copy(projectCache0 = 
+    copy(projectCache0 =
       newProjectCache.map {
         case ((mod, ver), value) =>
           ((mod, VersionConstraint0(ver)), value)
@@ -1259,7 +1259,7 @@ object Resolution {
     }
   @deprecated("Use withReconciliation0 instead", "2.1.25")
   def withReconciliation(newReconciliation: Option[Module => Reconciliation]): Resolution =
-    copy(reconciliation0 = 
+    copy(reconciliation0 =
       newReconciliation.map { f => mod =>
         ConstraintReconciliation(f(mod).id).getOrElse {
           sys.error("Cannot happen")
@@ -1323,12 +1323,12 @@ object Resolution {
     )
 
     copy(finalDependenciesCache = finalDependenciesCache ++ finalDependenciesCache0.asScala)
-      .copy(projectCache0 = {
+      .copy(projectCache0 =
         projectCache0 ++ projects.map {
           case (modVer, (s, p)) =>
             val p0 =
               withDependencyManagement(
-                p.copy(properties = 
+                p.copy(properties =
                   LazyProperties.merge(
                     Seq(
                       extraProperties,
@@ -1340,7 +1340,7 @@ object Resolution {
               )
             (modVer, (s, p0))
         }
-      })
+      )
   }
 
   @deprecated("Use addToProjectCache0 instead", "2.1.25")
@@ -1438,14 +1438,14 @@ object Resolution {
   ): Dependency = {
     var dep0 = dep
     if (withRetainedVersions)
-      dep0 = dep0.copy(versionConstraint = 
+      dep0 = dep0.copy(versionConstraint =
         (if (loose) retainedVersionsLoose else retainedVersions)
           .get(dep0.module)
           .map(v => VersionConstraint0.fromVersion(v))
           .getOrElse(dep0.versionConstraint)
       )
     else if (withReconciledVersions)
-      dep0 = dep0.copy(versionConstraint = 
+      dep0 = dep0.copy(versionConstraint =
         reconciledVersions
           .get(dep0.module)
           .getOrElse(dep0.versionConstraint)
@@ -1842,7 +1842,7 @@ object Resolution {
       )
 
       val project0 =
-        project.copy(properties = 
+        project.copy(properties =
           LazyProperties.merge(project.properties, profileProperties)
         ) // belongs to 1.5 & 1.6
 
@@ -2001,7 +2001,7 @@ object Resolution {
     )
 
     val project0 =
-      project.copy(properties = 
+      project.copy(properties =
         LazyProperties.merge(project.properties, profileProperties)
       ) // belongs to 1.5 & 1.6
 
@@ -2128,7 +2128,7 @@ object Resolution {
     project0
       .copy(packagingOpt = project0.packagingOpt.map(_.map(propertiesWrapper0.substitution)))
       .copy(version0 = Version0(propertiesWrapper0.substitution.apply(project0.version0.asString)))
-      .copy(dependencies0 = 
+      .copy(dependencies0 =
         standardDeps ++
           project0.parent0 // belongs to 1.5 & 1.6
             .map {
@@ -2141,7 +2141,7 @@ object Resolution {
       )
       .copy(dependencyManagement0 = Nil)
       .copy(overrides = depMgmt)
-      .copy(properties = 
+      .copy(properties =
         LazyProperties.merge(
           retainedParentProjects.map(_.properties) :+ project0.properties
         )

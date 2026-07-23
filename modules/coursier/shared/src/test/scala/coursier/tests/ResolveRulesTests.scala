@@ -36,7 +36,7 @@ object ResolveRulesTests extends TestSuite {
             .addRule(rule, ruleRes)
 
           val ex = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
               .withResolutionParams(params)
@@ -66,7 +66,7 @@ object ResolveRulesTests extends TestSuite {
             .addRule(rule, ruleRes)
 
           val ex = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
               .withResolutionParams(params)
@@ -95,7 +95,7 @@ object ResolveRulesTests extends TestSuite {
             .addRule(rule, ruleRes)
 
           val ex = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
               .withResolutionParams(params)
@@ -131,7 +131,7 @@ object ResolveRulesTests extends TestSuite {
             )
 
           val res = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
               .addRepositories(Repositories.jitpack)
@@ -155,7 +155,7 @@ object ResolveRulesTests extends TestSuite {
             )
 
           val res = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
               .addRepositories(Repositories.jitpack)
@@ -180,7 +180,7 @@ object ResolveRulesTests extends TestSuite {
             .addRule(rule, ruleRes)
 
           val ex = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
               .withResolutionParams(params)
@@ -209,7 +209,7 @@ object ResolveRulesTests extends TestSuite {
             .addRule(rule, ruleRes)
 
           val ex = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addDependencies(
                 dep"org.typelevel:cats-effect_2.11:1.3.1",
@@ -264,7 +264,7 @@ object ResolveRulesTests extends TestSuite {
             .addRule(rule, ruleRes)
 
           val ex = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addDependencies(
                 dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M4",
@@ -321,7 +321,7 @@ object ResolveRulesTests extends TestSuite {
               .addForceVersion0(mod"com.chuusai:shapeless_2.12" -> VersionConstraint("2.3.3"))
 
             val res = await {
-              Resolve()
+              Resolve.create()
                 .noMirrors
                 .addDependencies(
                   dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M4",
@@ -351,7 +351,7 @@ object ResolveRulesTests extends TestSuite {
               .addForceVersion0(mod"com.chuusai:shapeless_2.12" -> VersionConstraint("2.3.3"))
 
             val ex = await {
-              Resolve()
+              Resolve.create()
                 .noMirrors
                 .addDependencies(
                   dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M4",
@@ -397,7 +397,7 @@ object ResolveRulesTests extends TestSuite {
             .addReconciliation(ModuleMatchers.all -> ConstraintReconciliation.Strict)
 
           val ex = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
               .withResolutionParams(params)
@@ -424,7 +424,7 @@ object ResolveRulesTests extends TestSuite {
             .addReconciliation(ModuleMatchers.all -> ConstraintReconciliation.Strict)
 
           val ex = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addBoms0(dep"org.apache.logging.log4j:log4j-bom:2.23.1".moduleVersionConstraint)
               .addDependencies(
@@ -462,7 +462,7 @@ object ResolveRulesTests extends TestSuite {
             .addReconciliation(ModuleMatchers.all -> ConstraintReconciliation.SemVer)
 
           val ex = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addBoms0(dep"org.apache.logging.log4j:log4j-bom:2.23.1".moduleVersionConstraint)
               .addDependencies(
@@ -504,7 +504,7 @@ object ResolveRulesTests extends TestSuite {
             .addReconciliation(ModuleMatchers.all -> ConstraintReconciliation.SemVer)
 
           val res = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addBoms0(dep"org.apache.logging.log4j:log4j-bom:2.23.1".moduleVersionConstraint)
               .addDependencies(
@@ -530,7 +530,7 @@ object ResolveRulesTests extends TestSuite {
             .addRule(DontBumpRootDependencies(), RuleResolution.TryResolve)
 
           val res = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addBoms0(dep"org.apache.logging.log4j:log4j-bom:2.23.1".moduleVersionConstraint)
               .addDependencies(
@@ -565,7 +565,7 @@ object ResolveRulesTests extends TestSuite {
             )
 
           val res = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addDependencies(
                 dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M9",

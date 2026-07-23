@@ -117,7 +117,7 @@ import coursier.version.{Version, VersionInterval}
   @deprecated("Use withVersionRange0 instead", "2.1.25")
   def withVersionRange(newVersionRange: VersionOverrideHelper.LegacyVersionInterval)
     : VersionOverride =
-    copy(versionRange0 = 
+    copy(versionRange0 =
       VersionInterval(
         newVersionRange.from.map(_.repr).map(Version(_)),
         newVersionRange.to.map(_.repr).map(Version(_)),

@@ -12,7 +12,7 @@ object TreeTests extends TestSuite {
 
   import TestHelpers.{ec, cache, handmadeMetadataBase, validateDependencies, versionOf}
 
-  private val resolve = Resolve()
+  private val resolve = Resolve.create()
     .noMirrors
     .withCache(cache)
 

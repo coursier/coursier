@@ -253,7 +253,7 @@ object JvmIndex {
   import JvmIndex.parseDescriptor
 
   def filterIds(os: String, arch: String)(f: (String, String) => Boolean): JvmIndex =
-    copy(content = 
+    copy(content =
       content.map {
         case (`os`, osIndex) =>
           os -> osIndex.map {

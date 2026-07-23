@@ -2,8 +2,6 @@ package coursier.launcher
 
 import dataclass.data
 
-
-
 sealed abstract class ClassPathEntry extends Product with Serializable
 
 object ClassPathEntry {

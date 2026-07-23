@@ -66,7 +66,7 @@ object JavaOrScalaDependency {
       scalaVersion: String,
       platformName: String
     ): Dependency =
-      dependency.copy(minimizedExclusions = 
+      dependency.copy(minimizedExclusions =
         dependency.minimizedExclusions.join(
           MinimizedExclusions(
             exclude.map(_.module(scalaBinaryVersion, scalaVersion)).map { mod =>
@@ -114,7 +114,7 @@ object JavaOrScalaDependency {
 
       baseDependency
         .copy(module = baseDependency.module.copy(name = ModuleName(newName)))
-        .copy(minimizedExclusions = 
+        .copy(minimizedExclusions =
           baseDependency.minimizedExclusions.join(
             MinimizedExclusions(
               exclude.map(_.module(scalaBinaryVersion, scalaVersion)).map { mod =>
@@ -128,8 +128,8 @@ object JavaOrScalaDependency {
     def withPlatform(platformSuffix: String): ScalaDependency =
       if (withPlatformSuffix)
         withUnderlyingDependency { dep =>
-          dep.copy(module = 
-            dep.module.copy(name = 
+          dep.copy(module =
+            dep.module.copy(name =
               ModuleName(dep.module.name.value + platformSuffix)
             )
           )
@@ -241,7 +241,7 @@ object JavaOrScalaDependency {
       classifierOpt match {
         case Some(classifier) =>
           userParams = userParams - classifierKey
-          csDep = csDep.copy(publication = 
+          csDep = csDep.copy(publication =
             csDep.publication.copy(classifier = Classifier(classifier))
           )
         case None =>
@@ -251,7 +251,7 @@ object JavaOrScalaDependency {
       extOpt match {
         case Some(ext) =>
           userParams = userParams - extKey
-          csDep = csDep.copy(publication = 
+          csDep = csDep.copy(publication =
             csDep.publication.copy(ext = Extension(ext))
           )
         case None =>
@@ -261,7 +261,7 @@ object JavaOrScalaDependency {
       typeOpt match {
         case Some(tpe) =>
           userParams = userParams - typeKey
-          csDep = csDep.copy(publication = 
+          csDep = csDep.copy(publication =
             csDep.publication.copy(`type` = Type(tpe))
           )
         case None =>

@@ -176,7 +176,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
     copy(resolve = resolve.copy(throughOpt = fOpt))
 
   def transformFetcher(f: ResolutionProcess.Fetch0[F] => ResolutionProcess.Fetch0[F]): Fetch[F] =
-    copy(resolve = 
+    copy(resolve =
       resolve.copy(transformFetcherOpt = Some(resolve.transformFetcherOpt.fold(f)(_ andThen f)))
     )
   def noTransformFetcher(): Fetch[F] =
@@ -197,9 +197,11 @@ import scala.concurrent.{Await, ExecutionContext, Future}
   def withArtifactTypes(artifactTypes: Set[Type]): Fetch[F] =
     copy(artifacts = artifacts.copy(artifactTypesOpt = Some(artifactTypes)))
   def addArtifactTypes(artifactTypes: Type*): Fetch[F] =
-    copy(artifacts = artifacts.copy(artifactTypesOpt = 
-      Some(artifacts.artifactTypesOpt.getOrElse(Set()) ++ artifactTypes)
-    ))
+    copy(artifacts =
+      artifacts.copy(artifactTypesOpt =
+        Some(artifacts.artifactTypesOpt.getOrElse(Set()) ++ artifactTypes)
+      )
+    )
   def allArtifactTypes(): Fetch[F] =
     copy(artifacts = artifacts.copy(artifactTypesOpt = Some(Set(Type.all))))
 
@@ -229,11 +231,11 @@ import scala.concurrent.{Await, ExecutionContext, Future}
   /** Add variant attributes to be taken into account when picking Gradle Module variants
     */
   def addVariantAttributes(attributes: (String, VariantSelector.VariantMatcher)*): Fetch[F] =
-    copy(resolve = {
+    copy(resolve =
       resolve.copy(resolutionParams =
         resolve.resolutionParams.addVariantAttributes(attributes: _*)
       )
-    })
+    )
 
   def ioResult: F[Fetch.Result] = {
 
@@ -325,7 +327,7 @@ object Fetch {
       Artifact,
       Option[File]
     )]): Result =
-      copy(fullDetailedArtifacts0 = 
+      copy(fullDetailedArtifacts0 =
         artifacts.map {
           case (dep, pub, art, fOpt) =>
             (dep, Right(pub), art, fOpt)

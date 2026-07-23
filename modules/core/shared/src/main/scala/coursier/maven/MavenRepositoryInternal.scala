@@ -456,7 +456,7 @@ private[coursier] class MavenRepositoryInternal(
 
     def artifactWithExtra(publication: Publication) = {
       val artifact = artifactOf(publication)
-      artifact.copy(extra = 
+      artifact.copy(extra =
         artifact.extra + ("metadata" -> metadataArtifact)
       )
     }

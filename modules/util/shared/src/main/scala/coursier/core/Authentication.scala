@@ -5,7 +5,6 @@ import dataclass.{data, since => unroll}
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 
-
 @data case class Authentication(
   userOpt: Option[String],
   passwordOpt: Option[String],

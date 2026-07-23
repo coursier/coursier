@@ -242,7 +242,9 @@ import java.util.concurrent.ConcurrentMap
     publication.attributes
 
   def withAttributes(attributes: Attributes): Dependency =
-    copy(publication = publication.copy(`type` = attributes.`type`).copy(classifier = attributes.classifier))
+    copy(publication =
+      publication.copy(`type` = attributes.`type`).copy(classifier = attributes.classifier)
+    )
   def withPublication(name: String): Dependency =
     copy(publication = Publication(name, Type.empty, Extension.empty, Classifier.empty))
   def withPublication(name: String, `type`: Type): Dependency =
@@ -274,7 +276,7 @@ import java.util.concurrent.ConcurrentMap
   def exclusions(): Set[(Organization, ModuleName)] = minimizedExclusions.toSet()
 
   def addExclusion(org: Organization, name: ModuleName): Dependency =
-    copy(minimizedExclusions = 
+    copy(minimizedExclusions =
       minimizedExclusions.join(
         MinimizedExclusions(Set((org, name)))
       )
@@ -286,28 +288,32 @@ import java.util.concurrent.ConcurrentMap
     copy(bomDependencies = bomDependencies :+ BomDependency(module, version, Configuration.empty))
   @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
   def addBom(module: Module, version: String): Dependency =
-    copy(bomDependencies = bomDependencies :+ BomDependency(
-      module,
-      VersionConstraint0(version),
-      Configuration.empty
-    ))
+    copy(bomDependencies =
+      bomDependencies :+ BomDependency(
+        module,
+        VersionConstraint0(version),
+        Configuration.empty
+      )
+    )
   def addBom(module: Module, version: VersionConstraint0, config: Configuration): Dependency =
     copy(bomDependencies = bomDependencies :+ BomDependency(module, version, config))
   @deprecated("Use the override accepting a VersionConstraint", "2.1.25")
   def addBom(module: Module, version: String, config: Configuration): Dependency =
-    copy(bomDependencies = bomDependencies :+ BomDependency(
-      module,
-      VersionConstraint0(version),
-      config
-    ))
+    copy(bomDependencies =
+      bomDependencies :+ BomDependency(
+        module,
+        VersionConstraint0(version),
+        config
+      )
+    )
   def addBoms0(boms: Seq[(Module, VersionConstraint0)]): Dependency =
-    copy(bomDependencies = 
+    copy(bomDependencies =
       this.bomDependencies ++
         boms.map(t => BomDependency(t._1, t._2, Configuration.empty))
     )
   @deprecated("Prefer addBoms0 instead, that accepts a VersionConstraint", "2.1.25")
   def addBoms(boms: Seq[(Module, String)]): Dependency =
-    copy(bomDependencies = 
+    copy(bomDependencies =
       this.bomDependencies ++
         boms.map(t => BomDependency(t._1, VersionConstraint0(t._2), Configuration.empty))
     )
@@ -315,7 +321,7 @@ import java.util.concurrent.ConcurrentMap
     copy(bomDependencies = this.bomDependencies ++ bomDependencies)
 
   def addOverride(key: DependencyManagement.Key, values: DependencyManagement.Values): Dependency =
-    copy(overridesMap = 
+    copy(overridesMap =
       Overrides.add(overridesMap, Overrides(Map(key -> values)))
     )
   def addOverride(org: Organization, name: ModuleName, version: VersionConstraint0): Dependency = {
@@ -357,7 +363,7 @@ import java.util.concurrent.ConcurrentMap
   def addOverrides(
     entries: Seq[(DependencyManagement.Key, DependencyManagement.Values)]
   ): Dependency =
-    copy(overridesMap = 
+    copy(overridesMap =
       Overrides.add(
         overridesMap,
         Overrides(DependencyManagement.add(Map.empty, entries))

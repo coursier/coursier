@@ -80,6 +80,8 @@ case class FileCache[F[_]](
 
   def withLocation(location: String): FileCache[F] =
     copy(location = new File(location))
+  def withLocation(location: File): FileCache[F] =
+    copy(location = location)
   def withLogger(logger: CacheLogger): FileCache[F] =
     copy(logger = logger)
   def noCredentials: FileCache[F] =
@@ -90,12 +92,44 @@ case class FileCache[F[_]](
     copy(credentials = this.credentials :+ FileCredentials(credentialFile.getAbsolutePath))
   def withTtl(ttl: Duration): FileCache[F] =
     copy(ttl = Some(ttl))
+  def withTtl(ttl: Option[Duration]): FileCache[F] =
+    copy(ttl = ttl)
   def withSslSocketFactory(sslSocketFactory: SSLSocketFactory): FileCache[F] =
     copy(sslSocketFactoryOpt = Some(sslSocketFactory))
   def withHostnameVerifier(hostnameVerifier: HostnameVerifier): FileCache[F] =
     copy(hostnameVerifierOpt = Some(hostnameVerifier))
   def withMaxRedirections(max: Int): FileCache[F] =
     copy(maxRedirections = Some(max))
+  def withMaxRedirections(maxRedirections: Option[Int]): FileCache[F] =
+    copy(maxRedirections = maxRedirections)
+  // Setters that data-class used to generate; kept manually since `@data` is dropped here
+  // (it cannot generate `withX` setters on Scala 3 - see the WithLogger trait requirement).
+  def withCachePolicies(cachePolicies: Seq[CachePolicy]): FileCache[F] =
+    copy(cachePolicies = cachePolicies)
+  def withChecksums(checksums: Seq[Option[String]]): FileCache[F] =
+    copy(checksums = checksums)
+  def withCredentials(credentials: Seq[Credentials]): FileCache[F] =
+    copy(credentials = credentials)
+  def withPool(pool: ExecutorService): FileCache[F] =
+    copy(pool = pool)
+  def withLocalArtifactsShouldBeCached(localArtifactsShouldBeCached: Boolean): FileCache[F] =
+    copy(localArtifactsShouldBeCached = localArtifactsShouldBeCached)
+  def withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections: Boolean): FileCache[F] =
+    copy(followHttpToHttpsRedirections = followHttpToHttpsRedirections)
+  def withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections: Boolean): FileCache[F] =
+    copy(followHttpsToHttpRedirections = followHttpsToHttpRedirections)
+  def withRetry(retry: Int): FileCache[F] =
+    copy(retry = retry)
+  def withBufferSize(bufferSize: Int): FileCache[F] =
+    copy(bufferSize = bufferSize)
+  def withClassLoaders(classLoaders: Seq[ClassLoader]): FileCache[F] =
+    copy(classLoaders = classLoaders)
+  def withClock(clock: Clock): FileCache[F] =
+    copy(clock = clock)
+  def withRetryBackoffInitialDelay(retryBackoffInitialDelay: FiniteDuration): FileCache[F] =
+    copy(retryBackoffInitialDelay = retryBackoffInitialDelay)
+  def withRetryBackoffMultiplier(retryBackoffMultiplier: Double): FileCache[F] =
+    copy(retryBackoffMultiplier = retryBackoffMultiplier)
 
   def localFile(url: String, user: Option[String] = None): File =
     FileCache.localFile0(url, location, user, localArtifactsShouldBeCached)

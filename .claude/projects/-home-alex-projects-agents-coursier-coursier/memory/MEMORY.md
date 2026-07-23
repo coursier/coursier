@@ -1,2 +1,4 @@
 - [coursier unroll build task](coursier-unroll-build-task.md) — reworking unroll branch onto data-class 0.2.8 compat mode (2.12/2.13/3.8.2)
 - [data-class @unroll compat constraints](dataclass-unroll-compat.md) — gotchas of `@data case class` + `since => unroll` cross-building
+- [unroll apply→create + wither fixes](unroll-apply-to-create.md) — CI-fix pattern: create-vs-apply, missing withers on FileCache/RemoteCache
+- [unroll build.mill test cross](unroll-build-mill-test-cross.md) — excluding nested test modules from the scala3Unroll cross value

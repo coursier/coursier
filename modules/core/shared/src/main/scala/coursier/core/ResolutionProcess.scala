@@ -112,7 +112,7 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
     }
   @deprecated("Use missing0 instead", "2.1.25")
   def withMissing(newMissing: Seq[(Module, String)]): Missing =
-    copy(missing0 = 
+    copy(missing0 =
       newMissing.map {
         case (mod, ver) =>
           (mod, VersionConstraint0(ver))

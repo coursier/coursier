@@ -66,10 +66,10 @@ import scala.collection.compat._
       .toMap
 
     if (cantForce.isEmpty) {
-      val res0 = res.copy(forceVersions0 = {
+      val res0 = res.copy(forceVersions0 =
         res.forceVersions0 ++
           conflict.modules.toSeq.map(m => m -> VersionConstraint.fromVersion(selectedVersion))
-      })
+      )
       Right(res0)
     }
     else {

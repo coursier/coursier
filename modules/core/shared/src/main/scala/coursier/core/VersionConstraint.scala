@@ -2,7 +2,6 @@ package coursier.core
 
 import dataclass.data
 
-
 import scala.annotation.tailrec
 
 @deprecated("Use coursier.version.VersionConstraint instead", "2.1.25")

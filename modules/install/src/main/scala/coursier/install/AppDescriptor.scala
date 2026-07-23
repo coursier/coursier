@@ -46,34 +46,34 @@ import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
       .map { versionOverride =>
         copy(repositories = versionOverride.repositories.getOrElse(repositories))
           .copy(dependencies = versionOverride.dependencies.getOrElse(dependencies))
-          .copy(mainClass = 
+          .copy(mainClass =
             versionOverride.mainClass
               .map(mc => if (mc.isEmpty) None else Some(mc))
               .getOrElse(mainClass)
           )
-          .copy(defaultMainClass = 
+          .copy(defaultMainClass =
             versionOverride.defaultMainClass
               .map(dmc => if (dmc.isEmpty) None else Some(dmc))
               .getOrElse(defaultMainClass)
           )
           .copy(javaProperties = versionOverride.javaProperties.getOrElse(javaProperties))
-          .copy(prebuiltLauncher = {
+          .copy(prebuiltLauncher =
             versionOverride.prebuiltLauncher
               .map(l => if (l.isEmpty) None else Some(l))
               .getOrElse(prebuiltLauncher)
-          })
-          .copy(prebuiltBinaries = {
+          )
+          .copy(prebuiltBinaries =
             versionOverride.prebuiltBinaries
               .getOrElse(prebuiltBinaries)
-          })
-          .copy(launcherType = {
+          )
+          .copy(launcherType =
             versionOverride.launcherType
               .getOrElse(launcherType)
-          })
+          )
       }
       .getOrElse(this)
     val deps = overriddenDesc.dependencies
-    overriddenDesc.copy(dependencies = {
+    overriddenDesc.copy(dependencies =
       if (deps.isEmpty)
         deps
       else {
@@ -81,7 +81,7 @@ import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
           deps.head.withUnderlyingDependency(_.copy(versionConstraint = VersionConstraint(ver)))
         dep +: deps.tail
       }
-    })
+    )
   }
 
   def mainVersionOpt: Option[VersionConstraint] =

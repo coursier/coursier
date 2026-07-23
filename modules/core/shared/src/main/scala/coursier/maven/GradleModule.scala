@@ -304,7 +304,7 @@ object GradleModule {
           k -> str
       }
     def withVersion(version: Map[String, String]): ModuleDependency =
-      copy(version0 = 
+      copy(version0 =
         version.map {
           case (k, v) =>
             (k, StringOrSeqString(Right(v)))

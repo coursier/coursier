@@ -190,24 +190,28 @@ object Repository {
 
   implicit class ArtifactExtensions(val underlying: Artifact) extends AnyVal {
     def withDefaultChecksums: Artifact =
-      underlying.copy(checksumUrls = underlying.checksumUrls ++ Seq(
-        "MD5"     -> (underlying.url + ".md5"),
-        "SHA-1"   -> (underlying.url + ".sha1"),
-        "SHA-256" -> (underlying.url + ".sha256")
-      ))
+      underlying.copy(checksumUrls =
+        underlying.checksumUrls ++ Seq(
+          "MD5"     -> (underlying.url + ".md5"),
+          "SHA-1"   -> (underlying.url + ".sha1"),
+          "SHA-256" -> (underlying.url + ".sha256")
+        )
+      )
     def withDefaultSignature: Artifact =
-      underlying.copy(extra = underlying.extra ++ Seq(
-        "sig" ->
-          Artifact(
-            underlying.url + ".asc",
-            Map.empty,
-            Map.empty,
-            changing = underlying.changing,
-            optional = true,
-            authentication = underlying.authentication
-          )
-            .withDefaultChecksums
-      ))
+      underlying.copy(extra =
+        underlying.extra ++ Seq(
+          "sig" ->
+            Artifact(
+              underlying.url + ".asc",
+              Map.empty,
+              Map.empty,
+              changing = underlying.changing,
+              optional = true,
+              authentication = underlying.authentication
+            )
+              .withDefaultChecksums
+        )
+      )
   }
 
   trait Complete[F[_]] {
@@ -389,8 +393,12 @@ object Repository {
       @data case class Org(input: String) extends Input {
         def from: Int = 0
       }
-      @data case class Name(organization: Organization, input: String, from: Int, requiredSuffix: String)
-          extends Input {
+      @data case class Name(
+        organization: Organization,
+        input: String,
+        from: Int,
+        requiredSuffix: String
+      ) extends Input {
         def orgInput: Org =
           Org(organization.value)
       }

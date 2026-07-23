@@ -83,8 +83,7 @@ object ModuleName {
     }
 }
 
-object Module {
-}
+object Module {}
 
 final case class Type(value: String) extends AnyVal {
   def isEmpty: Boolean =
@@ -297,7 +296,7 @@ object Attributes {
     }
   @deprecated("Use withDependencies0 instead", "2.1.25")
   def withDependencies(newDependencies: Seq[(Configuration, Dependency)]): Project =
-    copy(dependencies0 = 
+    copy(dependencies0 =
       newDependencies.map {
         case (config, dep) =>
           (Variant.Configuration(config), dep)
@@ -314,7 +313,7 @@ object Attributes {
     }
   @deprecated("Use withPublications0 instead", "2.1.25")
   def withPublications(newPublications: Seq[(Configuration, Publication)]): Project =
-    copy(publications0 = 
+    copy(publications0 =
       newPublications.map {
         case (config, pub) =>
           (Variant.Configuration(config), pub)
@@ -438,7 +437,7 @@ object Attributes {
     }
   @deprecated("Use withParent0 instead", "2.1.25")
   def withParent(newParent: Option[(Module, String)]): Project =
-    copy(parent0 = 
+    copy(parent0 =
       newParent.map {
         case (mod, ver) =>
           (mod, Version0(ver))
@@ -462,7 +461,7 @@ object Attributes {
     }
   @deprecated("Use withDependencyManagement0 instead", "2.1.25")
   def withDependencyManagement(dependencyManagement: Seq[(Configuration, Dependency)]): Project =
-    copy(dependencyManagement0 = 
+    copy(dependencyManagement0 =
       dependencyManagement.map {
         case (c, dep) =>
           (Variant.Configuration(c), dep)

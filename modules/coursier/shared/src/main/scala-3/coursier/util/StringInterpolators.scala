@@ -24,7 +24,7 @@ object StringInterpolators {
       case Right(mod) => mod
     }
 
-  extension (sc: StringContext) {
+  extension(sc: StringContext) {
 
     def org(args: Any*): Organization =
       Organization(single(sc))

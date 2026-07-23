@@ -80,9 +80,9 @@ object RemoteCacheTests extends TestSuite {
     test("resolve dependency") {
       withRemoteCache { (_, remoteCache) =>
         val dependency = dep"org.scala-lang:scala-compiler:2.13.16"
-        val resolution = Resolve()
+        val resolution = Resolve.create()
           .noMirrors
-          .withRepositories(Seq(MavenRepository(central)))
+          .withRepositories(Seq(MavenRepository.create(central)))
           .withCache(remoteCache)
           .addDependencies(dependency)
           .run()(remoteCache.ec)
@@ -107,7 +107,7 @@ object RemoteCacheTests extends TestSuite {
         val dependency = dep"org.scala-lang:scala-compiler:2.13.16"
         val result = Fetch()
           .noMirrors
-          .withRepositories(Seq(MavenRepository(central)))
+          .withRepositories(Seq(MavenRepository.create(central)))
           .withCache(remoteCache)
           .addDependencies(dependency)
           .runResult()(remoteCache.ec)

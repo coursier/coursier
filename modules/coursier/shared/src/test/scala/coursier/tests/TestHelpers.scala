@@ -81,7 +81,7 @@ object TestHelpers extends PlatformTestHelpers {
       val (dependenciesHashPart, bomModVerHashPart) = {
         def isSimpleDependencies(ds: Seq[Dependency]) = {
           val simpleDeps = Seq(
-            Dependency(
+            Dependency.create(
               rootDep.module,
               rootDep.versionConstraint
             ).withVariantSelector(rootDep.variantSelector)

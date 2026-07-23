@@ -304,7 +304,7 @@ object DependencyParserTests extends TestSuite {
     }
 
     test("single bom") {
-      val expectedDep = Dependency(
+      val expectedDep = Dependency.create(
         module = Module(
           organization = Organization(value = "io.get-coursier.scala-native"),
           name = ModuleName(value = "sandbox_native0.3_2.13"),
@@ -323,7 +323,7 @@ object DependencyParserTests extends TestSuite {
     }
 
     test("multiple boms") {
-      val expectedDep = Dependency(
+      val expectedDep = Dependency.create(
         module = Module(
           organization = Organization(value = "io.get-coursier.scala-native"),
           name = ModuleName(value = "sandbox_native0.3_2.13"),
@@ -343,7 +343,7 @@ object DependencyParserTests extends TestSuite {
     }
 
     test("single override") {
-      val expectedDep = Dependency(
+      val expectedDep = Dependency.create(
         module = Module(
           organization = Organization(value = "io.get-coursier.scala-native"),
           name = ModuleName(value = "sandbox_native0.3_2.13"),
@@ -375,7 +375,7 @@ object DependencyParserTests extends TestSuite {
     }
 
     test("several overrides") {
-      val expectedDep = Dependency(
+      val expectedDep = Dependency.create(
         module = Module(
           organization = Organization(value = "io.get-coursier.scala-native"),
           name = ModuleName(value = "sandbox_native0.3_2.13"),
@@ -475,7 +475,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", VersionConstraint("ver"))
+            Dependency.create(mod"org:name", VersionConstraint("ver"))
               .withVariantSelector(VariantSelector.emptyConfiguration),
             fullCrossVersion = false,
             withPlatformSuffix = false,
@@ -491,7 +491,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", VersionConstraint(""))
+            Dependency.create(mod"org:name", VersionConstraint(""))
               .withVariantSelector(VariantSelector.emptyConfiguration),
             fullCrossVersion = false,
             withPlatformSuffix = false,
@@ -507,7 +507,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", VersionConstraint("ver"))
+            Dependency.create(mod"org:name", VersionConstraint("ver"))
               .withVariantSelector(VariantSelector.emptyConfiguration),
             fullCrossVersion = true,
             withPlatformSuffix = false,
@@ -523,7 +523,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", VersionConstraint(""))
+            Dependency.create(mod"org:name", VersionConstraint(""))
               .withVariantSelector(VariantSelector.emptyConfiguration),
             fullCrossVersion = true,
             withPlatformSuffix = false,
@@ -539,7 +539,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", VersionConstraint("ver"))
+            Dependency.create(mod"org:name", VersionConstraint("ver"))
               .withVariantSelector(VariantSelector.ConfigurationBased(Configuration("conf"))),
             fullCrossVersion = true,
             withPlatformSuffix = false,
@@ -555,7 +555,7 @@ object DependencyParserTests extends TestSuite {
         case Right((dep, params)) =>
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
-            Dependency(mod"org:name", VersionConstraint(""))
+            Dependency.create(mod"org:name", VersionConstraint(""))
               .withVariantSelector(VariantSelector.ConfigurationBased(Configuration("conf"))),
             fullCrossVersion = true,
             withPlatformSuffix = false,

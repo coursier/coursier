@@ -20,7 +20,7 @@ object ArtifactsTests extends TestSuite {
       async {
 
         val res1 = await {
-          Resolve()
+          Resolve.create()
             .noMirrors
             .addDependencies(dep"io.argonaut:argonaut_2.12:6.2.2")
             .withCache(cache)
@@ -28,7 +28,7 @@ object ArtifactsTests extends TestSuite {
         }
 
         val res2 = await {
-          Resolve()
+          Resolve.create()
             .noMirrors
             .addDependencies(dep"com.chuusai:shapeless_2.12:2.3.2")
             .withCache(cache)
@@ -36,7 +36,7 @@ object ArtifactsTests extends TestSuite {
         }
 
         val artifacts = await {
-          Artifacts()
+          Artifacts.create()
             .withResolutions(Seq(res1, res2))
             .withCache(cache)
             .future()
@@ -66,7 +66,7 @@ object ArtifactsTests extends TestSuite {
       async {
 
         val res = await {
-          Resolve()
+          Resolve.create()
             .noMirrors
             .addDependencies(dep"com.chuusai:shapeless_2.12:2.3.2")
             .withCache(cache)
@@ -74,7 +74,7 @@ object ArtifactsTests extends TestSuite {
         }
 
         val artifacts = await {
-          Artifacts()
+          Artifacts.create()
             .withResolution(res)
             .withCache(cache)
             .addExtraArtifacts { l =>
@@ -105,7 +105,7 @@ object ArtifactsTests extends TestSuite {
       async {
 
         val res = await {
-          Resolve()
+          Resolve.create()
             .noMirrors
             .addDependencies(dep"com.chuusai:shapeless_2.12:2.3.2")
             .withCache(cache)
@@ -113,7 +113,7 @@ object ArtifactsTests extends TestSuite {
         }
 
         val artifacts = await {
-          Artifacts()
+          Artifacts.create()
             .withResolution(res)
             .withCache(cache)
             .addTransformArtifacts { l =>
@@ -145,7 +145,7 @@ object ArtifactsTests extends TestSuite {
       async {
 
         val res = await {
-          Resolve()
+          Resolve.create()
             .noMirrors
             .addDependencies(dep"com.chuusai:shapeless_2.12:2.3.2")
             .withCache(cache)
@@ -153,7 +153,7 @@ object ArtifactsTests extends TestSuite {
         }
 
         val artifacts = await {
-          Artifacts()
+          Artifacts.create()
             .withResolutions(Seq(res, res))
             .withCache(cache)
             .future()
@@ -175,7 +175,7 @@ object ArtifactsTests extends TestSuite {
       async {
 
         val res = await {
-          Resolve()
+          Resolve.create()
             .noMirrors
             .addDependencies(
               dep"io.get-coursier:coursier-core_2.12:2.0.0-RC6",
@@ -186,7 +186,7 @@ object ArtifactsTests extends TestSuite {
         }
 
         val artifacts = await {
-          Artifacts()
+          Artifacts.create()
             .withResolution(res)
             .withCache(cache)
             .future()
@@ -227,7 +227,7 @@ object ArtifactsTests extends TestSuite {
         ))
 
         val res = await {
-          Resolve()
+          Resolve.create()
             .noMirrors
             .addDependencies(dep"com.chuusai:shapeless_2.11:2.3.3")
             .withRepositories(Seq(
@@ -239,7 +239,7 @@ object ArtifactsTests extends TestSuite {
         }
 
         val artifacts = await {
-          Artifacts()
+          Artifacts.create()
             .withResolutions(Seq(res))
             .withCache(cache)
             .future()
@@ -262,7 +262,7 @@ object ArtifactsTests extends TestSuite {
         async {
 
           val res = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addDependencies(dep"com.fake:lib1:1.7.27")
               .withRepositories(Seq(
@@ -277,7 +277,7 @@ object ArtifactsTests extends TestSuite {
           }
 
           val artifacts = await {
-            Artifacts()
+            Artifacts.create()
               .withResolutions(Seq(res))
               .withCache(cache)
               .future()
@@ -302,7 +302,7 @@ object ArtifactsTests extends TestSuite {
         async {
 
           val res = await {
-            Resolve()
+            Resolve.create()
               .noMirrors
               .addDependencies(dep"com.fake:lib1:1.7.27")
               .withRepositories(Seq(
@@ -316,7 +316,7 @@ object ArtifactsTests extends TestSuite {
           }
 
           val artifacts = await {
-            Artifacts()
+            Artifacts.create()
               .withResolutions(Seq(res))
               .withCache(cache)
               .future()
@@ -342,7 +342,7 @@ object ArtifactsTests extends TestSuite {
       async {
 
         val res = await {
-          Resolve()
+          Resolve.create()
             .noMirrors
             .addDependencies(dep"com.amazonaws:aws-java-sdk-s3:1.11.507")
             .withCache(cache)

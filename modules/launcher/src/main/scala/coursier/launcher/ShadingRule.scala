@@ -2,7 +2,6 @@ package coursier.launcher
 
 import dataclass.data
 
-
 /** A class relocation rule, applied when generating an assembly.
   *
   * These follow the same semantics as the rules of

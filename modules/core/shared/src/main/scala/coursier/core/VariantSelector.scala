@@ -59,7 +59,7 @@ object VariantSelector {
       if (AttributesBased.reprAsToString.get())
         repr
       else
-        s"AttributesBased(${matchers})"
+        s"AttributesBased($matchers)"
 
     def matches(variantAttributes: Map[String, String]): Option[(Int, Int)] = {
       val matchesMap = matchers.map {

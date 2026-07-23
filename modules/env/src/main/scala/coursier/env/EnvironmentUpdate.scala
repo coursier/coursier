@@ -4,7 +4,6 @@ import dataclass.data
 
 import java.io.File
 
-
 import scala.collection.mutable
 
 @data case class EnvironmentUpdate(

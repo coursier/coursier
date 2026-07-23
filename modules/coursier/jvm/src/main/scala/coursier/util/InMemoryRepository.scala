@@ -64,10 +64,10 @@ object InMemoryRepository {
         var conn: URLConnection = null
         try {
           conn = ConnectionBuilder(url.toString)
-            .copy(followHttpToHttpsRedirections = 
+            .copy(followHttpToHttpsRedirections =
               cacheOpt.fold(false)(_.followHttpToHttpsRedirections)
             )
-            .copy(followHttpsToHttpRedirections = 
+            .copy(followHttpsToHttpRedirections =
               cacheOpt.fold(false)(_.followHttpsToHttpRedirections)
             )
             .copy(sslSocketFactoryOpt = cacheOpt.flatMap(_.sslSocketFactoryOpt))
@@ -215,7 +215,7 @@ object InMemoryRepository {
     }
   @deprecated("Use withFallbacks0 instead", "2.1.25")
   def withFallbacks(newFallbacks: Map[(Module, String), (URL, Boolean)]): InMemoryRepository =
-    copy(fallbacks0 = 
+    copy(fallbacks0 =
       newFallbacks.map {
         case ((mod, ver), value) =>
           ((mod, Version0(ver)), value)

@@ -54,7 +54,7 @@ import coursier.version.{ConstraintReconciliation, Version, VersionConstraint}
     }
   @deprecated("Use withForceVersion0 instead", "2.1.25")
   def withForceVersion(newForceVersion: Map[Module, String]): ResolutionParams =
-    copy(forceVersion0 = 
+    copy(forceVersion0 =
       newForceVersion.map {
         case (k, v) =>
           (k, VersionConstraint(v))
@@ -82,7 +82,7 @@ import coursier.version.{ConstraintReconciliation, Version, VersionConstraint}
   @deprecated("Use withReconciliation0 instead", "2.1.25")
   def withReconciliation(newReconciliation: Seq[(ModuleMatchers, Reconciliation)])
     : ResolutionParams =
-    copy(reconciliation0 = 
+    copy(reconciliation0 =
       newReconciliation.map {
         case (m, Reconciliation.Default) =>
           (m, ConstraintReconciliation.Default)

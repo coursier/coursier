@@ -85,7 +85,7 @@ import scala.language.higherKinds
         exclusions(dep.module.organization, dep.module.name)
       }
       .map { dep =>
-        dep.copy(minimizedExclusions = 
+        dep.copy(minimizedExclusions =
           dep.minimizedExclusions.join(exclusions)
         )
       }
@@ -119,7 +119,7 @@ import scala.language.higherKinds
   def addBom(bomDep: BomDependency): Resolve[F] =
     copy(boms = this.boms :+ bomDep)
   def addBoms0(bomModuleVersions: (Module, VersionConstraint)*): Resolve[F] =
-    copy(boms = 
+    copy(boms =
       this.boms ++
         bomModuleVersions.map(t => BomDependency(t._1, t._2, Configuration.empty))
     )
@@ -191,7 +191,7 @@ import scala.language.higherKinds
   /** Add variant attributes to be taken into account when picking Gradle Module variants
     */
   def addVariantAttributes(attributes: (String, VariantSelector.VariantMatcher)*): Resolve[F] =
-    copy(resolutionParams = 
+    copy(resolutionParams =
       resolutionParams.addVariantAttributes(attributes: _*)
     )
 
@@ -457,7 +457,7 @@ object Resolve extends PlatformResolve {
       .copy(conflicts = Set.empty)
       .copy(filter = Some((dep: Dependency) => params.keepOptionalDependencies || !dep.optional))
       .copy(reconciliation0 = reconciliation)
-      .copy(osInfo = 
+      .copy(osInfo =
         params.osInfoOpt.getOrElse {
           if (params.useSystemOsInfo)
             // call from Sync[F].delay?
@@ -466,7 +466,7 @@ object Resolve extends PlatformResolve {
             Activation.Os.empty
         }
       )
-      .copy(jdkVersion0 = 
+      .copy(jdkVersion0 =
         params.jdkVersionOpt0.orElse {
           if (params.useSystemJdkVersion)
             // call from Sync[F].delay?
@@ -475,7 +475,7 @@ object Resolve extends PlatformResolve {
             None
         }
       )
-      .copy(userActivations = 
+      .copy(userActivations =
         if (params.profiles.isEmpty) None
         else Some(params.profiles.iterator.map(p =>
           if (p.startsWith("!")) p.drop(1) -> false else p -> true
@@ -488,7 +488,7 @@ object Resolve extends PlatformResolve {
       .copy(defaultVariantAttributes = params.finalDefaultVariantAttributes)
       .copy(keepProvidedDependencies = params.keepProvidedDependencies.getOrElse(false))
       .copy(forceDepMgmtVersions = params.forceDepMgmtVersions.getOrElse(false))
-      .copy(enableDependencyOverrides = 
+      .copy(enableDependencyOverrides =
         params.enableDependencyOverrides.getOrElse(Resolution.enableDependencyOverridesDefault)
       )
       .copy(boms = boms)
