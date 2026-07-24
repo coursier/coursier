@@ -32,7 +32,7 @@ final case class Retry(
           Thread.sleep(forcedDelayOpt.getOrElse(delay).toMillis)
           loop(
             attempt + 1,
-            delayMultiplier * delay match {
+            delay * delayMultiplier match {
               case f: FiniteDuration => f
               case _                 => delay // should not happen
             }

@@ -1,18 +1,18 @@
 package coursier.params.rule
 
+import dataclass.{data, since => unroll}
+
 import coursier.core.Resolution
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.graph.Conflict.Conflicted
 import coursier.util.ModuleMatcher
-import dataclass._
-
-@data class Strict(
+@data case class Strict(
   include: Set[ModuleMatcher] = Set(ModuleMatcher.all),
-  @since
+  @unroll
   exclude: Set[ModuleMatcher] = Set.empty,
-  @since
+  @unroll
   includeByDefault: Boolean = false,
-  @since
+  @unroll
   ignoreIfForcedVersion: Boolean = true,
   semVer: Boolean = false
 ) extends Rule {

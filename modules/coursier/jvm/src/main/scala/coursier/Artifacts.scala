@@ -1,5 +1,7 @@
 package coursier
 
+import dataclass.{data, since => unroll}
+
 import java.io.File
 import java.lang.{Boolean => JBoolean}
 
@@ -13,9 +15,7 @@ import scala.collection.compat._
 import scala.collection.mutable
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
-import dataclass._
-
-@data class Artifacts[F[_]](
+@data case class Artifacts[F[_]](
   cache: Cache[F],
   resolutions: Seq[Resolution] = Nil,
   classifiers: Set[Classifier] = Set.empty,
@@ -24,20 +24,20 @@ import dataclass._
   otherCaches: Seq[Cache[F]] = Nil,
   extraArtifactsSeq: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]] = Nil,
   classpathOrder: Boolean = true,
-  @since
+  @unroll
   // format: off
   transformArtifacts:
     Seq[Seq[(Dependency, Publication, Artifact)] =>
       Seq[(Dependency, Publication, Artifact)]] =
     Nil,
-  @since
+  @unroll
   // format: off
   transformArtifacts0:
     Seq[Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] =>
       Seq[(Dependency, Either[VariantPublication, Publication], Artifact)]] =
     Nil,
   extraArtifactsSeq0: Seq[Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] => Seq[Artifact]] = Nil,
-  @since("2.1.25")
+  @unroll
   attributes: Seq[VariantSelector.AttributesBased] = Nil
   // format: on
 )(implicit
@@ -65,26 +65,26 @@ import dataclass._
       }
 
   def withResolution(resolution: Resolution): Artifacts[F] =
-    withResolutions(Seq(resolution))
+    copy(resolutions = Seq(resolution))
   def withMainArtifacts(mainArtifacts: JBoolean): Artifacts[F] =
-    withMainArtifactsOpt(Option(mainArtifacts).map(x => x))
+    copy(mainArtifactsOpt = Option(mainArtifacts).map(x => x))
   def withArtifactTypes(artifactTypes: Set[Type]): Artifacts[F] =
-    withArtifactTypesOpt(Option(artifactTypes))
+    copy(artifactTypesOpt = Option(artifactTypes))
 
   def addExtraArtifacts(
     f: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]
   ): Artifacts[F] =
-    withExtraArtifactsSeq(extraArtifactsSeq :+ f)
+    copy(extraArtifactsSeq = extraArtifactsSeq :+ f)
   def noExtraArtifacts(): Artifacts[F] =
-    withExtraArtifactsSeq(Nil)
+    copy(extraArtifactsSeq = Nil)
   def withExtraArtifacts(
     l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]
   ): Artifacts[F] =
-    withExtraArtifactsSeq(l)
+    copy(extraArtifactsSeq = l)
   def addTransformArtifacts(
     f: Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]
   ): Artifacts[F] =
-    withTransformArtifacts(transformArtifacts :+ f)
+    copy(transformArtifacts = transformArtifacts :+ f)
   def addTransformArtifacts0(
     f: Seq[(Dependency, Either[VariantPublication, Publication], Artifact)] => Seq[(
       Dependency,
@@ -92,7 +92,7 @@ import dataclass._
       Artifact
     )]
   ): Artifacts[F] =
-    withTransformArtifacts0(transformArtifacts0 :+ f)
+    copy(transformArtifacts0 = transformArtifacts0 :+ f)
 
   def io: F[Seq[(Artifact, File)]] =
     ioResult.map(_.artifacts)
@@ -177,10 +177,10 @@ import dataclass._
 
 object Artifacts {
 
-  def apply(): Artifacts[Task] =
+  def create(): Artifacts[Task] =
     new Artifacts(Cache.default)
 
-  @data class Result(
+  @data case class Result(
     fullDetailedArtifacts0: Seq[(
       Dependency,
       Either[VariantPublication, Publication],
@@ -210,7 +210,7 @@ object Artifacts {
       Artifact,
       Option[File]
     )]): Result =
-      withFullDetailedArtifacts0(
+      copy(fullDetailedArtifacts0 =
         artifacts.map {
           case (dep, pub, art, fOpt) =>
             (dep, Right(pub), art, fOpt)
@@ -264,12 +264,12 @@ object Artifacts {
     def withDetailedArtifacts(
       detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)]
     ): Result =
-      withFullDetailedArtifacts0(detailedArtifacts.map { case (dep, pub, art, file) =>
+      copy(fullDetailedArtifacts0 = detailedArtifacts.map { case (dep, pub, art, file) =>
         (dep, Right(pub), art, Some(file))
       })
     @deprecated("Use withFullExtraArtifacts instead", "2.0.0-RC6-15")
     def withExtraArtifacts(extraArtifacts: Seq[(Artifact, File)]): Result =
-      withFullExtraArtifacts(extraArtifacts.map { case (art, file) => (art, Some(file)) })
+      copy(fullExtraArtifacts = extraArtifacts.map { case (art, file) => (art, Some(file)) })
   }
 
   implicit class ArtifactsTaskOps(private val artifacts: Artifacts[Task]) extends AnyVal {
@@ -405,7 +405,7 @@ object Artifacts {
 
     val artifacts = (main ++ classifiersArtifacts ++ attributesArtifacts).map {
       case (dep, pub0 @ Right(pub), artifact) =>
-        (dep.withAttributes(dep.attributes.withClassifier(pub.classifier)), pub0, artifact)
+        (dep.withAttributes(dep.attributes.copy(classifier = pub.classifier)), pub0, artifact)
       case (dep, pub0, artifact) =>
         (dep, pub0, artifact)
     }

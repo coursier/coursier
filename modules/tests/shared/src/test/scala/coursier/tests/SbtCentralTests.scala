@@ -12,7 +12,7 @@ import scala.concurrent.Future
 
 object SbtCentralTests extends CentralTests {
 
-  override def central = SbtMavenRepository(Repositories.central)
+  override def central = SbtMavenRepository.create(Repositories.central)
 
   override def tests = super.tests ++ Tests {
 

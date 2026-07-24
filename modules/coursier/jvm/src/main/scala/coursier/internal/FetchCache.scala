@@ -1,5 +1,7 @@
 package coursier.internal
 
+import dataclass.data
+
 import java.io.File
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
@@ -10,9 +12,8 @@ import coursier.cache.CacheLocks
 import coursier.core.{Classifier, Dependency, Repository, Type}
 import coursier.params.ResolutionParams
 import coursier.paths.CachePath
-import dataclass.data
 
-@data class FetchCache(base: Path) {
+@data case class FetchCache(base: Path) {
 
   def dir(key: FetchCache.Key): Path =
     base.resolve(s"${key.sha1.take(2)}/${key.sha1.drop(2)}")

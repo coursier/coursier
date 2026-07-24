@@ -11,7 +11,8 @@ import coursier.util.StringInterpolators._
 object SbtPluginResolveTests extends TestSuite {
 
   protected lazy val runner = new TestRunner(
-    repositories = Seq(SbtMavenRepository(Repositories.central), Repositories.sbtPlugin("releases"))
+    repositories =
+      Seq(SbtMavenRepository.create(Repositories.central), Repositories.sbtPlugin("releases"))
   )
 
   val tests = Tests {

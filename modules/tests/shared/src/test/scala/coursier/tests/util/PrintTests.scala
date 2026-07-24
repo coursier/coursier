@@ -53,7 +53,7 @@ object PrintTests extends TestSuite {
         val junit        = mod"junit:junit"
         val junitVersion = VersionConstraint("4.10")
 
-        val result = await(runner.resolve(Seq(Dependency(junit, junitVersion))))
+        val result = await(runner.resolve(Seq(Dependency.create(junit, junitVersion))))
 
         val hamcrest        = mod"org.hamcrest:hamcrest-core"
         val hamcrestVersion = VersionConstraint("1.1")
@@ -82,7 +82,7 @@ object PrintTests extends TestSuite {
         val version = VersionConstraint("2.3.11")
 
         val result = await(runner.resolve(
-          Seq(Dependency(mod, version)),
+          Seq(Dependency.create(mod, version)),
           forceVersions =
             Map(mod"org.webjars.npm:caniuse-lite" -> VersionConstraint("1.0.30000748")),
           reconciliation = Some(_ => ConstraintReconciliation.Relaxed)

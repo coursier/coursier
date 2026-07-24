@@ -6,8 +6,8 @@ import java.util.concurrent.TimeUnit
 
 import coursier.maven.MavenRepository
 import coursier.util.StringInterpolators._
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader
-import org.openjdk.jmh.annotations._
+import _root_.org.apache.maven.model.io.xpp3.MavenXpp3Reader
+import _root_.org.openjdk.jmh.annotations._
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration

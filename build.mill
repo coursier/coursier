@@ -44,28 +44,36 @@ implicit def millModuleBasePath: ModuleCtx.Nested =
     this
   )
 
+// The Scala 3 `unroll` cross value (ScalaVersions.scala3Unroll) only exists to check that the
+// data-class main sources still compile through the `@unroll` compatibility mode. Test sources are
+// not migrated to it (they are plain Scala 2 test code and depend on test-only modules that are
+// cross-built for Scala 2 only), so nested test modules contribute nothing there: we blank out their
+// sources and drop their Scala-2-only module dependencies for that cross value.
+def isUnrollOnly(crossValue: String): Boolean =
+  crossValue == ScalaVersions.scala3Unroll
+
 object util extends Module {
   object shared extends SharedScalaSources
-  object jvm    extends Cross[UtilJvm](ScalaVersions.all)
-  object js     extends Cross[UtilJs](ScalaVersions.all)
+  object jvm    extends Cross[UtilJvm](ScalaVersions.allWithUnroll)
+  object js     extends Cross[UtilJs](ScalaVersions.allWithUnroll)
 }
 object core extends Module {
   object shared extends SharedScalaSources
-  object jvm    extends Cross[CoreJvm](ScalaVersions.all)
-  object js     extends Cross[CoreJs](ScalaVersions.all)
+  object jvm    extends Cross[CoreJvm](ScalaVersions.allWithUnroll)
+  object js     extends Cross[CoreJs](ScalaVersions.allWithUnroll)
 }
 object `sbt-maven-repository` extends Module {
   object shared extends SharedScalaSources
-  object jvm    extends Cross[SbtMavenRepositoryJvm](ScalaVersions.all)
-  object js     extends Cross[SbtMavenRepositoryJs](ScalaVersions.all)
+  object jvm    extends Cross[SbtMavenRepositoryJvm](ScalaVersions.allWithUnroll)
+  object js     extends Cross[SbtMavenRepositoryJs](ScalaVersions.allWithUnroll)
 }
 object `cache-util` extends CacheUtil
 object cache extends Module {
   object shared extends SharedScalaSources
-  object jvm    extends Cross[CacheJvm](ScalaVersions.all)
-  object js     extends Cross[CacheJs](ScalaVersions.all)
+  object jvm    extends Cross[CacheJvm](ScalaVersions.allWithUnroll)
+  object js     extends Cross[CacheJs](ScalaVersions.allWithUnroll)
 }
-object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.all)
+object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.allWithUnroll)
 object `benchmark` extends ScalaModule with JmhModule {
   def scalaVersion: mill.api.Task.Simple[String] = ScalaVersions.scala213
   def moduleDeps = Seq(
@@ -79,14 +87,14 @@ object `benchmark` extends ScalaModule with JmhModule {
 
 object `cache-server` extends Cross[CacheServer](ScalaVersions.all)
 
-object launcher             extends Cross[Launcher](ScalaVersions.all)
-object env                  extends Cross[Env](ScalaVersions.all)
+object launcher             extends Cross[Launcher](ScalaVersions.allWithUnroll)
+object env                  extends Cross[Env](ScalaVersions.allWithUnroll)
 object `launcher-native_04` extends LauncherNative04
 
 object coursier extends Module {
   object shared extends SharedScalaSources
-  object jvm    extends Cross[CoursierJvm](ScalaVersions.all)
-  object js     extends Cross[CoursierJs](ScalaVersions.all)
+  object jvm    extends Cross[CoursierJvm](ScalaVersions.allWithUnroll)
+  object js     extends Cross[CoursierJs](ScalaVersions.allWithUnroll)
 }
 
 object `proxy-setup` extends JavaModule with CoursierPublishModule with CsMima {
@@ -339,9 +347,9 @@ trait CoreJvm extends Core with CoreJvmBase with Shading {
   )
   def commitHash = `build-util`.commitHash
   object test extends CrossSbtTests with CsTests {
-    def sources = Task {
-      super.sources() ++ core.shared.testSources()
-    }
+    def sources =
+      if (isUnrollOnly(crossValue)) Task.Sources()
+      else Task(super.sources() ++ core.shared.testSources())
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.jol
     )
@@ -365,9 +373,9 @@ trait CoreJs extends Core with CsScalaJsModule {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
-    def sources = Task {
-      super.sources() ++ core.shared.testSources()
-    }
+    def sources =
+      if (isUnrollOnly(crossValue)) Task.Sources()
+      else Task(super.sources() ++ core.shared.testSources())
     def jsEnvConfig = Task {
       JsTests.jsEnvConfig(super.jsEnvConfig(), forkEnv())
     }
@@ -425,19 +433,17 @@ trait CacheJvm extends CacheJvmBase {
     `custom-protocol-for-test`.runClasspath()
   }
   object test extends CacheJvmBaseTests with CsTests {
-    def sources = Task {
-      super.sources() ++ cache.shared.testSources()
-    }
-    def moduleDeps = super.moduleDeps ++ Seq(
-      coursier.jvm(),
-      `cache-server`(crossValue)
-    )
+    def sources =
+      if (isUnrollOnly(crossValue)) Task.Sources()
+      else Task(super.sources() ++ cache.shared.testSources())
+    def moduleDeps = super.moduleDeps ++
+      (if (isUnrollOnly(crossValue)) Nil
+       else Seq(coursier.jvm(), `cache-server`(crossValue)))
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.http4sBlazeServer,
       Deps.http4sDsl,
-      Deps.logbackClassic,
-      Deps.scalaAsync
-    )
+      Deps.logbackClassic
+    ) ++ (if (scalaVersion().startsWith("2.")) Seq(Deps.scalaAsync) else Nil)
     def compileMvnDeps = super.compileMvnDeps() ++ Seq(
       Deps.jsoniterMacros
     )
@@ -472,9 +478,11 @@ trait ArchiveCache extends ArchiveCacheBase {
     Deps.zstdJni
   )
   object test extends CrossSbtTests with CsTests {
-    def mvnDeps = super.mvnDeps() ++ Seq(
-      Deps.scalaAsync
-    )
+    def sources =
+      if (isUnrollOnly(crossValue)) Task.Sources()
+      else super.sources()
+    def mvnDeps = super.mvnDeps() ++
+      (if (scalaVersion().startsWith("2.")) Seq(Deps.scalaAsync) else Nil)
     def compileMvnDeps = super.compileMvnDeps() ++ Seq(
       Deps.jsoniterMacros
     )
@@ -514,7 +522,11 @@ trait Launcher extends LauncherBase {
   def noProguardBootstrap         = `bootstrap-launcher`.assembly()
   def noProguardResourceBootstrap = `bootstrap-launcher`.resourceAssembly()
 
-  object test extends CrossSbtTests with CsTests
+  object test extends CrossSbtTests with CsTests {
+    def sources =
+      if (isUnrollOnly(crossValue)) Task.Sources()
+      else super.sources()
+  }
 }
 
 trait Env extends CrossSbtModule with CsModule
@@ -531,6 +543,9 @@ trait Env extends CrossSbtModule with CsModule
     Deps.jniUtils
   )
   object test extends CrossSbtTests with CsTests {
+    def sources =
+      if (isUnrollOnly(crossValue)) Task.Sources()
+      else super.sources()
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.jimfs
     )
@@ -554,7 +569,10 @@ trait LauncherNative04 extends CsModule
 
 trait CoursierJvm extends CoursierJvmBase { self =>
   def sources = Task {
-    super.sources() ++ coursier.shared.sources()
+    val versionSources =
+      if (scalaVersion().startsWith("3.")) coursier.shared.sourcesScala3()
+      else coursier.shared.sourcesScala2()
+    super.sources() ++ coursier.shared.sources() ++ versionSources
   }
   def moduleDeps = Seq(
     core.jvm(),
@@ -566,12 +584,12 @@ trait CoursierJvm extends CoursierJvmBase { self =>
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
-    def sources = Task {
-      super.sources() ++ coursier.shared.testSources()
-    }
-    def moduleDeps = super.moduleDeps ++ Seq(
-      `test-cache`.jvm()
-    )
+    def sources =
+      if (isUnrollOnly(crossValue)) Task.Sources()
+      else Task(super.sources() ++ coursier.shared.testSources())
+    def moduleDeps = super.moduleDeps ++
+      (if (isUnrollOnly(crossValue)) Nil
+       else Seq(`test-cache`.jvm()))
     def forkArgs = Task {
       val httpServerCp = `test-cache`.jvm().httpServerClassPath()
         .map(_.path.toString).mkString(File.pathSeparator)
@@ -581,14 +599,15 @@ trait CoursierJvm extends CoursierJvmBase { self =>
     }
   }
   object it extends CrossSbtTests with CoursierTests {
-    def sources = Task.Sources(
-      os.sub / "src/it/scala",
-      os.sub / "src/it/java"
-    )
-    def moduleDeps = super.moduleDeps ++ Seq(
-      `test-cache`.jvm(),
-      self.test
-    )
+    def sources =
+      if (isUnrollOnly(crossValue)) Task.Sources()
+      else Task.Sources(
+        os.sub / "src/it/scala",
+        os.sub / "src/it/java"
+      )
+    def moduleDeps = super.moduleDeps ++
+      (if (isUnrollOnly(crossValue)) Nil
+       else Seq(`test-cache`.jvm(), self.test))
     def forkArgs = Task {
       val testRepositoryDataDir = (tests.handmadeMetadata().path / "http/abc.com").toString
       val httpServerCp = `test-cache`.jvm().httpServerClassPath()
@@ -602,7 +621,10 @@ trait CoursierJvm extends CoursierJvmBase { self =>
 }
 trait CoursierJs extends Coursier with CsScalaJsModule {
   def sources = Task {
-    super.sources() ++ coursier.shared.sources()
+    val versionSources =
+      if (scalaVersion().startsWith("3.")) coursier.shared.sourcesScala3()
+      else coursier.shared.sourcesScala2()
+    super.sources() ++ coursier.shared.sources() ++ versionSources
   }
   def moduleDeps = Seq(
     core.js(),
@@ -612,12 +634,12 @@ trait CoursierJs extends Coursier with CsScalaJsModule {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
-    def sources = Task {
-      super.sources() ++ coursier.shared.testSources()
-    }
-    def moduleDeps = super.moduleDeps ++ Seq(
-      `test-cache`.js()
-    )
+    def sources =
+      if (isUnrollOnly(crossValue)) Task.Sources()
+      else Task(super.sources() ++ coursier.shared.testSources())
+    def moduleDeps = super.moduleDeps ++
+      (if (isUnrollOnly(crossValue)) Nil
+       else Seq(`test-cache`.js()))
     def jsEnvConfig = Task {
       JsTests.jsEnvConfig(super.jsEnvConfig(), forkEnv())
     }

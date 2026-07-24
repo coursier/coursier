@@ -1,11 +1,12 @@
 package coursier.cache
 
-import coursier.util.Sync
 import dataclass.data
+
+import coursier.util.Sync
 
 import java.io.File
 
-@data class DigestBasedArchiveCache[F[_]](
+@data case class DigestBasedArchiveCache[F[_]](
   archiveCache: ArchiveCache[F]
 )(implicit
   sync: Sync[F]

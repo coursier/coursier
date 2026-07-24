@@ -16,8 +16,8 @@ abstract class PlatformCacheCompanion {
     CacheDefaults.cacheServerAddress match {
       case Some(serverAddress) =>
         RemoteCache(serverAddress, CacheDefaults.location)
-          .withBasicAuth(CacheDefaults.cacheServerBasicAuth)
-          .withFileFallback(Some(defaultLocalCacheFor[F]))
+          .copy(basicAuth = CacheDefaults.cacheServerBasicAuth)
+          .copy(fileFallback = Some(defaultLocalCacheFor[F]))
       case None =>
         defaultLocalCacheFor[F]
     }

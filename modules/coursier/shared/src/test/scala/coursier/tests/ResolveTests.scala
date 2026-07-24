@@ -36,7 +36,7 @@ object ResolveTests extends TestSuite {
 
   import TestHelpers.{ec, cache, handmadeMetadataBase, validateDependencies, versionOf}
 
-  private val resolve = Resolve()
+  private val resolve = Resolve.create()
     .noMirrors
     .withCache(cache)
 
@@ -1480,7 +1480,7 @@ object ResolveTests extends TestSuite {
           val res = await {
             resolve
               .addDependencies(
-                Dependency(
+                Dependency.create(
                   Module(
                     org"org.apache.spark",
                     ModuleName(s"spark-core_$scalaBinaryVersion"),

@@ -1,13 +1,14 @@
 package coursier.cache
 
+import dataclass.data
+
 import coursier.cache.internal.Retry
 import coursier.util.{Sync, Task}
-import dataclass.data
 
 import java.nio.file.{Files, Path}
 import java.nio.file.StandardCopyOption
 
-@data class DigestBasedCache[F[_]](
+@data case class DigestBasedCache[F[_]](
   location: Path,
   retry: Retry =
     Retry(

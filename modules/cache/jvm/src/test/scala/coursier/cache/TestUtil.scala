@@ -130,7 +130,7 @@ object TestUtil {
     val (uri0, authOpt) = uri.userInfo match {
       case Some(info) =>
         val updatedUri = uri.copy(authority = uri.authority.map(_.copy(userInfo = None)))
-        (updatedUri, Some(Authentication(info.username)))
+        (updatedUri, Some(Authentication.create(info.username)))
       case None =>
         (uri, None)
     }

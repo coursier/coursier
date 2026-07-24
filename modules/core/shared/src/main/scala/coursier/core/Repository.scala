@@ -1,5 +1,7 @@
 package coursier.core
 
+import dataclass.data
+
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.util.Monad.ops._
 import coursier.version.{
@@ -7,7 +9,6 @@ import coursier.version.{
   Version => Version0,
   VersionConstraint => VersionConstraint0
 }
-import dataclass.data
 
 import scala.annotation.nowarn
 
@@ -57,7 +58,7 @@ trait Repository extends Serializable with ArtifactSource {
                 EitherT[F, String, (ArtifactSource, Project)](F.point(Left(reason)))
               case Some(version0) =>
                 find0(module, version0, fetch)
-                  .map(t => t._1 -> t._2.withVersions(Some(versions0)))
+                  .map(t => t._1 -> t._2.copy(versions = Some(versions0)))
             }
         }
     }
@@ -189,24 +190,28 @@ object Repository {
 
   implicit class ArtifactExtensions(val underlying: Artifact) extends AnyVal {
     def withDefaultChecksums: Artifact =
-      underlying.withChecksumUrls(underlying.checksumUrls ++ Seq(
-        "MD5"     -> (underlying.url + ".md5"),
-        "SHA-1"   -> (underlying.url + ".sha1"),
-        "SHA-256" -> (underlying.url + ".sha256")
-      ))
+      underlying.copy(checksumUrls =
+        underlying.checksumUrls ++ Seq(
+          "MD5"     -> (underlying.url + ".md5"),
+          "SHA-1"   -> (underlying.url + ".sha1"),
+          "SHA-256" -> (underlying.url + ".sha256")
+        )
+      )
     def withDefaultSignature: Artifact =
-      underlying.withExtra(underlying.extra ++ Seq(
-        "sig" ->
-          Artifact(
-            underlying.url + ".asc",
-            Map.empty,
-            Map.empty,
-            changing = underlying.changing,
-            optional = true,
-            authentication = underlying.authentication
-          )
-            .withDefaultChecksums
-      ))
+      underlying.copy(extra =
+        underlying.extra ++ Seq(
+          "sig" ->
+            Artifact(
+              underlying.url + ".asc",
+              Map.empty,
+              Map.empty,
+              changing = underlying.changing,
+              optional = true,
+              authentication = underlying.authentication
+            )
+              .withDefaultChecksums
+        )
+      )
   }
 
   trait Complete[F[_]] {
@@ -385,15 +390,19 @@ object Repository {
       def from: Int
     }
     object Input {
-      @data class Org(input: String) extends Input {
+      @data case class Org(input: String) extends Input {
         def from: Int = 0
       }
-      @data class Name(organization: Organization, input: String, from: Int, requiredSuffix: String)
-          extends Input {
+      @data case class Name(
+        organization: Organization,
+        input: String,
+        from: Int,
+        requiredSuffix: String
+      ) extends Input {
         def orgInput: Org =
           Org(organization.value)
       }
-      @data class Ver(module: Module, input: String, from: Int) extends Input {
+      @data case class Ver(module: Module, input: String, from: Int) extends Input {
         def orgInput: Org =
           nameInput.orgInput
         def nameInput: Name = {
@@ -443,7 +452,7 @@ object Repository {
         }
     }
 
-    @data class Result(input: Input, completions: Seq[String])
+    @data case class Result(input: Input, completions: Seq[String])
 
     final class CompletingOrgException(input: String, cause: Throwable = null)
         extends Exception(s"Completing organization '$input'", cause)

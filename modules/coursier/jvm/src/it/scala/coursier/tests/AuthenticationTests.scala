@@ -42,7 +42,7 @@ object AuthenticationTests extends TestSuite with TestRepositoryServer.Test {
 
   private def testCredentials(credentials: DirectCredentials): Unit = {
     val result = withTmpDir { dir =>
-      Resolve()
+      Resolve.create()
         .noMirrors
         .withRepositories(Seq(
           MavenRepository(testRepo),

@@ -18,7 +18,7 @@ private[coursier] abstract class WebPageCompatibility {
     // getting weird "maybe a wrong Dynamic method signature" errors when trying to factor that more
 
     if (jqueryAvailable)
-      g.$("<div></div>").html(page).find("a").each({ self: js.Dynamic =>
+      g.$("<div></div>").html(page).find("a").each({ (self: js.Dynamic) =>
         val href = g.$(self).attr("href")
         if (js.typeOf(href) != "undefined")
           links += href.asInstanceOf[String]
@@ -26,7 +26,7 @@ private[coursier] abstract class WebPageCompatibility {
       }: js.ThisFunction0[js.Dynamic, Unit])
     else {
       val jquery = cheerio.load(page)
-      jquery("a").each({ self: js.Dynamic =>
+      jquery("a").each({ (self: js.Dynamic) =>
         val href = jquery(self).attr("href")
         if (js.typeOf(href) != "undefined")
           links += href.asInstanceOf[String]

@@ -1,13 +1,14 @@
 package coursier.ivy
 
+import dataclass.data
+
 import coursier.util.Traverse.TraverseOps
 import coursier.util.ValidationNel
-import dataclass.data
 import fastparse._, NoWhitespace._
 
 import scala.language.implicitConversions
 
-@data class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty]) {
+@data case class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty]) {
 
   def string: String = chunks.map(_.string).mkString
 
@@ -54,7 +55,7 @@ import scala.language.implicitConversions
   }
 }
 
-@data class Pattern(chunks: Seq[Pattern.Chunk]) {
+@data case class Pattern(chunks: Seq[Pattern.Chunk]) {
 
   def +:(chunk: Pattern.Chunk): Pattern =
     Pattern(chunk +: chunks)
@@ -137,15 +138,15 @@ object PropertiesPattern {
   }
 
   object ChunkOrProperty {
-    @data class Prop(name: String, alternative: Option[Seq[ChunkOrProperty]])
+    @data case class Prop(name: String, alternative: Option[Seq[ChunkOrProperty]])
         extends ChunkOrProperty {
       def string: String =
         s"$${" + name + alternative.fold("")(alt => "-" + alt.map(_.string).mkString) + "}"
     }
-    @data class Var(name: String) extends ChunkOrProperty {
+    @data case class Var(name: String) extends ChunkOrProperty {
       def string: String = "[" + name + "]"
     }
-    @data class Opt(content: Seq[ChunkOrProperty]) extends ChunkOrProperty {
+    @data case class Opt(content: Seq[ChunkOrProperty]) extends ChunkOrProperty {
       def string: String = "(" + content.map(_.string).mkString + ")"
     }
     object Opt {
@@ -156,7 +157,7 @@ object PropertiesPattern {
       def apply(elem: ChunkOrProperty, elem1: ChunkOrProperty, elem2: ChunkOrProperty): Opt =
         Opt(Seq(elem, elem1, elem2))
     }
-    @data class Const(value: String) extends ChunkOrProperty {
+    @data case class Const(value: String) extends ChunkOrProperty {
       def string: String = value
     }
 
@@ -193,7 +194,7 @@ object PropertiesPattern {
   }
 
   def parse(pattern: String): Either[String, PropertiesPattern] =
-    fastparse.parse(pattern, parser(_)) match {
+    fastparse.parse(pattern, parser(using _)) match {
       case f: Parsed.Failure =>
         Left(f.msg)
       case Parsed.Success(v, _) =>
@@ -209,10 +210,10 @@ object Pattern {
   }
 
   object Chunk {
-    @data class Var(name: String) extends Chunk {
+    @data case class Var(name: String) extends Chunk {
       def string: String = "[" + name + "]"
     }
-    @data class Opt(content: Seq[Chunk]) extends Chunk {
+    @data case class Opt(content: Seq[Chunk]) extends Chunk {
       def string: String = "(" + content.map(_.string).mkString + ")"
     }
     object Opt {
@@ -223,7 +224,7 @@ object Pattern {
       def apply(chunk: Chunk, chunk1: Chunk, chunk2: Chunk): Opt =
         Opt(Seq(chunk, chunk1, chunk2))
     }
-    @data class Const(value: String) extends Chunk {
+    @data case class Const(value: String) extends Chunk {
       def string: String = value
     }
 

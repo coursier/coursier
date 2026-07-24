@@ -1,22 +1,22 @@
 package coursier.install
 
+import dataclass.{data, since => unroll}
+
 import coursier.core.Repository
 import coursier.parse.JavaOrScalaDependency
 import coursier.version.{Version, VersionInterval}
-import dataclass._
-
 // format: off
-@data class VersionOverride(
+@data case class VersionOverride(
   versionRange0: VersionInterval,
   dependencies: Option[Seq[JavaOrScalaDependency]] = None,
   repositories: Option[Seq[Repository]] = None,
   mainClass: Option[String] = None,
   defaultMainClass: Option[String] = None,
   javaProperties: Option[Seq[(String, String)]] = None,
-  @since("2.1.0-M4")
+  @unroll
     prebuiltLauncher: Option[String] = None,
   prebuiltBinaries: Option[Map[String, String]] = None,
-  @since("2.1.10")
+  @unroll
     launcherType: Option[LauncherType] = None
 ) {
   // format: on
@@ -117,7 +117,7 @@ import dataclass._
   @deprecated("Use withVersionRange0 instead", "2.1.25")
   def withVersionRange(newVersionRange: VersionOverrideHelper.LegacyVersionInterval)
     : VersionOverride =
-    withVersionRange0(
+    copy(versionRange0 =
       VersionInterval(
         newVersionRange.from.map(_.repr).map(Version(_)),
         newVersionRange.to.map(_.repr).map(Version(_)),
@@ -130,7 +130,7 @@ import dataclass._
 object VersionOverride {
 
   @deprecated("Use the override accepting a coursier.version.VersionInterval instead", "2.1.25")
-  def apply(
+  def create(
     versionRange: coursier.core.VersionInterval,
     dependencies: Option[Seq[JavaOrScalaDependency]],
     repositories: Option[Seq[Repository]],
@@ -157,7 +157,7 @@ object VersionOverride {
     launcherType
   )
   @deprecated("Use the override accepting a coursier.version.VersionInterval instead", "2.1.25")
-  def apply(
+  def create(
     versionRange: coursier.core.VersionInterval,
     dependencies: Option[Seq[JavaOrScalaDependency]],
     repositories: Option[Seq[Repository]],
@@ -182,7 +182,7 @@ object VersionOverride {
     prebuiltBinaries
   )
   @deprecated("Use the override accepting a coursier.version.VersionInterval instead", "2.1.25")
-  def apply(
+  def create(
     versionRange: coursier.core.VersionInterval,
     dependencies: Option[Seq[JavaOrScalaDependency]],
     repositories: Option[Seq[Repository]],
@@ -203,7 +203,7 @@ object VersionOverride {
     javaProperties
   )
   @deprecated("Use the override accepting a coursier.version.VersionInterval instead", "2.1.25")
-  def apply(
+  def create(
     versionRange: coursier.core.VersionInterval
   ): VersionOverride = apply(
     VersionInterval(

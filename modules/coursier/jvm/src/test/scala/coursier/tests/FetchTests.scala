@@ -368,7 +368,7 @@ object FetchTests extends TestSuite {
         }
 
         val subsetArtifacts = await {
-          Artifacts()
+          Artifacts.create()
             .withResolution(subsetRes)
             .future()
         }
@@ -376,7 +376,7 @@ object FetchTests extends TestSuite {
         await(validateArtifacts(subsetRes, subsetArtifacts.map(_._1)))
 
         val subsetSourcesArtifacts = await {
-          Artifacts()
+          Artifacts.create()
             .withResolution(subsetRes)
             .withClassifiers(Set(Classifier.sources))
             .future()

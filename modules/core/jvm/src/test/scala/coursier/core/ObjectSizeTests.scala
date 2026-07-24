@@ -18,7 +18,7 @@ object ObjectSizeTests extends TestSuite {
 
     test("Dependency sizes") {
       test("should be the same for same dependency") {
-        def d = Dependency(
+        def d = Dependency.create(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
           VersionConstraint0("0.6.0")
         )
@@ -29,11 +29,11 @@ object ObjectSizeTests extends TestSuite {
       }
 
       test("should be the different for different dependency") {
-        def d1 = Dependency(
+        def d1 = Dependency.create(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
           VersionConstraint0("0.6.0")
         )
-        def d2 = Dependency(
+        def d2 = Dependency.create(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
           VersionConstraint0("0.7.0")
         )
@@ -82,11 +82,11 @@ object ObjectSizeTests extends TestSuite {
           Dependency.instanceCache.size()
         }
         Dependency.instanceCache.clear()
-        def d1 = Dependency(
+        def d1 = Dependency.create(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
           VersionConstraint0("0.6.0")
         )
-        def d2 = Dependency(
+        def d2 = Dependency.create(
           Module(Organization("tpolecat"), ModuleName("doobie-core_2.12"), Map.empty),
           VersionConstraint0("0.7.0")
         )

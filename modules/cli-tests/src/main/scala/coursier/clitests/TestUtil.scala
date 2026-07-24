@@ -36,7 +36,7 @@ object TestUtil {
       )
   }
 
-  val propsDep = Dependency(
+  val propsDep = Dependency.create(
     Module(Organization("io.get-coursier"), ModuleName("props"), Map.empty),
     VersionConstraint("1.0.2")
   )

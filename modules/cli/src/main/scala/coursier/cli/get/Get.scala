@@ -23,7 +23,7 @@ object Get extends CoursierCommand[GetOptions] {
     val pool  = Sync.fixedThreadPool(params.cache.parallel)
     val cache = params.cache.cache(pool, params.output.logger())
 
-    val archiveCache = ArchiveCache[Task](params.archiveCacheLocation)
+    val archiveCache = ArchiveCache.create[Task](params.archiveCacheLocation)
       .withCache(cache)
 
     val artifacts = args.all.map { rawUrl =>
@@ -31,14 +31,14 @@ object Get extends CoursierCommand[GetOptions] {
       for (changing <- params.changing)
         artifact = artifact.withChanging(changing)
       if (params.authHeaders.nonEmpty)
-        artifact = artifact.withAuthentication(Some(Authentication(params.authHeaders)))
+        artifact = artifact.withAuthentication(Some(Authentication.create(params.authHeaders)))
       for (referenceUrl <- params.referenceFileUrl) {
         var referenceArtifact = Artifact.fromUrl(referenceUrl)
         for (changing <- params.changing)
           referenceArtifact = referenceArtifact.withChanging(changing)
         if (params.authHeaders.nonEmpty)
           referenceArtifact =
-            referenceArtifact.withAuthentication(Some(Authentication(params.authHeaders)))
+            referenceArtifact.withAuthentication(Some(Authentication.create(params.authHeaders)))
         artifact = artifact.withExtra(
           artifact.extra ++ Seq("metadata" -> referenceArtifact)
         )

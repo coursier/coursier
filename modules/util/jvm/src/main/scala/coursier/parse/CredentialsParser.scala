@@ -11,8 +11,8 @@ object CredentialsParser {
   def parse(s: String): Either[String, DirectCredentials] = {
     val m = pattern.matcher(s)
     if (m.matches()) {
-      val cred = DirectCredentials(m.group(1), m.group(3), m.group(4))
-        .withRealm(Option(m.group(2)).map(_.stripPrefix("(").stripSuffix(")")))
+      val cred = DirectCredentials.create(m.group(1), m.group(3), m.group(4))
+        .copy(realm = Option(m.group(2)).map(_.stripPrefix("(").stripSuffix(")")))
       Right(cred)
     }
     else

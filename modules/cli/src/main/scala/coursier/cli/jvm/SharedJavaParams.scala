@@ -29,7 +29,7 @@ final case class SharedJavaParams(
     verbosity: Int
   ): (JvmCache, coursier.jvm.JavaHome) = {
     def jvmCacheOf(cache: Cache[Task]) = {
-      val archiveCache = ArchiveCache().withCache(cache)
+      val archiveCache = ArchiveCache.create().withCache(cache)
       var cache0       = JvmCache().withArchiveCache(archiveCache)
       for (arch <- architecture)
         cache0 = cache0.withArchitecture(arch)

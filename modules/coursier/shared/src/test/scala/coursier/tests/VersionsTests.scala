@@ -11,7 +11,7 @@ object VersionsTests extends TestSuite {
 
   import TestHelpers.{ec, cache}
 
-  private val versions = Versions()
+  private val versions = Versions.create()
     .withCache(cache)
 
   val tests = Tests {

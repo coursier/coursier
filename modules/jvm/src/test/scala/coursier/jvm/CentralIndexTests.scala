@@ -37,7 +37,7 @@ object CentralIndexTests extends TestSuite {
         val index = await {
           JvmIndex.load(
             cache = cache,
-            repositories = Resolve().repositories,
+            repositories = Resolve.create().repositories,
             indexChannel = channel(os, arch),
             os = Some(os),
             arch = Some(arch)
@@ -60,7 +60,7 @@ object CentralIndexTests extends TestSuite {
         val index = await {
           JvmIndex.load(
             cache = cache,
-            repositories = Resolve().repositories,
+            repositories = Resolve.create().repositories,
             indexChannel = channel(os, arch),
             os = Some(os),
             arch = Some(arch)

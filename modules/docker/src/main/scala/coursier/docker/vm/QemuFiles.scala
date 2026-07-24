@@ -185,7 +185,7 @@ object QemuFiles {
 
   def default(
     artifactsTask: Task[Artifacts] = Artifacts.default(),
-    archiveCache: ArchiveCache[Task] = ArchiveCache()
+    archiveCache: ArchiveCache[Task] = ArchiveCache.create()
   ): Task[QemuFiles] =
     artifactsTask.flatMap { artifacts =>
 

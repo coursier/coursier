@@ -1,5 +1,7 @@
 package coursier.core
 
+import dataclass.data
+
 import coursier.util.{EitherT, Gather, Monad}
 import coursier.util.Monad.ops._
 import coursier.version.{
@@ -7,7 +9,6 @@ import coursier.version.{
   Version => Version0,
   VersionConstraint => VersionConstraint0
 }
-import dataclass.data
 
 import scala.annotation.tailrec
 import scala.collection.compat.immutable.LazyList
@@ -97,7 +98,7 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
   def current: Resolution
 }
 
-@data class Missing(
+@data case class Missing(
   missing0: Seq[(Module, VersionConstraint0)],
   current: Resolution,
   cont: Resolution => ResolutionProcess
@@ -111,7 +112,7 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
     }
   @deprecated("Use missing0 instead", "2.1.25")
   def withMissing(newMissing: Seq[(Module, String)]): Missing =
-    withMissing0(
+    copy(missing0 =
       newMissing.map {
         case (mod, ver) =>
           (mod, VersionConstraint0(ver))
@@ -200,14 +201,14 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
 
 }
 
-@data class Continue(
+@data case class Continue(
   current: Resolution,
   cont: Resolution => ResolutionProcess
 ) extends ResolutionProcess {
 
   def next: ResolutionProcess = cont(current)
 
-  @tailrec def nextNoCont: ResolutionProcess =
+  @tailrec final def nextNoCont: ResolutionProcess =
     next match {
       case nextCont: Continue => nextCont.nextNoCont
       case other              => other
@@ -215,7 +216,7 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
 
 }
 
-@data class Done(resolution: Resolution) extends ResolutionProcess {
+@data case class Done(resolution: Resolution) extends ResolutionProcess {
 
   def current: Resolution = resolution
 }
@@ -299,7 +300,7 @@ object ResolutionProcess {
                       case None =>
                         s"No latest ${Latest0.Integration.name} version found in $listingUrl"
                       case Some(v0) =>
-                        if (v0 == selectedVer.repr)
+                        if (v0.repr == selectedVer.repr)
                           s"Latest ${Latest0.Integration.name} $v0 from $listingUrl not in ${version.interval.repr}"
                         else
                           s"Latest ${Latest0.Integration.name} $v0 from $listingUrl not retained"

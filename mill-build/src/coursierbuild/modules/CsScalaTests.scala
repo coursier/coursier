@@ -4,7 +4,7 @@ import mill.*
 import mill.scalalib.*
 
 trait CsScalaTests extends CsTests with ScalaModule {
-  def scalacOptions = Task {
+  override def scalacOptions = Task {
     CsScalaTests.removeReleaseOption(super.scalacOptions())
   }
 }

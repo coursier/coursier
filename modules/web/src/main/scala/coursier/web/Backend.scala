@@ -250,7 +250,7 @@ final class Backend($ : BackendScope[_, State]) {
     e.preventDefault()
     $.modState { state =>
       val modules =
-        state.modules :+ Dependency(Module(org"", name"", Map.empty), VersionConstraint(""))
+        state.modules :+ Dependency.create(Module(org"", name"", Map.empty), VersionConstraint(""))
       println(s"Modules:\n${modules.mkString("\n")}")
       state.copy(
         modules = modules,

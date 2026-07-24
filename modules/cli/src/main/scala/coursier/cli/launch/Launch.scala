@@ -424,7 +424,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
 
     val asyncProfilerOptions = params.asyncProfilerVersion match {
       case Some(asyncProfilerVersion) =>
-        val archiveCache = ArchiveCache().withCache(cache)
+        val archiveCache = ArchiveCache.create().withCache(cache)
         val (url, pathInArchive) =
           if (Properties.isMac)
             (

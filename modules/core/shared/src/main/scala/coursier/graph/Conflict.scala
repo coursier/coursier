@@ -1,5 +1,7 @@
 package coursier.graph
 
+import dataclass.data
+
 import coursier.core.{Module, Resolution}
 import coursier.version.{
   Version => Version0,
@@ -8,9 +10,8 @@ import coursier.version.{
 }
 import coursier.util.Print.{Colors, compatibleVersions}
 import coursier.util.{Print, Tree}
-import dataclass.data
 
-@data class Conflict(
+@data case class Conflict(
   module: Module,
   version0: Version0,
   wantedVersionConstraint: VersionConstraint0,
@@ -46,15 +47,15 @@ import dataclass.data
   @deprecated("Use withVersion0 instead", "2.1.25")
   def withVersion(newVersion: String): Conflict =
     if (newVersion == version) this
-    else withVersion0(Version0(newVersion))
+    else copy(version0 = Version0(newVersion))
   @deprecated("Use withWantedVersionConstraint instead", "2.1.25")
   def withWantedVersion(newWantedVersion: String): Conflict =
     if (newWantedVersion == wantedVersion) this
-    else withWantedVersionConstraint(VersionConstraint0(newWantedVersion))
+    else copy(wantedVersionConstraint = VersionConstraint0(newWantedVersion))
   @deprecated("Use withDependeeVersionConstraint instead", "2.1.25")
   def withDependeeVersion(newDependeeVersion: String): Conflict =
     if (newDependeeVersion == dependeeVersion) this
-    else withDependeeVersionConstraint(VersionConstraint0(newDependeeVersion))
+    else copy(dependeeVersionConstraint = VersionConstraint0(newDependeeVersion))
 
   import Conflict.{VersionConstraintOps, VersionOps}
 
@@ -80,7 +81,7 @@ object Conflict {
     }
   }
 
-  @data class Conflicted(tree: ReverseModuleTree) {
+  @data case class Conflicted(tree: ReverseModuleTree) {
     def conflict: Conflict =
       Conflict(
         tree.dependsOnModule,

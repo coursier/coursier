@@ -2,13 +2,12 @@ package coursier.benchmark
 
 import coursier.cache.Cache
 import coursier.core.{Configuration, ResolutionProcess}
-import coursier.version.Version
 import coursier.{Repositories, Resolve}
 import coursier.internal.InMemoryCachingFetcher
 import coursier.maven.{MavenRepository, Pom}
 import coursier.util.StringInterpolators._
 import coursier.util.Sync
-import org.openjdk.jmh.annotations.{Scope, State}
+import _root_.org.openjdk.jmh.annotations.{Scope, State}
 
 import scala.concurrent.{Await, ExecutionContext}
 import scala.concurrent.duration.Duration
@@ -71,8 +70,8 @@ class TestState {
         val str  = inMemoryCache.fromCache(url)
         val p    = MavenRepository.parseRawPomSax(str).toOption.get
         val p0 = Pom.addOptionalDependenciesInConfig(
-          p.withActualVersionOpt0(Some(Version(v)))
-            .withConfigurations(MavenRepository.defaultConfigurations),
+          p.withActualVersionOpt(Some(v))
+            .copy(configurations = MavenRepository.defaultConfigurations),
           Set(Configuration.empty, Configuration.default),
           Configuration.optional
         )

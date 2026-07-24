@@ -43,7 +43,10 @@ object IvyLocalTests extends TestSuite {
 
           val res = await(runner.resolve(
             Seq(
-              Dependency(mod"io.get-coursier:coursier-cli_2.12", localVersion).withTransitive(false)
+              Dependency.create(
+                mod"io.get-coursier:coursier-cli_2.12",
+                localVersion
+              ).withTransitive(false)
             ),
             extraRepos = extraRepos
           ))
@@ -62,7 +65,7 @@ object IvyLocalTests extends TestSuite {
       test("javadocSources") {
         async {
           val res = await(runner.resolve(
-            Seq(Dependency(module, localVersion)),
+            Seq(Dependency.create(module, localVersion)),
             extraRepos = extraRepos
           ))
 

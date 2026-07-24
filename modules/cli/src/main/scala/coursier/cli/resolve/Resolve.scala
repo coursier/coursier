@@ -280,7 +280,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
       _ = Output.printDependencies(params0.output, params0.resolution, deps, stdout, stderr)
 
       res1 <-
-        coursier.Resolve()
+        coursier.Resolve.create()
           .withDependencies(deps)
           .withRepositories(repositories)
           .withResolutionParams(params0.resolution)

@@ -1,5 +1,7 @@
 package coursier.cache.internal
 
+import dataclass.{data, since => unroll}
+
 import java.io.{Serializable => _, _}
 import java.net.{HttpURLConnection, URLConnection, MalformedURLException}
 import java.nio.ByteBuffer
@@ -19,8 +21,6 @@ import coursier.credentials.DirectCredentials
 import coursier.paths.{CachePath, Util}
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
-import dataclass._
-
 import scala.annotation.tailrec
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Try
@@ -28,7 +28,7 @@ import scala.util.Properties
 import scala.util.control.NonFatal
 
 // format: off
-@data class Downloader[F[_]](
+@data case class Downloader[F[_]](
   artifact: Artifact,
   cachePolicy: CachePolicy,
   location: File,
@@ -46,15 +46,15 @@ import scala.util.control.NonFatal
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   bufferSize: Int = CacheDefaults.bufferSize,
-  @since("2.0.16")
+  @unroll
     classLoaders: Seq[ClassLoader] = Nil,
-  @since("2.1.0-RC3")
+  @unroll
     clock: Clock = Clock.systemDefaultZone(),
-  @since("2.1.11")
+  @unroll
     retryCount: Int = CacheDefaults.retryCount,
-  @since("2.1.11")
+  @unroll
     retryBackoffInitialDelay: FiniteDuration = CacheDefaults.retryBackoffInitialDelay,
-  @since("2.1.11")
+  @unroll
     retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier
 )(implicit
   S: Sync[F]
@@ -97,15 +97,15 @@ import scala.util.control.NonFatal
 
       try {
         conn = ConnectionBuilder(url)
-          .withAuthentication(artifact.authentication)
-          .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
-          .withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections)
-          .withAutoCredentials(allCredentials0)
-          .withSslSocketFactoryOpt(sslSocketFactoryOpt)
-          .withHostnameVerifierOpt(hostnameVerifierOpt)
-          .withMethod("HEAD")
-          .withMaxRedirectionsOpt(maxRedirections)
-          .withClassLoaders(classLoaders)
+          .copy(authentication = artifact.authentication)
+          .copy(followHttpToHttpsRedirections = followHttpToHttpsRedirections)
+          .copy(followHttpsToHttpRedirections = followHttpsToHttpRedirections)
+          .copy(autoCredentials = allCredentials0)
+          .copy(sslSocketFactoryOpt = sslSocketFactoryOpt)
+          .copy(hostnameVerifierOpt = hostnameVerifierOpt)
+          .copy(method = "HEAD")
+          .copy(maxRedirectionsOpt = maxRedirections)
+          .copy(classLoaders = classLoaders)
           .connection()
 
         conn match {
@@ -229,16 +229,16 @@ import scala.util.control.NonFatal
 
       try {
         val (conn0, partialDownload) = ConnectionBuilder(url)
-          .withAuthentication(authenticationOpt)
-          .withAlreadyDownloaded(alreadyDownloaded)
-          .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
-          .withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections)
-          .withAutoCredentials(allCredentials0.filter(_.matchHost)) // just in case
-          .withSslSocketFactoryOpt(sslSocketFactoryOpt)
-          .withHostnameVerifierOpt(hostnameVerifierOpt)
-          .withMethod("GET")
-          .withMaxRedirectionsOpt(maxRedirections)
-          .withClassLoaders(classLoaders)
+          .copy(authentication = authenticationOpt)
+          .copy(alreadyDownloaded = alreadyDownloaded)
+          .copy(followHttpToHttpsRedirections = followHttpToHttpsRedirections)
+          .copy(followHttpsToHttpRedirections = followHttpsToHttpRedirections)
+          .copy(autoCredentials = allCredentials0.filter(_.matchHost)) // just in case
+          .copy(sslSocketFactoryOpt = sslSocketFactoryOpt)
+          .copy(hostnameVerifierOpt = hostnameVerifierOpt)
+          .copy(method = "GET")
+          .copy(maxRedirectionsOpt = maxRedirections)
+          .copy(classLoaders = classLoaders)
           .connectionMaybePartial()
         conn = conn0
 
@@ -977,14 +977,14 @@ object Downloader {
 
     try {
       conn = ConnectionBuilder(url)
-        .withAuthentication(authentication)
-        .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
-        .withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections)
-        .withAutoCredentials(credentials)
-        .withSslSocketFactoryOpt(sslSocketFactoryOpt)
-        .withHostnameVerifierOpt(hostnameVerifierOpt)
-        .withMethod("HEAD")
-        .withMaxRedirectionsOpt(maxRedirectionsOpt)
+        .copy(authentication = authentication)
+        .copy(followHttpToHttpsRedirections = followHttpToHttpsRedirections)
+        .copy(followHttpsToHttpRedirections = followHttpsToHttpRedirections)
+        .copy(autoCredentials = credentials)
+        .copy(sslSocketFactoryOpt = sslSocketFactoryOpt)
+        .copy(hostnameVerifierOpt = hostnameVerifierOpt)
+        .copy(method = "HEAD")
+        .copy(maxRedirectionsOpt = maxRedirectionsOpt)
         .connection()
 
       conn match {

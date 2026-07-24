@@ -217,7 +217,7 @@ object PomParser {
             relocationVersionOpt.nonEmpty
           if (isRelocated)
             Some {
-              Variant.emptyConfiguration -> Dependency(
+              Variant.emptyConfiguration -> Dependency.create(
                 Module(
                   organization = relocationGroupIdOpt.getOrElse(projModule.organization),
                   name = relocationArtifactIdOpt.getOrElse(projModule.name),
@@ -486,7 +486,7 @@ object PomParser {
           state.dependencyExclusions = Set()
         }
         def end(state: State) = {
-          val d = Dependency(
+          val d = Dependency.create(
             Module(state.dependencyGroupIdOpt.get, state.dependencyArtifactIdOpt.get, Map.empty),
             VersionConstraint(state.dependencyVersion),
             VariantSelector.emptyConfiguration,

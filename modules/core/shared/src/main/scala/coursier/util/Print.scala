@@ -1,5 +1,7 @@
 package coursier.util
 
+import dataclass.data
+
 import coursier.core.{
   Attributes,
   Configuration,
@@ -11,7 +13,6 @@ import coursier.core.{
 }
 import coursier.graph.{Conflict, DependencyTree, ReverseModuleTree}
 import coursier.version.{Version, VersionConstraint, VersionInterval}
-import dataclass.data
 
 object Print {
 
@@ -22,7 +23,7 @@ object Print {
     def get(colors: Boolean): Colors = if (colors) `with` else `without`
   }
 
-  @data class Colors private (red: String, yellow: String, reset: String)
+  @data case class Colors private (red: String, yellow: String, reset: String)
 
   def dependency(dep: Dependency): String =
     dependency(dep, printExclusions = false)
@@ -74,7 +75,7 @@ object Print {
     val deps0 =
       if (useFinalVersions)
         deps.map { dep =>
-          dep.withVersionConstraint(
+          dep.copy(versionConstraint =
             projects
               .get(dep.moduleVersionConstraint)
               .fold(dep.versionConstraint)(proj => VersionConstraint.fromVersion(proj.version0))
@@ -88,7 +89,7 @@ object Print {
         deps0
           .groupBy { dep =>
             dep
-              .withVariantSelector(VariantSelector.emptyConfiguration)
+              .copy(variantSelector = VariantSelector.emptyConfiguration)
               .withAttributes(Attributes.empty)
           }
           .toVector
@@ -112,7 +113,7 @@ object Print {
                 if (configurations.isEmpty) Nil
                 else {
                   val conf = Configuration.join(configurations.toVector.sorted.distinct: _*)
-                  Seq(k.withVariantSelector(VariantSelector.ConfigurationBased(conf)))
+                  Seq(k.copy(variantSelector = VariantSelector.ConfigurationBased(conf)))
                 }
               updatedConfDep ++ others
           }

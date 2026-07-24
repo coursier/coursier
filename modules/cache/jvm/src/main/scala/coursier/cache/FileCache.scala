@@ -1,5 +1,7 @@
 package coursier.cache
 
+import dataclass.{since => unroll}
+
 import java.io.{Serializable => _, _}
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets.UTF_8
@@ -22,15 +24,13 @@ import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
 import coursier.util.Monad.ops._
-import dataclass.data
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.Properties
 import scala.util.control.NonFatal
 
 // format: off
-@data class FileCache[F[_]](
+case class FileCache[F[_]](
   location: File,
   cachePolicies: Seq[CachePolicy] = CacheDefaults.cachePolicies,
   checksums: Seq[Option[String]] = CacheDefaults.checksums,
@@ -48,13 +48,13 @@ import scala.util.control.NonFatal
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   retry: Int = CacheDefaults.retryCount,
   bufferSize: Int = CacheDefaults.bufferSize,
-  @since("2.0.16")
+  @unroll
     classLoaders: Seq[ClassLoader] = Nil,
-  @since("2.1.0-RC3")
+  @unroll
     clock: Clock = Clock.systemDefaultZone(),
-  @since("2.1.11")
+  @unroll
     retryBackoffInitialDelay: FiniteDuration = CacheDefaults.retryBackoffInitialDelay,
-  @since("2.1.11")
+  @unroll
     retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier
 )(implicit
   sync: Sync[F]
@@ -79,21 +79,57 @@ import scala.util.control.NonFatal
     S.delay(allCredentials0)
 
   def withLocation(location: String): FileCache[F] =
-    withLocation(new File(location))
+    copy(location = new File(location))
+  def withLocation(location: File): FileCache[F] =
+    copy(location = location)
+  def withLogger(logger: CacheLogger): FileCache[F] =
+    copy(logger = logger)
   def noCredentials: FileCache[F] =
-    withCredentials(Nil)
+    copy(credentials = Nil)
   def addCredentials(credentials: Credentials*): FileCache[F] =
-    withCredentials(this.credentials ++ credentials)
+    copy(credentials = this.credentials ++ credentials)
   def addFileCredentials(credentialFile: File): FileCache[F] =
-    withCredentials(this.credentials :+ FileCredentials(credentialFile.getAbsolutePath))
+    copy(credentials = this.credentials :+ FileCredentials(credentialFile.getAbsolutePath))
   def withTtl(ttl: Duration): FileCache[F] =
-    withTtl(Some(ttl))
+    copy(ttl = Some(ttl))
+  def withTtl(ttl: Option[Duration]): FileCache[F] =
+    copy(ttl = ttl)
   def withSslSocketFactory(sslSocketFactory: SSLSocketFactory): FileCache[F] =
-    withSslSocketFactoryOpt(Some(sslSocketFactory))
+    copy(sslSocketFactoryOpt = Some(sslSocketFactory))
   def withHostnameVerifier(hostnameVerifier: HostnameVerifier): FileCache[F] =
-    withHostnameVerifierOpt(Some(hostnameVerifier))
+    copy(hostnameVerifierOpt = Some(hostnameVerifier))
   def withMaxRedirections(max: Int): FileCache[F] =
-    withMaxRedirections(Some(max))
+    copy(maxRedirections = Some(max))
+  def withMaxRedirections(maxRedirections: Option[Int]): FileCache[F] =
+    copy(maxRedirections = maxRedirections)
+  // Setters that data-class used to generate; kept manually since `@data` is dropped here
+  // (it cannot generate `withX` setters on Scala 3 - see the WithLogger trait requirement).
+  def withCachePolicies(cachePolicies: Seq[CachePolicy]): FileCache[F] =
+    copy(cachePolicies = cachePolicies)
+  def withChecksums(checksums: Seq[Option[String]]): FileCache[F] =
+    copy(checksums = checksums)
+  def withCredentials(credentials: Seq[Credentials]): FileCache[F] =
+    copy(credentials = credentials)
+  def withPool(pool: ExecutorService): FileCache[F] =
+    copy(pool = pool)
+  def withLocalArtifactsShouldBeCached(localArtifactsShouldBeCached: Boolean): FileCache[F] =
+    copy(localArtifactsShouldBeCached = localArtifactsShouldBeCached)
+  def withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections: Boolean): FileCache[F] =
+    copy(followHttpToHttpsRedirections = followHttpToHttpsRedirections)
+  def withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections: Boolean): FileCache[F] =
+    copy(followHttpsToHttpRedirections = followHttpsToHttpRedirections)
+  def withRetry(retry: Int): FileCache[F] =
+    copy(retry = retry)
+  def withBufferSize(bufferSize: Int): FileCache[F] =
+    copy(bufferSize = bufferSize)
+  def withClassLoaders(classLoaders: Seq[ClassLoader]): FileCache[F] =
+    copy(classLoaders = classLoaders)
+  def withClock(clock: Clock): FileCache[F] =
+    copy(clock = clock)
+  def withRetryBackoffInitialDelay(retryBackoffInitialDelay: FiniteDuration): FileCache[F] =
+    copy(retryBackoffInitialDelay = retryBackoffInitialDelay)
+  def withRetryBackoffMultiplier(retryBackoffMultiplier: Double): FileCache[F] =
+    copy(retryBackoffMultiplier = retryBackoffMultiplier)
 
   def localFile(url: String, user: Option[String] = None): File =
     FileCache.localFile0(url, location, user, localArtifactsShouldBeCached)
@@ -193,7 +229,7 @@ import scala.util.control.NonFatal
         val authOpt = allCredentials
           .find(_.autoMatches(artifact.url, None))
           .map(_.authentication)
-        artifact.withAuthentication(authOpt)
+        artifact.copy(authentication = authOpt)
       }
       else
         artifact
@@ -220,7 +256,7 @@ import scala.util.control.NonFatal
         val authOpt = allCredentials
           .find(_.autoMatches(artifact.url, None))
           .map(_.authentication)
-        artifact.withAuthentication(authOpt)
+        artifact.copy(authentication = authOpt)
       }
       else
         artifact
@@ -334,7 +370,7 @@ import scala.util.control.NonFatal
 
     val (artifact0, links) =
       if (artifact.url.endsWith("/.links"))
-        (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
+        (artifact.copy(url = artifact.url.stripSuffix(".links")), true)
       else (artifact, false)
 
     filePerPolicy(artifact0, policy).leftMap(_.describe).flatMap { f =>
@@ -484,7 +520,7 @@ object FileCache {
     new File(file.getParentFile, s"${auxiliaryFilePrefix(file)}$key0")
   }
 
-  def apply[F[_]]()(implicit S: Sync[F] = Task.sync): FileCache[F] =
+  def create[F[_]]()(implicit S: Sync[F] = Task.sync): FileCache[F] =
     FileCache(CacheDefaults.location)(S)
 
   /* Store computed cache in a file so we don't have to recompute them over and over. */

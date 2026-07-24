@@ -1,13 +1,14 @@
 package coursier.env
 
+import dataclass.data
+
 import java.nio.charset.StandardCharsets
 import java.util.Base64
-import dataclass.data
 import java.io.InputStream
 import java.io.ByteArrayOutputStream
 import scala.util.Try
 
-@data class PowershellRunner(
+@data case class PowershellRunner(
   powershellExePath: String = "powershell.exe",
   options: Seq[String] = PowershellRunner.defaultOptions,
   encodeProgram: Boolean = true

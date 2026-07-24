@@ -169,7 +169,7 @@ private[coursier] class MavenRepositoryInternal(
   def postProcessProject(project: Project): Either[String, Project] =
     Right {
       Pom.addOptionalDependenciesInConfig(
-        project.withConfigurations(defaultConfigurations),
+        project.copy(configurations = defaultConfigurations),
         Set(Configuration.empty, Configuration.default),
         Configuration.optional
       )
@@ -240,7 +240,7 @@ private[coursier] class MavenRepositoryInternal(
               )
             case versioning @ Some(_) =>
               findVersioning(module, version, versioning, fetch)
-                .map(_.withSnapshotVersioning(Some(snapshotVersioning)))
+                .map(_.copy(snapshotVersioning = Some(snapshotVersioning)))
           }
         }
 
@@ -259,7 +259,7 @@ private[coursier] class MavenRepositoryInternal(
       // keep exact version used to get metadata, in case the one inside the metadata is wrong
       res.map(_.map { proj =>
         if (proj.version0 == version) proj
-        else proj.withActualVersionOpt0(Some(version))
+        else proj.copy(actualVersionOpt0 = Some(version))
       })
     }
 
@@ -294,7 +294,7 @@ private[coursier] class MavenRepositoryInternal(
     def pomArtifact =
       if (checkModule)
         basePomArtifact
-          .withExtra(Map("check" -> baseModuleArtifact))
+          .copy(extra = Map("check" -> baseModuleArtifact))
       else
         basePomArtifact
     def pomProjectTask = fetch(pomArtifact).flatMap(parsePom(_))
@@ -304,7 +304,7 @@ private[coursier] class MavenRepositoryInternal(
           val moduleArtifact = baseModuleArtifact
             // keep track of missing module files, so that we don't attempt to download
             // them over and over, and so that we know we can safely use a cached POM
-            .withExtra(Map("cache-errors" -> Artifact("")))
+            .copy(extra = Map("cache-errors" -> Artifact("")))
           fetch(moduleArtifact).run.flatMap {
             case Left(err) =>
               F.point(Right(Left(err)))
@@ -377,7 +377,7 @@ private[coursier] class MavenRepositoryInternal(
           )
         )
         if (project.module == module) project
-        else project.withModule(module)
+        else project.copy(module = module)
       }
     }
 
@@ -391,7 +391,7 @@ private[coursier] class MavenRepositoryInternal(
   ): EitherT[F, String, Project] =
     fetchArtifact(module, version, versioningValue, fetch).map { proj =>
       if (proj.version0 == version) proj
-      else proj.withActualVersionOpt0(Some(version))
+      else proj.copy(actualVersionOpt0 = Some(version))
     }
 
   private def artifacts0(
@@ -456,7 +456,7 @@ private[coursier] class MavenRepositoryInternal(
 
     def artifactWithExtra(publication: Publication) = {
       val artifact = artifactOf(publication)
-      artifact.withExtra(
+      artifact.copy(extra =
         artifact.extra + ("metadata" -> metadataArtifact)
       )
     }
@@ -560,7 +560,7 @@ private[coursier] class MavenRepositoryInternal(
       }
       .map {
         case (pub, opt) =>
-          val a = artifactWithExtra(pub).withOptional(opt)
+          val a = artifactWithExtra(pub).copy(optional = opt)
           (pub, a)
       }
   }
@@ -619,7 +619,7 @@ private[coursier] class MavenRepositoryInternal(
                     isDir = true
                   )
                 ).resolve(baseUri)
-            val art = Artifact(uri.toASCIIString).withOptional(false)
+            val art = Artifact(uri.toASCIIString).copy(optional = false)
             (pub, art)
           }
         }

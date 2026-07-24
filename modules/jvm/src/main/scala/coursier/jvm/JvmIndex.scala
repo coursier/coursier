@@ -1,5 +1,7 @@
 package coursier.jvm
 
+import dataclass.data
+
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -13,7 +15,6 @@ import coursier.core.{Dependency, Repository}
 import coursier.util.{Artifact, Task}
 import coursier.util.Traverse.TraverseOps
 import coursier.version.{Latest, Version, VersionParse}
-import dataclass.data
 
 import scala.collection.compat._
 import scala.util.{Failure, Success, Try}
@@ -36,7 +37,7 @@ object JvmIndex {
   def coursierIndexCoordinates: String =
     JvmChannel.centralModule().repr
 
-  private def artifact(url: String) = Artifact(url).withChanging(true)
+  private def artifact(url: String) = Artifact(url).copy(changing = true)
 
   private val codec = JsonCodecMaker.make[Map[
     String,
@@ -95,7 +96,7 @@ object JvmIndex {
 
     for {
       res <- coursier.Fetch(cache)
-        .withDependencies(Seq(Dependency(channel.module, channel.versionConstraint)))
+        .withDependencies(Seq(Dependency.create(channel.module, channel.versionConstraint)))
         .withRepositories(repositories)
         .ioResult
 
@@ -209,10 +210,10 @@ object JvmIndex {
   def load(
     cache: Cache[Task]
   ): Task[JvmIndex] =
-    load(cache, coursier.Resolve().repositories, JvmChannel.default(), None, None)
+    load(cache, coursier.Resolve.create().repositories, JvmChannel.default(), None, None)
 
   def load(): Task[JvmIndex] =
-    load(Cache.default, coursier.Resolve().repositories, JvmChannel.default(), None, None)
+    load(Cache.default, coursier.Resolve.create().repositories, JvmChannel.default(), None, None)
 
   @deprecated("Use JvmChannel.currentOs instead", "2.1.15")
   def currentOs: Either[String, String] =
@@ -244,7 +245,7 @@ object JvmIndex {
   }
 }
 
-@data class JvmIndex(
+@data case class JvmIndex(
   content: Map[String, Map[String, Map[String, Map[String, String]]]],
   jdkNamePrefix: Option[String] = Some("jdk@")
 ) {
@@ -252,7 +253,7 @@ object JvmIndex {
   import JvmIndex.parseDescriptor
 
   def filterIds(os: String, arch: String)(f: (String, String) => Boolean): JvmIndex =
-    withContent(
+    copy(content =
       content.map {
         case (`os`, osIndex) =>
           os -> osIndex.map {

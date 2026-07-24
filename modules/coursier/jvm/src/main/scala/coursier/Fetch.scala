@@ -1,5 +1,7 @@
 package coursier
 
+import dataclass.data
+
 import java.io.File
 import java.lang.{Boolean => JBoolean}
 
@@ -21,12 +23,11 @@ import coursier.internal.FetchCache
 import coursier.params.{Mirror, ResolutionParams}
 import coursier.util.{Artifact, Sync, Task}
 import coursier.util.Monad.ops._
-import dataclass.data
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-@data class Fetch[F[_]](
+@data case class Fetch[F[_]](
   private val resolve: Resolve[F],
   private val artifacts: Artifacts[F],
   fetchCacheOpt: Option[File]
@@ -83,12 +84,12 @@ import scala.concurrent.{Await, ExecutionContext, Future}
             resolve
               .resolutionParams
               // taken into account in resolve.finalDependencies
-              .withExclusions(Set())
+              .copy(exclusions = Set())
               // these are taken into account below
-              .withForceVersion0(Map())
-              .withProperties(Nil)
-              .withForcedProperties(Map())
-              .withProfiles(Set()),
+              .copy(forceVersion0 = Map())
+              .copy(properties = Nil)
+              .copy(forcedProperties = Map())
+              .copy(profiles = Set()),
             resolve.resolutionParams
               .forceVersion0
               .toVector
@@ -120,119 +121,121 @@ import scala.concurrent.{Await, ExecutionContext, Future}
     cacheKeyOpt.nonEmpty
 
   def withDependencies(dependencies: Seq[Dependency]): Fetch[F] =
-    withResolve(resolve.withDependencies(dependencies))
+    copy(resolve = resolve.copy(dependencies = dependencies))
   def addDependencies(dependencies: Dependency*): Fetch[F] =
-    withResolve(resolve.withDependencies(resolve.dependencies ++ dependencies))
+    copy(resolve = resolve.copy(dependencies = resolve.dependencies ++ dependencies))
 
   def withBomDependencies(bomDependencies: Seq[Dependency]): Fetch[F] =
-    withResolve(resolve.withBomDependencies(bomDependencies))
+    copy(resolve = resolve.copy(bomDependencies = bomDependencies))
   @deprecated("Use addBoms instead", "2.1.18")
   def addBomDependencies(bomDependencies: Dependency*): Fetch[F] =
-    withResolve(resolve.withBomDependencies(resolve.bomDependencies ++ bomDependencies))
+    copy(resolve = resolve.copy(bomDependencies = resolve.bomDependencies ++ bomDependencies))
   def addBoms(bomDependencies: BomDependency*): Fetch[F] =
-    withResolve(resolve.withBoms(resolve.boms ++ bomDependencies))
+    copy(resolve = resolve.copy(boms = resolve.boms ++ bomDependencies))
 
   def withRepositories(repositories: Seq[Repository]): Fetch[F] =
-    withResolve(resolve.withRepositories(repositories))
+    copy(resolve = resolve.copy(repositories = repositories))
   def addRepositories(repositories: Repository*): Fetch[F] =
-    withResolve(resolve.withRepositories(resolve.repositories ++ repositories))
+    copy(resolve = resolve.copy(repositories = resolve.repositories ++ repositories))
 
   def noMirrors: Fetch[F] =
-    withResolve(resolve.noMirrors)
+    copy(resolve = resolve.noMirrors)
 
   def withMirrors(mirrors: Seq[Mirror]): Fetch[F] =
-    withResolve(resolve.withMirrors(mirrors))
+    copy(resolve = resolve.copy(mirrors = mirrors))
   def addMirrors(mirrors: Mirror*): Fetch[F] =
-    withResolve(resolve.withMirrors(resolve.mirrors ++ mirrors))
+    copy(resolve = resolve.copy(mirrors = resolve.mirrors ++ mirrors))
 
   def withResolutionParams(resolutionParams: ResolutionParams): Fetch[F] =
-    withResolve(resolve.withResolutionParams(resolutionParams))
+    copy(resolve = resolve.copy(resolutionParams = resolutionParams))
   def mapResolutionParams(f: ResolutionParams => ResolutionParams): Fetch[F] =
-    withResolve(resolve.withResolutionParams(f(resolutionParams)))
+    copy(resolve = resolve.copy(resolutionParams = f(resolutionParams)))
 
   def withCache(cache: Cache[F]): Fetch[F] =
-    withResolve(resolve.withCache(cache))
-      .withArtifacts(artifacts.withCache(cache))
+    copy(resolve = resolve.copy(cache = cache))
+      .copy(artifacts = artifacts.copy(cache = cache))
 
   def withResolveCache(cache: Cache[F]): Fetch[F] =
-    withResolve(resolve.withCache(cache))
+    copy(resolve = resolve.copy(cache = cache))
   def withArtifactsCache(cache: Cache[F]): Fetch[F] =
-    withArtifacts(artifacts.withCache(cache))
+    copy(artifacts = artifacts.copy(cache = cache))
 
   def withOtherArtifactsCaches(caches: Seq[Cache[F]]): Fetch[F] =
-    withArtifacts(artifacts.withOtherCaches(caches))
+    copy(artifacts = artifacts.copy(otherCaches = caches))
 
   def withFetchCache(location: File): Fetch[F] =
-    withFetchCacheOpt(Some(location))
+    copy(fetchCacheOpt = Some(location))
   def withFetchCache(locationOpt: Option[File]): Fetch[F] =
-    withFetchCacheOpt(locationOpt)
+    copy(fetchCacheOpt = locationOpt)
 
   def transformResolution(f: F[Resolution] => F[Resolution]): Fetch[F] =
-    withResolve(resolve.withThroughOpt(Some(resolve.throughOpt.fold(f)(_ andThen f))))
+    copy(resolve = resolve.copy(throughOpt = Some(resolve.throughOpt.fold(f)(_ andThen f))))
   def noTransformResolution(): Fetch[F] =
-    withResolve(resolve.withThroughOpt(None))
+    copy(resolve = resolve.copy(throughOpt = None))
   def withTransformResolution(fOpt: Option[F[Resolution] => F[Resolution]]): Fetch[F] =
-    withResolve(resolve.withThroughOpt(fOpt))
+    copy(resolve = resolve.copy(throughOpt = fOpt))
 
   def transformFetcher(f: ResolutionProcess.Fetch0[F] => ResolutionProcess.Fetch0[F]): Fetch[F] =
-    withResolve(
-      resolve.withTransformFetcherOpt(Some(resolve.transformFetcherOpt.fold(f)(_ andThen f)))
+    copy(resolve =
+      resolve.copy(transformFetcherOpt = Some(resolve.transformFetcherOpt.fold(f)(_ andThen f)))
     )
   def noTransformFetcher(): Fetch[F] =
-    withResolve(resolve.withTransformFetcherOpt(None))
+    copy(resolve = resolve.copy(transformFetcherOpt = None))
   def withTransformFetcher(
     fOpt: Option[ResolutionProcess.Fetch0[F] => ResolutionProcess.Fetch0[F]]
   ): Fetch[F] =
-    withResolve(resolve.withTransformFetcherOpt(fOpt))
+    copy(resolve = resolve.copy(transformFetcherOpt = fOpt))
 
   def withClassifiers(classifiers: Set[Classifier]): Fetch[F] =
-    withArtifacts(artifacts.withClassifiers(classifiers))
+    copy(artifacts = artifacts.copy(classifiers = classifiers))
   def addClassifiers(classifiers: Classifier*): Fetch[F] =
-    withArtifacts(artifacts.withClassifiers(artifacts.classifiers ++ classifiers))
+    copy(artifacts = artifacts.copy(classifiers = artifacts.classifiers ++ classifiers))
   def withMainArtifacts(mainArtifacts: JBoolean): Fetch[F] =
-    withArtifacts(artifacts.withMainArtifactsOpt(Option(mainArtifacts).map(x => x)))
+    copy(artifacts = artifacts.copy(mainArtifactsOpt = Option(mainArtifacts).map(x => x)))
   def withMainArtifacts(): Fetch[F] =
-    withArtifacts(artifacts.withMainArtifactsOpt(Some(true)))
+    copy(artifacts = artifacts.copy(mainArtifactsOpt = Some(true)))
   def withArtifactTypes(artifactTypes: Set[Type]): Fetch[F] =
-    withArtifacts(artifacts.withArtifactTypesOpt(Some(artifactTypes)))
+    copy(artifacts = artifacts.copy(artifactTypesOpt = Some(artifactTypes)))
   def addArtifactTypes(artifactTypes: Type*): Fetch[F] =
-    withArtifacts(artifacts.withArtifactTypesOpt(
-      Some(artifacts.artifactTypesOpt.getOrElse(Set()) ++ artifactTypes)
-    ))
+    copy(artifacts =
+      artifacts.copy(artifactTypesOpt =
+        Some(artifacts.artifactTypesOpt.getOrElse(Set()) ++ artifactTypes)
+      )
+    )
   def allArtifactTypes(): Fetch[F] =
-    withArtifacts(artifacts.withArtifactTypesOpt(Some(Set(Type.all))))
+    copy(artifacts = artifacts.copy(artifactTypesOpt = Some(Set(Type.all))))
 
   def withArtifactAttributes(attributes: Seq[VariantSelector.AttributesBased]): Fetch[F] =
-    withArtifacts(artifacts.withAttributes(attributes))
+    copy(artifacts = artifacts.copy(attributes = attributes))
 
   def addExtraArtifacts(f: Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]): Fetch[F] =
-    withArtifacts(artifacts.withExtraArtifactsSeq(artifacts.extraArtifactsSeq :+ f))
+    copy(artifacts = artifacts.copy(extraArtifactsSeq = artifacts.extraArtifactsSeq :+ f))
   def noExtraArtifacts(): Fetch[F] =
-    withArtifacts(artifacts.withExtraArtifactsSeq(Nil))
+    copy(artifacts = artifacts.copy(extraArtifactsSeq = Nil))
   def withExtraArtifacts(
     l: Seq[Seq[(Dependency, Publication, Artifact)] => Seq[Artifact]]
   ): Fetch[F] =
-    withArtifacts(artifacts.withExtraArtifactsSeq(l))
+    copy(artifacts = artifacts.copy(extraArtifactsSeq = l))
 
   def addTransformArtifacts(
     f: Seq[(Dependency, Publication, Artifact)] => Seq[(Dependency, Publication, Artifact)]
   ): Fetch[F] =
-    withArtifacts(artifacts.addTransformArtifacts(f))
+    copy(artifacts = artifacts.addTransformArtifacts(f))
 
   def withClasspathOrder(classpathOrder: Boolean): Fetch[F] =
-    withArtifacts(artifacts.withClasspathOrder(classpathOrder))
+    copy(artifacts = artifacts.copy(classpathOrder = classpathOrder))
 
   def withGradleModuleSupport(enable: Boolean): Fetch[F] =
-    withResolve(resolve.withGradleModuleSupport(Some(enable)))
+    copy(resolve = resolve.copy(gradleModuleSupport = Some(enable)))
 
   /** Add variant attributes to be taken into account when picking Gradle Module variants
     */
   def addVariantAttributes(attributes: (String, VariantSelector.VariantMatcher)*): Fetch[F] =
-    withResolve {
-      resolve.withResolutionParams(
+    copy(resolve =
+      resolve.copy(resolutionParams =
         resolve.resolutionParams.addVariantAttributes(attributes: _*)
       )
-    }
+    )
 
   def ioResult: F[Fetch.Result] = {
 
@@ -286,7 +289,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 
 object Fetch {
 
-  @data class Result(
+  @data case class Result(
     resolution: Resolution = Resolution(),
     fullDetailedArtifacts0: Seq[(
       Dependency,
@@ -324,7 +327,7 @@ object Fetch {
       Artifact,
       Option[File]
     )]): Result =
-      withFullDetailedArtifacts0(
+      copy(fullDetailedArtifacts0 =
         artifacts.map {
           case (dep, pub, art, fOpt) =>
             (dep, Right(pub), art, fOpt)
@@ -371,12 +374,12 @@ object Fetch {
     def withDetailedArtifacts(
       detailedArtifacts: Seq[(Dependency, Publication, Artifact, File)]
     ): Result =
-      withFullDetailedArtifacts0(detailedArtifacts.map { case (dep, pub, art, file) =>
+      copy(fullDetailedArtifacts0 = detailedArtifacts.map { case (dep, pub, art, file) =>
         (dep, Right(pub), art, Some(file))
       })
     @deprecated("Use withFullExtraArtifacts instead", "2.0.0-RC6-15")
     def withExtraArtifacts(extraArtifacts: Seq[(Artifact, File)]): Result =
-      withFullExtraArtifacts(extraArtifacts.map { case (art, file) => (art, Some(file)) })
+      copy(fullExtraArtifacts = extraArtifacts.map { case (art, file) => (art, Some(file)) })
   }
 
   def apply(): Fetch[Task] =

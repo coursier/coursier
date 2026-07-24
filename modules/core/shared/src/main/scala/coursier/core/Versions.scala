@@ -1,13 +1,14 @@
 package coursier.core
 
+import dataclass.data
+
 import coursier.version.{
   Latest => Latest0,
   Version => Version0,
   VersionInterval => VersionInterval0
 }
-import dataclass.data
 
-@data class Versions(
+@data case class Versions(
   latest0: Version0,
   release0: Version0,
   available0: List[Version0],
@@ -38,15 +39,15 @@ import dataclass.data
   @deprecated("Use withLatest0 instead", "2.1.25")
   def withLatest(newLatest: String): Versions =
     if (newLatest == latest) this
-    else withLatest0(Version0(newLatest))
+    else copy(latest0 = Version0(newLatest))
   @deprecated("Use withRelease0 instead", "2.1.25")
   def withRelease(newRelease: String): Versions =
     if (newRelease == release) this
-    else withRelease0(Version0(newRelease))
+    else copy(release0 = Version0(newRelease))
   @deprecated("Use withAvailable0 instead", "2.1.25")
   def withAvailable(newAvailable: List[String]): Versions =
     if (newAvailable == available) this
-    else withAvailable0(newAvailable.map(Version0(_)))
+    else copy(available0 = newAvailable.map(Version0(_)))
 
   private def latestIntegrationCandidates(): Iterator[Version0] = {
 
@@ -167,7 +168,7 @@ import dataclass.data
 }
 
 object Versions {
-  @data class DateTime(
+  @data case class DateTime(
     year: Int,
     month: Int,
     day: Int,
@@ -178,7 +179,10 @@ object Versions {
     def compare(other: DateTime): Int = {
       import Ordering.Implicits._
       if (this == other) 0
-      else if (tuple < other.tuple) -1
+      else if (
+        (year, month, day, hour, minute, second) <
+          (other.year, other.month, other.day, other.hour, other.minute, other.second)
+      ) -1
       else 1
     }
   }

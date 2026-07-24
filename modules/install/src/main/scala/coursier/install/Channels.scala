@@ -1,11 +1,13 @@
 package coursier.install
 
+import dataclass.{data, since => unroll}
+
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 import java.util.zip.ZipFile
 
-import argonaut.{DecodeJson, Parse}
+import argonaut.{DecodeJson, JsonObject, Parse}
 import coursier.Fetch
 import coursier.cache.Cache
 import coursier.cache.internal.FileUtil
@@ -15,17 +17,15 @@ import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepositoryLike
 import coursier.util.{Artifact, Task}
 import coursier.util.StringInterpolators._
-import dataclass._
-
 import scala.jdk.CollectionConverters._
 
-@data class Channels(
+@data case class Channels(
   channels: Seq[Channel] = Channels.defaultChannels,
   repositories: Seq[Repository] = coursier.Resolve.defaultRepositories,
   cache: Cache[Task] = Cache.default,
-  @since
+  @unroll
   verbosity: Int = 0,
-  @since("2.0.10")
+  @unroll
   logChannelVersion: Boolean = false
 ) {
 
@@ -110,7 +110,7 @@ import scala.jdk.CollectionConverters._
     def fromModule(channel: Channel.FromModule): Task[Option[ChannelData]] =
       for {
         res <- Fetch(cache)
-          .withDependencies(Seq(Dependency(channel.module, channel.versionConstraint)))
+          .withDependencies(Seq(Dependency.create(channel.module, channel.versionConstraint)))
           .withRepositories(repositories)
           .ioResult
 
@@ -186,10 +186,7 @@ import scala.jdk.CollectionConverters._
           new String(b, StandardCharsets.UTF_8)
         }
         m <- Task.fromEither {
-          Parse.decodeEither(content)(DecodeJson.MapDecodeJson(
-            DecodeJson.StringDecodeJson,
-            decodeObj
-          ))
+          Parse.decodeEither[Map[String, JsonObject]](content)
             .left.map(err => new Exception(s"Error decoding $f (${channel.url}): $err"))
         }
       } yield m.get(id).map { obj =>
@@ -218,7 +215,7 @@ import scala.jdk.CollectionConverters._
           contentOpt match {
             case None => Right(None)
             case Some(content) =>
-              Parse.decodeEither(content)(decodeObj)
+              Parse.decodeEither[JsonObject](content)
                 .left.map(err => new Exception(s"Error decoding $f: $err"))
                 .map(Some(_))
           }
@@ -260,7 +257,7 @@ import scala.jdk.CollectionConverters._
     def fromModule(channel: Channel.FromModule): Task[List[String]] =
       for {
         res <- Fetch(cache)
-          .withDependencies(Seq(Dependency(channel.module, channel.versionConstraint)))
+          .withDependencies(Seq(Dependency.create(channel.module, channel.versionConstraint)))
           .withRepositories(repositories)
           .ioResult
 
@@ -335,10 +332,7 @@ import scala.jdk.CollectionConverters._
           new String(b, StandardCharsets.UTF_8)
         }
         m <- Task.fromEither {
-          Parse.decodeEither(content)(DecodeJson.MapDecodeJson(
-            DecodeJson.StringDecodeJson,
-            decodeObj
-          ))
+          Parse.decodeEither[Map[String, JsonObject]](content)
             .left.map(err => new Exception(s"Error decoding $f (${channel.url}): $err"))
         }
       } yield m.keys.filter(matchQuery).toList

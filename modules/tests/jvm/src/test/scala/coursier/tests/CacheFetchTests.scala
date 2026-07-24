@@ -29,7 +29,7 @@ object CacheFetchTests extends TestSuite {
     followHttpToHttpsRedirections: Boolean = false,
     deps: Seq[Dependency] =
       Seq(
-        Dependency(
+        Dependency.create(
           mod"com.github.alexarchambault:coursier_2.11",
           VersionConstraint("1.0.0-M9-test")
         )

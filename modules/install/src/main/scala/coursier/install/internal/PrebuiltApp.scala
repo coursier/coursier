@@ -199,7 +199,7 @@ object PrebuiltApp {
           case None                  => (baseUrl + ext, archiveTypeAndPathOpt)
           case Some((tpe, subPath0)) => (baseUrl, Some((tpe, subPath0.map(_ + ext))))
         }
-      } yield (Artifact(url).withChanging(isSnapshot), archiveTypeAndPathOpt0)
+      } yield (Artifact(url).copy(changing = isSnapshot), archiveTypeAndPathOpt0)
 
       artifactsIt.toVector
     }

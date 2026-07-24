@@ -1,9 +1,10 @@
 package coursier.cache
 
+import dataclass.{data, since => unroll}
+
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task}
 import coursier.util.Monad.ops._
-import dataclass._
 import org.apache.tika.Tika
 
 import java.io.{EOFException, File, InputStream}
@@ -15,11 +16,11 @@ import java.util.zip.{GZIPInputStream, ZipException, ZipFile}
 import scala.jdk.CollectionConverters._
 import scala.util.Using
 
-@data class ArchiveCache[F[_]](
+@data case class ArchiveCache[F[_]](
   location: File,
-  cache: Cache[F] = Cache.defaultFor[F],
+  cache: Cache[F],
   unArchiver: UnArchiver = UnArchiver.default(),
-  @since("2.1.25")
+  @unroll
   openStream: UnArchiver.OpenStream = UnArchiver.default(),
   /** Set this to a non-empty value, to extract archives in single-level sub-directories under the
     * passed directory
@@ -291,7 +292,7 @@ import scala.util.Using
 
   def get(artifact: Artifact): F[Either[ArtifactError, File]] = {
     val (dir0, subPaths) = localDir(artifact)
-    val artifact0        = artifact.withUrl(artifact.url.takeWhile(_ != '!'))
+    val artifact0        = artifact.copy(url = artifact.url.takeWhile(_ != '!'))
     val download: F[Either[ArtifactError, File]] = {
       def doDownload: F[Either[ArtifactError, File]] = cache.file(artifact0).run
       if (integrityCheck.getOrElse(true)) {
@@ -390,12 +391,14 @@ import scala.util.Using
 
 object ArchiveCache {
 
-  def apply[F[_]]()(implicit S: Sync[F] = Task.sync): ArchiveCache[F] =
-    ArchiveCache(CacheDefaults.archiveCacheLocation)(S)
+  def create[F[_]](
+    location: File = CacheDefaults.archiveCacheLocation
+  )(implicit S: Sync[F] = Task.sync): ArchiveCache[F] =
+    ArchiveCache(location, Cache.defaultFor[F])(S)
 
   def priviledged[F[_]]()(implicit S: Sync[F] = Task.sync): ArchiveCache[F] =
-    ArchiveCache(CacheDefaults.priviledgedArchiveCacheLocation)(S)
-      .withUnArchiver(UnArchiver.priviledged())
+    ArchiveCache(CacheDefaults.priviledgedArchiveCacheLocation, Cache.defaultFor[F])(S)
+      .copy(unArchiver = UnArchiver.priviledged())
 
   private def deleteRecursive(f: File): Unit = {
     if (f.isDirectory)

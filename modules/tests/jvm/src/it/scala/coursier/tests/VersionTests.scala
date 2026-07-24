@@ -21,7 +21,7 @@ object VersionTests extends TestSuite {
           )
         val versions: coursier.core.Versions =
           await {
-            Versions()
+            Versions.create()
               .withModule(csModule)
               .result()
               .future()

@@ -15,7 +15,7 @@ abstract class ArchiveCacheTests extends TestSuite {
 
   def sandboxedCache = coursier.cache.FileCache[Task]((os.pwd / "test-cache").toIO)
   def archiveCache(location: os.Path): ArchiveCache[Task] =
-    ArchiveCache[Task](location.toIO)
+    ArchiveCache.create[Task](location.toIO)
   // Uncomment this to re-download everything in a test run
   // .withCache(sandboxedCache)
 

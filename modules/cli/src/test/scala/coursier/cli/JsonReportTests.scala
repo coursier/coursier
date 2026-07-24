@@ -74,7 +74,7 @@ object JsonReportTests extends TestSuite {
       .map(_.replace(dataDirStr, "${CACHE}/"))
       .toVector
 
-  private def resolve = Resolve()
+  private def resolve = Resolve.create()
     .noMirrors
     .withCache(TestHelpers.cache)
 
