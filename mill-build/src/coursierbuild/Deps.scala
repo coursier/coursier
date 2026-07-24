@@ -14,7 +14,7 @@ object Deps {
     def collectionCompat  = mvn"org.scala-lang.modules::scala-collection-compat::2.14.0"
     def concurrentReferenceHashMap =
       mvn"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
-    def dataClass         = mvn"io.github.alexarchambault::data-class:0.2.7"
+    def dataClass         = mvn"io.github.alexarchambault::data-class:0.2.8"
     def dependency        = mvn"io.get-coursier::dependency::0.3.2"
     def directories       = mvn"io.get-coursier.util:directories-jni:0.1.4"
     def diffUtils         = mvn"io.github.java-diff-utils:java-diff-utils:4.17"
