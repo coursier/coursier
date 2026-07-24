@@ -391,8 +391,10 @@ import scala.util.Using
 
 object ArchiveCache {
 
-  def create[F[_]]()(implicit S: Sync[F] = Task.sync): ArchiveCache[F] =
-    ArchiveCache(CacheDefaults.archiveCacheLocation, Cache.defaultFor[F])(S)
+  def create[F[_]](
+    location: File = CacheDefaults.archiveCacheLocation
+  )(implicit S: Sync[F] = Task.sync): ArchiveCache[F] =
+    ArchiveCache(location, Cache.defaultFor[F])(S)
 
   def priviledged[F[_]]()(implicit S: Sync[F] = Task.sync): ArchiveCache[F] =
     ArchiveCache(CacheDefaults.priviledgedArchiveCacheLocation, Cache.defaultFor[F])(S)

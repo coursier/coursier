@@ -653,7 +653,7 @@ object ResolutionTests extends TestSuite {
     test("depsFromPropertyActivatedProfile") {
       val f =
         for (version <- Seq("0.5.3", "0.5.4", "0.5.5", "0.5.6", "0.5.8")) yield async {
-          val dep = Dependency(mod"com.github.dummy:libb", VersionConstraint(version))
+          val dep = Dependency.create(mod"com.github.dummy:libb", VersionConstraint(version))
           val trDeps = Seq(
             dep"org.escalier:librairie-standard:2.11.6"
           )

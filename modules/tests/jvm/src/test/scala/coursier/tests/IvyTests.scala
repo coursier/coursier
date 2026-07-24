@@ -83,7 +83,7 @@ object IvyTests extends TestSuite {
     test("changing") {
       test("-SNAPSHOT suffix") {
 
-        val dep = Dependency(mod"com.example:a_2.11", VersionConstraint("0.1.0-SNAPSHOT"))
+        val dep = Dependency.create(mod"com.example:a_2.11", VersionConstraint("0.1.0-SNAPSHOT"))
           .withTransitive(false)
           .withAttributes(Attributes(Type.jar, Classifier.empty))
 
@@ -103,7 +103,7 @@ object IvyTests extends TestSuite {
 
       test("-SNAPSHOT suffix") {
 
-        val dep = Dependency(mod"com.example:a_2.11", VersionConstraint("0.2.0.SNAPSHOT"))
+        val dep = Dependency.create(mod"com.example:a_2.11", VersionConstraint("0.2.0.SNAPSHOT"))
           .withTransitive(false)
           .withAttributes(Attributes(Type.jar, Classifier.empty))
 
@@ -124,7 +124,7 @@ object IvyTests extends TestSuite {
 
     test("testArtifacts") {
 
-      val dep = Dependency(mod"com.example:a_2.11", VersionConstraint("0.1.0-SNAPSHOT"))
+      val dep = Dependency.create(mod"com.example:a_2.11", VersionConstraint("0.1.0-SNAPSHOT"))
         .withTransitive(false)
         .withAttributes(Attributes.empty)
 

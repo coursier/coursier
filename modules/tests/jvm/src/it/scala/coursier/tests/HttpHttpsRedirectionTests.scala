@@ -108,7 +108,7 @@ object HttpHttpsRedirectionTests extends TestSuite {
   val tests = Tests {
 
     lazy val testRepo = redirectingServer.url
-    val deps          = Seq(Dependency(mod"com.chuusai:shapeless_2.12", VersionConstraint("2.3.2")))
+    val deps = Seq(Dependency.create(mod"com.chuusai:shapeless_2.12", VersionConstraint("2.3.2")))
 
     test {
       // no redirections -> should fail

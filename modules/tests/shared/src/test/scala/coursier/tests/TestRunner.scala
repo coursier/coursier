@@ -149,7 +149,7 @@ class TestRunner[F[_]: Gather: ToFuture](
   ): Future[Resolution] =
     async {
 
-      val dep = Dependency(module, version)
+      val dep = Dependency.create(module, version)
         .withVariantSelector(VariantSelector.ConfigurationBased(configuration))
       val res = await {
         resolve(
@@ -262,7 +262,7 @@ class TestRunner[F[_]: Gather: ToFuture](
   )(
     f: Seq[Artifact] => T
   ): Future[T] = {
-    val dep = Dependency(module, VersionConstraint(version))
+    val dep = Dependency.create(module, VersionConstraint(version))
       .withTransitive(transitive)
       .withAttributes(attributes)
     withArtifacts(dep, extraRepos, classifierOpt)(f)

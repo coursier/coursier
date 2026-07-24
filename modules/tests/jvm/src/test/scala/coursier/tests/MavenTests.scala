@@ -18,9 +18,10 @@ object MavenTests extends TestSuite {
   val tests = Tests {
     test("testSnapshotNoVersioning") {
 
-      val dep = Dependency(mod"com.abc:test-snapshot-special", VersionConstraint("0.1.0-SNAPSHOT"))
-        .withTransitive(false)
-        .withAttributes(Attributes.empty)
+      val dep =
+        Dependency.create(mod"com.abc:test-snapshot-special", VersionConstraint("0.1.0-SNAPSHOT"))
+          .withTransitive(false)
+          .withAttributes(Attributes.empty)
 
       val repoBase = new File(HandmadeMetadata.repoBase, "http/abc.com")
         .toURI

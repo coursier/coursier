@@ -68,7 +68,7 @@ object SharedLoaderParams {
           case Right(m) =>
             val asDep = JavaOrScalaDependency(
               m,
-              Dependency(
+              Dependency.create(
                 Module(Organization("_"), ModuleName("_"), Map.empty),
                 VersionConstraint("_")
               )

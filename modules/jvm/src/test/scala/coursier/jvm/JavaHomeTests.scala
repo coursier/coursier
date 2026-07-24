@@ -181,13 +181,13 @@ object JavaHomeTests extends TestSuite {
                 Task.fail(new Exception("This cache must not be used"))
               )
           }
-        val failArchiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(failCache)
+        val failArchiveCache = ArchiveCache.create[Task](tmpDir.toFile).withCache(failCache)
         val csCache = MockCache.create[Task](
           JvmCacheTests.mockDataLocation,
           pool,
           baseChangingOpt = Some(JvmCacheTests.mockDataLocation)
         )
-        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(csCache)
+        val archiveCache = ArchiveCache.create[Task](tmpDir.toFile).withCache(csCache)
         val cache = JvmCache()
           .withArchiveCache(archiveCache)
           .withOs("the-os")

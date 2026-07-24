@@ -28,7 +28,7 @@ object InterpolatorsTests extends TestSuite {
     test("dependency") {
       test {
         val dep = dep"ch.qos.logback:logback-classic:1.1.3"
-        val expected = Dependency(
+        val expected = Dependency.create(
           Module(org"ch.qos.logback", name"logback-classic", Map.empty),
           VersionConstraint("1.1.3")
         )
@@ -36,7 +36,7 @@ object InterpolatorsTests extends TestSuite {
       }
       test {
         val dep = dep"org.scalatest:scalatest_2.12:3.0.1:test"
-        val expected = Dependency(
+        val expected = Dependency.create(
           Module(org"org.scalatest", name"scalatest_2.12", Map.empty),
           VersionConstraint("3.0.1")
         ).withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))

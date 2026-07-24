@@ -203,7 +203,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
       val deps0 = deps.map { dep =>
         dep.split(":", 3) match {
           case Array(org, name, ver) =>
-            Dependency(
+            Dependency.create(
               Module(Organization(org), ModuleName(name), Map.empty),
               VersionConstraint(ver)
             )

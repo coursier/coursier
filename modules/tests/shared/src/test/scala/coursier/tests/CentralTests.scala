@@ -643,7 +643,7 @@ abstract class CentralTests extends TestSuite {
       test - runner.resolutionCheck(mod, ver.asString)
 
       test - runner.withDetailedArtifacts(
-        Seq(Dependency(mod, ver).withAttributes(Attributes(Type.bundle, Classifier.empty))),
+        Seq(Dependency.create(mod, ver).withAttributes(Attributes(Type.bundle, Classifier.empty))),
         Nil,
         None
       ) { artifacts =>
@@ -660,7 +660,7 @@ abstract class CentralTests extends TestSuite {
       }
 
       test - runner.withDetailedArtifacts(
-        Seq(Dependency(mod, ver).withAttributes(Attributes(Type.pom, Classifier.empty))),
+        Seq(Dependency.create(mod, ver).withAttributes(Attributes(Type.pom, Classifier.empty))),
         Nil,
         None
       ) { artifacts =>

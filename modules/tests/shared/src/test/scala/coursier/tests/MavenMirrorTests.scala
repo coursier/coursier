@@ -31,7 +31,7 @@ object MavenMirrorTests extends TestSuite {
 
     test("preservesSbtMavenRepositoryAfterMirroring") {
       val mirror  = MavenMirror(Seq("*"), "https://proxy.example.com/")
-      val sbtRepo = SbtMavenRepository("https://repo1.maven.org/maven2")
+      val sbtRepo = SbtMavenRepository.create("https://repo1.maven.org/maven2")
 
       val replaced = mirror.matches(sbtRepo) match {
         case Some(r: SbtMavenRepository) => r

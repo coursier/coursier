@@ -52,7 +52,7 @@ object RepositoryParams {
       // take sbtPluginHack into account
       if (options.sbtPluginHack)
         repos = repos.map {
-          case m: MavenRepository => SbtMavenRepository(m)
+          case m: MavenRepository => SbtMavenRepository.create(m)
           case other              => other
         }
 

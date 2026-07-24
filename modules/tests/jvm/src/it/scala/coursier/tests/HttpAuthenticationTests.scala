@@ -37,7 +37,8 @@ object HttpAuthenticationTests extends TestSuite with TestRepositoryServer.Test 
         CacheFetchTests.check(
           MavenRepository(
             testRepo,
-            authentication = Some(Authentication(localTestRepo().user, localTestRepo().password))
+            authentication =
+              Some(Authentication.create(localTestRepo().user, localTestRepo().password))
           )
         )
       }

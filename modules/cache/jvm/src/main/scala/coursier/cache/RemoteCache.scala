@@ -33,6 +33,10 @@ case class RemoteCache[F[_]: Sync](
     copy(logger = logger)
   // Setters that data-class used to generate; kept manually since `@data` is dropped here
   // (it cannot generate `withX` setters on Scala 3 - see the WithLogger trait requirement).
+  def withLocation(location: File): RemoteCache[F] =
+    copy(location = location)
+  def withLocation(location: String): RemoteCache[F] =
+    copy(location = new File(location))
   def withPool(pool: ExecutorService): RemoteCache[F] =
     copy(pool = pool)
   def withCachePolicies(cachePolicies: Seq[CachePolicy]): RemoteCache[F] =

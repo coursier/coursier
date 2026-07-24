@@ -15,7 +15,7 @@ object DirectoryListingTests extends TestSuite with TestRepositoryServer.Test {
 
   private val repo = MavenRepository(
     repoUrl,
-    authentication = Some(Authentication(user, password))
+    authentication = Some(Authentication.create(user, password))
   )
 
   private val module  = mod"com.abc:test"
