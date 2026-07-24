@@ -25,7 +25,7 @@ object Deps {
     def http4sServer      = mvn"org.http4s::http4s-server:${Versions.http4s}"
     def isTerminal        = mvn"io.github.alexarchambault:is-terminal:0.1.2"
     def java8Compat       = mvn"org.scala-lang.modules::scala-java8-compat:1.0.2"
-    def jarjarAbrams      = mvn"com.eed3si9n.jarjarabrams::jarjar-abrams-core:1.16.0"
+    def jarjarAbrams      = mvn"com.eed3si9n.jarjarabrams::jarjar-abrams-core:1.17.1"
     def jimfs             = mvn"com.google.jimfs:jimfs:1.3.1"
     def jna               = mvn"net.java.dev.jna:jna:5.19.1"
     def jniUtils          = mvn"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
