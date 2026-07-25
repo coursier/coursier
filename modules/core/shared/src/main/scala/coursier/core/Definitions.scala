@@ -80,12 +80,6 @@ object ModuleName {
       case (k, v) =>
         k.contains("$") || v.contains("$")
     }
-
-  private[core] def copy(
-    organization: Organization = this.organization,
-    name: ModuleName = this.name,
-    attributes: Map[String, String] = this.attributes
-  ) = Module(organization, name, attributes)
 }
 
 object Module {
