@@ -71,7 +71,7 @@ object Deps {
     def svm                      = mvn"org.graalvm.nativeimage:svm:21.3.18"
     def tika                     = mvn"org.apache.tika:tika-core:3.3.1"
     def undertow                 = mvn"io.undertow:undertow-core:2.4.2.Final"
-    def ujson                    = mvn"com.lihaoyi::ujson:4.3.2"
+    def ujson                    = mvn"com.lihaoyi::ujson:4.4.3"
     def utest                    = mvn"com.lihaoyi::utest::0.9.5"
     def versions                 = mvn"io.get-coursier::versions::0.5.3"
     def windowsAnsi              = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
