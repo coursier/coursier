@@ -472,6 +472,7 @@ private[coursier] class MavenRepositoryInternal(
 
       val packagingPublicationOpt = project
         .packagingOpt
+        .orElse(Some(Type.jar))
         .filter(_ => dependency.attributes.isEmpty)
         .map { packaging =>
           Publication(
