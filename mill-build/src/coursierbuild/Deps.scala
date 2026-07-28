@@ -20,7 +20,7 @@ object Deps {
     def diffUtils         = mvn"io.github.java-diff-utils:java-diff-utils:4.17"
     def dockerClient      = mvn"com.spotify:docker-client:8.16.0"
     def fastParse         = mvn"com.lihaoyi::fastparse::3.1.1"
-    def http4sBlazeServer = mvn"org.http4s::http4s-blaze-server:0.23.17"
+    def http4sBlazeServer = mvn"org.http4s::http4s-blaze-server:0.23.18"
     def http4sDsl         = mvn"org.http4s::http4s-dsl:${Versions.http4s}"
     def http4sServer      = mvn"org.http4s::http4s-server:${Versions.http4s}"
     def isTerminal        = mvn"io.github.alexarchambault:is-terminal:0.1.2"
