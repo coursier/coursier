@@ -38,7 +38,7 @@ object Deps {
     def jsoniterMacros =
       mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
     def jsoup          = mvn"org.jsoup:jsoup:1.22.2"
-    def logbackClassic = mvn"ch.qos.logback:logback-classic:1.5.38"
+    def logbackClassic = mvn"ch.qos.logback:logback-classic:1.6.0"
     def macroParadise  = mvn"org.scalamacros:::paradise:2.1.1"
     def mdoc           = mvn"org.scalameta::mdoc:2.9.1"
     def noCrcZis       = mvn"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
