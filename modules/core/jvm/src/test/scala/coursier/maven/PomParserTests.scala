@@ -293,5 +293,57 @@ object PomParserTests extends TestSuite {
       val message = failure.left.toOption.get
       assert(message.contains("1.0/SNAPSHOT"))
     }
+
+    test("parent version interval") {
+      val pom =
+        """
+          |<project xmlns="http://maven.apache.org/POM/4.0.0">
+          |    <modelVersion>4.0.0</modelVersion>
+          |    <parent>
+          |        <groupId>com.example</groupId>
+          |        <artifactId>parent</artifactId>
+          |        <version>[1.0,2.0)</version>
+          |    </parent>
+          |    <artifactId>child</artifactId>
+          |    <version>1.0</version>
+          |</project>""".stripMargin
+
+      val expectedParent = Some((
+        Module(Organization("com.example"), ModuleName("parent"), Map.empty),
+        VersionConstraint("[1.0,2.0)")
+      ))
+
+      val sax = MavenRepository.parseRawPomSax(pom)
+      val dom = MavenRepository.parseRawPomDom(pom)
+
+      assert(sax.map(_.parent0) == Right(expectedParent))
+      assert(dom.map(_.parent0) == Right(expectedParent))
+    }
+
+    test("version inherited from a parent with a version interval") {
+      // The child's own version cannot be known until the parent is resolved. Parsing must
+      // stay non-fatal here - Project.actualVersion0, set from the version the metadata was
+      // fetched at, is what's authoritative downstream. Both parsers must agree.
+      val pom =
+        """
+          |<project xmlns="http://maven.apache.org/POM/4.0.0">
+          |    <modelVersion>4.0.0</modelVersion>
+          |    <parent>
+          |        <groupId>com.example</groupId>
+          |        <artifactId>parent</artifactId>
+          |        <version>[1.0,2.0)</version>
+          |    </parent>
+          |    <artifactId>child</artifactId>
+          |</project>""".stripMargin
+
+      val sax = MavenRepository.parseRawPomSax(pom)
+      val dom = MavenRepository.parseRawPomDom(pom)
+
+      assert(sax.isRight)
+      assert(dom.isRight)
+      assert(sax.map(_.version0.asString) == Right("[1.0,2.0)"))
+      assert(dom.map(_.version0.asString) == Right("[1.0,2.0)"))
+      assert(sax.map(_.parent0) == dom.map(_.parent0))
+    }
   }
 }

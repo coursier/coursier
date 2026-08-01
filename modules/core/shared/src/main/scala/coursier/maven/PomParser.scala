@@ -207,7 +207,7 @@ object PomParser {
         val parentOpt = for {
           parentModule  <- parentModuleOpt
           parentVersion <- validateCoordinate(parentVersion, "parent version")
-        } yield (parentModule, coursier.version.Version(parentVersion))
+        } yield (parentModule, coursier.version.VersionConstraint(parentVersion))
 
         val projModule = Module(Organization(finalGroupId), ModuleName(artifactId), Map.empty)
 

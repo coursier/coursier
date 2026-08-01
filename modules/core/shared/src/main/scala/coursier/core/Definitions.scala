@@ -4,7 +4,7 @@ import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap}
 import coursier.core.Validation._
 import coursier.error.VariantError
 import coursier.util.Artifact
-import coursier.version.{Version => Version0}
+import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
 import dataclass.data
 import scala.util.hashing.MurmurHash3
 
@@ -271,7 +271,7 @@ object Attributes {
   configurations: Map[Configuration, Seq[Configuration]],
 
   // Maven-specific
-  parent0: Option[(Module, Version0)],
+  parent0: Option[(Module, VersionConstraint0)],
   dependencyManagement0: Seq[(Variant, Dependency)],
   properties: Seq[(String, String)],
   profiles: Seq[Profile],
@@ -353,7 +353,7 @@ object Attributes {
           (Variant.Configuration(config), dep)
       },
       configurations,
-      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      parent.map { case (mod, ver) => (mod, VersionConstraint0(ver)) },
       dependencyManagement.map {
         case (config, dep) =>
           (Variant.Configuration(config), dep)
@@ -401,7 +401,7 @@ object Attributes {
           (Variant.Configuration(config), dep)
       },
       configurations,
-      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      parent.map { case (mod, ver) => (mod, VersionConstraint0(ver)) },
       dependencyManagement.map {
         case (config, dep) =>
           (Variant.Configuration(config), dep)
@@ -446,7 +446,7 @@ object Attributes {
     withParent0(
       newParent.map {
         case (mod, ver) =>
-          (mod, Version0(ver))
+          (mod, VersionConstraint0(ver))
       }
     )
 
@@ -698,7 +698,7 @@ object Project {
           (Variant.Configuration(config), dep)
       },
       configurations,
-      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      parent.map { case (mod, ver) => (mod, VersionConstraint0(ver)) },
       dependencyManagement.map {
         case (config, dep) =>
           (Variant.Configuration(config), dep)
@@ -746,7 +746,7 @@ object Project {
           (Variant.Configuration(config), dep)
       },
       configurations,
-      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      parent.map { case (mod, ver) => (mod, VersionConstraint0(ver)) },
       dependencyManagement.map {
         case (config, dep) =>
           (Variant.Configuration(config), dep)

@@ -133,7 +133,7 @@ object TestUtil {
         configurations,
         parent0.map {
           case (mod, ver) =>
-            (mod, Version(ver))
+            (mod, VersionConstraint(ver))
         },
         dependencyManagement,
         LazyProperties.merge(Seq(properties)),
