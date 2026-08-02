@@ -1,7 +1,9 @@
 package coursier.maven
 
 import utest._
-import coursier.core.Info
+
+import coursier.core.{Info, Module, ModuleName, Organization}
+import coursier.version.VersionConstraint
 
 object PomParserTests extends TestSuite {
 
