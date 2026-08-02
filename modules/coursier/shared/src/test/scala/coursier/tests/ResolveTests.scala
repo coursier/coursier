@@ -730,6 +730,12 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    test("parent version interval") {
+      // Regression for https://github.com/coursier/coursier/issues/3765
+      // env-var declares parent dev.openfeature.contrib:parent:[1.0,2.0)
+      check(dep"dev.openfeature.contrib.providers:env-var:0.0.12")
+    }
+
     test("properties") {
       test("in packaging") {
         async {
