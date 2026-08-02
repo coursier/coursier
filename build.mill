@@ -1329,6 +1329,10 @@ def uploadLaunchers(directory: String = "artifacts") = Task.Command {
   GitHubReleaseAssets.uploadLaunchers(version, os.Path(directory, BuildCtx.workspaceRoot))
 }
 
+def uploadNightlyLaunchers(directory: String = "artifacts") = Task.Command {
+  GitHubReleaseAssets.uploadNightlyLaunchers(os.Path(directory, BuildCtx.workspaceRoot))
+}
+
 def uploadLaunchersSpecialRepo(directory: String = "artifacts") = Task.Command {
   val version = cli.publishVersion()
   GitHubReleaseAssets.uploadLaunchersSpecialRepo(

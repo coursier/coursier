@@ -231,6 +231,19 @@ object GitHubReleaseAssets {
     upload(ghOrg, ghName, ghToken, tag, dryRun = false, overwrite = overwriteAssets)(launchers *)
   }
 
+  def uploadNightlyLaunchers(directory: os.Path): Unit = {
+    val launchers = os
+      .list(directory)
+      .filter(path => os.isFile(path) && !Set("coursier", "coursier.bat")(path.last))
+      .map { path =>
+        path -> path.last
+      }
+    val ghToken = Option(System.getenv("UPLOAD_GH_TOKEN")).getOrElse {
+      sys.error("UPLOAD_GH_TOKEN not set")
+    }
+    upload(ghOrg, ghName, ghToken, "nightly", dryRun = false, overwrite = true)(launchers *)
+  }
+
   def uploadLaunchersSpecialRepo(
     version: String,
     directory: os.Path
