@@ -133,6 +133,27 @@ object ResolutionTests extends TestSuite {
       ),
       parent0 = Some(mod"org.gnome:parent", "7.0")
     ),
+    // Parent POM referenced through a version interval: only 1.5 is in [1.0,2.0),
+    // so resolving the child must pick up 1.5's dependencies and not 2.5's.
+    Project(
+      mod"com.example:ranged-parent",
+      "1.5",
+      Seq(
+        Variant.emptyConfiguration -> dep"acme:config:1.3.0"
+      )
+    ),
+    Project(
+      mod"com.example:ranged-parent",
+      "2.5",
+      Seq(
+        Variant.emptyConfiguration -> dep"acme:play-json:2.4.0"
+      )
+    ),
+    Project(
+      mod"com.example:ranged-child",
+      "1.0",
+      parent0 = Some((mod"com.example:ranged-parent", "[1.0,2.0)"))
+    ),
     Project(
       mod"gov.nsa:secure-pgp",
       "10.0",
@@ -597,6 +618,26 @@ object ResolutionTests extends TestSuite {
         val expected = Resolution()
           .withRootDependencies(Seq(dep))
           .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
+
+        assert(res == expected)
+      }
+    }
+    test("parentVersionInterval") {
+      async {
+        // com.example:ranged-child declares its parent as com.example:ranged-parent:[1.0,2.0).
+        // Resolving it requires the parent to be looked up by interval and its dependencies
+        // inherited - acme:config:1.3.0 comes from ranged-parent:1.5, and acme:play-json
+        // (from the out-of-interval ranged-parent:2.5) must not show up.
+        val dep = dep"com.example:ranged-child:1.0"
+        val res = await(resolve0(
+          Seq(dep)
+        )).clearCaches
+
+        val expected = Resolution()
+          .withRootDependencies(Seq(dep))
+          .withDependencies(
+            Set(dep.withDefaultScope, dep"acme:config:1.3.0".withDefaultScope)
+          )
 
         assert(res == expected)
       }

@@ -829,10 +829,6 @@ object Resolution {
     projectCache: ((Module, VersionConstraint0)) => Option[Project]
   ): LazyList[Project] =
     project.parent0
-      .map {
-        case (m, v) =>
-          (m, VersionConstraint0.fromVersion(v))
-      }
       .flatMap(projectCache) match {
       case None         => LazyList.empty
       case Some(parent) => parent #:: parents(parent, projectCache)
@@ -1803,19 +1799,13 @@ object Resolution {
 
     val needsParent =
       project.parent0.exists {
-        case (parMod, parVer) =>
-          val par0        = (parMod, VersionConstraint0.fromVersion(parVer))
+        par0 =>
           val parentFound = projectCache0.contains(par0) || errorCache.contains(par0)
           !parentFound
       }
 
     if (needsParent)
-      project.parent0
-        .map {
-          case (parMod, parVer) =>
-            (parMod, VersionConstraint0.fromVersion(parVer))
-        }
-        .toSet
+      project.parent0.toSet
     else {
 
       val parentProperties0 = LazyProperties.merge(
@@ -2051,12 +2041,7 @@ object Resolution {
       }
     }
 
-    val parentDeps = project0.parent0
-      .map {
-        case (parMod, parVer) =>
-          (parMod, VersionConstraint0.fromVersion(parVer))
-      }
-      .toSeq // belongs to 1.5 & 1.6
+    val parentDeps = project0.parent0.toSeq // belongs to 1.5 & 1.6
 
     val allImportDeps = (importDeps ++ importDepsMgmt)
       .map(dep => (dep.module, dep.versionConstraint, dep.endorseStrictVersions))
@@ -2131,10 +2116,6 @@ object Resolution {
       .withDependencies0(
         standardDeps ++
           project0.parent0 // belongs to 1.5 & 1.6
-            .map {
-              case (parMod, parVer) =>
-                (parMod, VersionConstraint0.fromVersion(parVer))
-            }
             .filter(projectCache0.contains)
             .toSeq
             .flatMap(projectCache0(_)._2.dependencies0)
