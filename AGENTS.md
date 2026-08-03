@@ -57,6 +57,8 @@ Prefer minimal, local, reversible changes and follow existing patterns.
   - `./mill -i dockerTests`
 - Run native-launcher tests:
   - `./mill -i nativeTests`
+- Run the `cs.sh` launcher script tests:
+  - `./mill -i csShTests`
 
 ## Running a single test (important)
 

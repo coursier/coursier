@@ -178,6 +178,34 @@ jobs:
     - uses: coursier/setup-action@v3
     - run: cs launch scalafmt -- --check
 
+  test-cs-sh:
+    name: ${{ matrix.OS }} cs.sh
+    runs-on: ${{ matrix.OS }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest"]
+        include:
+          - OS: "ubuntu-24.04-arm"
+          - OS: "macos-15-intel"
+          - OS: "macos-14"
+          - OS: "windows-latest"
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - run: ./mill -i csShTests
+
   publish:
     needs:
       - "compile-publish-all"
@@ -573,6 +601,25 @@ jobs:
     - run: ./mill -i uploadLaunchers --directory artifacts/
       env:
         UPLOAD_GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  update-cs-sh:
+    name: Update cs.sh version
+    needs:
+      - upload-launchers
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - name: Open a PR bumping CS_VERSION in cs.sh
+      run: ./mill -i updateCsShVersion
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   upload-nightly-launchers:
     name: Upload launchers to nightly GitHub release

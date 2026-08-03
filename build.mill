@@ -3,7 +3,7 @@
 import coursierbuild.Deps.{Deps, ScalaVersions, csQemuVersion, scalaCliVersion}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
 import coursierbuild.Relativize.{relativize => doRelativize}
-import coursierbuild.{DocHelpers, GitHubReleaseAssets, Shading, Sync}
+import coursierbuild.{CsSh, DocHelpers, GitHubReleaseAssets, Shading, Sync}
 import coursierbuild.modules._
 import io.github.alexarchambault.millnativeimage.NativeImage
 import mill.contrib.jmh.JmhModule
@@ -1425,6 +1425,21 @@ def copyBatLauncher(
   os.copy(bootstrap, dir / "coursier.bat", createFolders = true, replaceExisting = true)
 }
 
+def updateCsShVersion(
+  version: String = CoursierPublishModule.buildVersion,
+  dryRun: Boolean = false
+) = Task.Command[Unit] {
+  val tokenOpt = Option(System.getenv("GH_TOKEN"))
+  if (!dryRun && tokenOpt.isEmpty)
+    sys.error("GH_TOKEN not set")
+  CsSh.updateVersion(
+    newVersion = version,
+    ghTokenOpt = tokenOpt,
+    dryRun = dryRun,
+    cloneUnder = Task.dest / "repo"
+  )
+}
+
 private val docScalaVersion = ScalaVersions.scala213
 object `doc-deps` extends ScalaModule {
   def scalaVersion = docScalaVersion
@@ -1653,6 +1668,14 @@ def nativeContainerTests() = Task.Command[Unit] {
 
 def standaloneJvmTests() = Task.Command[Unit] {
   `cli-tests`.`standalone-jvm-tests`.testForked()()
+}
+
+def csShTests() = Task.Command[Unit] {
+  CsSh.test(
+    BuildCtx.workspaceRoot / "cs.sh",
+    fetchModule = s"org.scala-lang:scala-library:${ScalaVersions.scala213}",
+    homeDir = Task.dest / "home"
+  )
 }
 
 def cliNativeImageLauncher() = Task.Command {
