@@ -302,19 +302,30 @@ import scala.jdk.CollectionConverters._
 
         if (shouldUpdate) {
 
+          // Computed first, as where we write things below depends on whether we are about to
+          // generate a native binary.
+          val prebuiltOrParams = prebuiltOrNotFoundUrls0.left.map { notFoundUrls =>
+            if (
+              (onlyPrebuilt && desc.launcherType.isNative) || desc.launcherType == LauncherType.Prebuilt
+            )
+              throw new NoPrebuiltBinaryAvailable(actualName(dest0), notFoundUrls)
+
+            params(desc, appArtifacts, infoEntries, mainClass)
+          }
+
+          // The auxiliary file is only meant to hold native binaries: it is named ".exe" on
+          // Windows, and Windows only runs files named that way if they are actual native
+          // executables. Some native launcher types fall back to a JVM launcher when no prebuilt
+          // binary is available for the current platform (see params). Such launchers have to be
+          // written to dest itself.
+          val usesAuxFile = desc.launcherType.isNative && prebuiltOrParams.left.forall(_.isNative)
+
           val genDest =
-            if (desc.launcherType.isNative) tmpAux
+            if (usesAuxFile) tmpAux
             else tmpDest
 
-          val actualLauncher = prebuiltOrNotFoundUrls0 match {
-            case Left(notFoundUrls) =>
-              if (
-                (onlyPrebuilt && desc.launcherType.isNative) || desc.launcherType == LauncherType.Prebuilt
-              )
-                throw new NoPrebuiltBinaryAvailable(actualName(dest0), notFoundUrls)
-
-              val params0 = params(desc, appArtifacts, infoEntries, mainClass)
-
+          val actualLauncher = prebuiltOrParams match {
+            case Left(params0) =>
               writing(genDest, verbosity, Some(currentTime)) {
                 Generator.generate(params0, genDest)
                 genDest
@@ -358,7 +369,7 @@ import scala.jdk.CollectionConverters._
               a.file.toPath
           }
 
-          val inPlaceLauncher     = desc.launcherType.isNative && actualLauncher == genDest
+          val inPlaceLauncher     = usesAuxFile && actualLauncher == genDest
           val launcherIsElsewhere = actualLauncher != genDest
           if (inPlaceLauncher || launcherIsElsewhere) {
             val preamble =
