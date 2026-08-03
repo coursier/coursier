@@ -423,6 +423,58 @@ object FetchTests extends TestSuite {
       }
     }
 
+    // POMs with no <packaging> (Maven defaults to jar) but no main JAR on Maven Central.
+    // Without an explicit packaging publication, the JAR is emitted as optional: fetch still
+    // remembers it in fullDetailedArtifacts0, but a missing optional JAR does not yield a file
+    // and does not fail the fetch.
+    // (Relocation-only POMs such as bouncycastle:bctsp-jdk14:138 and
+    // org.bouncycastle:bcprov-ext-jdk18on:1.78.1 are intentionally excluded.)
+    test("missingJarDefaultPackaging") {
+      def assertOptionalMissingJar(dep: Dependency, expectedJarUrl: String): Unit = {
+        val cache1 = cache match {
+          case cache: coursier.cache.MockCache[Task] =>
+            cache.withDummyArtifact(_ => false)
+        }
+        val res = fetch
+          .withCache(cache1)
+          .addDependencies(dep)
+          .runResult()
+
+        val matching = res.fullDetailedArtifacts0.collect {
+          case (_, _, art, fileOpt) if art.url == expectedJarUrl =>
+            (art, fileOpt)
+        }
+        assert(matching.nonEmpty)
+        val (art, fileOpt) = matching.head
+        assert(art.optional)
+        assert(fileOpt.isEmpty)
+
+        // Successful artifacts / files omit the missing optional JAR
+        assert(!res.artifacts.exists(_._1.url == expectedJarUrl))
+        val expectedJarName = expectedJarUrl.substring(expectedJarUrl.lastIndexOf('/') + 1)
+        assert(!res.files.map(_.getName).contains(expectedJarName))
+      }
+
+      test("jmxtools") {
+        assertOptionalMissingJar(
+          dep"com.sun.jdmk:jmxtools:1.2.1",
+          "https://repo1.maven.org/maven2/com/sun/jdmk/jmxtools/1.2.1/jmxtools-1.2.1.jar"
+        )
+      }
+      test("jmxri") {
+        assertOptionalMissingJar(
+          dep"com.sun.jmx:jmxri:1.2.1",
+          "https://repo1.maven.org/maven2/com/sun/jmx/jmxri/1.2.1/jmxri-1.2.1.jar"
+        )
+      }
+      test("jms") {
+        assertOptionalMissingJar(
+          dep"javax.jms:jms:1.1",
+          "https://repo1.maven.org/maven2/javax/jms/jms/1.1/jms-1.1.jar"
+        )
+      }
+    }
+
     test("url on lower version") {
       async {
         val res = await {

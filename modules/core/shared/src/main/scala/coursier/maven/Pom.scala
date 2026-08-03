@@ -195,7 +195,7 @@ object Pom {
       parentModuleOpt <- parentOpt
         .map(module(_).map(Some(_)))
         .getOrElse(Right(None))
-      parentVersionOpt = parentOpt.map(readVersion)
+      parentVersionOpt = parentOpt.map(readVersionConstraint)
 
       xmlDeps = pom.children
         .find(_.label == "dependencies")
@@ -214,7 +214,7 @@ object Pom {
         .orElse(parentModuleOpt.map(_.organization).filter(_.value.nonEmpty))
         .toRight("No organization found")
       version <- Some(readVersion(pom)).filter(_.asString.nonEmpty)
-        .orElse(parentVersionOpt.filter(_.asString.nonEmpty))
+        .orElse(parentVersionOpt.filter(_.asString.nonEmpty).map(c => Version(c.asString)))
         .toRight("No version found")
 
       _ <- parentVersionOpt
@@ -331,7 +331,7 @@ object Pom {
         },
         // this is customized later on in MavenRepositoryInternal
         Map.empty[Configuration, Seq[Configuration]],
-        parentModuleOpt.map((_, parentVersionOpt.getOrElse(Version.zero))),
+        parentModuleOpt.map((_, parentVersionOpt.getOrElse(VersionConstraint.empty))),
         depMgmts.map {
           case (conf, dep) =>
             (Variant.Configuration(conf), dep)

@@ -20,25 +20,25 @@ object Deps {
     def diffUtils         = mvn"io.github.java-diff-utils:java-diff-utils:4.17"
     def dockerClient      = mvn"com.spotify:docker-client:8.16.0"
     def fastParse         = mvn"com.lihaoyi::fastparse::3.1.1"
-    def http4sBlazeServer = mvn"org.http4s::http4s-blaze-server:0.23.17"
+    def http4sBlazeServer = mvn"org.http4s::http4s-blaze-server:0.23.18"
     def http4sDsl         = mvn"org.http4s::http4s-dsl:${Versions.http4s}"
     def http4sServer      = mvn"org.http4s::http4s-server:${Versions.http4s}"
     def isTerminal        = mvn"io.github.alexarchambault:is-terminal:0.1.2"
     def java8Compat       = mvn"org.scala-lang.modules::scala-java8-compat:1.0.2"
-    def jarjarAbrams      = mvn"com.eed3si9n.jarjarabrams::jarjar-abrams-core:1.16.0"
+    def jarjarAbrams      = mvn"com.eed3si9n.jarjarabrams::jarjar-abrams-core:1.17.1"
     def jimfs             = mvn"com.google.jimfs:jimfs:1.3.1"
     def jna               = mvn"net.java.dev.jna:jna:5.19.1"
     def jniUtils          = mvn"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
     def jniUtilsBootstrap =
       mvn"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
     def jol  = mvn"org.openjdk.jol:jol-core:0.17"
-    def jsch = mvn"com.github.mwiede:jsch:2.28.4"
+    def jsch = mvn"com.github.mwiede:jsch:2.28.6"
     def jsoniterCore =
       mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${Versions.jsoniterScala}"
     def jsoniterMacros =
       mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
-    def jsoup          = mvn"org.jsoup:jsoup:1.22.2"
-    def logbackClassic = mvn"ch.qos.logback:logback-classic:1.5.38"
+    def jsoup          = mvn"org.jsoup:jsoup:1.23.1"
+    def logbackClassic = mvn"ch.qos.logback:logback-classic:1.6.1"
     def macroParadise  = mvn"org.scalamacros:::paradise:2.1.1"
     def mdoc           = mvn"org.scalameta::mdoc:2.9.1"
     def noCrcZis       = mvn"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
@@ -69,7 +69,7 @@ object Deps {
     def shapeless                = mvn"com.chuusai::shapeless:2.3.12"
     def slf4JNop                 = mvn"org.slf4j:slf4j-nop:2.0.18"
     def svm                      = mvn"org.graalvm.nativeimage:svm:21.3.18"
-    def tika                     = mvn"org.apache.tika:tika-core:3.3.1"
+    def tika                     = mvn"org.apache.tika:tika-core:3.3.2"
     def undertow                 = mvn"io.undertow:undertow-core:2.4.2.Final"
     def ujson                    = mvn"com.lihaoyi::ujson:4.4.3"
     def utest                    = mvn"com.lihaoyi::utest::0.9.5"
@@ -77,7 +77,7 @@ object Deps {
     def windowsAnsi              = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
     def windowsAnsiPs =
       mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
-    def zstdJni = mvn"com.github.luben:zstd-jni:1.5.7-11"
+    def zstdJni = mvn"com.github.luben:zstd-jni:1.5.7-12"
   }
 
   object Versions {

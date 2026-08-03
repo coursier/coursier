@@ -1329,6 +1329,10 @@ def uploadLaunchers(directory: String = "artifacts") = Task.Command {
   GitHubReleaseAssets.uploadLaunchers(version, os.Path(directory, BuildCtx.workspaceRoot))
 }
 
+def uploadNightlyLaunchers(directory: String = "artifacts") = Task.Command {
+  GitHubReleaseAssets.uploadNightlyLaunchers(os.Path(directory, BuildCtx.workspaceRoot))
+}
+
 def uploadLaunchersSpecialRepo(directory: String = "artifacts") = Task.Command {
   val version = cli.publishVersion()
   GitHubReleaseAssets.uploadLaunchersSpecialRepo(
@@ -1343,7 +1347,7 @@ def bootstrapLauncher(
   bat: Boolean = false
 ) = Task.Command {
   cli.run(Task.Anon {
-    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
+    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "central:maven-snapshots") else Nil
     val batArgs   = if (bat) Seq("--bat") else Nil
     Args(Seq(
       "bootstrap",
@@ -1364,7 +1368,7 @@ def assemblyLauncher(
   dest: String = "coursier.jar"
 ) = Task.Command {
   cli.run(Task.Anon {
-    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
+    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "central:maven-snapshots") else Nil
     Args(
       Seq(
         "bootstrap",
@@ -1387,7 +1391,7 @@ def waitForSync(
 ) =
   Task.Command {
     val launcher  = cli.launcher().path
-    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
+    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "central:maven-snapshots") else Nil
     Sync.waitForSync(
       launcher.toString,
       s"${cli.pomSettings().organization}:${cli.artifactId()}:$version",
