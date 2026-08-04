@@ -205,6 +205,8 @@ jobs:
       with:
         disableFallback: true
     - run: ./mill -i csShTests
+    - name: Test cs.sh with CS_VERSION=nightly
+      run: ./mill -i csShTests --version nightly
 
   publish:
     needs:

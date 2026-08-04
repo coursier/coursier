@@ -1670,11 +1670,12 @@ def standaloneJvmTests() = Task.Command[Unit] {
   `cli-tests`.`standalone-jvm-tests`.testForked()()
 }
 
-def csShTests() = Task.Command[Unit] {
+def csShTests(version: String = "") = Task.Command[Unit] {
   CsSh.test(
     BuildCtx.workspaceRoot / "cs.sh",
     fetchModule = s"org.scala-lang:scala-library:${ScalaVersions.scala213}",
-    homeDir = Task.dest / "home"
+    workDir = Task.dest / "work",
+    versionOverride = Some(version).filter(_.nonEmpty)
   )
 }
 

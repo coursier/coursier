@@ -1,11 +1,12 @@
 package coursierbuild
 
+import java.io.File
 import java.util.regex.Matcher
 
 import sttp.client4.Response
 import sttp.client4.quick._
 
-import scala.util.Properties
+import scala.util.{Properties, Try}
 
 /** Helpers around the standalone `cs.sh` launcher script, at the root of this repository */
 object CsSh {
@@ -34,48 +35,94 @@ object CsSh {
       Matcher.quoteReplacement(s"""CS_VERSION="$newVersion"""")
     )
 
+  /** Command running a bash able to run `cs.sh`
+    *
+    * On Windows, `bash` on the `PATH` is usually the WSL one, from `System32`, that can't run
+    * `cs.sh` (and errors out straightaway if no distribution is installed). We use the bash of Git
+    * for Windows instead, like GitHub Actions does for its `bash` shell.
+    */
+  private lazy val bashCommand: String =
+    if (Properties.isWin) {
+      val programFiles = sys.env.getOrElse("ProgramFiles", """C:\Program Files""")
+      val gitBash      = os.Path(programFiles) / "Git" / "bin" / "bash.exe"
+      val fromPath = sys.env
+        .getOrElse("PATH", "")
+        .split(File.pathSeparator)
+        .iterator
+        .filter(_.nonEmpty)
+        .flatMap(dir => Try(os.Path(dir)).toOption.iterator)
+        .filter(dir => !dir.segments.exists(_.equalsIgnoreCase("System32")))
+        .map(_ / "bash.exe")
+      (Iterator(gitBash) ++ fromPath)
+        .find(os.isFile(_))
+        .map(_.toString)
+        .getOrElse {
+          sys.error("No bash found, cs.sh needs the bash of Git for Windows to run")
+        }
+    }
+    else "bash"
+
   /** Checks that `cs.sh` downloads and runs the coursier version it pins
     *
     * @param csSh
     *   Path to the `cs.sh` script to test
     * @param fetchModule
     *   A module, like `"org:name:version"`, that `cs.sh` is asked to fetch
-    * @param homeDir
-    *   Directory to use as home directory, so that `cs.sh` starts from an empty launcher cache
+    * @param workDir
+    *   Directory to work in, used as home directory too, so that `cs.sh` starts from an empty
+    *   launcher cache
+    * @param versionOverride
+    *   If set, test a copy of `cs.sh` pinning that version, rather than `cs.sh` itself
     */
   def test(
     csSh: os.Path,
     fetchModule: String,
-    homeDir: os.Path
+    workDir: os.Path,
+    versionOverride: Option[String] = None
   ): Unit = {
-
-    val expectedVersion = version(csSh)
-    System.err.println(s"cs.sh has CS_VERSION=$expectedVersion")
 
     // Start from an empty cache, so that the first run below actually downloads the cs launcher,
     // and so that we don't add it to the coursier cache shared with the other CI jobs.
-    os.remove.all(homeDir)
+    os.remove.all(workDir)
+    val homeDir = workDir / "home"
     os.makeDir.all(homeDir)
+
+    val script = versionOverride match {
+      case None => csSh
+      case Some(newVersion) =>
+        val dest = workDir / csSh.last
+        os.write(dest, withVersion(os.read(csSh), newVersion))
+        dest
+    }
+
+    val pinnedVersion = version(script)
+    System.err.println(s"cs.sh has CS_VERSION=$pinnedVersion")
+    // the nightly release gets new launchers pushed to it, so we can't tell beforehand
+    // which version they are going to report
+    val expectedVersionOpt = Some(pinnedVersion).filter(_ != "nightly")
+
     val extraEnv =
       if (Properties.isWin) Map("LOCALAPPDATA" -> (homeDir / "AppData" / "Local").toString)
       else Map("HOME"                          -> homeDir.toString)
 
     // cs.sh is a bash script, and can't be run as is on Windows
     val csShArg =
-      if (Properties.isWin) csSh.toString.replace("\\", "/")
-      else csSh.toString
+      if (Properties.isWin) script.toString.replace("\\", "/")
+      else script.toString
 
     def checkVersion(step: String): String = {
-      val res = os.proc("bash", csShArg, "version").call(
-        cwd = csSh / os.up,
+      val res = os.proc(bashCommand, csShArg, "version").call(
+        cwd = workDir,
         env = extraEnv,
         stdout = os.Pipe,
         stderr = os.Pipe
       )
       val output = res.out.trim()
       System.err.print(res.err.text())
-      if (output != expectedVersion)
+      for (expectedVersion <- expectedVersionOpt if output != expectedVersion)
         sys.error(s"$step: expected cs.sh to run coursier $expectedVersion, got '$output'")
+      if (output.isEmpty)
+        sys.error(s"$step: cs.sh printed no coursier version")
       System.err.println(s"OK ($step): cs.sh runs coursier $output")
       res.err.text()
     }
@@ -90,8 +137,8 @@ object CsSh {
     System.err.println("OK (second run): cs.sh used the cached cs launcher")
 
     // check that arguments are passed to the cs launcher, and that it can actually run things
-    os.proc("bash", csShArg, "fetch", fetchModule).call(
-      cwd = csSh / os.up,
+    os.proc(bashCommand, csShArg, "fetch", fetchModule).call(
+      cwd = workDir,
       env = extraEnv,
       stdin = os.Inherit,
       stdout = os.Inherit,

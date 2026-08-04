@@ -15,7 +15,12 @@ CS_VERSION="2.1.25-M26"
 GH_ORG="coursier"
 GH_NAME="coursier"
 
-TAG="v$CS_VERSION"
+if [ "$CS_VERSION" == "nightly" ]; then
+  # nightly launchers live in a release of their own, whose tag has no "v" prefix
+  TAG="nightly"
+else
+  TAG="v$CS_VERSION"
+fi
 
 IS_WINDOWS=false
 if [ "$(expr substr $(uname -s) 1 5 2>/dev/null)" == "MINGW" ]; then
