@@ -603,6 +603,28 @@ jobs:
     - run: ./mill -i uploadLaunchers --directory artifacts/
       env:
         UPLOAD_GH_TOKEN: ${{ secrets.GH_TOKEN }}
+    - name: Label GitHub release
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: |
+        release_info="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}" \
+          --jq '[.id, .prerelease] | @tsv')"
+        IFS=$'\t' read -r release_id is_prerelease <<< "$release_info"
+        latest_release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" \
+          --jq '.id' 2>/dev/null || true)"
+
+        if [[ "$is_prerelease" == true || "$release_id" == "$latest_release_id" ]]; then
+          exit 0
+        fi
+
+        version="${GITHUB_REF_NAME#v}"
+        if [[ "$version" =~ [[:alpha:]] ]]; then
+          gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${release_id}" \
+            -F prerelease=true --silent
+        else
+          gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${release_id}" \
+            -f make_latest=true --silent
+        fi
 
   update-cs-sh:
     name: Update cs.sh version
