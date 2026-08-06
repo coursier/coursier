@@ -161,7 +161,7 @@ object FileCacheListingTests extends TestSuite {
 
           val cache   = testCache(dir)
           val listing = makeLocalListing(dir)
-          val url     = s"file://$listing/"
+          val url     = directoryUrl(listing)
 
           val res = fetch(cache, url).fold(e => sys.error(e), identity)
 
@@ -180,7 +180,7 @@ object FileCacheListingTests extends TestSuite {
 
           val cache   = testCache(dir)
           val listing = makeLocalListing(dir)
-          val url     = s"file://$listing/"
+          val url     = directoryUrl(listing)
 
           val res = fetch(cache, s"$url.links").fold(e => sys.error(e), identity)
           assert(res == expectedElements)
@@ -191,7 +191,7 @@ object FileCacheListingTests extends TestSuite {
       test("a missing directory is an error") {
         withTmpDir { dir =>
           val cache = testCache(dir)
-          val res   = fetch(cache, s"file://${dir / "nope"}/")
+          val res   = fetch(cache, directoryUrl(dir / "nope"))
           assert(res.isLeft)
         }
       }

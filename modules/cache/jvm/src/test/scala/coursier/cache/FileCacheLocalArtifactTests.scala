@@ -23,9 +23,6 @@ object FileCacheLocalArtifactTests extends TestSuite {
 
   private val content = "the local artifact"
 
-  private def fileUrl(path: os.Path): String =
-    s"file://$path"
-
   private final class Ctx(val cacheDir: os.Path, val srcDir: os.Path, val cached: Boolean) {
 
     val cache: FileCache[Task] =

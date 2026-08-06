@@ -157,6 +157,22 @@ object TestUtil {
     finally os.remove.all(dir)
   }
 
+  /** The `file:` URL of `path`.
+    *
+    * Interpolating a path into `file://…` gives `file://C:\dir\foo.jar` on Windows, whose drive
+    * letter is then parsed as the host. `Path#toUri` gives the `file:///C:/dir/foo.jar` form that
+    * both `CachePath.localFile` and `URL#openConnection` handle.
+    */
+  def fileUrl(path: os.Path): String =
+    path.toNIO.toUri.toString
+
+  /** The `file:` URL of a directory, with the trailing slash coursier keys directory listings on.
+    *
+    * `Path#toUri` only adds that slash for directories that exist.
+    */
+  def directoryUrl(path: os.Path): String =
+    fileUrl(path).stripSuffix("/") + "/"
+
   def withTmpDir0[T](f: Path => T): T = {
     val dir = Files.createTempDirectory("coursier-test")
     val shutdownHook: Thread =
