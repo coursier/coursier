@@ -25,6 +25,11 @@ import org.http4s.server.Router
 import org.http4s.{BasicCredentials, Challenge, HttpRoutes, Request, Uri}
 import org.typelevel.ci.CIString
 
+import java.util.concurrent.{Executors, ThreadFactory}
+import java.util.concurrent.atomic.AtomicInteger
+
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
 import scala.language.implicitConversions
 
 object TestUtil {
@@ -165,6 +170,36 @@ object TestUtil {
       deleteRecursive(dir.toFile)
       Runtime.getRuntime.removeShutdownHook(shutdownHook)
     }
+  }
+
+  /** Runs `f` `n` times in parallel, on a dedicated pool, and awaits all results.
+    *
+    * Each call gets its own thread, so that `f` is free to block (which `Task#unsafeRun` does).
+    */
+  def runConcurrently[T](
+    n: Int,
+    timeout: FiniteDuration = 2.minutes
+  )(
+    f: Int => T
+  ): Seq[T] = {
+    val pool = Executors.newFixedThreadPool(
+      n,
+      new ThreadFactory {
+        val count = new AtomicInteger
+        def newThread(r: Runnable): Thread = {
+          val t = new Thread(r, s"test-concurrent-${count.incrementAndGet()}")
+          t.setDaemon(true)
+          t
+        }
+      }
+    )
+    try {
+      implicit val ec: ExecutionContext = ExecutionContext.fromExecutorService(pool)
+      // all futures are started before any of them is awaited
+      val futures = (0 until n).map(idx => Future(f(idx)))
+      Await.result(Future.sequence(futures), timeout)
+    }
+    finally pool.shutdown()
   }
 
   def resourceFile(name: String): File =
