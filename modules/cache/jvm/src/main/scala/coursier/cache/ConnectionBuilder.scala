@@ -7,6 +7,8 @@ import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
 import dataclass.data
 
+import scala.concurrent.duration.FiniteDuration
+
 // format: off
 @data class ConnectionBuilder(
   url: String,
@@ -21,7 +23,10 @@ import dataclass.data
   maxRedirectionsOpt: Option[Int] = Some(20),
   proxy: Option[Proxy] = None,
   @since("2.0.16")
-    classLoaders: Seq[ClassLoader] = Nil
+    classLoaders: Seq[ClassLoader] = Nil,
+  @since("2.1.26")
+    connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
+    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout
 ) {
   // format: on
 
@@ -47,6 +52,8 @@ import dataclass.data
       None,
       redirectionCount = 0,
       maxRedirectionsOpt,
-      classLoaders
+      classLoaders,
+      connectTimeout,
+      readTimeout
     ))
 }

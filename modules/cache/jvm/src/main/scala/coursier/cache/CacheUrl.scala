@@ -12,6 +12,7 @@ import coursier.credentials.DirectCredentials
 import javax.net.ssl.{HostnameVerifier, HttpsURLConnection, SSLSocketFactory}
 
 import scala.annotation.tailrec
+import scala.concurrent.duration.FiniteDuration
 import scala.util.Try
 import scala.util.control.NonFatal
 
@@ -122,13 +123,32 @@ object CacheUrl {
   private def partialContentResponseCode        = 206
   private def invalidPartialContentResponseCode = 416
 
+  /** The timeout in milliseconds, as the `int` `URLConnection` wants (which a long enough duration
+    * would otherwise overflow into a negative value it rejects)
+    */
+  private def timeoutMillis(timeout: FiniteDuration): Int =
+    if (timeout.toMillis > Int.MaxValue.toLong) Int.MaxValue
+    else timeout.toMillis.toInt
+
   private def initialize(
     conn: URLConnection,
     authentication: Option[Authentication],
     sslSocketFactoryOpt: Option[SSLSocketFactory],
     hostnameVerifierOpt: Option[HostnameVerifier],
-    method: String
+    method: String,
+    connectTimeout: Option[FiniteDuration],
+    readTimeout: Option[FiniteDuration]
   ): Unit = {
+
+    // Without these, a connection that stops answering - dropped by a NAT or a load balancer,
+    // say - blocks the thread reading it until the JVM exits: nothing above ever sees an
+    // exception, so nothing retries or fails. Note the read timeout applies to each individual
+    // read, not to the download as a whole, so it doesn't limit how long a large artifact may
+    // take to fetch.
+    for (timeout <- connectTimeout)
+      conn.setConnectTimeout(timeoutMillis(timeout))
+    for (timeout <- readTimeout)
+      conn.setReadTimeout(timeoutMillis(timeout))
 
     conn match {
       case conn0: HttpURLConnection =>
@@ -280,7 +300,9 @@ object CacheUrl {
     authRealm: Option[String],
     redirectionCount: Int,
     maxRedirectionsOpt: Option[Int],
-    classLoaders: Seq[ClassLoader]
+    classLoaders: Seq[ClassLoader],
+    connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
+    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout
   )
 
   @deprecated(
@@ -334,7 +356,15 @@ object CacheUrl {
           a.realmOpt.forall(authRealm.contains) &&
           !a.optional
         }
-        initialize(conn, authOpt, sslSocketFactoryOpt, hostnameVerifierOpt, method)
+        initialize(
+          conn,
+          authOpt,
+          sslSocketFactoryOpt,
+          hostnameVerifierOpt,
+          method,
+          connectTimeout,
+          readTimeout
+        )
 
         val rangeResOpt0 = rangeResOpt(conn, alreadyDownloaded)
 

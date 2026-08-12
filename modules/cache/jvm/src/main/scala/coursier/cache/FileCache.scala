@@ -55,7 +55,12 @@ import scala.util.control.NonFatal
   @since("2.1.11")
     retryBackoffInitialDelay: FiniteDuration = CacheDefaults.retryBackoffInitialDelay,
   @since("2.1.11")
-    retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier
+    retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier,
+  @since("2.1.26")
+    retryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.retryBackoffMaxDelay,
+    retryPollMaxDelay: Option[FiniteDuration] = CacheDefaults.retryPollMaxDelay,
+    connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
+    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout
 )(implicit
   sync: Sync[F]
 ) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext with Cache.WithLogger[F, FileCache[F]] with Cache.Default[F] {
@@ -63,7 +68,14 @@ import scala.util.control.NonFatal
 
   private def S = sync
 
-  private val retry0 = Retry(retry, retryBackoffInitialDelay, retryBackoffMultiplier)
+  private val retry0 =
+    Retry(
+      retry,
+      retryBackoffInitialDelay,
+      retryBackoffMultiplier,
+      retryBackoffMaxDelay,
+      retryPollMaxDelay
+    )
 
   private def readAllBytes(path: Path): Array[Byte] =
     retry0.retry {
@@ -131,7 +143,11 @@ import scala.util.control.NonFatal
       clock,
       retryCount = retry,
       retryBackoffInitialDelay = retryBackoffInitialDelay,
-      retryBackoffMultiplier = retryBackoffMultiplier
+      retryBackoffMultiplier = retryBackoffMultiplier,
+      retryBackoffMaxDelay = retryBackoffMaxDelay,
+      retryPollMaxDelay = retryPollMaxDelay,
+      connectTimeout = connectTimeout,
+      readTimeout = readTimeout
     ).download
 
   // Should have been private[coursier]
