@@ -40,7 +40,10 @@ Prefer minimal, local, reversible changes and follow existing patterns.
   - `scalafmt --check`
 - Apply formatting:
   - `scalafmt`
-- No default repo-wide Scalafix task is wired in CI.
+- Check Scalafix rules (matches CI):
+  - `./mill -i __.fix --check`
+- Apply Scalafix rewrites:
+  - `./mill -i __.fix`
 - Treat compiler warnings as actionable.
 
 ## Test commands

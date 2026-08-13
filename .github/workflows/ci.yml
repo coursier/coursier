@@ -178,6 +178,20 @@ jobs:
     - uses: coursier/setup-action@v3
     - run: cs launch scalafmt -- --check
 
+  scalafix:
+    runs-on: ubuntu-latest
+    name: Scalafix
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - run: ./mill -i __.fix --check
+
   test-cs-sh:
     name: ${{ matrix.OS }} cs.sh
     runs-on: ${{ matrix.OS }}
@@ -216,6 +230,7 @@ jobs:
       - "bin-compat"
       - "website-check"
       - "format"
+      - "scalafix"
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
