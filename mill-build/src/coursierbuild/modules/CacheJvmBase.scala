@@ -43,6 +43,10 @@ trait CacheJvmBase extends Cache with CsMima {
       ProblemFilter.exclude[Problem]("coursier.cache.CacheUrl#Args*"),
       ProblemFilter.exclude[Problem]("coursier.cache.CacheUrl$Args*"),
       ProblemFilter.exclude[Problem]("coursier.cache.CacheUrl.BasicRealm*"),
+      // internal, in spite of what their compiled visibility says
+      ProblemFilter.exclude[Problem]("coursier.cache.internal.Retry*"),
+      ProblemFilter.exclude[Problem]("coursier.cache.internal.Downloader#Blocking*"),
+      ProblemFilter.exclude[Problem]("coursier.cache.internal.Downloader$Blocking*"),
       // ignore shaded-stuff related errors
       ProblemFilter.exclude[Problem]("coursier.cache.shaded.*")
     )
