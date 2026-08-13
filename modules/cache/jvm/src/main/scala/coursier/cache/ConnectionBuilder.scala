@@ -24,7 +24,7 @@ import scala.concurrent.duration.FiniteDuration
   proxy: Option[Proxy] = None,
   @since("2.0.16")
     classLoaders: Seq[ClassLoader] = Nil,
-  @since("2.1.26")
+  @since("2.1.25")
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
     readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout
 ) {

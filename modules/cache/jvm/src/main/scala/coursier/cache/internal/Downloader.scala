@@ -56,7 +56,7 @@ import scala.util.control.NonFatal
     retryBackoffInitialDelay: FiniteDuration = CacheDefaults.retryBackoffInitialDelay,
   @since("2.1.11")
     retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier,
-  @since("2.1.26")
+  @since("2.1.25")
     retryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.retryBackoffMaxDelay,
     retryPollMaxDelay: Option[FiniteDuration] = CacheDefaults.retryPollMaxDelay,
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
