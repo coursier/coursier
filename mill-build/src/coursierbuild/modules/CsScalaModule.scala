@@ -1,9 +1,10 @@
 package coursierbuild.modules
 
+import com.goyeau.mill.scalafix.ScalafixModule
 import coursierbuild.Deps.Deps
 import mill._, mill.scalalib._
 
-trait CsScalaModule extends ScalaModule with CoursierJavaModule {
+trait CsScalaModule extends ScalaModule with CoursierJavaModule with ScalafixModule {
   def scalacOptions = Task {
     val sv = scalaVersion()
     val scala212Opts =

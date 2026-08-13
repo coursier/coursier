@@ -248,28 +248,36 @@ private[coursier] object LazyProperties {
       if (idx < 0)
         throw new IndexOutOfBoundsException(idx.toString)
 
-      var remaining = idx
-      var layerIdx  = 0
-      while (layerIdx < layers.length) {
+      var remaining                = idx
+      var layerIdx                 = 0
+      var result: (String, String) = null
+      while (result == null && layerIdx < layers.length) {
         val layerSize = layers(layerIdx).length
         if (remaining < layerSize)
-          return layers(layerIdx).tuple(remaining)
-        remaining -= layerSize
-        layerIdx += 1
+          result = layers(layerIdx).tuple(remaining)
+        else {
+          remaining -= layerSize
+          layerIdx += 1
+        }
       }
 
-      throw new IndexOutOfBoundsException(idx.toString)
+      if (result == null)
+        throw new IndexOutOfBoundsException(idx.toString)
+      else
+        result
     }
 
     final def winnerEntryForKeyOrNull(key: String): PropertyEntry = {
-      var layerIdx = layers.length - 1
-      while (layerIdx >= 0) {
+      var layerIdx              = layers.length - 1
+      var result: PropertyEntry = null
+      while (result == null && layerIdx >= 0) {
         val entry = layers(layerIdx).getOrNull(key)
         if (entry != null)
-          return entry
-        layerIdx -= 1
+          result = entry
+        else
+          layerIdx -= 1
       }
-      null
+      result
     }
   }
 
@@ -383,24 +391,28 @@ private[coursier] object LazyProperties {
       if (idx < 0)
         throw new IndexOutOfBoundsException(idx.toString)
 
-      var remaining = idx
-      var layerIdx  = 0
-      while (layerIdx < layers.length) {
+      var remaining                = idx
+      var layerIdx                 = 0
+      var result: (String, String) = null
+      while (result == null && layerIdx < layers.length) {
         val layer = layers(layerIdx)
         var i     = 0
-        while (i < layer.length) {
+        while (result == null && i < layer.length) {
           val k = layer.key(i)
-          if (!excludedKeys.contains(k)) {
+          if (!excludedKeys.contains(k))
             if (remaining == 0)
-              return (k, layer.value(i))
-            remaining -= 1
-          }
+              result = (k, layer.value(i))
+            else
+              remaining -= 1
           i += 1
         }
         layerIdx += 1
       }
 
-      throw new IndexOutOfBoundsException(idx.toString)
+      if (result == null)
+        throw new IndexOutOfBoundsException(idx.toString)
+      else
+        result
     }
 
     override protected lazy val resolvedMap: immutable.Map[String, String] =
