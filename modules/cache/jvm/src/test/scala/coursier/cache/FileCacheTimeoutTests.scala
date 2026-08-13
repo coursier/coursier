@@ -120,8 +120,9 @@ object FileCacheTimeoutTests extends TestSuite {
       // download that finishes just past one of those left every waiter asleep until the next.
       val initialDelay = 100.millis
       val downloadTime = 3400.millis
-      // how much longer than the download a waiter may take. Capped, a waiter is at most one
-      // poll behind; uncapped, these ones wouldn't wake up before ~6.4s
+      // how much longer than the download itself a waiter may take. Capped, a waiter is at most
+      // one poll behind, so a fraction of a second; uncapped, these ones sleep until ~6.3s while
+      // the download lands at ~3.4s, so they trail it by nearly 3s
       val slack   = 1.second
       val callers = 4
 
@@ -137,8 +138,14 @@ object FileCacheTimeoutTests extends TestSuite {
             System.currentTimeMillis() - start
           }
 
-          val slowest = elapsed.max
-          assert(slowest < (downloadTime + slack).toMillis)
+          // No caller can return before the download does, so the fastest one is the download
+          // itself. Measuring the others against it, rather than against a wall clock budget,
+          // keeps this about how long a waiter sleeps past the moment the artifact lands - and
+          // not about how long a loaded machine takes to start threads or open a socket.
+          val downloaded = elapsed.min
+          val slowest    = elapsed.max
+          val lag        = slowest - downloaded
+          assert(lag < slack.toMillis)
 
           // only one caller downloads; the others watch it, and watching should cost one length
           // lookup per waiter, not one per poll of the download in flight
