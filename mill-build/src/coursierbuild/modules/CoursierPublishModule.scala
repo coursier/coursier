@@ -7,6 +7,11 @@ import mill.scalalib.*
 trait CoursierPublishModule extends PublishModule
     with CoursierJavaModule {
   import mill.scalalib.publish._
+
+  def docJar = Task {
+    CoursierPublishModule.emptyDocJar()
+  }
+
   def pomSettings = PomSettings(
     description = artifactName(),
     organization = "io.get-coursier",
@@ -20,7 +25,17 @@ trait CoursierPublishModule extends PublishModule
   def publishVersion = Task.Input(CoursierPublishModule.computeBuildVersion())
 }
 
-object CoursierPublishModule {
+object CoursierPublishModule extends ExternalModule {
+
+  def emptyDocJar = Task {
+    val dest = Task.dest / "empty.zip"
+    val baos = new java.io.ByteArrayOutputStream
+    val zos  = new java.util.zip.ZipOutputStream(baos)
+    zos.finish()
+    zos.close()
+    os.write(dest, baos.toByteArray)
+    PathRef(dest)
+  }
 
   lazy val latestTaggedVersion = os.proc("git", "describe", "--abbrev=0", "--tags", "--match", "v*")
     .call().out
@@ -51,4 +66,6 @@ object CoursierPublishModule {
   }
 
   lazy val buildVersion = computeBuildVersion()
+
+  lazy val millDiscover: Discover = Discover[this.type]
 }

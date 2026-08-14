@@ -982,16 +982,6 @@ trait Cli extends CsModule
       Name.IMPLEMENTATION_VENDOR.toString  -> "io.get-coursier"
     )
   }
-  def docJar = Task {
-    val jar  = Task.dest / "empty.jar"
-    val baos = new java.io.ByteArrayOutputStream
-    val zos  = new java.util.zip.ZipOutputStream(baos)
-    zos.finish()
-    zos.close()
-    os.write.over(jar, baos.toByteArray)
-    PathRef(jar)
-  }
-
   // Locally, run cli in exclusive mode with os.InheritRaw stdin / stdout / stderr, so that it sees
   // an actual terminal, and not pipes, and we get progress bars and all.
   private def isCI = System.getenv("CI") != null
@@ -1070,19 +1060,6 @@ trait CliTests extends CsModule
       s"-Dcoursier-test.scala-cli.is-jar=$scalaCliIsJar",
       s"-Dcoursier-test.jni-utils-version=${Deps.jniUtils.dep.versionConstraint.asString}"
     )
-  }
-  def docJar = Task {
-    // dottydoc currently crashes when generating this module's doc jar
-
-    import java.io._
-    import java.util.zip._
-    val dest = Task.dest / "empty.zip"
-    val baos = new ByteArrayOutputStream
-    val zos  = new ZipOutputStream(baos)
-    zos.finish()
-    zos.close()
-    os.write(dest, baos.toByteArray)
-    PathRef(dest)
   }
   object test extends SbtTests with CsTests {
     def forkEnv = Task {
