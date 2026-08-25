@@ -49,7 +49,7 @@ object Deps {
       .exclude("junit" -> "junit")
     def plexusUtils      = mvn"org.codehaus.plexus:plexus-utils:4.1.0"
     def pprint           = mvn"com.lihaoyi::pprint::0.9.6"
-    def proguard         = mvn"com.guardsquare:proguard-base:7.9.1"
+    def proguard         = mvn"com.guardsquare:proguard-base:7.10.0"
     def pythonNativeLibs = mvn"ai.kien::python-native-libs:0.2.5"
     def scalaAsync       = mvn"org.scala-lang.modules::scala-async::1.0.1"
     def scalaCliConfig(sv: String) =
