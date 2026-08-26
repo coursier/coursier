@@ -45,8 +45,8 @@ trait CoursierJavaModule extends JavaModule {
     val hasRtJar   = os.isFile(rtJar)
     assert(hasModules || hasRtJar)
     val extraOpts =
-      if (hasModules) Seq("--system", javaHome.toString)
-      else Seq("-bootclasspath", rtJar.toString)
+      if (hasModules) Seq("--system", PathRef.toAbsString(javaHome))
+      else Seq("-bootclasspath", PathRef.toAbsString(rtJar))
     Seq("-source", jvmRelease, "-target", jvmRelease) ++ extraOpts
   }
   def javacOptions = Task {

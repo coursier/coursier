@@ -8,7 +8,7 @@ trait CoursierPublishModule extends PublishModule
     with CoursierJavaModule {
   import mill.scalalib.publish._
 
-  def docJar = Task {
+  override def docJar = Task {
     CoursierPublishModule.emptyDocJar()
   }
 

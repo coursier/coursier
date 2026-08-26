@@ -246,7 +246,7 @@ if [!MILL_RESOLVE_DOWNLOAD!]==[true] (
 
     echo Downloading mill !MILL_VERSION! from !MILL_DOWNLOAD_URL! ... 1>&2
 
-    curl -f -L "!MILL_DOWNLOAD_URL!" -o "!MILL_TEMP_DOWNLOAD_FILE!"
+    curl -f -L --retry 5 --retry-delay 2 --retry-all-errors "!MILL_DOWNLOAD_URL!" -o "!MILL_TEMP_DOWNLOAD_FILE!"
 
     if not exist "%MILL_FINAL_DOWNLOAD_FOLDER%" mkdir "%MILL_FINAL_DOWNLOAD_FOLDER%"
     move /y "!MILL_TEMP_DOWNLOAD_FILE!" "%MILL%"

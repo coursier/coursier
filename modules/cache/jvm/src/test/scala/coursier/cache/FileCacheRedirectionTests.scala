@@ -37,6 +37,36 @@ object FileCacheRedirectionTests extends TestSuite {
         sys.error(s"Expected default cache to be a FileCache, got $other")
     }
 
+  private def fileUrl(path: String): URL = {
+    val file = new File(path)
+    val uri  = file.toURI
+    if (file.isDirectory && !uri.toString.endsWith("/"))
+      URI.create(uri.toASCIIString + "/").toURL
+    else
+      uri.toURL
+  }
+
+  private def customProtocolClassLoader(): URLClassLoader = {
+    val urls =
+      Option(System.getenv("COURSIER_CUSTOM_LOADER_CP"))
+        .filter(_.nonEmpty)
+        .map(_.split(File.pathSeparator).toSeq.filter(_.nonEmpty).map(fileUrl))
+        .getOrElse {
+          CustomLoaderClasspath.files.map { s =>
+            if (s.startsWith("file:")) {
+              val asFile = new File(URI.create(s))
+              if (asFile.isDirectory) fileUrl(asFile.getPath)
+              else new URL(s)
+            }
+            else new URL(s)
+          }
+        }
+    if (urls.isEmpty)
+      sys.error("custom protocol classpath is empty")
+    // Isolate from the test classpath: the handler must come from the extra loader.
+    new URLClassLoader(urls.toArray, null: ClassLoader)
+  }
+
   private def fileCache0() = defaultCache()
     .noCredentials
     .withSslSocketFactory(dummyClientSslContext.getSocketFactory)
@@ -1053,10 +1083,7 @@ object FileCacheRedirectionTests extends TestSuite {
       test("with classloader") {
         withTmpDir0 { dir =>
           async {
-            val classloader =
-              new URLClassLoader(
-                CustomLoaderClasspath.files.map(new URL(_)).toArray
-              )
+            val classloader = customProtocolClassLoader()
 
             val customProtocolBase =
               Option(System.getenv("COURSIER_CUSTOMPROTOCOL_BASE")).getOrElse {
