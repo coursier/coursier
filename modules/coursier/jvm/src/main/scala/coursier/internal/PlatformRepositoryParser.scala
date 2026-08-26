@@ -4,7 +4,7 @@ import java.io.File
 import java.net.MalformedURLException
 
 import coursier.LocalRepositories
-import coursier.cache.CacheUrl
+import coursier.cache.{CacheDefaults, CacheUrl}
 import coursier.core.{Authentication, Repository}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepositoryLike
@@ -56,15 +56,27 @@ abstract class PlatformRepositoryParser {
         }
       }
 
+      val credentials = CacheDefaults.credentials.flatMap(_.get())
+
       validatedUrl.flatMap { url =>
-        Option(url.getUserInfo) match {
-          case None =>
-            repo
-          case Some(userInfo) =>
-            val authBase = userInfo.split(":", 2) match {
-              case Array(user, password) => Authentication(user, password)
-              case Array(user)           => Authentication(user)
-            }
+        val authBase = Option(url.getUserInfo).map(userInfo =>
+          userInfo.split(":", 2) match {
+            case Array(user, password) => Authentication(user, password)
+            case Array(user)           => Authentication(user)
+          }
+        ).orElse {
+          credentials.find(_.autoMatches(url.toExternalForm, None)).flatMap {
+            c =>
+              (c.usernameOpt, c.passwordOpt) match {
+                case (Some(user), Some(password)) => Some(Authentication(user, password.value))
+                case (Some(user), None)           => Some(Authentication(user))
+                case _                            => None
+              }
+          }
+        }
+
+        authBase match {
+          case Some(authBase) =>
 
             val auth = authBase.withHttpsOnly(url.getProtocol != "http")
 
@@ -90,7 +102,10 @@ abstract class PlatformRepositoryParser {
               case r =>
                 sys.error(s"Unrecognized repository: $r")
             }
+
+          case None => repo
         }
+
       }
     }
 
