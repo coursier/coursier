@@ -143,7 +143,7 @@ object Launchers {
       val usesDocker = nativeImageDockerParams().nonEmpty
       val cLibPath =
         if (usesDocker) s"/data/$staticLibDirName"
-        else staticLibDir().path.toString
+        else PathRef.toAbsString(staticLibDir().path)
       super.nativeImageOptions() ++
         Seq(
           s"-H:CLibraryPath=$cLibPath",
@@ -476,9 +476,9 @@ object Launchers {
         "--name",
         "cs",
         "--dest",
-        outputDir.toString,
+        PathRef.toAbsString(outputDir),
         "--input",
-        inputDir.toString,
+        PathRef.toAbsString(inputDir),
         "--main-jar",
         "coursier.jar",
         "--main-class",

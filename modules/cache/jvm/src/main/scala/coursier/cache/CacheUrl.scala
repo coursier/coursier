@@ -23,76 +23,87 @@ object CacheUrl {
   private def handlerFor(url: String, classLoaders: Seq[ClassLoader]): Option[URLStreamHandler] = {
     val protocol = url.takeWhile(_ != ':')
 
-    Option(handlerClsCache.get(protocol)) match {
-      case None =>
-        val clsName = List(
-          "coursier",
-          "cache",
-          "protocol",
-          s"${protocol.capitalize}Handler"
-        ).mkString(".")
+    // Extra class loaders can provide protocol handlers that a previous lookup without
+    // them would have missed. Skip the protocol-only cache in that case.
+    if (classLoaders.isEmpty)
+      Option(handlerClsCache.get(protocol)) match {
+        case Some(handlerOpt) => handlerOpt
+        case None =>
+          val handlerOpt = lookupHandler(protocol, classLoaders)
+          val prevOpt    = Option(handlerClsCache.putIfAbsent(protocol, handlerOpt))
+          prevOpt.getOrElse(handlerOpt)
+      }
+    else
+      lookupHandler(protocol, classLoaders).orElse(
+        Option(handlerClsCache.get(protocol)).flatten
+      )
+  }
 
-        def clsOpt(loader: ClassLoader): Option[Class[_]] =
-          try Some(Class.forName(clsName, false, loader))
-          catch {
-            case _: ClassNotFoundException =>
-              None
-          }
+  private def lookupHandler(
+    protocol: String,
+    classLoaders: Seq[ClassLoader]
+  ): Option[URLStreamHandler] = {
+    val clsName = List(
+      "coursier",
+      "cache",
+      "protocol",
+      s"${protocol.capitalize}Handler"
+    ).mkString(".")
 
-        val clsOpt0: Option[Class[_]] = {
-          val allLoaders = classLoaders.iterator ++ Iterator(
-            Thread.currentThread().getContextClassLoader,
-            getClass.getClassLoader
+    def clsOpt(loader: ClassLoader): Option[Class[_]] =
+      try Some(Class.forName(clsName, false, loader))
+      catch {
+        case _: ClassNotFoundException =>
+          None
+      }
+
+    val clsOpt0: Option[Class[_]] = {
+      val allLoaders = classLoaders.iterator ++ Iterator(
+        Thread.currentThread().getContextClassLoader,
+        getClass.getClassLoader
+      )
+      allLoaders
+        .flatMap(clsOpt(_).iterator)
+        .find(_ => true)
+    }
+
+    def printError(e: Exception): Unit =
+      scala.Console.err.println(
+        s"Cannot instantiate $clsName: " +
+          e +
+          Option(e.getMessage).fold("")(" (" + _ + ")")
+      )
+
+    val handlerFactoryOpt = clsOpt0.flatMap {
+      cls =>
+        try Some(
+            cls.getDeclaredConstructor().newInstance().asInstanceOf[URLStreamHandlerFactory]
           )
-          allLoaders
-            .flatMap(clsOpt(_).iterator)
-            .find(_ => true)
+        catch {
+          case e: InstantiationException =>
+            printError(e)
+            None
+          case e: IllegalAccessException =>
+            printError(e)
+            None
+          case e: ClassCastException =>
+            printError(e)
+            None
         }
+    }
 
-        def printError(e: Exception): Unit =
-          scala.Console.err.println(
-            s"Cannot instantiate $clsName: " +
-              e +
-              Option(e.getMessage).fold("")(" (" + _ + ")")
-          )
-
-        val handlerFactoryOpt = clsOpt0.flatMap {
-          cls =>
-            try Some(
-                cls.getDeclaredConstructor().newInstance().asInstanceOf[URLStreamHandlerFactory]
-              )
-            catch {
-              case e: InstantiationException =>
-                printError(e)
-                None
-              case e: IllegalAccessException =>
-                printError(e)
-                None
-              case e: ClassCastException =>
-                printError(e)
-                None
-            }
+    handlerFactoryOpt.flatMap {
+      factory =>
+        try Some(factory.createURLStreamHandler(protocol))
+        catch {
+          case NonFatal(e) =>
+            scala.Console.err.println(
+              s"Cannot get handler for $protocol from $clsName: " +
+                e.toString +
+                Option(e.getMessage).fold("")(" (" + _ + ")")
+            )
+            None
         }
-
-        val handlerOpt = handlerFactoryOpt.flatMap {
-          factory =>
-            try Some(factory.createURLStreamHandler(protocol))
-            catch {
-              case NonFatal(e) =>
-                scala.Console.err.println(
-                  s"Cannot get handler for $protocol from $clsName: " +
-                    e.toString +
-                    Option(e.getMessage).fold("")(" (" + _ + ")")
-                )
-                None
-            }
-        }
-
-        val prevOpt = Option(handlerClsCache.putIfAbsent(protocol, handlerOpt))
-        prevOpt.getOrElse(handlerOpt)
-
-      case Some(handlerOpt) =>
-        handlerOpt
     }
   }
 

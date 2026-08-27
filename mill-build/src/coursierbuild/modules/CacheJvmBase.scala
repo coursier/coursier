@@ -55,7 +55,14 @@ trait CacheJvmBase extends Cache with CsMima {
     def sources = Task {
       val dest = Task.dest / "CustomLoaderClasspath.scala"
       val customLoaderCp0 = customLoaderCp()
-        .map("\"" + _.path.toNIO.toUri.toASCIIString + "\"")
+        .map { ref =>
+          val file = PathRef.toAbsFile(ref)
+          val uri  = file.toURI.toASCIIString
+          val normalized =
+            if (file.isDirectory && !uri.endsWith("/")) uri + "/"
+            else uri
+          "\"" + normalized + "\""
+        }
         .mkString("Seq(", ", ", ")")
       val content =
         s"""package coursier.cache
