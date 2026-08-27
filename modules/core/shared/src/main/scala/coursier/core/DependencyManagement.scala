@@ -56,7 +56,7 @@ object DependencyManagement {
     config: Configuration,
     versionConstraint: VersionConstraint0,
     minimizedExclusions: MinimizedExclusions,
-    optional: Boolean,
+    optional: Option[Boolean],
     @since("2.1.25")
     global: Boolean = false
   ) {
@@ -71,7 +71,7 @@ object DependencyManagement {
       config,
       VersionConstraint0(version),
       minimizedExclusions,
-      optional
+      Some(optional)
     )
 
     @deprecated("Use versionConstraint instead", "2.1.25")
@@ -83,7 +83,7 @@ object DependencyManagement {
       else withVersionConstraint(VersionConstraint0(newVersion))
 
     def isEmpty: Boolean =
-      config.value.isEmpty && versionConstraint.asString.isEmpty && minimizedExclusions.isEmpty && !optional
+      config.value.isEmpty && versionConstraint.asString.isEmpty && minimizedExclusions.isEmpty && optional.isEmpty
     def fakeDependency(key: Key): Dependency =
       Dependency(
         key.fakeModule,
@@ -99,7 +99,7 @@ object DependencyManagement {
       val newVersion =
         if (versionConstraint.asString.isEmpty) other.versionConstraint else versionConstraint
       val newExcl     = other.minimizedExclusions.join(minimizedExclusions)
-      val newOptional = optional || other.optional
+      val newOptional = optional.orElse(other.optional)
       if (
         config != newConfig || versionConstraint != newVersion || minimizedExclusions != newExcl || optional != newOptional
       )
@@ -137,11 +137,16 @@ object DependencyManagement {
       versionConstraint.asString.contains("$") ||
       minimizedExclusions.hasProperties
     override def toString(): String = {
+      val optionalString = optional match {
+        case None        => "false"
+        case Some(true)  => "true"
+        case Some(false) => "Some(false)"
+      }
       var fields = Seq(
         config.toString,
         versionConstraint.toString,
         minimizedExclusions.toString,
-        optional.toString
+        optionalString
       )
       if (global)
         fields = fields :+ global.toString
@@ -154,7 +159,7 @@ object DependencyManagement {
       config = Configuration.empty,
       versionConstraint = VersionConstraint0.empty,
       minimizedExclusions = MinimizedExclusions.zero,
-      optional = false
+      optional = None
     )
 
     def from(config: Configuration, dep: Dependency): Values =
@@ -164,6 +169,14 @@ object DependencyManagement {
         dep.minimizedExclusions,
         dep.optional
       )
+
+    def apply(
+      config: Configuration,
+      versionConstraint: VersionConstraint0,
+      minimizedExclusions: MinimizedExclusions,
+      optional: Boolean
+    ): Values =
+      apply(config, versionConstraint, minimizedExclusions, Some(optional))
 
     @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
     def apply(
@@ -175,7 +188,7 @@ object DependencyManagement {
       config,
       VersionConstraint0(version),
       minimizedExclusions,
-      optional
+      Some(optional)
     )
   }
 

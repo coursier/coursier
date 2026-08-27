@@ -128,7 +128,7 @@ object PomParser {
     var dependencyGroupIdOpt    = Option.empty[Organization]
     var dependencyArtifactIdOpt = Option.empty[ModuleName]
     var dependencyVersion       = ""
-    var dependencyOptional      = false
+    var dependencyOptional      = Option.empty[Boolean]
     var dependencyScope         = Configuration.empty
     var dependencyType          = Type.empty
     var dependencyClassifier    = Classifier.empty
@@ -479,7 +479,7 @@ object PomParser {
           state.dependencyGroupIdOpt = None
           state.dependencyArtifactIdOpt = None
           state.dependencyVersion = ""
-          state.dependencyOptional = false
+          state.dependencyOptional = None
           state.dependencyScope = Configuration.empty
           state.dependencyType = Type.empty
           state.dependencyClassifier = Classifier.empty
@@ -512,7 +512,7 @@ object PomParser {
       },
       content("optional" :: prefix) {
         (state, content) =>
-          state.dependencyOptional = content == "true"
+          state.dependencyOptional = Some(content == "true")
       },
       content("scope" :: prefix) {
         (state, content) =>
