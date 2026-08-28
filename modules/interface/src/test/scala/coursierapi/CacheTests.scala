@@ -25,27 +25,27 @@ object CacheTests extends TestSuite {
               |""".stripMargin
           Files.write(tmpFile, content.getBytes)
 
-          val credEnv = EnvValues(Some(tmpFile.toAbsolutePath.toUri.toString), None)
-          val noEnv = EnvValues(None, None)
+          val credEnv      = EnvValues(Some(tmpFile.toAbsolutePath.toUri.toString), None)
+          val noEnv        = EnvValues(None, None)
           val defaultCreds = CacheEnv.defaultCredentials(credEnv, noEnv, noEnv)
 
           val fc = FileCache().withCredentials(defaultCreds)
           val resolved = fc.credentials.flatMap {
             case dc: DirectCredentials => Seq(dc)
-            case other => other.get()
+            case other                 => other.get()
           }
 
           assert(resolved.exists(_.host == "artifacts.corp.com"))
           assert(resolved.exists(dc => dc.usernameOpt.contains("testuser")))
           assert(resolved.exists(dc => dc.passwordOpt.exists(_.value == "testpass")))
-        } finally {
-          Files.deleteIfExists(tmpFile)
         }
+        finally
+          Files.deleteIfExists(tmpFile)
       }
 
       test("defaultCredentialsNotOverridden") {
-        val cache = Cache.create()
-        val fc = ApiHelper.cache(cache)
+        val cache     = Cache.create()
+        val fc        = ApiHelper.cache(cache)
         val defaultFc = FileCache()
         assert(fc.credentials == defaultFc.credentials)
       }
@@ -53,12 +53,12 @@ object CacheTests extends TestSuite {
       test("explicitCredentialsAppendedToDefaults") {
         val cache = Cache.create()
           .addCredentials(Credentials.of("custom.host.com", "myuser", "mypass"))
-        val fc = ApiHelper.cache(cache)
+        val fc        = ApiHelper.cache(cache)
         val defaultFc = FileCache()
         assert(fc.credentials.size >= defaultFc.credentials.size + 1)
         val allDirect = fc.credentials.flatMap {
           case dc: DirectCredentials => Seq(dc)
-          case other => other.get()
+          case other                 => other.get()
         }
         assert(allDirect.exists(_.host == "custom.host.com"))
       }
@@ -78,13 +78,13 @@ object CacheTests extends TestSuite {
               |""".stripMargin
           Files.write(tmpFile, content.getBytes)
 
-          val credEnv = EnvValues(Some(tmpFile.toAbsolutePath.toUri.toString), None)
-          val noEnv = EnvValues(None, None)
+          val credEnv      = EnvValues(Some(tmpFile.toAbsolutePath.toUri.toString), None)
+          val noEnv        = EnvValues(None, None)
           val defaultCreds = CacheEnv.defaultCredentials(credEnv, noEnv, noEnv)
 
           val resolved = defaultCreds.flatMap {
             case dc: DirectCredentials => Seq(dc)
-            case other => other.get()
+            case other                 => other.get()
           }
 
           assert(resolved.length == 2)
@@ -105,9 +105,9 @@ object CacheTests extends TestSuite {
           assert(backToScala.host == "host2.example.com")
           assert(backToScala.realm.contains("MyRealm"))
           assert(backToScala.httpsOnly)
-        } finally {
-          Files.deleteIfExists(tmpFile)
         }
+        finally
+          Files.deleteIfExists(tmpFile)
       }
 
       test("fetchAddCredentials") {
@@ -121,7 +121,7 @@ object CacheTests extends TestSuite {
         val fc = ApiHelper.cache(fetch.getCache)
         val allDirect = fc.credentials.flatMap {
           case dc: DirectCredentials => Seq(dc)
-          case other => other.get()
+          case other                 => other.get()
         }
         assert(allDirect.exists(_.host == "fetch.host.com"))
       }
@@ -145,12 +145,12 @@ object CacheTests extends TestSuite {
       test("coursierCredentialsEnvInlineCredentials") {
         // Simulates COURSIER_CREDENTIALS env var with inline credentials
         val credEnv = EnvValues(Some("artifacts.corp.com user:password"), None)
-        val noEnv = EnvValues(None, None)
-        val creds = CacheEnv.defaultCredentials(credEnv, noEnv, noEnv)
+        val noEnv   = EnvValues(None, None)
+        val creds   = CacheEnv.defaultCredentials(credEnv, noEnv, noEnv)
 
         val resolved = creds.flatMap {
           case dc: DirectCredentials => Seq(dc)
-          case other => other.get()
+          case other                 => other.get()
         }
 
         assert(resolved.exists(_.host == "artifacts.corp.com"))
@@ -170,27 +170,27 @@ object CacheTests extends TestSuite {
           Files.write(tmpFile, content.getBytes)
 
           val credEnv = EnvValues(Some(tmpFile.toAbsolutePath.toUri.toString), None)
-          val noEnv = EnvValues(None, None)
-          val creds = CacheEnv.defaultCredentials(credEnv, noEnv, noEnv)
+          val noEnv   = EnvValues(None, None)
+          val creds   = CacheEnv.defaultCredentials(credEnv, noEnv, noEnv)
 
           val resolved = creds.flatMap {
             case dc: DirectCredentials => Seq(dc)
-            case other => other.get()
+            case other                 => other.get()
           }
 
           assert(resolved.exists(_.host == "env-file.example.com"))
           assert(resolved.exists(dc => dc.usernameOpt.contains("envuser")))
           assert(resolved.exists(dc => dc.passwordOpt.exists(_.value == "envpass")))
-        } finally {
-          Files.deleteIfExists(tmpFile)
         }
+        finally
+          Files.deleteIfExists(tmpFile)
       }
 
       test("coursierCredentialsEnvPreservedThroughApiHelper") {
         // Proves that FileCache() defaults (which include COURSIER_CREDENTIALS)
         // are preserved when going through ApiHelper.cache(Cache.create())
-        val cache = Cache.create()
-        val fc = ApiHelper.cache(cache)
+        val cache     = Cache.create()
+        val fc        = ApiHelper.cache(cache)
         val defaultFc = FileCache()
 
         // The credentials from FileCache defaults (which reads COURSIER_CREDENTIALS)
@@ -296,12 +296,14 @@ object CacheTests extends TestSuite {
       test("credentialsImmutableFromGetter") {
         val cache = Cache.create()
           .addCredentials(Credentials.of("h1.com", "u1", "p1"))
-        val thrown = try {
-          cache.getCredentials.add(Credentials.of("h2.com", "u2", "p2"))
-          false
-        } catch {
-          case _: UnsupportedOperationException => true
-        }
+        val thrown =
+          try {
+            cache.getCredentials.add(Credentials.of("h2.com", "u2", "p2"))
+            false
+          }
+          catch {
+            case _: UnsupportedOperationException => true
+          }
         assert(thrown)
       }
 
@@ -322,20 +324,20 @@ object CacheTests extends TestSuite {
           // FileCredentials should be present in the FileCache credentials
           val hasFileCred = fc.credentials.exists {
             case fc: FileCredentials => fc.path == tmpFile.toAbsolutePath.toString
-            case _ => false
+            case _                   => false
           }
           assert(hasFileCred)
 
           // Resolve and verify the credentials load correctly
           val resolved = fc.credentials.flatMap {
             case dc: DirectCredentials => Seq(dc)
-            case other => other.get()
+            case other                 => other.get()
           }
           assert(resolved.exists(_.host == "filecred.example.com"))
           assert(resolved.exists(dc => dc.usernameOpt.contains("fileuser")))
-        } finally {
-          Files.deleteIfExists(tmpFile)
         }
+        finally
+          Files.deleteIfExists(tmpFile)
       }
 
       test("fileCredentialsRoundTrip") {
@@ -344,7 +346,7 @@ object CacheTests extends TestSuite {
           .addFileCredentials("/other/path/creds.properties")
 
         // Java API -> Scala FileCache -> Java API
-        val fc = ApiHelper.cache(cache)
+        val fc     = ApiHelper.cache(cache)
         val cache2 = ApiHelper.cache(fc)
 
         // Round-trip includes default FileCredentials from CacheDefaults plus our explicit ones

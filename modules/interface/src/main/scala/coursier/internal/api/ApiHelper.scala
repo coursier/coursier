@@ -9,7 +9,15 @@ import coursier._
 import coursierapi.{Credentials, Logger, SimpleLogger}
 import coursier.cache.loggers.RefreshLogger
 import coursier.cache.{ArchiveCache, CacheDefaults, CacheLogger, FileCache, UnArchiver}
-import coursier.core.{Authentication, Configuration, DependencyManagement, Extension, MinimizedExclusions, Publication, Version}
+import coursier.core.{
+  Authentication,
+  Configuration,
+  DependencyManagement,
+  Extension,
+  MinimizedExclusions,
+  Publication,
+  Version
+}
 import coursier.error.{CoursierError, FetchError, ResolutionError}
 import coursier.ivy.IvyRepository
 import coursier.jvm.{JavaHome, JvmCache}
@@ -181,7 +189,8 @@ object ApiHelper {
       ),
       values.isOptional
     )
-  def depMgmtValues(values: DependencyManagement.Values): coursierapi.DependencyManagement.Values = {
+  def depMgmtValues(values: DependencyManagement.Values)
+    : coursierapi.DependencyManagement.Values = {
     val apiValues = new coursierapi.DependencyManagement.Values(
       values.config.value,
       values.version,
@@ -191,7 +200,10 @@ object ApiHelper {
       values.minimizedExclusions.toSeq()
         .map {
           case (org, name) =>
-            new ju.AbstractMap.SimpleImmutableEntry(org.value, name.value): ju.Map.Entry[String, String]
+            new ju.AbstractMap.SimpleImmutableEntry(
+              org.value,
+              name.value
+            ): ju.Map.Entry[String, String]
         }
         .toSet
         .asJava
@@ -224,7 +236,12 @@ object ApiHelper {
 
     Option(dep.getPublication)
       .map { p =>
-        val p0 = Publication(p.getName, Type(p.getType), Extension(p.getExtension), Classifier(p.getClassifier))
+        val p0 = Publication(
+          p.getName,
+          Type(p.getType),
+          Extension(p.getExtension),
+          Classifier(p.getClassifier)
+        )
         dep0.withPublication(p0)
       }
       .getOrElse(dep0)
@@ -244,7 +261,10 @@ object ApiHelper {
           .exclusions
           .map {
             case (o, n) =>
-              new ju.AbstractMap.SimpleImmutableEntry(o.value, n.value): ju.Map.Entry[String, String]
+              new ju.AbstractMap.SimpleImmutableEntry(
+                o.value,
+                n.value
+              ): ju.Map.Entry[String, String]
           }
           .asJava
       )
@@ -297,7 +317,7 @@ object ApiHelper {
           .withCredentials(credentialsOpt.orNull)
       case ivy: IvyRepository =>
         val credentialsOpt = ivy.authentication.map(credentials)
-        val mdPatternOpt = ivy.metadataPatternOpt.map(_.string)
+        val mdPatternOpt   = ivy.metadataPatternOpt.map(_.string)
         coursierapi.IvyRepository.of(ivy.pattern.string)
           .withMetadataPattern(mdPatternOpt.orNull)
           .withCredentials(credentialsOpt.orNull)
@@ -315,14 +335,19 @@ object ApiHelper {
       .withForceVersions(params.forceVersion.map { case (m, v) => module(m) -> v }.asJava)
       .withForceProperties(params.forcedProperties.asJava)
       .withProfiles(params.profiles.asJava)
-      .withExclusions(params.exclusions.map { case (o, n) => new ju.AbstractMap.SimpleEntry(o.value, n.value): ju.Map.Entry[String, String] }.asJava)
+      .withExclusions(params.exclusions.map { case (o, n) =>
+        new ju.AbstractMap.SimpleEntry(o.value, n.value): ju.Map.Entry[String, String]
+      }.asJava)
       .withUseSystemOsInfo(params.useSystemOsInfo)
       .withUseSystemJdkVersion(params.useSystemJdkVersion)
       .withScalaVersion(params.scalaVersionOpt.orNull)
       .withKeepProvidedDependencies(params.keepProvidedDependencies.map(b => b: JBoolean).orNull)
       .withForceDepMgmtVersions(params.forceDepMgmtVersions.map(b => b: JBoolean).orNull)
       .withEnableDependencyOverrides(params.enableDependencyOverrides.map(b => b: JBoolean).orNull)
-      .withDefaultConfiguration(if (params.defaultConfiguration == ResolutionParams().defaultConfiguration) null else params.defaultConfiguration.value)
+      .withDefaultConfiguration(if (
+        params.defaultConfiguration == ResolutionParams().defaultConfiguration
+      ) null
+      else params.defaultConfiguration.value)
   }
 
   def resolutionParams(params: coursierapi.ResolutionParams): ResolutionParams = {
@@ -330,17 +355,25 @@ object ApiHelper {
     if (params.getMaxIterations != null)
       params0 = params0.withMaxIterations(params.getMaxIterations)
     params0
-      .withForceVersion(params.getForceVersions.asScala.iterator.toMap.map { case (m, v) => module(m) -> v })
+      .withForceVersion(params.getForceVersions.asScala.iterator.toMap.map { case (m, v) =>
+        module(m) -> v
+      })
       .withForcedProperties(params.getForcedProperties.asScala.iterator.toMap)
       .withProfiles(params.getProfiles.asScala.toSet)
-      .withExclusions(params.getExclusions.asScala.map { e => (Organization(e.getKey), ModuleName(e.getValue)) }.toSet)
+      .withExclusions(params.getExclusions.asScala.map { e =>
+        (Organization(e.getKey), ModuleName(e.getValue))
+      }.toSet)
       .withUseSystemOsInfo(params.getUseSystemOsInfo)
       .withUseSystemJdkVersion(params.getUseSystemJdkVersion)
       .withScalaVersionOpt(Option(params.getScalaVersion))
       .withKeepProvidedDependencies(Option(params.getKeepProvidedDependencies).map(b => b: Boolean))
       .withForceDepMgmtVersions(Option(params.getForceDepMgmtVersions).map(b => b: Boolean))
-      .withEnableDependencyOverrides(Option(params.getEnableDependencyOverrides).map(b => b: Boolean))
-      .withDefaultConfiguration(Option(params.getDefaultConfiguration).map(Configuration(_)).getOrElse(params0.defaultConfiguration))
+      .withEnableDependencyOverrides(Option(params.getEnableDependencyOverrides).map(b =>
+        b: Boolean
+      ))
+      .withDefaultConfiguration(Option(
+        params.getDefaultConfiguration
+      ).map(Configuration(_)).getOrElse(params0.defaultConfiguration))
   }
 
   def cache(cache: coursierapi.Cache): FileCache[Task] = {
@@ -350,7 +383,12 @@ object ApiHelper {
         new CacheLogger {
           override def downloadingArtifact(url: String) =
             s.starting(url)
-          override def downloadLength(url: String, totalLength: Long, alreadyDownloaded: Long, watching: Boolean) =
+          override def downloadLength(
+            url: String,
+            totalLength: Long,
+            alreadyDownloaded: Long,
+            watching: Boolean
+          ) =
             s.length(url, totalLength, alreadyDownloaded, watching)
           override def downloadProgress(url: String, downloaded: Long) =
             s.progress(url, downloaded)
@@ -377,12 +415,25 @@ object ApiHelper {
             c.checkingArtifact(url, ApiHelper.artifact(artifact))
           override def checkingUpdates(url: String, currentTimeOpt: Option[Long]): Unit =
             c.checkingUpdates(url, currentTimeOpt.map(x => x: JLong).orNull)
-          override def checkingUpdatesResult(url: String, currentTimeOpt: Option[Long], remoteTimeOpt: Option[Long]): Unit =
-            c.checkingUpdatesResult(url, currentTimeOpt.map(x => x: JLong).orNull, remoteTimeOpt.map(x => x: JLong).orNull)
+          override def checkingUpdatesResult(
+            url: String,
+            currentTimeOpt: Option[Long],
+            remoteTimeOpt: Option[Long]
+          ): Unit =
+            c.checkingUpdatesResult(
+              url,
+              currentTimeOpt.map(x => x: JLong).orNull,
+              remoteTimeOpt.map(x => x: JLong).orNull
+            )
 
           override def downloadedArtifact(url: String, success: Boolean): Unit =
             c.downloadedArtifact(url, success)
-          override def downloadLength(url: String, totalLength: Long, alreadyDownloaded: Long, watching: Boolean): Unit =
+          override def downloadLength(
+            url: String,
+            totalLength: Long,
+            alreadyDownloaded: Long,
+            watching: Boolean
+          ): Unit =
             c.downloadLength(url, totalLength, alreadyDownloaded, watching)
           override def downloadProgress(url: String, downloaded: Long): Unit =
             c.downloadProgress(url, downloaded)
@@ -403,7 +454,12 @@ object ApiHelper {
       .map(dc => dc: coursier.credentials.Credentials)
 
     val fileCredentials = cache.getCredentialFiles.asScala
-      .map(path => coursier.credentials.FileCredentials(path, optional = true): coursier.credentials.Credentials)
+      .map(path =>
+        coursier.credentials.FileCredentials(
+          path,
+          optional = true
+        ): coursier.credentials.Credentials
+      )
 
     FileCache()
       .withPool(cache.getPool)
@@ -421,8 +477,8 @@ object ApiHelper {
 
     val cacheCredentials = cache.credentials.flatMap {
       case dc: coursier.credentials.DirectCredentials => Seq(credentials(dc))
-      case _: coursier.credentials.FileCredentials => Nil
-      case other => other.get().map(credentials)
+      case _: coursier.credentials.FileCredentials    => Nil
+      case other                                      => other.get().map(credentials)
     }
 
     val fileCredentialPaths = cache.credentials.collect {
@@ -480,7 +536,8 @@ object ApiHelper {
       .withMainArtifacts(fetch.getMainArtifacts)
       .withClassifiers(classifiers)
     if (fetch.getArtifactTypes != null)
-      artifacts = artifacts.withArtifactTypes(fetch.getArtifactTypes.asScala.toSet[String].map(Type(_)))
+      artifacts =
+        artifacts.withArtifactTypes(fetch.getArtifactTypes.asScala.toSet[String].map(Type(_)))
 
     Fetch(resolve, artifacts, None)
       .withFetchCache(Option(fetch.getFetchCacheIKnowWhatImDoing))
@@ -499,7 +556,7 @@ object ApiHelper {
     val cache0 = cache(
       fetch.cache match {
         case f: FileCache[Task] => f
-        case c => sys.error(s"Unsupported cache type: $c")
+        case c                  => sys.error(s"Unsupported cache type: $c")
       }
     )
 
@@ -552,7 +609,9 @@ object ApiHelper {
         fetch0.eitherResult()
       else {
         val dummyArtifact = Artifact("", Map(), Map(), changing = false, optional = false, None)
-        fetch0.either().map(files => Fetch.Result().withExtraArtifacts(files.map((dummyArtifact, _))))
+        fetch0.either().map(files =>
+          Fetch.Result().withExtraArtifacts(files.map((dummyArtifact, _)))
+        )
       }
 
     // TODO Pass exception causes if any
@@ -587,7 +646,7 @@ object ApiHelper {
       case Right(result) =>
         val artifactFiles = new ju.ArrayList[ju.Map.Entry[coursierapi.Artifact, File]]
         for ((a, f) <- result.artifacts) {
-          val a0 = artifact(a)
+          val a0  = artifact(a)
           val ent = new ju.AbstractMap.SimpleEntry(a0, f)
           artifactFiles.add(ent)
         }
@@ -684,7 +743,7 @@ object ApiHelper {
     val cache0 = cache(
       versions.cache match {
         case f: FileCache[Task] => f
-        case c => sys.error(s"Unsupported cache type: $c")
+        case c                  => sys.error(s"Unsupported cache type: $c")
       }
     )
 
@@ -703,12 +762,18 @@ object ApiHelper {
 
     val errors = res.results.collect {
       case (repo, Left(error)) =>
-        new ju.AbstractMap.SimpleImmutableEntry(repository(repo), error): ju.Map.Entry[coursierapi.Repository, String]
+        new ju.AbstractMap.SimpleImmutableEntry(
+          repository(repo),
+          error
+        ): ju.Map.Entry[coursierapi.Repository, String]
     }
 
     val listings = res.results.collect {
       case (repo, Right(ver)) =>
-        new ju.AbstractMap.SimpleImmutableEntry(repository(repo), versionListing(ver)): ju.Map.Entry[coursierapi.Repository, coursierapi.VersionListing]
+        new ju.AbstractMap.SimpleImmutableEntry(
+          repository(repo),
+          versionListing(ver)
+        ): ju.Map.Entry[coursierapi.Repository, coursierapi.VersionListing]
     }
 
     coursierapi.VersionsResult.of(
@@ -722,26 +787,34 @@ object ApiHelper {
     val cache0 = ApiHelper.cache(cache)
     cache0.file(ApiHelper.artifact(artifact)).run.unsafeRun()(cache0.ec) match {
       case Left(err) => throw err
-      case Right(f) => f
+      case Right(f)  => f
     }
   }
 
   def archiveCache(archiveCache: coursierapi.ArchiveCache): ArchiveCache[Task] =
     ArchiveCache(archiveCache.getLocation, cache(archiveCache.getCache), UnArchiver.default())
 
-  def archiveCacheGet(archiveCache: coursierapi.ArchiveCache, artifact: coursierapi.Artifact): File = {
+  def archiveCacheGet(
+    archiveCache: coursierapi.ArchiveCache,
+    artifact: coursierapi.Artifact
+  ): File = {
     val archiveCache0 = ApiHelper.archiveCache(archiveCache)
     archiveCache0.get(ApiHelper.artifact(artifact)).unsafeRun()(archiveCache0.cache.ec) match {
       case Left(err) => throw err
-      case Right(f) => f
+      case Right(f)  => f
     }
   }
 
-  def archiveCacheGetIfExists(archiveCache: coursierapi.ArchiveCache, artifact: coursierapi.Artifact): File = {
+  def archiveCacheGetIfExists(
+    archiveCache: coursierapi.ArchiveCache,
+    artifact: coursierapi.Artifact
+  ): File = {
     val archiveCache0 = ApiHelper.archiveCache(archiveCache)
-    archiveCache0.getIfExists(ApiHelper.artifact(artifact)).unsafeRun()(archiveCache0.cache.ec) match {
+    archiveCache0.getIfExists(
+      ApiHelper.artifact(artifact)
+    ).unsafeRun()(archiveCache0.cache.ec) match {
       case Left(err) => throw err
-      case Right(f) => f.orNull
+      case Right(f)  => f.orNull
     }
   }
 

@@ -9,17 +9,18 @@ object Interpolators {
   final class Macros(val c: blackbox.Context) {
     import c.universe._
 
-    private def unsafeGetPrefixString: String = {
+    private def unsafeGetPrefixString: String =
       c.prefix.tree match {
         case Apply(_, List(Apply(_, Literal(Constant(string: String)) :: Nil))) => string
-        case _  => c.abort(c.enclosingPosition, "Only a single String literal is allowed here")
+        case _ => c.abort(c.enclosingPosition, "Only a single String literal is allowed here")
       }
-    }
 
     private def scalaVersion = ScalaVersion.of(scala.util.Properties.versionNumberString)
 
     private def toModuleExpr(mod: Module): Expr[Module] = {
-      val attrs = mod.getAttributes.asScala.toSeq.map { case (k, v) => q"_root_.scala.Tuple2($k, $v)" }
+      val attrs = mod.getAttributes.asScala.toSeq.map { case (k, v) =>
+        q"_root_.scala.Tuple2($k, $v)"
+      }
       c.Expr(q"""
         _root_.coursierapi.Module.of(
           ${mod.getOrganization},
@@ -31,13 +32,13 @@ object Interpolators {
 
     def safeModule(args: Expr[Any]*): Expr[Module] = {
       val modString = unsafeGetPrefixString
-      val mod = Module.parse(modString, scalaVersion)
+      val mod       = Module.parse(modString, scalaVersion)
       toModuleExpr(mod)
     }
 
     def safeDependency(args: Expr[Any]*): Expr[Dependency] = {
       val depString = unsafeGetPrefixString
-      val dep = Dependency.parse(depString, scalaVersion)
+      val dep       = Dependency.parse(depString, scalaVersion)
       c.Expr(q"_root_.coursierapi.Dependency.of(${toModuleExpr(dep.getModule)}, ${dep.getVersion})")
     }
 
