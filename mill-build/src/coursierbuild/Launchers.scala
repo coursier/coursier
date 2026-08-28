@@ -143,7 +143,7 @@ object Launchers {
       val usesDocker = nativeImageDockerParams().nonEmpty
       val cLibPath =
         if (usesDocker) s"/data/$staticLibDirName"
-        else PathRef.toAbsString(staticLibDir().path)
+        else PathRef.toResolvedPathString(staticLibDir().path)
       super.nativeImageOptions() ++
         Seq(
           s"-H:CLibraryPath=$cLibPath",
@@ -328,7 +328,8 @@ object Launchers {
     }
 
     def runWithAssistedConfig(args: String*) = Task.Command {
-      val cp         = jarClassPath().map(_.path).mkString(File.pathSeparator)
+      val cp = jarClassPath().map(ref => PathRef.toResolvedPathString(ref.path))
+        .mkString(File.pathSeparator)
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
       val graalVmHome = Option(System.getenv("GRAALVM_HOME")).getOrElse {
         import coursier.jvm.{JavaHome, JvmCache}
@@ -356,7 +357,8 @@ object Launchers {
     }
 
     def runFromJars(args: String*) = Task.Command {
-      val cp         = jarClassPath().map(_.path).mkString(File.pathSeparator)
+      val cp = jarClassPath().map(ref => PathRef.toResolvedPathString(ref.path))
+        .mkString(File.pathSeparator)
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
       val command    = Seq("java", "-cp", cp, mainClass0) ++ args
       os.proc(command.map(x => x: os.Shellable) *).call(
@@ -371,6 +373,16 @@ object Launchers {
       cp.filter(ref => os.exists(ref.path) && !os.isDir(ref.path))
     }
 
+    /** [[jarClassPath]] with Mill's session-scoped `sandbox` / `mill-home` forwarder symlinks
+      * resolved away. The launchers below bake these paths into a generated file that outlives the
+      * run that produced them, so the lexical form (which keeps the `sandbox/../mill-home` detour)
+      * would only resolve while that run's `out` layout is still around. Not a task: `os.Path`
+      * values that go through Mill's cache come back in the aliased form again.
+      */
+    private def resolvedJarClassPath: Task[Seq[os.Path]] = Task.Anon {
+      jarClassPath().map(ref => PathRef.toResolvedOsPath(ref.path))
+    }
+
     def launcher = Task {
       import coursier.launcher.{
         AssemblyGenerator,
@@ -380,7 +392,7 @@ object Launchers {
         Preamble
       }
       import scala.util.Properties.isWin
-      val cp         = jarClassPath().map(_.path)
+      val cp         = resolvedJarClassPath()
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
       val dest = Task.dest / (if (isWin) "launcher.bat" else "launcher")
@@ -388,7 +400,8 @@ object Launchers {
       val preamble = Preamble()
         .withOsKind(isWin)
         .callsItself(isWin)
-      val entries       = cp.map(path => ClassPathEntry.Url(path.toNIO.toUri.toASCIIString))
+      val entries =
+        cp.map(path => ClassPathEntry.Url(PathRef.toAbsNioPath(path).toUri.toASCIIString))
       val loaderContent = coursier.launcher.ClassLoaderContent(entries)
       val params = Parameters.Bootstrap(Seq(loaderContent), mainClass0)
         .withDeterministic(true)
@@ -401,7 +414,9 @@ object Launchers {
 
     def standaloneLauncher = Task {
 
-      val cachePath = os.Path(coursier.cache.FileCache().location, BuildCtx.workspaceRoot)
+      val cachePath = PathRef.toResolvedOsPath(
+        os.Path(coursier.cache.FileCache().location, BuildCtx.workspaceRoot)
+      )
       def urlOf(path: os.Path): Option[String] =
         if (path.startsWith(cachePath)) {
           val segments = path.relativeTo(cachePath).segments
@@ -418,7 +433,7 @@ object Launchers {
         Preamble
       }
       import scala.util.Properties.isWin
-      val cp         = jarClassPath().map(_.path)
+      val cp         = resolvedJarClassPath()
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
       val dest = Task.dest / (if (isWin) "launcher.bat" else "launcher")
@@ -476,9 +491,9 @@ object Launchers {
         "--name",
         "cs",
         "--dest",
-        PathRef.toAbsString(outputDir),
+        PathRef.toResolvedPathString(outputDir),
         "--input",
-        PathRef.toAbsString(inputDir),
+        PathRef.toResolvedPathString(inputDir),
         "--main-jar",
         "coursier.jar",
         "--main-class",

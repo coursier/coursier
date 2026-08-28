@@ -150,6 +150,14 @@ Notes:
 
 ## Build definition conventions
 
+- Never hand an `os.Path` to a subprocess (or bake it into a generated file) via
+  `toString` / `.toIO` / `.toNIO` / `PathRef.toAbsString` / `PathRef.toAbsFile`. Mill renders
+  `os.Path` as `../mill-workspace/...` and `../mill-home/...` aliases; those forms only resolve
+  through forwarder symlinks under the output dir that do not outlive the run that created them
+  (with `--no-daemon` they are deleted on exit), so a cached task value ends up pointing at a
+  dangling path. Use `PathRef.toResolvedPathString` (or `PathRef.toAbsNioPath` composed with
+  `PathRef.toResolvedOsPath` when a `java.nio.Path` / URI is needed), which resolves the
+  symlinks and falls back to the lexical form for paths that do not exist yet.
 - Follow existing `Cross` + shared-source composition patterns.
 - Keep Scala-version logic centralized (typically `mill-build/src/.../Deps.scala`).
 - Avoid hardcoding duplicated version values across files.
