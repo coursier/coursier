@@ -67,7 +67,7 @@ if [ ! -f "$CACHE_DEST" ]; then
   mkdir -p "$(dirname "$CACHE_DEST")"
   TMP_DEST="$CACHE_DEST.tmp-setup"
   echo "Downloading $CS_URL" 1>&2
-  curl -fLo "$TMP_DEST" "$CS_URL"
+  curl --retry 5 --retry-delay 2 --retry-all-errors -fLo "$TMP_DEST" "$CS_URL"
   mv "$TMP_DEST" "$CACHE_DEST"
 fi
 
