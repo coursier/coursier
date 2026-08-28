@@ -209,9 +209,9 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
     )
     def forkArgs = Task {
       val testRepositoryDataDir =
-        PathRef.toAbsString(tests.handmadeMetadata().path / "http/abc.com")
+        PathRef.toResolvedPathString(tests.handmadeMetadata().path / "http/abc.com")
       val httpServerCp = `test-cache`.jvm(ScalaVersions.scala213).httpServerClassPath()
-        .map(ref => PathRef.toAbsString(ref.path)).mkString(File.pathSeparator)
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.repository.data-dir=$testRepositoryDataDir",
         s"-Dtest.http-server.classpath=$httpServerCp"
@@ -258,8 +258,8 @@ object exec extends Exec {
     def scalaVersion = ScalaVersions.scala213
     def forkArgs = Task {
       super.forkArgs() ++ Seq(
-        s"-Dcoursier.execve.test.assembly=${PathRef.toAbsString(`execve-test`.assembly().path)}",
-        s"-Dcoursier.execve.test.native-image=${PathRef.toAbsString(`execve-test`.nativeImage().path)}"
+        s"-Dcoursier.execve.test.assembly=${PathRef.toResolvedPathString(`execve-test`.assembly().path)}",
+        s"-Dcoursier.execve.test.native-image=${PathRef.toResolvedPathString(`execve-test`.nativeImage().path)}"
       )
     }
   }
@@ -444,9 +444,10 @@ trait CacheJvm extends CacheJvmBase {
       Deps.jsoniterMacros
     )
     def forkEnv = super.forkEnv() ++ Seq(
-      "COURSIER_CUSTOMPROTOCOL_BASE" -> PathRef.toAbsString(BuildCtx.workspaceRoot),
+      "COURSIER_CUSTOMPROTOCOL_BASE" -> PathRef.toResolvedPathString(BuildCtx.workspaceRoot),
       "COURSIER_CUSTOM_LOADER_CP" ->
-        customLoaderCp().map(ref => PathRef.toAbsString(ref.path)).mkString(File.pathSeparator)
+        customLoaderCp().map(ref => PathRef.toResolvedPathString(ref.path))
+          .mkString(File.pathSeparator)
     )
   }
 }
@@ -578,7 +579,7 @@ trait CoursierJvm extends CoursierJvmBase { self =>
     )
     def forkArgs = Task {
       val httpServerCp = `test-cache`.jvm().httpServerClassPath()
-        .map(ref => PathRef.toAbsString(ref.path)).mkString(File.pathSeparator)
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.http-server.classpath=$httpServerCp"
       )
@@ -595,9 +596,9 @@ trait CoursierJvm extends CoursierJvmBase { self =>
     )
     def forkArgs = Task {
       val testRepositoryDataDir =
-        PathRef.toAbsString(tests.handmadeMetadata().path / "http/abc.com")
+        PathRef.toResolvedPathString(tests.handmadeMetadata().path / "http/abc.com")
       val httpServerCp = `test-cache`.jvm().httpServerClassPath()
-        .map(ref => PathRef.toAbsString(ref.path)).mkString(File.pathSeparator)
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.repository.data-dir=$testRepositoryDataDir",
         s"-Dtest.http-server.classpath=$httpServerCp"
@@ -656,7 +657,7 @@ trait TestsJvm extends TestsModule { self =>
     )
     def forkArgs = Task {
       val httpServerCp = `test-cache`.jvm().httpServerClassPath()
-        .map(ref => PathRef.toAbsString(ref.path)).mkString(File.pathSeparator)
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.http-server.classpath=$httpServerCp"
       )
@@ -668,13 +669,11 @@ trait TestsJvm extends TestsModule { self =>
     def testMetadataDir         = tests.metadata
     def forkArgs = Task {
       val testRepositoryDataDir =
-        PathRef.toAbsString(testHandmadeMetadataDir().path / "http/abc.com")
-      val redirectingServerCp =
-        `redirecting-server`.runClasspath().map(ref => PathRef.toAbsString(ref.path)).mkString(
-          File.pathSeparator
-        )
+        PathRef.toResolvedPathString(testHandmadeMetadataDir().path / "http/abc.com")
+      val redirectingServerCp = `redirecting-server`.runClasspath()
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
       val httpServerCp = `test-cache`.jvm().httpServerClassPath()
-        .map(ref => PathRef.toAbsString(ref.path)).mkString(File.pathSeparator)
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.repository.data-dir=$testRepositoryDataDir",
         s"-Dtest.redirecting-server.classpath=$redirectingServerCp",
@@ -830,7 +829,7 @@ trait Install extends CrossSbtModule with CsModule
     )
     def forkArgs = Task {
       val httpServerCp = `test-cache`.jvm().httpServerClassPath()
-        .map(ref => PathRef.toAbsString(ref.path)).mkString(File.pathSeparator)
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.http-server.classpath=$httpServerCp"
       )
@@ -871,13 +870,13 @@ trait Jvm extends CrossSbtModule with CsModule
     )
     def forkArgs = Task {
       val httpServerCp = `test-cache`.jvm().httpServerClassPath()
-        .map(ref => PathRef.toAbsString(ref.path)).mkString(File.pathSeparator)
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.http-server.classpath=$httpServerCp"
       )
     }
     def forkEnv = super.forkEnv() ++ Seq(
-      "COURSIER_JVM_TESTS_MOCK_CACHE" -> PathRef.toAbsString(mockCache().path)
+      "COURSIER_JVM_TESTS_MOCK_CACHE" -> PathRef.toResolvedPathString(mockCache().path)
     )
   }
 }
@@ -1018,7 +1017,7 @@ trait Cli extends CsModule
       .asScala
       .find(_._1.toLowerCase(Locale.ROOT) == "path")
       .getOrElse(("PATH", ""))
-    pathVarName -> s"${PathRef.toAbsString(Task.dest)}${File.pathSeparator}$pathBaseValue"
+    pathVarName -> s"${PathRef.toResolvedPathString(Task.dest)}${File.pathSeparator}$pathBaseValue"
   }
 }
 
@@ -1075,14 +1074,14 @@ trait CliTests extends CsModule
     }
     def forkArgs = Task {
       super.forkArgs() ++ sharedTestArgs ++ Seq(
-        s"-Dcoursier-test-launcher=${PathRef.toAbsString(cli.launcher().path)}",
-        s"-Dcoursier-test-assembly=${PathRef.toAbsString(cli.assembly().path)}",
+        s"-Dcoursier-test-launcher=${PathRef.toResolvedPathString(cli.launcher().path)}",
+        s"-Dcoursier-test-assembly=${PathRef.toResolvedPathString(cli.assembly().path)}",
         "-Dcoursier-test-launcher-accepts-D=false",
         "-Dcoursier-test-launcher-accepts-J=true",
         "-Dcoursier-test-is-native=false",
         "-Dcoursier-test-is-native-static=false",
         "-Dcoursier-test-is-standalone=false",
-        s"-Dcoursier.test.auth-proxy-data-dir=${PathRef.toAbsString(BuildCtx.workspaceRoot / "project/authenticated-proxy")}",
+        s"-Dcoursier.test.auth-proxy-data-dir=${PathRef.toResolvedPathString(BuildCtx.workspaceRoot / "project/authenticated-proxy")}",
         s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
@@ -1101,13 +1100,13 @@ trait CliTests extends CsModule
         .find(_._1.toLowerCase(Locale.ROOT) == "path")
         .getOrElse(("PATH", ""))
       super.forkEnv() ++ Seq(
-        pathVarName -> s"${PathRef.toAbsString(Task.dest)}${File.pathSeparator}$pathBaseValue"
+        pathVarName -> s"${PathRef.toResolvedPathString(Task.dest)}${File.pathSeparator}$pathBaseValue"
       )
     }
     def forkArgs = {
       val launcherTask = cliLauncher.map(_.path)
       Task {
-        val launcher = PathRef.toAbsString(launcherTask())
+        val launcher = PathRef.toResolvedPathString(launcherTask())
         super.forkArgs() ++ sharedTestArgs ++ Seq(
           s"-Dcoursier-test-launcher=$launcher",
           s"-Dcoursier-test-assembly=$launcher",
@@ -1116,7 +1115,7 @@ trait CliTests extends CsModule
           "-Dcoursier-test-is-native=true",
           s"-Dcoursier-test-is-native-static=$isStatic",
           "-Dcoursier-test-is-standalone=false",
-          s"-Dcoursier.test.auth-proxy-data-dir=${PathRef.toAbsString(BuildCtx.workspaceRoot / "project/authenticated-proxy")}",
+          s"-Dcoursier.test.auth-proxy-data-dir=${PathRef.toResolvedPathString(BuildCtx.workspaceRoot / "project/authenticated-proxy")}",
           s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
           s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
           s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
@@ -1134,12 +1133,13 @@ trait CliTests extends CsModule
         .find(_._1.toLowerCase(Locale.ROOT) == "path")
         .getOrElse(("PATH", ""))
       super.forkEnv() ++ Seq(
-        pathVarName -> s"${PathRef.toAbsString(Task.dest / "cs" / (cli.launcherSubPath / os.up))}${File.pathSeparator}$pathBaseValue"
+        pathVarName -> s"${PathRef.toResolvedPathString(Task.dest / "cs" / (cli.launcherSubPath / os.up))}${File.pathSeparator}$pathBaseValue"
       )
     }
     def forkArgs = Task {
-      val launcherDir = PathRef.toAbsString(cli.standaloneJvmLauncherDir().path)
-      val launcher = PathRef.toAbsString(cli.standaloneJvmLauncherDir().path / cli.launcherSubPath)
+      val launcherDir = PathRef.toResolvedPathString(cli.standaloneJvmLauncherDir().path)
+      val launcher =
+        PathRef.toResolvedPathString(cli.standaloneJvmLauncherDir().path / cli.launcherSubPath)
       super.forkArgs() ++ sharedTestArgs ++ Seq(
         s"-Dcoursier-test-launcher=$launcher",
         s"-Dcoursier-test-assembly=$launcher",
@@ -1150,7 +1150,7 @@ trait CliTests extends CsModule
         "-Dcoursier-test-is-standalone=true",
         s"-Dcoursier-test-launcher-dir=$launcherDir",
         s"-Dcoursier-test-launcher-sub-path=${cli.launcherSubPath}",
-        s"-Dcoursier.test.auth-proxy-data-dir=${PathRef.toAbsString(BuildCtx.workspaceRoot / "project/authenticated-proxy")}",
+        s"-Dcoursier.test.auth-proxy-data-dir=${PathRef.toResolvedPathString(BuildCtx.workspaceRoot / "project/authenticated-proxy")}",
         s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
@@ -1716,7 +1716,7 @@ object `class-file-version-check` extends Module {
       val jars = allPublishJars()
         .map {
           case (ref, jvmRel) =>
-            val path = PathRef.toAbsString(ref.path)
+            val path = PathRef.toResolvedPathString(ref.path)
             if (jvmRel == CoursierJavaModule.defaultJvmRelease) path
             else s"$path($jvmRel)"
         }
@@ -1759,13 +1759,13 @@ object docs extends ScalaModule {
   def mdocArgs = Task.Anon {
     Args(
       "--in",
-      PathRef.toAbsString(mdocInput().path),
+      PathRef.toResolvedPathString(mdocInput().path),
       "--out",
-      PathRef.toAbsString(mdocOutput().path),
+      PathRef.toResolvedPathString(mdocOutput().path),
       "--site.VERSION",
       coursier.jvm(sv).publishVersion(),
       "--classpath",
-      runClasspath().map(ref => PathRef.toAbsString(ref.path)).mkString(File.pathSeparator)
+      runClasspath().map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
     )
   }
   def mdocWatchArgs = Task.Anon {
@@ -1784,10 +1784,10 @@ object docs extends ScalaModule {
   def mkdocsConfigArgs = Task {
     val mkdocsConfigFile0 = mkdocsConfigFile().map(_.path)
     assert(mkdocsConfigFile0.length == 1)
-    Seq("--config-file", PathRef.toAbsString(mkdocsConfigFile0.head))
+    Seq("--config-file", PathRef.toResolvedPathString(mkdocsConfigFile0.head))
   }
   def mkdocsSiteDirArgs = Task {
-    Seq("--site-dir", PathRef.toAbsString(mkdocsOutput().path))
+    Seq("--site-dir", PathRef.toResolvedPathString(mkdocsOutput().path))
   }
   def mkdocsWatchScript: T[PathRef] = Task {
     mdoc()()

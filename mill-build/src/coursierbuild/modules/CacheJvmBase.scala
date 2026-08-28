@@ -52,11 +52,17 @@ trait CacheJvmBase extends Cache with CsMima {
     )
 
   trait CacheJvmBaseTests extends CrossSbtTests {
+    // These URIs are baked into the generated source below, so they outlive the run that
+    // computed them. PathRef.toAbsFile only de-aliases lexically, which leaves them pointing
+    // through Mill's `mill-{workspace,home}` forwarder symlinks - those are session-scoped, and
+    // a stale one makes the forked test JVM fail to load the custom protocol handler.
+    // getCanonicalFile resolves them, and unlike toRealPath it copes with entries that don't
+    // exist on disk (e.g. `compile-resources`).
     def sources = Task {
       val dest = Task.dest / "CustomLoaderClasspath.scala"
       val customLoaderCp0 = customLoaderCp()
         .map { ref =>
-          val file = PathRef.toAbsFile(ref)
+          val file = PathRef.toAbsFile(ref).getCanonicalFile
           val uri  = file.toURI.toASCIIString
           val normalized =
             if (file.isDirectory && !uri.endsWith("/")) uri + "/"
