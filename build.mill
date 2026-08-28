@@ -2170,10 +2170,14 @@ trait DependsOnInterfaceProguarded extends JavaModule {
     mvn"$mavenOrg:interface:${`interface-proguarded`.publishVersion()}"
   )
   def repositories = super.repositories() ++ Seq(
-    // resolve symlinks: this value is cached, and must not route through the ephemeral
-    // out/mill-no-daemon/<id>/mill-workspace forwarder, that mill deletes when it exits
-    PathRef.toResolvedOsPath(`interface-proguarded`.publishLocalTestRepo().path)
-      .toNIO.toUri.toASCIIString
+    // This value is cached, so it has to be a real absolute path. `os.Path.toNIO` can hand back
+    // the relative `../mill-workspace/…` alias, that only resolves from the sandbox of the mill
+    // run that computed it, and that mill wipes when it exits. `toResolvedPathString` follows
+    // the forwarder symlinks and never routes through `os.Path`, unlike `toResolvedOsPath`.
+    java.nio.file.Paths
+      .get(PathRef.toResolvedPathString(`interface-proguarded`.publishLocalTestRepo().path))
+      .toUri
+      .toASCIIString
   )
 }
 
