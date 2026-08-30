@@ -44,6 +44,8 @@ trait CoursierJavaModule extends JavaModule {
     val hasModules = os.isDir(javaHome / "jmods")
     val hasRtJar   = os.isFile(rtJar)
     assert(hasModules || hasRtJar)
+    // resolve symlinks: these options are cached, and must not route through the ephemeral
+    // out/mill-no-daemon/<id>/mill-home forwarder, that mill deletes when it exits
     val extraOpts =
       if (hasModules) Seq("--system", PathRef.toResolvedPathString(javaHome))
       else Seq("-bootclasspath", PathRef.toResolvedPathString(rtJar))

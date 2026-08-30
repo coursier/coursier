@@ -122,6 +122,30 @@ jobs:
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
 
+  interface-test:
+    runs-on: ubuntu-latest
+    name: Interface Scala ${{ matrix.SCALA_VERSION }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        SCALA_VERSION:
+          - "2.12.20"
+          - "2.13.18"
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - run: ./mill -i interfaceTests --scalaVersion "$SCALA_VERSION"
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+    - name: Test published dependencies
+      run: ./mill -i testInterfacePublishedDeps
+
   bin-compat:
     runs-on: ubuntu-latest
     name: Binary compatibility
@@ -227,6 +251,7 @@ jobs:
       - "compile-publish-all"
       - "test"
       - "js-test"
+      - "interface-test"
       - "bin-compat"
       - "website-check"
       - "format"
@@ -247,6 +272,9 @@ jobs:
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
+      # cutting a release needs a 'v*' and an 'interface-v*' tag on the same commit
+      - name: Check publish versions
+        run: ./mill -i ci.checkPublishVersions
       - name: Publish
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
