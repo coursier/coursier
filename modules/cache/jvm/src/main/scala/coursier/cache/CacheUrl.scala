@@ -133,6 +133,7 @@ object CacheUrl {
 
   private def partialContentResponseCode        = 206
   private def invalidPartialContentResponseCode = 416
+  private def tooManyRequestsResponseCode       = 429
 
   /** The timeout in milliseconds, as the `int` `URLConnection` wants (which a long enough duration
     * would otherwise overflow into a negative value it rejects)
@@ -260,11 +261,17 @@ object CacheUrl {
     else
       None
 
-  private def is4xx(conn: URLConnection): Boolean =
+  /** Whether the response is a 4xx we may be able to get past by authenticating
+    *
+    * 429 is excluded: it means we are being rate limited, not that we need credentials. Re-issuing
+    * the request with authentication only adds a request against a server that just asked us to
+    * slow down, and it happens right away, without any of the backoff the retry loop would apply.
+    */
+  private def maybeNeedsAuthentication(conn: URLConnection): Boolean =
     conn match {
       case conn0: HttpURLConnection =>
         val c = conn0.getResponseCode
-        c / 100 == 4
+        c / 100 == 4 && c != tooManyRequestsResponseCode
       case _ =>
         false
     }
@@ -419,7 +426,7 @@ object CacheUrl {
                   )
                 }
               case None =>
-                if (is4xx(conn)) {
+                if (maybeNeedsAuthentication(conn)) {
                   val realmOpt = realm(conn)
                   val authentication0 = authentication
                     .map(_.withOptional(false))
