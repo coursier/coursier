@@ -1529,7 +1529,10 @@
 
 <h1 id="coursier-java-api">coursier Java API<a class="headerlink" href="#coursier-java-api" title="Permanent link">&para;</a></h1>
 <p>coursier can be used from pure Java projects, but also from Scala projects, via its Java API.</p>
-<p>The coursier Java API is currently handled from <a href="https://github.com/coursier/interface">an external repository</a>, although it might be moved to the main repository at some point.</p>
+<p>The coursier Java API used to be handled from <a href="https://github.com/coursier/interface">an external repository</a>,
+but its sources now live in this repository, under <code>modules/interface</code>. It keeps its own versioning
+scheme, unrelated to the one of the other coursier modules, and driven by the <code>interface-v*</code> tags of
+this repository (rather than the <code>v*</code> ones).</p>
 <p>It is published as <code>io.get-coursier:interface</code>, and aims at minimizing binary compatibility
 breakages - it basically never broke binary compatibility since its very first release (but
 for one borked release).</p>
@@ -1539,6 +1542,10 @@ all coursier dependencies. This results in a slightly heavy JAR, that embeds und
 <code>coursierapi.shaded</code> most coursier dependencies. Note that users shouldn't tap directly into
 the APIs under <code>coursierapi.shaded</code> - these are considered private, and no compatibility guarantees
 apply to those.</p>
+<p>Even though coursier and its dependencies are shaded, the environment variables and Java properties
+that coursier reads are left untouched. That is <code>COURSIER_REPOSITORIES</code> / <code>coursier.repositories</code>,
+<code>COURSIER_CACHE</code> / <code>coursier.cache</code>, etc. are read by the Java API just like they are by coursier
+itself.</p>
 
 
 
