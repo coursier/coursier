@@ -31,6 +31,8 @@ object Deps {
     def jniUtils          = mvn"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
     def jniUtilsBootstrap =
       mvn"io.get-coursier.jniutils:windows-jni-utils-bootstrap:${Versions.jniUtils}"
+    def jniUtilsCoursierApi =
+      mvn"io.get-coursier.jniutils:windows-jni-utils-coursierapi:${Versions.jniUtils}"
     def jol  = mvn"org.openjdk.jol:jol-core:0.17"
     def jsch = mvn"com.github.mwiede:jsch:2.28.7"
     def jsoniterCore =
@@ -67,14 +69,19 @@ object Deps {
     def scalazConcurrent         = mvn"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
     def scodec                   = mvn"org.scodec::scodec-core:2.3.3"
     def shapeless                = mvn"com.chuusai::shapeless:2.3.12"
-    def slf4JNop                 = mvn"org.slf4j:slf4j-nop:2.0.18"
-    def svm                      = mvn"org.graalvm.nativeimage:svm:21.3.18"
-    def tika                     = mvn"org.apache.tika:tika-core:4.0.0"
-    def undertow                 = mvn"io.undertow:undertow-core:2.4.3.Final"
-    def ujson                    = mvn"com.lihaoyi::ujson:4.4.3"
-    def utest                    = mvn"com.lihaoyi::utest::0.9.5"
-    def versions                 = mvn"io.get-coursier::versions::0.5.3"
-    def windowsAnsi              = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
+    // stick to slf4j 1.x here, so that the interface module can be used from
+    // applications relying on either slf4j 1.x or 2.x
+    def slf4jApi = mvn"org.slf4j:slf4j-api:1.7.36"
+    def slf4JNop = mvn"org.slf4j:slf4j-nop:2.0.18"
+    def svm      = mvn"org.graalvm.nativeimage:svm:21.3.18"
+    // stick to the 2.x line: tika 3.x is compiled for Java 11, and we still support Java 8.
+    // Pinned in .scala-steward.conf too, so that it doesn't get bumped back to 3.x.
+    def tika        = mvn"org.apache.tika:tika-core:2.9.4"
+    def undertow    = mvn"io.undertow:undertow-core:2.4.3.Final"
+    def ujson       = mvn"com.lihaoyi::ujson:4.4.3"
+    def utest       = mvn"com.lihaoyi::utest::0.9.5"
+    def versions    = mvn"io.get-coursier::versions::0.5.3"
+    def windowsAnsi = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
     def windowsAnsiPs =
       mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
     def zstdJni = mvn"com.github.luben:zstd-jni:1.5.7-16"
@@ -85,6 +92,7 @@ object Deps {
     def http4s        = "0.23.36"
     def jniUtils      = "0.3.4"
     def jsoniterScala = "2.13.5"
+    def junit         = "4.13.2"
     def scalaz        = "7.2.36"
   }
 

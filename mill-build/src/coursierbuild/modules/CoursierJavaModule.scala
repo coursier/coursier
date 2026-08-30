@@ -44,6 +44,9 @@ trait CoursierJavaModule extends JavaModule {
     val hasModules = os.isDir(javaHome / "jmods")
     val hasRtJar   = os.isFile(rtJar)
     assert(hasModules || hasRtJar)
+    // These options are cached, so they have to be real absolute paths. `toAbsString` alone
+    // keeps the ephemeral out/mill-no-daemon/<id>/mill-home forwarder, that mill wipes when it
+    // exits, in the path. `toResolvedPathString` follows it.
     val extraOpts =
       if (hasModules) Seq("--system", PathRef.toResolvedPathString(javaHome))
       else Seq("-bootclasspath", PathRef.toResolvedPathString(rtJar))

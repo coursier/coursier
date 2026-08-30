@@ -1,10 +1,21 @@
 //| mill-version: 1.2.0-RC1-46-16168f
 //| mill-jvm-version: 21
 
-import coursierbuild.Deps.{Deps, ScalaVersions, csQemuVersion, scalaCliVersion}
+import com.github.lolgab.mill.mima.InterfaceMima
+import coursierbuild.Deps.{Deps, ScalaVersions, Versions, csQemuVersion, scalaCliVersion}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
 import coursierbuild.Relativize.{relativize => doRelativize}
-import coursierbuild.{CsSh, DocHelpers, GitHubReleaseAssets, Shading, Sync}
+import coursierbuild.{
+  Check,
+  CoursierProperties,
+  CsSh,
+  DocHelpers,
+  GitHubReleaseAssets,
+  InterfaceVersion,
+  Shading,
+  Sync,
+  ZipUtil
+}
 import coursierbuild.modules._
 import io.github.alexarchambault.millnativeimage.NativeImage
 import mill.contrib.jmh.JmhModule
@@ -1687,6 +1698,25 @@ object ci extends Module {
     destJavaHome
   }
 
+  /** Checks that all published modules are either all snapshots, or all releases.
+    *
+    * The coursier modules are versioned from the `v*` tags, the interface ones from the
+    * `interface-v*` tags, so cutting a release requires both kinds of tags on the same commit.
+    */
+  def checkPublishVersions() = Task.Command[Unit] {
+    val versions            = allPublishVersions()
+    val (snapshots, others) = versions.partition(_._2.endsWith("-SNAPSHOT"))
+    if (snapshots.nonEmpty && others.nonEmpty) {
+      for ((name, version) <- versions.sortBy(_._1))
+        System.err.println(s"$name: $version")
+      Task.fail(
+        s"Found ${snapshots.length} snapshot and ${others.length} non-snapshot publish " +
+          "versions, expected either all snapshots or all releases (releases need both a " +
+          "'v*' and an 'interface-v*' tag on the same commit)"
+      )
+    }
+  }
+
   def noEmptyDiscoveredTestClasses(tasks: Tasks[Seq[String]]) = Task.Command[Unit] {
     assert(tasks.value.nonEmpty)
     val results       = tasks.value.zip(Task.sequence(tasks.value)())
@@ -1698,6 +1728,11 @@ object ci extends Module {
     }
   }
 }
+
+lazy val allPublishVersions: Task[Seq[(String, String)]] =
+  Task.traverse(moduleInternal.modules.collect { case m: PublishModule => m }) { m =>
+    Task.Anon((m.moduleSegments.render, m.publishVersion()))
+  }
 
 lazy val allPublishJars: Task[Seq[(PathRef, String)]] =
   Task.traverse(moduleInternal.modules.collect { case m: PublishModule => m }) { m =>
@@ -1902,4 +1937,395 @@ trait CacheServer extends CrossSbtModule with CsModule with CoursierPublishModul
     val artifactId0  = artifactId()
     versions.map(version => mvn"$organization:$artifactId0:$version")
   }
+}
+
+// The modules below come from https://github.com/coursier/interface. Compared to the build
+// of that repository, the coursier dependencies of these modules are module dependencies
+// here, rather than dependencies on published coursier artifacts.
+//
+// Their versioning scheme (1.0.x) is unrelated to the tags of this repository: it is driven
+// by the `interface-v*` tags, see `InterfaceVersion`. `ci.checkPublishVersions` ensures a
+// release can only be cut with an `interface-v*` and a `v*` tag on the same commit.
+//
+// TODO Enable Mima on `interface-no-shading` and `interpolators` too (only the proguarded
+// `interface` JAR, the one users actually depend on, is checked for now).
+
+object interface extends Cross[Interface](ScalaVersions.all)
+
+object `interface-proguarded` extends InterfaceProguarded
+
+object `interface-svm-subs` extends InterfaceSvmSubs
+
+object `interface-interpolators` extends Cross[InterfaceInterpolators](ScalaVersions.all)
+
+object `interface-test` extends Cross[InterfaceTest](ScalaVersions.all)
+
+/** The interface modules are versioned from the `interface-v*` tags, not the `v*` ones */
+trait InterfacePublishModule extends CoursierPublishModule {
+  def publishVersion = Task.Input(InterfaceVersion.computeBuildVersion())
+}
+
+trait Interface extends CrossSbtModule with CsModule with InterfacePublishModule {
+  def artifactName = "interface-no-shading"
+  def moduleDeps = super.moduleDeps ++ Seq(
+    coursier.jvm(),
+    jvm()
+  )
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    Deps.jniUtilsCoursierApi,
+    Deps.slf4jApi // no need to shade that one…
+  )
+  // coursier-jvm pulls JNA via coursier-exec. JNA embeds native libraries, which cannot be
+  // shaded, and nothing here calls the coursier-exec API. Mill refers to the modules of this
+  // build with the (hardcoded here) mill-internal:$moduleName:0+mill-internal coordinates.
+  def depManagement = super.depManagement() ++ Seq(
+    mvn"mill-internal:exec:0+mill-internal".exclude("net.java.dev.jna" -> "jna")
+  )
+  object test extends CrossSbtTests with CsTests
+}
+
+trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
+  def interfaceScalaVersion = ScalaVersions.scala213
+  // no cross-version suffix: this module has no Scala code left after proguarding and shading
+  def artifactName = "interface"
+  def mvnDeps = Seq(
+    Deps.slf4jApi
+  )
+
+  def proguardedJar = Task {
+    val dest       = Task.dest / "interface.jar"
+    val configFile = Task.dest / "config.pro"
+    val proguardOptions = {
+      val baseOptions = Seq(
+        "-dontnote",
+        "-dontwarn",
+        "-dontobfuscate",
+        "-dontoptimize",
+        "-keep class coursierapi.** {\n  public protected *;\n}"
+      )
+      val maybeJava9Options =
+        if (sys.props.get("java.version").exists(!_.startsWith("1."))) {
+          val javaHome = os.Path(sys.props.getOrElse("java.home", sys.error("java.home not set")))
+          Seq(
+            s"-libraryjars ${javaHome / "jmods/java.base.jmod"}",
+            s"-libraryjars ${javaHome / "jmods/java.xml.jmod"}"
+          )
+        }
+        else
+          Nil
+      val classPathOptions = interface(interfaceScalaVersion)
+        .runClasspath()
+        .map(_.path)
+        .filter(os.exists)
+        .flatMap { path =>
+          val name      = path.last
+          val isLibrary = name.startsWith("slf4j-api-") && name.endsWith(".jar")
+          if (isLibrary)
+            Seq("-libraryjars", path.toString)
+          else {
+            val filterOpt =
+              if (os.isDir(path))
+                // classes / resources directories of the modules of this build
+                Some("!META-INF/**,!coursier.properties,!coursier/coursier.properties")
+              else
+                name match {
+                  case n if n.startsWith("windows-jni-utils") => Some("!META-INF/MANIFEST.MF")
+                  case n if n.startsWith("scala-xml") => Some("!META-INF/**,!scala-xml.properties")
+                  case n if n.startsWith("scala-library") =>
+                    Some("!META-INF/**,!library.properties,!rootdoc.txt")
+                  case n if n.startsWith("tika-core") =>
+                    Some("!META-INF/**,!pipes-fork-server-default-log4j2.xml")
+                  case _ => Some("!META-INF/**")
+                }
+            Seq("-injars", path.toString + filterOpt.fold("")("(" + _ + ")"))
+          }
+        }
+      val outputOptions = Seq("-outjars", dest.toString)
+      baseOptions ++ maybeJava9Options ++ classPathOptions ++ outputOptions
+    }
+    os.write(configFile, proguardOptions.map(_ + System.lineSeparator()).mkString)
+    // mill.util.Jvm, not the coursier-jvm module trait defined above
+    mill.util.Jvm.callProcess(
+      mainClass = "proguard.ProGuard",
+      mainArgs = Seq("-include", configFile.toString),
+      classPath = proguard.runClasspath().map(_.path),
+      jvmArgs = Seq("-Xmx3172M"),
+      stdin = os.Inherit,
+      stdout = os.Inherit,
+      stderr = os.Inherit
+    )
+    PathRef(dest)
+  }
+
+  def proguardedAndShadedJar = Task {
+    import com.eed3si9n.jarjar.{JJProcessor, Rule}
+    import com.eed3si9n.jarjar.util.StandaloneJarProcessor
+    val input = proguardedJar().path
+    def rename(from: String, to: String): Rule = {
+      val rule = new Rule
+      rule.setPattern(from)
+      rule.setResult(to)
+      rule
+    }
+    // JarJar remaps string constants that look like class names. That would rename the
+    // coursier system properties below too, which we'd rather keep as is, so that users can
+    // set them the same way, whether they use coursier directly or via coursier-interface.
+    // Identity rules, put before the more general coursier.** rule (the first matching rule
+    // wins), keep those strings untouched.
+    val identityRules = CoursierProperties.list.map(prop => rename(prop, prop))
+    val rules = identityRules ++ Seq(
+      rename("scala.**", "coursierapi.shaded.scala.@1"),
+      rename("coursier.**", "coursierapi.shaded.coursier.@1"),
+      rename("dependency.**", "coursierapi.shaded.dependency.@1"),
+      rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
+      rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
+      rename("concurrentrefhashmap.**", "coursierapi.shaded.concurrentrefhashmap.@1"),
+      rename("org.apache.commons.codec.**", "coursierapi.shaded.commonscodec.@1"),
+      rename("org.apache.commons.compress.**", "coursierapi.shaded.commonscompress.@1"),
+      rename("org.apache.commons.io.**", "coursierapi.shaded.commonsio.@1"),
+      rename("org.codehaus.plexus.**", "coursierapi.shaded.plexus.@1"),
+      rename("org.tukaani.xz.**", "coursierapi.shaded.xz.@1"),
+      rename("org.iq80.snappy.**", "coursierapi.shaded.snappy.@1"),
+      rename("com.github.plokhotnyuk.jsoniter_scala.core.**", "coursierapi.shaded.jsoniter.@1"),
+      rename("com.github.luben.zstd.**", "coursierapi.shaded.zstd.@1"),
+      rename("io.airlift.compress.**", "coursierapi.shaded.compress.@1"),
+      rename("io.github.alexarchambault.isterminal.**", "coursierapi.shaded.isterminal.@1"),
+      rename("org.apache.commons.lang3.**", "coursierapi.shaded.lang3.@1"),
+      rename("org.apache.tika.**", "coursierapi.shaded.tika.@1"),
+      // Those are shaded in the JARs published by this repository, but not in the class
+      // directories we get from the modules of this build, that we proguard here.
+      rename("dev.dirs.**", "coursierapi.shaded.dirs.@1"),
+      rename("fastparse.**", "coursierapi.shaded.fastparse.@1"),
+      rename("geny.**", "coursierapi.shaded.geny.@1"),
+      rename("org.jsoup.**", "coursierapi.shaded.jsoup.@1"),
+      rename("sourcecode.**", "coursierapi.shaded.sourcecode.@1"),
+      rename("pprint.**", "coursierapi.shaded.pprint.@1")
+    )
+    val processor = new JJProcessor(
+      rules,
+      verbose = false,
+      skipManifest = true,
+      misplacedClassStrategy = "fatal"
+    )
+    val dest = Task.dest / "interface.jar"
+    StandaloneJarProcessor.run(input.toIO, dest.toIO, processor)
+    PathRef(dest)
+  }
+
+  def cleanedUpJar = Task {
+    val input            = proguardedAndShadedJar().path
+    val intermediaryDest = Task.dest / "intermediary.jar"
+    val dest             = Task.dest / "interface.jar"
+    val toBeRemoved = Set(
+      "LICENSE",
+      "NOTICE",
+      "README"
+    )
+    val directoriesToBeRemoved = Seq(
+      "licenses/"
+    )
+    assert(directoriesToBeRemoved.forall(_.endsWith("/")))
+    ZipUtil.removeFromZip(
+      input,
+      intermediaryDest,
+      name =>
+        toBeRemoved(name) || directoriesToBeRemoved.exists(dir => name.startsWith(dir))
+    )
+    val serviceName = "META-INF/services/coursier.jniutils.NativeApi"
+    val serviceContent = ZipUtil.zipEntryContent(proguardedJar().path, serviceName).getOrElse {
+      sys.error(s"$serviceName not found in ${proguardedJar().path}")
+    }
+    ZipUtil.addOrOverwriteInZip(
+      intermediaryDest,
+      dest,
+      Seq(
+        "META-INF/services/coursierapi.shaded.coursier.jniutils.NativeApi" -> serviceContent
+      )
+    )
+    PathRef(dest)
+  }
+
+  def jar = Task {
+    val jar0 = cleanedUpJar()
+    Check.onlyNamespace("coursierapi", jar0.path.toIO)
+    Check.noShadedProperties(jar0.path.toIO)
+    jar0
+  }
+
+  def sourceJar = interface(interfaceScalaVersion).sourceJar()
+
+  object mima extends JavaModule with InterfaceMima {
+    // The interface JAR embeds shaded copies of coursier and its dependencies. Only the
+    // `coursierapi` API surface is checked, `InterfaceMima` strips the rest on both sides.
+    def mimaCurrentArtifact = Task {
+      val dest = Task.dest / "interface.jar"
+      InterfaceMima.stripNonApiClasses(InterfaceProguarded.this.jar().path, dest)
+      PathRef(dest)
+    }
+    def mimaPreviousVersions = Seq("1.0.29-M4")
+    // `mima` isn't a PublishModule itself, so the previous artifacts can't be derived from it
+    def mimaPreviousArtifacts = Task {
+      val organization = InterfaceProguarded.this.pomSettings().organization
+      val artifactId0  = InterfaceProguarded.this.artifactId()
+      mimaPreviousVersions().map(version => mvn"$organization:$artifactId0:$version")
+    }
+  }
+}
+
+/** Depends on the shaded and proguarded interface JAR, like downstream users do */
+trait DependsOnInterfaceProguarded extends JavaModule {
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    mvn"$mavenOrg:interface:${`interface-proguarded`.publishVersion()}"
+  )
+  def repositories = super.repositories() ++ Seq(
+    // This value is cached, so it has to be a real absolute path. `os.Path.toNIO` can hand back
+    // the relative `../mill-workspace/…` alias, that only resolves from the sandbox of the mill
+    // run that computed it, and that mill wipes when it exits. `toResolvedPathString` follows
+    // the forwarder symlinks and never routes through `os.Path`, unlike `toResolvedOsPath`.
+    java.nio.file.Paths
+      .get(PathRef.toResolvedPathString(`interface-proguarded`.publishLocalTestRepo().path))
+      .toUri
+      .toASCIIString
+  )
+}
+
+/** GraalVM native image substitutions for the classes shaded in the interface JAR */
+trait InterfaceSvmSubs extends JavaModule with InterfacePublishModule
+    with DependsOnInterfaceProguarded {
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
+    Deps.svm
+  )
+}
+
+trait InterfaceInterpolators extends CrossSbtModule with CsModule with InterfacePublishModule
+    with DependsOnInterfaceProguarded {
+  // published as `interpolators` since its inception, keep it that way
+  def artifactName = "interpolators"
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
+    Deps.scalaReflect(scalaVersion())
+  )
+  object test extends CrossSbtTests with CsTests
+}
+
+trait InterfaceTest extends CrossSbtModule with CsModule with DependsOnInterfaceProguarded {
+  object test extends CrossSbtTests with TestModule.Junit4 {
+    def junit4Version = Versions.junit
+    // SystemPropertyTests starts JVMs of its own, and needs our class path for that
+    def forkArgs = Task {
+      val classPath = runClasspath()
+        .map(ref => PathRef.toResolvedPathString(ref.path))
+        .mkString(File.pathSeparator)
+      super.forkArgs() ++ Seq(s"-Dcoursier-interface.test-classpath=$classPath")
+    }
+  }
+}
+
+def interfaceTests(scalaVersion: String = defaultScalaVersion) = {
+
+  def crossTests(sv: String) = Seq(
+    // format: off
+    interface                .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    `interface-interpolators`.valuesToModules.get(List(sv)).map(_.test.testForked()),
+    `interface-test`         .valuesToModules.get(List(sv)).map(_.test.testForked())
+    // format: on
+  ).flatten
+
+  val scalaVersions =
+    if (scalaVersion == "*") ScalaVersions.all
+    else Seq(scalaVersion)
+
+  val tasks = scalaVersions.flatMap(crossTests)
+
+  Task.Command {
+    Task.sequence(tasks.map(_.map(_ => ())))()
+
+    ()
+  }
+}
+
+/** Checks that the published interface JAR only depends on slf4j-api */
+def testInterfacePublishedDeps() = Task.Command {
+
+  import _root_.coursier.{Repositories, Resolve}
+  import _root_.coursier.core.{
+    Dependency => CsDependency,
+    Module => CsModule0,
+    ModuleName,
+    Organization,
+    Repository => CsRepository
+  }
+  import _root_.coursier.ivy.{IvyRepository => CsIvyRepository}
+  import _root_.coursier.maven.{MavenRepository => CsMavenRepository}
+  import _root_.coursier.version.VersionConstraint
+  import mill.javalib.publish.{LocalIvyPublisher, LocalM2Publisher}
+
+  val version      = `interface-proguarded`.publishVersion()
+  val organization = `interface-proguarded`.pomSettings().organization
+  val artifactId0  = `interface-proguarded`.artifactId()
+
+  val allowed = Set(
+    s"$organization:$artifactId0:$version",
+    s"${Deps.slf4jApi.organization}:${Deps.slf4jApi.name}:${Deps.slf4jApi.version}"
+  )
+
+  def checkResolution(name: String, repositories: Seq[CsRepository]): Unit = {
+    val interfaceDependency = CsDependency(
+      CsModule0(Organization(organization), ModuleName(artifactId0), Map.empty),
+      VersionConstraint(version)
+    )
+    val resolve = Resolve()
+      .withRepositories(repositories)
+      .addDependencies(interfaceDependency)
+    val resolution = resolve.io.unsafeRun(true)(using resolve.cache.ec)
+    val modules = resolution.dependenciesWithRetainedVersions.map { dep =>
+      val mod = dep.module
+      s"${mod.organization.value}:${mod.name.value}:${dep.versionConstraint.asString}"
+    }
+    val unexpected = modules -- allowed
+    if (unexpected.nonEmpty)
+      sys.error(
+        s"Unexpected dependencies from $name publication:${System.lineSeparator()}" +
+          unexpected.toSeq.sorted.mkString(System.lineSeparator())
+      )
+  }
+
+  val publishInfos = `interface-proguarded`.defaultPublishInfos(sources = true, docs = false)()
+  val metadata     = `interface-proguarded`.artifactMetadata()
+  val pom          = `interface-proguarded`.pom().path
+
+  def checkIvy(baseDir: os.Path): Unit = {
+    val ivyRepo = baseDir / "ivy"
+    os.makeDir.all(ivyRepo)
+
+    val ivy = `interface-proguarded`.ivy().path
+    new LocalIvyPublisher(ivyRepo).publishLocal(pom, Right(ivy), metadata, publishInfos)
+
+    val ivyBase = ivyRepo.toNIO.toUri.toASCIIString.stripSuffix("/")
+    val ivyRepository =
+      CsIvyRepository
+        .parse(
+          s"$ivyBase/[organisation]/[module]/[revision]/[type]s/[artifact](-[classifier]).[ext]"
+        )
+        .left.map(error => sys.error(s"Invalid Ivy repository pattern: $error"))
+        .merge
+    checkResolution("publishLocal", Seq(ivyRepository, Repositories.central))
+  }
+
+  def checkM2(baseDir: os.Path): Unit = {
+    val m2Repo = baseDir / "m2"
+    os.makeDir.all(m2Repo)
+
+    new LocalM2Publisher(m2Repo).publish(pom, metadata, publishInfos)
+
+    val m2Base = m2Repo.toNIO.toUri.toASCIIString
+    checkResolution("publishM2Local", Seq(CsMavenRepository(m2Base), Repositories.central))
+  }
+
+  val tmp = os.temp.dir(prefix = "coursier-interface-published-deps-")
+  try {
+    checkIvy(tmp)
+    checkM2(tmp)
+  }
+  finally
+    os.remove.all(tmp)
 }
