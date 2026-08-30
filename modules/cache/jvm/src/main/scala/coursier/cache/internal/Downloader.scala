@@ -954,6 +954,7 @@ object Downloader {
         case e: ArtifactError.RetryableHttpError          => e.retryAfterOpt.map(retryAfterValue)
         case _: AccessDeniedException if Properties.isWin => None
         case _: javax.net.ssl.SSLException                => None
+        case _: java.net.UnknownHostException             => None
         case _: java.net.SocketException                  => None
         // a connect or read timeout: the connection went quiet rather than failed, and the next
         // attempt resumes from what the .part file already holds. Note this is an

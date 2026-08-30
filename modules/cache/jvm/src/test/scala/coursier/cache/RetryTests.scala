@@ -6,6 +6,7 @@ import coursier.util.{Artifact, Task}
 import utest._
 
 import java.io.File
+import java.net.UnknownHostException
 import javax.net.ssl.SSLException
 
 import scala.concurrent.duration._
@@ -62,6 +63,19 @@ object RetryTests extends TestSuite {
       assert(failCount > 2)
       TestretryHandler.reset(failUntil = failCount)
       TestretryHandler.createException = _ => new SSLException("foo SSLException")
+
+      withTmpDir { dir =>
+        val result = get(dir)
+        assert(result.isRight)
+        assert(TestretryHandler.attempts.get() == failCount + 1)
+      }
+    }
+
+    test("retry on UnknownHostException") {
+      val failCount = retryCount - 2
+      assert(failCount > 2)
+      TestretryHandler.reset(failUntil = failCount)
+      TestretryHandler.createException = _ => new UnknownHostException("fake.host")
 
       withTmpDir { dir =>
         val result = get(dir)
