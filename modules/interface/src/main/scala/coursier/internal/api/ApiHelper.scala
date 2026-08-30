@@ -533,6 +533,7 @@ object ApiHelper {
       .withCache(cache0)
       .withResolutionParams(params)
     var artifacts = Artifacts()
+      .withCache(cache0)
       .withMainArtifacts(fetch.getMainArtifacts)
       .withClassifiers(classifiers)
     if (fetch.getArtifactTypes != null)
