@@ -3,6 +3,7 @@ package coursierbuild
 import java.io.File
 import java.util.regex.Matcher
 
+import mill.api.PathRef
 import sttp.client4.Response
 import sttp.client4.quick._
 
@@ -178,11 +179,24 @@ object CsSh {
       ghTokenOpt.fold(input)(token => input.replace(token, "****"))
 
     os.remove.all(cloneUnder)
-    os.makeDir.all(cloneUnder / os.up)
+    os.makeDir.all(cloneUnder)
 
     System.err.println(s"Cloning ${masked(remote)} in $cloneUnder")
-    os.proc("git", "clone", remote, "-q", "--depth", "1", "-b", baseBranch, cloneUnder.toString)
+    os.proc(
+      "git",
+      "clone",
+      remote,
+      "-q",
+      "--depth",
+      "1",
+      "-b",
+      baseBranch,
+      PathRef.toResolvedPathString(cloneUnder)
+    )
       .call(stdin = os.Inherit, stdout = os.Inherit, stderr = os.Inherit)
+
+    if (!os.exists(cloneUnder / ".git"))
+      sys.error(s"Error: $ghOrg/$ghName not cloned in $cloneUnder")
 
     def git(args: String*): Unit =
       os.proc("git", args).call(
