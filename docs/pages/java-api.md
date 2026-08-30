@@ -2,7 +2,10 @@
 
 coursier can be used from pure Java projects, but also from Scala projects, via its Java API.
 
-The coursier Java API is currently handled from [an external repository](https://github.com/coursier/interface), although it might be moved to the main repository at some point.
+The coursier Java API used to be handled from [an external repository](https://github.com/coursier/interface),
+but its sources now live in this repository, under `modules/interface`. It keeps its own versioning
+scheme, unrelated to the one of the other coursier modules, and driven by the `interface-v*` tags of
+this repository (rather than the `v*` ones).
 
 It is published as `io.get-coursier:interface`, and aims at minimizing binary compatibility
 breakages - it basically never broke binary compatibility since its very first release (but
