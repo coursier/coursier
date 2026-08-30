@@ -106,12 +106,23 @@ import scala.util.control.NonFatal
       allCredentials0: Seq[DirectCredentials]
     ): Either[ArtifactError, Option[Long]] =
       try
-        retry.retry {
-          urlLastModifiedOnce(url, currentLastModifiedOpt, logger, allCredentials0)
+        retry.retryOpt0 {
+          urlLastModifiedOnce(url, currentLastModifiedOpt, logger, allCredentials0) match {
+            case Left(e: ArtifactError.RetryableHttpError) =>
+              // throw the exception, so that Retry catches it and can make other attempts
+              throw e
+            case other => Some(other)
+          }
         } {
-          case _: java.net.SocketTimeoutException =>
+          case _: java.net.SocketTimeoutException => None
+          case e: ArtifactError.RetryableHttpError =>
+            e.retryAfterOpt.map(Downloader.retryAfterValue)
         }
       catch {
+        case ex: ArtifactError =>
+          if (Downloader.throwExceptions)
+            throw ex
+          Left(ex)
         case NonFatal(e) =>
           val ex = new ArtifactError.DownloadError(
             s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url",
@@ -150,20 +161,33 @@ import scala.util.control.NonFatal
             logger.checkingUpdates(url, currentLastModifiedOpt)
 
             var success = false
-            try {
-              val remoteLastModified = c.getLastModified
+            try
+              // Without this, a rate-limited HEAD looks just like a response carrying no
+              // last modified time, and the caller (which cannot tell the file is still current)
+              // downloads the file again - more requests against a server already asking us to
+              // slow down.
+              if (CacheUrl.responseCode(c).contains(Downloader.tooManyRequestsResponseCode))
+                Left(
+                  new ArtifactError.RetryableHttpError(
+                    url,
+                    Downloader.tooManyRequestsResponseCode,
+                    Downloader.retryAfter(c, clock)
+                  )
+                )
+              else {
+                val remoteLastModified = c.getLastModified
 
-              val res =
-                if (remoteLastModified > 0L)
-                  Some(remoteLastModified)
-                else
-                  None
+                val res =
+                  if (remoteLastModified > 0L)
+                    Some(remoteLastModified)
+                  else
+                    None
 
-              success = true
-              logger.checkingUpdatesResult(url, currentLastModifiedOpt, res)
+                success = true
+                logger.checkingUpdatesResult(url, currentLastModifiedOpt, res)
 
-              Right(res)
-            }
+                Right(res)
+              }
             finally if (!success)
                 logger.checkingUpdatesResult(url, currentLastModifiedOpt, None)
 
@@ -279,7 +303,7 @@ import scala.util.control.NonFatal
           Left(new ArtifactError.Forbidden(url))
         else if (respCodeOpt.contains(401))
           Left(new ArtifactError.Unauthorized(url, realm = CacheUrl.realm(conn)))
-        else if (respCodeOpt.contains(429))
+        else if (respCodeOpt.contains(Downloader.tooManyRequestsResponseCode))
           Left(
             new ArtifactError.RetryableHttpError(
               url,
@@ -855,12 +879,16 @@ object Downloader {
   private val checksumHeader          = Seq("MD5", "SHA1", "SHA256")
   private val httpResponseCodeMessage = ".*HTTP response code: ([0-9]+).*".r
 
+  private[internal] def tooManyRequestsResponseCode = 429
+
   private def retryableHttpResponseCode(e: IOException): Option[Int] =
     Option(e.getMessage)
       .collect {
         case httpResponseCodeMessage(responseCode) => responseCode.toInt
       }
-      .filter(responseCode => responseCode == 429 || responseCode / 100 == 5)
+      .filter(responseCode =>
+        responseCode == tooManyRequestsResponseCode || responseCode / 100 == 5
+      )
 
   private def retryAfter(conn: URLConnection, clock: Clock): Option[FiniteDuration] =
     conn match {

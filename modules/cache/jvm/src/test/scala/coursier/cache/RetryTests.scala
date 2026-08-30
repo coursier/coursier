@@ -2,10 +2,13 @@ package coursier.cache
 
 import coursier.cache.TestUtil._
 import coursier.cache.protocol.TestretryHandler
+import coursier.core.Authentication
 import coursier.util.{Artifact, Task}
 import utest._
 
 import java.io.File
+import java.nio.charset.StandardCharsets.UTF_8
+import java.nio.file.Files
 import javax.net.ssl.SSLException
 
 import scala.concurrent.duration._
@@ -18,14 +21,18 @@ object RetryTests extends TestSuite {
 
   private def retryCount = 6
 
-  private def get(dir: os.Path): Either[ArtifactError, File] = {
-    val cache = FileCache[Task]((dir / "cache").toIO)
+  private def fileCache(dir: os.Path): FileCache[Task] =
+    FileCache[Task]((dir / "cache").toIO)
       .withRetryBackoffInitialDelay(0.millis)
       .withChecksums(Seq(None))
       .withRetry(retryCount)
+
+  private def get(dir: os.Path): Either[ArtifactError, File] =
+    get(fileCache(dir), artifact)
+
+  private def get(cache: FileCache[Task], artifact: Artifact): Either[ArtifactError, File] =
     cache.file(artifact).run
       .unsafeRun(wrapExceptions = false)(cache.ec)
-  }
 
   val tests = Tests {
 
@@ -121,6 +128,53 @@ object RetryTests extends TestSuite {
           case other =>
             throw new Exception(s"Unexpected result: $other", other.left.toOption.orNull)
         }
+      }
+    }
+
+    test("don't re-send the request with credentials when rate limited") {
+      TestretryHandler.reset()
+      TestretryHandler.responseCode = 429
+      TestretryHandler.responseHeaders = Map("Retry-After" -> "0")
+
+      withTmpDir { dir =>
+        // Optional credentials: a 4xx used to be read as a hint that the request is worth
+        // re-sending, non-optionally, straight away - which is precisely what a 429 is not.
+        val artifact0 = artifact.withAuthentication(
+          Some(Authentication("user", "pass").withOptional(true))
+        )
+        val result = get(fileCache(dir), artifact0)
+        assert(result.isLeft)
+        // one round-trip per attempt, and no extra "same request, now with credentials" on top
+        assert(TestretryHandler.connections.get() == retryCount)
+      }
+    }
+
+    test("don't download the file again when the update check is rate limited") {
+      TestretryHandler.reset()
+      TestretryHandler.responseCode = 429
+      TestretryHandler.responseHeaders = Map("Retry-After" -> "0")
+
+      withTmpDir { dir =>
+        val cache = fileCache(dir)
+          .withCachePolicies(Seq(CachePolicy.Update))
+          .withTtl(1.hour)
+
+        // a cached file, with no ".checked" file alongside it, so the TTL check has to ask
+        // the server whether it is still current - with a HEAD request
+        val file = cache.localFile(artifact.url)
+        file.getParentFile.mkdirs()
+        Files.write(file.toPath, "cached-content".getBytes(UTF_8))
+
+        val result = get(cache, artifact)
+        result match {
+          case Left(e: ArtifactError.RetryableHttpError) =>
+            assert(e.responseCode == 429)
+          case other =>
+            throw new Exception(s"Unexpected result: $other", other.left.toOption.orNull)
+        }
+        // the rate-limited HEAD must not be read as "no last modified time, so download it again"
+        assert(TestretryHandler.attempts.get() == 0)
+        assert(TestretryHandler.connections.get() == retryCount)
       }
     }
 

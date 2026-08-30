@@ -5,7 +5,17 @@ import java.net.{HttpURLConnection, SocketException, URL, URLStreamHandler, URLS
 import java.util.concurrent.atomic.AtomicInteger
 
 object TestretryHandler {
-  val attempts: AtomicInteger                 = new AtomicInteger(0)
+
+  /** Download attempts, that is GET requests - HEAD requests are counted separately */
+  val attempts: AtomicInteger = new AtomicInteger(0)
+
+  /** Every connection opened, whatever the method
+    *
+    * More telling than `attempts` when what a test is after is the number of round-trips a server
+    * sees, rather than the number of downloads.
+    */
+  val connections: AtomicInteger = new AtomicInteger(0)
+
   @volatile var failUntilAttempt: Option[Int] = Some(0)
 
   private def defaultCreateException: Int => Throwable =
@@ -17,6 +27,7 @@ object TestretryHandler {
 
   def reset(failUntil: Int = -1): Unit = {
     attempts.set(0)
+    connections.set(0)
     failUntilAttempt = Some(failUntil).filter(_ >= 0)
     createException = defaultCreateException
     responseCode = defaultResponseCode
@@ -30,7 +41,8 @@ class TestretryHandler extends URLStreamHandlerFactory {
   def createURLStreamHandler(protocol: String): URLStreamHandler =
     if (protocol == "testretry")
       new URLStreamHandler {
-        protected def openConnection(url: URL): HttpURLConnection =
+        protected def openConnection(url: URL): HttpURLConnection = {
+          TestretryHandler.connections.incrementAndGet()
           new HttpURLConnection(url) {
             // CacheUrl.closeConn calls getInputStream() again after the download
             // to drain/close the connection. Only the first call per connection
@@ -48,7 +60,8 @@ class TestretryHandler extends URLStreamHandlerFactory {
 
             override def getInputStream: InputStream =
               new ByteArrayInputStream(
-                if (firstCall) {
+                // closeConn() drains HEAD connections too, and that is not a download attempt
+                if (firstCall && getRequestMethod != "HEAD") {
                   firstCall = false
                   val n = TestretryHandler.attempts.incrementAndGet()
                   if (TestretryHandler.failUntilAttempt.forall(n <= _))
@@ -62,6 +75,7 @@ class TestretryHandler extends URLStreamHandlerFactory {
 
             override def getContentLengthLong: Long = -1L
           }
+        }
       }
     else
       null
