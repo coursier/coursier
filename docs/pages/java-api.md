@@ -14,3 +14,8 @@ all coursier dependencies. This results in a slightly heavy JAR, that embeds und
 `coursierapi.shaded` most coursier dependencies. Note that users shouldn't tap directly into
 the APIs under `coursierapi.shaded` - these are considered private, and no compatibility guarantees
 apply to those.
+
+Even though coursier and its dependencies are shaded, the environment variables and Java properties
+that coursier reads are left untouched. That is `COURSIER_REPOSITORIES` / `coursier.repositories`,
+`COURSIER_CACHE` / `coursier.cache`, etc. are read by the Java API just like they are by coursier
+itself.

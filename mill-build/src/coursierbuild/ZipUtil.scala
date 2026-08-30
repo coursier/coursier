@@ -1,23 +1,8 @@
 package coursierbuild
 
-import java.io.{ByteArrayOutputStream, InputStream}
 import java.util.zip.{ZipEntry, ZipFile, ZipInputStream, ZipOutputStream}
 
 object ZipUtil {
-
-  private def readFullySync(is: InputStream) = {
-    val buffer = new ByteArrayOutputStream
-    val data   = Array.ofDim[Byte](16384)
-
-    var nRead = is.read(data, 0, data.length)
-    while (nRead != -1) {
-      buffer.write(data, 0, nRead)
-      nRead = is.read(data, 0, data.length)
-    }
-
-    buffer.flush()
-    buffer.toByteArray
-  }
 
   private def zipEntries(zipStream: ZipInputStream): Iterator[(ZipEntry, Array[Byte])] =
     new Iterator[(ZipEntry, Array[Byte])] {
@@ -30,7 +15,7 @@ object ZipUtil {
       def hasNext = nextEntry.nonEmpty
       def next() = {
         val ent  = nextEntry.get
-        val data = readFullySync(zipStream)
+        val data = zipStream.readAllBytes()
 
         update()
 
@@ -105,7 +90,7 @@ object ZipUtil {
     val zf       = new ZipFile(sourceZip.toIO)
     val entryOpt = Option(zf.getEntry(entryName))
     val content = entryOpt.map { entry =>
-      readFullySync(zf.getInputStream(entry))
+      zf.getInputStream(entry).readAllBytes()
     }
     zf.close()
     content
