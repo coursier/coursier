@@ -1,6 +1,6 @@
 package coursier.internal.api
 
-import java.io.{File, OutputStreamWriter}
+import java.io.{File, Writer}
 import java.lang.{Boolean => JBoolean, Long => JLong}
 import java.time.LocalDateTime
 import java.{util => ju}
@@ -54,8 +54,8 @@ object ApiHelper {
   def defaultArchiveCacheLocation(): File =
     CacheDefaults.archiveCacheLocation
 
-  def progressBarLogger(writer: OutputStreamWriter): Logger =
-    WrappedLogger.of(RefreshLogger.create(writer))
+  def progressBarLogger(writer: Writer): Logger =
+    WrappedLogger.of(new RefreshLogger(writer, RefreshLogger.defaultDisplay()))
   def nopLogger(): Logger =
     WrappedLogger.of(CacheLogger.nop)
 
