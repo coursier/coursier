@@ -50,6 +50,12 @@ object CacheEnv {
     "coursier.max-http-retry-after"
   )
 
+  /** Env var and Java prop names for how long an artifact may spend being rate limited */
+  val maxThrottleWait = EnvEntry(
+    "COURSIER_MAX_THROTTLE_WAIT",
+    "coursier.max-throttle-wait"
+  )
+
   /** Env var and Java prop names for the HTTP connect timeout */
   val connectTimeout = EnvEntry("COURSIER_CONNECT_TIMEOUT", "coursier.connect-timeout")
 
@@ -191,6 +197,23 @@ object CacheEnv {
       case duration: FiniteDuration => duration
     }
     def default = if (System.getenv("CI") == null) 5.seconds else 1.minute
+
+    fromEnv
+      .orElse(fromProps)
+      .orElse(Some(default))
+  }
+
+  /** Computes the maximum total rate limit wait from the passed env var and Java property */
+  def defaultMaxThrottleWait(values: EnvValues): Option[FiniteDuration] = {
+    val fromEnv = values.env.flatMap(parseDuration(_).toOption).collect {
+      case duration: FiniteDuration => duration
+    }
+    def fromProps = values.prop.flatMap(parseDuration(_).toOption).collect {
+      case duration: FiniteDuration => duration
+    }
+    // CI runs are where being turned away for minutes is both most likely and most worth sitting
+    // out - there is no one there to re-run the build
+    def default = if (System.getenv("CI") == null) 1.minute else 5.minutes
 
     fromEnv
       .orElse(fromProps)
