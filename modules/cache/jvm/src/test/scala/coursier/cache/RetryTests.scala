@@ -32,14 +32,21 @@ object RetryTests extends TestSuite {
     maxRetryAfter = Some(5.seconds)
   )
 
-  private def fileCache(dir: os.Path): FileCache[Task] =
+  private def fileCache(
+    dir: os.Path,
+    // A wall clock budget, spent on the requests as much as on the pauses between them, so the
+    // tests that mean to get through several rate limits ask for a generous one: how long a slow
+    // machine takes to round-trip ten of them is not what they are checking. The default is short
+    // for the ones that check we stop asking - they need the budget to actually run out.
+    maxThrottleWait: FiniteDuration = 500.millis
+  ): FileCache[Task] =
     FileCache[Task]((dir / "cache").toIO)
       .withRetryBackoffInitialDelay(0.millis)
       .withChecksums(Seq(None))
       .withRetry(retryCount)
       // its own, so that a pause one test records doesn't hold up the next one
       .withHostThrottle(throttle)
-      .withMaxThrottleWait(Some(500.millis))
+      .withMaxThrottleWait(Some(maxThrottleWait))
 
   private def get(dir: os.Path): Either[ArtifactError, File] =
     get(fileCache(dir), artifact)
@@ -250,7 +257,7 @@ object RetryTests extends TestSuite {
       TestretryHandler.rateLimitUntilConnection = retryCount + 3
 
       withTmpDir { dir =>
-        val result = get(dir)
+        val result = get(fileCache(dir, maxThrottleWait = 30.seconds), artifact)
         assert(result.isRight)
         // every rate-limited attempt, and the one that finally got through
         assert(TestretryHandler.connections.get() == retryCount + 4)
