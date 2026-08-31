@@ -71,7 +71,7 @@ object Deps {
     def shapeless                = mvn"com.chuusai::shapeless:2.3.12"
     // stick to slf4j 1.x here, so that the interface module can be used from
     // applications relying on either slf4j 1.x or 2.x
-    def slf4jApi = mvn"org.slf4j:slf4j-api:1.7.36"
+    def slf4jApi = mvn"org.slf4j:slf4j-api:2.0.18"
     def slf4JNop = mvn"org.slf4j:slf4j-nop:2.0.18"
     def svm      = mvn"org.graalvm.nativeimage:svm:21.3.18"
     // stick to the 2.x line: tika 3.x is compiled for Java 11, and we still support Java 8.
