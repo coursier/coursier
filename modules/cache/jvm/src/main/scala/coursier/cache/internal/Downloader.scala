@@ -60,7 +60,9 @@ import scala.util.control.NonFatal
     retryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.retryBackoffMaxDelay,
     retryPollMaxDelay: Option[FiniteDuration] = CacheDefaults.retryPollMaxDelay,
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
-    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout
+    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout,
+    hostThrottle: HostThrottle = CacheDefaults.hostThrottle,
+    maxThrottleWait: Option[FiniteDuration] = CacheDefaults.maxThrottleWait
 )(implicit
   S: Sync[F]
 ) {
@@ -72,7 +74,8 @@ import scala.util.control.NonFatal
       retryBackoffInitialDelay,
       retryBackoffMultiplier,
       retryBackoffMaxDelay,
-      retryPollMaxDelay
+      retryPollMaxDelay,
+      maxThrottleWait
     )
 
   private def blockingIO[T](f: => T): F[T] =
@@ -114,9 +117,8 @@ import scala.util.control.NonFatal
             case other => Some(other)
           }
         } {
-          case _: java.net.SocketTimeoutException => None
-          case e: ArtifactError.RetryableHttpError =>
-            e.retryAfterOpt.map(Downloader.retryAfterValue)
+          case _: java.net.SocketTimeoutException  => Retry.Failed(None)
+          case _: ArtifactError.RetryableHttpError => Downloader.throttleOutcome(hostThrottle, url)
         }
       catch {
         case ex: ArtifactError =>
@@ -134,6 +136,19 @@ import scala.util.control.NonFatal
       }
 
     private def urlLastModifiedOnce(
+      url: String,
+      currentLastModifiedOpt: Option[Long], // for the logger
+      logger: CacheLogger,
+      allCredentials0: Seq[DirectCredentials]
+    ): Either[ArtifactError, Option[Long]] =
+      hostThrottle.holdOff(url) match {
+        case HostThrottle.Clear =>
+          urlLastModifiedOnce0(url, currentLastModifiedOpt, logger, allCredentials0)
+        case HostThrottle.Wait(left)    => Left(Downloader.heldOff(url, left))
+        case HostThrottle.TooLong(left) => Left(Downloader.heldOff(url, left))
+      }
+
+    private def urlLastModifiedOnce0(
       url: String,
       currentLastModifiedOpt: Option[Long], // for the logger
       logger: CacheLogger,
@@ -166,15 +181,20 @@ import scala.util.control.NonFatal
               // last modified time, and the caller (which cannot tell the file is still current)
               // downloads the file again - more requests against a server already asking us to
               // slow down.
-              if (CacheUrl.responseCode(c).contains(Downloader.tooManyRequestsResponseCode))
+              if (CacheUrl.responseCode(c).contains(Downloader.tooManyRequestsResponseCode)) {
+                val retryAfterOpt = Downloader.retryAfter(c, clock)
+                Downloader.rateLimited(hostThrottle, logger, url, retryAfterOpt)
                 Left(
                   new ArtifactError.RetryableHttpError(
                     url,
                     Downloader.tooManyRequestsResponseCode,
-                    Downloader.retryAfter(c, clock)
+                    retryAfterOpt
                   )
                 )
+              }
               else {
+                hostThrottle.succeeded(url)
+
                 val remoteLastModified = c.getLastModified
 
                 val res =
@@ -256,6 +276,23 @@ import scala.util.control.NonFatal
       keepHeaderChecksums: Boolean,
       allCredentials0: Seq[DirectCredentials],
       tmp: File
+    ): Either[ArtifactError, Unit] =
+      // This host already told another download to slow down. Sending it a request it would only
+      // reject is one more for its limiter to count, so we sit out the pause it asked for too,
+      // rather than each thread having to discover the limit for itself.
+      hostThrottle.holdOff(url) match {
+        case HostThrottle.Clear =>
+          doDownload0(file, url, keepHeaderChecksums, allCredentials0, tmp)
+        case HostThrottle.Wait(left)    => Left(Downloader.heldOff(url, left))
+        case HostThrottle.TooLong(left) => Left(Downloader.heldOff(url, left))
+      }
+
+    private def doDownload0(
+      file: File,
+      url: String,
+      keepHeaderChecksums: Boolean,
+      allCredentials0: Seq[DirectCredentials],
+      tmp: File
     ): Either[ArtifactError, Unit] = {
 
       val alreadyDownloaded = tmp.length()
@@ -297,6 +334,20 @@ import scala.util.control.NonFatal
 
         val respCodeOpt = CacheUrl.responseCode(conn)
 
+        val retryAfterOpt =
+          if (respCodeOpt.contains(Downloader.tooManyRequestsResponseCode)) {
+            val retryAfterOpt0 = Downloader.retryAfter(conn, clock)
+            // the limit is on us as a client, not on this artifact, so the pause is the whole
+            // host's - the other threads are talking to the same server
+            Downloader.rateLimited(hostThrottle, logger, url, retryAfterOpt0)
+            retryAfterOpt0
+          }
+          else {
+            // it is answering us normally again, whatever it is answering
+            hostThrottle.succeeded(url)
+            None
+          }
+
         if (respCodeOpt.contains(404))
           Left(new ArtifactError.NotFound(url, permanent = Some(true)))
         else if (respCodeOpt.contains(403))
@@ -304,13 +355,7 @@ import scala.util.control.NonFatal
         else if (respCodeOpt.contains(401))
           Left(new ArtifactError.Unauthorized(url, realm = CacheUrl.realm(conn)))
         else if (respCodeOpt.contains(Downloader.tooManyRequestsResponseCode))
-          Left(
-            new ArtifactError.RetryableHttpError(
-              url,
-              respCodeOpt.get,
-              Downloader.retryAfter(conn, clock)
-            )
-          )
+          Left(new ArtifactError.RetryableHttpError(url, respCodeOpt.get, retryAfterOpt))
         else if (respCodeOpt.exists(c => c / 100 == 5))
           // Mark http 500 errors as retryable, to mitigate flakiness
           Left(
@@ -508,7 +553,7 @@ import scala.util.control.NonFatal
       val watchedLength = new Downloader.WatchedLength
 
       try {
-        val res = Downloader.downloading(url, file, retry)(
+        val res = Downloader.downloading(url, file, retry, hostThrottle, logger)(
           CacheLocks.withLockOr(location, file, retry)(
             if (proceed())
               doDownload(file, url, keepHeaderChecksums, allCredentials0, tmp)
@@ -942,6 +987,43 @@ object Downloader {
     helper(alreadyDownloaded)
   }
 
+  /** What a rate-limited host means for the retry loop
+    *
+    * Note this is a `Throttled` rather than a `Failed`: nothing failed, and spending the attempts
+    * kept for real failures on a server that is working - and that told us exactly when to come
+    * back - is how a resolution ends up giving up a third of a second in.
+    */
+  private def throttleOutcome(hostThrottle: HostThrottle, url: String): Retry.Outcome =
+    hostThrottle.holdOff(url) match {
+      case HostThrottle.Clear      => Retry.Throttled(None)
+      case HostThrottle.Wait(d)    => Retry.Throttled(Some(d))
+      case HostThrottle.TooLong(_) => Retry.GiveUp
+    }
+
+  /** Records a host's pause, and reports it if this 429 is what started it
+    *
+    * The downloads that then wait it out don't report anything of their own: what is worth saying
+    * is that the host asked us to slow down, not that each of six threads found out about it.
+    */
+  private def rateLimited(
+    hostThrottle: HostThrottle,
+    logger: CacheLogger,
+    url: String,
+    retryAfterOpt: Option[FiniteDuration]
+  ): Unit =
+    for (delay <- hostThrottle.rateLimited(url, retryAfterOpt))
+      logger.rateLimited(url, delay)
+
+  /** Stands for "this host is still holding us off, so no request was sent"
+    *
+    * Reusing `RetryableHttpError` rather than inventing an error of its own is deliberate: the
+    * hold-off is only ever there because this host answered a sibling download with a 429, which is
+    * what this request would have got as well - and `left` is how much of that pause is still to
+    * run, so that an artifact which runs out of budget waiting still reports what it waited on.
+    */
+  private def heldOff(url: String, left: FiniteDuration): ArtifactError.RetryableHttpError =
+    new ArtifactError.RetryableHttpError(url, tooManyRequestsResponseCode, Some(left))
+
   private lazy val maxRetryAfterOpt: Option[FiniteDuration] =
     CacheEnv.defaultMaxHttpRetryAfter(CacheEnv.maxHttpRetryAfter.read())
   private def retryAfterValue(value: FiniteDuration): FiniteDuration =
@@ -953,7 +1035,9 @@ object Downloader {
   private def downloading[T](
     url: String,
     file: File,
-    retry: Retry
+    retry: Retry,
+    hostThrottle: HostThrottle,
+    logger: CacheLogger
   )(
     f: => Either[ArtifactError, T],
     ifLocked: => Option[Either[ArtifactError, T]]
@@ -978,19 +1062,27 @@ object Downloader {
           case other => other
         }
       } {
-        case e: ArtifactError.InternalServerError         => e.retryAfterOpt.map(retryAfterValue)
-        case e: ArtifactError.RetryableHttpError          => e.retryAfterOpt.map(retryAfterValue)
-        case _: AccessDeniedException if Properties.isWin => None
-        case _: javax.net.ssl.SSLException                => None
-        case _: java.net.SocketException                  => None
+        case e: ArtifactError.InternalServerError =>
+          Retry.Failed(e.retryAfterOpt.map(retryAfterValue))
+        case _: ArtifactError.RetryableHttpError =>
+          throttleOutcome(hostThrottle, url)
+        case _: AccessDeniedException if Properties.isWin => Retry.Failed(None)
+        case _: javax.net.ssl.SSLException                => Retry.Failed(None)
+        case _: java.net.SocketException                  => Retry.Failed(None)
         // a connect or read timeout: the connection went quiet rather than failed, and the next
         // attempt resumes from what the .part file already holds. Note this is an
         // InterruptedIOException, not a SocketException, so the case above doesn't cover it.
-        case _: java.net.SocketTimeoutException => None
+        case _: java.net.SocketTimeoutException => Retry.Failed(None)
         // Is that case really necessary?
         case e: IOException
             if Downloader.retryableHttpResponseCode(e).nonEmpty =>
-          None
+          if (retryableHttpResponseCode(e).contains(tooManyRequestsResponseCode)) {
+            // no connection left to read a Retry-After from, so the throttle picks the pause
+            rateLimited(hostThrottle, logger, url, None)
+            throttleOutcome(hostThrottle, url)
+          }
+          else
+            Retry.Failed(None)
       }
     catch {
       case UnknownProtocol(e, msg0) =>

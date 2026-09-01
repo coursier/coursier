@@ -107,6 +107,55 @@ object CacheDefaults {
   lazy val retryPollMaxDelay: Option[FiniteDuration] =
     maxDelay("coursier.retry-poll-max-delay", defaultRetryPollMaxDelay)
 
+  private def defaultThrottleInitialDelay = 1.second
+  private def defaultThrottleMaxDelay     = 1.minute
+
+  /** First pause to observe when a host turns us away without saying for how long
+    *
+    * Rate limits are expressed per second or per minute, so this starts far higher than the
+    * millisecond-scale backoff that suits a connection error: retrying a rate limit 10 ms later is
+    * just one more request for the limiter to reject, and several of them count rejected requests
+    * toward the limit they are enforcing.
+    */
+  lazy val throttleInitialDelay: FiniteDuration =
+    sys.props
+      .get("coursier.retry-throttle-initial-delay")
+      .flatMap(s => parseDuration(s).toOption)
+      .collect {
+        case f: FiniteDuration => f
+      }
+      .getOrElse(defaultThrottleInitialDelay)
+
+  /** Ceiling on the pause we pick ourselves for a host that keeps turning us away */
+  lazy val throttleMaxDelay: Option[FiniteDuration] =
+    maxDelay("coursier.retry-throttle-max-delay", defaultThrottleMaxDelay)
+
+  /** The longest `Retry-After` we are willing to honour */
+  lazy val maxHttpRetryAfter: Option[FiniteDuration] =
+    CacheEnv.defaultMaxHttpRetryAfter(CacheEnv.maxHttpRetryAfter.read())
+
+  /** How long a single artifact may spend being told to come back later, in total
+    *
+    * Being throttled is not a failure, so it doesn't spend the attempts kept for those - what
+    * bounds it is this budget of wall clock time instead.
+    */
+  lazy val maxThrottleWait: Option[FiniteDuration] =
+    CacheEnv.defaultMaxThrottleWait(CacheEnv.maxThrottleWait.read())
+
+  /** Shared between all the caches of this JVM, like `pool` is
+    *
+    * A rate limit applies to the client as a whole, so a `FileCache` that kept its own would only
+    * see the share of the 429s that happened to land on it. Pass a `FileCache` its own throttle to
+    * isolate it - tests want that, most other things don't.
+    */
+  lazy val hostThrottle: coursier.cache.internal.HostThrottle =
+    new coursier.cache.internal.HostThrottle(
+      throttleInitialDelay,
+      throttleMaxDelay,
+      retryBackoffMultiplier,
+      maxHttpRetryAfter
+    )
+
   private def maxDelay(prop: String, default: FiniteDuration): Option[FiniteDuration] =
     sys.props
       .get(prop)
