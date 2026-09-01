@@ -54,6 +54,9 @@ object ApiHelper {
   def defaultArchiveCacheLocation(): File =
     CacheDefaults.archiveCacheLocation
 
+  def proxySetup(): Unit =
+    Resolve.proxySetup()
+
   def progressBarLogger(writer: Writer): Logger =
     WrappedLogger.of(new RefreshLogger(writer, RefreshLogger.defaultDisplay()))
   def nopLogger(): Logger =
