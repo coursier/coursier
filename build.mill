@@ -1947,8 +1947,8 @@ trait CacheServer extends CrossSbtModule with CsModule with CoursierPublishModul
 // by the `interface-v*` tags, see `InterfaceVersion`. `ci.checkPublishVersions` ensures a
 // release can only be cut with an `interface-v*` and a `v*` tag on the same commit.
 //
-// TODO Enable Mima on `interface-no-shading` and `interpolators` too (only the proguarded
-// `interface` JAR, the one users actually depend on, is checked for now).
+// TODO Enable Mima on `interpolators` too (only the proguarded `interface` JAR, the one users
+// actually depend on, is checked for now).
 
 object interface extends Cross[Interface](ScalaVersions.all)
 
@@ -1963,7 +1963,9 @@ trait InterfacePublishModule extends CoursierPublishModule {
   def publishVersion = Task.Input(InterfaceVersion.computeBuildVersion())
 }
 
-trait Interface extends CrossSbtModule with CsModule with InterfacePublishModule {
+/** Input of the proguarding and shading of `interface-proguarded`, not published itself */
+trait Interface extends CrossSbtModule with CsModule {
+  // only used to name the JARs, this module isn't published
   def artifactName = "interface-no-shading"
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(),
