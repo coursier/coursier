@@ -70,7 +70,11 @@ object Deps {
     def scodec                   = mvn"org.scodec::scodec-core:2.3.3"
     def shapeless                = mvn"com.chuusai::shapeless:2.3.12"
     // stick to slf4j 1.x here, so that the interface module can be used from
-    // applications relying on either slf4j 1.x or 2.x
+    // applications relying on either slf4j 1.x or 2.x. slf4j-api is the only
+    // unshaded dependency of the published interface module, so the version
+    // declared here lands on the class path of its users: a 2.x one would make
+    // applications still relying on a 1.x binding silently fall back to NOP.
+    // Pinned in .scala-steward.conf too, so that it doesn't get bumped to 2.x.
     def slf4jApi = mvn"org.slf4j:slf4j-api:1.7.36"
     def slf4JNop = mvn"org.slf4j:slf4j-nop:2.0.18"
     def svm      = mvn"org.graalvm.nativeimage:svm:21.3.18"
