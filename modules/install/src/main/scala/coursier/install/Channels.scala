@@ -5,7 +5,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 import java.util.zip.ZipFile
 
-import argonaut.{DecodeJson, Parse}
+import argonaut.{DecodeJson, JsonObject, Parse}
 import coursier.Fetch
 import coursier.cache.Cache
 import coursier.cache.internal.FileUtil
@@ -14,7 +14,6 @@ import coursier.install.Codecs.{decodeObj, encodeObj}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepositoryLike
 import coursier.util.{Artifact, Task}
-import coursier.util.StringInterpolators._
 import dataclass._
 
 import scala.jdk.CollectionConverters._
@@ -105,6 +104,56 @@ import scala.jdk.CollectionConverters._
         zf.close()
   }
 
+  /** Fetches the JSON file of a URL-based channel, and decodes it.
+    *
+    * @return
+    *   the local file the channel was downloaded to, and the decoded channel content (app name ->
+    *   app descriptor)
+    */
+  private def urlChannelContent(channel: Channel.FromUrl): Task[(File, Map[String, JsonObject])] = {
+
+    val loggerOpt = cache.loggerOpt
+
+    val a = Artifact(
+      channel.url,
+      Map.empty,
+      Map.empty,
+      changing = true,
+      optional = false,
+      authentication = None
+    )
+
+    val fetch = cache.file(a).run
+
+    val task = loggerOpt match {
+      case None => fetch
+      case Some(logger) =>
+        Task.delay(logger.init(sizeHint = Some(1))).flatMap { _ =>
+          fetch.attempt.flatMap { a =>
+            Task.delay(logger.stop()).flatMap { _ =>
+              Task.fromEither(a)
+            }
+          }
+        }
+    }
+
+    for {
+      e <- task
+      f <- Task.fromEither(e.left.map(err => new Channels.ErrorFetchingChannel(channel, err)))
+      content <- Task.delay {
+        val b = Files.readAllBytes(f.toPath)
+        new String(b, StandardCharsets.UTF_8)
+      }
+      m <- Task.fromEither {
+        Parse.decodeEither(content)(DecodeJson.MapDecodeJson(
+          DecodeJson.StringDecodeJson,
+          decodeObj
+        ))
+          .left.map(err => new Channels.ErrorDecodingChannel(channel, f, err))
+      }
+    } yield (f, m)
+  }
+
   def find(id: String): Task[Option[ChannelData]] = {
 
     def fromModule(channel: Channel.FromModule): Task[Option[ChannelData]] =
@@ -151,55 +200,17 @@ import scala.jdk.CollectionConverters._
           }
       } yield dataOpt
 
-    def fromUrl(channel: Channel.FromUrl): Task[Option[ChannelData]] = {
-
-      val loggerOpt = cache.loggerOpt
-
-      val a = Artifact(
-        channel.url,
-        Map.empty,
-        Map.empty,
-        changing = true,
-        optional = false,
-        authentication = None
-      )
-
-      val fetch = cache.file(a).run
-
-      val task = loggerOpt match {
-        case None => fetch
-        case Some(logger) =>
-          Task.delay(logger.init(sizeHint = Some(1))).flatMap { _ =>
-            fetch.attempt.flatMap { a =>
-              Task.delay(logger.stop()).flatMap { _ =>
-                Task.fromEither(a)
-              }
-            }
+    def fromUrl(channel: Channel.FromUrl): Task[Option[ChannelData]] =
+      urlChannelContent(channel).map {
+        case (f, m) =>
+          m.get(id).map { obj =>
+            ChannelData(
+              channel,
+              s"$f#$id",
+              encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8)
+            )
           }
       }
-
-      for {
-        e <- task
-        f <- Task.fromEither(e.left.map(err => new Exception(s"Error getting ${channel.url}", err)))
-        content <- Task.delay {
-          val b = Files.readAllBytes(f.toPath)
-          new String(b, StandardCharsets.UTF_8)
-        }
-        m <- Task.fromEither {
-          Parse.decodeEither(content)(DecodeJson.MapDecodeJson(
-            DecodeJson.StringDecodeJson,
-            decodeObj
-          ))
-            .left.map(err => new Exception(s"Error decoding $f (${channel.url}): $err"))
-        }
-      } yield m.get(id).map { obj =>
-        ChannelData(
-          channel,
-          s"$f#$id",
-          encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8)
-        )
-      }
-    }
 
     def fromDirectory(channel: Channel.FromDirectory): Task[Option[ChannelData]] = {
 
@@ -300,50 +311,11 @@ import scala.jdk.CollectionConverters._
           }
       } yield dataOpt
 
-    def fromUrl(channel: Channel.FromUrl): Task[List[String]] = {
-
-      val loggerOpt = cache.loggerOpt
-
-      val a = Artifact(
-        channel.url,
-        Map.empty,
-        Map.empty,
-        changing = true,
-        optional = false,
-        authentication = None
-      )
-
-      val fetch = cache.file(a).run
-
-      val task = loggerOpt match {
-        case None => fetch
-        case Some(logger) =>
-          Task.delay(logger.init(sizeHint = Some(1))).flatMap { _ =>
-            fetch.attempt.flatMap { a =>
-              Task.delay(logger.stop()).flatMap { _ =>
-                Task.fromEither(a)
-              }
-            }
-          }
+    def fromUrl(channel: Channel.FromUrl): Task[List[String]] =
+      urlChannelContent(channel).map {
+        case (_, m) =>
+          m.keys.filter(matchQuery).toList
       }
-
-      for {
-        e <- task
-        f <- Task.fromEither(e.left.map(err => new Exception(s"Error getting ${channel.url}", err)))
-        content <- Task.delay {
-          val b = Files.readAllBytes(f.toPath)
-          new String(b, StandardCharsets.UTF_8)
-        }
-        m <- Task.fromEither {
-          Parse.decodeEither(content)(DecodeJson.MapDecodeJson(
-            DecodeJson.StringDecodeJson,
-            decodeObj
-          ))
-            .left.map(err => new Exception(s"Error decoding $f (${channel.url}): $err"))
-        }
-      } yield m.keys.filter(matchQuery).toList
-
-    }
 
     def fromDirectory(channel: Channel.FromDirectory): Task[List[String]] = Task.delay {
       if (Files.isDirectory(channel.path)) {
@@ -394,16 +366,23 @@ import scala.jdk.CollectionConverters._
 
 object Channels {
 
+  // Single JSON files generated from the app descriptors of the
+  // https://github.com/coursier/apps repository (see its README)
+  private def defaultChannelUrl =
+    "https://raw.githubusercontent.com/coursier/apps/main/listings/apps.json"
+  private def contribChannelUrl =
+    "https://raw.githubusercontent.com/coursier/apps/main/listings/apps-contrib.json"
+
   private lazy val defaultChannels0 =
     // TODO Allow to customize that via env vars / Java properties
     Seq(
-      Channel.module(mod"io.get-coursier:apps")
+      Channel.url(defaultChannelUrl)
     )
 
   private lazy val contribChannels0 =
     // TODO Allow to customize that via env vars / Java properties
     Seq(
-      Channel.module(mod"io.get-coursier:apps-contrib")
+      Channel.url(contribChannelUrl)
     )
 
   def defaultChannels: Seq[Channel] =
@@ -430,6 +409,17 @@ object Channels {
   final class AppNotFound(val id: String, val channels: Seq[Channel])
       extends ChannelsException(
         s"Cannot find app $id in channels ${channels.map(_.repr).mkString(", ")}"
+      )
+
+  final class ErrorFetchingChannel(val channel: Channel, val cause: Throwable)
+      extends ChannelsException(
+        s"Error getting channel ${channel.repr}: ${cause.getMessage}",
+        cause
+      )
+
+  final class ErrorDecodingChannel(val channel: Channel, val file: File, val reason: String)
+      extends ChannelsException(
+        s"Error decoding channel ${channel.repr} ($file): $reason"
       )
 
   final class ErrorParsingAppDescriptor(val id: String, val channel: Channel, val reason: String)

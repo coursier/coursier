@@ -36,7 +36,7 @@ abstract class SetupTests extends TestSuite {
   def tests = Tests {
 
     // Run the same setup test twice: once against a local snapshot of the
-    // io.get-coursier:apps channel (so that it doesn't depend on the
+    // default coursier/apps channel (so that it doesn't depend on the
     // coursier/apps repository being reachable), and once against the live
     // default channel.
     test("setup-local-channel") {
@@ -61,7 +61,7 @@ abstract class SetupTests extends TestSuite {
   private def setupApps =
     List("cs", "coursier", "scala", "scalac", "scala-cli", "sbt", "sbtn", "scalafmt")
 
-  // Directory containing a snapshot of the io.get-coursier:apps channel
+  // Directory containing a snapshot of the default coursier/apps channel
   // (bundled as test resources under setup-channel/). Lets the setup test use a
   // local channel instead of depending on the coursier/apps repository.
   private def localChannelDir: os.Path = {
