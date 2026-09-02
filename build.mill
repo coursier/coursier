@@ -1954,8 +1954,6 @@ object interface extends Cross[Interface](ScalaVersions.all)
 
 object `interface-proguarded` extends InterfaceProguarded
 
-object `interface-svm-subs` extends InterfaceSvmSubs
-
 object `interface-interpolators` extends Cross[InterfaceInterpolators](ScalaVersions.all)
 
 object `interface-test` extends Cross[InterfaceTest](ScalaVersions.all)
@@ -2186,14 +2184,6 @@ trait DependsOnInterfaceProguarded extends JavaModule {
       .get(PathRef.toResolvedPathString(`interface-proguarded`.publishLocalTestRepo().path))
       .toUri
       .toASCIIString
-  )
-}
-
-/** GraalVM native image substitutions for the classes shaded in the interface JAR */
-trait InterfaceSvmSubs extends JavaModule with InterfacePublishModule
-    with DependsOnInterfaceProguarded {
-  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.svm
   )
 }
 
