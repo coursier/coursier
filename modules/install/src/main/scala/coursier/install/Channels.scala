@@ -5,14 +5,14 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 import java.util.zip.ZipFile
 
-import argonaut.{DecodeJson, JsonObject, Parse}
 import coursier.Fetch
 import coursier.cache.Cache
 import coursier.cache.internal.FileUtil
 import coursier.core.{Dependency, Repository}
-import coursier.install.Codecs.{decodeObj, encodeObj}
+import coursier.install.Codecs.{rawJsonObject, rawJsonObjectMap}
 import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepositoryLike
+import coursier.parse.RawJson
 import coursier.util.{Artifact, Task}
 import dataclass._
 
@@ -110,7 +110,7 @@ import scala.jdk.CollectionConverters._
     *   the local file the channel was downloaded to, and the decoded channel content (app name ->
     *   app descriptor)
     */
-  private def urlChannelContent(channel: Channel.FromUrl): Task[(File, Map[String, JsonObject])] = {
+  private def urlChannelContent(channel: Channel.FromUrl): Task[(File, Map[String, RawJson])] = {
 
     val loggerOpt = cache.loggerOpt
 
@@ -145,10 +145,7 @@ import scala.jdk.CollectionConverters._
         new String(b, StandardCharsets.UTF_8)
       }
       m <- Task.fromEither {
-        Parse.decodeEither(content)(DecodeJson.MapDecodeJson(
-          DecodeJson.StringDecodeJson,
-          decodeObj
-        ))
+        Codecs.read[Map[String, RawJson]](content)
           .left.map(err => new Channels.ErrorDecodingChannel(channel, f, err))
       }
     } yield (f, m)
@@ -207,7 +204,7 @@ import scala.jdk.CollectionConverters._
             ChannelData(
               channel,
               s"$f#$id",
-              encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8)
+              obj.value
             )
           }
       }
@@ -229,7 +226,7 @@ import scala.jdk.CollectionConverters._
           contentOpt match {
             case None => Right(None)
             case Some(content) =>
-              Parse.decodeEither(content)(decodeObj)
+              Codecs.read[RawJson](content)
                 .left.map(err => new Exception(s"Error decoding $f: $err"))
                 .map(Some(_))
           }
@@ -238,7 +235,7 @@ import scala.jdk.CollectionConverters._
         ChannelData(
           channel,
           f.toString,
-          encodeObj(obj).nospaces.getBytes(StandardCharsets.UTF_8)
+          obj.value
         )
       }
     }

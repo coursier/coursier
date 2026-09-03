@@ -1,0 +1,20 @@
+{
+  "echo": {
+    "dependencies": [
+      "io.get-coursier:echo:1.0.2"
+    ],
+    "launcherType": "bootstrap",
+    "properties": {
+      "echo.mode": "compat"
+    }
+  },
+  "scalafmt": {
+    "dependencies": [
+      "org.scalameta:scalafmt-cli_2.13:3.9.3"
+    ],
+    "mainClass": "org.scalafmt.cli.Cli",
+    "repositories": [
+      "central"
+    ]
+  }
+}

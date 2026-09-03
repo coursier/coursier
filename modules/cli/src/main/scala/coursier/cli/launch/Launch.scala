@@ -645,7 +645,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
         if (options.json) {
           val app  = res._1.app
           val app0 = app.withDependencies((res._2 ++ app.dependencies).toList)
-          println(RawAppDescriptor.encoder(app0).spaces2)
+          println(app0.prettyRepr)
           sys.exit(0)
         }
 
