@@ -102,7 +102,7 @@ isn't detected automatically, or if the wrong main class is detected.</p>
 <p>You should then put the details passed to the <code>bootstrap</code> command in
 an <a href="#application-descriptor-reference">application descriptor</a>.
 Examples of such application descriptors live in
-<a href="https://github.com/coursier/apps/tree/master/apps/resources">the default channel GitHub repository</a>.</p>
+<a href="https://github.com/coursier/apps/tree/main/apps/resources">the default channel GitHub repository</a>.</p>
 <p>At the minimum, your application descriptor should have
 <code>repositories</code> and <code>dependencies</code> sections, like</p>
 <pre><code class="hljs css language-json">{
@@ -140,10 +140,11 @@ You can either:</p>
 </ul>
 <h4><a class="anchor" aria-hidden="true" id="use-the-contrib-channel"></a><a href="#use-the-contrib-channel" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Use the contrib channel</h4>
 <p>Send a pull requests adding your application channel
-under the <a href="https://github.com/coursier/apps/tree/master/apps-contrib/resources">resources directory</a>
+under the <a href="https://github.com/coursier/apps/tree/main/apps-contrib/resources">resources directory</a>
 of the contrib channel.
-Once the maintainers of this repository merge your pull request and cut a release,
-your users should be able to install and run your appplication like</p>
+Once the maintainers of this repository merge your pull request, and its CI
+updates the JSON file of the contrib channel, your users should be able to
+install and run your application like</p>
 <pre><code class="hljs css language-bash">$ cs install --contrib my-app
 $ my-app
 …
@@ -184,36 +185,33 @@ $ my-app
 <li><a href="#jar-based-channels">a collection of JSON files in a JAR</a>, published on a Maven repository, or</li>
 <li><a href="#directory-based-channels">a local directory, containing JSON files</a>.</li>
 </ul>
-<p>For example, the default channel, <code>io.get-coursier:apps</code> is JAR-based.
-It lives in <a href="https://github.com/coursier/apps">this GitHub repository</a>.
-It is published as <code>io.get-coursier:apps</code>
-<a href="https://repo1.maven.org/maven2/io/get-coursier/apps">on Maven Central</a>.</p>
-<p>Its JAR contains a number of JSON files at its root:</p>
-<pre><code class="hljs">$ unzip -l <span class="hljs-string">"$(cs fetch io.get-coursier:apps:0.0.8)"</span> | grep json
-      <span class="hljs-number">188</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   ammonite.json
-      <span class="hljs-number">175</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   coursier.json
-      <span class="hljs-number">332</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   cs.json
-      <span class="hljs-number">241</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   dotty-repl.json
-      <span class="hljs-number">150</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   echo-graalvm.json
-      <span class="hljs-number">108</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   echo-java.json
-      <span class="hljs-number">172</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   echo-native.json
-      <span class="hljs-number">335</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   giter8.json
-      <span class="hljs-number">135</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   mdoc.json
-      <span class="hljs-number">323</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   mill-<span class="hljs-built_in">int</span>eractive.json
-      <span class="hljs-number">321</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   mill.json
-      <span class="hljs-number">524</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   sbt-launcher.json
-      <span class="hljs-number">222</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   scala.json
-      <span class="hljs-number">209</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   scalac.json
-      <span class="hljs-number">213</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   scaladoc.json
-      <span class="hljs-number">180</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   scalafix.json
-      <span class="hljs-number">184</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   scalafmt.json
-      <span class="hljs-number">204</span>  <span class="hljs-number">02</span><span class="hljs-number">-09</span><span class="hljs-number">-2020</span> <span class="hljs-number">17</span>:<span class="hljs-number">48</span>   scalap.json
+<p>For example, the default channel is URL-based. It lives in
+<a href="https://github.com/coursier/apps">this GitHub repository</a>, that holds one
+JSON file per application under its
+<a href="https://github.com/coursier/apps/tree/main/apps/resources"><code>apps/resources</code></a>
+directory. Those are aggregated in a single JSON file,
+<a href="https://github.com/coursier/apps/blob/main/apps.json"><code>apps.json</code></a>, that
+coursier reads from
+<code>https://raw.githubusercontent.com/coursier/apps/main/listings/apps.json</code>.</p>
+<p>That file contains a JSON object, whose keys are application names, and
+whose values are application descriptors:</p>
+<pre><code class="hljs"><span class="hljs-variable">$ </span>curl -sL <span class="hljs-symbol">https:</span>/<span class="hljs-regexp">/raw.githubusercontent.com/coursier</span><span class="hljs-regexp">/apps/main</span><span class="hljs-regexp">/listings/apps</span>.json | jq keys
+[
+  <span class="hljs-string">"almond"</span>,
+  <span class="hljs-string">"ammonite"</span>,
+  <span class="hljs-string">"bloop"</span>,
+  <span class="hljs-string">"bloop-jvm"</span>,
+  <span class="hljs-string">"coursier"</span>,
+  <span class="hljs-string">"cs"</span>,
+  …
+]
 </code></pre>
 <h3><a class="anchor" aria-hidden="true" id="jar-based-channels"></a><a href="#jar-based-channels" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>JAR-based channels</h3>
 <p>These channels can be created by publishing a JAR to a Maven or Ivy repository.
-The default channel, <code>io.get-coursier:apps</code>,
-living in <a href="https://github.com/coursier/apps">this GitHub repository</a>,
-is <a href="https://repo1.maven.org/maven2/io/get-coursier/apps">published</a> this way.</p>
+The <code>io.get-coursier:apps</code> module, published
+<a href="https://repo1.maven.org/maven2/io/get-coursier/apps">on Maven Central</a> from
+<a href="https://github.com/coursier/apps">this GitHub repository</a>, is such a channel
+(it used to be the default channel of coursier).</p>
 <p><a href="https://repo1.maven.org/maven2/io/get-coursier/apps/0.0.8/apps-0.0.8.jar">The JAR it publishes</a>
 contains JSON files at its root (<code>scala.json</code>, <code>ammonite.json</code>, etc.)
 Each of these JSON files gives the Maven coordinates of the corresponding
@@ -225,7 +223,8 @@ for more details.</p>
 <p>JAR-based channels can be passed to the <code>--channel</code> option of <code>install</code> command,
 via their Maven coordinates, with no version, like <code>io.get-coursier:apps</code>.
 The latest version of the channel module is automatically pulled.</p>
-<p>The following command explicitly adds the default channel via its coordinates:</p>
+<p>The following command uses the <code>io.get-coursier:apps</code> channel, via its
+coordinates, rather than the default channel:</p>
 <pre><code class="hljs css language-bash">$ cs install --default-channels=<span class="hljs-literal">false</span> \
     --channel io.get-coursier:apps \
     mdoc
