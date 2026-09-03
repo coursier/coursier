@@ -7,8 +7,8 @@ import coursier.cli.options.OptionGroup
 final case class SharedChannelOptions(
 
   @Group(OptionGroup.channel)
-  @HelpMessage("Channel for apps")
-  @ValueDescription("org:name")
+  @HelpMessage("Channel for apps (URL of a JSON file, org:name of a JAR, or local directory)")
+  @ValueDescription("url|org:name|directory")
     channel: List[String] = Nil,
 
   @Group(OptionGroup.channel)

@@ -17,7 +17,7 @@ import coursier.cli.options.{
   "\n" +
   "Examples:\n" +
   "$ cs install scalafmt\n" +
-  "$ cs install --channel io.get-coursier:apps-contrib proguard\n" +
+  "$ cs install --channel https://raw.githubusercontent.com/coursier/apps/main/listings/apps-contrib.json proguard\n" +
   "$ cs install --contrib proguard\n"
 )
 final case class InstallOptions(

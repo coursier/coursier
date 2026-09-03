@@ -173,10 +173,13 @@ $ cs list --dir /myCustomDirectory
 
 Application descriptors are pulled via "channels": repositories listing available applications and how they must be installed.
 
-By default, coursier uses the Main channel `io.get-coursier:apps`.
+By default, coursier uses the Main channel, a single JSON file living in the
+[coursier/apps](https://github.com/coursier/apps) repository, at
+`https://raw.githubusercontent.com/coursier/apps/main/listings/apps.json`.
 It can be disabled with the `--default-channels=false` option.
 
-There also exists a Contrib channel `io.get-coursier:apps-contrib`, which is not used by default, and can be enabled with `--contrib`.
+There also exists a Contrib channel, `https://raw.githubusercontent.com/coursier/apps/main/listings/apps-contrib.json`,
+which is not used by default, and can be enabled with `--contrib`.
 For example:
 
 ```bash

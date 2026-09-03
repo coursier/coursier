@@ -67,7 +67,7 @@ isn't detected automatically, or if the wrong main class is detected.
 You should then put the details passed to the `bootstrap` command in
 an [application descriptor](#application-descriptor-reference).
 Examples of such application descriptors live in
-[the default channel GitHub repository](https://github.com/coursier/apps/tree/master/apps/resources).
+[the default channel GitHub repository](https://github.com/coursier/apps/tree/main/apps/resources).
 
 At the minimum, your application descriptor should have
 `repositories` and `dependencies` sections, like
@@ -113,10 +113,11 @@ You can either:
 #### Use the contrib channel
 
 Send a pull requests adding your application channel
-under the [resources directory](https://github.com/coursier/apps/tree/master/apps-contrib/resources)
+under the [resources directory](https://github.com/coursier/apps/tree/main/apps-contrib/resources)
 of the contrib channel.
-Once the maintainers of this repository merge your pull request and cut a release,
-your users should be able to install and run your appplication like
+Once the maintainers of this repository merge your pull request, and its CI
+updates the JSON file of the contrib channel, your users should be able to
+install and run your application like
 ```bash
 $ cs install --contrib my-app
 $ my-app
@@ -167,40 +168,37 @@ Channels consist either of
 - [a collection of JSON files in a JAR](#jar-based-channels), published on a Maven repository, or
 - [a local directory, containing JSON files](#directory-based-channels).
 
-For example, the default channel, `io.get-coursier:apps` is JAR-based.
-It lives in [this GitHub repository](https://github.com/coursier/apps).
-It is published as `io.get-coursier:apps`
-[on Maven Central](https://repo1.maven.org/maven2/io/get-coursier/apps).
+For example, the default channel is URL-based. It lives in
+[this GitHub repository](https://github.com/coursier/apps), that holds one
+JSON file per application under its
+[`apps/resources`](https://github.com/coursier/apps/tree/main/apps/resources)
+directory. Those are aggregated in a single JSON file,
+[`apps.json`](https://github.com/coursier/apps/blob/main/apps.json), that
+coursier reads from
+`https://raw.githubusercontent.com/coursier/apps/main/listings/apps.json`.
 
-Its JAR contains a number of JSON files at its root:
+That file contains a JSON object, whose keys are application names, and
+whose values are application descriptors:
 ```
-$ unzip -l "$(cs fetch io.get-coursier:apps:0.0.8)" | grep json
-      188  02-09-2020 17:48   ammonite.json
-      175  02-09-2020 17:48   coursier.json
-      332  02-09-2020 17:48   cs.json
-      241  02-09-2020 17:48   dotty-repl.json
-      150  02-09-2020 17:48   echo-graalvm.json
-      108  02-09-2020 17:48   echo-java.json
-      172  02-09-2020 17:48   echo-native.json
-      335  02-09-2020 17:48   giter8.json
-      135  02-09-2020 17:48   mdoc.json
-      323  02-09-2020 17:48   mill-interactive.json
-      321  02-09-2020 17:48   mill.json
-      524  02-09-2020 17:48   sbt-launcher.json
-      222  02-09-2020 17:48   scala.json
-      209  02-09-2020 17:48   scalac.json
-      213  02-09-2020 17:48   scaladoc.json
-      180  02-09-2020 17:48   scalafix.json
-      184  02-09-2020 17:48   scalafmt.json
-      204  02-09-2020 17:48   scalap.json
+$ curl -sL https://raw.githubusercontent.com/coursier/apps/main/listings/apps.json | jq keys
+[
+  "almond",
+  "ammonite",
+  "bloop",
+  "bloop-jvm",
+  "coursier",
+  "cs",
+  …
+]
 ```
 
 ### JAR-based channels
 
 These channels can be created by publishing a JAR to a Maven or Ivy repository.
-The default channel, `io.get-coursier:apps`,
-living in [this GitHub repository](https://github.com/coursier/apps),
-is [published](https://repo1.maven.org/maven2/io/get-coursier/apps) this way.
+The `io.get-coursier:apps` module, published
+[on Maven Central](https://repo1.maven.org/maven2/io/get-coursier/apps) from
+[this GitHub repository](https://github.com/coursier/apps), is such a channel
+(it used to be the default channel of coursier).
 
 [The JAR it publishes](https://repo1.maven.org/maven2/io/get-coursier/apps/0.0.8/apps-0.0.8.jar)
 contains JSON files at its root (`scala.json`, `ammonite.json`, etc.)
@@ -215,7 +213,8 @@ JAR-based channels can be passed to the `--channel` option of `install` command,
 via their Maven coordinates, with no version, like `io.get-coursier:apps`.
 The latest version of the channel module is automatically pulled.
 
-The following command explicitly adds the default channel via its coordinates:
+The following command uses the `io.get-coursier:apps` channel, via its
+coordinates, rather than the default channel:
 ```bash
 $ cs install --default-channels=false \
     --channel io.get-coursier:apps \
