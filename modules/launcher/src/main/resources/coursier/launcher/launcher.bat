@@ -45,12 +45,12 @@ goto Win9xApp
 :runm2
 SET CMDLINE="@COMMAND@" %CMD_LINE_ARGS%
 %CMDLINE%
-if ERRORLEVEL 1 goto error
+SET ERROR_CODE=%ERRORLEVEL%
+if %ERROR_CODE% NEQ 0 goto error
 goto end
 
 :error
-if "%OS%"=="Windows_NT" @endlocal
-set ERROR_CODE=1
+if "%OS%"=="Windows_NT" endlocal & set ERROR_CODE=%ERROR_CODE%
 
 :end
 @REM set local scope for the variables with windows NT shell
