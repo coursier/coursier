@@ -1,5 +1,9 @@
 [
   {
+    "name" : "java.nio.charset.Charset",
+    "fields" : [{"name" : "defaultCharset", "allowWrite" : true}]
+  },
+  {
     "name" : "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl",
     "allDeclaredConstructors" : true,
     "allPublicConstructors" : true,
