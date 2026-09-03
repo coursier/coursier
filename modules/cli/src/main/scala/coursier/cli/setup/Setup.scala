@@ -102,14 +102,19 @@ object Setup extends CoursierCommand[SetupOptions] {
       )
 
     // TODO Better error messages for relevant exceptions
-    try task.unsafeRun(wrapExceptions = true)(cache.ec)
-    catch {
-      case e: InstallDirException if params.output.verbosity <= 1 =>
+    task.attempt.unsafeRun(wrapExceptions = true)(cache.ec) match {
+      case Left(e: InstallDirException) if params.output.verbosity <= 1 =>
         System.err.println(e.getMessage)
         sys.exit(1)
-      case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
+      case Left(e: JvmCache.JvmCacheException) if params.output.verbosity <= 1 =>
         System.err.println(e.getMessage)
         sys.exit(1)
+      case Left(e: Channels.ChannelsException) if params.output.verbosity <= 1 =>
+        System.err.println(e.getMessage)
+        sys.exit(1)
+      case Left(e) =>
+        throw e
+      case Right(()) =>
     }
   }
 }
