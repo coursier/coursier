@@ -1,7 +1,7 @@
 //| mill-version: 1.2.0-RC1-46-16168f
 //| mill-jvm-version: 21
 
-import com.github.lolgab.mill.mima.InterfaceMima
+import com.github.lolgab.mill.mima.{DirectMissingMethodProblem, InterfaceMima, ProblemFilter}
 import coursierbuild.Deps.{Deps, ScalaVersions, Versions, csQemuVersion, scalaCliVersion}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
 import coursierbuild.Relativize.{relativize => doRelativize}
@@ -815,6 +815,25 @@ trait Install extends CrossSbtModule with CsModule
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
   def artifactName = "coursier-install"
+  // former argonaut codecs, replaced by jsoniter-scala ones
+  def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
+    ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.install.RawAppDescriptor.encoder"),
+    ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.install.RawAppDescriptor.decoder"),
+    ProblemFilter.exclude[DirectMissingMethodProblem](
+      "coursier.install.RawAppDescriptor#Properties.encoder"
+    ),
+    ProblemFilter.exclude[DirectMissingMethodProblem](
+      "coursier.install.RawAppDescriptor#Properties.decoder"
+    ),
+    ProblemFilter.exclude[DirectMissingMethodProblem](
+      "coursier.install.RawAppDescriptor#RawGraalvmOptions.encoder"
+    ),
+    ProblemFilter.exclude[DirectMissingMethodProblem](
+      "coursier.install.RawAppDescriptor#RawGraalvmOptions.decoder"
+    ),
+    ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.install.RawSource.encoder"),
+    ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.install.RawSource.decoder")
+  )
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(),
     env(),
@@ -822,11 +841,12 @@ trait Install extends CrossSbtModule with CsModule
     launcherModule()
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.dataClass
+    Deps.dataClass,
+    Deps.jsoniterMacros
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
-    Deps.argonautShapeless,
-    Deps.catsCore
+    Deps.catsCore,
+    Deps.jsoniterCore
   )
   object test extends CrossSbtTests with CsScalaTests with CsResourcesTests {
     def testDataDir             = tests.shared.testDataDir
@@ -836,7 +856,8 @@ trait Install extends CrossSbtModule with CsModule
       `test-cache`.jvm()
     )
     def mvnDeps = super.mvnDeps() ++ Seq(
-      Deps.pprint
+      Deps.pprint,
+      Deps.ujson
     )
     def forkArgs = Task {
       val httpServerCp = `test-cache`.jvm().httpServerClassPath()

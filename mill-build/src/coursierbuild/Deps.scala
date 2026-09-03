@@ -4,14 +4,13 @@ import mill._, scalalib._
 
 object Deps {
   object Deps {
-    def asm               = mvn"org.ow2.asm:asm:9.10.1"
-    def argonautShapeless = mvn"com.github.alexarchambault::argonaut-shapeless_6.3::1.3.1"
-    def caseApp           = mvn"com.github.alexarchambault::case-app:2.1.0"
-    def catsCore          = mvn"org.typelevel::cats-core:${Versions.cats}"
-    def catsFree213       = mvn"org.typelevel:cats-free_2.13:${Versions.cats}"
-    def catsEffect        = mvn"org.typelevel::cats-effect::3.7.1"
-    def classPathUtil     = mvn"io.get-coursier::class-path-util:0.1.4"
-    def collectionCompat  = mvn"org.scala-lang.modules::scala-collection-compat::2.14.0"
+    def asm              = mvn"org.ow2.asm:asm:9.10.1"
+    def caseApp          = mvn"com.github.alexarchambault::case-app:2.1.0"
+    def catsCore         = mvn"org.typelevel::cats-core:${Versions.cats}"
+    def catsFree213      = mvn"org.typelevel:cats-free_2.13:${Versions.cats}"
+    def catsEffect       = mvn"org.typelevel::cats-effect::3.7.1"
+    def classPathUtil    = mvn"io.get-coursier::class-path-util:0.1.4"
+    def collectionCompat = mvn"org.scala-lang.modules::scala-collection-compat::2.14.0"
     def concurrentReferenceHashMap =
       mvn"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
     def dataClass         = mvn"io.github.alexarchambault::data-class:0.2.8"

@@ -1,8 +1,9 @@
 package coursier.install
 
-import argonaut.{DecodeJson, EncodeJson, Parse}
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
+import com.github.plokhotnyuk.jsoniter_scala.core._
+import com.github.plokhotnyuk.jsoniter_scala.macros._
 import coursier.parse.RepositoryParser
 import dataclass.data
 
@@ -38,17 +39,37 @@ import dataclass.data
     }
   }
   def repr: String =
-    RawSource.encoder.encode(this).nospaces
+    Codecs.write(this)(RawSource.codec)
 }
 
 object RawSource {
 
-  import argonaut.ArgonautShapeless._
+  private final case class RawSourceJson(
+    repositories: List[String],
+    channel: String,
+    id: String
+  )
 
-  lazy val encoder = EncodeJson.of[RawSource]
-  lazy val decoder = DecodeJson.of[RawSource]
+  private val jsonCodec: JsonValueCodec[RawSourceJson] =
+    JsonCodecMaker.make(
+      CodecMakerConfig
+        .withRequireCollectionFields(true)
+        .withTransientEmpty(false)
+    )
+
+  implicit val codec: JsonValueCodec[RawSource] =
+    new JsonValueCodec[RawSource] {
+      def decodeValue(in: JsonReader, default: RawSource): RawSource = {
+        val json = jsonCodec.decodeValue(in, jsonCodec.nullValue)
+        RawSource(json.repositories, json.channel, json.id)
+      }
+      def encodeValue(x: RawSource, out: JsonWriter): Unit =
+        jsonCodec.encodeValue(RawSourceJson(x.repositories, x.channel, x.id), out)
+      def nullValue: RawSource =
+        null
+    }
 
   def parse(input: String): Either[String, RawSource] =
-    Parse.decodeEither(input)(decoder)
+    Codecs.read(input)(codec)
 
 }

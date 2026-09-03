@@ -1,8 +1,9 @@
 package coursier.install
 
-import argonaut._
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
+import com.github.plokhotnyuk.jsoniter_scala.core._
+import com.github.plokhotnyuk.jsoniter_scala.macros._
 import coursier.core.{
   Classifier,
   Configuration,
@@ -163,7 +164,11 @@ import scala.language.implicitConversions
     }
   }
   def repr: String =
-    RawAppDescriptor.encoder.encode(this).nospaces
+    Codecs.write(this)(RawAppDescriptor.codec)
+
+  /** Same as [[repr]], with an indented / more human-readable output */
+  def prettyRepr: String =
+    Codecs.writeIndented(this)(RawAppDescriptor.codec)
 
   def overrideVersion(ver: String, useVersionOverrides: Boolean): RawAppDescriptor = {
     val base =
@@ -226,27 +231,36 @@ object RawAppDescriptor {
   object Properties {
     implicit def fromSeq(s: Seq[(String, String)]): Properties =
       Properties(s)
-    implicit val encoder: EncodeJson[Properties] =
-      EncodeJson { props =>
-        Json.obj(props.props.map { case (k, v) => k -> Json.jString(v) }: _*)
-      }
-    implicit val decoder: DecodeJson[Properties] =
-      DecodeJson { c =>
-        c.focus.obj match {
-          case None => DecodeResult.fail("Expected JSON object", c.history)
-          case Some(obj) =>
-            obj
-              .toList
-              .foldLeft(DecodeResult.ok(List.empty[(String, String)])) {
-                case (acc, (k, v)) =>
-                  for (a <- acc; s <- v.as[String]) yield (k -> s) :: a
-              }
-              .map(l => Properties(l.reverse))
+    implicit val codec: JsonValueCodec[Properties] =
+      new JsonValueCodec[Properties] {
+        def decodeValue(in: JsonReader, default: Properties): Properties =
+          if (in.isNextToken('{')) {
+            val b = List.newBuilder[(String, String)]
+            if (!in.isNextToken('}')) {
+              in.rollbackToken()
+              while ({
+                b += in.readKeyAsString() -> in.readString(null)
+                in.isNextToken(',')
+              }) ()
+              if (!in.isCurrentToken('}'))
+                in.objectEndOrCommaError()
+            }
+            Properties(b.result())
+          }
+          else
+            in.decodeError("expected JSON object")
+        def encodeValue(x: Properties, out: JsonWriter): Unit = {
+          out.writeObjectStart()
+          for ((k, v) <- x.props) {
+            out.writeKey(k)
+            out.writeVal(v)
+          }
+          out.writeObjectEnd()
         }
+        def nullValue: Properties =
+          null.asInstanceOf[Properties]
       }
   }
-
-  import argonaut.ArgonautShapeless._
 
   @data class RawGraalvmOptions(
     options: List[String] = Nil,
@@ -261,8 +275,6 @@ object RawAppDescriptor {
 
   object RawGraalvmOptions {
 
-    import Codecs.{decodeObj, encodeObj}
-
     private final case class RawGraalvmOptionsJson(
       options: List[String] = Nil
     ) {
@@ -274,10 +286,18 @@ object RawAppDescriptor {
     private def optionsJson(opt: RawGraalvmOptions): RawGraalvmOptionsJson =
       RawGraalvmOptionsJson(opt.options)
 
-    implicit val encoder: EncodeJson[RawGraalvmOptions] =
-      EncodeJson.of[RawGraalvmOptionsJson].contramap(optionsJson)
-    implicit val decoder: DecodeJson[RawGraalvmOptions] =
-      DecodeJson.of[RawGraalvmOptionsJson].map(_.get)
+    private val jsonCodec: JsonValueCodec[RawGraalvmOptionsJson] =
+      JsonCodecMaker.make
+
+    implicit val codec: JsonValueCodec[RawGraalvmOptions] =
+      new JsonValueCodec[RawGraalvmOptions] {
+        def decodeValue(in: JsonReader, default: RawGraalvmOptions): RawGraalvmOptions =
+          jsonCodec.decodeValue(in, jsonCodec.nullValue).get
+        def encodeValue(x: RawGraalvmOptions, out: JsonWriter): Unit =
+          jsonCodec.encodeValue(optionsJson(x), out)
+        def nullValue: RawGraalvmOptions =
+          null
+      }
 
   }
 
@@ -322,6 +342,63 @@ object RawAppDescriptor {
             .withLauncherType(launcherType)
       }
     }
+  }
+
+  object RawVersionOverride {
+
+    private final case class RawVersionOverrideJson(
+      versionRange: String,
+      dependencies: Option[List[String]] = None,
+      repositories: Option[List[String]] = None,
+      mainClass: Option[String] = None,
+      properties: Option[Properties] = None,
+      prebuilt: Option[String] = None,
+      prebuiltBinaries: Option[Map[String, String]] = None,
+      launcherType: Option[String] = None
+    ) {
+      def get: RawVersionOverride =
+        RawVersionOverride(versionRange)
+          .withDependencies(dependencies)
+          .withRepositories(repositories)
+          .withMainClass(mainClass)
+          .withProperties(properties)
+          .withPrebuilt(prebuilt)
+          .withPrebuiltBinaries(prebuiltBinaries)
+          .withLauncherType(launcherType)
+    }
+
+    private def overrideJson(o: RawVersionOverride): RawVersionOverrideJson =
+      RawVersionOverrideJson(
+        versionRange = o.versionRange,
+        dependencies = o.dependencies,
+        repositories = o.repositories,
+        mainClass = o.mainClass,
+        properties = o.properties,
+        prebuilt = o.prebuilt,
+        prebuiltBinaries = o.prebuiltBinaries,
+        launcherType = o.launcherType
+      )
+
+    // all fields are always written out, absent ones as null, like the former
+    // argonaut-shapeless-derived codec used to do
+    private val jsonCodec: JsonValueCodec[RawVersionOverrideJson] =
+      JsonCodecMaker.make(
+        CodecMakerConfig
+          .withTransientDefault(false)
+          .withTransientEmpty(false)
+          .withTransientNone(false)
+      )
+
+    implicit val codec: JsonValueCodec[RawVersionOverride] =
+      new JsonValueCodec[RawVersionOverride] {
+        def decodeValue(in: JsonReader, default: RawVersionOverride): RawVersionOverride =
+          jsonCodec.decodeValue(in, jsonCodec.nullValue).get
+        def encodeValue(x: RawVersionOverride, out: JsonWriter): Unit =
+          jsonCodec.encodeValue(overrideJson(x), out)
+        def nullValue: RawVersionOverride =
+          null
+      }
+
   }
 
   /* Left is mainClass and Right is defaultMainClass */
@@ -433,12 +510,20 @@ object RawAppDescriptor {
       versionOverrides = desc.versionOverrides
     )
 
-  implicit val encoder: EncodeJson[RawAppDescriptor] =
-    EncodeJson.of[RawAppDescriptorJson].contramap(descriptorJson)
-  implicit val decoder: DecodeJson[RawAppDescriptor] =
-    DecodeJson.of[RawAppDescriptorJson].map(_.get)
+  private val jsonCodec: JsonValueCodec[RawAppDescriptorJson] =
+    JsonCodecMaker.make
+
+  implicit val codec: JsonValueCodec[RawAppDescriptor] =
+    new JsonValueCodec[RawAppDescriptor] {
+      def decodeValue(in: JsonReader, default: RawAppDescriptor): RawAppDescriptor =
+        jsonCodec.decodeValue(in, jsonCodec.nullValue).get
+      def encodeValue(x: RawAppDescriptor, out: JsonWriter): Unit =
+        jsonCodec.encodeValue(descriptorJson(x), out)
+      def nullValue: RawAppDescriptor =
+        null
+    }
 
   def parse(input: String): Either[String, RawAppDescriptor] =
-    Parse.decodeEither(input)(decoder)
+    Codecs.read(input)(codec)
 
 }
