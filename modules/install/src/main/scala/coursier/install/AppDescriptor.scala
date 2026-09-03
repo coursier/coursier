@@ -508,7 +508,13 @@ object AppDescriptor {
           System.err.println(s"  ${v.repr}$msg")
         }
       }
-      availableScalaVersions.filter(filter)
+      val filtered = availableScalaVersions.filter(filter)
+      // If the filter yields no results (e.g. because the Complete API could not list
+      // module names for this organisation, or because availableScalaVersions does not
+      // yet include versions for the detected binary version), fall back to trying *all*
+      // known Scala versions.  scalaVersionIsOk will then do the right thing by
+      // checking the actual artifact existence in the repositories.
+      if (filtered.isEmpty) availableScalaVersions else filtered
     }
 
     sets.foldLeft(availableScalaVersions)(_ intersect _)
