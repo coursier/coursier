@@ -179,7 +179,7 @@ object VariantSelector {
     }
     @data class MinimumVersion(minimumVersion: Version0) extends VariantMatcher {
       def matches(value: String): Option[Int] =
-        if (Version0(value).compareTo(minimumVersion) >= 0) Some(0)
+        if (Version0(value).compareSemantic(minimumVersion) >= 0) Some(0)
         else None
       def repr: String = s">= ${minimumVersion.asString}"
     }

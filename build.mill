@@ -78,7 +78,7 @@ object cache extends Module {
   object js     extends Cross[CacheJs](ScalaVersions.all)
 }
 object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.all)
-object `benchmark` extends ScalaModule with JmhModule {
+object `benchmark` extends ScalaModule with JmhModule with MavenSnapshotsRepo {
   def scalaVersion: mill.api.Task.Simple[String] = ScalaVersions.scala213
   def moduleDeps = Seq(
     coursier.jvm(ScalaVersions.scala213)
@@ -1460,7 +1460,7 @@ def updateCsShVersion(
 }
 
 private val docScalaVersion = ScalaVersions.scala213
-object `doc-deps` extends ScalaModule {
+object `doc-deps` extends ScalaModule with MavenSnapshotsRepo {
   def scalaVersion = docScalaVersion
   def moduleDeps = Seq(
     coursier.jvm(docScalaVersion),
@@ -1794,7 +1794,7 @@ object `build-util` extends Module {
 }
 
 // copied from https://github.com/alexarchambault/case-app/blob/fd9e3fcb7d628f166cd0a532addacde49629632a/build.sc#L453-L549
-object docs extends ScalaModule {
+object docs extends ScalaModule with MavenSnapshotsRepo {
   private def sv   = ScalaVersions.scala213
   def scalaVersion = sv
   def moduleDeps = Seq(

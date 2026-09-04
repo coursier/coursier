@@ -525,7 +525,7 @@ object AppDescriptor {
       case Some(c) =>
         // here, either c.interval isn't VersionInterval.zero, or c.preferred is non empty, anyway
         val inInterval           = c.interval.contains(sv)
-        val lowerPreferredExists = c.preferred.forall(_.compare(sv) >= 0)
+        val lowerPreferredExists = c.preferred.forall(_.compareSemantic(sv) >= 0)
 
         lowerPreferredExists && inInterval
     }
