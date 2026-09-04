@@ -110,7 +110,7 @@ object Deps {
   def csQemuVersion = "9.2.1-1"
 
   object ScalaVersions {
-    def scala3   = "3.7.4"
+    def scala3   = "3.9.0"
     def scala213 = "2.13.18"
     def scala212 = "2.12.20"
     // TODO SCALA_213_BASELINE search for this TODO in the codebase
