@@ -49,7 +49,7 @@ abstract class PlatformResolve {
   def proxySetup(): Unit =
     if (!SetupProxy.setup()) {
       val configPath = CoursierPaths.scalaConfigFile()
-      val db = ConfigDb.open(configPath)
+      val db         = ConfigDb.open(configPath)
         .fold(e => throw new Exception(e), identity)
       val addrOpt     = db.get(Keys.proxyAddress).fold(e => throw new Exception(e), identity)
       val userOpt     = db.get(Keys.proxyUser).fold(e => throw new Exception(e), identity)

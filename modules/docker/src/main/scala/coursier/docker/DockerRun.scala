@@ -282,7 +282,7 @@ object DockerRun {
             if (useExec) {
               val sudo           = if (useSudo) "sudo " else ""
               val interactiveOpt = if (interactive) " -t" else ""
-              val script =
+              val script         =
                 s"""#!/usr/bin/env sh
                    |set -ex
                    |cleanUp() {
@@ -318,7 +318,7 @@ object DockerRun {
               val res = {
                 val sudo           = if (useSudo) "sudo " else ""
                 val interactiveOpt = if (interactive) " -t" else ""
-                val script =
+                val script         =
                   s"""#!/usr/bin/env sh
                      |set -eu
                      |cleanUp() {

@@ -78,7 +78,7 @@ abstract class PlatformTestHelpers {
 
   def maybePrintConsistencyDiff(fromOrdered: Seq[String], fromMinimized: Seq[String]): Unit = {
     val patch = DiffUtils.diff(fromOrdered.asJava, fromMinimized.asJava)
-    val diff = UnifiedDiffUtils.generateUnifiedDiff(
+    val diff  = UnifiedDiffUtils.generateUnifiedDiff(
       "ordered-dependencies",
       "minimized-dependencies",
       fromOrdered.asJava,
@@ -99,7 +99,7 @@ abstract class PlatformTestHelpers {
 
   def filteringCache(exclude: String, defaultCache: Cache[Task]): Cache[Task] =
     new Cache[Task] {
-      override def ec: ExecutionContext = defaultCache.ec
+      override def ec: ExecutionContext     = defaultCache.ec
       override def fetch: Cache.Fetch[Task] =
         artifact =>
           if (artifact.url.contains(exclude))

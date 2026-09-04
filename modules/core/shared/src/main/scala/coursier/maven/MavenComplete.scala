@@ -22,7 +22,7 @@ import dataclass.data
 
   def organization(prefix: String): F[Either[Throwable, Seq[String]]] = {
 
-    val idx = prefix.lastIndexOf('.')
+    val idx                  = prefix.lastIndexOf('.')
     val (base, dir, prefix0) =
       if (idx < 0)
         ("", Nil, prefix)

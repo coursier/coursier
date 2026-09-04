@@ -96,7 +96,7 @@ object RawAppDescriptorTests extends TestSuite {
       VersionConstraint(channelVersion)
     )
     val jars = Fetch(FileCache()).addDependencies(dep).run()
-    val jar = jars match {
+    val jar  = jars match {
       case Seq(jar) => jar
       case other    => sys.error(s"Expected a single JAR for $dep, got $other")
     }
@@ -118,7 +118,7 @@ object RawAppDescriptorTests extends TestSuite {
     encode: T => String
   ): Unit = {
     val content = readResource(path)
-    val value = decode(content) match {
+    val value   = decode(content) match {
       case Left(error)  => sys.error(s"Error decoding $path: $error")
       case Right(value) => value
     }
@@ -194,7 +194,7 @@ object RawAppDescriptorTests extends TestSuite {
         channel                <- Seq("apps", "apps-contrib")
         (name, descriptorJson) <- channelDescriptors(channel).toVector.sortBy(_._1)
       } {
-        val app = s"$channel/$name"
+        val app  = s"$channel/$name"
         val desc = RawAppDescriptor.parse(descriptorJson) match {
           case Left(error)  => sys.error(s"Error parsing $app: $error")
           case Right(value) => value
@@ -243,7 +243,7 @@ object RawAppDescriptorTests extends TestSuite {
       // parsed as app descriptors later on
       val path    = "/golden/install/channel/apps.json"
       val content = readResource(path)
-      val map = Codecs.read[Map[String, RawJson]](content) match {
+      val map     = Codecs.read[Map[String, RawJson]](content) match {
         case Left(error)  => sys.error(s"Error decoding $path: $error")
         case Right(value) => value
       }

@@ -49,7 +49,7 @@ object FetchCacheTests extends TestSuite {
 
   private def defaultCache() = Cache.default match {
     case fc: FileCache[Task] => fc
-    case other =>
+    case other               =>
       sys.error(s"Expected default cache to be a FileCache, got $other")
   }
 

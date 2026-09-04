@@ -145,7 +145,7 @@ object FileCachePolicyTests extends TestSuite {
         }
 
         remote match {
-          case Remote.Same => // leave the server as it was seeded from
+          case Remote.Same  => // leave the server as it was seeded from
           case Remote.Newer =>
             state.content = secondContent
             state.lastModified = lastModified2

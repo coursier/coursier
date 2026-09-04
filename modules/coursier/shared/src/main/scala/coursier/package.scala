@@ -84,7 +84,7 @@ package object coursier {
   type Resolution = core.Resolution
   // ought to be replaced by just  val Resolution = core.Resolution
   object Resolution {
-    val empty = apply()
+    val empty               = apply()
     def apply(): Resolution =
       core.Resolution()
     def apply(dependencies: Seq[Dependency]): Resolution =

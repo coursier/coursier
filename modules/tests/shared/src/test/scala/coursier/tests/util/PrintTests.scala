@@ -57,7 +57,7 @@ object PrintTests extends TestSuite {
 
         val hamcrest        = mod"org.hamcrest:hamcrest-core"
         val hamcrestVersion = VersionConstraint("1.1")
-        val t = ReverseModuleTree(
+        val t               = ReverseModuleTree(
           result,
           Seq(hamcrest),
           withExclusions = true

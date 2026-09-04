@@ -126,7 +126,7 @@ object JvmIndex {
                 .map {
                   case (path, isShort, e) =>
                     val binaryContent = FileUtil.readFully(zf.getInputStream(e))
-                    val res =
+                    val res           =
                       if (isShort) shortIndexFromBytes(binaryContent, os0, arch0)
                       else fromBytes(binaryContent)
                     res.left.map(ex => new Exception(s"Error parsing $f!$path", ex))
@@ -160,7 +160,7 @@ object JvmIndex {
     indexChannel match {
       case f: JvmChannel.FromFile =>
         Task.delay(Files.readAllBytes(f.path)).attempt.flatMap {
-          case Left(ex) => Task.fail(new Exception(s"Error while reading ${f.path}", ex))
+          case Left(ex)       => Task.fail(new Exception(s"Error while reading ${f.path}", ex))
           case Right(content) =>
             Task.fromEither(fromBytes(content))
         }
@@ -301,7 +301,7 @@ object JvmIndex {
               Left(s"No $name version matching '$version' found")
             else {
               val preferredInInterval = inInterval.filterKeys(s => c.preferred.contains(Version(s)))
-              val map =
+              val map                 =
                 if (preferredInInterval.isEmpty) inInterval
                 else preferredInInterval
               val retained = map.toVector.sortBy { case (v, _) => Version(v) }
@@ -319,7 +319,7 @@ object JvmIndex {
       versionIndex <-
         archIndex.get(jdkNamePrefix.getOrElse("") + name).toRight(s"JVM $name not found")
       needs1Prefix = versionIndex.keysIterator.forall(_.startsWith("1."))
-      version0 =
+      version0     =
         if (needs1Prefix)
           if (version.startsWith("1.") || version == "1" || version == "1+")
             version

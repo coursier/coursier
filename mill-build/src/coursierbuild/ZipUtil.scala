@@ -7,13 +7,13 @@ object ZipUtil {
   private def zipEntries(zipStream: ZipInputStream): Iterator[(ZipEntry, Array[Byte])] =
     new Iterator[(ZipEntry, Array[Byte])] {
       private var nextEntry = Option.empty[ZipEntry]
-      private def update() =
+      private def update()  =
         nextEntry = Option(zipStream.getNextEntry)
 
       update()
 
       def hasNext = nextEntry.nonEmpty
-      def next() = {
+      def next()  = {
         val ent  = nextEntry.get
         val data = zipStream.readAllBytes()
 
@@ -89,7 +89,7 @@ object ZipUtil {
   def zipEntryContent(sourceZip: os.Path, entryName: String): Option[Array[Byte]] = {
     val zf       = new ZipFile(sourceZip.toIO)
     val entryOpt = Option(zf.getEntry(entryName))
-    val content = entryOpt.map { entry =>
+    val content  = entryOpt.map { entry =>
       zf.getInputStream(entry).readAllBytes()
     }
     zf.close()

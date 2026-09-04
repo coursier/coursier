@@ -23,9 +23,9 @@ object Setup extends CoursierCommand[SetupOptions] {
 
     val params = SetupParams(options).exitOnError()
 
-    val pool   = Sync.fixedThreadPool(params.cache.parallel)
-    val logger = params.output.logger()
-    val cache  = params.cache.cache(pool, logger)
+    val pool                  = Sync.fixedThreadPool(params.cache.parallel)
+    val logger                = params.output.logger()
+    val cache                 = params.cache.cache(pool, logger)
     val noUpdateCoursierCache =
       params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
@@ -45,7 +45,7 @@ object Setup extends CoursierCommand[SetupOptions] {
     }
 
     val installCache = cache.withLogger(params.output.logger(byFileType = true))
-    val installDir = params.sharedInstall.installDir(installCache, params.repository.repositories)
+    val installDir   = params.sharedInstall.installDir(installCache, params.repository.repositories)
       .withVerbosity(params.output.verbosity)
       .withNativeImageJavaHome(Some(graalvmHome))
     val channels =

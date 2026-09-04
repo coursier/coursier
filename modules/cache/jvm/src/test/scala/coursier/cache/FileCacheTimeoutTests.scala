@@ -43,7 +43,7 @@ object FileCacheTimeoutTests extends TestSuite {
     val pool = Executors.newFixedThreadPool(
       n,
       new ThreadFactory {
-        val count = new AtomicInteger
+        val count                          = new AtomicInteger
         def newThread(r: Runnable): Thread = {
           val t = new Thread(r, s"timeout-test-${count.incrementAndGet()}")
           t.setDaemon(true)
@@ -66,7 +66,7 @@ object FileCacheTimeoutTests extends TestSuite {
   /** Runs `f` on a thread of its own, and fails if it hasn't returned within `deadline` */
   private def withDeadline[T](deadline: FiniteDuration)(f: => T): T = {
     val result = new AtomicReference[Either[Throwable, T]]
-    val t = new Thread("timeout-test-deadline") {
+    val t      = new Thread("timeout-test-deadline") {
       override def run(): Unit =
         result.set(
           try Right(f)
@@ -131,7 +131,7 @@ object FileCacheTimeoutTests extends TestSuite {
           val cache = cacheOf(dir).withRetryBackoffInitialDelay(initialDelay)
           val url   = server.url("/dir/foo.jar")
 
-          val start = System.currentTimeMillis()
+          val start   = System.currentTimeMillis()
           val elapsed = runConcurrently(callers) { _ =>
             val res = fetch(cache, url)
             res.fold(e => sys.error(e.describe), _ => ())

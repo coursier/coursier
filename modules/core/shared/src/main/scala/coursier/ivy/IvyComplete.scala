@@ -27,7 +27,7 @@ import dataclass.data
         prefix
       ).run
     ) {
-      case Left(e) => Left(new Exception(e))
+      case Left(e)     => Left(new Exception(e))
       case Right(None) =>
         Left(new Exception(s"Can't list organizations of ${repo.metadataPattern.string}"))
       case Right(Some((_, l))) => Right(l)
@@ -43,7 +43,7 @@ import dataclass.data
         prefix
       ).run
     ) {
-      case Left(e) => Left(new Exception(e))
+      case Left(e)     => Left(new Exception(e))
       case Right(None) =>
         Left(new Exception(s"Can't list module names of ${repo.metadataPattern.string}"))
       case Right(Some((_, l))) => Right(l)

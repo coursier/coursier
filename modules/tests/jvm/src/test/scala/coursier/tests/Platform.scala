@@ -29,7 +29,7 @@ object Platform {
     Sync[F].delay {
       val t = Try {
         val is0 = is
-        val b =
+        val b   =
           try readFullySync(is0)
           finally is0.close()
 
@@ -37,7 +37,7 @@ object Platform {
       }
 
       t match {
-        case Success(r) => Right(r)
+        case Success(r)                                                        => Right(r)
         case Failure(e: java.io.FileNotFoundException) if e.getMessage != null =>
           Left(s"Not found: ${e.getMessage}")
         case Failure(e) =>

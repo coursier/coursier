@@ -30,7 +30,7 @@ import scala.concurrent.duration.Duration
       getIfInstalled(Artifact.fromUrl(id))
     else
       entries(id).flatMap {
-        case Left(err) => Task.fail(new JvmCache.JvmNotFoundInIndex(id, err))
+        case Left(err)       => Task.fail(new JvmCache.JvmNotFoundInIndex(id, err))
         case Right(entries0) =>
           entries0
             .reverse
@@ -89,7 +89,7 @@ import scala.concurrent.duration.Duration
         Task.fail(new JvmCache.MalformedJvmId(id))
       case Some((name, ver)) =>
         index match {
-          case None => Task.fail(new JvmCache.NoIndexSpecified)
+          case None            => Task.fail(new JvmCache.NoIndexSpecified)
           case Some(indexTask) =>
             indexTask.map { index0 =>
               index0.lookup(name, ver, Some(os), Some(architecture))
