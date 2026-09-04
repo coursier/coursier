@@ -83,7 +83,7 @@ object Deps {
     def undertow    = mvn"io.undertow:undertow-core:2.4.3.Final"
     def ujson       = mvn"com.lihaoyi::ujson:4.4.3"
     def utest       = mvn"com.lihaoyi::utest::0.9.5"
-    def versions    = mvn"io.get-coursier::versions::0.5.3"
+    def versions    = mvn"io.get-coursier::versions::0.6.0"
     def windowsAnsi = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
     def windowsAnsiPs =
       mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
