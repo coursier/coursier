@@ -50,6 +50,13 @@ import dataclass._
 
     var setSomething = false
 
+    val newJavaHomeOpt = update.set.find(_._1 == "JAVA_HOME").map(_._2)
+
+    // Track the old JAVA_HOME before we update it, for PATH cleanup below
+    val oldJavaHomeOpt =
+      if (update.set.exists(_._1 == "JAVA_HOME")) getEnvironmentVariable("JAVA_HOME")
+      else None
+
     for ((k, v) <- update.set) {
       val formerValueOpt = getEnvironmentVariable(k)
       val needsUpdate    = formerValueOpt.forall(_ != v)
@@ -60,13 +67,46 @@ import dataclass._
     }
 
     for ((k, v) <- update.pathLikeAppends) {
-      val formerValueOpt = getEnvironmentVariable(k)
-      val alreadyInList = formerValueOpt
-        .exists(_.split(WindowsEnvVarUpdater.windowsPathSeparator).contains(v))
-      if (!alreadyInList) {
-        val newValue = formerValueOpt.fold(v)(_ + WindowsEnvVarUpdater.windowsPathSeparator + v)
-        setEnvironmentVariable(k, newValue)
-        setSomething = true
+      // Detect a JVM bin directory update: the path being added is {new JAVA_HOME}\bin
+      val isJvmBinUpdate = k == "PATH" && newJavaHomeOpt.exists { h =>
+        v.equalsIgnoreCase(h + "\\bin") || v.equalsIgnoreCase(h + "/bin")
+      }
+
+      if (isJvmBinUpdate) {
+        // Use %JAVA_HOME%\bin as the PATH entry instead of an absolute path.
+        // This way, when JAVA_HOME is updated, PATH automatically resolves to the new JVM.
+        val ref            = WindowsEnvVarUpdater.javaHomeBinRef
+        val formerValueOpt = getEnvironmentVariable(k)
+        val parts = formerValueOpt.fold(Array.empty[String])(
+          _.split(WindowsEnvVarUpdater.windowsPathSeparator, -1)
+        )
+        val hasRef = parts.exists(_.equalsIgnoreCase(ref))
+
+        // Remove the old absolute JVM bin path from PATH if present (backward compatibility
+        // with setups that stored the absolute path instead of the %JAVA_HOME%\bin reference)
+        val staleEntries: Set[String] =
+          Set(v) ++
+            oldJavaHomeOpt.map(_ + "\\bin").toSet ++
+            oldJavaHomeOpt.map(_ + "/bin").toSet
+        val filteredParts = parts.filterNot(p => staleEntries.exists(p.equalsIgnoreCase(_)))
+
+        if (!hasRef || filteredParts.length < parts.length) {
+          val newParts = if (hasRef) filteredParts else filteredParts :+ ref
+          val newValue = newParts.mkString(WindowsEnvVarUpdater.windowsPathSeparator)
+          if (newValue.isEmpty) clearEnvironmentVariable(k)
+          else setEnvironmentVariable(k, newValue)
+          setSomething = true
+        }
+      }
+      else {
+        val formerValueOpt = getEnvironmentVariable(k)
+        val alreadyInList = formerValueOpt
+          .exists(_.split(WindowsEnvVarUpdater.windowsPathSeparator).contains(v))
+        if (!alreadyInList) {
+          val newValue = formerValueOpt.fold(v)(_ + WindowsEnvVarUpdater.windowsPathSeparator + v)
+          setEnvironmentVariable(k, newValue)
+          setSomething = true
+        }
       }
     }
 
@@ -89,20 +129,89 @@ import dataclass._
       }
     }
 
+    val newJavaHomeOpt = update.set.find(_._1 == "JAVA_HOME").map(_._2)
     for ((k, v) <- update.pathLikeAppends; formerValue <- getEnvironmentVariable(k)) {
-      val parts    = formerValue.split(WindowsEnvVarUpdater.windowsPathSeparator)
-      val isInList = parts.contains(v)
-      if (isInList) {
-        val newValue = parts.filter(_ != v)
-        if (newValue.isEmpty)
+      val isJvmBinUpdate = k == "PATH" && newJavaHomeOpt.exists { h =>
+        v.equalsIgnoreCase(h + "\\bin") || v.equalsIgnoreCase(h + "/bin")
+      }
+
+      val toRemove: Set[String] =
+        if (isJvmBinUpdate) Set(v, WindowsEnvVarUpdater.javaHomeBinRef)
+        else Set(v)
+
+      val parts   = formerValue.split(WindowsEnvVarUpdater.windowsPathSeparator)
+      val matched = parts.exists(p => toRemove.exists(p.equalsIgnoreCase(_)))
+      if (matched) {
+        val newParts = parts.filterNot(p => toRemove.exists(p.equalsIgnoreCase(_)))
+        if (newParts.isEmpty)
           clearEnvironmentVariable(k)
         else
-          setEnvironmentVariable(k, newValue.mkString(WindowsEnvVarUpdater.windowsPathSeparator))
+          setEnvironmentVariable(k, newParts.mkString(WindowsEnvVarUpdater.windowsPathSeparator))
         setSomething = true
       }
     }
 
     setSomething
+  }
+
+  /** Checks whether the given directory looks like a JVM bin directory eligible for removal.
+    * It must contain a `java` executable (based on PATHEXT extensions) and its parent directory
+    * must contain a `release` file with a `JAVA_VERSION=` line.
+    */
+  private def isJvmBinDir(dir: java.nio.file.Path): Boolean = {
+    val pathExts = Option(System.getenv("PATHEXT"))
+      .map(_.split(";").toSeq)
+      .getOrElse(Seq(".exe", ".cmd", ".com", ".bat"))
+    val hasJavaExe = pathExts.exists { ext =>
+      java.nio.file.Files.isRegularFile(dir.resolve("java" + ext))
+    }
+    if (!hasJavaExe) false
+    else {
+      val parent = dir.getParent
+      if (parent == null) false
+      else {
+        val releaseFile = parent.resolve("release")
+        java.nio.file.Files.isRegularFile(releaseFile) && {
+          try {
+            val lines = java.nio.file.Files.readAllLines(releaseFile)
+            lines.stream().anyMatch(_.startsWith("JAVA_VERSION="))
+          }
+          catch { case _: Exception => false }
+        }
+      }
+    }
+  }
+
+  /** Removes PATH entries that start with the given directory prefix AND look like JVM bin
+    * directories (contain a java executable and have a sibling `release` file with
+    * `JAVA_VERSION=`).  This is used to clean up accumulated absolute JVM bin paths added by
+    * older coursier versions before switching to the %JAVA_HOME%\bin reference approach.
+    * The prefix comparison is case-insensitive and normalised to use backslashes,
+    * as expected for Windows paths.
+    */
+  def removePathEntriesWithPrefix(prefix: String): Boolean = {
+    val formerValueOpt = getEnvironmentVariable("PATH")
+    formerValueOpt match {
+      case None => false
+      case Some(formerValue) =>
+        // Normalise the prefix to a lowercase backslash-terminated string so we can do a
+        // case-insensitive prefix match regardless of how the path was originally recorded.
+        val normalizedPrefix =
+          prefix.stripSuffix("\\").stripSuffix("/").toLowerCase(java.util.Locale.ROOT) + "\\"
+        val parts = formerValue.split(WindowsEnvVarUpdater.windowsPathSeparator, -1)
+        val filtered = parts.filterNot { p =>
+          p.toLowerCase(java.util.Locale.ROOT).startsWith(normalizedPrefix) &&
+            isJvmBinDir(java.nio.file.Paths.get(p))
+        }
+        if (filtered.length != parts.length) {
+          val newValue = filtered.filter(_.nonEmpty).mkString(WindowsEnvVarUpdater.windowsPathSeparator)
+          if (newValue.isEmpty) clearEnvironmentVariable("PATH")
+          else setEnvironmentVariable("PATH", newValue)
+          true
+        }
+        else
+          false
+    }
   }
 
 }
@@ -121,7 +230,14 @@ object WindowsEnvVarUpdater {
     s"""[Environment]::SetEnvironmentVariable("$name", $$null, "User")
        |""".stripMargin
 
-  private def windowsPathSeparator: String =
+  private[env] def windowsPathSeparator: String =
     ";"
+
+  /** The PATH entry used to reference the active JVM's bin directory on Windows.
+    * Using this expandable reference instead of an absolute path means that whenever
+    * JAVA_HOME is updated, PATH automatically resolves to the new JVM's bin directory.
+    */
+  val javaHomeBinRef: String =
+    "%JAVA_HOME%\\bin"
 
 }
