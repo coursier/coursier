@@ -147,24 +147,35 @@ lexicographically, ignoring the case. Literal items go before non-zero numeric i
 <li><code>1.0.1e</code> goes before <code>1.0.1.2</code> (literal <code>e</code> goes before non-zero numeric item <code>2</code>)</li>
 <li><code>1.1.0</code> has same ordering as <code>1.1</code> (zero or empty items are equivalent)</li>
 </ul>
-<p>Some literal items have a special meaning, and go before both literal and
-zero and non-zero numeric items. These are, in comparison order:</p>
+<p>Some literal items have a special meaning, and are called qualifiers. These are,
+in comparison order:</p>
 <ul>
 <li><code>alpha</code> (or <code>a</code> if directly followed by a digit),</li>
 <li><code>beta</code> (or <code>b</code> if directly followed by a digit),</li>
 <li><code>milestone</code> (or <code>m</code> if directly followed by a digit),</li>
 <li><code>cr</code> or <code>rc</code>,</li>
 <li><code>snapshot</code>,</li>
-<li><code>ga</code> or <code>final</code>,</li>
+<li>then the empty item itself,</li>
+<li><code>ga</code>,</li>
+<li><code>final</code>,</li>
 <li><code>sp</code>.</li>
 </ul>
+<p>The qualifiers before the empty item denote pre-releases, and go before both zero
+and non-zero numeric items. <code>ga</code>, <code>final</code> and <code>sp</code> denote releases, and go after
+the empty item. All qualifiers go before the literal items that have no special
+meaning.</p>
+<p>Note that, unlike Maven, <code>ga</code> and <code>final</code> are equivalent neither to each other nor
+to the empty item. Each of them has its own position in the ordering, so that no
+two distinct versions compare equal, and sorting versions is deterministic.</p>
 <p>Note that the case doesn't matter, so <code>RC</code> is equivalent to <code>rc</code> for example.</p>
 <p>That gives the following comparisons:</p>
 <ul>
 <li><code>1.1-alpha</code> goes before <code>1.1-rc</code> (qualifier <code>alpha</code> before <code>rc</code>)</li>
-<li><code>1.1-rc</code> goes before <code>1.1-final</code> (qualifier <code>rc</code> before <code>final</code>)</li>
-<li><code>1.1-final</code> goes before <code>1.1</code> (qualifier <code>final</code> before empty item)</li>
-<li><code>1.1</code> goes before <code>1.1a</code> (empty item before literal <code>a</code>, see below)</li>
+<li><code>1.1-rc</code> goes before <code>1.1</code> (qualifier <code>rc</code> before the empty item)</li>
+<li><code>1.1</code> goes before <code>1.1-ga</code> (empty item before qualifier <code>ga</code>)</li>
+<li><code>1.1-ga</code> goes before <code>1.1-final</code> (qualifier <code>ga</code> before <code>final</code>)</li>
+<li><code>1.1-final</code> goes before <code>1.1-sp</code> (qualifier <code>final</code> before <code>sp</code>)</li>
+<li><code>1.1-sp</code> goes before <code>1.1a</code> (qualifier <code>sp</code> before literal <code>a</code>, see below)</li>
 <li><code>1.1a</code> goes before <code>1.1-foo</code> (literal item <code>a</code> before literal <code>foo</code>, see below)</li>
 </ul>
 <p>Note that <code>1.1a</code> is not equivalent to <code>1.1-alpha</code>, as <code>a</code> is not followed
