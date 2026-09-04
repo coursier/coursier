@@ -694,8 +694,18 @@ object ResolveTests extends TestSuite {
               val expectedModules = Set(mod"io.grpc:grpc-core")
               val modules         = c.dependencies.map(_.module)
               assert(modules == expectedModules)
+              // bigtable-protos is wanted at both 1.0.0 and 1.0.0-pre3, and pre is an unknown
+              // qualifier, which sorts after the release, so 1.0.0-pre3 is retained - it is
+              // the one wanting grpc-core 1.5.0
               val expectedVersions = Map(
-                mod"io.grpc:grpc-core" -> Set("1.2.0", "1.6.1", "1.7.0", "[1.2.0]", "[1.7.0]")
+                mod"io.grpc:grpc-core" -> Set(
+                  "1.2.0",
+                  "1.5.0",
+                  "1.6.1",
+                  "1.7.0",
+                  "[1.2.0]",
+                  "[1.7.0]"
+                )
               )
               val versions = c
                 .dependencies

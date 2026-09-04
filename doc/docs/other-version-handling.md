@@ -129,7 +129,9 @@ Note that the case doesn't matter, so `RC` is equivalent to `rc` for example.
 That gives the following comparisons:
 - `1.1-alpha` goes before `1.1-rc` (qualifier `alpha` before `rc`)
 - `1.1-rc` goes before `1.1-final` (qualifier `rc` before `final`)
-- `1.1-final` goes before `1.1` (qualifier `final` before empty item)
+- `1.1-final` and `1.1` are equivalent (`ga` and `final` stand for the absence of a
+  qualifier - they only tell versions apart when a total order is needed, and then they
+  come after the empty item)
 - `1.1` goes before `1.1a` (empty item before literal `a`, see below)
 - `1.1a` goes before `1.1-foo` (literal item `a` before literal `foo`, see below)
 
