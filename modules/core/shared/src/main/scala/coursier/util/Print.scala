@@ -233,7 +233,7 @@ object Print {
     else {
       val roots0 = Option(roots).getOrElse(resolution.rootDependencies)
       val t      = DependencyTree(resolution, roots0, withExclusions = printExclusions)
-      Tree(t.toVector)(_.children)
+      Tree(t.toVector)(_.children.filterNot(_.endorsed))
         .render { t =>
           render(
             t.dependency.module,
