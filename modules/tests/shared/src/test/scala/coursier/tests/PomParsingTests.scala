@@ -87,7 +87,7 @@ object PomParsingTests extends TestSuite {
           </activation>
         </profile>
                        """
-      val expected = Right {
+      val expected    = Right {
         Profile(
           "profile1",
           None,
@@ -114,7 +114,7 @@ object PomParsingTests extends TestSuite {
           </activation>
         </profile>
                        """
-      val expected = Right {
+      val expected    = Right {
         Profile(
           "profile1",
           None,
@@ -347,7 +347,7 @@ object PomParsingTests extends TestSuite {
         </profile>
                        """
       val profile     = Pom.profile(xmlParseDom(profileNode).toOption.get).toOption.get
-      val windowsOs = Activation.Os.fromProperties(Map(
+      val windowsOs   = Activation.Os.fromProperties(Map(
         "os.name"        -> "Windows 10",
         "os.arch"        -> "amd64",
         "os.version"     -> "10.0",

@@ -148,7 +148,7 @@ object JavaOrScalaDependency {
   private def typeKey         = "type"
   private def bomKey          = "bom"
   private def overrideKey     = "override"
-  private lazy val readKeys = Set(
+  private lazy val readKeys   = Set(
     inlineConfigKey,
     classifierKey,
     extKey,
@@ -272,7 +272,7 @@ object JavaOrScalaDependency {
       errors += "Invalid empty bom parameter"
     val bomOrErrors = bomValues.flatten.map { v =>
       dependency.parser.DependencyParser.parse(v.replace('%', ':')) match {
-        case Left(error) => Left(error)
+        case Left(error)   => Left(error)
         case Right(bomDep) =>
           val expectedShape = DependencyLike(
             ModuleLike(
@@ -317,7 +317,7 @@ object JavaOrScalaDependency {
       errors += "Invalid empty override parameter"
     val overrideOrErrors = overrideValues.flatten.map { v =>
       dependency.parser.DependencyParser.parse(v.replace('%', ':')) match {
-        case Left(error) => Left(error)
+        case Left(error)        => Left(error)
         case Right(overrideDep) =>
           val expectedShape = DependencyLike(
             ModuleLike(

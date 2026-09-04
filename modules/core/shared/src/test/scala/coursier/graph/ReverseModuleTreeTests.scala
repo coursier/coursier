@@ -15,7 +15,7 @@ object ReverseModuleTreeTests extends TestSuite {
     : Map[Module, Seq[(Module, VersionConstraint, Boolean, Boolean)]] =
     (0 until size)
       .map { i =>
-        val mod = makeModule("org.example", s"dep-$i")
+        val mod       = makeModule("org.example", s"dep-$i")
         val dependees = Seq(
           (makeModule("org.example", s"parent-$i"), VersionConstraint(s"1.$i.0"), false, false)
         )

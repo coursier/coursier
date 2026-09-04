@@ -5,7 +5,7 @@ import mill._
 
 trait Util extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
   def artifactName = "coursier-util"
-  def mvnDeps = Seq(
+  def mvnDeps      = Seq(
     Deps.collectionCompat
   )
   def compileMvnDeps = Seq(

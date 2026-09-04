@@ -75,7 +75,7 @@ object DockerPull {
         System.err.println("No manifest found for the current architecture")
         sys.exit(1)
       case Seq(entry) => entry
-      case other =>
+      case other      =>
         System.err.println("Found too many manifests for the current architecture:")
         for (m <- other)
           System.err.println(m.toString)
@@ -128,7 +128,7 @@ object DockerPull {
     }
 
     layerFileErrors match {
-      case Seq() =>
+      case Seq()                   =>
       case Seq(first, others @ _*) =>
         val ex = new Exception(first)
         for (other <- others)

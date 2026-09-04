@@ -28,7 +28,7 @@ object Confirm {
           else "[y/N]"
 
         val message0 = marginOpt match {
-          case None => message
+          case None         => message
           case Some(margin) =>
             message.linesIterator.map(margin + _).mkString(System.lineSeparator())
         }
@@ -38,7 +38,7 @@ object Confirm {
         def loop(): Boolean = {
           val scanner = new Scanner(in)
           val resp    = scanner.nextLine()
-          val resp0 = resp
+          val resp0   = resp
             .filter(!_.isSpaceChar)
             .toLowerCase(locale)
             .distinct
@@ -47,7 +47,7 @@ object Confirm {
             case "y" => true
             case "n" => false
             case ""  => default
-            case _ =>
+            case _   =>
               out.print(s"Please answer Y or N. $choice ")
               loop()
           }

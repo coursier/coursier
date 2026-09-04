@@ -27,7 +27,7 @@ object ClassLoaderContent {
             if (n == 0)
               r
             else {
-              val extIdx = r.fileName.lastIndexOf('.')
+              val extIdx    = r.fileName.lastIndexOf('.')
               val fileName0 =
                 if (extIdx < 0)
                   s"${r.fileName}-$n"

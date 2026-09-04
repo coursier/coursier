@@ -178,13 +178,13 @@ object ChannelsTests extends TestSuite {
         assert(res == Right(Channel.FromUrl(url)))
       }
       test("github url") {
-        val res = Channel.parse("https://github.com/coursier/apps/blob/main/apps.json")
+        val res      = Channel.parse("https://github.com/coursier/apps/blob/main/apps.json")
         val expected =
           Channel.FromUrl("https://raw.githubusercontent.com/coursier/apps/main/apps.json")
         assert(res == Right(expected))
       }
       test("gh shorthand") {
-        val res = Channel.parse("gh:coursier/apps/main")
+        val res      = Channel.parse("gh:coursier/apps/main")
         val expected =
           Channel.FromUrl("https://raw.githubusercontent.com/coursier/apps/main/apps.json")
         assert(res == Right(expected))

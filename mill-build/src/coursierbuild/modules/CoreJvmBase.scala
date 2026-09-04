@@ -79,7 +79,7 @@ trait CoreJvmBase extends Core with Shading with CsMima {
     Deps.pprint
   )
   def validNamespaces = Seq("coursier")
-  def shadeRenames = Seq(
+  def shadeRenames    = Seq(
     "com.github.plokhotnyuk.jsoniter_scala.**" -> "coursier.core.shaded.jsoniter.@1",
     "fastparse.**"                             -> "coursier.core.shaded.fastparse.@1",
     "geny.**"                                  -> "coursier.core.shaded.geny.@1",

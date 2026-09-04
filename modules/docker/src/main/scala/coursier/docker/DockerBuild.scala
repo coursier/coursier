@@ -234,7 +234,7 @@ object DockerBuild {
                 case Left(err) => err
               }
               fromBuiltErrors match {
-                case Seq() =>
+                case Seq()                   =>
                 case Seq(first, others @ _*) =>
                   for (other <- others)
                     first.addSuppressed(other)

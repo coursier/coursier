@@ -95,7 +95,7 @@ object DependencyManagement {
         transitive = true
       )
     def orElse(other: Values): Values = {
-      val newConfig = if (config.value.isEmpty) other.config else config
+      val newConfig  = if (config.value.isEmpty) other.config else config
       val newVersion =
         if (versionConstraint.asString.isEmpty) other.versionConstraint else versionConstraint
       val newExcl     = other.minimizedExclusions.join(minimizedExclusions)
@@ -112,7 +112,7 @@ object DependencyManagement {
       else
         this
     }
-    private lazy val parsedConfig = config.parsedValue
+    private lazy val parsedConfig                  = config.parsedValue
     def mapButVersion(f: String => String): Values = {
       val newConfig = Configuration(parsedConfig.applySubstitution(f))
       val newExcl   = minimizedExclusions.map(f)
@@ -127,7 +127,7 @@ object DependencyManagement {
       else
         this
     }
-    private lazy val parsedVersionConstraint = PropertyExpr.parse(versionConstraint.asString)
+    private lazy val parsedVersionConstraint    = PropertyExpr.parse(versionConstraint.asString)
     def mapVersion(f: String => String): Values = {
       val newVersion = parsedVersionConstraint.applySubstitution(f)
       if (versionConstraint.asString == newVersion) this
@@ -205,7 +205,7 @@ object DependencyManagement {
       val it = entries.iterator
       while (it.hasNext) {
         val (key0, incomingValues) = it.next()
-        val newValues = b.get(key0) match {
+        val newValues              = b.get(key0) match {
           case Some(previousValues) =>
             if (composeValues) previousValues.orElse(incomingValues)
             else previousValues
@@ -236,7 +236,7 @@ object DependencyManagement {
     var mayContainGlobal = false
     // whether the result differs from the first non-empty map, allowing callers to
     // keep the original instance (and skip a full map comparison) when it doesn't
-    var changedFromHead = false
+    var changedFromHead                                    = false
     val builder: coursier.util.HashMapBuilder[Key, Values] =
       coursier.util.HashMapBuilderFactory.apply
 

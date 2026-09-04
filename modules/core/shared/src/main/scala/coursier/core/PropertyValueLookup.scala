@@ -9,7 +9,7 @@ private[coursier] object PropertyValueLookup {
   def fromMap(properties: Map[String, String]): PropertyValueLookup =
     properties match {
       case pvl: PropertyValueLookup => pvl
-      case _ =>
+      case _                        =>
         key =>
           properties.getOrElse(key, null) match {
             case null => null

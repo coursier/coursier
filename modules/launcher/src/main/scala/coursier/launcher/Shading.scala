@@ -39,7 +39,7 @@ object Shading {
   ): Unit = {
     // .toList so that this is an immutable.Seq, as required by JJProcessor on Scala 2.12
     val jarjarRules: List[PatternElement] = rules.map(jarjarRule).toList
-    val processor = new JJProcessor(
+    val processor                         = new JJProcessor(
       jarjarRules,
       verbose,
       false,

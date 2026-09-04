@@ -29,7 +29,7 @@ object CacheTests extends TestSuite {
           val noEnv        = EnvValues(None, None)
           val defaultCreds = CacheEnv.defaultCredentials(credEnv, noEnv, noEnv)
 
-          val fc = FileCache().withCredentials(defaultCreds)
+          val fc       = FileCache().withCredentials(defaultCreds)
           val resolved = fc.credentials.flatMap {
             case dc: DirectCredentials => Seq(dc)
             case other                 => other.get()
@@ -118,7 +118,7 @@ object CacheTests extends TestSuite {
         assert(creds.get(0).getHost == "fetch.host.com")
         assert(creds.get(0).getUser == "fuser")
 
-        val fc = ApiHelper.cache(fetch.getCache)
+        val fc        = ApiHelper.cache(fetch.getCache)
         val allDirect = fc.credentials.flatMap {
           case dc: DirectCredentials => Seq(dc)
           case other                 => other.get()

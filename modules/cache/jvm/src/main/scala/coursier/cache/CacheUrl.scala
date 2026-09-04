@@ -28,7 +28,7 @@ object CacheUrl {
     if (classLoaders.isEmpty)
       Option(handlerClsCache.get(protocol)) match {
         case Some(handlerOpt) => handlerOpt
-        case None =>
+        case None             =>
           val handlerOpt = lookupHandler(protocol, classLoaders)
           val prevOpt    = Option(handlerClsCache.putIfAbsent(protocol, handlerOpt))
           prevOpt.getOrElse(handlerOpt)
@@ -392,7 +392,7 @@ object CacheUrl {
             Left(args.copy(alreadyDownloaded = 0L))
           case _ =>
             val partialDownload = rangeResOpt0.nonEmpty
-            val redirectOpt =
+            val redirectOpt     =
               redirect(url0, conn, followHttpToHttpsRedirections, followHttpsToHttpRedirections)
 
             redirectOpt match {
@@ -427,7 +427,7 @@ object CacheUrl {
                 }
               case None =>
                 if (maybeNeedsAuthentication(conn)) {
-                  val realmOpt = realm(conn)
+                  val realmOpt        = realm(conn)
                   val authentication0 = authentication
                     .map(_.withOptional(false))
                     .orElse(

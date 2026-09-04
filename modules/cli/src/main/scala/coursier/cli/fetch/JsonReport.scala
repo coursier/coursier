@@ -111,7 +111,7 @@ object JsonReport {
           trees: List[DependencyTree]
         ): Seq[(Module, Attributes)] =
           trees match {
-            case Nil => acc.result().distinct
+            case Nil    => acc.result().distinct
             case h :: t =>
               acc += key0(h.dependency)
               allDeps(
@@ -127,7 +127,7 @@ object JsonReport {
     val directDependenciesMap = keys
       .map {
         case key @ (mod, attr) =>
-          val deps = map(key)
+          val deps       = map(key)
           val directDeps = deps
             .flatMap {
               case (dep, _, _) =>
@@ -197,7 +197,7 @@ object JsonReport {
 
     val depEntries = keys.flatMap {
       case key @ (mod, attr) =>
-        val deps = map(key)
+        val deps  = map(key)
         val files = deps
           .map {
             case (_, _, art) =>

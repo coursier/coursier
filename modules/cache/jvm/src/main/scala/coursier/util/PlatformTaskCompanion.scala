@@ -23,7 +23,7 @@ abstract class PlatformTaskCompanion { self =>
 
   def completeAfter(pool: ScheduledExecutorService, duration: FiniteDuration): Task[Unit] =
     Task.delay {
-      val p = Promise[Unit]()
+      val p        = Promise[Unit]()
       val runnable =
         new Runnable {
           def run(): Unit =

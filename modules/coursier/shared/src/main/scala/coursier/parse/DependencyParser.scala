@@ -180,7 +180,7 @@ object DependencyParser {
       anyDep <- DepParser.parse(input, acceptInlineConfiguration = true)
       t      <- JavaOrScalaDependency.from0(anyDep)
       (dep, userParams) = t
-      map = userParams.map {
+      map               = userParams.map {
         case (k, v) =>
           (k, v.reverseIterator.flatMap(_.iterator).find(_ => true).getOrElse(""))
       }

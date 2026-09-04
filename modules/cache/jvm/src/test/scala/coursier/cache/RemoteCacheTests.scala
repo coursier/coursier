@@ -17,7 +17,7 @@ import coursier.util.StringInterpolators._
 
 object RemoteCacheTests extends TestSuite {
 
-  private val central = "https://repo1.maven.org/maven2"
+  private val central            = "https://repo1.maven.org/maven2"
   private val scalaLibraryPomUrl =
     s"$central/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16.pom"
 
@@ -33,7 +33,7 @@ object RemoteCacheTests extends TestSuite {
 
   private def withCacheServer[T](cache: FileCache[Task])(f: String => T): T =
     withExecutorService(Executors.newCachedThreadPool()) { requestsPool =>
-      val port = freePort()
+      val port   = freePort()
       val server = Undertow.builder()
         .addHttpListener(port, "localhost")
         .setHandler(CacheServer.handler(cache, ExecutionContext.fromExecutorService(requestsPool)))
@@ -46,7 +46,7 @@ object RemoteCacheTests extends TestSuite {
   private def withRemoteCache[T](f: (os.Path, RemoteCache[Task]) => T): T =
     withTmpDir { dir =>
       withExecutorService(Executors.newFixedThreadPool(4)) { serverPool =>
-        val cacheDir = dir / "cache"
+        val cacheDir    = dir / "cache"
         val serverCache = FileCache[Task](cacheDir.toIO)
           .withPool(serverPool)
 
@@ -105,7 +105,7 @@ object RemoteCacheTests extends TestSuite {
     test("fetch dependency artifacts") {
       withRemoteCache { (cacheDir, remoteCache) =>
         val dependency = dep"org.scala-lang:scala-compiler:2.13.16"
-        val result = Fetch()
+        val result     = Fetch()
           .noMirrors
           .withRepositories(Seq(MavenRepository(central)))
           .withCache(remoteCache)

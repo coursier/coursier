@@ -11,7 +11,7 @@ object JvmIndexTests extends TestSuite {
       val os     = "the-os"
       val arch   = "the-arch"
       val prefix = "prefix@"
-      val index = JvmIndex(
+      val index  = JvmIndex(
         Map(os -> Map(arch -> Map(
           s"${prefix}foo" -> Map(
             "18.1"   -> "zip+https://foo.com/jdk-18.1.zip",
@@ -56,8 +56,8 @@ object JvmIndexTests extends TestSuite {
     }
 
     test("1-dot prefix") {
-      val os   = "the-os"
-      val arch = "the-arch"
+      val os    = "the-os"
+      val arch  = "the-arch"
       val index = JvmIndex(
         Map(os -> Map(arch -> Map(
           "jdk@openfoo" -> Map(
