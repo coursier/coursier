@@ -6,7 +6,13 @@ object VersionTests extends TestSuite {
 
   import coursier.version.Version
 
+  // Version.compare is a total order, consistent with equals: it tells apart versions that
+  // mean the same thing but are spelled differently. These tests are about the semantics of
+  // versions, hence compareSemantic. See compareTotal below for the total order.
   def compare(first: String, second: String) =
+    Version(first).compareSemantic(Version(second))
+
+  def compareTotal(first: String, second: String) =
     Version(first).compare(Version(second))
 
   def increasing(versions: String*): Boolean =
@@ -187,12 +193,15 @@ object VersionTests extends TestSuite {
       assert(compare("1-alpha1", "1-a1") == 0)
       assert(compare("1-alpha", "1-beta") < 0)
       assert(compare("1-beta1", "1-b1") == 0)
-      assert(compare("1-beta", "1-milestone") > 0)
-      assert(compare("1-milestone1", "1-m1") > 0)
+      assert(compare("1-beta", "1-milestone") < 0)
+      assert(compare("1-milestone1", "1-m1") == 0)
       assert(compare("1-milestone", "1-rc") < 0)
       assert(compare("1-rc", "1-cr") == 0)
       assert(compare("1-rc", "1-snapshot") < 0)
       assert(compare("1-snapshot", "1") < 0)
+      // ga and final stand for the absence of a qualifier, so they don't change what a
+      // version means, while the total order puts them after the empty item, in that order,
+      // so that no two of them compare equal
       assert(compare("1", "1-ga") == 0)
       assert(compare("1", "1.ga.0.ga") == 0)
       assert(compare("1.0", "1-ga") == 0)
@@ -201,6 +210,11 @@ object VersionTests extends TestSuite {
       assert(compare("A", "A.ga.ga") == 0)
       assert(compare("A", "A-ga-ga") == 0)
       assert(compare("1", "1-final") == 0)
+      assert(compare("1-ga", "1-final") == 0)
+      assert(compareTotal("1", "1-ga") < 0)
+      assert(compareTotal("1-ga", "1-final") < 0)
+      // sp is a release of its own, it isn't equivalent to the empty item
+      assert(compare("1-final", "1-sp") < 0)
       assert(compare("1", "1-sp") < 0)
 
       assert(compare("2.12.4-bin-typelevel-4", "2.12.4") > 0)
@@ -213,49 +227,53 @@ object VersionTests extends TestSuite {
 
     test("wellKnownQualifierVersusUnknownQualifierOrdering") {
       assert(compare("1-milestone", "1-rc") < 0)
-      assert(compare("1-milestone", "1-beta") < 0)
+      assert(compare("1-milestone", "1-beta") > 0)
       assert(compare("1-M1", "1-rc1") < 0)
 
-      assert(compare("1-abc", "1-alpha") < 0)
-      assert(compare("1-abc", "1-beta") < 0)
-      assert(compare("1-abc", "1-milestone") < 0)
-      assert(compare("1-abc", "1-rc") < 0)
-      assert(compare("1-abc", "1-snapshot") < 0)
-      assert(compare("1-abc", "1") < 0)
-      assert(compare("1-abc", "1-sp") < 0)
+      // unknown qualifiers are plain literal items, they go after all the known qualifiers
+      // and after the empty item, but before non-zero numeric items
+      assert(compare("1-abc", "1-alpha") > 0)
+      assert(compare("1-abc", "1-beta") > 0)
+      assert(compare("1-abc", "1-milestone") > 0)
+      assert(compare("1-abc", "1-rc") > 0)
+      assert(compare("1-abc", "1-snapshot") > 0)
+      assert(compare("1-abc", "1") > 0)
+      assert(compare("1-abc", "1-sp") > 0)
 
-      assert(compare("1.0m", "1.0") < 0)
-      assert(compare("1.0-m", "1.0") < 0)
-      assert(compare("1.0.m", "1.0") < 0)
+      assert(compare("1.0m", "1.0") > 0)
+      assert(compare("1.0-m", "1.0") > 0)
+      assert(compare("1.0.m", "1.0") > 0)
 
       assert(compare("1.0m1", "1.0") < 0)
       assert(compare("1.0-m1", "1.0") < 0)
       assert(compare("1.0.m1", "1.0") < 0)
-      assert(compare("1.0m.1", "1.0") < 0)
-      assert(compare("1.0m-1", "1.0") < 0)
+      assert(compare("1.0m.1", "1.0") > 0)
+      assert(compare("1.0m-1", "1.0") > 0)
 
       assert(compare("1.0.1-MF", "1.0.0") > 0)
-      assert(compare("1.0.1-MF", "1.0.1") < 0)
+      assert(compare("1.0.1-MF", "1.0.1") > 0)
       assert(compare("1.0.1-MF", "1.0.2") < 0)
       assert(compare("1.0.1-X20", "1.0.0") > 0)
-      assert(compare("1.0.1-X20", "1.0.1") < 0)
+      assert(compare("1.0.1-X20", "1.0.1") > 0)
       assert(compare("1.0.1-X20", "1.0.2") < 0)
       assert(compare("1.0.1-SNAP12", "1.0.0") > 0)
-      assert(compare("1.0.1-SNAP12", "1.0.1") < 0)
+      assert(compare("1.0.1-SNAP12", "1.0.1") > 0)
       assert(compare("1.0.1-SNAP12", "1.0.2") < 0)
     }
 
     test("wellKnownSingleCharQualifiersOnlyRecognizedIfImmediatelyFollowedByNumber") {
-      assert(compare("1.0a", "1.0") < 0)
-      assert(compare("1.0-a", "1.0") < 0)
-      assert(compare("1.0.a", "1.0") < 0)
-      assert(compare("1.0b", "1.0") < 0)
-      assert(compare("1.0-b", "1.0") < 0)
-      assert(compare("1.0.b", "1.0") < 0)
-      assert(compare("1.0m", "1.0") < 0)
-      assert(compare("1.0-m", "1.0") < 0)
-      assert(compare("1.0.m", "1.0") < 0)
+      // not followed by a digit, so plain literal items, which go after the empty item
+      assert(compare("1.0a", "1.0") > 0)
+      assert(compare("1.0-a", "1.0") > 0)
+      assert(compare("1.0.a", "1.0") > 0)
+      assert(compare("1.0b", "1.0") > 0)
+      assert(compare("1.0-b", "1.0") > 0)
+      assert(compare("1.0.b", "1.0") > 0)
+      assert(compare("1.0m", "1.0") > 0)
+      assert(compare("1.0-m", "1.0") > 0)
+      assert(compare("1.0.m", "1.0") > 0)
 
+      // directly followed by a digit, so alpha / beta / milestone qualifiers
       assert(compare("1.0a1", "1.0") < 0)
       assert(compare("1.0-a1", "1.0") < 0)
       assert(compare("1.0.a1", "1.0") < 0)
@@ -266,12 +284,13 @@ object VersionTests extends TestSuite {
       assert(compare("1.0-m1", "1.0") < 0)
       assert(compare("1.0.m1", "1.0") < 0)
 
-      assert(compare("1.0a.1", "1.0") < 0)
-      assert(compare("1.0a-1", "1.0") < 0)
-      assert(compare("1.0b.1", "1.0") < 0)
-      assert(compare("1.0b-1", "1.0") < 0)
-      assert(compare("1.0m.1", "1.0") < 0)
-      assert(compare("1.0m-1", "1.0") < 0)
+      // followed by a separator rather than a digit, so plain literal items again
+      assert(compare("1.0a.1", "1.0") > 0)
+      assert(compare("1.0a-1", "1.0") > 0)
+      assert(compare("1.0b.1", "1.0") > 0)
+      assert(compare("1.0b-1", "1.0") > 0)
+      assert(compare("1.0m.1", "1.0") > 0)
+      assert(compare("1.0m-1", "1.0") > 0)
     }
 
     test("unknownQualifierOrdering") {
@@ -399,19 +418,21 @@ object VersionTests extends TestSuite {
       assert(increasing("1.0-alpha", "1.0", "1.0.1"))
       assert(increasing("1.0.alpha", "1.0", "1.0.1"))
 
+      // M1 is a milestone, while MF, X1 and a are plain literal items, which sort after 1.0
+      // rather than before it
       assert(
         increasing(
-          "1.0-M1",
-          "1.0-MF",
-          "1.0-X1",
           "1.0-alpha1",
+          "1.0-M1",
           "1.0-RC1",
           "1.0",
+          "1.0-MF",
+          "1.0-X1",
           "2.0",
           "2.0.2"
         )
       )
-      assert(increasing("1.0-MF", "1.0-X1", "1.0a", "1.0-RC1", "1.0", "2.0", "2.0.2"))
+      assert(increasing("1.0-RC1", "1.0", "1.0a", "1.0-MF", "1.0-X1", "2.0", "2.0.2"))
     }
 
 //    test("caseInsensitiveOrderingOfQualifiersIsLocaleIndependent") {
