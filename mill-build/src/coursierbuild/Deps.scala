@@ -75,7 +75,7 @@ object Deps {
     // applications still relying on a 1.x binding silently fall back to NOP.
     // Pinned in .scala-steward.conf too, so that it doesn't get bumped to 2.x.
     def slf4jApi = mvn"org.slf4j:slf4j-api:1.7.36"
-    def slf4JNop = mvn"org.slf4j:slf4j-nop:2.0.18"
+    def slf4JNop = mvn"org.slf4j:slf4j-nop:2.0.19"
     def svm      = mvn"org.graalvm.nativeimage:svm:21.3.18"
     // stick to the 2.x line: tika 3.x is compiled for Java 11, and we still support Java 8.
     // Pinned in .scala-steward.conf too, so that it doesn't get bumped back to 3.x.
