@@ -36,6 +36,25 @@ object InfoFile {
         zf.close()
   }
 
+  def readLock(f: Path): Option[ArtifactsLock] = {
+
+    var zf: ZipFile = null
+
+    try {
+      zf = new ZipFile(f.toFile)
+      Option(zf.getEntry(lockFilePath)).flatMap { ent =>
+        val content = FileUtil.readFully(zf.getInputStream(ent))
+        val s       = new String(content, StandardCharsets.UTF_8)
+        ArtifactsLock.read(s).toOption
+      }
+    }
+    catch {
+      case NonFatal(_) => None
+    }
+    finally if (zf != null)
+        zf.close()
+  }
+
   def readSource(f: Path): Option[(Source, Array[Byte])] = {
 
     var zf: ZipFile = null
