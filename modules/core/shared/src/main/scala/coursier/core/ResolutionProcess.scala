@@ -299,7 +299,7 @@ object ResolutionProcess {
                       case None =>
                         s"No latest ${Latest0.Integration.name} version found in $listingUrl"
                       case Some(v0) =>
-                        if (v0 == selectedVer.repr)
+                        if (v0.repr == selectedVer.repr)
                           s"Latest ${Latest0.Integration.name} $v0 from $listingUrl not in ${version.interval.repr}"
                         else
                           s"Latest ${Latest0.Integration.name} $v0 from $listingUrl not retained"
