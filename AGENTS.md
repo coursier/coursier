@@ -44,6 +44,10 @@ Prefer minimal, local, reversible changes and follow existing patterns.
   - `./mill -i __.fix --check`
 - Apply Scalafix rewrites:
   - `./mill -i __.fix`
+- Enabled rules live in `.scalafix.conf`; `return` and `isInstanceOf` are both banned.
+  Repository-specific rules are in `modules/scalafix-rules` (a Scala 2.13 module, as Scalafix
+  loads rules through a 2.13 class loader), and reach Scalafix through
+  `CsScalaModule#scalafixToolClasspath`.
 - Treat compiler warnings as actionable.
 
 ## Test commands

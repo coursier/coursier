@@ -23,6 +23,11 @@ trait CsScalaModule extends ScalaModule with CoursierJavaModule with ScalafixMod
       jvmRelease
     )
   }
+  // rules from modules/scalafix-rules, enabled by name in .scalafix.conf
+  // (build_.package_ is the root module of build.mill, which is compiled along with this file)
+  def scalafixToolClasspath = Task {
+    super.scalafixToolClasspath() ++ build_.package_.`scalafix-rules`.localClasspath()
+  }
   def scalacPluginMvnDeps = Task {
     val sv = scalaVersion()
     val scala212Plugins =

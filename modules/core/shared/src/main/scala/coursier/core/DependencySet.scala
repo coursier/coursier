@@ -11,7 +11,10 @@ final class DependencySet private (
 ) extends Product {
 
   def canEqual(that: Any): Boolean =
-    that.isInstanceOf[DependencySet]
+    that match {
+      case _: DependencySet => true
+      case _                => false
+    }
 
   def productArity: Int = 1
   //   Add that back if / when dropping Scala 2.12 support

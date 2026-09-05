@@ -654,6 +654,12 @@ import scala.util.control.NonFatal
 
   private def errFile(file: File) = new File(file.getParentFile, "." + file.getName + ".error")
 
+  private def isIOException(t: Throwable): Boolean =
+    t match {
+      case _: IOException => true
+      case _              => false
+    }
+
   private def remoteKeepErrors(
     file: File,
     url: String,
@@ -680,8 +686,7 @@ import scala.util.control.NonFatal
           case err @ Left(nf: ArtifactError.NotFound) if nf.permanent.contains(true) =>
             createErrFileBlocking()
             err: Either[ArtifactError, Unit]
-          case err @ Left(err0: ArtifactError.DownloadError)
-              if err0.getCause.isInstanceOf[IOException] =>
+          case err @ Left(err0: ArtifactError.DownloadError) if isIOException(err0.getCause) =>
             if (referenceFileOpt.exists(_.exists()) && errFile0.exists())
               // We got a download error, but we also got a not-found error
               // in the past. We assume the download error is transient
