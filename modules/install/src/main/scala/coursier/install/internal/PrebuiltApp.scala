@@ -112,6 +112,12 @@ object PrebuiltApp {
     }
   }
 
+  private def sslHandshakeFailure(t: Throwable): Boolean =
+    t match {
+      case _: javax.net.ssl.SSLHandshakeException => true
+      case _                                      => false
+    }
+
   private[coursier] def handleArtifactErrors(
     maybeFile: Either[ArtifactError, File],
     artifact: Artifact,
@@ -122,8 +128,7 @@ object PrebuiltApp {
         if (verbosity >= 2)
           System.err.println(s"No prebuilt launcher found at ${artifact.url}")
         None
-      case Left(e: ArtifactError.DownloadError)
-          if e.getCause.isInstanceOf[javax.net.ssl.SSLHandshakeException] =>
+      case Left(e: ArtifactError.DownloadError) if sslHandshakeFailure(e.getCause) =>
         // These seem to happen on Windows for non existing artifacts, only from the native launcher apparently???
         // Interpreting these errors as not-found-errors too.
         if (verbosity >= 2)

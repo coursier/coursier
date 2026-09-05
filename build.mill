@@ -146,6 +146,18 @@ object `custom-protocol-for-test` extends CsModule {
   def scalaVersion = ScalaVersions.scala213
 }
 
+// Scalafix rules written for this repository, loaded by `__.fix` through
+// CsScalaModule#scalafixToolClasspath, and enabled by name in .scalafix.conf
+object `scalafix-rules` extends SbtModule {
+  // Scalafix loads rules through a Scala 2.13 class loader, whatever the Scala version of the
+  // module being linted
+  def scalaVersion = ScalaVersions.scala213
+  // scalafix-core is only needed to compile the rules: at run time, it comes from the Scalafix
+  // tool class loader these classes get appended to, and a second copy of it there would clash
+  // with that one
+  def compileMvnDeps = Seq(Deps.scalafixCore)
+}
+
 object `bootstrap-launcher` extends BootstrapLauncher { self =>
   def moduleDeps = Seq(
     paths
