@@ -1967,15 +1967,10 @@ trait CacheServer extends CrossSbtModule with CsModule with CoursierPublishModul
 // Their versioning scheme (1.0.x) is unrelated to the tags of this repository: it is driven
 // by the `interface-v*` tags, see `InterfaceVersion`. `ci.checkPublishVersions` ensures a
 // release can only be cut with an `interface-v*` and a `v*` tag on the same commit.
-//
-// TODO Enable Mima on `interpolators` too (only the proguarded `interface` JAR, the one users
-// actually depend on, is checked for now).
 
 object interface extends Cross[Interface](ScalaVersions.all)
 
 object `interface-proguarded` extends InterfaceProguarded
-
-object `interface-interpolators` extends Cross[InterfaceInterpolators](ScalaVersions.all)
 
 object `interface-test` extends Cross[InterfaceTest](ScalaVersions.all)
 
@@ -2210,16 +2205,6 @@ trait DependsOnInterfaceProguarded extends JavaModule {
   )
 }
 
-trait InterfaceInterpolators extends CrossSbtModule with CsModule with InterfacePublishModule
-    with DependsOnInterfaceProguarded {
-  // published as `interpolators` since its inception, keep it that way
-  def artifactName = "interpolators"
-  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.scalaReflect(scalaVersion())
-  )
-  object test extends CrossSbtTests with CsTests
-}
-
 trait InterfaceTest extends CrossSbtModule with CsModule with DependsOnInterfaceProguarded {
   object test extends CrossSbtTests with TestModule.Junit4 {
     def junit4Version = Versions.junit
@@ -2237,9 +2222,8 @@ def interfaceTests(scalaVersion: String = defaultScalaVersion) = {
 
   def crossTests(sv: String) = Seq(
     // format: off
-    interface                .valuesToModules.get(List(sv)).map(_.test.testForked()),
-    `interface-interpolators`.valuesToModules.get(List(sv)).map(_.test.testForked()),
-    `interface-test`         .valuesToModules.get(List(sv)).map(_.test.testForked())
+    interface       .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    `interface-test`.valuesToModules.get(List(sv)).map(_.test.testForked())
     // format: on
   ).flatten
 
