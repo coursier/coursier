@@ -63,16 +63,16 @@ object InMemoryRepository {
         var conn: URLConnection = null
         try {
           conn = ConnectionBuilder(url.toString)
-            .withFollowHttpToHttpsRedirections(
-              cacheOpt.fold(false)(_.followHttpToHttpsRedirections)
+            .copy(
+              followHttpToHttpsRedirections =
+                cacheOpt.fold(false)(_.followHttpToHttpsRedirections),
+              followHttpsToHttpRedirections =
+                cacheOpt.fold(false)(_.followHttpsToHttpRedirections),
+              sslSocketFactoryOpt = cacheOpt.flatMap(_.sslSocketFactoryOpt),
+              hostnameVerifierOpt = cacheOpt.flatMap(_.hostnameVerifierOpt),
+              method = "HEAD",
+              maxRedirectionsOpt = cacheOpt.flatMap(_.maxRedirections)
             )
-            .withFollowHttpsToHttpRedirections(
-              cacheOpt.fold(false)(_.followHttpsToHttpRedirections)
-            )
-            .withSslSocketFactoryOpt(cacheOpt.flatMap(_.sslSocketFactoryOpt))
-            .withHostnameVerifierOpt(cacheOpt.flatMap(_.hostnameVerifierOpt))
-            .withMethod("HEAD")
-            .withMaxRedirectionsOpt(cacheOpt.flatMap(_.maxRedirections))
             .connection()
           // Even though the finally clause handles this too, this has to be run here, so that we return Some(true)
           // iff this doesn't throw.
@@ -187,7 +187,7 @@ object InMemoryRepository {
 
 }
 
-@data class InMemoryRepository(
+@data case class InMemoryRepository(
   fallbacks0: Map[(Module, Version0), (URL, Boolean)],
   cacheOpt: Option[FileCache[Nothing]],
   localArtifactsShouldBeCached: Boolean
@@ -214,8 +214,8 @@ object InMemoryRepository {
     }
   @deprecated("Use withFallbacks0 instead", "2.1.25")
   def withFallbacks(newFallbacks: Map[(Module, String), (URL, Boolean)]): InMemoryRepository =
-    withFallbacks0(
-      newFallbacks.map {
+    copy(
+      fallbacks0 = newFallbacks.map {
         case ((mod, ver), value) =>
           ((mod, Version0(ver)), value)
       }

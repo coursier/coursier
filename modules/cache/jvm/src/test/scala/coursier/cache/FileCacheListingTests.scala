@@ -44,9 +44,10 @@ object FileCacheListingTests extends TestSuite {
     }
 
   private def testCache(dir: os.Path): FileCache[Task] =
-    FileCache[Task]((dir / "cache").toIO)
-      .withChecksums(Nil)
-      .withCachePolicies(Seq(CachePolicy.FetchMissing))
+    FileCache[Task]((dir / "cache").toIO).copy(
+      checksums = Nil,
+      cachePolicies = Seq(CachePolicy.FetchMissing)
+    )
 
   private def fetch(cache: FileCache[Task], url: String): Either[String, String] =
     cache.fetch(Artifact(url)).run.unsafeRun(wrapExceptions = true)(cache.ec)

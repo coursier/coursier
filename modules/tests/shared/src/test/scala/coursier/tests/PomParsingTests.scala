@@ -316,18 +316,20 @@ object PomParsingTests extends TestSuite {
           |    </scm>
           |</project>""".stripMargin
 
-      val expected = Right(Project(mod"com.example:awesome-project", "1.0-SNAPSHOT").withInfo(Info(
-        description = "",
-        homePage = "https://example.com",
-        licenses = Seq.empty,
-        developers = Seq.empty,
-        publication = None,
-        scm = Some(Info.Scm(
-          url = Some("https://github.com/coursier/coursier"),
-          connection = Some("scm:git:git@github.com:coursier/coursier.git"),
-          developerConnection = None
-        ))
-      )))
+      val expected = Right(Project(mod"com.example:awesome-project", "1.0-SNAPSHOT").copy(
+        info = Info(
+          description = "",
+          homePage = "https://example.com",
+          licenses = Seq.empty,
+          developers = Seq.empty,
+          publication = None,
+          scm = Some(Info.Scm(
+            url = Some("https://github.com/coursier/coursier"),
+            connection = Some("scm:git:git@github.com:coursier/coursier.git"),
+            developerConnection = None
+          ))
+        )
+      ))
 
       val result = Pom.project(xmlParseDom(profileNode).toOption.get)
 

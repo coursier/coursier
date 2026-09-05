@@ -13,7 +13,7 @@ import scala.collection.compat._
   *
   * If ever different versions are found, the highest one is currently selected.
   */
-@data class SameVersion(matchers: Set[ModuleMatcher]) extends Rule {
+@data case class SameVersion(matchers: Set[ModuleMatcher]) extends Rule {
 
   import SameVersion._
 
@@ -65,10 +65,10 @@ import scala.collection.compat._
       .toMap
 
     if (cantForce.isEmpty) {
-      val res0 = res.withForceVersions0 {
-        res.forceVersions0 ++
+      val res0 = res.copy(
+        forceVersions0 = res.forceVersions0 ++
           conflict.modules.toSeq.map(m => m -> VersionConstraint.fromVersion(selectedVersion))
-      }
+      )
       Right(res0)
     }
     else {

@@ -292,7 +292,7 @@ object Pom {
           )
         }
 
-      val finalProjModule = projModule.withOrganization(groupId)
+      val finalProjModule = projModule.copy(organization = groupId)
 
       val relocationDependencyOpt = pom
         .children
@@ -311,8 +311,7 @@ object Pom {
 
           Variant.emptyConfiguration -> Dependency(
             finalProjModule
-              .withOrganization(relocatedGroupId)
-              .withName(relocatedArtifactId),
+              .copy(organization = relocatedGroupId, name = relocatedArtifactId),
             VersionConstraint.fromVersion(relocatedVersion),
             VariantSelector.emptyConfiguration,
             Set.empty[(Organization, ModuleName)],
@@ -525,7 +524,7 @@ object Pom {
 
     val optionalDeps = proj.dependencies0.collect {
       case (c: Variant.Configuration, dep) if dep.optional && fromConfigs(c.configuration) =>
-        Variant.Configuration(optionalConfig) -> dep.withOptional(false)
+        Variant.Configuration(optionalConfig) -> dep.copy(optional = false)
     }
 
     val optConfigThing = proj.configurations.getOrElse(optionalConfig, Nil) ++
@@ -533,7 +532,6 @@ object Pom {
     val configurations = proj.configurations + (optionalConfig -> optConfigThing.distinct)
 
     proj
-      .withConfigurations(configurations)
-      .withDependencies0(proj.dependencies0 ++ optionalDeps)
+      .copy(configurations = configurations, dependencies0 = proj.dependencies0 ++ optionalDeps)
   }
 }

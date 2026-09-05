@@ -45,7 +45,7 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
                 if (remaining.isEmpty)
                   parameters.content.drop(1)
                 else {
-                  val c0 = c.withEntries(remaining)
+                  val c0 = c.copy(entries = remaining)
                   c0 +: parameters.content.drop(1)
                 }
               }
