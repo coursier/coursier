@@ -1,6 +1,7 @@
 package coursier.maven
 
 import coursier.core._
+import coursier.maven.internal.MavenRepositoryHelpers
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version => Version0}
 import dataclass.{data, since => unroll}
@@ -40,7 +41,8 @@ object MavenRepository {
   override val versionsCheckHasModule: Boolean = true,
   @unroll
   override val checkModule: Boolean = false
-) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi {
+) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi
+    with MavenRepositoryHelpers {
 
   private[coursier] val internal = new MavenRepositoryInternal(
     root,

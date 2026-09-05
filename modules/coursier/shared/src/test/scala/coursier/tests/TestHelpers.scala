@@ -16,6 +16,7 @@ import coursier.testcache.TestCache
 import coursier.util.Artifact
 import coursier.version.VersionConstraint
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 

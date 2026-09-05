@@ -6,7 +6,7 @@ import scala.language.implicitConversions
 
 /** Mainly pulls definitions from coursier.core, sometimes with default arguments.
   */
-package object coursier {
+package object coursier extends coursier.internal.PlatformPackageObject {
 
   // `extends Serializable` added here-or-there for bin compat while switching from 2.12.1 to 2.12.4
 
@@ -108,21 +108,9 @@ package object coursier {
     def process: ResolutionProcess = ResolutionProcess(underlying)
   }
 
-  implicit def organizationString(sc: StringContext): SafeOrganization =
-    SafeOrganization(sc)
-  implicit def moduleNameString(sc: StringContext): SafeModuleName =
-    SafeModuleName(sc)
-  implicit def moduleString(sc: StringContext): SafeModule =
-    SafeModule(sc)
-  implicit def moduleExclString(sc: StringContext): SafeModuleExclusionMatcher =
-    SafeModuleExclusionMatcher(sc)
-  implicit def moduleInclString(sc: StringContext): SafeModuleInclusionMatcher =
-    SafeModuleInclusionMatcher(sc)
-  implicit def dependencyString(sc: StringContext): SafeDependency =
-    SafeDependency(sc)
-  implicit def mavenRepositoryString(sc: StringContext): SafeMavenRepository =
-    SafeMavenRepository(sc)
-  implicit def ivyRepositoryString(sc: StringContext): SafeIvyRepository =
-    SafeIvyRepository(sc)
+  // The string interpolators (org"…", mod"…", dep"…", mvn"…", ivy"…", …) are provided by
+  // coursier.util.StringInterpolators (a Scala 2 macro / Scala 3 extension methods). On Scala 2,
+  // they are also available from here via the implicit conversions of PlatformPackageObject
+  // (kept for binary compatibility); on Scala 3, import them from there directly.
 
 }

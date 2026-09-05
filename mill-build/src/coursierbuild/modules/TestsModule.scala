@@ -6,8 +6,7 @@ import mill._
 trait TestsModule extends CsCrossJvmJsModule {
   def mvnDeps = Seq(
     Deps.collectionCompat,
-    Deps.pprint,
-    Deps.scalaAsync
+    Deps.pprint
   )
   def compileMvnDeps = Seq(
     Deps.dataClass

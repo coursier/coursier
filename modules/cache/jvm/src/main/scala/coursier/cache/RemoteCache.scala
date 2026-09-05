@@ -1,6 +1,7 @@
 package coursier.cache
 
 import com.github.plokhotnyuk.jsoniter_scala.core._
+import coursier.cache.internal.RemoteCacheHelpers
 import coursier.cache.server.Model.{Artifact => ModelArtifact, _}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
@@ -30,7 +31,7 @@ import scala.util.Try
 )(implicit
   val sync: Sync[F]
 ) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext
-    with Cache.WithLogger[F, RemoteCache[F]] with Cache.Default[F] {
+    with Cache.WithLogger[F, RemoteCache[F]] with Cache.Default[F] with RemoteCacheHelpers[F] {
 
   lazy val ec: ExecutionContextExecutorService =
     ExecutionContext.fromExecutorService(pool)

@@ -16,6 +16,7 @@ import coursier.util.StringInterpolators._
 import coursier.version.{ConstraintReconciliation, VersionConstraint}
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 import scala.concurrent.ExecutionContext.Implicits.global
 

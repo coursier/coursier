@@ -5,12 +5,11 @@ import com.github.lolgab.mill.mima._
 
 import mill._, mill.scalalib._
 
-trait CoursierTests extends TestModule with JavaModule with CsTests {
+trait CoursierTests extends TestModule with ScalaModule with CsTests {
   def mvnDeps = Task {
     super.mvnDeps() ++ Seq(
       Deps.diffUtils,
-      Deps.pprint,
-      Deps.scalaAsync
+      Deps.pprint
     )
   }
 
