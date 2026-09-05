@@ -664,7 +664,8 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
                 directory = tmpDir
               )
             }
-            finally if (bgProc != null)
+            finally
+              if (bgProc != null)
                 bgProc.destroy()
 
           val expectedOutput = "foo" + System.lineSeparator()
