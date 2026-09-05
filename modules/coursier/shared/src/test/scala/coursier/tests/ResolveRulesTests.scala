@@ -16,6 +16,7 @@ import coursier.util.StringInterpolators._
 import coursier.version.{ConstraintReconciliation, Version, VersionConstraint}
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 
 object ResolveRulesTests extends TestSuite {
@@ -39,8 +40,10 @@ object ResolveRulesTests extends TestSuite {
             Resolve()
               .noMirrors
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-              .withResolutionParams(params)
-              .withCache(cache)
+              .copy(
+                resolutionParams = params,
+                cache = cache
+              )
               .future()
               .failed
           }
@@ -69,8 +72,10 @@ object ResolveRulesTests extends TestSuite {
             Resolve()
               .noMirrors
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-              .withResolutionParams(params)
-              .withCache(cache)
+              .copy(
+                resolutionParams = params,
+                cache = cache
+              )
               .future()
               .failed
           }
@@ -98,8 +103,10 @@ object ResolveRulesTests extends TestSuite {
             Resolve()
               .noMirrors
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-              .withResolutionParams(params)
-              .withCache(cache)
+              .copy(
+                resolutionParams = params,
+                cache = cache
+              )
               .future()
               .failed
           }
@@ -135,8 +142,10 @@ object ResolveRulesTests extends TestSuite {
               .noMirrors
               .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
               .addRepositories(Repositories.jitpack)
-              .withResolutionParams(params)
-              .withCache(cache)
+              .copy(
+                resolutionParams = params,
+                cache = cache
+              )
               .future()
           }
 
@@ -159,8 +168,10 @@ object ResolveRulesTests extends TestSuite {
               .noMirrors
               .addDependencies(dep"sh.almond:scala-kernel_2.12.7:0.2.2")
               .addRepositories(Repositories.jitpack)
-              .withResolutionParams(params)
-              .withCache(cache)
+              .copy(
+                resolutionParams = params,
+                cache = cache
+              )
               .future()
           }
 
@@ -183,8 +194,10 @@ object ResolveRulesTests extends TestSuite {
             Resolve()
               .noMirrors
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-              .withResolutionParams(params)
-              .withCache(cache)
+              .copy(
+                resolutionParams = params,
+                cache = cache
+              )
               .future()
               .failed
           }
@@ -215,8 +228,10 @@ object ResolveRulesTests extends TestSuite {
                 dep"org.typelevel:cats-effect_2.11:1.3.1",
                 dep"org.typelevel:cats-core_2.11:1.5.0"
               )
-              .withResolutionParams(params)
-              .withCache(cache)
+              .copy(
+                resolutionParams = params,
+                cache = cache
+              )
               .future()
               .failed
           }
@@ -254,10 +269,11 @@ object ResolveRulesTests extends TestSuite {
       test("with intervals") {
         async {
 
-          val rule = Strict()
-            .withExclude(Set(
+          val rule = Strict().copy(
+            exclude = Set(
               ModuleMatcher(mod"org.scala-lang:*")
-            ))
+            )
+          )
           val ruleRes = RuleResolution.Fail
 
           val params = ResolutionParams()
@@ -270,8 +286,10 @@ object ResolveRulesTests extends TestSuite {
                 dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M4",
                 dep"com.chuusai:shapeless_2.12:[2.3.3,2.3.4)"
               )
-              .withResolutionParams(params)
-              .withCache(cache)
+              .copy(
+                resolutionParams = params,
+                cache = cache
+              )
               .future()
               .failed
           }
@@ -310,10 +328,11 @@ object ResolveRulesTests extends TestSuite {
         test("do ignore") {
           async {
 
-            val rule = Strict()
-              .withExclude(Set(
+            val rule = Strict().copy(
+              exclude = Set(
                 ModuleMatcher(mod"org.scala-lang:*")
-              ))
+              )
+            )
             val ruleRes = RuleResolution.Fail
 
             val params = ResolutionParams()
@@ -327,8 +346,10 @@ object ResolveRulesTests extends TestSuite {
                   dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M4",
                   dep"com.chuusai:shapeless_2.12:[2.3.3,2.3.4)"
                 )
-                .withResolutionParams(params)
-                .withCache(cache)
+                .copy(
+                  resolutionParams = params,
+                  cache = cache
+                )
                 .future()
             }
 
@@ -339,11 +360,12 @@ object ResolveRulesTests extends TestSuite {
         test("do not ignore") {
           async {
 
-            val rule = Strict()
-              .withExclude(Set(
+            val rule = Strict().copy(
+              exclude = Set(
                 ModuleMatcher(mod"org.scala-lang:*")
-              ))
-              .withIgnoreIfForcedVersion(false)
+              ),
+              ignoreIfForcedVersion = false
+            )
             val ruleRes = RuleResolution.Fail
 
             val params = ResolutionParams()
@@ -357,8 +379,10 @@ object ResolveRulesTests extends TestSuite {
                   dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M4",
                   dep"com.chuusai:shapeless_2.12:[2.3.3,2.3.4)"
                 )
-                .withResolutionParams(params)
-                .withCache(cache)
+                .copy(
+                  resolutionParams = params,
+                  cache = cache
+                )
                 .future()
                 .failed
             }
@@ -400,8 +424,10 @@ object ResolveRulesTests extends TestSuite {
             Resolve()
               .noMirrors
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
-              .withResolutionParams(params)
-              .withCache(cache)
+              .copy(
+                resolutionParams = params,
+                cache = cache
+              )
               .future()
               .failed
           }
@@ -432,8 +458,10 @@ object ResolveRulesTests extends TestSuite {
                 dep"io.argonaut:argonaut_2.11:6.1",
                 dep"org.apache.logging.log4j:log4j-api" // "any" version must not be reconciled
               )
-              .withResolutionParams(params)
-              .withCache(cache)
+              .copy(
+                resolutionParams = params,
+                cache = cache
+              )
               .future()
               .failed
           }
@@ -470,8 +498,10 @@ object ResolveRulesTests extends TestSuite {
                 dep"io.argonaut:argonaut_2.11:6.1",
                 dep"org.apache.logging.log4j:log4j-api" // "any" version must not introduce conficts
               )
-              .withResolutionParams(params)
-              .withCache(cache)
+              .copy(
+                resolutionParams = params,
+                cache = cache
+              )
               .future()
               .failed
           }
@@ -512,8 +542,10 @@ object ResolveRulesTests extends TestSuite {
                 dep"io.argonaut:argonaut_2.11:6.2",
                 dep"org.apache.logging.log4j:log4j-api" // "any" version must not introduce conficts
               )
-              .withResolutionParams(params)
-              .withCache(cache)
+              .copy(
+                resolutionParams = params,
+                cache = cache
+              )
               .future()
           }
 
@@ -538,8 +570,10 @@ object ResolveRulesTests extends TestSuite {
                 dep"com.chuusai:shapeless_2.12:2.3.2",
                 dep"org.apache.logging.log4j:log4j-api" // "any" version substitution is not a bump
               )
-              .withResolutionParams(params)
-              .withCache(cache)
+              .copy(
+                resolutionParams = params,
+                cache = cache
+              )
               .future()
           }
 
@@ -572,8 +606,10 @@ object ResolveRulesTests extends TestSuite {
                 dep"com.chuusai:shapeless_2.12:2.3.2",
                 dep"org.scala-lang:scala-library:2.12.1"
               )
-              .withResolutionParams(params)
-              .withCache(cache)
+              .copy(
+                resolutionParams = params,
+                cache = cache
+              )
               .future()
           }
 

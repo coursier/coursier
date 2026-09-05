@@ -1,11 +1,11 @@
 package coursier.env
 
-import dataclass._
+import dataclass.{data, since => unroll}
 
-@data class WindowsEnvVarUpdater(
+@data case class WindowsEnvVarUpdater(
   powershellRunner: PowershellRunner = PowershellRunner(),
   target: String = "User",
-  @since
+  @unroll
   useJni: Option[Boolean] = None
 ) extends EnvVarUpdater {
 

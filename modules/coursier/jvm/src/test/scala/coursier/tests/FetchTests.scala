@@ -9,12 +9,13 @@ import coursier.util.{InMemoryRepository, Task}
 import coursier.version.VersionConstraint
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 object FetchTests extends TestSuite {
 
-  import TestHelpers.{ec, cache, cacheWithHandmadeMetadata, handmadeMetadataBase, validateArtifacts}
+  import TestHelpers.{cache, cacheWithHandmadeMetadata, handmadeMetadataBase, validateArtifacts}
 
   private val fetch = Fetch()
     .noMirrors
@@ -28,6 +29,8 @@ object FetchTests extends TestSuite {
         case other => other
       }
     }
+
+  private implicit val ec: ExecutionContext = TestHelpers.ec
 
   val tests = Tests {
 
@@ -213,7 +216,7 @@ object FetchTests extends TestSuite {
               .addRepositories(m2Repo)
               .addDependencies(
                 dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
-                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
+                  .copy(variantSelector = VariantSelector.ConfigurationBased(Configuration.test))
               )
               .futureResult()
           }
@@ -247,7 +250,7 @@ object FetchTests extends TestSuite {
               .addRepositories(ivy2Repo)
               .addDependencies(
                 dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
-                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
+                  .copy(variantSelector = VariantSelector.ConfigurationBased(Configuration.test))
               )
               .futureResult()
           }
@@ -378,7 +381,7 @@ object FetchTests extends TestSuite {
         val subsetSourcesArtifacts = await {
           Artifacts()
             .withResolution(subsetRes)
-            .withClassifiers(Set(Classifier.sources))
+            .copy(classifiers = Set(Classifier.sources))
             .future()
         }
 
@@ -396,7 +399,7 @@ object FetchTests extends TestSuite {
       test("ko") {
         val cache1 = cache match {
           case cache: coursier.cache.MockCache[Task] =>
-            cache.withDummyArtifact(_ => false)
+            cache.copy(dummyArtifact = _ => false)
         }
         try {
           val res = fetch
@@ -433,7 +436,7 @@ object FetchTests extends TestSuite {
       def assertOptionalMissingJar(dep: Dependency, expectedJarUrl: String): Unit = {
         val cache1 = cache match {
           case cache: coursier.cache.MockCache[Task] =>
-            cache.withDummyArtifact(_ => false)
+            cache.copy(dummyArtifact = _ => false)
         }
         val res = fetch
           .withCache(cache1)
@@ -572,7 +575,7 @@ object FetchTests extends TestSuite {
       test("android") {
 
         def withVariant(dep: Dependency, map: Map[String, VariantSelector.VariantMatcher]) =
-          dep.withVariantSelector(VariantSelector.AttributesBased(map))
+          dep.copy(variantSelector = VariantSelector.AttributesBased(map))
 
         def testVariants(map: Map[String, VariantSelector.VariantMatcher]): Future[Unit] = async {
           val params = fetch.resolutionParams
@@ -625,13 +628,11 @@ object FetchTests extends TestSuite {
         )(
           dependencies: Dependency*
         ): Future[Unit] = async {
-          val params = fetch.resolutionParams
-            .withDefaultConfiguration(
-              config.getOrElse(fetch.resolutionParams.defaultConfiguration)
-            )
-            .withDefaultVariantAttributes(
+          val params = fetch.resolutionParams.copy(
+            defaultConfiguration = config.getOrElse(fetch.resolutionParams.defaultConfiguration),
+            defaultVariantAttributes =
               defaultAttributes.orElse(fetch.resolutionParams.defaultVariantAttributes)
-            )
+          )
           val res = await {
             enableModules(fetch.addRepositories(Repositories.google))
               .withResolutionParams(params)
@@ -648,8 +649,8 @@ object FetchTests extends TestSuite {
         }
 
         test("compile") {
-          val attr = VariantSelector.AttributesBased().withMatchers(
-            Map(
+          val attr = VariantSelector.AttributesBased().copy(
+            matchers = Map(
               "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
             )
           )
@@ -658,8 +659,8 @@ object FetchTests extends TestSuite {
           )
         }
         test("runtime") {
-          val attr = VariantSelector.AttributesBased().withMatchers(
-            Map(
+          val attr = VariantSelector.AttributesBased().copy(
+            matchers = Map(
               "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
             )
           )
@@ -672,7 +673,7 @@ object FetchTests extends TestSuite {
         test("compile") {
           async {
             val params = fetch.resolutionParams
-              .withDefaultConfiguration(Configuration.compile)
+              .copy(defaultConfiguration = Configuration.compile)
               .addVariantAttributes(
                 "org.gradle.jvm.environment" ->
                   VariantSelector.VariantMatcher.Equals("standard-jvm"),

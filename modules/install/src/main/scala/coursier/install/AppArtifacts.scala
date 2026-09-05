@@ -1,13 +1,14 @@
 package coursier.install
 
+import dataclass.data
+
 import java.io.File
 
 import coursier.Fetch
 import coursier.parse.JavaOrScalaDependency
 import coursier.util.Artifact
-import dataclass.data
 
-@data class AppArtifacts(
+@data case class AppArtifacts(
   fetchResult: Fetch.Result = Fetch.Result(),
   shared: Seq[(Artifact, File)] = Nil,
   extraProperties: Seq[(String, String)] = Nil,

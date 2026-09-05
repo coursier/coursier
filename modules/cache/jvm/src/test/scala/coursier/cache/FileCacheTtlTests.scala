@@ -72,11 +72,12 @@ object FileCacheTtlTests extends TestSuite {
       changing: Boolean = true
     ): (List[String], Either[ArtifactError, File]) = {
       log.reset()
-      val cache = base
-        .withCachePolicies(Seq(policy))
-        .withClock(Clock.fixed(instant, zone))
+      val cache = base.copy(
+        cachePolicies = Seq(policy),
+        clock = Clock.fixed(instant, zone)
+      )
       val res = cache
-        .file(Artifact(url).withChanging(changing)).run
+        .file(Artifact(url).copy(changing = changing)).run
         .unsafeRun(wrapExceptions = true)(cache.ec)
       (log.methods, res)
     }
@@ -110,9 +111,10 @@ object FileCacheTtlTests extends TestSuite {
     val state = new ServerState
     withHttpServer(logRequests(log)(routes(state))) { serverUri =>
       withTmpDir { dir =>
-        val base = FileCache[Task]((dir / "cache").toIO)
-          .withChecksums(Nil)
-          .withTtl(ttl)
+        val base = FileCache[Task]((dir / "cache").toIO).copy(
+          checksums = Nil,
+          ttl = ttl
+        )
         f(new Ctx(state, log, base, (serverUri / "dir" / "foo.pom").renderString))
       }
     }

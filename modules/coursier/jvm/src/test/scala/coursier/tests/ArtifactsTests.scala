@@ -8,6 +8,7 @@ import coursier.util.StringInterpolators._
 import coursier.version.{Version, VersionConstraint}
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 
 object ArtifactsTests extends TestSuite {
@@ -23,7 +24,7 @@ object ArtifactsTests extends TestSuite {
           Resolve()
             .noMirrors
             .addDependencies(dep"io.argonaut:argonaut_2.12:6.2.2")
-            .withCache(cache)
+            .copy(cache = cache)
             .future()
         }
 
@@ -31,14 +32,14 @@ object ArtifactsTests extends TestSuite {
           Resolve()
             .noMirrors
             .addDependencies(dep"com.chuusai:shapeless_2.12:2.3.2")
-            .withCache(cache)
+            .copy(cache = cache)
             .future()
         }
 
         val artifacts = await {
           Artifacts()
-            .withResolutions(Seq(res1, res2))
-            .withCache(cache)
+            .copy(resolutions = Seq(res1, res2))
+            .copy(cache = cache)
             .future()
         }
 
@@ -69,14 +70,14 @@ object ArtifactsTests extends TestSuite {
           Resolve()
             .noMirrors
             .addDependencies(dep"com.chuusai:shapeless_2.12:2.3.2")
-            .withCache(cache)
+            .copy(cache = cache)
             .future()
         }
 
         val artifacts = await {
           Artifacts()
             .withResolution(res)
-            .withCache(cache)
+            .copy(cache = cache)
             .addExtraArtifacts { l =>
               l.flatMap {
                 case (_, _, a) =>
@@ -108,14 +109,14 @@ object ArtifactsTests extends TestSuite {
           Resolve()
             .noMirrors
             .addDependencies(dep"com.chuusai:shapeless_2.12:2.3.2")
-            .withCache(cache)
+            .copy(cache = cache)
             .future()
         }
 
         val artifacts = await {
           Artifacts()
             .withResolution(res)
-            .withCache(cache)
+            .copy(cache = cache)
             .addTransformArtifacts { l =>
               l.flatMap {
                 case elem @ (d, p, a) =>
@@ -148,14 +149,14 @@ object ArtifactsTests extends TestSuite {
           Resolve()
             .noMirrors
             .addDependencies(dep"com.chuusai:shapeless_2.12:2.3.2")
-            .withCache(cache)
+            .copy(cache = cache)
             .future()
         }
 
         val artifacts = await {
           Artifacts()
-            .withResolutions(Seq(res, res))
-            .withCache(cache)
+            .copy(resolutions = Seq(res, res))
+            .copy(cache = cache)
             .future()
         }
 
@@ -181,14 +182,14 @@ object ArtifactsTests extends TestSuite {
               dep"io.get-coursier:coursier-core_2.12:2.0.0-RC6",
               dep"io.get-coursier:coursier_2.12:2.0.0-RC6-16"
             )
-            .withCache(cache)
+            .copy(cache = cache)
             .future()
         }
 
         val artifacts = await {
           Artifacts()
             .withResolution(res)
-            .withCache(cache)
+            .copy(cache = cache)
             .future()
         }
 
@@ -230,18 +231,20 @@ object ArtifactsTests extends TestSuite {
           Resolve()
             .noMirrors
             .addDependencies(dep"com.chuusai:shapeless_2.11:2.3.3")
-            .withRepositories(Seq(
-              inMemoryRepo,
-              Repositories.central
-            ))
-            .withCache(cache)
+            .copy(
+              repositories = Seq(
+                inMemoryRepo,
+                Repositories.central
+              ),
+              cache = cache
+            )
             .future()
         }
 
         val artifacts = await {
           Artifacts()
-            .withResolutions(Seq(res))
-            .withCache(cache)
+            .copy(resolutions = Seq(res))
+            .copy(cache = cache)
             .future()
         }
 
@@ -265,21 +268,25 @@ object ArtifactsTests extends TestSuite {
             Resolve()
               .noMirrors
               .addDependencies(dep"com.fake:lib1:1.7.27")
-              .withRepositories(Seq(
-                MavenRepository(handmadeMetadataBase + "/fake-maven"),
-                IvyRepository.parse(
-                  handmadeMetadataBase +
-                    "/fake-ivy/[defaultPattern]"
-                ).fold(sys.error, identity)
-              ))
-              .withCache(cache)
+              .copy(
+                repositories = Seq(
+                  MavenRepository(handmadeMetadataBase + "/fake-maven"),
+                  IvyRepository.parse(
+                    handmadeMetadataBase +
+                      "/fake-ivy/[defaultPattern]"
+                  ).fold(sys.error, identity)
+                ),
+                cache = cache
+              )
               .future()
           }
 
           val artifacts = await {
             Artifacts()
-              .withResolutions(Seq(res))
-              .withCache(cache)
+              .copy(
+                resolutions = Seq(res),
+                cache = cache
+              )
               .future()
           }
 
@@ -305,20 +312,24 @@ object ArtifactsTests extends TestSuite {
             Resolve()
               .noMirrors
               .addDependencies(dep"com.fake:lib1:1.7.27")
-              .withRepositories(Seq(
-                IvyRepository.parse(
-                  handmadeMetadataBase +
-                    "/fake-ivy/[defaultPattern]"
-                ).fold(sys.error, identity)
-              ))
-              .withCache(cache)
+              .copy(
+                repositories = Seq(
+                  IvyRepository.parse(
+                    handmadeMetadataBase +
+                      "/fake-ivy/[defaultPattern]"
+                  ).fold(sys.error, identity)
+                ),
+                cache = cache
+              )
               .future()
           }
 
           val artifacts = await {
             Artifacts()
-              .withResolutions(Seq(res))
-              .withCache(cache)
+              .copy(
+                resolutions = Seq(res),
+                cache = cache
+              )
               .future()
           }
 
@@ -345,7 +356,7 @@ object ArtifactsTests extends TestSuite {
           Resolve()
             .noMirrors
             .addDependencies(dep"com.amazonaws:aws-java-sdk-s3:1.11.507")
-            .withCache(cache)
+            .copy(cache = cache)
             .future()
         }
 

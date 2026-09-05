@@ -71,9 +71,10 @@ object FileCacheErrorTests extends TestSuite {
       artifact: Artifact
     ): (List[String], Either[ArtifactError, File]) = {
       log.reset()
-      val cache = base
-        .withCachePolicies(Seq(policy))
-        .withClock(Clock.fixed(instant, zone))
+      val cache = base.copy(
+        cachePolicies = Seq(policy),
+        clock = Clock.fixed(instant, zone)
+      )
       val res = cache
         .file(artifact).run
         .unsafeRun(wrapExceptions = true)(cache.ec)
@@ -106,9 +107,10 @@ object FileCacheErrorTests extends TestSuite {
     val state = new ServerState
     withHttpServer(logRequests(log)(routes(state))) { serverUri =>
       withTmpDir { dir =>
-        val base = FileCache[Task]((dir / "cache").toIO)
-          .withChecksums(Nil)
-          .withTtl(ttl)
+        val base = FileCache[Task]((dir / "cache").toIO).copy(
+          checksums = Nil,
+          ttl = Some(ttl)
+        )
         f(new Ctx(
           state,
           log,
@@ -131,7 +133,7 @@ object FileCacheErrorTests extends TestSuite {
     test("a permanent not-found is remembered in a .error file") {
       withSetup { ctx =>
 
-        val changing = ctx.jar.withChanging(true)
+        val changing = ctx.jar.copy(changing = true)
 
         val (requests, res) = ctx.at(t0, CachePolicy.Update, changing)
         assert(requests == List("GET"))
@@ -152,7 +154,7 @@ object FileCacheErrorTests extends TestSuite {
     test("a cached error expires with the TTL") {
       withSetup { ctx =>
 
-        val changing = ctx.jar.withChanging(true)
+        val changing = ctx.jar.copy(changing = true)
 
         assert(ctx.at(t0, CachePolicy.Update, changing)._1 == List("GET"))
         ctx.stampErrorAt(t0)
@@ -168,7 +170,7 @@ object FileCacheErrorTests extends TestSuite {
     test("an infinite TTL never expires a cached error") {
       withSetup { ctx =>
 
-        val changing = ctx.jar.withChanging(true)
+        val changing = ctx.jar.copy(changing = true)
         val base     = ctx.base
 
         assert(ctx.at(t0, CachePolicy.Update, changing)._1 == List("GET"))
@@ -186,7 +188,7 @@ object FileCacheErrorTests extends TestSuite {
     test("a successful download deletes the cached error") {
       withSetup { ctx =>
 
-        val changing = ctx.jar.withChanging(true)
+        val changing = ctx.jar.copy(changing = true)
 
         assert(ctx.at(t0, CachePolicy.Update, changing)._1 == List("GET"))
         ctx.stampErrorAt(t0)
@@ -219,7 +221,7 @@ object FileCacheErrorTests extends TestSuite {
 
       test("the cache-errors extra opts a non-changing artifact in") {
         withSetup { ctx =>
-          val artifact = ctx.jar.withExtra(Map("cache-errors" -> ctx.jar))
+          val artifact = ctx.jar.copy(extra = Map("cache-errors" -> ctx.jar))
 
           val (requests, _) = ctx.at(t0, CachePolicy.Update, artifact)
           assert(requests == List("GET"))
@@ -241,7 +243,7 @@ object FileCacheErrorTests extends TestSuite {
 
           // neither changing nor cache-errors: it is the reference file in cache that enables
           // remembering the error
-          val artifact = ctx.jar.withExtra(Map("metadata" -> ctx.pom))
+          val artifact = ctx.jar.copy(extra = Map("metadata" -> ctx.pom))
 
           val (requests, _) = ctx.at(t0, CachePolicy.Update, artifact)
           assert(requests == List("GET"))
@@ -267,12 +269,13 @@ object FileCacheErrorTests extends TestSuite {
 
         withTmpDir { dir =>
 
-          val base = FileCache[Task]((dir / "cache").toIO)
-            .withChecksums(Nil)
-            .withTtl(ttl)
+          val base = FileCache[Task]((dir / "cache").toIO).copy(
+            checksums = Nil,
+            ttl = Some(ttl),
             // a single attempt, so that the connection failure surfaces without waiting out the
             // retry backoff
-            .withRetry(0)
+            retry = 0
+          )
 
           val (jarUrl, pomUrl) =
             withHttpServer(logRequests(log)(routes(state))) { serverUri =>
@@ -284,7 +287,7 @@ object FileCacheErrorTests extends TestSuite {
                 (serverUri / "dir" / "foo.pom").renderString
               )
               ctx.seedPom()
-              val artifact      = ctx.jar.withExtra(Map("metadata" -> ctx.pom))
+              val artifact      = ctx.jar.copy(extra = Map("metadata" -> ctx.pom))
               val (requests, _) = ctx.at(t0, CachePolicy.FetchMissing, artifact)
               assert(requests == List("GET"))
               assert(ctx.errorFile.exists())
@@ -293,7 +296,7 @@ object FileCacheErrorTests extends TestSuite {
 
           // the server is gone now, so connecting to it fails with an IOException
           val ctx      = new Ctx(state, log, base, jarUrl, pomUrl)
-          val artifact = ctx.jar.withExtra(Map("metadata" -> ctx.pom))
+          val artifact = ctx.jar.copy(extra = Map("metadata" -> ctx.pom))
 
           val (_, res) = ctx.at(hoursIn(1), CachePolicy.FetchMissing, artifact)
           val nf       = assertNotFound(res)
@@ -314,7 +317,7 @@ object FileCacheErrorTests extends TestSuite {
 
       withSetup { ctx =>
 
-        val changing = ctx.jar.withChanging(true)
+        val changing = ctx.jar.copy(changing = true)
 
         assert(ctx.at(t0, CachePolicy.FetchMissing, changing)._1 == List("GET"))
         assert(ctx.errorFile.exists())
@@ -328,7 +331,7 @@ object FileCacheErrorTests extends TestSuite {
     test("a cached error doesn't hide a file that is in cache") {
       withSetup { ctx =>
 
-        val changing = ctx.jar.withChanging(true)
+        val changing = ctx.jar.copy(changing = true)
 
         ctx.state.found = true
         assert(ctx.at(t0, CachePolicy.FetchMissing, changing)._2.isRight)

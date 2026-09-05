@@ -6,7 +6,7 @@ import dataclass.data
 
 import scala.collection.mutable
 
-@data class EnvironmentUpdate(
+@data case class EnvironmentUpdate(
   set: Seq[(String, String)] = Nil,
   pathLikeAppends: Seq[(String, String)] = Nil
 ) {

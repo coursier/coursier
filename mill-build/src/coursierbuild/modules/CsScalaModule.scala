@@ -16,11 +16,15 @@ trait CsScalaModule extends ScalaModule with CoursierJavaModule with ScalafixMod
     val scala2Opts =
       if (sv.startsWith("2.")) Seq("-Xasync")
       else Nil
+    // Scala 3.8.x only supports Java 17+ output targets; bump the release there.
+    val releaseVersion =
+      if (sv.startsWith("3.") && jvmRelease.toInt < 17) "17"
+      else jvmRelease
     super.scalacOptions() ++ scala212Opts ++ scala213Opts ++ scala2Opts ++ Seq(
       "-deprecation",
       "-feature",
       "--release",
-      jvmRelease
+      releaseVersion
     )
   }
   def scalacPluginMvnDeps = Task {

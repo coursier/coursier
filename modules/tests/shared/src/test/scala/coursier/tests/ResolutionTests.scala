@@ -22,6 +22,7 @@ import coursier.util.StringInterpolators._
 import coursier.version.VersionConstraint
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 
 object ResolutionTests extends TestSuite {
@@ -32,12 +33,13 @@ object ResolutionTests extends TestSuite {
     forceVersions: Map[Module, VersionConstraint] = Map.empty,
     forceProperties: Map[String, String] = Map.empty
   ) = {
-    val res = Resolution()
-      .withRootDependencies(deps)
-      .withFilter(filter)
-      .withForceVersions0(forceVersions)
-      .withForceProperties(forceProperties)
-      .withOsInfo(Activation.Os.empty)
+    val res = Resolution().copy(
+      rootDependencies = deps,
+      filter = filter,
+      forceVersions0 = forceVersions,
+      forceProperties = forceProperties,
+      osInfo = Activation.Os.empty
+    )
     ResolutionProcess(res)
       .run0(Platform.fetch(repositories))
       .future()
@@ -75,7 +77,7 @@ object ResolutionTests extends TestSuite {
       "2.4.1",
       Seq(
         Variant.emptyConfiguration -> dep"acme:play:2.4.1"
-          .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"config"))))
+          .copy(minimizedExclusions = MinimizedExclusions(Set((org"acme", name"config"))))
       )
     ),
     Project(
@@ -83,7 +85,7 @@ object ResolutionTests extends TestSuite {
       "2.4.1",
       Seq(
         Variant.emptyConfiguration -> dep"acme:play:2.4.1"
-          .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"config"))))
+          .copy(minimizedExclusions = MinimizedExclusions(Set((org"*", name"config"))))
       )
     ),
     Project(
@@ -107,7 +109,7 @@ object ResolutionTests extends TestSuite {
       "18.0",
       dependencyManagement = Seq(
         Variant.Configuration(Configuration.empty) -> dep"acme:play:2.4.0"
-          .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"play-json"))))
+          .copy(minimizedExclusions = MinimizedExclusions(Set((org"acme", name"play-json"))))
       )
     ),
     Project(
@@ -166,7 +168,7 @@ object ResolutionTests extends TestSuite {
       "2.1",
       dependencies = Seq(
         Variant.emptyConfiguration -> dep"gov.nsa:secure-pgp:10.0"
-          .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"$${crypto.name}"))))
+          .copy(minimizedExclusions = MinimizedExclusions(Set((org"*", name"$${crypto.name}"))))
       ),
       properties = Seq("crypto.name" -> "crypto", "dummy" -> "2")
     ),
@@ -347,9 +349,10 @@ object ResolutionTests extends TestSuite {
       mod"an-org:an-app",
       "1.0",
       Seq(
-        Variant.emptyConfiguration -> dep"an-org:a-lib:1.0"
-          .withMinimizedExclusions(MinimizedExclusions(Set((org"an-org", name"a-name")))),
-        Variant.emptyConfiguration -> dep"an-org:another-lib:1.0".withOptional(true)
+        Variant.emptyConfiguration -> dep"an-org:a-lib:1.0".copy(
+          minimizedExclusions = MinimizedExclusions(Set((org"an-org", name"a-name")))
+        ),
+        Variant.emptyConfiguration -> dep"an-org:another-lib:1.0".copy(optional = true)
       )
     ),
     Project(
@@ -412,7 +415,7 @@ object ResolutionTests extends TestSuite {
     .map { p =>
       (
         (p.module, VersionConstraint.fromVersion(p.version0)),
-        p.withConfigurations(MavenRepository.defaultConfigurations)
+        p.copy(configurations = MavenRepository.defaultConfigurations)
       )
     }
     .toMap
@@ -440,9 +443,9 @@ object ResolutionTests extends TestSuite {
         ))
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope))
-          .withErrorCache(Map(dep.moduleVersionConstraint -> Seq("Not found")))
+          .copy(errorCache = Map(dep.moduleVersionConstraint -> Seq("Not found")))
 
         assert(res == expected)
       }
@@ -481,14 +484,16 @@ object ResolutionTests extends TestSuite {
         )).clearFinalDependenciesCache.clearProjectProperties
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope))
-          .withProjectCache0(Map(
-            dep.moduleVersionConstraint -> (
-              testRepository,
-              projectsMap(dep.moduleVersionConstraint)
+          .copy(
+            projectCache0 = Map(
+              dep.moduleVersionConstraint -> (
+                testRepository,
+                projectsMap(dep.moduleVersionConstraint)
+              )
             )
-          ))
+          )
 
         assert(res == expected)
       }
@@ -502,10 +507,10 @@ object ResolutionTests extends TestSuite {
         )).clearFinalDependenciesCache.clearProjectProperties
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope, trDep.withDefaultScope))
-          .withProjectCache0(
-            Map(
+          .copy(
+            projectCache0 = Map(
               projectsMap(dep.moduleVersionConstraint).kv,
               projectsMap(trDep.moduleVersionConstraint).kv
             )
@@ -526,7 +531,7 @@ object ResolutionTests extends TestSuite {
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
@@ -537,16 +542,16 @@ object ResolutionTests extends TestSuite {
         val dep = dep"acme:play-extra-no-config:2.4.1"
         val trDeps = Seq(
           dep"acme:play:2.4.1"
-            .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"config")))),
+            .copy(minimizedExclusions = MinimizedExclusions(Set((org"acme", name"config")))),
           dep"acme:play-json:2.4.0"
-            .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"config"))))
+            .copy(minimizedExclusions = MinimizedExclusions(Set((org"acme", name"config"))))
         )
         val res = await(resolve0(
           Seq(dep)
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
@@ -557,16 +562,16 @@ object ResolutionTests extends TestSuite {
         val dep = dep"acme:play-extra-no-config-no:2.4.1"
         val trDeps = Seq(
           dep"acme:play:2.4.1"
-            .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"config")))),
+            .copy(minimizedExclusions = MinimizedExclusions(Set((org"*", name"config")))),
           dep"acme:play-json:2.4.0"
-            .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"config"))))
+            .copy(minimizedExclusions = MinimizedExclusions(Set((org"*", name"config"))))
         )
         val res = await(resolve0(
           Seq(dep)
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
@@ -580,7 +585,7 @@ object ResolutionTests extends TestSuite {
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope))
 
         assert(res == expected)
@@ -591,14 +596,14 @@ object ResolutionTests extends TestSuite {
         val dep = dep"se.ikea:billy:18.0"
         val trDeps = Seq(
           dep"acme:play:2.4.0"
-            .withMinimizedExclusions(MinimizedExclusions(Set((org"acme", name"play-json"))))
+            .copy(minimizedExclusions = MinimizedExclusions(Set((org"acme", name"play-json"))))
         )
         val res = await(resolve0(
           Seq(dep)
         )).clearCaches.clearDependencyOverrides
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
@@ -616,7 +621,7 @@ object ResolutionTests extends TestSuite {
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
@@ -634,7 +639,7 @@ object ResolutionTests extends TestSuite {
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(
             Set(dep.withDefaultScope, dep"acme:config:1.3.0".withDefaultScope)
           )
@@ -647,14 +652,14 @@ object ResolutionTests extends TestSuite {
         val dep = dep"com.mailapp:mail-client:2.1"
         val trDeps = Seq(
           dep"gov.nsa:secure-pgp:10.0"
-            .withMinimizedExclusions(MinimizedExclusions(Set((org"*", name"crypto"))))
+            .copy(minimizedExclusions = MinimizedExclusions(Set((org"*", name"crypto"))))
         )
         val res = await(resolve0(
           Seq(dep)
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
@@ -668,7 +673,7 @@ object ResolutionTests extends TestSuite {
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope))
 
         assert(res == expected)
@@ -685,7 +690,7 @@ object ResolutionTests extends TestSuite {
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
@@ -703,7 +708,7 @@ object ResolutionTests extends TestSuite {
           )).clearCaches
 
           val expected = Resolution()
-            .withRootDependencies(Seq(dep))
+            .copy(rootDependencies = Seq(dep))
             .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
           assert(res == expected)
@@ -728,7 +733,7 @@ object ResolutionTests extends TestSuite {
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope))
 
         assert(res == expected)
@@ -746,7 +751,7 @@ object ResolutionTests extends TestSuite {
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
@@ -757,10 +762,11 @@ object ResolutionTests extends TestSuite {
       async {
         val dep = dep"an-org:an-app:1.0"
         val trDeps = Seq(
-          dep"an-org:a-lib:1.0"
-            .withMinimizedExclusions(MinimizedExclusions(Set((org"an-org", name"a-name")))),
-          dep"an-org:another-lib:1.0".withOptional(true),
-          dep"an-org:a-name:1.0".withOptional(true)
+          dep"an-org:a-lib:1.0".copy(
+            minimizedExclusions = MinimizedExclusions(Set((org"an-org", name"a-name")))
+          ),
+          dep"an-org:another-lib:1.0".copy(optional = true),
+          dep"an-org:a-name:1.0".copy(optional = true)
         )
         val res = await(resolve0(
           Seq(dep),
@@ -768,7 +774,7 @@ object ResolutionTests extends TestSuite {
         )).clearCaches.clearFilter
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
@@ -779,13 +785,14 @@ object ResolutionTests extends TestSuite {
       async {
         val deps = Seq(
           dep"an-org:an-app:1.0",
-          dep"an-org:a-lib:1.0".withOptional(true)
+          dep"an-org:a-lib:1.0".copy(optional = true)
         )
         val trDeps = Seq(
-          dep"an-org:a-lib:1.0"
-            .withMinimizedExclusions(MinimizedExclusions(Set((org"an-org", name"a-name")))),
-          dep"an-org:another-lib:1.0".withOptional(true),
-          dep"an-org:a-name:1.0".withOptional(true)
+          dep"an-org:a-lib:1.0".copy(
+            minimizedExclusions = MinimizedExclusions(Set((org"an-org", name"a-name")))
+          ),
+          dep"an-org:another-lib:1.0".copy(optional = true),
+          dep"an-org:a-name:1.0".copy(optional = true)
         )
         val res = await(resolve0(
           deps,
@@ -793,7 +800,7 @@ object ResolutionTests extends TestSuite {
         )).clearCaches.clearFilter
 
         val expected = Resolution()
-          .withRootDependencies(deps)
+          .copy(rootDependencies = deps)
           .withDependencies((deps ++ trDeps).map(_.withDefaultScope).toSet)
 
         assert(res == expected)
@@ -816,13 +823,13 @@ object ResolutionTests extends TestSuite {
           )).clearCaches
 
           val expected = Resolution()
-            .withRootDependencies(deps)
+            .copy(rootDependencies = deps)
             .withDependencies(
               Set(
                 dep"an-org:a-name:1.0"
               ).map(_.withDefaultScope)
             )
-            .withForceVersions0(depOverrides)
+            .copy(forceVersions0 = depOverrides)
 
           assert(res == expected)
         }
@@ -842,7 +849,7 @@ object ResolutionTests extends TestSuite {
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(deps)
+          .copy(rootDependencies = deps)
           .withDependencies(
             Set(
               dep"an-org:an-app:1.1",
@@ -850,7 +857,7 @@ object ResolutionTests extends TestSuite {
               dep"an-org:a-name:1.0"
             ).map(_.withDefaultScope)
           )
-          .withForceVersions0(depOverrides)
+          .copy(forceVersions0 = depOverrides)
 
         assert(res == expected)
       }
@@ -869,7 +876,7 @@ object ResolutionTests extends TestSuite {
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(deps)
+          .copy(rootDependencies = deps)
           .withDependencies(
             Set(
               dep"an-org:an-app:1.1",
@@ -877,7 +884,7 @@ object ResolutionTests extends TestSuite {
               dep"an-org:a-name:1.0"
             ).map(_.withDefaultScope)
           )
-          .withForceVersions0(depOverrides)
+          .copy(forceVersions0 = depOverrides)
 
         assert(res == expected)
       }
@@ -897,14 +904,14 @@ object ResolutionTests extends TestSuite {
           )).clearCaches
 
           val expected = Resolution()
-            .withRootDependencies(deps)
+            .copy(rootDependencies = deps)
             .withDependencies(
               Set(
                 dep"an-org:an-app:1.2",
                 dep"an-org:a-lib:1.1"
               ).map(_.withDefaultScope)
             )
-            .withForceVersions0(depOverrides)
+            .copy(forceVersions0 = depOverrides)
 
           assert(res == expected)
         }
@@ -979,13 +986,13 @@ object ResolutionTests extends TestSuite {
         ).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(deps)
+          .copy(rootDependencies = deps)
           .withDependencies(
             Set(
               dep"com.github.dummy:libb:0.5.4"
             ).map(_.withDefaultScope)
           )
-          .withForceProperties(forceProperties)
+          .copy(forceProperties = forceProperties)
 
         assert(res == expected)
       }
@@ -1004,7 +1011,7 @@ object ResolutionTests extends TestSuite {
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
@@ -1022,7 +1029,7 @@ object ResolutionTests extends TestSuite {
         )).clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)

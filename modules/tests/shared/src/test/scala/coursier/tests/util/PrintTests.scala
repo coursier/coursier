@@ -16,6 +16,7 @@ import coursier.util.StringInterpolators._
 import coursier.version.{ConstraintReconciliation, VersionConstraint}
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -35,7 +36,7 @@ object PrintTests extends TestSuite {
   val tests = Tests {
     test("ignoreAttributes") {
       val dep = dep"org:name:0.1"
-        .withVariantSelector(VariantSelector.ConfigurationBased(Configuration("foo")))
+        .copy(variantSelector = VariantSelector.ConfigurationBased(Configuration("foo")))
       val deps = Seq(
         dep,
         dep.withAttributes(Attributes(Type("fooz"), Classifier.empty))

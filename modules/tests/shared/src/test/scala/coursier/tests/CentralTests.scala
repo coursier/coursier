@@ -2,6 +2,7 @@ package coursier.tests
 
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 import coursier.Repositories
 import coursier.core.{
@@ -42,7 +43,7 @@ abstract class CentralTests extends TestSuite {
         val res = await(runner.resolve(Seq(dep))).clearCaches.clearDependencyOverrides
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(
             Set(
               dep.withDefaultScope,
@@ -61,7 +62,7 @@ abstract class CentralTests extends TestSuite {
         val res = await(runner.resolve(Seq(dep))).clearCaches.clearDependencyOverrides
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(
             Set(
               dep.withDefaultScope,
@@ -81,7 +82,7 @@ abstract class CentralTests extends TestSuite {
         val res  = res0.clearCaches
 
         val expected = Resolution()
-          .withRootDependencies(Seq(dep))
+          .copy(rootDependencies = Seq(dep))
           .withDependencies(Set(dep.withDefaultScope))
 
         assert(res == expected)
@@ -274,9 +275,9 @@ abstract class CentralTests extends TestSuite {
 
       def intransitiveCompiler(config: Configuration) =
         dep"org.scala-lang:scala-compiler:2.11.8"
-          .withVariantSelector(VariantSelector.ConfigurationBased(config))
+          .copy(variantSelector = VariantSelector.ConfigurationBased(config))
           .withAttributes(Attributes(Type.jar, Classifier.empty))
-          .withTransitive(false)
+          .copy(transitive = false)
 
       runner.withArtifacts(
         Seq(

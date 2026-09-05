@@ -6,7 +6,7 @@ import dataclass.data
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@data class AlwaysDownload(
+@data case class AlwaysDownload(
   logger: CacheLogger = CacheLogger.nop
 ) extends Cache[Task] {
 

@@ -5,6 +5,7 @@ import coursier.util.StringInterpolators._
 import coursier.version.Version
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 
 object VersionsTests extends TestSuite {
@@ -12,7 +13,7 @@ object VersionsTests extends TestSuite {
   import TestHelpers.{ec, cache}
 
   private val versions = Versions()
-    .withCache(cache)
+    .copy(cache = cache)
 
   val tests = Tests {
     test("simple") {

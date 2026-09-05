@@ -18,11 +18,11 @@ object Typelevel {
 
   def swap(module: Module): Module =
     if (module.organization == mainLineOrg && modules(module.name) && module.attributes.isEmpty)
-      module.withOrganization(typelevelOrg)
+      module.copy(organization = typelevelOrg)
     else
       module
 
   val swap: Dependency => Dependency =
-    dependency => dependency.withModule(swap(dependency.module))
+    dependency => dependency.copy(module = swap(dependency.module))
 
 }

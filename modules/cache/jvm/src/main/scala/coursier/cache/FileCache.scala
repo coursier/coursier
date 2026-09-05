@@ -17,12 +17,12 @@ import java.util.Locale
 import java.util.concurrent.ExecutorService
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
-import coursier.cache.internal.{Downloader, DownloadResult, FileUtil, Retry}
+import coursier.cache.internal.{Downloader, DownloadResult, FileCacheHelpers, FileUtil, Retry}
 import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
 import coursier.util.Monad.ops._
-import dataclass.data
+import dataclass.{data, since => unroll}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -30,7 +30,7 @@ import scala.util.Properties
 import scala.util.control.NonFatal
 
 // format: off
-@data class FileCache[F[_]](
+@data case class FileCache[F[_]](
   location: File,
   cachePolicies: Seq[CachePolicy] = CacheDefaults.cachePolicies,
   checksums: Seq[Option[String]] = CacheDefaults.checksums,
@@ -48,22 +48,22 @@ import scala.util.control.NonFatal
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   retry: Int = CacheDefaults.retryCount,
   bufferSize: Int = CacheDefaults.bufferSize,
-  @since("2.0.16")
+  @unroll
     classLoaders: Seq[ClassLoader] = Nil,
-  @since("2.1.0-RC3")
+  @unroll
     clock: Clock = Clock.systemDefaultZone(),
-  @since("2.1.11")
+  @unroll
     retryBackoffInitialDelay: FiniteDuration = CacheDefaults.retryBackoffInitialDelay,
-  @since("2.1.11")
+  @unroll
     retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier,
-  @since("2.1.25")
+  @unroll
     retryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.retryBackoffMaxDelay,
     retryPollMaxDelay: Option[FiniteDuration] = CacheDefaults.retryPollMaxDelay,
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
     readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout
 )(implicit
-  sync: Sync[F]
-) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext with Cache.WithLogger[F, FileCache[F]] with Cache.Default[F] {
+  val sync: Sync[F]
+) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext with Cache.WithLogger[F, FileCache[F]] with Cache.Default[F] with FileCacheHelpers[F] {
   // format: on
 
   private def S = sync
@@ -91,21 +91,21 @@ import scala.util.control.NonFatal
     S.delay(allCredentials0)
 
   def withLocation(location: String): FileCache[F] =
-    withLocation(new File(location))
+    copy(location = new File(location))
   def noCredentials: FileCache[F] =
-    withCredentials(Nil)
+    copy(credentials = Nil)
   def addCredentials(credentials: Credentials*): FileCache[F] =
-    withCredentials(this.credentials ++ credentials)
+    copy(credentials = this.credentials ++ credentials)
   def addFileCredentials(credentialFile: File): FileCache[F] =
-    withCredentials(this.credentials :+ FileCredentials(credentialFile.getAbsolutePath))
+    copy(credentials = this.credentials :+ FileCredentials(credentialFile.getAbsolutePath))
   def withTtl(ttl: Duration): FileCache[F] =
-    withTtl(Some(ttl))
+    copy(ttl = Some(ttl))
   def withSslSocketFactory(sslSocketFactory: SSLSocketFactory): FileCache[F] =
-    withSslSocketFactoryOpt(Some(sslSocketFactory))
+    copy(sslSocketFactoryOpt = Some(sslSocketFactory))
   def withHostnameVerifier(hostnameVerifier: HostnameVerifier): FileCache[F] =
-    withHostnameVerifierOpt(Some(hostnameVerifier))
+    copy(hostnameVerifierOpt = Some(hostnameVerifier))
   def withMaxRedirections(max: Int): FileCache[F] =
-    withMaxRedirections(Some(max))
+    copy(maxRedirections = Some(max))
 
   def localFile(url: String, user: Option[String] = None): File =
     FileCache.localFile0(url, location, user, localArtifactsShouldBeCached)
@@ -209,7 +209,7 @@ import scala.util.control.NonFatal
         val authOpt = allCredentials
           .find(_.autoMatches(artifact.url, None))
           .map(_.authentication)
-        artifact.withAuthentication(authOpt)
+        artifact.copy(authentication = authOpt)
       }
       else
         artifact
@@ -236,7 +236,7 @@ import scala.util.control.NonFatal
         val authOpt = allCredentials
           .find(_.autoMatches(artifact.url, None))
           .map(_.authentication)
-        artifact.withAuthentication(authOpt)
+        artifact.copy(authentication = authOpt)
       }
       else
         artifact
@@ -350,7 +350,7 @@ import scala.util.control.NonFatal
 
     val (artifact0, links) =
       if (artifact.url.endsWith("/.links"))
-        (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
+        (artifact.copy(url = artifact.url.stripSuffix(".links")), true)
       else (artifact, false)
 
     filePerPolicy(artifact0, policy).leftMap(_.describe).flatMap { f =>
@@ -472,7 +472,7 @@ import scala.util.control.NonFatal
 
 }
 
-object FileCache {
+object FileCache extends FileCachePlatformCompanion {
 
   private[coursier] def localFile0(
     url: String,
@@ -500,7 +500,8 @@ object FileCache {
     new File(file.getParentFile, s"${auxiliaryFilePrefix(file)}$key0")
   }
 
-  def apply[F[_]]()(implicit S: Sync[F] = Task.sync): FileCache[F] =
+  // See FileCachePlatformCompanion for the `apply` counterparts of this
+  def create[F[_]]()(implicit S: Sync[F] = Task.sync): FileCache[F] =
     FileCache(CacheDefaults.location)(S)
 
   /* Store computed cache in a file so we don't have to recompute them over and over. */

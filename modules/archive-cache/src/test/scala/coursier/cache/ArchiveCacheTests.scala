@@ -15,7 +15,7 @@ abstract class ArchiveCacheTests extends TestSuite {
 
   def sandboxedCache = coursier.cache.FileCache[Task]((os.pwd / "test-cache").toIO)
   def archiveCache(location: os.Path): ArchiveCache[Task] =
-    ArchiveCache[Task](location.toIO)
+    ArchiveCache.create[Task](location.toIO)
   // Uncomment this to re-download everything in a test run
   // .withCache(sandboxedCache)
 
@@ -133,7 +133,7 @@ abstract class ArchiveCacheTests extends TestSuite {
         Artifact(
           s"https://registry-1.docker.io/v2/$repoName/blobs/sha256:c9c5fd25a1bdc181cb012bc4fbb1ab272a975728f54064b7ae3ee8e77fd28c46"
         )
-          .withAuthentication(Some(auth)),
+          .copy(authentication = Some(auth)),
         os.sub / "hello"
       )
     }
@@ -174,7 +174,7 @@ abstract class ArchiveCacheTests extends TestSuite {
 
         def check(useShortBase: Boolean): Unit = {
           val archiveCache0 = archiveCache(defaultDir)
-            .withShortPathDirectory(if (useShortBase) Some(shortBase.toIO) else None)
+            .copy(shortPathDirectory = if (useShortBase) Some(shortBase.toIO) else None)
 
           val future = archiveCache0
             .get(archive)
@@ -213,8 +213,8 @@ abstract class ArchiveCacheTests extends TestSuite {
       truncate: Boolean
     ): Unit =
       withTmpDir { dir =>
-        val cache         = defaultCache().withLocation((dir / "cache").toIO)
-        val archiveCache0 = archiveCache(dir / "arc").withCache(cache)
+        val cache         = defaultCache().copy(location = (dir / "cache").toIO)
+        val archiveCache0 = archiveCache(dir / "arc").copy(cache = cache)
 
         val localArchivePath = cache.file(artifact).run.unsafeRun()(cache.ec) match {
           case Left(err) =>

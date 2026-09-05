@@ -1,16 +1,16 @@
 package coursier.jvm
 
+import dataclass.{data, since => unroll}
+
 import java.io.File
 
 import coursier.cache.{ArchiveCache, CacheLogger}
 import coursier.core.Repository
 import coursier.util.{Artifact, Task}
-import dataclass.data
-
 import scala.concurrent.duration.Duration
 
 // format: off
-@data class JvmCache(
+@data case class JvmCache(
   os: String = JvmChannel.defaultOs(),
   architecture: String = JvmChannel.defaultArchitecture(),
   defaultJdkNameOpt: Option[String] = Some(""), // empty value means use the default one for the passed os and architecure
@@ -20,7 +20,7 @@ import scala.concurrent.duration.Duration
 
   handleLoggerLifecycle: Boolean = true,
 
-  @since("2.0.17")
+  @unroll
   archiveCache: ArchiveCache[Task] = ArchiveCache()
 ) {
   // format: on
@@ -45,7 +45,7 @@ import scala.concurrent.duration.Duration
       }
 
   def getIfInstalled(entry: JvmIndexEntry): Task[Option[File]] = {
-    val artifact = Artifact(entry.url).withChanging(entry.version.endsWith("SNAPSHOT"))
+    val artifact = Artifact(entry.url).copy(changing = entry.version.endsWith("SNAPSHOT"))
     getIfInstalled(artifact)
   }
 
@@ -60,7 +60,7 @@ import scala.concurrent.duration.Duration
     entry: JvmIndexEntry,
     logger: Option[JvmCacheLogger]
   ): Task[File] = {
-    val artifact = Artifact(entry.url).withChanging(entry.version.endsWith("SNAPSHOT"))
+    val artifact = Artifact(entry.url).copy(changing = entry.version.endsWith("SNAPSHOT"))
     get(artifact, logger)
   }
 
@@ -114,7 +114,7 @@ import scala.concurrent.duration.Duration
       }
 
   def withIndex(index: Task[JvmIndex]): JvmCache =
-    withIndex(Some(index))
+    copy(index = Some(index))
 
   def withIndex(indexUrl: String): JvmCache = {
     val indexTask = archiveCache.cache

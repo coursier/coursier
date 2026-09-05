@@ -3,8 +3,9 @@ package coursier.tests
 import coursier.cache.Cache
 import coursier.core.{Organization, Module, ModuleName}
 import coursier.Versions
-import utest.{TestSuite, Tests, assert, test}
+import utest.{TestSuite, Tests, test}
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 import scala.concurrent.ExecutionContextExecutorService
 

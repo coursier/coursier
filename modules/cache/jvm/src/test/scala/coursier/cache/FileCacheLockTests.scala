@@ -42,12 +42,13 @@ object FileCacheLockTests extends TestSuite {
   }
 
   private def testCache(cacheDir: os.Path): FileCache[Task] =
-    FileCache[Task](cacheDir.toIO)
-      .withChecksums(Nil)
-      .withCachePolicies(Seq(CachePolicy.FetchMissing))
+    FileCache[Task](cacheDir.toIO).copy(
+      checksums = Nil,
+      cachePolicies = Seq(CachePolicy.FetchMissing),
       // a pool of our own, so that the number of threads available doesn't depend on what else
       // runs in this JVM
-      .withPool(Sync.fixedThreadPool(8))
+      pool = Sync.fixedThreadPool(8)
+    )
 
   private def daemonThread(name: String)(f: => Unit): Thread = {
     val t = new Thread(name) {

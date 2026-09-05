@@ -106,13 +106,15 @@ object ShadingTests extends TestSuite {
       try
         withTempFile("shading-assembly-") { output =>
           val params = Parameters.Assembly()
-            .withFiles(Seq(input.toFile))
             .withMainClass("shaded.shadingtest.app.Hello")
-            .withPreambleOpt(None)
-            .withShadingRules(Seq(
-              ShadingRule.rename("shadingtest.lib", "shaded.shadingtest.lib"),
-              ShadingRule.rename("shadingtest.app", "shaded.shadingtest.app")
-            ))
+            .copy(
+              files = Seq(input.toFile),
+              preambleOpt = None,
+              shadingRules = Seq(
+                ShadingRule.rename("shadingtest.lib", "shaded.shadingtest.lib"),
+                ShadingRule.rename("shadingtest.app", "shaded.shadingtest.app")
+              )
+            )
 
           Generator.generate(params, output)
 

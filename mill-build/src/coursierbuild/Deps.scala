@@ -13,11 +13,13 @@ object Deps {
     def collectionCompat = mvn"org.scala-lang.modules::scala-collection-compat::2.14.0"
     def concurrentReferenceHashMap =
       mvn"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
-    def dataClass         = mvn"io.github.alexarchambault::data-class:0.2.8"
-    def dependency        = mvn"io.get-coursier::dependency::0.3.2"
-    def directories       = mvn"io.get-coursier.util:directories-jni:0.1.4"
-    def diffUtils         = mvn"io.github.java-diff-utils:java-diff-utils:4.17"
-    def dockerClient      = mvn"com.spotify:docker-client:8.16.0"
+    def dataClass    = mvn"io.github.alexarchambault::data-class:0.2.9-SNAPSHOT"
+    def dependency   = mvn"io.get-coursier::dependency::0.3.2"
+    def directories  = mvn"io.get-coursier.util:directories-jni:0.1.4"
+    def diffUtils    = mvn"io.github.java-diff-utils:java-diff-utils:4.17"
+    def dockerClient = mvn"com.spotify:docker-client:8.16.0"
+    // Backs `shimScalaAsync` below; used directly by the `async-compat` module, for Scala.js
+    def dottyCpsAsync     = mvn"io.github.dotty-cps-async::dotty-cps-async::1.3.4"
     def fastParse         = mvn"com.lihaoyi::fastparse::3.1.1"
     def http4sBlazeServer = mvn"org.http4s::http4s-blaze-server:0.23.18"
     def http4sDsl         = mvn"org.http4s::http4s-dsl:${Versions.http4s}"
@@ -59,6 +61,9 @@ object Deps {
       else
         mvn"org.virtuslab.scala-cli:config_3:1.16.0"
           .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
+    def scalaCompiler(sv: String) =
+      if (sv.startsWith("3.")) mvn"org.scala-lang::scala3-compiler:$sv"
+      else mvn"org.scala-lang:scala-compiler:$sv"
     def scalaJsDom               = mvn"org.scala-js::scalajs-dom::2.4.0"
     def scalaJsReact             = mvn"com.github.japgolly.scalajs-react::core::2.1.4"
     def scalaNativeTools040      = mvn"org.scala-native::tools:0.4.17"
@@ -67,6 +72,9 @@ object Deps {
     def scalazCore               = mvn"org.scalaz::scalaz-core::${Versions.scalaz}"
     def scalazConcurrent         = mvn"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
     def scodec                   = mvn"org.scodec::scodec-core:2.3.3"
+    // Exposes dotty-cps-async's SIP-22 compatible interface as `scala.async.Async`, so that the
+    // test sources' `import scala.async.Async.{async, await}` also works on Scala 3
+    def shimScalaAsync = mvn"io.github.dotty-cps-async::shim-scala-async:1.3.3"
     // stick to slf4j 1.x here, so that the interface module can be used from
     // applications relying on either slf4j 1.x or 2.x. slf4j-api is the only
     // unshaded dependency of the published interface module, so the version
@@ -78,15 +86,27 @@ object Deps {
     def svm      = mvn"org.graalvm.nativeimage:svm:21.3.18"
     // stick to the 2.x line: tika 3.x is compiled for Java 11, and we still support Java 8.
     // Pinned in .scala-steward.conf too, so that it doesn't get bumped back to 3.x.
-    def tika        = mvn"org.apache.tika:tika-core:2.9.4"
-    def undertow    = mvn"io.undertow:undertow-core:2.4.3.Final"
-    def ujson       = mvn"com.lihaoyi::ujson:4.4.3"
-    def utest       = mvn"com.lihaoyi::utest::0.9.5"
-    def versions    = mvn"io.get-coursier::versions::0.5.3"
-    def windowsAnsi = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
+    def tika             = mvn"org.apache.tika:tika-core:2.9.4"
+    def undertow         = mvn"io.undertow:undertow-core:2.4.3.Final"
+    def ujson            = mvn"com.lihaoyi::ujson:4.4.3"
+    def unrollAnnotation = mvn"com.lihaoyi::unroll-annotation:0.3.0"
+    def utest            = mvn"com.lihaoyi::utest::0.9.5"
+    def versions         = mvn"io.get-coursier::versions::0.5.4-SNAPSHOT"
+    def windowsAnsi      = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
     def windowsAnsiPs =
       mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
     def zstdJni = mvn"com.github.luben:zstd-jni:1.5.7-16"
+
+    /** The async/await implementation the test sources are written against.
+      *
+      * scala-async is a Scala 2-only macro library. On Scala 3, [[shimScalaAsync]] provides the
+      * same `scala.async.Async` object, backed by dotty-cps-async. That shim is only published for
+      * the JVM, so the Scala.js Scala 3 cross values get the same alias from the `async-compat`
+      * module of the build instead (hence `Nil` here).
+      */
+    def asyncMvnDeps(scalaVersion: String) =
+      if (!scalaVersion.startsWith("3.")) Seq(scalaAsync)
+      else Seq(shimScalaAsync)
   }
 
   object Versions {
@@ -109,12 +129,15 @@ object Deps {
   def csQemuVersion = "9.2.1-1"
 
   object ScalaVersions {
-    def scala3   = "3.7.4"
+    // Also the version building the data-class modules, with the vendored unroll compiler plugin
+    // (see modules/unroll/) standing in for data-class there.
+    def scala3   = "3.8.2"
     def scala213 = "2.13.18"
     def scala212 = "2.12.20"
     // TODO SCALA_213_BASELINE search for this TODO in the codebase
     // for cleanup tasks when we move to Scala 2.13 as as the baseline
-    val all = Seq(scala213, scala212)
+    val allScala2 = Seq(scala213, scala212)
+    val all       = allScala2 :+ scala3
 
     def scalaJs = "1.22.0"
   }

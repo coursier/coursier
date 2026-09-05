@@ -23,7 +23,7 @@ sealed abstract class JvmChannel extends Product with Serializable {
 
 object JvmChannel {
 
-  @data class FromModule(
+  @data case class FromModule(
     module: Module,
     versionConstraint: VersionConstraint = VersionConstraint("latest.release")
   ) extends JvmChannel {
@@ -44,7 +44,7 @@ object JvmChannel {
     @deprecated("Use withVersionConstraint instead", "2.1.25")
     def withVersion(newVersion: String): FromModule =
       if (newVersion == versionConstraint.asString) this
-      else withVersionConstraint(VersionConstraint(newVersion))
+      else copy(versionConstraint = VersionConstraint(newVersion))
   }
 
   object FromModule {
@@ -58,12 +58,12 @@ object JvmChannel {
     )
   }
 
-  @data class FromUrl(url: String) extends JvmChannel {
+  @data case class FromUrl(url: String) extends JvmChannel {
     def repr: String =
       url
   }
 
-  @data class FromFile(path: Path) extends JvmChannel {
+  @data case class FromFile(path: Path) extends JvmChannel {
     def repr: String =
       path.toString
   }

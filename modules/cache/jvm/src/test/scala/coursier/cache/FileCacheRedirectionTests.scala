@@ -11,6 +11,7 @@ import cats.effect.IO
 import coursier.cache.TestUtil._
 import coursier.credentials.{Credentials, DirectCredentials}
 import coursier.paths.Util
+import coursier.tests.AssertCompat.assert
 import coursier.util.{Artifact, Sync, Task}
 import org.http4s.dsl.io._
 import org.http4s.headers.{Authorization, Location}
@@ -79,7 +80,7 @@ object FileCacheRedirectionTests extends TestSuite {
   ): Unit =
     withTmpDir0 { dir =>
       val c = fileCache0()
-        .withLocation(dir.toFile)
+        .copy(location = dir.toFile)
       val res         = transform(c).fetch(artifact).run.unsafeRun(wrapExceptions = true)
       val expectedRes = Right(content)
       assert(res == expectedRes)
@@ -105,7 +106,7 @@ object FileCacheRedirectionTests extends TestSuite {
   ): Unit =
     withTmpDir0 { dir =>
       val c = fileCache0()
-        .withLocation(dir.toFile)
+        .copy(location = dir.toFile)
       val res = transform(c).fetch(artifact).run.unsafeRun(wrapExceptions = true)
       assert(res.isLeft)
       assert(res.left.exists(check))
@@ -208,7 +209,7 @@ object FileCacheRedirectionTests extends TestSuite {
             expect(
               httpBaseUri / "redirect",
               "redirecting",
-              _.withFollowHttpToHttpsRedirections(false)
+              _.copy(followHttpToHttpsRedirections = false)
             )
           }
         }
@@ -253,9 +254,10 @@ object FileCacheRedirectionTests extends TestSuite {
               httpBaseUri / "auth-redirect",
               "hello auth secure",
               _.addCredentials(
-                credentials(httpsBaseUri, userPass)
-                  .withRealm(realm)
-                  .withMatchHost(true)
+                credentials(httpsBaseUri, userPass).copy(
+                  realm = Some(realm),
+                  matchHost = true
+                )
               )
             )
           }
@@ -266,7 +268,7 @@ object FileCacheRedirectionTests extends TestSuite {
             expect(
               httpBaseUri / "auth-redirect",
               "redirecting",
-              _.withFollowHttpToHttpsRedirections(false)
+              _.copy(followHttpToHttpsRedirections = false)
             )
           }
         }
@@ -297,10 +299,11 @@ object FileCacheRedirectionTests extends TestSuite {
               base / "redirect",
               "hello auth",
               _.addCredentials(
-                credentials(base, userPass)
-                  .withRealm(realm)
-                  .withHttpsOnly(false)
-                  .withMatchHost(true)
+                credentials(base, userPass).copy(
+                  realm = Some(realm),
+                  httpsOnly = false,
+                  matchHost = true
+                )
               )
             )
           }
@@ -313,9 +316,11 @@ object FileCacheRedirectionTests extends TestSuite {
               "hello auth",
               _.addCredentials(
                 credentials(base, userPass)
-                  .withHttpsOnly(false)
-                  .withRealm(None)
-                  .withMatchHost(true)
+                  .copy(
+                    httpsOnly = false,
+                    realm = None,
+                    matchHost = true
+                  )
               )
             )
           }
@@ -337,10 +342,11 @@ object FileCacheRedirectionTests extends TestSuite {
                 base / "redirect",
                 _.startsWith("unauthorized: "),
                 _.addCredentials(
-                  credentials(base, userPass)
-                    .withRealm(realm)
-                    .withHttpsOnly(true) // should make things fail
-                    .withMatchHost(true)
+                  credentials(base, userPass).copy(
+                    realm = Some(realm),
+                    httpsOnly = true, // should make things fail
+                    matchHost = true
+                  )
                 )
               )
             }
@@ -371,10 +377,11 @@ object FileCacheRedirectionTests extends TestSuite {
               base / "redirect",
               "hello auth",
               _.addCredentials(
-                credentials(base, userPass)
-                  .withRealm(realm)
-                  .withHttpsOnly(false)
-                  .withMatchHost(true)
+                credentials(base, userPass).copy(
+                  realm = Some(realm),
+                  httpsOnly = false,
+                  matchHost = true
+                )
               )
             )
           }
@@ -386,9 +393,11 @@ object FileCacheRedirectionTests extends TestSuite {
               "hello auth",
               _.addCredentials(
                 credentials(base, userPass)
-                  .withHttpsOnly(false)
-                  .withRealm(None)
-                  .withMatchHost(true)
+                  .copy(
+                    httpsOnly = false,
+                    realm = None,
+                    matchHost = true
+                  )
               )
             )
           }
@@ -399,16 +408,19 @@ object FileCacheRedirectionTests extends TestSuite {
               base / "redirect",
               "hello auth",
               _.addCredentials(
-                credentials(base, userPass)
-                  .withRealm(realm)
-                  .withHttpsOnly(false)
-                  .withMatchHost(true),
+                credentials(base, userPass).copy(
+                  realm = Some(realm),
+                  httpsOnly = false,
+                  matchHost = true
+                ),
                 credentials(
                   base.copy(authority = base.authority.map(a => a.copy(port = a.port.map(_ + 1)))),
                   ("something", "pass123")
                 )
-                  .withRealm("other realm")
-                  .withMatchHost(true)
+                  .copy(
+                    realm = Some("other realm"),
+                    matchHost = true
+                  )
               )
             )
           }
@@ -500,9 +512,10 @@ object FileCacheRedirectionTests extends TestSuite {
               base / "redirect",
               "hello auth",
               _.addCredentials(
-                credentials(base, userPass)
-                  .withRealm(realm)
-                  .withMatchHost(true)
+                credentials(base, userPass).copy(
+                  realm = Some(realm),
+                  matchHost = true
+                )
               )
             )
           }
@@ -514,9 +527,10 @@ object FileCacheRedirectionTests extends TestSuite {
               base / "redirect",
               "hello auth",
               _.addCredentials(
-                credentials(base, userPass)
-                  .withRealm(None)
-                  .withMatchHost(true)
+                credentials(base, userPass).copy(
+                  realm = None,
+                  matchHost = true
+                )
               )
             )
           }
@@ -556,9 +570,10 @@ object FileCacheRedirectionTests extends TestSuite {
               base / "redirect",
               "hello auth",
               _.addCredentials(
-                credentials(base, userPass)
-                  .withRealm(realm)
-                  .withMatchHost(true)
+                credentials(base, userPass).copy(
+                  realm = Some(realm),
+                  matchHost = true
+                )
               )
             )
           }
@@ -571,8 +586,8 @@ object FileCacheRedirectionTests extends TestSuite {
               "hello auth",
               _.addCredentials(
                 credentials(base, userPass)
-                  .withRealm(None)
-                  .withMatchHost(true)
+                  .copy(realm = None)
+                  .copy(matchHost = true)
               )
             )
           }
@@ -633,15 +648,17 @@ object FileCacheRedirectionTests extends TestSuite {
                 "hello",
                 _
                   .addCredentials(
-                    credentials(httpsBaseUri, httpsUserPass)
-                      .withRealm(httpsRealm)
-                      .withMatchHost(true),
-                    credentials(httpBaseUri, httpUserPass)
-                      .withRealm(httpRealm)
-                      .withHttpsOnly(false)
-                      .withMatchHost(true)
+                    credentials(httpsBaseUri, httpsUserPass).copy(
+                      realm = Some(httpsRealm),
+                      matchHost = true
+                    ),
+                    credentials(httpBaseUri, httpUserPass).copy(
+                      realm = Some(httpRealm),
+                      httpsOnly = false,
+                      matchHost = true
+                    )
                   )
-                  .withFollowHttpToHttpsRedirections(true)
+                  .copy(followHttpToHttpsRedirections = true)
               )
             }
           }
@@ -649,19 +666,20 @@ object FileCacheRedirectionTests extends TestSuite {
           test {
             withServers { (httpBaseUri, httpsBaseUri) =>
               val cred = credentials(httpBaseUri, httpUserPass)
-                .withHttpsOnly(false)
+                .copy(httpsOnly = false)
               expect(
                 (httpBaseUri / "redirect")
                   .withUser(cred.usernameOpt),
                 "hello",
                 _
                   .addCredentials(
-                    credentials(httpsBaseUri, httpsUserPass)
-                      .withRealm(httpsRealm)
-                      .withMatchHost(true),
+                    credentials(httpsBaseUri, httpsUserPass).copy(
+                      realm = Some(httpsRealm),
+                      matchHost = true
+                    ),
                     cred
                   )
-                  .withFollowHttpToHttpsRedirections(true)
+                  .copy(followHttpToHttpsRedirections = true)
               )
             }
           }
@@ -673,12 +691,13 @@ object FileCacheRedirectionTests extends TestSuite {
               httpBaseUri / "redirect",
               "hello",
               _.addCredentials(
-                credentials(httpBaseUri, httpUserPass)
-                  .withHttpsOnly(false)
-                  .withRealm(None)
-                  .withMatchHost(true)
+                credentials(httpBaseUri, httpUserPass).copy(
+                  httpsOnly = false,
+                  realm = None,
+                  matchHost = true
+                )
               )
-                .withFollowHttpToHttpsRedirections(true)
+                .copy(followHttpToHttpsRedirections = true)
             )
           }
         }
@@ -690,11 +709,12 @@ object FileCacheRedirectionTests extends TestSuite {
               _.startsWith("unauthorized: "),
               _
                 .addCredentials(
-                  credentials(httpsBaseUri, httpsUserPass)
-                    .withRealm(httpsRealm)
-                    .withMatchHost(true)
+                  credentials(httpsBaseUri, httpsUserPass).copy(
+                    realm = Some(httpsRealm),
+                    matchHost = true
+                  )
                 )
-                .withFollowHttpToHttpsRedirections(true)
+                .copy(followHttpToHttpsRedirections = true)
             )
           }
         }
@@ -757,7 +777,7 @@ object FileCacheRedirectionTests extends TestSuite {
             expect(
               httpBaseUri / "auth-redirect",
               "hello auth secure",
-              _.withFollowHttpToHttpsRedirections(true)
+              _.copy(followHttpToHttpsRedirections = true)
                 .addFileCredentials(credFile)
             )
           }
@@ -834,7 +854,7 @@ object FileCacheRedirectionTests extends TestSuite {
             expect(
               httpBaseUri / "auth-redirect",
               "hello auth secure",
-              _.withFollowHttpToHttpsRedirections(true)
+              _.copy(followHttpToHttpsRedirections = true)
                 .addFileCredentials(credFile)
             )
           }
@@ -855,7 +875,7 @@ object FileCacheRedirectionTests extends TestSuite {
             expect(
               httpBaseUri / "auth-redirect",
               "hello auth secure",
-              _.withFollowHttpToHttpsRedirections(true)
+              _.copy(followHttpToHttpsRedirections = true)
                 .addCredentials(CacheDefaults.credentialsFromConfig(confFile.toPath): _*)
             )
           }
@@ -917,7 +937,7 @@ object FileCacheRedirectionTests extends TestSuite {
             expect(
               base / "redirect" / "10000",
               "hello",
-              _.withMaxRedirections(None)
+              _.copy(maxRedirections = None)
             )
           }
         }
@@ -953,8 +973,8 @@ object FileCacheRedirectionTests extends TestSuite {
         }
 
         def artifact(base: Uri)(f: DirectCredentials => DirectCredentials) =
-          TestUtil.artifact(base / "redirect").withAuthentication(
-            Some(f(credentials(base, userPass)).authentication)
+          TestUtil.artifact(base / "redirect").copy(
+            authentication = Some(f(credentials(base, userPass)).authentication)
           )
 
         // both servers have the same host here, so we're passing an Authentication ourselves via an Artifact
@@ -964,7 +984,7 @@ object FileCacheRedirectionTests extends TestSuite {
             withServers() { (base, _) =>
               expect(
                 artifact(base)(
-                  _.withPassOnRedirect(true)
+                  _.copy(passOnRedirect = true)
                 ),
                 "hello"
               )
@@ -975,10 +995,13 @@ object FileCacheRedirectionTests extends TestSuite {
             withServers(secondServerUseSsl = false) { (base, _) =>
               expect(
                 artifact(base)(
-                  _.withPassOnRedirect(true).withHttpsOnly(false)
+                  _.copy(
+                    passOnRedirect = true,
+                    httpsOnly = false
+                  )
                 ),
                 "hello",
-                _.withFollowHttpsToHttpRedirections(true)
+                _.copy(followHttpsToHttpRedirections = true)
               )
             }
           }
@@ -998,7 +1021,10 @@ object FileCacheRedirectionTests extends TestSuite {
             withServers(secondServerUseSsl = false) { (base, _) =>
               expect(
                 artifact(base)(
-                  _.withPassOnRedirect(true) // shouldn't be passed to http redirection by default
+                  _.copy(
+                    // shouldn't be passed to http redirection by default
+                    passOnRedirect = true
+                  )
                 ),
                 "redirecting"
               )
@@ -1043,9 +1069,10 @@ object FileCacheRedirectionTests extends TestSuite {
             base / "hello",
             _.startsWith("not found: "),
             _.addCredentials(
-              credentials(base, userPass)
-                .withRealm(realm)
-                .withMatchHost(true)
+              credentials(base, userPass).copy(
+                realm = Some(realm),
+                matchHost = true
+              )
             )
           )
         }
@@ -1093,8 +1120,10 @@ object FileCacheRedirectionTests extends TestSuite {
 
             val res = await {
               defaultCache()
-                .withClassLoaders(Seq(classloader))
-                .withLocation(dir.toFile)
+                .copy(
+                  classLoaders = Seq(classloader),
+                  location = dir.toFile
+                )
                 .file(artifact)
                 .run
                 .future()
@@ -1136,7 +1165,7 @@ object FileCacheRedirectionTests extends TestSuite {
         test - async {
           val res = await {
             defaultCache()
-              .withChecksums(Seq(Some("SHA-1")))
+              .copy(checksums = Seq(Some("SHA-1")))
               .file(artifact)
               .run
               .future()
@@ -1148,7 +1177,7 @@ object FileCacheRedirectionTests extends TestSuite {
         test - async {
           val res = await {
             defaultCache()
-              .withChecksums(Seq(Some("SHA-256")))
+              .copy(checksums = Seq(Some("SHA-256")))
               .file(artifact)
               .run
               .future()
@@ -1169,7 +1198,7 @@ object FileCacheRedirectionTests extends TestSuite {
         test - async {
           val res = await {
             defaultCache()
-              .withChecksums(Seq(Some("SHA-512"), Some("SHA-256")))
+              .copy(checksums = Seq(Some("SHA-512"), Some("SHA-256")))
               .file(artifact)
               .run
               .future()
@@ -1225,17 +1254,17 @@ object FileCacheRedirectionTests extends TestSuite {
 
         test("SHA-256") {
           withHttpServer(routes) { root =>
-            expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("SHA-256"))))
+            expect(artifact(root / "foo.txt"), content, _.copy(checksums = Seq(Some("SHA-256"))))
           }
         }
         test("SHA-1") {
           withHttpServer(routes) { root =>
-            expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("SHA-1"))))
+            expect(artifact(root / "foo.txt"), content, _.copy(checksums = Seq(Some("SHA-1"))))
           }
         }
         test("MD5") {
           withHttpServer(routes) { root =>
-            expect(artifact(root / "foo.txt"), content, _.withChecksums(Seq(Some("MD5"))))
+            expect(artifact(root / "foo.txt"), content, _.copy(checksums = Seq(Some("MD5"))))
           }
         }
       }
@@ -1248,11 +1277,13 @@ object FileCacheRedirectionTests extends TestSuite {
         Util.createDirectories(cacheFile.getParent)
         Files.write(cacheFile, Array.emptyByteArray)
         val c = fileCache0()
-          .withLocation(dir.toFile)
-          .withTtl(None)
-          .withCachePolicies(Seq(
-            CachePolicy.LocalUpdateChanging
-          ))
+          .copy(
+            location = dir.toFile,
+            ttl = None,
+            cachePolicies = Seq(
+              CachePolicy.LocalUpdateChanging
+            )
+          )
         val res = c.fetch(artifact(
           Uri.unsafeFromString(url),
           changing = true
@@ -1281,8 +1312,10 @@ object FileCacheRedirectionTests extends TestSuite {
 
         val res =
           defaultCache()
-            .withLocation(dir.toString)
-            .withChecksums(Seq(Some("SHA-1")))
+            .copy(
+              location = dir.toFile,
+              checksums = Seq(Some("SHA-1"))
+            )
             .file(artifact)
             .run
             .unsafeRun(wrapExceptions = true)
@@ -1317,8 +1350,10 @@ object FileCacheRedirectionTests extends TestSuite {
         )
 
         val res = defaultCache()
-          .withLocation(dir.toString)
-          .withChecksums(Seq(Some("MD5")))
+          .copy(
+            location = dir.toFile,
+            checksums = Seq(Some("MD5"))
+          )
           .file(artifact)
           .run
           .unsafeRun(wrapExceptions = true)
@@ -1354,7 +1389,7 @@ object FileCacheRedirectionTests extends TestSuite {
 
         // use default location so our file is considered outside
         val _ = defaultCache()
-          .withChecksums(Seq(Some("MD5")))
+          .copy(checksums = Seq(Some("MD5")))
           .file(artifact)
           .run
           .unsafeRun(wrapExceptions = true)
@@ -1380,8 +1415,10 @@ object FileCacheRedirectionTests extends TestSuite {
           )
 
           defaultCache()
-            .withLocation(dir.toString)
-            .withChecksums(Seq(Some("SHA-1")))
+            .copy(
+              location = dir.toFile,
+              checksums = Seq(Some("SHA-1"))
+            )
             .file(artifact)
             .run
         }
@@ -1404,10 +1441,10 @@ object FileCacheRedirectionTests extends TestSuite {
         val dummyFileUri = dummyFile.toUri.toASCIIString
         assert(dummyFileUri.contains("%20"))
         val artifact = Artifact(dummyFileUri)
-          .withChecksumUrls(Map("SHA-1" -> s"$dummyFileUri.sha1"))
+          .copy(checksumUrls = Map("SHA-1" -> s"$dummyFileUri.sha1"))
 
         val res = defaultCache()
-          .withLocation(dir.toString)
+          .copy(location = dir.toFile)
           .file(artifact)
           .run
           .unsafeRun(wrapExceptions = true)
@@ -1427,10 +1464,10 @@ object FileCacheRedirectionTests extends TestSuite {
           None,
           false
         )
-        assert(
+        Predef.assert(
           localFile.toString.endsWith("https/evil-repo.org/com.fake/../../../../../../lib1.jar")
         )
-        assert(false) // local file is out of cache
+        Predef.assert(false) // local file is out of cache
       }
       ()
     }
