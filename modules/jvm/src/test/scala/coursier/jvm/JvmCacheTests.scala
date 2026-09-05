@@ -107,7 +107,7 @@ object JvmCacheTests extends TestSuite {
   val tests = Tests {
     test("specific version") {
       withTempDir { tmpDir =>
-        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
+        val archiveCache = ArchiveCache.create[Task](tmpDir.toFile).withCache(cache)
         val jvmCache = JvmCache()
           .withArchiveCache(archiveCache)
           .withOs(theOS)
@@ -127,7 +127,7 @@ object JvmCacheTests extends TestSuite {
 
     test("version range") {
       withTempDir { tmpDir =>
-        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
+        val archiveCache = ArchiveCache.create[Task](tmpDir.toFile).withCache(cache)
         val jvmCache = JvmCache()
           .withArchiveCache(archiveCache)
           .withOs(theOS)
@@ -146,7 +146,7 @@ object JvmCacheTests extends TestSuite {
 
     test("Contents/Home directory on macOS") {
       withTempDir { tmpDir =>
-        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
+        val archiveCache = ArchiveCache.create[Task](tmpDir.toFile).withCache(cache)
         val jvmCache = JvmCache()
           .withArchiveCache(archiveCache)
           .withOs("darwin")
@@ -192,7 +192,7 @@ object JvmCacheTests extends TestSuite {
 
     test("no Contents/Home directory on macOS") {
       withTempDir { tmpDir =>
-        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
+        val archiveCache = ArchiveCache.create[Task](tmpDir.toFile).withCache(cache)
         val jvmCache = JvmCache()
           .withArchiveCache(archiveCache)
           .withOs("darwin")
@@ -218,7 +218,7 @@ object JvmCacheTests extends TestSuite {
 
     test("URL id") {
       withTempDir0 { tmpDir =>
-        val archiveCache = ArchiveCache[Task](tmpDir.toIO).withCache(cache)
+        val archiveCache = ArchiveCache.create[Task](tmpDir.toIO).withCache(cache)
         val jvmCache = JvmCache()
           .withArchiveCache(archiveCache)
           .withOs("the-os")

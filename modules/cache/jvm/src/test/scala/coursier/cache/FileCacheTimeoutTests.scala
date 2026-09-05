@@ -25,12 +25,13 @@ import scala.concurrent.duration.{DurationInt, FiniteDuration}
 object FileCacheTimeoutTests extends TestSuite {
 
   private def cacheOf(dir: os.Path): FileCache[Task] =
-    FileCache[Task]((dir / "cache").toIO)
-      .withChecksums(Nil)
-      .withCachePolicies(Seq(CachePolicy.FetchMissing))
+    FileCache[Task]((dir / "cache").toIO).copy(
+      checksums = Nil,
+      cachePolicies = Seq(CachePolicy.FetchMissing),
       // a pool of our own, so that the number of threads available doesn't depend on what else
       // runs in this JVM
-      .withPool(Sync.fixedThreadPool(8))
+      pool = Sync.fixedThreadPool(8)
+    )
 
   private def fetch(cache: FileCache[Task], url: String): Either[ArtifactError, File] =
     cache.file(Artifact(url)).run.unsafeRun(wrapExceptions = true)(cache.ec)
@@ -93,9 +94,10 @@ object FileCacheTimeoutTests extends TestSuite {
 
       RawServer.withServer(RawServer.stallAfterHeaders(bodyLength = 23450)) { server =>
         withTmpDir { dir =>
-          val cache = cacheOf(dir)
-            .withReadTimeout(Some(readTimeout))
-            .withRetry(attempts)
+          val cache = cacheOf(dir).copy(
+            readTimeout = Some(readTimeout),
+            retry = attempts
+          )
 
           // the fetch runs on a thread of its own: without a read timeout it never returns at
           // all, and that should be reported as a failed test rather than a stuck test run
@@ -128,7 +130,7 @@ object FileCacheTimeoutTests extends TestSuite {
 
       RawServer.withServer(RawServer.slowBody(bodyLength = 23450, over = downloadTime)) { server =>
         withTmpDir { dir =>
-          val cache = cacheOf(dir).withRetryBackoffInitialDelay(initialDelay)
+          val cache = cacheOf(dir).copy(retryBackoffInitialDelay = initialDelay)
           val url   = server.url("/dir/foo.jar")
 
           val start = System.currentTimeMillis()

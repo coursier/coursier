@@ -43,7 +43,10 @@ object IvyLocalTests extends TestSuite {
 
           val res = await(runner.resolve(
             Seq(
-              Dependency(mod"io.get-coursier:coursier-cli_2.12", localVersion).withTransitive(false)
+              Dependency(
+                mod"io.get-coursier:coursier-cli_2.12",
+                localVersion
+              ).copy(transitive = false)
             ),
             extraRepos = extraRepos
           ))

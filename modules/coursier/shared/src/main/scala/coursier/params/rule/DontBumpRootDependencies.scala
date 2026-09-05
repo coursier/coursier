@@ -7,7 +7,7 @@ import coursier.util.ModuleMatchers
 import coursier.version.VersionConstraint
 import dataclass.data
 
-@data class DontBumpRootDependencies(matchers: ModuleMatchers) extends Rule {
+@data case class DontBumpRootDependencies(matchers: ModuleMatchers) extends Rule {
 
   import DontBumpRootDependencies._
 
@@ -67,7 +67,7 @@ import dataclass.data
       }
 
     if (cantForce.isEmpty) {
-      val res0 = res.withForceVersions0(res.forceVersions0 ++ modules)
+      val res0 = res.copy(forceVersions0 = res.forceVersions0 ++ modules)
       Right(res0)
     }
     else {

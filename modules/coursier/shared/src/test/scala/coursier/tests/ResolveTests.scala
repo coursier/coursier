@@ -34,11 +34,11 @@ import java.io.File
 
 object ResolveTests extends TestSuite {
 
-  import TestHelpers.{ec, cache, handmadeMetadataBase, validateDependencies, versionOf}
+  import TestHelpers.{cache, handmadeMetadataBase, validateDependencies, versionOf}
 
   private val resolve = Resolve()
     .noMirrors
-    .withCache(cache)
+    .copy(cache = cache)
 
   def doCheck(resolve: Resolve[Task], dependencies: Seq[Dependency]): Future[Unit] =
     async {
@@ -54,13 +54,13 @@ object ResolveTests extends TestSuite {
     doCheck(resolve, dependencies)
 
   def enableModules(resolve: Resolve[Task]): Resolve[Task] =
-    resolve.withRepositories {
-      resolve.repositories.map {
+    resolve.copy(
+      repositories = resolve.repositories.map {
         case m: MavenRepositoryLike.WithModuleSupport =>
           m.withCheckModule(true)
         case other => other
       }
-    }
+    )
   def gradleModuleCheck0(
     resolve0: Resolve[Task] = resolve,
     defaultConfiguration: Option[Configuration] = None,
@@ -72,7 +72,7 @@ object ResolveTests extends TestSuite {
     async {
       var resolve1 = enableModules(resolve0.addRepositories(Repositories.google))
       for (conf <- defaultConfiguration)
-        resolve1 = resolve1.mapResolutionParams(_.withDefaultConfiguration(conf))
+        resolve1 = resolve1.mapResolutionParams(_.copy(defaultConfiguration = conf))
       for (attr <- defaultAttributes)
         resolve1 = resolve1.mapResolutionParams(_.withDefaultVariantAttributes(attr))
       val res = await {
@@ -102,7 +102,7 @@ object ResolveTests extends TestSuite {
       val resolve0 = resolve
         .addDependencies(dependencies: _*)
         .addRepositories(extraRepositories: _*)
-        .mapResolutionParams(_.withDefaultConfiguration(defaultConfiguration))
+        .mapResolutionParams(_.copy(defaultConfiguration = defaultConfiguration))
       val res = await {
         resolve0.future()
       }
@@ -119,6 +119,8 @@ object ResolveTests extends TestSuite {
       }
       await(validateDependencies(res))
     }
+
+  private implicit val ec: ExecutionContext = TestHelpers.ec
 
   val tests = Tests {
 
@@ -181,7 +183,7 @@ object ResolveTests extends TestSuite {
           .mapResolutionParams { params =>
             params
               .withScalaVersion("2.11.8")
-              .withTypelevel(true)
+              .copy(typelevel = true)
           }
 
         val res = await {
@@ -363,11 +365,12 @@ object ResolveTests extends TestSuite {
     test("latest") {
       test("maven") {
 
-        val resolve0 = resolve
-          .withRepositories(Seq(
+        val resolve0 = resolve.copy(
+          repositories = Seq(
             Repositories.sonatype("snapshots"),
             Repositories.central
-          ))
+          )
+        )
 
         test("integration") {
           async {
@@ -464,12 +467,13 @@ object ResolveTests extends TestSuite {
 
       test("ivy") {
 
-        val resolve0 = resolve
-          .withRepositories(Seq(
+        val resolve0 = resolve.copy(
+          repositories = Seq(
             Repositories.central,
             IvyRepository.parse(handmadeMetadataBase + "http/ivy.abc.com/[defaultPattern]")
               .fold(sys.error, identity)
-          ))
+          )
+        )
 
         test("integration") {
           async {
@@ -560,12 +564,13 @@ object ResolveTests extends TestSuite {
       test("plusInVersion") {
         async {
 
-          val resolve0 = resolve
-            .withRepositories(Seq(
+          val resolve0 = resolve.copy(
+            repositories = Seq(
               Repositories.central,
               IvyRepository.parse(handmadeMetadataBase + "http/ivy.abc.com/[defaultPattern]")
                 .fold(sys.error, identity)
-            ))
+            )
+          )
 
           val res = await {
             resolve0
@@ -625,8 +630,9 @@ object ResolveTests extends TestSuite {
             resolve
               .addDependencies(
                 dep"com.netflix.karyon:karyon-eureka:1.0.28"
-                  .withVariantSelector(
-                    VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
+                  .copy(
+                    variantSelector =
+                      VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
                   )
               )
               .future()
@@ -654,11 +660,10 @@ object ResolveTests extends TestSuite {
       test("compile") {
         async {
 
-          val resolve0 = resolve
-            .withResolutionParams(
-              resolve.resolutionParams
-                .withDefaultConfiguration(Configuration.compile)
-            )
+          val resolve0 = resolve.copy(
+            resolutionParams = resolve.resolutionParams
+              .copy(defaultConfiguration = Configuration.compile)
+          )
 
           val res = await {
             resolve0
@@ -676,9 +681,10 @@ object ResolveTests extends TestSuite {
           val res = await {
             resolve
               .addDependencies(dep"org.apache.beam:beam-sdks-java-io-google-cloud-platform:2.3.0")
-              .withResolutionParams(
-                resolve.resolutionParams
-                  .withEnableDependencyOverrides(Some(false))
+              .copy(
+                resolutionParams = resolve.resolutionParams.copy(
+                  enableDependencyOverrides = Some(false)
+                )
               )
               .io
               .attempt
@@ -761,12 +767,13 @@ object ResolveTests extends TestSuite {
       test("publication name") {
         async {
 
-          val resolve0 = resolve
-            .withRepositories(Seq(
+          val resolve0 = resolve.copy(
+            repositories = Seq(
               Repositories.central,
               IvyRepository.parse(handmadeMetadataBase + "http/ivy.abc.com/[defaultPattern]")
                 .fold(sys.error, identity)
-            ))
+            )
+          )
 
           val deps = Seq(
             dep"test:b_2.12:1.0.1".withPublication("foo"),
@@ -810,12 +817,13 @@ object ResolveTests extends TestSuite {
       test("global excludes") {
         async {
 
-          val resolve0 = resolve
-            .withRepositories(Seq(
+          val resolve0 = resolve.copy(
+            repositories = Seq(
               Repositories.central,
               IvyRepository.parse(handmadeMetadataBase + "fake-ivy/[defaultPattern]")
                 .fold(sys.error, identity)
-            ))
+            )
+          )
 
           val res = await {
             resolve0
@@ -843,12 +851,13 @@ object ResolveTests extends TestSuite {
       test("global overrides") {
         async {
 
-          val resolve0 = resolve
-            .withRepositories(Seq(
+          val resolve0 = resolve.copy(
+            repositories = Seq(
               Repositories.central,
               IvyRepository.parse(handmadeMetadataBase + "fake-ivy/[defaultPattern]")
                 .fold(sys.error, identity)
-            ))
+            )
+          )
 
           val res = await {
             resolve0
@@ -973,8 +982,8 @@ object ResolveTests extends TestSuite {
           val resolve0 = resolve
             .mapResolutionParams { params =>
               params
-                .withUseSystemOsInfo(false)
-                .withUseSystemJdkVersion(false)
+                .copy(useSystemOsInfo = false)
+                .copy(useSystemJdkVersion = false)
             }
             .addDependencies(dep"io.netty:netty-transport-native-epoll:4.1.34.Final")
 
@@ -996,8 +1005,8 @@ object ResolveTests extends TestSuite {
 
           val resolve0 = resolve
             .mapResolutionParams(_
-              .withUseSystemOsInfo(false)
-              .withUseSystemJdkVersion(false)
+              .copy(useSystemOsInfo = false)
+              .copy(useSystemJdkVersion = false)
               .withOsInfo(coursier.core.Activation.Os.fromProperties(Map(
                 "os.name"        -> "Linux",
                 "os.arch"        -> "amd64",
@@ -1024,8 +1033,8 @@ object ResolveTests extends TestSuite {
 
           val resolve0 = resolve
             .mapResolutionParams(_
-              .withUseSystemOsInfo(false)
-              .withUseSystemJdkVersion(false)
+              .copy(useSystemOsInfo = false)
+              .copy(useSystemJdkVersion = false)
               .withOsInfo(coursier.core.Activation.Os.fromProperties(Map(
                 "os.name"        -> "Mac OS X",
                 "os.arch"        -> "x86_64",
@@ -1079,7 +1088,7 @@ object ResolveTests extends TestSuite {
         async {
           val params = ResolutionParams()
             .withScalaVersion("2.12.8")
-            .withReconciliation0(Seq(ModuleMatchers.all -> ConstraintReconciliation.Relaxed))
+            .copy(reconciliation0 = Seq(ModuleMatchers.all -> ConstraintReconciliation.Relaxed))
 
           val res = await {
             resolve
@@ -1087,7 +1096,7 @@ object ResolveTests extends TestSuite {
                 dep"org.webjars.npm:randomatic:1.1.7",
                 dep"org.webjars.npm:is-odd:2.0.0"
               )
-              .withResolutionParams(params)
+              .copy(resolutionParams = params)
               .future()
           }
 
@@ -1142,7 +1151,7 @@ object ResolveTests extends TestSuite {
 
         val res1 = await {
           resolve
-            .withInitialResolution(Some(res0))
+            .copy(initialResolution = Some(res0))
             .addRepositories(Repositories.typesafeIvy("releases"))
             .addDependencies(dep"io.get-coursier:coursier-cli_2.12:2.0.0-RC6-16")
             .future()
@@ -1271,7 +1280,7 @@ object ResolveTests extends TestSuite {
           .withJdkVersion(Version("1.8.0_121"))
         val res = await {
           resolve
-            .withResolutionParams(params)
+            .copy(resolutionParams = params)
             .addDependencies(dep)
             .future()
         }
@@ -1369,7 +1378,7 @@ object ResolveTests extends TestSuite {
           val params = resolve.resolutionParams.withJdkVersion(Version("1.8.0_121"))
           val res = await {
             resolve
-              .withResolutionParams(params)
+              .copy(resolutionParams = params)
               .addDependencies(dep)
               .future()
           }
@@ -1381,7 +1390,7 @@ object ResolveTests extends TestSuite {
           val params = resolve.resolutionParams.withJdkVersion(Version("11.0.5"))
           val res = await {
             resolve
-              .withResolutionParams(params)
+              .copy(resolutionParams = params)
               .addDependencies(dep)
               .future()
           }
@@ -1415,7 +1424,7 @@ object ResolveTests extends TestSuite {
           .withJdkVersion(Version("1.8.0_121"))
         val res = await {
           resolve
-            .withResolutionParams(params)
+            .copy(resolutionParams = params)
             .addDependencies(dep"org.openjfx:javafx-base:18-ea+2")
             .future()
         }
@@ -1449,10 +1458,10 @@ object ResolveTests extends TestSuite {
 
         val resolve0 = resolve
           .addDependencies(dep"com.lihaoyi:pprint_2.12:0.5.4")
-          .withMapDependenciesOpt(
-            Some { dep =>
+          .copy(
+            mapDependenciesOpt = Some { dep =>
               if (dep.module.name.value == "scala-library")
-                dep.withVersionConstraint(VersionConstraint("2.12.12"))
+                dep.copy(versionConstraint = VersionConstraint("2.12.12"))
               else
                 dep
             }
@@ -1481,8 +1490,8 @@ object ResolveTests extends TestSuite {
         async {
           val params = ResolutionParams()
             .withJdkVersion(Version("8.0"))
-            .withProfiles(profiles)
-            .withForceDepMgmtVersions(forceDepMgmtVersions)
+            .copy(profiles = profiles)
+            .copy(forceDepMgmtVersions = forceDepMgmtVersions)
           val res = await {
             resolve
               .addDependencies(
@@ -1495,7 +1504,7 @@ object ResolveTests extends TestSuite {
                   VersionConstraint(sparkVersion)
                 )
               )
-              .withResolutionParams(params)
+              .copy(resolutionParams = params)
               .future()
           }
           // await(validateDependencies(res))
@@ -1610,8 +1619,8 @@ object ResolveTests extends TestSuite {
     test("quarkus") {
       test("rest") {
         doCheck(
-          resolve.withResolutionParams(
-            resolve.resolutionParams.withOsInfo(
+          resolve.copy(
+            resolutionParams = resolve.resolutionParams.withOsInfo(
               Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1"))
             )
           ),
@@ -1620,8 +1629,8 @@ object ResolveTests extends TestSuite {
       }
       test("rest-jackson") {
         doCheck(
-          resolve.withResolutionParams(
-            resolve.resolutionParams.withOsInfo(
+          resolve.copy(
+            resolutionParams = resolve.resolutionParams.withOsInfo(
               Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1"))
             )
           ),
@@ -1746,7 +1755,7 @@ object ResolveTests extends TestSuite {
           // as we pull the test entries too
           bomCheck(
             dep"org.apache.spark:spark-parent_2.13:3.5.3"
-              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
+              .copy(variantSelector = VariantSelector.ConfigurationBased(Configuration.test))
               .asBomDependency
           )(
             dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1"
@@ -1759,7 +1768,7 @@ object ResolveTests extends TestSuite {
             check(
               dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
+                  .copy(variantSelector = VariantSelector.ConfigurationBased(Configuration.test))
                   .asBomDependency
               )
             )
@@ -1771,8 +1780,9 @@ object ResolveTests extends TestSuite {
             check(
               dep"org.scalatestplus.play:scalatestplus-play_2.13:7.0.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withVariantSelector(
-                    VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
+                  .copy(
+                    variantSelector =
+                      VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
                   )
                   .asBomDependency
               )
@@ -1784,7 +1794,7 @@ object ResolveTests extends TestSuite {
       test("runtime") {
         bomCheck(
           dep"io.quarkus:quarkus-bom:3.15.1"
-            .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.runtime))
+            .copy(variantSelector = VariantSelector.ConfigurationBased(Configuration.runtime))
             .asBomDependency
         )(
           dep"org.mvnpm.at.hpcc-js:wasm"
@@ -1797,7 +1807,7 @@ object ResolveTests extends TestSuite {
           // protobuf-java is marked as provided there
           bomCheck(
             dep"org.apache.spark:spark-parent_2.13:3.5.3"
-              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
+              .copy(variantSelector = VariantSelector.ConfigurationBased(Configuration.provided))
               .asBomDependency
           )(
             dep"com.google.protobuf:protobuf-java"
@@ -1808,7 +1818,7 @@ object ResolveTests extends TestSuite {
           // protobuf-java is marked as provided there
           bomCheck(
             dep"org.apache.spark:spark-parent_2.13:3.5.3"
-              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
+              .copy(variantSelector = VariantSelector.ConfigurationBased(Configuration.provided))
               .asBomDependency
           )(
             dep"com.google.protobuf:protobuf-java-util"
@@ -1863,7 +1873,9 @@ object ResolveTests extends TestSuite {
             check(
               dep"com.google.protobuf:protobuf-java:3.7.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
+                  .copy(
+                    variantSelector = VariantSelector.ConfigurationBased(Configuration.provided)
+                  )
                   .asBomDependency
               )
             )
@@ -1875,7 +1887,9 @@ object ResolveTests extends TestSuite {
             check(
               dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
+                  .copy(
+                    variantSelector = VariantSelector.ConfigurationBased(Configuration.provided)
+                  )
                   .asBomDependency
               )
             )
@@ -1886,8 +1900,9 @@ object ResolveTests extends TestSuite {
             check(
               dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withVariantSelector(
-                    VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
+                  .copy(
+                    variantSelector =
+                      VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
                   )
                   .asBomDependency
               )
@@ -1902,9 +1917,11 @@ object ResolveTests extends TestSuite {
             check(
               dep"com.google.protobuf:protobuf-java:3.7.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
+                  .copy(
+                    variantSelector = VariantSelector.ConfigurationBased(Configuration.provided)
+                  )
                   .asBomDependency
-                  .withForceOverrideVersions(true)
+                  .copy(forceOverrideVersions = true)
               )
             )
           }
@@ -1914,9 +1931,11 @@ object ResolveTests extends TestSuite {
             check(
               dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
-                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.provided))
+                  .copy(
+                    variantSelector = VariantSelector.ConfigurationBased(Configuration.provided)
+                  )
                   .asBomDependency
-                  .withForceOverrideVersions(true)
+                  .copy(forceOverrideVersions = true)
               )
             )
           }
@@ -1929,7 +1948,7 @@ object ResolveTests extends TestSuite {
               dep"com.google.protobuf:protobuf-java-util:3.7.1".addBom(
                 dep"org.apache.spark:spark-parent_2.13:3.5.3"
                   .asBomDependency
-                  .withForceOverrideVersions(true)
+                  .copy(forceOverrideVersions = true)
               )
             )
           }
@@ -2123,7 +2142,7 @@ object ResolveTests extends TestSuite {
       test("android") {
         test("dependency") {
           def withVariant(dep: Dependency, map: Map[String, VariantMatcher]) =
-            dep.withVariantSelector(VariantSelector.AttributesBased(map))
+            dep.copy(variantSelector = VariantSelector.AttributesBased(map))
 
           def testVariants(
             config: Configuration,
@@ -2189,8 +2208,8 @@ object ResolveTests extends TestSuite {
       test("fallback from config") {
         test("android") {
           test("compile") {
-            val attr = VariantSelector.AttributesBased().withMatchers(
-              Map(
+            val attr = VariantSelector.AttributesBased().copy(
+              matchers = Map(
                 "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
               )
             )
@@ -2202,8 +2221,8 @@ object ResolveTests extends TestSuite {
             )
           }
           test("runtime") {
-            val attr = VariantSelector.AttributesBased().withMatchers(
-              Map(
+            val attr = VariantSelector.AttributesBased().copy(
+              matchers = Map(
                 "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
               )
             )
@@ -2215,8 +2234,8 @@ object ResolveTests extends TestSuite {
         test("kotlin") {
           test("runtime") {
             test("js") {
-              val attr = VariantSelector.AttributesBased().withMatchers(
-                Map(
+              val attr = VariantSelector.AttributesBased().copy(
+                matchers = Map(
                   "org.jetbrains.kotlin.platform.type" ->
                     VariantMatcher.Equals("js"),
                   "org.jetbrains.kotlin.js.compiler" -> VariantMatcher.Equals("ir")
@@ -2227,8 +2246,8 @@ object ResolveTests extends TestSuite {
               )
             }
             test("jvm") {
-              val attr = VariantSelector.AttributesBased().withMatchers(
-                Map(
+              val attr = VariantSelector.AttributesBased().copy(
+                matchers = Map(
                   "org.gradle.jvm.environment" ->
                     VariantMatcher.Equals("standard-jvm")
                 )
@@ -2241,8 +2260,8 @@ object ResolveTests extends TestSuite {
         }
       }
       test("module-bom") {
-        val resolve0 = resolve.withResolutionParams(
-          resolve.resolutionParams.withOsInfo(
+        val resolve0 = resolve.copy(
+          resolutionParams = resolve.resolutionParams.withOsInfo(
             Activation.Os(Some("x86_64"), Set("mac", "unix"), Some("mac os x"), Some("10.15.1"))
           )
         )
@@ -2426,7 +2445,7 @@ object ResolveTests extends TestSuite {
       test("swapsDepsForScala3") {
         val params = ResolutionParams()
           .withScalaVersion("3.8.0")
-          .withScalaOrganizationOverride(Some(org"ch.epfl.lara"))
+          .copy(scalaOrganizationOverride = Some(org"ch.epfl.lara"))
 
         val res = Resolve.initialResolution(Nil, params)
 
@@ -2445,7 +2464,7 @@ object ResolveTests extends TestSuite {
       test("swapsDepsForScala2") {
         val params = ResolutionParams()
           .withScalaVersion("2.12.20")
-          .withScalaOrganizationOverride(Some(org"org.typelevel"))
+          .copy(scalaOrganizationOverride = Some(org"org.typelevel"))
 
         val res = Resolve.initialResolution(Nil, params)
 
@@ -2469,7 +2488,7 @@ object ResolveTests extends TestSuite {
       test("doesNotSwapNonScalaModules") {
         val params = ResolutionParams()
           .withScalaVersion("3.8.0")
-          .withScalaOrganizationOverride(Some(org"ch.epfl.lara"))
+          .copy(scalaOrganizationOverride = Some(org"ch.epfl.lara"))
 
         val res = Resolve.initialResolution(Nil, params)
 
@@ -2485,7 +2504,7 @@ object ResolveTests extends TestSuite {
         val filteringCache = TestHelpers.filteringCache("-parent", resolve.cache)
         val res = await {
           resolve
-            .withCache(filteringCache)
+            .copy(cache = filteringCache)
             .addDependencies(dep"org.scala-lang:scala3-repl_3:3.8.2")
             .futureEither()
         }

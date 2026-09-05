@@ -44,17 +44,17 @@ object AuthenticationTests extends TestSuite with TestRepositoryServer.Test {
     val result = withTmpDir { dir =>
       Resolve()
         .noMirrors
-        .withRepositories(Seq(
-          MavenRepository(testRepo),
-          Repositories.central
-        ))
-        .addDependencies(dep"com.abc:test:0.1".withTransitive(false))
-        .withCache(
-          defaultCache()
+        .copy(
+          repositories = Seq(
+            MavenRepository(testRepo),
+            Repositories.central
+          ),
+          cache = defaultCache()
             .noCredentials
-            .withLocation(dir.toFile)
+            .copy(location = dir.toFile)
             .addCredentials(credentials)
         )
+        .addDependencies(dep"com.abc:test:0.1".copy(transitive = false))
         .run()
     }
     val modules         = result.minDependencies.map(_.module)
@@ -67,11 +67,13 @@ object AuthenticationTests extends TestSuite with TestRepositoryServer.Test {
     test {
       testCredentials {
         DirectCredentials()
-          .withHost(testHost)
           .withUsername(user)
           .withPassword(password)
-          .withMatchHost(true)
-          .withHttpsOnly(false)
+          .copy(
+            host = testHost,
+            matchHost = true,
+            httpsOnly = false
+          )
       }
     }
 

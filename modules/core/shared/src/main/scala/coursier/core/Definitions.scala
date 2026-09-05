@@ -5,7 +5,7 @@ import coursier.core.Validation._
 import coursier.error.VariantError
 import coursier.util.Artifact
 import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
-import dataclass.data
+import dataclass.{data, since => unroll}
 import scala.util.hashing.MurmurHash3
 
 final case class Organization(value: String) extends AnyVal {
@@ -43,7 +43,7 @@ object ModuleName {
   *
   * Using the same terminology as Ivy.
   */
-@data(apply = false, settersCallApply = true, cachedHashCode = true) class Module(
+@data(apply = false, settersCallApply = true, cachedHashCode = true) case class Module(
   organization: Organization,
   name: ModuleName,
   attributes: Map[String, String]
@@ -84,10 +84,14 @@ object ModuleName {
 
 object Module {
 
-  private[core] val instanceCache: ConcurrentMap[Module, Module] =
+  private[coursier] val instanceCache: ConcurrentMap[Module, Module] =
     coursier.util.Cache.createCache()
 
-  def apply(organization: Organization, name: ModuleName, attributes: Map[String, String]): Module =
+  def apply(
+    organization: Organization,
+    name: ModuleName,
+    attributes: Map[String, String]
+  ): Module =
     coursier.util.Cache.cacheMethod(instanceCache)(new Module(organization, name, attributes))
 }
 
@@ -230,7 +234,7 @@ object Configuration {
     Configuration(confs.map(_.value).mkString(";"))
 }
 
-@data class Attributes(
+@data case class Attributes(
   `type`: Type,
   classifier: Classifier
 ) {
@@ -255,7 +259,7 @@ object Configuration {
     `type`.isEmpty && classifier.isEmpty
 
   def normalize: Attributes =
-    if (`type` == Type.jar) withType(Type.empty)
+    if (`type` == Type.jar) copy(`type` = Type.empty)
     else this
 }
 
@@ -263,7 +267,7 @@ object Attributes {
   val empty = Attributes(Type.empty, Classifier.empty)
 }
 
-@data class Project(
+@data case class Project(
   module: Module,
   version0: Version0,
   dependencies0: Seq[(Variant, Dependency)],
@@ -302,8 +306,8 @@ object Attributes {
     }
   @deprecated("Use withDependencies0 instead", "2.1.25")
   def withDependencies(newDependencies: Seq[(Configuration, Dependency)]): Project =
-    withDependencies0(
-      newDependencies.map {
+    copy(
+      dependencies0 = newDependencies.map {
         case (config, dep) =>
           (Variant.Configuration(config), dep)
       }
@@ -319,8 +323,8 @@ object Attributes {
     }
   @deprecated("Use withPublications0 instead", "2.1.25")
   def withPublications(newPublications: Seq[(Configuration, Publication)]): Project =
-    withPublications0(
-      newPublications.map {
+    copy(
+      publications0 = newPublications.map {
         case (config, pub) =>
           (Variant.Configuration(config), pub)
       }
@@ -433,7 +437,7 @@ object Attributes {
   @deprecated("Use withVersion0 instead", "2.1.25")
   def withVersion(newVersion: String): Project =
     if (version == newVersion) this
-    else withVersion0(Version0(newVersion))
+    else copy(version0 = Version0(newVersion))
 
   @deprecated("Use parent0 instead", "2.1.25")
   def parent: Option[(Module, String)] =
@@ -443,8 +447,8 @@ object Attributes {
     }
   @deprecated("Use withParent0 instead", "2.1.25")
   def withParent(newParent: Option[(Module, String)]): Project =
-    withParent0(
-      newParent.map {
+    copy(
+      parent0 = newParent.map {
         case (mod, ver) =>
           (mod, VersionConstraint0(ver))
       }
@@ -455,7 +459,7 @@ object Attributes {
     actualVersionOpt0.map(_.asString)
   @deprecated("Use withActualVersionOpt0 instead", "2.1.25")
   def withActualVersionOpt(newParent: Option[String]): Project =
-    withActualVersionOpt0(newParent.map(Version0(_)))
+    copy(actualVersionOpt0 = newParent.map(Version0(_)))
 
   @deprecated("Use dependencyManagement0 instead", "2.1.25")
   def dependencyManagement: Seq[(Configuration, Dependency)] =
@@ -467,8 +471,8 @@ object Attributes {
     }
   @deprecated("Use withDependencyManagement0 instead", "2.1.25")
   def withDependencyManagement(dependencyManagement: Seq[(Configuration, Dependency)]): Project =
-    withDependencyManagement0(
-      dependencyManagement.map {
+    copy(
+      dependencyManagement0 = dependencyManagement.map {
         case (c, dep) =>
           (Variant.Configuration(c), dep)
       }
@@ -663,7 +667,7 @@ object Attributes {
     lines.result().mkString("\n")
   }
 
-  final override lazy val hashCode = tuple.hashCode
+  final override lazy val hashCode: Int = scala.runtime.ScalaRunTime._hashCode(this)
 }
 
 object Project {
@@ -770,7 +774,7 @@ object Project {
 }
 
 /** Extra project info, not used during resolution */
-@data class Info(
+@data case class Info(
   description: String,
   homePage: String,
   developers: Seq[Info.Developer],
@@ -825,19 +829,19 @@ object Info {
     licenseInfo = licenses.map(l => License(l._1, l._2, None, None))
   )
 
-  @data class Developer(
+  @data case class Developer(
     id: String,
     name: String,
     url: String
   )
 
-  @data class Scm(
+  @data case class Scm(
     url: Option[String],
     connection: Option[String],
     developerConnection: Option[String]
   )
 
-  @data class License(
+  @data case class License(
     name: String,
     url: Option[String],
     distribution: Option[String], // Maven-specific
@@ -848,7 +852,7 @@ object Info {
 }
 
 // Maven-specific
-@data class Profile(
+@data case class Profile(
   id: String,
   activeByDefault: Option[Boolean],
   activation: Activation,
@@ -858,7 +862,7 @@ object Info {
 )
 
 // Maven-specific
-@data class SnapshotVersion(
+@data case class SnapshotVersion(
   classifier: Classifier,
   extension: Extension,
   value0: Version0,
@@ -884,7 +888,7 @@ object Info {
   @deprecated("Use withValue0 instead", "2.1.25")
   def withValue(newValue: String): SnapshotVersion =
     if (newValue == value) this
-    else withValue0(Version0(newValue))
+    else copy(value0 = Version0(newValue))
 }
 
 object SnapshotVersion {
@@ -904,7 +908,7 @@ object SnapshotVersion {
 }
 
 // Maven-specific
-@data class SnapshotVersioning(
+@data case class SnapshotVersioning(
   module: Module,
   version0: Version0,
   latest0: Version0,
@@ -949,15 +953,15 @@ object SnapshotVersion {
   @deprecated("Use withVersion0 instead", "2.1.25")
   def withVersion(newVersion: String): SnapshotVersioning =
     if (newVersion == version) this
-    else withVersion0(Version0(newVersion))
+    else copy(version0 = Version0(newVersion))
   @deprecated("Use withLatest0 instead", "2.1.25")
   def withLatest(newLatest: String): SnapshotVersioning =
     if (newLatest == latest) this
-    else withLatest0(Version0(newLatest))
+    else copy(latest0 = Version0(newLatest))
   @deprecated("Use withRelease0 instead", "2.1.25")
   def withRelease(newRelease: String): SnapshotVersioning =
     if (newRelease == release) this
-    else withRelease0(Version0(newRelease))
+    else copy(release0 = Version0(newRelease))
 }
 
 object SnapshotVersioning {
@@ -986,7 +990,7 @@ object SnapshotVersioning {
     )
 }
 
-@data(apply = false, settersCallApply = true, cachedHashCode = true) class Publication(
+@data(apply = false, settersCallApply = true, cachedHashCode = true) case class Publication(
   name: String,
   `type`: Type,
   ext: Extension,
@@ -1002,20 +1006,21 @@ object SnapshotVersioning {
 }
 
 object Publication {
-  private[core] val instanceCache: ConcurrentMap[Publication, Publication] =
+
+  private[coursier] val instanceCache: ConcurrentMap[Publication, Publication] =
     coursier.util.Cache.createCache()
 
   def apply(name: String, `type`: Type, ext: Extension, classifier: Classifier): Publication =
     coursier.util.Cache.cacheMethod(instanceCache)(new Publication(name, `type`, ext, classifier))
 
   val empty: Publication =
-    Publication("", Type.empty, Extension.empty, Classifier.empty)
+    apply("", Type.empty, Extension.empty, Classifier.empty)
 }
 
-@data class VariantPublication(
+@data case class VariantPublication(
   name: String,
   url: String,
-  @since
+  @unroll
   classifier: Option[Classifier] = None
 )
 

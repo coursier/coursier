@@ -124,10 +124,11 @@ object FileCachePolicyTests extends TestSuite {
 
         val url = (serverUri / "dir" / "foo.pom").renderString
 
-        val baseCache = FileCache[Task]((dir / "cache").toIO)
-          .withTtl(ttl)
+        val baseCache = FileCache[Task]((dir / "cache").toIO).copy(
+          ttl = Some(ttl),
           // no checksums, so that the request log only contains requests for the artifact itself
-          .withChecksums(Nil)
+          checksums = Nil
+        )
 
         def run(cache: FileCache[Task], artifact: Artifact) =
           cache
@@ -136,9 +137,10 @@ object FileCachePolicyTests extends TestSuite {
 
         if (local != Local.Absent) {
           val seeded = run(
-            baseCache
-              .withCachePolicies(Seq(CachePolicy.FetchMissing))
-              .withClock(Clock.fixed(seedTime, zone)),
+            baseCache.copy(
+              cachePolicies = Seq(CachePolicy.FetchMissing),
+              clock = Clock.fixed(seedTime, zone)
+            ),
             Artifact(url)
           )
           assert(seeded.isRight)
@@ -161,10 +163,11 @@ object FileCachePolicyTests extends TestSuite {
         }
 
         val res = run(
-          baseCache
-            .withCachePolicies(Seq(policy))
-            .withClock(Clock.fixed(now, zone)),
-          Artifact(url).withChanging(changing)
+          baseCache.copy(
+            cachePolicies = Seq(policy),
+            clock = Clock.fixed(now, zone)
+          ),
+          Artifact(url).copy(changing = changing)
         )
 
         val actualRequests = log.methods

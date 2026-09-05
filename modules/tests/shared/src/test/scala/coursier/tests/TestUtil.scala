@@ -20,9 +20,10 @@ import scala.collection.compat._
 object TestUtil {
 
   implicit class DependencyOps(val underlying: Dependency) extends AnyVal {
-    def withDefaultScope: Dependency = underlying.withVariantSelector(
-      VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
-    )
+    def withDefaultScope: Dependency =
+      underlying.copy(
+        variantSelector = VariantSelector.ConfigurationBased(Configuration.defaultRuntime)
+      )
   }
 
   private val projectProperties = Set(
@@ -51,29 +52,30 @@ object TestUtil {
     // to an expected value.
 
     def clearFinalDependenciesCache: Resolution =
-      underlying.withFinalDependenciesCache(Map.empty)
+      underlying.copy(finalDependenciesCache = Map.empty)
     def clearCaches: Resolution =
-      underlying
-        .withProjectCache0(Map.empty)
-        .withErrorCache(Map.empty)
-        .withFinalDependenciesCache(Map.empty)
+      underlying.copy(
+        projectCache0 = Map.empty,
+        errorCache = Map.empty,
+        finalDependenciesCache = Map.empty
+      )
     def clearDependencyOverrides: Resolution =
       underlying.withDependencies(
-        underlying.dependencies.map(_.withOverridesMap(Overrides.empty))
+        underlying.dependencies.map(_.copy(overridesMap = Overrides.empty))
       )
     def clearFilter: Resolution =
-      underlying.withFilter(None)
+      underlying.copy(filter = None)
     def clearProjectProperties: Resolution =
-      underlying.withProjectCache0(
-        underlying
+      underlying.copy(
+        projectCache0 = underlying
           .projectCache0
           .view
           .mapValues {
             case (s, p) =>
               (
                 s,
-                p.withProperties(
-                  LazyProperties.merge(Seq(p.properties.filter { case (k, _) =>
+                p.copy(
+                  properties = LazyProperties.merge(Seq(p.properties.filter { case (k, _) =>
                     !projectProperties(k)
                   }))
                 )

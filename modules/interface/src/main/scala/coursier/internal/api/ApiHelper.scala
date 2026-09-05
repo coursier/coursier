@@ -23,6 +23,7 @@ import coursier.ivy.IvyRepository
 import coursier.jvm.{JavaHome, JvmCache}
 import coursier.params.ResolutionParams
 import coursier.util.{Artifact, Task}
+import coursier.version.{VersionConstraint => VersionConstraint0}
 
 import scala.collection.JavaConverters
 import scala.collection.JavaConverters._
@@ -182,7 +183,7 @@ object ApiHelper {
   def depMgmtValues(values: coursierapi.DependencyManagement.Values): DependencyManagement.Values =
     DependencyManagement.Values(
       Configuration(values.getConfiguration),
-      values.getVersion,
+      VersionConstraint0(values.getVersion),
       MinimizedExclusions(
         values.getExclusions.asScala
           .map { e =>
@@ -227,14 +228,15 @@ object ApiHelper {
     val dep0 = Dependency(module0, dep.getVersion)
       .withExclusions(exclusions)
       .withConfiguration(configuration)
-      .withTransitive(dep.isTransitive)
-      .withOverrides(
-        dep.getOverrides.asScala
-          .map {
-            case (key, values) =>
-              (depMgmtKey(key), depMgmtValues(values))
-          }
-          .toMap
+      .copy(
+        transitive = dep.isTransitive,
+        overrides =
+          dep.getOverrides.asScala
+            .map {
+              case (key, values) =>
+                (depMgmtKey(key), depMgmtValues(values))
+            }
+            .toMap
       )
 
     Option(dep.getPublication)
@@ -335,7 +337,7 @@ object ApiHelper {
     if (params.maxIterations != default.maxIterations)
       params0 = params0.withMaxIterations(params.maxIterations)
     params0
-      .withForceVersions(params.forceVersion.map { case (m, v) => module(m) -> v }.asJava)
+      .withForceVersions(params.forceVersion0.map { case (m, v) => module(m) -> v.asString }.asJava)
       .withForceProperties(params.forcedProperties.asJava)
       .withProfiles(params.profiles.asJava)
       .withExclusions(params.exclusions.map { case (o, n) =>
@@ -356,27 +358,26 @@ object ApiHelper {
   def resolutionParams(params: coursierapi.ResolutionParams): ResolutionParams = {
     var params0 = ResolutionParams()
     if (params.getMaxIterations != null)
-      params0 = params0.withMaxIterations(params.getMaxIterations)
-    params0
-      .withForceVersion(params.getForceVersions.asScala.iterator.toMap.map { case (m, v) =>
-        module(m) -> v
-      })
-      .withForcedProperties(params.getForcedProperties.asScala.iterator.toMap)
-      .withProfiles(params.getProfiles.asScala.toSet)
-      .withExclusions(params.getExclusions.asScala.map { e =>
+      params0 = params0.copy(maxIterations = params.getMaxIterations)
+    params0.copy(
+      forceVersion0 = params.getForceVersions.asScala.iterator.toMap.map { case (m, v) =>
+        module(m) -> VersionConstraint0(v)
+      },
+      forcedProperties = params.getForcedProperties.asScala.iterator.toMap,
+      profiles = params.getProfiles.asScala.toSet,
+      exclusions = params.getExclusions.asScala.map { e =>
         (Organization(e.getKey), ModuleName(e.getValue))
-      }.toSet)
-      .withUseSystemOsInfo(params.getUseSystemOsInfo)
-      .withUseSystemJdkVersion(params.getUseSystemJdkVersion)
-      .withScalaVersionOpt(Option(params.getScalaVersion))
-      .withKeepProvidedDependencies(Option(params.getKeepProvidedDependencies).map(b => b: Boolean))
-      .withForceDepMgmtVersions(Option(params.getForceDepMgmtVersions).map(b => b: Boolean))
-      .withEnableDependencyOverrides(Option(params.getEnableDependencyOverrides).map(b =>
-        b: Boolean
-      ))
-      .withDefaultConfiguration(Option(
-        params.getDefaultConfiguration
-      ).map(Configuration(_)).getOrElse(params0.defaultConfiguration))
+      }.toSet,
+      useSystemOsInfo = params.getUseSystemOsInfo,
+      useSystemJdkVersion = params.getUseSystemJdkVersion,
+      scalaVersionOpt0 = Option(params.getScalaVersion).map(VersionConstraint0(_)),
+      keepProvidedDependencies = Option(params.getKeepProvidedDependencies).map(b => b: Boolean),
+      forceDepMgmtVersions = Option(params.getForceDepMgmtVersions).map(b => b: Boolean),
+      enableDependencyOverrides = Option(params.getEnableDependencyOverrides).map(b => b: Boolean),
+      defaultConfiguration = Option(params.getDefaultConfiguration)
+        .map(Configuration(_))
+        .getOrElse(params0.defaultConfiguration)
+    )
   }
 
   def cache(cache: coursierapi.Cache): FileCache[Task] = {
@@ -530,15 +531,16 @@ object ApiHelper {
     // temporarily creating a Resolve and and Artifacts manually,
     // to work around missing BOM-related methods on Fetch
     val resolve = Resolve()
-      .withDependencies(dependencies)
-      .withBomDependencies(bomDependencies)
-      .withRepositories(repositories)
-      .withCache(cache0)
-      .withResolutionParams(params)
+      .copy(
+        cache = cache0,
+        dependencies = dependencies,
+        repositories = repositories,
+        resolutionParams = params,
+        boms = bomDependencies.map(_.asBomDependency)
+      )
     var artifacts = Artifacts()
-      .withCache(cache0)
+      .copy(cache = cache0, classifiers = classifiers)
       .withMainArtifacts(fetch.getMainArtifacts)
-      .withClassifiers(classifiers)
     if (fetch.getArtifactTypes != null)
       artifacts =
         artifacts.withArtifactTypes(fetch.getArtifactTypes.asScala.toSet[String].map(Type(_)))
@@ -600,10 +602,11 @@ object ApiHelper {
   }
 
   private def artifact(artifact: coursierapi.Artifact): Artifact =
-    Artifact(artifact.getUrl)
-      .withChanging(artifact.isChanging)
-      .withOptional(artifact.isOptional)
-      .withAuthentication(Option(artifact.getCredentials).map(credentials))
+    Artifact(artifact.getUrl).copy(
+      changing = artifact.isChanging,
+      optional = artifact.isOptional,
+      authentication = Option(artifact.getCredentials).map(credentials)
+    )
 
   def doFetch(apiFetch: coursierapi.Fetch): coursierapi.FetchResult = {
 
@@ -678,10 +681,9 @@ object ApiHelper {
 
     val binVersionOpt = Option(complete.getScalaBinaryVersion)
     val res = coursier.complete.Complete(cache0)
-      .withRepositories(repositories)
-      .withScalaBinaryVersionOpt(binVersionOpt)
+      .copy(repositories = repositories, scalaBinaryVersionOpt = binVersionOpt)
       .withScalaVersionOpt(Option(complete.getScalaVersion), binVersionOpt.isEmpty)
-      .withInput(complete.getInput)
+      .copy(input = complete.getInput)
       .complete()
       .unsafeRun()(cache0.ec)
 
@@ -738,7 +740,7 @@ object ApiHelper {
       .toVector
 
     coursier.Versions(cache0)
-      .withRepositories(repositories)
+      .copy(repositories = repositories)
       .withModule(module(versions.getModule))
   }
 
@@ -826,7 +828,7 @@ object ApiHelper {
 
     val jvmCache = JvmCache()
       .withDefaultIndex
-      .withArchiveCache(archiveCache(manager.getArchiveCache))
+      .copy(archiveCache = archiveCache(manager.getArchiveCache))
     val javaHome = JavaHome().withCache(jvmCache)
 
     javaHome.get(jvmId).unsafeRun()(jvmCache.archiveCache.cache.ec)

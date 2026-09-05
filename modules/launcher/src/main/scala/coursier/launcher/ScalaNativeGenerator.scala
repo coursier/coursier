@@ -10,8 +10,8 @@ object ScalaNativeGenerator extends Generator[Parameters.ScalaNative] {
     val options =
       if (parameters.python) {
         val extraLdflags = Python().ldflags.get
-        parameters.options.withLinkingOptions(
-          parameters.options.linkingOptions ++ extraLdflags
+        parameters.options.copy(
+          linkingOptions = parameters.options.linkingOptions ++ extraLdflags
         )
       }
       else

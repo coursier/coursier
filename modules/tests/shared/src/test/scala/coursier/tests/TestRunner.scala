@@ -48,22 +48,21 @@ class TestRunner[F[_]: Gather: ToFuture](
 
     val fetch0 = fetch(repositories0)
 
-    val res = Resolution()
-      .withRootDependencies(deps)
-      .withFilter(filter)
-      .withUserActivations {
-        profiles.map { profiles0 =>
-          profiles0
-            .iterator
-            .map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true)
-            .toMap
-        }
-      }
-      .withMapDependencies(mapDependencies)
-      .withForceVersions0(forceVersions)
-      .withDefaultConfiguration(defaultConfiguration)
-      .withReconciliation0(reconciliation)
-      .withForceDepMgmtVersions(forceDepMgmtVersions.getOrElse(false))
+    val res = Resolution().copy(
+      rootDependencies = deps,
+      filter = filter,
+      userActivations = profiles.map { profiles0 =>
+        profiles0
+          .iterator
+          .map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true)
+          .toMap
+      },
+      mapDependencies = mapDependencies,
+      forceVersions0 = forceVersions,
+      defaultConfiguration = defaultConfiguration,
+      reconciliation0 = reconciliation,
+      forceDepMgmtVersions = forceDepMgmtVersions.getOrElse(false)
+    )
     val r = ResolutionProcess(res).run0(fetch0)
 
     val t = Gather[F].map(r) { res =>
@@ -150,7 +149,7 @@ class TestRunner[F[_]: Gather: ToFuture](
     async {
 
       val dep = Dependency(module, version)
-        .withVariantSelector(VariantSelector.ConfigurationBased(configuration))
+        .copy(variantSelector = VariantSelector.ConfigurationBased(configuration))
       val res = await {
         resolve(
           Seq(dep),
@@ -168,11 +167,11 @@ class TestRunner[F[_]: Gather: ToFuture](
           val projOpt = res.projectCache0
             .get(dep.moduleVersionConstraint)
             .map { case (_, proj) => proj }
-          val dep0 = dep.withVersionConstraint {
-            projOpt.fold(dep.versionConstraint) { p =>
+          val dep0 = dep.copy(
+            versionConstraint = projOpt.fold(dep.versionConstraint) { p =>
               VersionConstraint.fromVersion(p.actualVersion0)
             }
-          }
+          )
           (
             dep0.module.organization.value,
             dep0.module.nameWithAttributes,
@@ -263,7 +262,7 @@ class TestRunner[F[_]: Gather: ToFuture](
     f: Seq[Artifact] => T
   ): Future[T] = {
     val dep = Dependency(module, VersionConstraint(version))
-      .withTransitive(transitive)
+      .copy(transitive = transitive)
       .withAttributes(attributes)
     withArtifacts(dep, extraRepos, classifierOpt)(f)
   }

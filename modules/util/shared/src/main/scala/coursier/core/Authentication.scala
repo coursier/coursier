@@ -3,9 +3,9 @@ package coursier.core
 import java.nio.charset.StandardCharsets
 import java.util.Base64
 
-import dataclass.{data, since}
+import dataclass.{data, since => unroll}
 
-@data class Authentication(
+@data case class Authentication(
   userOpt: Option[String],
   passwordOpt: Option[String],
   httpHeaders: Seq[(String, String)],
@@ -13,7 +13,7 @@ import dataclass.{data, since}
   realmOpt: Option[String],
   httpsOnly: Boolean,
   passOnRedirect: Boolean,
-  @since
+  @unroll
   byNameHttpHeaders: Seq[() => Seq[(String, String)]] = Nil
 ) {
 
@@ -44,7 +44,7 @@ import dataclass.{data, since}
     }
 
   def withUser(newUser: String): Authentication =
-    withUserOpt(Some(newUser))
+    copy(userOpt = Some(newUser))
 
   override def toString: String = {
     val headersStr = httpHeaders.map {
@@ -58,9 +58,9 @@ import dataclass.{data, since}
   }
 
   def withPassword(password: String): Authentication =
-    withPasswordOpt(Some(password))
+    copy(passwordOpt = Some(password))
   def withRealm(realm: String): Authentication =
-    withRealmOpt(Some(realm))
+    copy(realmOpt = Some(realm))
 
   def userOnly: Boolean =
     userOpt.forall { user =>

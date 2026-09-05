@@ -84,7 +84,7 @@ object TestHelpers extends PlatformTestHelpers {
             Dependency(
               rootDep.module,
               rootDep.versionConstraint
-            ).withVariantSelector(rootDep.variantSelector)
+            ).copy(variantSelector = rootDep.variantSelector)
           )
           ds == simpleDeps
         }
@@ -125,9 +125,9 @@ object TestHelpers extends PlatformTestHelpers {
           // hack not to have to edit / review lots of test fixtures
           val params0 =
             if (params.defaultConfiguration == Configuration.defaultRuntime)
-              params.withDefaultConfiguration(Configuration.compile)
+              params.copy(defaultConfiguration = Configuration.compile)
             else if (params.defaultConfiguration == Configuration.compile)
-              params.withDefaultConfiguration(Configuration("really-compile"))
+              params.copy(defaultConfiguration = Configuration("really-compile"))
             else
               params
           // This avoids some sha1 changes

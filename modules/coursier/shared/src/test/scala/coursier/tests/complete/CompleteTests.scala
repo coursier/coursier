@@ -20,7 +20,7 @@ object CompleteTests extends TestSuite {
     async {
       val res = await {
         complete
-          .withInput(input)
+          .copy(input = input)
           .complete()
           .future()
       }
@@ -33,9 +33,11 @@ object CompleteTests extends TestSuite {
     test("maven") {
 
       val complete = Complete(cache)
-        .withRepositories(Seq(
-          Repositories.central
-        ))
+        .copy(
+          repositories = Seq(
+            Repositories.central
+          )
+        )
         .withScalaVersion("2.12.8")
 
       val simple = simpleUsing(complete) _
@@ -678,7 +680,7 @@ object CompleteTests extends TestSuite {
       )
 
       val complete = Complete(handmadeMetadataCache)
-        .withRepositories(Seq(repo))
+        .copy(repositories = Seq(repo))
         .withScalaVersion("2.12.8")
 
       val simple = simpleUsing(complete) _
@@ -702,9 +704,11 @@ object CompleteTests extends TestSuite {
       "should use 3 as binary version when binary version not specified and full version scala 3"
     ) {
       val complete = Complete(cache)
-        .withRepositories(Seq(
-          Repositories.central
-        ))
+        .copy(
+          repositories = Seq(
+            Repositories.central
+          )
+        )
         .withScalaVersion("3.2.0")
 
       val simple = simpleUsing(complete) _

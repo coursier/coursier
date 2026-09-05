@@ -51,14 +51,14 @@ object JavaOrScalaModule {
           scalaVersion
       }
 
-  @data class JavaModule(module: Module) extends JavaOrScalaModule {
+  @data case class JavaModule(module: Module) extends JavaOrScalaModule {
     def attributes: Map[String, String] = module.attributes
     override def toString =
       module.toString
     def module(scalaBinaryVersion: String, scalaVersion: String): Module =
       module
   }
-  @data class ScalaModule(
+  @data case class ScalaModule(
     baseModule: Module,
     fullCrossVersion: Boolean
   ) extends JavaOrScalaModule {
@@ -75,7 +75,7 @@ object JavaOrScalaModule {
 
       val newName = baseModule.name.value + scalaSuffix
 
-      baseModule.withName(ModuleName(newName))
+      baseModule.copy(name = ModuleName(newName))
     }
   }
 }

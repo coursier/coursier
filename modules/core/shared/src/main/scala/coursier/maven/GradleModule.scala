@@ -23,7 +23,7 @@ import coursier.version.{Version, VersionConstraint}
 import dataclass.data
 import coursier.core.VariantPublication
 
-@data class GradleModule(
+@data case class GradleModule(
   formatVersion: String,
   component: GradleModule.Component,
   variants: Seq[GradleModule.Variant] = Nil
@@ -100,7 +100,7 @@ import coursier.core.VariantPublication
 
         val dependency0 =
           if (dep.endorseStrictVersions.getOrElse(false))
-            dependency.withEndorseStrictVersions(true)
+            dependency.copy(endorseStrictVersions = true)
           else
             dependency
 
@@ -117,7 +117,11 @@ import coursier.core.VariantPublication
           val variant0 = Variant.Attributes(variant.name)
           Seq(
             variant0 -> Dependency(
-              Module(Organization(availableAt.group), ModuleName(availableAt.module), Map.empty),
+              Module(
+                Organization(availableAt.group),
+                ModuleName(availableAt.module),
+                Map.empty
+              ),
               VersionConstraint.fromVersion(Version(availableAt.version)),
               VariantSelector.AttributesBased(Map.empty),
               MinimizedExclusions.zero,
@@ -170,7 +174,11 @@ import coursier.core.VariantPublication
 
     val baseProject = Project(
       module =
-        Module(Organization(actualComponent.group), ModuleName(actualComponent.module), Map.empty),
+        Module(
+          Organization(actualComponent.group),
+          ModuleName(actualComponent.module),
+          Map.empty
+        ),
       version0 = Version(actualComponent.version),
       dependencies0 = dependencies,
       configurations = GradleModule.defaultConfigurations,
@@ -198,8 +206,7 @@ import coursier.core.VariantPublication
     )
 
     baseProject
-      .withVariants(variantsMap)
-      .withVariantPublications(variantPublications)
+      .copy(variants = variantsMap, variantPublications = variantPublications)
   }
 }
 
@@ -256,7 +263,7 @@ object GradleModule {
       }
   }
 
-  @data class Component(
+  @data case class Component(
     group: String,
     module: String,
     version: String,
@@ -268,7 +275,7 @@ object GradleModule {
     }
   }
 
-  @data class Variant(
+  @data case class Variant(
     name: String,
     attributes: Map[String, StringOrInt],
     dependencies: Seq[ModuleDependency],
@@ -290,7 +297,7 @@ object GradleModule {
       }
   }
 
-  @data class ModuleDependency(
+  @data case class ModuleDependency(
     group: String,
     module: String,
     version0: Map[String, StringOrSeqString],
@@ -303,8 +310,8 @@ object GradleModule {
           k -> str
       }
     def withVersion(version: Map[String, String]): ModuleDependency =
-      withVersion0(
-        version.map {
+      copy(
+        version0 = version.map {
           case (k, v) =>
             (k, StringOrSeqString(Right(v)))
         }
@@ -348,7 +355,7 @@ object GradleModule {
       }
   }
 
-  @data class ModuleFile(
+  @data case class ModuleFile(
     name: String,
     url: String,
     size: Option[Long] = None,
@@ -358,14 +365,14 @@ object GradleModule {
     md5: Option[String] = None
   )
 
-  @data class AvailableAt(
+  @data case class AvailableAt(
     url: String,
     group: String,
     module: String,
     version: String
   )
 
-  @data class Capability(
+  @data case class Capability(
     group: String,
     name: String,
     version: String

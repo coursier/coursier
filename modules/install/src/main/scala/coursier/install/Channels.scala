@@ -1,5 +1,7 @@
 package coursier.install
 
+import dataclass.{data, since => unroll}
+
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
@@ -14,17 +16,16 @@ import coursier.ivy.IvyRepository
 import coursier.maven.MavenRepositoryLike
 import coursier.parse.RawJson
 import coursier.util.{Artifact, Task}
-import dataclass._
-
+import coursier.util.StringInterpolators._
 import scala.jdk.CollectionConverters._
 
-@data class Channels(
+@data case class Channels(
   channels: Seq[Channel] = Channels.defaultChannels,
   repositories: Seq[Repository] = coursier.Resolve.defaultRepositories,
   cache: Cache[Task] = Cache.default,
-  @since
+  @unroll
   verbosity: Int = 0,
-  @since("2.0.10")
+  @unroll
   logChannelVersion: Boolean = false
 ) {
 

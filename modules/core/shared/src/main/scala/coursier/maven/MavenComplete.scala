@@ -5,7 +5,7 @@ import coursier.util.Monad
 import coursier.version.Version
 import dataclass.data
 
-@data class MavenComplete[F[_]](
+@data case class MavenComplete[F[_]](
   repo: MavenRepositoryLike,
   fetch: Repository.Fetch[F],
   F: Monad[F]

@@ -22,10 +22,11 @@ object RetryTests extends TestSuite {
   private def retryCount = 6
 
   private def fileCache(dir: os.Path): FileCache[Task] =
-    FileCache[Task]((dir / "cache").toIO)
-      .withRetryBackoffInitialDelay(0.millis)
-      .withChecksums(Seq(None))
-      .withRetry(retryCount)
+    FileCache[Task]((dir / "cache").toIO).copy(
+      retryBackoffInitialDelay = 0.millis,
+      checksums = Seq(None),
+      retry = retryCount
+    )
 
   private def get(dir: os.Path): Either[ArtifactError, File] =
     get(fileCache(dir), artifact)
@@ -139,8 +140,8 @@ object RetryTests extends TestSuite {
       withTmpDir { dir =>
         // Optional credentials: a 4xx used to be read as a hint that the request is worth
         // re-sending, non-optionally, straight away - which is precisely what a 429 is not.
-        val artifact0 = artifact.withAuthentication(
-          Some(Authentication("user", "pass").withOptional(true))
+        val artifact0 = artifact.copy(
+          authentication = Some(Authentication("user", "pass").copy(optional = true))
         )
         val result = get(fileCache(dir), artifact0)
         assert(result.isLeft)
@@ -156,8 +157,10 @@ object RetryTests extends TestSuite {
 
       withTmpDir { dir =>
         val cache = fileCache(dir)
-          .withCachePolicies(Seq(CachePolicy.Update))
-          .withTtl(1.hour)
+          .copy(
+            cachePolicies = Seq(CachePolicy.Update),
+            ttl = Some(1.hour)
+          )
 
         // a cached file, with no ".checked" file alongside it, so the TTL check has to ask
         // the server whether it is still current - with a HEAD request

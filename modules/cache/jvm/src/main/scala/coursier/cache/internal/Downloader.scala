@@ -19,7 +19,7 @@ import coursier.credentials.DirectCredentials
 import coursier.paths.{CachePath, Util}
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
-import dataclass._
+import dataclass.{data, since => unroll}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -28,7 +28,7 @@ import scala.util.Properties
 import scala.util.control.NonFatal
 
 // format: off
-@data class Downloader[F[_]](
+@data case class Downloader[F[_]](
   artifact: Artifact,
   cachePolicy: CachePolicy,
   location: File,
@@ -46,17 +46,17 @@ import scala.util.control.NonFatal
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   bufferSize: Int = CacheDefaults.bufferSize,
-  @since("2.0.16")
+  @unroll
     classLoaders: Seq[ClassLoader] = Nil,
-  @since("2.1.0-RC3")
+  @unroll
     clock: Clock = Clock.systemDefaultZone(),
-  @since("2.1.11")
+  @unroll
     retryCount: Int = CacheDefaults.retryCount,
-  @since("2.1.11")
+  @unroll
     retryBackoffInitialDelay: FiniteDuration = CacheDefaults.retryBackoffInitialDelay,
-  @since("2.1.11")
+  @unroll
     retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier,
-  @since("2.1.25")
+  @unroll
     retryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.retryBackoffMaxDelay,
     retryPollMaxDelay: Option[FiniteDuration] = CacheDefaults.retryPollMaxDelay,
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
@@ -143,17 +143,19 @@ import scala.util.control.NonFatal
 
       try {
         conn = ConnectionBuilder(url)
-          .withAuthentication(artifact.authentication)
-          .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
-          .withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections)
-          .withAutoCredentials(allCredentials0)
-          .withSslSocketFactoryOpt(sslSocketFactoryOpt)
-          .withHostnameVerifierOpt(hostnameVerifierOpt)
-          .withMethod("HEAD")
-          .withMaxRedirectionsOpt(maxRedirections)
-          .withClassLoaders(classLoaders)
-          .withConnectTimeout(connectTimeout)
-          .withReadTimeout(readTimeout)
+          .copy(
+            authentication = artifact.authentication,
+            followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+            followHttpsToHttpRedirections = followHttpsToHttpRedirections,
+            autoCredentials = allCredentials0,
+            sslSocketFactoryOpt = sslSocketFactoryOpt,
+            hostnameVerifierOpt = hostnameVerifierOpt,
+            method = "HEAD",
+            maxRedirectionsOpt = maxRedirections,
+            classLoaders = classLoaders,
+            connectTimeout = connectTimeout,
+            readTimeout = readTimeout
+          )
           .connection()
 
         conn match {
@@ -280,18 +282,20 @@ import scala.util.control.NonFatal
 
       try {
         val (conn0, partialDownload) = ConnectionBuilder(url)
-          .withAuthentication(authenticationOpt)
-          .withAlreadyDownloaded(alreadyDownloaded)
-          .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
-          .withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections)
-          .withAutoCredentials(allCredentials0.filter(_.matchHost)) // just in case
-          .withSslSocketFactoryOpt(sslSocketFactoryOpt)
-          .withHostnameVerifierOpt(hostnameVerifierOpt)
-          .withMethod("GET")
-          .withMaxRedirectionsOpt(maxRedirections)
-          .withClassLoaders(classLoaders)
-          .withConnectTimeout(connectTimeout)
-          .withReadTimeout(readTimeout)
+          .copy(
+            authentication = authenticationOpt,
+            alreadyDownloaded = alreadyDownloaded,
+            followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+            followHttpsToHttpRedirections = followHttpsToHttpRedirections,
+            autoCredentials = allCredentials0.filter(_.matchHost), // just in case
+            sslSocketFactoryOpt = sslSocketFactoryOpt,
+            hostnameVerifierOpt = hostnameVerifierOpt,
+            method = "GET",
+            maxRedirectionsOpt = maxRedirections,
+            classLoaders = classLoaders,
+            connectTimeout = connectTimeout,
+            readTimeout = readTimeout
+          )
           .connectionMaybePartial()
         conn = conn0
 
@@ -1047,16 +1051,18 @@ object Downloader {
 
     try {
       conn = ConnectionBuilder(url)
-        .withAuthentication(authentication)
-        .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
-        .withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections)
-        .withAutoCredentials(credentials)
-        .withSslSocketFactoryOpt(sslSocketFactoryOpt)
-        .withHostnameVerifierOpt(hostnameVerifierOpt)
-        .withMethod("HEAD")
-        .withMaxRedirectionsOpt(maxRedirectionsOpt)
-        .withConnectTimeout(connectTimeout)
-        .withReadTimeout(readTimeout)
+        .copy(
+          authentication = authentication,
+          followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+          followHttpsToHttpRedirections = followHttpsToHttpRedirections,
+          autoCredentials = credentials,
+          sslSocketFactoryOpt = sslSocketFactoryOpt,
+          hostnameVerifierOpt = hostnameVerifierOpt,
+          method = "HEAD",
+          maxRedirectionsOpt = maxRedirectionsOpt,
+          connectTimeout = connectTimeout,
+          readTimeout = readTimeout
+        )
         .connection()
 
       conn match {

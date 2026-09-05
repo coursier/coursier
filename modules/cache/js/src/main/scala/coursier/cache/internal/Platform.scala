@@ -33,7 +33,7 @@ object Platform {
   def get(url: String)(implicit executionContext: ExecutionContext): Future[String] = {
     val p       = Promise[String]()
     val xhrReq0 = xhrReq()
-    val f = { _: Event =>
+    val f = { (_: Event) =>
       if (xhrReq0.status >= 200 && xhrReq0.status < 300)
         p.success(xhrReq0.responseText)
       else

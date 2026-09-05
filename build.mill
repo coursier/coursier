@@ -56,6 +56,11 @@ implicit def millModuleBasePath: ModuleCtx.Nested =
     this
   )
 
+// Modules whose sources use the data-class `@data` / `@since` annotations.
+trait DataClassModule extends CsScalaModule with CrossModuleBase {
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(Deps.dataClass)
+}
+
 object util extends Module {
   object shared extends SharedScalaSources
   object jvm    extends Cross[UtilJvm](ScalaVersions.all)
@@ -322,7 +327,7 @@ object `test-cache` extends Module {
   object js  extends Cross[TestCacheJs](ScalaVersions.all)
 }
 
-trait UtilJvm extends UtilJvmBase {
+trait UtilJvm extends UtilJvmBase with DataClassModule {
   def sources = Task {
     super.sources() ++ util.shared.sources()
   }
@@ -330,13 +335,13 @@ trait UtilJvm extends UtilJvmBase {
     Deps.jsoup
   )
 }
-trait UtilJs extends CsScalaJsModule with Util {
+trait UtilJs extends CsScalaJsModule with Util with DataClassModule {
   def sources = Task {
     super.sources() ++ util.shared.sources()
   }
 }
 
-trait CoreJvm extends Core with CoreJvmBase with Shading {
+trait CoreJvm extends Core with CoreJvmBase with Shading with DataClassModule {
   def sources = Task {
     val versionSources =
       if (scalaVersion().startsWith("2.12")) core.shared.sourcesScala212()
@@ -360,7 +365,7 @@ trait CoreJvm extends Core with CoreJvmBase with Shading {
     )
   }
 }
-trait CoreJs extends Core with CsScalaJsModule {
+trait CoreJs extends Core with CsScalaJsModule with DataClassModule {
   def sources = Task {
     val versionSources =
       if (scalaVersion().startsWith("2.12")) core.shared.sourcesScala212()
@@ -387,7 +392,7 @@ trait CoreJs extends Core with CsScalaJsModule {
   }
 }
 
-trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase {
+trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase with DataClassModule {
   def sources = Task {
     super.sources() ++ `sbt-maven-repository`.shared.sources()
   }
@@ -396,7 +401,7 @@ trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase {
   )
 }
 trait SbtMavenRepositoryJs extends SbtMavenRepository
-    with CsScalaJsModule {
+    with CsScalaJsModule with DataClassModule {
   def sources = Task {
     super.sources() ++ `sbt-maven-repository`.shared.sources()
   }
@@ -416,7 +421,7 @@ trait CacheUtil extends CoursierPublishModule with CsMima {
   }
 }
 
-trait CacheJvm extends CacheJvmBase {
+trait CacheJvm extends CacheJvmBase with DataClassModule {
   def sources = Task {
     super.sources() ++ cache.shared.sources()
   }
@@ -462,7 +467,7 @@ trait CacheJvm extends CacheJvmBase {
     )
   }
 }
-trait CacheJs extends Cache with CsScalaJsModule {
+trait CacheJs extends Cache with CsScalaJsModule with DataClassModule {
   def sources = Task {
     super.sources() ++ cache.shared.sources()
   }
@@ -475,7 +480,7 @@ trait CacheJs extends Cache with CsScalaJsModule {
   )
 }
 
-trait ArchiveCache extends ArchiveCacheBase {
+trait ArchiveCache extends ArchiveCacheBase with DataClassModule {
   def moduleDeps = Seq(
     cache.jvm()
   )
@@ -513,15 +518,12 @@ trait ArchiveCache extends ArchiveCacheBase {
   }
 }
 
-trait Launcher extends LauncherBase {
+trait Launcher extends LauncherBase with DataClassModule {
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.collectionCompat,
     Deps.jarjarAbrams,
     Deps.noCrcZis,
     Deps.pythonNativeLibs
-  )
-  def compileMvnDeps = Seq(
-    Deps.dataClass
   )
   def commitHash = `build-util`.commitHash
 
@@ -534,14 +536,11 @@ trait Launcher extends LauncherBase {
 }
 
 trait Env extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima {
+    with CoursierPublishModule with CsMima with DataClassModule {
   def mimaPreviousVersions = Task {
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
   def artifactName = "coursier-env"
-  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.dataClass
-  )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.collectionCompat,
     Deps.jniUtils
@@ -568,7 +567,7 @@ trait LauncherNative04 extends CsModule
   )
 }
 
-trait CoursierJvm extends CoursierJvmBase { self =>
+trait CoursierJvm extends CoursierJvmBase with DataClassModule { self =>
   def sources = Task {
     super.sources() ++ coursier.shared.sources()
   }
@@ -617,7 +616,7 @@ trait CoursierJvm extends CoursierJvmBase { self =>
     }
   }
 }
-trait CoursierJs extends Coursier with CsScalaJsModule {
+trait CoursierJs extends Coursier with CsScalaJsModule with DataClassModule {
   def sources = Task {
     super.sources() ++ coursier.shared.sources()
   }

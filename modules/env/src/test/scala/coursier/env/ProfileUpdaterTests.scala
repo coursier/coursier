@@ -40,17 +40,19 @@ object ProfileUpdaterTests extends TestSuite {
       Files.write(home.resolve(".profile"), initialContent.getBytes("UTF-8"))
 
       val updater = ProfileUpdater()
-        .withHome(Some(home))
-        .withGetEnv(Some(_ => None))
-        .withCharset(StandardCharsets.UTF_8)
-        .withPathSeparator(":")
+        .copy(
+          home = Some(home),
+          getEnv = Some(_ => None),
+          charset = StandardCharsets.UTF_8,
+          pathSeparator = ":"
+        )
 
       val expectedProfileFiles = Seq("/home/alex/.profile")
       val profileFiles         = updater.profileFiles().map(_.toString)
       assert(profileFiles == expectedProfileFiles)
 
       val update = EnvironmentUpdate()
-        .withPathLikeAppends(Seq("PATH" -> "/foo/bin"))
+        .copy(pathLikeAppends = Seq("PATH" -> "/foo/bin"))
 
       updater.applyUpdate(update)
 
@@ -69,16 +71,18 @@ object ProfileUpdaterTests extends TestSuite {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex")
       val updater = ProfileUpdater()
-        .withHome(Some(home))
-        .withGetEnv(Some(_ => None))
-        .withCharset(StandardCharsets.UTF_8)
-        .withPathSeparator(":")
+        .copy(
+          home = Some(home),
+          getEnv = Some(_ => None),
+          charset = StandardCharsets.UTF_8,
+          pathSeparator = ":"
+        )
 
       val expectedProfileFiles = Seq("/home/alex/.profile")
       val profileFiles         = updater.profileFiles().map(_.toString)
       assert(profileFiles == expectedProfileFiles)
 
-      val update = EnvironmentUpdate().withSet(Seq("JAVA_HOME" -> "/foo/jvm/oracle-jdk-1.5"))
+      val update = EnvironmentUpdate().copy(set = Seq("JAVA_HOME" -> "/foo/jvm/oracle-jdk-1.5"))
       updater.applyUpdate(update)
 
       val expectedInDotProfile =
@@ -97,16 +101,18 @@ object ProfileUpdaterTests extends TestSuite {
         "SHELL" -> "/bin/fish"
       )
       val updater = ProfileUpdater()
-        .withHome(Some(home))
-        .withGetEnv(Some(env.get))
-        .withCharset(StandardCharsets.UTF_8)
-        .withPathSeparator(":")
+        .copy(
+          home = Some(home),
+          getEnv = Some(env.get),
+          charset = StandardCharsets.UTF_8,
+          pathSeparator = ":"
+        )
 
       val expectedProfileFiles = Seq("/home/alex/.config/fish/config.fish")
       val profileFiles         = updater.profileFiles().map(_.toString)
       assert(profileFiles == expectedProfileFiles)
 
-      val update = EnvironmentUpdate().withSet(Seq("JAVA_HOME" -> "/foo/jvm/oracle-jdk-1.5"))
+      val update = EnvironmentUpdate().copy(set = Seq("JAVA_HOME" -> "/foo/jvm/oracle-jdk-1.5"))
       updater.applyUpdate(update)
 
       val expectedInFishConfig =
@@ -126,10 +132,12 @@ object ProfileUpdaterTests extends TestSuite {
       val home = fs.getPath("/home/alex")
       val env  = Map("SHELL" -> "/bin/zsh")
       val updater = ProfileUpdater()
-        .withHome(Some(home))
-        .withGetEnv(Some(env.get))
-        .withCharset(StandardCharsets.UTF_8)
-        .withPathSeparator(":")
+        .copy(
+          home = Some(home),
+          getEnv = Some(env.get),
+          charset = StandardCharsets.UTF_8,
+          pathSeparator = ":"
+        )
 
       val expectedProfileFiles = Set(
         "/home/alex/.profile",
@@ -139,7 +147,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(profileFiles == expectedProfileFiles)
 
       val update = EnvironmentUpdate()
-        .withPathLikeAppends(Seq("PATH" -> "/foo/bin"))
+        .copy(pathLikeAppends = Seq("PATH" -> "/foo/bin"))
 
       updater.applyUpdate(update)
 
@@ -167,10 +175,12 @@ object ProfileUpdaterTests extends TestSuite {
       val home = fs.getPath("/home/alex")
       val env  = Map("SHELL" -> "/bin/zsh")
       val updater = ProfileUpdater()
-        .withHome(Some(home))
-        .withGetEnv(Some(env.get))
-        .withCharset(StandardCharsets.UTF_8)
-        .withPathSeparator(":")
+        .copy(
+          home = Some(home),
+          getEnv = Some(env.get),
+          charset = StandardCharsets.UTF_8,
+          pathSeparator = ":"
+        )
 
       val expectedProfileFiles = Set(
         "/home/alex/.profile",
@@ -181,7 +191,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(profileFiles == expectedProfileFiles)
 
       val update = EnvironmentUpdate()
-        .withPathLikeAppends(Seq("PATH" -> "/foo/bin"))
+        .copy(pathLikeAppends = Seq("PATH" -> "/foo/bin"))
 
       updater.applyUpdate(update)
 
@@ -207,10 +217,12 @@ object ProfileUpdaterTests extends TestSuite {
       val home = fs.getPath("/home/alex")
       val env  = Map("SHELL" -> "/bin/zsh", "ZDOTDIR" -> "/the/zdotdir")
       val updater = ProfileUpdater()
-        .withHome(Some(home))
-        .withGetEnv(Some(env.get))
-        .withCharset(StandardCharsets.UTF_8)
-        .withPathSeparator(":")
+        .copy(
+          home = Some(home),
+          getEnv = Some(env.get),
+          charset = StandardCharsets.UTF_8,
+          pathSeparator = ":"
+        )
 
       val expectedProfileFiles = Set(
         "/home/alex/.profile",
@@ -220,7 +232,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(profileFiles == expectedProfileFiles)
 
       val update = EnvironmentUpdate()
-        .withPathLikeAppends(Seq("PATH" -> "/foo/bin"))
+        .copy(pathLikeAppends = Seq("PATH" -> "/foo/bin"))
 
       updater.applyUpdate(update)
 
@@ -242,17 +254,19 @@ object ProfileUpdaterTests extends TestSuite {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex")
       val updater = ProfileUpdater()
-        .withHome(Some(home))
-        .withGetEnv(Some(_ => None))
-        .withCharset(StandardCharsets.UTF_8)
-        .withPathSeparator(":")
+        .copy(
+          home = Some(home),
+          getEnv = Some(_ => None),
+          charset = StandardCharsets.UTF_8,
+          pathSeparator = ":"
+        )
 
       val expectedProfileFiles = Seq("/home/alex/.profile")
       val profileFiles         = updater.profileFiles().map(_.toString)
       assert(profileFiles == expectedProfileFiles)
 
       val update = EnvironmentUpdate()
-        .withPathLikeAppends(Seq("PATH" -> "/foo/bin"))
+        .copy(pathLikeAppends = Seq("PATH" -> "/foo/bin"))
 
       updater.applyUpdate(update)
 
@@ -275,10 +289,12 @@ object ProfileUpdaterTests extends TestSuite {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex")
       val updater = ProfileUpdater()
-        .withHome(Some(home))
-        .withGetEnv(Some(_ => None))
-        .withCharset(StandardCharsets.UTF_8)
-        .withPathSeparator(":")
+        .copy(
+          home = Some(home),
+          getEnv = Some(_ => None),
+          charset = StandardCharsets.UTF_8,
+          pathSeparator = ":"
+        )
       val title = "foo title"
 
       val expectedProfileFiles = Seq("/home/alex/.profile")
@@ -286,7 +302,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(profileFiles == expectedProfileFiles)
 
       val update = EnvironmentUpdate()
-        .withPathLikeAppends(Seq("PATH" -> "/foo/bin"))
+        .copy(pathLikeAppends = Seq("PATH" -> "/foo/bin"))
 
       updater.applyUpdate(update, title)
 
@@ -300,7 +316,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(dotProfile.contains(expectedInDotProfile))
 
       val newUpdate = EnvironmentUpdate()
-        .withPathLikeAppends(Seq("PATH" -> "/other/bin"))
+        .copy(pathLikeAppends = Seq("PATH" -> "/other/bin"))
 
       updater.applyUpdate(newUpdate, title)
 
@@ -333,10 +349,12 @@ object ProfileUpdaterTests extends TestSuite {
         "SHELL" -> "/bin/fish"
       )
       val updater = ProfileUpdater()
-        .withHome(Some(home))
-        .withGetEnv(Some(env.get))
-        .withCharset(StandardCharsets.UTF_8)
-        .withPathSeparator(":")
+        .copy(
+          home = Some(home),
+          getEnv = Some(env.get),
+          charset = StandardCharsets.UTF_8,
+          pathSeparator = ":"
+        )
       val title = "foo title"
 
       val expectedProfileFiles = Seq("/home/alex/.config/fish/config.fish")
@@ -344,7 +362,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(profileFiles == expectedProfileFiles)
 
       val update = EnvironmentUpdate()
-        .withPathLikeAppends(Seq("PATH" -> "/foo/bin"))
+        .copy(pathLikeAppends = Seq("PATH" -> "/foo/bin"))
 
       updater.applyUpdate(update, title)
 
@@ -358,7 +376,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(fishConfig.contains(expectedInFishConfig))
 
       val newUpdate = EnvironmentUpdate()
-        .withPathLikeAppends(Seq("PATH" -> "/other/bin"))
+        .copy(pathLikeAppends = Seq("PATH" -> "/other/bin"))
 
       updater.applyUpdate(newUpdate, title)
 
@@ -398,10 +416,12 @@ object ProfileUpdaterTests extends TestSuite {
       Files.write(home.resolve(".profile"), initialContent.getBytes("UTF-8"))
 
       val updater = ProfileUpdater()
-        .withHome(Some(home))
-        .withGetEnv(Some(_ => None))
-        .withCharset(StandardCharsets.UTF_8)
-        .withPathSeparator(":")
+        .copy(
+          home = Some(home),
+          getEnv = Some(_ => None),
+          charset = StandardCharsets.UTF_8,
+          pathSeparator = ":"
+        )
       val title = "foo title"
 
       val expectedProfileFiles = Seq("/home/alex/.profile")
@@ -409,7 +429,7 @@ object ProfileUpdaterTests extends TestSuite {
       assert(profileFiles == expectedProfileFiles)
 
       val update = EnvironmentUpdate()
-        .withPathLikeAppends(Seq("PATH" -> "/foo/bin"))
+        .copy(pathLikeAppends = Seq("PATH" -> "/foo/bin"))
 
       updater.applyUpdate(update, title)
 

@@ -29,7 +29,7 @@ object compatibility {
   def artifact[F[_]: Sync]: Repository.Fetch[F] =
     TestCache.cache[F].fetch
   def artifactWithProxy[F[_]: Sync](proxy: java.net.Proxy): Repository.Fetch[F] =
-    TestCache.cache[F].withProxy(Some(proxy)).fetch
+    TestCache.cache[F].copy(proxy = Some(proxy)).fetch
 
   val taskArtifact = artifact[Task]
 

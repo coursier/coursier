@@ -22,7 +22,7 @@ object IvyTests extends TestSuite {
   // only tested on the JVM for lack of support of XML attributes in the platform-dependent XML stubs
 
   val sbtRepo = ivy"https://repo.scala-sbt.org/scalasbt/sbt-plugin-releases/[defaultPattern]"
-    .withDropInfoAttributes(true)
+    .copy(dropInfoAttributes = true)
 
   private val runner = new TestRunner
 
@@ -84,7 +84,7 @@ object IvyTests extends TestSuite {
       test("-SNAPSHOT suffix") {
 
         val dep = Dependency(mod"com.example:a_2.11", VersionConstraint("0.1.0-SNAPSHOT"))
-          .withTransitive(false)
+          .copy(transitive = false)
           .withAttributes(Attributes(Type.jar, Classifier.empty))
 
         runner.withArtifacts(
@@ -104,7 +104,7 @@ object IvyTests extends TestSuite {
       test("-SNAPSHOT suffix") {
 
         val dep = Dependency(mod"com.example:a_2.11", VersionConstraint("0.2.0.SNAPSHOT"))
-          .withTransitive(false)
+          .copy(transitive = false)
           .withAttributes(Attributes(Type.jar, Classifier.empty))
 
         runner.withArtifacts(
@@ -125,7 +125,7 @@ object IvyTests extends TestSuite {
     test("testArtifacts") {
 
       val dep = Dependency(mod"com.example:a_2.11", VersionConstraint("0.1.0-SNAPSHOT"))
-        .withTransitive(false)
+        .copy(transitive = false)
         .withAttributes(Attributes.empty)
 
       val mainJarUrl = repoBase + "com.example/a_2.11/0.1.0-SNAPSHOT/jars/a_2.11.jar"
@@ -149,7 +149,9 @@ object IvyTests extends TestSuite {
       test("test conf") {
         test("no attributes") {
           runner.withArtifacts(
-            dep = dep.withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test)),
+            dep = dep.copy(
+              variantSelector = VariantSelector.ConfigurationBased(Configuration.test)
+            ),
             extraRepos = Seq(repo),
             classifierOpt = None
           ) { artifacts =>
@@ -162,7 +164,7 @@ object IvyTests extends TestSuite {
         test("attributes") {
           runner.withArtifacts(
             dep = dep
-              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
+              .copy(variantSelector = VariantSelector.ConfigurationBased(Configuration.test))
               .withAttributes(Attributes(Type.jar, Classifier.empty)),
             extraRepos = Seq(repo),
             classifierOpt = None

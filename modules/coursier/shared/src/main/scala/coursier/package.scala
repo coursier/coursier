@@ -88,7 +88,7 @@ package object coursier {
     def apply(): Resolution =
       core.Resolution()
     def apply(dependencies: Seq[Dependency]): Resolution =
-      core.Resolution().withRootDependencies(dependencies)
+      core.Resolution().copy(rootDependencies = dependencies)
 
     def defaultTypes: Set[Type]          = coursier.core.Resolution.defaultTypes
     def enableDependencyOverridesDefault = coursier.core.Resolution.enableDependencyOverridesDefault
