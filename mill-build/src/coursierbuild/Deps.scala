@@ -13,7 +13,7 @@ object Deps {
     def collectionCompat = mvn"org.scala-lang.modules::scala-collection-compat::2.14.0"
     def concurrentReferenceHashMap =
       mvn"io.github.alexarchambault:concurrent-reference-hash-map:1.1.0"
-    def dataClass    = mvn"io.github.alexarchambault::data-class:0.2.9"
+    def dataClass    = mvn"io.github.alexarchambault::data-class:0.2.9-SNAPSHOT"
     def dependency   = mvn"io.get-coursier::dependency::0.3.2"
     def directories  = mvn"io.get-coursier.util:directories-jni:0.1.4"
     def diffUtils    = mvn"io.github.java-diff-utils:java-diff-utils:4.17"
@@ -91,7 +91,7 @@ object Deps {
     def ujson            = mvn"com.lihaoyi::ujson:4.4.3"
     def unrollAnnotation = mvn"com.lihaoyi::unroll-annotation:0.3.0"
     def utest            = mvn"com.lihaoyi::utest::0.9.5"
-    def versions         = mvn"io.get-coursier::versions::0.6.0"
+    def versions         = mvn"io.get-coursier::versions::0.5.4-SNAPSHOT"
     def windowsAnsi      = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
     def windowsAnsiPs =
       mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"

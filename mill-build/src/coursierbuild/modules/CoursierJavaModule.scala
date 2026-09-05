@@ -15,6 +15,10 @@ import java.util.Locale
 import scala.util.Properties
 
 trait CoursierJavaModule extends JavaModule {
+  // FIXME Remove once data-class 0.2.9 is released: its snapshot is only available from there
+  def repositories = super.repositories() ++ Seq(
+    "https://central.sonatype.com/repository/maven-snapshots"
+  )
   def jvmRelease: String =
     CoursierJavaModule.defaultJvmRelease
   def javacSystemJvmId = Task {
