@@ -1968,7 +1968,7 @@ trait CacheServer extends CrossSbtModule with CsModule with CoursierPublishModul
 // by the `interface-v*` tags, see `InterfaceVersion`. `ci.checkPublishVersions` ensures a
 // release can only be cut with an `interface-v*` and a `v*` tag on the same commit.
 
-object interface extends Cross[Interface](ScalaVersions.all)
+object interface extends Interface
 
 object `interface-proguarded` extends InterfaceProguarded
 
@@ -1980,12 +1980,16 @@ trait InterfacePublishModule extends CoursierPublishModule {
 }
 
 /** Input of the proguarding and shading of `interface-proguarded`, not published itself */
-trait Interface extends CrossSbtModule with CsModule {
+trait Interface extends SbtModule with CsModule {
+  // The interface is a Java API, only used from Java or from any Scala version via the shaded
+  // JAR of `interface-proguarded`. Building it for a single Scala version is enough.
+  private def sv = ScalaVersions.scala213
+  def scalaVersion = sv
   // only used to name the JARs, this module isn't published
   def artifactName = "interface-no-shading"
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(),
-    jvm()
+    coursier.jvm(sv),
+    jvm(sv)
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jniUtilsCoursierApi,
@@ -1997,11 +2001,10 @@ trait Interface extends CrossSbtModule with CsModule {
   def depManagement = super.depManagement() ++ Seq(
     mvn"mill-internal:exec:0+mill-internal".exclude("net.java.dev.jna" -> "jna")
   )
-  object test extends CrossSbtTests with CsTests
+  object test extends SbtTests with CsTests
 }
 
 trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
-  def interfaceScalaVersion = ScalaVersions.scala213
   // no cross-version suffix: this module has no Scala code left after proguarding and shading
   def artifactName = "interface"
   def mvnDeps = Seq(
@@ -2029,7 +2032,7 @@ trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
         }
         else
           Nil
-      val classPathOptions = interface(interfaceScalaVersion)
+      val classPathOptions = interface
         .runClasspath()
         .map(_.path)
         .filter(os.exists)
@@ -2168,7 +2171,7 @@ trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
     jar0
   }
 
-  def sourceJar = interface(interfaceScalaVersion).sourceJar()
+  def sourceJar = interface.sourceJar()
 
   object mima extends JavaModule with InterfaceMima {
     // The interface JAR embeds shaded copies of coursier and its dependencies. Only the
@@ -2220,18 +2223,15 @@ trait InterfaceTest extends CrossSbtModule with CsModule with DependsOnInterface
 
 def interfaceTests(scalaVersion: String = defaultScalaVersion) = {
 
-  def crossTests(sv: String) = Seq(
-    // format: off
-    interface       .valuesToModules.get(List(sv)).map(_.test.testForked()),
-    `interface-test`.valuesToModules.get(List(sv)).map(_.test.testForked())
-    // format: on
-  ).flatten
+  def crossTests(sv: String) =
+    `interface-test`.valuesToModules.get(List(sv)).map(_.test.testForked()).toSeq
 
   val scalaVersions =
     if (scalaVersion == "*") ScalaVersions.all
     else Seq(scalaVersion)
 
-  val tasks = scalaVersions.flatMap(crossTests)
+  // `interface` is built with Scala 2.13 only, its tests are run whatever `scalaVersion` is
+  val tasks = interface.test.testForked() +: scalaVersions.flatMap(crossTests)
 
   Task.Command {
     Task.sequence(tasks.map(_.map(_ => ())))()
