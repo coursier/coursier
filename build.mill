@@ -1983,7 +1983,7 @@ trait InterfacePublishModule extends CoursierPublishModule {
 trait Interface extends SbtModule with CsModule {
   // The interface is a Java API, only used from Java or from any Scala version via the shaded
   // JAR of `interface-proguarded`. Building it for a single Scala version is enough.
-  private def sv = ScalaVersions.scala213
+  private def sv   = ScalaVersions.scala213
   def scalaVersion = sv
   // only used to name the JARs, this module isn't published
   def artifactName = "interface-no-shading"
