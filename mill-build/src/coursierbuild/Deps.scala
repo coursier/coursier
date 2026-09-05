@@ -67,7 +67,6 @@ object Deps {
     def scalazCore               = mvn"org.scalaz::scalaz-core::${Versions.scalaz}"
     def scalazConcurrent         = mvn"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
     def scodec                   = mvn"org.scodec::scodec-core:2.3.3"
-    def shapeless                = mvn"com.chuusai::shapeless:2.3.12"
     // stick to slf4j 1.x here, so that the interface module can be used from
     // applications relying on either slf4j 1.x or 2.x. slf4j-api is the only
     // unshaded dependency of the published interface module, so the version
