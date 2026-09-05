@@ -2026,8 +2026,11 @@ trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
   )
 
   def proguardedJar = Task {
-    val dest       = Task.dest / "interface.jar"
-    val configFile = Task.dest / "config.pro"
+    // Resolved dest, so that the paths we hand to proguard below don't have to go through
+    // mill's forwarder symlinks, that only live as long as the current mill run
+    val destDir    = PathRef.toResolvedOsPath(Task.dest)
+    val dest       = destDir / "interface.jar"
+    val configFile = destDir / "config.pro"
     val proguardOptions = {
       val baseOptions = Seq(
         "-dontnote",
@@ -2040,8 +2043,8 @@ trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
         if (sys.props.get("java.version").exists(!_.startsWith("1."))) {
           val javaHome = os.Path(sys.props.getOrElse("java.home", sys.error("java.home not set")))
           Seq(
-            s"-libraryjars ${javaHome / "jmods/java.base.jmod"}",
-            s"-libraryjars ${javaHome / "jmods/java.xml.jmod"}"
+            s"-libraryjars ${PathRef.toResolvedPathString(javaHome / "jmods/java.base.jmod")}",
+            s"-libraryjars ${PathRef.toResolvedPathString(javaHome / "jmods/java.xml.jmod")}"
           )
         }
         else
@@ -2054,7 +2057,7 @@ trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
           val name      = path.last
           val isLibrary = name.startsWith("slf4j-api-") && name.endsWith(".jar")
           if (isLibrary)
-            Seq("-libraryjars", path.toString)
+            Seq("-libraryjars", PathRef.toResolvedPathString(path))
           else {
             val filterOpt =
               if (os.isDir(path))
@@ -2070,17 +2073,20 @@ trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
                     Some("!META-INF/**,!pipes-fork-server-default-log4j2.xml")
                   case _ => Some("!META-INF/**")
                 }
-            Seq("-injars", path.toString + filterOpt.fold("")("(" + _ + ")"))
+            Seq(
+              "-injars",
+              PathRef.toResolvedPathString(path) + filterOpt.fold("")("(" + _ + ")")
+            )
           }
         }
-      val outputOptions = Seq("-outjars", dest.toString)
+      val outputOptions = Seq("-outjars", PathRef.toResolvedPathString(dest))
       baseOptions ++ maybeJava9Options ++ classPathOptions ++ outputOptions
     }
     os.write(configFile, proguardOptions.map(_ + System.lineSeparator()).mkString)
     // mill.util.Jvm, not the coursier-jvm module trait defined above
     mill.util.Jvm.callProcess(
       mainClass = "proguard.ProGuard",
-      mainArgs = Seq("-include", configFile.toString),
+      mainArgs = Seq("-include", PathRef.toResolvedPathString(configFile)),
       classPath = proguard.runClasspath().map(_.path),
       jvmArgs = Seq("-Xmx3172M"),
       stdin = os.Inherit,
