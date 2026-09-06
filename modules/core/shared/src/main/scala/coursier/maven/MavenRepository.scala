@@ -3,7 +3,7 @@ package coursier.maven
 import coursier.core._
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version => Version0}
-import dataclass._
+import dataclass.{data, since => unroll}
 
 object MavenRepository {
 
@@ -31,14 +31,14 @@ object MavenRepository {
     )
 }
 
-@data(apply = false) class MavenRepository(
+@data(apply = false) case class MavenRepository(
   root: String,
   authentication: Option[Authentication] = None,
-  @since
+  @unroll
   changing: Option[Boolean] = None,
-  @since
+  @unroll
   override val versionsCheckHasModule: Boolean = true,
-  @since("2.1.25")
+  @unroll
   override val checkModule: Boolean = false
 ) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi {
 
@@ -82,7 +82,7 @@ object MavenRepository {
     internal.artifactFor(url, changing)
 
   def withChanging(changing: Boolean): MavenRepository =
-    withChanging(Some(changing))
+    copy(changing = Some(changing))
 
   override def fetchVersions[F[_]](
     module: Module,

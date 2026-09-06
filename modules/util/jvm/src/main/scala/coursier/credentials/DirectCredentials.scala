@@ -5,28 +5,28 @@ import java.net.URI
 import coursier.core.Authentication
 
 import scala.util.Try
-import dataclass._
+import dataclass.{data, since => unroll}
 
-@data class DirectCredentials(
+@data case class DirectCredentials(
   host: String = "",
   usernameOpt: Option[String] = None,
   passwordOpt: Option[Password[String]] = None,
-  @since
+  @unroll
   realm: Option[String] = None,
-  @since
+  @unroll
   optional: Boolean = DirectCredentials.defaultOptional,
-  @since
+  @unroll
   matchHost: Boolean = DirectCredentials.defaultMatchHost,
   httpsOnly: Boolean = DirectCredentials.defaultHttpsOnly,
   passOnRedirect: Boolean = DirectCredentials.defaultPassOnRedirect
 ) extends Credentials {
 
   def withUsername(username: String): DirectCredentials =
-    withUsernameOpt(Some(username))
+    copy(usernameOpt = Some(username))
   def withPassword(password: String): DirectCredentials =
-    withPasswordOpt(Some(Password(password)))
+    copy(passwordOpt = Some(Password(password)))
   def withRealm(realm: String): DirectCredentials =
-    withRealm(Option(realm))
+    copy(realm = Option(realm))
 
   private def nonEmpty: Boolean =
     usernameOpt.nonEmpty && passwordOpt.nonEmpty

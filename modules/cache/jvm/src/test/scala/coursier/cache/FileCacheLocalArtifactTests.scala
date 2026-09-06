@@ -26,12 +26,13 @@ object FileCacheLocalArtifactTests extends TestSuite {
   private final class Ctx(val cacheDir: os.Path, val srcDir: os.Path, val cached: Boolean) {
 
     val cache: FileCache[Task] =
-      FileCache[Task](cacheDir.toIO)
-        .withChecksums(Nil)
-        .withCachePolicies(Seq(CachePolicy.FetchMissing))
-        .withLocalArtifactsShouldBeCached(cached)
-        .withTtl(Duration(24L, TimeUnit.HOURS))
-        .withClock(Clock.fixed(t0, zone))
+      FileCache[Task](cacheDir.toIO).copy(
+        checksums = Nil,
+        cachePolicies = Seq(CachePolicy.FetchMissing),
+        localArtifactsShouldBeCached = cached,
+        ttl = Some(Duration(24L, TimeUnit.HOURS)),
+        clock = Clock.fixed(t0, zone)
+      )
 
     val src: os.Path = srcDir / "foo.jar"
     val url: String  = fileUrl(src)
@@ -170,13 +171,13 @@ object FileCacheLocalArtifactTests extends TestSuite {
         withSetup(cached = true) { ctx =>
           assert(ctx.run().isRight)
 
-          val updating = ctx.cache.withCachePolicies(Seq(CachePolicy.Update))
+          val updating = ctx.cache.copy(cachePolicies = Seq(CachePolicy.Update))
 
           // within the TTL, the cached copy answers
           assert(ctx.run(updating).isRight)
 
           // past it, the check is attempted, and fails
-          val later = updating.withClock(Clock.fixed(t0.plusSeconds(25L * 3600L), zone))
+          val later = updating.copy(clock = Clock.fixed(t0.plusSeconds(25L * 3600L), zone))
           ctx.run(later) match {
             case Left(err: ArtifactError.DownloadError) =>
               assert(err.describe.contains("Cannot do HEAD request"))

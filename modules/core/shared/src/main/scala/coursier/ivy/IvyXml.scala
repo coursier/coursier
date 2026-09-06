@@ -180,7 +180,7 @@ object IvyXml {
           pub, // should come from possible artifact nodes
           optional = false,
           transitive = transitive
-        ).withOverridesMap(globalOverrides)
+        ).copy(overridesMap = globalOverrides)
       }
 
   private def publication(node: Node): Publication = {
@@ -218,7 +218,7 @@ object IvyXml {
         .partition(_._1.startsWith("info."))
       val module =
         if (extraInfo.isEmpty) module0
-        else module0.withAttributes(attr)
+        else module0.copy(attributes = attr)
 
       val dependenciesNodeOpt = node.children
         .find(_.label == "dependencies")

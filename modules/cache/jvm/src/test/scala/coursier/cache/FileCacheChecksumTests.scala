@@ -82,7 +82,7 @@ object FileCacheChecksumTests extends TestSuite {
   ) {
 
     def artifact: Artifact =
-      Artifact(url).withChecksumUrls(Map("SHA-1" -> s"$url.sha1"))
+      Artifact(url).copy(checksumUrls = Map("SHA-1" -> s"$url.sha1"))
 
     def run(artifact: Artifact = artifact): Either[ArtifactError, File] =
       cache.file(artifact).run.unsafeRun(wrapExceptions = true)(cache.ec)
@@ -114,10 +114,11 @@ object FileCacheChecksumTests extends TestSuite {
     val state  = new ServerState
     withHttpServer(logRequests(log)(routes(state))) { serverUri =>
       withTmpDir { dir =>
-        val cache = FileCache[Task]((dir / "cache").toIO)
-          .withChecksums(Seq(Some("SHA-1")))
-          .withCachePolicies(Seq(CachePolicy.FetchMissing))
-          .withLogger(logger)
+        val cache = FileCache[Task]((dir / "cache").toIO).copy(
+          checksums = Seq(Some("SHA-1")),
+          cachePolicies = Seq(CachePolicy.FetchMissing),
+          logger = logger
+        )
         f(new Ctx(state, log, logger, cache, (serverUri / "dir" / "foo.jar").renderString))
       }
     }
@@ -128,7 +129,7 @@ object FileCacheChecksumTests extends TestSuite {
     test("a wrong checksum is retried after the corrupt file is removed") {
       withSetup { ctx0 =>
 
-        val ctx = ctx0.withCache(_.withRetry(2))
+        val ctx = ctx0.withCache(_.copy(retry = 2))
         // first attempt gets a checksum that doesn't match, later ones the real one
         ctx.state.sums = Seq(badSum, goodSum)
 
@@ -155,7 +156,7 @@ object FileCacheChecksumTests extends TestSuite {
       withSetup { ctx0 =>
         // If `.foo.jar__sha1.computed` were left behind, the second attempt would validate the
         // freshly downloaded artifact against the digest of the one that was thrown away.
-        val ctx = ctx0.withCache(_.withRetry(2))
+        val ctx = ctx0.withCache(_.copy(retry = 2))
         ctx.state.sums = Seq(badSum, goodSum)
 
         assert(ctx.run().isRight)
@@ -171,7 +172,7 @@ object FileCacheChecksumTests extends TestSuite {
       def check(retry: Int, expectedAttempts: Int, expectedRemovals: Int): Unit =
         withSetup { ctx0 =>
 
-          val ctx = ctx0.withCache(_.withRetry(retry))
+          val ctx = ctx0.withCache(_.copy(retry = retry))
           ctx.state.sums = Seq(badSum)
 
           ctx.run() match {
@@ -228,7 +229,7 @@ object FileCacheChecksumTests extends TestSuite {
       test("is cleared along with the corrupt file when it doesn't match") {
         withSetup { ctx0 =>
 
-          val ctx = ctx0.withCache(_.withRetry(2))
+          val ctx = ctx0.withCache(_.copy(retry = 2))
           ctx.state.asHeader = true
           ctx.state.sums = Seq(badSum, goodSum)
 
@@ -253,7 +254,7 @@ object FileCacheChecksumTests extends TestSuite {
 
         withSetup { ctx0 =>
 
-          val ctx = ctx0.withCache(_.withRetry(3))
+          val ctx = ctx0.withCache(_.copy(retry = 3))
           ctx.state.sumFound = false
 
           ctx.run() match {
@@ -270,7 +271,7 @@ object FileCacheChecksumTests extends TestSuite {
       test("is tolerated when the checksum is optional") {
         withSetup { ctx0 =>
           // the `None` entry is what makes SHA-1 a best-effort check
-          val ctx = ctx0.withCache(_.withChecksums(Seq(Some("SHA-1"), None)))
+          val ctx = ctx0.withCache(_.copy(checksums = Seq(Some("SHA-1"), None)))
           ctx.state.sumFound = false
 
           val res = ctx.run()
@@ -285,7 +286,7 @@ object FileCacheChecksumTests extends TestSuite {
     test("a malformed checksum file fails without a retry") {
       withSetup { ctx0 =>
 
-        val ctx = ctx0.withCache(_.withRetry(3))
+        val ctx = ctx0.withCache(_.copy(retry = 3))
         ctx.state.sums = Seq("not a checksum")
 
         ctx.run() match {
@@ -310,7 +311,7 @@ object FileCacheChecksumTests extends TestSuite {
 
       withSetup { ctx0 =>
 
-        val ctx = ctx0.withCache(_.withChecksums(Seq(Some("SHA-1"), None)))
+        val ctx = ctx0.withCache(_.copy(checksums = Seq(Some("SHA-1"), None)))
         ctx.state.sumFound = false
 
         assert(ctx.run().isRight)

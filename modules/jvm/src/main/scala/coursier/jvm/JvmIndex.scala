@@ -1,5 +1,7 @@
 package coursier.jvm
 
+import dataclass.data
+
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -13,7 +15,6 @@ import coursier.core.{Dependency, Repository}
 import coursier.util.{Artifact, Task}
 import coursier.util.Traverse.TraverseOps
 import coursier.version.{Latest, Version, VersionParse}
-import dataclass.data
 
 import scala.collection.compat._
 import scala.util.{Failure, Success, Try}
@@ -36,7 +37,7 @@ object JvmIndex {
   def coursierIndexCoordinates: String =
     JvmChannel.centralModule().repr
 
-  private def artifact(url: String) = Artifact(url).withChanging(true)
+  private def artifact(url: String) = Artifact(url).copy(changing = true)
 
   private val codec = JsonCodecMaker.make[Map[
     String,
@@ -244,7 +245,7 @@ object JvmIndex {
   }
 }
 
-@data class JvmIndex(
+@data case class JvmIndex(
   content: Map[String, Map[String, Map[String, Map[String, String]]]],
   jdkNamePrefix: Option[String] = Some("jdk@")
 ) {
@@ -252,8 +253,8 @@ object JvmIndex {
   import JvmIndex.parseDescriptor
 
   def filterIds(os: String, arch: String)(f: (String, String) => Boolean): JvmIndex =
-    withContent(
-      content.map {
+    copy(
+      content = content.map {
         case (`os`, osIndex) =>
           os -> osIndex.map {
             case (`arch`, archIndex) =>

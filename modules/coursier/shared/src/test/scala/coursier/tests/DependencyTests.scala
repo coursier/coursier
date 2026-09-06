@@ -18,7 +18,7 @@ object DependencyTests extends TestSuite {
           Resolve()
             .noMirrors
             .addDependencies(dep"org.apache.hadoop:hadoop-client:3.2.0")
-            .withCache(cache)
+            .copy(cache = cache)
             .future()
         }
 

@@ -48,13 +48,14 @@ object RemoteCacheTests extends TestSuite {
       withExecutorService(Executors.newFixedThreadPool(4)) { serverPool =>
         val cacheDir = dir / "cache"
         val serverCache = FileCache[Task](cacheDir.toIO)
-          .withPool(serverPool)
+          .copy(pool = serverPool)
 
         withCacheServer(serverCache) { cacheServerUrl =>
           withExecutorService(Executors.newCachedThreadPool()) { remotePool =>
-            val remoteCache = RemoteCache[Task](cacheServerUrl, cacheDir.toIO)
-              .withPool(remotePool)
-              .withWatchLenPool(remotePool)
+            val remoteCache = RemoteCache[Task](cacheServerUrl, cacheDir.toIO).copy(
+              pool = remotePool,
+              watchLenPool = remotePool
+            )
             f(cacheDir, remoteCache)
           }
         }
@@ -82,8 +83,8 @@ object RemoteCacheTests extends TestSuite {
         val dependency = dep"org.scala-lang:scala-compiler:2.13.16"
         val resolution = Resolve()
           .noMirrors
-          .withRepositories(Seq(MavenRepository(central)))
-          .withCache(remoteCache)
+          .copy(repositories = Seq(MavenRepository(central)))
+          .copy(cache = remoteCache)
           .addDependencies(dependency)
           .run()(remoteCache.ec)
 
