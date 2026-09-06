@@ -22,7 +22,7 @@ jobs:
       run: |
         git config --global core.autocrlf false
         git config --global core.eol lf
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: true
@@ -62,7 +62,7 @@ jobs:
       run: |
         git config --global core.autocrlf false
         git config --global core.eol lf
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: true
@@ -104,11 +104,11 @@ jobs:
       run: |
         git config --global core.autocrlf false
         git config --global core.eol lf
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: true
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: '18'
     - uses: coursier/cache-action@v8
@@ -122,11 +122,35 @@ jobs:
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
 
+  interface-test:
+    runs-on: ubuntu-latest
+    name: Interface Scala ${{ matrix.SCALA_VERSION }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        SCALA_VERSION:
+          - "2.12.20"
+          - "2.13.18"
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - run: ./mill -i interfaceTests --scalaVersion "$SCALA_VERSION"
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+    - name: Test published dependencies
+      run: ./mill -i testInterfacePublishedDeps
+
   bin-compat:
     runs-on: ubuntu-latest
     name: Binary compatibility
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: true
@@ -144,11 +168,11 @@ jobs:
       run: |
         git config --global core.autocrlf false
         git config --global core.eol lf
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: true
-    - uses: actions/setup-node@v6
+    - uses: actions/setup-node@v7
       with:
         node-version: '18'
     - uses: coursier/cache-action@v8
@@ -168,7 +192,7 @@ jobs:
   format:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: true
@@ -178,27 +202,89 @@ jobs:
     - uses: coursier/setup-action@v3
     - run: cs launch scalafmt -- --check
 
+  scalafix:
+    runs-on: ubuntu-latest
+    name: Scalafix
+    timeout-minutes: 30
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - run: ./mill -i __.fix --check
+
+  test-cs-sh:
+    name: ${{ matrix.OS }} cs.sh
+    runs-on: ${{ matrix.OS }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        OS: ["ubuntu-latest"]
+        include:
+          - OS: "ubuntu-24.04-arm"
+          - OS: "macos-15-intel"
+          - OS: "macos-14"
+          - OS: "windows-latest"
+    steps:
+    - name: Don't convert LF to CRLF during checkout
+      if: runner.os == 'Windows'
+      run: |
+        git config --global core.autocrlf false
+        git config --global core.eol lf
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - run: ./mill -i csShTests
+    - name: Test cs.sh with CS_VERSION=nightly
+      run: ./mill -i csShTests --version nightly
+
   publish:
     needs:
       - "compile-publish-all"
       - "test"
       - "js-test"
+      - "interface-test"
       - "bin-compat"
       - "website-check"
       - "format"
+      - "scalafix"
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
+      - name: Delete tag if building from a branch
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          for tag in $(git tag --points-at HEAD); do
+            git tag -d "$tag"
+          done
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
+      # cutting a release needs a 'v*' and an 'interface-v*' tag on the same commit
+      - name: Check publish versions
+        run: ./mill -i ci.checkPublishVersions
       - name: Publish
         run: |
-          ./mill -i mill.scalalib.SonatypeCentralPublishModule/
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --bundleName "coursier-${GITHUB_REF#refs/tags/v}"
+          else
+            for tag in $(git tag --points-at HEAD); do
+              git tag -d "$tag"
+            done
+            ./mill -i mill.scalalib.SonatypeCentralPublishModule/
+          fi
         env:
           MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}
           MILL_PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
@@ -223,7 +309,7 @@ jobs:
           - OS: "ubuntu-24.04-arm"
             OSSHORT: "linux-arm"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
@@ -256,7 +342,7 @@ jobs:
     name: linux compat native
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
@@ -295,7 +381,7 @@ jobs:
           - OS: "ubuntu-24.04-arm"
             OSSHORT: "linux-arm"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
@@ -332,7 +418,7 @@ jobs:
           - OS: "ubuntu-24.04-arm"
             OSSHORT: "linux-arm"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
@@ -370,7 +456,7 @@ jobs:
         #   - OS: "windows-11-arm"
         #     OSSHORT: "windows-arm"
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
@@ -398,12 +484,12 @@ jobs:
     name: windows-11-arm standalone jvm
     runs-on: windows-11-arm
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v8
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -425,11 +511,11 @@ jobs:
   generate-jar-launchers:
     name: Upload JAR launchers
     needs: publish
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: true
@@ -458,7 +544,7 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: true
@@ -467,10 +553,8 @@ jobs:
         disableFallback: true
     - name: Wait for sync to Central
       run: ./mill -i waitForSync
-      shell: bash
     - name: Copy artifacts
       run: ./mill -i copyBatLauncher
-      shell: bash
     - uses: actions/attest-build-provenance@v4
       if: startsWith(github.ref, 'refs/tags/v')
       with:
@@ -496,7 +580,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: true
@@ -562,6 +646,76 @@ jobs:
     - run: ./mill -i uploadLaunchers --directory artifacts/
       env:
         UPLOAD_GH_TOKEN: ${{ secrets.GH_TOKEN }}
+    - name: Label GitHub release
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: |
+        release_info="$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${GITHUB_REF_NAME}" \
+          --jq '[.id, .prerelease] | @tsv')"
+        IFS=$'\t' read -r release_id is_prerelease <<< "$release_info"
+        latest_release_id="$(gh api "repos/${GITHUB_REPOSITORY}/releases/latest" \
+          --jq '.id' 2>/dev/null || true)"
+
+        if [[ "$is_prerelease" == true || "$release_id" == "$latest_release_id" ]]; then
+          exit 0
+        fi
+
+        version="${GITHUB_REF_NAME#v}"
+        if [[ "$version" =~ [[:alpha:]] ]]; then
+          gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${release_id}" \
+            -F prerelease=true --silent
+        else
+          gh api --method PATCH "repos/${GITHUB_REPOSITORY}/releases/${release_id}" \
+            -f make_latest=true --silent
+        fi
+
+  update-cs-sh:
+    name: Update cs.sh version
+    needs:
+      - upload-launchers
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - name: Open a PR bumping CS_VERSION in cs.sh
+      run: ./mill -i updateCsShVersion
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
+  upload-nightly-launchers:
+    name: Upload launchers to nightly GitHub release
+    needs:
+      - generate-native-launchers
+      - generate-compat-native-launchers
+      - generate-native-static-launcher
+      - generate-native-container-launcher
+      - generate-standalone-launchers
+      - generate-standalone-launcher-windows-arm-tmp
+      - generate-jar-launchers
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - uses: actions/download-artifact@v8
+      with:
+        pattern: launchers-*
+        path: artifacts/
+        merge-multiple: true
+    - run: ./mill -i uploadNightlyLaunchers --directory artifacts/
+      env:
+        UPLOAD_GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
   upload-launchers-special-repo:
     name: Upload launchers to dedicated repository
@@ -574,7 +728,7 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0
         submodules: true
@@ -636,14 +790,17 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
+      - uses: coursier/setup-action@v3
+        with:
+          apps: scala-cli
       - uses: coursier/cache-action@v8
         with:
           disableFallback: true
-      - run: .github/scripts/scala-cli.sh .github/scripts/UpdateBrewFormula.scala
+      - run: scala-cli run --server=false .github/scripts/UpdateBrewFormula.scala
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
@@ -652,11 +809,11 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: '18'
       - uses: coursier/cache-action@v8
@@ -675,11 +832,11 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
           submodules: true
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: '18'
       - uses: coursier/cache-action@v8

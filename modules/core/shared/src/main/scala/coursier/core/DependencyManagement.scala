@@ -4,7 +4,7 @@ import coursier.version.{
   VersionConstraint => VersionConstraint0,
   VersionInterval => VersionInterval0
 }
-import dataclass.{data, since}
+import dataclass.{data, since => unroll}
 
 import scala.collection.mutable
 
@@ -12,7 +12,7 @@ object DependencyManagement {
   type Map        = scala.collection.immutable.Map[Key, Values]
   type GenericMap = scala.collection.Map[Key, Values]
 
-  @data class Key(
+  @data case class Key(
     organization: Organization,
     name: ModuleName,
     `type`: Type,
@@ -52,12 +52,12 @@ object DependencyManagement {
       dep.depManagementKey
   }
 
-  @data class Values(
+  @data case class Values(
     config: Configuration,
     versionConstraint: VersionConstraint0,
     minimizedExclusions: MinimizedExclusions,
     optional: Boolean,
-    @since("2.1.25")
+    @unroll
     global: Boolean = false
   ) {
 
@@ -80,7 +80,7 @@ object DependencyManagement {
     @deprecated("Use withVersionConstraint instead", "2.1.25")
     def withVersion(newVersion: String): Values =
       if (newVersion == version) this
-      else withVersionConstraint(VersionConstraint0(newVersion))
+      else copy(versionConstraint = VersionConstraint0(newVersion))
 
     def isEmpty: Boolean =
       config.value.isEmpty && versionConstraint.asString.isEmpty && minimizedExclusions.isEmpty && !optional
@@ -131,7 +131,7 @@ object DependencyManagement {
     def mapVersion(f: String => String): Values = {
       val newVersion = parsedVersionConstraint.applySubstitution(f)
       if (versionConstraint.asString == newVersion) this
-      else withVersionConstraint(VersionConstraint0(newVersion))
+      else copy(versionConstraint = VersionConstraint0(newVersion))
     }
     val hasProperties = config.value.contains("$") ||
       versionConstraint.asString.contains("$") ||
@@ -165,13 +165,12 @@ object DependencyManagement {
         dep.optional
       )
 
-    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
     def apply(
       config: Configuration,
       version: String,
       minimizedExclusions: MinimizedExclusions,
       optional: Boolean
-    ): Values = apply(
+    ): Values = Values(
       config,
       VersionConstraint0(version),
       minimizedExclusions,
@@ -223,13 +222,20 @@ object DependencyManagement {
     composeValues: Boolean = true
   ): GenericMap = addAll0(initialMap, entries.map(_.toMap), composeValues).map
 
-  private[coursier] case class AddAllResult(map: Map, mayContainGlobal: Boolean)
+  private[coursier] case class AddAllResult(
+    map: Map,
+    mayContainGlobal: Boolean,
+    changedFromHead: Boolean
+  )
   private[coursier] def addAll0(
     initialMap: Map,
     entries: Seq[GenericMap],
     composeValues: Boolean = true
   ): AddAllResult = {
     var mayContainGlobal = false
+    // whether the result differs from the first non-empty map, allowing callers to
+    // keep the original instance (and skip a full map comparison) when it doesn't
+    var changedFromHead = false
     val builder: coursier.util.HashMapBuilder[Key, Values] =
       coursier.util.HashMapBuilderFactory.apply
 
@@ -255,12 +261,14 @@ object DependencyManagement {
                   val composed = prev.orElse(incoming)
                   if (composed != prev) {
                     mayContainGlobal ||= composed.global
+                    changedFromHead = true
                     builder.add(key, composed)
                   }
                 }
               }
               else {
                 mayContainGlobal ||= incoming.global
+                changedFromHead = true
                 builder.add(key, incoming)
               }
           }
@@ -269,7 +277,7 @@ object DependencyManagement {
       case Nil =>
 
     }
-    AddAllResult(builder.result(), mayContainGlobal)
+    AddAllResult(builder.result(), mayContainGlobal, changedFromHead)
   }
 
   def addDependencies(

@@ -1,6 +1,6 @@
 package coursier.cache.loggers
 
-import dataclass.{data, since}
+import dataclass.{data, since => unroll}
 
 sealed abstract class RefreshInfo extends Product with Serializable {
   def fraction: Option[Double]
@@ -15,14 +15,14 @@ sealed abstract class RefreshInfo extends Product with Serializable {
 
 object RefreshInfo {
 
-  @data class DownloadInfo(
+  @data case class DownloadInfo(
     downloaded: Long,
     previouslyDownloaded: Long,
     length: Option[Long],
     startTime: Long,
     updateCheck: Boolean,
     watching: Boolean,
-    @since("2.1.25")
+    @unroll
     success: Boolean = true
   ) extends RefreshInfo {
 
@@ -41,11 +41,11 @@ object RefreshInfo {
     }
   }
 
-  @data class CheckUpdateInfo(
+  @data case class CheckUpdateInfo(
     currentTimeOpt: Option[Long],
     remoteTimeOpt: Option[Long],
     isDone: Boolean,
-    @since("2.1.25")
+    @unroll
     success: Boolean = true
   ) extends RefreshInfo {
     def watching = false

@@ -19,7 +19,7 @@ import coursier.credentials.DirectCredentials
 import coursier.paths.{CachePath, Util}
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
-import dataclass._
+import dataclass.{data, since => unroll}
 
 import scala.annotation.tailrec
 import scala.concurrent.duration.{Duration, FiniteDuration}
@@ -28,7 +28,7 @@ import scala.util.Properties
 import scala.util.control.NonFatal
 
 // format: off
-@data class Downloader[F[_]](
+@data case class Downloader[F[_]](
   artifact: Artifact,
   cachePolicy: CachePolicy,
   location: File,
@@ -46,22 +46,34 @@ import scala.util.control.NonFatal
   sslSocketFactoryOpt: Option[SSLSocketFactory] = None,
   hostnameVerifierOpt: Option[HostnameVerifier] = None,
   bufferSize: Int = CacheDefaults.bufferSize,
-  @since("2.0.16")
+  @unroll
     classLoaders: Seq[ClassLoader] = Nil,
-  @since("2.1.0-RC3")
+  @unroll
     clock: Clock = Clock.systemDefaultZone(),
-  @since("2.1.11")
+  @unroll
     retryCount: Int = CacheDefaults.retryCount,
-  @since("2.1.11")
+  @unroll
     retryBackoffInitialDelay: FiniteDuration = CacheDefaults.retryBackoffInitialDelay,
-  @since("2.1.11")
-    retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier
+  @unroll
+    retryBackoffMultiplier: Double = CacheDefaults.retryBackoffMultiplier,
+  @unroll
+    retryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.retryBackoffMaxDelay,
+    retryPollMaxDelay: Option[FiniteDuration] = CacheDefaults.retryPollMaxDelay,
+    connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
+    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout
 )(implicit
   S: Sync[F]
 ) {
   // format: on
 
-  private val retry = Retry(retryCount, retryBackoffInitialDelay, retryBackoffMultiplier)
+  private val retry =
+    Retry(
+      retryCount,
+      retryBackoffInitialDelay,
+      retryBackoffMultiplier,
+      retryBackoffMaxDelay,
+      retryPollMaxDelay
+    )
 
   private def blockingIO[T](f: => T): F[T] =
     S.schedule(pool)(f)
@@ -92,20 +104,58 @@ import scala.util.control.NonFatal
       currentLastModifiedOpt: Option[Long], // for the logger
       logger: CacheLogger,
       allCredentials0: Seq[DirectCredentials]
+    ): Either[ArtifactError, Option[Long]] =
+      try
+        retry.retryOpt0 {
+          urlLastModifiedOnce(url, currentLastModifiedOpt, logger, allCredentials0) match {
+            case Left(e: ArtifactError.RetryableHttpError) =>
+              // throw the exception, so that Retry catches it and can make other attempts
+              throw e
+            case other => Some(other)
+          }
+        } {
+          case _: java.net.SocketTimeoutException => None
+          case e: ArtifactError.RetryableHttpError =>
+            e.retryAfterOpt.map(Downloader.retryAfterValue)
+        }
+      catch {
+        case ex: ArtifactError =>
+          if (Downloader.throwExceptions)
+            throw ex
+          Left(ex)
+        case NonFatal(e) =>
+          val ex = new ArtifactError.DownloadError(
+            s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url",
+            Some(e)
+          )
+          if (Downloader.throwExceptions)
+            throw ex
+          Left(ex)
+      }
+
+    private def urlLastModifiedOnce(
+      url: String,
+      currentLastModifiedOpt: Option[Long], // for the logger
+      logger: CacheLogger,
+      allCredentials0: Seq[DirectCredentials]
     ): Either[ArtifactError, Option[Long]] = {
       var conn: URLConnection = null
 
       try {
         conn = ConnectionBuilder(url)
-          .withAuthentication(artifact.authentication)
-          .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
-          .withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections)
-          .withAutoCredentials(allCredentials0)
-          .withSslSocketFactoryOpt(sslSocketFactoryOpt)
-          .withHostnameVerifierOpt(hostnameVerifierOpt)
-          .withMethod("HEAD")
-          .withMaxRedirectionsOpt(maxRedirections)
-          .withClassLoaders(classLoaders)
+          .copy(
+            authentication = artifact.authentication,
+            followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+            followHttpsToHttpRedirections = followHttpsToHttpRedirections,
+            autoCredentials = allCredentials0,
+            sslSocketFactoryOpt = sslSocketFactoryOpt,
+            hostnameVerifierOpt = hostnameVerifierOpt,
+            method = "HEAD",
+            maxRedirectionsOpt = maxRedirections,
+            classLoaders = classLoaders,
+            connectTimeout = connectTimeout,
+            readTimeout = readTimeout
+          )
           .connection()
 
         conn match {
@@ -113,20 +163,33 @@ import scala.util.control.NonFatal
             logger.checkingUpdates(url, currentLastModifiedOpt)
 
             var success = false
-            try {
-              val remoteLastModified = c.getLastModified
+            try
+              // Without this, a rate-limited HEAD looks just like a response carrying no
+              // last modified time, and the caller (which cannot tell the file is still current)
+              // downloads the file again - more requests against a server already asking us to
+              // slow down.
+              if (CacheUrl.responseCode(c).contains(Downloader.tooManyRequestsResponseCode))
+                Left(
+                  new ArtifactError.RetryableHttpError(
+                    url,
+                    Downloader.tooManyRequestsResponseCode,
+                    Downloader.retryAfter(c, clock)
+                  )
+                )
+              else {
+                val remoteLastModified = c.getLastModified
 
-              val res =
-                if (remoteLastModified > 0L)
-                  Some(remoteLastModified)
-                else
-                  None
+                val res =
+                  if (remoteLastModified > 0L)
+                    Some(remoteLastModified)
+                  else
+                    None
 
-              success = true
-              logger.checkingUpdatesResult(url, currentLastModifiedOpt, res)
+                success = true
+                logger.checkingUpdatesResult(url, currentLastModifiedOpt, res)
 
-              Right(res)
-            }
+                Right(res)
+              }
             finally if (!success)
                 logger.checkingUpdatesResult(url, currentLastModifiedOpt, None)
 
@@ -138,16 +201,6 @@ import scala.util.control.NonFatal
               )
             )
         }
-      }
-      catch {
-        case NonFatal(e) =>
-          val ex = new ArtifactError.DownloadError(
-            s"Caught $e${Option(e.getMessage).fold("")(" (" + _ + ")")} while getting last modified time of $url",
-            Some(e)
-          )
-          if (Downloader.throwExceptions)
-            throw ex
-          Left(ex)
       }
       finally if (conn != null)
           CacheUrl.closeConn(conn)
@@ -229,16 +282,20 @@ import scala.util.control.NonFatal
 
       try {
         val (conn0, partialDownload) = ConnectionBuilder(url)
-          .withAuthentication(authenticationOpt)
-          .withAlreadyDownloaded(alreadyDownloaded)
-          .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
-          .withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections)
-          .withAutoCredentials(allCredentials0.filter(_.matchHost)) // just in case
-          .withSslSocketFactoryOpt(sslSocketFactoryOpt)
-          .withHostnameVerifierOpt(hostnameVerifierOpt)
-          .withMethod("GET")
-          .withMaxRedirectionsOpt(maxRedirections)
-          .withClassLoaders(classLoaders)
+          .copy(
+            authentication = authenticationOpt,
+            alreadyDownloaded = alreadyDownloaded,
+            followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+            followHttpsToHttpRedirections = followHttpsToHttpRedirections,
+            autoCredentials = allCredentials0.filter(_.matchHost), // just in case
+            sslSocketFactoryOpt = sslSocketFactoryOpt,
+            hostnameVerifierOpt = hostnameVerifierOpt,
+            method = "GET",
+            maxRedirectionsOpt = maxRedirections,
+            classLoaders = classLoaders,
+            connectTimeout = connectTimeout,
+            readTimeout = readTimeout
+          )
           .connectionMaybePartial()
         conn = conn0
 
@@ -250,7 +307,7 @@ import scala.util.control.NonFatal
           Left(new ArtifactError.Forbidden(url))
         else if (respCodeOpt.contains(401))
           Left(new ArtifactError.Unauthorized(url, realm = CacheUrl.realm(conn)))
-        else if (respCodeOpt.contains(429))
+        else if (respCodeOpt.contains(Downloader.tooManyRequestsResponseCode))
           Left(
             new ArtifactError.RetryableHttpError(
               url,
@@ -369,57 +426,47 @@ import scala.util.control.NonFatal
       file: File,
       url: String,
       allCredentials0: Seq[DirectCredentials],
-      tmp: File
+      tmp: File,
+      // holds the length across the calls that watch a single download: kept per download rather
+      // than per call, so that watching doesn't send a HEAD request for every 20 ms it waits
+      watchedLength: Downloader.WatchedLength
     ): Option[Either[ArtifactError, Unit]] = {
 
-      var lenOpt = Option.empty[Option[Long]]
+      def lengthOnce(): Option[Long] =
+        watchedLength.getOrElseUpdate {
+          Downloader.contentLength(
+            url,
+            artifact.authentication,
+            followHttpToHttpsRedirections,
+            followHttpsToHttpRedirections,
+            allCredentials0,
+            sslSocketFactoryOpt,
+            hostnameVerifierOpt,
+            logger,
+            maxRedirections,
+            connectTimeout,
+            readTimeout
+          ).toOption.flatten
+        }
 
       def progress(currentLen: Long): Unit =
-        if (lenOpt.isEmpty) {
-          lenOpt = Some(
-            Downloader.contentLength(
-              url,
-              artifact.authentication,
-              followHttpToHttpsRedirections,
-              followHttpsToHttpRedirections,
-              allCredentials0,
-              sslSocketFactoryOpt,
-              hostnameVerifierOpt,
-              logger,
-              maxRedirections
-            ).toOption.flatten
-          )
-          for (o <- lenOpt; len <- o)
+        if (watchedLength.isEmpty)
+          for (len <- lengthOnce())
             logger.downloadLength(url, len, currentLen, watching = true)
-        }
         else
           logger.downloadProgress(url, currentLen)
 
       def done(): Unit =
-        if (lenOpt.isEmpty) {
-          lenOpt = Some(
-            Downloader.contentLength(
-              url,
-              artifact.authentication,
-              followHttpToHttpsRedirections,
-              followHttpsToHttpRedirections,
-              allCredentials0,
-              sslSocketFactoryOpt,
-              hostnameVerifierOpt,
-              logger,
-              maxRedirections
-            ).toOption.flatten
-          )
-          for (o <- lenOpt; len <- o)
+        if (watchedLength.isEmpty)
+          for (len <- lengthOnce())
             logger.downloadLength(url, len, len, watching = true)
-        }
         else
-          for (o <- lenOpt; len <- o)
+          for (len <- watchedLength.get)
             logger.downloadProgress(url, len)
 
       if (file.exists()) {
         done()
-        val res = lenOpt.flatten match {
+        val res = watchedLength.get match {
           case None =>
             Right(())
           case Some(len) =>
@@ -461,7 +508,8 @@ import scala.util.control.NonFatal
 
       logger.downloadingArtifact(url, artifact)
 
-      var success = false
+      var success       = false
+      val watchedLength = new Downloader.WatchedLength
 
       try {
         val res = Downloader.downloading(url, file, retry)(
@@ -470,9 +518,9 @@ import scala.util.control.NonFatal
               doDownload(file, url, keepHeaderChecksums, allCredentials0, tmp)
             else
               Right(()),
-            checkDownload(file, url, allCredentials0, tmp)
+            checkDownload(file, url, allCredentials0, tmp, watchedLength)
           ),
-          checkDownload(file, url, allCredentials0, tmp)
+          checkDownload(file, url, allCredentials0, tmp, watchedLength)
         )
         success = res.isRight
         res
@@ -610,6 +658,12 @@ import scala.util.control.NonFatal
 
   private def errFile(file: File) = new File(file.getParentFile, "." + file.getName + ".error")
 
+  private def isIOException(t: Throwable): Boolean =
+    t match {
+      case _: IOException => true
+      case _              => false
+    }
+
   private def remoteKeepErrors(
     file: File,
     url: String,
@@ -636,8 +690,7 @@ import scala.util.control.NonFatal
           case err @ Left(nf: ArtifactError.NotFound) if nf.permanent.contains(true) =>
             createErrFileBlocking()
             err: Either[ArtifactError, Unit]
-          case err @ Left(err0: ArtifactError.DownloadError)
-              if err0.getCause.isInstanceOf[IOException] =>
+          case err @ Left(err0: ArtifactError.DownloadError) if isIOException(err0.getCause) =>
             if (referenceFileOpt.exists(_.exists()) && errFile0.exists())
               // We got a download error, but we also got a not-found error
               // in the past. We assume the download error is transient
@@ -813,18 +866,38 @@ import scala.util.control.NonFatal
 
 object Downloader {
 
+  /** The content length of a download we are watching another thread (or process) run
+    *
+    * Looking it up costs a HEAD request, and watching re-checks the download every 20 ms, so the
+    * answer is remembered for as long as we keep watching that download.
+    */
+  private final class WatchedLength {
+    private var lenOpt    = Option.empty[Option[Long]]
+    def isEmpty: Boolean  = lenOpt.isEmpty
+    def get: Option[Long] = lenOpt.flatten
+    def getOrElseUpdate(compute: => Option[Long]): Option[Long] = {
+      if (lenOpt.isEmpty)
+        lenOpt = Some(compute)
+      lenOpt.flatten
+    }
+  }
+
   private[cache] lazy val throwExceptions =
     java.lang.Boolean.getBoolean("coursier.cache.throw-exceptions")
 
   private val checksumHeader          = Seq("MD5", "SHA1", "SHA256")
   private val httpResponseCodeMessage = ".*HTTP response code: ([0-9]+).*".r
 
+  private[internal] def tooManyRequestsResponseCode = 429
+
   private def retryableHttpResponseCode(e: IOException): Option[Int] =
     Option(e.getMessage)
       .collect {
         case httpResponseCodeMessage(responseCode) => responseCode.toInt
       }
-      .filter(responseCode => responseCode == 429 || responseCode / 100 == 5)
+      .filter(responseCode =>
+        responseCode == tooManyRequestsResponseCode || responseCode / 100 == 5
+      )
 
   private def retryAfter(conn: URLConnection, clock: Clock): Option[FiniteDuration] =
     conn match {
@@ -919,6 +992,10 @@ object Downloader {
         case _: AccessDeniedException if Properties.isWin => None
         case _: javax.net.ssl.SSLException                => None
         case _: java.net.SocketException                  => None
+        // a connect or read timeout: the connection went quiet rather than failed, and the next
+        // attempt resumes from what the .part file already holds. Note this is an
+        // InterruptedIOException, not a SocketException, so the case above doesn't cover it.
+        case _: java.net.SocketTimeoutException => None
         // Is that case really necessary?
         case e: IOException
             if Downloader.retryableHttpResponseCode(e).nonEmpty =>
@@ -970,21 +1047,27 @@ object Downloader {
     sslSocketFactoryOpt: Option[SSLSocketFactory],
     hostnameVerifierOpt: Option[HostnameVerifier],
     logger: CacheLogger,
-    maxRedirectionsOpt: Option[Int]
+    maxRedirectionsOpt: Option[Int],
+    connectTimeout: Option[FiniteDuration],
+    readTimeout: Option[FiniteDuration]
   ): Either[ArtifactError, Option[Long]] = {
 
     var conn: URLConnection = null
 
     try {
       conn = ConnectionBuilder(url)
-        .withAuthentication(authentication)
-        .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
-        .withFollowHttpsToHttpRedirections(followHttpsToHttpRedirections)
-        .withAutoCredentials(credentials)
-        .withSslSocketFactoryOpt(sslSocketFactoryOpt)
-        .withHostnameVerifierOpt(hostnameVerifierOpt)
-        .withMethod("HEAD")
-        .withMaxRedirectionsOpt(maxRedirectionsOpt)
+        .copy(
+          authentication = authentication,
+          followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+          followHttpsToHttpRedirections = followHttpsToHttpRedirections,
+          autoCredentials = credentials,
+          sslSocketFactoryOpt = sslSocketFactoryOpt,
+          hostnameVerifierOpt = hostnameVerifierOpt,
+          method = "HEAD",
+          maxRedirectionsOpt = maxRedirectionsOpt,
+          connectTimeout = connectTimeout,
+          readTimeout = readTimeout
+        )
         .connection()
 
       conn match {

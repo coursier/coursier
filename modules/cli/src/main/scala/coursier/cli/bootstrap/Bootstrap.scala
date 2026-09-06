@@ -49,7 +49,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
     dependencyArgs: Seq[String],
     stdout: PrintStream = System.out,
     stderr: PrintStream = System.err
-  ): Task[(Resolution, Option[String], Option[String], Seq[(Artifact, File)], String)] =
+  ): Task[(Resolution, Option[String], Option[String], Seq[(Artifact, File)], Option[String])] =
     for {
       t <-
         Fetch.task(params.sharedLaunch.fetch(params.channel), pool, dependencyArgs, stdout, stderr)
@@ -57,7 +57,9 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
       mainClass <- {
         params.sharedLaunch.mainClassOpt match {
           case Some(c) =>
-            Task.point(c)
+            Task.point(Some(c))
+          case None if params.specific.noMainClass =>
+            Task.point(None)
           case None =>
             Task.delay(
               MainClass.mainClasses(files.map(_._2) ++ params.sharedLaunch.extraJars.map(_.toFile))
@@ -80,7 +82,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
                   .map(d => (d.module.organization.value, d.module.name.value))
               ) match {
                 case Some(c) =>
-                  Task.point(c)
+                  Task.point(Some(c))
                 case None =>
                   Task.fail(new LaunchException.NoMainClassFound)
               }
@@ -251,7 +253,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
       deps
     )
 
-    val (res, scalaVersionOpt, platformOpt, files, mainClass) =
+    val (res, scalaVersionOpt, platformOpt, files, mainClassOpt) =
       t.attempt.unsafeRun(wrapExceptions = true)(ec) match {
         case Left(e: ResolveException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
           System.err.println(e.message)
@@ -271,6 +273,13 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
         case Right(t0) =>
           t0
       }
+
+    // Only assembly launchers may have no main class (enforced when validating params);
+    // for every other launcher type a main class is guaranteed to be present here.
+    def mainClass: String = mainClassOpt.getOrElse {
+      System.err.println("Cannot find default main class. Specify one with -M or --main-class.")
+      sys.exit(1)
+    }
 
     var wroteBat = false
 
@@ -360,8 +369,12 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
           sys.exit(1)
         }
 
+        // A preamble turns the jar into a self-executing launcher, which only makes
+        // sense when there is a main class to run, hence the default below.
+        val withPreamble = params.specific.preambleOpt.getOrElse(mainClassOpt.nonEmpty)
+
         val preambleOpt =
-          if (params.specific.withPreamble)
+          if (withPreamble)
             Some(
               coursier.launcher.Preamble()
                 .withJavaOpts(javaOptions)
@@ -373,8 +386,9 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
         if (params.specific.assembly)
           Parameters.Assembly()
             .withFiles(files.map(_._2))
-            .withMainClass(mainClass)
+            .withMainClass(mainClassOpt)
             .withRules(params.specific.assemblyRules)
+            .withShadingRules(params.specific.shadingRules)
             .withBaseManifest(params.specific.baseManifestOpt)
             .withPreambleOpt(preambleOpt)
         else if (params.specific.manifestJar)

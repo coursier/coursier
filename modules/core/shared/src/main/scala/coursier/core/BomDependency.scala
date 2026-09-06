@@ -1,13 +1,13 @@
 package coursier.core
 
 import coursier.version.{VersionConstraint => VersionConstraint0}
-import dataclass.data
+import dataclass.{data, since => unroll}
 
-@data class BomDependency(
+@data case class BomDependency(
   module: Module,
   versionConstraint: VersionConstraint0,
   config: Configuration = Configuration.empty,
-  @since
+  @unroll
   forceOverrideVersions: Boolean = false
 ) {
   @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
@@ -47,7 +47,7 @@ import dataclass.data
   @deprecated("Use withVersionConstraint instead", "2.1.25")
   def withVersion(newVersion: String): BomDependency =
     if (newVersion == version) this
-    else withVersionConstraint(VersionConstraint0(newVersion))
+    else copy(versionConstraint = VersionConstraint0(newVersion))
 
   def repr: String = {
     val base = s"${module.repr}:${versionConstraint.asString}"
@@ -68,33 +68,30 @@ import dataclass.data
 
 object BomDependency {
 
-  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
   def apply(
     module: Module,
     version: String,
     config: Configuration,
     forceOverrideVersions: Boolean
-  ): BomDependency = apply(
+  ): BomDependency = BomDependency(
     module,
     VersionConstraint0(version),
     config,
     forceOverrideVersions
   )
-  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
   def apply(
     module: Module,
     version: String,
     config: Configuration
-  ): BomDependency = apply(
+  ): BomDependency = BomDependency(
     module,
     VersionConstraint0(version),
     config
   )
-  @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
   def apply(
     module: Module,
     version: String
-  ): BomDependency = apply(
+  ): BomDependency = BomDependency(
     module,
     VersionConstraint0(version)
   )

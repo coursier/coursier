@@ -172,6 +172,27 @@ $ cs bootstrap scalafmt --assembly -o scalafmt --assembly-rule exclude:logback.x
 ```
 See `cs bootstrap --help` for the format of the rules accepted by `--assembly-rule`.
 
+#### Relocating classes
+
+When generating an assembly, classes can be relocated ("shaded"), so that the
+classes of a dependency end up under a different package in the resulting JAR.
+This is useful to avoid clashes when the assembly is meant to be used as a
+library alongside other versions of its dependencies. This relies on
+[jarjar-abrams](https://github.com/eed3si9n/jarjar-abrams), like
+[sbt-shading](https://github.com/coursier/sbt-shading).
+
+Pass `--relocate from=to` to move every class under the `from` package to be
+under the `to` package (references to the moved classes are rewritten too):
+```bash
+$ cs bootstrap io.get-coursier:echo:1.0.1 --assembly -o echo \
+    --relocate coursier.echo=shaded.coursier.echo \
+    -M shaded.coursier.echo.Echo
+```
+Alternatively, `--relocate move-under:from=to` moves the `from` package _under_
+`to` (that is, `from.Foo` becomes `to.from.Foo`).
+
+`--relocate` can only be used along with `--assembly`.
+
 ### GraalVM native-image
 
 `bootstrap` can generate native executables via

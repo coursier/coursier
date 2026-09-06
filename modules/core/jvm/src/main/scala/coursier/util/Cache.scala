@@ -20,4 +20,20 @@ private[coursier] object Cache {
     else
       first
   }
+  def createMemoCache[K >: Null, V >: Null](): ConcurrentMap[K, V] =
+    new ConcurrentReferenceHashMap[K, V](
+      16,
+      ConcurrentReferenceHashMap.ReferenceType.SOFT,
+      ConcurrentReferenceHashMap.ReferenceType.STRONG
+    )
+  def memoizeMethod[K >: Null, V >: Null](memoCache: ConcurrentMap[K, V])(key: K)(f: K => V): V = {
+    val cached = memoCache.get(key)
+    if (cached == null) {
+      val computed = f(key)
+      val previous = memoCache.putIfAbsent(key, computed)
+      if (previous == null) computed else previous
+    }
+    else
+      cached
+  }
 }

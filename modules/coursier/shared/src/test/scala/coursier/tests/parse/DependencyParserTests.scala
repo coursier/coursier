@@ -476,7 +476,7 @@ object DependencyParserTests extends TestSuite {
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
             Dependency(mod"org:name", VersionConstraint("ver"))
-              .withVariantSelector(VariantSelector.emptyConfiguration),
+              .copy(variantSelector = VariantSelector.emptyConfiguration),
             fullCrossVersion = false,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -492,7 +492,7 @@ object DependencyParserTests extends TestSuite {
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
             Dependency(mod"org:name", VersionConstraint(""))
-              .withVariantSelector(VariantSelector.emptyConfiguration),
+              .copy(variantSelector = VariantSelector.emptyConfiguration),
             fullCrossVersion = false,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -508,7 +508,7 @@ object DependencyParserTests extends TestSuite {
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
             Dependency(mod"org:name", VersionConstraint("ver"))
-              .withVariantSelector(VariantSelector.emptyConfiguration),
+              .copy(variantSelector = VariantSelector.emptyConfiguration),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -524,7 +524,7 @@ object DependencyParserTests extends TestSuite {
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
             Dependency(mod"org:name", VersionConstraint(""))
-              .withVariantSelector(VariantSelector.emptyConfiguration),
+              .copy(variantSelector = VariantSelector.emptyConfiguration),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -540,7 +540,7 @@ object DependencyParserTests extends TestSuite {
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
             Dependency(mod"org:name", VersionConstraint("ver"))
-              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration("conf"))),
+              .copy(variantSelector = VariantSelector.ConfigurationBased(Configuration("conf"))),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty
@@ -556,7 +556,7 @@ object DependencyParserTests extends TestSuite {
           assert(params.isEmpty)
           val expected = JavaOrScalaDependency.ScalaDependency(
             Dependency(mod"org:name", VersionConstraint(""))
-              .withVariantSelector(VariantSelector.ConfigurationBased(Configuration("conf"))),
+              .copy(variantSelector = VariantSelector.ConfigurationBased(Configuration("conf"))),
             fullCrossVersion = true,
             withPlatformSuffix = false,
             exclude = Set.empty

@@ -36,7 +36,7 @@ trait BootstrapLauncher extends CsModule {
   }
 
   def sharedProguardConf = Task {
-    s"""-libraryjars ${runtimeLibs().path}
+    s"""-libraryjars ${PathRef.toResolvedPathString(runtimeLibs().path)}
        |-dontnote
        |-dontwarn
        |-repackageclasses coursier.bootstrap.launcher
@@ -53,7 +53,7 @@ trait BootstrapLauncher extends CsModule {
   }
 
   def sharedResourceProguardConf = Task {
-    s"""-libraryjars ${runtimeLibs().path}
+    s"""-libraryjars ${PathRef.toResolvedPathString(runtimeLibs().path)}
        |-dontnote
        |-dontwarn
        |-repackageclasses coursier.bootstrap.launcher
@@ -111,15 +111,18 @@ trait BootstrapLauncher extends CsModule {
 
     // TODO Cache this more heavily (hash inputs, and don't recompute if inputs didn't change)
 
-    val conf = Task.dest / "configuration.pro"
-    val dest = Task.dest / "proguard-bootstrap.jar"
+    // Resolved dest, so that the paths we hand to proguard below don't have to go through
+    // mill's forwarder symlinks, that only live as long as the current mill run
+    val destDir = PathRef.toResolvedOsPath(Task.dest)
+    val conf    = destDir / "configuration.pro"
+    val dest    = destDir / "proguard-bootstrap.jar"
 
     val baseJar    = assembly().path
     val sharedConf = sharedProguardConf()
 
     val confContent =
-      s"""-injars "$baseJar"
-         |-outjars "$dest"
+      s"""-injars "${PathRef.toResolvedPathString(baseJar)}"
+         |-outjars "${PathRef.toResolvedPathString(dest)}"
          |$sharedConf
          |""".stripMargin
     os.write.over(conf, confContent)
@@ -127,7 +130,7 @@ trait BootstrapLauncher extends CsModule {
     Jvm.callProcess(
       mainClass = "proguard.ProGuard",
       classPath = proguardClassPath().map(_.path),
-      mainArgs = Seq("-include", conf.toString)
+      mainArgs = Seq("-include", PathRef.toResolvedPathString(conf))
     )
     PathRef(dest)
   }
@@ -152,15 +155,18 @@ trait BootstrapLauncher extends CsModule {
   }
 
   def proguardedResourceAssembly = Task {
-    val conf = Task.dest / "configuration.pro"
-    val dest = Task.dest / "proguard-resource-bootstrap.jar"
+    // Resolved dest, so that the paths we hand to proguard below don't have to go through
+    // mill's forwarder symlinks, that only live as long as the current mill run
+    val destDir = PathRef.toResolvedOsPath(Task.dest)
+    val conf    = destDir / "configuration.pro"
+    val dest    = destDir / "proguard-resource-bootstrap.jar"
 
     val baseJar    = resourceAssembly().path
     val sharedConf = sharedResourceProguardConf()
 
     val confContent =
-      s"""-injars "$baseJar"
-         |-outjars "$dest"
+      s"""-injars "${PathRef.toResolvedPathString(baseJar)}"
+         |-outjars "${PathRef.toResolvedPathString(dest)}"
          |$sharedConf
          |""".stripMargin
     os.write.over(conf, confContent)
@@ -168,7 +174,7 @@ trait BootstrapLauncher extends CsModule {
     Jvm.callProcess(
       mainClass = "proguard.ProGuard",
       classPath = proguardClassPath().map(_.path),
-      mainArgs = Seq("-include", conf.toString)
+      mainArgs = Seq("-include", PathRef.toResolvedPathString(conf))
     )
     PathRef(dest)
   }
