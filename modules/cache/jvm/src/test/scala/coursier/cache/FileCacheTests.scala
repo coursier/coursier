@@ -42,13 +42,13 @@ object FileCacheTests extends TestSuite {
           val cache = FileCache[Task]((dir / "cache").toIO)
             .withTtl(Duration(36L, TimeUnit.HOURS))
           val artifact = Artifact((serverUri / "dir" / "foo.pom").renderString)
-            .withChanging(true)
+            .copy(changing = true)
 
           def check(instant: Instant, serving: String, expected: String = null): Unit = {
             val expected0 = Option(expected).getOrElse(serving)
             serverContent = serving
             val file = cache
-              .withClock(Clock.fixed(instant, offset))
+              .copy(clock = Clock.fixed(instant, offset))
               .file(artifact).run
               .unsafeRun(wrapExceptions = true)(cache.ec)
               .fold(e => throw new Exception(e), identity)
@@ -169,7 +169,7 @@ object FileCacheTests extends TestSuite {
             // first put the POM in cache, as if downloaded by an older coursier version
             check0(basePomArtifact0, Some("the pom"))
             // then try to download the module: this should be remembered via a '.error' file
-            check0(baseModuleArtifact0.withExtra(Map("metadata" -> basePomArtifact0)), None)
+            check0(baseModuleArtifact0.copy(extra = Map("metadata" -> basePomArtifact0)), None)
 
             validateCacheState(serverUri, cache)(
               Seq(
@@ -201,14 +201,14 @@ object FileCacheTests extends TestSuite {
             )
 
             // then try to download it again in offline mode, requiring a module check - this should fail
-            check(cache.withCachePolicies(Seq(CachePolicy.LocalUpdateChanging)), dir)(
-              basePomArtifact0.withExtra(Map("check" -> baseModuleArtifact0)),
+            check(cache.copy(cachePolicies = Seq(CachePolicy.LocalUpdateChanging)), dir)(
+              basePomArtifact0.copy(extra = Map("check" -> baseModuleArtifact0)),
               None
             )
 
             // then try to download it while online, requiring a module check - this should fail too
-            check(cache.withCachePolicies(Seq(CachePolicy.FetchMissing)), dir)(
-              basePomArtifact0.withExtra(Map("check" -> baseModuleArtifact0)),
+            check(cache.copy(cachePolicies = Seq(CachePolicy.FetchMissing)), dir)(
+              basePomArtifact0.copy(extra = Map("check" -> baseModuleArtifact0)),
               None
             )
 
@@ -216,8 +216,8 @@ object FileCacheTests extends TestSuite {
             check(cache, dir)(baseModuleArtifact0, Some("the module"))
 
             // then try to download the pom again in offline mode, requiring a module check - this should succeed this time
-            check(cache.withCachePolicies(Seq(CachePolicy.LocalUpdateChanging)), dir)(
-              basePomArtifact0.withExtra(Map("check" -> baseModuleArtifact0)),
+            check(cache.copy(cachePolicies = Seq(CachePolicy.LocalUpdateChanging)), dir)(
+              basePomArtifact0.copy(extra = Map("check" -> baseModuleArtifact0)),
               Some("the pom")
             )
           }
@@ -234,14 +234,14 @@ object FileCacheTests extends TestSuite {
             val baseModuleArtifact0 = baseModuleArtifact(serverUri)
 
             // try to download the pom in offline mode, requiring a module check - this should fail
-            check(cache.withCachePolicies(Seq(CachePolicy.LocalUpdateChanging)), dir)(
-              basePomArtifact0.withExtra(Map("check" -> baseModuleArtifact0)),
+            check(cache.copy(cachePolicies = Seq(CachePolicy.LocalUpdateChanging)), dir)(
+              basePomArtifact0.copy(extra = Map("check" -> baseModuleArtifact0)),
               None
             )
 
             // then try to download it while online, requiring a module check - this should fail too
-            check(cache.withCachePolicies(Seq(CachePolicy.FetchMissing)), dir)(
-              basePomArtifact0.withExtra(Map("check" -> baseModuleArtifact0)),
+            check(cache.copy(cachePolicies = Seq(CachePolicy.FetchMissing)), dir)(
+              basePomArtifact0.copy(extra = Map("check" -> baseModuleArtifact0)),
               None
             )
 
@@ -249,14 +249,14 @@ object FileCacheTests extends TestSuite {
             check(cache, dir)(baseModuleArtifact0, Some("the module"))
 
             // then try to download the pom again in offline mode, requiring a module check - this should fail because of offline
-            check(cache.withCachePolicies(Seq(CachePolicy.LocalUpdateChanging)), dir)(
-              basePomArtifact0.withExtra(Map("check" -> baseModuleArtifact0)),
+            check(cache.copy(cachePolicies = Seq(CachePolicy.LocalUpdateChanging)), dir)(
+              basePomArtifact0.copy(extra = Map("check" -> baseModuleArtifact0)),
               None
             )
 
             // then try to download the pom again while online, requiring a module check - this should succeed this time
-            check(cache.withCachePolicies(Seq(CachePolicy.FetchMissing)), dir)(
-              basePomArtifact0.withExtra(Map("check" -> baseModuleArtifact0)),
+            check(cache.copy(cachePolicies = Seq(CachePolicy.FetchMissing)), dir)(
+              basePomArtifact0.copy(extra = Map("check" -> baseModuleArtifact0)),
               Some("the pom")
             )
           }
@@ -274,13 +274,13 @@ object FileCacheTests extends TestSuite {
 
             // try to download the module - this should fail
             check(cache, dir)(
-              baseModuleArtifact0.withExtra(Map("cache-errors" -> Artifact(""))),
+              baseModuleArtifact0.copy(extra = Map("cache-errors" -> Artifact(""))),
               None
             )
 
             // then try to download the pom - this should succeed
             check(cache, dir)(
-              basePomArtifact0.withExtra(Map("check" -> baseModuleArtifact0)),
+              basePomArtifact0.copy(extra = Map("check" -> baseModuleArtifact0)),
               Some("the pom")
             )
           }

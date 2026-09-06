@@ -63,11 +63,11 @@ trait Doc extends ScalaModule {
 
     val allArgs: Seq[String] = Seq(
       "--classpath",
-      classPath().map(_.path.toString).mkString(File.pathSeparator),
+      classPath().map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator),
       "--in",
-      (BuildCtx.workspaceRoot / "doc" / "docs").toString,
+      PathRef.toResolvedPathString(BuildCtx.workspaceRoot / "doc" / "docs"),
       "--out",
-      outputDir.toString,
+      PathRef.toResolvedPathString(outputDir),
       "--site.VERSION",
       ver,
       "--site.EXTRA_SBT",

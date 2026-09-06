@@ -114,23 +114,36 @@ For example:
 - `1.0.1e` goes before `1.0.1.2` (literal `e` goes before non-zero numeric item `2`)
 - `1.1.0` has same ordering as `1.1` (zero or empty items are equivalent)
 
-Some literal items have a special meaning, and go before both literal and
-zero and non-zero numeric items. These are, in comparison order:
+Some literal items have a special meaning, and are called qualifiers. These are,
+in comparison order:
 - `alpha` (or `a` if directly followed by a digit),
 - `beta` (or `b` if directly followed by a digit),
 - `milestone` (or `m` if directly followed by a digit),
 - `cr` or `rc`,
 - `snapshot`,
-- `ga` or `final`,
+- then the empty item itself,
+- `ga`,
+- `final`,
 - `sp`.
+
+The qualifiers before the empty item denote pre-releases, and go before both zero
+and non-zero numeric items. `ga`, `final` and `sp` denote releases, and go after
+the empty item. All qualifiers go before the literal items that have no special
+meaning.
+
+Note that, unlike Maven, `ga` and `final` are equivalent neither to each other nor
+to the empty item. Each of them has its own position in the ordering, so that no
+two distinct versions compare equal, and sorting versions is deterministic.
 
 Note that the case doesn't matter, so `RC` is equivalent to `rc` for example.
 
 That gives the following comparisons:
 - `1.1-alpha` goes before `1.1-rc` (qualifier `alpha` before `rc`)
-- `1.1-rc` goes before `1.1-final` (qualifier `rc` before `final`)
-- `1.1-final` goes before `1.1` (qualifier `final` before empty item)
-- `1.1` goes before `1.1a` (empty item before literal `a`, see below)
+- `1.1-rc` goes before `1.1` (qualifier `rc` before the empty item)
+- `1.1` goes before `1.1-ga` (empty item before qualifier `ga`)
+- `1.1-ga` goes before `1.1-final` (qualifier `ga` before `final`)
+- `1.1-final` goes before `1.1-sp` (qualifier `final` before `sp`)
+- `1.1-sp` goes before `1.1a` (qualifier `sp` before literal `a`, see below)
 - `1.1a` goes before `1.1-foo` (literal item `a` before literal `foo`, see below)
 
 Note that `1.1a` is not equivalent to `1.1-alpha`, as `a` is not followed

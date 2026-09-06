@@ -23,7 +23,7 @@ object TmpConfig {
     passOnRedirect: Option[Boolean] = None
   ) {
     def credentials: DirectCredentials = {
-      var cred = DirectCredentials().withHost(host)
+      var cred = DirectCredentials().copy(host = host)
       for (u <- user)
         PasswordOption.parse(u) match {
           case Left(error) =>
@@ -45,13 +45,13 @@ object TmpConfig {
       for (r <- realm)
         cred = cred.withRealm(r)
       for (opt <- optional)
-        cred = cred.withOptional(opt)
+        cred = cred.copy(optional = opt)
       for (v <- matchHost)
-        cred = cred.withMatchHost(v)
+        cred = cred.copy(matchHost = v)
       for (v <- httpsOnly)
-        cred = cred.withHttpsOnly(v)
+        cred = cred.copy(httpsOnly = v)
       for (v <- passOnRedirect)
-        cred = cred.withPassOnRedirect(v)
+        cred = cred.copy(passOnRedirect = v)
       cred
     }
   }

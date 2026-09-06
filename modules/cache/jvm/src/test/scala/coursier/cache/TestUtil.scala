@@ -25,6 +25,11 @@ import org.http4s.server.Router
 import org.http4s.{BasicCredentials, Challenge, HttpRoutes, Request, Uri}
 import org.typelevel.ci.CIString
 
+import java.util.concurrent.{Executors, ThreadFactory}
+import java.util.concurrent.atomic.AtomicInteger
+
+import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
 import scala.language.implicitConversions
 
 object TestUtil {
@@ -152,6 +157,22 @@ object TestUtil {
     finally os.remove.all(dir)
   }
 
+  /** The `file:` URL of `path`.
+    *
+    * Interpolating a path into `file://…` gives `file://C:\dir\foo.jar` on Windows, whose drive
+    * letter is then parsed as the host. `Path#toUri` gives the `file:///C:/dir/foo.jar` form that
+    * both `CachePath.localFile` and `URL#openConnection` handle.
+    */
+  def fileUrl(path: os.Path): String =
+    path.toNIO.toUri.toString
+
+  /** The `file:` URL of a directory, with the trailing slash coursier keys directory listings on.
+    *
+    * `Path#toUri` only adds that slash for directories that exist.
+    */
+  def directoryUrl(path: os.Path): String =
+    fileUrl(path).stripSuffix("/") + "/"
+
   def withTmpDir0[T](f: Path => T): T = {
     val dir = Files.createTempDirectory("coursier-test")
     val shutdownHook: Thread =
@@ -165,6 +186,36 @@ object TestUtil {
       deleteRecursive(dir.toFile)
       Runtime.getRuntime.removeShutdownHook(shutdownHook)
     }
+  }
+
+  /** Runs `f` `n` times in parallel, on a dedicated pool, and awaits all results.
+    *
+    * Each call gets its own thread, so that `f` is free to block (which `Task#unsafeRun` does).
+    */
+  def runConcurrently[T](
+    n: Int,
+    timeout: FiniteDuration = 2.minutes
+  )(
+    f: Int => T
+  ): Seq[T] = {
+    val pool = Executors.newFixedThreadPool(
+      n,
+      new ThreadFactory {
+        val count = new AtomicInteger
+        def newThread(r: Runnable): Thread = {
+          val t = new Thread(r, s"test-concurrent-${count.incrementAndGet()}")
+          t.setDaemon(true)
+          t
+        }
+      }
+    )
+    try {
+      implicit val ec: ExecutionContext = ExecutionContext.fromExecutorService(pool)
+      // all futures are started before any of them is awaited
+      val futures = (0 until n).map(idx => Future(f(idx)))
+      Await.result(Future.sequence(futures), timeout)
+    }
+    finally pool.shutdown()
   }
 
   def resourceFile(name: String): File =

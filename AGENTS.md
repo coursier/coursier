@@ -40,7 +40,14 @@ Prefer minimal, local, reversible changes and follow existing patterns.
   - `scalafmt --check`
 - Apply formatting:
   - `scalafmt`
-- No default repo-wide Scalafix task is wired in CI.
+- Check Scalafix rules (matches CI):
+  - `./mill -i __.fix --check`
+- Apply Scalafix rewrites:
+  - `./mill -i __.fix`
+- Enabled rules live in `.scalafix.conf`; `return` and `isInstanceOf` are both banned.
+  Repository-specific rules are in `modules/scalafix-rules` (a Scala 2.13 module, as Scalafix
+  loads rules through a 2.13 class loader), and reach Scalafix through
+  `CsScalaModule#scalafixToolClasspath`.
 - Treat compiler warnings as actionable.
 
 ## Test commands
@@ -57,6 +64,8 @@ Prefer minimal, local, reversible changes and follow existing patterns.
   - `./mill -i dockerTests`
 - Run native-launcher tests:
   - `./mill -i nativeTests`
+- Run the `cs.sh` launcher script tests:
+  - `./mill -i csShTests`
 
 ## Running a single test (important)
 
@@ -145,6 +154,14 @@ Notes:
 
 ## Build definition conventions
 
+- Never hand an `os.Path` to a subprocess (or bake it into a generated file) via
+  `toString` / `.toIO` / `.toNIO` / `PathRef.toAbsString` / `PathRef.toAbsFile`. Mill renders
+  `os.Path` as `../mill-workspace/...` and `../mill-home/...` aliases; those forms only resolve
+  through forwarder symlinks under the output dir that do not outlive the run that created them
+  (with `--no-daemon` they are deleted on exit), so a cached task value ends up pointing at a
+  dangling path. Use `PathRef.toResolvedPathString` (or `PathRef.toAbsNioPath` composed with
+  `PathRef.toResolvedOsPath` when a `java.nio.Path` / URI is needed), which resolves the
+  symlinks and falls back to the lexical form for paths that do not exist yet.
 - Follow existing `Cross` + shared-source composition patterns.
 - Keep Scala-version logic centralized (typically `mill-build/src/.../Deps.scala`).
 - Avoid hardcoding duplicated version values across files.

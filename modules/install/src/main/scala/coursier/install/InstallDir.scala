@@ -1,5 +1,7 @@
 package coursier.install
 
+import dataclass.{data, since => unroll}
+
 import java.io.{File, InputStream, OutputStream}
 import java.nio.file.attribute.FileTime
 import java.nio.file.{Files, Path, Paths, StandardCopyOption, StandardOpenOption}
@@ -18,15 +20,13 @@ import coursier.launcher.internal.FileUtil
 import coursier.launcher.Parameters.ScalaNative
 import coursier.util.{Artifact, Task}
 import coursier.version.VersionConstraint
-import dataclass._
-
 import scala.jdk.CollectionConverters._
 
-@data class InstallDir(
+@data case class InstallDir(
   baseDir: Path = InstallDir.defaultDir,
-  @since
+  @unroll
   cache: Cache[Task] = Cache.default,
-  @since
+  @unroll
   verbosity: Int = 0,
   graalvmParamsOpt: Option[GraalvmParams] = None,
   coursierRepositories: Seq[Repository] = Nil,
@@ -38,9 +38,9 @@ import scala.jdk.CollectionConverters._
   onlyPrebuilt: Boolean = false,
   preferPrebuilt: Boolean = true,
   basePreamble: Preamble = Preamble(),
-  @since
+  @unroll
   overrideProguardedBootstraps: Option[Boolean] = None,
-  @since("2.0.17")
+  @unroll
   archiveCache: ArchiveCache[Task] = ArchiveCache()
 ) {
 
@@ -106,8 +106,7 @@ import scala.jdk.CollectionConverters._
     basePreamble
       .withOsKind(isWin)
       .callsItself(isWin)
-      .withJavaOpts(desc.javaOptions)
-      .withJvmOptionFile(desc.jvmOptionFile)
+      .copy(javaOpts = desc.javaOptions, jvmOptionFile = desc.jvmOptionFile)
 
   private def bootstrapParamsLike(
     desc: AppDescriptor,
@@ -136,15 +135,17 @@ import scala.jdk.CollectionConverters._
 
     val params0 = Parameters.Bootstrap(sharedContentOpt.toSeq :+ mainContent, mainClass)
       .withPreamble(baseJarPreamble)
-      .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
-      .withDeterministic(true)
-      .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
-      .withExtraZipEntries(infoEntries)
-      .withPythonJep(desc.jna.contains("python-jep"))
-      .withPython(desc.jna.contains("python"))
+      .copy(
+        javaProperties = desc.javaProperties ++ appArtifacts.extraProperties,
+        deterministic = true,
+        hybridAssembly = desc.launcherType == LauncherType.Hybrid,
+        extraZipEntries = infoEntries,
+        pythonJep = desc.jna.contains("python-jep"),
+        python = desc.jna.contains("python")
+      )
 
     overrideProguardedBootstraps
-      .fold(params0)(params0.withProguarded)
+      .fold(params0)(pg => params0.copy(proguarded = pg))
   }
 
   private[install] def params(
@@ -160,10 +161,12 @@ import scala.jdk.CollectionConverters._
       case LauncherType.DummyJar =>
         Parameters.Bootstrap(Nil, mainClass)
           .withPreamble(baseJarPreamble0)
-          .withJavaProperties(desc.javaProperties ++ appArtifacts.extraProperties)
-          .withDeterministic(true)
-          .withHybridAssembly(desc.launcherType == LauncherType.Hybrid)
-          .withExtraZipEntries(infoEntries)
+          .copy(
+            javaProperties = desc.javaProperties ++ appArtifacts.extraProperties,
+            deterministic = true,
+            hybridAssembly = desc.launcherType == LauncherType.Hybrid,
+            extraZipEntries = infoEntries
+          )
 
       case _: LauncherType.BootstrapLike =>
         bootstrapParamsLike(desc, appArtifacts, infoEntries, mainClass, baseJarPreamble0)
@@ -173,9 +176,9 @@ import scala.jdk.CollectionConverters._
         // FIXME Allow to adjust merge rules?
         Parameters.Assembly()
           .withPreamble(baseJarPreamble0)
-          .withFiles(appArtifacts.fetchResult.files)
+          .copy(files = appArtifacts.fetchResult.files)
           .withMainClass(mainClass)
-          .withExtraZipEntries(infoEntries)
+          .copy(extraZipEntries = infoEntries)
 
       case LauncherType.DummyNative =>
         Parameters.DummyNative()
@@ -198,9 +201,7 @@ import scala.jdk.CollectionConverters._
         val options = ScalaNative.ScalaNativeOptions()
 
         Parameters.ScalaNative(fetch, mainClass, nativeVersion)
-          .withJars(appArtifacts.fetchResult.files)
-          .withOptions(options)
-          .withVerbosity(verbosity)
+          .copy(jars = appArtifacts.fetchResult.files, options = options, verbosity = verbosity)
     }
   }
 
@@ -302,19 +303,30 @@ import scala.jdk.CollectionConverters._
 
         if (shouldUpdate) {
 
+          // Computed first, as where we write things below depends on whether we are about to
+          // generate a native binary.
+          val prebuiltOrParams = prebuiltOrNotFoundUrls0.left.map { notFoundUrls =>
+            if (
+              (onlyPrebuilt && desc.launcherType.isNative) || desc.launcherType == LauncherType.Prebuilt
+            )
+              throw new NoPrebuiltBinaryAvailable(actualName(dest0), notFoundUrls)
+
+            params(desc, appArtifacts, infoEntries, mainClass)
+          }
+
+          // The auxiliary file is only meant to hold native binaries: it is named ".exe" on
+          // Windows, and Windows only runs files named that way if they are actual native
+          // executables. Some native launcher types fall back to a JVM launcher when no prebuilt
+          // binary is available for the current platform (see params). Such launchers have to be
+          // written to dest itself.
+          val usesAuxFile = desc.launcherType.isNative && prebuiltOrParams.left.forall(_.isNative)
+
           val genDest =
-            if (desc.launcherType.isNative) tmpAux
+            if (usesAuxFile) tmpAux
             else tmpDest
 
-          val actualLauncher = prebuiltOrNotFoundUrls0 match {
-            case Left(notFoundUrls) =>
-              if (
-                (onlyPrebuilt && desc.launcherType.isNative) || desc.launcherType == LauncherType.Prebuilt
-              )
-                throw new NoPrebuiltBinaryAvailable(actualName(dest0), notFoundUrls)
-
-              val params0 = params(desc, appArtifacts, infoEntries, mainClass)
-
+          val actualLauncher = prebuiltOrParams match {
+            case Left(params0) =>
               writing(genDest, verbosity, Some(currentTime)) {
                 Generator.generate(params0, genDest)
                 genDest
@@ -358,18 +370,18 @@ import scala.jdk.CollectionConverters._
               a.file.toPath
           }
 
-          val inPlaceLauncher     = desc.launcherType.isNative && actualLauncher == genDest
+          val inPlaceLauncher     = usesAuxFile && actualLauncher == genDest
           val launcherIsElsewhere = actualLauncher != genDest
           if (inPlaceLauncher || launcherIsElsewhere) {
             val preamble =
               if (inPlaceLauncher)
                 if (isWin)
                   basePreamble
-                    .withKind(Preamble.Kind.Bat)
+                    .copy(kind = Preamble.Kind.Bat)
                     .withCommand("%~dp0\\" + auxName("%~n0", ".exe"))
                 else
                   basePreamble
-                    .withKind(Preamble.Kind.Sh)
+                    .copy(kind = Preamble.Kind.Sh)
                     .withCommand(
                       // FIXME needs directory
                       """$(cd "$(dirname "$0")"; pwd)/""" + auxName(dest0.getFileName.toString, "")
@@ -377,7 +389,7 @@ import scala.jdk.CollectionConverters._
               else {
                 assert(launcherIsElsewhere)
                 basePreamble
-                  .withKind(if (isWin) Preamble.Kind.Bat else Preamble.Kind.Sh)
+                  .copy(kind = if (isWin) Preamble.Kind.Bat else Preamble.Kind.Sh)
                   .withCommand(actualLauncher.toAbsolutePath.toString)
               }
             writing(tmpDest, verbosity, Some(currentTime)) {
@@ -434,7 +446,7 @@ import scala.jdk.CollectionConverters._
                 info
               else
                 // just in case, that shouldn't happen
-                info.withAppDescriptor(info.appDescriptor.withNameOpt(Some(name)))
+                info.copy(appDescriptor = info.appDescriptor.copy(nameOpt = Some(name)))
             }
 
             writtenOpt <- Task.delay {
@@ -456,7 +468,7 @@ import scala.jdk.CollectionConverters._
 
   def envUpdate: EnvironmentUpdate =
     EnvironmentUpdate()
-      .withPathLikeAppends(Seq("PATH" -> baseDir.toAbsolutePath.toString))
+      .copy(pathLikeAppends = Seq("PATH" -> baseDir.toAbsolutePath.toString))
 
   def list(): Seq[String] =
     if (Files.isDirectory(baseDir)) {

@@ -14,7 +14,7 @@ object TreeTests extends TestSuite {
 
   private val resolve = Resolve()
     .noMirrors
-    .withCache(cache)
+    .copy(cache = cache)
 
   def tests = Tests {
     test("root conflict") {
@@ -34,7 +34,7 @@ object TreeTests extends TestSuite {
               dep"com.softwaremill.sttp.client3:core_2.13:3.8.3",
               dep"org.scala-lang:scala-library:[2.13.8]"
             )
-            .mapResolutionParams(_.withRenderModuleVersion(Some(renderModuleVersion)))
+            .mapResolutionParams(_.copy(renderModuleVersion = Some(renderModuleVersion)))
             .io
             .attempt
             .future()

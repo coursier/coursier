@@ -207,9 +207,10 @@ object PomParser {
         val parentOpt = for {
           parentModule  <- parentModuleOpt
           parentVersion <- validateCoordinate(parentVersion, "parent version")
-        } yield (parentModule, coursier.version.Version(parentVersion))
+        } yield (parentModule, coursier.version.VersionConstraint(parentVersion))
 
-        val projModule = Module(Organization(finalGroupId), ModuleName(artifactId), Map.empty)
+        val projModule =
+          Module(Organization(finalGroupId), ModuleName(artifactId), Map.empty)
 
         val relocationDependencyOpt = {
           val isRelocated = relocationGroupIdOpt.nonEmpty ||
@@ -487,7 +488,11 @@ object PomParser {
         }
         def end(state: State) = {
           val d = Dependency(
-            Module(state.dependencyGroupIdOpt.get, state.dependencyArtifactIdOpt.get, Map.empty),
+            Module(
+              state.dependencyGroupIdOpt.get,
+              state.dependencyArtifactIdOpt.get,
+              Map.empty
+            ),
             VersionConstraint(state.dependencyVersion),
             VariantSelector.emptyConfiguration,
             state.dependencyExclusions,
@@ -625,20 +630,22 @@ object PomParser {
     private val hashes = keys.map(_.hashCode)
     def next(tag: String): HandlerMapNode = {
       Objects.requireNonNull(tag)
-      val h   = tag.hashCode
-      val len = keys.length
-      var i   = 0
+      val h                     = tag.hashCode
+      val len                   = keys.length
+      var i                     = 0
+      var found: HandlerMapNode = null
 
-      while (i < len) {
+      while (found == null && i < len)
         // Identity check (hashes(i) == h) is significantly faster than string equals.
         // We only perform the full .equals check if the hash matches.
         if (hashes(i) == h && keys(i) == tag)
-          return values(i)
-        i += 1
-      }
+          found = values(i)
+        else
+          i += 1
 
       // 3. Fallback to wildcard (e.g., the "*" or EmptyNode)
-      wildcard
+      if (found != null) found
+      else wildcard
     }
   }
 

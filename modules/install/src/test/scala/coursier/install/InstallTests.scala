@@ -530,6 +530,111 @@ object InstallTests extends TestSuite {
       }
     }
 
+    test("fall back to a JVM launcher when no prebuilt launcher is available") {
+      // The prebuilt binaries below are only available for x86_64, so that installing on
+      // aarch64 falls back to a JVM launcher. That launcher has to be written to the launcher
+      // itself, rather than to the auxiliary file: the latter is named ".exe" on Windows, and
+      // Windows only runs files named that way if they are actual native executables.
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
+
+        val id    = "echo"
+        val csUrl = "https://github.com/coursier/coursier/releases/download/v2.0.0/coursier"
+        val appInfo0 = appInfo(
+          RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
+            .withRepositories(List("central"))
+            .withLauncherType("graalvm-native-image")
+            .withPrebuiltBinaries(Map(
+              "x86_64-apple-darwin" -> csUrl,
+              "x86_64-pc-linux"     -> csUrl,
+              "x86_64-pc-win32"     -> csUrl
+            )),
+          id
+        )
+
+        val installDir0 = installDir(tmpDir, os, arch)
+
+        val created = installDir0.createOrUpdate(appInfo0)
+        assert(created.exists(identity))
+
+        val launcher = installDir0.actualDest(id)
+        assert(Files.isRegularFile(launcher))
+
+        // the launcher is the JVM launcher itself, not a script running the auxiliary file
+        assertHasEntry(launcher.toFile, "coursier/bootstrap/launcher/ResourcesLauncher.class")
+
+        val ext = if (os == "windows") ".exe" else ""
+        val auxiliaryLauncher = launcher.getParent.resolve(
+          InstallDir.auxName(launcher.getFileName.toString, ext)
+        )
+        assert(!Files.exists(auxiliaryLauncher))
+
+        if (currentOs == os) {
+          val output         = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
+          val expectedOutput = "foo"
+          assert(output == expectedOutput)
+        }
+      }
+
+      test("linux") {
+        run("linux", "aarch64")
+      }
+      test("mac") {
+        run("mac", "aarch64")
+      }
+      test("windows") {
+        run("windows", "aarch64")
+      }
+    }
+
+    test("write generated native launchers to the auxiliary file") {
+      // Unlike the JVM launcher above, a generated native binary goes to the auxiliary file,
+      // with a script running it as dest.
+      def run(os: String, arch: String) = withTempDir { tmpDir =>
+
+        val id = "echo"
+        val raw = RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
+          .withRepositories(List("central"))
+        val rawSource = RawSource(Nil, "inline", id)
+        val appInfo0 = AppInfo(
+          raw.appDescriptor.toOption.get.withLauncherType(LauncherType.DummyNative),
+          raw.repr.getBytes(StandardCharsets.UTF_8),
+          rawSource.source.toOption.getOrElse(???),
+          rawSource.repr.getBytes(StandardCharsets.UTF_8)
+        )
+
+        val installDir0 = installDir(tmpDir, os, arch)
+
+        val created = installDir0.createOrUpdate(appInfo0)
+        assert(created.exists(identity))
+
+        val launcher = installDir0.actualDest(id)
+        assert(Files.isRegularFile(launcher))
+
+        val ext = if (os == "windows") ".exe" else ""
+        val auxiliaryLauncher = launcher.getParent.resolve(
+          InstallDir.auxName(launcher.getFileName.toString, ext)
+        )
+        // DummyNative generates an empty file
+        assert(Files.isRegularFile(auxiliaryLauncher))
+        assert(Files.size(auxiliaryLauncher) == 0L)
+
+        val expectedCommand =
+          if (os == "windows") InstallDir.auxName("%~n0", ext)
+          else InstallDir.auxName(id, ext)
+        assert(findInSource(launcher.toFile, expectedCommand))
+      }
+
+      test("linux") {
+        run("linux", "aarch64")
+      }
+      test("mac") {
+        run("mac", "aarch64")
+      }
+      test("windows") {
+        run("windows", "aarch64")
+      }
+    }
+
     test("install a compressed prebuilt launcher") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 

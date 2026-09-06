@@ -3,7 +3,7 @@ package coursier.tests
 import coursier.maven.MavenRepository
 import coursier.tests.compatibility._
 import coursier.util.StringInterpolators._
-import coursier.version.Version
+import coursier.version.{Version, VersionConstraint}
 
 import utest._
 
@@ -34,7 +34,7 @@ object JsTests extends TestSuite {
         .map {
           case (_, proj) =>
             val parent = proj.parent0
-            assert(parent == Some(mod"ch.qos.logback:logback-parent", Version("1.1.3")))
+            assert(parent == Some(mod"ch.qos.logback:logback-parent", VersionConstraint("1.1.3")))
         }
         .run
         .map { res =>

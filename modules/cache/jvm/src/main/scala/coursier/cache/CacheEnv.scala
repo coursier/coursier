@@ -50,6 +50,12 @@ object CacheEnv {
     "coursier.max-http-retry-after"
   )
 
+  /** Env var and Java prop names for the HTTP connect timeout */
+  val connectTimeout = EnvEntry("COURSIER_CONNECT_TIMEOUT", "coursier.connect-timeout")
+
+  /** Env var and Java prop names for the HTTP read timeout */
+  val readTimeout = EnvEntry("COURSIER_READ_TIMEOUT", "coursier.read-timeout")
+
   /** Env var and Java prop names for the cache policies */
   val cachePolicy = EnvEntry("COURSIER_MODE", "coursier.mode")
 
@@ -189,6 +195,36 @@ object CacheEnv {
     fromEnv
       .orElse(fromProps)
       .orElse(Some(default))
+  }
+
+  /** Computes the HTTP connect timeout from the passed env var and Java property
+    *
+    * `Duration.Zero` disables the timeout, like it does on `java.net.URLConnection` itself.
+    */
+  def defaultConnectTimeout(values: EnvValues): Option[FiniteDuration] =
+    timeout(values, default = 30.seconds)
+
+  /** Computes the HTTP read timeout from the passed env var and Java property
+    *
+    * This is the maximum time a single read is allowed to take, not the maximum duration of a
+    * download, so it can stay well under how long a large artifact takes to fetch.
+    *
+    * `Duration.Zero` disables the timeout, like it does on `java.net.URLConnection` itself.
+    */
+  def defaultReadTimeout(values: EnvValues): Option[FiniteDuration] =
+    timeout(values, default = 1.minute)
+
+  private def timeout(values: EnvValues, default: FiniteDuration): Option[FiniteDuration] = {
+    val fromEnv   = values.env.flatMap(parseDuration(_).toOption)
+    def fromProps = values.prop.flatMap(parseDuration(_).toOption)
+
+    fromEnv
+      .orElse(fromProps)
+      .getOrElse(default) match {
+      case duration: FiniteDuration if duration > Duration.Zero => Some(duration)
+      // both Duration.Zero and infinite durations mean "wait as long as it takes"
+      case _ => None
+    }
   }
 
   private[coursier] def parseDuration(s: String): Either[Throwable, Duration] =

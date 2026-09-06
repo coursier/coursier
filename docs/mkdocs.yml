@@ -33,6 +33,7 @@ nav:
     - cache-action: 'gha-cache-action.md'
   - Reference:
     - Repositories: 'reference-repositories.md'
+    - Repository mirrors: 'reference-mirrors.md'
   - Contributors:
     - Contributing: 'contrib.md'
   - About:

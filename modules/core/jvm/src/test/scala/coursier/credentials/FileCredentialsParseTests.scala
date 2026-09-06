@@ -20,12 +20,14 @@ object FileCredentialsParseTests extends TestSuite {
 
       val parsed = FileCredentials(credFilePath).get().sortBy(_.usernameOpt.getOrElse(""))
       val expected = Seq(
-        DirectCredentials("127.0.0.1", "secure", "sEcUrE", Some("secure realm"))
-          .withOptional(true)
-          .withHttpsOnly(true),
-        DirectCredentials("127.0.0.1", "simple", "SiMpLe", Some("simple realm"))
-          .withOptional(true)
-          .withHttpsOnly(false)
+        DirectCredentials("127.0.0.1", "secure", "sEcUrE", Some("secure realm")).copy(
+          optional = true,
+          httpsOnly = true
+        ),
+        DirectCredentials("127.0.0.1", "simple", "SiMpLe", Some("simple realm")).copy(
+          optional = true,
+          httpsOnly = false
+        )
       )
 
       assert(parsed == expected)
