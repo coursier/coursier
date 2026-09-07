@@ -566,7 +566,11 @@ object Resolution {
           if (mgmtValues.config.nonEmpty && variant.isEmpty)
             variant = Variant.Configuration(mgmtValues.config)
 
-          if (!ignoreOptionalFromDepMgmt && mgmtValues.optional0.contains(true) && !dep.optional0.contains(true))
+          if (
+            !ignoreOptionalFromDepMgmt &&
+            mgmtValues.optional0.contains(true) &&
+            !dep.optional0.contains(true)
+          )
             dep = dep.copy(optional0 = mgmtValues.optional0)
         }
 
