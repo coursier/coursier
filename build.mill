@@ -682,6 +682,9 @@ trait TestsJvm extends TestsModule { self =>
       coursier.jvm(),
       `test-cache`.jvm()
     )
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      Deps.osLib
+    )
     def forkArgs = Task {
       val httpServerCp = `test-cache`.jvm().httpServerClassPath()
         .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
