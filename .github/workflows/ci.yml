@@ -36,7 +36,30 @@ jobs:
       run: ./mill -i ci.noEmptyDiscoveredTestClasses --tasks __.discoveredTestClasses
     - run: ./mill -i __.publishLocal
 
+  scala-versions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    name: Scala versions
+    outputs:
+      scala-versions: ${{ steps.versions.outputs.scala-versions }}
+      scala213: ${{ steps.versions.outputs.scala213 }}
+      scala212: ${{ steps.versions.outputs.scala212 }}
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - name: Get Scala versions from the build
+      id: versions
+      run: |
+        ./mill -i --ticker false show ci.scalaVersions \
+          | jq -r 'to_entries[] | "\(.key)=\(.value | if type == "array" then tojson else . end)"' \
+          >> "$GITHUB_OUTPUT"
+
   test:
+    needs: scala-versions
     runs-on: ${{ matrix.OS }}
     name: ${{ matrix.OS }} Scala ${{ matrix.SCALA_VERSION }}
     timeout-minutes: 35
@@ -44,18 +67,18 @@ jobs:
       fail-fast: false
       matrix:
         OS: ["ubuntu-latest"]
-        SCALA_VERSION: ["2.13.18"]
+        SCALA_VERSION: ["${{ needs.scala-versions.outputs.scala213 }}"]
         include:
           - OS: "ubuntu-24.04-arm"
-            SCALA_VERSION: "2.13.18"
+            SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
           - OS: "macos-15-intel"
-            SCALA_VERSION: "2.13.18"
+            SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
           - OS: "macos-14"
-            SCALA_VERSION: "2.13.18"
+            SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
           - OS: "windows-latest"
-            SCALA_VERSION: "2.13.18"
+            SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
           - OS: "ubuntu-latest"
-            SCALA_VERSION: "2.12.20"
+            SCALA_VERSION: "${{ needs.scala-versions.outputs.scala212 }}"
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
@@ -89,15 +112,14 @@ jobs:
         COURSIER_JNI: force
 
   js-test:
+    needs: scala-versions
     runs-on: ubuntu-latest
     name: Scala.js Scala ${{ matrix.SCALA_VERSION }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        SCALA_VERSION:
-          - "2.12.20"
-          - "2.13.18"
+        SCALA_VERSION: ${{ fromJSON(needs.scala-versions.outputs.scala-versions) }}
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
@@ -123,15 +145,14 @@ jobs:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
 
   interface-test:
+    needs: scala-versions
     runs-on: ubuntu-latest
     name: Interface Scala ${{ matrix.SCALA_VERSION }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        SCALA_VERSION:
-          - "2.12.20"
-          - "2.13.18"
+        SCALA_VERSION: ${{ fromJSON(needs.scala-versions.outputs.scala-versions) }}
     steps:
     - uses: actions/checkout@v7
       with:
