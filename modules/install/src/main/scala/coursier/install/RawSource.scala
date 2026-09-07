@@ -1,11 +1,12 @@
 package coursier.install
 
+import dataclass.data
+
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import com.github.plokhotnyuk.jsoniter_scala.macros._
 import coursier.parse.RepositoryParser
-import dataclass.data
 
 /** Unprocessed source, meaning it's mostly made of strings rather than typed data.
   *
@@ -13,7 +14,7 @@ import dataclass.data
   * @param channel
   * @param id
   */
-@data class RawSource(
+@data case class RawSource(
   repositories: List[String],
   channel: String,
   id: String

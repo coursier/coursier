@@ -306,7 +306,7 @@ import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import scala.concurrent.ExecutionContext
 
-val cache = FileCache[IO]()
+val cache = FileCache.create[IO]()
 
 val ioResolution = Resolve(cache) // note the cache passed here
   .addDependencies(dep"org.tpolecat:doobie-core_2.12:0.6.0")

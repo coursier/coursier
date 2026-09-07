@@ -10,7 +10,7 @@ import dataclass.data
   * `to`. Only _Maven_ repositories, not Ivy ones for example. See [[TreeMirror]] to mirror both
   * types of repository.
   */
-@data class MavenMirror(
+@data case class MavenMirror(
   from: Seq[String],
   to: String
 ) extends Mirror {

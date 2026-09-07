@@ -33,7 +33,7 @@ object MirrorTests extends TestSuite {
         val res = await {
           Resolve()
             .noMirrors
-            .withCache(cache)
+            .copy(cache = cache)
             .addMirrorConfFiles(file)
             .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M10")
             .future()
@@ -58,7 +58,7 @@ object MirrorTests extends TestSuite {
         val res = await {
           Resolve()
             .noMirrors
-            .withCache(cache)
+            .copy(cache = cache)
             .addConfFiles(file)
             .addDependencies(dep"com.github.alexarchambault:argonaut-shapeless_6.2_2.12:1.2.0-M10")
             .future()

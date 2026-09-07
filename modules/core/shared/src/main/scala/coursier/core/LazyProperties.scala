@@ -144,7 +144,10 @@ private[coursier] object LazyProperties {
       }
   }
   final class SeqPropertyLayer(val values: immutable.Seq[(String, String)]) extends PropertyLayer {
-    assert(!values.isInstanceOf[ConcatProperties])
+    assert(values match {
+      case _: ConcatProperties => false
+      case _                   => true
+    })
 
     override def iterator: IterableOnce[(String, String)] = values.iterator
 

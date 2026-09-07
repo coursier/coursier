@@ -5,12 +5,12 @@ import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
 import coursier.core.Authentication
 import coursier.credentials.DirectCredentials
-import dataclass.data
+import dataclass.{data, since => unroll}
 
 import scala.concurrent.duration.FiniteDuration
 
 // format: off
-@data class ConnectionBuilder(
+@data case class ConnectionBuilder(
   url: String,
   authentication: Option[Authentication] = None,
   alreadyDownloaded: Long = 0L,
@@ -22,9 +22,9 @@ import scala.concurrent.duration.FiniteDuration
   method: String = "GET",
   maxRedirectionsOpt: Option[Int] = Some(20),
   proxy: Option[Proxy] = None,
-  @since("2.0.16")
+  @unroll
     classLoaders: Seq[ClassLoader] = Nil,
-  @since("2.1.25")
+  @unroll
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
     readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout
 ) {

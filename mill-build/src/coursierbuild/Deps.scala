@@ -24,7 +24,7 @@ object Deps {
     def http4sServer      = mvn"org.http4s::http4s-server:${Versions.http4s}"
     def isTerminal        = mvn"io.github.alexarchambault:is-terminal:0.1.2"
     def java8Compat       = mvn"org.scala-lang.modules::scala-java8-compat:1.0.2"
-    def jarjarAbrams      = mvn"com.eed3si9n.jarjarabrams::jarjar-abrams-core:1.18.0"
+    def jarjarAbrams      = mvn"com.eed3si9n.jarjarabrams::jarjar-abrams-core:1.18.1"
     def jimfs             = mvn"com.google.jimfs:jimfs:1.3.2"
     def jna               = mvn"net.java.dev.jna:jna:5.19.1"
     def jniUtils          = mvn"io.get-coursier.jniutils:windows-jni-utils:${Versions.jniUtils}"
@@ -41,7 +41,7 @@ object Deps {
     def jsoup          = mvn"org.jsoup:jsoup:1.23.2"
     def logbackClassic = mvn"ch.qos.logback:logback-classic:1.6.1"
     def macroParadise  = mvn"org.scalamacros:::paradise:2.1.1"
-    def mdoc           = mvn"org.scalameta::mdoc:2.9.1"
+    def mdoc           = mvn"org.scalameta::mdoc:2.9.2"
     def noCrcZis       = mvn"io.github.alexarchambault.scala-cli.tmp:zip-input-stream:0.1.1"
     def osLib          = mvn"com.lihaoyi::os-lib:0.11.8"
     def plexusArchiver = mvn"org.codehaus.plexus:plexus-archiver:4.14.0"
@@ -59,6 +59,8 @@ object Deps {
       else
         mvn"org.virtuslab.scala-cli:config_3:1.16.0"
           .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
+    // has to match the scalafix-interfaces version that mill-scalafix pulls
+    def scalafixCore             = mvn"ch.epfl.scala::scalafix-core:0.14.7"
     def scalaJsDom               = mvn"org.scala-js::scalajs-dom::2.4.0"
     def scalaJsReact             = mvn"com.github.japgolly.scalajs-react::core::2.1.4"
     def scalaNativeTools040      = mvn"org.scala-native::tools:0.4.17"
@@ -67,7 +69,6 @@ object Deps {
     def scalazCore               = mvn"org.scalaz::scalaz-core::${Versions.scalaz}"
     def scalazConcurrent         = mvn"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
     def scodec                   = mvn"org.scodec::scodec-core:2.3.3"
-    def shapeless                = mvn"com.chuusai::shapeless:2.3.12"
     // stick to slf4j 1.x here, so that the interface module can be used from
     // applications relying on either slf4j 1.x or 2.x. slf4j-api is the only
     // unshaded dependency of the published interface module, so the version
@@ -75,7 +76,7 @@ object Deps {
     // applications still relying on a 1.x binding silently fall back to NOP.
     // Pinned in .scala-steward.conf too, so that it doesn't get bumped to 2.x.
     def slf4jApi = mvn"org.slf4j:slf4j-api:1.7.36"
-    def slf4JNop = mvn"org.slf4j:slf4j-nop:2.0.18"
+    def slf4JNop = mvn"org.slf4j:slf4j-nop:2.0.19"
     def svm      = mvn"org.graalvm.nativeimage:svm:21.3.18"
     // stick to the 2.x line: tika 3.x is compiled for Java 11, and we still support Java 8.
     // Pinned in .scala-steward.conf too, so that it doesn't get bumped back to 3.x.

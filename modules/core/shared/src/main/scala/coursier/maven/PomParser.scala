@@ -209,7 +209,8 @@ object PomParser {
           parentVersion <- validateCoordinate(parentVersion, "parent version")
         } yield (parentModule, coursier.version.VersionConstraint(parentVersion))
 
-        val projModule = Module(Organization(finalGroupId), ModuleName(artifactId), Map.empty)
+        val projModule =
+          Module(Organization(finalGroupId), ModuleName(artifactId), Map.empty)
 
         val relocationDependencyOpt = {
           val isRelocated = relocationGroupIdOpt.nonEmpty ||
@@ -487,7 +488,11 @@ object PomParser {
         }
         def end(state: State) = {
           val d = Dependency(
-            Module(state.dependencyGroupIdOpt.get, state.dependencyArtifactIdOpt.get, Map.empty),
+            Module(
+              state.dependencyGroupIdOpt.get,
+              state.dependencyArtifactIdOpt.get,
+              Map.empty
+            ),
             VersionConstraint(state.dependencyVersion),
             VariantSelector.emptyConfiguration,
             state.dependencyExclusions,

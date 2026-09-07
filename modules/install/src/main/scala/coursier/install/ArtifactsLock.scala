@@ -1,5 +1,7 @@
 package coursier.install
 
+import dataclass.data
+
 import java.io.{File, InputStream}
 import java.math.BigInteger
 import java.nio.file.Files
@@ -8,9 +10,8 @@ import java.security.MessageDigest
 import cats.implicits._
 import coursier.cache.internal.FileUtil
 import coursier.util.Artifact
-import dataclass.data
 
-@data class ArtifactsLock(
+@data case class ArtifactsLock(
   entries: Set[ArtifactsLock.Entry]
 ) {
   def repr: String =
@@ -25,7 +26,7 @@ import dataclass.data
 
 object ArtifactsLock {
 
-  @data class Entry(
+  @data case class Entry(
     url: String,
     checksumType: String,
     checksum: String

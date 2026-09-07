@@ -6,7 +6,7 @@ import dataclass.data
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@data class MockCache(
+@data case class MockCache(
   base: String,
   baseChanging: String
 ) extends Cache[Task] {
@@ -20,7 +20,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
       val (artifact0, links) =
         if (artifact.url.endsWith("/.links"))
-          (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
+          (artifact.copy(url = artifact.url.stripSuffix(".links")), true)
         else
           (artifact, false)
 

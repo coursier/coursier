@@ -1,10 +1,10 @@
 package coursier.maven
 
+import dataclass.{data, since => unroll}
+
 import coursier.core._
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
-import dataclass._
-
 import scala.collection.compat._
 
 object SbtMavenRepository {
@@ -47,7 +47,7 @@ object SbtMavenRepository {
 
   def apply(repo: MavenRepository): SbtMavenRepository =
     SbtMavenRepository(
-      root = repo.root,
+      root = actualRoot(repo.root),
       authentication = repo.authentication,
       changing = repo.changing,
       versionsCheckHasModule = repo.versionsCheckHasModule,
@@ -151,24 +151,24 @@ object SbtMavenRepository {
             val moduleWithAttrs = getSbtCrossVersion(attrs)
               .fold(dep0.module) { sbtCrossVersion =>
                 val sttripedName = dep0.module.name.value.stripSuffix(sbtCrossVersion)
-                dep0.module.withName(ModuleName(sttripedName))
+                dep0.module.copy(name = ModuleName(sttripedName))
               }
-              .withAttributes(attrs)
-            dep0.withModule(moduleWithAttrs)
+              .copy(attributes = attrs)
+            dep0.copy(module = moduleWithAttrs)
           }
           config -> dep
       }
 
-      project.withDependencies0(adaptedDependencies)
+      project.copy(dependencies0 = adaptedDependencies)
     }
 }
 
-@data(apply = false, settersCallApply = true) class SbtMavenRepository(
+@data(apply = false, settersCallApply = true) case class SbtMavenRepository(
   val root: String,
   val authentication: Option[Authentication] = None,
   val changing: Option[Boolean] = None,
   override val versionsCheckHasModule: Boolean = true,
-  @since("2.1.25")
+  @unroll
   checkModule: Boolean = false
 ) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi { self =>
 
@@ -243,7 +243,7 @@ object SbtMavenRepository {
     internal.artifactFor(url, changing)
 
   def withChanging(changing: Boolean): SbtMavenRepository =
-    withChanging(Some(changing))
+    copy(changing = Some(changing))
 
   override def fetchVersions[F[_]](
     module: Module,
