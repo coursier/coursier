@@ -174,13 +174,14 @@ object InstallTests extends TestSuite {
     installDir(tmpDir, "linux", "x86_64")
   private def installDir(tmpDir: Path, os: String, arch: String): InstallDir =
     InstallDir(tmpDir, cache)
-      .withPlatform(Platform.get(os, arch))
-      .withPlatformExtensions(InstallDir.platformExtensions(os))
-      .withBasePreamble(Preamble())
-      .withOverrideProguardedBootstraps {
-        if (sys.props.get("java.version").exists(_.startsWith("1."))) None
-        else Some(false)
-      }
+      .copy(
+        platform = Platform.get(os, arch),
+        platformExtensions = InstallDir.platformExtensions(os),
+        basePreamble = Preamble(),
+        overrideProguardedBootstraps =
+          if (sys.props.get("java.version").exists(_.startsWith("1."))) None
+          else Some(false)
+      )
 
   private val currentArch =
     Option(System.getProperty("os.arch")).getOrElse("x86_64")
@@ -200,7 +201,7 @@ object InstallTests extends TestSuite {
         val id = "echo"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
-            .withRepositories(List("central")),
+            .copy(repositories = List("central")),
           id
         )
 
@@ -248,8 +249,10 @@ object InstallTests extends TestSuite {
         val id = "echo"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
-            .withRepositories(List("central"))
-            .withLauncherType("assembly"),
+            .copy(
+              repositories = List("central"),
+              launcherType = "assembly"
+            ),
           id
         )
 
@@ -287,8 +290,10 @@ object InstallTests extends TestSuite {
         val id = "echo"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
-            .withRepositories(List("central"))
-            .withLauncherType("standalone"),
+            .copy(
+              repositories = List("central"),
+              launcherType = "standalone"
+            ),
           id
         )
 
@@ -334,12 +339,12 @@ object InstallTests extends TestSuite {
         val id = "echo"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
-            .withRepositories(List("central")),
+            .copy(repositories = List("central")),
           id
         )
 
         val installDir0 = installDir(tmpDir, os, arch)
-          .withVerbosity(1)
+          .copy(verbosity = 1)
 
         val created = installDir0.createOrUpdate(appInfo0)
         assert(created.exists(identity))
@@ -380,13 +385,15 @@ object InstallTests extends TestSuite {
         val id = "echo"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.1"))
-            .withRepositories(List("central"))
-            .withLauncherType("standalone"), // easier to test
+            .copy(
+              repositories = List("central"),
+              launcherType = "standalone" // easier to test
+            ),
           id
         )
 
         val installDir0 = installDir(tmpDir, os, arch)
-          .withVerbosity(1)
+          .copy(verbosity = 1)
 
         val now = {
           val t = Instant.now()
@@ -416,8 +423,10 @@ object InstallTests extends TestSuite {
 
         val newAppInfo = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.2")) // bump version
-            .withRepositories(List("central"))
-            .withLauncherType("standalone"), // easier to test
+            .copy(
+              repositories = List("central"),
+              launcherType = "standalone" // easier to test
+            ),
           "echo"
         )
 
@@ -458,7 +467,7 @@ object InstallTests extends TestSuite {
     test("try updating a non-installed app") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
         val installDir0 = installDir(tmpDir, os, arch)
-          .withVerbosity(1)
+          .copy(verbosity = 1)
 
         val result =
           installDir0.maybeUpdate(
@@ -489,19 +498,23 @@ object InstallTests extends TestSuite {
         val csUrl = "https://github.com/coursier/coursier/releases/download/v2.0.0/coursier"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.1"))
-            .withRepositories(List("central"))
-            .withLauncherType("graalvm-native-image")
-            .withPrebuiltBinaries(Map(
-              "x86_64-apple-darwin" -> csUrl,
-              "x86_64-pc-linux"     -> csUrl,
-              "x86_64-pc-win32"     -> csUrl
-            )),
+            .copy(
+              repositories = List("central"),
+              launcherType = "graalvm-native-image",
+              prebuiltBinaries = Map(
+                "x86_64-apple-darwin" -> csUrl,
+                "x86_64-pc-linux"     -> csUrl,
+                "x86_64-pc-win32"     -> csUrl
+              )
+            ),
           id
         )
 
         val installDir0 = installDir(tmpDir, os, arch)
-          .withVerbosity(1)
-          .withOnlyPrebuilt(true)
+          .copy(
+            verbosity = 1,
+            onlyPrebuilt = true
+          )
 
         val created = installDir0.createOrUpdate(appInfo0)
         assert(created.exists(identity))
@@ -541,13 +554,15 @@ object InstallTests extends TestSuite {
         val csUrl = "https://github.com/coursier/coursier/releases/download/v2.0.0/coursier"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
-            .withRepositories(List("central"))
-            .withLauncherType("graalvm-native-image")
-            .withPrebuiltBinaries(Map(
-              "x86_64-apple-darwin" -> csUrl,
-              "x86_64-pc-linux"     -> csUrl,
-              "x86_64-pc-win32"     -> csUrl
-            )),
+            .copy(
+              repositories = List("central"),
+              launcherType = "graalvm-native-image",
+              prebuiltBinaries = Map(
+                "x86_64-apple-darwin" -> csUrl,
+                "x86_64-pc-linux"     -> csUrl,
+                "x86_64-pc-win32"     -> csUrl
+              )
+            ),
           id
         )
 
@@ -593,10 +608,10 @@ object InstallTests extends TestSuite {
 
         val id = "echo"
         val raw = RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
-          .withRepositories(List("central"))
+          .copy(repositories = List("central"))
         val rawSource = RawSource(Nil, "inline", id)
         val appInfo0 = AppInfo(
-          raw.appDescriptor.toOption.get.withLauncherType(LauncherType.DummyNative),
+          raw.appDescriptor.toOption.get.copy(launcherType = LauncherType.DummyNative),
           raw.repr.getBytes(StandardCharsets.UTF_8),
           rawSource.source.toOption.getOrElse(???),
           rawSource.repr.getBytes(StandardCharsets.UTF_8)
@@ -641,19 +656,23 @@ object InstallTests extends TestSuite {
         val id = "sbtn"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("org.scala-sbt:sbt:1.4.0"))
-            .withRepositories(List("central"))
-            .withLauncherType("graalvm-native-image")
-            .withPrebuiltBinaries(Map(
-              "x86_64-apple-darwin" -> "tgz+https://github.com/sbt/sbtn-dist/releases/download/v${version}/sbtn-${platform}-${version}.tar.gz",
-              "x86_64-pc-linux" -> "tgz+https://github.com/sbt/sbtn-dist/releases/download/v${version}/sbtn-${platform}-${version}.tar.gz",
-              "x86_64-pc-win32" -> "zip+https://github.com/sbt/sbtn-dist/releases/download/v${version}/sbtn-${platform}-${version}.zip"
-            )),
+            .copy(
+              repositories = List("central"),
+              launcherType = "graalvm-native-image",
+              prebuiltBinaries = Map(
+                "x86_64-apple-darwin" -> "tgz+https://github.com/sbt/sbtn-dist/releases/download/v${version}/sbtn-${platform}-${version}.tar.gz",
+                "x86_64-pc-linux" -> "tgz+https://github.com/sbt/sbtn-dist/releases/download/v${version}/sbtn-${platform}-${version}.tar.gz",
+                "x86_64-pc-win32" -> "zip+https://github.com/sbt/sbtn-dist/releases/download/v${version}/sbtn-${platform}-${version}.zip"
+              )
+            ),
           id
         )
 
         val installDir0 = installDir(tmpDir, os, arch)
-          .withVerbosity(1)
-          .withOnlyPrebuilt(true)
+          .copy(
+            verbosity = 1,
+            onlyPrebuilt = true
+          )
 
         val created = installDir0.createOrUpdate(appInfo0)
         assert(created.exists(identity))
@@ -701,15 +720,19 @@ object InstallTests extends TestSuite {
         val id = "sbtn"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("org.scala-sbt:sbt:1.4.1"))
-            .withRepositories(List("central"))
-            .withLauncherType("graalvm-native-image")
-            .withPrebuilt(Some(pattern)),
+            .copy(
+              repositories = List("central"),
+              launcherType = "graalvm-native-image",
+              prebuilt = Some(pattern)
+            ),
           id
         )
 
         val installDir0 = installDir(tmpDir, os, arch)
-          .withVerbosity(1)
-          .withOnlyPrebuilt(true)
+          .copy(
+            verbosity = 1,
+            onlyPrebuilt = true
+          )
 
         val created = installDir0.createOrUpdate(appInfo0)
         assert(created.exists(identity))
@@ -766,21 +789,24 @@ object InstallTests extends TestSuite {
         val id = "scalafmt-native"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("org.scalameta::scalafmt-cli:3.0.6"))
-            .withRepositories(List("central"))
-            .withLauncherType("graalvm-native-image")
-            .withPrebuiltBinaries(
-              Map(
-                "x86_64-apple-darwin" -> "gz+https://github.com/scala-cli/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-apple-darwin.gz",
-                "x86_64-pc-linux" -> "gz+https://github.com/scala-cli/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-linux.gz",
-                "x86_64-pc-win32" -> "zip+https://github.com/scala-cli/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-win32.zip"
-              )
+            .copy(
+              repositories = List("central"),
+              launcherType = "graalvm-native-image",
+              prebuiltBinaries =
+                Map(
+                  "x86_64-apple-darwin" -> "gz+https://github.com/scala-cli/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-apple-darwin.gz",
+                  "x86_64-pc-linux" -> "gz+https://github.com/scala-cli/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-linux.gz",
+                  "x86_64-pc-win32" -> "zip+https://github.com/scala-cli/scalafmt-native-image/releases/download/v3.0.6/scalafmt-x86_64-pc-win32.zip"
+                )
             ),
           id
         )
 
         val installDir0 = installDir(tmpDir, os, arch)
-          .withVerbosity(1)
-          .withOnlyPrebuilt(true)
+          .copy(
+            verbosity = 1,
+            onlyPrebuilt = true
+          )
 
         val created = installDir0.createOrUpdate(appInfo0)
         assert(created.exists(identity))
@@ -820,16 +846,18 @@ object InstallTests extends TestSuite {
         val id = "sbt"
         val appInfo0 = appInfo(
           RawAppDescriptor(List("org.scala-sbt:sbt:1.4.1"))
-            .withRepositories(List("central"))
-            .withLauncherType("prebuilt")
-            .withPrebuilt(Some(
-              "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbt"
-            )),
+            .copy(
+              repositories = List("central"),
+              launcherType = "prebuilt",
+              prebuilt = Some(
+                "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbt"
+              )
+            ),
           id
         )
 
         val installDir0 = installDir(tmpDir, os, arch)
-          .withVerbosity(1)
+          .copy(verbosity = 1)
 
         val created = installDir0.createOrUpdate(appInfo0)
         assert(created.exists(identity))
@@ -909,7 +937,7 @@ object InstallTests extends TestSuite {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 
         val installDir0 = installDir(tmpDir, os, arch)
-          .withVerbosity(1)
+          .copy(verbosity = 1)
 
         val app = installDir0.actualDest("foo")
         Files.write(app, Array.emptyByteArray)
@@ -943,25 +971,29 @@ object InstallTests extends TestSuite {
         val id = "scalac"
         val versionOverride =
           RawAppDescriptor.RawVersionOverride("(,2.max]")
-            .withLauncherType(Some("bootstrap"))
-            .withDependencies(Some(List("org.scala-lang:scala-compiler:2.12.8")))
-            .withMainClass(Some("scala.tools.nsc.Main"))
-            .withProperties(Some(RawAppDescriptor.Properties(
-              Seq("scala.usejavacp" -> "true")
-            )))
+            .copy(
+              launcherType = Some("bootstrap"),
+              dependencies = Some(List("org.scala-lang:scala-compiler:2.12.8")),
+              mainClass = Some("scala.tools.nsc.Main"),
+              properties = Some(RawAppDescriptor.Properties(
+                Seq("scala.usejavacp" -> "true")
+              ))
+            )
         val appInfo0 = appInfo(
           RawAppDescriptor(List("org.scala-lang:scala3-compiler_3:3.3.3"))
-            .withRepositories(List("central"))
-            .withLauncherType("prebuilt")
-            .withPrebuilt(Some(
-              "zip+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}.zip!scala3-${version}/bin/scalac"
-            ))
-            .withVersionOverrides(List(versionOverride)),
+            .copy(
+              repositories = List("central"),
+              launcherType = "prebuilt",
+              prebuilt = Some(
+                "zip+https://github.com/scala/scala3/releases/download/${version}/scala3-${version}.zip!scala3-${version}/bin/scalac"
+              ),
+              versionOverrides = List(versionOverride)
+            ),
           id
         )
 
         val installDir0 = installDir(tmpDir, os, arch)
-          .withVerbosity(1)
+          .copy(verbosity = 1)
 
         val created = installDir0.createOrUpdate(appInfo0)
         assert(created.exists(identity))
@@ -1067,28 +1099,32 @@ object InstallTests extends TestSuite {
       val id = "cs"
       val versionOverride =
         RawAppDescriptor.RawVersionOverride("(,2.0.16]")
-          .withPrebuilt(Some(
-            "https://github.com/coursier/coursier/releases/download/v${version}/cs-${platform}"
-          ))
-          .withPrebuiltBinaries(Some(Map()))
+          .copy(
+            prebuilt = Some(
+              "https://github.com/coursier/coursier/releases/download/v${version}/cs-${platform}"
+            ),
+            prebuiltBinaries = Some(Map())
+          )
       val appInfo0 = appInfo(
         RawAppDescriptor(List("io.get-coursier::coursier-cli:latest.release"))
-          .withRepositories(List("central", "typesafe:ivy-releases"))
-          .withName(Some("cs"))
-          .withLauncherType("prebuilt")
-          .withPrebuilt(None)
-          .withPrebuiltBinaries(Map(
-            "x86_64-pc-linux" -> "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-linux.gz",
-            "x86_64-apple-darwin" -> "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-apple-darwin.gz",
-            "x86_64-pc-win32" -> "zip+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-win32.zip"
-          ))
-          .withVersionOverrides(List(versionOverride)),
+          .copy(
+            repositories = List("central", "typesafe:ivy-releases"),
+            name = Some("cs"),
+            launcherType = "prebuilt",
+            prebuilt = None,
+            prebuiltBinaries = Map(
+              "x86_64-pc-linux" -> "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-linux.gz",
+              "x86_64-apple-darwin" -> "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-apple-darwin.gz",
+              "x86_64-pc-win32" -> "zip+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-win32.zip"
+            ),
+            versionOverrides = List(versionOverride)
+          ),
         id
       )
 
       def run(os: String, arch: String) = withTempDir { tmpDir =>
         val installDir0 = installDir(tmpDir, os, arch)
-          .withVerbosity(1)
+          .copy(verbosity = 1)
 
         val created = installDir0.createOrUpdate(appInfo0)
         assert(created.exists(identity))

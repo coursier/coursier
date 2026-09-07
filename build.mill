@@ -821,7 +821,7 @@ trait CatsJs extends Cats with CsScalaJsModule {
 }
 
 trait Install extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima {
+    with CoursierPublishModule with CsMima with DataClassModule {
   def mimaPreviousVersions = Task {
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
@@ -843,7 +843,11 @@ trait Install extends CrossSbtModule with CsModule
       "coursier.install.RawAppDescriptor#RawGraalvmOptions.decoder"
     ),
     ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.install.RawSource.encoder"),
-    ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.install.RawSource.decoder")
+    ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.install.RawSource.decoder"),
+    // private class, whose `prebuiltBinaries` lost its default value (see the comment there)
+    ProblemFilter.exclude[DirectMissingMethodProblem](
+      "coursier.install.RawAppDescriptor#RawAppDescriptorJson*"
+    )
   )
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(),
@@ -852,7 +856,6 @@ trait Install extends CrossSbtModule with CsModule
     launcherModule()
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.dataClass,
     Deps.jsoniterMacros
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
@@ -881,7 +884,7 @@ trait Install extends CrossSbtModule with CsModule
 }
 
 trait Jvm extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima {
+    with CoursierPublishModule with CsMima with DataClassModule {
   def mockCache = Task.Source(os.sub / "src/test/resources/mock-cache")
   def mimaPreviousVersions = Task {
     super.mimaPreviousVersions().filter(_ != "2.0.16")
@@ -894,7 +897,6 @@ trait Jvm extends CrossSbtModule with CsModule
     exec
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.dataClass,
     Deps.jsoniterMacros,
     Deps.svm
   )

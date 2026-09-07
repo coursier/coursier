@@ -468,7 +468,10 @@ object RawAppDescriptor {
     graalvm: Option[RawAppDescriptor.RawGraalvmOptions] = None,
     prebuilt: Option[String] = None,
     jvmOptionFile: Option[String] = None,
-    prebuiltBinaries: Map[String, String] = Map.empty,
+    // no default value on purpose: with one, the Scala 3 macros of jsoniter-scala 2.13.5 encode
+    // this map as an array of pairs rather than as a JSON object (missing map fields are decoded
+    // as an empty map either way)
+    prebuiltBinaries: Map[String, String],
     jna: List[String] = Nil,
     versionOverrides: List[RawVersionOverride] = Nil
   ) {

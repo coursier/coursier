@@ -8,6 +8,7 @@ import coursier.parse.DependencyParser
 import coursier.util.Task
 import utest._
 
+import scala.concurrent.ExecutionContext
 import scala.jdk.CollectionConverters._
 
 object ChannelsTests extends TestSuite {
@@ -68,12 +69,12 @@ object ChannelsTests extends TestSuite {
         val channelFile = tmpDir.resolve("channel.json")
         write(channelFile, channelFileContent)
 
-        val cache   = FileCache[Task]().withLocation(tmpDir.resolve("cache").toFile)
+        val cache   = FileCache.create[Task]().copy(location = tmpDir.resolve("cache").toFile)
         val channel = Channel.url(channelFile.toUri.toASCIIString)
         assert(channel.url.startsWith("file:"))
-        val channels = Channels().withChannels(Seq(channel)).withCache(cache)
+        val channels = Channels().copy(channels = Seq(channel), cache = cache)
 
-        implicit val ec = cache.ec
+        implicit val ec: ExecutionContext = cache.ec
 
         // find
         val fooDataOpt = channels.find("foo").unsafeRun(wrapExceptions = true)
@@ -111,12 +112,12 @@ object ChannelsTests extends TestSuite {
         // shadowed by the URL channel, that comes first
         write(dir.resolve("foo.json"), barDescriptor)
 
-        val cache      = FileCache[Task]().withLocation(tmpDir.resolve("cache").toFile)
+        val cache      = FileCache.create[Task]().copy(location = tmpDir.resolve("cache").toFile)
         val urlChannel = Channel.url(channelFile.toUri.toASCIIString)
         val dirChannel = Channel.FromDirectory(dir)
-        val channels   = Channels().withChannels(Seq(urlChannel, dirChannel)).withCache(cache)
+        val channels   = Channels().copy(channels = Seq(urlChannel, dirChannel), cache = cache)
 
-        implicit val ec = cache.ec
+        implicit val ec: ExecutionContext = cache.ec
 
         val foo = channels.find("foo").unsafeRun(wrapExceptions = true)
         assert(foo.exists(_.channel == urlChannel))
@@ -129,11 +130,11 @@ object ChannelsTests extends TestSuite {
 
     test("unreachable url channel") {
       withTempDir { tmpDir =>
-        val cache    = FileCache[Task]().withLocation(tmpDir.resolve("cache").toFile)
+        val cache    = FileCache.create[Task]().copy(location = tmpDir.resolve("cache").toFile)
         val channel  = Channel.url(tmpDir.resolve("missing.json").toUri.toASCIIString)
-        val channels = Channels().withChannels(Seq(channel)).withCache(cache)
+        val channels = Channels().copy(channels = Seq(channel), cache = cache)
 
-        implicit val ec = cache.ec
+        implicit val ec: ExecutionContext = cache.ec
 
         val res = channels.find("foo").attempt.unsafeRun(wrapExceptions = true)
         assert(res.left.exists(_.isInstanceOf[Channels.ErrorFetchingChannel]))
@@ -148,11 +149,11 @@ object ChannelsTests extends TestSuite {
       withTempDir { tmpDir =>
         val channelFile = tmpDir.resolve("channel.json")
         write(channelFile, """{ "foo": [] }""")
-        val cache    = FileCache[Task]().withLocation(tmpDir.resolve("cache").toFile)
+        val cache    = FileCache.create[Task]().copy(location = tmpDir.resolve("cache").toFile)
         val channel  = Channel.url(channelFile.toUri.toASCIIString)
-        val channels = Channels().withChannels(Seq(channel)).withCache(cache)
+        val channels = Channels().copy(channels = Seq(channel), cache = cache)
 
-        implicit val ec = cache.ec
+        implicit val ec: ExecutionContext = cache.ec
 
         val res = channels.find("foo").attempt.unsafeRun(wrapExceptions = true)
         assert(res.left.exists(_.isInstanceOf[Channels.ErrorDecodingChannel]))
