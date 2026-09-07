@@ -2374,6 +2374,29 @@ object ResolveTests extends TestSuite {
         )
       }
 
+      test("endorseStrictVersions tree") {
+        async {
+          val resolve0 = enableModules(resolve.addRepositories(Repositories.google))
+            .mapResolutionParams(
+              _.withDefaultVariantAttributes(
+                VariantSelector.AttributesBased(Map(
+                  "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
+                ))
+              )
+            )
+            .addDependencies(dep"androidx.test.ext:junit:1.2.1")
+          val res = await(resolve0.future())
+          await {
+            TestHelpers.validateTree(
+              res,
+              resolve0.resolutionParams,
+              extraKeyPart = "_gradlemod",
+              attributesBasedReprAsToString = true
+            )
+          }
+        }
+      }
+
       test("bom config graph") {
         val resolve0 = resolve
           .addVariantAttributes(

@@ -13,7 +13,7 @@ import coursier.core.{
 }
 import coursier.params.ResolutionParams
 import coursier.testcache.TestCache
-import coursier.util.Artifact
+import coursier.util.{Artifact, Print}
 import coursier.version.VersionConstraint
 
 import scala.async.Async.{async, await}
@@ -266,6 +266,26 @@ object TestHelpers extends PlatformTestHelpers {
           ).mkString(":")
         }
         .distinct
+    }
+
+  def validateTree(
+    res: Resolution,
+    params: ResolutionParams = ResolutionParams(),
+    extraKeyPart: String = "",
+    attributesBasedReprAsToString: Boolean = false
+  ): Future[Unit] =
+    validate(
+      "trees",
+      res,
+      params,
+      extraKeyPart,
+      attributesBasedReprAsToString = attributesBasedReprAsToString
+    ) {
+      Print
+        .dependencyTree0(res, colors = false)
+        .replace("\r\n", "\n")
+        .linesIterator
+        .toVector
     }
 
   def versionOf(res: Resolution, mod: Module): Option[String] =
