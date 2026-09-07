@@ -351,7 +351,7 @@ object ResolutionTests extends TestSuite {
         Variant.emptyConfiguration -> dep"an-org:a-lib:1.0".copy(
           minimizedExclusions = MinimizedExclusions(Set((org"an-org", name"a-name")))
         ),
-        Variant.emptyConfiguration -> dep"an-org:another-lib:1.0".copy(optional = true)
+        Variant.emptyConfiguration -> dep"an-org:another-lib:1.0".copy(optional0 = Some(true))
       )
     ),
     Project(
@@ -764,8 +764,8 @@ object ResolutionTests extends TestSuite {
           dep"an-org:a-lib:1.0".copy(
             minimizedExclusions = MinimizedExclusions(Set((org"an-org", name"a-name")))
           ),
-          dep"an-org:another-lib:1.0".copy(optional = true),
-          dep"an-org:a-name:1.0".copy(optional = true)
+          dep"an-org:another-lib:1.0".copy(optional0 = Some(true)),
+          dep"an-org:a-name:1.0".copy(optional0 = Some(true))
         )
         val res = await(resolve0(
           Seq(dep),
@@ -784,14 +784,14 @@ object ResolutionTests extends TestSuite {
       async {
         val deps = Seq(
           dep"an-org:an-app:1.0",
-          dep"an-org:a-lib:1.0".copy(optional = true)
+          dep"an-org:a-lib:1.0".copy(optional0 = Some(true))
         )
         val trDeps = Seq(
           dep"an-org:a-lib:1.0".copy(
             minimizedExclusions = MinimizedExclusions(Set((org"an-org", name"a-name")))
           ),
-          dep"an-org:another-lib:1.0".copy(optional = true),
-          dep"an-org:a-name:1.0".copy(optional = true)
+          dep"an-org:another-lib:1.0".copy(optional0 = Some(true)),
+          dep"an-org:a-name:1.0".copy(optional0 = Some(true))
         )
         val res = await(resolve0(
           deps,

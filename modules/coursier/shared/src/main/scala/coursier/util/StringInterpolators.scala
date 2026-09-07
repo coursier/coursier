@@ -185,7 +185,7 @@ object StringInterpolators {
                     ${values.versionConstraint.asString}
                   ),
                   _root_.coursier.core.MinimizedExclusions(_root_.scala.collection.immutable.Set[(_root_.coursier.core.Organization, _root_.coursier.core.ModuleName)](..$excls)),
-                  ${values.optional}
+                  ${values.optional0}
                 )"""
                 q"_root_.scala.Tuple2($key0, $values0)"
             }
@@ -239,7 +239,7 @@ object StringInterpolators {
                   _root_.coursier.core.Extension(${dep.publication.ext.value}),
                   _root_.coursier.core.Classifier(${dep.publication.classifier.value})
                 ),
-                ${dep.optional},
+                ${dep.optional0},
                 ${dep.transitive},
                 _root_.scala.collection.immutable.Map[_root_.coursier.core.DependencyManagement.Key, _root_.coursier.core.DependencyManagement.Values](),
                 _root_.scala.collection.immutable.Nil,

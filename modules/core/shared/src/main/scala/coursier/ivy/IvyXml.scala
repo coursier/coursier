@@ -256,7 +256,7 @@ object IvyXml {
                   Configuration.empty,
                   ver,
                   MinimizedExclusions.zero,
-                  optional = false
+                  optional0 = None
                 )
           }
           .toMap

@@ -343,7 +343,7 @@ object JavaOrScalaDependency {
                 Configuration.empty,
                 VersionConstraint(overrideDep.version),
                 MinimizedExclusions.zero,
-                optional = false
+                optional0 = None
               )
             ))
           else

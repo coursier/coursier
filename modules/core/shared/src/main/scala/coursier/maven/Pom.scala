@@ -97,7 +97,7 @@ object Pom {
           .eitherTraverse(module(_, defaultArtifactId = Some(ModuleName("*"))))
         version <- validateCoordinate(version0.asString, "version")
       } yield {
-        val optional = text(node, "optional", "").toSeq.contains("true")
+        val optional = text(node, "optional", "").toOption.map(_ == "true")
 
         scopeOpt.getOrElse(Configuration.empty) -> Dependency(
           mod,
@@ -523,8 +523,9 @@ object Pom {
   ): Project = {
 
     val optionalDeps = proj.dependencies0.collect {
-      case (c: Variant.Configuration, dep) if dep.optional && fromConfigs(c.configuration) =>
-        Variant.Configuration(optionalConfig) -> dep.copy(optional = false)
+      case (c: Variant.Configuration, dep)
+          if dep.optional0.contains(true) && fromConfigs(c.configuration) =>
+        Variant.Configuration(optionalConfig) -> dep.copy(optional0 = None)
     }
 
     val optConfigThing = proj.configurations.getOrElse(optionalConfig, Nil) ++
