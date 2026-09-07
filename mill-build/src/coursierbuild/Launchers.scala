@@ -184,6 +184,14 @@ object Launchers {
             System.err.println("Warning: not sure which zstd-jni library to embed")
             Nil
           }
+        // @AutomaticFeature isn't honored anymore since GraalVM 23, so we have
+        // to register that feature explicitly. Only added on Windows, as that's
+        // the only platform CsJniUtilsFeature applies to (see its @Platforms).
+        val featureOpts =
+          if (Properties.isWin)
+            Seq("--features=coursier.cli.internal.CsJniUtilsFeature")
+          else
+            Nil
         val extraOpts =
           if (Properties.isLinux && arch == "aarch64")
             Seq(
@@ -194,6 +202,7 @@ object Launchers {
           else
             Nil
         super.nativeImageOptions() ++
+          featureOpts ++
           extraOpts ++
           zstdOpt
       }
