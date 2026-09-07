@@ -318,4 +318,6 @@ ioResolution: cats.effect.IO[Resolution]
 ```
 
 Note that this example requires the `coursier-cats-interop` module
-(`io.get-coursier::coursier-cats-interop:@VERSION@`).
+(`io.get-coursier::coursier-cats-interop:2.1.25-M26`). `2.1.25-M26` is the last release
+this module was published for - from now on, it is only published as snapshots, not for
+releases.

@@ -67,5 +67,10 @@ object CoursierPublishModule extends ExternalModule {
 
   lazy val buildVersion = computeBuildVersion()
 
+  def isSnapshot(version: String): Boolean =
+    version.endsWith("-SNAPSHOT")
+
+  lazy val buildVersionIsSnapshot = isSnapshot(buildVersion)
+
   lazy val millDiscover: Discover = Discover[this.type]
 }
