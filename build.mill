@@ -567,8 +567,13 @@ trait Env extends CrossSbtModule with CsModule
 def cliScalaVersion          = ScalaVersions.scala3
 def cliScalaVersion213Compat = ScalaVersions.scala213
 def launcherModule           = launcher
+// Lowest JVM release the latest Scala 3 can emit bytecode for: Scala 3.8+
+// only accepts 17 and later, so the modules compiled with cliScalaVersion
+// cannot target an earlier one.
+def scala3LatestJvmRelease = "17"
 trait LauncherNative04 extends CsModule
     with CoursierPublishModule {
+  def jvmRelease   = scala3LatestJvmRelease
   def scalaVersion = cliScalaVersion
   def artifactName = "coursier-launcher-native_0.4"
   def compileModuleDeps = Seq(
@@ -953,7 +958,7 @@ trait Exec extends JavaModule with CoursierPublishModule with CsMima {
 }
 
 trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
-  def jvmRelease   = "11"
+  def jvmRelease   = scala3LatestJvmRelease
   def artifactName = "coursier-docker"
   def moduleDeps = super.moduleDeps ++ Seq(
     cache.jvm(cliScalaVersion213Compat),
@@ -991,7 +996,7 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
 
 trait Cli extends CsModule
     with CoursierPublishModule with Launchers {
-  def jvmRelease   = "11"
+  def jvmRelease   = scala3LatestJvmRelease
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion213Compat),
@@ -1068,6 +1073,7 @@ trait Cli extends CsModule
 
 trait CliTests extends CsModule
     with CoursierPublishModule { self =>
+  def jvmRelease   = scala3LatestJvmRelease
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion213Compat)
