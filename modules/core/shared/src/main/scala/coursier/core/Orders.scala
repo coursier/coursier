@@ -181,7 +181,7 @@ object Orders {
     val availableConfigs = configs.keySet
     val groupedDependencies = dependencies
       .map(fallbackConfigIfNecessary(_, availableConfigs))
-      .groupBy(dep => (dep.optional, dep.variantSelector))
+      .groupBy(dep => (dep.optional0, dep.variantSelector))
       .mapValues { deps =>
         deps.head.withExclusions(deps.foldLeft(Exclusions.one)((acc, dep) =>
           Exclusions.meet(acc, dep.exclusions())
@@ -193,7 +193,9 @@ object Orders {
       for {
         List(((xOpt, xVariant), xDep), ((yOpt, yVariant), yDep)) <-
           groupedDependencies.combinations(2)
-        optCmp   <- optionalPartialOrder.tryCompare(xOpt, yOpt).iterator
+        optCmp <- optionalPartialOrder
+          .tryCompare(xOpt.getOrElse(false), yOpt.getOrElse(false))
+          .iterator
         xScope   <- xVariant.asConfiguration.iterator
         yScope   <- yVariant.asConfiguration.iterator
         scopeCmp <- configurationPartialOrder0(configs).tryCompare(xScope, yScope).iterator
@@ -225,7 +227,7 @@ object Orders {
       .groupBy(
         _.copy(variantSelector = VariantSelector.emptyConfiguration)
           .withExclusions(Set.empty)
-          .copy(optional = false)
+          .copy(optional0 = None)
       )
       .mapValues { deps =>
         minDependenciesUnsafe(

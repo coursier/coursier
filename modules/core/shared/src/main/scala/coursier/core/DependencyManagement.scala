@@ -56,10 +56,17 @@ object DependencyManagement {
     config: Configuration,
     versionConstraint: VersionConstraint0,
     minimizedExclusions: MinimizedExclusions,
-    optional: Boolean,
+    optional0: Option[Boolean],
     @unroll
     global: Boolean = false
   ) {
+
+    @deprecated("Use optional0 instead", "2.1.25")
+    def optional: Boolean =
+      optional0.getOrElse(false)
+
+    def withOptional(optional: Boolean): Values =
+      copy(optional0 = Some(optional))
 
     @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
     def this(
@@ -71,7 +78,7 @@ object DependencyManagement {
       config,
       VersionConstraint0(version),
       minimizedExclusions,
-      optional
+      Some(optional)
     )
 
     @deprecated("Use versionConstraint instead", "2.1.25")
@@ -83,7 +90,7 @@ object DependencyManagement {
       else copy(versionConstraint = VersionConstraint0(newVersion))
 
     def isEmpty: Boolean =
-      config.value.isEmpty && versionConstraint.asString.isEmpty && minimizedExclusions.isEmpty && !optional
+      config.value.isEmpty && versionConstraint.asString.isEmpty && minimizedExclusions.isEmpty && optional0.isEmpty
     def fakeDependency(key: Key): Dependency =
       Dependency(
         key.fakeModule,
@@ -91,7 +98,7 @@ object DependencyManagement {
         VariantSelector.ConfigurationBased(config),
         minimizedExclusions,
         Publication("", key.`type`, Extension.empty, key.classifier),
-        optional = optional,
+        optional0 = optional0,
         transitive = true
       )
     def orElse(other: Values): Values = {
@@ -99,9 +106,9 @@ object DependencyManagement {
       val newVersion =
         if (versionConstraint.asString.isEmpty) other.versionConstraint else versionConstraint
       val newExcl     = other.minimizedExclusions.join(minimizedExclusions)
-      val newOptional = optional || other.optional
+      val newOptional = optional0.orElse(other.optional0)
       if (
-        config != newConfig || versionConstraint != newVersion || minimizedExclusions != newExcl || optional != newOptional
+        config != newConfig || versionConstraint != newVersion || minimizedExclusions != newExcl || optional0 != newOptional
       )
         Values(
           newConfig,
@@ -122,7 +129,7 @@ object DependencyManagement {
           versionConstraint = versionConstraint,
           minimizedExclusions = newExcl,
           // FIXME This might have been a string like "${some-prop}" initially :/
-          optional = optional
+          optional0 = optional0
         )
       else
         this
@@ -137,11 +144,16 @@ object DependencyManagement {
       versionConstraint.asString.contains("$") ||
       minimizedExclusions.hasProperties
     override def toString(): String = {
+      val optionalString = optional0 match {
+        case None        => "false"
+        case Some(true)  => "true"
+        case Some(false) => "Some(false)"
+      }
       var fields = Seq(
         config.toString,
         versionConstraint.toString,
         minimizedExclusions.toString,
-        optional.toString
+        optionalString
       )
       if (global)
         fields = fields :+ global.toString
@@ -154,7 +166,7 @@ object DependencyManagement {
       config = Configuration.empty,
       versionConstraint = VersionConstraint0.empty,
       minimizedExclusions = MinimizedExclusions.zero,
-      optional = false
+      optional0 = None
     )
 
     def from(config: Configuration, dep: Dependency): Values =
@@ -162,9 +174,19 @@ object DependencyManagement {
         config,
         dep.versionConstraint,
         dep.minimizedExclusions,
-        dep.optional
+        dep.optional0
       )
 
+    @deprecated("Use the override accepting an Option[Boolean] instead", "2.1.25")
+    def apply(
+      config: Configuration,
+      versionConstraint: VersionConstraint0,
+      minimizedExclusions: MinimizedExclusions,
+      optional: Boolean
+    ): Values =
+      apply(config, versionConstraint, minimizedExclusions, Some(optional))
+
+    @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
     def apply(
       config: Configuration,
       version: String,
@@ -174,7 +196,7 @@ object DependencyManagement {
       config,
       VersionConstraint0(version),
       minimizedExclusions,
-      optional
+      Some(optional)
     )
   }
 

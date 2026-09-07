@@ -198,7 +198,7 @@ object ApiHelper {
     val apiValues = new coursierapi.DependencyManagement.Values(
       values.config.value,
       values.version,
-      values.optional
+      values.optional0.getOrElse(false)
     )
     apiValues.withExclusions(
       values.minimizedExclusions.toSeq()

@@ -47,6 +47,12 @@ trait CoreJvmBase extends Core with Shading with CsMima {
 
       // PomParser#State is private, so this can be ignored
       ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.maven.PomParser#State.licenses"),
+      ProblemFilter.exclude[IncompatibleResultTypeProblem](
+        "coursier.maven.PomParser#State.dependencyOptional"
+      ),
+      ProblemFilter.exclude[IncompatibleMethTypeProblem](
+        "coursier.maven.PomParser#State.dependencyOptional_="
+      ),
 
       // ignore shaded-stuff related errors
       ProblemFilter.exclude[Problem]("coursier.core.shaded.*"),
