@@ -17,17 +17,19 @@ object CentralIndexTests extends TestSuite {
   val cache = {
     val cache0 = TestCache.cache[Task]
     cache0
-      .withDummyArtifact { a =>
-        cache0.dummyArtifact(a) &&
-        // don't clear indices JARs in snapshots
-        !(a.url.contains("/coursier/jvm/indices/") && a.url.endsWith(".jar"))
-      }
+      .copy(
+        dummyArtifact =
+          a =>
+            cache0.dummyArtifact(a) &&
+            // don't clear indices JARs in snapshots
+            !(a.url.contains("/coursier/jvm/indices/") && a.url.endsWith(".jar"))
+      )
   }
   private implicit def ec: ExecutionContext = cache.ec
 
   private def channel(os: String, arch: String): JvmChannel =
     JvmChannel.central(os, arch)
-      .withVersionConstraint(VersionConstraint("0.0.4-64-11f282"))
+      .copy(versionConstraint = VersionConstraint("0.0.4-64-11f282"))
 
   val tests = Tests {
     test("alpine-x64-zulu17") {
