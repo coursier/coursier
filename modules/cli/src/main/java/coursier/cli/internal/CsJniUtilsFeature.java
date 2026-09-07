@@ -2,6 +2,7 @@ package coursier.cli.internal;
 
 // https://github.com/VirtusLab/scala-cli/blob/4ae17a428933c0edc118a065838c236c255f719c/modules/cli/src/main/java/scala/cli/internal/CsJniUtilsFeature.java
 
+import com.oracle.svm.core.annotate.AutomaticFeature;
 import com.oracle.svm.core.jdk.NativeLibrarySupport;
 import com.oracle.svm.core.jdk.PlatformNativeLibrarySupport;
 import com.oracle.svm.hosted.FeatureImpl;
@@ -10,8 +11,7 @@ import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.Platform;
 import org.graalvm.nativeimage.Platforms;
 
-// Registered via --features=... from the build (see Launchers.scala in mill-build),
-// as @AutomaticFeature is no longer honored since GraalVM 23.
+@AutomaticFeature
 @Platforms({Platform.WINDOWS.class})
 public class CsJniUtilsFeature implements Feature {
 
