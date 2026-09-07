@@ -1749,6 +1749,19 @@ object ci extends Module {
     }
   }
 
+  /** The Scala versions the build uses, as JSON
+    *
+    * Printed by `./mill show ci.scalaVersions`, and read by the CI to fill its job matrices, so
+    * that Scala versions don't have to be hard-coded in the GitHub Actions workflow.
+    */
+  def scalaVersions() = Task.Command[ujson.Value] {
+    ujson.Obj(
+      "scala-versions" -> ujson.Arr.from(ScalaVersions.all),
+      "scala213"       -> ScalaVersions.scala213,
+      "scala212"       -> ScalaVersions.scala212
+    )
+  }
+
   def noEmptyDiscoveredTestClasses(tasks: Tasks[Seq[String]]) = Task.Command[Unit] {
     assert(tasks.value.nonEmpty)
     val results       = tasks.value.zip(Task.sequence(tasks.value)())
