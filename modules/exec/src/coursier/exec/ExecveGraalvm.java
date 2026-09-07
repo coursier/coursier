@@ -6,7 +6,7 @@ import java.lang.reflect.Method;
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
 import com.oracle.svm.core.jdk.RuntimeSupport;
-import com.oracle.svm.core.posix.headers.LibC;
+import com.oracle.svm.core.headers.LibC;
 import org.graalvm.nativeimage.c.type.CTypeConversion;
 import org.graalvm.nativeimage.Platform;
 import org.graalvm.nativeimage.Platforms;
