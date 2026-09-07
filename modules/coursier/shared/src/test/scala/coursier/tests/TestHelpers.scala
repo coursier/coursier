@@ -135,6 +135,10 @@ object TestHelpers extends PlatformTestHelpers {
             val noComma = s.replace(", ", "||")
             val remove  = Seq("None", "List()", "Map()", "Set()")
             var value   = noComma.replace("HashSet", "Set")
+            // ignoreOptionalFromDepMgmt, the last field of ResolutionParams, defaults to false -
+            // dropping it when it has its default value keeps the former sha-1 values
+            if (value.endsWith("||false)"))
+              value = value.stripSuffix("||false)") + ")"
             for (r <- remove) {
               value = value.replace("|" + r + "|", "")
               if (value.endsWith("||" + r + ")"))
