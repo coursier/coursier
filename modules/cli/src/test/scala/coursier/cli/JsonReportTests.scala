@@ -25,8 +25,6 @@ import coursier.util.{InMemoryRepository, Task}
 import coursier.version.{Version, VersionConstraint}
 import utest._
 
-import java.io.File
-
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Properties
 
@@ -90,7 +88,8 @@ object JsonReportTests extends TestSuite {
   def doCheck(
     fetch: Fetch[Task],
     dependencies: Seq[Dependency],
-    extraKeyPart: String = ""
+    extraKeyPart: String = "",
+    attributesBasedReprAsToString: Boolean = false
   ): Future[Unit] =
     for {
       res <- fetch
@@ -99,10 +98,16 @@ object JsonReportTests extends TestSuite {
       _ <- TestHelpers.validateDependencies(
         res.resolution,
         fetch.resolutionParams,
-        extraKeyPart = extraKeyPart
+        extraKeyPart = extraKeyPart,
+        attributesBasedReprAsToString = attributesBasedReprAsToString
       )
       _ <- TestHelpers.validateResult(
-        s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams, extraKeyPart = extraKeyPart)}.json"
+        s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(
+            res.resolution,
+            fetch.resolutionParams,
+            extraKeyPart = extraKeyPart,
+            attributesBasedReprAsToString = attributesBasedReprAsToString
+          )}.json"
       ) {
         jsonLines {
           JsonReport.report(
@@ -116,6 +121,14 @@ object JsonReportTests extends TestSuite {
 
   def check(dependencies: Dependency*): Future[Unit] =
     doCheck(fetch, dependencies)
+
+  def enableModules(fetch: Fetch[Task]): Fetch[Task] =
+    fetch.withRepositories {
+      fetch.repositories.map {
+        case m: MavenRepositoryLike.WithModuleSupport => m.withCheckModule(true)
+        case other                                    => other
+      }
+    }
 
   val tests = Tests {
     test("android") {
@@ -143,12 +156,7 @@ object JsonReportTests extends TestSuite {
     }
 
     test("endorseStrictVersions") {
-      val withGoogle = resolve.addRepositories(Repositories.google)
-      val gradleResolve = withGoogle
-        .withRepositories(withGoogle.repositories.map {
-          case m: MavenRepositoryLike.WithModuleSupport => m.withCheckModule(true)
-          case other                                    => other
-        })
+      val gradleFetch = enableModules(fetch.addRepositories(Repositories.google))
         .mapResolutionParams(
           _.withDefaultVariantAttributes(
             VariantSelector.AttributesBased(Map(
@@ -156,33 +164,12 @@ object JsonReportTests extends TestSuite {
             ))
           )
         )
-      for {
-        res <- gradleResolve
-          .addDependencies(dep"androidx.test.ext:junit:1.2.1")
-          .future()
-      } yield {
-        val artifacts = res.dependencyArtifacts0().map {
-          case (dep0, pub, art) => (dep0, pub, art, Option.empty[File])
-        }
-        val report = JsonReport.report(
-          res,
-          artifacts,
-          useSlashSeparator = Properties.isWin
-        )
-        val deps = ujson.read(report)("dependencies").arr
-        val coreJvm = deps
-          .find(_("coord").str.startsWith("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:"))
-          .getOrElse(sys.error("kotlinx-coroutines-core-jvm entry not found in report"))
-        val direct     = coreJvm("directDependencies").arr.map(_.str).toVector
-        val transitive = coreJvm("dependencies").arr.map(_.str).toVector
-        assert(direct.exists(_.startsWith("org.jetbrains:annotations:")))
-        assert(direct.exists(_.startsWith("org.jetbrains.kotlin:kotlin-stdlib")))
-        assert(!direct.exists(_.startsWith("org.jetbrains.kotlinx:kotlinx-coroutines-core:")))
-        assert(!direct.exists(_.startsWith("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:")))
-        assert(
-          !transitive.exists(_.startsWith("org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:"))
-        )
-      }
+      doCheck(
+        gradleFetch,
+        Seq(dep"androidx.test.ext:junit:1.2.1"),
+        extraKeyPart = "_gradlemod",
+        attributesBasedReprAsToString = true
+      )
     }
 
     test("spring") {
