@@ -21,5 +21,18 @@
       }
     ]
   },
-  "bundles": []
+  "bundles": [
+    {
+      "name": "com.sun.org.apache.xerces.internal.impl.msg.XMLMessages"
+    },
+    {
+      "name": "com.sun.org.apache.xerces.internal.impl.msg.XMLSchemaMessages"
+    },
+    {
+      "name": "com.sun.org.apache.xerces.internal.impl.msg.DOMMessages"
+    },
+    {
+      "name": "com.sun.org.apache.xerces.internal.impl.msg.SAXMessages"
+    }
+  ]
 }

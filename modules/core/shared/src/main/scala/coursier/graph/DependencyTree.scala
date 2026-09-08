@@ -4,6 +4,7 @@ import coursier.core.{Dependency, MinimizedExclusions, Resolution, VariantSelect
 import coursier.version.{Version, VersionConstraint}
 
 import scala.annotation.tailrec
+import scala.collection.mutable
 
 /** Simple dependency tree. */
 sealed abstract class DependencyTree {
@@ -65,16 +66,18 @@ object DependencyTree {
   ) extends DependencyTree {
 
     lazy val dependency: Dependency = {
-
+      val seenRelocations = new mutable.HashSet[Dependency]
       @tailrec
-      def relocation(dep: Dependency): Dependency = {
+      def relocation(dep: Dependency): Dependency = if (!seenRelocations.add(dep))
+        initialDependency // Bail out! see: https://github.com/coursier/coursier/issues/3578#issuecomment-4083094617
+      else {
         val reconciledVersion = resolution.reconciledVersions.getOrElse(
           dep.module,
           sys.error(s"Cannot find ${dep.module.repr} in reconciled versions")
         )
         val dep0 =
           if (dep.versionConstraint == reconciledVersion) dep
-          else dep.withVersionConstraint(reconciledVersion)
+          else dep.copy(versionConstraint = reconciledVersion)
         val (_, proj) = resolution.projectCache0.getOrElse(
           dep0.moduleVersionConstraint,
           sys.error(
@@ -104,7 +107,7 @@ object DependencyTree {
           case Some(relocatedTo) =>
             val relocatedTo0 =
               if (relocatedTo.variantSelector.isEmpty)
-                relocatedTo.withVariantSelector(dep0.variantSelector)
+                relocatedTo.copy(variantSelector = dep0.variantSelector)
               else
                 relocatedTo
             relocation(relocatedTo0)
@@ -139,7 +142,7 @@ object DependencyTree {
       if (excluded)
         Nil
       else {
-        val dep0 = dependency.withVersionConstraint(reconciledVersionConstraint)
+        val dep0 = dependency.copy(versionConstraint = reconciledVersionConstraint)
 
         val dependencies = resolution
           .dependenciesOf0(
@@ -156,18 +159,18 @@ object DependencyTree {
 
         val globalOverrides = resolution.projectCache0
           .get(dependency.moduleVersionConstraint)
-          .map(_._2.overrides.global.flatten.toSeq)
+          .map(_._2.overrides.filter((_, v) => v.global).flatten.toSeq)
           .getOrElse(Nil)
           .collect {
             case (k, v) if resolution.dependencySet.containsModule(k.fakeModule) =>
-              v.fakeDependency(k).withTransitive(false)
+              v.fakeDependency(k).copy(transitive = false)
           }
 
         def excluded = {
           val dependencies0 = dependencies.map(_.moduleVersionConstraint).toSet
           resolution
             .dependenciesOf0(
-              dep0.withMinimizedExclusions(MinimizedExclusions.zero),
+              dep0.copy(minimizedExclusions = MinimizedExclusions.zero),
               withRetainedVersions = false
             )
             .toOption

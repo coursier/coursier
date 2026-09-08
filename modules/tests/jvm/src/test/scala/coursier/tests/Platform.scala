@@ -48,7 +48,7 @@ object Platform {
   val artifact: Repository.Fetch[Task] = { artifact =>
     EitherT {
       val conn = ConnectionBuilder(artifact.url)
-        .withAuthentication(artifact.authentication)
+        .copy(authentication = artifact.authentication)
         .connection()
       readFully[Task](conn.getInputStream)
     }

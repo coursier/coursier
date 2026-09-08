@@ -1,7 +1,7 @@
 package coursier.cache
 
 import java.io._
-import java.net.URI
+import java.net.{URI, URLConnection}
 import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 import java.util.concurrent.{ConcurrentHashMap, ExecutorService}
@@ -11,27 +11,30 @@ import coursier.cache.internal.MockCacheEscape
 import coursier.paths.Util
 import coursier.util.{Artifact, EitherT, Sync, WebPage}
 import coursier.util.Monad.ops._
-import dataclass._
+import dataclass.{data, since => unroll}
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
 // format: off
-@data class MockCache[F[_]](
+@data case class MockCache[F[_]](
   base: Path,
   extraData: Seq[Path],
   writeMissing: Boolean,
   pool: ExecutorService,
   S: Sync[F],
   dummyArtifact: Artifact => Boolean = _ => false,
-  @since
+  @unroll
     proxy: Option[java.net.Proxy] = None,
-  @since("2.1.25")
+  @unroll
+    // FIXME Needs to be a sub-directory of base
     baseChangingOpt: Option[Path] = None,
   replaceByNames: Artifact => Boolean = _ => false,
   failsWhenWritingMissing: ConcurrentHashMap[String, ArtifactError] = new ConcurrentHashMap[String, ArtifactError]
 ) extends Cache[F] {
 // format: on
+
+  def location = base.toFile
 
   private implicit def S0: Sync[F] = S
 
@@ -39,17 +42,20 @@ import scala.util.{Failure, Success, Try}
 
     val (artifact0, links) =
       if (artifact.url.endsWith("/.links"))
-        (artifact.withUrl(artifact.url.stripSuffix(".links")), true)
+        (artifact.copy(url = artifact.url.stripSuffix(".links")), true)
       else
         (artifact, false)
 
     if (proxy.nonEmpty || artifact0.url.startsWith("http://localhost:"))
       EitherT(MockCache.readFully(
-        ConnectionBuilder(artifact0.url)
-          .withAuthentication(artifact0.authentication)
-          .withProxy(proxy)
-          .connection()
-          .getInputStream,
+        MockCache.readFullySync(
+          ConnectionBuilder(artifact0.url)
+            .copy(
+              authentication = artifact0.authentication,
+              proxy = proxy
+            )
+            .connection()
+        ),
         if (links) Some(artifact0.url) else None
       ))
     else
@@ -58,7 +64,7 @@ import scala.util.{Failure, Success, Try}
         .flatMap { f =>
           EitherT {
             MockCache.readFully(
-              Files.newInputStream(f.toPath),
+              MockCache.readFullySyncAndClose(Files.newInputStream(f.toPath)),
               if (links) Some(artifact0.url) else None
             )
           }
@@ -110,15 +116,16 @@ import scala.util.{Failure, Success, Try}
                   case None =>
                     S.schedule[Either[ArtifactError, Path]](pool) {
                       Util.createDirectories(path.getParent)
-                      def is(): InputStream =
+                      def bytes(): Array[Byte] =
                         if (dummyArtifact(artifact))
-                          new ByteArrayInputStream(Array.emptyByteArray)
+                          Array.emptyByteArray
                         else
-                          ConnectionBuilder(artifact.url)
-                            .withAuthentication(artifact.authentication)
-                            .connection()
-                            .getInputStream
-                      val b = MockCache.readFullySync(is())
+                          MockCache.readFullySync(
+                            ConnectionBuilder(artifact.url)
+                              .copy(authentication = artifact.authentication)
+                              .connection()
+                          )
+                      val b = bytes()
                       val finalContent =
                         if (replaceByNames(artifact)) {
                           val name = artifact.url.drop(artifact.url.lastIndexOf("/") + 1)
@@ -233,7 +240,7 @@ object MockCache {
       Sync[F]
     )
 
-  private def readFullySync(is: InputStream) = {
+  private def readFullySync(is: InputStream): Array[Byte] = {
     val buffer = new ByteArrayOutputStream
     val data   = Array.ofDim[Byte](16384)
 
@@ -247,18 +254,21 @@ object MockCache {
     buffer.toByteArray
   }
 
+  private def readFullySyncAndClose(is: InputStream): Array[Byte] =
+    try readFullySync(is)
+    finally is.close()
+
+  private def readFullySync(conn: URLConnection): Array[Byte] =
+    try readFullySync(conn.getInputStream)
+    finally CacheUrl.closeConn(conn)
+
   private def readFully[F[_]: Sync](
-    is: => InputStream,
+    bytes: => Array[Byte],
     parseLinksUrl: Option[String]
   ): F[Either[String, String]] =
     Sync[F].delay {
       val t = Try {
-        val is0 = is
-        val b =
-          try readFullySync(is0)
-          finally is0.close()
-
-        val s = new String(b, StandardCharsets.UTF_8)
+        val s = new String(bytes, StandardCharsets.UTF_8)
         parseLinksUrl match {
           case None => s
           case Some(url) =>

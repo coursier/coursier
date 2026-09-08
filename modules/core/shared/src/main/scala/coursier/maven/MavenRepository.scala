@@ -3,7 +3,7 @@ package coursier.maven
 import coursier.core._
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version => Version0}
-import dataclass._
+import dataclass.{data, since => unroll}
 
 object MavenRepository {
 
@@ -12,6 +12,9 @@ object MavenRepository {
   private[coursier] def parseRawPomSax(str: String): Either[String, Project] =
     coursier.core.compatibility.xmlParseSax(str, new PomParser)
       .project
+
+  private[coursier] def parseRawPomDom(str: String): Either[String, Project] =
+    Pom.project(coursier.core.compatibility.xmlParseDom(str).toOption.get)
 
   private def actualRoot(root: String): String =
     root.stripSuffix("/")
@@ -28,18 +31,18 @@ object MavenRepository {
     )
 }
 
-@data(apply = false) class MavenRepository(
+@data(apply = false) case class MavenRepository(
   root: String,
   authentication: Option[Authentication] = None,
-  @since
+  @unroll
   changing: Option[Boolean] = None,
-  @since
+  @unroll
   override val versionsCheckHasModule: Boolean = true,
-  @since("2.1.25")
+  @unroll
   override val checkModule: Boolean = false
 ) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi {
 
-  private val internal = new MavenRepositoryInternal(
+  private[coursier] val internal = new MavenRepositoryInternal(
     root,
     authentication,
     changing,
@@ -79,7 +82,7 @@ object MavenRepository {
     internal.artifactFor(url, changing)
 
   def withChanging(changing: Boolean): MavenRepository =
-    withChanging(Some(changing))
+    copy(changing = Some(changing))
 
   override def fetchVersions[F[_]](
     module: Module,

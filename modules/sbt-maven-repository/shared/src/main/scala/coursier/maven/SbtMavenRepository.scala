@@ -1,10 +1,10 @@
 package coursier.maven
 
+import dataclass.{data, since => unroll}
+
 import coursier.core._
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
-import dataclass._
-
 import scala.collection.compat._
 
 object SbtMavenRepository {
@@ -12,9 +12,18 @@ object SbtMavenRepository {
     root.stripSuffix("/")
 
   def apply(root: String): SbtMavenRepository =
-    new SbtMavenRepository(actualRoot(root))
-  def apply(root: String, authentication: Option[Authentication]): SbtMavenRepository =
-    new SbtMavenRepository(
+    SbtMavenRepository(
+      actualRoot(root),
+      authentication = None,
+      changing = None,
+      versionsCheckHasModule = true,
+      checkModule = false
+    )
+  def apply(
+    root: String,
+    authentication: Option[Authentication]
+  ): SbtMavenRepository =
+    SbtMavenRepository(
       actualRoot(root),
       authentication = authentication,
       changing = None,
@@ -22,13 +31,42 @@ object SbtMavenRepository {
       checkModule = false
     )
 
+  def apply(
+    root: String,
+    authentication: Option[Authentication],
+    changing: Option[Boolean],
+    versionsCheckHasModule: Boolean
+  ): SbtMavenRepository =
+    SbtMavenRepository(
+      root = root,
+      authentication = authentication,
+      changing = changing,
+      versionsCheckHasModule = versionsCheckHasModule,
+      checkModule = false
+    )
+
   def apply(repo: MavenRepository): SbtMavenRepository =
+    SbtMavenRepository(
+      root = actualRoot(repo.root),
+      authentication = repo.authentication,
+      changing = repo.changing,
+      versionsCheckHasModule = repo.versionsCheckHasModule,
+      checkModule = repo.checkModule
+    )
+
+  def apply(
+    root: String,
+    authentication: Option[Authentication],
+    changing: Option[Boolean],
+    versionsCheckHasModule: Boolean,
+    checkModule: Boolean
+  ): SbtMavenRepository =
     new SbtMavenRepository(
-      repo.root,
-      repo.authentication,
-      repo.changing,
-      repo.versionsCheckHasModule,
-      repo.checkModule
+      root = root.stripSuffix("/"),
+      authentication = authentication,
+      changing = changing,
+      versionsCheckHasModule = versionsCheckHasModule,
+      checkModule = checkModule
     )
 
   private def extraAttributes(s: String)
@@ -113,26 +151,28 @@ object SbtMavenRepository {
             val moduleWithAttrs = getSbtCrossVersion(attrs)
               .fold(dep0.module) { sbtCrossVersion =>
                 val sttripedName = dep0.module.name.value.stripSuffix(sbtCrossVersion)
-                dep0.module.withName(ModuleName(sttripedName))
+                dep0.module.copy(name = ModuleName(sttripedName))
               }
-              .withAttributes(attrs)
-            dep0.withModule(moduleWithAttrs)
+              .copy(attributes = attrs)
+            dep0.copy(module = moduleWithAttrs)
           }
           config -> dep
       }
 
-      project.withDependencies0(adaptedDependencies)
+      project.copy(dependencies0 = adaptedDependencies)
     }
 }
 
-@data(apply = false) class SbtMavenRepository(
+@data(apply = false, settersCallApply = true) case class SbtMavenRepository(
   val root: String,
   val authentication: Option[Authentication] = None,
   val changing: Option[Boolean] = None,
   override val versionsCheckHasModule: Boolean = true,
-  @since("2.1.25")
+  @unroll
   checkModule: Boolean = false
 ) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi { self =>
+
+  assert(!root.endsWith("/"))
 
   private val internal =
     new MavenRepositoryInternal(root, authentication, changing, checkModule) {
@@ -203,7 +243,7 @@ object SbtMavenRepository {
     internal.artifactFor(url, changing)
 
   def withChanging(changing: Boolean): SbtMavenRepository =
-    withChanging(Some(changing))
+    copy(changing = Some(changing))
 
   override def fetchVersions[F[_]](
     module: Module,

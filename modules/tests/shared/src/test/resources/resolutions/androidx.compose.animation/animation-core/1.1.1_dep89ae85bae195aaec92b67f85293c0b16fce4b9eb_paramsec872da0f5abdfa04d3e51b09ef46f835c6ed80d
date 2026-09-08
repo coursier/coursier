@@ -3,7 +3,6 @@ androidx.compose.ui:ui:1.1.1:default
 androidx.annotation:annotation:1.2.0:default
 org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2:default
 androidx.compose.runtime:runtime:1.1.1:default
-androidx.compose.ui:ui:1.1.1:default
 androidx.compose.ui:ui-unit:1.1.1:default
 androidx.compose.ui:ui-util:1.1.1:default
 org.jetbrains.kotlin:kotlin-stdlib:1.6.10:default

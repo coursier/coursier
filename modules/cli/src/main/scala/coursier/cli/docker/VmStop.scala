@@ -50,14 +50,12 @@ object VmStop extends CoursierCommand[VmStopOptions] {
         exitCode == 0
       }
 
-    if (isRunning()) {
+    // TODO Check if process keeps running, etc.
+    if (isRunning())
       if (Properties.isWin)
         os.proc("taskkill", "/PID", pid).call()
       else
         os.proc("kill", "-15", pid).call()
-
-      // TODO Check if process keeps running, etc.
-    }
 
     os.remove.all(vmsDir / params.vmSelect.id)
   }

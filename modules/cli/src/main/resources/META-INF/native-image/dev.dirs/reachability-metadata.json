@@ -1,0 +1,33 @@
+{
+  "comment": [
+    "TEMPORARY: remove this file once we depend on a directories-jni / directories",
+    "newer than 0.1.4. This is a copy of the metadata added upstream in",
+    "https://github.com/coursier/directories-jvm, under the same path, so that the",
+    "library ships it itself. As long as we stay on 0.1.4, the metadata has to live",
+    "here, or native images throw MissingForeignRegistrationError on Windows.",
+    "",
+    "On JDK 22+, dev.dirs picks its java.lang.foreign-based Windows implementation",
+    "(dev.dirs.impl.WindowsForeign, from the JDK 22 multi-release section of the",
+    "directories JAR). These are its only downcalls: CLSIDFromString(void*, void*)",
+    "and SHGetKnownFolderPath(void*, int, void*, void*), both returning C long,",
+    "which is 32-bit on Windows, hence 'int'. Pointers are declared as 'void*':",
+    "WindowsForeign builds them with ADDRESS.withTargetLayout(...), which",
+    "native-image matches against the canonical 'void*' layout.",
+    "",
+    "The --enable-native-access=ALL-UNNAMED that goes with this lives in",
+    "../io.get-coursier/coursier-cli/native-image.properties, and should stay when",
+    "this file goes away."
+  ],
+  "foreign": {
+    "downcalls": [
+      {
+        "returnType": "int",
+        "parameterTypes": ["void*", "void*"]
+      },
+      {
+        "returnType": "int",
+        "parameterTypes": ["void*", "int", "void*", "void*"]
+      }
+    ]
+  }
+}

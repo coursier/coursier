@@ -1,5 +1,7 @@
 package coursier.install
 
+import dataclass.{data, since => unroll}
+
 import java.io.File
 
 import coursier.cache.{Cache, CacheLogger}
@@ -10,9 +12,7 @@ import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Task}
 import coursier.util.StringInterpolators._
 import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
-import dataclass._
-
-@data class AppDescriptor(
+@data case class AppDescriptor(
   repositories: Seq[Repository] = Nil,
   dependencies: Seq[JavaOrScalaDependency] = Nil,
   sharedDependencies: Seq[JavaOrScalaModule] = Nil,
@@ -27,15 +27,15 @@ import dataclass._
   scalaVersionOpt: Option[String] = None,
   nameOpt: Option[String] = None,
   graalvmOptions: Option[AppDescriptor.GraalvmOptions] = None,
-  @since
+  @unroll
   prebuiltLauncher: Option[String] = None,
-  @since
+  @unroll
   jvmOptionFile: Option[String] = None,
-  @since("2.0.1")
+  @unroll
   prebuiltBinaries: Map[String, String] = Map.empty,
-  @since("2.0.4")
+  @unroll
   jna: List[String] = Nil,
-  @since("2.1.0")
+  @unroll
   versionOverrides: Seq[VersionOverride] = Nil
 ) {
   def overrideVersion(ver: String): AppDescriptor = {
@@ -44,44 +44,42 @@ import dataclass._
         versionOverrides.find(_.versionRange0.contains(version))
       }
       .map { versionOverride =>
-        withRepositories(versionOverride.repositories.getOrElse(repositories))
-          .withDependencies(versionOverride.dependencies.getOrElse(dependencies))
-          .withMainClass(
+        copy(
+          repositories = versionOverride.repositories.getOrElse(repositories),
+          dependencies = versionOverride.dependencies.getOrElse(dependencies),
+          mainClass =
             versionOverride.mainClass
               .map(mc => if (mc.isEmpty) None else Some(mc))
-              .getOrElse(mainClass)
-          )
-          .withDefaultMainClass(
+              .getOrElse(mainClass),
+          defaultMainClass =
             versionOverride.defaultMainClass
               .map(dmc => if (dmc.isEmpty) None else Some(dmc))
-              .getOrElse(defaultMainClass)
-          )
-          .withJavaProperties(versionOverride.javaProperties.getOrElse(javaProperties))
-          .withPrebuiltLauncher {
+              .getOrElse(defaultMainClass),
+          javaProperties = versionOverride.javaProperties.getOrElse(javaProperties),
+          prebuiltLauncher =
             versionOverride.prebuiltLauncher
               .map(l => if (l.isEmpty) None else Some(l))
-              .getOrElse(prebuiltLauncher)
-          }
-          .withPrebuiltBinaries {
+              .getOrElse(prebuiltLauncher),
+          prebuiltBinaries =
             versionOverride.prebuiltBinaries
-              .getOrElse(prebuiltBinaries)
-          }
-          .withLauncherType {
+              .getOrElse(prebuiltBinaries),
+          launcherType =
             versionOverride.launcherType
               .getOrElse(launcherType)
-          }
+        )
       }
       .getOrElse(this)
     val deps = overriddenDesc.dependencies
-    overriddenDesc.withDependencies {
-      if (deps.isEmpty)
-        deps
-      else {
-        val dep =
-          deps.head.withUnderlyingDependency(_.withVersionConstraint(VersionConstraint(ver)))
-        dep +: deps.tail
-      }
-    }
+    overriddenDesc.copy(
+      dependencies =
+        if (deps.isEmpty)
+          deps
+        else {
+          val dep =
+            deps.head.withUnderlyingDependency(_.copy(versionConstraint = VersionConstraint(ver)))
+          dep +: deps.tail
+        }
+    )
   }
 
   def mainVersionOpt: Option[VersionConstraint] =
@@ -118,7 +116,7 @@ import dataclass._
     }
 
     val resolutionParams = ResolutionParams()
-      .withScalaVersionOpt0(scalaVersionOpt.filter(_ => hasFullCrossVersionDeps))
+      .copy(scalaVersionOpt0 = scalaVersionOpt.filter(_ => hasFullCrossVersionDeps))
 
     val res: Fetch.Result = Fetch()
       .withDependencies(deps)
@@ -279,8 +277,7 @@ import dataclass._
 
       def versions() = coursier.Versions()
         .withModule(deps.head.module)
-        .withRepositories(repositories)
-        .withCache(cache)
+        .copy(repositories = repositories, cache = cache)
         .result()
         .unsafeRun(wrapExceptions = true)(cache.ec)
         .versions
@@ -298,13 +295,15 @@ import dataclass._
             }
 
             val resolutionParams = ResolutionParams()
-              .withScalaVersionOpt0(scalaVersionOpt.filter(_ => hasFullCrossVersionDeps))
+              .copy(scalaVersionOpt0 = scalaVersionOpt.filter(_ => hasFullCrossVersionDeps))
 
             val res = coursier.Resolve()
-              .withDependencies(deps.take(1).map(_.withTransitive(false)))
-              .withRepositories(repositories)
-              .withResolutionParams(resolutionParams)
-              .withCache(cache)
+              .copy(
+                dependencies = deps.take(1).map(_.copy(transitive = false)),
+                repositories = repositories,
+                resolutionParams = resolutionParams,
+                cache = cache
+              )
               .run()
 
             res.retainedVersions.get(deps.head.module)
@@ -357,7 +356,7 @@ import dataclass._
 
 object AppDescriptor {
 
-  @data class GraalvmOptions(
+  @data case class GraalvmOptions(
     version: Option[String] = None,
     options: Seq[String] = Nil
   )
@@ -480,8 +479,7 @@ object AppDescriptor {
           s"Completing '$base' (org: ${m.baseModule.organization.value}, name: ${m.baseModule.name.value})"
         )
       val (n, compl) = coursier.complete.Complete(cache)
-        .withRepositories(repositories)
-        .withInput(base)
+        .copy(repositories = repositories, input = base)
         .complete()
         .unsafeRun(wrapExceptions = true)(cache.ec)
       if (verbosity >= 2) {

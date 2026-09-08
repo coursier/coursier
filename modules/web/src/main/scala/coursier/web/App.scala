@@ -75,7 +75,7 @@ object App {
                 }
                 .toSeq
                 .toTagMod,
-              if (dep.optional) TagMod(infoLabel("optional")) else TagMod(),
+              if (dep.optional0.contains(true)) TagMod(infoLabel("optional")) else TagMod(),
               res
                 .errorCache
                 .get(dep.moduleVersionConstraint)

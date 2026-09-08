@@ -1,7 +1,8 @@
 package coursierbuild.modules
 
-import java.io.File
 import com.github.lolgab.mill.mima.Mima
+import coursier.cache.ArchiveCache
+import coursier.jvm.{JavaHome, JvmCache}
 import coursierbuild.Deps.{Deps, ScalaVersions}
 
 import mill.*
@@ -14,43 +15,24 @@ import java.util.Locale
 import scala.util.Properties
 
 trait CoursierJavaModule extends JavaModule {
-  def jvmRelease = "8"
-  private def csApp(workspace: os.Path): String =
-    if (Properties.isWin) {
-      def pathEntries = Option(System.getenv("PATH"))
-        .iterator
-        .flatMap(_.split(File.pathSeparator).iterator)
-        .map(os.Path(_, workspace))
-      val pathExts = Option(System.getenv("PATHEXT"))
-        .iterator
-        .flatMap(_.split(File.pathSeparator).iterator)
-        .toSeq
-      pathEntries
-        .flatMap(dir => pathExts.iterator.map(ext => dir / s"cs$ext"))
-        .find(os.isFile)
-        .map(_.toString)
-        .getOrElse {
-          System.err.println("Warning: cannot find cs in PATH")
-          "cs"
-        }
-    }
-    else
-      "cs"
-  private def isArm64 =
-    Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
-      case Some("aarch64" | "arm64") => true
-      case _                         => false
-    }
+  def jvmRelease: String =
+    CoursierJavaModule.defaultJvmRelease
   def javacSystemJvmId = Task {
-    if (Properties.isMac && isArm64) s"zulu:$jvmRelease"
-    else if (Properties.isWin && isArm64) s"liberica:$jvmRelease"
+    if (Properties.isMac && CoursierJavaModule.isArm64) s"zulu:$jvmRelease"
+    else if (Properties.isWin && CoursierJavaModule.isArm64) s"liberica:$jvmRelease"
     else s"adoptium:$jvmRelease"
   }
   def javacSystemJvm = Task {
-    val output = os.proc(csApp(BuildCtx.workspaceRoot), "java-home", "--jvm", javacSystemJvmId())
-      .call(cwd = BuildCtx.workspaceRoot)
-      .out.trim()
-    val javaHome = os.Path(output)
+    val cache = coursier.cache.Cache.default
+    val javaHome = JavaHome()
+      .withCache(
+        JvmCache()
+          .withArchiveCache(ArchiveCache().withCache(cache))
+          .withDefaultIndex
+      )
+      .get(javacSystemJvmId())
+      .map(os.Path(_))
+      .unsafeRun(true)(using cache.ec)
     assert(os.isDir(javaHome))
     PathRef(javaHome, quick = true)
   }
@@ -62,14 +44,26 @@ trait CoursierJavaModule extends JavaModule {
     val hasModules = os.isDir(javaHome / "jmods")
     val hasRtJar   = os.isFile(rtJar)
     assert(hasModules || hasRtJar)
-    if (hasModules)
-      Seq("--system", javaHome.toString)
-    else
-      Seq("-source", jvmRelease, "-target", jvmRelease, "-bootclasspath", rtJar.toString)
+    // These options are cached, so they have to be real absolute paths. `toAbsString` alone
+    // keeps the ephemeral out/mill-no-daemon/<id>/mill-home forwarder, that mill wipes when it
+    // exits, in the path. `toResolvedPathString` follows it.
+    val extraOpts =
+      if (hasModules) Seq("--system", PathRef.toResolvedPathString(javaHome))
+      else Seq("-bootclasspath", PathRef.toResolvedPathString(rtJar))
+    Seq("-source", jvmRelease, "-target", jvmRelease) ++ extraOpts
   }
   def javacOptions = Task {
     super.javacOptions() ++ maybeJdkJavacOpt() ++ Seq(
       "-Xlint:unchecked"
     )
   }
+}
+
+object CoursierJavaModule {
+  def defaultJvmRelease = if (Properties.isWin && isArm64) "11" else "8"
+  private def isArm64 =
+    Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
+      case Some("aarch64" | "arm64") => true
+      case _                         => false
+    }
 }

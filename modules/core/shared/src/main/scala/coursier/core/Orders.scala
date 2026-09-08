@@ -159,7 +159,7 @@ object Orders {
               else
                 c.configuration
 
-            dep.withVariantSelector(VariantSelector.ConfigurationBased(config0))
+            dep.copy(variantSelector = VariantSelector.ConfigurationBased(config0))
           case _ =>
             dep
         }
@@ -181,10 +181,10 @@ object Orders {
     val availableConfigs = configs.keySet
     val groupedDependencies = dependencies
       .map(fallbackConfigIfNecessary(_, availableConfigs))
-      .groupBy(dep => (dep.optional, dep.variantSelector))
+      .groupBy(dep => (dep.optional0, dep.variantSelector))
       .mapValues { deps =>
         deps.head.withExclusions(deps.foldLeft(Exclusions.one)((acc, dep) =>
-          Exclusions.meet(acc, dep.exclusions)
+          Exclusions.meet(acc, dep.exclusions())
         ))
       }
       .toList
@@ -193,12 +193,14 @@ object Orders {
       for {
         List(((xOpt, xVariant), xDep), ((yOpt, yVariant), yDep)) <-
           groupedDependencies.combinations(2)
-        optCmp   <- optionalPartialOrder.tryCompare(xOpt, yOpt).iterator
+        optCmp <- optionalPartialOrder
+          .tryCompare(xOpt.getOrElse(false), yOpt.getOrElse(false))
+          .iterator
         xScope   <- xVariant.asConfiguration.iterator
         yScope   <- yVariant.asConfiguration.iterator
         scopeCmp <- configurationPartialOrder0(configs).tryCompare(xScope, yScope).iterator
         if optCmp * scopeCmp >= 0
-        exclCmp <- exclusionsPartialOrder.tryCompare(xDep.exclusions, yDep.exclusions).iterator
+        exclCmp <- exclusionsPartialOrder.tryCompare(xDep.exclusions(), yDep.exclusions()).iterator
         if optCmp * exclCmp >= 0
         if scopeCmp * exclCmp >= 0
         xIsMin = optCmp < 0 || scopeCmp < 0 || exclCmp < 0
@@ -223,9 +225,9 @@ object Orders {
   ): Set[Dependency] =
     dependencies
       .groupBy(
-        _.withVariantSelector(VariantSelector.emptyConfiguration)
+        _.copy(variantSelector = VariantSelector.emptyConfiguration)
           .withExclusions(Set.empty)
-          .withOptional(false)
+          .copy(optional0 = None)
       )
       .mapValues { deps =>
         minDependenciesUnsafe(

@@ -39,7 +39,7 @@ object InterpolatorsTests extends TestSuite {
         val expected = Dependency(
           Module(org"org.scalatest", name"scalatest_2.12", Map.empty),
           VersionConstraint("3.0.1")
-        ).withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
+        ).copy(variantSelector = VariantSelector.ConfigurationBased(Configuration.test))
         assert(dep == expected)
       }
     }

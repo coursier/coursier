@@ -1,10 +1,24 @@
-//| mill-version: 1.1.3
+//| mill-version: 1.2.0-RC1-46-16168f
+//| mill-jvm-version: 21
 
-import coursierbuild.Deps.{Deps, ScalaVersions, scalaCliVersion}
+import com.github.lolgab.mill.mima.{DirectMissingMethodProblem, InterfaceMima, ProblemFilter}
+import coursierbuild.Deps.{Deps, ScalaVersions, Versions, csQemuVersion, scalaCliVersion}
 import coursierbuild.Launchers.{Launchers, platformBootstrapExtension}
 import coursierbuild.Relativize.{relativize => doRelativize}
-import coursierbuild.{DocHelpers, GitHubReleaseAssets, Shading, Sync, Workers}
+import coursierbuild.{
+  Check,
+  CoursierProperties,
+  CsSh,
+  DocHelpers,
+  GitHubReleaseAssets,
+  InterfaceVersion,
+  Shading,
+  Sync,
+  ZipUtil
+}
 import coursierbuild.modules._
+import io.github.alexarchambault.millnativeimage.NativeImage
+import mill.contrib.jmh.JmhModule
 
 import _root_.coursier.getcs.GetCs
 
@@ -12,8 +26,10 @@ import mill.*
 import mill.api.*
 import mill.scalalib._
 import mill.scalajslib._
+import mill.util.Tasks
 
 import java.io.File
+import java.util.Locale
 import java.util.zip.ZipFile
 
 import scala.concurrent.duration._
@@ -40,6 +56,11 @@ implicit def millModuleBasePath: ModuleCtx.Nested =
     this
   )
 
+// Modules whose sources use the data-class `@data` / `@since` annotations.
+trait DataClassModule extends CsScalaModule with CrossModuleBase {
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(Deps.dataClass)
+}
+
 object util extends Module {
   object shared extends SharedScalaSources
   object jvm    extends Cross[UtilJvm](ScalaVersions.all)
@@ -61,7 +82,20 @@ object cache extends Module {
   object jvm    extends Cross[CacheJvm](ScalaVersions.all)
   object js     extends Cross[CacheJs](ScalaVersions.all)
 }
-object `archive-cache`      extends Cross[ArchiveCache](ScalaVersions.all)
+object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.all)
+object `benchmark` extends ScalaModule with JmhModule {
+  def scalaVersion: mill.api.Task.Simple[String] = ScalaVersions.scala213
+  def moduleDeps = Seq(
+    coursier.jvm(ScalaVersions.scala213)
+  )
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    mvn"org.apache.maven:maven-model:3.9.16"
+  )
+  def jmhCoreVersion = "1.37"
+}
+
+object `cache-server` extends Cross[CacheServer](ScalaVersions.all)
+
 object launcher             extends Cross[Launcher](ScalaVersions.all)
 object env                  extends Cross[Env](ScalaVersions.all)
 object `launcher-native_04` extends LauncherNative04
@@ -117,6 +151,18 @@ object `custom-protocol-for-test` extends CsModule {
   def scalaVersion = ScalaVersions.scala213
 }
 
+// Scalafix rules written for this repository, loaded by `__.fix` through
+// CsScalaModule#scalafixToolClasspath, and enabled by name in .scalafix.conf
+object `scalafix-rules` extends SbtModule {
+  // Scalafix loads rules through a Scala 2.13 class loader, whatever the Scala version of the
+  // module being linted
+  def scalaVersion = ScalaVersions.scala213
+  // scalafix-core is only needed to compile the rules: at run time, it comes from the Scalafix
+  // tool class loader these classes get appended to, and a second copy of it there would clash
+  // with that one
+  def compileMvnDeps = Seq(Deps.scalafixCore)
+}
+
 object `bootstrap-launcher` extends BootstrapLauncher { self =>
   def moduleDeps = Seq(
     paths
@@ -162,7 +208,7 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
         val nonIgnoredFiles = os.walk(dir)
           .filter(os.isFile(_))
           .map(_.relativeTo(dir))
-          .filter(!_.startsWith(os.sub / "META-INF" / "native-image"))
+          .filter(!_.startsWith(os.sub / "META-INF/native-image"))
         if (nonIgnoredFiles.isEmpty) Nil
         else
           sys.error(s"Resource directory $dir contains unexpected resources $nonIgnoredFiles")
@@ -186,15 +232,21 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
       os.sub / "src/it/java"
     )
     def moduleDeps = Seq(
+      `test-cache`.jvm(ScalaVersions.scala213),
       self.test
     )
     def forkArgs = Task {
-      val testRepoServer0 = buildWorkers.testRepoServer()
+      val testRepositoryDataDir =
+        PathRef.toResolvedPathString(tests.handmadeMetadata().path / "http/abc.com")
+      val httpServerCp = `test-cache`.jvm(ScalaVersions.scala213).httpServerClassPath()
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
-        s"-Dtest.repository=${testRepoServer0.url}",
-        s"-Dtest.repository.user=${testRepoServer0.user}",
-        s"-Dtest.repository.password=${testRepoServer0.password}"
+        s"-Dtest.repository.data-dir=$testRepositoryDataDir",
+        s"-Dtest.http-server.classpath=$httpServerCp"
       )
+    }
+    def forkEnv = Task {
+      super.forkEnv() ++ Seq(cli.csInPathForkEnv())
     }
   }
 }
@@ -209,6 +261,9 @@ object tests extends Module {
   object shared extends TestsShared
   object jvm    extends Cross[TestsJvm](ScalaVersions.all)
   object js     extends Cross[TestsJs](ScalaVersions.all)
+
+  def handmadeMetadata = Task.Source("handmade-metadata/data")
+  def metadata         = Task.Source("metadata")
 }
 
 object `proxy-tests` extends Cross[ProxyTests](ScalaVersions.all)
@@ -226,7 +281,36 @@ object interop extends Module {
   }
 }
 
-object exec extends Exec
+object exec extends Exec {
+  object test extends JavaTests with CsScalaTests {
+    def scalaVersion = ScalaVersions.scala213
+    def forkArgs = Task {
+      super.forkArgs() ++ Seq(
+        s"-Dcoursier.execve.test.assembly=${PathRef.toResolvedPathString(`execve-test`.assembly().path)}",
+        s"-Dcoursier.execve.test.native-image=${PathRef.toResolvedPathString(`execve-test`.nativeImage().path)}"
+      )
+    }
+  }
+}
+
+object `execve-test` extends CoursierJavaModule with coursierbuild.Launchers.CsJniNativeImage {
+  def jvmRelease = "11"
+  def mainClass  = Some("coursier.exec.test.ExecveTestApp")
+  def moduleDeps = Seq(
+    exec
+  )
+  def javacOptions = Task {
+    Seq("--release", jvmRelease, "-Xlint:unchecked")
+  }
+
+  def nativeImageGraalVmJvmId = coursierbuild.Deps.graalVmJvmId
+  def nativeImageClassPath    = runClasspath()
+  def nativeImageMainClass    = mainClass().getOrElse(sys.error("No main class"))
+  def nativeImageName         = "execve-test"
+  def nativeImageOptions = Task {
+    Seq("--no-fallback") ++ super.nativeImageOptions()
+  }
+}
 
 object jvm     extends Cross[Jvm](ScalaVersions.all)
 object install extends Cross[Install](ScalaVersions.all)
@@ -235,7 +319,9 @@ object docker extends Cross[Docker](Seq(ScalaVersions.scala3))
 
 object cli extends Cli {
   object test extends SbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm(cliScalaVersion213Compat).test
     )
@@ -253,7 +339,7 @@ object `test-cache` extends Module {
   object js  extends Cross[TestCacheJs](ScalaVersions.all)
 }
 
-trait UtilJvm extends UtilJvmBase {
+trait UtilJvm extends UtilJvmBase with DataClassModule {
   def sources = Task {
     super.sources() ++ util.shared.sources()
   }
@@ -261,15 +347,18 @@ trait UtilJvm extends UtilJvmBase {
     Deps.jsoup
   )
 }
-trait UtilJs extends CsScalaJsModule with Util {
+trait UtilJs extends CsScalaJsModule with Util with DataClassModule {
   def sources = Task {
     super.sources() ++ util.shared.sources()
   }
 }
 
-trait CoreJvm extends Core with CoreJvmBase with Shading {
+trait CoreJvm extends Core with CoreJvmBase with Shading with DataClassModule {
   def sources = Task {
-    super.sources() ++ core.shared.sources()
+    val versionSources =
+      if (scalaVersion().startsWith("2.12")) core.shared.sourcesScala212()
+      else core.shared.sourcesScala213()
+    super.sources() ++ core.shared.sources() ++ versionSources
   }
   def moduleDeps = super.moduleDeps ++ Seq(
     util.jvm()
@@ -288,9 +377,12 @@ trait CoreJvm extends Core with CoreJvmBase with Shading {
     )
   }
 }
-trait CoreJs extends Core with CsScalaJsModule {
+trait CoreJs extends Core with CsScalaJsModule with DataClassModule {
   def sources = Task {
-    super.sources() ++ core.shared.sources()
+    val versionSources =
+      if (scalaVersion().startsWith("2.12")) core.shared.sourcesScala212()
+      else core.shared.sourcesScala213()
+    super.sources() ++ core.shared.sources() ++ versionSources
   }
   def moduleDeps = super.moduleDeps ++ Seq(
     util.js()
@@ -300,7 +392,9 @@ trait CoreJs extends Core with CsScalaJsModule {
   )
   def commitHash = `build-util`.commitHash
   object test extends SbtTests with ScalaJSTests with CsResourcesTests with CsTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ core.shared.testSources()
     }
@@ -310,7 +404,7 @@ trait CoreJs extends Core with CsScalaJsModule {
   }
 }
 
-trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase {
+trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase with DataClassModule {
   def sources = Task {
     super.sources() ++ `sbt-maven-repository`.shared.sources()
   }
@@ -319,7 +413,7 @@ trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase {
   )
 }
 trait SbtMavenRepositoryJs extends SbtMavenRepository
-    with CsScalaJsModule {
+    with CsScalaJsModule with DataClassModule {
   def sources = Task {
     super.sources() ++ `sbt-maven-repository`.shared.sources()
   }
@@ -339,7 +433,7 @@ trait CacheUtil extends CoursierPublishModule with CsMima {
   }
 }
 
-trait CacheJvm extends CacheJvmBase {
+trait CacheJvm extends CacheJvmBase with DataClassModule {
   def sources = Task {
     super.sources() ++ cache.shared.sources()
   }
@@ -364,23 +458,28 @@ trait CacheJvm extends CacheJvmBase {
     def sources = Task {
       super.sources() ++ cache.shared.testSources()
     }
+    def moduleDeps = super.moduleDeps ++ Seq(
+      coursier.jvm(),
+      `cache-server`(crossValue)
+    )
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.http4sBlazeServer,
       Deps.http4sDsl,
       Deps.logbackClassic,
-      Deps.osLib,
-      Deps.pprint,
       Deps.scalaAsync
     )
     def compileMvnDeps = super.compileMvnDeps() ++ Seq(
       Deps.jsoniterMacros
     )
     def forkEnv = super.forkEnv() ++ Seq(
-      "COURSIER_CUSTOMPROTOCOL_BASE" -> BuildCtx.workspaceRoot.toString
+      "COURSIER_CUSTOMPROTOCOL_BASE" -> PathRef.toResolvedPathString(BuildCtx.workspaceRoot),
+      "COURSIER_CUSTOM_LOADER_CP" ->
+        customLoaderCp().map(ref => PathRef.toResolvedPathString(ref.path))
+          .mkString(File.pathSeparator)
     )
   }
 }
-trait CacheJs extends Cache with CsScalaJsModule {
+trait CacheJs extends Cache with CsScalaJsModule with DataClassModule {
   def sources = Task {
     super.sources() ++ cache.shared.sources()
   }
@@ -393,21 +492,20 @@ trait CacheJs extends Cache with CsScalaJsModule {
   )
 }
 
-trait ArchiveCache extends ArchiveCacheBase {
+trait ArchiveCache extends ArchiveCacheBase with DataClassModule {
   def moduleDeps = Seq(
     cache.jvm()
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.plexusArchiver,
     Deps.plexusContainerDefault,
+    Deps.plexusUtils, // Explicitly bumping that one to >= 4.0.3 to address CVE-2025-67030
     Deps.tika,
     // here only for the sake of bumping it, to work around JNI loading issues with earlier versions on macOS
     Deps.zstdJni
   )
   object test extends CrossSbtTests with CsTests {
     def mvnDeps = super.mvnDeps() ++ Seq(
-      Deps.osLib,
-      Deps.pprint,
       Deps.scalaAsync
     )
     def compileMvnDeps = super.compileMvnDeps() ++ Seq(
@@ -432,14 +530,12 @@ trait ArchiveCache extends ArchiveCacheBase {
   }
 }
 
-trait Launcher extends LauncherBase {
+trait Launcher extends LauncherBase with DataClassModule {
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.collectionCompat,
+    Deps.jarjarAbrams,
     Deps.noCrcZis,
     Deps.pythonNativeLibs
-  )
-  def compileMvnDeps = Seq(
-    Deps.dataClass
   )
   def commitHash = `build-util`.commitHash
 
@@ -447,17 +543,16 @@ trait Launcher extends LauncherBase {
   def resourceBootstrap           = `bootstrap-launcher`.proguardedResourceAssembly()
   def noProguardBootstrap         = `bootstrap-launcher`.assembly()
   def noProguardResourceBootstrap = `bootstrap-launcher`.resourceAssembly()
+
+  object test extends CrossSbtTests with CsTests
 }
 
 trait Env extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima {
+    with CoursierPublishModule with CsMima with DataClassModule {
   def mimaPreviousVersions = Task {
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
   def artifactName = "coursier-env"
-  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.dataClass
-  )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.collectionCompat,
     Deps.jniUtils
@@ -472,8 +567,13 @@ trait Env extends CrossSbtModule with CsModule
 def cliScalaVersion          = ScalaVersions.scala3
 def cliScalaVersion213Compat = ScalaVersions.scala213
 def launcherModule           = launcher
+// Lowest JVM release the latest Scala 3 can emit bytecode for: Scala 3.8+
+// only accepts 17 and later, so the modules compiled with cliScalaVersion
+// cannot target an earlier one.
+def scala3LatestJvmRelease = "17"
 trait LauncherNative04 extends CsModule
     with CoursierPublishModule {
+  def jvmRelease   = scala3LatestJvmRelease
   def scalaVersion = cliScalaVersion
   def artifactName = "coursier-launcher-native_0.4"
   def compileModuleDeps = Seq(
@@ -484,7 +584,7 @@ trait LauncherNative04 extends CsModule
   )
 }
 
-trait CoursierJvm extends CoursierJvmBase { self =>
+trait CoursierJvm extends CoursierJvmBase with DataClassModule { self =>
   def sources = Task {
     super.sources() ++ coursier.shared.sources()
   }
@@ -495,34 +595,45 @@ trait CoursierJvm extends CoursierJvmBase { self =>
   )
   // Put CoursierTests right after TestModule, and see what happens
   object test extends CrossSbtTests with CoursierTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ coursier.shared.testSources()
     }
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.jvm()
     )
+    def forkArgs = Task {
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
+      super.forkArgs() ++ Seq(
+        s"-Dtest.http-server.classpath=$httpServerCp"
+      )
+    }
   }
   object it extends CrossSbtTests with CoursierTests {
-    def testDataDir = tests.shared.testDataDir
     def sources = Task.Sources(
       os.sub / "src/it/scala",
       os.sub / "src/it/java"
     )
     def moduleDeps = super.moduleDeps ++ Seq(
+      `test-cache`.jvm(),
       self.test
     )
     def forkArgs = Task {
-      val testRepoServer0 = buildWorkers.testRepoServer()
+      val testRepositoryDataDir =
+        PathRef.toResolvedPathString(tests.handmadeMetadata().path / "http/abc.com")
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
-        s"-Dtest.repository=${testRepoServer0.url}",
-        s"-Dtest.repository.user=${testRepoServer0.user}",
-        s"-Dtest.repository.password=${testRepoServer0.password}"
+        s"-Dtest.repository.data-dir=$testRepositoryDataDir",
+        s"-Dtest.http-server.classpath=$httpServerCp"
       )
     }
   }
 }
-trait CoursierJs extends Coursier with CsScalaJsModule {
+trait CoursierJs extends Coursier with CsScalaJsModule with DataClassModule {
   def sources = Task {
     super.sources() ++ coursier.shared.sources()
   }
@@ -531,7 +642,9 @@ trait CoursierJs extends Coursier with CsScalaJsModule {
     cache.js()
   )
   object test extends SbtTests with ScalaJSTests with CsResourcesTests with CoursierTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ coursier.shared.testSources()
     }
@@ -559,7 +672,9 @@ trait TestsJvm extends TestsModule { self =>
     Deps.jsoup
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ tests.shared.testSources()
     }
@@ -567,22 +682,32 @@ trait TestsJvm extends TestsModule { self =>
       coursier.jvm(),
       `test-cache`.jvm()
     )
-  }
-  object it extends CrossSbtTests with CsTests with CsResourcesTests
-      with Workers.UsesRedirectingServer {
-    def testDataDir = tests.shared.testDataDir
-    def redirectingServerCp =
-      `redirecting-server`.runClasspath()
-    def redirectingServerMainClass =
-      `redirecting-server`.mainClass().getOrElse(sys.error("no main class"))
+    def mvnDeps = super.mvnDeps() ++ Seq(
+      Deps.osLib
+    )
     def forkArgs = Task {
-      val redirectingServer0 = redirectingServer()
-      val testRepoServer0    = buildWorkers.testRepoServer()
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
-        s"-Dtest.redirect.repository=${redirectingServer0.url}",
-        s"-Dtest.repository=${testRepoServer0.url}",
-        s"-Dtest.repository.user=${testRepoServer0.user}",
-        s"-Dtest.repository.password=${testRepoServer0.password}"
+        s"-Dtest.http-server.classpath=$httpServerCp"
+      )
+    }
+  }
+  object it extends CrossSbtTests with CsScalaTests with CsResourcesTests {
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
+    def forkArgs = Task {
+      val testRepositoryDataDir =
+        PathRef.toResolvedPathString(testHandmadeMetadataDir().path / "http/abc.com")
+      val redirectingServerCp = `redirecting-server`.runClasspath()
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
+      super.forkArgs() ++ Seq(
+        s"-Dtest.repository.data-dir=$testRepositoryDataDir",
+        s"-Dtest.redirecting-server.classpath=$redirectingServerCp",
+        s"-Dtest.http-server.classpath=$httpServerCp"
       )
     }
     def sources = Task.Sources(
@@ -591,6 +716,8 @@ trait TestsJvm extends TestsModule { self =>
     )
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm(),
+      `test-cache`.jvm(),
+      `redirecting-server`,
       self.test
     )
   }
@@ -605,7 +732,9 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
   )
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
   object test extends SbtTests with ScalaJSTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def sources = Task {
       super.sources() ++ tests.shared.testSources()
     }
@@ -654,7 +783,9 @@ trait ScalazJvm extends Scalaz with CsMima {
     Deps.scalazConcurrent
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
@@ -680,7 +811,9 @@ trait CatsJvm extends Cats with CsMima {
     cache.jvm()
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       tests.jvm().test
     )
@@ -696,11 +829,34 @@ trait CatsJs extends Cats with CsScalaJsModule {
 }
 
 trait Install extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima {
+    with CoursierPublishModule with CsMima with DataClassModule {
   def mimaPreviousVersions = Task {
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
   def artifactName = "coursier-install"
+  // former argonaut codecs, replaced by jsoniter-scala ones
+  def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
+    ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.install.RawAppDescriptor.encoder"),
+    ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.install.RawAppDescriptor.decoder"),
+    ProblemFilter.exclude[DirectMissingMethodProblem](
+      "coursier.install.RawAppDescriptor#Properties.encoder"
+    ),
+    ProblemFilter.exclude[DirectMissingMethodProblem](
+      "coursier.install.RawAppDescriptor#Properties.decoder"
+    ),
+    ProblemFilter.exclude[DirectMissingMethodProblem](
+      "coursier.install.RawAppDescriptor#RawGraalvmOptions.encoder"
+    ),
+    ProblemFilter.exclude[DirectMissingMethodProblem](
+      "coursier.install.RawAppDescriptor#RawGraalvmOptions.decoder"
+    ),
+    ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.install.RawSource.encoder"),
+    ProblemFilter.exclude[DirectMissingMethodProblem]("coursier.install.RawSource.decoder"),
+    // private class, whose `prebuiltBinaries` lost its default value (see the comment there)
+    ProblemFilter.exclude[DirectMissingMethodProblem](
+      "coursier.install.RawAppDescriptor#RawAppDescriptorJson*"
+    )
+  )
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(),
     env(),
@@ -708,25 +864,35 @@ trait Install extends CrossSbtModule with CsModule
     launcherModule()
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.dataClass
+    Deps.jsoniterMacros
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
-    Deps.argonautShapeless,
-    Deps.catsCore
+    Deps.catsCore,
+    Deps.jsoniterCore
   )
-  object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+  object test extends CrossSbtTests with CsScalaTests with CsResourcesTests {
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.jvm()
     )
     def mvnDeps = super.mvnDeps() ++ Seq(
-      Deps.pprint
+      Deps.pprint,
+      Deps.ujson
     )
+    def forkArgs = Task {
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
+      super.forkArgs() ++ Seq(
+        s"-Dtest.http-server.classpath=$httpServerCp"
+      )
+    }
   }
 }
 
 trait Jvm extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima {
+    with CoursierPublishModule with CsMima with DataClassModule {
   def mockCache = Task.Source(os.sub / "src/test/resources/mock-cache")
   def mimaPreviousVersions = Task {
     super.mimaPreviousVersions().filter(_ != "2.0.16")
@@ -739,7 +905,6 @@ trait Jvm extends CrossSbtModule with CsModule
     exec
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.dataClass,
     Deps.jsoniterMacros,
     Deps.svm
   )
@@ -747,17 +912,24 @@ trait Jvm extends CrossSbtModule with CsModule
     Deps.jsoniterCore
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
-    def testDataDir = tests.shared.testDataDir
+    def testDataDir             = tests.shared.testDataDir
+    def testHandmadeMetadataDir = tests.handmadeMetadata
+    def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
       `test-cache`.jvm()
     )
     def mvnDeps = super.mvnDeps() ++ Seq(
-      Deps.osLib,
-      Deps.pprint,
       Deps.scalaAsync
     )
+    def forkArgs = Task {
+      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
+        .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
+      super.forkArgs() ++ Seq(
+        s"-Dtest.http-server.classpath=$httpServerCp"
+      )
+    }
     def forkEnv = super.forkEnv() ++ Seq(
-      "COURSIER_JVM_TESTS_MOCK_CACHE" -> mockCache().path.toString
+      "COURSIER_JVM_TESTS_MOCK_CACHE" -> PathRef.toResolvedPathString(mockCache().path)
     )
   }
 }
@@ -789,7 +961,7 @@ trait Exec extends JavaModule with CoursierPublishModule with CsMima {
 }
 
 trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
-  def jvmRelease   = "11"
+  def jvmRelease   = scala3LatestJvmRelease
   def artifactName = "coursier-docker"
   def moduleDeps = super.moduleDeps ++ Seq(
     cache.jvm(cliScalaVersion213Compat),
@@ -822,16 +994,12 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
     def moduleDeps = super.moduleDeps ++ Seq(
       cache.jvm(cliScalaVersion213Compat).test
     )
-    def mvnDeps = super.mvnDeps() ++ Seq(
-      Deps.osLib,
-      Deps.pprint
-    )
   }
 }
 
 trait Cli extends CsModule
     with CoursierPublishModule with Launchers {
-  def jvmRelease   = "11"
+  def jvmRelease   = scala3LatestJvmRelease
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion213Compat),
@@ -839,7 +1007,8 @@ trait Cli extends CsModule
     install(cliScalaVersion213Compat),
     jvm(cliScalaVersion213Compat),
     docker(cliScalaVersion),
-    launcherModule(cliScalaVersion213Compat)
+    launcherModule(cliScalaVersion213Compat),
+    `cache-server`(cliScalaVersion213Compat)
   )
   def artifactName = "coursier-cli"
   def mvnDeps = super.mvnDeps() ++ Seq(
@@ -873,16 +1042,6 @@ trait Cli extends CsModule
       Name.IMPLEMENTATION_VENDOR.toString  -> "io.get-coursier"
     )
   }
-  def docJar = Task {
-    val jar  = Task.dest / "empty.jar"
-    val baos = new java.io.ByteArrayOutputStream
-    val zos  = new java.util.zip.ZipOutputStream(baos)
-    zos.finish()
-    zos.close()
-    os.write.over(jar, baos.toByteArray)
-    PathRef(jar)
-  }
-
   // Locally, run cli in exclusive mode with os.InheritRaw stdin / stdout / stderr, so that it sees
   // an actual terminal, and not pipes, and we get progress bars and all.
   private def isCI = System.getenv("CI") != null
@@ -903,10 +1062,21 @@ trait Cli extends CsModule
 
     ()
   }
+
+  def csInPathForkEnv = Task {
+    val ext = if (Properties.isWin) ".bat" else ""
+    os.copy(cli.assembly().path, Task.dest / s"cs$ext")
+    val (pathVarName, pathBaseValue) = System.getenv()
+      .asScala
+      .find(_._1.toLowerCase(Locale.ROOT) == "path")
+      .getOrElse(("PATH", ""))
+    pathVarName -> s"${PathRef.toResolvedPathString(Task.dest)}${File.pathSeparator}$pathBaseValue"
+  }
 }
 
 trait CliTests extends CsModule
     with CoursierPublishModule { self =>
+  def jvmRelease   = scala3LatestJvmRelease
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion213Compat)
@@ -921,49 +1091,76 @@ trait CliTests extends CsModule
     Deps.ujson,
     Deps.utest
   )
-  private def sharedTestArgs = Seq(
-    s"-Dcoursier-test.scala-cli=${GetCs.scalaCli(scalaCliVersion)}"
-  )
-  def docJar = Task {
-    // dottydoc currently crashes when generating this module's doc jar
-
-    import java.io._
-    import java.util.zip._
-    val dest = Task.dest / "empty.zip"
-    val baos = new ByteArrayOutputStream
-    val zos  = new ZipOutputStream(baos)
-    zos.finish()
-    zos.close()
-    os.write(dest, baos.toByteArray)
-    PathRef(dest)
+  private def sharedTestArgs = {
+    val arch = sys.props.getOrElse("os.arch", "").toLowerCase(java.util.Locale.ROOT)
+    val (scalaCli, scalaCliIsJar) = GetCs.scalaCliUrl(
+      arch,
+      scalaCliVersion,
+      Properties.isWin,
+      Properties.isMac,
+      Properties.isLinux
+    )
+      .map(GetCs.download)
+      .map((_, false))
+      .getOrElse {
+        if (Properties.isWin && (arch == "aarch64" || arch == "arm64")) {
+          val url =
+            s"https://github.com/VirtusLab/scala-cli/releases/download/v$scalaCliVersion/scala-cli"
+          val cache = _root_.coursier.cache.Cache.default
+          val path = cache
+            .file(_root_.coursier.util.Artifact(url))
+            .run.unsafeRun(true)(using cache.ec)
+            .fold(ex => throw ex, _.toString)
+          (path, true)
+        }
+        else
+          (GetCs.fromPath("scala-cli"), false)
+      }
+    Seq(
+      s"-Dcoursier-test.scala-cli=$scalaCli",
+      s"-Dcoursier-test.scala-cli.is-jar=$scalaCliIsJar",
+      s"-Dcoursier-test.jni-utils-version=${Deps.jniUtils.dep.versionConstraint.asString}"
+    )
   }
   object test extends SbtTests with CsTests {
-    def forkArgs = {
-      val launcherTask = cli.launcher.map(_.path)
-      val assemblyTask = cli.assembly.map(_.path)
-      Task {
-        super.forkArgs() ++ sharedTestArgs ++ Seq(
-          s"-Dcoursier-test-launcher=${launcherTask()}",
-          s"-Dcoursier-test-assembly=${assemblyTask()}",
-          "-Dcoursier-test-launcher-accepts-D=false",
-          "-Dcoursier-test-launcher-accepts-J=true",
-          "-Dcoursier-test-is-native=false",
-          "-Dcoursier-test-is-native-static=false",
-          s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
-          s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
-          s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
-          s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
-        )
-      }
+    def forkEnv = Task {
+      super.forkEnv() ++ Seq(cli.csInPathForkEnv())
+    }
+    def forkArgs = Task {
+      super.forkArgs() ++ sharedTestArgs ++ Seq(
+        s"-Dcoursier-test-launcher=${PathRef.toResolvedPathString(cli.launcher().path)}",
+        s"-Dcoursier-test-assembly=${PathRef.toResolvedPathString(cli.assembly().path)}",
+        "-Dcoursier-test-launcher-accepts-D=false",
+        "-Dcoursier-test-launcher-accepts-J=true",
+        "-Dcoursier-test-is-native=false",
+        "-Dcoursier-test-is-native-static=false",
+        "-Dcoursier-test-is-standalone=false",
+        s"-Dcoursier.test.auth-proxy-data-dir=${PathRef.toResolvedPathString(BuildCtx.workspaceRoot / "project/authenticated-proxy")}",
+        s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
+      )
     }
   }
   trait NativeTests extends SbtTests with CsTests {
+    def testModuleName = "test"
     def cliLauncher: T[PathRef]
     def isStatic: Boolean = false
+    def forkEnv = Task {
+      val ext = if (Properties.isWin) ".bat" else ""
+      os.copy(cliLauncher().path, Task.dest / s"cs$ext")
+      val (pathVarName, pathBaseValue) = System.getenv()
+        .asScala
+        .find(_._1.toLowerCase(Locale.ROOT) == "path")
+        .getOrElse(("PATH", ""))
+      super.forkEnv() ++ Seq(
+        pathVarName -> s"${PathRef.toResolvedPathString(Task.dest)}${File.pathSeparator}$pathBaseValue"
+      )
+    }
     def forkArgs = {
       val launcherTask = cliLauncher.map(_.path)
       Task {
-        val launcher = launcherTask()
+        val launcher = PathRef.toResolvedPathString(launcherTask())
         super.forkArgs() ++ sharedTestArgs ++ Seq(
           s"-Dcoursier-test-launcher=$launcher",
           s"-Dcoursier-test-assembly=$launcher",
@@ -971,12 +1168,47 @@ trait CliTests extends CsModule
           "-Dcoursier-test-launcher-accepts-J=false",
           "-Dcoursier-test-is-native=true",
           s"-Dcoursier-test-is-native-static=$isStatic",
-          s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
+          "-Dcoursier-test-is-standalone=false",
+          s"-Dcoursier.test.auth-proxy-data-dir=${PathRef.toResolvedPathString(BuildCtx.workspaceRoot / "project/authenticated-proxy")}",
           s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
           s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
           s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
         )
       }
+    }
+  }
+  object `standalone-jvm-tests` extends SbtTests with CsTests {
+    def testModuleName = "test"
+    def forkEnv = Task {
+      val ext = if (Properties.isWin) ".bat" else ""
+      os.copy(cli.standaloneJvmLauncherDir().path, Task.dest / "cs")
+      val (pathVarName, pathBaseValue) = System.getenv()
+        .asScala
+        .find(_._1.toLowerCase(Locale.ROOT) == "path")
+        .getOrElse(("PATH", ""))
+      super.forkEnv() ++ Seq(
+        pathVarName -> s"${PathRef.toResolvedPathString(Task.dest / "cs" / (cli.launcherSubPath / os.up))}${File.pathSeparator}$pathBaseValue"
+      )
+    }
+    def forkArgs = Task {
+      val launcherDir = PathRef.toResolvedPathString(cli.standaloneJvmLauncherDir().path)
+      val launcher =
+        PathRef.toResolvedPathString(cli.standaloneJvmLauncherDir().path / cli.launcherSubPath)
+      super.forkArgs() ++ sharedTestArgs ++ Seq(
+        s"-Dcoursier-test-launcher=$launcher",
+        s"-Dcoursier-test-assembly=$launcher",
+        "-Dcoursier-test-launcher-accepts-D=false",
+        "-Dcoursier-test-launcher-accepts-J=false",
+        "-Dcoursier-test-is-native=false",
+        "-Dcoursier-test-is-native-static=false",
+        "-Dcoursier-test-is-standalone=true",
+        s"-Dcoursier-test-launcher-dir=$launcherDir",
+        s"-Dcoursier-test-launcher-sub-path=${cli.launcherSubPath}",
+        s"-Dcoursier.test.auth-proxy-data-dir=${PathRef.toResolvedPathString(BuildCtx.workspaceRoot / "project/authenticated-proxy")}",
+        s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Deps.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-image=${coursierbuild.Deps.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-java-image=${coursierbuild.Deps.Docker.alpineJavaImage}"
+      )
     }
   }
   object `native-tests` extends NativeTests {
@@ -988,9 +1220,6 @@ trait CliTests extends CsModule
   object `native-static-tests` extends NativeTests {
     def cliLauncher = cli.`static-image`.nativeImage
     def isStatic    = true
-  }
-  object `native-mostly-static-tests` extends NativeTests {
-    def cliLauncher = cli.`mostly-static-image`.nativeImage
   }
   object `native-container-tests` extends NativeTests {
     def cliLauncher = cli.containerImage
@@ -1039,6 +1268,20 @@ trait TestCacheJvm extends Cross.Module[String] with CsCrossJvmJsModule {
   def moduleDeps = Seq(
     cache.jvm()
   )
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    Deps.osLib,
+    Deps.utest
+  )
+  def scalacOptions = Task {
+    CsScalaTests.removeReleaseOption(super.scalacOptions())
+  }
+  def httpServerClassPath = Task {
+    defaultResolver().classpath(
+      Seq(mvn"io.get-coursier:http-server_2.12:1.0.0"),
+      // Clear forced Scala version in particular
+      resolutionParamsMapOpt = Some(_ => _root_.coursier.params.ResolutionParams())
+    )
+  }
 }
 trait TestCacheJs extends Cross.Module[String] with CsCrossJvmJsModule with CsScalaJsModule {
   def scalaVersion = crossValue
@@ -1104,15 +1347,6 @@ def copyStaticLauncher(directory: String = "artifacts") = Task.Command {
   )
 }
 
-def copyMostlyStaticLauncher(directory: String = "artifacts") = Task.Command {
-  val nativeLauncher = cli.`mostly-static-image`.nativeImage().path
-  GitHubReleaseAssets.copyLauncher(
-    nativeLauncher,
-    os.Path(directory, BuildCtx.workspaceRoot),
-    suffix = "-mostly-static"
-  )
-}
-
 def copyContainerLauncher(directory: String = "artifacts") = Task.Command {
   val nativeLauncher = cli.containerImage().path
   GitHubReleaseAssets.copyLauncher(
@@ -1122,9 +1356,22 @@ def copyContainerLauncher(directory: String = "artifacts") = Task.Command {
   )
 }
 
+def copyStandaloneJvmLauncher(directory: String = "artifacts") = Task.Command {
+  val nativeLauncher = cli.standaloneJvmLauncherArchive().path
+  GitHubReleaseAssets.copyLauncher(
+    nativeLauncher,
+    os.Path(directory, BuildCtx.workspaceRoot),
+    suffix = "-jvm"
+  )
+}
+
 def uploadLaunchers(directory: String = "artifacts") = Task.Command {
   val version = cli.publishVersion()
   GitHubReleaseAssets.uploadLaunchers(version, os.Path(directory, BuildCtx.workspaceRoot))
+}
+
+def uploadNightlyLaunchers(directory: String = "artifacts") = Task.Command {
+  GitHubReleaseAssets.uploadNightlyLaunchers(os.Path(directory, BuildCtx.workspaceRoot))
 }
 
 def uploadLaunchersSpecialRepo(directory: String = "artifacts") = Task.Command {
@@ -1137,14 +1384,17 @@ def uploadLaunchersSpecialRepo(directory: String = "artifacts") = Task.Command {
 
 def bootstrapLauncher(
   version: String = CoursierPublishModule.buildVersion,
-  dest: String = s"coursier$platformBootstrapExtension"
+  dest: String = s"coursier$platformBootstrapExtension",
+  bat: Boolean = false
 ) = Task.Command {
   cli.run(Task.Anon {
-    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
+    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "central:maven-snapshots") else Nil
+    val batArgs   = if (bat) Seq("--bat") else Nil
     Args(Seq(
       "bootstrap",
       "-o",
-      dest,
+      dest
+    ) ++ batArgs ++ Seq(
       "-f",
       s"$mavenOrg::coursier-cli:$version",
       "--scala",
@@ -1159,7 +1409,7 @@ def assemblyLauncher(
   dest: String = "coursier.jar"
 ) = Task.Command {
   cli.run(Task.Anon {
-    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
+    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "central:maven-snapshots") else Nil
     Args(
       Seq(
         "bootstrap",
@@ -1182,7 +1432,7 @@ def waitForSync(
 ) =
   Task.Command {
     val launcher  = cli.launcher().path
-    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "sonatype:snapshots") else Nil
+    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "central:maven-snapshots") else Nil
     Sync.waitForSync(
       launcher.toString,
       s"${cli.pomSettings().organization}:${cli.artifactId()}:$version",
@@ -1207,6 +1457,30 @@ def copyJarLaunchers(
   os.copy(assembly, dir / "coursier.jar", createFolders = true, replaceExisting = true)
 }
 
+def copyBatLauncher(
+  version: String = CoursierPublishModule.buildVersion,
+  directory: String = "artifacts"
+) = Task.Command {
+  val bootstrap: os.Path = bootstrapLauncher(version = version, dest = "coursier.bat", bat = true)()
+  val dir                = os.Path(directory, BuildCtx.workspaceRoot)
+  os.copy(bootstrap, dir / "coursier.bat", createFolders = true, replaceExisting = true)
+}
+
+def updateCsShVersion(
+  version: String = CoursierPublishModule.buildVersion,
+  dryRun: Boolean = false
+) = Task.Command[Unit] {
+  val tokenOpt = Option(System.getenv("GH_TOKEN"))
+  if (!dryRun && tokenOpt.isEmpty)
+    sys.error("GH_TOKEN not set")
+  CsSh.updateVersion(
+    newVersion = version,
+    ghTokenOpt = tokenOpt,
+    dryRun = dryRun,
+    cloneUnder = Task.dest / "repo"
+  )
+}
+
 private val docScalaVersion = ScalaVersions.scala213
 object `doc-deps` extends ScalaModule {
   def scalaVersion = docScalaVersion
@@ -1226,7 +1500,7 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command 
 
   val rootDir0 =
     if (rootDir.isEmpty) BuildCtx.workspaceRoot else os.Path(rootDir, BuildCtx.workspaceRoot)
-  val docusaurusDir       = rootDir0 / "doc" / "website"
+  val docusaurusDir       = rootDir0 / "doc/website"
   val versionedDocsRepo   = "coursier/versioned-docs"
   val versionedDocsBranch = "master"
 
@@ -1261,7 +1535,7 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command 
   // copyDemoFiles()
 
   val newSiteDir = docs.mkdocsBuild()().path
-  os.copy(newSiteDir, docusaurusDir / "build" / "coursier" / "upcoming")
+  os.copy(newSiteDir, docusaurusDir / "build/coursier/upcoming")
 
   DocHelpers.updateGhPages(
     docusaurusDir / "build",
@@ -1385,16 +1659,65 @@ def nativeCompatTests() = Task.Command[Unit] {
   `cli-tests`.`native-compat-tests`.testForked()()
 }
 
+// Tests the compat launcher under QEMU with a Nehalem-class CPU (SSE4.2/POPCNT,
+// no AVX/BMI) to verify the binary actually runs on low-power x86-64 hardware
+// such as Intel Jasper Lake / Celeron N4xxx / Pentium Silver.
+// Requires: curl, tar (both available on ubuntu-latest CI runners).
+def qemuCompatTests() = Task.Command[Unit] {
+
+  import _root_.coursier.cache.ArchiveCache
+  import _root_.coursier.util.Artifact
+
+  val launcher = cli.compatNativeImage().path
+
+  val archiveCache = ArchiveCache()
+  val qemuDir = archiveCache
+    .get(Artifact(
+      s"https://github.com/coursier/qemu/releases/download/v$csQemuVersion/qemu-linux-amd64.tar.gz!"
+    ))
+    .unsafeRun(true)(using archiveCache.cache.ec)
+    .fold(err => throw err, os.Path(_))
+
+  val qemuBin = os.walk(qemuDir)
+    .find(_.last == "qemu-x86_64")
+    .getOrElse(sys.error("qemu-x86_64 not found in downloaded archive"))
+
+  // just in case
+  os.proc("chmod", "+x", qemuBin).call()
+
+  // Run the compat launcher under QEMU emulating a Nehalem CPU.
+  // Nehalem supports SSE4.2 and POPCNT (x86-64-v2) but NOT AVX/LZCNT/BMI
+  // (x86-64-v3).  A binary built with -march=native on an AVX2 host would
+  // fail here with "does not support all of the following CPU features".
+  System.err.println(
+    s"Testing compat launcher at $launcher with QEMU launcher $qemuBin (Nehalem CPU – no AVX)…"
+  )
+  val output = os.proc(qemuBin, "-cpu", "Nehalem", launcher, "version").call().out.trim()
+  pprint.err.log(output)
+  val expectedOutput = cli.publishVersion()
+  assert(output == expectedOutput, s"Expected output '$expectedOutput'")
+  System.err.println("QEMU compat test passed: launcher works on Nehalem CPU (no AVX)")
+}
+
 def nativeStaticTests() = Task.Command[Unit] {
   `cli-tests`.`native-static-tests`.testForked()()
 }
 
-def nativeMostlyStaticTests() = Task.Command[Unit] {
-  `cli-tests`.`native-mostly-static-tests`.testForked()()
-}
-
 def nativeContainerTests() = Task.Command[Unit] {
   `cli-tests`.`native-container-tests`.testForked()()
+}
+
+def standaloneJvmTests() = Task.Command[Unit] {
+  `cli-tests`.`standalone-jvm-tests`.testForked()()
+}
+
+def csShTests(version: String = "") = Task.Command[Unit] {
+  CsSh.test(
+    BuildCtx.workspaceRoot / "cs.sh",
+    fetchModule = s"org.scala-lang:scala-library:${ScalaVersions.scala213}",
+    workDir = Task.dest / "work",
+    versionOverride = Some(version).filter(_.nonEmpty)
+  )
 }
 
 def cliNativeImageLauncher() = Task.Command {
@@ -1403,75 +1726,98 @@ def cliNativeImageLauncher() = Task.Command {
 
 object ci extends Module {
   def copyJvm(jvm: String = coursierbuild.Deps.graalVmJvmId, dest: String = "jvm") = Task.Command {
-    import sys.process._
-    val cs = if (Properties.isWin) "cs.exe" else "cs"
-    val command = Seq(
-      cs,
-      "java-home",
-      "--jvm",
-      jvm,
-      "--update",
-      "--ttl",
-      "0"
-    )
-    val baseJavaHome = os.Path(command.!!.trim, BuildCtx.workspaceRoot)
+    import _root_.coursier.cache.{ArchiveCache, FileCache}
+    import _root_.coursier.jvm.{JavaHome, JvmCache}
+    val fileCache = FileCache().withTtl(Duration.Zero)
+    val jvmCache = JvmCache()
+      .withArchiveCache(ArchiveCache().withCache(fileCache))
+      .withDefaultIndex
+    val javaHome     = JavaHome().withCache(jvmCache).withUpdate(true)
+    val baseJavaHome = os.Path(javaHome.get(jvm).unsafeRun()(using fileCache.ec).getAbsolutePath)
     System.err.println(s"Initial Java home $baseJavaHome")
     val destJavaHome = os.Path(dest, BuildCtx.workspaceRoot)
     os.copy(baseJavaHome, destJavaHome, createFolders = true)
     System.err.println(s"New Java home $destJavaHome")
     destJavaHome
   }
-}
 
-object buildWorkers extends Module {
-
-  def testRepoServer = Task.Worker {
-    val server = new Workers.TestRepoServer
-
-    if (server.healthCheck())
-      sys.error("Test repo server already running")
-
-    server.proc = os.proc(
-      "cs",
-      "launch",
-      "io.get-coursier:http-server_2.12:1.0.0",
-      "--",
-      "-d",
-      "modules/tests/handmade-metadata/data/http/abc.com",
-      "-u",
-      server.user,
-      "-P",
-      server.password,
-      "-r",
-      "realm",
-      "-v",
-      "--host",
-      server.host,
-      "--port",
-      server.port.toString
-    ).spawn(
-      cwd = BuildCtx.workspaceRoot,
-      stdin = os.Pipe,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
-    server.proc.stdin.close()
-    var serverRunning = false
-    var countDown     = 20
-    while (!serverRunning && server.proc.isAlive() && countDown > 0) {
-      serverRunning = server.healthCheck()
-      if (!serverRunning)
-        Thread.sleep(500L)
-      countDown -= 1
+  /** Checks that all published modules are either all snapshots, or all releases.
+    *
+    * The coursier modules are versioned from the `v*` tags, the interface ones from the
+    * `interface-v*` tags, so cutting a release requires both kinds of tags on the same commit.
+    */
+  def checkPublishVersions() = Task.Command[Unit] {
+    val versions            = allPublishVersions()
+    val (snapshots, others) = versions.partition(_._2.endsWith("-SNAPSHOT"))
+    if (snapshots.nonEmpty && others.nonEmpty) {
+      for ((name, version) <- versions.sortBy(_._1))
+        System.err.println(s"$name: $version")
+      Task.fail(
+        s"Found ${snapshots.length} snapshot and ${others.length} non-snapshot publish " +
+          "versions, expected either all snapshots or all releases (releases need both a " +
+          "'v*' and an 'interface-v*' tag on the same commit)"
+      )
     }
-    if (serverRunning && server.proc.isAlive()) {
-      System.err.println(s"Test repository listening on ${server.url}")
-      server
-    }
-    else
-      sys.error("Cannot run test repo server")
   }
 
+  /** The Scala versions the build uses, as JSON
+    *
+    * Printed by `./mill show ci.scalaVersions`, and read by the CI to fill its job matrices, so
+    * that Scala versions don't have to be hard-coded in the GitHub Actions workflow.
+    */
+  def scalaVersions() = Task.Command[ujson.Value] {
+    ujson.Obj(
+      "scala-versions" -> ujson.Arr.from(ScalaVersions.all),
+      "scala213"       -> ScalaVersions.scala213,
+      "scala212"       -> ScalaVersions.scala212
+    )
+  }
+
+  def noEmptyDiscoveredTestClasses(tasks: Tasks[Seq[String]]) = Task.Command[Unit] {
+    assert(tasks.value.nonEmpty)
+    val results       = tasks.value.zip(Task.sequence(tasks.value)())
+    val noTestClasses = results.filter(_._2.isEmpty)
+    if (noTestClasses.nonEmpty) {
+      for ((task, _) <- noTestClasses)
+        System.err.println(s"$task is empty")
+      Task.fail("Found test modules with no test classes")
+    }
+  }
+}
+
+lazy val allPublishVersions: Task[Seq[(String, String)]] =
+  Task.traverse(moduleInternal.modules.collect { case m: PublishModule => m }) { m =>
+    Task.Anon((m.moduleSegments.render, m.publishVersion()))
+  }
+
+lazy val allPublishJars: Task[Seq[(PathRef, String)]] =
+  Task.traverse(moduleInternal.modules.collect { case m: PublishModule => m }) { m =>
+    val jvmRel = m match {
+      case cjm: CoursierJavaModule => cjm.jvmRelease
+      case _                       => CoursierJavaModule.defaultJvmRelease
+    }
+    Task.Anon((m.jar(), jvmRel))
+  }
+
+object `class-file-version-check` extends Module {
+  object test extends CsScalaTests {
+    def scalaVersion = ScalaVersions.scala213
+    def mvnDeps      = super.mvnDeps() ++ Seq(Deps.asm)
+    def forkArgs = Task {
+      val jars = allPublishJars()
+        .map {
+          case (ref, jvmRel) =>
+            val path = PathRef.toResolvedPathString(ref.path)
+            if (jvmRel == CoursierJavaModule.defaultJvmRelease) path
+            else s"$path($jvmRel)"
+        }
+        .mkString(java.io.File.pathSeparator)
+      super.forkArgs() ++ Seq(
+        s"-Dcoursier.class-file-version-check.jars=$jars",
+        s"-Dcoursier.class-file-version-check.max-jvm=${CoursierJavaModule.defaultJvmRelease}"
+      )
+    }
+  }
 }
 
 object `build-util` extends Module {
@@ -1504,13 +1850,13 @@ object docs extends ScalaModule {
   def mdocArgs = Task.Anon {
     Args(
       "--in",
-      mdocInput().path,
+      PathRef.toResolvedPathString(mdocInput().path),
       "--out",
-      mdocOutput().path,
+      PathRef.toResolvedPathString(mdocOutput().path),
       "--site.VERSION",
       coursier.jvm(sv).publishVersion(),
       "--classpath",
-      runClasspath().map(_.path).mkString(File.pathSeparator)
+      runClasspath().map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
     )
   }
   def mdocWatchArgs = Task.Anon {
@@ -1529,10 +1875,10 @@ object docs extends ScalaModule {
   def mkdocsConfigArgs = Task {
     val mkdocsConfigFile0 = mkdocsConfigFile().map(_.path)
     assert(mkdocsConfigFile0.length == 1)
-    Seq("--config-file", mkdocsConfigFile0.head.toString)
+    Seq("--config-file", PathRef.toResolvedPathString(mkdocsConfigFile0.head))
   }
   def mkdocsSiteDirArgs = Task {
-    Seq("--site-dir", mkdocsOutput().path.toString)
+    Seq("--site-dir", PathRef.toResolvedPathString(mkdocsOutput().path))
   }
   def mkdocsWatchScript: T[PathRef] = Task {
     mdoc()()
@@ -1617,4 +1963,407 @@ object docs extends ScalaModule {
 
     ()
   }
+}
+
+trait CacheServer extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
+  def artifactName = "coursier-cache-server"
+  def moduleDeps = super.moduleDeps ++ Seq(
+    cache.jvm()
+  )
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    Deps.osLib,
+    Deps.undertow
+  )
+  def compileMvnDeps = super.compileMvnDeps() ++ Seq(
+    Deps.jsoniterMacros
+  )
+
+  def mimaPreviousVersions = Task {
+    import _root_.coursier.version.Version
+    val cutOff = Version("2.1.25")
+    super.mimaPreviousVersions()
+      .map(Version(_))
+      .filter(_ >= cutOff)
+      .map(_.repr)
+  }
+  // Remove once 2.1.25 is out
+  def mimaPreviousArtifacts = Task {
+    val versions     = mimaPreviousVersions()
+    val organization = pomSettings().organization
+    val artifactId0  = artifactId()
+    versions.map(version => mvn"$organization:$artifactId0:$version")
+  }
+}
+
+// The modules below come from https://github.com/coursier/interface. Compared to the build
+// of that repository, the coursier dependencies of these modules are module dependencies
+// here, rather than dependencies on published coursier artifacts.
+//
+// Their versioning scheme (1.0.x) is unrelated to the tags of this repository: it is driven
+// by the `interface-v*` tags, see `InterfaceVersion`. `ci.checkPublishVersions` ensures a
+// release can only be cut with an `interface-v*` and a `v*` tag on the same commit.
+
+object interface extends Interface
+
+object `interface-proguarded` extends InterfaceProguarded
+
+object `interface-test` extends Cross[InterfaceTest](ScalaVersions.all)
+
+/** The interface modules are versioned from the `interface-v*` tags, not the `v*` ones */
+trait InterfacePublishModule extends CoursierPublishModule {
+  def publishVersion = Task.Input(InterfaceVersion.computeBuildVersion())
+}
+
+/** Input of the proguarding and shading of `interface-proguarded`, not published itself */
+trait Interface extends SbtModule with CsModule {
+  // The interface is a Java API, only used from Java or from any Scala version via the shaded
+  // JAR of `interface-proguarded`. Building it for a single Scala version is enough.
+  private def sv   = ScalaVersions.scala213
+  def scalaVersion = sv
+  // only used to name the JARs, this module isn't published
+  def artifactName = "interface-no-shading"
+  def moduleDeps = super.moduleDeps ++ Seq(
+    coursier.jvm(sv),
+    jvm(sv)
+  )
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    Deps.jniUtilsCoursierApi,
+    Deps.slf4jApi // no need to shade that one…
+  )
+  // coursier-jvm pulls JNA via coursier-exec. JNA embeds native libraries, which cannot be
+  // shaded, and nothing here calls the coursier-exec API. Mill refers to the modules of this
+  // build with the (hardcoded here) mill-internal:$moduleName:0+mill-internal coordinates.
+  def depManagement = super.depManagement() ++ Seq(
+    mvn"mill-internal:exec:0+mill-internal".exclude("net.java.dev.jna" -> "jna")
+  )
+  object test extends SbtTests with CsTests
+}
+
+trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
+  // no cross-version suffix: this module has no Scala code left after proguarding and shading
+  def artifactName = "interface"
+  def mvnDeps = Seq(
+    Deps.slf4jApi
+  )
+
+  def proguardedJar = Task {
+    // Resolved dest, so that the paths we hand to proguard below don't have to go through
+    // mill's forwarder symlinks, that only live as long as the current mill run
+    val destDir    = PathRef.toResolvedOsPath(Task.dest)
+    val dest       = destDir / "interface.jar"
+    val configFile = destDir / "config.pro"
+    val proguardOptions = {
+      val baseOptions = Seq(
+        "-dontnote",
+        "-dontwarn",
+        "-dontobfuscate",
+        "-dontoptimize",
+        "-keep class coursierapi.** {\n  public protected *;\n}"
+      )
+      val maybeJava9Options =
+        if (sys.props.get("java.version").exists(!_.startsWith("1."))) {
+          val javaHome = os.Path(sys.props.getOrElse("java.home", sys.error("java.home not set")))
+          Seq(
+            s"-libraryjars ${PathRef.toResolvedPathString(javaHome / "jmods/java.base.jmod")}",
+            s"-libraryjars ${PathRef.toResolvedPathString(javaHome / "jmods/java.xml.jmod")}"
+          )
+        }
+        else
+          Nil
+      val classPathOptions = interface
+        .runClasspath()
+        .map(_.path)
+        .filter(os.exists)
+        .flatMap { path =>
+          val name      = path.last
+          val isLibrary = name.startsWith("slf4j-api-") && name.endsWith(".jar")
+          if (isLibrary)
+            Seq("-libraryjars", PathRef.toResolvedPathString(path))
+          else {
+            val filterOpt =
+              if (os.isDir(path))
+                // classes / resources directories of the modules of this build
+                Some("!META-INF/**,!coursier.properties,!coursier/coursier.properties")
+              else
+                name match {
+                  case n if n.startsWith("windows-jni-utils") => Some("!META-INF/MANIFEST.MF")
+                  case n if n.startsWith("scala-xml") => Some("!META-INF/**,!scala-xml.properties")
+                  case n if n.startsWith("scala-library") =>
+                    Some("!META-INF/**,!library.properties,!rootdoc.txt")
+                  case n if n.startsWith("tika-core") =>
+                    Some("!META-INF/**,!pipes-fork-server-default-log4j2.xml")
+                  case _ => Some("!META-INF/**")
+                }
+            Seq(
+              "-injars",
+              PathRef.toResolvedPathString(path) + filterOpt.fold("")("(" + _ + ")")
+            )
+          }
+        }
+      val outputOptions = Seq("-outjars", PathRef.toResolvedPathString(dest))
+      baseOptions ++ maybeJava9Options ++ classPathOptions ++ outputOptions
+    }
+    os.write(configFile, proguardOptions.map(_ + System.lineSeparator()).mkString)
+    // mill.util.Jvm, not the coursier-jvm module trait defined above
+    mill.util.Jvm.callProcess(
+      mainClass = "proguard.ProGuard",
+      mainArgs = Seq("-include", PathRef.toResolvedPathString(configFile)),
+      classPath = proguard.runClasspath().map(_.path),
+      jvmArgs = Seq("-Xmx3172M"),
+      stdin = os.Inherit,
+      stdout = os.Inherit,
+      stderr = os.Inherit
+    )
+    PathRef(dest)
+  }
+
+  def proguardedAndShadedJar = Task {
+    import com.eed3si9n.jarjar.{JJProcessor, Rule}
+    import com.eed3si9n.jarjar.util.StandaloneJarProcessor
+    val input = proguardedJar().path
+    def rename(from: String, to: String): Rule = {
+      val rule = new Rule
+      rule.setPattern(from)
+      rule.setResult(to)
+      rule
+    }
+    // JarJar remaps string constants that look like class names. That would rename the
+    // coursier system properties below too, which we'd rather keep as is, so that users can
+    // set them the same way, whether they use coursier directly or via coursier-interface.
+    // Identity rules, put before the more general coursier.** rule (the first matching rule
+    // wins), keep those strings untouched.
+    val identityRules = CoursierProperties.list.map(prop => rename(prop, prop))
+    val rules = identityRules ++ Seq(
+      rename("scala.**", "coursierapi.shaded.scala.@1"),
+      rename("coursier.**", "coursierapi.shaded.coursier.@1"),
+      rename("dependency.**", "coursierapi.shaded.dependency.@1"),
+      rename("org.fusesource.**", "coursierapi.shaded.org.fusesource.@1"),
+      rename("io.github.alexarchambault.windowsansi.**", "coursierapi.shaded.windowsansi.@1"),
+      rename("concurrentrefhashmap.**", "coursierapi.shaded.concurrentrefhashmap.@1"),
+      rename("org.apache.commons.codec.**", "coursierapi.shaded.commonscodec.@1"),
+      rename("org.apache.commons.compress.**", "coursierapi.shaded.commonscompress.@1"),
+      rename("org.apache.commons.io.**", "coursierapi.shaded.commonsio.@1"),
+      rename("org.codehaus.plexus.**", "coursierapi.shaded.plexus.@1"),
+      rename("org.tukaani.xz.**", "coursierapi.shaded.xz.@1"),
+      rename("org.iq80.snappy.**", "coursierapi.shaded.snappy.@1"),
+      rename("com.github.plokhotnyuk.jsoniter_scala.core.**", "coursierapi.shaded.jsoniter.@1"),
+      rename("com.github.luben.zstd.**", "coursierapi.shaded.zstd.@1"),
+      rename("io.airlift.compress.**", "coursierapi.shaded.compress.@1"),
+      rename("io.github.alexarchambault.isterminal.**", "coursierapi.shaded.isterminal.@1"),
+      rename("org.apache.commons.lang3.**", "coursierapi.shaded.lang3.@1"),
+      rename("org.apache.tika.**", "coursierapi.shaded.tika.@1"),
+      // Those are shaded in the JARs published by this repository, but not in the class
+      // directories we get from the modules of this build, that we proguard here.
+      rename("dev.dirs.**", "coursierapi.shaded.dirs.@1"),
+      rename("fastparse.**", "coursierapi.shaded.fastparse.@1"),
+      rename("geny.**", "coursierapi.shaded.geny.@1"),
+      rename("org.jsoup.**", "coursierapi.shaded.jsoup.@1"),
+      rename("sourcecode.**", "coursierapi.shaded.sourcecode.@1"),
+      rename("pprint.**", "coursierapi.shaded.pprint.@1")
+    )
+    val processor = new JJProcessor(
+      rules,
+      verbose = false,
+      skipManifest = true,
+      misplacedClassStrategy = "fatal"
+    )
+    val dest = Task.dest / "interface.jar"
+    StandaloneJarProcessor.run(input.toIO, dest.toIO, processor)
+    PathRef(dest)
+  }
+
+  def cleanedUpJar = Task {
+    val input            = proguardedAndShadedJar().path
+    val intermediaryDest = Task.dest / "intermediary.jar"
+    val dest             = Task.dest / "interface.jar"
+    val toBeRemoved = Set(
+      "LICENSE",
+      "NOTICE",
+      "README"
+    )
+    val directoriesToBeRemoved = Seq(
+      "licenses/"
+    )
+    assert(directoriesToBeRemoved.forall(_.endsWith("/")))
+    ZipUtil.removeFromZip(
+      input,
+      intermediaryDest,
+      name =>
+        toBeRemoved(name) || directoriesToBeRemoved.exists(dir => name.startsWith(dir))
+    )
+    val serviceName = "META-INF/services/coursier.jniutils.NativeApi"
+    val serviceContent = ZipUtil.zipEntryContent(proguardedJar().path, serviceName).getOrElse {
+      sys.error(s"$serviceName not found in ${proguardedJar().path}")
+    }
+    ZipUtil.addOrOverwriteInZip(
+      intermediaryDest,
+      dest,
+      Seq(
+        "META-INF/services/coursierapi.shaded.coursier.jniutils.NativeApi" -> serviceContent
+      )
+    )
+    PathRef(dest)
+  }
+
+  def jar = Task {
+    val jar0 = cleanedUpJar()
+    Check.onlyNamespace("coursierapi", jar0.path.toIO)
+    Check.noShadedProperties(jar0.path.toIO)
+    jar0
+  }
+
+  def sourceJar = interface.sourceJar()
+
+  object mima extends JavaModule with InterfaceMima {
+    // The interface JAR embeds shaded copies of coursier and its dependencies. Only the
+    // `coursierapi` API surface is checked, `InterfaceMima` strips the rest on both sides.
+    def mimaCurrentArtifact = Task {
+      val dest = Task.dest / "interface.jar"
+      InterfaceMima.stripNonApiClasses(InterfaceProguarded.this.jar().path, dest)
+      PathRef(dest)
+    }
+    def mimaPreviousVersions = Seq("1.0.29-M4")
+    // `mima` isn't a PublishModule itself, so the previous artifacts can't be derived from it
+    def mimaPreviousArtifacts = Task {
+      val organization = InterfaceProguarded.this.pomSettings().organization
+      val artifactId0  = InterfaceProguarded.this.artifactId()
+      mimaPreviousVersions().map(version => mvn"$organization:$artifactId0:$version")
+    }
+  }
+}
+
+/** Depends on the shaded and proguarded interface JAR, like downstream users do */
+trait DependsOnInterfaceProguarded extends JavaModule {
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    mvn"$mavenOrg:interface:${`interface-proguarded`.publishVersion()}"
+  )
+  def repositories = super.repositories() ++ Seq(
+    // This value is cached, so it has to be a real absolute path. `os.Path.toNIO` can hand back
+    // the relative `../mill-workspace/…` alias, that only resolves from the sandbox of the mill
+    // run that computed it, and that mill wipes when it exits. `toResolvedPathString` follows
+    // the forwarder symlinks and never routes through `os.Path`, unlike `toResolvedOsPath`.
+    java.nio.file.Paths
+      .get(PathRef.toResolvedPathString(`interface-proguarded`.publishLocalTestRepo().path))
+      .toUri
+      .toASCIIString
+  )
+}
+
+trait InterfaceTest extends CrossSbtModule with CsModule with DependsOnInterfaceProguarded {
+  object test extends CrossSbtTests with TestModule.Junit4 {
+    def junit4Version = Versions.junit
+    // SystemPropertyTests starts JVMs of its own, and needs our class path for that
+    def forkArgs = Task {
+      val classPath = runClasspath()
+        .map(ref => PathRef.toResolvedPathString(ref.path))
+        .mkString(File.pathSeparator)
+      super.forkArgs() ++ Seq(s"-Dcoursier-interface.test-classpath=$classPath")
+    }
+  }
+}
+
+def interfaceTests(scalaVersion: String = defaultScalaVersion) = {
+
+  def crossTests(sv: String) =
+    `interface-test`.valuesToModules.get(List(sv)).map(_.test.testForked()).toSeq
+
+  val scalaVersions =
+    if (scalaVersion == "*") ScalaVersions.all
+    else Seq(scalaVersion)
+
+  // `interface` is built with Scala 2.13 only, its tests are run whatever `scalaVersion` is
+  val tasks = interface.test.testForked() +: scalaVersions.flatMap(crossTests)
+
+  Task.Command {
+    Task.sequence(tasks.map(_.map(_ => ())))()
+
+    ()
+  }
+}
+
+/** Checks that the published interface JAR only depends on slf4j-api */
+def testInterfacePublishedDeps() = Task.Command {
+
+  import _root_.coursier.{Repositories, Resolve}
+  import _root_.coursier.core.{
+    Dependency => CsDependency,
+    Module => CsModule0,
+    ModuleName,
+    Organization,
+    Repository => CsRepository
+  }
+  import _root_.coursier.ivy.{IvyRepository => CsIvyRepository}
+  import _root_.coursier.maven.{MavenRepository => CsMavenRepository}
+  import _root_.coursier.version.VersionConstraint
+  import mill.javalib.publish.{LocalIvyPublisher, LocalM2Publisher}
+
+  val version      = `interface-proguarded`.publishVersion()
+  val organization = `interface-proguarded`.pomSettings().organization
+  val artifactId0  = `interface-proguarded`.artifactId()
+
+  val allowed = Set(
+    s"$organization:$artifactId0:$version",
+    s"${Deps.slf4jApi.organization}:${Deps.slf4jApi.name}:${Deps.slf4jApi.version}"
+  )
+
+  def checkResolution(name: String, repositories: Seq[CsRepository]): Unit = {
+    val interfaceDependency = CsDependency(
+      CsModule0(Organization(organization), ModuleName(artifactId0), Map.empty),
+      VersionConstraint(version)
+    )
+    val resolve = Resolve()
+      .withRepositories(repositories)
+      .addDependencies(interfaceDependency)
+    val resolution = resolve.io.unsafeRun(true)(using resolve.cache.ec)
+    val modules = resolution.dependenciesWithRetainedVersions.map { dep =>
+      val mod = dep.module
+      s"${mod.organization.value}:${mod.name.value}:${dep.versionConstraint.asString}"
+    }
+    val unexpected = modules -- allowed
+    if (unexpected.nonEmpty)
+      sys.error(
+        s"Unexpected dependencies from $name publication:${System.lineSeparator()}" +
+          unexpected.toSeq.sorted.mkString(System.lineSeparator())
+      )
+  }
+
+  val publishInfos = `interface-proguarded`.defaultPublishInfos(sources = true, docs = false)()
+  val metadata     = `interface-proguarded`.artifactMetadata()
+  val pom          = `interface-proguarded`.pom().path
+
+  def checkIvy(baseDir: os.Path): Unit = {
+    val ivyRepo = baseDir / "ivy"
+    os.makeDir.all(ivyRepo)
+
+    val ivy = `interface-proguarded`.ivy().path
+    new LocalIvyPublisher(ivyRepo).publishLocal(pom, Right(ivy), metadata, publishInfos)
+
+    val ivyBase = ivyRepo.toNIO.toUri.toASCIIString.stripSuffix("/")
+    val ivyRepository =
+      CsIvyRepository
+        .parse(
+          s"$ivyBase/[organisation]/[module]/[revision]/[type]s/[artifact](-[classifier]).[ext]"
+        )
+        .left.map(error => sys.error(s"Invalid Ivy repository pattern: $error"))
+        .merge
+    checkResolution("publishLocal", Seq(ivyRepository, Repositories.central))
+  }
+
+  def checkM2(baseDir: os.Path): Unit = {
+    val m2Repo = baseDir / "m2"
+    os.makeDir.all(m2Repo)
+
+    new LocalM2Publisher(m2Repo).publish(pom, metadata, publishInfos)
+
+    val m2Base = m2Repo.toNIO.toUri.toASCIIString
+    checkResolution("publishM2Local", Seq(CsMavenRepository(m2Base), Repositories.central))
+  }
+
+  val tmp = os.temp.dir(prefix = "coursier-interface-published-deps-")
+  try {
+    checkIvy(tmp)
+    checkM2(tmp)
+  }
+  finally
+    os.remove.all(tmp)
 }

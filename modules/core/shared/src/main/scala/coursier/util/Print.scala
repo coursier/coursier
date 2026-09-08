@@ -22,7 +22,7 @@ object Print {
     def get(colors: Boolean): Colors = if (colors) `with` else `without`
   }
 
-  @data class Colors private (red: String, yellow: String, reset: String)
+  @data case class Colors private (red: String, yellow: String, reset: String)
 
   def dependency(dep: Dependency): String =
     dependency(dep, printExclusions = false)
@@ -74,8 +74,8 @@ object Print {
     val deps0 =
       if (useFinalVersions)
         deps.map { dep =>
-          dep.withVersionConstraint(
-            projects
+          dep.copy(
+            versionConstraint = projects
               .get(dep.moduleVersionConstraint)
               .fold(dep.versionConstraint)(proj => VersionConstraint.fromVersion(proj.version0))
           )
@@ -88,7 +88,7 @@ object Print {
         deps0
           .groupBy { dep =>
             dep
-              .withVariantSelector(VariantSelector.emptyConfiguration)
+              .copy(variantSelector = VariantSelector.emptyConfiguration)
               .withAttributes(Attributes.empty)
           }
           .toVector
@@ -112,7 +112,7 @@ object Print {
                 if (configurations.isEmpty) Nil
                 else {
                   val conf = Configuration.join(configurations.toVector.sorted.distinct: _*)
-                  Seq(k.withVariantSelector(VariantSelector.ConfigurationBased(conf)))
+                  Seq(k.copy(variantSelector = VariantSelector.ConfigurationBased(conf)))
                 }
               updatedConfDep ++ others
           }
@@ -183,7 +183,8 @@ object Print {
     printExclusions: Boolean = false,
     reverse: Boolean = false,
     colors: Boolean = true,
-    renderModuleVersion: (Module, String) => String = (mod, ver) => s"${mod.repr}:$ver"
+    renderModuleVersion: (Module, String) => String = (mod, ver) => s"${mod.repr}:$ver",
+    reverseDeduplicateNodes: Boolean = false
   ): String = {
 
     val colors0 = Colors.get(colors)
@@ -211,7 +212,7 @@ object Print {
           depTree.module != tree.module || depTree.dependees.nonEmpty
         }
       }
-      tree0.render { node =>
+      tree0.customRender0(deduplicateNodes = reverseDeduplicateNodes) { node =>
         if (node.excludedDependsOn)
           s"${colors0.yellow}(excluded by)${colors0.reset} ${renderModuleVersion(node.module, node.retainedVersion0.asString)}"
         else if (
@@ -232,7 +233,7 @@ object Print {
     else {
       val roots0 = Option(roots).getOrElse(resolution.rootDependencies)
       val t      = DependencyTree(resolution, roots0, withExclusions = printExclusions)
-      Tree(t.toVector)(_.children)
+      Tree(t.toVector)(_.children.filterNot(_.endorsed))
         .render { t =>
           render(
             t.dependency.module,

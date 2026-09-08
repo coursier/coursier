@@ -28,7 +28,6 @@ org.jboss.xnio:xnio-nio:3.6.5.Final:default
 org.scalameta:interactive_2.12.7:4.0.0:default
 org.scalameta:mtags_2.12:0.2.0:default
 com.lihaoyi:sourcecode_2.12:0.1.5:default
-org.slf4j:slf4j-api:1.8.0-beta2:default
 org.typelevel:cats-macros_2.12:1.1.0:default
 org.typelevel:cats-kernel_2.12:1.1.0:default
 org.typelevel:machinist_2.12:0.6.2:default
@@ -59,7 +58,6 @@ org.scala-lang:scala-reflect:2.12.7:default
 net.java.dev.jna:jna:4.2.2:default
 com.lihaoyi:os-lib_2.12:0.2.6:default
 com.lihaoyi:upickle_2.12:0.7.1:default
-com.lihaoyi:pprint_2.12:0.5.3:default
 com.lihaoyi:fansi_2.12:0.2.5:default
 io.get-coursier:coursier_2.12:1.1.0-M7:default
 io.get-coursier:coursier-cache_2.12:1.1.0-M7:default

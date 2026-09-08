@@ -48,16 +48,20 @@ object Run extends CaseApp[RunOptions] {
     }
     val aboutTests = new AboutTests {
       val launcher       = options.launcher
-      val assembly       = options.assembly
+      val assembly       = os.Path(options.assembly, os.pwd)
       def isNative       = false
       def isNativeStatic = false
+      def isStandalone   = false
 
       def acceptsDOptions = true
       def acceptsJOptions = true
     }
     val bootstrapTests = new BootstrapTests {
-      val launcher = options.launcher
-      val assembly = options.assembly
+      val launcher        = options.launcher
+      val assembly        = os.Path(options.assembly, os.pwd)
+      val launcherDir     = os.Path(options.assembly, os.pwd)
+      val launcherSubPath = os.sub
+      def isStandalone    = false
 
       def acceptsDOptions = true
       def acceptsJOptions = true

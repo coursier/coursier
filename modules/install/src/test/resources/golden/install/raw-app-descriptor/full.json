@@ -1,0 +1,50 @@
+{
+  "properties": {
+    "alpha": "a",
+    "beta": "b"
+  },
+  "graalvm": {
+    "options": [
+      "--no-fallback",
+      "--initialize-at-build-time=coursier.echo"
+    ]
+  },
+  "name": "echo",
+  "scalaVersion": "2.13.18",
+  "javaOptions": [
+    "-Xmx256m",
+    "-Dfoo=bar"
+  ],
+  "mainClass": "coursier.echo.Echo",
+  "artifactTypes": [
+    "jar",
+    "bundle"
+  ],
+  "classifiers": [
+    "sources",
+    "javadoc"
+  ],
+  "launcherType": "bootstrap",
+  "exclusions": [
+    "org.slf4j:slf4j-log4j12"
+  ],
+  "shared": [
+    "org.scala-lang:scala-library"
+  ],
+  "repositories": [
+    "central",
+    "https://repo1.maven.org/maven2"
+  ],
+  "dependencies": [
+    "io.get-coursier:echo:1.0.2",
+    "org.scala-lang:scala-library:2.13.18"
+  ],
+  "prebuilt": "https://example.com/echo",
+  "jvmOptionFile": ".echo.jvmopts",
+  "prebuiltBinaries": {
+    "linux-x86_64": "https://example.com/echo-linux-x86_64"
+  },
+  "jna": [
+    "com.sun.jna:jna:5.17.0"
+  ]
+}

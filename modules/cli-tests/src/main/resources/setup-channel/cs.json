@@ -1,0 +1,55 @@
+{
+  "repositories": [
+    "central",
+    "typesafe:ivy-releases"
+  ],
+  "launcherType": "graalvm-native-image",
+  "dependencies": [
+    "io.get-coursier::coursier-cli:latest.release"
+  ],
+  "name": "cs",
+  "prebuiltBinaries": {
+    "x86_64-pc-linux": "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-linux.gz",
+    "aarch64-pc-linux": "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-aarch64-pc-linux.gz",
+    "x86_64-apple-darwin": "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-apple-darwin.gz",
+    "aarch64-apple-darwin": "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-aarch64-apple-darwin.gz",
+    "x86_64-pc-win32": "zip+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-win32.zip"
+  },
+  "versionOverrides": [
+    {
+      "versionRange": "(2.1.15, 2.1.25-M2]",
+      "prebuiltBinaries": {
+        "x86_64-pc-linux": "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-linux.gz",
+        "aarch64-pc-linux": "gz+https://github.com/VirtusLab/coursier-m1/releases/download/v${version}/cs-aarch64-pc-linux.gz",
+        "x86_64-apple-darwin": "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-apple-darwin.gz",
+        "aarch64-apple-darwin": "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-aarch64-apple-darwin.gz",
+        "x86_64-pc-win32": "zip+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-win32.zip"
+      }
+    },
+    {
+      "versionRange": "(2.1.0-RC4, 2.1.15]",
+      "prebuiltBinaries": {
+        "x86_64-pc-linux": "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-linux.gz",
+        "aarch64-pc-linux": "gz+https://github.com/VirtusLab/coursier-m1/releases/download/v${version}/cs-aarch64-pc-linux.gz",
+        "x86_64-apple-darwin": "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-apple-darwin.gz",
+        "aarch64-apple-darwin": "gz+https://github.com/VirtusLab/coursier-m1/releases/download/v${version}/cs-aarch64-apple-darwin.gz",
+        "x86_64-pc-win32": "zip+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-win32.zip"
+      }
+    },
+    {
+      "versionRange": "(2.0.16, 2.1.0-RC4]",
+      "prebuiltBinaries": {
+        "x86_64-pc-linux": "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-linux.gz",
+        "aarch64-pc-linux": "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-aarch64-pc-linux.gz",
+        "x86_64-apple-darwin": "gz+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-apple-darwin.gz",
+        "aarch64-apple-darwin": "gz+https://github.com/VirtusLab/coursier-m1/releases/download/v${version}/cs-aarch64-apple-darwin.gz",
+        "x86_64-pc-win32": "zip+https://github.com/coursier/coursier/releases/download/v${version}/cs-x86_64-pc-win32.zip"
+      }
+    },
+    {
+      "versionRange": "(,2.0.16]",
+      "prebuiltBinaries": {},
+      "prebuilt": "https://github.com/coursier/coursier/releases/download/v${version}/cs-${platform}"
+    }
+  ]
+}

@@ -1,8 +1,11 @@
 package coursier.install
 
-import argonaut._
+import dataclass.{data, since => unroll}
+
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
+import com.github.plokhotnyuk.jsoniter_scala.core._
+import com.github.plokhotnyuk.jsoniter_scala.macros._
 import coursier.core.{
   Classifier,
   Configuration,
@@ -20,11 +23,9 @@ import coursier.parse.{
   JavaOrScalaDependency
 }
 import coursier.version.{VersionInterval, VersionParse}
-import dataclass._
-
 import scala.language.implicitConversions
 
-@data class RawAppDescriptor(
+@data case class RawAppDescriptor(
   dependencies: List[String],
   repositories: List[String] = Nil,
   shared: List[String] = Nil,
@@ -38,15 +39,15 @@ import scala.language.implicitConversions
   scalaVersion: Option[String] = None,
   name: Option[String] = None,
   graalvm: Option[RawAppDescriptor.RawGraalvmOptions] = None,
-  @since
+  @unroll
   prebuilt: Option[String] = None,
-  @since
+  @unroll
   jvmOptionFile: Option[String] = None,
-  @since("2.0.1")
+  @unroll
   prebuiltBinaries: Map[String, String] = Map.empty,
-  @since("2.0.4")
+  @unroll
   jna: List[String] = Nil,
-  @since("2.1.0")
+  @unroll
   versionOverrides: List[RawAppDescriptor.RawVersionOverride] = Nil
 ) {
   def isEmpty: Boolean =
@@ -133,37 +134,43 @@ import scala.language.implicitConversions
         versionOverrides
       ) =>
         AppDescriptor()
-          .withRepositories(repositories)
-          .withDependencies {
-            dependencies.map { dep =>
-              dep.withUnderlyingDependency { dep0 =>
-                dep0.withMinimizedExclusions(
-                  dep0.minimizedExclusions.join(MinimizedExclusions(exclusions.toSet))
-                )
-              }
-            }
-          }
-          .withSharedDependencies(sharedDependencies)
-          .withLauncherType(launcherType)
-          .withClassifiers(classifiers0)
-          .withMainArtifacts(mainArtifacts)
-          .withArtifactTypes(artifactTypes0)
-          .withMainClass(mainClassOpt)
-          .withDefaultMainClass(defaultMainClassOpt)
-          .withJavaOptions(javaOptions)
-          .withJavaProperties(properties.props.sorted)
-          .withScalaVersionOpt(scalaVersion)
-          .withNameOpt(name)
-          .withGraalvmOptions(graalvm.map(_.graalvmOptions))
-          .withPrebuiltLauncher(prebuilt)
-          .withJvmOptionFile(jvmOptionFile)
-          .withPrebuiltBinaries(prebuiltBinaries)
-          .withJna(jna)
-          .withVersionOverrides(versionOverrides)
+          .copy(
+            repositories = repositories,
+            dependencies =
+              dependencies.map { dep =>
+                dep.withUnderlyingDependency { dep0 =>
+                  dep0.copy(
+                    minimizedExclusions =
+                      dep0.minimizedExclusions.join(MinimizedExclusions(exclusions.toSet))
+                  )
+                }
+              },
+            sharedDependencies = sharedDependencies,
+            launcherType = launcherType,
+            classifiers = classifiers0,
+            mainArtifacts = mainArtifacts,
+            artifactTypes = artifactTypes0,
+            mainClass = mainClassOpt,
+            defaultMainClass = defaultMainClassOpt,
+            javaOptions = javaOptions,
+            javaProperties = properties.props.sorted,
+            scalaVersionOpt = scalaVersion,
+            nameOpt = name,
+            graalvmOptions = graalvm.map(_.graalvmOptions),
+            prebuiltLauncher = prebuilt,
+            jvmOptionFile = jvmOptionFile,
+            prebuiltBinaries = prebuiltBinaries,
+            jna = jna,
+            versionOverrides = versionOverrides
+          )
     }
   }
   def repr: String =
-    RawAppDescriptor.encoder.encode(this).nospaces
+    Codecs.write(this)(RawAppDescriptor.codec)
+
+  /** Same as [[repr]], with an indented / more human-readable output */
+  def prettyRepr: String =
+    Codecs.writeIndented(this)(RawAppDescriptor.codec)
 
   def overrideVersion(ver: String, useVersionOverrides: Boolean): RawAppDescriptor = {
     val base =
@@ -184,10 +191,12 @@ import scala.language.implicitConversions
           }
           .find(_ => true)
         versionOverrideOpt.fold(this) { versionOverride =>
-          withDependencies(versionOverride.dependencies.getOrElse(dependencies))
-            .withRepositories(versionOverride.repositories.getOrElse(repositories))
-            .withMainClass(versionOverride.mainClass.orElse(mainClass))
-            .withProperties(versionOverride.properties.getOrElse(properties))
+          copy(
+            dependencies = versionOverride.dependencies.getOrElse(dependencies),
+            repositories = versionOverride.repositories.getOrElse(repositories),
+            mainClass = versionOverride.mainClass.orElse(mainClass),
+            properties = versionOverride.properties.getOrElse(properties)
+          )
         }
       }
       else this
@@ -196,21 +205,22 @@ import scala.language.implicitConversions
 
   // version substitution possibly a bit flaky…
   def overrideVersion(ver: String): RawAppDescriptor =
-    withDependencies {
-      if (dependencies.isEmpty)
-        dependencies
-      else {
-        val dep = {
-          val dep0 = dependencies.head
-          val idx  = dep0.lastIndexOf(':')
-          if (idx < 0)
-            dep0 // ???
-          else
-            dep0.take(idx + 1) + ver
+    copy(
+      dependencies =
+        if (dependencies.isEmpty)
+          dependencies
+        else {
+          val dep = {
+            val dep0 = dependencies.head
+            val idx  = dep0.lastIndexOf(':')
+            if (idx < 0)
+              dep0 // ???
+            else
+              dep0.take(idx + 1) + ver
+          }
+          dep +: dependencies.tail
         }
-        dep +: dependencies.tail
-      }
-    }
+    )
 
   def overrideVersion(verOpt: Option[String]): RawAppDescriptor =
     verOpt.fold(this)(overrideVersion(_))
@@ -226,29 +236,38 @@ object RawAppDescriptor {
   object Properties {
     implicit def fromSeq(s: Seq[(String, String)]): Properties =
       Properties(s)
-    implicit val encoder: EncodeJson[Properties] =
-      EncodeJson { props =>
-        Json.obj(props.props.map { case (k, v) => k -> Json.jString(v) }: _*)
-      }
-    implicit val decoder: DecodeJson[Properties] =
-      DecodeJson { c =>
-        c.focus.obj match {
-          case None => DecodeResult.fail("Expected JSON object", c.history)
-          case Some(obj) =>
-            obj
-              .toList
-              .foldLeft(DecodeResult.ok(List.empty[(String, String)])) {
-                case (acc, (k, v)) =>
-                  for (a <- acc; s <- v.as[String]) yield (k -> s) :: a
-              }
-              .map(l => Properties(l.reverse))
+    implicit val codec: JsonValueCodec[Properties] =
+      new JsonValueCodec[Properties] {
+        def decodeValue(in: JsonReader, default: Properties): Properties =
+          if (in.isNextToken('{')) {
+            val b = List.newBuilder[(String, String)]
+            if (!in.isNextToken('}')) {
+              in.rollbackToken()
+              while ({
+                b += in.readKeyAsString() -> in.readString(null)
+                in.isNextToken(',')
+              }) ()
+              if (!in.isCurrentToken('}'))
+                in.objectEndOrCommaError()
+            }
+            Properties(b.result())
+          }
+          else
+            in.decodeError("expected JSON object")
+        def encodeValue(x: Properties, out: JsonWriter): Unit = {
+          out.writeObjectStart()
+          for ((k, v) <- x.props) {
+            out.writeKey(k)
+            out.writeVal(v)
+          }
+          out.writeObjectEnd()
         }
+        def nullValue: Properties =
+          null.asInstanceOf[Properties]
       }
   }
 
-  import argonaut.ArgonautShapeless._
-
-  @data class RawGraalvmOptions(
+  @data case class RawGraalvmOptions(
     options: List[String] = Nil,
     version: Option[String] = None
   ) {
@@ -261,36 +280,42 @@ object RawAppDescriptor {
 
   object RawGraalvmOptions {
 
-    import Codecs.{decodeObj, encodeObj}
-
     private final case class RawGraalvmOptionsJson(
       options: List[String] = Nil
     ) {
       def get: RawGraalvmOptions =
         RawGraalvmOptions()
-          .withOptions(options)
+          .copy(options = options)
     }
 
     private def optionsJson(opt: RawGraalvmOptions): RawGraalvmOptionsJson =
       RawGraalvmOptionsJson(opt.options)
 
-    implicit val encoder: EncodeJson[RawGraalvmOptions] =
-      EncodeJson.of[RawGraalvmOptionsJson].contramap(optionsJson)
-    implicit val decoder: DecodeJson[RawGraalvmOptions] =
-      DecodeJson.of[RawGraalvmOptionsJson].map(_.get)
+    private val jsonCodec: JsonValueCodec[RawGraalvmOptionsJson] =
+      JsonCodecMaker.make
+
+    implicit val codec: JsonValueCodec[RawGraalvmOptions] =
+      new JsonValueCodec[RawGraalvmOptions] {
+        def decodeValue(in: JsonReader, default: RawGraalvmOptions): RawGraalvmOptions =
+          jsonCodec.decodeValue(in, jsonCodec.nullValue).get
+        def encodeValue(x: RawGraalvmOptions, out: JsonWriter): Unit =
+          jsonCodec.encodeValue(optionsJson(x), out)
+        def nullValue: RawGraalvmOptions =
+          null
+      }
 
   }
 
-  @data class RawVersionOverride(
+  @data case class RawVersionOverride(
     versionRange: String,
     dependencies: Option[List[String]] = None,
     repositories: Option[List[String]] = None,
     mainClass: Option[String] = None,
     properties: Option[RawAppDescriptor.Properties] = None,
-    @since("2.1.0-M4")
+    @unroll
     prebuilt: Option[String] = None,
     prebuiltBinaries: Option[Map[String, String]] = None,
-    @since("2.1.10")
+    @unroll
     launcherType: Option[String] = None
   ) {
     def versionOverride: ValidatedNel[String, VersionOverride] = {
@@ -312,16 +337,77 @@ object RawAppDescriptor {
       (versionRangeV, repositoriesV, dependenciesV, launcherTypeV).mapN {
         (versionRange, repositories, dependencies, launcherType) =>
           VersionOverride(versionRange)
-            .withDependencies(dependencies)
-            .withRepositories(repositories)
-            .withMainClass(mainClassOpt)
-            .withDefaultMainClass(defaultMainClassOpt)
-            .withJavaProperties(properties.map(_.props.sorted))
-            .withPrebuiltLauncher(prebuilt)
-            .withPrebuiltBinaries(prebuiltBinaries)
-            .withLauncherType(launcherType)
+            .copy(
+              dependencies = dependencies,
+              repositories = repositories,
+              mainClass = mainClassOpt,
+              defaultMainClass = defaultMainClassOpt,
+              javaProperties = properties.map(_.props.sorted),
+              prebuiltLauncher = prebuilt,
+              prebuiltBinaries = prebuiltBinaries,
+              launcherType = launcherType
+            )
       }
     }
+  }
+
+  object RawVersionOverride {
+
+    private final case class RawVersionOverrideJson(
+      versionRange: String,
+      dependencies: Option[List[String]] = None,
+      repositories: Option[List[String]] = None,
+      mainClass: Option[String] = None,
+      properties: Option[Properties] = None,
+      prebuilt: Option[String] = None,
+      prebuiltBinaries: Option[Map[String, String]] = None,
+      launcherType: Option[String] = None
+    ) {
+      def get: RawVersionOverride =
+        RawVersionOverride(versionRange)
+          .copy(
+            dependencies = dependencies,
+            repositories = repositories,
+            mainClass = mainClass,
+            properties = properties,
+            prebuilt = prebuilt,
+            prebuiltBinaries = prebuiltBinaries,
+            launcherType = launcherType
+          )
+    }
+
+    private def overrideJson(o: RawVersionOverride): RawVersionOverrideJson =
+      RawVersionOverrideJson(
+        versionRange = o.versionRange,
+        dependencies = o.dependencies,
+        repositories = o.repositories,
+        mainClass = o.mainClass,
+        properties = o.properties,
+        prebuilt = o.prebuilt,
+        prebuiltBinaries = o.prebuiltBinaries,
+        launcherType = o.launcherType
+      )
+
+    // all fields are always written out, absent ones as null, like the former
+    // argonaut-shapeless-derived codec used to do
+    private val jsonCodec: JsonValueCodec[RawVersionOverrideJson] =
+      JsonCodecMaker.make(
+        CodecMakerConfig
+          .withTransientDefault(false)
+          .withTransientEmpty(false)
+          .withTransientNone(false)
+      )
+
+    implicit val codec: JsonValueCodec[RawVersionOverride] =
+      new JsonValueCodec[RawVersionOverride] {
+        def decodeValue(in: JsonReader, default: RawVersionOverride): RawVersionOverride =
+          jsonCodec.decodeValue(in, jsonCodec.nullValue).get
+        def encodeValue(x: RawVersionOverride, out: JsonWriter): Unit =
+          jsonCodec.encodeValue(overrideJson(x), out)
+        def nullValue: RawVersionOverride =
+          null
+      }
+
   }
 
   /* Left is mainClass and Right is defaultMainClass */
@@ -382,31 +468,36 @@ object RawAppDescriptor {
     graalvm: Option[RawAppDescriptor.RawGraalvmOptions] = None,
     prebuilt: Option[String] = None,
     jvmOptionFile: Option[String] = None,
-    prebuiltBinaries: Map[String, String] = Map.empty,
+    // no default value on purpose: with one, the Scala 3 macros of jsoniter-scala 2.13.5 encode
+    // this map as an array of pairs rather than as a JSON object (missing map fields are decoded
+    // as an empty map either way)
+    prebuiltBinaries: Map[String, String],
     jna: List[String] = Nil,
     versionOverrides: List[RawVersionOverride] = Nil
   ) {
     def get: RawAppDescriptor = {
       var d = RawAppDescriptor(dependencies)
-        .withRepositories(repositories)
-        .withShared(shared)
-        .withExclusions(exclusions)
-        .withClassifiers(classifiers)
-        .withArtifactTypes(artifactTypes)
-        .withMainClass(mainClass)
-        .withJavaOptions(javaOptions)
-        .withScalaVersion(scalaVersion)
-        .withName(name)
-        .withGraalvm(graalvm)
-        .withPrebuilt(prebuilt)
-        .withJvmOptionFile(jvmOptionFile)
-        .withPrebuiltBinaries(prebuiltBinaries)
-        .withJna(jna)
-        .withVersionOverrides(versionOverrides)
+        .copy(
+          repositories = repositories,
+          shared = shared,
+          exclusions = exclusions,
+          classifiers = classifiers,
+          artifactTypes = artifactTypes,
+          mainClass = mainClass,
+          javaOptions = javaOptions,
+          scalaVersion = scalaVersion,
+          name = name,
+          graalvm = graalvm,
+          prebuilt = prebuilt,
+          jvmOptionFile = jvmOptionFile,
+          prebuiltBinaries = prebuiltBinaries,
+          jna = jna,
+          versionOverrides = versionOverrides
+        )
       for (t <- launcherType)
-        d = d.withLauncherType(t)
+        d = d.copy(launcherType = t)
       for (p <- properties)
-        d = d.withProperties(p)
+        d = d.copy(properties = p)
       d
     }
   }
@@ -433,12 +524,20 @@ object RawAppDescriptor {
       versionOverrides = desc.versionOverrides
     )
 
-  implicit val encoder: EncodeJson[RawAppDescriptor] =
-    EncodeJson.of[RawAppDescriptorJson].contramap(descriptorJson)
-  implicit val decoder: DecodeJson[RawAppDescriptor] =
-    DecodeJson.of[RawAppDescriptorJson].map(_.get)
+  private val jsonCodec: JsonValueCodec[RawAppDescriptorJson] =
+    JsonCodecMaker.make
+
+  implicit val codec: JsonValueCodec[RawAppDescriptor] =
+    new JsonValueCodec[RawAppDescriptor] {
+      def decodeValue(in: JsonReader, default: RawAppDescriptor): RawAppDescriptor =
+        jsonCodec.decodeValue(in, jsonCodec.nullValue).get
+      def encodeValue(x: RawAppDescriptor, out: JsonWriter): Unit =
+        jsonCodec.encodeValue(descriptorJson(x), out)
+      def nullValue: RawAppDescriptor =
+        null
+    }
 
   def parse(input: String): Either[String, RawAppDescriptor] =
-    Parse.decodeEither(input)(decoder)
+    Codecs.read(input)(codec)
 
 }

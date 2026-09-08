@@ -41,7 +41,35 @@
     "name":"com.jcraft.jsch.bc.SNTRUP761"
   },
   {
+    "name":"com.jcraft.jsch.jce.AES128CBC",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
     "name":"com.jcraft.jsch.jce.AES128CTR",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.AES128GCM",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.AES192CBC",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.AES192CTR",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.AES256CBC",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.AES256CTR",
+    "methods":[{"name":"<init>","parameterTypes":[] }]
+  },
+  {
+    "name":"com.jcraft.jsch.jce.AES256GCM",
     "methods":[{"name":"<init>","parameterTypes":[] }]
   },
   {

@@ -9,13 +9,13 @@ import coursier.cli.options.{OptionGroup, OutputOptions}
   "Those channels are stored in coursier configuration files.\n" +
   "\n" +
   "Examples:\n" +
-  "$ cs channel --add io.get-coursier:apps-contrib\n" +
+  "$ cs channel --add https://raw.githubusercontent.com/coursier/apps/main/listings/apps-contrib.json\n" +
   "$ cs channel --list\n"
 )
 final case class ChannelOptions(
   @Group(OptionGroup.channel)
   @ExtraName("a")
-  @HelpMessage("adds given URL based channels")
+  @HelpMessage("adds given channels (URL, org:name, or local directory)")
     add: List[String] = Nil,
   @Group(OptionGroup.channel)
   @ExtraName("l")

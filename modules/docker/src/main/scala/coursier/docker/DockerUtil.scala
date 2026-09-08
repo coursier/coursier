@@ -2,26 +2,35 @@ package coursier.docker
 
 import com.github.plokhotnyuk.jsoniter_scala.core.{JsonValueCodec, readFromArray}
 import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
-import coursier.cache.{Cache, CacheLogger}
-import coursier.cache.internal.FileUtil
-import coursier.util.{Artifact, Task}
+import coursier.cache.CacheDefaults
+import coursier.cache.internal.{FileUtil, Retry}
 
-import java.io.File
+import java.io.IOException
 import java.net.URL
 
-import scala.concurrent.Await
-import scala.concurrent.duration.Duration
+import scala.concurrent.duration.DurationInt
 
 object DockerUtil {
+
+  private def tokenRetry =
+    Retry(
+      CacheDefaults.retryCount,
+      1.second,
+      CacheDefaults.retryBackoffMultiplier
+    )
 
   def token(
     authRegistry: String,
     repoName: String
   ): String = {
     // FIXME repo escaping!!!!
-    val url  = s"$authRegistry?service=registry.docker.io&scope=repository:$repoName:pull"
-    val conn = new URL(url).openConnection()
-    val b    = FileUtil.readFully(conn.getInputStream())
+    val url = s"$authRegistry?service=registry.docker.io&scope=repository:$repoName:pull"
+    val b = tokenRetry.retry {
+      val conn = new URL(url).openConnection()
+      FileUtil.readFully(conn.getInputStream())
+    } {
+      case _: IOException =>
+    }
     readFromArray(b)(tokenResponseCodec).token
   }
 

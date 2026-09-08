@@ -7,6 +7,7 @@ import coursier.credentials.Credentials
 import coursier.paths.CachePath
 import coursier.util.Sync
 
+import scala.cli.config.Secret
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.util.Try
 
@@ -22,6 +23,19 @@ object CacheDefaults {
     CachePath.defaultPriviledgedArchiveCacheDirectory()
 
   lazy val digestBasedCacheLocation: File = CachePath.defaultDigestBasedCacheDirectory()
+
+  lazy val cacheServerAddress: Option[String] =
+    CacheEnv.defaultServerAddress(CacheEnv.server.read())
+  lazy val cacheServerBasicAuth: Option[Secret[String]] = {
+    val userValues     = CacheEnv.serverUser.read()
+    val passwordValues = CacheEnv.serverPassword.read()
+    val userOpt        = userValues.prop.orElse(userValues.env)
+    val passwordOpt    = passwordValues.prop.orElse(passwordValues.env)
+    if (userOpt.isEmpty && passwordOpt.isEmpty)
+      None
+    else
+      Some(Secret((userOpt.toSeq ++ passwordOpt.toSeq).mkString(":")))
+  }
 
   @deprecated(
     "Legacy cache location support was dropped, this method does nothing.",
@@ -39,7 +53,8 @@ object CacheDefaults {
         defaultConcurrentDownloadCount
       )
 
-  lazy val pool = Sync.fixedThreadPool(concurrentDownloadCount)
+  lazy val pool         = Sync.fixedThreadPool(concurrentDownloadCount)
+  lazy val watchLenPool = Sync.fixedThreadPool(concurrentDownloadCount)
 
   def parseDuration(s: String): Either[Throwable, Duration] =
     CacheEnv.parseDuration(s)
@@ -53,6 +68,8 @@ object CacheDefaults {
   def defaultRetryCount                       = 5
   private def defaultRetryBackoffInitialDelay = 10.milliseconds
   private def defaultRetryBackoffMultiplier   = 2.0
+  private def defaultRetryBackoffMaxDelay     = 20.seconds
+  private def defaultRetryPollMaxDelay        = 200.milliseconds
 
   lazy val retryCount =
     sys.props
@@ -76,6 +93,35 @@ object CacheDefaults {
       .flatMap(s => scala.util.Try(s.toDouble).toOption)
       .filter(_ > 0)
       .getOrElse(defaultRetryBackoffMultiplier)
+
+  /** Ceiling on the backoff delay between attempts that failed */
+  lazy val retryBackoffMaxDelay: Option[FiniteDuration] =
+    maxDelay("coursier.exception-retry-backoff-max-delay", defaultRetryBackoffMaxDelay)
+
+  /** Ceiling on the delay between attempts that have no answer yet
+    *
+    * These are not failures to back off from: they are a download another thread of this JVM
+    * already has in flight, which we only need to poll for. Backing off exponentially there means
+    * sleeping through the moment it lands, for as long again as the download itself took.
+    */
+  lazy val retryPollMaxDelay: Option[FiniteDuration] =
+    maxDelay("coursier.retry-poll-max-delay", defaultRetryPollMaxDelay)
+
+  private def maxDelay(prop: String, default: FiniteDuration): Option[FiniteDuration] =
+    sys.props
+      .get(prop)
+      .flatMap(s => parseDuration(s).toOption)
+      .getOrElse(default) match {
+      case f: FiniteDuration if f > Duration.Zero => Some(f)
+      // both Duration.Zero and infinite durations mean "don't cap the delay"
+      case _ => None
+    }
+
+  lazy val connectTimeout: Option[FiniteDuration] =
+    CacheEnv.defaultConnectTimeout(CacheEnv.connectTimeout.read())
+
+  lazy val readTimeout: Option[FiniteDuration] =
+    CacheEnv.defaultReadTimeout(CacheEnv.readTimeout.read())
 
   @deprecated("Use retryCount instead", "2.1.11")
   lazy val sslRetryCount =

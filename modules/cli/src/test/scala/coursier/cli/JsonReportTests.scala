@@ -13,8 +13,11 @@ import coursier.core.{
   ModuleName,
   Organization,
   Resolution,
-  Type
+  Type,
+  VariantSelector
 }
+import coursier.core.VariantSelector.VariantMatcher
+import coursier.maven.MavenRepositoryLike
 import coursier.parse.{DependencyParser, ModuleParser}
 import coursier.testcache.TestCache
 import coursier.tests.TestHelpers
@@ -85,7 +88,8 @@ object JsonReportTests extends TestSuite {
   def doCheck(
     fetch: Fetch[Task],
     dependencies: Seq[Dependency],
-    extraKeyPart: String = ""
+    extraKeyPart: String = "",
+    attributesBasedReprAsToString: Boolean = false
   ): Future[Unit] =
     for {
       res <- fetch
@@ -94,10 +98,16 @@ object JsonReportTests extends TestSuite {
       _ <- TestHelpers.validateDependencies(
         res.resolution,
         fetch.resolutionParams,
-        extraKeyPart = extraKeyPart
+        extraKeyPart = extraKeyPart,
+        attributesBasedReprAsToString = attributesBasedReprAsToString
       )
       _ <- TestHelpers.validateResult(
-        s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(res.resolution, fetch.resolutionParams, extraKeyPart = extraKeyPart)}.json"
+        s"${TestHelpers.testDataDir}/reports/${TestHelpers.pathFor(
+            res.resolution,
+            fetch.resolutionParams,
+            extraKeyPart = extraKeyPart,
+            attributesBasedReprAsToString = attributesBasedReprAsToString
+          )}.json"
       ) {
         jsonLines {
           JsonReport.report(
@@ -111,6 +121,14 @@ object JsonReportTests extends TestSuite {
 
   def check(dependencies: Dependency*): Future[Unit] =
     doCheck(fetch, dependencies)
+
+  def enableModules(fetch: Fetch[Task]): Fetch[Task] =
+    fetch.withRepositories {
+      fetch.repositories.map {
+        case m: MavenRepositoryLike.WithModuleSupport => m.withCheckModule(true)
+        case other                                    => other
+      }
+    }
 
   val tests = Tests {
     test("android") {
@@ -135,6 +153,23 @@ object JsonReportTests extends TestSuite {
       test("material3") {
         androidCheck(dep"androidx.compose.material3:material3:1.0.1")
       }
+    }
+
+    test("endorseStrictVersions") {
+      val gradleFetch = enableModules(fetch.addRepositories(Repositories.google))
+        .mapResolutionParams(
+          _.withDefaultVariantAttributes(
+            VariantSelector.AttributesBased(Map(
+              "org.jetbrains.kotlin.platform.type" -> VariantMatcher.Equals("jvm")
+            ))
+          )
+        )
+      doCheck(
+        gradleFetch,
+        Seq(dep"androidx.test.ext:junit:1.2.1"),
+        extraKeyPart = "_gradlemod",
+        attributesBasedReprAsToString = true
+      )
     }
 
     test("spring") {

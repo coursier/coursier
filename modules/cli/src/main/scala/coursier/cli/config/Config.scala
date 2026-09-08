@@ -94,7 +94,7 @@ object Config extends Command[ConfigOptions] {
                               System.err.println(err)
                               sys.exit(1)
                             case Right(passwordOption) =>
-                              val password = passwordOption.getBytes()
+                              val password = passwordOption.getBytes
                               System.out.write(password.value)
                           }
                         else

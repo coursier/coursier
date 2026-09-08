@@ -1,30 +1,25 @@
 package coursierbuild.modules
 
-import java.io.File
-import com.github.lolgab.mill.mima.Mima
-import coursierbuild.Deps.{Deps, ScalaVersions}
-
 import mill.*
 import mill.api.*
 import mill.scalalib.*
-import mill.scalajslib.*
-
-import java.util.Locale
-
-import scala.util.Properties
 
 trait CsResourcesTests extends TestModule {
   def testDataDir: T[PathRef]
+  def testHandmadeMetadataDir: T[PathRef]
+  def testMetadataDir: T[PathRef]
+  private def dirUri(dir: PathRef): String =
+    PathRef.toAbsNioPath(PathRef.toResolvedOsPath(dir.path)).toUri.toASCIIString
   def forkEnv = super.forkEnv() ++ Seq(
     "COURSIER_TEST_DATA_DIR" ->
-      testDataDir().path.toString,
+      PathRef.toResolvedPathString(testDataDir().path),
     "COURSIER_TESTS_METADATA_DIR" ->
-      (BuildCtx.workspaceRoot / "modules" / "tests" / "metadata").toString,
+      PathRef.toResolvedPathString(testMetadataDir().path),
     "COURSIER_TESTS_HANDMADE_METADATA_DIR" ->
-      (BuildCtx.workspaceRoot / "modules" / "tests" / "handmade-metadata" / "data").toString,
+      PathRef.toResolvedPathString(testHandmadeMetadataDir().path),
     "COURSIER_TESTS_METADATA_DIR_URI" ->
-      (BuildCtx.workspaceRoot / "modules" / "tests" / "metadata").toNIO.toUri.toASCIIString,
+      dirUri(testMetadataDir()),
     "COURSIER_TESTS_HANDMADE_METADATA_DIR_URI" ->
-      (BuildCtx.workspaceRoot / "modules" / "tests" / "handmade-metadata" / "data").toNIO.toUri.toASCIIString
+      dirUri(testHandmadeMetadataDir())
   )
 }

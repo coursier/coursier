@@ -19,7 +19,7 @@ object InstallDirTests extends TestSuite {
 
       val mainClass = "main.class"
       val params = InstallDir().params(
-        AppDescriptor().withLauncherType(LauncherType.GraalvmNativeImage),
+        AppDescriptor().copy(launcherType = LauncherType.GraalvmNativeImage),
         AppArtifacts(),
         Nil,
         mainClass
@@ -66,7 +66,7 @@ object InstallDirTests extends TestSuite {
         createApp(tempDir, ".dot-app-should-be-ignored")
         createApp(tempDir, "app1")
 
-        val installedApps = new InstallDir(tempDir, FileCache()).list()
+        val installedApps = InstallDir(tempDir).list()
         assert(installedApps == Seq("app1"))
       }
       finally

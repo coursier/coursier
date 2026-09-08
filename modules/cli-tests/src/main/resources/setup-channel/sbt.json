@@ -1,0 +1,17 @@
+{
+  "repositories": [
+    "central"
+  ],
+  "dependencies": [
+    "org.scala-sbt:sbt-launch:latest.stable",
+    "io.get-coursier.sbt:sbt-runner:latest.stable"
+  ],
+  "properties": {
+    "jline.shutdownhook": "false",
+    "jna.nosys": "true"
+  },
+  "javaOptions": ["-Xms512m", "-Xss2m"],
+  "jvmOptionFile": ".jvmopts",
+  "launcherType": "graalvm-native-image",
+  "prebuilt": "zip+https://github.com/sbt/sbt/releases/download/v${version}/sbt-${version}.zip!sbt/bin/sbt"
+}

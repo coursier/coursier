@@ -3,16 +3,14 @@ package coursier.util
 import coursier.core.Authentication
 import dataclass.data
 
-@data class Artifact(
+@data(cachedHashCode = true) case class Artifact(
   url: String,
   checksumUrls: Map[String, String] = Map.empty,
   extra: Map[String, Artifact] = Map.empty,
   changing: Boolean = false,
   optional: Boolean = false,
   authentication: Option[Authentication] = None
-) {
-  final override lazy val hashCode = tuple.hashCode()
-}
+)
 
 object Artifact {
 
@@ -23,6 +21,6 @@ object Artifact {
       else if (url.endsWith("?changing=true")) (url.stripSuffix("?changing=true"), true)
       else if (url.endsWith("?changing=false")) (url.stripSuffix("?changing=false"), false)
       else (url, false)
-    Artifact(url).withChanging(changing)
+    Artifact(url).copy(changing = changing)
   }
 }

@@ -1,15 +1,15 @@
 package coursier.tests
 
-import coursier.cache.FileCache
+import coursier.cache.Cache
 import coursier.core.{Organization, Module, ModuleName}
 import coursier.Versions
-import utest.{TestSuite, Tests, assert, test}
+import utest.{TestSuite, Tests, test}
 
 import scala.async.Async.{async, await}
 import scala.concurrent.ExecutionContextExecutorService
 
 object VersionTests extends TestSuite {
-  implicit val ec: ExecutionContextExecutorService = FileCache().ec
+  implicit val ec: ExecutionContextExecutorService = Cache.default.ec
   val tests: Tests = Tests {
     test {
       async {

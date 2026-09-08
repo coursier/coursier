@@ -78,7 +78,8 @@ object Output {
               .toSeq,
             printExclusions = withExclusions,
             reverse = true,
-            colors = colors
+            colors = colors,
+            reverseDeduplicateNodes = params.deduplicateTree
           )
         }
         else if (params.reverseTree || params.tree)
@@ -86,7 +87,8 @@ object Output {
             res,
             printExclusions = withExclusions,
             reverse = params.reverseTree,
-            colors = colors
+            colors = colors,
+            reverseDeduplicateNodes = params.deduplicateTree
           )
         else if (params.conflicts) {
           val conflicts = Conflict(res)

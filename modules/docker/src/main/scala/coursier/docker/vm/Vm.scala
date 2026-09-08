@@ -17,7 +17,7 @@ import com.jcraft.jsch.Logger
 import com.jcraft.jsch.Channel
 import com.jcraft.jsch.ChannelExec
 import com.jcraft.jsch.ChannelShell
-import com.jcraft.jsch.Session
+import scala.util.control.NonFatal
 import coursier.cache.DigestBasedCache
 import coursier.cache.FileCache
 import coursier.paths.CoursierPaths
@@ -26,6 +26,8 @@ import com.github.plokhotnyuk.jsoniter_scala.macros.JsonCodecMaker
 import java.io.InputStream
 import coursier.cache.util.Cpu
 import coursier.docker.vm.iso.Image
+import scala.annotation.tailrec
+import coursier.cache.Cache
 
 final class Vm(
   val id: String,
@@ -87,35 +89,44 @@ final class Vm(
   }
 
   def withSession[T](f: Session => T): T = {
-    val session = jsch.getSession(params.user, "127.0.0.1", params.sshLocalPort)
-    val props   = new JProperties
-    props.setProperty("StrictHostKeyChecking", "no")
-    session.setConfig(props)
-    session.setDaemonThread(true)
-    session.setLogger(
-      new Logger {
-        def isEnabled(level: Int): Boolean =
-          debug
-        def levelStr(level: Int): String =
-          level match {
-            case 0 => "debug"
-            case 1 => "info"
-            case 2 => "warn"
-            case 3 => "error"
-            case 4 => "fatal"
-            case _ => "???"
-          }
-        def log(level: Int, message: String): Unit =
-          if (debug)
-            System.err.println(s"[${levelStr(level)}] $message")
-      }
-    )
+    def newSession(): Session = {
+      val session = jsch.getSession(params.user, "127.0.0.1", params.sshLocalPort)
+      val props   = new JProperties
+      props.setProperty("StrictHostKeyChecking", "no")
+      session.setConfig(props)
+      session.setDaemonThread(true)
+      session.setLogger(
+        new Logger {
+          def isEnabled(level: Int): Boolean =
+            debug
+          def levelStr(level: Int): String =
+            level match {
+              case 0 => "debug"
+              case 1 => "info"
+              case 2 => "warn"
+              case 3 => "error"
+              case 4 => "fatal"
+              case _ => "???"
+            }
+          def log(level: Int, message: String): Unit =
+            if (debug)
+              System.err.println(s"[${levelStr(level)}] $message")
+        }
+      )
+      session
+    }
 
     val delay =
       if (System.getenv("CI") == null) 2.seconds
       else 10.seconds
-    def connect(): Unit = {
-      val success =
+    val maxWait =
+      if (System.getenv("CI") == null) 2.minutes
+      else 10.minutes
+    val deadline = System.nanoTime() + maxWait.toNanos
+    @tailrec
+    def connect(): Session = {
+      val session = newSession()
+      val connected =
         try {
           session.connect(delay.toMillis.toInt)
           true
@@ -126,23 +137,36 @@ final class Vm(
               case _: ConnectException       => true
               case _: SocketTimeoutException => true
               case _: SocketException        => true
-              case _                         => e.getMessage.contains("channel is not opened")
+              case _ =>
+                val message = Option(e.getMessage).getOrElse("")
+                message.contains("channel is not opened") ||
+                message.contains("connection is closed by foreign host")
             }
             if (retry) {
-              System.err.println(s"Caught $e, waiting $delay")
-              if (debug)
-                e.printStackTrace(System.err)
-              Thread.sleep(delay.toMillis)
-              false
+              val remainingNanos = deadline - System.nanoTime()
+              session.disconnect()
+              if (remainingNanos <= 0L)
+                throw new Exception(s"Timed out connecting to VM ${params.name} after $maxWait", e)
+              else {
+                System.err.println(s"Caught $e, waiting $delay")
+                if (debug)
+                  e.printStackTrace(System.err)
+                Thread.sleep(math.min(delay.toMillis, remainingNanos / 1000000L))
+                false
+              }
             }
-            else
+            else {
+              session.disconnect()
               throw e
+            }
         }
-      if (!success)
+      if (connected)
+        session
+      else
         connect()
     }
 
-    connect()
+    val session = connect()
     if (debug)
       System.err.println("Connected")
 
@@ -199,7 +223,7 @@ object Vm {
     def default(
       workDir: os.Path = defaultWorkDir(),
       guestWorkDir: os.SubPath = os.sub / "workdir",
-      cacheLocation: Option[os.Path] = Some(os.Path(FileCache().location, os.pwd)),
+      cacheLocation: Option[os.Path] = Some(os.Path(Cache.default.location, os.pwd)),
       digestCacheLocation: Option[os.Path] = Some(os.Path(DigestBasedCache().location, os.pwd)),
       guestCpu: Cpu = Cpu.get()
     ): Params = Params(
@@ -221,7 +245,7 @@ object Vm {
     def defaultMounts(
       workDir: os.Path = defaultWorkDir(),
       guestWorkDir: os.SubPath = os.sub / "workdir",
-      cacheLocation: Option[os.Path] = Some(os.Path(FileCache().location, os.pwd)),
+      cacheLocation: Option[os.Path] = Some(os.Path(Cache.default.location, os.pwd)),
       digestCacheLocation: Option[os.Path] = Some(os.Path(DigestBasedCache().location, os.pwd))
     ): Seq[Mount] = {
 
@@ -338,8 +362,19 @@ object Vm {
       else params.copy(sshLocalPort = port)
 
     val vm = new Vm(id, params0, Right(qemuProc))
-    vm.setupMounts()
-    vm
+    try {
+      vm.setupMounts()
+      vm
+    }
+    catch {
+      case NonFatal(t) =>
+        try vm.close()
+        catch {
+          case NonFatal(e) =>
+            System.err.println(s"Error closing VM $id after failed setup: $e")
+        }
+        throw t
+    }
   }
 
   def seedIso(

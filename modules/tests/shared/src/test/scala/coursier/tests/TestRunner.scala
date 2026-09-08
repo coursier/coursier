@@ -41,29 +41,30 @@ class TestRunner[F[_]: Gather: ToFuture](
     forceVersions: Map[Module, VersionConstraint] = Map.empty,
     defaultConfiguration: Configuration = Configuration.defaultRuntime,
     reconciliation: Option[Module => ConstraintReconciliation] = None,
-    forceDepMgmtVersions: Option[Boolean] = None
+    forceDepMgmtVersions: Option[Boolean] = None,
+    ignoreOptionalFromDepMgmt: Boolean = false
   ): Future[Resolution] = {
 
     val repositories0 = extraRepos ++ repositories
 
     val fetch0 = fetch(repositories0)
 
-    val res = Resolution()
-      .withRootDependencies(deps)
-      .withFilter(filter)
-      .withUserActivations {
-        profiles.map { profiles0 =>
-          profiles0
-            .iterator
-            .map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true)
-            .toMap
-        }
-      }
-      .withMapDependencies(mapDependencies)
-      .withForceVersions0(forceVersions)
-      .withDefaultConfiguration(defaultConfiguration)
-      .withReconciliation0(reconciliation)
-      .withForceDepMgmtVersions(forceDepMgmtVersions.getOrElse(false))
+    val res = Resolution().copy(
+      rootDependencies = deps,
+      filter = filter,
+      userActivations = profiles.map { profiles0 =>
+        profiles0
+          .iterator
+          .map(p => if (p.startsWith("!")) p.drop(1) -> false else p -> true)
+          .toMap
+      },
+      mapDependencies = mapDependencies,
+      forceVersions0 = forceVersions,
+      defaultConfiguration = defaultConfiguration,
+      reconciliation0 = reconciliation,
+      forceDepMgmtVersions = forceDepMgmtVersions.getOrElse(false),
+      ignoreOptionalFromDepMgmt = ignoreOptionalFromDepMgmt
+    )
     val r = ResolutionProcess(res).run0(fetch0)
 
     val t = Gather[F].map(r) { res =>
@@ -84,7 +85,8 @@ class TestRunner[F[_]: Gather: ToFuture](
   def pathFor(
     module: Module,
     version: VersionConstraint,
-    configuration: Configuration
+    configuration: Configuration,
+    ignoreOptionalFromDepMgmt: Boolean = false
   ): String = {
 
     val attrPathPart =
@@ -100,12 +102,12 @@ class TestRunner[F[_]: Gather: ToFuture](
       module.organization.value,
       module.name.value,
       attrPathPart,
-      version.asString + (
-        if (configuration.isEmpty)
-          ""
-        else
-          "_" + configuration.value.replace('(', '_').replace(')', '_')
-      )
+      version.asString +
+        (if (ignoreOptionalFromDepMgmt) "_ignore-optional-from-dep-mgmt" else "") +
+        (if (configuration.isEmpty)
+           ""
+         else
+           "_" + configuration.value.replace('(', '_').replace(')', '_'))
       // FIXME Take forceVersions, forceDepMgmtVersions into account too
     ).filter(_.nonEmpty).mkString("/")
   }
@@ -145,12 +147,13 @@ class TestRunner[F[_]: Gather: ToFuture](
     profiles: Option[Set[String]] = None,
     forceVersions: Map[Module, VersionConstraint] = Map.empty,
     defaultConfiguration: Configuration = Configuration.defaultRuntime,
-    forceDepMgmtVersions: Option[Boolean] = None
+    forceDepMgmtVersions: Option[Boolean] = None,
+    ignoreOptionalFromDepMgmt: Boolean = false
   ): Future[Resolution] =
     async {
 
       val dep = Dependency(module, version)
-        .withVariantSelector(VariantSelector.ConfigurationBased(configuration))
+        .copy(variantSelector = VariantSelector.ConfigurationBased(configuration))
       val res = await {
         resolve(
           Seq(dep),
@@ -158,7 +161,8 @@ class TestRunner[F[_]: Gather: ToFuture](
           profiles = profiles,
           forceVersions = forceVersions,
           defaultConfiguration = defaultConfiguration,
-          forceDepMgmtVersions = forceDepMgmtVersions
+          forceDepMgmtVersions = forceDepMgmtVersions,
+          ignoreOptionalFromDepMgmt = ignoreOptionalFromDepMgmt
         )
       }
 
@@ -168,11 +172,11 @@ class TestRunner[F[_]: Gather: ToFuture](
           val projOpt = res.projectCache0
             .get(dep.moduleVersionConstraint)
             .map { case (_, proj) => proj }
-          val dep0 = dep.withVersionConstraint {
-            projOpt.fold(dep.versionConstraint) { p =>
+          val dep0 = dep.copy(
+            versionConstraint = projOpt.fold(dep.versionConstraint) { p =>
               VersionConstraint.fromVersion(p.actualVersion0)
             }
-          }
+          )
           (
             dep0.module.organization.value,
             dep0.module.nameWithAttributes,
@@ -186,10 +190,12 @@ class TestRunner[F[_]: Gather: ToFuture](
             Seq(org, name, ver, cfg).mkString(":")
         }
 
-      validateSnapshot(
-        pathFor(module, version, configuration),
-        result
-      )
+      await {
+        validateSnapshot(
+          pathFor(module, version, configuration, ignoreOptionalFromDepMgmt),
+          result
+        )
+      }
 
       res
     }
@@ -201,7 +207,8 @@ class TestRunner[F[_]: Gather: ToFuture](
     configuration: Configuration = Configuration.empty,
     profiles: Option[Set[String]] = None,
     forceVersions: Map[Module, VersionConstraint] = Map.empty,
-    forceDepMgmtVersions: Option[Boolean] = None
+    forceDepMgmtVersions: Option[Boolean] = None,
+    ignoreOptionalFromDepMgmt: Boolean = false
   ): Future[Unit] =
     resolution(
       module,
@@ -210,7 +217,8 @@ class TestRunner[F[_]: Gather: ToFuture](
       configuration,
       profiles,
       forceVersions,
-      forceDepMgmtVersions = forceDepMgmtVersions
+      forceDepMgmtVersions = forceDepMgmtVersions,
+      ignoreOptionalFromDepMgmt = ignoreOptionalFromDepMgmt
     ).map(_ => ())
 
   def resolutionCheck(
@@ -220,7 +228,8 @@ class TestRunner[F[_]: Gather: ToFuture](
     configuration: Configuration = Configuration.empty,
     profiles: Option[Set[String]] = None,
     forceVersions: Map[Module, VersionConstraint] = Map.empty,
-    forceDepMgmtVersions: Option[Boolean] = None
+    forceDepMgmtVersions: Option[Boolean] = None,
+    ignoreOptionalFromDepMgmt: Boolean = false
   ): Future[Unit] =
     resolution(
       module,
@@ -229,7 +238,8 @@ class TestRunner[F[_]: Gather: ToFuture](
       configuration,
       profiles,
       forceVersions,
-      forceDepMgmtVersions = forceDepMgmtVersions
+      forceDepMgmtVersions = forceDepMgmtVersions,
+      ignoreOptionalFromDepMgmt = ignoreOptionalFromDepMgmt
     ).map(_ => ())
 
   def resolutionCheckDep(
@@ -261,7 +271,7 @@ class TestRunner[F[_]: Gather: ToFuture](
     f: Seq[Artifact] => T
   ): Future[T] = {
     val dep = Dependency(module, VersionConstraint(version))
-      .withTransitive(transitive)
+      .copy(transitive = transitive)
       .withAttributes(attributes)
     withArtifacts(dep, extraRepos, classifierOpt)(f)
   }

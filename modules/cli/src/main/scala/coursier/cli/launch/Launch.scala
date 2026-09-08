@@ -9,7 +9,7 @@ import java.util.concurrent.ExecutorService
 import ai.kien.python.Python
 import caseapp.core.RemainingArgs
 import cats.data.Validated
-import coursier.cache.{ArchiveCache, FileCache}
+import coursier.cache.{ArchiveCache, Cache}
 import coursier.cli.{CoursierCommand, CommandGroup}
 import coursier.cli.fetch.Fetch
 import coursier.cli.params.{ArtifactParams, SharedLaunchParams, SharedLoaderParams}
@@ -329,7 +329,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
     props: Seq[(String, String)],
     extraEnv: EnvironmentUpdate,
     userArgs: Seq[String],
-    cache: FileCache[Task]
+    cache: Cache[Task]
   ) = {
 
     val (jlp, jepExtraJar) =
@@ -645,7 +645,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
         if (options.json) {
           val app  = res._1.app
           val app0 = app.withDependencies((res._2 ++ app.dependencies).toList)
-          println(RawAppDescriptor.encoder(app0).spaces2)
+          println(app0.prettyRepr)
           sys.exit(0)
         }
 

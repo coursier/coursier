@@ -4,7 +4,7 @@ import dataclass.data
 
 import java.nio.file.Path
 
-@data class DigestArtifact(
+@data case class DigestArtifact(
   digest: String,
   path: Path
 )

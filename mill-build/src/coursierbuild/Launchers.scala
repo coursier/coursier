@@ -7,12 +7,72 @@ import io.github.alexarchambault.millnativeimage.NativeImage
 import mill.*
 import mill.api.*
 import mill.scalalib.*
+import org.apache.commons.compress.archivers.tar.{TarArchiveEntry, TarArchiveOutputStream}
 
-import java.io.File
+import java.io.{BufferedOutputStream, File}
+import java.nio.file.{Files, LinkOption, Path}
+import java.nio.file.attribute.PosixFilePermission
+import java.util.zip.GZIPOutputStream
 
-import scala.util.Properties
+import scala.jdk.CollectionConverters.*
+import scala.util.{Properties, Using}
 
 object Launchers {
+  private def writeTarGz(sourceDir: os.Path, dest: os.Path): os.Path = {
+    def permissionsMode(path: os.Path, defaultMode: Int): Int =
+      try {
+        val perms = Files.getPosixFilePermissions(path.toNIO, LinkOption.NOFOLLOW_LINKS).asScala
+        Seq(
+          PosixFilePermission.OWNER_READ     -> 0x100,
+          PosixFilePermission.OWNER_WRITE    -> 0x080,
+          PosixFilePermission.OWNER_EXECUTE  -> 0x040,
+          PosixFilePermission.GROUP_READ     -> 0x020,
+          PosixFilePermission.GROUP_WRITE    -> 0x010,
+          PosixFilePermission.GROUP_EXECUTE  -> 0x008,
+          PosixFilePermission.OTHERS_READ    -> 0x004,
+          PosixFilePermission.OTHERS_WRITE   -> 0x002,
+          PosixFilePermission.OTHERS_EXECUTE -> 0x001
+        ).iterator
+          .collect { case (perm, bit) if perms.contains(perm) => bit }
+          .sum
+      }
+      catch {
+        case _: UnsupportedOperationException => defaultMode
+      }
+
+    os.makeDir.all(dest / os.up)
+    Using.resource(
+      new TarArchiveOutputStream(
+        new GZIPOutputStream(new BufferedOutputStream(Files.newOutputStream(dest.toNIO)))
+      )
+    ) { tar =>
+      tar.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX)
+      tar.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX)
+      val entries = os.walk(sourceDir)
+        .filter(_ != sourceDir) // needed?
+        .sorted
+
+      for (path <- entries) {
+        val isDirectory = os.isDir(path)
+        val entry = new TarArchiveEntry(
+          path.toNIO,
+          path.subRelativeTo(sourceDir).toString + (if (isDirectory) "/" else ""),
+          LinkOption.NOFOLLOW_LINKS
+        )
+        entry.setMode(permissionsMode(path, if (isDirectory) 0x1ed else 0x1a4))
+        tar.putArchiveEntry(entry)
+        if (!isDirectory)
+          Using.resource(os.read.inputStream(path)) { is =>
+            is.transferTo(tar)
+          }
+        tar.closeArchiveEntry()
+      }
+
+      tar.finish()
+    }
+    dest
+  }
+
   def platformExtension: String =
     if (Properties.isWin) ".exe"
     else ""
@@ -38,52 +98,77 @@ object Launchers {
     s"$arch-$os"
   }
 
+  trait CsJniNativeImage extends NativeImage {
+    private def copyCsjniutilTo(destDir: os.Path): Unit = {
+      import coursier.*
+      import coursier.core.Extension
+      val dep = Dependency(
+        Module(Organization("io.get-coursier.jniutils"), ModuleName("windows-jni-utils")),
+        Deps.jniUtils.dep.versionConstraint
+      )
+      val dep0 = dep
+        .withPublication(
+          "windows-jni-utils",
+          Type("lib"),
+          Extension("lib"),
+          Classifier("x86_64-pc-win32")
+        )
+        .withTransitive(false)
+
+      val files = Fetch()
+        .addDependencies(dep0)
+        .addArtifactTypes(Type("lib"))
+        .run()
+      assert(files.length == 1)
+
+      val libPath = os.Path(files.head.getAbsolutePath)
+      os.copy.over(libPath, destDir / "csjniutils.lib")
+    }
+
+    protected def staticLibDirName = "native-libs"
+
+    def staticLibDir = Task {
+      BuildCtx.withFilesystemCheckerDisabled {
+        val dir = nativeImageDockerWorkingDir() / staticLibDirName
+        os.makeDir.all(dir)
+
+        if (Properties.isWin)
+          copyCsjniutilTo(dir)
+
+        PathRef(dir)
+      }
+    }
+
+    def nativeImageOptions = Task {
+      val usesDocker = nativeImageDockerParams().nonEmpty
+      val cLibPath =
+        if (usesDocker) s"/data/$staticLibDirName"
+        else PathRef.toResolvedPathString(staticLibDir().path)
+      super.nativeImageOptions() ++
+        Seq(
+          s"-H:CLibraryPath=$cLibPath",
+          "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.core.jdk=ALL-UNNAMED",
+          "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted=ALL-UNNAMED",
+          "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c=ALL-UNNAMED"
+        )
+    }
+  }
+
   trait Launchers extends CsModule {
 
-    trait CliNativeImage extends NativeImage {
+    trait CliNativeImage extends CsJniNativeImage {
 
       def nativeImageClassPath = runClasspath()
       def nativeImageMainClass = mainClass().getOrElse(sys.error("No main class"))
 
       def generateNativeImageWithFileSystemChecker = false
 
-      def nativeImageCsCommand    = Seq(coursierbuild.Cs.cs)
       def nativeImagePersist      = System.getenv("CI") != null
       def nativeImageGraalVmJvmId = graalVmJvmId
 
-      def nativeImageName          = "cs"
-      private def staticLibDirName = "native-libs"
-      private def copyCsjniutilTo(destDir: os.Path, workspace: os.Path): Unit = {
-        val jniUtilsVersion = Deps.jniUtils.dep.versionConstraint.asString
-        val libRes = os.proc(
-          coursierbuild.Cs.cs,
-          "fetch",
-          "--intransitive",
-          s"io.get-coursier.jniutils:windows-jni-utils:$jniUtilsVersion,classifier=x86_64-pc-win32,ext=lib,type=lib",
-          "-A",
-          "lib"
-        ).call()
-        val libPath = os.Path(libRes.out.text().trim(), workspace)
-        os.copy.over(libPath, destDir / "csjniutils.lib")
-      }
-
-      def staticLibDir = Task {
-        BuildCtx.withFilesystemCheckerDisabled {
-          val dir = nativeImageDockerWorkingDir() / staticLibDirName
-          os.makeDir.all(dir)
-
-          if (Properties.isWin)
-            copyCsjniutilTo(dir, BuildCtx.workspaceRoot)
-
-          PathRef(dir)
-        }
-      }
+      def nativeImageName = "cs"
 
       def nativeImageOptions = Task {
-        val usesDocker = nativeImageDockerParams().nonEmpty
-        val cLibPath =
-          if (usesDocker) s"/data/$staticLibDirName"
-          else staticLibDir().path.toString
         val zstdOpt =
           if (Properties.isWin && (arch == "x86_64" || arch == "amd64"))
             Seq(s"-H:IncludeResources=win/amd64/libzstd-jni-.*\\.dll")
@@ -108,12 +193,7 @@ object Launchers {
             )
           else
             Nil
-        Seq(
-          s"-H:CLibraryPath=$cLibPath",
-          "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.core.jdk=ALL-UNNAMED",
-          "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted=ALL-UNNAMED",
-          "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c=ALL-UNNAMED"
-        ) ++
+        super.nativeImageOptions() ++
           extraOpts ++
           zstdOpt
       }
@@ -122,6 +202,13 @@ object Launchers {
     object `base-image` extends CliNativeImage
 
     private def compatNativeImageOptions = Seq(
+      // Tell the GraalVM Substrate VM compiler to target the x86-64 baseline
+      // (equivalent to x86-64-v1), so the generated image runs on any 64-bit
+      // x86 processor — including CPUs that lack AVX/BMI (e.g. Intel Jasper Lake).
+      // Without this flag native-image defaults to "native" and uses the build
+      // host's CPU features (often AVX2/BMI), breaking on older hardware.
+      "-march=compatibility",
+      // Restrict the C-code compilation stage (GCC/Clang) to the same baseline.
       "--native-compiler-options=-march=x86-64",
       "--native-compiler-options=-mtune=generic"
     )
@@ -138,15 +225,15 @@ object Launchers {
         `base-image`.nativeImage
 
     def compatNativeImage =
-      if (Properties.isLinux && isCI)
-        `linux-compat-docker-image`.nativeImage
-      else
+      if (Properties.isLinux && !isCI)
         `compat-image`.nativeImage
+      else
+        `linux-compat-docker-image`.nativeImage
 
     object `linux-docker-image` extends CliNativeImage {
       def nativeImageDockerParams = Some(
         NativeImage.DockerParams(
-          imageName = "ubuntu:20.04",
+          imageName = Docker.linuxBinaryBaseImage,
           prepareCommand =
             """apt-get update -q -y &&\
               |apt-get install -q -y build-essential libz-dev zlib1g-dev git python3-pip curl zip
@@ -162,7 +249,7 @@ object Launchers {
     object `linux-compat-docker-image` extends CliNativeImage {
       def nativeImageDockerParams = Some(
         NativeImage.DockerParams(
-          imageName = "ubuntu:20.04",
+          imageName = Docker.linuxBinaryBaseImage,
           prepareCommand =
             """apt-get update -q -y &&\
               |apt-get install -q -y build-essential libz-dev zlib1g-dev git python3-pip curl zip
@@ -176,11 +263,11 @@ object Launchers {
       def nativeImageOptions = super.nativeImageOptions() ++ compatNativeImageOptions
     }
 
-    private def linuxCsLauncher =
-      if (arch == "aarch64")
-        s"https://github.com/VirtusLab/coursier-m1/releases/download/v${coursierbuild.Deps.csDockerVersion}/cs-aarch64-pc-linux.gz"
-      else
-        s"https://github.com/coursier/coursier/releases/download/v${coursierbuild.Deps.csDockerVersion}/cs-x86_64-pc-linux.gz"
+    private def linuxCsLauncher = {
+      val version  = coursierbuild.Deps.csDockerVersion
+      val archPart = if (arch == "aarch64") "aarch64" else "x86_64"
+      s"https://github.com/coursier/coursier/releases/download/v$version/cs-$archPart-pc-linux.gz"
+    }
 
     private def setupLocaleAndOptions(params: NativeImage.DockerParams): NativeImage.DockerParams =
       params.copy(
@@ -216,17 +303,6 @@ object Launchers {
       }
     }
 
-    object `mostly-static-image` extends CliNativeImage {
-      def nativeImageDockerParams = Task {
-        val baseDockerParams = NativeImage.linuxMostlyStaticParams(
-          if (arch == "aarch64") "ubuntu:20.04" else "ubuntu:18.04", // TODO Pin that
-          linuxCsLauncher
-        )
-        val dockerParams = setupLocaleAndOptions(baseDockerParams)
-        Some(dockerParams)
-      }
-    }
-
     object `container-image` extends CliNativeImage {
       def nativeImageOptions = super.nativeImageOptions() ++ Seq(
         "-H:-UseContainerSupport"
@@ -252,16 +328,17 @@ object Launchers {
     }
 
     def runWithAssistedConfig(args: String*) = Task.Command {
-      val cp         = jarClassPath().map(_.path).mkString(File.pathSeparator)
+      val cp = jarClassPath().map(ref => PathRef.toResolvedPathString(ref.path))
+        .mkString(File.pathSeparator)
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
       val graalVmHome = Option(System.getenv("GRAALVM_HOME")).getOrElse {
-        import sys.process._
-        Seq(
-          coursierbuild.Cs.cs,
-          "java-home",
-          "--jvm",
-          `base-image`.nativeImageGraalVmJvmId()
-        ).!!.trim
+        import coursier.jvm.{JavaHome, JvmCache}
+        val jvmCache = JvmCache()
+        JavaHome()
+          .withCache(jvmCache)
+          .get(`base-image`.nativeImageGraalVmJvmId())
+          .unsafeRun()(using jvmCache.archiveCache.cache.ec)
+          .getAbsolutePath
       }
       val outputDir = Task.dest / "config"
       val command = Seq(
@@ -280,7 +357,8 @@ object Launchers {
     }
 
     def runFromJars(args: String*) = Task.Command {
-      val cp         = jarClassPath().map(_.path).mkString(File.pathSeparator)
+      val cp = jarClassPath().map(ref => PathRef.toResolvedPathString(ref.path))
+        .mkString(File.pathSeparator)
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
       val command    = Seq("java", "-cp", cp, mainClass0) ++ args
       os.proc(command.map(x => x: os.Shellable) *).call(
@@ -295,6 +373,16 @@ object Launchers {
       cp.filter(ref => os.exists(ref.path) && !os.isDir(ref.path))
     }
 
+    /** [[jarClassPath]] with Mill's session-scoped `sandbox` / `mill-home` forwarder symlinks
+      * resolved away. The launchers below bake these paths into a generated file that outlives the
+      * run that produced them, so the lexical form (which keeps the `sandbox/../mill-home` detour)
+      * would only resolve while that run's `out` layout is still around. Not a task: `os.Path`
+      * values that go through Mill's cache come back in the aliased form again.
+      */
+    private def resolvedJarClassPath: Task[Seq[os.Path]] = Task.Anon {
+      jarClassPath().map(ref => PathRef.toResolvedOsPath(ref.path))
+    }
+
     def launcher = Task {
       import coursier.launcher.{
         AssemblyGenerator,
@@ -304,7 +392,7 @@ object Launchers {
         Preamble
       }
       import scala.util.Properties.isWin
-      val cp         = jarClassPath().map(_.path)
+      val cp         = resolvedJarClassPath()
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
       val dest = Task.dest / (if (isWin) "launcher.bat" else "launcher")
@@ -312,7 +400,8 @@ object Launchers {
       val preamble = Preamble()
         .withOsKind(isWin)
         .callsItself(isWin)
-      val entries       = cp.map(path => ClassPathEntry.Url(path.toNIO.toUri.toASCIIString))
+      val entries =
+        cp.map(path => ClassPathEntry.Url(PathRef.toAbsNioPath(path).toUri.toASCIIString))
       val loaderContent = coursier.launcher.ClassLoaderContent(entries)
       val params = Parameters.Bootstrap(Seq(loaderContent), mainClass0)
         .withDeterministic(true)
@@ -325,7 +414,9 @@ object Launchers {
 
     def standaloneLauncher = Task {
 
-      val cachePath = os.Path(coursier.cache.FileCache().location, BuildCtx.workspaceRoot)
+      val cachePath = PathRef.toResolvedOsPath(
+        os.Path(coursier.cache.FileCache().location, BuildCtx.workspaceRoot)
+      )
       def urlOf(path: os.Path): Option[String] =
         if (path.startsWith(cachePath)) {
           val segments = path.relativeTo(cachePath).segments
@@ -342,7 +433,7 @@ object Launchers {
         Preamble
       }
       import scala.util.Properties.isWin
-      val cp         = jarClassPath().map(_.path)
+      val cp         = resolvedJarClassPath()
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
 
       val dest = Task.dest / (if (isWin) "launcher.bat" else "launcher")
@@ -368,5 +459,74 @@ object Launchers {
 
       PathRef(dest)
     }
+
+    def standaloneJvmLauncherDir = Task {
+      val assemblyPath = assembly().path
+      val mainClass0   = mainClass().getOrElse(sys.error("No main class"))
+
+      val inputDir  = Task.dest / "input"
+      val outputDir = Task.dest / "output"
+      os.makeDir.all(inputDir)
+      os.remove.all(outputDir)
+      os.copy(assemblyPath, inputDir / "coursier.jar", replaceExisting = true)
+
+      val javaHome = os.Path(sys.props("java.home"), BuildCtx.workspaceRoot)
+      val jpackage =
+        javaHome / "bin" / (if (Properties.isWin) "jpackage.exe" else "jpackage")
+
+      if (!os.exists(jpackage))
+        sys.error(s"jpackage not found at $jpackage")
+
+      // On Windows, app-image launchers default to the GUI subsystem (no console).
+      // As a console application, cs needs --win-console so that it keeps a console,
+      // its standard streams stay connected, and child processes it spawns don't end
+      // up hanging on inherited handles.
+      val winConsoleArgs =
+        if (Properties.isWin) Seq("--win-console") else Nil
+
+      os.proc(
+        jpackage,
+        "--type",
+        "app-image",
+        "--name",
+        "cs",
+        "--dest",
+        PathRef.toResolvedPathString(outputDir),
+        "--input",
+        PathRef.toResolvedPathString(inputDir),
+        "--main-jar",
+        "coursier.jar",
+        "--main-class",
+        mainClass0,
+        winConsoleArgs
+      ).call(stdin = os.Inherit, stdout = os.Inherit, stderr = os.Inherit)
+
+      val launcherPath = outputDir / launcherSubPath
+
+      if (!os.exists(launcherPath)) {
+        val files = os.walk(outputDir)
+          .map(_.subRelativeTo(outputDir))
+          .sorted
+        pprint.err.log(files)
+        sys.error(s"Generated jpackage launcher not found at $launcherPath")
+      }
+
+      PathRef(outputDir)
+    }
+
+    def standaloneJvmLauncherArchive = Task {
+      val dir = standaloneJvmLauncherDir().path
+      val archive =
+        if (Properties.isWin)
+          os.zip(Task.dest / "cs.zip", os.list(dir))
+        else
+          writeTarGz(dir, Task.dest / "cs.tar.gz")
+      PathRef(archive)
+    }
+
+    def launcherSubPath: os.SubPath =
+      if (Properties.isMac) os.sub / "cs.app/Contents/MacOS/cs"
+      else if (Properties.isWin) os.sub / "cs/cs.exe"
+      else os.sub / "cs/bin/cs"
   }
 }

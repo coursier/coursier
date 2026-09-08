@@ -1,7 +1,7 @@
 package coursier.docker
 
 import com.github.plokhotnyuk.jsoniter_scala.core.writeToArray
-import coursier.cache.{DigestBasedCache, FileCache}
+import coursier.cache.{Cache, DigestBasedCache, FileCache}
 import coursier.util.Task
 import coursier.docker.vm.Vm
 import io.github.alexarchambault.isterminal.IsTerminal
@@ -13,7 +13,7 @@ object DockerVm {
 
   private class Pull(
     workDir: os.Path,
-    cache: FileCache[Task],
+    cache: Cache[Task] with Cache.HasLocation,
     digestCacheOpt: Option[DigestBasedCache[Task]],
     vm: Vm,
     session: Session,
@@ -104,7 +104,7 @@ object DockerVm {
 
   private class Run(
     workDir: os.Path,
-    cache: FileCache[Task],
+    cache: Cache[Task] with Cache.HasLocation,
     digestCache: DigestBasedCache[Task],
     layerFiles: Seq[os.Path],
     rootFsDirName: String,
@@ -231,7 +231,7 @@ object DockerVm {
 
   def pullContainer(
     workDir: os.Path,
-    cache: FileCache[Task],
+    cache: Cache[Task] with Cache.HasLocation,
     layerFiles: Seq[os.Path],
     vm: Vm,
     session: Session,
@@ -253,7 +253,7 @@ object DockerVm {
 
   def runContainer(
     workDir: os.Path,
-    cache: FileCache[Task],
+    cache: Cache[Task] with Cache.HasLocation,
     digestCache: DigestBasedCache[Task],
     layerFiles: Seq[os.Path],
     rootFsDirName: String,

@@ -1,0 +1,8 @@
+{
+  "repositories": [
+    "central",
+    "https://repo1.maven.org/maven2"
+  ],
+  "channel": "https://example.com/apps.json",
+  "id": "apps"
+}

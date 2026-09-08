@@ -53,6 +53,7 @@ object Coursier extends CommandsEntryPoint {
     install.List,
     resolve.Resolve,
     search.Search,
+    server.Server,
     setup.Setup,
     version.Version,
     install.Uninstall,

@@ -9,7 +9,7 @@ import java.net.URI
 import java.nio.file.{Path, Paths}
 
 import scala.cli.config.{ConfigDb, Keys}
-import scala.concurrent.duration.{Duration, DurationInt}
+import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.util.{Failure, Success, Try}
 
 /** Helpers meant to help compute default cache-related parameters, with the environment and Java
@@ -26,6 +26,15 @@ object CacheEnv {
   /** Env var and Java prop names for the archive cache location */
   val archiveCache = EnvEntry("COURSIER_ARCHIVE_CACHE", "coursier.archive.cache")
 
+  /** Env var and Java prop names for the cache server */
+  val server = EnvEntry("COURSIER_CACHE_SERVER", "coursier.cache.server")
+
+  /** Env var and Java prop names for the cache server user */
+  val serverUser = EnvEntry("COURSIER_CACHE_SERVER_USER", "coursier.cache.server.user")
+
+  /** Env var and Java prop names for the cache server password */
+  val serverPassword = EnvEntry("COURSIER_CACHE_SERVER_PASSWORD", "coursier.cache.server.password")
+
   /** Env var and Java prop names for credentials */
   val credentials = EnvEntry("COURSIER_CREDENTIALS", "coursier.credentials")
 
@@ -34,6 +43,18 @@ object CacheEnv {
 
   /** Env var and Java prop names for the cache TTL */
   val ttl = EnvEntry("COURSIER_TTL", "coursier.ttl")
+
+  /** Env var and Java prop names for the maximum HTTP Retry-After duration */
+  val maxHttpRetryAfter = EnvEntry(
+    "COURSIER_MAX_HTTP_RETRY_AFTER",
+    "coursier.max-http-retry-after"
+  )
+
+  /** Env var and Java prop names for the HTTP connect timeout */
+  val connectTimeout = EnvEntry("COURSIER_CONNECT_TIMEOUT", "coursier.connect-timeout")
+
+  /** Env var and Java prop names for the HTTP read timeout */
+  val readTimeout = EnvEntry("COURSIER_READ_TIMEOUT", "coursier.read-timeout")
 
   /** Env var and Java prop names for the cache policies */
   val cachePolicy = EnvEntry("COURSIER_MODE", "coursier.mode")
@@ -60,6 +81,11 @@ object CacheEnv {
         "arc"
       )
     )
+
+  /** Computes the default main cache location from the passed env var and Java property */
+  def defaultServerAddress(values: EnvValues): Option[String] =
+    values.prop.map(_.trim).filter(_.nonEmpty)
+      .orElse(values.env.map(_.trim).filter(_.nonEmpty))
 
   private def isPropFile(s: String) =
     s.startsWith("/") || s.startsWith("file:")
@@ -154,6 +180,51 @@ object CacheEnv {
     fromEnv
       .orElse(fromProps)
       .orElse(Some(default))
+  }
+
+  /** Computes the maximum HTTP Retry-After duration from the passed env var and Java property */
+  def defaultMaxHttpRetryAfter(values: EnvValues): Option[FiniteDuration] = {
+    val fromEnv = values.env.flatMap(parseDuration(_).toOption).collect {
+      case duration: FiniteDuration => duration
+    }
+    def fromProps = values.prop.flatMap(parseDuration(_).toOption).collect {
+      case duration: FiniteDuration => duration
+    }
+    def default = if (System.getenv("CI") == null) 5.seconds else 1.minute
+
+    fromEnv
+      .orElse(fromProps)
+      .orElse(Some(default))
+  }
+
+  /** Computes the HTTP connect timeout from the passed env var and Java property
+    *
+    * `Duration.Zero` disables the timeout, like it does on `java.net.URLConnection` itself.
+    */
+  def defaultConnectTimeout(values: EnvValues): Option[FiniteDuration] =
+    timeout(values, default = 30.seconds)
+
+  /** Computes the HTTP read timeout from the passed env var and Java property
+    *
+    * This is the maximum time a single read is allowed to take, not the maximum duration of a
+    * download, so it can stay well under how long a large artifact takes to fetch.
+    *
+    * `Duration.Zero` disables the timeout, like it does on `java.net.URLConnection` itself.
+    */
+  def defaultReadTimeout(values: EnvValues): Option[FiniteDuration] =
+    timeout(values, default = 1.minute)
+
+  private def timeout(values: EnvValues, default: FiniteDuration): Option[FiniteDuration] = {
+    val fromEnv   = values.env.flatMap(parseDuration(_).toOption)
+    def fromProps = values.prop.flatMap(parseDuration(_).toOption)
+
+    fromEnv
+      .orElse(fromProps)
+      .getOrElse(default) match {
+      case duration: FiniteDuration if duration > Duration.Zero => Some(duration)
+      // both Duration.Zero and infinite durations mean "wait as long as it takes"
+      case _ => None
+    }
   }
 
   private[coursier] def parseDuration(s: String): Either[Throwable, Duration] =

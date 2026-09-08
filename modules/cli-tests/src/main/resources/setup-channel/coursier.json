@@ -1,0 +1,9 @@
+{
+  "repositories": [
+    "central",
+    "typesafe:ivy-releases"
+  ],
+  "dependencies": [
+    "io.get-coursier::coursier-cli:latest.release"
+  ]
+}

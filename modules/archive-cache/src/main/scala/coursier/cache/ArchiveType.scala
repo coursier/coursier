@@ -44,6 +44,7 @@ object ArchiveType {
       case "application/gzip" | "application/x-gzip"                      => Some(Gzip)
       case "application/xz" | "application/x-xz"                          => Some(Xz)
       case "application/tar" | "application/x-tar" | "application/x-gtar" => Some(Tar)
+      case "application/zip"                                              => Some(Zip)
       case _                                                              => None
     }
 }

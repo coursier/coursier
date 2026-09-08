@@ -15,7 +15,7 @@ abstract class ArchiveCacheTests extends TestSuite {
 
   def sandboxedCache = coursier.cache.FileCache[Task]((os.pwd / "test-cache").toIO)
   def archiveCache(location: os.Path): ArchiveCache[Task] =
-    ArchiveCache[Task](location.toIO)
+    ArchiveCache.create[Task](location.toIO)
   // Uncomment this to re-download everything in a test run
   // .withCache(sandboxedCache)
 
@@ -57,6 +57,13 @@ abstract class ArchiveCacheTests extends TestSuite {
       }
     }
 
+  private def defaultCache() =
+    Cache.default match {
+      case fc: FileCache[Task] => fc
+      case other =>
+        sys.error(s"Expected default cache to be a FileCache, got $other")
+    }
+
   def actualTests = Tests {
     test("jar") {
       checkArchiveHas(
@@ -72,7 +79,7 @@ abstract class ArchiveCacheTests extends TestSuite {
       )
     }
 
-    test("txz") {
+    test("zst") {
       checkArchiveHas(
         "https://europe.mirror.pkgbuild.com/extra/os/x86_64/busybox-1.36.1-2-x86_64.pkg.tar.zst",
         os.sub / "usr/bin/busybox"
@@ -93,6 +100,28 @@ abstract class ArchiveCacheTests extends TestSuite {
       )
     }
 
+    test("aar") {
+      checkArchiveHas(
+        "https://maven.google.com/com/android/support/support-fragment/25.3.1/support-fragment-25.3.1.aar",
+        os.sub / "classes.jar"
+      )
+    }
+
+    test("jar-in-aar") {
+      test {
+        checkArchiveHas(
+          "https://maven.google.com/com/android/support/support-fragment/25.3.1/support-fragment-25.3.1.aar!classes.jar!android/support/v4/app/ListFragment.class"
+        )
+      }
+
+      test {
+        checkArchiveHas(
+          "https://maven.google.com/com/android/support/support-fragment/25.3.1/support-fragment-25.3.1.aar!classes.jar!",
+          os.sub / "android/support/v4/app/ListFragment.class"
+        )
+      }
+    }
+
     test("detect tgz") {
 
       val repoName = "library/hello-world"
@@ -104,15 +133,24 @@ abstract class ArchiveCacheTests extends TestSuite {
         Artifact(
           s"https://registry-1.docker.io/v2/$repoName/blobs/sha256:c9c5fd25a1bdc181cb012bc4fbb1ab272a975728f54064b7ae3ee8e77fd28c46"
         )
-          .withAuthentication(Some(auth)),
+          .copy(authentication = Some(auth)),
         os.sub / "hello"
       )
     }
 
     test("archive in archive") {
-      checkArchiveHas(
-        "https://github.com/VirtusLab/scala-cli/releases/download/v1.7.1/scala-cli-x86_64-pc-linux.deb!data.tar.zst!usr/bin/scala-cli"
-      )
+      test {
+        checkArchiveHas(
+          "https://github.com/VirtusLab/scala-cli/releases/download/v1.7.1/scala-cli-x86_64-pc-linux.deb!data.tar.zst!usr/bin/scala-cli"
+        )
+      }
+
+      test {
+        checkArchiveHas(
+          "https://github.com/VirtusLab/scala-cli/releases/download/v1.7.1/scala-cli-x86_64-pc-linux.deb!data.tar.zst!",
+          os.sub / "usr/bin/scala-cli"
+        )
+      }
 
       // TODO Add that back after having factored some Debian index related helpers from QemuFiles,
       // so that we can get from the index the latest URL of the package. Hard-coded addresses tend
@@ -136,7 +174,7 @@ abstract class ArchiveCacheTests extends TestSuite {
 
         def check(useShortBase: Boolean): Unit = {
           val archiveCache0 = archiveCache(defaultDir)
-            .withShortPathDirectory(if (useShortBase) Some(shortBase.toIO) else None)
+            .copy(shortPathDirectory = if (useShortBase) Some(shortBase.toIO) else None)
 
           val future = archiveCache0
             .get(archive)
@@ -175,8 +213,8 @@ abstract class ArchiveCacheTests extends TestSuite {
       truncate: Boolean
     ): Unit =
       withTmpDir { dir =>
-        val cache         = FileCache().withLocation((dir / "cache").toIO)
-        val archiveCache0 = archiveCache(dir / "arc").withCache(cache)
+        val cache         = defaultCache().copy(location = (dir / "cache").toIO)
+        val archiveCache0 = archiveCache(dir / "arc").copy(cache = cache)
 
         val localArchivePath = cache.file(artifact).run.unsafeRun()(cache.ec) match {
           case Left(err) =>

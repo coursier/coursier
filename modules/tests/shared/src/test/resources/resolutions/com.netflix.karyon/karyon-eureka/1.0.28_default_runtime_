@@ -36,11 +36,8 @@ xmlpull:xmlpull:1.1.3.1:default
 xpp3:xpp3_min:1.1.4c:default
 com.netflix.servo:servo-internal:0.9.4:default
 org.apache.httpcomponents:httpcore:4.3.2:default
-commons-logging:commons-logging:1.1.3:default
 commons-codec:commons-codec:1.6:default
-javax.inject:javax.inject:1:default
 aopalliance:aopalliance:1.0:default
-com.google.code.findbugs:jsr305:3.0.0:default
 org.ow2.asm:asm-all:5.0:default
 com.google.inject.extensions:guice-multibindings:4.0:default
 com.google.inject.extensions:guice-grapher:4.0:default

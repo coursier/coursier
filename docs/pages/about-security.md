@@ -47,7 +47,18 @@ for urgent non-public security-related issues.
 
 ## Artifact attestations
 
-coursier use the [actions/attest-build-provenance](https://github.com/actions/attest-build-provenance)
+coursier uses the [actions/attest-build-provenance](https://github.com/actions/attest-build-provenance)
 GitHub action to attest that the binaries it distributes on its release pages were indeed built
 by the GitHub Action runners themselves. Attestations can be found
 [here](https://github.com/coursier/coursier/attestations).
+
+Users can validate a downloaded binary attestation with the GitHub CLI:
+
+```bash
+gh attestation verify /path/to/cs \
+  -R coursier/coursier
+```
+
+If verification succeeds, the downloaded file digest matches an attested build subject and the
+attestation signature and certificate chain validate. You can add `--format json` to inspect the
+provenance details from the verified statement.

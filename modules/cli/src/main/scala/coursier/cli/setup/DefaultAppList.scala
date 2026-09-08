@@ -4,7 +4,6 @@ object DefaultAppList {
 
   def defaultAppList: Seq[String] =
     Seq(
-      "ammonite",
       "cs",
       "coursier",
       "scala",

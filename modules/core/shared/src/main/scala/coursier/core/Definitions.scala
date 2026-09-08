@@ -1,16 +1,20 @@
 package coursier.core
 
-import java.util.concurrent.ConcurrentMap
-
+import java.util.concurrent.{ConcurrentHashMap, ConcurrentMap}
 import coursier.core.Validation._
 import coursier.error.VariantError
 import coursier.util.Artifact
-import coursier.version.{Version => Version0}
-import dataclass.data
+import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
+import dataclass.{data, since => unroll}
+import scala.util.hashing.MurmurHash3
 
 final case class Organization(value: String) extends AnyVal {
-  def map(f: String => String): Organization =
-    Organization(f(value))
+  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  def map(f: String => String): Organization = {
+    val o = PropertyExpr.applySubstitution(value, f)
+    if (o eq value) this
+    else Organization(o)
+  }
 }
 
 object Organization {
@@ -19,8 +23,12 @@ object Organization {
 }
 
 final case class ModuleName(value: String) extends AnyVal {
-  def map(f: String => String): ModuleName =
-    ModuleName(f(value))
+  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  def map(f: String => String): ModuleName = {
+    val newName = PropertyExpr.applySubstitution(value, f)
+    if (newName eq value) this
+    else ModuleName(newName)
+  }
 }
 
 object ModuleName {
@@ -35,7 +43,7 @@ object ModuleName {
   *
   * Using the same terminology as Ivy.
   */
-@data(apply = false, settersCallApply = true) class Module(
+@data(apply = false, settersCallApply = true, cachedHashCode = true) case class Module(
   organization: Organization,
   name: ModuleName,
   attributes: Map[String, String]
@@ -72,22 +80,18 @@ object ModuleName {
       case (k, v) =>
         k.contains("$") || v.contains("$")
     }
-
-  final override lazy val hashCode = tuple.hashCode()
-
-  private[core] def copy(
-    organization: Organization = this.organization,
-    name: ModuleName = this.name,
-    attributes: Map[String, String] = this.attributes
-  ) = Module(organization, name, attributes)
 }
 
 object Module {
 
-  private[core] val instanceCache: ConcurrentMap[Module, Module] =
+  private[coursier] val instanceCache: ConcurrentMap[Module, Module] =
     coursier.util.Cache.createCache()
 
-  def apply(organization: Organization, name: ModuleName, attributes: Map[String, String]): Module =
+  def apply(
+    organization: Organization,
+    name: ModuleName,
+    attributes: Map[String, String]
+  ): Module =
     coursier.util.Cache.cacheMethod(instanceCache)(new Module(organization, name, attributes))
 }
 
@@ -96,8 +100,12 @@ final case class Type(value: String) extends AnyVal {
     value.isEmpty
   def nonEmpty: Boolean =
     value.nonEmpty
-  def map(f: String => String): Type =
-    Type(f(value))
+  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  def map(f: String => String): Type = {
+    val newValue = PropertyExpr.applySubstitution(value, f)
+    if (newValue eq value) this
+    else Type(newValue)
+  }
 
   def asExtension: Extension =
     Extension(value)
@@ -146,8 +154,13 @@ final case class Classifier(value: String) extends AnyVal {
     value.isEmpty
   def nonEmpty: Boolean =
     value.nonEmpty
-  def map(f: String => String): Classifier =
-    Classifier(f(value))
+
+  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  def map(f: String => String): Classifier = {
+    val newValue = PropertyExpr.applySubstitution(value, f)
+    if (newValue eq value) this
+    else Classifier(newValue)
+  }
 }
 
 object Classifier {
@@ -188,8 +201,13 @@ final case class Configuration(value: String) extends AnyVal {
     value.nonEmpty
   def -->(target: Configuration): Configuration =
     Configuration(s"$value->${target.value}")
-  def map(f: String => String): Configuration =
-    Configuration(f(value))
+
+  private[coursier] def parsedValue = PropertyExpr.parse(value)
+  def map(f: String => String): Configuration = {
+    val newValue = PropertyExpr.applySubstitution(value, f)
+    if (newValue eq value) this
+    else Configuration(newValue)
+  }
 }
 
 object Configuration {
@@ -216,7 +234,7 @@ object Configuration {
     Configuration(confs.map(_.value).mkString(";"))
 }
 
-@data class Attributes(
+@data case class Attributes(
   `type`: Type,
   classifier: Classifier
 ) {
@@ -241,7 +259,7 @@ object Configuration {
     `type`.isEmpty && classifier.isEmpty
 
   def normalize: Attributes =
-    if (`type` == Type.jar) withType(Type.empty)
+    if (`type` == Type.jar) copy(`type` = Type.empty)
     else this
 }
 
@@ -249,7 +267,7 @@ object Attributes {
   val empty = Attributes(Type.empty, Classifier.empty)
 }
 
-@data class Project(
+@data case class Project(
   module: Module,
   version0: Version0,
   dependencies0: Seq[(Variant, Dependency)],
@@ -257,7 +275,7 @@ object Attributes {
   configurations: Map[Configuration, Seq[Configuration]],
 
   // Maven-specific
-  parent0: Option[(Module, Version0)],
+  parent0: Option[(Module, VersionConstraint0)],
   dependencyManagement0: Seq[(Variant, Dependency)],
   properties: Seq[(String, String)],
   profiles: Seq[Profile],
@@ -288,8 +306,8 @@ object Attributes {
     }
   @deprecated("Use withDependencies0 instead", "2.1.25")
   def withDependencies(newDependencies: Seq[(Configuration, Dependency)]): Project =
-    withDependencies0(
-      newDependencies.map {
+    copy(
+      dependencies0 = newDependencies.map {
         case (config, dep) =>
           (Variant.Configuration(config), dep)
       }
@@ -305,8 +323,8 @@ object Attributes {
     }
   @deprecated("Use withPublications0 instead", "2.1.25")
   def withPublications(newPublications: Seq[(Configuration, Publication)]): Project =
-    withPublications0(
-      newPublications.map {
+    copy(
+      publications0 = newPublications.map {
         case (config, pub) =>
           (Variant.Configuration(config), pub)
       }
@@ -339,7 +357,7 @@ object Attributes {
           (Variant.Configuration(config), dep)
       },
       configurations,
-      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      parent.map { case (mod, ver) => (mod, VersionConstraint0(ver)) },
       dependencyManagement.map {
         case (config, dep) =>
           (Variant.Configuration(config), dep)
@@ -387,7 +405,7 @@ object Attributes {
           (Variant.Configuration(config), dep)
       },
       configurations,
-      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      parent.map { case (mod, ver) => (mod, VersionConstraint0(ver)) },
       dependencyManagement.map {
         case (config, dep) =>
           (Variant.Configuration(config), dep)
@@ -419,7 +437,7 @@ object Attributes {
   @deprecated("Use withVersion0 instead", "2.1.25")
   def withVersion(newVersion: String): Project =
     if (version == newVersion) this
-    else withVersion0(Version0(newVersion))
+    else copy(version0 = Version0(newVersion))
 
   @deprecated("Use parent0 instead", "2.1.25")
   def parent: Option[(Module, String)] =
@@ -429,10 +447,10 @@ object Attributes {
     }
   @deprecated("Use withParent0 instead", "2.1.25")
   def withParent(newParent: Option[(Module, String)]): Project =
-    withParent0(
-      newParent.map {
+    copy(
+      parent0 = newParent.map {
         case (mod, ver) =>
-          (mod, Version0(ver))
+          (mod, VersionConstraint0(ver))
       }
     )
 
@@ -441,7 +459,7 @@ object Attributes {
     actualVersionOpt0.map(_.asString)
   @deprecated("Use withActualVersionOpt0 instead", "2.1.25")
   def withActualVersionOpt(newParent: Option[String]): Project =
-    withActualVersionOpt0(newParent.map(Version0(_)))
+    copy(actualVersionOpt0 = newParent.map(Version0(_)))
 
   @deprecated("Use dependencyManagement0 instead", "2.1.25")
   def dependencyManagement: Seq[(Configuration, Dependency)] =
@@ -453,8 +471,8 @@ object Attributes {
     }
   @deprecated("Use withDependencyManagement0 instead", "2.1.25")
   def withDependencyManagement(dependencyManagement: Seq[(Configuration, Dependency)]): Project =
-    withDependencyManagement0(
-      dependencyManagement.map {
+    copy(
+      dependencyManagement0 = dependencyManagement.map {
         case (c, dep) =>
           (Variant.Configuration(c), dep)
       }
@@ -462,8 +480,14 @@ object Attributes {
 
   /** All configurations that each configuration extends, including the ones it extends transitively
     */
-  lazy val allConfigurations: Map[Configuration, Set[Configuration]] =
-    Orders.allConfigurations0(configurations)
+  lazy val allConfigurations: Map[Configuration, Set[Configuration]] = {
+    val result = Project.allConfigurationsCache.computeIfAbsent(
+      configurations,
+      (configs: Map[Configuration, Seq[Configuration]]) =>
+        Orders.allConfigurations0(configs)
+    )
+    result
+  }
 
   /** Version used to get this project metadata if available, else the version from metadata. May
     * not match `version` for projects having a wrong version in their metadata, if the actual
@@ -567,10 +591,90 @@ object Attributes {
       attr0.equivalentConfiguration.toSeq.map(attr -> _)
   }
 
-  final override lazy val hashCode = tuple.hashCode
+  def repr: String = {
+    def variantStr(v: Variant): String = v match {
+      case c: Variant.Configuration => c.configuration.value
+      case a: Variant.Attributes    => s"@${a.variantName}"
+    }
+
+    val lines = Seq.newBuilder[String]
+    lines += s"module: ${module.repr}"
+    lines += s"version: ${version0.asString}"
+    for ((parentMod, parentVer) <- parent0)
+      lines += s"parent: ${parentMod.repr}:${parentVer.asString}"
+    for (v <- actualVersionOpt0)
+      lines += s"actualVersion: ${v.asString}"
+    for (p <- packagingOpt)
+      lines += s"packaging: ${p.value}"
+    if (relocated)
+      lines += "relocated: true"
+    if (dependencies0.nonEmpty) {
+      lines += "dependencies:"
+      for ((variant, dep) <- dependencies0) {
+        val it = dep.repr.linesIterator
+        lines += s"  ${it.next()}"
+        lines += s"    variant: ${variantStr(variant)}"
+        for (line <- it)
+          lines += s"    $line"
+      }
+    }
+    if (dependencyManagement0.nonEmpty) {
+      lines += "dependencyManagement:"
+      for ((variant, dep) <- dependencyManagement0) {
+        lines += s"  (${variantStr(variant)}):"
+        for (line <- dep.repr.linesIterator)
+          lines += s"    $line"
+      }
+    }
+    if (configurations.nonEmpty)
+      lines += s"configurations: $configurations"
+    if (properties.nonEmpty) {
+      lines += "Properties:"
+      for ((k, v) <- properties.sorted)
+        lines += s"  $k=$v"
+    }
+    if (profiles.nonEmpty)
+      lines += s"profiles: $profiles"
+    for (v <- versions)
+      lines += s"versions: $v"
+    for (sv <- snapshotVersioning)
+      lines += s"snapshotVersioning: $sv"
+    if (publications0.nonEmpty) {
+      lines += "publications:"
+      for ((variant, pub) <- publications0)
+        lines += s"  (${variantStr(variant)}): $pub"
+    }
+    if (info != Info.empty)
+      lines += s"info: $info"
+    if (!overrides.isEmpty)
+      for (line <- overrides.repr.linesIterator)
+        lines += line
+    if (variants.nonEmpty) {
+      lines += "variants:"
+      for ((attr, map) <- variants.toSeq.sortBy(_._1.variantName)) {
+        val attrs = map.toSeq.sortBy(_._1).map { case (k, v) => s"$k=$v" }.mkString(", ")
+        lines += s"  ${attr.variantName}: $attrs"
+      }
+    }
+    if (variantPublications.nonEmpty) {
+      lines += "variantPublications:"
+      for ((attr, pubs) <- variantPublications.toSeq.sortBy(_._1.variantName)) {
+        lines += s"  ${attr.variantName}:"
+        for (pub <- pubs)
+          lines += s"    $pub"
+      }
+    }
+    lines.result().mkString("\n")
+  }
+
+  final override lazy val hashCode: Int = scala.runtime.ScalaRunTime._hashCode(this)
 }
 
 object Project {
+  private val allConfigurationsCache = new ConcurrentHashMap[
+    Map[Configuration, Seq[Configuration]],
+    Map[Configuration, Set[Configuration]]
+  ]()
 
   @deprecated("Use the override accepting Version-s instead", "2.1.25")
   def apply(
@@ -598,7 +702,7 @@ object Project {
           (Variant.Configuration(config), dep)
       },
       configurations,
-      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      parent.map { case (mod, ver) => (mod, VersionConstraint0(ver)) },
       dependencyManagement.map {
         case (config, dep) =>
           (Variant.Configuration(config), dep)
@@ -646,7 +750,7 @@ object Project {
           (Variant.Configuration(config), dep)
       },
       configurations,
-      parent.map { case (mod, ver) => (mod, Version0(ver)) },
+      parent.map { case (mod, ver) => (mod, VersionConstraint0(ver)) },
       dependencyManagement.map {
         case (config, dep) =>
           (Variant.Configuration(config), dep)
@@ -670,7 +774,7 @@ object Project {
 }
 
 /** Extra project info, not used during resolution */
-@data class Info(
+@data case class Info(
   description: String,
   homePage: String,
   developers: Seq[Info.Developer],
@@ -725,19 +829,19 @@ object Info {
     licenseInfo = licenses.map(l => License(l._1, l._2, None, None))
   )
 
-  @data class Developer(
+  @data case class Developer(
     id: String,
     name: String,
     url: String
   )
 
-  @data class Scm(
+  @data case class Scm(
     url: Option[String],
     connection: Option[String],
     developerConnection: Option[String]
   )
 
-  @data class License(
+  @data case class License(
     name: String,
     url: Option[String],
     distribution: Option[String], // Maven-specific
@@ -748,7 +852,7 @@ object Info {
 }
 
 // Maven-specific
-@data class Profile(
+@data case class Profile(
   id: String,
   activeByDefault: Option[Boolean],
   activation: Activation,
@@ -758,7 +862,7 @@ object Info {
 )
 
 // Maven-specific
-@data class SnapshotVersion(
+@data case class SnapshotVersion(
   classifier: Classifier,
   extension: Extension,
   value0: Version0,
@@ -784,7 +888,7 @@ object Info {
   @deprecated("Use withValue0 instead", "2.1.25")
   def withValue(newValue: String): SnapshotVersion =
     if (newValue == value) this
-    else withValue0(Version0(newValue))
+    else copy(value0 = Version0(newValue))
 }
 
 object SnapshotVersion {
@@ -804,7 +908,7 @@ object SnapshotVersion {
 }
 
 // Maven-specific
-@data class SnapshotVersioning(
+@data case class SnapshotVersioning(
   module: Module,
   version0: Version0,
   latest0: Version0,
@@ -849,15 +953,15 @@ object SnapshotVersion {
   @deprecated("Use withVersion0 instead", "2.1.25")
   def withVersion(newVersion: String): SnapshotVersioning =
     if (newVersion == version) this
-    else withVersion0(Version0(newVersion))
+    else copy(version0 = Version0(newVersion))
   @deprecated("Use withLatest0 instead", "2.1.25")
   def withLatest(newLatest: String): SnapshotVersioning =
     if (newLatest == latest) this
-    else withLatest0(Version0(newLatest))
+    else copy(latest0 = Version0(newLatest))
   @deprecated("Use withRelease0 instead", "2.1.25")
   def withRelease(newRelease: String): SnapshotVersioning =
     if (newRelease == release) this
-    else withRelease0(Version0(newRelease))
+    else copy(release0 = Version0(newRelease))
 }
 
 object SnapshotVersioning {
@@ -886,7 +990,7 @@ object SnapshotVersioning {
     )
 }
 
-@data(apply = false, settersCallApply = true) class Publication(
+@data(apply = false, settersCallApply = true, cachedHashCode = true) case class Publication(
   name: String,
   `type`: Type,
   ext: Extension,
@@ -899,25 +1003,24 @@ object SnapshotVersioning {
   lazy val attributesHaveProperties =
     `type`.value.contains("$") ||
     classifier.value.contains("$")
-
-  final override lazy val hashCode = tuple.hashCode
 }
 
 object Publication {
-  private[core] val instanceCache: ConcurrentMap[Publication, Publication] =
+
+  private[coursier] val instanceCache: ConcurrentMap[Publication, Publication] =
     coursier.util.Cache.createCache()
 
   def apply(name: String, `type`: Type, ext: Extension, classifier: Classifier): Publication =
     coursier.util.Cache.cacheMethod(instanceCache)(new Publication(name, `type`, ext, classifier))
 
   val empty: Publication =
-    Publication("", Type.empty, Extension.empty, Classifier.empty)
+    apply("", Type.empty, Extension.empty, Classifier.empty)
 }
 
-@data class VariantPublication(
+@data case class VariantPublication(
   name: String,
   url: String,
-  @since
+  @unroll
   classifier: Option[Classifier] = None
 )
 
@@ -941,9 +1044,12 @@ object ArtifactSource {
 
 private[coursier] object Validation {
   def validateCoordinate(value: String, name: String): Either[String, String] =
-    Seq('/', '\\').foldLeft[Either[String, String]](Right(value)) { (acc, char) =>
-      acc.filterOrElse(value => !value.contains(char), s"$name $value contains invalid '$char'")
-    }
+    if (value.contains('/'))
+      Left(s"$name $value contains invalid '/' character")
+    else if (value.contains('\\'))
+      Left(s"$name $value contains invalid '\\' character")
+    else
+      Right(value)
 
   def assertValid(value: String, name: String): Unit =
     validateCoordinate(value, name).fold(msg => throw new AssertionError(msg), identity)

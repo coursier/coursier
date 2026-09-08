@@ -1,5 +1,7 @@
 package coursierbuild
 
+import mill.api.PathRef
+
 object DocHelpers {
   def copyDocusaurusVersionedData(
     repo: String,
@@ -10,7 +12,9 @@ object DocHelpers {
 
     val remote = s"https://github.com/$repo.git"
 
-    os.proc("git", "clone", remote, "-b", branch, cloneUnder.toString).call(
+    os.makeDir.all(cloneUnder)
+
+    os.proc("git", "clone", remote, "-b", branch, PathRef.toResolvedPathString(cloneUnder)).call(
       stdin = os.Inherit,
       stdout = os.Inherit,
       stderr = os.Inherit
@@ -60,7 +64,14 @@ object DocHelpers {
     os.makeDir.all(cloneUnder)
 
     System.err.println()
-    runAndLog(ghTokenOpt.toSeq)("git", "clone", remote, "-b", branch, cloneUnder.toString).call(
+    runAndLog(ghTokenOpt.toSeq)(
+      "git",
+      "clone",
+      remote,
+      "-b",
+      branch,
+      PathRef.toResolvedPathString(cloneUnder)
+    ).call(
       stdin = os.Inherit,
       stdout = os.Inherit,
       stderr = os.Inherit
@@ -136,11 +147,15 @@ object DocHelpers {
 
     os.makeDir.all(dest)
 
-    os.proc("git", "clone", remote, "-q", "-b", branch, dest.toString).call(
+    os.proc("git", "clone", remote, "-q", "-b", branch, PathRef.toResolvedPathString(dest)).call(
       stdin = os.Inherit,
       stdout = os.Inherit,
       stderr = os.Inherit
     )
+
+    if (!os.exists(dest / ".git"))
+      sys.error(s"Error: $repo not cloned in $dest")
+
     os.proc("git", "config", "user.name", "Github Actions").call(
       cwd = dest,
       stdin = os.Inherit,
@@ -171,7 +186,7 @@ object DocHelpers {
       .filter(f => !keepList.contains(f.last))
 
     if (toGitRm.nonEmpty)
-      os.proc("git", "rm", "-r", toGitRm).call(
+      os.proc("git", "rm", "-r", "--", toGitRm.map(_.last)).call(
         cwd = dest,
         stdin = os.Inherit,
         stdout = os.Inherit,

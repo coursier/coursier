@@ -13,7 +13,7 @@ import coursier.core.{
 }
 import coursier.params.ResolutionParams
 import coursier.testcache.TestCache
-import coursier.util.Artifact
+import coursier.util.{Artifact, Print}
 import coursier.version.VersionConstraint
 
 import scala.async.Async.{async, await}
@@ -84,29 +84,32 @@ object TestHelpers extends PlatformTestHelpers {
             Dependency(
               rootDep.module,
               rootDep.versionConstraint
-            ).withVariantSelector(rootDep.variantSelector)
+            ).copy(variantSelector = rootDep.variantSelector)
           )
           ds == simpleDeps
         }
 
         val dependencyElements = res.rootDependencies match {
           case ds if isSimpleDependencies(ds) => ""
-          case ds if ds.lengthCompare(1) == 0 => ds.head
-          case ds                             => ds
+          case ds if ds.lengthCompare(1) == 0 => ds.head.toString
+          case ds                             => ds.toString
         }
 
         val bomElements = res.boms match {
           case boms if boms.isEmpty => ""
-          case boms => boms.map {
-              // quick hack to recycle former sha-1 values when config is empty
-              case emptyConfigBomDep if emptyConfigBomDep.config.isEmpty =>
-                emptyConfigBomDep.moduleVersionConstraint
-              case other =>
-                other
-            }
+          case boms =>
+            boms
+              .map {
+                // quick hack to recycle former sha-1 values when config is empty
+                case emptyConfigBomDep if emptyConfigBomDep.config.isEmpty =>
+                  emptyConfigBomDep.moduleVersionConstraint
+                case other =>
+                  other
+              }
+              .toString
         }
 
-        (dependencyElements.toString(), bomElements.toString()) match {
+        (dependencyElements, bomElements) match {
           case ("", "")       => ("", "")
           case (dStr @ _, "") => ("_dep" + sha1(dStr), "")
           case ("", bStr @ _) => ("", "_boms" + sha1(bStr))
@@ -122,9 +125,9 @@ object TestHelpers extends PlatformTestHelpers {
           // hack not to have to edit / review lots of test fixtures
           val params0 =
             if (params.defaultConfiguration == Configuration.defaultRuntime)
-              params.withDefaultConfiguration(Configuration.compile)
+              params.copy(defaultConfiguration = Configuration.compile)
             else if (params.defaultConfiguration == Configuration.compile)
-              params.withDefaultConfiguration(Configuration("really-compile"))
+              params.copy(defaultConfiguration = Configuration("really-compile"))
             else
               params
           // This avoids some sha1 changes
@@ -132,6 +135,10 @@ object TestHelpers extends PlatformTestHelpers {
             val noComma = s.replace(", ", "||")
             val remove  = Seq("None", "List()", "Map()", "Set()")
             var value   = noComma.replace("HashSet", "Set")
+            // ignoreOptionalFromDepMgmt, the last field of ResolutionParams, defaults to false -
+            // dropping it when it has its default value keeps the former sha-1 values
+            if (value.endsWith("||false)"))
+              value = value.stripSuffix("||false)") + ")"
             for (r <- remove) {
               value = value.replace("|" + r + "|", "")
               if (value.endsWith("||" + r + ")"))
@@ -217,19 +224,21 @@ object TestHelpers extends PlatformTestHelpers {
       await(
         tryRead.recoverWith {
           case _: Exception if TestCache.updateSnapshots =>
-            maybeWriteTextResource(path, result0.mkString("\n"))
+            maybeWriteTextResource(path, result0.map(_ + "\n").mkString)
             tryRead
         }
       ).split('\n').toSeq
 
     if (TestCache.updateSnapshots) {
       if (result0 != expected)
-        maybeWriteTextResource(path, result0.mkString("\n"))
+        maybeWriteTextResource(path, result0.map(_ + "\n").mkString)
     }
     else {
       if (result0 != expected) {
         println(s"In $path:")
-        for (((e, r), idx) <- expected.zip(result0).zipWithIndex if e != r)
+        val paddedExpected = expected ++ Seq.fill(math.max(result0.length - expected.length, 0))("")
+        val paddedResult   = result0 ++ Seq.fill(math.max(expected.length - result0.length, 0))("")
+        for (((e, r), idx) <- paddedExpected.zip(paddedResult).zipWithIndex if e != r)
           println(s"Line ${idx + 1}:\n  expected: $e\n  got:      $r")
       }
 
@@ -250,14 +259,37 @@ object TestHelpers extends PlatformTestHelpers {
       extraKeyPart,
       attributesBasedReprAsToString = attributesBasedReprAsToString
     ) {
-      res.orderedDependencies.map { dep =>
-        Seq(
-          dep.module.organization.value,
-          dep.module.nameWithAttributes,
-          dep.versionConstraint.asString,
-          dep.variantSelector.repr
-        ).mkString(":")
-      }
+      res.orderedDependencies
+        .map(_.clearExclusions)
+        .map { dep =>
+          Seq(
+            dep.module.organization.value,
+            dep.module.nameWithAttributes,
+            dep.versionConstraint.asString,
+            dep.variantSelector.repr
+          ).mkString(":")
+        }
+        .distinct
+    }
+
+  def validateTree(
+    res: Resolution,
+    params: ResolutionParams = ResolutionParams(),
+    extraKeyPart: String = "",
+    attributesBasedReprAsToString: Boolean = false
+  ): Future[Unit] =
+    validate(
+      "trees",
+      res,
+      params,
+      extraKeyPart,
+      attributesBasedReprAsToString = attributesBasedReprAsToString
+    ) {
+      Print
+        .dependencyTree0(res, colors = false)
+        .replace("\r\n", "\n")
+        .linesIterator
+        .toVector
     }
 
   def versionOf(res: Resolution, mod: Module): Option[String] =
