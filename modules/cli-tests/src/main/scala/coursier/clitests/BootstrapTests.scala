@@ -647,13 +647,14 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
             "flyway-assembly.jar",
             "org.flywaydb:flyway-core:10.13.0",
             "org.flywaydb:flyway-database-postgresql:10.13.0",
-            "-M", "foo" // Required, but ignored
+            "-M",
+            "foo" // Required, but ignored
           ) ++ extraOptions,
           directory = tmpDir
         )
 
         Using.resource(new ZipFile((tmpDir0 / "flyway-assembly.jar").toIO)) { zf =>
-          val entry = zf.getEntry("META-INF/services/org.flywaydb.core.extensibility.Plugin")
+          val entry   = zf.getEntry("META-INF/services/org.flywaydb.core.extensibility.Plugin")
           val content = Source.fromInputStream(zf.getInputStream(entry))(Codec.UTF8).mkString
           val lines   = content.linesIterator.toVector
           assert(lines.nonEmpty)
