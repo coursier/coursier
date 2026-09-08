@@ -43,7 +43,9 @@ import dataclass.{data, since => unroll}
   defaultVariantAttributes: Option[VariantSelector.AttributesBased] = None,
   renderModuleVersion: Option[(Module, String) => String] = None,
   @unroll
-  scalaOrganizationOverride: Option[Organization] = None
+  scalaOrganizationOverride: Option[Organization] = None,
+  @unroll
+  ignoreOptionalFromDepMgmt: Boolean = false
 ) {
 
   @deprecated("Use forceVersion0 instead", "2.1.25")

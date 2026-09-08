@@ -8,6 +8,7 @@ org.apache.maven.wagon:wagon-http:2.10:default
 org.apache.maven.wagon:wagon-file:2.10:default
 org.eclipse.aether:aether-connector-basic:1.0.2.v20150114:default
 org.eclipse.aether:aether-transport-wagon:1.0.2.v20150114:default
+org.slf4j:slf4j-simple:1.7.5:default
 org.apache.maven:maven-settings:3.3.9:default
 org.apache.maven:maven-plugin-api:3.3.9:default
 org.apache.maven:maven-model-builder:3.3.9:default

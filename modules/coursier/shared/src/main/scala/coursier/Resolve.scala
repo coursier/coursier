@@ -488,6 +488,7 @@ object Resolve extends PlatformResolve {
         defaultVariantAttributes = params.finalDefaultVariantAttributes,
         keepProvidedDependencies = params.keepProvidedDependencies.getOrElse(false),
         forceDepMgmtVersions = params.forceDepMgmtVersions.getOrElse(false),
+        ignoreOptionalFromDepMgmt = params.ignoreOptionalFromDepMgmt,
         enableDependencyOverrides =
           params.enableDependencyOverrides.getOrElse(Resolution.enableDependencyOverridesDefault),
         boms = boms
