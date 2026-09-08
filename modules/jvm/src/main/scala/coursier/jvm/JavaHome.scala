@@ -261,15 +261,37 @@ object JavaHome {
   ): Option[Path] =
     executable(javaHome.resolve("bin"), "java", pathExtensionsOpt)
 
+  /** Extensions a java launcher can have on Windows, when PATHEXT isn't set.
+    *
+    * Same as the extensions cmd.exe itself falls back to in that case, restricted to those a java
+    * launcher could plausibly have.
+    */
+  private def defaultWindowsPathExtensions =
+    Seq(".com", ".exe", ".bat", ".cmd")
+
+  private[jvm] def pathExtensions(
+    isWindows: Boolean,
+    getEnv: String => Option[String]
+  ): Option[Seq[String]] =
+    if (isWindows) {
+      val fromEnv = getEnv("pathext")
+        .toSeq
+        // PATHEXT is ';'-separated, whatever the path separator of the JVM we run on
+        .flatMap(_.split(";").toSeq)
+        .map(_.trim)
+        .filter(_.nonEmpty)
+      // Never fall back to None here: that means "look for a bare bin/java", which
+      // never exists on Windows, so a perfectly valid JAVA_HOME would be rejected.
+      Some(if (fromEnv.isEmpty) defaultWindowsPathExtensions else fromEnv)
+    }
+    else
+      None
+
   def defaultPathExtensions: Option[Seq[String]] = {
     val isWindows = System.getProperty("os.name", "")
       .toLowerCase(Locale.ROOT)
       .contains("windows")
-    if (isWindows)
-      Option(System.getenv("pathext"))
-        .map(_.split(File.pathSeparator).toSeq)
-    else
-      None
+    pathExtensions(isWindows, k => Option(System.getenv(k)))
   }
 
   private[coursier] def csJavaFailVariable: String =

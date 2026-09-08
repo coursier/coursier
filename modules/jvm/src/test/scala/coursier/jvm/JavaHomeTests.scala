@@ -137,6 +137,55 @@ object JavaHomeTests extends TestSuite {
       assert(system == expectedSystem)
     }
 
+    test("path extensions") {
+
+      test("none on Linux or macOS") {
+        val extensions = JavaHome.pathExtensions(isWindows = false, _ => Some(".EXE"))
+        assert(extensions.isEmpty)
+      }
+
+      test("read PATHEXT on Windows") {
+        val extensions = JavaHome.pathExtensions(isWindows = true, _ => Some(".COM;.EXE;.BAT"))
+        val expected   = Some(Seq(".COM", ".EXE", ".BAT"))
+        assert(extensions == expected)
+      }
+
+      // If we returned None here, we'd look for a bare bin/java, which never exists on
+      // Windows, and we'd reject every JAVA_HOME.
+      test("fall back to defaults on Windows when PATHEXT isn't set") {
+        val extensions = JavaHome.pathExtensions(isWindows = true, _ => None)
+        assert(extensions.exists(_.exists(_.equalsIgnoreCase(".exe"))))
+      }
+
+      test("fall back to defaults on Windows when PATHEXT is empty") {
+        val extensions = JavaHome.pathExtensions(isWindows = true, _ => Some(""))
+        val expected   = JavaHome.pathExtensions(isWindows = true, _ => None)
+        assert(extensions == expected)
+      }
+    }
+
+    test("system JVM should accept JAVA_HOME with a bin/java.exe on Windows") {
+
+      JvmCacheTests.withTempDir { tmpDir =>
+        val binDir = tmpDir.resolve("bin")
+        Files.createDirectories(binDir)
+        Files.write(binDir.resolve("java.exe"), Array.empty[Byte])
+
+        val env = Map("JAVA_HOME" -> tmpDir.toAbsolutePath.toString)
+        val home = JavaHome()
+          .withGetEnv(Some(env.get))
+          .withCommandOutput(forbidCommands)
+          .withOs("windows")
+          .withPathExtensions(JavaHome.pathExtensions(isWindows = true, _ => None))
+
+        val expectedSystem = Some(tmpDir.toAbsolutePath.toString)
+        val system = home.system()
+          .unsafeRun(wrapExceptions = true)(ExecutionContext.global)
+          .map(_.getAbsolutePath)
+        assert(system == expectedSystem)
+      }
+    }
+
     test("system JVM should use /usr/libexec/java_home on macOS") {
 
       val commandOutput: CommandOutput =
