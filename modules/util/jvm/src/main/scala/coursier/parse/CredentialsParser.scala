@@ -12,7 +12,7 @@ object CredentialsParser {
     val m = pattern.matcher(s)
     if (m.matches()) {
       val cred = DirectCredentials(m.group(1), m.group(3), m.group(4))
-        .withRealm(Option(m.group(2)).map(_.stripPrefix("(").stripSuffix(")")))
+        .copy(realm = Option(m.group(2)).map(_.stripPrefix("(").stripSuffix(")")))
       Right(cred)
     }
     else

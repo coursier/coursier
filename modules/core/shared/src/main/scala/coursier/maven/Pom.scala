@@ -97,7 +97,7 @@ object Pom {
           .eitherTraverse(module(_, defaultArtifactId = Some(ModuleName("*"))))
         version <- validateCoordinate(version0.asString, "version")
       } yield {
-        val optional = text(node, "optional", "").toSeq.contains("true")
+        val optional = text(node, "optional", "").toOption.map(_ == "true")
 
         scopeOpt.getOrElse(Configuration.empty) -> Dependency(
           mod,
@@ -195,7 +195,7 @@ object Pom {
       parentModuleOpt <- parentOpt
         .map(module(_).map(Some(_)))
         .getOrElse(Right(None))
-      parentVersionOpt = parentOpt.map(readVersion)
+      parentVersionOpt = parentOpt.map(readVersionConstraint)
 
       xmlDeps = pom.children
         .find(_.label == "dependencies")
@@ -214,7 +214,7 @@ object Pom {
         .orElse(parentModuleOpt.map(_.organization).filter(_.value.nonEmpty))
         .toRight("No organization found")
       version <- Some(readVersion(pom)).filter(_.asString.nonEmpty)
-        .orElse(parentVersionOpt.filter(_.asString.nonEmpty))
+        .orElse(parentVersionOpt.filter(_.asString.nonEmpty).map(c => Version(c.asString)))
         .toRight("No version found")
 
       _ <- parentVersionOpt
@@ -292,7 +292,7 @@ object Pom {
           )
         }
 
-      val finalProjModule = projModule.withOrganization(groupId)
+      val finalProjModule = projModule.copy(organization = groupId)
 
       val relocationDependencyOpt = pom
         .children
@@ -311,8 +311,7 @@ object Pom {
 
           Variant.emptyConfiguration -> Dependency(
             finalProjModule
-              .withOrganization(relocatedGroupId)
-              .withName(relocatedArtifactId),
+              .copy(organization = relocatedGroupId, name = relocatedArtifactId),
             VersionConstraint.fromVersion(relocatedVersion),
             VariantSelector.emptyConfiguration,
             Set.empty[(Organization, ModuleName)],
@@ -331,7 +330,7 @@ object Pom {
         },
         // this is customized later on in MavenRepositoryInternal
         Map.empty[Configuration, Seq[Configuration]],
-        parentModuleOpt.map((_, parentVersionOpt.getOrElse(Version.zero))),
+        parentModuleOpt.map((_, parentVersionOpt.getOrElse(VersionConstraint.empty))),
         depMgmts.map {
           case (conf, dep) =>
             (Variant.Configuration(conf), dep)
@@ -524,8 +523,9 @@ object Pom {
   ): Project = {
 
     val optionalDeps = proj.dependencies0.collect {
-      case (c: Variant.Configuration, dep) if dep.optional && fromConfigs(c.configuration) =>
-        Variant.Configuration(optionalConfig) -> dep.withOptional(false)
+      case (c: Variant.Configuration, dep)
+          if dep.optional0.contains(true) && fromConfigs(c.configuration) =>
+        Variant.Configuration(optionalConfig) -> dep.copy(optional0 = None)
     }
 
     val optConfigThing = proj.configurations.getOrElse(optionalConfig, Nil) ++
@@ -533,7 +533,6 @@ object Pom {
     val configurations = proj.configurations + (optionalConfig -> optConfigThing.distinct)
 
     proj
-      .withConfigurations(configurations)
-      .withDependencies0(proj.dependencies0 ++ optionalDeps)
+      .copy(configurations = configurations, dependencies0 = proj.dependencies0 ++ optionalDeps)
   }
 }

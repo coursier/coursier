@@ -107,13 +107,15 @@ object JvmCacheTests extends TestSuite {
   val tests = Tests {
     test("specific version") {
       withTempDir { tmpDir =>
-        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
+        val archiveCache = ArchiveCache.create[Task](tmpDir.toFile).copy(cache = cache)
         val jvmCache = JvmCache()
-          .withArchiveCache(archiveCache)
-          .withOs(theOS)
-          .withArchitecture("the-arch")
-          .withDefaultJdkNameOpt(None)
-          .withDefaultVersionOpt(None)
+          .copy(
+            archiveCache = archiveCache,
+            os = theOS,
+            architecture = "the-arch",
+            defaultJdkNameOpt = None,
+            defaultVersionOpt = None
+          )
           .withIndex(Task.point(index))
 
         val home           = jvmCache.get("the-jdk:1.1").unsafeRun(wrapExceptions = true)(cache.ec)
@@ -127,13 +129,15 @@ object JvmCacheTests extends TestSuite {
 
     test("version range") {
       withTempDir { tmpDir =>
-        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
+        val archiveCache = ArchiveCache.create[Task](tmpDir.toFile).copy(cache = cache)
         val jvmCache = JvmCache()
-          .withArchiveCache(archiveCache)
-          .withOs(theOS)
-          .withArchitecture("the-arch")
-          .withDefaultJdkNameOpt(None)
-          .withDefaultVersionOpt(None)
+          .copy(
+            archiveCache = archiveCache,
+            os = theOS,
+            architecture = "the-arch",
+            defaultJdkNameOpt = None,
+            defaultVersionOpt = None
+          )
           .withIndex(Task.point(index))
 
         val home           = jvmCache.get("the-jdk:1+").unsafeRun(wrapExceptions = true)(cache.ec)
@@ -146,13 +150,15 @@ object JvmCacheTests extends TestSuite {
 
     test("Contents/Home directory on macOS") {
       withTempDir { tmpDir =>
-        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
+        val archiveCache = ArchiveCache.create[Task](tmpDir.toFile).copy(cache = cache)
         val jvmCache = JvmCache()
-          .withArchiveCache(archiveCache)
-          .withOs("darwin")
-          .withArchitecture("the-arch")
-          .withDefaultJdkNameOpt(None)
-          .withDefaultVersionOpt(None)
+          .copy(
+            archiveCache = archiveCache,
+            os = "darwin",
+            architecture = "the-arch",
+            defaultJdkNameOpt = None,
+            defaultVersionOpt = None
+          )
           .withIndex(Task.point(index))
 
         val home = jvmCache.get("the-jdk:1.1").unsafeRun(wrapExceptions = true)(cache.ec)
@@ -192,13 +198,15 @@ object JvmCacheTests extends TestSuite {
 
     test("no Contents/Home directory on macOS") {
       withTempDir { tmpDir =>
-        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(cache)
+        val archiveCache = ArchiveCache.create[Task](tmpDir.toFile).copy(cache = cache)
         val jvmCache = JvmCache()
-          .withArchiveCache(archiveCache)
-          .withOs("darwin")
-          .withArchitecture("the-arch")
-          .withDefaultJdkNameOpt(None)
-          .withDefaultVersionOpt(None)
+          .copy(
+            archiveCache = archiveCache,
+            os = "darwin",
+            architecture = "the-arch",
+            defaultJdkNameOpt = None,
+            defaultVersionOpt = None
+          )
           .withIndex(Task.point(index))
 
         val home = jvmCache.get("the-jdk:1.2").unsafeRun(wrapExceptions = true)(cache.ec)
@@ -218,13 +226,15 @@ object JvmCacheTests extends TestSuite {
 
     test("URL id") {
       withTempDir0 { tmpDir =>
-        val archiveCache = ArchiveCache[Task](tmpDir.toIO).withCache(cache)
+        val archiveCache = ArchiveCache.create[Task](tmpDir.toIO).copy(cache = cache)
         val jvmCache = JvmCache()
-          .withArchiveCache(archiveCache)
-          .withOs("the-os")
-          .withArchitecture("the-arch")
-          .withDefaultJdkNameOpt(None)
-          .withDefaultVersionOpt(None)
+          .copy(
+            archiveCache = archiveCache,
+            os = "the-os",
+            architecture = "the-arch",
+            defaultJdkNameOpt = None,
+            defaultVersionOpt = None
+          )
 
         val dir = os.Path(
           jvmCache

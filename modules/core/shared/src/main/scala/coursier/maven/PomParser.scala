@@ -128,7 +128,7 @@ object PomParser {
     var dependencyGroupIdOpt    = Option.empty[Organization]
     var dependencyArtifactIdOpt = Option.empty[ModuleName]
     var dependencyVersion       = ""
-    var dependencyOptional      = false
+    var dependencyOptional      = Option.empty[Boolean]
     var dependencyScope         = Configuration.empty
     var dependencyType          = Type.empty
     var dependencyClassifier    = Classifier.empty
@@ -207,9 +207,10 @@ object PomParser {
         val parentOpt = for {
           parentModule  <- parentModuleOpt
           parentVersion <- validateCoordinate(parentVersion, "parent version")
-        } yield (parentModule, coursier.version.Version(parentVersion))
+        } yield (parentModule, coursier.version.VersionConstraint(parentVersion))
 
-        val projModule = Module(Organization(finalGroupId), ModuleName(artifactId), Map.empty)
+        val projModule =
+          Module(Organization(finalGroupId), ModuleName(artifactId), Map.empty)
 
         val relocationDependencyOpt = {
           val isRelocated = relocationGroupIdOpt.nonEmpty ||
@@ -479,7 +480,7 @@ object PomParser {
           state.dependencyGroupIdOpt = None
           state.dependencyArtifactIdOpt = None
           state.dependencyVersion = ""
-          state.dependencyOptional = false
+          state.dependencyOptional = None
           state.dependencyScope = Configuration.empty
           state.dependencyType = Type.empty
           state.dependencyClassifier = Classifier.empty
@@ -487,7 +488,11 @@ object PomParser {
         }
         def end(state: State) = {
           val d = Dependency(
-            Module(state.dependencyGroupIdOpt.get, state.dependencyArtifactIdOpt.get, Map.empty),
+            Module(
+              state.dependencyGroupIdOpt.get,
+              state.dependencyArtifactIdOpt.get,
+              Map.empty
+            ),
             VersionConstraint(state.dependencyVersion),
             VariantSelector.emptyConfiguration,
             state.dependencyExclusions,
@@ -512,7 +517,7 @@ object PomParser {
       },
       content("optional" :: prefix) {
         (state, content) =>
-          state.dependencyOptional = content == "true"
+          state.dependencyOptional = Some(content == "true")
       },
       content("scope" :: prefix) {
         (state, content) =>
@@ -625,20 +630,22 @@ object PomParser {
     private val hashes = keys.map(_.hashCode)
     def next(tag: String): HandlerMapNode = {
       Objects.requireNonNull(tag)
-      val h   = tag.hashCode
-      val len = keys.length
-      var i   = 0
+      val h                     = tag.hashCode
+      val len                   = keys.length
+      var i                     = 0
+      var found: HandlerMapNode = null
 
-      while (i < len) {
+      while (found == null && i < len)
         // Identity check (hashes(i) == h) is significantly faster than string equals.
         // We only perform the full .equals check if the hash matches.
         if (hashes(i) == h && keys(i) == tag)
-          return values(i)
-        i += 1
-      }
+          found = values(i)
+        else
+          i += 1
 
       // 3. Fallback to wildcard (e.g., the "*" or EmptyNode)
-      wildcard
+      if (found != null) found
+      else wildcard
     }
   }
 

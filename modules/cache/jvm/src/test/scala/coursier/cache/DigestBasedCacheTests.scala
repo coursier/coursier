@@ -24,7 +24,7 @@ object DigestBasedCacheTests extends TestSuite {
         val sha256 = "f1f77a0f96b7251d7ef5472705624e2d76db64855b5b121e1cbefe9dc52d0f86"
         val file = cache.file(
           Artifact(s"https://registry-1.docker.io/v2/$repoName/blobs/sha256:$sha256")
-            .withAuthentication(Some(auth))
+            .copy(authentication = Some(auth))
         )
           .run.unsafeRun(wrapExceptions = true)(cache.ec)
           .toTry.get

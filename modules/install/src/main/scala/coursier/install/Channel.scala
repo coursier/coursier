@@ -1,5 +1,7 @@
 package coursier.install
 
+import dataclass.data
+
 import java.io.File
 import java.nio.file.{FileSystem, FileSystems, Path}
 import java.util.regex.Pattern.quote
@@ -7,7 +9,6 @@ import java.util.regex.Pattern.quote
 import coursier.core.Module
 import coursier.parse.{DependencyParser, JavaOrScalaDependency, JavaOrScalaModule, ModuleParser}
 import coursier.version.VersionConstraint
-import dataclass.data
 
 sealed abstract class Channel extends Product with Serializable {
   def repr: String
@@ -15,7 +16,7 @@ sealed abstract class Channel extends Product with Serializable {
 
 object Channel {
 
-  @data class FromModule(
+  @data case class FromModule(
     module: Module,
     versionConstraint: VersionConstraint = VersionConstraint("latest.release")
   ) extends Channel {
@@ -34,7 +35,7 @@ object Channel {
       versionConstraint.asString
     @deprecated("Use withVersionConstraint instead", "2.1.25")
     def withVersion(newVersion: String): FromModule =
-      withVersionConstraint(VersionConstraint(newVersion))
+      copy(versionConstraint = VersionConstraint(newVersion))
 
     def repr: String =
       module.repr
@@ -51,17 +52,17 @@ object Channel {
     )
   }
 
-  @data class FromUrl(url: String) extends Channel {
+  @data case class FromUrl(url: String) extends Channel {
     def repr: String =
       url
   }
 
-  @data class FromDirectory(path: Path) extends Channel {
+  @data case class FromDirectory(path: Path) extends Channel {
     def repr: String =
       path.toString
   }
 
-  @data class Inline() extends Channel {
+  @data case class Inline() extends Channel {
     def repr: String =
       "inline"
   }

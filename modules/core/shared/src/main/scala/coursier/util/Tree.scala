@@ -18,6 +18,14 @@ final class Tree[A](val roots: IndexedSeq[A], val children: A => Seq[A]) {
     assumeTopRoot: Boolean = true,
     extraPrefix: String = "",
     extraSeparator: Option[String] = None
+  )(show: A => String): String =
+    customRender0(assumeTopRoot, extraPrefix, extraSeparator)(show)
+
+  def customRender0(
+    assumeTopRoot: Boolean = true,
+    extraPrefix: String = "",
+    extraSeparator: Option[String] = None,
+    deduplicateNodes: Boolean = false
   )(show: A => String): String = {
 
     /** Recursively go down the resolution for the elems to construct the tree for print out.
@@ -31,6 +39,10 @@ final class Tree[A](val roots: IndexedSeq[A], val children: A => Seq[A]) {
       * @param acc
       *   accumulation method on a string
       */
+    val visited =
+      if (deduplicateNodes) new scala.collection.mutable.HashSet[A]
+      else null
+
     def recursivePrint(
       elems: Seq[A],
       ancestors: Set[A],
@@ -41,12 +53,21 @@ final class Tree[A](val roots: IndexedSeq[A], val children: A => Seq[A]) {
       val unseenElems: Seq[A] = elems.filterNot(ancestors.contains)
       val unseenElemsLen      = unseenElems.length
       for ((elem, idx) <- unseenElems.iterator.zipWithIndex) {
-        val isLast = idx == unseenElemsLen - 1
-        val tee    = if (!assumeTopRoot && isRoot) "" else if (isLast) "└─ " else "├─ "
-        acc(prefix + tee + show(elem))
+        val isLast     = idx == unseenElemsLen - 1
+        val tee        = if (!assumeTopRoot && isRoot) "" else if (isLast) "└─ " else "├─ "
+        val firstVisit = visited == null || visited.add(elem)
+        acc(prefix + tee + show(elem) + (if (firstVisit) "" else " (*)"))
 
-        val extraPrefix = if (!assumeTopRoot && isRoot) "" else if (isLast) "   " else "│  "
-        recursivePrint(children(elem), ancestors + elem, prefix + extraPrefix, isRoot = false, acc)
+        if (firstVisit) {
+          val extraPrefix = if (!assumeTopRoot && isRoot) "" else if (isLast) "   " else "│  "
+          recursivePrint(
+            children(elem),
+            ancestors + elem,
+            prefix + extraPrefix,
+            isRoot = false,
+            acc
+          )
+        }
 
         for (sep <- extraSeparator)
           if (!assumeTopRoot && isRoot)

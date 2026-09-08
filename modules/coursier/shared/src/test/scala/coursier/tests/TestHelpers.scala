@@ -13,7 +13,7 @@ import coursier.core.{
 }
 import coursier.params.ResolutionParams
 import coursier.testcache.TestCache
-import coursier.util.Artifact
+import coursier.util.{Artifact, Print}
 import coursier.version.VersionConstraint
 
 import scala.async.Async.{async, await}
@@ -84,7 +84,7 @@ object TestHelpers extends PlatformTestHelpers {
             Dependency(
               rootDep.module,
               rootDep.versionConstraint
-            ).withVariantSelector(rootDep.variantSelector)
+            ).copy(variantSelector = rootDep.variantSelector)
           )
           ds == simpleDeps
         }
@@ -125,9 +125,9 @@ object TestHelpers extends PlatformTestHelpers {
           // hack not to have to edit / review lots of test fixtures
           val params0 =
             if (params.defaultConfiguration == Configuration.defaultRuntime)
-              params.withDefaultConfiguration(Configuration.compile)
+              params.copy(defaultConfiguration = Configuration.compile)
             else if (params.defaultConfiguration == Configuration.compile)
-              params.withDefaultConfiguration(Configuration("really-compile"))
+              params.copy(defaultConfiguration = Configuration("really-compile"))
             else
               params
           // This avoids some sha1 changes
@@ -135,6 +135,10 @@ object TestHelpers extends PlatformTestHelpers {
             val noComma = s.replace(", ", "||")
             val remove  = Seq("None", "List()", "Map()", "Set()")
             var value   = noComma.replace("HashSet", "Set")
+            // ignoreOptionalFromDepMgmt, the last field of ResolutionParams, defaults to false -
+            // dropping it when it has its default value keeps the former sha-1 values
+            if (value.endsWith("||false)"))
+              value = value.stripSuffix("||false)") + ")"
             for (r <- remove) {
               value = value.replace("|" + r + "|", "")
               if (value.endsWith("||" + r + ")"))
@@ -266,6 +270,26 @@ object TestHelpers extends PlatformTestHelpers {
           ).mkString(":")
         }
         .distinct
+    }
+
+  def validateTree(
+    res: Resolution,
+    params: ResolutionParams = ResolutionParams(),
+    extraKeyPart: String = "",
+    attributesBasedReprAsToString: Boolean = false
+  ): Future[Unit] =
+    validate(
+      "trees",
+      res,
+      params,
+      extraKeyPart,
+      attributesBasedReprAsToString = attributesBasedReprAsToString
+    ) {
+      Print
+        .dependencyTree0(res, colors = false)
+        .replace("\r\n", "\n")
+        .linesIterator
+        .toVector
     }
 
   def versionOf(res: Resolution, mod: Module): Option[String] =

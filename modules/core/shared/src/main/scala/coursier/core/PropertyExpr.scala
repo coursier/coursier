@@ -130,32 +130,37 @@ private[coursier] object PropertyExpr {
 
     // Probe: before allocating anything, verify at least one ref resolves.
     // Only runs at top level (!forceSubstitute), where seen=Nil, so no cycle check needed.
-    if (!forceSubstitute) {
-      var hasSubst = false
-      var j        = 0
-      while (j < n && !hasSubst) {
-        parts(j) match {
-          case PropertyReference(name, _) =>
-            if (lookup.lookupOrNull(name) != null) hasSubst = true
-          case _ =>
+    val noSubst =
+      if (!forceSubstitute) {
+        var hasSubst = false
+        var j        = 0
+        while (j < n && !hasSubst) {
+          parts(j) match {
+            case PropertyReference(name, _) =>
+              if (lookup.lookupOrNull(name) != null) hasSubst = true
+            case _ =>
+          }
+          j += 1
         }
-        j += 1
+        !hasSubst
       }
-      if (!hasSubst) return raw
-    }
+      else false
 
-    // Single-part fast path: no StringBuilder needed
-    if (n == 1)
-      return resolvePartToString(parts(0), lookup, trim, seen, depth)
-
-    // Single forward pass: capacity heuristic avoids resizing in the common case
-    val sb = new java.lang.StringBuilder(if (raw.nonEmpty) raw.length else 16)
-    var i  = 0
-    while (i < n) {
-      sb.append(resolvePartToString(parts(i), lookup, trim, seen, depth))
-      i += 1
+    if (noSubst)
+      raw
+    else if (n == 1)
+      // Single-part fast path: no StringBuilder needed
+      resolvePartToString(parts(0), lookup, trim, seen, depth)
+    else {
+      // Single forward pass: capacity heuristic avoids resizing in the common case
+      val sb = new java.lang.StringBuilder(if (raw.nonEmpty) raw.length else 16)
+      var i  = 0
+      while (i < n) {
+        sb.append(resolvePartToString(parts(i), lookup, trim, seen, depth))
+        i += 1
+      }
+      sb.toString
     }
-    sb.toString
   }
 
   def parse(s: String): PropertyExpr = {

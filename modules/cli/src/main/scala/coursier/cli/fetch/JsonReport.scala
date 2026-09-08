@@ -100,7 +100,7 @@ object JsonReport {
 
         val directDeps = trees
           .iterator
-          .flatMap(_.children.iterator)
+          .flatMap(_.children.iterator.filterNot(_.endorsed))
           .map(_.dependency)
           .map(key0)
           .toVector
@@ -117,7 +117,7 @@ object JsonReport {
               allDeps(
                 acc,
                 seen + h.dependency,
-                h.children.filter(tr => !seen(tr.dependency)).toList ::: t
+                h.children.filter(tr => !tr.endorsed && !seen(tr.dependency)).toList ::: t
               )
           }
 

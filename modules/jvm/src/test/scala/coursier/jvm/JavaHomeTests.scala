@@ -57,8 +57,10 @@ object JavaHomeTests extends TestSuite {
 
     test("environment update should update both JAVA_HOME and PATH on Linux or Windows") {
       val expectedEdit = EnvironmentUpdate()
-        .withSet(Seq("JAVA_HOME" -> platformPath("/home/foo/jvm/openjdk-27")))
-        .withPathLikeAppends(Seq("PATH" -> platformPath("/home/foo/jvm/openjdk-27/bin")))
+        .copy(
+          set = Seq("JAVA_HOME" -> platformPath("/home/foo/jvm/openjdk-27")),
+          pathLikeAppends = Seq("PATH" -> platformPath("/home/foo/jvm/openjdk-27/bin"))
+        )
       val edit =
         JavaHome.environmentFor(false, new File("/home/foo/jvm/openjdk-27"), isMacOs = false)
       assert(edit == expectedEdit)
@@ -66,7 +68,7 @@ object JavaHomeTests extends TestSuite {
 
     test("environment update should update only JAVA_HOME on macOS") {
       val expectedEdit = EnvironmentUpdate()
-        .withSet(Seq("JAVA_HOME" -> platformPath("/home/foo/jvm/openjdk-27")))
+        .copy(set = Seq("JAVA_HOME" -> platformPath("/home/foo/jvm/openjdk-27")))
       val edit =
         JavaHome.environmentFor(false, new File("/home/foo/jvm/openjdk-27"), isMacOs = true)
       assert(edit == expectedEdit)
@@ -75,10 +77,11 @@ object JavaHomeTests extends TestSuite {
     test("system JVM should respect JAVA_HOME") {
 
       val env = Map("JAVA_HOME" -> platformPath("/home/foo/jvm/adopt-31"))
-      val home = JavaHome()
-        .withGetEnv(Some(env.get))
-        .withCommandOutput(forbidCommands)
-        .withOs("linux")
+      val home = JavaHome().copy(
+        getEnv = Some(env.get),
+        commandOutput = forbidCommands,
+        os = "linux"
+      )
 
       val expectedSystem = Some(platformPath("/home/foo/jvm/adopt-31"))
       val system = home.system()
@@ -102,10 +105,11 @@ object JavaHomeTests extends TestSuite {
               throw new Exception(s"Unexpected command: $command")
         }
 
-      val home = JavaHome()
-        .withGetEnv(Some(_ => None))
-        .withCommandOutput(commandOutput)
-        .withOs("darwin")
+      val home = JavaHome().copy(
+        getEnv = Some(_ => None),
+        commandOutput = commandOutput,
+        os = "darwin"
+      )
 
       val expectedSystem = Some(platformPath("/Library/JVMs/oracle-41"))
       val system = home.system()
@@ -143,10 +147,11 @@ object JavaHomeTests extends TestSuite {
               throw new Exception(s"Unexpected command: $command")
         }
 
-      val home = JavaHome()
-        .withGetEnv(Some(_ => None))
-        .withCommandOutput(commandOutput)
-        .withOs("linux")
+      val home = JavaHome().copy(
+        getEnv = Some(_ => None),
+        commandOutput = commandOutput,
+        os = "linux"
+      )
 
       val expectedSystem = Some(platformPath("/usr/lib/jvm/oracle-39b07"))
       val system = home.system()
@@ -181,26 +186,30 @@ object JavaHomeTests extends TestSuite {
                 Task.fail(new Exception("This cache must not be used"))
               )
           }
-        val failArchiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(failCache)
+        val failArchiveCache = ArchiveCache.create[Task](tmpDir.toFile).copy(cache = failCache)
         val csCache = MockCache.create[Task](
           JvmCacheTests.mockDataLocation,
           pool,
           baseChangingOpt = Some(JvmCacheTests.mockDataLocation)
         )
-        val archiveCache = ArchiveCache[Task](tmpDir.toFile).withCache(csCache)
+        val archiveCache = ArchiveCache.create[Task](tmpDir.toFile).copy(cache = csCache)
         val cache = JvmCache()
-          .withArchiveCache(archiveCache)
-          .withOs("the-os")
-          .withArchitecture("the-arch")
+          .copy(
+            archiveCache = archiveCache,
+            os = "the-os",
+            architecture = "the-arch"
+          )
           .withIndex(Task.point(index))
         val home = JavaHome()
-          .withGetEnv(Some(_ => None))
-          .withCommandOutput(forbidCommands)
-          .withOs("the-os")
+          .copy(
+            getEnv = Some(_ => None),
+            commandOutput = forbidCommands,
+            os = "the-os"
+          )
           .withCache(cache)
         val noUpdateHome = home
-          .withNoUpdateCache(Some(cache))
-          .withCache(cache.withArchiveCache(failArchiveCache))
+          .copy(noUpdateCache = Some(cache))
+          .withCache(cache.copy(archiveCache = failArchiveCache))
 
         val initialCheckRes = home.getIfInstalled("the-jdk:1.1").unsafeRun(wrapExceptions = true)
         assert(initialCheckRes.isEmpty)

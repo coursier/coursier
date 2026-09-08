@@ -306,7 +306,7 @@ import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import scala.concurrent.ExecutionContext
 
-val cache = FileCache[IO]()
+val cache = FileCache.create[IO]()
 
 val ioResolution = Resolve(cache) // note the cache passed here
   .addDependencies(dep"org.tpolecat:doobie-core_2.12:0.6.0")
@@ -318,4 +318,6 @@ ioResolution: cats.effect.IO[Resolution]
 ```
 
 Note that this example requires the `coursier-cats-interop` module
-(`io.get-coursier::coursier-cats-interop:@VERSION@`).
+(`io.get-coursier::coursier-cats-interop:2.1.25-M26`). `2.1.25-M26` is the last release
+this module was published for - from now on, it is only published as snapshots, not for
+releases.

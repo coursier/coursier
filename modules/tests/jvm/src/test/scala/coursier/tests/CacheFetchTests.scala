@@ -56,8 +56,10 @@ object CacheFetchTests extends TestSuite {
 
     val fetchs = defaultCache()
       .noCredentials
-      .withLocation(tmpDir)
-      .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
+      .copy(
+        location = tmpDir,
+        followHttpToHttpsRedirections = followHttpToHttpsRedirections
+      )
       .fetchs
 
     val processFetch = ResolutionProcess.fetch0(
@@ -74,7 +76,7 @@ object CacheFetchTests extends TestSuite {
     )
 
     val startRes = Resolution()
-      .withRootDependencies(deps)
+      .copy(rootDependencies = deps)
 
     val f = ResolutionProcess(startRes)
       .run0(processFetch)

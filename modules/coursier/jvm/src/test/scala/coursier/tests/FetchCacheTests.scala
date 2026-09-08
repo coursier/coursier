@@ -85,7 +85,7 @@ object FetchCacheTests extends TestSuite {
             .withCache(
               defaultCache()
                 .noCredentials
-                .withLocation(tmpCache.toFile)
+                .copy(location = tmpCache.toFile)
             )
             .withFetchCache(tmpFetchCache.toFile)
             .future()

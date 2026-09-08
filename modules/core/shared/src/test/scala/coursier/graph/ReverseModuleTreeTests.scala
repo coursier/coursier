@@ -90,9 +90,10 @@ object ReverseModuleTreeTests extends TestSuite {
       }
       val elapsedMs = (System.nanoTime() - start) / 1000000
 
-      // With cached hashCode, this should complete in well under 1 second.
-      // Without caching, 100 nodes * 500-entry maps would take much longer.
-      assert(elapsedMs < 1000L)
+      // With cached hashCode, this should complete in well under a few seconds.
+      // Without caching, 10000 nodes * 50000-entry maps would take much longer.
+      // Keep the bound loose enough for slower Windows CI runners.
+      assert(elapsedMs < 5000L)
     }
   }
 }

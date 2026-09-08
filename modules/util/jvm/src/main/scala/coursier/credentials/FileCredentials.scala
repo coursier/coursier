@@ -9,7 +9,7 @@ import dataclass.data
 
 import scala.jdk.CollectionConverters._
 
-@data class FileCredentials(
+@data case class FileCredentials(
   path: String,
   optional: Boolean = true
 ) extends Credentials {
@@ -65,10 +65,12 @@ object FileCredentials {
         .fold(false)(_.toBoolean)
 
       DirectCredentials(host, user, password)
-        .withRealm(realmOpt)
-        .withMatchHost(matchHost)
-        .withHttpsOnly(httpsOnly)
-        .withPassOnRedirect(passOnRedirect)
+        .copy(
+          realm = realmOpt,
+          matchHost = matchHost,
+          httpsOnly = httpsOnly,
+          passOnRedirect = passOnRedirect
+        )
     }
   }
 

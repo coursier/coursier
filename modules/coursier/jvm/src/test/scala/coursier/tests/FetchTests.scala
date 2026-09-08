@@ -10,15 +10,16 @@ import coursier.version.VersionConstraint
 import utest._
 
 import scala.async.Async.{async, await}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 object FetchTests extends TestSuite {
 
-  import TestHelpers.{ec, cache, cacheWithHandmadeMetadata, handmadeMetadataBase, validateArtifacts}
+  import TestHelpers.{cache, cacheWithHandmadeMetadata, handmadeMetadataBase, validateArtifacts}
 
   private val fetch = Fetch()
     .noMirrors
     .withCache(cache)
+    .withRepositories(Seq(Repositories.central))
 
   def enableModules(fetch: Fetch[Task]): Fetch[Task] =
     fetch.withRepositories {
@@ -28,6 +29,8 @@ object FetchTests extends TestSuite {
         case other => other
       }
     }
+
+  private implicit val ec: ExecutionContext = TestHelpers.ec
 
   val tests = Tests {
 
@@ -203,17 +206,14 @@ object FetchTests extends TestSuite {
       val m2Repo   = MavenRepository(m2Local)
       val ivy2Repo = IvyRepository.parse(ivy2Local + "/[defaultPattern]").toOption.get
 
-      val fetch0 = fetch
-        .withRepositories(Seq(Repositories.central))
-
       test("m2Local") {
         async {
           val res = await {
-            fetch0
+            fetch
               .addRepositories(m2Repo)
               .addDependencies(
                 dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
-                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
+                  .copy(variantSelector = VariantSelector.ConfigurationBased(Configuration.test))
               )
               .futureResult()
           }
@@ -243,11 +243,11 @@ object FetchTests extends TestSuite {
       test("ivy2Local") {
         async {
           val res = await {
-            fetch0
+            fetch
               .addRepositories(ivy2Repo)
               .addDependencies(
                 dep"com.thoughtworks:top_2.12:0.1.0-SNAPSHOT"
-                  .withVariantSelector(VariantSelector.ConfigurationBased(Configuration.test))
+                  .copy(variantSelector = VariantSelector.ConfigurationBased(Configuration.test))
               )
               .futureResult()
           }
@@ -281,11 +281,10 @@ object FetchTests extends TestSuite {
     test("properties") {
 
       val fetch0 = fetch
-        .withRepositories(Seq(
-          Repositories.central,
+        .addRepositories(
           mvn"http://repository.splicemachine.com/nexus/content/groups/public",
           mvn"http://repository.mapr.com/maven"
-        ))
+        )
         .addDependencies(
           dep"com.splicemachine:splice_spark:2.8.0.1915-SNAPSHOT"
         )
@@ -327,10 +326,9 @@ object FetchTests extends TestSuite {
           val res = await {
             fetch
               .withCache(cacheWithHandmadeMetadata)
-              .withRepositories(Seq(
-                Repositories.central,
+              .addRepositories(
                 IvyRepository.parse("http://ivy.abc.com/[defaultPattern]").toOption.get
-              ))
+              )
               .addDependencies(dep"test:a_2.12:1.0.0")
               .addArtifactTypes(artifactTypes: _*)
               .futureResult()
@@ -378,7 +376,7 @@ object FetchTests extends TestSuite {
         val subsetSourcesArtifacts = await {
           Artifacts()
             .withResolution(subsetRes)
-            .withClassifiers(Set(Classifier.sources))
+            .copy(classifiers = Set(Classifier.sources))
             .future()
         }
 
@@ -396,7 +394,7 @@ object FetchTests extends TestSuite {
       test("ko") {
         val cache1 = cache match {
           case cache: coursier.cache.MockCache[Task] =>
-            cache.withDummyArtifact(_ => false)
+            cache.copy(dummyArtifact = _ => false)
         }
         try {
           val res = fetch
@@ -414,12 +412,64 @@ object FetchTests extends TestSuite {
           val res = await {
             val osgeo = MavenRepository("https://repo.osgeo.org/repository/release")
             fetch
-              .withRepositories(Seq(osgeo, Repositories.central))
+              .withRepositories(Seq(osgeo) ++ fetch.repositories)
               .addDependencies(dep"javax.media:jai_core:1.1.3")
               .future()
           }
           assert(res(0) != null)
         }
+      }
+    }
+
+    // POMs with no <packaging> (Maven defaults to jar) but no main JAR on Maven Central.
+    // Without an explicit packaging publication, the JAR is emitted as optional: fetch still
+    // remembers it in fullDetailedArtifacts0, but a missing optional JAR does not yield a file
+    // and does not fail the fetch.
+    // (Relocation-only POMs such as bouncycastle:bctsp-jdk14:138 and
+    // org.bouncycastle:bcprov-ext-jdk18on:1.78.1 are intentionally excluded.)
+    test("missingJarDefaultPackaging") {
+      def assertOptionalMissingJar(dep: Dependency, expectedJarUrl: String): Unit = {
+        val cache1 = cache match {
+          case cache: coursier.cache.MockCache[Task] =>
+            cache.copy(dummyArtifact = _ => false)
+        }
+        val res = fetch
+          .withCache(cache1)
+          .addDependencies(dep)
+          .runResult()
+
+        val matching = res.fullDetailedArtifacts0.collect {
+          case (_, _, art, fileOpt) if art.url == expectedJarUrl =>
+            (art, fileOpt)
+        }
+        assert(matching.nonEmpty)
+        val (art, fileOpt) = matching.head
+        assert(art.optional)
+        assert(fileOpt.isEmpty)
+
+        // Successful artifacts / files omit the missing optional JAR
+        assert(!res.artifacts.exists(_._1.url == expectedJarUrl))
+        val expectedJarName = expectedJarUrl.substring(expectedJarUrl.lastIndexOf('/') + 1)
+        assert(!res.files.map(_.getName).contains(expectedJarName))
+      }
+
+      test("jmxtools") {
+        assertOptionalMissingJar(
+          dep"com.sun.jdmk:jmxtools:1.2.1",
+          "https://repo1.maven.org/maven2/com/sun/jdmk/jmxtools/1.2.1/jmxtools-1.2.1.jar"
+        )
+      }
+      test("jmxri") {
+        assertOptionalMissingJar(
+          dep"com.sun.jmx:jmxri:1.2.1",
+          "https://repo1.maven.org/maven2/com/sun/jmx/jmxri/1.2.1/jmxri-1.2.1.jar"
+        )
+      }
+      test("jms") {
+        assertOptionalMissingJar(
+          dep"javax.jms:jms:1.1",
+          "https://repo1.maven.org/maven2/javax/jms/jms/1.1/jms-1.1.jar"
+        )
       }
     }
 
@@ -520,7 +570,7 @@ object FetchTests extends TestSuite {
       test("android") {
 
         def withVariant(dep: Dependency, map: Map[String, VariantSelector.VariantMatcher]) =
-          dep.withVariantSelector(VariantSelector.AttributesBased(map))
+          dep.copy(variantSelector = VariantSelector.AttributesBased(map))
 
         def testVariants(map: Map[String, VariantSelector.VariantMatcher]): Future[Unit] = async {
           val params = fetch.resolutionParams
@@ -573,13 +623,11 @@ object FetchTests extends TestSuite {
         )(
           dependencies: Dependency*
         ): Future[Unit] = async {
-          val params = fetch.resolutionParams
-            .withDefaultConfiguration(
-              config.getOrElse(fetch.resolutionParams.defaultConfiguration)
-            )
-            .withDefaultVariantAttributes(
+          val params = fetch.resolutionParams.copy(
+            defaultConfiguration = config.getOrElse(fetch.resolutionParams.defaultConfiguration),
+            defaultVariantAttributes =
               defaultAttributes.orElse(fetch.resolutionParams.defaultVariantAttributes)
-            )
+          )
           val res = await {
             enableModules(fetch.addRepositories(Repositories.google))
               .withResolutionParams(params)
@@ -596,8 +644,8 @@ object FetchTests extends TestSuite {
         }
 
         test("compile") {
-          val attr = VariantSelector.AttributesBased().withMatchers(
-            Map(
+          val attr = VariantSelector.AttributesBased().copy(
+            matchers = Map(
               "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
             )
           )
@@ -606,8 +654,8 @@ object FetchTests extends TestSuite {
           )
         }
         test("runtime") {
-          val attr = VariantSelector.AttributesBased().withMatchers(
-            Map(
+          val attr = VariantSelector.AttributesBased().copy(
+            matchers = Map(
               "org.jetbrains.kotlin.platform.type" -> VariantSelector.VariantMatcher.Equals("jvm")
             )
           )
@@ -620,7 +668,7 @@ object FetchTests extends TestSuite {
         test("compile") {
           async {
             val params = fetch.resolutionParams
-              .withDefaultConfiguration(Configuration.compile)
+              .copy(defaultConfiguration = Configuration.compile)
               .addVariantAttributes(
                 "org.gradle.jvm.environment" ->
                   VariantSelector.VariantMatcher.Equals("standard-jvm"),

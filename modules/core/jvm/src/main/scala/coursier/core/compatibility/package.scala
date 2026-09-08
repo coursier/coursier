@@ -27,10 +27,11 @@ package object compatibility {
   private lazy val throwExceptions = java.lang.Boolean.getBoolean("coursier.core.throw-exceptions")
 
   private def entityIdx(s: String, fromIdx: Int): (Int, Int) = {
-    val len = s.length
-    var i   = s.indexOf('&', fromIdx)
+    val len                = s.length
+    var i                  = s.indexOf('&', fromIdx)
+    var result: (Int, Int) = null
 
-    while (i >= 0 && i <= len - 3) { // Need at least &X; (3 chars)
+    while (result == null && i >= 0 && i <= len - 3) { // Need at least &X; (3 chars)
       var j = i + 1
       while (
         j < len && {
@@ -40,11 +41,11 @@ package object compatibility {
       ) j += 1
 
       if (j > i + 1 && j < len && s.charAt(j) == ';')
-        return (i, j + 1)
-
-      i = s.indexOf('&', i + 1)
+        result = (i, j + 1)
+      else
+        i = s.indexOf('&', i + 1)
     }
-    null
+    result
   }
   import java.io.{CharArrayReader, Reader, StringReader}
 
@@ -65,87 +66,90 @@ package object compatibility {
     }
     def process(s: String): Reader = {
       val len = s.length
-      if (len == 0) return new StringReader("")
+      if (len == 0)
+        new StringReader("")
+      else {
+        // Skip BOM if present
+        val hasBom = s.charAt(0) == '\uFEFF'
+        val start  = if (hasBom) 1 else 0
 
-      // Skip BOM if present
-      val hasBom = s.charAt(0) == '\uFEFF'
-      val start  = if (hasBom) 1 else 0
+        var dst: Array[Char] = null
+        var readPtr          = start
+        var writePtr         = 0
 
-      var dst: Array[Char] = null
-      var readPtr          = start
-      var writePtr         = 0
+        // Leapfrog from ampersand to ampersand
+        var nextAmp = s.indexOf('&', readPtr)
 
-      // Leapfrog from ampersand to ampersand
-      var nextAmp = s.indexOf('&', readPtr)
-
-      if (nextAmp == -1) {
-        // Fast path: No ampersands at all
-        if (hasBom) {
-          val reader = new StringReader(s)
-          reader.skip(1)
-          reader.mark(len - 1)
-          return reader
-        }
-        return new StringReader(s)
-      }
-
-      while (readPtr < len)
-        if (nextAmp == -1 || readPtr < nextAmp) {
-          // We are between the current readPtr and the next ampersand (or end of string)
-          val limit    = if (nextAmp == -1) len else nextAmp
-          val chunkLen = limit - readPtr
-
-          if (dst != null) {
-            s.getChars(readPtr, limit, dst, writePtr)
-            writePtr += chunkLen
+        if (nextAmp == -1)
+          // Fast path: No ampersands at all
+          if (hasBom) {
+            val reader = new StringReader(s)
+            reader.skip(1)
+            reader.mark(len - 1)
+            reader
           }
           else
-            // If we haven't allocated dst yet, we just "virtually" move the writePtr
-            writePtr += chunkLen
-          readPtr = limit
-        }
+            new StringReader(s)
         else {
-          // We are exactly at an ampersand
-          val semiIdx = s.indexOf(';', readPtr + 1)
+          while (readPtr < len)
+            if (nextAmp == -1 || readPtr < nextAmp) {
+              // We are between the current readPtr and the next ampersand (or end of string)
+              val limit    = if (nextAmp == -1) len else nextAmp
+              val chunkLen = limit - readPtr
 
-          // Spec check: entity must close within 11 chars (&...;)
-          if (semiIdx != -1 && (semiIdx - readPtr) <= 11) {
-            val entityNameWithAmpAndSemi = s.substring(readPtr, semiIdx + 1)
-            val replacement              = Entities.mapFast(entityNameWithAmpAndSemi)
-
-            if (replacement != null) {
-              // Lazy initialization on first confirmed substitution
-              if (dst == null) {
-                dst = new Array[Char](len)
-                // Copy everything skipped so far (the clean prefix, after BOM)
-                s.getChars(start, readPtr, dst, 0)
-                // writePtr was already tracking our virtual position
+              if (dst != null) {
+                s.getChars(readPtr, limit, dst, writePtr)
+                writePtr += chunkLen
               }
-
-              replacement.getChars(0, replacement.length, dst, writePtr)
-              writePtr += replacement.length
-              readPtr = semiIdx + 1
+              else
+                // If we haven't allocated dst yet, we just "virtually" move the writePtr
+                writePtr += chunkLen
+              readPtr = limit
             }
             else {
-              // Found &...; but not a spec entity, treat '&' as literal
-              if (dst != null) dst(writePtr) = '&'
-              writePtr += 1
-              readPtr += 1
+              // We are exactly at an ampersand
+              val semiIdx = s.indexOf(';', readPtr + 1)
+
+              // Spec check: entity must close within 11 chars (&...;)
+              if (semiIdx != -1 && (semiIdx - readPtr) <= 11) {
+                val entityNameWithAmpAndSemi = s.substring(readPtr, semiIdx + 1)
+                val replacement              = Entities.mapFast(entityNameWithAmpAndSemi)
+
+                if (replacement != null) {
+                  // Lazy initialization on first confirmed substitution
+                  if (dst == null) {
+                    dst = new Array[Char](len)
+                    // Copy everything skipped so far (the clean prefix, after BOM)
+                    s.getChars(start, readPtr, dst, 0)
+                    // writePtr was already tracking our virtual position
+                  }
+
+                  replacement.getChars(0, replacement.length, dst, writePtr)
+                  writePtr += replacement.length
+                  readPtr = semiIdx + 1
+                }
+                else {
+                  // Found &...; but not a spec entity, treat '&' as literal
+                  if (dst != null) dst(writePtr) = '&'
+                  writePtr += 1
+                  readPtr += 1
+                }
+              }
+              else {
+                // Lone '&' or ';' too far away
+                if (dst != null) dst(writePtr) = '&'
+                writePtr += 1
+                readPtr += 1
+              }
+
+              // Find the next ampersand for the next iteration
+              nextAmp = s.indexOf('&', readPtr)
             }
-          }
-          else {
-            // Lone '&' or ';' too far away
-            if (dst != null) dst(writePtr) = '&'
-            writePtr += 1
-            readPtr += 1
-          }
 
-          // Find the next ampersand for the next iteration
-          nextAmp = s.indexOf('&', readPtr)
+          if (dst == null) new StringReader(s)
+          else new CharArrayReader(dst, 0, writePtr)
         }
-
-      if (dst == null) new StringReader(s)
-      else new CharArrayReader(dst, 0, writePtr)
+      }
     }
   }
 

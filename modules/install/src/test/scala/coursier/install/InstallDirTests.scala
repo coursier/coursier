@@ -19,7 +19,7 @@ object InstallDirTests extends TestSuite {
 
       val mainClass = "main.class"
       val params = InstallDir().params(
-        AppDescriptor().withLauncherType(LauncherType.GraalvmNativeImage),
+        AppDescriptor().copy(launcherType = LauncherType.GraalvmNativeImage),
         AppArtifacts(),
         Nil,
         mainClass

@@ -102,8 +102,10 @@ object ChecksumTests extends TestSuite {
       def validate(artifact: Artifact, sumType: String): Task[Either[ArtifactError, Unit]] =
         defaultCache()
           .noCredentials
-          .withLocation(cache)
-          .withPool(Sync.fixedThreadPool(4))
+          .copy(
+            location = cache,
+            pool = Sync.fixedThreadPool(4)
+          )
           .validateChecksum(artifact, sumType).run
 
       def artifact(url: String) = Artifact(

@@ -12,7 +12,7 @@ object VersionsTests extends TestSuite {
   import TestHelpers.{ec, cache}
 
   private val versions = Versions()
-    .withCache(cache)
+    .copy(cache = cache)
 
   val tests = Tests {
     test("simple") {

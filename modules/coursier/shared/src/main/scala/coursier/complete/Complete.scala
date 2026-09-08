@@ -8,7 +8,7 @@ import coursier.util.Sync
 import dataclass.data
 import coursier.util.Task
 
-@data class Complete[F[_]](
+@data case class Complete[F[_]](
   cache: Cache[F],
   repositories: Seq[Repository] = Resolve.defaultRepositories,
   scalaVersionOpt: Option[String] = None,
@@ -21,27 +21,29 @@ import coursier.util.Task
   private def F = sync
 
   def addRepositories(repository: Repository*): Complete[F] =
-    withRepositories(repositories ++ repository)
+    copy(repositories = repositories ++ repository)
 
   def withScalaVersion(version: String, adjustBinaryVersion: Boolean): Complete[F] =
-    withScalaVersionOpt(Some(version))
-      .withScalaBinaryVersionOpt(
+    copy(
+      scalaVersionOpt = Some(version),
+      scalaBinaryVersionOpt =
         if (adjustBinaryVersion) Some(Complete.scalaBinaryVersion(version))
         else scalaBinaryVersionOpt
-      )
+    )
   def withScalaVersion(version: String): Complete[F] =
     withScalaVersion(version, adjustBinaryVersion = true)
   def withScalaVersionOpt(versionOpt: Option[String], adjustBinaryVersion: Boolean): Complete[F] =
-    withScalaVersionOpt(versionOpt)
-      .withScalaBinaryVersionOpt(
+    copy(
+      scalaVersionOpt = versionOpt,
+      scalaBinaryVersionOpt =
         if (adjustBinaryVersion) versionOpt.map(Complete.scalaBinaryVersion)
         else scalaBinaryVersionOpt
-      )
+    )
   // FIXME Manage to recover that back (automatically adjusting scalaBinaryVersionOpt when scalaVersionOpt is set)
   // def withScalaVersionOpt(versionOpt: Option[String]): Complete[F] =
   //   withScalaVersionOpt(versionOpt, adjustBinaryVersion = versionOpt.nonEmpty)
   def withScalaBinaryVersion(version: String): Complete[F] =
-    withScalaBinaryVersionOpt(Some(version))
+    copy(scalaBinaryVersionOpt = Some(version))
 
   def complete(): F[(Int, Seq[String])] =
     result().map(r => (r.from, r.completions))
@@ -92,7 +94,7 @@ object Complete {
     else
       scalaVersion.split('.').take(2).mkString(".")
 
-  @data class Result(
+  @data case class Result(
     input: Repository.Complete.Input,
     results: Seq[(Repository, Either[Throwable, Seq[String]])]
   ) {
