@@ -20,7 +20,7 @@ The following Java system properties control proxy behaviour:
 | `http.proxyPort` | Port of the proxy for HTTP connections (default: `80`) |
 | `http.proxyUser` | Username for proxy authentication (HTTP) |
 | `http.proxyPassword` | Password for proxy authentication (HTTP) |
-| `http.nonProxyHosts` | Pipe-separated list of host patterns that bypass the proxy (e.g. `localhost|*.internal.example.com`) |
+| `http.nonProxyHosts` | Pipe-separated list of host patterns that bypass the proxy (e.g. `localhost\|*.internal.example.com`) |
 
 ## Maven settings.xml
 

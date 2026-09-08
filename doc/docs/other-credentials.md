@@ -166,7 +166,7 @@ The first matching credential is used. No credential is used if none matches.
 ```scala mdoc:silent
 import coursier.credentials.DirectCredentials
 
-val cred = DirectCredentials("repo.example.com", "myuser", "mypass")
+val directCred = DirectCredentials("repo.example.com", "myuser", "mypass")
   .withRealm(Some("My Repository"))
   .withHttpsOnly(true)
 ```
@@ -178,7 +178,7 @@ val cred = DirectCredentials("repo.example.com", "myuser", "mypass")
 ```scala mdoc:silent
 import coursier.credentials.FileCredentials
 
-val cred = FileCredentials("/home/alex/.config/coursier/credentials.properties")
+val fileCred = FileCredentials("/home/alex/.config/coursier/credentials.properties")
 ```
 
 Pass `optional = false` to throw an exception if the file is not found
