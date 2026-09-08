@@ -17,6 +17,7 @@ import scala.util.{Properties, Using}
 import coursier.clitests.util.TestAuthProxy
 import coursier.util.StringInterpolators._
 import utest._
+import scala.util.Using
 
 abstract class BootstrapTests extends TestSuite with LauncherOptions {
 
@@ -628,6 +629,38 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         ).call(cwd = tmpDir, check = false, mergeErrIntoOut = true)
         assert(res.exitCode != 0)
         assert(res.out.text().contains("--relocate can only be used along with --assembly"))
+      }
+    }
+
+    test("assembly service files") {
+      // Checks that META-INF/services files from multiple JARs are properly
+      // concatenated with newline separators, so each provider class name
+      // appears on its own line (regression test for broken service files).
+      TestUtil.withTempDir { tmpDir =>
+        val tmpDir0 = os.Path(tmpDir, os.pwd)
+        LauncherTestUtil.run(
+          args = Seq(
+            launcher,
+            "bootstrap",
+            "--assembly",
+            "-o",
+            "flyway-assembly.jar",
+            "org.flywaydb:flyway-core:10.13.0",
+            "org.flywaydb:flyway-database-postgresql:10.13.0",
+            "-M",
+            "foo" // Required, but ignored
+          ) ++ extraOptions,
+          directory = tmpDir
+        )
+
+        Using.resource(new ZipFile((tmpDir0 / "flyway-assembly.jar").toIO)) { zf =>
+          val entry   = zf.getEntry("META-INF/services/org.flywaydb.core.extensibility.Plugin")
+          val content = Source.fromInputStream(zf.getInputStream(entry))(Codec.UTF8).mkString
+          val lines   = content.linesIterator.toVector
+          assert(lines.nonEmpty)
+          assert(lines.forall(_.startsWith("org.flywaydb.")))
+          assert(lines.forall(!_.stripPrefix("org.flywaydb.").contains("org.flywaydb")))
+        }
       }
     }
 
