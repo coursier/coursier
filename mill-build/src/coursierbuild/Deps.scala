@@ -93,7 +93,7 @@ object Deps {
 
   object Versions {
     def cats          = "2.13.0"
-    def http4s        = "0.23.36"
+    def http4s        = "0.23.37"
     def jniUtils      = "0.3.4"
     def jsoniterScala = "2.13.5"
     def junit         = "4.13.2"
