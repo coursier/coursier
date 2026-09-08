@@ -69,8 +69,14 @@ SET PSEP=;
 
 @REM Start Java program
 :runm2
+if "%OS%"=="Windows_NT" goto WinNTExec
 SET CMDLINE=%JAVA_EXE% @JVM_OPTS@ %JAVA_OPTS% -Dprog.dir="%PROG_DIR:\=\\%" -jar "%JAR_PATH%" %CMD_LINE_ARGS%
 %CMDLINE%
+SET ERROR_CODE=%ERRORLEVEL%
+if %ERROR_CODE% NEQ 0 goto error
+goto end
+:WinNTExec
+%JAVA_EXE% @JVM_OPTS@ %JAVA_OPTS% -Dprog.dir="%PROG_DIR:\=\\%" -jar "%JAR_PATH%" %*
 SET ERROR_CODE=%ERRORLEVEL%
 if %ERROR_CODE% NEQ 0 goto error
 goto end
