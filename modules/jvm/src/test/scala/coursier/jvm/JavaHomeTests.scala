@@ -2,6 +2,7 @@ package coursier.jvm
 
 import java.io.File
 import java.nio.file.Files
+import java.nio.file.attribute.PosixFilePermissions
 import java.util.concurrent.atomic.AtomicBoolean
 
 import coursier.cache.{ArchiveCache, ArtifactError, Cache, MockCache}
@@ -76,14 +77,60 @@ object JavaHomeTests extends TestSuite {
 
     test("system JVM should respect JAVA_HOME") {
 
-      val env = Map("JAVA_HOME" -> platformPath("/home/foo/jvm/adopt-31"))
-      val home = JavaHome().copy(
-        getEnv = Some(env.get),
-        commandOutput = forbidCommands,
-        os = "linux"
-      )
+      JvmCacheTests.withTempDir { tmpDir =>
+        val binDir = tmpDir.resolve("bin")
+        Files.createDirectories(binDir)
+        val javaBin = binDir.resolve("java")
+        // An empty file with executable permission is sufficient: we only check
+        // isFile and canExecute (not that it's a real JVM binary).
+        Files.write(javaBin, Array.empty[Byte])
+        if (!Properties.isWin)
+          Files.setPosixFilePermissions(javaBin, PosixFilePermissions.fromString("rwxr-xr-x"))
 
-      val expectedSystem = Some(platformPath("/home/foo/jvm/adopt-31"))
+        val env = Map("JAVA_HOME" -> tmpDir.toAbsolutePath.toString)
+        val home = JavaHome()
+          .withGetEnv(Some(env.get))
+          .withCommandOutput(forbidCommands)
+          .withOs("linux")
+          .withPathExtensions(None) // test non-Windows behavior
+
+        val expectedSystem = Some(tmpDir.toAbsolutePath.toString)
+        val system = home.system()
+          .unsafeRun(wrapExceptions = true)(ExecutionContext.global)
+          .map(_.getAbsolutePath)
+        assert(system == expectedSystem)
+      }
+    }
+
+    test("system JVM should ignore invalid JAVA_HOME") {
+
+      // JAVA_HOME points at a directory with no bin/java, so we should fall back to
+      // the other detection mechanisms rather than trust it.
+
+      val commandOutput: CommandOutput =
+        new CommandOutput {
+          def run(
+            command: Seq[String],
+            keepErrorStream: Boolean,
+            extraEnv: Seq[(String, String)]
+          ): Either[Int, String] =
+            if (command == Seq("java", "-XshowSettings:properties", "-version"))
+              Right(
+                """  java.home = /usr/lib/jvm/oracle-39b07
+                  |""".stripMargin
+              )
+            else
+              throw new Exception(s"Unexpected command: $command")
+        }
+
+      val env = Map("JAVA_HOME" -> platformPath("/outer/space"))
+      val home = JavaHome()
+        .withGetEnv(Some(env.get))
+        .withCommandOutput(commandOutput)
+        .withOs("linux")
+        .withPathExtensions(None) // test non-Windows behavior
+
+      val expectedSystem = Some(platformPath("/usr/lib/jvm/oracle-39b07"))
       val system = home.system()
         .unsafeRun(wrapExceptions = true)(ExecutionContext.global)
         .map(_.getAbsolutePath)
