@@ -178,34 +178,41 @@ object Resolution {
         val b       = new java.util.HashMap[DependencyManagement.Key, DependencyManagement.Values]()
         var changed = false
 
+        // Substituting properties in a key can make it equal to another entry's key, and only the
+        // first of the two ends up in the map (the other one merely fills its empty fields, via
+        // `orElse`). Which one comes first must not depend on the iteration order of `map`, that
+        // is on the hash codes of its keys: add the entries that need no substitution in their key
+        // first, then the remaining ones in a fixed order.
+        val keysWithProperties =
+          List.newBuilder[(DependencyManagement.Key, DependencyManagement.Values)]
+
         val it = map.iterator
         while (it.hasNext) {
           val kv = it.next()
-          if (kv._1.hasProperties) {
-            val (k0, v0) = withPropertiesEntry(kv, properties)
-
-            if (!changed && (k0 != kv._1 || v0 != kv._2))
-              changed = true
-
-            val existing = b.get(k0)
-            if (existing == null)
-              b.put(k0, v0)
-            else
-              b.put(k0, existing.orElse(v0))
-          }
+          if (kv._1.hasProperties)
+            keysWithProperties += kv
           else {
             val v0 = withProperties(kv._2, properties)
 
             if (!changed && (v0 != kv._2))
               changed = true
 
-            val existing = b.get(kv._1)
-            if (existing == null)
-              b.put(kv._1, v0)
-            else
-              b.put(kv._1, existing.orElse(v0))
+            // no collision possible here, the keys are those of `map` and are left as is
+            b.put(kv._1, v0)
           }
+        }
 
+        for (kv <- keysWithProperties.result().sortBy(_._1.repr)) {
+          val (k0, v0) = withPropertiesEntry(kv, properties)
+
+          if (!changed && (k0 != kv._1 || v0 != kv._2))
+            changed = true
+
+          val existing = b.get(k0)
+          if (existing == null)
+            b.put(k0, v0)
+          else
+            b.put(k0, existing.orElse(v0))
         }
 
         if (changed)
