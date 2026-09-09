@@ -320,7 +320,7 @@ object CacheUrl {
     maxRedirectionsOpt: Option[Int],
     classLoaders: Seq[ClassLoader],
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
-    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout,
+    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout
   )
 
   @deprecated(
@@ -596,9 +596,9 @@ object CacheUrl {
     override def createSocket(s: Socket, host: String, port: Int, autoClose: Boolean): Socket =
       underlying.createSocket(s, originalHostname, port, autoClose)
 
-    override def getDefaultCipherSuites: Array[String] = underlying.getDefaultCipherSuites
+    override def getDefaultCipherSuites: Array[String]   = underlying.getDefaultCipherSuites
     override def getSupportedCipherSuites: Array[String] = underlying.getSupportedCipherSuites
-    override def createSocket(): Socket = underlying.createSocket()
+    override def createSocket(): Socket                  = underlying.createSocket()
     override def createSocket(host: String, port: Int): Socket =
       underlying.createSocket(host, port)
     override def createSocket(
@@ -631,8 +631,8 @@ object CacheUrl {
     // isIpAddress is only used to skip DNS resolution when the host is already an IP.
     // If an invalid IP-like string slips through, InetAddress.getAllByName will fail with
     // UnknownHostException, which is caught and handled safely.
-    host.matches("""^\d+\.\d+\.\d+\.\d+$""") || // IPv4
-      (host.startsWith("[") && host.endsWith("]"))   // IPv6 bracket notation
+    host.matches("""^\d+\.\d+\.\d+\.\d+$""") ||  // IPv4
+    (host.startsWith("[") && host.endsWith("]")) // IPv6 bracket notation
 
   private def argsWithIpAddress(
     args: Args,
@@ -702,8 +702,8 @@ object CacheUrl {
     * multiple A-records but the first resolved IP is unreachable.
     *
     * Can be disabled by setting the `COURSIER_RETRY_RESOLVED_IPS` environment variable (or
-    * `coursier.retry-resolved-ips` system property) to `false`. The per-IP connection timeout
-    * can be configured via `COURSIER_PER_IP_TIMEOUT_MS` (or `coursier.per-ip-timeout-ms`).
+    * `coursier.retry-resolved-ips` system property) to `false`. The per-IP connection timeout can
+    * be configured via `COURSIER_PER_IP_TIMEOUT_MS` (or `coursier.per-ip-timeout-ms`).
     */
   private[cache] def urlConnectionMaybePartialWithIpFallback(
     args: Args,
@@ -745,6 +745,5 @@ object CacheUrl {
 
     throw lastEx
   }
-
 
 }
