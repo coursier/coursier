@@ -1377,9 +1377,9 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         // scenario where Get-Content -Raw returns a multi-line string passed as a
         // single argument to a .bat launcher (issue: bat ignores all lines but first).
         // Note: in PowerShell strings, `n is the escape sequence for a newline character.
+        val quotedBootstrap = "'" + bootstrap.toString.replace("'", "''") + "'"
         val psScript =
-          s"""$$arg = "first line`nsecond line`nthird line"
-             |& '${bootstrap.toString.replace("'", "''")}' $$arg""".stripMargin
+          s"""$$arg = "first line`nsecond line`nthird line"; & $quotedBootstrap $$arg"""
         val output = os.proc(
           "powershell",
           "-NoProfile",
@@ -1387,14 +1387,9 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
           psScript
         ).call(cwd = tmpDir).out.text()
 
-        assert(
-          output.contains("second line"),
-          s"Expected 'second line' in output but got: $output"
-        )
-        assert(
-          output.contains("third line"),
-          s"Expected 'third line' in output but got: $output"
-        )
+        val lines         = output.linesIterator.map(_.trim).filter(_.nonEmpty).toVector
+        val expectedLines = Vector("first line", "second line", "third line")
+        assert(lines == expectedLines)
       }
 
     def jniUtilFromBootstrapTest(extraOpts: String*): Unit = {
