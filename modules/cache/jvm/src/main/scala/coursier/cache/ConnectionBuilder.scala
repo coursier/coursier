@@ -36,8 +36,8 @@ import scala.concurrent.duration.FiniteDuration
     c
   }
 
-  def connectionMaybePartial(): (URLConnection, Boolean) =
-    CacheUrl.urlConnectionMaybePartial(CacheUrl.Args(
+  def connectionMaybePartial(): (URLConnection, Boolean) = {
+    val args = CacheUrl.Args(
       url,
       url,
       authentication,
@@ -55,5 +55,10 @@ import scala.concurrent.duration.FiniteDuration
       classLoaders,
       connectTimeout,
       readTimeout
-    ))
+    )
+    if (CacheDefaults.retryResolvedIps)
+      CacheUrl.urlConnectionMaybePartialWithIpFallback(args, CacheDefaults.perIpTimeoutMs)
+    else
+      CacheUrl.urlConnectionMaybePartial(args)
+  }
 }

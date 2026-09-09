@@ -5,7 +5,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
+import java.net.Inet6Address;
 import java.net.MalformedURLException;
+import java.net.ConnectException;
+import java.net.NoRouteToHostException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.FileLock;
@@ -93,8 +98,13 @@ class Download {
         }
     }
 
-    private void doDownload(URL url, File tmpDest, File dest) throws IOException {
+    private void doDownloadToUrl(URL url, File tmpDest, File dest) throws IOException {
+        doDownloadToUrl(url, tmpDest, dest, 0);
+    }
+
+    private void doDownloadToUrl(URL url, File tmpDest, File dest, int connectTimeoutMs) throws IOException {
         URLConnection conn = url.openConnection();
+        if (connectTimeoutMs > 0) conn.setConnectTimeout(connectTimeoutMs);
         if (conn instanceof HttpURLConnection) {
             final Optional<String> userInfoOpt = Optional.ofNullable(url.getUserInfo());
             final Optional<String> userInfoUserOpt = userInfoOpt.map(userInfo -> userInfo.split(":", 2)[0]);
@@ -131,6 +141,83 @@ class Download {
         Util.writeBytesToFile(tmpDest, b);
         tmpDest.setLastModified(lastModified);
         Files.move(tmpDest.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
+    }
+
+    private static boolean isRetryableConnectionError(IOException e) {
+        return (e instanceof ConnectException) ||
+               (e instanceof NoRouteToHostException) ||
+               (e instanceof SocketTimeoutException);
+    }
+
+    private static boolean isIpAddress(String host) {
+        return host.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$") || // IPv4
+               (host.startsWith("[") && host.endsWith("]"));    // IPv6 bracket notation
+    }
+
+    private static URL urlWithIp(URL original, InetAddress addr) throws MalformedURLException {
+        String ipStr = (addr instanceof Inet6Address)
+            ? "[" + addr.getHostAddress() + "]"
+            : addr.getHostAddress();
+        int port = original.getPort();
+        String ipWithPort = (port == -1) ? ipStr : ipStr + ":" + port;
+        String userInfo = original.getUserInfo();
+        String userInfoPart = (userInfo != null && !userInfo.isEmpty()) ? userInfo + "@" : "";
+        String newUrlStr = original.getProtocol() + "://" + userInfoPart + ipWithPort + original.getFile();
+        return new URL(newUrlStr);
+    }
+
+    private void doDownload(URL url, File tmpDest, File dest) throws IOException {
+        // Try the primary connection first
+        IOException initialEx;
+        try {
+            doDownloadToUrl(url, tmpDest, dest);
+            return;
+        } catch (IOException e) {
+            if (!isRetryableConnectionError(e)) throw e;
+            initialEx = e;
+        }
+
+        // Check whether multi-IP retry is enabled (default: true)
+        String retryProp = System.getProperty("coursier.retry-resolved-ips");
+        String retryEnv  = System.getenv("COURSIER_RETRY_RESOLVED_IPS");
+        String retryVal  = (retryProp != null) ? retryProp : retryEnv;
+        if ("false".equalsIgnoreCase(retryVal)) throw initialEx;
+
+        String host = url.getHost();
+        if (host == null || host.isEmpty() || isIpAddress(host)) throw initialEx;
+
+        // Resolve all IP addresses for the hostname
+        InetAddress[] allAddresses;
+        try {
+            allAddresses = InetAddress.getAllByName(host);
+        } catch (Exception e) {
+            throw initialEx;
+        }
+
+        if (allAddresses.length <= 1) throw initialEx;
+
+        // Per-IP connection timeout
+        String timeoutProp = System.getProperty("coursier.per-ip-timeout-ms");
+        String timeoutEnv  = System.getenv("COURSIER_PER_IP_TIMEOUT_MS");
+        String timeoutVal  = (timeoutProp != null) ? timeoutProp : timeoutEnv;
+        // Default: 3000 ms
+        int perIpTimeoutMs = 3000;
+        if (timeoutVal != null) {
+            try { perIpTimeoutMs = Integer.parseInt(timeoutVal); } catch (NumberFormatException ignored) {}
+        }
+
+        IOException lastEx = initialEx;
+        for (InetAddress addr : allAddresses) {
+            URL ipUrl = urlWithIp(url, addr);
+            try {
+                doDownloadToUrl(ipUrl, tmpDest, dest, perIpTimeoutMs);
+                return;
+            } catch (IOException e) {
+                lastEx = e;
+            }
+        }
+
+        throw lastEx;
     }
 
     private List<URL> getLocalURLs(List<URL> urls, ExecutorService pool) throws MalformedURLException {
