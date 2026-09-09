@@ -23,7 +23,6 @@ final case class FetchOptions(
 
   @Group(OptionGroup.fetch)
   @HelpMessage("Specify path for json output")
-  @Hidden
   @ExtraName("j")
     jsonOutputFile: String = "",
 
@@ -33,7 +32,9 @@ final case class FetchOptions(
     legacyReportNoGuarantees: Option[Boolean] = None,
 
   @Group(OptionGroup.fetch)
-  @HelpMessage("Add artifact URLs to the json report")
+  @HelpMessage(
+    "Add to the json report the URL each artifact was fetched from (requires --json-output-file)"
+  )
     jsonReportAddUrls: Boolean = false,
 
   @Recurse

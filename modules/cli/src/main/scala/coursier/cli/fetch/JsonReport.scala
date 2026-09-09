@@ -33,6 +33,9 @@ object JsonReport {
   final case class DependencyEntry(
     coord: String,
     file: Option[String] = None,
+    // URL file was fetched from - that's the effective URL, after mirrors have been applied,
+    // rather than the one the repository the dependency was found in would have used.
+    // Only filled in if JsonReport.report is passed addUrls = true.
     url: Option[String] = None,
     directDependencies: Seq[String],
     dependencies: Seq[String],
@@ -208,12 +211,19 @@ object JsonReport {
           .flatten
           .map(_.getAbsolutePath)
           .distinct
-        if (files.lengthCompare(1) <= 0) {
-          val url =
-            if (addUrls)
-              deps.flatMap { case (_, _, art) => fileMap.get(art).map(_ => art.url) }.headOption
-            else
-              None
+        // Keyed like the paths in files, so that the reported URL is always the one the
+        // reported file was fetched from.
+        val fileUrls =
+          if (addUrls)
+            deps
+              .flatMap {
+                case (_, _, art) =>
+                  fileMap.get(art).map(_.getAbsolutePath -> art.url)
+              }
+              .toMap
+          else
+            Map.empty[String, String]
+        if (files.lengthCompare(1) <= 0)
           Seq(
             DependencyEntry(
               coords(key),
@@ -223,7 +233,7 @@ object JsonReport {
                 else
                   path
               },
-              url,
+              files.headOption.flatMap(fileUrls.get),
               directDependenciesMap(key).map(coords).sorted,
               fromDepTrees
                 .get(key)
@@ -236,7 +246,6 @@ object JsonReport {
               exclusionsMap(key)
             )
           )
-        }
         else {
           val attributesMap = deps
             .flatMap {
@@ -256,15 +265,6 @@ object JsonReport {
               case (k, l) =>
                 (k.getAbsolutePath, l.map(_._2.normalize).sortBy(_.packagingAndClassifier).head)
             }
-          val fileToUrlMap =
-            if (addUrls)
-              deps
-                .flatMap { case (_, _, art) =>
-                  fileMap.get(art).map(f => f.getAbsolutePath -> art.url)
-                }
-                .toMap
-            else
-              Map.empty[String, String]
           files.map { f =>
             val attr = attributesMap(f)
             DependencyEntry(
@@ -275,7 +275,7 @@ object JsonReport {
                 else
                   f
               },
-              fileToUrlMap.get(f),
+              fileUrls.get(f),
               directDependenciesMap(key).map(coords).sorted,
               fromDepTrees
                 .get(key)

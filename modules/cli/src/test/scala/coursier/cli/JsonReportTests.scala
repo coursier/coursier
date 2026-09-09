@@ -90,6 +90,9 @@ object JsonReportTests extends TestSuite {
     dependencies: Seq[Dependency],
     extraKeyPart: String = "",
     attributesBasedReprAsToString: Boolean = false,
+    // Appended to the report file name only, so that several reports can be checked against
+    // the same resolution, without having to duplicate its fixture.
+    extraReportKeyPart: String = "",
     addUrls: Boolean = false
   ): Future[Unit] =
     for {
@@ -108,7 +111,7 @@ object JsonReportTests extends TestSuite {
             fetch.resolutionParams,
             extraKeyPart = extraKeyPart,
             attributesBasedReprAsToString = attributesBasedReprAsToString
-          )}.json"
+          )}$extraReportKeyPart.json"
       ) {
         jsonLines {
           JsonReport.report(
@@ -452,15 +455,51 @@ object JsonReportTests extends TestSuite {
     }
 
     test("addUrls") {
-      doCheck(
-        fetch,
-        Seq(
-          dep"org.apache.commons:commons-compress:1.5"
-            .withTransitive(false)
-        ),
-        "_addurls",
-        addUrls = true
-      )
+      // Same resolutions as the tests above, only the reports differ.
+
+      test("single file") {
+        doCheck(
+          fetch,
+          Seq(
+            dep"org.apache.commons:commons-compress:1.5"
+              .withTransitive(false)
+          ),
+          extraReportKeyPart = "_addurls",
+          addUrls = true
+        )
+      }
+
+      // Several artifacts under a single coordinate, so that each entry has to be paired
+      // with the URL of its own file.
+      test("several files") {
+        doCheck(
+          fetch,
+          Seq(
+            dep"org.apache.commons:commons-compress:1.5,classifier=tests",
+            dep"org.apache.commons:commons-compress:1.5"
+          ),
+          extraReportKeyPart = "_addurls",
+          addUrls = true
+        )
+      }
+
+      // URL that doesn't follow from the coordinates, so that this checks the artifact URL is
+      // reported, rather than one re-derived from the module / version.
+      test("custom url") {
+        doCheck(
+          fetch.addRepositories(
+            InMemoryRepository.forDependencies(
+              dep"h:i:j" -> "https://repo1.maven.org/maven2/junit/junit/4.12/junit-4.12.jar"
+            )
+          ),
+          Seq(
+            dep"h:i:j"
+          ),
+          "_customurl2",
+          extraReportKeyPart = "_addurls",
+          addUrls = true
+        )
+      }
     }
 
   }
