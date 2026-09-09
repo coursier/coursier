@@ -302,7 +302,7 @@ private[coursier] class MavenRepositoryInternal(
           .copy(extra = Map("check" -> baseModuleArtifact))
       else
         basePomArtifact
-    def pomProjectTask = fetch(pomArtifact).flatMap(parsePom(_))
+    def pomProjectTask = fetch(pomArtifact).flatMap(parsePom(_, pomArtifact.url))
     if (checkModule) {
       val moduleProjectTask: EitherT[F, String, Either[String, Project]] =
         EitherT {
@@ -342,11 +342,18 @@ private[coursier] class MavenRepositoryInternal(
   )(implicit F: Monad[F]): EitherT[F, String, Project] =
     fetchArtifactForModuleName(module, module.name.value, version, versioningValue, fetch)(F)
 
-  def parsePom[F[_]](str: String)(implicit F: Monad[F]): EitherT[F, String, Project] =
+  def parsePom[F[_]](str: String, source: String = "")(implicit
+    F: Monad[F]
+  ): EitherT[F, String, Project] =
     EitherT.fromEither {
       val maybeProj =
         if (useSaxParser)
-          MavenRepositoryInternal.parseRawPomSaxMemoized(str)
+          try MavenRepositoryInternal.parseRawPomSaxMemoized(str)
+          catch {
+            case e: Exception =>
+              val extra = if (source.isEmpty) "" else s" (while parsing $source)"
+              Left(e.toString + extra)
+          }
         else
           for {
             xml  <- coursier.core.compatibility.xmlParseDom(str)
