@@ -33,6 +33,10 @@ object JsonReport {
   final case class DependencyEntry(
     coord: String,
     file: Option[String] = None,
+    // URL file was fetched from - that's the effective URL, after mirrors have been applied,
+    // rather than the one the repository the dependency was found in would have used.
+    // Only filled in if JsonReport.report is passed addUrls = true.
+    url: Option[String] = None,
     directDependencies: Seq[String],
     dependencies: Seq[String],
     exclusions: Seq[String] = Nil
@@ -46,7 +50,8 @@ object JsonReport {
   def report(
     resolution: Resolution,
     artifacts: Seq[(Dependency, Either[VariantPublication, Publication], Artifact, Option[File])],
-    useSlashSeparator: Boolean = false
+    useSlashSeparator: Boolean = false,
+    addUrls: Boolean = false
   ): String = {
 
     val fileMap = artifacts
@@ -206,6 +211,18 @@ object JsonReport {
           .flatten
           .map(_.getAbsolutePath)
           .distinct
+        // Keyed like the paths in files, so that the reported URL is always the one the
+        // reported file was fetched from.
+        val fileUrls =
+          if (addUrls)
+            deps
+              .flatMap {
+                case (_, _, art) =>
+                  fileMap.get(art).map(_.getAbsolutePath -> art.url)
+              }
+              .toMap
+          else
+            Map.empty[String, String]
         if (files.lengthCompare(1) <= 0)
           Seq(
             DependencyEntry(
@@ -216,6 +233,7 @@ object JsonReport {
                 else
                   path
               },
+              files.headOption.flatMap(fileUrls.get),
               directDependenciesMap(key).map(coords).sorted,
               fromDepTrees
                 .get(key)
@@ -257,6 +275,7 @@ object JsonReport {
                 else
                   f
               },
+              fileUrls.get(f),
               directDependenciesMap(key).map(coords).sorted,
               fromDepTrees
                 .get(key)

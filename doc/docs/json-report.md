@@ -9,7 +9,50 @@ fetch -t <modules...> --json-output-file <report.json>
 
 The report will contain the info about resolved modules and their relationships.
 
+Pass `--json-report-add-urls` alongside `--json-output-file` to also record, for each
+artifact, the URL it was fetched from.
+
 ## Format and Version Change Log
+
+### 0.1.0
+
+Report generation was rewritten. Per dependency, the `files` array is replaced by a single
+`file` field, and dependencies with several artifacts (say, a JAR and its tests JAR) now get
+one entry each, the classifier being carried by `coord` rather than by the file entry.
+`directDependencies` and `exclusions` fields are added.
+
+```
+{
+  "conflict_resolution": {
+    "org:name:version" (requested): "org:name:version" (reconciled)
+  },
+  "dependencies": [
+    {
+      "coord": "orgA:nameA:versionA",
+      "file": <path>,
+      "url": <url>,                  // only with --json-report-add-urls, see below
+      "directDependencies": [        // coordinates of its direct dependencies
+        <orgX:nameX:versionX>
+      ],
+      "dependencies": [              // coordinates of its transitive dependencies
+        <orgX:nameX:versionX>,
+        <orgY:nameY:versionY>
+      ],
+      "exclusions": [                // "org:name" pairs excluded by this dependency
+        <orgZ:nameZ>
+      ]
+    }
+  ],
+  "version": "0.1.0"
+}
+```
+
+`url` is only written when `--json-report-add-urls` is passed, and is left out of the entry
+otherwise - it was added without a version bump, so a `0.1.0` report may or may not have it.
+It's the URL the file was actually fetched from: if a mirror is configured, that's the
+mirror URL, not the one the repository the dependency was found in would have used. Note
+that `coord` doesn't necessarily follow from it, as repositories can serve an artifact from
+an arbitrary URL.
 
 ### 0.0.1
 
