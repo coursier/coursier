@@ -8,6 +8,7 @@ import coursier.core.{
   Dependency,
   Module,
   Resolution,
+  ToStringHelper,
   Type,
   VariantSelector
 }
@@ -16,6 +17,7 @@ import coursier.testcache.TestCache
 import coursier.util.{Artifact, Print}
 import coursier.version.VersionConstraint
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -61,6 +63,9 @@ object TestHelpers extends PlatformTestHelpers {
     if (attributesBasedReprAsToString)
       VariantSelector.AttributesBased.reprAsToString.set(true)
     VersionConstraint.parsedValueAsToString.set(true)
+    // the fixtures below were recorded from Scala 2, whose case class toString isn't formatted
+    // like the Scala 3 one
+    ToStringHelper.scala2Mode.set(true)
     try {
 
       val attrPathPart =
@@ -178,6 +183,7 @@ object TestHelpers extends PlatformTestHelpers {
       ).filter(_.nonEmpty).mkString("/")
     }
     finally {
+      ToStringHelper.scala2Mode.remove()
       VersionConstraint.parsedValueAsToString.remove()
       if (attributesBasedReprAsToString)
         VariantSelector.AttributesBased.reprAsToString.remove()

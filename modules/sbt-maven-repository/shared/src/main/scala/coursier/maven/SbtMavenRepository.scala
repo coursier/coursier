@@ -3,6 +3,7 @@ package coursier.maven
 import dataclass.{data, since => unroll}
 
 import coursier.core._
+import coursier.maven.internal.SbtMavenRepositoryHelpers
 import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version => Version0, VersionConstraint => VersionConstraint0}
 import scala.collection.compat._
@@ -176,7 +177,8 @@ object SbtMavenRepository {
   override val versionsCheckHasModule: Boolean = true,
   @unroll
   checkModule: Boolean = false
-) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi { self =>
+) extends MavenRepositoryLike.WithModuleSupport with Repository.VersionApi
+    with SbtMavenRepositoryHelpers { self =>
 
   assert(!root.endsWith("/"))
 

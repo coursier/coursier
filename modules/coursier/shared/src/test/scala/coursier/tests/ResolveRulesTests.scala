@@ -16,6 +16,7 @@ import coursier.util.StringInterpolators._
 import coursier.version.{ConstraintReconciliation, Version, VersionConstraint}
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 
 object ResolveRulesTests extends TestSuite {

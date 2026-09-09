@@ -14,6 +14,9 @@ import dataclass.{data, since => unroll}
   @unroll
   forceOverrideVersions: Boolean = false
 ) {
+  override def toString: String =
+    ToStringHelper(this)
+
   @deprecated("Use the override accepting a VersionConstraint instead", "2.1.25")
   def this(
     module: Module,
