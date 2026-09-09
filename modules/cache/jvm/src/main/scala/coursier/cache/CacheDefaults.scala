@@ -123,6 +123,12 @@ object CacheDefaults {
   lazy val readTimeout: Option[FiniteDuration] =
     CacheEnv.defaultReadTimeout(CacheEnv.readTimeout.read())
 
+  lazy val retryResolvedIps: Boolean =
+    CacheEnv.defaultRetryResolvedIps(CacheEnv.retryResolvedIps.read())
+
+  lazy val perIpConnectTimeout: Option[FiniteDuration] =
+    CacheEnv.defaultPerIpConnectTimeout(CacheEnv.perIpConnectTimeout.read())
+
   @deprecated("Use retryCount instead", "2.1.11")
   lazy val sslRetryCount =
     sys.props

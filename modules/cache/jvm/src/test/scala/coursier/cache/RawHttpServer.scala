@@ -17,15 +17,18 @@ import java.util.concurrent.atomic.AtomicBoolean
   */
 final class RawHttpServer(
   log: RequestLog,
-  handler: RequestLog.Entry => RawHttpServer.Response
+  handler: RequestLog.Entry => RawHttpServer.Response,
+  bindAddress: String = "localhost"
 ) extends AutoCloseable {
 
   import RawHttpServer.Response
 
-  private val server = new ServerSocket(0, 50, InetAddress.getByName("localhost"))
+  private val server = new ServerSocket(0, 50, InetAddress.getByName(bindAddress))
   private val closed = new AtomicBoolean(false)
 
-  def baseUrl: String = s"http://localhost:${server.getLocalPort}"
+  def port: Int = server.getLocalPort
+
+  def baseUrl: String = s"http://$bindAddress:$port"
 
   private val acceptThread = {
     val t = new Thread("raw-http-server") {
@@ -170,6 +173,20 @@ object RawHttpServer {
   ): T = {
     val server = new RawHttpServer(log, handler)
     try f(server.baseUrl)
+    finally server.close()
+  }
+
+  /** Like [[withServer]], but hands over the server itself, bound to `bindAddress` */
+  def withServerOn[T](
+    log: RequestLog,
+    bindAddress: String
+  )(
+    handler: RequestLog.Entry => Response
+  )(
+    f: RawHttpServer => T
+  ): T = {
+    val server = new RawHttpServer(log, handler, bindAddress)
+    try f(server)
     finally server.close()
   }
 }
