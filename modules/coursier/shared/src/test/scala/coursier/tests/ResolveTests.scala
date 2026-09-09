@@ -1296,6 +1296,68 @@ object ResolveTests extends TestSuite {
       }
     }
 
+    test("javacpp platform property") {
+      // https://github.com/coursier/coursier/issues/3278
+      // javacpp.platform is only defined by profiles of the org.deeplearning4j:deeplearning4j
+      // grand-parent POM ("javacpp-platform-default", activated when the javacpp.platform
+      // property is *not* set, along with the OS-activated ones defining os.name / os.arch).
+      // Those properties end up in the classifiers of several org.nd4j:nd4j-native
+      // dependencies, so any hiccup in profile activation or in parent property propagation
+      // leaves "${javacpp.platform}" in artifact URLs.
+      def check(osInfo: Activation.Os, platform: String): Future[Unit] =
+        async {
+          val params = ResolutionParams()
+            .withOsInfo(osInfo)
+            .withJdkVersion(Version("1.8.0_121"))
+          val res = await {
+            resolve
+              .copy(resolutionParams = params)
+              .addDependencies(dep"org.nd4j:nd4j-native:1.0.0-beta4")
+              .future()
+          }
+
+          await(validateDependencies(res, params))
+
+          val urls = res.dependencyArtifacts0().map(_._3.url)
+
+          val wrongUrls = urls.filter(_.contains("${"))
+          assert(wrongUrls.isEmpty)
+
+          // ${dependency.classifier}, that is ${javacpp.platform}${javacpp.platform.extension}
+          val expectedNd4jUrl =
+            "https://repo1.maven.org/maven2/org/nd4j/nd4j-native/1.0.0-beta4/" +
+              s"nd4j-native-1.0.0-beta4-$platform.jar"
+          // ${dependency.platform}, set to ${javacpp.platform} by a profile of
+          // org.nd4j:nd4j-backend-impls
+          val expectedOpenblasUrl =
+            "https://repo1.maven.org/maven2/org/bytedeco/openblas/0.3.5-1.5/" +
+              s"openblas-0.3.5-1.5-$platform.jar"
+
+          assert(urls.contains(expectedNd4jUrl))
+          assert(urls.contains(expectedOpenblasUrl))
+        }
+
+      test("linux") - check(
+        Activation.Os(
+          Some("x86_64"),
+          Set("unix"),
+          Some("linux"),
+          Some("5.15.0")
+        ),
+        "linux-x86_64"
+      )
+
+      test("mac") - check(
+        Activation.Os(
+          Some("x86_64"),
+          Set("mac", "unix"),
+          Some("mac os x"),
+          Some("10.15.1")
+        ),
+        "macosx-x86_64"
+      )
+    }
+
     test("pom project.packaging property") {
       async {
         val dep = dep"org.apache.zookeeper:zookeeper:3.5.0-alpha"
