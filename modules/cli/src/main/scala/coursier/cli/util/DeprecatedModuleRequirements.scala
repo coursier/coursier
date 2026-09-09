@@ -8,8 +8,8 @@ final case class DeprecatedModuleRequirements(
   localExcludes: Map[String, Set[(Organization, ModuleName)]]
 ) {
   def apply(dep: Dependency): Dependency =
-    dep.withMinimizedExclusions(
-      MinimizedExclusions(
+    dep.copy(
+      minimizedExclusions = MinimizedExclusions(
         localExcludes.getOrElse(
           dep.module.orgName,
           dep.minimizedExclusions.toSet()

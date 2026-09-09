@@ -64,7 +64,7 @@ case class MaybeSetupPath(
   def tryRevert: Task[Unit] = {
 
     val envUpdate = EnvironmentUpdate()
-      .withPathLikeAppends(Seq("PATH" -> binDir.toAbsolutePath.toString))
+      .copy(pathLikeAppends = Seq("PATH" -> binDir.toAbsolutePath.toString))
 
     val revertedTask = envVarUpdaterOpt match {
       case None =>

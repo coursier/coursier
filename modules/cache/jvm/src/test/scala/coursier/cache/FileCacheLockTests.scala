@@ -142,7 +142,7 @@ object FileCacheLockTests extends TestSuite {
       withHttpServer(logRequests(log)(routes())) { serverUri =>
         withTmpDir { dir =>
 
-          val cache    = testCache(dir / "cache").withLogger(logger)
+          val cache    = testCache(dir / "cache").copy(logger = logger)
           val url      = (serverUri / "dir" / "foo.jar").renderString
           val artifact = Artifact(url)
 

@@ -37,7 +37,7 @@ object VmFiles {
     // FIXME Quite some duplication with QemuFiles.default
     artifactsTask.flatMap { artifacts =>
       def baseArtifact(art: Artifact): Artifact =
-        if (art.url.contains("!")) art.withUrl(art.url.takeWhile(_ != '!'))
+        if (art.url.contains("!")) art.copy(url = art.url.takeWhile(_ != '!'))
         else art
 
       def taskFor(art: Artifact): Task[Either[ArtifactError, File]] =

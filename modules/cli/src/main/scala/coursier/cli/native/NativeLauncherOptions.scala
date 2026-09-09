@@ -112,20 +112,21 @@ final case class NativeLauncherOptions(
     val keepWorkDir = nativeKeepWorkDir
 
     Validated.validNel(
-      ScalaNativeOptions()
-        .withGcOpt(gcOpt)
-        .withModeOpt(modeOpt)
-        .withLinkStubs(linkStubs)
-        .withClangOpt(clangOpt)
-        .withClangppOpt(clangppOpt)
-        .withPrependDefaultLinkingOptions(prependDefaultLinkingOptions)
-        .withLinkingOptions(linkingOptions)
-        .withPrependDefaultCompileOptions(prependDefaultCompileOptions)
-        .withCompileOptions(compileOptions)
-        .withTargetTripleOpt(targetTripleOpt)
-        .withNativeLibOpt(nativeLibOpt)
-        .withWorkDirOpt(workDirOpt)
-        .withKeepWorkDir(keepWorkDir)
+      ScalaNativeOptions().copy(
+        gcOpt = gcOpt,
+        modeOpt = modeOpt,
+        linkStubs = linkStubs,
+        clangOpt = clangOpt,
+        clangppOpt = clangppOpt,
+        prependDefaultLinkingOptions = prependDefaultLinkingOptions,
+        linkingOptions = linkingOptions,
+        prependDefaultCompileOptions = prependDefaultCompileOptions,
+        compileOptions = compileOptions,
+        targetTripleOpt = targetTripleOpt,
+        nativeLibOpt = nativeLibOpt,
+        workDirOpt = workDirOpt,
+        keepWorkDir = keepWorkDir
+      )
     )
   }
 }

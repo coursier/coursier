@@ -45,12 +45,14 @@ object Setup extends CoursierCommand[SetupOptions] {
     }
 
     val installCache = cache.withLogger(params.output.logger(byFileType = true))
-    val installDir = params.sharedInstall.installDir(installCache, params.repository.repositories)
-      .withVerbosity(params.output.verbosity)
-      .withNativeImageJavaHome(Some(graalvmHome))
+    val installDir =
+      params.sharedInstall.installDir(installCache, params.repository.repositories).copy(
+        verbosity = params.output.verbosity,
+        nativeImageJavaHome = Some(graalvmHome)
+      )
     val channels =
       Channels(params.sharedChannel.channels, params.repository.repositories, installCache)
-        .withVerbosity(params.output.verbosity)
+        .copy(verbosity = params.output.verbosity)
 
     val confirm =
       if (params.yes)

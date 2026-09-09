@@ -24,23 +24,23 @@ object Get extends CoursierCommand[GetOptions] {
     val cache = params.cache.cache(pool, params.output.logger())
 
     val archiveCache = ArchiveCache.create[Task](params.archiveCacheLocation)
-      .withCache(cache)
+      .copy(cache = cache)
 
     val artifacts = args.all.map { rawUrl =>
       var artifact = Artifact.fromUrl(rawUrl)
       for (changing <- params.changing)
-        artifact = artifact.withChanging(changing)
+        artifact = artifact.copy(changing = changing)
       if (params.authHeaders.nonEmpty)
-        artifact = artifact.withAuthentication(Some(Authentication(params.authHeaders)))
+        artifact = artifact.copy(authentication = Some(Authentication(params.authHeaders)))
       for (referenceUrl <- params.referenceFileUrl) {
         var referenceArtifact = Artifact.fromUrl(referenceUrl)
         for (changing <- params.changing)
-          referenceArtifact = referenceArtifact.withChanging(changing)
+          referenceArtifact = referenceArtifact.copy(changing = changing)
         if (params.authHeaders.nonEmpty)
           referenceArtifact =
-            referenceArtifact.withAuthentication(Some(Authentication(params.authHeaders)))
-        artifact = artifact.withExtra(
-          artifact.extra ++ Seq("metadata" -> referenceArtifact)
+            referenceArtifact.copy(authentication = Some(Authentication(params.authHeaders)))
+        artifact = artifact.copy(
+          extra = artifact.extra ++ Seq("metadata" -> referenceArtifact)
         )
       }
       artifact

@@ -41,9 +41,10 @@ object Update extends CoursierCommand[UpdateOptions] {
         .get(s"graalvm:$version")
     }
 
-    val installDir = params.shared.installDir(cache, params.repository.repositories)
-      .withVerbosity(params.output.verbosity)
-      .withNativeImageJavaHome(Some(graalvmHome))
+    val installDir = params.shared.installDir(cache, params.repository.repositories).copy(
+      verbosity = params.output.verbosity,
+      nativeImageJavaHome = Some(graalvmHome)
+    )
 
     val names =
       if (args.all.isEmpty)

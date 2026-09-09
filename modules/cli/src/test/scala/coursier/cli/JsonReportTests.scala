@@ -79,10 +79,10 @@ object JsonReportTests extends TestSuite {
 
   private def resolve = Resolve()
     .noMirrors
-    .withCache(TestHelpers.cache)
+    .copy(cache = TestHelpers.cache)
 
   private def fetch = Fetch()
-    .withResolve(resolve)
+    .copy(resolve = resolve)
     .withCache(TestHelpers.cache)
 
   def doCheck(
@@ -317,7 +317,7 @@ object JsonReportTests extends TestSuite {
     test("intransitive") {
       check(
         dep"org.apache.commons:commons-compress:1.5"
-          .withTransitive(false)
+          .copy(transitive = false)
       )
     }
 
@@ -346,24 +346,24 @@ object JsonReportTests extends TestSuite {
     test("intransitive") {
       check(
         dep"org.apache.commons:commons-compress:1.5"
-          .withTransitive(false)
+          .copy(transitive = false)
       )
     }
 
     test("intransitiveTests") {
       check(
         dep"org.apache.commons:commons-compress:1.5,classifier=tests"
-          .withTransitive(false)
+          .copy(transitive = false)
       )
     }
 
     test("forceVersionTests") {
       doCheck(
         fetch.withResolutionParams(
-          fetch.resolutionParams
-            .withForceVersion0(
+          fetch.resolutionParams.copy(
+            forceVersion0 =
               Map(mod"org.apache.commons:commons-compress" -> VersionConstraint("1.4.1"))
-            )
+          )
         ),
         Seq(
           dep"org.apache.commons:commons-compress:1.5,classifier=tests"
@@ -374,14 +374,14 @@ object JsonReportTests extends TestSuite {
     test("forceVersionIntransitiveTests") {
       doCheck(
         fetch.withResolutionParams(
-          fetch.resolutionParams
-            .withForceVersion0(
+          fetch.resolutionParams.copy(
+            forceVersion0 =
               Map(mod"org.apache.commons:commons-compress" -> VersionConstraint("1.4.1"))
-            )
+          )
         ),
         Seq(
           dep"org.apache.commons:commons-compress:1.5,classifier=tests"
-            .withTransitive(false)
+            .copy(transitive = false)
         )
       )
     }

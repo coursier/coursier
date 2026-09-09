@@ -52,9 +52,10 @@ object Install extends CoursierCommand[InstallOptions] {
       ).get(s"graalvm:$version")
     }
 
-    val installDir = params.shared.installDir(cache, params.repository.repositories)
-      .withVerbosity(params.output.verbosity)
-      .withNativeImageJavaHome(Some(graalvmHome))
+    val installDir = params.shared.installDir(cache, params.repository.repositories).copy(
+      verbosity = params.output.verbosity,
+      nativeImageJavaHome = Some(graalvmHome)
+    )
 
     if (params.installChannels.nonEmpty) {
       val progName = coursier.cli.Coursier.progName
@@ -110,7 +111,7 @@ object Install extends CoursierCommand[InstallOptions] {
       }
 
       val channels = Channels(params.channels, params.repository.repositories, cache)
-        .withVerbosity(params.output.verbosity)
+        .copy(verbosity = params.output.verbosity)
 
       try for (id <- args.all) {
 

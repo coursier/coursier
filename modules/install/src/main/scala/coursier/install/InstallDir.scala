@@ -376,21 +376,24 @@ import scala.jdk.CollectionConverters._
             val preamble =
               if (inPlaceLauncher)
                 if (isWin)
-                  basePreamble
-                    .copy(kind = Preamble.Kind.Bat)
-                    .withCommand("%~dp0\\" + auxName("%~n0", ".exe"))
+                  basePreamble.copy(
+                    kind = Preamble.Kind.Bat,
+                    command = Some("%~dp0\\" + auxName("%~n0", ".exe"))
+                  )
                 else
-                  basePreamble
-                    .copy(kind = Preamble.Kind.Sh)
-                    .withCommand(
-                      // FIXME needs directory
+                  basePreamble.copy(
+                    kind = Preamble.Kind.Sh,
+                    // FIXME needs directory
+                    command = Some(
                       """$(cd "$(dirname "$0")"; pwd)/""" + auxName(dest0.getFileName.toString, "")
                     )
+                  )
               else {
                 assert(launcherIsElsewhere)
-                basePreamble
-                  .copy(kind = if (isWin) Preamble.Kind.Bat else Preamble.Kind.Sh)
-                  .withCommand(actualLauncher.toAbsolutePath.toString)
+                basePreamble.copy(
+                  kind = if (isWin) Preamble.Kind.Bat else Preamble.Kind.Sh,
+                  command = Some(actualLauncher.toAbsolutePath.toString)
+                )
               }
             writing(tmpDest, verbosity, Some(currentTime)) {
               InfoFile.writeInfoFile(tmpDest, Some(preamble), infoEntries)

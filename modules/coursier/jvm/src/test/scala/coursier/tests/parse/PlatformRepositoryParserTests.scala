@@ -35,7 +35,7 @@ object PlatformRepositoryParserTests extends TestSuite {
       )
       val expectedRes = Right(MavenRepository(
         "https://domain.d.codeartifact.us-east-1.amazonaws.com/maven/dir"
-      ).withAuthentication(Some(Authentication("aws", "pass"))))
+      ).copy(authentication = Some(Authentication("aws", "pass"))))
       assert(res == expectedRes)
     }
 
@@ -45,7 +45,7 @@ object PlatformRepositoryParserTests extends TestSuite {
       )
       val expectedRes = Right(MavenRepository(
         "https://domain.d.codeartifact.us-east-1.amazonaws.com/maven/dir"
-      ).withAuthentication(Some(Authentication("aws"))))
+      ).copy(authentication = Some(Authentication("aws"))))
       assert(res == expectedRes)
     }
   }

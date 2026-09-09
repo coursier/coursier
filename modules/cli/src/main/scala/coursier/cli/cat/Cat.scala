@@ -40,7 +40,7 @@ object Cat extends CoursierCommand[CatOptions] {
       val artifact0 = Artifact.fromUrl(rawUrl)
       params.changing match {
         case None           => artifact0
-        case Some(changing) => artifact0.withChanging(changing)
+        case Some(changing) => artifact0.copy(changing = changing)
       }
     }
 

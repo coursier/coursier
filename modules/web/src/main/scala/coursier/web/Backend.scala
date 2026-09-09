@@ -155,9 +155,10 @@ final class Backend($ : BackendScope[_, State]) {
     $.state.map { s =>
 
       def task = {
-        val res = Resolution()
-          .withRootDependencies(s.modules)
-          .withFilter(Some(dep => s.options.followOptional || !dep.optional0.contains(true)))
+        val res = Resolution().copy(
+          rootDependencies = s.modules,
+          filter = Some(dep => s.options.followOptional || !dep.optional0.contains(true))
+        )
         ResolutionProcess(res).run0(
           fetch(s.repositories.map { case (_, repo) => repo }, AlwaysDownload(logger).fetch),
           100

@@ -194,7 +194,7 @@ object App {
                         ^.onChange ==> backend.updateModule(
                           moduleIdx,
                           (dep, value) =>
-                            dep.withModule(dep.module.withOrganization(Organization(value)))
+                            dep.copy(module = dep.module.copy(organization = Organization(value)))
                         ),
                         ^.value := module.organization.value
                       )
@@ -208,7 +208,8 @@ object App {
                         ^.placeholder := "Name",
                         ^.onChange ==> backend.updateModule(
                           moduleIdx,
-                          (dep, value) => dep.withModule(dep.module.withName(ModuleName(value)))
+                          (dep, value) =>
+                            dep.copy(module = dep.module.copy(name = ModuleName(value)))
                         ),
                         ^.value := module.name.value
                       )
@@ -222,7 +223,7 @@ object App {
                         ^.placeholder := "Version",
                         ^.onChange ==> backend.updateModule(
                           moduleIdx,
-                          (dep, value) => dep.withVersionConstraint(VersionConstraint(value))
+                          (dep, value) => dep.copy(versionConstraint = VersionConstraint(value))
                         ),
                         ^.value := version.asString
                       )
@@ -360,7 +361,7 @@ object App {
                       ^.placeholder := "Root",
                       ^.onChange ==> backend.updateRepo(
                         repoIdx,
-                        (item, value) => (item._1, item._2.withRoot(value))
+                        (item, value) => (item._1, item._2.copy(root = value))
                       ),
                       ^.value := repo.root
                     )

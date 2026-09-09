@@ -63,20 +63,19 @@ final case class SharedLaunchOptions(
     )
 
   def app: RawAppDescriptor =
-    RawAppDescriptor(Nil)
-      .withShared(sharedLoaderOptions.shared)
-      .withRepositories {
+    RawAppDescriptor(Nil).copy(
+      shared = sharedLoaderOptions.shared,
+      repositories = {
         val default =
           if (resolveOptions.repositoryOptions.noDefault) List()
           else List("central") // ?
         default ::: resolveOptions.repositoryOptions.repository
-      }
-      .withExclusions(resolveOptions.dependencyOptions.exclude)
-      .withLauncherType {
+      },
+      exclusions = resolveOptions.dependencyOptions.exclude,
+      launcherType =
         if (resolveOptions.dependencyOptions.native) "scala-native"
-        else "bootstrap"
-      }
-      .withClassifiers {
+        else "bootstrap",
+      classifiers = {
         val l       = artifactOptions.classifier
         val default = if (artifactOptions.default0) List("_") else Nil
         val c       = default ::: l
@@ -84,26 +83,24 @@ final case class SharedLaunchOptions(
           Nil
         else
           c
-      }
-      .withArtifactTypes(artifactOptions.artifactType)
-      .withMainClass(Some(mainClass).filter(_.nonEmpty))
-      .withProperties(
-        RawAppDescriptor.Properties {
-          property.map { s =>
-            s.split("=", 2) match {
-              case Array(k, v) =>
-                (k, v)
-              case Array(k) =>
-                (k, "")
-            }
+      },
+      artifactTypes = artifactOptions.artifactType,
+      mainClass = Some(mainClass).filter(_.nonEmpty),
+      properties = RawAppDescriptor.Properties {
+        property.map { s =>
+          s.split("=", 2) match {
+            case Array(k, v) =>
+              (k, v)
+            case Array(k) =>
+              (k, "")
           }
         }
-      )
-      .withJna {
+      },
+      jna =
         if (pythonJep.getOrElse(false)) List("python-jep")
         else if (python.getOrElse(false)) List("python")
         else Nil
-      }
+    )
 }
 
 object SharedLaunchOptions {

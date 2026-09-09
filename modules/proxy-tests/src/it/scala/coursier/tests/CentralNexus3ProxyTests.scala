@@ -24,7 +24,7 @@ object CentralNexus3ProxyTests extends CentralTests {
 
   override def central =
     MavenRepository(repo.base.stripSuffix("/"))
-      .withVersionsCheckHasModule(false)
+      .copy(versionsCheckHasModule = false)
 
   override def tests: Tests =
     if (isWin)
