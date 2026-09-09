@@ -56,11 +56,16 @@ object CacheEnv {
   /** Env var and Java prop names for the HTTP read timeout */
   val readTimeout = EnvEntry("COURSIER_READ_TIMEOUT", "coursier.read-timeout")
 
-  /** Env var and Java prop names to enable/disable retrying resolved IPs on connection failure */
+  /** Env var and Java prop names to enable/disable trying the other resolved addresses of a host
+    * when connecting to the first one fails
+    */
   val retryResolvedIps = EnvEntry("COURSIER_RETRY_RESOLVED_IPS", "coursier.retry-resolved-ips")
 
-  /** Env var and Java prop names for the per-IP connection timeout (in ms) when retrying IPs */
-  val perIpTimeoutMs = EnvEntry("COURSIER_PER_IP_TIMEOUT_MS", "coursier.per-ip-timeout-ms")
+  /** Env var and Java prop names for the connect timeout of those extra attempts */
+  val perIpConnectTimeout = EnvEntry(
+    "COURSIER_PER_IP_CONNECT_TIMEOUT",
+    "coursier.per-ip-connect-timeout"
+  )
 
   /** Env var and Java prop names for the cache policies */
   val cachePolicy = EnvEntry("COURSIER_MODE", "coursier.mode")
@@ -219,6 +224,24 @@ object CacheEnv {
     */
   def defaultReadTimeout(values: EnvValues): Option[FiniteDuration] =
     timeout(values, default = 1.minute)
+
+  /** Whether to try the other resolved addresses of a host when the first one cannot be reached
+    *
+    * Enabled unless the env var or the Java property says otherwise.
+    */
+  def defaultRetryResolvedIps(values: EnvValues): Boolean =
+    values.env
+      .orElse(values.prop)
+      .forall(value => !value.equalsIgnoreCase("false") && value != "0")
+
+  /** Computes the connect timeout of the extra attempts from the passed env var and Java property
+    *
+    * These attempts only happen once a first one already failed, so they get a shorter timeout than
+    * [[defaultConnectTimeout]]: a host with several addresses would otherwise wait for the full
+    * connect timeout once per address.
+    */
+  def defaultPerIpConnectTimeout(values: EnvValues): Option[FiniteDuration] =
+    timeout(values, default = 3.seconds)
 
   private def timeout(values: EnvValues, default: FiniteDuration): Option[FiniteDuration] = {
     val fromEnv   = values.env.flatMap(parseDuration(_).toOption)

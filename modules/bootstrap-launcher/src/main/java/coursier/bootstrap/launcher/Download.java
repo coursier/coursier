@@ -6,11 +6,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
-import java.net.Inet6Address;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
-import java.net.ConnectException;
-import java.net.NoRouteToHostException;
+import java.net.Proxy;
+import java.net.ProxySelector;
+import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.channels.FileLock;
@@ -27,6 +31,8 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
 
 import coursier.bootstrap.launcher.credentials.Credentials;
 import coursier.bootstrap.launcher.credentials.DirectCredentials;
@@ -98,23 +104,12 @@ class Download {
         }
     }
 
-    private void doDownloadToUrl(URL url, File tmpDest, File dest) throws IOException {
-        doDownloadToUrl(url, null, tmpDest, dest, 0);
-    }
-
-    private void doDownloadToUrl(URL url, File tmpDest, File dest, int connectTimeoutMs) throws IOException {
-        doDownloadToUrl(url, null, tmpDest, dest, connectTimeoutMs);
-    }
-
-    /** Downloads from {@code url} to {@code dest}. When {@code originalHost} is non-null it is
-     * used for credentials matching (needed when {@code url} uses an IP address instead of the
-     * original hostname).
+    /** Downloads `url`, connecting to `address` if it is non-null rather than to the address the
+     * host name resolves to.
      */
-    private void doDownloadToUrl(URL url, String originalHost, File tmpDest, File dest, int connectTimeoutMs) throws IOException {
-        URLConnection conn = url.openConnection();
-        if (connectTimeoutMs > 0) conn.setConnectTimeout(connectTimeoutMs);
+    private void doDownloadFrom(URL url, File tmpDest, File dest, InetAddress address, int connectTimeout) throws IOException {
+        URLConnection conn = openConnection(url, address, connectTimeout);
         if (conn instanceof HttpURLConnection) {
-            final String credentialsHost = (originalHost != null) ? originalHost : url.getHost();
             final Optional<String> userInfoOpt = Optional.ofNullable(url.getUserInfo());
             final Optional<String> userInfoUserOpt = userInfoOpt.map(userInfo -> userInfo.split(":", 2)[0]);
             final Optional<DirectCredentials> directCredentialsOpt = directCredentials.stream()
@@ -122,7 +117,7 @@ class Download {
                 .filter(credentials -> credentials.getUsernameOpt().isPresent() && (!userInfoUserOpt.isPresent() || credentials.getUsernameOpt().get().equals(userInfoUserOpt.get())))
                 .filter(credentials -> credentials.getPasswordOpt().isPresent())
                 .filter(credentials -> ("http".equals(url.getProtocol()) && !credentials.isHttpsOnly()) || "https".equals(url.getProtocol()))
-                .filter(credentials -> credentials.getHost().equals(credentialsHost))
+                .filter(credentials -> credentials.getHost().equals(url.getHost()))
                 .findFirst();
             final Optional<String> userOpt = userInfoUserOpt.map(Optional::of).orElse(directCredentialsOpt.flatMap(credentials -> credentials.getUsernameOpt())); // Java 9: .or(() -> directCredentialsOpt.flatMap(credentials -> credentials.getUsername()));
             final Optional<String> basicAuthOpt = userOpt.flatMap(user ->
@@ -135,6 +130,7 @@ class Download {
             basicAuthOpt.ifPresent(basicAuth -> ((HttpURLConnection)conn).setRequestProperty("Authorization", "Basic " + basicAuth));
         }
         long lastModified = conn.getLastModified();
+        checkFaithful(url, conn, address);
         int size = conn.getContentLength();
         InputStream s = conn.getInputStream();
         byte[] b = Util.readFullySync(s);
@@ -152,85 +148,211 @@ class Download {
         Files.move(tmpDest.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
     }
 
-    private static boolean isRetryableConnectionError(IOException e) {
-        return (e instanceof ConnectException) ||
-               (e instanceof NoRouteToHostException) ||
-               (e instanceof SocketTimeoutException);
-    }
-
-    private static boolean isIpAddress(String host) {
-        // These patterns don't need to be precise (e.g., checking octet ranges for IPv4) because
-        // isIpAddress is only used to skip DNS resolution when the host is already an IP.
-        // If an invalid IP-like string slips through, InetAddress.getAllByName will fail with
-        // UnknownHostException, which is caught and handled safely.
-        return host.matches("^\\d+\\.\\d+\\.\\d+\\.\\d+$") || // IPv4
-               (host.startsWith("[") && host.endsWith("]"));    // IPv6 bracket notation
-    }
-
-    private static URL urlWithIp(URL original, InetAddress addr) throws MalformedURLException {
-        String ipStr = (addr instanceof Inet6Address)
-            ? "[" + addr.getHostAddress() + "]"
-            : addr.getHostAddress();
-        int port = original.getPort();
-        String ipWithPort = (port == -1) ? ipStr : ipStr + ":" + port;
-        String userInfo = original.getUserInfo();
-        String userInfoPart = (userInfo != null && !userInfo.isEmpty()) ? userInfo + "@" : "";
-        String newUrlStr = original.getProtocol() + "://" + userInfoPart + ipWithPort + original.getFile();
-        return new URL(newUrlStr);
-    }
-
+    /** Downloads `url`, and tries the other addresses of its host if it failed to connect.
+     *
+     * `HttpURLConnection` only ever connects to the first address a host resolves to, so a host
+     * whose first address is unreachable - a load-balanced mirror with a node down, an AAAA record
+     * on a machine with no IPv6 route - fails for good. See `coursier.cache.AddressFallback`, which
+     * does the same for the downloads coursier itself runs, for the details.
+     */
     private void doDownload(URL url, File tmpDest, File dest) throws IOException {
-        // Try the primary connection first
+
         IOException initialEx;
         try {
-            doDownloadToUrl(url, tmpDest, dest);
+            doDownloadFrom(url, tmpDest, dest, null, 0);
             return;
         } catch (IOException e) {
-            if (!isRetryableConnectionError(e)) throw e;
+            if (!isConnectionFailure(e)) throw e;
             initialEx = e;
         }
 
-        // Check whether multi-IP retry is enabled (default: true)
-        String retryProp = System.getProperty("coursier.retry-resolved-ips");
-        String retryEnv  = System.getenv("COURSIER_RETRY_RESOLVED_IPS");
-        String retryVal  = (retryProp != null) ? retryProp : retryEnv;
-        if ("false".equalsIgnoreCase(retryVal)) throw initialEx;
+        InetAddress[] addresses = otherAddresses(url);
+        if (addresses == null) throw initialEx;
 
-        String host = url.getHost();
-        if (host == null || host.isEmpty() || isIpAddress(host)) throw initialEx;
-
-        // Resolve all IP addresses for the hostname
-        InetAddress[] allAddresses;
-        try {
-            allAddresses = InetAddress.getAllByName(host);
-        } catch (Exception e) {
-            throw initialEx;
-        }
-
-        if (allAddresses.length <= 1) throw initialEx;
-
-        // Per-IP connection timeout
-        String timeoutProp = System.getProperty("coursier.per-ip-timeout-ms");
-        String timeoutEnv  = System.getenv("COURSIER_PER_IP_TIMEOUT_MS");
-        String timeoutVal  = (timeoutProp != null) ? timeoutProp : timeoutEnv;
-        // Default: 3000 ms
-        int perIpTimeoutMs = 3000;
-        if (timeoutVal != null) {
-            try { perIpTimeoutMs = Integer.parseInt(timeoutVal); } catch (NumberFormatException ignored) {}
-        }
-
-        IOException lastEx = initialEx;
-        for (InetAddress addr : allAddresses) {
-            URL ipUrl = urlWithIp(url, addr);
+        int connectTimeout = perIpConnectTimeout();
+        for (int i = 0; i < addresses.length; i++) {
+            // the address that just failed is the first one, and goes last
+            InetAddress address = addresses[(i + 1) % addresses.length];
             try {
-                doDownloadToUrl(ipUrl, host, tmpDest, dest, perIpTimeoutMs);
+                doDownloadFrom(url, tmpDest, dest, address, connectTimeout);
                 return;
             } catch (IOException e) {
-                lastEx = e;
+                initialEx.addSuppressed(e);
             }
         }
 
-        throw lastEx;
+        throw initialEx;
+    }
+
+    /** Fails the attempt if the answer did not come from the server it was meant for
+     *
+     * An http request pinned to an address goes out as if to a proxy, for the whole exchange: a
+     * redirection to another host or port would have been fetched from the pinned address, which is
+     * not that host's server. A 400 goes too: that is what a server refusing the absolute request
+     * URI a proxy sends - which RFC 7230 requires it to accept - answers. The https attempts are
+     * pinned per host, so what comes back is sound whichever way it redirects.
+     */
+    static void checkFaithful(URL url, URLConnection conn, InetAddress address) throws IOException {
+        if (address == null || "https".equals(url.getProtocol()) || !(conn instanceof HttpURLConnection))
+            return;
+        URL answered = conn.getURL();
+        if (!url.getHost().equalsIgnoreCase(answered.getHost())
+                || url.getPort() != answered.getPort()
+                || ((HttpURLConnection) conn).getResponseCode() == 400)
+            throw new IOException(
+                    "Cannot download " + url + " from " + address.getHostAddress());
+    }
+
+    /** Whether `e` is the kind of failure another address may not run into */
+    static boolean isConnectionFailure(IOException e) {
+        return (e instanceof SocketException) || (e instanceof SocketTimeoutException);
+    }
+
+    /** The addresses of the host of `url`, or null when there is nothing worth trying */
+    static InetAddress[] otherAddresses(URL url) {
+        String retry = env("COURSIER_RETRY_RESOLVED_IPS", "coursier.retry-resolved-ips");
+        if (retry != null && (retry.equalsIgnoreCase("false") || retry.equals("0"))) return null;
+
+        String protocol = url.getProtocol();
+        if (!"http".equals(protocol) && !"https".equals(protocol)) return null;
+
+        String host = url.getHost();
+        if (host == null || host.isEmpty()) return null;
+
+        // a proxied connection fails on the proxy's address, which has nothing to do with the
+        // addresses the host resolves to
+        try {
+            ProxySelector selector = ProxySelector.getDefault();
+            if (selector != null)
+                for (Proxy proxy : selector.select(url.toURI()))
+                    if (proxy.type() != Proxy.Type.DIRECT) return null;
+        } catch (URISyntaxException | RuntimeException e) {
+            // no proxy to be seen
+        }
+
+        InetAddress[] addresses;
+        try {
+            addresses = InetAddress.getAllByName(host);
+        } catch (IOException e) {
+            return null;
+        }
+        // a literal address resolves to itself, and lands here as a single-element array
+        return (addresses.length > 1) ? addresses : null;
+    }
+
+    static int perIpConnectTimeout() {
+        String value = env("COURSIER_PER_IP_CONNECT_TIMEOUT", "coursier.per-ip-connect-timeout");
+        if (value != null) {
+            String digits = value.endsWith("ms") ? value.substring(0, value.length() - 2)
+                    : value.endsWith("s") ? value.substring(0, value.length() - 1)
+                    : value;
+            try {
+                int amount = Integer.parseInt(digits.trim());
+                if (amount >= 0) return value.endsWith("ms") ? amount : amount * 1000;
+            } catch (NumberFormatException e) {
+                // stick to the default
+            }
+        }
+        return 3000;
+    }
+
+    /** The environment variable if it is set, else the Java property, like `coursier.util.EnvEntry` */
+    private static String env(String envName, String propName) {
+        String value = System.getenv(envName);
+        return (value != null) ? value : System.getProperty(propName);
+    }
+
+    /** Opens a connection to `url`, going to `address` when it is non-null
+     *
+     * The URL is left alone, so that the request keeps its Host header, its SNI and the
+     * certificate it is checked against: only the connection is redirected.
+     */
+    static URLConnection openConnection(URL url, InetAddress address, int connectTimeout) throws IOException {
+        URLConnection conn;
+        if (address == null)
+            conn = url.openConnection();
+        else if ("https".equals(url.getProtocol())) {
+            conn = url.openConnection();
+            if (!(conn instanceof HttpsURLConnection))
+                throw new IOException("Cannot connect to " + url + " via " + address.getHostAddress());
+            HttpsURLConnection httpsConn = (HttpsURLConnection) conn;
+            httpsConn.setSSLSocketFactory(
+                    new PinnedAddressSslSocketFactory(httpsConn.getSSLSocketFactory(), url.getHost(), address));
+        }
+        else {
+            // an HTTP proxy is handed the URL as it stands, so the request keeps its Host header,
+            // and only its destination changes
+            int port = (url.getPort() == -1) ? url.getDefaultPort() : url.getPort();
+            conn = url.openConnection(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(address, port)));
+        }
+        if (connectTimeout > 0) conn.setConnectTimeout(connectTimeout);
+        return conn;
+    }
+
+    /** Creates sockets that connect to `address` rather than to whatever `host` resolves to
+     *
+     * `HttpsClient` asks the SSL socket factory for an unconnected socket, connects it itself, then
+     * hands it back to the factory to be wrapped with SSL, passing the host name from the URL. This
+     * socket lands in between, and leaves the SSL layer to the factory it wraps, none the wiser.
+     */
+    static final class PinnedAddressSslSocketFactory extends SSLSocketFactory {
+
+        private final SSLSocketFactory underlying;
+        private final String host;
+        private final InetAddress address;
+
+        PinnedAddressSslSocketFactory(SSLSocketFactory underlying, String host, InetAddress address) {
+            this.underlying = underlying;
+            this.host = host;
+            this.address = address;
+        }
+
+        @Override
+        public Socket createSocket() throws IOException {
+            return new Socket() {
+                @Override
+                public void connect(SocketAddress endpoint, int timeout) throws IOException {
+                    if (endpoint instanceof InetSocketAddress) {
+                        InetSocketAddress inet = (InetSocketAddress) endpoint;
+                        // a redirection elsewhere gets to connect where it should
+                        if (host.equalsIgnoreCase(inet.getHostString())) {
+                            super.connect(new InetSocketAddress(address, inet.getPort()), timeout);
+                            return;
+                        }
+                    }
+                    super.connect(endpoint, timeout);
+                }
+            };
+        }
+
+        @Override
+        public Socket createSocket(Socket s, String host, int port, boolean autoClose) throws IOException {
+            return underlying.createSocket(s, host, port, autoClose);
+        }
+        @Override
+        public String[] getDefaultCipherSuites() {
+            return underlying.getDefaultCipherSuites();
+        }
+        @Override
+        public String[] getSupportedCipherSuites() {
+            return underlying.getSupportedCipherSuites();
+        }
+        @Override
+        public Socket createSocket(String host, int port) throws IOException {
+            return underlying.createSocket(host, port);
+        }
+        @Override
+        public Socket createSocket(String host, int port, InetAddress localHost, int localPort) throws IOException {
+            return underlying.createSocket(host, port, localHost, localPort);
+        }
+        @Override
+        public Socket createSocket(InetAddress host, int port) throws IOException {
+            return underlying.createSocket(host, port);
+        }
+        @Override
+        public Socket createSocket(InetAddress address, int port, InetAddress localAddress, int localPort) throws IOException {
+            return underlying.createSocket(address, port, localAddress, localPort);
+        }
     }
 
     private List<URL> getLocalURLs(List<URL> urls, ExecutorService pool) throws MalformedURLException {

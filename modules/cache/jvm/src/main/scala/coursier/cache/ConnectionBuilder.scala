@@ -57,7 +57,7 @@ import scala.concurrent.duration.FiniteDuration
       readTimeout
     )
     if (CacheDefaults.retryResolvedIps)
-      CacheUrl.urlConnectionMaybePartialWithIpFallback(args, CacheDefaults.perIpTimeoutMs)
+      AddressFallback.connectionMaybePartial(args, CacheDefaults.perIpConnectTimeout)
     else
       CacheUrl.urlConnectionMaybePartial(args)
   }
