@@ -16,15 +16,14 @@ final case class SharedResolveParams(
   classpathOrder: Option[Boolean]
 ) {
   def updatedResolution(scalaVersionOpt: Option[VersionConstraint]): ResolutionParams =
-    resolution
-      .withScalaVersionOpt0(resolution.scalaVersionOpt0.flatMap(_ => scalaVersionOpt))
-      .withExclusions(
-        dependency.exclude
-          .map { m =>
-            val m0 = m.module(scalaVersionOpt.getOrElse(VersionConstraint.empty).asString)
-            (m0.organization, m0.name)
-          }
-      )
+    resolution.copy(
+      scalaVersionOpt0 = resolution.scalaVersionOpt0.flatMap(_ => scalaVersionOpt),
+      exclusions = dependency.exclude
+        .map { m =>
+          val m0 = m.module(scalaVersionOpt.getOrElse(VersionConstraint.empty).asString)
+          (m0.organization, m0.name)
+        }
+    )
 }
 
 object SharedResolveParams {

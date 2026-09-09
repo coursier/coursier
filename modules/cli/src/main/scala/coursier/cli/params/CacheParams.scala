@@ -53,30 +53,32 @@ final case class CacheParams(
   ): Cache.Default[Task] = {
 
     def basicCustomizations(fc: FileCache[Task]): FileCache[Task] =
-      fc
-        .withLocation(cacheLocation)
-        .withCachePolicies(cachePolicies)
-        .withChecksums(checksum)
-        .withLogger(logger)
-        .withPool(pool)
-        .withTtl(overrideTtl.orElse(ttl))
-        .withRetry(retryCount)
-        .withFollowHttpToHttpsRedirections(followHttpToHttpsRedirections)
-        .withLocalArtifactsShouldBeCached(cacheLocalArtifacts)
+      fc.copy(
+        location = cacheLocation,
+        cachePolicies = cachePolicies,
+        checksums = checksum,
+        logger = logger,
+        pool = pool,
+        ttl = overrideTtl.orElse(ttl),
+        retry = retryCount,
+        followHttpToHttpsRedirections = followHttpToHttpsRedirections,
+        localArtifactsShouldBeCached = cacheLocalArtifacts
+      )
 
     Cache.default match {
       case fc: FileCache[Task] =>
         var c = basicCustomizations(fc)
         if (!useEnvCredentials)
-          c = c.withCredentials(Nil)
+          c = c.copy(credentials = Nil)
         c = c.addCredentials(credentials: _*)
         c
       case rc: RemoteCache[Task] =>
-        rc
-          .withLocation(cacheLocation)
-          .withLogger(logger)
-          .withPool(pool)
-          .withFileFallback(Some(basicCustomizations(Cache.defaultLocalCache)))
+        rc.copy(
+          location = cacheLocation,
+          logger = logger,
+          pool = pool,
+          fileFallback = Some(basicCustomizations(Cache.defaultLocalCache))
+        )
       // .withLocalArtifactsShouldBeCached(cacheLocalArtifacts)
       case other =>
         // FIXME Warn users if they customize that aren't going to be used

@@ -40,7 +40,7 @@ object Uninstall extends CoursierCommand[UninstallOptions] {
       System.err.println(s"Using install directory ${params.dir}")
 
     val installDir = InstallDir(params.dir, new NoopCache)
-      .withVerbosity(params.verbosity)
+      .copy(verbosity = params.verbosity)
 
     val list =
       if (params.all) installDir.list()

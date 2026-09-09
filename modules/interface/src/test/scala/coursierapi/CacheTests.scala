@@ -29,7 +29,7 @@ object CacheTests extends TestSuite {
           val noEnv        = EnvValues(None, None)
           val defaultCreds = CacheEnv.defaultCredentials(credEnv, noEnv, noEnv)
 
-          val fc = FileCache().withCredentials(defaultCreds)
+          val fc = FileCache().copy(credentials = defaultCreds)
           val resolved = fc.credentials.flatMap {
             case dc: DirectCredentials => Seq(dc)
             case other                 => other.get()

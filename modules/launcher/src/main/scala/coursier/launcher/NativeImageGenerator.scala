@@ -70,10 +70,11 @@ object NativeImageGenerator extends Generator[Parameters.NativeImage] {
       try {
         val cp =
           if (parameters.intermediateAssembly) {
-            val p = Parameters.Assembly()
-              .copy(files = parameters.jars)
-              .withMainClass(parameters.mainClass)
-              .copy(preambleOpt = None)
+            val p = Parameters.Assembly().copy(
+              files = parameters.jars,
+              mainClass = Some(parameters.mainClass),
+              preambleOpt = None
+            )
             tmpFile = Files.createTempFile("native-image-assembly-", ".jar")
             AssemblyGenerator.generate(p, tmpFile)
             tmpFile.toString

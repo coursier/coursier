@@ -107,10 +107,11 @@ object Launch extends CoursierCommand[LaunchOptions] {
             )
             f
         }
-        val bootstrapParams = Parameters.Bootstrap(content, mainClass)
-          .withPreambleOpt(None)
-          .withHybridAssembly(hybrid)
-          .withRules(assemblyRules)
+        val bootstrapParams = Parameters.Bootstrap(content, mainClass).copy(
+          preambleOpt = None,
+          hybridAssembly = hybrid,
+          rules = assemblyRules
+        )
         BootstrapGenerator.generate(bootstrapParams, tmpFile)
         Left(tmpFile.toAbsolutePath.toFile)
     }
@@ -424,7 +425,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
 
     val asyncProfilerOptions = params.asyncProfilerVersion match {
       case Some(asyncProfilerVersion) =>
-        val archiveCache = ArchiveCache().withCache(cache)
+        val archiveCache = ArchiveCache().copy(cache = cache)
         val (url, pathInArchive) =
           if (Properties.isMac)
             (
@@ -644,7 +645,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
 
         if (options.json) {
           val app  = res._1.app
-          val app0 = app.withDependencies((res._2 ++ app.dependencies).toList)
+          val app0 = app.copy(dependencies = (res._2 ++ app.dependencies).toList)
           println(app0.prettyRepr)
           sys.exit(0)
         }

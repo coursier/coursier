@@ -30,10 +30,12 @@ object Complete extends CoursierCommand[CompleteOptions] {
     val cache = params.cache.cache(pool, params.output.logger())
 
     val result = coursier.complete.Complete(cache)
-      .withRepositories(params.repositories)
-      .withScalaBinaryVersionOpt(params.scalaBinaryVersion)
-      .withScalaVersionOpt(params.scalaVersion)
-      .withInput(params.toComplete)
+      .copy(
+        repositories = params.repositories,
+        scalaBinaryVersionOpt = params.scalaBinaryVersion,
+        scalaVersionOpt = params.scalaVersion,
+        input = params.toComplete
+      )
       .result()
       .unsafeRun(wrapExceptions = true)(ec)
 

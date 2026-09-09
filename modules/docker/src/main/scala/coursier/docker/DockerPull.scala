@@ -45,9 +45,10 @@ object DockerPull {
 
     // FIXME repo and version escaping!!!!
     val indexArtifact =
-      Artifact(s"https://registry-1.docker.io/v2/$repoName/manifests/$repoVersion")
-        .withChanging(true)
-        .withAuthentication(Some(auth))
+      Artifact(s"https://registry-1.docker.io/v2/$repoName/manifests/$repoVersion").copy(
+        changing = true,
+        authentication = Some(auth)
+      )
 
     val logger = cache.loggerOpt.getOrElse(CacheLogger.nop)
 
@@ -84,7 +85,7 @@ object DockerPull {
 
     val manifestArtifact =
       Artifact(s"https://registry-1.docker.io/v2/$repoName/blobs/${selectedManifestEntry.digest}")
-        .withAuthentication(Some(auth))
+        .copy(authentication = Some(auth))
     val manifestFile = Await.result(
       logger.using(cache.file(manifestArtifact).run).future()(cache.ec),
       Duration.Inf
@@ -100,7 +101,7 @@ object DockerPull {
 
     val configArtifact =
       Artifact(s"https://registry-1.docker.io/v2/$repoName/blobs/${manifest.config.digest}")
-        .withAuthentication(Some(auth))
+        .copy(authentication = Some(auth))
     val configFile = Await.result(
       logger.using(cache.file(configArtifact).run).future()(cache.ec),
       Duration.Inf
@@ -116,7 +117,7 @@ object DockerPull {
 
     val layerArtifacts = manifest.layers.map { layer =>
       Artifact(s"https://registry-1.docker.io/v2/$repoName/blobs/${layer.digest}")
-        .withAuthentication(Some(auth))
+        .copy(authentication = Some(auth))
     }
     val layerFilesOrErrors = {
       val task = logger.using(Task.gather.gather(layerArtifacts.map(cache.file(_).run)))

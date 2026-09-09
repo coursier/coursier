@@ -257,30 +257,29 @@ final case class ResolutionOptions(
         reconciliation,
         defaultVariantAttributesOpt
       ) =>
-        ResolutionParams()
-          .withKeepOptionalDependencies(keepOptional)
-          .withMaxIterations(maxIterations)
-          .withForceVersion0(forceVersion)
-          .withProperties(extraProperties)
-          .withForcedProperties(forcedProperties)
-          .withProfiles(profiles)
-          .withScalaVersionOpt0(
-            scalaVersion
-              .map(_.trim)
-              .filter(_.nonEmpty)
-              .map(VersionConstraint(_))
-          )
-          .withForceScalaVersionOpt(forceScalaVersion)
-          .withOverrideFullSuffixOpt(overrideFullSuffix)
-          .withTypelevel(typelevel)
-          .withRules(rules)
-          .withReconciliation0(reconciliation)
-          .withDefaultConfiguration(Configuration(defaultConfiguration))
-          .withKeepProvidedDependencies(keepProvidedDependencies)
-          .withJdkVersionOpt0(jdkVersion.map(_.trim).filter(_.nonEmpty).map(Version(_)))
-          .withForceDepMgmtVersions(forceDepMgmtVersions)
-          .withEnableDependencyOverrides(enableDependencyOverrides)
-          .withDefaultVariantAttributes(defaultVariantAttributesOpt)
+        ResolutionParams().copy(
+          keepOptionalDependencies = keepOptional,
+          maxIterations = maxIterations,
+          forceVersion0 = forceVersion,
+          properties = extraProperties,
+          forcedProperties = forcedProperties,
+          profiles = profiles,
+          scalaVersionOpt0 = scalaVersion
+            .map(_.trim)
+            .filter(_.nonEmpty)
+            .map(VersionConstraint(_)),
+          forceScalaVersionOpt = forceScalaVersion,
+          overrideFullSuffixOpt = overrideFullSuffix,
+          typelevel = typelevel,
+          rules = rules,
+          reconciliation0 = reconciliation,
+          defaultConfiguration = Configuration(defaultConfiguration),
+          keepProvidedDependencies = Some(keepProvidedDependencies),
+          jdkVersionOpt0 = jdkVersion.map(_.trim).filter(_.nonEmpty).map(Version(_)),
+          forceDepMgmtVersions = forceDepMgmtVersions,
+          enableDependencyOverrides = enableDependencyOverrides,
+          defaultVariantAttributes = defaultVariantAttributesOpt
+        )
     }
   }
 }

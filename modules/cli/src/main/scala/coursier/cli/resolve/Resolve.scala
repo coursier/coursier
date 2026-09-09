@@ -78,10 +78,10 @@ object Resolve extends CoursierCommand[ResolveOptions] {
 
       val (scalaVersionOpt, platformOpt, deps) = unlift {
         AppDescriptor()
-          .withDependencies(javaOrScalaDeps)
-          .withRepositories(params.repositories.repositories)
-          .withScalaVersionOpt(
-            params.resolution.scalaVersionOpt0.map(_.asString).map { s =>
+          .copy(
+            dependencies = javaOrScalaDeps,
+            repositories = params.repositories.repositories,
+            scalaVersionOpt = params.resolution.scalaVersionOpt0.map(_.asString).map { s =>
               // add a "+" to partial Scala version numbers such as "2.13", "2.12", "3"
               if (s.count(_ == '.') < 2 && s.forall(c => c.isDigit || c == '.')) s + "+"
               else s
@@ -281,11 +281,13 @@ object Resolve extends CoursierCommand[ResolveOptions] {
 
       res1 <-
         coursier.Resolve()
-          .withDependencies(deps)
-          .withRepositories(repositories)
-          .withResolutionParams(params0.resolution)
-          .withBomDependencies(params0.dependency.bomDependencies)
-          .withCache(cache)
+          .copy(
+            dependencies = deps,
+            repositories = repositories,
+            resolutionParams = params0.resolution,
+            bomDependencies = params0.dependency.bomDependencies,
+            cache = cache
+          )
           .transformResolution { t =>
             if (benchmark == 0) t
             else Resolve.benchmark(math.abs(benchmark))(t)
@@ -362,7 +364,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
         } yield rawDesc
           // kind of meh - so that the id can be picked as default output name by bootstrap
           // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
-          .withName(rawDesc.name.orElse(nameOpt))
+          .copy(name = rawDesc.name.orElse(nameOpt))
 
       e match {
         case Left(err) =>
@@ -390,7 +392,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
         } yield rawDesc
           // kind of meh - so that the id can be picked as default output name by bootstrap
           // we have to update those ourselves, as these aren't put in the app descriptor bytes of AppInfo
-          .withName(rawDesc.name.orElse(info.appDescriptor.nameOpt))
+          .copy(name = rawDesc.name.orElse(info.appDescriptor.nameOpt))
           .overrideVersion(info.overrideVersionOpt, useVersionOverrides = true)
 
       e match {

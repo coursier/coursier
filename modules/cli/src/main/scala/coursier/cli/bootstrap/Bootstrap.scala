@@ -318,12 +318,13 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
           )
         }
 
-        Parameters.ScalaNative(fetch0, mainClass, nativeVersion)
-          .withJars(files.map(_._2))
-          .withOptions(params.nativeOptions)
-          .withLog(log)
-          .withVerbosity(params.sharedLaunch.resolve.output.verbosity)
-          .withPython(params.sharedLaunch.python)
+        Parameters.ScalaNative(fetch0, mainClass, nativeVersion).copy(
+          jars = files.map(_._2),
+          options = params.nativeOptions,
+          log = log,
+          verbosity = params.sharedLaunch.resolve.output.verbosity,
+          python = params.sharedLaunch.python
+        )
       }
       else if (params.specific.nativeImage) {
         val fetch0 = {
@@ -348,14 +349,15 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
         val javaHome =
           javaHomeTask.unsafeRun(wrapExceptions = true)(ExecutionContext.fromExecutorService(pool))
 
-        Parameters.NativeImage(mainClass, fetch0)
-          .withJars(files.map(_._2))
-          .withGraalvmVersion(params.specific.graalvmVersionOpt)
-          .withGraalvmJvmOptions(params.specific.graalvmJvmOptions)
-          .withGraalvmOptions(params.specific.graalvmOptions ++ args.unparsed)
-          .withIntermediateAssembly(params.specific.nativeImageIntermediateAssembly)
-          .withJavaHome(javaHome)
-          .withVerbosity(params.sharedLaunch.resolve.output.verbosity)
+        Parameters.NativeImage(mainClass, fetch0).copy(
+          jars = files.map(_._2),
+          graalvmVersion = params.specific.graalvmVersionOpt,
+          graalvmJvmOptions = params.specific.graalvmJvmOptions,
+          graalvmOptions = params.specific.graalvmOptions ++ args.unparsed,
+          intermediateAssembly = params.specific.nativeImageIntermediateAssembly,
+          javaHome = Some(javaHome),
+          verbosity = params.sharedLaunch.resolve.output.verbosity
+        )
       }
       else {
 
@@ -377,23 +379,24 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
           if (withPreamble)
             Some(
               coursier.launcher.Preamble()
-                .withJavaOpts(javaOptions)
-                .withJvmOptionFile(params.jvmOptionFile)
+                .copy(javaOpts = javaOptions)
+                .copy(jvmOptionFile = params.jvmOptionFile)
             )
           else
             None
 
         if (params.specific.assembly)
-          Parameters.Assembly()
-            .withFiles(files.map(_._2))
-            .withMainClass(mainClassOpt)
-            .withRules(params.specific.assemblyRules)
-            .withShadingRules(params.specific.shadingRules)
-            .withBaseManifest(params.specific.baseManifestOpt)
-            .withPreambleOpt(preambleOpt)
+          Parameters.Assembly().copy(
+            files = files.map(_._2),
+            mainClass = mainClassOpt,
+            rules = params.specific.assemblyRules,
+            shadingRules = params.specific.shadingRules,
+            baseManifest = params.specific.baseManifestOpt,
+            preambleOpt = preambleOpt
+          )
         else if (params.specific.manifestJar)
           Parameters.ManifestJar(files.map(_._2), mainClass)
-            .withPreambleOpt(preambleOpt)
+            .copy(preambleOpt = preambleOpt)
         else {
 
           val artifactFiles = files.toMap
@@ -422,19 +425,20 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
               val artifactFiles0 = artifacts
                 .map(a => (a, artifactFiles.getOrElse(a, sys.error("should not happen"))))
               classloaderContent(params.specific.bootstrapPackaging, artifactFiles0)
-                .withLoaderName(name)
+                .copy(loaderName = name)
           }
 
-          val params0 = Parameters.Bootstrap(content, mainClass)
-            .withJavaProperties(params.sharedLaunch.properties)
-            .withDeterministic(params.specific.deterministicOutput)
-            .withPreambleOpt(preambleOpt)
-            .withProguarded(params.specific.proguarded)
-            .withHybridAssembly(params.specific.hybrid)
-            .withDisableJarChecking(params.specific.disableJarCheckingOpt)
-            .withPython(params.sharedLaunch.python)
-            .withPythonJep(params.sharedLaunch.pythonJep)
-            .withRules(params.specific.assemblyRules)
+          val params0 = Parameters.Bootstrap(content, mainClass).copy(
+            javaProperties = params.sharedLaunch.properties,
+            deterministic = params.specific.deterministicOutput,
+            preambleOpt = preambleOpt,
+            proguarded = params.specific.proguarded,
+            hybridAssembly = params.specific.hybrid,
+            disableJarChecking = params.specific.disableJarCheckingOpt,
+            python = params.sharedLaunch.python,
+            pythonJep = params.sharedLaunch.pythonJep,
+            rules = params.specific.assemblyRules
+          )
 
           if (params.sharedLaunch.python) {
             val task = Fetch.task(
@@ -469,9 +473,11 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
 
     if (params.specific.createBatFile) {
       val content = Preamble()
-        .withKind(Preamble.Kind.Bat)
-        .withJarPath("%~dp0\\%~n0")
-        .withJavaOpts(javaOptions)
+        .copy(
+          kind = Preamble.Kind.Bat,
+          jarPath = Some("%~dp0\\%~n0"),
+          javaOpts = javaOptions
+        )
         .value
       Files.write(params.specific.batOutput, content)
       wroteBat = true

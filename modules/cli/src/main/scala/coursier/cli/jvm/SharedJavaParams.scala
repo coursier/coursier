@@ -29,12 +29,12 @@ final case class SharedJavaParams(
     verbosity: Int
   ): (JvmCache, coursier.jvm.JavaHome) = {
     def jvmCacheOf(cache: Cache[Task]) = {
-      val archiveCache = ArchiveCache().withCache(cache)
-      var cache0       = JvmCache().withArchiveCache(archiveCache)
+      val archiveCache = ArchiveCache().copy(cache = cache)
+      var cache0       = JvmCache().copy(archiveCache = archiveCache)
       for (arch <- architecture)
-        cache0 = cache0.withArchitecture(arch)
+        cache0 = cache0.copy(architecture = arch)
       for (os0 <- os)
-        cache0 = cache0.withOs(os0)
+        cache0 = cache0.copy(os = os0)
       jvmChannelOpt match {
         case None             => cache0.withDefaultIndex
         case Some(jvmChannel) => cache0.withIndexChannel(repositories, jvmChannel, os, architecture)
@@ -42,11 +42,12 @@ final case class SharedJavaParams(
     }
     val noUpdateJvmCache = jvmCacheOf(noUpdateCache)
     val jvmCache         = jvmCacheOf(cache)
-    val javaHome = coursier.jvm.JavaHome()
-      .withCache(jvmCache)
-      .withNoUpdateCache(Some(noUpdateJvmCache))
-      .withAllowSystem(allowSystemJvm)
-      .withUpdate(update)
+    val javaHome = coursier.jvm.JavaHome().copy(
+      cache = Some(jvmCache),
+      noUpdateCache = Some(noUpdateJvmCache),
+      allowSystem = allowSystemJvm,
+      update = update
+    )
     (jvmCache, javaHome)
   }
   def javaHome(

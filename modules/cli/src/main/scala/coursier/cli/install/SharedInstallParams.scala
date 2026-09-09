@@ -23,13 +23,14 @@ final case class SharedInstallParams(
 ) {
 
   def installDir(cache: Cache[Task], repositories: Seq[Repository]): InstallDir =
-    InstallDir(dir, cache)
-      .withGraalvmParamsOpt(graalvmParamsOpt)
-      .withCoursierRepositories(repositories)
-      .withOnlyPrebuilt(onlyPrebuilt)
-      .withPlatform(platformOpt)
-      .withPreferPrebuilt(preferPrebuilt)
-      .withOverrideProguardedBootstraps(proguarded)
+    InstallDir(dir, cache).copy(
+      graalvmParamsOpt = graalvmParamsOpt,
+      coursierRepositories = repositories,
+      onlyPrebuilt = onlyPrebuilt,
+      platform = platformOpt,
+      preferPrebuilt = preferPrebuilt,
+      overrideProguardedBootstraps = proguarded
+    )
 }
 
 object SharedInstallParams {

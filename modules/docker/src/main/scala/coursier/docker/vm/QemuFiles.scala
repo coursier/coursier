@@ -71,7 +71,7 @@ object QemuFiles {
           val cache = coursier.cache.Cache.default
           val debIndexArtifact =
             Artifact("https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.gz")
-              .withChanging(true)
+              .copy(changing = true)
           val debIndexFileTask = cache.file(debIndexArtifact).run
             .flatMap {
               case Left(ex) => Task.fail(ex)
@@ -190,7 +190,7 @@ object QemuFiles {
     artifactsTask.flatMap { artifacts =>
 
       def baseArtifact(art: Artifact): Artifact =
-        if (art.url.contains("!")) art.withUrl(art.url.takeWhile(_ != '!'))
+        if (art.url.contains("!")) art.copy(url = art.url.takeWhile(_ != '!'))
         else art
 
       def taskFor(art: Artifact): Task[Either[ArtifactError, File]] =

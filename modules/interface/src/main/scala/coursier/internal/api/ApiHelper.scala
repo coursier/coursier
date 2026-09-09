@@ -247,7 +247,7 @@ object ApiHelper {
           Extension(p.getExtension),
           Classifier(p.getClassifier)
         )
-        dep0.withPublication(p0)
+        dep0.copy(publication = p0)
       }
       .getOrElse(dep0)
   }
@@ -466,9 +466,11 @@ object ApiHelper {
       )
 
     FileCache()
-      .withPool(cache.getPool)
-      .withLocation(cache.getLocation)
-      .withLogger(loggerOpt.getOrElse(CacheLogger.nop))
+      .copy(
+        pool = cache.getPool,
+        location = cache.getLocation,
+        logger = loggerOpt.getOrElse(CacheLogger.nop)
+      )
       .addCredentials((cacheCredentials ++ fileCredentials).toSeq: _*)
   }
 

@@ -66,7 +66,7 @@ object RepositoryParams {
       // take dropInfoAttr into account
       if (options.dropInfoAttr)
         repos = repos.map {
-          case m: IvyRepository => m.withDropInfoAttributes(true)
+          case m: IvyRepository => m.copy(dropInfoAttributes = true)
           case other            => other
         }
 

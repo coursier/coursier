@@ -23,11 +23,11 @@ final case class EnvParams(
   // TODO Allow to customize some parameters of WindowsEnvVarUpdater / ProfileUpdater?
   def envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater] =
     if (Properties.isWin)
-      Left(WindowsEnvVarUpdater().withUseJni(Some(coursier.paths.Util.useJni())))
+      Left(WindowsEnvVarUpdater().copy(useJni = Some(coursier.paths.Util.useJni())))
     else
       Right(
         ProfileUpdater()
-          .withHome(homeOpt.orElse(ProfileUpdater.defaultHome))
+          .copy(home = homeOpt.orElse(ProfileUpdater.defaultHome))
       )
 
   def setupTask(

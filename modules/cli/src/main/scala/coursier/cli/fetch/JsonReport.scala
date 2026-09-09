@@ -90,7 +90,7 @@ object JsonReport {
         )
       }
       if (dep.versionConstraint == retainedVersion) dep
-      else dep.withVersionConstraint(retainedVersion)
+      else dep.copy(versionConstraint = retainedVersion)
     }
 
     val fromDepTrees = map.map {
@@ -237,7 +237,7 @@ object JsonReport {
                     variantPub.classifier.fold(dep.attributes)(c =>
                       Attributes(dep.attributes.`type`, c)
                     ),
-                  pub0 => dep.withPublication(pub0).attributes
+                  pub0 => dep.copy(publication = pub0).attributes
                 )
                 val fileOpt = fileMap.get(art)
                 fileOpt.map((_, attr))
