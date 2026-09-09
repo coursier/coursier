@@ -14,7 +14,7 @@ import java.util.Locale
 
 import scala.util.Properties
 
-trait CoursierJavaModule extends JavaModule {
+trait CoursierJavaModule extends JavaModule with MavenSnapshotsRepo {
   def jvmRelease: String =
     CoursierJavaModule.defaultJvmRelease
   def javacSystemJvmId = Task {

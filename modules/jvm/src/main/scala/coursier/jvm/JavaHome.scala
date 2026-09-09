@@ -30,6 +30,10 @@ import coursier.util.Task
   def withArchiveCache(archiveCache: ArchiveCache[Task]): JavaHome =
     copy(cache = this.cache.map(_.copy(archiveCache = archiveCache)))
 
+  /** Directory the JVMs we manage are extracted under, if we manage any */
+  def managedJvmsDir: Option[File] =
+    cache.map(_.archiveCache.location)
+
   def default(): Task[File] =
     get(JavaHome.defaultId)
 

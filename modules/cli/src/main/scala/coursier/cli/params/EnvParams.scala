@@ -1,5 +1,6 @@
 package coursier.cli.params
 
+import java.io.File
 import java.nio.file.{Path, Paths}
 
 import cats.data.{Validated, ValidatedNel}
@@ -34,7 +35,8 @@ final case class EnvParams(
     envUpdate: EnvironmentUpdate,
     envVarUpdater: Either[WindowsEnvVarUpdater, ProfileUpdater],
     verbosity: Int,
-    headerComment: String
+    headerComment: String,
+    managedJvmsDir: Option[File] = None
   ): Task[Unit] =
     for {
 
@@ -50,7 +52,15 @@ final case class EnvParams(
               Task.delay {
                 if (verbosity >= 0)
                   System.err.println(msg)
-                windowsEnvVarUpdater.applyUpdate(envUpdate)
+                // Former coursier versions added the bin directory of the JVM they were setting
+                // up to the PATH, so that those piled up there, and the JVM set up first kept
+                // winning over JAVA_HOME. Get rid of all of them, applyUpdate right below adds
+                // back the one of the JVM we're setting up.
+                val cleaned = managedJvmsDir.exists { dir =>
+                  windowsEnvVarUpdater.removePathEntriesWithPrefix(dir.getAbsolutePath)
+                }
+                val updated = windowsEnvVarUpdater.applyUpdate(envUpdate)
+                cleaned || updated
               }
             case Right(profileUpdater) =>
               lazy val profileFiles = profileUpdater.profileFiles() // Task.delay(…)

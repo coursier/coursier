@@ -172,7 +172,8 @@ object Java extends CoursierCommand[JavaOptions] {
           envUpdate,
           params.env.envVarUpdater,
           params.output.verbosity,
-          MaybeInstallJvm.headerComment
+          MaybeInstallJvm.headerComment,
+          javaHome.managedJvmsDir
         )
         task.unsafeRun(wrapExceptions = true)(coursierCache.ec)
       }
