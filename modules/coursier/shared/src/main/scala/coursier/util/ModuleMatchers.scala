@@ -2,8 +2,7 @@ package coursier.util
 
 import dataclass.{data, since => unroll}
 
-import coursier.core.{Module, ModuleName, Organization}
-
+import coursier.core.{Module, ModuleName, Organization, ToStringHelper}
 @data(
   deprecatedSetters = true,
   deprecatedSettersMessage = "Use copy instead",
@@ -14,6 +13,9 @@ import coursier.core.{Module, ModuleName, Organization}
   @unroll
   includeByDefault: Boolean = true
 ) {
+
+  override def toString: String =
+    ToStringHelper(this)
 
   // If modules are included by default:
   // Those matched by anything in exclude are excluded, but for those also matched by something in include.

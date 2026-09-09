@@ -4,6 +4,7 @@ import coursier.Resolve
 import coursier.util.StringInterpolators._
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 import coursier.error.ResolutionError
 import coursier.util.Print.Colors
