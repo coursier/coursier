@@ -2,7 +2,7 @@ package coursier.bootstrap.launcher
 
 import utest._
 
-import java.io.{BufferedReader, ByteArrayOutputStream, InputStreamReader}
+import java.io.{BufferedReader, ByteArrayOutputStream, IOException, InputStreamReader}
 import java.net.{
   ConnectException,
   InetAddress,
@@ -22,7 +22,11 @@ import java.nio.charset.StandardCharsets.US_ASCII
   */
 object DownloadAddressFallbackTests extends TestSuite {
 
-  /** Nothing listens there, and 127.0.0.0/8 is local, so connecting refuses at once */
+  /** Nothing listens there, and nothing is meant to
+    *
+    * How connecting to it fails is up to the OS: a connection refused where the whole of
+    * 127.0.0.0/8 is local, a timeout on macOS, where only 127.0.0.1 is.
+    */
   private def unreachable = InetAddress.getByName("127.0.0.9")
   private def reachable   = InetAddress.getByName("127.0.0.1")
 
@@ -38,7 +42,8 @@ object DownloadAddressFallbackTests extends TestSuite {
           while (true) {
             val socket = server.accept()
             try {
-              val reader = new BufferedReader(new InputStreamReader(socket.getInputStream, US_ASCII))
+              val reader =
+                new BufferedReader(new InputStreamReader(socket.getInputStream, US_ASCII))
               reader.readLine() // request line
               var line = reader.readLine()
               while (line != null && line.nonEmpty) {
@@ -109,7 +114,7 @@ object DownloadAddressFallbackTests extends TestSuite {
           // a host name that resolves to the address nothing listens on, like the one the JDK
           // would have handed the socket
           val endpoint = InetAddress.getByAddress(endpointHost, unreachable.getAddress)
-          socket.connect(new InetSocketAddress(endpoint, port), 2000)
+          socket.connect(new InetSocketAddress(endpoint, port), 1000)
         }
         finally if (socket != null) socket.close()
       }
@@ -122,7 +127,7 @@ object DownloadAddressFallbackTests extends TestSuite {
 
       test("leaves the connections of other hosts alone") {
         withServer { (port, _) =>
-          assertThrows[ConnectException] {
+          assertThrows[IOException] {
             connectThrough("repo.example.com", "other.example.com", port)
           }
         }

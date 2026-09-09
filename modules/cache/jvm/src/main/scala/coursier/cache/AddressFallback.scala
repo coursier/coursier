@@ -50,11 +50,34 @@ private[cache] object AddressFallback {
     resolve: String => Seq[InetAddress] = defaultResolve
   ): (URLConnection, Boolean) = {
 
-    val initialEx =
-      try return CacheUrl.urlConnectionMaybePartial(args)
+    val initial: Either[IOException, (URLConnection, Boolean)] =
+      try Right(CacheUrl.urlConnectionMaybePartial(args))
       catch {
-        case e: IOException if isConnectionFailure(e) => e
+        case e: IOException if isConnectionFailure(e) => Left(e)
       }
+
+    initial match {
+      case Right(res) => res
+      case Left(initialEx) =>
+        elsewhere(args, initialEx, perIpConnectTimeout, resolve) match {
+          case Some(res) => res
+          // the failures of the addresses that were tried hang off it, as suppressed exceptions
+          case None => throw initialEx
+        }
+    }
+  }
+
+  /** Runs `args` again against each of the other addresses of its host, until one answers
+    *
+    * The failures along the way are added to `initialEx` as suppressed exceptions, so that a report
+    * of it accounts for every address that was tried.
+    */
+  private def elsewhere(
+    args: CacheUrl.Args,
+    initialEx: IOException,
+    perIpConnectTimeout: Option[FiniteDuration],
+    resolve: String => Seq[InetAddress]
+  ): Option[(URLConnection, Boolean)] = {
 
     var res: (URLConnection, Boolean) = null
 
@@ -82,11 +105,7 @@ private[cache] object AddressFallback {
       }
     }
 
-    if (res == null)
-      // the failures of the addresses that were tried hang off it, as suppressed exceptions
-      throw initialEx
-    else
-      res
+    Option(res)
   }
 
   /** Whether `t` is the kind of failure another address may not run into

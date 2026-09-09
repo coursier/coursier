@@ -3,8 +3,8 @@ package coursier.cache
 import coursier.util.EnvValues
 import utest._
 
-import java.io.ByteArrayOutputStream
-import java.net.{ConnectException, InetAddress, InetSocketAddress, Socket, URLConnection}
+import java.io.{ByteArrayOutputStream, IOException}
+import java.net.{InetAddress, InetSocketAddress, Socket, URLConnection}
 import java.nio.charset.StandardCharsets.UTF_8
 
 import scala.concurrent.duration.DurationInt
@@ -24,7 +24,12 @@ object AddressFallbackTests extends TestSuite {
 
   private val body = "address fallback".getBytes(UTF_8)
 
-  /** Nothing listens there, and 127.0.0.0/8 is local, so connecting refuses at once */
+  /** Nothing listens there, and nothing is meant to
+    *
+    * How connecting to it fails is up to the OS: a connection refused where the whole of
+    * 127.0.0.0/8 is local, a timeout on macOS, where only 127.0.0.1 is. The timeouts below are kept
+    * short for the latter, and the assertions stay off the exact exception.
+    */
   private def unreachable  = InetAddress.getByName("127.0.0.9")
   private def unreachable2 = InetAddress.getByName("127.0.0.8")
   private def reachable    = InetAddress.getByName("127.0.0.1")
@@ -45,14 +50,14 @@ object AddressFallbackTests extends TestSuite {
     redirectionCount = 0,
     Some(20),
     Nil,
-    connectTimeout = Some(5.seconds),
+    connectTimeout = Some(1.second),
     readTimeout = Some(5.seconds)
   )
 
   private def connect(url: String, addresses: Seq[InetAddress]): (URLConnection, Boolean) =
     AddressFallback.connectionMaybePartial(
       args(url),
-      Some(2.seconds),
+      Some(1.second),
       _ => addresses
     )
 
@@ -95,7 +100,7 @@ object AddressFallbackTests extends TestSuite {
       val log = new RequestLog
       RawHttpServer.withServerOn(log, "127.0.0.1")(_ => RawHttpServer.ok(body)) { server =>
         val url = s"http://${unreachable.getHostAddress}:${server.port}/dir/file.txt"
-        val ex = assertThrows[ConnectException] {
+        val ex = assertThrows[IOException] {
           connect(url, Seq(unreachable))
         }
         // nothing was tried beyond the initial attempt
@@ -108,7 +113,7 @@ object AddressFallbackTests extends TestSuite {
       val log = new RequestLog
       RawHttpServer.withServerOn(log, "127.0.0.1")(_ => RawHttpServer.ok(body)) { server =>
         val url = s"http://${unreachable.getHostAddress}:${server.port}/dir/file.txt"
-        val ex = assertThrows[ConnectException] {
+        val ex = assertThrows[IOException] {
           connect(url, Seq(unreachable, unreachable2))
         }
         // the addresses that were tried are accounted for
@@ -132,7 +137,7 @@ object AddressFallbackTests extends TestSuite {
           // a host name that resolves to the address nothing listens on, like the one the JDK
           // would have handed the socket
           val endpoint = InetAddress.getByAddress(endpointHost, unreachable.getAddress)
-          socket.connect(new InetSocketAddress(endpoint, port), 2000)
+          socket.connect(new InetSocketAddress(endpoint, port), 1000)
         }
         finally if (socket != null) socket.close()
       }
@@ -147,7 +152,7 @@ object AddressFallbackTests extends TestSuite {
       test("leaves the connections of other hosts alone") {
         val log = new RequestLog
         RawHttpServer.withServerOn(log, "127.0.0.1")(_ => RawHttpServer.ok(body)) { server =>
-          assertThrows[ConnectException] {
+          assertThrows[IOException] {
             connectThrough("repo.example.com", "other.example.com", server.port)
           }
         }
