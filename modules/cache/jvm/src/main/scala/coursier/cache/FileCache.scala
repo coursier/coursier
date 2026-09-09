@@ -30,7 +30,7 @@ import scala.util.Properties
 import scala.util.control.NonFatal
 
 // format: off
-@data case class FileCache[F[_]](
+@data(deprecatedSetters = true, deprecatedSettersMessage = "Use copy instead", deprecatedSettersSince = "2.1.25") case class FileCache[F[_]](
   location: File,
   cachePolicies: Seq[CachePolicy] = CacheDefaults.cachePolicies,
   checksums: Seq[Option[String]] = CacheDefaults.checksums,

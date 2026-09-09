@@ -21,7 +21,11 @@ import coursier.util.{Artifact, EitherT, Monad}
 import coursier.version.{Version, VersionParse}
 import dataclass.{data, since => unroll}
 
-@data case class IvyRepository(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class IvyRepository(
   pattern: Pattern,
   metadataPatternOpt: Option[Pattern] = None,
   changingOpt: Option[Boolean] = None,

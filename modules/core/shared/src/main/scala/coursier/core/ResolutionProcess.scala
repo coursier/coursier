@@ -97,7 +97,11 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
   def current: Resolution
 }
 
-@data case class Missing(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Missing(
   missing0: Seq[(Module, VersionConstraint0)],
   current: Resolution,
   cont: Resolution => ResolutionProcess
@@ -200,7 +204,11 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
 
 }
 
-@data case class Continue(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Continue(
   current: Resolution,
   cont: Resolution => ResolutionProcess
 ) extends ResolutionProcess {
@@ -215,7 +223,11 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
 
 }
 
-@data case class Done(resolution: Resolution) extends ResolutionProcess {
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Done(resolution: Resolution) extends ResolutionProcess {
 
   def current: Resolution = resolution
 }

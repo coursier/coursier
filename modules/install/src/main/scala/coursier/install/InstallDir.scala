@@ -22,7 +22,11 @@ import coursier.util.{Artifact, Task}
 import coursier.version.VersionConstraint
 import scala.jdk.CollectionConverters._
 
-@data case class InstallDir(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class InstallDir(
   baseDir: Path = InstallDir.defaultDir,
   @unroll
   cache: Cache[Task] = Cache.default,

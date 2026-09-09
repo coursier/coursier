@@ -4,7 +4,11 @@ import dataclass.data
 
 import coursier.cache.ArchiveType
 
-@data case class JvmIndexEntry(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class JvmIndexEntry(
   os: String,
   architecture: String,
   name: String,

@@ -8,7 +8,11 @@ import coursier.util.Sync
 import dataclass.data
 import coursier.util.Task
 
-@data case class Complete[F[_]](
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Complete[F[_]](
   cache: Cache[F],
   repositories: Seq[Repository] = Resolve.defaultRepositories,
   scalaVersionOpt: Option[String] = None,
@@ -94,7 +98,11 @@ object Complete {
     else
       scalaVersion.split('.').take(2).mkString(".")
 
-  @data case class Result(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Result(
     input: Repository.Complete.Input,
     results: Seq[(Repository, Either[Throwable, Seq[String]])]
   ) {

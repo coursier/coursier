@@ -11,7 +11,11 @@ import cats.implicits._
 import coursier.cache.internal.FileUtil
 import coursier.util.Artifact
 
-@data case class ArtifactsLock(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class ArtifactsLock(
   entries: Set[ArtifactsLock.Entry]
 ) {
   def repr: String =
@@ -26,7 +30,11 @@ import coursier.util.Artifact
 
 object ArtifactsLock {
 
-  @data case class Entry(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Entry(
     url: String,
     checksumType: String,
     checksum: String

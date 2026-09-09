@@ -7,7 +7,11 @@ import java.nio.charset.{Charset, StandardCharsets}
 
 import scala.io.{Codec, Source}
 
-@data case class Preamble(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Preamble(
   kind: Preamble.Kind = Preamble.Kind.Sh,
   javaOpts: Seq[String] = Nil,
   jarPath: Option[String] = None,

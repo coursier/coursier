@@ -16,7 +16,11 @@ sealed abstract class Channel extends Product with Serializable {
 
 object Channel {
 
-  @data case class FromModule(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class FromModule(
     module: Module,
     versionConstraint: VersionConstraint = VersionConstraint("latest.release")
   ) extends Channel {
@@ -52,17 +56,29 @@ object Channel {
     )
   }
 
-  @data case class FromUrl(url: String) extends Channel {
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class FromUrl(url: String) extends Channel {
     def repr: String =
       url
   }
 
-  @data case class FromDirectory(path: Path) extends Channel {
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class FromDirectory(path: Path) extends Channel {
     def repr: String =
       path.toString
   }
 
-  @data case class Inline() extends Channel {
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Inline() extends Channel {
     def repr: String =
       "inline"
   }

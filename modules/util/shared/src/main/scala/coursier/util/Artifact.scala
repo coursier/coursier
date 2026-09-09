@@ -3,7 +3,12 @@ package coursier.util
 import coursier.core.Authentication
 import dataclass.data
 
-@data(cachedHashCode = true) case class Artifact(
+@data(
+  cachedHashCode = true,
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Artifact(
   url: String,
   checksumUrls: Map[String, String] = Map.empty,
   extra: Map[String, Artifact] = Map.empty,

@@ -7,7 +7,11 @@ import coursier.util.ModuleMatchers
 import coursier.version.VersionConstraint
 import dataclass.data
 
-@data case class DontBumpRootDependencies(matchers: ModuleMatchers) extends Rule {
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class DontBumpRootDependencies(matchers: ModuleMatchers) extends Rule {
 
   import DontBumpRootDependencies._
 

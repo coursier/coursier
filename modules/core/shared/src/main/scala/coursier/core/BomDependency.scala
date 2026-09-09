@@ -3,7 +3,11 @@ package coursier.core
 import coursier.version.{VersionConstraint => VersionConstraint0}
 import dataclass.{data, since => unroll}
 
-@data case class BomDependency(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class BomDependency(
   module: Module,
   versionConstraint: VersionConstraint0,
   config: Configuration = Configuration.empty,

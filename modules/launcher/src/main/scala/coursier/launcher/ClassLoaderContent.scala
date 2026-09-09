@@ -4,7 +4,11 @@ import dataclass.data
 
 import scala.collection.mutable
 
-@data case class ClassLoaderContent(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class ClassLoaderContent(
   entries: Seq[ClassPathEntry],
   loaderName: String = ""
 )

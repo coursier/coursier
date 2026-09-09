@@ -15,7 +15,11 @@ import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 import dataclass.{data, since => unroll}
 
-@data case class Artifacts[F[_]](
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Artifacts[F[_]](
   cache: Cache[F],
   resolutions: Seq[Resolution] = Nil,
   classifiers: Set[Classifier] = Set.empty,
@@ -180,7 +184,11 @@ object Artifacts {
   def apply(): Artifacts[Task] =
     new Artifacts(Cache.default)
 
-  @data case class Result(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Result(
     fullDetailedArtifacts0: Seq[(
       Dependency,
       Either[VariantPublication, Publication],

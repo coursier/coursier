@@ -51,14 +51,22 @@ object JavaOrScalaModule {
           scalaVersion
       }
 
-  @data case class JavaModule(module: Module) extends JavaOrScalaModule {
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class JavaModule(module: Module) extends JavaOrScalaModule {
     def attributes: Map[String, String] = module.attributes
     override def toString =
       module.toString
     def module(scalaBinaryVersion: String, scalaVersion: String): Module =
       module
   }
-  @data case class ScalaModule(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class ScalaModule(
     baseModule: Module,
     fullCrossVersion: Boolean
   ) extends JavaOrScalaModule {

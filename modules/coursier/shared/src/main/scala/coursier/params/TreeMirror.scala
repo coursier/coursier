@@ -12,7 +12,11 @@ import dataclass.data
   * `"https://mirror.c.com/maven/a/b/c"`, and `"https://artifacts.b.com/foo/e/f/g"` also exists at
   * `"https://mirror.c.com/maven/foo/e/f/g"`.
   */
-@data case class TreeMirror(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class TreeMirror(
   from: Seq[String],
   to: String
 ) extends Mirror {

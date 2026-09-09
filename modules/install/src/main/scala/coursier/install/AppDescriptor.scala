@@ -12,7 +12,11 @@ import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.util.{Artifact, Task}
 import coursier.util.StringInterpolators._
 import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
-@data case class AppDescriptor(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class AppDescriptor(
   repositories: Seq[Repository] = Nil,
   dependencies: Seq[JavaOrScalaDependency] = Nil,
   sharedDependencies: Seq[JavaOrScalaModule] = Nil,
@@ -356,7 +360,11 @@ import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
 
 object AppDescriptor {
 
-  @data case class GraalvmOptions(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class GraalvmOptions(
     version: Option[String] = None,
     options: Seq[String] = Nil
   )

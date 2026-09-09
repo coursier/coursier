@@ -6,7 +6,11 @@ import dataclass.data
 import java.util.Locale
 
 // Maven-specific
-@data case class Activation(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Activation(
   properties: Seq[(String, Option[String])],
   os: Activation.Os,
   jdk: Option[Either[VersionInterval0, Seq[Version0]]]
@@ -57,7 +61,11 @@ import java.util.Locale
 
 object Activation {
 
-  @data case class Os(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Os(
     arch: Option[String],
     families: Set[String],
     name: Option[String],

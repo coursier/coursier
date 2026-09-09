@@ -4,7 +4,11 @@ import dataclass.data
 
 import java.nio.charset.StandardCharsets
 
-@data case class ChannelData(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class ChannelData(
   channel: Channel,
   origin: String,
   data: Array[Byte]

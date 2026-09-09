@@ -10,7 +10,7 @@ import dataclass.{data, since => unroll}
 import scala.concurrent.duration.FiniteDuration
 
 // format: off
-@data case class ConnectionBuilder(
+@data(deprecatedSetters = true, deprecatedSettersMessage = "Use copy instead", deprecatedSettersSince = "2.1.25") case class ConnectionBuilder(
   url: String,
   authentication: Option[Authentication] = None,
   alreadyDownloaded: Long = 0L,

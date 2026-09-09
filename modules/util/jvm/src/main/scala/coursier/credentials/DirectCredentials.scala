@@ -7,7 +7,11 @@ import coursier.core.Authentication
 import scala.util.Try
 import dataclass.{data, since => unroll}
 
-@data case class DirectCredentials(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class DirectCredentials(
   host: String = "",
   usernameOpt: Option[String] = None,
   passwordOpt: Option[Password[String]] = None,

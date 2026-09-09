@@ -2,7 +2,11 @@ package coursier.env
 
 import dataclass.{data, since => unroll}
 
-@data case class WindowsEnvVarUpdater(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class WindowsEnvVarUpdater(
   powershellRunner: PowershellRunner = PowershellRunner(),
   target: String = "User",
   @unroll

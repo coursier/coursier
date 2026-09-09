@@ -6,7 +6,11 @@ import dataclass.data
 
 import scala.collection.mutable
 
-@data case class EnvironmentUpdate(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class EnvironmentUpdate(
   set: Seq[(String, String)] = Nil,
   pathLikeAppends: Seq[(String, String)] = Nil
 ) {

@@ -7,7 +7,11 @@ import dataclass.data
 import java.nio.file.{Files, Path}
 import java.nio.file.StandardCopyOption
 
-@data case class DigestBasedCache[F[_]](
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class DigestBasedCache[F[_]](
   location: Path,
   retry: Retry =
     Retry(

@@ -14,7 +14,11 @@ import coursier.parse.RepositoryParser
   * @param channel
   * @param id
   */
-@data case class RawSource(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class RawSource(
   repositories: List[String],
   channel: String,
   id: String

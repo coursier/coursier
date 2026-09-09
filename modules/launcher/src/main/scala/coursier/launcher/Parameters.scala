@@ -16,7 +16,11 @@ sealed abstract class Parameters extends Product with Serializable {
 
 object Parameters {
 
-  @data case class Assembly(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Assembly(
     files: Seq[File] = Nil,
     mainClass: Option[String] = None,
     attributes: Seq[(JarAttributes.Name, String)] = Nil,
@@ -39,7 +43,11 @@ object Parameters {
         attributes
   }
 
-  @data case class Bootstrap(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Bootstrap(
     content: Seq[ClassLoaderContent],
     mainClass: String,
     javaProperties: Seq[(String, String)] = Nil,
@@ -85,7 +93,11 @@ object Parameters {
       copy(extraContent = extraContent + (name -> content))
   }
 
-  @data case class ManifestJar(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class ManifestJar(
     classpath: Seq[File],
     mainClass: String,
     preambleOpt: Option[Preamble] = Some(Preamble())
@@ -95,7 +107,11 @@ object Parameters {
       copy(preambleOpt = Some(preamble))
   }
 
-  @data case class NativeImage(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class NativeImage(
     mainClass: String,
     fetch: Seq[String] => Seq[File],
     jars: Seq[File] = Nil,
@@ -120,11 +136,19 @@ object Parameters {
       Seq("-Xmx3g")
   }
 
-  @data case class Prebuilt() extends Parameters {
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Prebuilt() extends Parameters {
     override def isNative: Boolean = true
   }
 
-  @data case class ScalaNative(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class ScalaNative(
     fetch: Seq[String] => Seq[File],
     mainClass: String,
     nativeVersion: String,
@@ -140,7 +164,11 @@ object Parameters {
 
   object ScalaNative {
 
-    @data case class ScalaNativeOptions(
+    @data(
+      deprecatedSetters = true,
+      deprecatedSettersMessage = "Use copy instead",
+      deprecatedSettersSince = "2.1.25"
+    ) case class ScalaNativeOptions(
       gcOpt: Option[String] = None,
       modeOpt: Option[String] = None,
       linkStubs: Boolean = true,
@@ -159,7 +187,11 @@ object Parameters {
   }
 
   /** For test purposes */
-  @data case class DummyNative() extends Parameters {
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class DummyNative() extends Parameters {
     override def isNative: Boolean = true
   }
 

@@ -6,7 +6,11 @@ import coursier.graph.Conflict.Conflicted
 import coursier.util.ModuleMatcher
 import dataclass.{data, since => unroll}
 
-@data case class Strict(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Strict(
   include: Set[ModuleMatcher] = Set(ModuleMatcher.all),
   @unroll
   exclude: Set[ModuleMatcher] = Set.empty,

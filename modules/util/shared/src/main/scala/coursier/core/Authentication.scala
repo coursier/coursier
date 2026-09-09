@@ -5,7 +5,11 @@ import java.util.Base64
 
 import dataclass.{data, since => unroll}
 
-@data case class Authentication(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Authentication(
   userOpt: Option[String],
   passwordOpt: Option[String],
   httpHeaders: Seq[(String, String)],

@@ -24,7 +24,11 @@ object ShadingRule {
     * For instance `moveUnder("foo", "shaded")` relocates `foo.Bar` to `shaded.foo.Bar`. This
     * matches the `moveUnder` helper of sbt-shading.
     */
-  @data case class MoveUnder(from: String, to: String) extends ShadingRule {
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class MoveUnder(from: String, to: String) extends ShadingRule {
     def pattern: String = s"$from.**"
     def result: String  = s"$to.$from.@1"
   }
@@ -33,13 +37,21 @@ object ShadingRule {
     *
     * For instance `rename("foo", "shaded.foo")` relocates `foo.Bar` to `shaded.foo.Bar`.
     */
-  @data case class Rename(from: String, to: String) extends ShadingRule {
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Rename(from: String, to: String) extends ShadingRule {
     def pattern: String = s"$from.**"
     def result: String  = s"$to.@1"
   }
 
   /** A raw jarjar rule, with its pattern and result. */
-  @data case class Patterns(pattern: String, result: String) extends ShadingRule
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Patterns(pattern: String, result: String) extends ShadingRule
 
   def moveUnder(from: String, to: String): ShadingRule =
     MoveUnder(from, to)

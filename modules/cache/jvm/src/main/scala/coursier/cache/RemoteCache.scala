@@ -18,7 +18,11 @@ import scala.cli.config.Secret
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.util.Try
 
-@data case class RemoteCache[F[_]](
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class RemoteCache[F[_]](
   serverUrl: String,
   location: File,
   basicAuth: Option[Secret[String]] = None, // user:password

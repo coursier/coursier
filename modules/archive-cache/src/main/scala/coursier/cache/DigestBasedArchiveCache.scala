@@ -5,7 +5,11 @@ import dataclass.data
 
 import java.io.File
 
-@data case class DigestBasedArchiveCache[F[_]](
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class DigestBasedArchiveCache[F[_]](
   archiveCache: ArchiveCache[F]
 )(implicit
   sync: Sync[F]

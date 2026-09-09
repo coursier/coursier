@@ -12,8 +12,16 @@ object MergeRule {
     def path: String
   }
 
-  @data case class Exclude(path: String)         extends PathRule
-  @data case class ExcludePattern(path: Pattern) extends MergeRule
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Exclude(path: String) extends PathRule
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class ExcludePattern(path: Pattern) extends MergeRule
 
   object ExcludePattern {
     def apply(s: String): ExcludePattern =
@@ -22,8 +30,16 @@ object MergeRule {
 
   // TODO Accept a separator: Array[Byte] argument in these
   // (to separate content with a line return in particular)
-  @data case class Append(path: String)         extends PathRule
-  @data case class AppendPattern(path: Pattern) extends MergeRule
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Append(path: String) extends PathRule
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class AppendPattern(path: Pattern) extends MergeRule
 
   object AppendPattern {
     def apply(s: String): AppendPattern =

@@ -12,7 +12,11 @@ object DependencyManagement {
   type Map        = scala.collection.immutable.Map[Key, Values]
   type GenericMap = scala.collection.Map[Key, Values]
 
-  @data case class Key(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Key(
     organization: Organization,
     name: ModuleName,
     `type`: Type,
@@ -52,7 +56,11 @@ object DependencyManagement {
       dep.depManagementKey
   }
 
-  @data case class Values(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Values(
     config: Configuration,
     versionConstraint: VersionConstraint0,
     minimizedExclusions: MinimizedExclusions,

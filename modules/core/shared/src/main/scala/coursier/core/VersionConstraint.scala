@@ -5,7 +5,11 @@ import dataclass.data
 import scala.annotation.tailrec
 
 @deprecated("Use coursier.version.VersionConstraint instead", "2.1.25")
-@data case class VersionConstraint(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class VersionConstraint(
   interval: VersionInterval,
   preferred: Seq[Version]
 ) {

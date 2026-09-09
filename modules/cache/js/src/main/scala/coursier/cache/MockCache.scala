@@ -6,7 +6,11 @@ import dataclass.data
 
 import scala.concurrent.{ExecutionContext, Future}
 
-@data case class MockCache(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class MockCache(
   base: String,
   baseChanging: String
 ) extends Cache[Task] {

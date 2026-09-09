@@ -9,7 +9,11 @@ import dataclass.data
 
 import scala.jdk.CollectionConverters._
 
-@data case class FileCredentials(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class FileCredentials(
   path: String,
   optional: Boolean = true
 ) extends Credentials {

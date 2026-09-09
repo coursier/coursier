@@ -8,7 +8,11 @@ import coursier.util.{Artifact, EitherT, Sync}
 import scala.concurrent.ExecutionContext
 import dataclass.data
 
-@data case class InMemoryCache[F[_]](underlying: Cache[F], S: Sync[F]) extends Cache[F] {
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class InMemoryCache[F[_]](underlying: Cache[F], S: Sync[F]) extends Cache[F] {
 
   private implicit def S0: Sync[F] = S
 
