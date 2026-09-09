@@ -1681,13 +1681,29 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command 
   )
 }
 
+/** The module of `cross` for Scala version `sv`
+  *
+  * Unlike `cross.valuesToModules.get(List(sv))`, this fails rather than yielding no module when
+  * `cross` isn't cross-built for `sv`. A silent miss means the tests of that module simply don't
+  * run, and the CI job for that Scala version goes green without them - which is how the Scala 3
+  * `interface-test` tests went unnoticed as never running.
+  */
+def crossModule[M <: Cross.Module[?]](cross: Cross[M], sv: String): M =
+  cross.valuesToModules.getOrElse(
+    List(sv),
+    sys.error(
+      s"${cross.moduleSegments.render} is not cross-built for Scala $sv " +
+        cross.valuesToModules.keys.map(_.mkString(", ")).mkString("(cross values: ", " / ", ")")
+    )
+  )
+
+/** Like `crossModule`, for the modules that are deliberately cross-built for Scala 2 only */
+def scala2CrossModule[M <: Cross.Module[?]](cross: Cross[M], sv: String): Option[M] =
+  if (sv.startsWith("3.")) None
+  else Some(crossModule(cross, sv))
+
 def dockerTests(): Task.Command[Unit] = {
-  val cmd = docker.valuesToModules
-    .get(List(ScalaVersions.scala3))
-    .map(_.test.testForked())
-    .getOrElse {
-      sys.error("docker test command not found")
-    }
+  val cmd = crossModule(docker, ScalaVersions.scala3).test.testForked()
 
   Task.Command[Unit] {
     cmd()
@@ -1707,24 +1723,28 @@ def jvmTests(scalaVersion: String = defaultScalaVersion) = {
 
   def crossTests(sv: String) = Seq(
     // format: off
-    core.jvm           .valuesToModules.get(List(sv)).map(_.test.testForked()),
-    cache.jvm          .valuesToModules.get(List(sv)).map(_.test.testForked()),
-    env                .valuesToModules.get(List(sv)).map(_.test.testForked()),
-    coursier.jvm       .valuesToModules.get(List(sv)).map(_.test.testForked()),
-    tests.jvm          .valuesToModules.get(List(sv)).map(_.test.testForked()),
-    interop.scalaz.jvm .valuesToModules.get(List(sv)).map(_.test.testForked()),
-    interop.cats.jvm   .valuesToModules.get(List(sv)).map(_.test.testForked()),
-    install            .valuesToModules.get(List(sv)).map(_.test.testForked()),
-    jvm                .valuesToModules.get(List(sv)).map(_.test.testForked())
+    crossModule(core.jvm     , sv).test.testForked(),
+    crossModule(cache.jvm    , sv).test.testForked(),
+    crossModule(env          , sv).test.testForked(),
+    crossModule(coursier.jvm , sv).test.testForked(),
+    crossModule(tests.jvm    , sv).test.testForked(),
+    crossModule(install      , sv).test.testForked(),
+    crossModule(jvm          , sv).test.testForked()
+    // format: on
+  ) ++ Seq(
+    // the cats and scalaz interop modules are cross-built for Scala 2 only
+    // format: off
+    scala2CrossModule(interop.scalaz.jvm , sv).map(_.test.testForked()),
+    scala2CrossModule(interop.cats.jvm   , sv).map(_.test.testForked())
     // format: on
   ).flatten
 
   def crossIts(sv: String) = Seq(
     // format: off
-    coursier.jvm .valuesToModules.get(List(sv)).map(_.it.testForked()),
-    tests.jvm    .valuesToModules.get(List(sv)).map(_.it.testForked())
+    crossModule(coursier.jvm , sv).it.testForked(),
+    crossModule(tests.jvm    , sv).it.testForked()
     // format: on
-  ).flatten
+  )
 
   val prerequisites = Seq(
     // required for some tests of `cli-tests`
@@ -1768,11 +1788,11 @@ def jsTests(scalaVersion: String = "*") = {
 
   def crossTests(sv: String) = Seq(
     // format: off
-    core.js            .valuesToModules.get(List(sv)).map(_.test.testForked()),
-    coursier.js        .valuesToModules.get(List(sv)).map(_.test.testForked()),
-    tests.js           .valuesToModules.get(List(sv)).map(_.test.testForked())
+    crossModule(core.js     , sv).test.testForked(),
+    crossModule(coursier.js , sv).test.testForked(),
+    crossModule(tests.js    , sv).test.testForked()
     // format: on
-  ).flatten
+  )
 
   val scalaVersions =
     if (scalaVersion == "*") ScalaVersions.all
@@ -2399,7 +2419,7 @@ trait InterfaceTest extends CrossSbtModule with CsModule with DependsOnInterface
 def interfaceTests(scalaVersion: String = defaultScalaVersion) = {
 
   def crossTests(sv: String) =
-    `interface-test`.valuesToModules.get(List(sv)).map(_.test.testForked()).toSeq
+    Seq(crossModule(`interface-test`, sv).test.testForked())
 
   val scalaVersions =
     if (scalaVersion == "*") ScalaVersions.all
