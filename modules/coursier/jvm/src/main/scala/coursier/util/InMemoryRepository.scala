@@ -187,7 +187,11 @@ object InMemoryRepository {
 
 }
 
-@data case class InMemoryRepository(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class InMemoryRepository(
   fallbacks0: Map[(Module, Version0), (URL, Boolean)],
   cacheOpt: Option[FileCache[Nothing]],
   localArtifactsShouldBeCached: Boolean

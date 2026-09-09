@@ -75,7 +75,11 @@ object MinimizedExclusions {
     def repr: String = "Exclusions: *:*"
   }
 
-  @data case class ExcludeSpecific(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class ExcludeSpecific(
     byOrg: Set[Organization],
     byModule: Set[ModuleName],
     specific: Set[(Organization, ModuleName)]
@@ -228,7 +232,11 @@ object MinimizedExclusions {
     }
 }
 
-@data case class MinimizedExclusions(data: MinimizedExclusions.ExclusionData) {
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class MinimizedExclusions(data: MinimizedExclusions.ExclusionData) {
   def apply(org: Organization, module: ModuleName): Boolean = data(org, module)
 
   def join(other: MinimizedExclusions): MinimizedExclusions = {

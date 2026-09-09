@@ -13,7 +13,11 @@ import scala.concurrent.Future
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
-@data case class Versions[F[_]](
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Versions[F[_]](
   cache: Cache[F],
   moduleOpt: Option[Module] = None,
   repositories: Seq[Repository] = Resolve.defaultRepositories,
@@ -103,7 +107,11 @@ object Versions {
       coursier.core.Versions(latest, release, available, lastUpdated)
     }
 
-  @data case class Result(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Result(
     results: Seq[(Repository, Either[String, coursier.core.Versions])]
   ) {
     def versions: coursier.core.Versions =

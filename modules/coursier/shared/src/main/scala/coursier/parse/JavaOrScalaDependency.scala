@@ -54,7 +54,11 @@ object JavaOrScalaDependency {
         )
     }
 
-  @data case class JavaDependency(dependency: Dependency, exclude: Set[JavaOrScalaModule])
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class JavaDependency(dependency: Dependency, exclude: Set[JavaOrScalaModule])
       extends JavaOrScalaDependency {
     def module: JavaOrScalaModule.JavaModule =
       JavaOrScalaModule.JavaModule(dependency.module)
@@ -83,7 +87,11 @@ object JavaOrScalaDependency {
     def withUnderlyingDependency(f: Dependency => Dependency): JavaDependency =
       copy(dependency = f(dependency))
   }
-  @data case class ScalaDependency(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class ScalaDependency(
     baseDependency: Dependency,
     fullCrossVersion: Boolean,
     withPlatformSuffix: Boolean,

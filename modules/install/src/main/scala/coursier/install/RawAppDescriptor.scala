@@ -25,7 +25,11 @@ import coursier.parse.{
 import coursier.version.{VersionInterval, VersionParse}
 import scala.language.implicitConversions
 
-@data case class RawAppDescriptor(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class RawAppDescriptor(
   dependencies: List[String],
   repositories: List[String] = Nil,
   shared: List[String] = Nil,
@@ -267,7 +271,11 @@ object RawAppDescriptor {
       }
   }
 
-  @data case class RawGraalvmOptions(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class RawGraalvmOptions(
     options: List[String] = Nil,
     version: Option[String] = None
   ) {
@@ -306,7 +314,11 @@ object RawAppDescriptor {
 
   }
 
-  @data case class RawVersionOverride(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class RawVersionOverride(
     versionRange: String,
     dependencies: Option[List[String]] = None,
     repositories: Option[List[String]] = None,

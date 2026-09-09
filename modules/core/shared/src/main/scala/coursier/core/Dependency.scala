@@ -11,7 +11,14 @@ import java.util.concurrent.ConcurrentMap
   * The remaining fields are left untouched, some being transitively propagated (exclusions,
   * optional, in particular).
   */
-@data(apply = false, settersCallApply = true, cachedHashCode = true) case class Dependency(
+@data(
+  apply = false,
+  settersCallApply = true,
+  cachedHashCode = true,
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Dependency(
   module: Module,
   versionConstraint: VersionConstraint0,
   variantSelector: VariantSelector,

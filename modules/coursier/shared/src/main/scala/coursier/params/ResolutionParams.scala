@@ -14,7 +14,11 @@ import coursier.util.ModuleMatchers
 import coursier.version.{ConstraintReconciliation, Version, VersionConstraint}
 import dataclass.{data, since => unroll}
 
-@data case class ResolutionParams(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class ResolutionParams(
   keepOptionalDependencies: Boolean = false,
   maxIterations: Int = 200,
   forceVersion0: Map[Module, VersionConstraint] = Map.empty,

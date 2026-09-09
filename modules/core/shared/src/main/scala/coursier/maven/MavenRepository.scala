@@ -31,7 +31,12 @@ object MavenRepository {
     )
 }
 
-@data(apply = false) case class MavenRepository(
+@data(
+  apply = false,
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class MavenRepository(
   root: String,
   authentication: Option[Authentication] = None,
   @unroll

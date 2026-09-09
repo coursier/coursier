@@ -15,7 +15,11 @@ import java.util.zip.{GZIPInputStream, ZipException, ZipFile}
 import scala.jdk.CollectionConverters._
 import scala.util.Using
 
-@data case class ArchiveCache[F[_]](
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class ArchiveCache[F[_]](
   location: File,
   cache: Cache[F],
   unArchiver: UnArchiver = UnArchiver.default(),

@@ -7,7 +7,11 @@ import java.io.InputStream
 import java.io.ByteArrayOutputStream
 import scala.util.Try
 
-@data case class PowershellRunner(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class PowershellRunner(
   powershellExePath: String = "powershell.exe",
   options: Seq[String] = PowershellRunner.defaultOptions,
   encodeProgram: Boolean = true

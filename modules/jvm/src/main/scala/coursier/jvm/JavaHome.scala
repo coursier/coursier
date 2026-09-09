@@ -12,7 +12,11 @@ import coursier.cache.ArchiveCache
 import coursier.env.EnvironmentUpdate
 import coursier.jvm.util.CommandOutput
 import coursier.util.Task
-@data case class JavaHome(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class JavaHome(
   cache: Option[JvmCache] = None,
   getEnv: Option[String => Option[String]] = Some(k => Option(System.getenv(k))),
   os: String = JvmChannel.defaultOs(),

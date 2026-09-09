@@ -245,7 +245,11 @@ object JvmIndex {
   }
 }
 
-@data case class JvmIndex(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class JvmIndex(
   content: Map[String, Map[String, Map[String, Map[String, String]]]],
   jdkNamePrefix: Option[String] = Some("jdk@")
 ) {

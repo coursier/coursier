@@ -2,7 +2,11 @@ package coursier.install
 
 import dataclass.data
 
-@data case class AppInfo(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class AppInfo(
   appDescriptor: AppDescriptor,
   appDescriptorBytes: Array[Byte],
   source: Source,

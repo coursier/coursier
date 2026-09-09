@@ -10,7 +10,11 @@ import coursier.util.Print.{Colors, compatibleVersions}
 import coursier.util.{Print, Tree}
 import dataclass.data
 
-@data case class Conflict(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Conflict(
   module: Module,
   version0: Version0,
   wantedVersionConstraint: VersionConstraint0,
@@ -80,7 +84,11 @@ object Conflict {
     }
   }
 
-  @data case class Conflicted(tree: ReverseModuleTree) {
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Conflicted(tree: ReverseModuleTree) {
     def conflict: Conflict =
       Conflict(
         tree.dependsOnModule,

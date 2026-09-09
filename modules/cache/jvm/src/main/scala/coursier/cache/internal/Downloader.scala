@@ -28,7 +28,7 @@ import scala.util.Properties
 import scala.util.control.NonFatal
 
 // format: off
-@data case class Downloader[F[_]](
+@data(deprecatedSetters = true, deprecatedSettersMessage = "Use copy instead", deprecatedSettersSince = "2.1.25") case class Downloader[F[_]](
   artifact: Artifact,
   cachePolicy: CachePolicy,
   location: File,

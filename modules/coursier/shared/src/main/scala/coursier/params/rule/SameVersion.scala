@@ -13,7 +13,11 @@ import scala.collection.compat._
   *
   * If ever different versions are found, the highest one is currently selected.
   */
-@data case class SameVersion(matchers: Set[ModuleMatcher]) extends Rule {
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class SameVersion(matchers: Set[ModuleMatcher]) extends Rule {
 
   import SameVersion._
 

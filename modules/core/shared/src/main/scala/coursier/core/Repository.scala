@@ -389,10 +389,18 @@ object Repository {
       def from: Int
     }
     object Input {
-      @data case class Org(input: String) extends Input {
+      @data(
+        deprecatedSetters = true,
+        deprecatedSettersMessage = "Use copy instead",
+        deprecatedSettersSince = "2.1.25"
+      ) case class Org(input: String) extends Input {
         def from: Int = 0
       }
-      @data case class Name(
+      @data(
+        deprecatedSetters = true,
+        deprecatedSettersMessage = "Use copy instead",
+        deprecatedSettersSince = "2.1.25"
+      ) case class Name(
         organization: Organization,
         input: String,
         from: Int,
@@ -401,7 +409,11 @@ object Repository {
         def orgInput: Org =
           Org(organization.value)
       }
-      @data case class Ver(module: Module, input: String, from: Int) extends Input {
+      @data(
+        deprecatedSetters = true,
+        deprecatedSettersMessage = "Use copy instead",
+        deprecatedSettersSince = "2.1.25"
+      ) case class Ver(module: Module, input: String, from: Int) extends Input {
         def orgInput: Org =
           nameInput.orgInput
         def nameInput: Name = {
@@ -451,7 +463,11 @@ object Repository {
         }
     }
 
-    @data case class Result(input: Input, completions: Seq[String])
+    @data(
+      deprecatedSetters = true,
+      deprecatedSettersMessage = "Use copy instead",
+      deprecatedSettersSince = "2.1.25"
+    ) case class Result(input: Input, completions: Seq[String])
 
     final class CompletingOrgException(input: String, cause: Throwable = null)
         extends Exception(s"Completing organization '$input'", cause)

@@ -163,7 +163,13 @@ object SbtMavenRepository {
     }
 }
 
-@data(apply = false, settersCallApply = true) case class SbtMavenRepository(
+@data(
+  apply = false,
+  settersCallApply = true,
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class SbtMavenRepository(
   val root: String,
   val authentication: Option[Authentication] = None,
   val changing: Option[Boolean] = None,

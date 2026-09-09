@@ -34,7 +34,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.language.higherKinds
 
 // format: off
-@data case class Resolve[F[_]](
+@data(deprecatedSetters = true, deprecatedSettersMessage = "Use copy instead", deprecatedSettersSince = "2.1.25") case class Resolve[F[_]](
   cache: Cache[F],
   dependencies: Seq[Dependency] = Nil,
   repositories: Seq[Repository] = Resolve.defaultRepositories,

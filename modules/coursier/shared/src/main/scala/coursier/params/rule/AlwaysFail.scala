@@ -12,7 +12,11 @@ import dataclass.data
   * If `doTryResolve` is true, `tryResolve` will return the current Resolution, as if it was
   * attempting to address the issue. Else, it will fail early.
   */
-@data case class AlwaysFail(doTryResolve: Boolean = false) extends Rule {
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class AlwaysFail(doTryResolve: Boolean = false) extends Rule {
 
   import AlwaysFail._
 

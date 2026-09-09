@@ -6,7 +6,7 @@ import coursier.core.Repository
 import coursier.parse.JavaOrScalaDependency
 import coursier.version.{Version, VersionInterval}
 // format: off
-@data case class VersionOverride(
+@data(deprecatedSetters = true, deprecatedSettersMessage = "Use copy instead", deprecatedSettersSince = "2.1.25") case class VersionOverride(
   versionRange0: VersionInterval,
   dependencies: Option[Seq[JavaOrScalaDependency]] = None,
   repositories: Option[Seq[Repository]] = None,

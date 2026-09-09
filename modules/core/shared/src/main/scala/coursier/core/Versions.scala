@@ -7,7 +7,11 @@ import coursier.version.{
 }
 import dataclass.data
 
-@data case class Versions(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Versions(
   latest0: Version0,
   release0: Version0,
   available0: List[Version0],
@@ -167,7 +171,11 @@ import dataclass.data
 }
 
 object Versions {
-  @data case class DateTime(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class DateTime(
     year: Int,
     month: Int,
     day: Int,

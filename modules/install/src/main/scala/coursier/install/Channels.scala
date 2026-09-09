@@ -19,7 +19,11 @@ import coursier.util.{Artifact, Task}
 import coursier.util.StringInterpolators._
 import scala.jdk.CollectionConverters._
 
-@data case class Channels(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Channels(
   channels: Seq[Channel] = Channels.defaultChannels,
   repositories: Seq[Repository] = coursier.Resolve.defaultRepositories,
   cache: Cache[Task] = Cache.default,

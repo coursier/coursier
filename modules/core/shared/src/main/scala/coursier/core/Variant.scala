@@ -9,13 +9,21 @@ sealed abstract class Variant extends Product with Serializable {
 }
 
 object Variant {
-  @data case class Configuration(configuration: Configuration0) extends Variant {
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Configuration(configuration: Configuration0) extends Variant {
     lazy val asConfiguration: Option[Configuration0] =
       Some(configuration)
     def isEmpty: Boolean =
       configuration.isEmpty
   }
-  @data case class Attributes(variantName: String) extends Variant {
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Attributes(variantName: String) extends Variant {
     def asConfiguration: Option[Configuration0] =
       None
     def isEmpty: Boolean =

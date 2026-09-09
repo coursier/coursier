@@ -8,7 +8,11 @@ import coursier.Fetch
 import coursier.parse.JavaOrScalaDependency
 import coursier.util.Artifact
 
-@data case class AppArtifacts(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class AppArtifacts(
   fetchResult: Fetch.Result = Fetch.Result(),
   shared: Seq[(Artifact, File)] = Nil,
   extraProperties: Seq[(String, String)] = Nil,

@@ -43,7 +43,14 @@ object ModuleName {
   *
   * Using the same terminology as Ivy.
   */
-@data(apply = false, settersCallApply = true, cachedHashCode = true) case class Module(
+@data(
+  apply = false,
+  settersCallApply = true,
+  cachedHashCode = true,
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Module(
   organization: Organization,
   name: ModuleName,
   attributes: Map[String, String]
@@ -234,7 +241,11 @@ object Configuration {
     Configuration(confs.map(_.value).mkString(";"))
 }
 
-@data case class Attributes(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Attributes(
   `type`: Type,
   classifier: Classifier
 ) {
@@ -267,7 +278,11 @@ object Attributes {
   val empty = Attributes(Type.empty, Classifier.empty)
 }
 
-@data case class Project(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Project(
   module: Module,
   version0: Version0,
   dependencies0: Seq[(Variant, Dependency)],
@@ -774,7 +789,11 @@ object Project {
 }
 
 /** Extra project info, not used during resolution */
-@data case class Info(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Info(
   description: String,
   homePage: String,
   developers: Seq[Info.Developer],
@@ -829,19 +848,31 @@ object Info {
     licenseInfo = licenses.map(l => License(l._1, l._2, None, None))
   )
 
-  @data case class Developer(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Developer(
     id: String,
     name: String,
     url: String
   )
 
-  @data case class Scm(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Scm(
     url: Option[String],
     connection: Option[String],
     developerConnection: Option[String]
   )
 
-  @data case class License(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class License(
     name: String,
     url: Option[String],
     distribution: Option[String], // Maven-specific
@@ -852,7 +883,11 @@ object Info {
 }
 
 // Maven-specific
-@data case class Profile(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Profile(
   id: String,
   activeByDefault: Option[Boolean],
   activation: Activation,
@@ -862,7 +897,11 @@ object Info {
 )
 
 // Maven-specific
-@data case class SnapshotVersion(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class SnapshotVersion(
   classifier: Classifier,
   extension: Extension,
   value0: Version0,
@@ -908,7 +947,11 @@ object SnapshotVersion {
 }
 
 // Maven-specific
-@data case class SnapshotVersioning(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class SnapshotVersioning(
   module: Module,
   version0: Version0,
   latest0: Version0,
@@ -990,7 +1033,14 @@ object SnapshotVersioning {
     )
 }
 
-@data(apply = false, settersCallApply = true, cachedHashCode = true) case class Publication(
+@data(
+  apply = false,
+  settersCallApply = true,
+  cachedHashCode = true,
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Publication(
   name: String,
   `type`: Type,
   ext: Extension,
@@ -1017,7 +1067,11 @@ object Publication {
     apply("", Type.empty, Extension.empty, Classifier.empty)
 }
 
-@data case class VariantPublication(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class VariantPublication(
   name: String,
   url: String,
   @unroll

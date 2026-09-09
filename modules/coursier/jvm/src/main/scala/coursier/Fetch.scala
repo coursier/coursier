@@ -26,7 +26,11 @@ import dataclass.data
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 
-@data case class Fetch[F[_]](
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Fetch[F[_]](
   private val resolve: Resolve[F],
   private val artifacts: Artifacts[F],
   fetchCacheOpt: Option[File]
@@ -290,7 +294,11 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 
 object Fetch {
 
-  @data case class Result(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Result(
     resolution: Resolution = Resolution(),
     fullDetailedArtifacts0: Seq[(
       Dependency,

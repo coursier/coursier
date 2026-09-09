@@ -15,7 +15,11 @@ sealed abstract class RefreshInfo extends Product with Serializable {
 
 object RefreshInfo {
 
-  @data case class DownloadInfo(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class DownloadInfo(
     downloaded: Long,
     previouslyDownloaded: Long,
     length: Option[Long],
@@ -41,7 +45,11 @@ object RefreshInfo {
     }
   }
 
-  @data case class CheckUpdateInfo(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class CheckUpdateInfo(
     currentTimeOpt: Option[Long],
     remoteTimeOpt: Option[Long],
     isDone: Boolean,

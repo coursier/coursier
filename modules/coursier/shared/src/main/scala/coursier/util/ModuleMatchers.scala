@@ -3,7 +3,12 @@ package coursier.util
 import dataclass.{data, since => unroll}
 
 import coursier.core.{Module, ModuleName, Organization}
-@data case class ModuleMatchers(
+
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class ModuleMatchers(
   exclude: Set[ModuleMatcher],
   include: Set[ModuleMatcher] = Set(),
   @unroll

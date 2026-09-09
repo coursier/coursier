@@ -10,7 +10,11 @@ import dataclass.data
   * `to`. Only _Maven_ repositories, not Ivy ones for example. See [[TreeMirror]] to mirror both
   * types of repository.
   */
-@data case class MavenMirror(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class MavenMirror(
   from: Seq[String],
   to: String
 ) extends Mirror {

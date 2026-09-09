@@ -23,7 +23,11 @@ sealed abstract class JvmChannel extends Product with Serializable {
 
 object JvmChannel {
 
-  @data case class FromModule(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class FromModule(
     module: Module,
     versionConstraint: VersionConstraint = VersionConstraint("latest.release")
   ) extends JvmChannel {
@@ -58,12 +62,20 @@ object JvmChannel {
     )
   }
 
-  @data case class FromUrl(url: String) extends JvmChannel {
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class FromUrl(url: String) extends JvmChannel {
     def repr: String =
       url
   }
 
-  @data case class FromFile(path: Path) extends JvmChannel {
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class FromFile(path: Path) extends JvmChannel {
     def repr: String =
       path.toString
   }

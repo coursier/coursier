@@ -3,7 +3,11 @@ package coursier.core
 import dataclass.data
 
 @deprecated("Use coursier.version.VersionInterval instead", "2.1.25")
-@data case class VersionInterval(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class VersionInterval(
   from: Option[Version],
   to: Option[Version],
   fromIncluded: Boolean,

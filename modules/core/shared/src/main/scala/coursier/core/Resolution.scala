@@ -1210,7 +1210,11 @@ object Resolution {
   * @param errorCache:
   *   keeps track of the modules whose project definition could not be found
   */
-@data case class Resolution(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Resolution(
   rootDependencies: Seq[Dependency] = Nil,
   dependencySet: DependencySet = DependencySet.empty,
   forceVersions0: Map[Module, VersionConstraint0] = Map.empty,

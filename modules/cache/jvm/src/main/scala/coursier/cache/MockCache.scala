@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
 // format: off
-@data case class MockCache[F[_]](
+@data(deprecatedSetters = true, deprecatedSettersMessage = "Use copy instead", deprecatedSettersSince = "2.1.25") case class MockCache[F[_]](
   base: Path,
   extraData: Seq[Path],
   writeMissing: Boolean,

@@ -10,7 +10,7 @@ import coursier.util.{Artifact, Task}
 import scala.concurrent.duration.Duration
 
 // format: off
-@data case class JvmCache(
+@data(deprecatedSetters = true, deprecatedSettersMessage = "Use copy instead", deprecatedSettersSince = "2.1.25") case class JvmCache(
   os: String = JvmChannel.defaultOs(),
   architecture: String = JvmChannel.defaultArchitecture(),
   defaultJdkNameOpt: Option[String] = Some(""), // empty value means use the default one for the passed os and architecure

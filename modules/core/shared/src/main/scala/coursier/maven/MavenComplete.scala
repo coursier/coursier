@@ -5,7 +5,11 @@ import coursier.util.Monad
 import coursier.version.Version
 import dataclass.data
 
-@data case class MavenComplete[F[_]](
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class MavenComplete[F[_]](
   repo: MavenRepositoryLike,
   fetch: Repository.Fetch[F],
   F: Monad[F]

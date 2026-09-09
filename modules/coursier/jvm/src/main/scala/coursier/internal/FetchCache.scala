@@ -12,7 +12,11 @@ import coursier.params.ResolutionParams
 import coursier.paths.CachePath
 import dataclass.data
 
-@data case class FetchCache(base: Path) {
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class FetchCache(base: Path) {
 
   def dir(key: FetchCache.Key): Path =
     base.resolve(s"${key.sha1.take(2)}/${key.sha1.drop(2)}")

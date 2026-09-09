@@ -10,7 +10,11 @@ import scala.annotation.tailrec
 import scala.collection.compat._
 import scala.util.matching.Regex
 
-@data case class ModuleMatcher(matcher: Module) {
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class ModuleMatcher(matcher: Module) {
 
   import ModuleMatcher.blobToPattern
 

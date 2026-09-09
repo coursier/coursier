@@ -23,7 +23,11 @@ import coursier.version.{Version, VersionConstraint}
 import dataclass.data
 import coursier.core.VariantPublication
 
-@data case class GradleModule(
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class GradleModule(
   formatVersion: String,
   component: GradleModule.Component,
   variants: Seq[GradleModule.Variant] = Nil
@@ -263,7 +267,11 @@ object GradleModule {
       }
   }
 
-  @data case class Component(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Component(
     group: String,
     module: String,
     version: String,
@@ -275,7 +283,11 @@ object GradleModule {
     }
   }
 
-  @data case class Variant(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Variant(
     name: String,
     attributes: Map[String, StringOrInt],
     dependencies: Seq[ModuleDependency],
@@ -297,7 +309,11 @@ object GradleModule {
       }
   }
 
-  @data case class ModuleDependency(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class ModuleDependency(
     group: String,
     module: String,
     version0: Map[String, StringOrSeqString],
@@ -355,7 +371,11 @@ object GradleModule {
       }
   }
 
-  @data case class ModuleFile(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class ModuleFile(
     name: String,
     url: String,
     size: Option[Long] = None,
@@ -365,14 +385,22 @@ object GradleModule {
     md5: Option[String] = None
   )
 
-  @data case class AvailableAt(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class AvailableAt(
     url: String,
     group: String,
     module: String,
     version: String
   )
 
-  @data case class Capability(
+  @data(
+    deprecatedSetters = true,
+    deprecatedSettersMessage = "Use copy instead",
+    deprecatedSettersSince = "2.1.25"
+  ) case class Capability(
     group: String,
     name: String,
     version: String

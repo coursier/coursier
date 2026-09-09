@@ -7,7 +7,11 @@ import fastparse._, NoWhitespace._
 
 import scala.language.implicitConversions
 
-@data case class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty]) {
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class PropertiesPattern(chunks: Seq[PropertiesPattern.ChunkOrProperty]) {
 
   def string: String = chunks.map(_.string).mkString
 
@@ -54,7 +58,11 @@ import scala.language.implicitConversions
   }
 }
 
-@data case class Pattern(chunks: Seq[Pattern.Chunk]) {
+@data(
+  deprecatedSetters = true,
+  deprecatedSettersMessage = "Use copy instead",
+  deprecatedSettersSince = "2.1.25"
+) case class Pattern(chunks: Seq[Pattern.Chunk]) {
 
   def +:(chunk: Pattern.Chunk): Pattern =
     Pattern(chunk +: chunks)
@@ -137,15 +145,27 @@ object PropertiesPattern {
   }
 
   object ChunkOrProperty {
-    @data case class Prop(name: String, alternative: Option[Seq[ChunkOrProperty]])
+    @data(
+      deprecatedSetters = true,
+      deprecatedSettersMessage = "Use copy instead",
+      deprecatedSettersSince = "2.1.25"
+    ) case class Prop(name: String, alternative: Option[Seq[ChunkOrProperty]])
         extends ChunkOrProperty {
       def string: String =
         s"$${" + name + alternative.fold("")(alt => "-" + alt.map(_.string).mkString) + "}"
     }
-    @data case class Var(name: String) extends ChunkOrProperty {
+    @data(
+      deprecatedSetters = true,
+      deprecatedSettersMessage = "Use copy instead",
+      deprecatedSettersSince = "2.1.25"
+    ) case class Var(name: String) extends ChunkOrProperty {
       def string: String = "[" + name + "]"
     }
-    @data case class Opt(content: Seq[ChunkOrProperty]) extends ChunkOrProperty {
+    @data(
+      deprecatedSetters = true,
+      deprecatedSettersMessage = "Use copy instead",
+      deprecatedSettersSince = "2.1.25"
+    ) case class Opt(content: Seq[ChunkOrProperty]) extends ChunkOrProperty {
       def string: String = "(" + content.map(_.string).mkString + ")"
     }
     object Opt {
@@ -156,7 +176,11 @@ object PropertiesPattern {
       def apply(elem: ChunkOrProperty, elem1: ChunkOrProperty, elem2: ChunkOrProperty): Opt =
         Opt(Seq(elem, elem1, elem2))
     }
-    @data case class Const(value: String) extends ChunkOrProperty {
+    @data(
+      deprecatedSetters = true,
+      deprecatedSettersMessage = "Use copy instead",
+      deprecatedSettersSince = "2.1.25"
+    ) case class Const(value: String) extends ChunkOrProperty {
       def string: String = value
     }
 
@@ -209,10 +233,18 @@ object Pattern {
   }
 
   object Chunk {
-    @data case class Var(name: String) extends Chunk {
+    @data(
+      deprecatedSetters = true,
+      deprecatedSettersMessage = "Use copy instead",
+      deprecatedSettersSince = "2.1.25"
+    ) case class Var(name: String) extends Chunk {
       def string: String = "[" + name + "]"
     }
-    @data case class Opt(content: Seq[Chunk]) extends Chunk {
+    @data(
+      deprecatedSetters = true,
+      deprecatedSettersMessage = "Use copy instead",
+      deprecatedSettersSince = "2.1.25"
+    ) case class Opt(content: Seq[Chunk]) extends Chunk {
       def string: String = "(" + content.map(_.string).mkString + ")"
     }
     object Opt {
@@ -223,7 +255,11 @@ object Pattern {
       def apply(chunk: Chunk, chunk1: Chunk, chunk2: Chunk): Opt =
         Opt(Seq(chunk, chunk1, chunk2))
     }
-    @data case class Const(value: String) extends Chunk {
+    @data(
+      deprecatedSetters = true,
+      deprecatedSettersMessage = "Use copy instead",
+      deprecatedSettersSince = "2.1.25"
+    ) case class Const(value: String) extends Chunk {
       def string: String = value
     }
 
