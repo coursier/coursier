@@ -709,6 +709,25 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
+  update-setup-action:
+    name: Update setup-action version
+    needs:
+      - upload-launchers
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+    # coursier/setup-action has a workflow of its own opening a PR bumping the default
+    # coursier version in its src/main.ts, we only trigger it here
+    - name: Trigger the workflow bumping the default version in coursier/setup-action
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        TAG: ${{ github.ref_name }}
+      run: |
+        gh workflow run update-coursier.yml \
+          --repo coursier/setup-action \
+          --ref main \
+          -f version="${TAG#v}"
+
   upload-nightly-launchers:
     name: Upload launchers to nightly GitHub release
     needs:
