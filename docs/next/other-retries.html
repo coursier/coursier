@@ -1,0 +1,228 @@
+<!DOCTYPE html><html lang="en"><head><meta charSet="utf-8"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>Retries and rate limiting · Coursier</title><meta name="viewport" content="width=device-width, initial-scale=1.0"/><meta name="generator" content="Docusaurus"/><meta name="description" content="Coursier fetches metadata and artifacts over HTTP. Repositories occasionally fail a request, and"/><meta name="docsearch:version" content="next"/><meta name="docsearch:language" content="en"/><meta property="og:title" content="Retries and rate limiting · Coursier"/><meta property="og:type" content="website"/><meta property="og:url" content="https://get-coursier.io/"/><meta property="og:description" content="Coursier fetches metadata and artifacts over HTTP. Repositories occasionally fail a request, and"/><meta name="twitter:card" content="summary"/><link rel="shortcut icon" href="/undefined"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.css"/><link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css"/><link rel="alternate" type="application/atom+xml" href="https://get-coursier.io/blog/atom.xml" title="Coursier Blog ATOM Feed"/><link rel="alternate" type="application/rss+xml" href="https://get-coursier.io/blog/feed.xml" title="Coursier Blog RSS Feed"/><script type="text/javascript" src="https://buttons.github.io/buttons.js"></script><script src="/js/scrollSpy.js"></script><link rel="stylesheet" href="/css/main.css"/><script src="/js/codetabs.js"></script></head><body class="sideNavVisible separateOnPageNav"><div class="fixedHeaderContainer"><div class="headerWrapper wrapper"><header><a href="/"><h2 class="headerTitle">Coursier</h2></a><a href="/versions"><h3>next</h3></a><div class="navigationWrapper navigationSlider"><nav class="slidingNav"><ul class="nav-site nav-site-internal"><li class="siteNavGroupActive"><a href="/docs/next/overview" target="_self">Docs</a></li><li class=""><a href="/blog/" target="_self">Blog</a></li><li class=""><a href="https://github.com/coursier/coursier" target="_self">GitHub</a></li><li class="navSearchWrapper reactNavSearchWrapper"><input type="text" id="search_input_react" placeholder="Search" title="Search"/></li></ul></nav></div></header></div></div><div class="navPusher"><div class="docMainWrapper wrapper"><div class="docsNavContainer" id="docsNav"><nav class="toc"><div class="toggleNav"><section class="navWrapper wrapper"><div class="navBreadcrumb wrapper"><div class="navToggle" id="navToggler"><div class="hamburger-menu"><div class="line1"></div><div class="line2"></div><div class="line3"></div></div></div><h2><i>›</i><span>Other</span></h2><div class="tocToggler" id="tocToggler"><i class="icon-toc"></i></div></div><div class="navGroups"><div class="navGroup"><h3 class="navGroupCategoryTitle">Intro</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/next/overview">Overview</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Command-line</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/next/cli-overview">Overview</a></li><li class="navListItem"><a class="navItem" href="/docs/next/cli-installation">Installation</a></li><li class="navListItem"><a class="navItem" href="/docs/next/cli-install">install</a></li><li class="navListItem"><a class="navItem" href="/docs/next/cli-launch">launch</a></li><li class="navListItem"><a class="navItem" href="/docs/next/cli-bootstrap">bootstrap</a></li><li class="navListItem"><a class="navItem" href="/docs/next/cli-java">java</a></li><li class="navListItem"><a class="navItem" href="/docs/next/cli-resolve">resolve</a></li><li class="navListItem"><a class="navItem" href="/docs/next/cli-fetch">fetch</a></li><li class="navListItem"><a class="navItem" href="/docs/next/cli-complete">complete-dep</a></li><li class="navListItem"><a class="navItem" href="/docs/next/cli-appdescriptors">Application descriptors</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Motivation</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/next/overview-motivations">Motivations</a></li><li class="navListItem"><a class="navItem" href="/docs/next/overview-in-the-wild">Users</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">sbt plugins</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/next/sbt-coursier">sbt-coursier</a></li><li class="navListItem"><a class="navItem" href="/docs/next/sbt-pgp-coursier">sbt-pgp-coursier</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">API</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/next/api">API</a></li><li class="navListItem"><a class="navItem" href="/docs/next/api-low-level">Low-level API</a></li><li class="navListItem"><a class="navItem" href="/docs/next/api-scala-js">Scala.js</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Other</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/next/cache">Cache</a></li><li class="navListItem"><a class="navItem" href="/docs/next/ttl">TTL</a></li><li class="navListItem navListItemActive"><a class="navItem" href="/docs/next/other-retries">Retries and rate limiting</a></li><li class="navListItem"><a class="navItem" href="/docs/next/other-repositories">Repositories</a></li><li class="navListItem"><a class="navItem" href="/docs/next/other-mirrors">Repository mirrors</a></li><li class="navListItem"><a class="navItem" href="/docs/next/other-credentials">Credentials</a></li><li class="navListItem"><a class="navItem" href="/docs/next/other-proxy">Proxy</a></li><li class="navListItem"><a class="navItem" href="/docs/next/json-report">JSON report</a></li><li class="navListItem"><a class="navItem" href="/docs/next/extra">Extra</a></li><li class="navListItem"><a class="navItem" href="/docs/next/limitations">Limitations</a></li><li class="navListItem"><a class="navItem" href="/docs/next/other-version-handling">Version handling</a></li><li class="navListItem"><a class="navItem" href="/docs/next/faq">FAQ</a></li></ul></div><div class="navGroup"><h3 class="navGroupCategoryTitle">Development</h3><ul class=""><li class="navListItem"><a class="navItem" href="/docs/next/dev-contributing">Contributing</a></li><li class="navListItem"><a class="navItem" href="/docs/next/dev-website">Website</a></li></ul></div></div></section></div><script>
+            var coll = document.getElementsByClassName('collapsible');
+            var checkActiveCategory = true;
+            for (var i = 0; i < coll.length; i++) {
+              var links = coll[i].nextElementSibling.getElementsByTagName('*');
+              if (checkActiveCategory){
+                for (var j = 0; j < links.length; j++) {
+                  if (links[j].classList.contains('navListItemActive')){
+                    coll[i].nextElementSibling.classList.toggle('hide');
+                    coll[i].childNodes[1].classList.toggle('rotate');
+                    checkActiveCategory = false;
+                    break;
+                  }
+                }
+              }
+
+              coll[i].addEventListener('click', function() {
+                var arrow = this.childNodes[1];
+                arrow.classList.toggle('rotate');
+                var content = this.nextElementSibling;
+                content.classList.toggle('hide');
+              });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+              createToggler('#navToggler', '#docsNav', 'docsSliderActive');
+              createToggler('#tocToggler', 'body', 'tocActive');
+
+              var headings = document.querySelector('.toc-headings');
+              headings && headings.addEventListener('click', function(event) {
+                var el = event.target;
+                while(el !== headings){
+                  if (el.tagName === 'A') {
+                    document.body.classList.remove('tocActive');
+                    break;
+                  } else{
+                    el = el.parentNode;
+                  }
+                }
+              }, false);
+
+              function createToggler(togglerSelector, targetSelector, className) {
+                var toggler = document.querySelector(togglerSelector);
+                var target = document.querySelector(targetSelector);
+
+                if (!toggler) {
+                  return;
+                }
+
+                toggler.onclick = function(event) {
+                  event.preventDefault();
+
+                  target.classList.toggle(className);
+                };
+              }
+            });
+        </script></nav></div><div class="container mainContainer docsContainer"><div class="wrapper"><div class="post"><header class="postHeader"><a class="edit-page-link button" href="https://github.com/coursier/coursier/edit/main/doc/docs/other-retries.md" target="_blank" rel="noreferrer noopener">Edit</a><h1 id="__docusaurus" class="postHeaderTitle">Retries and rate limiting</h1></header><article><div><span><p>Coursier fetches metadata and artifacts over HTTP. Repositories occasionally fail a request, and
+public ones increasingly ask clients that send too much traffic to slow down, with an
+<a href="https://central.sonatype.org/faq/429-error/">HTTP 429</a> response. This page describes what coursier
+requests, how it retries, what it does when it is rate limited, and how to change each of these.</p>
+<p>It follows the guidance repositories give to build tools, in particular
+<a href="https://central.sonatype.org/faq/429-error/">Maven Central's</a>: cache, back off rather than retry
+harder, make it easy to route traffic through a repository manager, and say who is asking.</p>
+<h2><a class="anchor" aria-hidden="true" id="what-coursier-requests"></a><a href="#what-coursier-requests" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>What coursier requests</h2>
+<p>Everything coursier downloads goes to its <a href="/docs/next/cache">cache</a>, and is only requested again when the
+cache says it can change. In practice, a resolution or a fetch sends:</p>
+<ul>
+<li><strong>one request per module</strong> for its POM, to the first repository that has it - plus one for its
+Gradle module file when Gradle module support is enabled. A POM for a given version never changes,
+so it is never requested again once cached;</li>
+<li><strong>one request per version listing</strong> (<code>maven-metadata.xml</code>) for dependencies with a version range
+or a <code>latest.*</code> version. Listings can change, so they are requested again once their
+<a href="/docs/next/ttl">TTL</a> has expired - 24 hours by default;</li>
+<li><strong>one request per artifact</strong>, plus one for its SHA-1 checksum file when the server did not already
+send the checksum in an <code>X-Checksum-SHA1</code> header (Maven Central does). Artifacts of non-snapshot
+versions are never requested again once cached;</li>
+<li><strong>one last-modified check per changing artifact</strong> (<code>-SNAPSHOT</code> versions and the like) once its TTL
+has expired. The artifact itself is downloaded again only when the server reports a newer copy.</li>
+</ul>
+<p>Up to 6 downloads run in parallel by default. The <code>coursier.parallel-download-count</code> Java property,
+or <code>--parallel</code> (<code>-n</code>) on the command line, change that. The command-line progress display prints
+the URL of every file being downloaded.</p>
+<h2><a class="anchor" aria-hidden="true" id="failed-requests"></a><a href="#failed-requests" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Failed requests</h2>
+<p>A request that fails - a connection error, a connect or read timeout, an SSL error, or an HTTP 5xx
+response - is retried, with an exponential backoff between attempts. By default, coursier makes up
+to 5 attempts, waiting 10 ms after the first failure and twice as long after each of the next ones,
+up to 20 seconds.</p>
+<table>
+<thead>
+<tr><th>Java property</th><th>Default</th><th>Meaning</th></tr>
+</thead>
+<tbody>
+<tr><td><code>coursier.exception-retry</code></td><td><code>5</code></td><td>Number of attempts, including the first one. <code>1</code> means no retry.</td></tr>
+<tr><td><code>coursier.exception-retry-backoff-initial-delay</code></td><td><code>10 ms</code></td><td>Delay before the second attempt</td></tr>
+<tr><td><code>coursier.exception-retry-backoff-multiplier</code></td><td><code>2.0</code></td><td>How much the delay grows after each failed attempt</td></tr>
+<tr><td><code>coursier.exception-retry-backoff-max-delay</code></td><td><code>20 s</code></td><td>Ceiling on that delay</td></tr>
+</tbody>
+</table>
+<p>A <code>Retry-After</code> header on a 503 response is honoured, up to the <code>COURSIER_MAX_HTTP_RETRY_AFTER</code>
+limit described below.</p>
+<h2><a class="anchor" aria-hidden="true" id="rate-limiting"></a><a href="#rate-limiting" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Rate limiting</h2>
+<p>An HTTP 429 response is not a failure: the server works, and asked to be left alone for a while.
+Coursier handles it separately from the failures above.</p>
+<ul>
+<li><strong>It never comes back sooner than asked.</strong> When the response carries a <code>Retry-After</code> header,
+coursier waits at least that long. Without one, it waits 1 second the first time, twice as long
+each following time, up to 1 minute.</li>
+<li><strong>The pause applies to the whole host, not to one download.</strong> The other downloads in flight
+towards that host, in that JVM, wait it out too, rather than each sending a request that would
+only be rejected - and count against the limit.</li>
+<li><strong>Downloads do not all come back at once.</strong> A small random delay, of up to one second, is added
+on top of the pause, so that the downloads that were told to come back at the same time do not
+trip the limit again together.</li>
+<li><strong>Waiting does not consume the retry budget.</strong> The attempts above are kept for actual failures.
+What bounds a rate-limited download is a budget of wall clock time instead:
+<code>COURSIER_MAX_THROTTLE_WAIT</code>.</li>
+<li><strong>It gives up rather than retrying harder.</strong> A <code>Retry-After</code> longer than
+<code>COURSIER_MAX_HTTP_RETRY_AFTER</code> is not shortened and retried at that pace: the download fails
+right away, after a single request. A download that has waited for <code>COURSIER_MAX_THROTTLE_WAIT</code>
+in total fails too.</li>
+</ul>
+<p>When a host asks coursier to slow down, the command line logs it once per pause:</p>
+<pre><code class="hljs css language-text">Rate limited by repo1.maven.org, holding off for 30s
+</code></pre>
+<p>and a download that ends up giving up reports the response code and what the server asked for:</p>
+<pre><code class="hljs css language-text">retryable HTTP error: https://repo1.maven.org/maven2/… (HTTP 429, Retry-After: 1 hour)
+</code></pre>
+<p>The defaults are higher when the <code>CI</code> environment variable is set - which the usual CI services
+do - as that is where being turned away for a few minutes is both most likely and most worth
+sitting out.</p>
+<table>
+<thead>
+<tr><th>Setting</th><th>Environment variable</th><th>Java property</th><th>Default</th><th>In CI</th></tr>
+</thead>
+<tbody>
+<tr><td>Longest <code>Retry-After</code> honoured</td><td><code>COURSIER_MAX_HTTP_RETRY_AFTER</code></td><td><code>coursier.max-http-retry-after</code></td><td><code>5 s</code></td><td><code>1 min</code></td></tr>
+<tr><td>Total time one download may spend rate limited</td><td><code>COURSIER_MAX_THROTTLE_WAIT</code></td><td><code>coursier.max-throttle-wait</code></td><td><code>1 min</code></td><td><code>5 min</code></td></tr>
+<tr><td>First pause when there is no <code>Retry-After</code></td><td></td><td><code>coursier.retry-throttle-initial-delay</code></td><td><code>1 s</code></td><td></td></tr>
+<tr><td>Ceiling on that pause</td><td></td><td><code>coursier.retry-throttle-max-delay</code></td><td><code>1 min</code></td><td></td></tr>
+<tr><td>How much that pause grows each time</td><td></td><td><code>coursier.exception-retry-backoff-multiplier</code></td><td><code>2.0</code></td><td></td></tr>
+</tbody>
+</table>
+<p>Being rate limited by a public repository is a sign that too much traffic reaches it from your
+network as a whole, and that is what to look at: see <a href="#reducing-traffic">Reducing traffic</a> below.
+Raising these limits only makes coursier wait longer for a block that lifts on its own.</p>
+<h3><a class="anchor" aria-hidden="true" id="setting-the-values"></a><a href="#setting-the-values" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Setting the values</h3>
+<p>Durations are parsed with <code>scala.concurrent.duration.Duration</code>, so <code>30s</code>, <code>2 min</code>, and <code>1 hour</code>
+are all fine.</p>
+<p>Java properties are passed to the <code>cs</code> command with <code>-J-D…</code>, before the command:</p>
+<pre><code class="hljs css language-text">cs -J-Dcoursier.max-throttle-wait="10 min" fetch org.scala-lang:scala-library:2.13.16
+</code></pre>
+<p>When coursier is used from sbt, the properties are prefixed with <code>lmcoursier.internal.shaded.</code>,
+like <code>lmcoursier.internal.shaded.coursier.max-throttle-wait</code>. The environment variables are the
+same everywhere.</p>
+<h2><a class="anchor" aria-hidden="true" id="identifying-coursier-to-repositories"></a><a href="#identifying-coursier-to-repositories" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Identifying coursier to repositories</h2>
+<p>Every request carries a <code>User-Agent</code> header, <code>Coursier/2.0</code> by default. The <code>coursier.http.agent</code>
+Java property replaces it. Repositories ask that tools identify themselves with a product name, a
+version, and a way to reach whoever runs them, so a tool embedding coursier, or a large
+installation, is better off sending its own:</p>
+<pre><code class="hljs css language-text">-Dcoursier.http.agent="my-tool/1.4.0 (contact: ops@example.com)"
+</code></pre>
+<p>That is also what a repository operator looks for when investigating where traffic comes from.</p>
+<h2><a class="anchor" aria-hidden="true" id="reducing-traffic"></a><a href="#reducing-traffic" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Reducing traffic</h2>
+<p>Retries and pauses are only there for the occasional failure. What keeps a repository from rate
+limiting you in the first place is sending it fewer requests:</p>
+<ul>
+<li><strong>Keep the cache between runs.</strong> In CI, persist the <a href="/docs/next/cache">cache directory</a> across jobs, and
+in container images, populate it when building the image (with <code>cs fetch</code>, for example) rather
+than at start-up. A fresh environment fetching the same dependency tree on every run is exactly
+the pattern public repositories block.</li>
+<li><strong>Do not fetch at runtime.</strong> Launchers created with <code>cs bootstrap --standalone</code> embed their
+dependencies instead of downloading them on first run.</li>
+<li><strong>Go through a repository manager.</strong> <a href="/docs/next/other-mirrors">Mirrors</a> route the requests that would go
+to a public repository to an internal one, without changing any build. <code>COURSIER_REPOSITORIES</code>
+replaces the default repositories altogether.</li>
+<li><strong>Raise the TTL</strong> of changing things, with <a href="/docs/next/ttl"><code>COURSIER_TTL</code></a>, when snapshots and version
+listings are checked more often than needed.</li>
+<li><strong>Work offline</strong> when everything is already cached: <code>--mode offline</code> on the command line, or
+<code>COURSIER_MODE=offline</code>.</li>
+<li><strong>Lower the parallelism</strong>, with <code>--parallel</code> or <code>coursier.parallel-download-count</code>, when a
+repository limits the number of concurrent connections rather than the request rate.</li>
+</ul>
+<h2><a class="anchor" aria-hidden="true" id="api"></a><a href="#api" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>API</h2>
+<p>The retry settings are fields of <code>FileCache</code>, and the same defaults apply. Here they are all set
+explicitly:</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier.cache.<span class="hljs-type">FileCache</span>
+<span class="hljs-keyword">import</span> coursier.util.<span class="hljs-type">Task</span>
+
+<span class="hljs-keyword">import</span> scala.concurrent.duration._
+
+<span class="hljs-keyword">val</span> cache = <span class="hljs-type">FileCache</span>[<span class="hljs-type">Task</span>]().copy(
+  <span class="hljs-comment">// failed requests</span>
+  retry = <span class="hljs-number">5</span>,
+  retryBackoffInitialDelay = <span class="hljs-number">10.</span>millis,
+  retryBackoffMultiplier = <span class="hljs-number">2.0</span>,
+  retryBackoffMaxDelay = <span class="hljs-type">Some</span>(<span class="hljs-number">20.</span>seconds),
+  <span class="hljs-comment">// rate limiting: the total time one download may spend being told to come back later</span>
+  maxThrottleWait = <span class="hljs-type">Some</span>(<span class="hljs-number">1.</span>minute)
+)
+</code></pre>
+<p>The per-host pause is kept by a <code>HostThrottle</code> shared by all the caches of a JVM, since a rate limit
+applies to the process as a whole. <code>FileCache</code> accepts one of its own through its <code>hostThrottle</code>
+field, which is mostly useful in tests. <code>HostThrottle</code> is a trait, so that field also takes
+<code>HostThrottle.Nop</code>, which holds nothing off: rate limits are then left to the retry loop alone,
+bounded by <code>maxThrottleWait</code> only.</p>
+<p>A <code>CacheLogger</code> is told about rate limits through its <code>rateLimited(url, duration)</code> method, called
+once per pause: it is what prints the message above on the command line, and what to override to
+surface it elsewhere.</p>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/next/ttl"><span class="arrow-prev">← </span><span>TTL</span></a><a class="docs-next button" href="/docs/next/other-repositories"><span>Repositories</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#what-coursier-requests">What coursier requests</a></li><li><a href="#failed-requests">Failed requests</a></li><li><a href="#rate-limiting">Rate limiting</a><ul class="toc-headings"><li><a href="#setting-the-values">Setting the values</a></li></ul></li><li><a href="#identifying-coursier-to-repositories">Identifying coursier to repositories</a></li><li><a href="#reducing-traffic">Reducing traffic</a></li><li><a href="#api">API</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><h2><a href="/" class="nav-home">Coursier</a></h2><div><h5><a href="/docs/overview">Docs</a></h5><a href="/docs/overview">Overview</a><a href="/docs/cli-installation">Install CLI</a><a href="/docs/sbt-coursier">Setup sbt</a><a href="/docs/api">Use the API</a></div><div><h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5><a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"/></a><a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"/></a></div></section><section class="copyright">Copyright © 2026 coursier contributors</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+                document.addEventListener('keyup', function(e) {
+                  if (e.target !== document.body) {
+                    return;
+                  }
+                  // keyCode for '/' (slash)
+                  if (e.keyCode === 191) {
+                    const search = document.getElementById('search_input_react');
+                    search && search.focus();
+                  }
+                });
+              </script><script>
+              var search = docsearch({
+                
+                apiKey: '53a7a919d6905f94dafd59e25d0f5e5d',
+                indexName: 'get-coursier',
+                inputSelector: '#search_input_react',
+                algoliaOptions: {}
+              });
+            </script></body></html>
