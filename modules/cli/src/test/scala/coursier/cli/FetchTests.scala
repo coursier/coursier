@@ -14,7 +14,7 @@ import java.nio.charset.StandardCharsets.UTF_8
 import java.nio.file.{Files, Paths}
 
 import cats.data.Validated
-import coursier.cache.FileCache
+import coursier.cache.{CacheUrl, FileCache}
 import coursier.cli.fetch.{Fetch, FetchOptions, FetchParams}
 import coursier.cli.launch.Launch
 import coursier.cli.resolve.{ResolveException, SharedResolveOptions}
@@ -45,6 +45,30 @@ object FetchTests extends TestSuite {
     }
 
   val tests = Tests {
+
+    // asserted against the helper rather than a literal: the expected value gains a "ci" token
+    // when these tests themselves run in CI
+    test("a json report adds a json comment token to the user agent") {
+      val params = paramsOrThrow(FetchOptions(jsonOutputFile = "report.json"))
+      assert(params.resolve.cache.userAgent == Some(CacheUrl.coursierUserAgent("json")))
+      assert(params.resolve.cache.userAgent.exists(_.endsWith("; json)")))
+    }
+
+    test("no json report leaves the user agent alone") {
+      val params = paramsOrThrow(FetchOptions())
+      assert(params.resolve.cache.userAgent.isEmpty)
+    }
+
+    test("an explicit user agent wins over the json one") {
+      val resolveOpt = SharedResolveOptions(
+        cacheOptions = CacheOptions(userAgent = Some("Custom/1.2"))
+      )
+      val params = paramsOrThrow(
+        FetchOptions(jsonOutputFile = "report.json", resolveOptions = resolveOpt)
+      )
+      assert(params.resolve.cache.userAgent == Some("Custom/1.2"))
+    }
+
     test("get all files") {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)

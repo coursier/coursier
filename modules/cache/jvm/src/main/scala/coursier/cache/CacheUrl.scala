@@ -18,6 +18,38 @@ import scala.util.control.NonFatal
 
 object CacheUrl {
 
+  private def userAgentVersion = "2.1"
+  private def userAgentContact = "https://github.com/coursier"
+
+  /** The `User-Agent` for one of coursier's own product names.
+    *
+    * The product name stays the same whatever coursier is doing - repositories ask for a stable,
+    * tool-specific one - so anything worth telling them goes in the comment, as extra tokens after
+    * the contact. See `FileCache#withUserAgent` for the format.
+    */
+  private[coursier] def userAgent(product: String, comments: String*): String = {
+    val comment = (s"+$userAgentContact" +: comments).mkString("; ")
+    s"$product/$userAgentVersion ($comment)"
+  }
+
+  /** Comment tokens that describe the run itself, whatever coursier is doing in it.
+    *
+    * A build machine hammering a repository is worth telling apart from someone at a prompt, and
+    * every CI provider coursier cares about sets `CI`.
+    */
+  private def ambientComments: Seq[String] =
+    if (System.getenv("CI") == null) Nil else Seq("ci")
+
+  /** coursier's own `User-Agent`, with comment tokens describing what this run is doing.
+    *
+    * The `coursier.http.agent` Java property overrides it outright, comments included.
+    */
+  private[coursier] def coursierUserAgent(comments: String*): String =
+    sys.props.getOrElse(
+      "coursier.http.agent",
+      userAgent("Coursier", ambientComments ++ comments: _*)
+    )
+
   /** The `User-Agent` sent for callers that don't set one of their own.
     *
     * Overridden by the `coursier.http.agent` Java property. Tools embedding coursier should rather
@@ -25,10 +57,7 @@ object CacheUrl {
     * repositories ask for.
     */
   private[coursier] val defaultUserAgent: String =
-    sys.props.getOrElse(
-      "coursier.http.agent",
-      "Coursier/2.1 (+https://github.com/coursier)"
-    )
+    coursierUserAgent()
 
   private val handlerClsCache = new ConcurrentHashMap[String, Option[URLStreamHandler]]
 

@@ -121,8 +121,9 @@ import scala.util.control.NonFatal
     * Maven Central singles out the generic defaults HTTP clients send - `Java/17` and the like - as
     * the thing to avoid, see https://central.sonatype.org/faq/429-tooling-provider/
     *
-    * Left unset, coursier sends `Coursier/2.1 (+https://github.com/coursier)`, which the
-    * `coursier.http.agent` Java property overrides.
+    * Left unset, coursier sends `Coursier/2.1 (+https://github.com/coursier)`, adding a `ci`
+    * comment token when the `CI` environment variable is set, which the `coursier.http.agent` Java
+    * property overrides.
     */
   def withUserAgent(userAgent: String): FileCache[F] =
     copy(userAgent = Some(userAgent))

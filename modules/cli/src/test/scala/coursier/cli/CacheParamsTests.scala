@@ -43,6 +43,15 @@ object CacheParamsTests extends TestSuite {
     test("the help spells out the user agent format") {
       val help = Help[CacheOptions].help(HelpFormat.default())
       assert(help.contains("Coursier/2.1 (contact: ops@example.com)"))
+      // the default the help claims has to be the one actually sent
+      assert(help.contains(coursier.cache.CacheUrl.userAgent("Coursier")))
+    }
+
+    test("extra comment tokens land after the contact, in order") {
+      assert(
+        coursier.cache.CacheUrl.userAgent("Coursier", "ci", "json") ==
+          "Coursier/2.1 (+https://github.com/coursier; ci; json)"
+      )
     }
   }
 }

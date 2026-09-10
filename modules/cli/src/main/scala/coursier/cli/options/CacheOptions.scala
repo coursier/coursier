@@ -75,7 +75,7 @@ final case class CacheOptions(
     useEnvCredentials: Boolean = true,
 
   @Group(OptionGroup.cache)
-  @HelpMessage("User agent to send when fetching metadata or artifacts (default: \"Coursier/2.1 (+https://github.com/coursier)\"). Repositories ask tools to identify themselves with a name, a version, and a contact, like \"Coursier/2.1 (contact: ops@example.com)\" - see https://central.sonatype.org/faq/429-tooling-provider/")
+  @HelpMessage("User agent to send when fetching metadata or artifacts (default: \"Coursier/2.1 (+https://github.com/coursier)\", plus a \"ci\" comment token when the CI environment variable is set, and a \"json\" one when a JSON report is written). Repositories ask tools to identify themselves with a name, a version, and a contact, like \"Coursier/2.1 (contact: ops@example.com)\" - see https://central.sonatype.org/faq/429-tooling-provider/")
   @ValueDescription("user agent")
     userAgent: Option[String] = None
 
