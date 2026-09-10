@@ -20,7 +20,8 @@ final case class CacheParams(
   cacheLocalArtifacts: Boolean,
   followHttpToHttpsRedirections: Boolean,
   credentials: Seq[coursier.credentials.Credentials] = Nil,
-  useEnvCredentials: Boolean = true
+  useEnvCredentials: Boolean = true,
+  userAgent: Option[String] = None
 ) {
 
   def withCacheLocation(cacheLocation: java.io.File): CacheParams =
@@ -45,6 +46,8 @@ final case class CacheParams(
     copy(credentials = credentials)
   def withUseEnvCredentials(useEnvCredentials: Boolean): CacheParams =
     copy(useEnvCredentials = useEnvCredentials)
+  def withUserAgent(userAgent: Option[String]): CacheParams =
+    copy(userAgent = userAgent)
 
   def cache(
     pool: ExecutorService,
@@ -62,7 +65,8 @@ final case class CacheParams(
         ttl = overrideTtl.orElse(ttl),
         retry = retryCount,
         followHttpToHttpsRedirections = followHttpToHttpsRedirections,
-        localArtifactsShouldBeCached = cacheLocalArtifacts
+        localArtifactsShouldBeCached = cacheLocalArtifacts,
+        userAgent = userAgent
       )
 
     Cache.default match {
