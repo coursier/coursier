@@ -18,9 +18,14 @@ import coursier.install.internal._
 import coursier.launcher.{ClassLoaderContent, ClassPathEntry, Generator, Parameters, Preamble}
 import coursier.launcher.internal.FileUtil
 import coursier.launcher.Parameters.ScalaNative
+import coursier.parse.JavaOrScalaModule
 import coursier.util.{Artifact, Task}
 import coursier.version.VersionConstraint
+
+import java.util.regex.Pattern
+
 import scala.jdk.CollectionConverters._
+import scala.util.matching.Regex
 
 @data(
   deprecatedSetters = true,
@@ -477,7 +482,7 @@ import scala.jdk.CollectionConverters._
     EnvironmentUpdate()
       .copy(pathLikeAppends = Seq("PATH" -> baseDir.toAbsolutePath.toString))
 
-  def list(): Seq[String] =
+  private def listLaunchers(): Seq[Path] =
     if (Files.isDirectory(baseDir)) {
       var s: Stream[Path] = null
       try {
@@ -486,15 +491,28 @@ import scala.jdk.CollectionConverters._
           .asScala
           .filter(p => p.toFile.isFile && !p.getFileName.toString.startsWith("."))
           .filter(InfoFile.isInfoFile)
-          .map(actualName)
           .toVector
-          .sorted
+          .sortBy(actualName)
       }
       finally if (s != null)
           s.close()
     }
     else
       Nil
+
+  def list(): Seq[String] =
+    listLaunchers().map(actualName)
+
+  /** Same as [[list]], with the version each application was installed at, when it can be inferred
+    * from its launcher.
+    */
+  def listWithVersions(): Seq[(String, Option[String])] =
+    listLaunchers().map { p =>
+      val versionOpt = InfoFile.readDescriptorAndLock(p).flatMap {
+        case (desc, lock) => InstallDir.versionOf(desc, lock)
+      }
+      (actualName(p), versionOpt)
+    }
 }
 
 object InstallDir {
@@ -514,6 +532,124 @@ object InstallDir {
 
   def defaultDir: Path =
     defaultDir0
+
+  /** Infers the version an application was installed at, from the URLs its artifacts were
+    * downloaded from.
+    *
+    * Nothing in the launcher records that version as such, so we look for it in the lock file: for
+    * prebuilt launchers, by reversing the URL pattern the descriptor builds prebuilt URLs with, and
+    * for the other launcher types, by looking for the artifact of the descriptor's main dependency
+    * in the lock file, and reading its version off its Maven-layout URL.
+    *
+    * Returns `None` rather than a wrong version if neither applies (unknown repository layout, URL
+    * pattern that changed since the app was installed, …).
+    */
+  private[install] def versionOf(desc: AppDescriptor, lock: ArtifactsLock): Option[String] = {
+    val urls = lock.entries.toVector.map(_.url).sorted
+    prebuiltVersion(desc, urls).orElse(mainDependencyVersion(desc, urls))
+  }
+
+  private def prebuiltPatterns(desc: AppDescriptor): Seq[String] = {
+    def patternsOf(launcher: Option[String], binaries: Map[String, String]): Seq[String] =
+      launcher.toSeq ++ binaries.valuesIterator
+    val fromOverrides = desc.versionOverrides.flatMap { o =>
+      patternsOf(o.prebuiltLauncher, o.prebuiltBinaries.getOrElse(Map.empty))
+    }
+    (patternsOf(desc.prebuiltLauncher, desc.prebuiltBinaries) ++ fromOverrides).distinct
+  }
+
+  /** Strips the decorations [[coursier.install.internal.PrebuiltApp]] accepts around prebuilt URLs
+    * (a leading `"gz+"`-like archive type, a trailing `"!sub/path"`), which don't end up in the
+    * artifact URL.
+    */
+  private def prebuiltUrlPattern(pattern: String): String = {
+    val noArchiveType = {
+      val idx = pattern.indexOf('+')
+      if (idx < 0) pattern
+      else
+        ArchiveType.parse(pattern.take(idx)) match {
+          case Some(_) => pattern.drop(idx + 1)
+          case None    => pattern
+        }
+    }
+    val idx = noArchiveType.indexOf('!')
+    if (idx < 0) noArchiveType
+    else noArchiveType.take(idx)
+  }
+
+  private def prebuiltVersion(desc: AppDescriptor, urls: Seq[String]): Option[String] = {
+    val it = for {
+      pattern <- prebuiltPatterns(desc).iterator
+      regex   <- prebuiltUrlRegex(prebuiltUrlPattern(pattern)).iterator
+      url     <- urls.iterator
+      m       <- regex.findFirstMatchIn(url)
+    } yield m.group(1)
+    if (it.hasNext) Some(it.next()) else None
+  }
+
+  private def prebuiltUrlRegex(urlPattern: String): Option[Regex] =
+    if (urlPattern.contains(versionPlaceholder)) {
+      // ${version} and ${platform} can't be quoted along with the rest of the pattern, so we split
+      // on them, and quote what's in-between
+      val regex = urlPattern
+        .split(Pattern.quote(versionPlaceholder), -1)
+        .map {
+          _.split(Pattern.quote(platformPlaceholder), -1)
+            .map(Pattern.quote)
+            .mkString("[^/]*")
+        }
+        .mkString("([^/]+)")
+      // platform extensions (".exe", ".bat") can be appended to the URL the pattern gives
+      Some(("^" + regex + "(?:\\.[^./]+)?$").r)
+    }
+    else
+      None
+
+  private def versionPlaceholder  = "${version}"
+  private def platformPlaceholder = "${platform}"
+
+  private def mainDependencyVersion(desc: AppDescriptor, urls: Seq[String]): Option[String] = {
+    val mainDeps = desc.dependencies.headOption.toSeq ++
+      desc.versionOverrides.flatMap(_.dependencies.toSeq.flatMap(_.headOption))
+    val modules = mainDeps.map(_.module).distinct
+    val it = for {
+      mod <- modules.iterator
+      (org, name, exactName) = mod match {
+        case j: JavaOrScalaModule.JavaModule =>
+          (j.module.organization.value, j.module.name.value, true)
+        case s: JavaOrScalaModule.ScalaModule =>
+          // the Scala suffix of the actual module isn't known here
+          (s.baseModule.organization.value, s.baseModule.name.value, false)
+      }
+      url     <- urls.iterator
+      version <- versionFromMavenUrl(org, name, exactName, url).iterator
+    } yield version
+    if (it.hasNext) Some(it.next()) else None
+  }
+
+  /** Reads the version off a Maven-layout URL, like
+    * `https://repo1.maven.org/maven2/org/scalameta/scalafmt-cli_2.13/3.9.6/scalafmt-cli_2.13-3.9.6.jar`
+    * for organization `org.scalameta` and module name `scalafmt-cli`.
+    */
+  private def versionFromMavenUrl(
+    org: String,
+    name: String,
+    exactName: Boolean,
+    url: String
+  ): Option[String] = {
+    val orgParts = org.split('.').toVector
+    val parts    = url.split('/').toVector
+    def nameMatches(s: String) =
+      s == name || (!exactName && s.startsWith(name + "_"))
+    val it = parts.indices.iterator.filter { idx =>
+      idx >= orgParts.length &&
+      idx + 2 < parts.length &&
+      nameMatches(parts(idx)) &&
+      parts.slice(idx - orgParts.length, idx) == orgParts &&
+      parts(idx + 2).startsWith(parts(idx) + "-" + parts(idx + 1))
+    }
+    if (it.hasNext) Some(parts(it.next() + 1)) else None
+  }
 
   private def classpathEntry(a: Artifact, f: File, forceResource: Boolean = false): ClassPathEntry =
     if (forceResource || a.changing || a.url.startsWith("file:"))
