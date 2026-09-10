@@ -1,6 +1,6 @@
 package coursier.params.rule
 
-import coursier.core.Resolution
+import coursier.core.{Resolution, ToStringHelper}
 import coursier.error.conflict.UnsatisfiedRule
 import coursier.graph.Conflict.Conflicted
 import coursier.util.ModuleMatcher
@@ -20,6 +20,9 @@ import dataclass.{data, since => unroll}
   ignoreIfForcedVersion: Boolean = true,
   semVer: Boolean = false
 ) extends Rule {
+
+  override def toString: String =
+    ToStringHelper(this)
 
   import Strict._
 

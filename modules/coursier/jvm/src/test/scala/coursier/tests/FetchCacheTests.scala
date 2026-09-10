@@ -7,6 +7,7 @@ import coursier.cache.FileCache
 import coursier.util.StringInterpolators._
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 import scala.jdk.CollectionConverters._
 import coursier.cache.Cache

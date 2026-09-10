@@ -22,6 +22,9 @@ object DependencyManagement {
     `type`: Type,
     classifier: Classifier
   ) {
+    override def toString: String =
+      ToStringHelper(this)
+
     private[coursier] lazy val hasProperties =
       organization.parsedValue.hasProperties || name.parsedValue.hasProperties || `type`.parsedValue.hasProperties || classifier.parsedValue.hasProperties
 

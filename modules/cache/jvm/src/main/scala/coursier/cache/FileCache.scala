@@ -17,7 +17,7 @@ import java.util.Locale
 import java.util.concurrent.ExecutorService
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
-import coursier.cache.internal.{Downloader, DownloadResult, FileUtil, Retry}
+import coursier.cache.internal.{Downloader, DownloadResult, FileCacheHelpers, FileUtil, Retry}
 import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
@@ -67,7 +67,7 @@ import scala.util.control.NonFatal
     maxThrottleWait: Option[FiniteDuration] = CacheDefaults.maxThrottleWait
 )(implicit
   val sync: Sync[F]
-) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext with Cache.WithLogger[F, FileCache[F]] with Cache.Default[F] {
+) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext with Cache.WithLogger[F, FileCache[F]] with Cache.Default[F] with FileCacheHelpers[F] {
   // format: on
 
   private def S = sync
@@ -499,7 +499,7 @@ import scala.util.control.NonFatal
 
 }
 
-object FileCache {
+object FileCache extends FileCachePlatformCompanion {
 
   private[coursier] def localFile0(
     url: String,
@@ -527,9 +527,7 @@ object FileCache {
     new File(file.getParentFile, s"${auxiliaryFilePrefix(file)}$key0")
   }
 
-  def apply[F[_]]()(implicit S: Sync[F] = Task.sync): FileCache[F] =
-    FileCache.create[F]()(S)
-
+  // See FileCachePlatformCompanion for the `apply` counterparts of this
   def create[F[_]]()(implicit S: Sync[F] = Task.sync): FileCache[F] =
     FileCache(CacheDefaults.location)(S)
 

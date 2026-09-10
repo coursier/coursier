@@ -4,6 +4,7 @@ import coursier.{Repositories, Resolve}
 import coursier.cache.ArchiveCache
 import coursier.parse.ModuleParser
 import coursier.testcache.TestCache
+import coursier.tests.AssertCompat.assert
 import coursier.util.StringInterpolators._
 import coursier.util.Task
 import utest._

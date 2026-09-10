@@ -8,6 +8,7 @@ import coursier.util.StringInterpolators._
 import coursier.version.{Version, VersionConstraint}
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 
 object ArtifactsTests extends TestSuite {

@@ -7,6 +7,7 @@ import coursier.core.{
   ModuleName,
   Organization,
   Reconciliation,
+  ToStringHelper,
   VariantSelector
 }
 import coursier.params.rule.{Rule, RuleResolution, Strict}
@@ -51,6 +52,9 @@ import dataclass.{data, since => unroll}
   @unroll
   ignoreOptionalFromDepMgmt: Boolean = false
 ) {
+
+  override def toString: String =
+    ToStringHelper(this)
 
   @deprecated("Use forceVersion0 instead", "2.1.25")
   def forceVersion: Map[Module, String] =

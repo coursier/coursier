@@ -8,6 +8,7 @@ import coursier.util.StringInterpolators._
 import coursier.util.Task
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 import scala.util.Properties.isWin
 

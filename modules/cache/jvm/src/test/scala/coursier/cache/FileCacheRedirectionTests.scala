@@ -11,6 +11,7 @@ import cats.effect.IO
 import coursier.cache.TestUtil._
 import coursier.credentials.{Credentials, DirectCredentials}
 import coursier.paths.Util
+import coursier.tests.AssertCompat.assert
 import coursier.util.{Artifact, Sync, Task}
 import org.http4s.dsl.io._
 import org.http4s.headers.{Authorization, Location}
