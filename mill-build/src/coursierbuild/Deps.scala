@@ -57,7 +57,7 @@ object Deps {
       if (sv.startsWith("2.12"))
         mvn"org.virtuslab.scala-cli::config:1.1.3"
       else
-        mvn"org.virtuslab.scala-cli:config_3:1.16.0"
+        mvn"org.virtuslab.scala-cli:config_3:1.17.0"
           .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
     // has to match the scalafix-interfaces version that mill-scalafix pulls
     def scalafixCore             = mvn"ch.epfl.scala::scalafix-core:0.14.8"
