@@ -1,6 +1,7 @@
 package coursier.cache.loggers
 
 import java.io.{OutputStream, OutputStreamWriter, Writer}
+import java.net.URI
 import java.util.concurrent.{ConcurrentHashMap, ConcurrentLinkedQueue, ScheduledExecutorService}
 import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
@@ -10,8 +11,21 @@ import coursier.cache.loggers.RefreshInfo.{CheckUpdateInfo, DownloadInfo}
 import coursier.util.Artifact
 
 import scala.collection.mutable.ArrayBuffer
+import scala.concurrent.duration.FiniteDuration
+import scala.util.Try
 
 object RefreshLogger {
+
+  /** A duration the way someone would say it out loud */
+  private[loggers] def readable(duration: FiniteDuration): String = {
+    val millis = duration.toMillis
+    if (millis < 1000L) s"${millis}ms"
+    else {
+      val seconds = millis / 1000L
+      if (seconds < 60L) s"${seconds}s"
+      else s"${seconds / 60L}m${seconds % 60L}s"
+    }
+  }
 
   def defaultDisplay(
     fallbackMode: Boolean = defaultFallbackMode,
@@ -317,6 +331,13 @@ class RefreshLogger(
   override def pickedModuleVersion(module: String, version: String): Unit =
     if (logPickedVersions)
       updateRunnable.log(s"Using $module:$version")
+
+  override def rateLimited(url: String, duration: FiniteDuration): Unit = {
+    val host = Try(new URI(url)).toOption.flatMap(uri => Option(uri.getHost)).getOrElse(url)
+    updateRunnable.log(
+      s"Rate limited by $host, holding off for ${RefreshLogger.readable(duration)}"
+    )
+  }
 
   override def downloadingArtifact(url: String, artifact: Artifact): Unit =
     updateRunnable.newEntry(

@@ -32,6 +32,7 @@
     "Other": [
       "cache",
       "ttl",
+      "other-retries",
       "other-repositories",
       "other-mirrors",
       "other-credentials",

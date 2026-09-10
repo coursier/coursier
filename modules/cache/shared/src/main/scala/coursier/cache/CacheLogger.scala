@@ -3,6 +3,8 @@ package coursier.cache
 import coursier.util.{Artifact, Sync}
 import coursier.util.Monad.ops._
 
+import scala.concurrent.duration.FiniteDuration
+
 trait CacheLogger {
   def foundLocally(url: String): Unit = {}
 
@@ -36,6 +38,15 @@ trait CacheLogger {
   def gettingLengthResult(url: String, length: Option[Long]): Unit = {}
 
   def removedCorruptFile(url: String, reason: Option[String]): Unit = {}
+
+  /** `url`'s host answered a request with a 429, and asked to be left alone for `duration`
+    *
+    * Called once per pause rather than once per download waiting it out, and not at all for the
+    * requests that are never sent because the pause was already known. Without this, a rate-limited
+    * resolution is indistinguishable from a hung one: everything stops, for as long as the server
+    * asked, with nothing on screen to say why.
+    */
+  def rateLimited(url: String, duration: FiniteDuration): Unit = {}
 
   // FIXME Create another logger class for that?
   def pickedModuleVersion(module: String, version: String): Unit = {}
