@@ -184,6 +184,16 @@ object Launchers {
             System.err.println("Warning: not sure which zstd-jni library to embed")
             Nil
           }
+        val charsetOpts =
+          if (Properties.isWin)
+            // Preamble writes .bat files in the OEM code page, since that is what cmd.exe
+            // parses them with. Looking that charset up at run time only finds it if it is
+            // in the image, and an image otherwise carries just the handful of charsets
+            // reachable at build time. Costs a few MB, so only pay it where .bat files are
+            // written.
+            Seq("-H:+AddAllCharsets")
+          else
+            Nil
         val extraOpts =
           if (Properties.isLinux && arch == "aarch64")
             Seq(
@@ -195,6 +205,7 @@ object Launchers {
             Nil
         super.nativeImageOptions() ++
           extraOpts ++
+          charsetOpts ++
           zstdOpt
       }
     }
