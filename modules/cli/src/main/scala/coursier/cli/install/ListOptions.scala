@@ -15,6 +15,9 @@ final case class ListOptions(
   @Group(OptionGroup.install)
   @ExtraName("dir")
     installDir: Option[String] = None,
+  @Group(OptionGroup.install)
+  @HelpMessage("Show version of installed applications (can be disabled with --versions=false)")
+    versions: Boolean = true,
 )
 // format: on
 

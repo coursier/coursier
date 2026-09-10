@@ -61,15 +61,17 @@ applications:
 
 ```bash
 $ cs list
-amm
-coursier
-cs
-sbt
-sbtn
-scala
-scalac
-scalafmt
+amm 3.0.2
+coursier 2.1.24
+cs 2.1.24
+sbt 1.11.2
+sbtn 1.11.2
+scala 3.7.1
+scalac 3.7.1
+scalafmt 3.9.6
 ```
+
+Pass `--versions=false` to only print the application names.
 
 ## Java Options
 
@@ -168,6 +170,10 @@ a custom location.
 ```bash
 $ cs list --dir /myCustomDirectory
 ```
+
+The version each application was installed at is printed alongside its name,
+unless `--versions=false` is passed. It is left out for applications whose
+version couldn't be inferred from their launcher.
 
 ## Channels
 

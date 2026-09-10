@@ -36,6 +36,35 @@ object InfoFile {
         zf.close()
   }
 
+  /** Reads both the app descriptor and the artifacts lock file of an app launcher.
+    *
+    * Unlike [[readAppDescriptor]], this doesn't throw if `f` isn't a launcher, or if its content
+    * can't be read - it returns `None` instead.
+    */
+  def readDescriptorAndLock(f: Path): Option[(AppDescriptor, ArtifactsLock)] = {
+
+    var zf: ZipFile = null
+
+    try {
+      zf = new ZipFile(f.toFile)
+      for {
+        descEnt <- Option(zf.getEntry(jsonDescFilePath))
+        desc <- appDescriptor(
+          s"$f!$jsonDescFilePath",
+          FileUtil.readFully(zf.getInputStream(descEnt))
+        ).toOption
+        lockEnt <- Option(zf.getEntry(lockFilePath))
+        lockContent = FileUtil.readFully(zf.getInputStream(lockEnt))
+        lock <- ArtifactsLock.read(new String(lockContent, StandardCharsets.UTF_8)).toOption
+      } yield (desc, lock)
+    }
+    catch {
+      case NonFatal(_) => None
+    }
+    finally if (zf != null)
+        zf.close()
+  }
+
   def readSource(f: Path): Option[(Source, Array[Byte])] = {
 
     var zf: ZipFile = null
