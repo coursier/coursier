@@ -35,6 +35,18 @@ object CacheParamsTests extends TestSuite {
       assert(params(parse()).userAgent.isEmpty)
     }
 
+    test("cli runs say so in the comment") {
+      val params0 = params(parse())
+      assert(params0.userAgentComments == Seq("cli"))
+
+      params0.cache(coursier.cache.CacheDefaults.pool, coursier.cache.CacheLogger.nop) match {
+        case fc: FileCache[Task] =>
+          assert(fc.userAgent == Some(coursier.cache.CacheUrl.coursierUserAgent("cli")))
+          assert(fc.userAgent.exists(_.endsWith("; cli)")))
+        case other => sys.error(s"Expected a FileCache, got $other")
+      }
+    }
+
     test("a blank user agent is ignored") {
       assert(params(parse("--user-agent", "  ")).userAgent.isEmpty)
     }
@@ -44,7 +56,7 @@ object CacheParamsTests extends TestSuite {
       val help = Help[CacheOptions].help(HelpFormat.default())
       assert(help.contains("Coursier/2.1 (contact: ops@example.com)"))
       // the default the help claims has to be the one actually sent
-      assert(help.contains(coursier.cache.CacheUrl.userAgent("Coursier")))
+      assert(help.contains(coursier.cache.CacheUrl.userAgent("Coursier", "cli")))
     }
 
     test("extra comment tokens land after the contact, in order") {

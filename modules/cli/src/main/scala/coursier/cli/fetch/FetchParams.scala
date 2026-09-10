@@ -4,7 +4,6 @@ import java.nio.file.{Path, Paths}
 
 import cats.data.ValidatedNel
 import cats.implicits._
-import coursier.cache.CacheUrl
 import coursier.cli.install.SharedChannelParams
 import coursier.cli.params.ArtifactParams
 import coursier.cli.resolve.SharedResolveParams
@@ -24,14 +23,11 @@ object FetchParams {
   /** Marks the agent of a run that writes a JSON report.
     *
     * A report is read by a script or a CI job rather than by someone at a prompt, so it goes in the
-    * comment - the product token stays `Coursier`, and a `ci` token joins it where both apply. An
-    * agent passed explicitly wins over this.
+    * comment - the product token stays `Coursier`, and the `cli` and `ci` tokens join it where they
+    * apply. An agent passed explicitly wins over the lot.
     */
   private def withJsonReportUserAgent(resolve: SharedResolveParams): SharedResolveParams =
-    if (resolve.cache.userAgent.isEmpty)
-      resolve.copy(cache = resolve.cache.withUserAgent(Some(CacheUrl.coursierUserAgent("json"))))
-    else
-      resolve
+    resolve.copy(cache = resolve.cache.addUserAgentComments("json"))
 
   def apply(options: FetchOptions): ValidatedNel[String, FetchParams] = {
 

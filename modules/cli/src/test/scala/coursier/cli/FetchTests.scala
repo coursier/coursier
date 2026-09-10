@@ -44,29 +44,37 @@ object FetchTests extends TestSuite {
         params0
     }
 
+  def cacheUserAgent(params: FetchParams): Option[String] =
+    params.resolve.cache.cache(pool, coursier.cache.CacheLogger.nop) match {
+      case fc: FileCache[_] => fc.userAgent
+      case other            => sys.error(s"Expected a FileCache, got $other")
+    }
+
   val tests = Tests {
 
-    // asserted against the helper rather than a literal: the expected value gains a "ci" token
-    // when these tests themselves run in CI
-    test("a json report adds a json comment token to the user agent") {
+    // the agent is asserted against the helper rather than a literal: the expected value gains a
+    // "ci" token when these tests themselves run in CI
+    test("a json report adds a json comment token after cli") {
       val params = paramsOrThrow(FetchOptions(jsonOutputFile = "report.json"))
-      assert(params.resolve.cache.userAgent == Some(CacheUrl.coursierUserAgent("json")))
-      assert(params.resolve.cache.userAgent.exists(_.endsWith("; json)")))
+      assert(params.resolve.cache.userAgentComments == Seq("cli", "json"))
+      assert(cacheUserAgent(params) == Some(CacheUrl.coursierUserAgent("cli", "json")))
+      assert(cacheUserAgent(params).exists(_.endsWith("; cli; json)")))
     }
 
-    test("no json report leaves the user agent alone") {
+    test("no json report leaves just the cli token") {
       val params = paramsOrThrow(FetchOptions())
-      assert(params.resolve.cache.userAgent.isEmpty)
+      assert(params.resolve.cache.userAgentComments == Seq("cli"))
+      assert(cacheUserAgent(params) == Some(CacheUrl.coursierUserAgent("cli")))
     }
 
-    test("an explicit user agent wins over the json one") {
+    test("an explicit user agent wins over the comment tokens") {
       val resolveOpt = SharedResolveOptions(
         cacheOptions = CacheOptions(userAgent = Some("Custom/1.2"))
       )
       val params = paramsOrThrow(
         FetchOptions(jsonOutputFile = "report.json", resolveOptions = resolveOpt)
       )
-      assert(params.resolve.cache.userAgent == Some("Custom/1.2"))
+      assert(cacheUserAgent(params) == Some("Custom/1.2"))
     }
 
     test("get all files") {
