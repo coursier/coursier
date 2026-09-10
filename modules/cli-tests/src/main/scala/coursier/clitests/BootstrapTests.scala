@@ -1247,13 +1247,22 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
           if (Properties.isWin) tmpDir / "app.bat"
           else appLauncher
 
+        // while jni-utils is a snapshot, it's only on the Maven Central snapshot repository
+        val jniUtilsIsSnapshot = TestUtil.jniUtilsVersion.endsWith("SNAPSHOT")
+        val snapshotRepo       = "https://central.sonatype.com/repository/maven-snapshots"
+        val usingSnapshotRepo =
+          if (jniUtilsIsSnapshot)
+            "//> using repository \"" + snapshotRepo + "\"" + System.lineSeparator()
+          else
+            ""
+
         val appSource = tmpDir / "TestApp.scala"
         os.write(
           appSource,
           s"""//> using scala "2.13.10"
              |//> using jvm "17"
              |//> using lib "io.get-coursier.jniutils:windows-jni-utils:${TestUtil.jniUtilsVersion}"
-             |//> using publish.organization "io.get-coursier.tests"
+             |$usingSnapshotRepo//> using publish.organization "io.get-coursier.tests"
              |//> using publish.name "test-app"
              |//> using publish.version "0.1.0"
              |
@@ -1286,11 +1295,16 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         )
           .call(cwd = tmpDir, stdin = os.Inherit, stdout = os.Inherit)
 
+        val extraRepoArgs =
+          if (jniUtilsIsSnapshot) Seq("-r", snapshotRepo)
+          else Nil
+
         os.proc(
           launcher,
           "bootstrap",
           "-r",
           repo.toNIO.toUri.toASCIIString,
+          extraRepoArgs,
           "io.get-coursier.tests::test-app:0.1.0",
           "--scala",
           "2.13.10",

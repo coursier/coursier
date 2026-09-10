@@ -89,12 +89,24 @@ object Deps {
     def windowsAnsiPs =
       mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
     def zstdJni = mvn"com.github.luben:zstd-jni:1.5.7-16"
+
+    /** The Maven Central snapshot repository, `central:maven-snapshots` for the coursier CLI */
+    def mavenSnapshots = "https://central.sonatype.com/repository/maven-snapshots"
+
+    /** Repositories needed to resolve the dependencies above, beyond Maven Central
+      *
+      * Added by `CoursierJavaModule`, that all modules of this build inherit from.
+      */
+    def extraRepositories: Seq[String] =
+      // only needed while we're on a snapshot of jni-utils
+      if (Versions.jniUtils.endsWith("SNAPSHOT")) Seq(mavenSnapshots)
+      else Nil
   }
 
   object Versions {
     def cats          = "2.13.0"
     def http4s        = "0.23.37"
-    def jniUtils      = "0.4.0"
+    def jniUtils      = "0.3.5-SNAPSHOT"
     def jsoniterScala = "2.13.5"
     def junit         = "4.13.2"
     def scalaz        = "7.2.36"

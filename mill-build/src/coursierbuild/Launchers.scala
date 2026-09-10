@@ -115,9 +115,13 @@ object Launchers {
         )
         .withTransitive(false)
 
-      val files = Fetch()
+      val fetch = Fetch()
         .addDependencies(dep0)
         .addArtifactTypes(Type("lib"))
+      val files = fetch
+        .withRepositories(
+          fetch.repositories ++ Deps.extraRepositories.map(maven.MavenRepository(_))
+        )
         .run()
       assert(files.length == 1)
 

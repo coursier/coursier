@@ -85,6 +85,10 @@ object cache extends Module {
 object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.all)
 object `benchmark` extends ScalaModule with JmhModule {
   def scalaVersion: mill.api.Task.Simple[String] = ScalaVersions.scala213
+  // unlike the other modules, this one doesn't extend CoursierJavaModule, that adds those
+  def repositories = Task {
+    super.repositories() ++ Deps.extraRepositories
+  }
   def moduleDeps = Seq(
     coursier.jvm(ScalaVersions.scala213)
   )
