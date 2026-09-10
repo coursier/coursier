@@ -65,7 +65,7 @@ object Deps {
     def scalaJsReact             = mvn"com.github.japgolly.scalajs-react::core::2.1.4"
     def scalaNativeTools040      = mvn"org.scala-native::tools:0.4.17"
     def scalaReflect(sv: String) = mvn"org.scala-lang:scala-reflect:$sv"
-    def scalaXml                 = mvn"org.scala-lang.modules::scala-xml:2.4.0"
+    def scalaXml                 = mvn"org.scala-lang.modules::scala-xml:2.5.0"
     def scalazCore               = mvn"org.scalaz::scalaz-core::${Versions.scalaz}"
     def scalazConcurrent         = mvn"org.scalaz::scalaz-concurrent:${Versions.scalaz}"
     def scodec                   = mvn"org.scodec::scodec-core:2.3.3"
