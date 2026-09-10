@@ -161,7 +161,8 @@ object CacheUrl {
     hostnameVerifierOpt: Option[HostnameVerifier],
     method: String,
     connectTimeout: Option[FiniteDuration],
-    readTimeout: Option[FiniteDuration]
+    readTimeout: Option[FiniteDuration],
+    userAgentOpt: Option[String]
   ): Unit = {
 
     // Without these, a connection that stops answering - dropped by a NAT or a load balancer,
@@ -184,7 +185,7 @@ object CacheUrl {
 
         // Early in the development of coursier, I ran into some repositories (Sonatype ones?) not
         // returning the same content for user agent "Java/…".
-        conn0.setRequestProperty("User-Agent", userAgent)
+        conn0.setRequestProperty("User-Agent", userAgentOpt.getOrElse(defaultUserAgent))
         // Some remote repositories (AWS CodeArtifact) return a "false" 404 if maven-metadata.xml is requested
         // with default Accept header Java sets for HttpUrlConnection
         conn0.setRequestProperty("Accept", "*/*")
@@ -332,7 +333,8 @@ object CacheUrl {
     maxRedirectionsOpt: Option[Int],
     classLoaders: Seq[ClassLoader],
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
-    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout
+    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout,
+    userAgentOpt: Option[String] = None
   )
 
   @deprecated(
@@ -393,7 +395,8 @@ object CacheUrl {
           hostnameVerifierOpt,
           method,
           connectTimeout,
-          readTimeout
+          readTimeout,
+          userAgentOpt
         )
 
         val rangeResOpt0 = rangeResOpt(conn, alreadyDownloaded)

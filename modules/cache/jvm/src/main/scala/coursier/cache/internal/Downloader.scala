@@ -60,7 +60,9 @@ import scala.util.control.NonFatal
     retryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.retryBackoffMaxDelay,
     retryPollMaxDelay: Option[FiniteDuration] = CacheDefaults.retryPollMaxDelay,
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
-    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout
+    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout,
+  @unroll
+    userAgentOpt: Option[String] = None
 )(implicit
   S: Sync[F]
 ) {
@@ -154,7 +156,8 @@ import scala.util.control.NonFatal
             maxRedirectionsOpt = maxRedirections,
             classLoaders = classLoaders,
             connectTimeout = connectTimeout,
-            readTimeout = readTimeout
+            readTimeout = readTimeout,
+            userAgentOpt = userAgentOpt
           )
           .connection()
 
@@ -294,7 +297,8 @@ import scala.util.control.NonFatal
             maxRedirectionsOpt = maxRedirections,
             classLoaders = classLoaders,
             connectTimeout = connectTimeout,
-            readTimeout = readTimeout
+            readTimeout = readTimeout,
+            userAgentOpt = userAgentOpt
           )
           .connectionMaybePartial()
         conn = conn0
@@ -445,7 +449,8 @@ import scala.util.control.NonFatal
             logger,
             maxRedirections,
             connectTimeout,
-            readTimeout
+            readTimeout,
+            userAgentOpt
           ).toOption.flatten
         }
 
@@ -1049,7 +1054,8 @@ object Downloader {
     logger: CacheLogger,
     maxRedirectionsOpt: Option[Int],
     connectTimeout: Option[FiniteDuration],
-    readTimeout: Option[FiniteDuration]
+    readTimeout: Option[FiniteDuration],
+    userAgentOpt: Option[String]
   ): Either[ArtifactError, Option[Long]] = {
 
     var conn: URLConnection = null
@@ -1066,7 +1072,8 @@ object Downloader {
           method = "HEAD",
           maxRedirectionsOpt = maxRedirectionsOpt,
           connectTimeout = connectTimeout,
-          readTimeout = readTimeout
+          readTimeout = readTimeout,
+          userAgentOpt = userAgentOpt
         )
         .connection()
 
