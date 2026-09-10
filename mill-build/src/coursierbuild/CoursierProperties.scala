@@ -32,6 +32,7 @@ object CoursierProperties {
     "coursier.jni",
     "coursier.jni.check.throw",
     "coursier.jvm.cache",
+    "coursier.maven-settings",
     "coursier.max-http-retry-after",
     "coursier.mirrors",
     "coursier.mirrors.extra",

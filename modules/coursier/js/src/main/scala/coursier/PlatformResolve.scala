@@ -15,7 +15,12 @@ abstract class PlatformResolve {
   def defaultMirrors: Seq[Mirror] =
     Nil
 
+  def defaultMavenSettingsFile: Option[Path] =
+    None
+
   def confFileMirrors(confFile: Path): Seq[Mirror] =
+    Nil
+  def mavenSettingsMirrors(settingsFile: Path): Seq[Mirror] =
     Nil
   def confFileRepositories(confFile: Path): Option[Seq[Repository]] =
     None

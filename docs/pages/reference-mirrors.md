@@ -57,6 +57,58 @@ Mirror definitions are checked in order. The first matching definition is used f
 Authentication attached to the source repository is not copied to the mirror, so configure
 credentials for the mirror host separately when it requires authentication.
 
+## Maven `settings.xml`
+
+Coursier also honors the `mirrors` section of Maven's `settings.xml`, like
+
+```xml
+<settings>
+  <mirrors>
+    <mirror>
+      <id>internal</id>
+      <name>Internal mirror</name>
+      <url>https://nexus.example.com/repository/maven-public</url>
+      <mirrorOf>*</mirrorOf>
+    </mirror>
+  </mirrors>
+</settings>
+```
+
+`mirrorOf` accepts the syntax Maven accepts: a comma-separated list of repository identifiers,
+which can also contain `*` (any repository), `external:*` (any repository that is neither local
+nor on `file:`), `external:http:*` (any non-local repository accessed over plain HTTP), and
+negations like `!some-repo`.
+
+Maven matches those identifiers against the `id` of the repositories it knows about. Coursier
+repositories have no such identifier, so their root URL is matched instead, along with the
+well-known Maven identifier of the repository if it has one - only `central`, for Maven Central.
+That is, `<mirrorOf>central</mirrorOf>` mirrors Maven Central, and other repositories are named by
+their root URL:
+
+```xml
+<mirrorOf>https://repo.example.com/releases</mirrorOf>
+```
+
+When a `server` element has the same `id` as a mirror, its `username` and `password` are passed to
+that mirror. Values are read as they appear in the file: passwords encrypted with
+`settings-security.xml` are not decrypted, and property references like `${env.NEXUS_USER}` are
+not substituted.
+
+Mirrors that are `blocked`, and mirrors whose `mirrorOfLayouts` leaves out the `default` layout,
+are ignored: coursier has no way to block a repository, and doesn't support the other Maven
+layouts.
+
+By default, coursier reads `~/.m2/settings.xml` - the same file it reads proxy settings from.
+`CS_MAVEN_HOME` (or the `cs.maven.home` Java property), then `MAVEN_HOME` (or `maven.home`),
+add directories to look that file up in, ahead of `~/.m2`. The first of those directories that
+actually holds a `settings.xml` file wins, so a `MAVEN_HOME` pointing at a Maven installation, as
+it usually does, doesn't hide the settings file of the user.
+
+`COURSIER_MAVEN_SETTINGS` (or `coursier.maven-settings`) points at a settings file directly,
+skipping that lookup; set it to `false` to ignore Maven settings altogether.
+
+Mirrors from the coursier configuration are checked before those from `settings.xml`.
+
 ## Legacy properties files
 
 Mirrors can also be declared in a `mirror.properties` file:
@@ -95,3 +147,7 @@ val resolve = Resolve()
 
 Use `.noMirrors` when a resolution must ignore both the default mirrors and mirror configuration
 files. `TreeMirror` provides the prefix-preserving behavior described above.
+
+Mirrors can be read from a Maven settings file explicitly too, with
+`Resolve.mavenSettingsMirrors`, which accepts the path of a `settings.xml` file and returns
+`MavenSettingsMirror` instances.
