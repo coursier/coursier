@@ -90,6 +90,45 @@ Maven and Ivy repositories. For example:</p>
 <p>Mirror definitions are checked in order. The first matching definition is used for each repository.
 Authentication attached to the source repository is not copied to the mirror, so configure
 <a href="/docs/next/other-credentials">credentials</a> for the mirror host separately when it requires authentication.</p>
+<h2><a class="anchor" aria-hidden="true" id="maven-settingsxml"></a><a href="#maven-settingsxml" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Maven <code>settings.xml</code></h2>
+<p>Coursier also honors the <code>mirrors</code> section of Maven's <code>settings.xml</code>, like</p>
+<pre><code class="hljs css language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">settings</span>&gt;</span>
+  <span class="hljs-tag">&lt;<span class="hljs-name">mirrors</span>&gt;</span>
+    <span class="hljs-tag">&lt;<span class="hljs-name">mirror</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">id</span>&gt;</span>internal<span class="hljs-tag">&lt;/<span class="hljs-name">id</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">name</span>&gt;</span>Internal mirror<span class="hljs-tag">&lt;/<span class="hljs-name">name</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">url</span>&gt;</span>https://nexus.example.com/repository/maven-public<span class="hljs-tag">&lt;/<span class="hljs-name">url</span>&gt;</span>
+      <span class="hljs-tag">&lt;<span class="hljs-name">mirrorOf</span>&gt;</span>*<span class="hljs-tag">&lt;/<span class="hljs-name">mirrorOf</span>&gt;</span>
+    <span class="hljs-tag">&lt;/<span class="hljs-name">mirror</span>&gt;</span>
+  <span class="hljs-tag">&lt;/<span class="hljs-name">mirrors</span>&gt;</span>
+<span class="hljs-tag">&lt;/<span class="hljs-name">settings</span>&gt;</span>
+</code></pre>
+<p><code>mirrorOf</code> accepts the syntax Maven accepts: a comma-separated list of repository identifiers,
+which can also contain <code>*</code> (any repository), <code>external:*</code> (any repository that is neither local
+nor on <code>file:</code>), <code>external:http:*</code> (any non-local repository accessed over plain HTTP), and
+negations like <code>!some-repo</code>.</p>
+<p>Maven matches those identifiers against the <code>id</code> of the repositories it knows about. Coursier
+repositories have no such identifier, so their root URL is matched instead, along with the
+well-known Maven identifier of the repository if it has one - only <code>central</code>, for Maven Central.
+That is, <code>&lt;mirrorOf&gt;central&lt;/mirrorOf&gt;</code> mirrors Maven Central, and other repositories are named by
+their root URL:</p>
+<pre><code class="hljs css language-xml"><span class="hljs-tag">&lt;<span class="hljs-name">mirrorOf</span>&gt;</span>https://repo.example.com/releases<span class="hljs-tag">&lt;/<span class="hljs-name">mirrorOf</span>&gt;</span>
+</code></pre>
+<p>When a <code>server</code> element has the same <code>id</code> as a mirror, its <code>username</code> and <code>password</code> are passed to
+that mirror. Values are read as they appear in the file: passwords encrypted with
+<code>settings-security.xml</code> are not decrypted, and property references like <code>${env.NEXUS_USER}</code> are
+not substituted.</p>
+<p>Mirrors that are <code>blocked</code>, and mirrors whose <code>mirrorOfLayouts</code> leaves out the <code>default</code> layout,
+are ignored: coursier has no way to block a repository, and doesn't support the other Maven
+layouts.</p>
+<p>By default, coursier reads <code>~/.m2/settings.xml</code> - the same file it reads proxy settings from.
+<code>CS_MAVEN_HOME</code> (or the <code>cs.maven.home</code> Java property), then <code>MAVEN_HOME</code> (or <code>maven.home</code>),
+add directories to look that file up in, ahead of <code>~/.m2</code>. The first of those directories that
+actually holds a <code>settings.xml</code> file wins, so a <code>MAVEN_HOME</code> pointing at a Maven installation, as
+it usually does, doesn't hide the settings file of the user.</p>
+<p><code>COURSIER_MAVEN_SETTINGS</code> (or <code>coursier.maven-settings</code>) points at a settings file directly,
+skipping that lookup; set it to <code>false</code> to ignore Maven settings altogether.</p>
+<p>Mirrors from the coursier configuration are checked before those from <code>settings.xml</code>.</p>
 <h2><a class="anchor" aria-hidden="true" id="legacy-properties-files"></a><a href="#legacy-properties-files" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Legacy properties files</h2>
 <p>Mirrors can also be declared in a <code>mirror.properties</code> file:</p>
 <pre><code class="hljs css language-properties"><span class="hljs-meta">internal.from</span>=<span class="hljs-string">https://repo1.maven.org/maven2;https://plugins.gradle.org/m2</span>
@@ -118,7 +157,10 @@ directories. <code>COURSIER_MIRRORS</code> (or <code>coursier.mirrors</code>) se
 </code></pre>
 <p>Use <code>.noMirrors</code> when a resolution must ignore both the default mirrors and mirror configuration
 files. <code>TreeMirror</code> provides the prefix-preserving behavior described above.</p>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/next/other-repositories"><span class="arrow-prev">← </span><span>Repositories</span></a><a class="docs-next button" href="/docs/next/other-credentials"><span>Credentials</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#mirror-types">Mirror types</a></li><li><a href="#legacy-properties-files">Legacy properties files</a></li><li><a href="#api">API</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><h2><a href="/" class="nav-home">Coursier</a></h2><div><h5><a href="/docs/overview">Docs</a></h5><a href="/docs/overview">Overview</a><a href="/docs/cli-installation">Install CLI</a><a href="/docs/sbt-coursier">Setup sbt</a><a href="/docs/api">Use the API</a></div><div><h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5><a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"/></a><a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"/></a></div></section><section class="copyright">Copyright © 2026 coursier contributors</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+<p>Mirrors can be read from a Maven settings file explicitly too, with
+<code>Resolve.mavenSettingsMirrors</code>, which accepts the path of a <code>settings.xml</code> file and returns
+<code>MavenSettingsMirror</code> instances.</p>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/next/other-repositories"><span class="arrow-prev">← </span><span>Repositories</span></a><a class="docs-next button" href="/docs/next/other-credentials"><span>Credentials</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#mirror-types">Mirror types</a></li><li><a href="#maven-settingsxml">Maven <code>settings.xml</code></a></li><li><a href="#legacy-properties-files">Legacy properties files</a></li><li><a href="#api">API</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><h2><a href="/" class="nav-home">Coursier</a></h2><div><h5><a href="/docs/overview">Docs</a></h5><a href="/docs/overview">Overview</a><a href="/docs/cli-installation">Install CLI</a><a href="/docs/sbt-coursier">Setup sbt</a><a href="/docs/api">Use the API</a></div><div><h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5><a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"/></a><a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"/></a></div></section><section class="copyright">Copyright © 2026 coursier contributors</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
                     return;

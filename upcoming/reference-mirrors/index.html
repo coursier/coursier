@@ -1307,6 +1307,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#maven-settingsxml" class="md-nav__link">
+    <span class="md-ellipsis">
+      Maven settings.xml
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#legacy-properties-files" class="md-nav__link">
     <span class="md-ellipsis">
       Legacy properties files
@@ -1571,6 +1580,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#maven-settingsxml" class="md-nav__link">
+    <span class="md-ellipsis">
+      Maven settings.xml
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#legacy-properties-files" class="md-nav__link">
     <span class="md-ellipsis">
       Legacy properties files
@@ -1656,11 +1674,50 @@ Maven and Ivy repositories. For example:</p>
 <p>Mirror definitions are checked in order. The first matching definition is used for each repository.
 Authentication attached to the source repository is not copied to the mirror, so configure
 credentials for the mirror host separately when it requires authentication.</p>
+<h2 id="maven-settingsxml">Maven <code>settings.xml</code><a class="headerlink" href="#maven-settingsxml" title="Permanent link">&para;</a></h2>
+<p>Coursier also honors the <code>mirrors</code> section of Maven's <code>settings.xml</code>, like</p>
+<div class="language-xml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nt">&lt;settings&gt;</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">&lt;mirrors&gt;</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">    </span><span class="nt">&lt;mirror&gt;</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">      </span><span class="nt">&lt;id&gt;</span>internal<span class="nt">&lt;/id&gt;</span>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="w">      </span><span class="nt">&lt;name&gt;</span>Internal<span class="w"> </span>mirror<span class="nt">&lt;/name&gt;</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="w">      </span><span class="nt">&lt;url&gt;</span>https://nexus.example.com/repository/maven-public<span class="nt">&lt;/url&gt;</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="w">      </span><span class="nt">&lt;mirrorOf&gt;</span>*<span class="nt">&lt;/mirrorOf&gt;</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="w">    </span><span class="nt">&lt;/mirror&gt;</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="w">  </span><span class="nt">&lt;/mirrors&gt;</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="nt">&lt;/settings&gt;</span>
+</span></code></pre></div>
+<p><code>mirrorOf</code> accepts the syntax Maven accepts: a comma-separated list of repository identifiers,
+which can also contain <code>*</code> (any repository), <code>external:*</code> (any repository that is neither local
+nor on <code>file:</code>), <code>external:http:*</code> (any non-local repository accessed over plain HTTP), and
+negations like <code>!some-repo</code>.</p>
+<p>Maven matches those identifiers against the <code>id</code> of the repositories it knows about. Coursier
+repositories have no such identifier, so their root URL is matched instead, along with the
+well-known Maven identifier of the repository if it has one - only <code>central</code>, for Maven Central.
+That is, <code>&lt;mirrorOf&gt;central&lt;/mirrorOf&gt;</code> mirrors Maven Central, and other repositories are named by
+their root URL:</p>
+<div class="language-xml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="nt">&lt;mirrorOf&gt;</span>https://repo.example.com/releases<span class="nt">&lt;/mirrorOf&gt;</span>
+</span></code></pre></div>
+<p>When a <code>server</code> element has the same <code>id</code> as a mirror, its <code>username</code> and <code>password</code> are passed to
+that mirror. Values are read as they appear in the file: passwords encrypted with
+<code>settings-security.xml</code> are not decrypted, and property references like <code>${env.NEXUS_USER}</code> are
+not substituted.</p>
+<p>Mirrors that are <code>blocked</code>, and mirrors whose <code>mirrorOfLayouts</code> leaves out the <code>default</code> layout,
+are ignored: coursier has no way to block a repository, and doesn't support the other Maven
+layouts.</p>
+<p>By default, coursier reads <code>~/.m2/settings.xml</code> - the same file it reads proxy settings from.
+<code>CS_MAVEN_HOME</code> (or the <code>cs.maven.home</code> Java property), then <code>MAVEN_HOME</code> (or <code>maven.home</code>),
+add directories to look that file up in, ahead of <code>~/.m2</code>. The first of those directories that
+actually holds a <code>settings.xml</code> file wins, so a <code>MAVEN_HOME</code> pointing at a Maven installation, as
+it usually does, doesn't hide the settings file of the user.</p>
+<p><code>COURSIER_MAVEN_SETTINGS</code> (or <code>coursier.maven-settings</code>) points at a settings file directly,
+skipping that lookup; set it to <code>false</code> to ignore Maven settings altogether.</p>
+<p>Mirrors from the coursier configuration are checked before those from <code>settings.xml</code>.</p>
 <h2 id="legacy-properties-files">Legacy properties files<a class="headerlink" href="#legacy-properties-files" title="Permanent link">&para;</a></h2>
 <p>Mirrors can also be declared in a <code>mirror.properties</code> file:</p>
-<div class="language-properties highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="na">internal.from</span><span class="o">=</span><span class="s">https://repo1.maven.org/maven2;https://plugins.gradle.org/m2</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="na">internal.to</span><span class="o">=</span><span class="s">https://nexus.example.com/repository/maven-public</span>
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="na">internal.type</span><span class="o">=</span><span class="s">maven</span>
+<div class="language-properties highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="na">internal.from</span><span class="o">=</span><span class="s">https://repo1.maven.org/maven2;https://plugins.gradle.org/m2</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="na">internal.to</span><span class="o">=</span><span class="s">https://nexus.example.com/repository/maven-public</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="na">internal.type</span><span class="o">=</span><span class="s">maven</span>
 </span></code></pre></div>
 <p>Each mirror has an arbitrary name (<code>internal</code> above), a semicolon-separated <code>.from</code> value, a <code>.to</code>
 value, and an optional <code>.type</code>. In properties files, <code>.type</code> defaults to <code>tree</code>; accepted values are
@@ -1671,19 +1728,22 @@ directories. <code>COURSIER_MIRRORS</code> (or <code>coursier.mirrors</code>) se
 <code>COURSIER_EXTRA_MIRRORS</code> (or <code>coursier.mirrors.extra</code>) adds another properties file.</p>
 <h2 id="api">API<a class="headerlink" href="#api" title="Permanent link">&para;</a></h2>
 <p>The high-level API loads configured mirrors by default. Mirrors can also be supplied explicitly:</p>
-<div class="language-scala highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">import</span><span class="w"> </span><span class="nn">coursier</span><span class="p">.</span><span class="nc">Resolve</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="k">import</span><span class="w"> </span><span class="nn">coursier</span><span class="p">.</span><span class="nn">params</span><span class="p">.</span><span class="nc">MavenMirror</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="kd">val</span><span class="w"> </span><span class="n">resolve</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Resolve</span><span class="p">()</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="p">.</span><span class="n">addMirrors</span><span class="p">(</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span><span class="nc">MavenMirror</span><span class="p">(</span>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">      </span><span class="nc">Seq</span><span class="p">(</span><span class="s">&quot;https://repo1.maven.org/maven2&quot;</span><span class="p">),</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">      </span><span class="s">&quot;https://nexus.example.com/repository/maven-public&quot;</span>
-</span><span id="__span-6-9"><a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">    </span><span class="p">)</span>
-</span><span id="__span-6-10"><a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">  </span><span class="p">)</span>
+<div class="language-scala highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">import</span><span class="w"> </span><span class="nn">coursier</span><span class="p">.</span><span class="nc">Resolve</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="k">import</span><span class="w"> </span><span class="nn">coursier</span><span class="p">.</span><span class="nn">params</span><span class="p">.</span><span class="nc">MavenMirror</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="kd">val</span><span class="w"> </span><span class="n">resolve</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Resolve</span><span class="p">()</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">  </span><span class="p">.</span><span class="n">addMirrors</span><span class="p">(</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">    </span><span class="nc">MavenMirror</span><span class="p">(</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="w">      </span><span class="nc">Seq</span><span class="p">(</span><span class="s">&quot;https://repo1.maven.org/maven2&quot;</span><span class="p">),</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="w">      </span><span class="s">&quot;https://nexus.example.com/repository/maven-public&quot;</span>
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a><span class="w">    </span><span class="p">)</span>
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="w">  </span><span class="p">)</span>
 </span></code></pre></div>
 <p>Use <code>.noMirrors</code> when a resolution must ignore both the default mirrors and mirror configuration
 files. <code>TreeMirror</code> provides the prefix-preserving behavior described above.</p>
+<p>Mirrors can be read from a Maven settings file explicitly too, with
+<code>Resolve.mavenSettingsMirrors</code>, which accepts the path of a <code>settings.xml</code> file and returns
+<code>MavenSettingsMirror</code> instances.</p>
 
 
 
