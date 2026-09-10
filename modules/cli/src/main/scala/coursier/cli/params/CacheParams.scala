@@ -20,7 +20,9 @@ final case class CacheParams(
   cacheLocalArtifacts: Boolean,
   followHttpToHttpsRedirections: Boolean,
   credentials: Seq[coursier.credentials.Credentials] = Nil,
-  useEnvCredentials: Boolean = true
+  useEnvCredentials: Boolean = true,
+  userAgent: Option[String] = None,
+  userAgentComments: Seq[String] = Nil
 ) {
 
   def withCacheLocation(cacheLocation: java.io.File): CacheParams =
@@ -45,6 +47,18 @@ final case class CacheParams(
     copy(credentials = credentials)
   def withUseEnvCredentials(useEnvCredentials: Boolean): CacheParams =
     copy(useEnvCredentials = useEnvCredentials)
+  def withUserAgent(userAgent: Option[String]): CacheParams =
+    copy(userAgent = userAgent)
+
+  /** Comment tokens describing what this run is doing, added to coursier's own agent.
+    *
+    * Kept apart from `userAgent` so that they compose - a command adds what it knows about itself,
+    * and an agent passed explicitly still wins over the lot.
+    */
+  def withUserAgentComments(userAgentComments: Seq[String]): CacheParams =
+    copy(userAgentComments = userAgentComments)
+  def addUserAgentComments(comments: String*): CacheParams =
+    copy(userAgentComments = userAgentComments ++ comments)
 
   def cache(
     pool: ExecutorService,
@@ -62,7 +76,8 @@ final case class CacheParams(
         ttl = overrideTtl.orElse(ttl),
         retry = retryCount,
         followHttpToHttpsRedirections = followHttpToHttpsRedirections,
-        localArtifactsShouldBeCached = cacheLocalArtifacts
+        localArtifactsShouldBeCached = cacheLocalArtifacts,
+        userAgent = userAgent.orElse(Some(CacheUrl.coursierUserAgent(userAgentComments: _*)))
       )
 
     Cache.default match {

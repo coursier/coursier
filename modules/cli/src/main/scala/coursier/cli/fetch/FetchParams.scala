@@ -19,6 +19,16 @@ final case class FetchParams(
 )
 
 object FetchParams {
+
+  /** Marks the agent of a run that writes a JSON report.
+    *
+    * A report is read by a script or a CI job rather than by someone at a prompt, so it goes in the
+    * comment - the product token stays `Coursier`, and the `cli` and `ci` tokens join it where they
+    * apply. An agent passed explicitly wins over the lot.
+    */
+  private def withJsonReportUserAgent(resolve: SharedResolveParams): SharedResolveParams =
+    resolve.copy(cache = resolve.cache.addUserAgentComments("json"))
+
   def apply(options: FetchOptions): ValidatedNel[String, FetchParams] = {
 
     val classpath = options.classpath
@@ -39,7 +49,7 @@ object FetchParams {
           classpath,
           jsonOutputOpt,
           options.jsonReportAddUrls,
-          resolve,
+          if (jsonOutputOpt.isEmpty) resolve else withJsonReportUserAgent(resolve),
           artifact,
           channel,
           options.legacyReportNoGuarantees.getOrElse(false)

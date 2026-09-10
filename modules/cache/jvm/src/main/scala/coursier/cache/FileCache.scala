@@ -60,7 +60,9 @@ import scala.util.control.NonFatal
     retryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.retryBackoffMaxDelay,
     retryPollMaxDelay: Option[FiniteDuration] = CacheDefaults.retryPollMaxDelay,
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
-    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout
+    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout,
+  @unroll
+    userAgent: Option[String] = None
 )(implicit
   val sync: Sync[F]
 ) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext with Cache.WithLogger[F, FileCache[F]] with Cache.Default[F] {
@@ -107,6 +109,25 @@ import scala.util.control.NonFatal
   def withMaxRedirections(max: Int): FileCache[F] =
     copy(maxRedirections = Some(max))
 
+  /** Sets the `User-Agent` sent when fetching metadata or artifacts.
+    *
+    * Repositories ask tools to identify themselves with a name, a version, and a contact, in the
+    * RFC 9110 form `product (comment)`:
+    * {{{
+    * Coursier/2.1 (contact: ops@example.com)
+    * Coursier/2.1 (mailto:ops@example.com)
+    * Coursier/2.1 (Example Corp; +https://example.com/build-policy)
+    * }}}
+    * Maven Central singles out the generic defaults HTTP clients send - `Java/17` and the like - as
+    * the thing to avoid, see https://central.sonatype.org/faq/429-tooling-provider/
+    *
+    * Left unset, coursier sends `Coursier/2.1 (+https://github.com/coursier)`, adding a `ci`
+    * comment token when the `CI` environment variable is set, which the `coursier.http.agent` Java
+    * property overrides.
+    */
+  def withUserAgent(userAgent: String): FileCache[F] =
+    copy(userAgent = Some(userAgent))
+
   def localFile(url: String, user: Option[String] = None): File =
     FileCache.localFile0(url, location, user, localArtifactsShouldBeCached)
 
@@ -147,7 +168,8 @@ import scala.util.control.NonFatal
       retryBackoffMaxDelay = retryBackoffMaxDelay,
       retryPollMaxDelay = retryPollMaxDelay,
       connectTimeout = connectTimeout,
-      readTimeout = readTimeout
+      readTimeout = readTimeout,
+      userAgentOpt = userAgent
     ).download
 
   // Should have been private[coursier]

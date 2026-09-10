@@ -18,7 +18,46 @@ import scala.util.control.NonFatal
 
 object CacheUrl {
 
-  private val userAgent: String = sys.props.get("coursier.http.agent").getOrElse("Coursier/2.0")
+  private def userAgentVersion = "2.1"
+  private def userAgentContact = "https://github.com/coursier"
+
+  /** The `User-Agent` for one of coursier's own product names.
+    *
+    * The product name stays the same whatever coursier is doing - repositories ask for a stable,
+    * tool-specific one - so anything worth telling them goes in the comment, as extra tokens after
+    * the contact. See `FileCache#withUserAgent` for the format.
+    */
+  private[coursier] def userAgent(product: String, comments: String*): String = {
+    val comment = (s"+$userAgentContact" +: comments).mkString("; ")
+    s"$product/$userAgentVersion ($comment)"
+  }
+
+  /** Comment tokens that describe the run itself, whatever coursier is doing in it.
+    *
+    * A build machine hammering a repository is worth telling apart from someone at a prompt, and
+    * every CI provider coursier cares about sets `CI`.
+    */
+  private def ambientComments: Seq[String] =
+    if (System.getenv("CI") == null) Nil else Seq("ci")
+
+  /** coursier's own `User-Agent`, with comment tokens describing what this run is doing.
+    *
+    * The `coursier.http.agent` Java property overrides it outright, comments included.
+    */
+  private[coursier] def coursierUserAgent(comments: String*): String =
+    sys.props.getOrElse(
+      "coursier.http.agent",
+      userAgent("Coursier", ambientComments ++ comments: _*)
+    )
+
+  /** The `User-Agent` sent for callers that don't set one of their own.
+    *
+    * Overridden by the `coursier.http.agent` Java property. Tools embedding coursier should rather
+    * send an agent naming themselves and a contact - see `FileCache#withUserAgent` for the format
+    * repositories ask for.
+    */
+  private[coursier] val defaultUserAgent: String =
+    coursierUserAgent()
 
   private val handlerClsCache = new ConcurrentHashMap[String, Option[URLStreamHandler]]
 
@@ -151,7 +190,8 @@ object CacheUrl {
     hostnameVerifierOpt: Option[HostnameVerifier],
     method: String,
     connectTimeout: Option[FiniteDuration],
-    readTimeout: Option[FiniteDuration]
+    readTimeout: Option[FiniteDuration],
+    userAgentOpt: Option[String]
   ): Unit = {
 
     // Without these, a connection that stops answering - dropped by a NAT or a load balancer,
@@ -174,7 +214,7 @@ object CacheUrl {
 
         // Early in the development of coursier, I ran into some repositories (Sonatype ones?) not
         // returning the same content for user agent "Java/…".
-        conn0.setRequestProperty("User-Agent", userAgent)
+        conn0.setRequestProperty("User-Agent", userAgentOpt.getOrElse(defaultUserAgent))
         // Some remote repositories (AWS CodeArtifact) return a "false" 404 if maven-metadata.xml is requested
         // with default Accept header Java sets for HttpUrlConnection
         conn0.setRequestProperty("Accept", "*/*")
@@ -322,7 +362,8 @@ object CacheUrl {
     maxRedirectionsOpt: Option[Int],
     classLoaders: Seq[ClassLoader],
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
-    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout
+    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout,
+    userAgentOpt: Option[String] = None
   )
 
   @deprecated(
@@ -383,7 +424,8 @@ object CacheUrl {
           hostnameVerifierOpt,
           method,
           connectTimeout,
-          readTimeout
+          readTimeout,
+          userAgentOpt
         )
 
         val rangeResOpt0 = rangeResOpt(conn, alreadyDownloaded)

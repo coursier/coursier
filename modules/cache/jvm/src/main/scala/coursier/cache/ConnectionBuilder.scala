@@ -26,7 +26,9 @@ import scala.concurrent.duration.FiniteDuration
     classLoaders: Seq[ClassLoader] = Nil,
   @unroll
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
-    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout
+    readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout,
+  @unroll
+    userAgentOpt: Option[String] = None
 ) {
   // format: on
 
@@ -54,6 +56,7 @@ import scala.concurrent.duration.FiniteDuration
       maxRedirectionsOpt,
       classLoaders,
       connectTimeout,
-      readTimeout
+      readTimeout,
+      userAgentOpt
     ))
 }
