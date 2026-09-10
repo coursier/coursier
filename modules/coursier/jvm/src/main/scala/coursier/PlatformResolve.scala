@@ -24,17 +24,41 @@ abstract class PlatformResolve {
       CacheEnv.configDir.read()
     )
 
-  /** Default value for mirror repositories */
+  /** Default location of the Maven settings file
+    *
+    * Empty if the reading of Maven settings is disabled, see `CoursierEnv.mavenSettings`.
+    */
+  lazy val defaultMavenSettingsFile: Option[Path] =
+    CoursierEnv.defaultMavenSettingsFile(
+      CoursierEnv.mavenSettings.read(),
+      CoursierEnv.mavenHome.read(),
+      CoursierEnv.mavenHomeFallback.read()
+    )
+
+  /** Default value for mirror repositories
+    *
+    * Mirrors from the coursier configuration come first, so that they take precedence over the ones
+    * read from the Maven settings file.
+    */
   lazy val defaultMirrors: Seq[Mirror] =
     CoursierEnv.defaultMirrors(
       CoursierEnv.mirrors.read(),
       CoursierEnv.mirrorsExtra.read(),
       CoursierEnv.scalaCliConfig.read(),
       CacheEnv.configDir.read()
-    )
+    ) ++
+      CoursierEnv.defaultMavenSettingsMirrors(
+        CoursierEnv.mavenSettings.read(),
+        CoursierEnv.mavenHome.read(),
+        CoursierEnv.mavenHomeFallback.read()
+      )
 
   def confFileMirrors(confFile: Path): Seq[Mirror] =
     CoursierEnv.confFileMirrors(confFile)
+
+  /** Mirrors read from the `mirrors` section of a Maven settings file */
+  def mavenSettingsMirrors(settingsFile: Path): Seq[Mirror] =
+    CoursierEnv.mavenSettingsMirrors(settingsFile)
 
   def confFileRepositories(confFile: Path): Option[Seq[Repository]] =
     CoursierEnv.confFileRepositories(confFile)
