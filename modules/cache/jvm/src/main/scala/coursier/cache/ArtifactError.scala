@@ -110,7 +110,9 @@ object ArtifactError {
     val retryAfterOpt: Option[FiniteDuration]
   ) extends ArtifactError(
     "retryable HTTP error",
-    s"$url (HTTP $responseCode)"
+    // naming the pause matters when it is why we gave up: a Retry-After longer than
+    // COURSIER_MAX_HTTP_RETRY_AFTER ends the download rather than being retried at that pace
+    s"$url (HTTP $responseCode" + retryAfterOpt.fold("")(d => s", Retry-After: $d") + ")"
   ) {
     def this(
       url: String,

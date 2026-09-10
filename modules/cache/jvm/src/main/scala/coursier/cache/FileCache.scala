@@ -62,7 +62,9 @@ import scala.util.control.NonFatal
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
     readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout,
   @unroll
-    userAgent: Option[String] = None
+    userAgent: Option[String] = None,
+    hostThrottle: HostThrottle = CacheDefaults.hostThrottle,
+    maxThrottleWait: Option[FiniteDuration] = CacheDefaults.maxThrottleWait
 )(implicit
   val sync: Sync[F]
 ) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext with Cache.WithLogger[F, FileCache[F]] with Cache.Default[F] {
@@ -76,7 +78,8 @@ import scala.util.control.NonFatal
       retryBackoffInitialDelay,
       retryBackoffMultiplier,
       retryBackoffMaxDelay,
-      retryPollMaxDelay
+      retryPollMaxDelay,
+      maxThrottleWait
     )
 
   private def readAllBytes(path: Path): Array[Byte] =
@@ -169,7 +172,9 @@ import scala.util.control.NonFatal
       retryPollMaxDelay = retryPollMaxDelay,
       connectTimeout = connectTimeout,
       readTimeout = readTimeout,
-      userAgentOpt = userAgent
+      userAgentOpt = userAgent,
+      hostThrottle = hostThrottle,
+      maxThrottleWait = maxThrottleWait
     ).download
 
   // Should have been private[coursier]
