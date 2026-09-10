@@ -18,6 +18,8 @@ import scala.util.control.NonFatal
 
 object CacheUrl {
 
+  private val userAgent: String = sys.props.get("coursier.http.agent").getOrElse("Coursier/2.0")
+
   private val handlerClsCache = new ConcurrentHashMap[String, Option[URLStreamHandler]]
 
   private def handlerFor(url: String, classLoaders: Seq[ClassLoader]): Option[URLStreamHandler] = {
@@ -172,7 +174,7 @@ object CacheUrl {
 
         // Early in the development of coursier, I ran into some repositories (Sonatype ones?) not
         // returning the same content for user agent "Java/…".
-        conn0.setRequestProperty("User-Agent", "Coursier/2.0")
+        conn0.setRequestProperty("User-Agent", userAgent)
         // Some remote repositories (AWS CodeArtifact) return a "false" 404 if maven-metadata.xml is requested
         // with default Accept header Java sets for HttpUrlConnection
         conn0.setRequestProperty("Accept", "*/*")
