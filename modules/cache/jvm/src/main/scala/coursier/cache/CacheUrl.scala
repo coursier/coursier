@@ -18,7 +18,17 @@ import scala.util.control.NonFatal
 
 object CacheUrl {
 
-  private val userAgent: String = sys.props.get("coursier.http.agent").getOrElse("Coursier/2.0")
+  /** The `User-Agent` sent for callers that don't set one of their own.
+    *
+    * Overridden by the `coursier.http.agent` Java property. Tools embedding coursier should rather
+    * send an agent naming themselves and a contact - see `FileCache#withUserAgent` for the format
+    * repositories ask for.
+    */
+  private[coursier] val defaultUserAgent: String =
+    sys.props.getOrElse(
+      "coursier.http.agent",
+      "Coursier/2.1 (+https://github.com/coursier)"
+    )
 
   private val handlerClsCache = new ConcurrentHashMap[String, Option[URLStreamHandler]]
 
