@@ -2,7 +2,12 @@ package coursier.clitests
 
 import java.io._
 import java.net.{ServerSocket, URI}
-import java.nio.charset.Charset
+import java.nio.charset.{
+  Charset,
+  IllegalCharsetNameException,
+  StandardCharsets,
+  UnsupportedCharsetException
+}
 import java.nio.file.Files
 import java.util.Locale
 import java.util.jar.JarFile
@@ -12,7 +17,7 @@ import java.util.zip.ZipFile
 import scala.concurrent.duration.Duration
 import scala.io.{Codec, Source}
 import scala.jdk.CollectionConverters._
-import scala.util.{Properties, Using}
+import scala.util.{Properties, Try, Using}
 
 import coursier.clitests.util.TestAuthProxy
 import coursier.util.StringInterpolators._
@@ -44,6 +49,71 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       case None        => Nil
       case Some(value) => Seq(s"--proguarded=$value")
     }
+
+  private def nonAsciiPropName = "coursier.test.non-ascii"
+
+  /** Only Latin-1 characters, so that the code pages Windows consoles run under (437, 850, 1252, …)
+    * can all represent them - which charset the launcher gets written with is what is under test,
+    * not what becomes of characters it cannot encode.
+    */
+  private def nonAsciiValue = "héllo-wörld"
+
+  /** Whether non-ASCII arguments can be passed to a child process at all from here.
+    *
+    * They go out encoded with this JVM's `sun.jnu.encoding`, which an ASCII-only locale (the `C` /
+    * `POSIX` one, say) leaves us with no way around.
+    */
+  private lazy val canPassNonAsciiArgs =
+    sys.props.get("sun.jnu.encoding").forall { encoding =>
+      val res =
+        try {
+          Charset.isSupported(encoding) &&
+          Charset.forName(encoding).newEncoder().canEncode(nonAsciiValue)
+          Right(())
+        }
+        catch {
+          case e: IllegalCharsetNameException =>
+            Left(e)
+          case e: UnsupportedCharsetException =>
+            Left(e)
+          case e: UnsupportedOperationException =>
+            Left(e)
+        }
+      for (e <- res.left) {
+        System.err.println("Caught exception while checking encoding")
+        e.printStackTrace(System.err)
+      }
+      res.isRight
+    }
+
+  /** The charset a launcher generated here is expected to be written with.
+    *
+    * cmd.exe parses batch files in the OEM code page, so that is what a .bat has to use; sh
+    * launchers are always UTF-8. The code page is read from the registry, rather than through the
+    * JNI call the CLI itself makes, so that this stays an independent check.
+    */
+  private lazy val generatedLauncherCharset: Charset =
+    if (Properties.isWin)
+      os.proc(
+        "reg",
+        "query",
+        "HKLM\\SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage",
+        "/v",
+        "OEMCP"
+      )
+        .call()
+        .out.text()
+        .linesIterator
+        .map(_.trim)
+        .filter(_.startsWith("OEMCP"))
+        .flatMap(_.split("\\s+").lastOption)
+        .flatMap(codePage => Try(codePage.toInt).toOption)
+        .flatMap(codePage => Option(coursier.jniutils.WindowsCodePages.charsetFor(codePage)))
+        .toSeq
+        .headOption
+        .getOrElse(StandardCharsets.UTF_8)
+    else
+      StandardCharsets.UTF_8
 
   private def putLauncherIn(binDir: os.Path): Unit = {
 
@@ -192,6 +262,51 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
     test("java props") {
       if (acceptsDOptions) {
         javaPropsTest()
+        "ok"
+      }
+      else
+        "disabled"
+    }
+
+    def nonAsciiJavaOptTest(): Unit =
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0)
+        os.proc(
+          launcher,
+          "bootstrap",
+          "-o",
+          "cs-props",
+          "--java-opt",
+          s"-D$nonAsciiPropName=$nonAsciiValue",
+          TestUtil.propsDepStr,
+          extraOptions
+        ).call(cwd = tmpDir, stdin = os.Inherit, stdout = os.Inherit)
+
+        val generated =
+          if (Properties.isWin) tmpDir / "cs-props.bat"
+          else tmpDir / "cs-props"
+        val bytes  = os.read.bytes(generated)
+        val marker = s"-D$nonAsciiPropName=".getBytes(StandardCharsets.US_ASCII)
+        val idx    = bytes.indexOfSlice(marker)
+        assert(idx >= 0)
+        val expected = nonAsciiValue.getBytes(generatedLauncherCharset).toSeq
+        val got      = bytes.slice(idx + marker.length, idx + marker.length + expected.length).toSeq
+        assert(got == expected)
+
+        if (!Properties.isWin) {
+          // reading the output back is only dependable where everything involved is UTF-8
+          val output = LauncherTestUtil.output(
+            Seq("./cs-props", nonAsciiPropName),
+            keepErrorOutput = false,
+            directory = tmpDir0
+          )
+          val expectedOutput = nonAsciiValue + System.lineSeparator()
+          assert(output == expectedOutput)
+        }
+      }
+    test("non-ascii java opt") {
+      if (canPassNonAsciiArgs) {
+        nonAsciiJavaOptTest()
         "ok"
       }
       else
@@ -1247,13 +1362,22 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
           if (Properties.isWin) tmpDir / "app.bat"
           else appLauncher
 
+        // while jni-utils is a snapshot, it's only on the Maven Central snapshot repository
+        val jniUtilsIsSnapshot = TestUtil.jniUtilsVersion.endsWith("SNAPSHOT")
+        val snapshotRepo       = "https://central.sonatype.com/repository/maven-snapshots"
+        val usingSnapshotRepo =
+          if (jniUtilsIsSnapshot)
+            "//> using repository \"" + snapshotRepo + "\"" + System.lineSeparator()
+          else
+            ""
+
         val appSource = tmpDir / "TestApp.scala"
         os.write(
           appSource,
           s"""//> using scala "2.13.10"
              |//> using jvm "17"
              |//> using lib "io.get-coursier.jniutils:windows-jni-utils:${TestUtil.jniUtilsVersion}"
-             |//> using publish.organization "io.get-coursier.tests"
+             |$usingSnapshotRepo//> using publish.organization "io.get-coursier.tests"
              |//> using publish.name "test-app"
              |//> using publish.version "0.1.0"
              |
@@ -1286,11 +1410,16 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         )
           .call(cwd = tmpDir, stdin = os.Inherit, stdout = os.Inherit)
 
+        val extraRepoArgs =
+          if (jniUtilsIsSnapshot) Seq("-r", snapshotRepo)
+          else Nil
+
         os.proc(
           launcher,
           "bootstrap",
           "-r",
           repo.toNIO.toUri.toASCIIString,
+          extraRepoArgs,
           "io.get-coursier.tests::test-app:0.1.0",
           "--scala",
           "2.13.10",

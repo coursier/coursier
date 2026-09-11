@@ -15,6 +15,9 @@ import java.util.Locale
 import scala.util.Properties
 
 trait CoursierJavaModule extends JavaModule {
+  def repositories = Task {
+    super.repositories() ++ Deps.extraRepositories
+  }
   def jvmRelease: String =
     CoursierJavaModule.defaultJvmRelease
   def javacSystemJvmId = Task {
