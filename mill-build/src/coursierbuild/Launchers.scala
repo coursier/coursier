@@ -151,6 +151,10 @@ object Launchers {
       super.nativeImageOptions() ++
         Seq(
           s"-H:CLibraryPath=$cLibPath",
+          // coursier.cli.internal.WindowsMainArgs reaches into JavaMainWrapper for the
+          // argument vector the image was started with
+          "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.core=ALL-UNNAMED",
+          "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.core.c.function=ALL-UNNAMED",
           "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.core.jdk=ALL-UNNAMED",
           "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted=ALL-UNNAMED",
           "--add-exports=org.graalvm.nativeimage.builder/com.oracle.svm.hosted.c=ALL-UNNAMED"

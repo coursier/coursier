@@ -23,8 +23,10 @@ object PreambleTests extends TestSuite {
       sys.props("java.class.path"),
       "coursier.launcher.PreambleCharsetProbe"
     )
-      // the probe only ever prints ASCII, so how we read its output back doesn't matter
-      .call(cwd = os.pwd)
+      // the probe only ever prints ASCII, so how we read its output back doesn't matter.
+      // COURSIER_JNI is dropped because CI sets it to `force`, which wins over the
+      // coursier.jni property the fallback test below hands the probe.
+      .call(cwd = os.pwd, env = Map("COURSIER_JNI" -> null))
       .out.text()
     output
       .linesIterator

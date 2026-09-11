@@ -5,7 +5,7 @@ import caseapp.core.app.CommandsEntryPoint
 import caseapp.core.help.HelpFormat
 import caseapp.RemainingArgs
 import coursier.cache.CacheUrl
-import coursier.cli.internal.{Argv0, PathUtil}
+import coursier.cli.internal.{Argv0, MainArgs, PathUtil}
 import coursier.cli.setup.{Setup, SetupOptions}
 import coursier.install.InstallDir
 import coursier.jniutils.ModuleFileName
@@ -78,7 +78,11 @@ object Coursier extends CommandsEntryPoint {
     scanner.nextLine()
   }
 
-  override def main(args: Array[String]): Unit = {
+  override def main(rawArgs: Array[String]): Unit = {
+
+    // A Windows native image decodes its arguments with a charset frozen into it at build time,
+    // which is not necessarily the code page of the machine running it - read them back first.
+    val args = new MainArgs().get(rawArgs)
 
     if (!Properties.isWin && isGraalvmNativeImage)
       // Ignore SIGPIPE
