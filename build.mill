@@ -1587,7 +1587,8 @@ def jvmTests(scalaVersion: String = defaultScalaVersion) = {
     interop.scalaz.jvm .valuesToModules.get(List(sv)).map(_.test.testForked()),
     interop.cats.jvm   .valuesToModules.get(List(sv)).map(_.test.testForked()),
     install            .valuesToModules.get(List(sv)).map(_.test.testForked()),
-    jvm                .valuesToModules.get(List(sv)).map(_.test.testForked())
+    jvm                .valuesToModules.get(List(sv)).map(_.test.testForked()),
+    launcher           .valuesToModules.get(List(sv)).map(_.test.testForked())
     // format: on
   ).flatten
 
