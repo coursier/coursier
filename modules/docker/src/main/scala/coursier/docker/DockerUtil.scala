@@ -25,7 +25,7 @@ object DockerUtil {
   ): String = {
     // FIXME repo escaping!!!!
     val url = s"$authRegistry?service=registry.docker.io&scope=repository:$repoName:pull"
-    val b = tokenRetry.retry {
+    val b   = tokenRetry.retry {
       val conn = new URL(url).openConnection()
       FileUtil.readFully(conn.getInputStream())
     } {

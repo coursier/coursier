@@ -11,10 +11,10 @@ object HostThrottleTests extends TestSuite {
 
   /** A clock that only moves when told to, so that pauses can be checked to the millisecond */
   private final class ManualClock(private var now: Long) extends Clock {
-    def getZone: ZoneId               = ZoneOffset.UTC
-    def withZone(zone: ZoneId): Clock = this
-    def instant(): Instant            = Instant.ofEpochMilli(now)
-    override def millis(): Long       = now
+    def getZone: ZoneId                   = ZoneOffset.UTC
+    def withZone(zone: ZoneId): Clock     = this
+    def instant(): Instant                = Instant.ofEpochMilli(now)
+    override def millis(): Long           = now
     def advance(by: FiniteDuration): Unit =
       now += by.toMillis
   }

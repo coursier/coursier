@@ -54,7 +54,7 @@ import dataclass.{data, since => unroll}
     else copy(versionConstraint = VersionConstraint0(newVersion))
 
   def repr: String = {
-    val base = s"${module.repr}:${versionConstraint.asString}"
+    val base       = s"${module.repr}:${versionConstraint.asString}"
     val withConfig =
       if (config.isEmpty) base
       else s"$base:${config.value}"

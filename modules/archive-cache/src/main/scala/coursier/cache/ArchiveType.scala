@@ -6,7 +6,7 @@ sealed abstract class ArchiveType extends Product with Serializable {
 
 object ArchiveType {
 
-  sealed abstract class Tar extends ArchiveType
+  sealed abstract class Tar        extends ArchiveType
   sealed abstract class Compressed extends ArchiveType {
     override def singleFile: Boolean = true
     def tar: Tar

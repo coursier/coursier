@@ -58,7 +58,7 @@ abstract class ServerTests extends TestSuite {
     val bytes = body.getBytes(StandardCharsets.UTF_8)
     conn.getOutputStream.write(bytes)
     conn.getOutputStream.close()
-    val code = conn.getResponseCode
+    val code   = conn.getResponseCode
     val stream =
       if (code >= 400) conn.getErrorStream
       else conn.getInputStream
@@ -122,7 +122,7 @@ abstract class ServerTests extends TestSuite {
 
         val cachedFileViaHttpReq = {
           val ujsonResponse = ujson.read(responseBody)
-          val pathOpt = ujsonResponse.obj
+          val pathOpt       = ujsonResponse.obj
             .get("path")
             .flatMap(v => if (v.isNull) None else Some(v.str))
           val errorOpt = ujsonResponse.obj

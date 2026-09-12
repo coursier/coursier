@@ -174,7 +174,7 @@ object TestUtil {
     fileUrl(path).stripSuffix("/") + "/"
 
   def withTmpDir0[T](f: Path => T): T = {
-    val dir = Files.createTempDirectory("coursier-test")
+    val dir                  = Files.createTempDirectory("coursier-test")
     val shutdownHook: Thread =
       new Thread {
         override def run() =
@@ -201,7 +201,7 @@ object TestUtil {
     val pool = Executors.newFixedThreadPool(
       n,
       new ThreadFactory {
-        val count = new AtomicInteger
+        val count                          = new AtomicInteger
         def newThread(r: Runnable): Thread = {
           val t = new Thread(r, s"test-concurrent-${count.incrementAndGet()}")
           t.setDaemon(true)

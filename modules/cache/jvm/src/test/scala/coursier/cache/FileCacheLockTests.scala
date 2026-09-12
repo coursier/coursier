@@ -154,7 +154,7 @@ object FileCacheLockTests extends TestSuite {
           os.write(os.Path(part), content.take(8))
 
           val lockFile = CachePath.lockFile(file)
-          val channel = FileChannel.open(
+          val channel  = FileChannel.open(
             lockFile.toPath,
             StandardOpenOption.CREATE,
             StandardOpenOption.WRITE
@@ -198,7 +198,7 @@ object FileCacheLockTests extends TestSuite {
         withHttpServer(routes(found = found)) { serverUri =>
           withTmpDir { dir =>
             val cache = testCache(dir / "cache")
-            val res = cache
+            val res   = cache
               .file(Artifact((serverUri / "dir" / "foo.jar").renderString)).run
               .unsafeRun(wrapExceptions = true)(cache.ec)
             assert(res.isRight == expectSuccess)
@@ -246,7 +246,7 @@ object FileCacheLockTests extends TestSuite {
           val cacheDir = dir / "cache"
           val release  = holdStructureLock(cacheDir)
           try {
-            val ran = new AtomicBoolean(false)
+            val ran   = new AtomicBoolean(false)
             val exOpt =
               try {
                 CacheLocks.withStructureLock(cacheDir.toIO) {

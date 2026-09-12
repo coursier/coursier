@@ -21,7 +21,7 @@ object BootstrapParams {
     val nativeOptionsV   = options.nativeOptions.params
     val channelV         = SharedChannelParams(options.channelOptions)
     val nativeVersionOpt = options.nativeOptions.nativeVersion.map(_.trim).filter(_.nonEmpty)
-    val specificV = BootstrapSpecificParams(
+    val specificV        = BootstrapSpecificParams(
       options.options,
       sharedLaunchV
         .toOption

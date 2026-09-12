@@ -27,7 +27,7 @@ object JavaHomeTests extends TestSuite {
     }
 
   private val poolInitialized = new AtomicBoolean(false)
-  private lazy val pool = {
+  private lazy val pool       = {
     val p = Sync.fixedThreadPool(6)
     poolInitialized.set(true)
     p
@@ -76,7 +76,7 @@ object JavaHomeTests extends TestSuite {
 
     test("system JVM should respect JAVA_HOME") {
 
-      val env = Map("JAVA_HOME" -> platformPath("/home/foo/jvm/adopt-31"))
+      val env  = Map("JAVA_HOME" -> platformPath("/home/foo/jvm/adopt-31"))
       val home = JavaHome().copy(
         getEnv = Some(env.get),
         commandOutput = forbidCommands,
@@ -84,7 +84,7 @@ object JavaHomeTests extends TestSuite {
       )
 
       val expectedSystem = Some(platformPath("/home/foo/jvm/adopt-31"))
-      val system = home.system()
+      val system         = home.system()
         .unsafeRun(wrapExceptions = true)(ExecutionContext.global)
         .map(_.getAbsolutePath)
       assert(system == expectedSystem)
@@ -112,7 +112,7 @@ object JavaHomeTests extends TestSuite {
       )
 
       val expectedSystem = Some(platformPath("/Library/JVMs/oracle-41"))
-      val system = home.system()
+      val system         = home.system()
         .unsafeRun(wrapExceptions = true)(ExecutionContext.global)
         .map(_.getAbsolutePath)
       assert(system == expectedSystem)
@@ -154,7 +154,7 @@ object JavaHomeTests extends TestSuite {
       )
 
       val expectedSystem = Some(platformPath("/usr/lib/jvm/oracle-39b07"))
-      val system = home.system()
+      val system         = home.system()
         .unsafeRun(wrapExceptions = true)(ExecutionContext.global)
         .map(_.getAbsolutePath)
       assert(system == expectedSystem)
@@ -178,7 +178,7 @@ object JavaHomeTests extends TestSuite {
       JvmCacheTests.withTempDir { tmpDir =>
         val failCache: Cache[Task] =
           new Cache[Task] {
-            val ec = ExecutionContext.fromExecutorService(pool)
+            val ec    = ExecutionContext.fromExecutorService(pool)
             val fetch = _ =>
               EitherT[Task, String, String](Task.fail(new Exception("This cache must not be used")))
             def file(artifact: Artifact): EitherT[Task, ArtifactError, File] =
@@ -187,13 +187,13 @@ object JavaHomeTests extends TestSuite {
               )
           }
         val failArchiveCache = ArchiveCache.create[Task](tmpDir.toFile).copy(cache = failCache)
-        val csCache = MockCache.create[Task](
+        val csCache          = MockCache.create[Task](
           JvmCacheTests.mockDataLocation,
           pool,
           baseChangingOpt = Some(JvmCacheTests.mockDataLocation)
         )
         val archiveCache = ArchiveCache.create[Task](tmpDir.toFile).copy(cache = csCache)
-        val cache = JvmCache()
+        val cache        = JvmCache()
           .copy(
             archiveCache = archiveCache,
             os = "the-os",

@@ -76,7 +76,7 @@ object MavenSettingsFileTests extends TestSuite {
     test("malformedFile") {
       withTmpDir { tmpDir =>
         val settingsFile = writeSettings(tmpDir, "<settings>")
-        val exOpt =
+        val exOpt        =
           try {
             CoursierEnv.mavenSettingsMirrors(settingsFile)
             None
@@ -114,7 +114,7 @@ object MavenSettingsFileTests extends TestSuite {
       test("mavenHome") {
         withTmpDir { tmpDir =>
           val settingsFile = writeSettings(tmpDir, "<settings/>")
-          val fileOpt = CoursierEnv.defaultMavenSettingsFile(
+          val fileOpt      = CoursierEnv.defaultMavenSettingsFile(
             EnvValues(Some("true"), None),
             EnvValues(Some(tmpDir.toString), None),
             EnvValues(Some("/opt/other-maven-home"), None)
@@ -126,7 +126,7 @@ object MavenSettingsFileTests extends TestSuite {
       test("mavenHomeFallback") {
         withTmpDir { tmpDir =>
           val settingsFile = writeSettings(tmpDir, "<settings/>")
-          val fileOpt = CoursierEnv.defaultMavenSettingsFile(
+          val fileOpt      = CoursierEnv.defaultMavenSettingsFile(
             noValues,
             EnvValues(Some("/opt/maven-home"), None),
             EnvValues(None, Some(tmpDir.toString))
@@ -148,7 +148,7 @@ object MavenSettingsFileTests extends TestSuite {
       }
 
       test("userHome") {
-        val fileOpt = CoursierEnv.defaultMavenSettingsFile(noValues, noValues, noValues)
+        val fileOpt  = CoursierEnv.defaultMavenSettingsFile(noValues, noValues, noValues)
         val expected = Option(System.getProperty("user.home"))
           .map(Paths.get(_).resolve(".m2").resolve("settings.xml"))
         assert(fileOpt == expected)

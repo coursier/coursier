@@ -54,7 +54,7 @@ final case class EnvParams(
               }
             case Right(profileUpdater) =>
               lazy val profileFiles = profileUpdater.profileFiles() // Task.delay(…)
-              val profileFilesStr =
+              val profileFilesStr   =
                 profileFiles.map(_.toString.replace(sys.props("user.home"), "~"))
               val msg = s"Checking if ${profileFilesStr.mkString(", ")} need(s) updating."
               Task.delay {

@@ -65,7 +65,7 @@ import dataclass.{data, since => unroll}
 
     for ((k, v) <- update.pathLikeAppends) {
       val formerValueOpt = getEnvironmentVariable(k)
-      val alreadyInList = formerValueOpt
+      val alreadyInList  = formerValueOpt
         .exists(_.split(WindowsEnvVarUpdater.windowsPathSeparator).contains(v))
       if (!alreadyInList) {
         val newValue = formerValueOpt.fold(v)(_ + WindowsEnvVarUpdater.windowsPathSeparator + v)

@@ -10,7 +10,7 @@ import scala.concurrent.ExecutionContextExecutorService
 
 object VersionTests extends TestSuite {
   implicit val ec: ExecutionContextExecutorService = Cache.default.ec
-  val tests: Tests = Tests {
+  val tests: Tests                                 = Tests {
     test {
       async {
         val csModule =

@@ -8,7 +8,7 @@ object Parse {
 
   @deprecated("Use coursier.version.VersionParse.version instead", "2.1.25")
   def version(s: String): Option[Version] = {
-    val trimmed = s.trim
+    val trimmed     = s.trim
     val notAVersion = trimmed.isEmpty || trimmed.exists(c =>
       c != '.' && c != '-' && c != '_' && c != '+' && !c.letterOrDigit
     )

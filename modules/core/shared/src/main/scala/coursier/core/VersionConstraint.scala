@@ -93,7 +93,7 @@ object VersionConstraint {
     cs match {
       case Nil      => VersionConstraint.all
       case h :: Nil => h
-      case _ =>
+      case _        =>
         val sorted = cs.sortBy { c =>
           c.preferred.headOption
             .orElse(c.interval.from)
