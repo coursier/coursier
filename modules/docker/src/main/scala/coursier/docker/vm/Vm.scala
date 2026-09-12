@@ -125,7 +125,7 @@ final class Vm(
     val deadline = System.nanoTime() + maxWait.toNanos
     @tailrec
     def connect(): Session = {
-      val session = newSession()
+      val session   = newSession()
       val connected =
         try {
           session.connect(delay.toMillis.toInt)
@@ -137,7 +137,7 @@ final class Vm(
               case _: ConnectException       => true
               case _: SocketTimeoutException => true
               case _: SocketException        => true
-              case _ =>
+              case _                         =>
                 val message = Option(e.getMessage).getOrElse("")
                 message.contains("channel is not opened") ||
                 message.contains("connection is closed by foreign host")
@@ -507,8 +507,8 @@ object Vm {
     )
   }
 
-  private val sq = "'"
-  private val dq = "\""
+  private val sq                                   = "'"
+  private val dq                                   = "\""
   private def toCommand(args: Seq[String]): String =
     args
       .map { arg =>

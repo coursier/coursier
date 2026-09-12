@@ -41,7 +41,7 @@ object Reconciliation {
     if (latests.isEmpty) None
     else if (latests.lengthCompare(1) == 0) latests.headOption
     else {
-      val set = latests.toSet
+      val set      = latests.toSet
       val retained =
         if (set(LatestIntegration))
           LatestIntegration
@@ -63,7 +63,7 @@ object Reconciliation {
         Some(versions.head)
       else {
         val (standard, latests) = splitStandard(versions)
-        val retainedStandard =
+        val retainedStandard    =
           if (standard.isEmpty) None
           else if (standard.lengthCompare(1) == 0) standard.headOption
           else
@@ -97,7 +97,7 @@ object Reconciliation {
         Some(versions.head)
       else {
         val (standard, latests) = splitStandard(versions)
-        val retainedStandard =
+        val retainedStandard    =
           if (standard.isEmpty) None
           else if (standard.lengthCompare(1) == 0) standard.headOption
           else

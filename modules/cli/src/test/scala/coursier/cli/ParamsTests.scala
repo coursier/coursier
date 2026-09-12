@@ -41,7 +41,7 @@ object ParamsTests extends TestSuite {
         "org1:name1--org2:name2"
       ) { (file, _) =>
         val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-        val params = DependencyParams(options, None)
+        val params  = DependencyParams(options, None)
           .fold(e => sys.error(e.toString), identity)
         val expected = Map(JavaOrScalaModule.JavaModule(mod"org1:name1") -> Set(
           JavaOrScalaModule.JavaModule(mod"org2:name2")
@@ -58,7 +58,7 @@ object ParamsTests extends TestSuite {
       ) { (file, _) =>
 
         val options = DependencyOptions(localExcludeFile = file.getAbsolutePath)
-        val params = DependencyParams(options, None)
+        val params  = DependencyParams(options, None)
           .fold(e => sys.error(e.toString), identity)
         val expected = Map(
           JavaOrScalaModule.JavaModule(mod"org1:name1") -> Set(

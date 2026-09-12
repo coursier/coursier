@@ -40,7 +40,7 @@ private[coursier] object HashMapBuilderFactory {
     }
   }
 
-  private val lookup = MethodHandles.lookup()
+  private val lookup                          = MethodHandles.lookup()
   private final val getOrElseMH: MethodHandle =
     try
       lookup.findVirtual(

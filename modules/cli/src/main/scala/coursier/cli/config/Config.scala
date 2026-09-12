@@ -43,7 +43,7 @@ object Config extends Command[ConfigOptions] {
               e => e.fullName -> e
             )
           keysMap.get(name) match {
-            case None => unrecognizedKey(name)
+            case None        => unrecognizedKey(name)
             case Some(entry) =>
               if (values.isEmpty)
                 if (options.unset) {

@@ -76,7 +76,7 @@ object IvyXml {
     }
 
   private def exclude(node0: Node): Seq[(Configuration, (Organization, ModuleName))] = {
-    val org = Organization(node0.attribute("org").getOrElse("*"))
+    val org  = Organization(node0.attribute("org").getOrElse("*"))
     val name = ModuleName(
       node0.attribute("module").toOption
         .orElse(node0.attribute("name").toOption)
@@ -96,7 +96,7 @@ object IvyXml {
       .toOption
       .filter(_.nonEmpty)
     versionOpt.map { version =>
-      val org = Organization(node0.attribute("org").getOrElse("*"))
+      val org  = Organization(node0.attribute("org").getOrElse("*"))
       val name = ModuleName(
         node0.attribute("module").toOption
           .orElse(node0.attribute("name").toOption)
@@ -140,7 +140,7 @@ object IvyXml {
 
         val allConfsExcludes = excludes.getOrElse(Configuration.all, Set.empty)
 
-        val attr = node.attributesFromNamespace(attributesNamespace)
+        val attr       = node.attributesFromNamespace(attributesNamespace)
         val transitive = node.attribute("transitive") match {
           case Right("false") => false
           case _              => true
@@ -195,7 +195,7 @@ object IvyXml {
     node.children
       .filter(_.label == "artifact")
       .flatMap { node =>
-        val pub = publication(node)
+        val pub   = publication(node)
         val confs = node
           .attribute("conf")
           .fold(_ => Seq(Configuration.all), _.split(',').toSeq.map(Configuration(_)))
@@ -214,7 +214,7 @@ object IvyXml {
     } yield {
 
       val (module0, version) = modVer
-      val (extraInfo, attr) = module0.attributes
+      val (extraInfo, attr)  = module0.attributes
         .partition(_._1.startsWith("info."))
       val module =
         if (extraInfo.isEmpty) module0

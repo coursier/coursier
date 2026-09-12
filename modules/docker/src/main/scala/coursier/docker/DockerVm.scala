@@ -284,7 +284,7 @@ object DockerVm {
 
     run.withUnionFs { upperDirInVm =>
       val newLayerArchive = workDir / "upper.tar"
-      val keepArchive =
+      val keepArchive     =
         if (withUpperDirArchive.isEmpty) None
         else Some((upperDirInVm, newLayerArchive))
       os.write(runcScriptPath, run.runcScript(runcFile, configPath, keepArchive))

@@ -49,7 +49,7 @@ class FallbackRefreshDisplay(quiet: Boolean = false) extends RefreshDisplay {
 
     if (!quiet) {
       val prefix = if (info.watching) "(watching) " else ""
-      val msg = info match {
+      val msg    = info match {
         case _: DownloadInfo =>
           if (info.success) s"Downloaded $url\n"
           else s"Failed to download $url\n"

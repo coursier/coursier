@@ -56,7 +56,7 @@ object CachePolicyParserTests extends TestSuite {
       }
 
       test {
-        val res = CachePolicyParser.cachePolicies("offline,update,default", defaults)
+        val res         = CachePolicyParser.cachePolicies("offline,update,default", defaults)
         val expectedRes = ValidationNel.success(
           Seq(CachePolicy.LocalOnly, CachePolicy.Update) ++ defaults
         )

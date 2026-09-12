@@ -64,7 +64,7 @@ object CommandOutput {
       // waitFor calls below unblock instead of hanging forever (see e.g. a jpackage-built
       // launcher spawning a child process that never returns).
       val finiteTimeout = timeout.filter(_.isFinite)
-      val watchdogOpt = finiteTimeout.map { d =>
+      val watchdogOpt   = finiteTimeout.map { d =>
         val t = new Thread("coursier-command-output-timeout") {
           setDaemon(true)
           override def run(): Unit =

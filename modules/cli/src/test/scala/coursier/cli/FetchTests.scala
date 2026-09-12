@@ -78,8 +78,8 @@ object FetchTests extends TestSuite {
     }
 
     test("get all files") {
-      val options = FetchOptions()
-      val params  = paramsOrThrow(options)
+      val options          = FetchOptions()
+      val params           = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
         .unsafeRun(wrapExceptions = true)(ec)
       assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
@@ -89,8 +89,8 @@ object FetchTests extends TestSuite {
       val artifactOpt = ArtifactOptions(
         classifier = List("_")
       )
-      val options = FetchOptions(artifactOptions = artifactOpt)
-      val params  = paramsOrThrow(options)
+      val options          = FetchOptions(artifactOptions = artifactOpt)
+      val params           = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
         .unsafeRun(wrapExceptions = true)(ec)
       assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
@@ -134,7 +134,7 @@ object FetchTests extends TestSuite {
       val options       = FetchOptions(resolveOptions = resolveOpt)
 
       val expectedErrorMessage = s"Error reading dependencies from $path"
-      val thrownException = assertThrows[Exception] {
+      val thrownException      = assertThrows[Exception] {
         paramsOrThrow(options)
       }
       assert(thrownException.getMessage == expectedErrorMessage)
@@ -145,8 +145,8 @@ object FetchTests extends TestSuite {
         classifier = List("_"),
         sources = true
       )
-      val options = FetchOptions(artifactOptions = artifactOpt)
-      val params  = paramsOrThrow(options)
+      val options          = FetchOptions(artifactOptions = artifactOpt)
+      val params           = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
         .unsafeRun(wrapExceptions = true)(ec)
       assert(files.map(_._2.getName).toSet.equals(Set(
@@ -165,7 +165,7 @@ object FetchTests extends TestSuite {
       val options = FetchOptions(
         artifactOptions = artifactOpt
       )
-      val params = paramsOrThrow(options)
+      val params           = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
         .unsafeRun(wrapExceptions = true)(ec)
       assert(files.map(_._2.getName).toSet.equals(Set(
@@ -177,8 +177,8 @@ object FetchTests extends TestSuite {
     }
 
     test("scalafmt-cli fetch should discover all main classes") {
-      val options = FetchOptions()
-      val params  = paramsOrThrow(options)
+      val options          = FetchOptions()
+      val params           = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"))
         .unsafeRun(wrapExceptions = true)(ec)
       assert(MainClass.mainClasses(files.map(_._2)) == Map(
@@ -188,8 +188,8 @@ object FetchTests extends TestSuite {
     }
 
     test("scalafix-cli fetch should discover all main classes") {
-      val options = FetchOptions()
-      val params  = paramsOrThrow(options)
+      val options          = FetchOptions()
+      val params           = paramsOrThrow(options)
       val (_, _, _, files) =
         Fetch.task(params, pool, Seq("ch.epfl.scala:scalafix-cli_2.12.4:0.5.10"))
           .unsafeRun(wrapExceptions = true)(ec)
@@ -201,8 +201,8 @@ object FetchTests extends TestSuite {
     }
 
     test("ammonite fetch should discover all main classes") {
-      val options = FetchOptions()
-      val params  = paramsOrThrow(options)
+      val options          = FetchOptions()
+      val params           = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("com.lihaoyi:ammonite_2.12.4:1.1.0"))
         .unsafeRun(wrapExceptions = true)(ec)
       val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
@@ -214,8 +214,8 @@ object FetchTests extends TestSuite {
     }
 
     test("sssio fetch should discover all main classes") {
-      val options = FetchOptions()
-      val params  = paramsOrThrow(options)
+      val options          = FetchOptions()
+      val params           = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("lt.dvim.sssio:sssio_2.12:0.0.1"))
         .unsafeRun(wrapExceptions = true)(ec)
       val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
@@ -265,7 +265,7 @@ object FetchTests extends TestSuite {
               file.delete()
 
               val (_, _, _, artifactFiles0) = task.unsafeRun(wrapExceptions = true)(ec)
-              val testFile0 = artifactFiles0.map(_._2) match {
+              val testFile0                 = artifactFiles0.map(_._2) match {
                 case Seq(f) => f
                 case _      => sys.error("Expected a single artifact")
               }
@@ -350,10 +350,10 @@ object FetchTests extends TestSuite {
       withTempDir("tmp_dir") {
         dir =>
           def runFetchJunit() = {
-            val cacheOpt   = CacheOptions(cache = Some(dir.getAbsolutePath))
-            val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
-            val options    = FetchOptions(resolveOptions = resolveOpt)
-            val params     = paramsOrThrow(options)
+            val cacheOpt         = CacheOptions(cache = Some(dir.getAbsolutePath))
+            val resolveOpt       = SharedResolveOptions(cacheOptions = cacheOpt)
+            val options          = FetchOptions(resolveOptions = resolveOpt)
+            val params           = paramsOrThrow(options)
             val (_, _, _, files) = mayThrow {
               Fetch.task(params, pool, Seq("junit:junit:4.12"))
                 .unsafeRun(wrapExceptions = true)(ec)
@@ -363,8 +363,8 @@ object FetchTests extends TestSuite {
             val junitJarPath =
               files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
                 .head
-            val junitPomFile    = Paths.get(junitJarPath.replace(".jar", ".pom"))
-            val junitPomShaFile = Paths.get(junitJarPath.replace(".jar", ".pom.sha1"))
+            val junitPomFile               = Paths.get(junitJarPath.replace(".jar", ".pom"))
+            val junitPomShaFile            = Paths.get(junitJarPath.replace(".jar", ".pom.sha1"))
             val junitAlternativePomShaFile =
               FileCache.auxiliaryFile(junitPomFile.toFile, "SHA-1").toPath
             assert(Files.isRegularFile(junitPomFile))
@@ -395,10 +395,10 @@ object FetchTests extends TestSuite {
       withTempDir("tmp_dir") {
         dir =>
           def runFetchJunit() = {
-            val cacheOpt   = CacheOptions(cache = Some(dir.getAbsolutePath))
-            val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
-            val options    = FetchOptions(resolveOptions = resolveOpt)
-            val params     = paramsOrThrow(options)
+            val cacheOpt         = CacheOptions(cache = Some(dir.getAbsolutePath))
+            val resolveOpt       = SharedResolveOptions(cacheOptions = cacheOpt)
+            val options          = FetchOptions(resolveOptions = resolveOpt)
+            val params           = paramsOrThrow(options)
             val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
               .unsafeRun(wrapExceptions = true)(ec)
             assert(files.map(_._2.getName).toSet
@@ -406,8 +406,8 @@ object FetchTests extends TestSuite {
             val junitJarPath =
               files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
                 .head
-            val junitPomFile    = Paths.get(junitJarPath.replace(".jar", ".pom"))
-            val junitPomShaFile = Paths.get(junitJarPath.replace(".jar", ".pom.sha1"))
+            val junitPomFile               = Paths.get(junitJarPath.replace(".jar", ".pom"))
+            val junitPomShaFile            = Paths.get(junitJarPath.replace(".jar", ".pom.sha1"))
             val junitAlternativePomShaFile =
               FileCache.auxiliaryFile(junitPomFile.toFile, "SHA-1").toPath
             assert(Files.isRegularFile(junitPomFile))
@@ -439,10 +439,10 @@ object FetchTests extends TestSuite {
       withTempDir("tmp_dir") {
         dir =>
           def runFetchJunit() = {
-            val cacheOpt   = CacheOptions(cache = Some(dir.getAbsolutePath))
-            val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
-            val options    = FetchOptions(resolveOptions = resolveOpt)
-            val params     = paramsOrThrow(options)
+            val cacheOpt         = CacheOptions(cache = Some(dir.getAbsolutePath))
+            val resolveOpt       = SharedResolveOptions(cacheOptions = cacheOpt)
+            val options          = FetchOptions(resolveOptions = resolveOpt)
+            val params           = paramsOrThrow(options)
             val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
               .unsafeRun(wrapExceptions = true)(ec)
             assert(files.map(_._2.getName).toSet
@@ -474,10 +474,10 @@ object FetchTests extends TestSuite {
       withTempDir("tmp_dir") {
         dir =>
           def runFetchJunit() = {
-            val cacheOpt   = CacheOptions(cache = Some(dir.getAbsolutePath))
-            val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
-            val options    = FetchOptions(resolveOptions = resolveOpt)
-            val params     = paramsOrThrow(options)
+            val cacheOpt         = CacheOptions(cache = Some(dir.getAbsolutePath))
+            val resolveOpt       = SharedResolveOptions(cacheOptions = cacheOpt)
+            val options          = FetchOptions(resolveOptions = resolveOpt)
+            val params           = paramsOrThrow(options)
             val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
               .unsafeRun(wrapExceptions = true)(ec)
             assert(files.map(_._2.getName).toSet
@@ -485,7 +485,7 @@ object FetchTests extends TestSuite {
             val junitJarPath =
               files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.12.jar"))
                 .head
-            val junitJarShaFile = Paths.get(junitJarPath.replace(".jar", ".jar.sha1"))
+            val junitJarShaFile            = Paths.get(junitJarPath.replace(".jar", ".jar.sha1"))
             val junitAlternativePomShaFile =
               FileCache.auxiliaryFile(new File(junitJarPath), "SHA-1").toPath
             if (Files.isRegularFile(junitJarShaFile))
@@ -518,10 +518,10 @@ object FetchTests extends TestSuite {
       ) {
         dir =>
           def runFetchJunit() = {
-            val cacheOpt   = CacheOptions(mode = "force", cache = Some(dir.getAbsolutePath))
-            val resolveOpt = SharedResolveOptions(cacheOptions = cacheOpt)
-            val options    = FetchOptions(resolveOptions = resolveOpt)
-            val params     = paramsOrThrow(options)
+            val cacheOpt         = CacheOptions(mode = "force", cache = Some(dir.getAbsolutePath))
+            val resolveOpt       = SharedResolveOptions(cacheOptions = cacheOpt)
+            val options          = FetchOptions(resolveOptions = resolveOpt)
+            val params           = paramsOrThrow(options)
             val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.6"))
               .unsafeRun(wrapExceptions = true)(ec)
             assert(files.map(_._2.getName).toSet
@@ -549,7 +549,7 @@ object FetchTests extends TestSuite {
     test("fail because of resolution") {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
-      val a = Fetch.task(params, pool, Seq("sh.almond:scala-kernel_2.12.8:0.2.2"))
+      val a       = Fetch.task(params, pool, Seq("sh.almond:scala-kernel_2.12.8:0.2.2"))
         .attempt
         .unsafeRun(wrapExceptions = true)(ec)
 
@@ -557,7 +557,7 @@ object FetchTests extends TestSuite {
         case Right(_) =>
           throw new Exception("should have failed")
         case Left(_: ResolveException) =>
-        case Left(ex) =>
+        case Left(ex)                  =>
           throw new Exception("Unexpected exception type", ex)
       }
     }
@@ -569,7 +569,7 @@ object FetchTests extends TestSuite {
       val options = FetchOptions(
         artifactOptions = artifactOptions
       )
-      val params = paramsOrThrow(options)
+      val params       = paramsOrThrow(options)
       val (_, _, _, l) = Fetch.task(params, pool, Seq("sh.almond:scala-kernel_2.12.8:0.2.2"))
         .unsafeRun(wrapExceptions = true)(ec)
 
@@ -692,7 +692,7 @@ object FetchTests extends TestSuite {
 
         val pomPath     = new File(tmpDir, "org/name/0.1/name-0.1.pom")
         val pomSha1Path = new File(pomPath.getParentFile, pomPath.getName + ".sha1")
-        val pomContent =
+        val pomContent  =
           """<?xml version='1.0' encoding='UTF-8'?>
             |<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0">
             |    <modelVersion>4.0.0</modelVersion>
@@ -730,7 +730,7 @@ object FetchTests extends TestSuite {
         val resolveOptions = SharedResolveOptions(repositoryOptions = repositoryOptions)
         val options        = FetchOptions(resolveOptions = resolveOptions)
         val params         = paramsOrThrow(options)
-        val a = Fetch.task(params, pool, Seq("org:name:0.1"))
+        val a              = Fetch.task(params, pool, Seq("org:name:0.1"))
           .attempt
           .unsafeRun(wrapExceptions = true)(ec)
 
@@ -755,8 +755,8 @@ object FetchTests extends TestSuite {
       val resolveOpt = SharedResolveOptions(
         resolutionOptions = resolutionOpt
       )
-      val options = FetchOptions(resolveOptions = resolveOpt)
-      val params  = paramsOrThrow(options)
+      val options          = FetchOptions(resolveOptions = resolveOpt)
+      val params           = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("com.lihaoyi:::ammonite:1.8.1"))
         .unsafeRun(wrapExceptions = true)(ec)
       val expectedFiles = Set(
@@ -821,7 +821,7 @@ object FetchTests extends TestSuite {
             )
           )
         )
-        val params = paramsOrThrow(options)
+        val params           = paramsOrThrow(options)
         val (_, _, _, files) =
           Fetch.task(params, pool, Seq.empty).unsafeRun(wrapExceptions = true)(ec)
 

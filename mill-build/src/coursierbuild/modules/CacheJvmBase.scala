@@ -59,11 +59,11 @@ trait CacheJvmBase extends Cache with CsMima {
     // getCanonicalFile resolves them, and unlike toRealPath it copes with entries that don't
     // exist on disk (e.g. `compile-resources`).
     def sources = Task {
-      val dest = Task.dest / "CustomLoaderClasspath.scala"
+      val dest            = Task.dest / "CustomLoaderClasspath.scala"
       val customLoaderCp0 = customLoaderCp()
         .map { ref =>
-          val file = PathRef.toAbsFile(ref).getCanonicalFile
-          val uri  = file.toURI.toASCIIString
+          val file       = PathRef.toAbsFile(ref).getCanonicalFile
+          val uri        = file.toURI.toASCIIString
           val normalized =
             if (file.isDirectory && !uri.endsWith("/")) uri + "/"
             else uri

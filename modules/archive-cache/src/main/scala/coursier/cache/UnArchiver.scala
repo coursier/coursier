@@ -223,7 +223,7 @@ object UnArchiver {
             case ArchiveType.Tzst => ("", Seq("--zstd"))
           }
           val maybeSudo = if (useSudo) Seq("sudo") else Nil
-          val command = maybeSudo ++ Seq("tar") ++ compressionArgs ++
+          val command   = maybeSudo ++ Seq("tar") ++ compressionArgs ++
             Seq("-" + compressionOptionOneLetter + "xf", archive.toString)
           Files.createDirectories(destDir.toPath)
           val proc = new ProcessBuilder()

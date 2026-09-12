@@ -153,7 +153,7 @@ import dataclass.{data, since => unroll}
       .toMap
 
     val allArtifacts = (a.map(_._3) ++ extraArtifacts(a)).distinct
-    val res = Artifacts.fetchArtifacts(
+    val res          = Artifacts.fetchArtifacts(
       allArtifacts,
       cache,
       otherCaches: _*

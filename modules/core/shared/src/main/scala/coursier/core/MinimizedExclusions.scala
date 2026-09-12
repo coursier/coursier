@@ -94,8 +94,8 @@ object MinimizedExclusions {
 
     override def join(other: ExclusionData): ExclusionData =
       other match {
-        case ExcludeNone => this
-        case ExcludeAll  => ExcludeAll
+        case ExcludeNone            => this
+        case ExcludeAll             => ExcludeAll
         case other: ExcludeSpecific =>
           val joinedByOrg    = byOrg ++ other.byOrg
           val joinedByModule = byModule ++ other.byModule
@@ -113,8 +113,8 @@ object MinimizedExclusions {
 
     override def meet(other: ExclusionData): ExclusionData =
       other match {
-        case ExcludeNone => this
-        case ExcludeAll  => ExcludeAll
+        case ExcludeNone            => this
+        case ExcludeAll             => ExcludeAll
         case other: ExcludeSpecific =>
           val metByOrg    = byOrg intersect other.byOrg
           val metByModule = byModule intersect other.byModule
@@ -152,8 +152,8 @@ object MinimizedExclusions {
 
     override def subsetOf(other: ExclusionData): Boolean =
       other match {
-        case ExcludeNone => false
-        case ExcludeAll  => true
+        case ExcludeNone            => false
+        case ExcludeAll             => true
         case other: ExcludeSpecific =>
           byOrg.subsetOf(other.byOrg) &&
           byModule.subsetOf(other.byModule) &&

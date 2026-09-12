@@ -203,7 +203,7 @@ object DockerFile {
       case Seq(first, others @ _*) =>
         val maybeFrom = first.value match {
           case from: DockerInstruction.From => Right(first.map(_ => from))
-          case other =>
+          case other                        =>
             Left(new ParseException(first.lines.toSeq, "Expected a FROM instruction upfront"))
         }
         val maybeOthers = {

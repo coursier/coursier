@@ -46,7 +46,7 @@ object CsSh {
     if (Properties.isWin) {
       val programFiles = sys.env.getOrElse("ProgramFiles", """C:\Program Files""")
       val gitBash      = os.Path(programFiles) / "Git" / "bin" / "bash.exe"
-      val fromPath = sys.env
+      val fromPath     = sys.env
         .getOrElse("PATH", "")
         .split(File.pathSeparator)
         .iterator
@@ -89,7 +89,7 @@ object CsSh {
     os.makeDir.all(homeDir)
 
     val script = versionOverride match {
-      case None => csSh
+      case None             => csSh
       case Some(newVersion) =>
         val dest = workDir / csSh.last
         os.write(dest, withVersion(os.read(csSh), newVersion))
@@ -253,7 +253,7 @@ object CsSh {
       if (resp.code.isSuccess) ujson.read(resp.body)
       else sys.error(s"Error $description: got HTTP ${resp.code.code}, response: ${resp.body}")
 
-    val head = s"$ghOrg:$branch"
+    val head             = s"$ghOrg:$branch"
     val openPullRequests = request
       .get(uri"https://api.github.com/repos/$ghOrg/$ghName/pulls?head=$head&state=open")
       .send()
@@ -271,7 +271,7 @@ object CsSh {
           "title" -> s"Update cs.sh to $newVersion",
           "head"  -> branch,
           "base"  -> baseBranch,
-          "body" ->
+          "body"  ->
             s"""Bumps `CS_VERSION` in `cs.sh` from `$currentVersion` to `$newVersion`, released in
                |https://github.com/$ghOrg/$ghName/releases/tag/v$newVersion.
                |
