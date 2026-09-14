@@ -70,9 +70,12 @@ object Java extends CoursierCommand[JavaOptions] {
               else {
                 assert(params.installed)
 
+                // Look ids up in the index we already have at hand, rather than
+                // letting each getIfInstalled call load the index on its own.
+                val jvmCache0 = jvmCache.withIndex(Task.point(index))
                 val resultsTask = Task.gather.gather {
                   available.map { id =>
-                    jvmCache.getIfInstalled(id).map((id, _))
+                    jvmCache0.getIfInstalled(id).map((id, _))
                   }
                 }
                 resultsTask.map { results =>

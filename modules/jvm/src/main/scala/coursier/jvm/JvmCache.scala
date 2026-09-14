@@ -113,8 +113,14 @@ import scala.concurrent.duration.Duration
         case Right(entries0) => get(entries0.last, None)
       }
 
+  /** Uses `index` as the JVM index of this cache.
+    *
+    * `index` is memoized, so that it is run at most once per `JvmCache` instance: every lookup
+    * method (`entries`, `get`, `getIfInstalled`, …) runs it, and loading and parsing the full index
+    * each time makes iterating over many ids prohibitively expensive.
+    */
   def withIndex(index: Task[JvmIndex]): JvmCache =
-    copy(index = Some(index))
+    copy(index = Some(index.memoize))
 
   def withIndex(indexUrl: String): JvmCache = {
     val indexTask = archiveCache.cache
