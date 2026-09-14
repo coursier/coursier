@@ -69,7 +69,8 @@ object JavaHome extends CoursierCommand[JavaHomeOptions] {
         envUpdate,
         params.env.envVarUpdater,
         params.output.verbosity,
-        MaybeInstallJvm.headerComment
+        MaybeInstallJvm.headerComment,
+        javaHome.managedJvmsDir
       )
       setupTask.unsafeRun(wrapExceptions = true)(coursierCache.ec)
     }
