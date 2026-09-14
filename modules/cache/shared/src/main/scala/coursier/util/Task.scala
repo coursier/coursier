@@ -24,6 +24,23 @@ final case class Task[+T](value: ExecutionContext => Future[T]) extends AnyVal {
       case t: Throwable => Left(t)
     }
 
+  /** Runs this task at most once, and hands out its result to all subsequent runs.
+    *
+    * The `ExecutionContext` of the first run is the one used to run this task. Later runs, on any
+    * `ExecutionContext`, get the future of the first run, whether it succeeded or failed.
+    */
+  def memoize: Task[T] = {
+    val lock                 = new Object
+    var futureOpt: Future[T] = null
+    Task { ec =>
+      lock.synchronized {
+        if (futureOpt == null)
+          futureOpt = value(ec)
+        futureOpt
+      }
+    }
+  }
+
   def schedule(duration: Duration, es: ScheduledExecutorService): Task[T] =
     Task { implicit ec =>
       val p = Promise[T]()

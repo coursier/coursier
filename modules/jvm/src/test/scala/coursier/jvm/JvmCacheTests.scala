@@ -2,7 +2,7 @@ package coursier.jvm
 
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
-import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.{AtomicBoolean, AtomicInteger}
 
 import coursier.cache.internal.FileUtil
 import coursier.cache.{ArchiveCache, MockCache}
@@ -124,6 +124,42 @@ object JvmCacheTests extends TestSuite {
 
         val output = Seq(javaExec.getAbsolutePath, "-version").!!
         assert(output.replace("\r\n", "\n") == expectedOutput)
+      }
+    }
+
+    test("index loaded once") {
+      // https://github.com/coursier/coursier/issues/3764
+      withTempDir { tmpDir =>
+        val archiveCache = ArchiveCache.create[Task](tmpDir.toFile).copy(cache = cache)
+        val loadCount    = new AtomicInteger
+        val jvmCache = JvmCache()
+          .copy(
+            archiveCache = archiveCache,
+            os = theOS,
+            architecture = "the-arch",
+            defaultJdkNameOpt = None,
+            defaultVersionOpt = None
+          )
+          .withIndex(Task.delay {
+            loadCount.incrementAndGet()
+            index
+          })
+
+        assert(loadCount.get() == 0)
+
+        val ids = Seq("the-jdk:1.1", "the-jdk:1.2", "the-jdk:1+")
+        val installed = Task.gather
+          .gather(ids.map(jvmCache.getIfInstalled(_)))
+          .unsafeRun(wrapExceptions = true)(cache.ec)
+        assert(installed.forall(_.isEmpty))
+        assert(loadCount.get() == 1)
+
+        val entries = jvmCache.entries("the-jdk:1.1").unsafeRun(wrapExceptions = true)(cache.ec)
+        assert(entries.exists(_.nonEmpty))
+        assert(loadCount.get() == 1)
+
+        jvmCache.get("the-jdk:1.1").unsafeRun(wrapExceptions = true)(cache.ec)
+        assert(loadCount.get() == 1)
       }
     }
 
