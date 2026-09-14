@@ -77,8 +77,10 @@ $ cs fetch -r https://artifacts.foo.com/maven …
 </ul>
 <p>The first one matches any realm.
 The second one only matches a specific HTTP Basic auth realm.</p>
-<p>Space characters are the beginning of each line are ignored. Empty lines
+<p>Space characters at the beginning of each line are ignored. Empty lines
 are ignored too.</p>
+<p>Usernames can contain spaces (but not colons). Passwords can contain any
+character including colons and trailing spaces.</p>
 <p>From the CLI, you can also pass those explicitly via the <code>--credentials</code> option,
 like</p>
 <pre><code class="hljs css language-bash">$ cs fetch -r https://artifacts.foo.com/maven \
@@ -93,6 +95,10 @@ Only <code>--credentials</code> and <code>--credential-file</code> are considere
 <p>Credentials can be passed via property files too. By default,
 <code>~/.config/coursier/credentials.properties</code> is read
 (<code>~/Library/Application Support/Coursier/credentials.properties</code> on OS X).</p>
+<p>Any <code>.properties</code> files found in <code>~/.config/coursier/credentials/</code>
+(<code>~/Library/Application Support/Coursier/credentials/</code> on OS X) are also
+read automatically, making it easy to keep each repository's credentials
+in a separate file.</p>
 <h3><a class="anchor" aria-hidden="true" id="format"></a><a href="#format" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Format</h3>
 <p>The credential property file format is like</p>
 <pre><code class="hljs"><span class="hljs-attr">simple.username</span>=simple
@@ -110,6 +116,27 @@ a common prefix (<code>simple</code> and <code>otherone</code> above). That pref
 It's only used to specify several credentials in a single file.</p>
 <p>If no realm property is specified, the corresponding credentials are passed
 to the host, no matter its HTTP Basic auth realm.</p>
+<p>The following optional properties can also be set per prefix:</p>
+<table>
+<thead>
+<tr><th>Property</th><th>Default</th><th>Description</th></tr>
+</thead>
+<tbody>
+<tr><td><code>prefix.realm</code></td><td>(unset)</td><td>Match only if the server's HTTP Basic auth realm equals this value</td></tr>
+<tr><td><code>prefix.https-only</code></td><td><code>false</code></td><td>Only send credentials over HTTPS connections</td></tr>
+<tr><td><code>prefix.auto</code></td><td><code>true</code></td><td>Automatically match based on the host name (used during redirections)</td></tr>
+<tr><td><code>prefix.pass-on-redirect</code></td><td><code>false</code></td><td>Forward credentials when the server issues an HTTP redirect</td></tr>
+</tbody>
+</table>
+<p>Example with all optional properties:</p>
+<pre><code class="hljs"><span class="hljs-attr">myrepo.username</span>=myuser
+<span class="hljs-attr">myrepo.password</span>=mypass
+<span class="hljs-attr">myrepo.host</span>=repo.example.com
+<span class="hljs-attr">myrepo.realm</span>=My Repository
+<span class="hljs-attr">myrepo.https-only</span>=<span class="hljs-literal">true</span>
+<span class="hljs-attr">myrepo.auto</span>=<span class="hljs-literal">true</span>
+<span class="hljs-attr">myrepo.pass-on-redirect</span>=<span class="hljs-literal">false</span>
+</code></pre>
 <p>To read a file from an alternate location, pass it via the
 <code>COURSIER_CREDENTIALS</code> environment variable or <code>coursier.credentials</code>
 Java property (same ones as above). Set its value to the full
@@ -121,6 +148,75 @@ specified multiple times).</p>
 <p>Pass <code>--use-env-credentials=false</code> to also ignore the content of
 <code>COURSIER_CREDENTIALS</code> (environment) and <code>coursier.credentials</code> (Java property).
 Only <code>--credentials</code> and <code>--credential-file</code> are considered then.</p>
+<h2><a class="anchor" aria-hidden="true" id="scala-cli-config-file"></a><a href="#scala-cli-config-file" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Scala CLI config file</h2>
+<p>If a <a href="https://scala-cli.virtuslab.org/">Scala CLI</a> configuration file is present
+(at <code>~/.config/scala-cli/config.json</code>, or as specified by the <code>SCALA_CLI_CONFIG</code>
+environment variable / <code>scala-cli.config</code> Java property), coursier reads repository
+credentials from it as well.</p>
+<p>Credentials are stored under the <code>repositories.credentials</code> key, for example:</p>
+<pre><code class="hljs css language-json">{
+  <span class="hljs-attr">"repositories"</span>: {
+    <span class="hljs-attr">"credentials"</span>: [
+      {
+        <span class="hljs-attr">"host"</span>: <span class="hljs-string">"repo.example.com"</span>,
+        <span class="hljs-attr">"user"</span>: <span class="hljs-string">"value:myuser"</span>,
+        <span class="hljs-attr">"password"</span>: <span class="hljs-string">"value:mypass"</span>,
+        <span class="hljs-attr">"realm"</span>: <span class="hljs-string">"My Repository"</span>,
+        <span class="hljs-attr">"httpsOnly"</span>: <span class="hljs-literal">false</span>,
+        <span class="hljs-attr">"matchHost"</span>: <span class="hljs-literal">true</span>
+      }
+    ]
+  }
+}
+</code></pre>
+<h2><a class="anchor" aria-hidden="true" id="how-credentials-are-matched"></a><a href="#how-credentials-are-matched" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>How credentials are matched</h2>
+<p>When coursier makes an HTTP request that requires authentication, it looks for
+a matching credential entry using the following rules:</p>
+<ul>
+<li>The credential's <code>host</code> must match the URL's host.</li>
+<li>If <code>https-only</code> is <code>true</code>, the URL must use HTTPS.</li>
+<li>If a <code>realm</code> is specified, it must match the realm advertised in the server's
+<code>WWW-Authenticate</code> response header.</li>
+<li>If <code>auto</code> is <code>true</code> (the default), the credential is also eligible to
+authenticate requests that result from HTTP redirections to the same host.</li>
+<li>If <code>pass-on-redirect</code> is <code>false</code> (the default), credentials are <strong>not</strong>
+forwarded when the server redirects to a different host. Set it to <code>true</code>
+only if you explicitly need cross-host credential forwarding.</li>
+</ul>
+<p>The first matching credential is used. No credential is used if none matches.</p>
+<h2><a class="anchor" aria-hidden="true" id="api"></a><a href="#api" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>API</h2>
+<h3><a class="anchor" aria-hidden="true" id="directcredentials"></a><a href="#directcredentials" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>DirectCredentials</h3>
+<p><code>DirectCredentials</code> holds credentials for a single host directly in memory:</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier.credentials.<span class="hljs-type">DirectCredentials</span>
+
+<span class="hljs-keyword">val</span> directCred = <span class="hljs-type">DirectCredentials</span>(<span class="hljs-string">"repo.example.com"</span>, <span class="hljs-string">"myuser"</span>, <span class="hljs-string">"mypass"</span>)
+  .withRealm(<span class="hljs-type">Some</span>(<span class="hljs-string">"My Repository"</span>))
+  .withHttpsOnly(<span class="hljs-literal">true</span>)
+</code></pre>
+<h3><a class="anchor" aria-hidden="true" id="filecredentials"></a><a href="#filecredentials" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>FileCredentials</h3>
+<p><code>FileCredentials</code> lazily reads credentials from a <code>.properties</code> file on disk:</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier.credentials.<span class="hljs-type">FileCredentials</span>
+
+<span class="hljs-keyword">val</span> fileCred = <span class="hljs-type">FileCredentials</span>(<span class="hljs-string">"/home/alex/.config/coursier/credentials.properties"</span>)
+</code></pre>
+<p>Pass <code>optional = false</code> to throw an exception if the file is not found
+(by default the file is silently ignored when absent).</p>
+<h3><a class="anchor" aria-hidden="true" id="using-credentials-when-resolving"></a><a href="#using-credentials-when-resolving" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Using credentials when resolving</h3>
+<p>Both credential types implement the <code>Credentials</code> base class and can be passed
+to a <code>FileCache</code>:</p>
+<pre><code class="hljs css language-scala"><span class="hljs-keyword">import</span> coursier._
+<span class="hljs-keyword">import</span> coursier.cache._
+<span class="hljs-keyword">import</span> coursier.credentials._
+
+<span class="hljs-keyword">val</span> cache = <span class="hljs-type">FileCache</span>()
+  .addCredentials(
+    <span class="hljs-type">DirectCredentials</span>(<span class="hljs-string">"repo.example.com"</span>, <span class="hljs-string">"myuser"</span>, <span class="hljs-string">"mypass"</span>),
+    <span class="hljs-type">FileCredentials</span>(<span class="hljs-string">"/home/alex/.config/coursier/credentials.properties"</span>)
+  )
+
+<span class="hljs-keyword">val</span> fetch = <span class="hljs-type">Fetch</span>()
+  .withCache(cache)
+</code></pre>
 <h2><a class="anchor" aria-hidden="true" id="per-host"></a><a href="#per-host" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Per host</h2>
 <p>This is the legacy way of passing credentials. Prefer the methods above
 if that's a possibility.</p>
@@ -136,11 +232,11 @@ if that's a possibility.</p>
   authentication = <span class="hljs-type">Some</span>(<span class="hljs-type">Authentication</span>(<span class="hljs-string">"user"</span>, <span class="hljs-string">"password"</span>))
 )
 </code></pre>
-<p>Not that from now on (coursier <code>&gt; 1.1.0-M13-2</code>), these credentials
+<p>Note that from now on (coursier <code>&gt; 1.1.0-M13-2</code>), these credentials
 are <em>not</em> passed upon redirection. If you want to pass some credentials
 when a redirection happens, pass them either <a href="#inline">inline</a> or
 via a <a href="#property-file">property file</a>, for the host of the redirection.</p>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/next/other-mirrors"><span class="arrow-prev">← </span><span>Repository mirrors</span></a><a class="docs-next button" href="/docs/next/other-proxy"><span>Proxy</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#inline">Inline</a></li><li><a href="#property-file">Property file</a><ul class="toc-headings"><li><a href="#format">Format</a></li></ul></li><li><a href="#per-host">Per host</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><h2><a href="/" class="nav-home">Coursier</a></h2><div><h5><a href="/docs/overview">Docs</a></h5><a href="/docs/overview">Overview</a><a href="/docs/cli-installation">Install CLI</a><a href="/docs/sbt-coursier">Setup sbt</a><a href="/docs/api">Use the API</a></div><div><h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5><a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"/></a><a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"/></a></div></section><section class="copyright">Copyright © 2026 coursier contributors</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/next/other-mirrors"><span class="arrow-prev">← </span><span>Repository mirrors</span></a><a class="docs-next button" href="/docs/next/other-proxy"><span>Proxy</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#inline">Inline</a></li><li><a href="#property-file">Property file</a><ul class="toc-headings"><li><a href="#format">Format</a></li></ul></li><li><a href="#scala-cli-config-file">Scala CLI config file</a></li><li><a href="#how-credentials-are-matched">How credentials are matched</a></li><li><a href="#api">API</a><ul class="toc-headings"><li><a href="#directcredentials">DirectCredentials</a></li><li><a href="#filecredentials">FileCredentials</a></li><li><a href="#using-credentials-when-resolving">Using credentials when resolving</a></li></ul></li><li><a href="#per-host">Per host</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><h2><a href="/" class="nav-home">Coursier</a></h2><div><h5><a href="/docs/overview">Docs</a></h5><a href="/docs/overview">Overview</a><a href="/docs/cli-installation">Install CLI</a><a href="/docs/sbt-coursier">Setup sbt</a><a href="/docs/api">Use the API</a></div><div><h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5><a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"/></a><a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"/></a></div></section><section class="copyright">Copyright © 2026 coursier contributors</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
                     return;
