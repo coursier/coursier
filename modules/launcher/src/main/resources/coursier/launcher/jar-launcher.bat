@@ -43,9 +43,9 @@ if NOT "%OS%"=="Windows_NT" goto Win9xArg
 if "%@eval[2+2]" == "4" goto 4NTArgs
 
 @REM -- Regular WinNT shell
-@REM Don't stash the arguments in a variable here: SET stops at the first
-@REM newline character, so all but the first line of a multi-line argument
-@REM would be dropped. They are passed along as %* below instead.
+@REM Pass the arguments straight through as %* below, rather than round-tripping
+@REM them through a variable: that needed a second round of percent expansion,
+@REM which mangles arguments containing % ^ or &.
 set RAW_ARGS=1
 goto endInit
 

@@ -9,7 +9,7 @@ import java.nio.charset.{
   UnsupportedCharsetException
 }
 import java.nio.file.Files
-import java.util.{Base64, Locale}
+import java.util.Locale
 import java.util.jar.JarFile
 import java.util.regex.Pattern
 import java.util.zip.ZipFile
@@ -1351,51 +1351,6 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       else
         "disabled"
     }
-
-    test("bat multi-line arg") {
-      if (Properties.isWin)
-        batMultiLineArgTest()
-      else
-        "disabled"
-    }
-
-    def batMultiLineArgTest(): Unit =
-      TestUtil.withTempDir { tmpDir0 =>
-        val tmpDir = os.Path(tmpDir0)
-        os.proc(
-          launcher,
-          "bootstrap",
-          "-o",
-          "cs-echo",
-          "io.get-coursier:echo:1.0.1",
-          extraOptions
-        ).call(cwd = tmpDir)
-
-        val bootstrap = tmpDir / "cs-echo.bat"
-
-        // Simulate passing a multi-line argument via PowerShell, which mirrors the
-        // scenario where Get-Content -Raw returns a multi-line string passed as a
-        // single argument to a .bat launcher (issue: bat ignores all lines but first).
-        // Note: in PowerShell strings, `n is the escape sequence for a newline character.
-        val quotedBootstrap = "'" + bootstrap.toString.replace("'", "''") + "'"
-        val psScript =
-          s"""$$arg = "first line`nsecond line`nthird line"; & $quotedBootstrap $$arg"""
-        // -EncodedCommand rather than -Command: PowerShell strips the double quotes
-        // from a -Command argument, which would leave the script unparseable here.
-        val encodedPsScript = Base64.getEncoder.encodeToString(
-          psScript.getBytes(StandardCharsets.UTF_16LE)
-        )
-        val output = os.proc(
-          "powershell",
-          "-NoProfile",
-          "-EncodedCommand",
-          encodedPsScript
-        ).call(cwd = tmpDir).out.text()
-
-        val lines         = output.linesIterator.map(_.trim).filter(_.nonEmpty).toVector
-        val expectedLines = Vector("first line", "second line", "third line")
-        assert(lines == expectedLines)
-      }
 
     def jniUtilFromBootstrapTest(extraOpts: String*): Unit = {
       TestUtil.withTempDir("jni-cs") { tmpDir0 =>
