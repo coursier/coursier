@@ -11,6 +11,7 @@ set ERROR_CODE=0
 if "%OS%"=="Windows_NT" @setlocal
 
 @REM Decide how to startup depending on the version of windows
+set RAW_ARGS=
 
 @REM -- Win98ME
 if NOT "%OS%"=="Windows_NT" goto Win9xArg
@@ -19,7 +20,10 @@ if NOT "%OS%"=="Windows_NT" goto Win9xArg
 if "%@eval[2+2]" == "4" goto 4NTArgs
 
 @REM -- Regular WinNT shell
-set CMD_LINE_ARGS=%*
+@REM Pass the arguments straight through as %* below, rather than round-tripping
+@REM them through a variable: that needed a second round of percent expansion,
+@REM which mangles arguments containing % ^ or &.
+set RAW_ARGS=1
 goto endInit
 
 @REM The 4NT Shell from jp software
@@ -43,8 +47,13 @@ goto Win9xApp
 
 @REM Start program
 :runm2
-SET CMDLINE="@COMMAND@" %CMD_LINE_ARGS%
-%CMDLINE%
+SET RUN_CMD="@COMMAND@"
+if "%RAW_ARGS%"=="1" goto rawExec
+%RUN_CMD% %CMD_LINE_ARGS%
+goto runDone
+:rawExec
+%RUN_CMD% %*
+:runDone
 SET ERROR_CODE=%ERRORLEVEL%
 if %ERROR_CODE% NEQ 0 goto error
 goto end
@@ -59,7 +68,8 @@ if "%OS%"=="Windows_NT" goto endNT
 @REM For old DOS remove the set variables from ENV - we assume they were not set
 @REM before we started - at least we don't leave any baggage around
 set CMD_LINE_ARGS=
-set CMDLINE=
+set RAW_ARGS=
+set RUN_CMD=
 goto postExec
 
 :endNT
