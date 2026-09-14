@@ -70,7 +70,10 @@ object CacheUrlHttpDebugTests extends TestSuite {
       httpDebugOpt = Some(line => lines += line)
     )
     val (conn, _) = CacheUrl.urlConnectionMaybePartial(args)
-    try (conn.asInstanceOf[HttpURLConnection].getResponseCode, lines.toList)
+    try {
+      val code = conn.asInstanceOf[HttpURLConnection].getResponseCode
+      (code, lines.toList)
+    }
     finally CacheUrl.closeConn(conn)
   }
 
