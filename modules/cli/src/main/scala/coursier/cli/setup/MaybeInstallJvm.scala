@@ -65,7 +65,15 @@ case class MaybeInstallJvm(
                   case false => Task.point(false)
                   case true =>
                     Task.delay {
-                      windowsEnvVarUpdater.applyUpdate(envUpdate)
+                      // Former coursier versions added the bin directory of the JVM they set up
+                      // to the PATH, so that those piled up there, and the JVM set up first kept
+                      // winning over the JAVA_HOME we're about to update. Get rid of all of them
+                      // first, applyUpdate adds back the one of the JVM we're setting up.
+                      val cleaned = javaHome.managedJvmsDir.exists { dir =>
+                        windowsEnvVarUpdater.removePathEntriesWithPrefix(dir.getAbsolutePath)
+                      }
+                      val updated = windowsEnvVarUpdater.applyUpdate(envUpdate)
+                      cleaned || updated
                     }
                 }
             }
