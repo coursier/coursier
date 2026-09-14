@@ -345,6 +345,81 @@ object CacheUrl {
       Nil
     ).connection()
 
+  /** Where `COURSIER_HTTP_DEBUG` sends its lines: stderr when it is set, nowhere otherwise.
+    *
+    * These lines are the only way to see what coursier does on the wire from the CLI - which URLs
+    * are requested, what the server answers, and whether credentials were attached and where they
+    * came from. Passwords never appear in them.
+    */
+  private[coursier] lazy val defaultHttpDebug: Option[String => Unit] =
+    if (CacheDefaults.httpDebug) Some(s => System.err.println("[coursier http] " + s))
+    else None
+
+  private def quoted(s: String): String =
+    "\"" + s + "\""
+
+  private def describeAuth(auth: Authentication): String = {
+    val what = auth.userOpt.filter(_.nonEmpty) match {
+      case Some(user) =>
+        s"credentials for user $user"
+      case None if auth.httpHeaders.nonEmpty || auth.byNameHttpHeaders.nonEmpty =>
+        "custom HTTP headers"
+      case None =>
+        "credentials"
+    }
+    what + auth.realmOpt.fold("")(r => s" (realm ${quoted(r)})")
+  }
+
+  /** How the request about to be sent is authenticated, for the debug output
+    *
+    * Credentials read from files or the environment are "optional": they are held back until the
+    * server challenges the request, which is worth spelling out, as that first anonymous request is
+    * what people see when they capture traffic.
+    */
+  private def describeRequestAuth(
+    authentication: Option[Authentication],
+    sent: Option[Authentication],
+    authRealm: Option[String]
+  ): String =
+    (authentication, sent) match {
+      case (None, _) =>
+        "no credentials"
+      case (Some(auth), Some(_)) =>
+        describeAuth(auth)
+      case (Some(auth), None) if auth.optional =>
+        s"${describeAuth(auth)} withheld until the server asks for them"
+      case (Some(auth), None) =>
+        val realm = authRealm.fold("unknown")(r => quoted(r))
+        s"${describeAuth(auth)} withheld, the server realm ($realm) does not match"
+    }
+
+  private def wwwAuthenticate(conn: URLConnection): Option[String] =
+    conn match {
+      case conn0: HttpURLConnection => Option(conn0.getHeaderField("WWW-Authenticate"))
+      case _                        => None
+    }
+
+  private def givingUpMessage(
+    url: String,
+    authentication: Option[Authentication],
+    realmOpt: Option[String],
+    autoCredentials: Seq[DirectCredentials]
+  ): String =
+    authentication match {
+      case Some(auth) =>
+        s"$url: ${describeAuth(auth)} rejected, giving up"
+      case None =>
+        val host  = Try(new URI(url)).toOption.flatMap(u => Option(u.getHost)).getOrElse("?")
+        val realm = realmOpt.fold("no realm in the response")(r => s"realm ${quoted(r)}")
+        val known = autoCredentials
+          .map(c => c.host + c.realm.fold("")(r => s"($r)"))
+          .distinct
+        val configured =
+          if (known.isEmpty) "no credentials are configured"
+          else s"credentials are configured for: ${known.mkString(", ")}"
+        s"$url: no credentials match host $host ($realm), $configured, giving up"
+    }
+
   private[cache] final case class Args(
     initialUrl: String,
     url0: String,
@@ -363,7 +438,8 @@ object CacheUrl {
     classLoaders: Seq[ClassLoader],
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
     readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout,
-    userAgentOpt: Option[String] = None
+    userAgentOpt: Option[String] = None,
+    httpDebugOpt: Option[String => Unit] = CacheUrl.defaultHttpDebug
   )
 
   @deprecated(
@@ -417,6 +493,8 @@ object CacheUrl {
           a.realmOpt.forall(authRealm.contains) &&
           !a.optional
         }
+        for (log <- httpDebugOpt)
+          log(s"$method $url0 (${describeRequestAuth(authentication, authOpt, authRealm)})")
         initialize(
           conn,
           authOpt,
@@ -429,6 +507,12 @@ object CacheUrl {
         )
 
         val rangeResOpt0 = rangeResOpt(conn, alreadyDownloaded)
+
+        for (log <- httpDebugOpt; code <- responseCode(conn))
+          log(
+            s"HTTP $code for $url0" +
+              wwwAuthenticate(conn).fold("")(v => s" (WWW-Authenticate: $v)")
+          )
 
         rangeResOpt0 match {
           case Some(true) =>
@@ -460,6 +544,8 @@ object CacheUrl {
                         .find(_.autoMatches(loc, None))
                         .map(_.authentication)
                     }
+                  for (log <- httpDebugOpt)
+                    log(s"following redirection to $loc")
                   Left(
                     args.copy(
                       url0 = loc,
@@ -472,15 +558,37 @@ object CacheUrl {
               case None =>
                 if (maybeNeedsAuthentication(conn)) {
                   val realmOpt = realm(conn)
+                  // The server just asked for credentials, so the ones we pick up here are sent
+                  // right away rather than held back until a challenge - that would only add
+                  // an anonymous round trip.
                   val authentication0 = authentication
                     .map(_.copy(optional = false))
                     .orElse(
-                      autoCredentials.find(_.autoMatches(url0, realmOpt)).map(_.authentication)
+                      autoCredentials
+                        .find(_.autoMatches(url0, realmOpt))
+                        .map(_.authentication.copy(optional = false))
                     )
-                  if (authentication0 == authentication && realmOpt.forall(authRealm.contains))
+                  // Nothing to retry with: same credentials as before (none, or ones the server
+                  // has already seen along with its realm) would only repeat the same request.
+                  val nothingLeftToTry =
+                    authentication0 == authentication &&
+                    (authentication.isEmpty || realmOpt.forall(authRealm.contains))
+                  if (nothingLeftToTry) {
+                    // any 4xx lands here, and a 404 has nothing to do with credentials
+                    val wasChallenged = realmOpt.nonEmpty || responseCode(conn).contains(401)
+                    for (log <- httpDebugOpt if wasChallenged)
+                      log(givingUpMessage(url0, authentication, realmOpt, autoCredentials))
                     Right((conn, partialDownload))
+                  }
                   else {
                     closeConn(conn)
+                    for (log <- httpDebugOpt; auth <- authentication0)
+                      log(
+                        if (authentication0 == authentication)
+                          s"retrying $url0 now that the realm is known"
+                        else
+                          s"retrying $url0 with ${describeAuth(auth)}"
+                      )
 
                     if (maxRedirectionsOpt.exists(_ <= redirectionCount))
                       throw new Exception(
@@ -503,6 +611,8 @@ object CacheUrl {
       }
       catch {
         case NonFatal(e) =>
+          for (log <- httpDebugOpt)
+            log(s"$method $url0 failed: $e")
           if (conn != null)
             closeConn(conn)
           throw e

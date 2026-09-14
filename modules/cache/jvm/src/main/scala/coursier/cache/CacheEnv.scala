@@ -62,6 +62,9 @@ object CacheEnv {
   /** Env var and Java prop names for the HTTP read timeout */
   val readTimeout = EnvEntry("COURSIER_READ_TIMEOUT", "coursier.read-timeout")
 
+  /** Env var and Java prop names for HTTP request debugging */
+  val httpDebug = EnvEntry("COURSIER_HTTP_DEBUG", "coursier.http.debug")
+
   /** Env var and Java prop names for the cache policies */
   val cachePolicy = EnvEntry("COURSIER_MODE", "coursier.mode")
 
@@ -265,6 +268,17 @@ object CacheEnv {
     // lastly, try to download what's missing
     CachePolicy.FetchMissing
   )
+
+  /** Whether HTTP request debugging is enabled by the passed env var and Java property
+    *
+    * Accepts the same spellings as `COURSIER_PROGRESS`: `true`, `1`, `enable` turn it on, anything
+    * else leaves it off.
+    */
+  def defaultHttpDebug(values: EnvValues): Boolean =
+    values.env.orElse(values.prop).map(_.trim.toLowerCase(java.util.Locale.ROOT)).exists {
+      case "true" | "1" | "enable" | "enabled" => true
+      case _                                   => false
+    }
 
   /** Computes the default cache policies from the passed env var and Java property */
   def defaultCachePolicies(values: EnvValues): Seq[CachePolicy] = {

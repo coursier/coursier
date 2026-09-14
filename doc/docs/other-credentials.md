@@ -157,6 +157,39 @@ a matching credential entry using the following rules:
 
 The first matching credential is used. No credential is used if none matches.
 
+## Debugging
+
+To see what coursier does on the wire, set `COURSIER_HTTP_DEBUG=1` (or the
+`coursier.http.debug` Java property). Every HTTP request is then printed on
+stderr, along with the status the server answered, the `WWW-Authenticate`
+challenge if any, and which credentials were attached and where they came from:
+
+```text
+$ COURSIER_HTTP_DEBUG=1 cs resolve org.typelevel:cats-core_3:2.9.0
+[coursier http] GET https://artifacts.foo.com/maven/org/typelevel/cats-core_3/2.9.0/cats-core_3-2.9.0.pom (no credentials)
+[coursier http] HTTP 401 for https://artifacts.foo.com/maven/org/typelevel/cats-core_3/2.9.0/cats-core_3-2.9.0.pom (WWW-Authenticate: Basic realm="Artifactory Realm")
+[coursier http] retrying https://artifacts.foo.com/maven/org/typelevel/cats-core_3/2.9.0/cats-core_3-2.9.0.pom with credentials for user alex
+[coursier http] GET https://artifacts.foo.com/maven/org/typelevel/cats-core_3/2.9.0/cats-core_3-2.9.0.pom (credentials for user alex)
+[coursier http] HTTP 200 for https://artifacts.foo.com/maven/org/typelevel/cats-core_3/2.9.0/cats-core_3-2.9.0.pom
+```
+
+Passwords are never printed. When no credentials match a challenge, the output
+says which host and realm the server asked for, and which hosts (and realms)
+credentials are configured for, which is usually enough to spot a typo:
+
+```text
+[coursier http] https://artifacts.foo.com/maven/…/cats-core_3-2.9.0.pom: no credentials match host artifacts.foo.com (realm "Artifactory Realm"), credentials are configured for: artifacts.foo.com(Artifactory realm), giving up
+```
+
+Note that credentials coming from the environment or from files are only sent
+once the server has asked for them, so the first request for a given file is
+always anonymous. Credentials embedded in a repository URL
+(`-r https://user:password@…`) are sent right away.
+
+Files already in the cache are not requested at all, and do not show up in this
+output. To force requests for everything, run with an empty cache
+(`COURSIER_CACHE=$(mktemp -d) cs …`).
+
 ## API
 
 ### DirectCredentials
