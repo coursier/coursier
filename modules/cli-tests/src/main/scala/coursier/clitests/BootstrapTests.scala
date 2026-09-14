@@ -9,7 +9,7 @@ import java.nio.charset.{
   UnsupportedCharsetException
 }
 import java.nio.file.Files
-import java.util.Locale
+import java.util.{Base64, Locale}
 import java.util.jar.JarFile
 import java.util.regex.Pattern
 import java.util.zip.ZipFile
@@ -1380,11 +1380,16 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
         val quotedBootstrap = "'" + bootstrap.toString.replace("'", "''") + "'"
         val psScript =
           s"""$$arg = "first line`nsecond line`nthird line"; & $quotedBootstrap $$arg"""
+        // -EncodedCommand rather than -Command: PowerShell strips the double quotes
+        // from a -Command argument, which would leave the script unparseable here.
+        val encodedPsScript = Base64.getEncoder.encodeToString(
+          psScript.getBytes(StandardCharsets.UTF_16LE)
+        )
         val output = os.proc(
           "powershell",
           "-NoProfile",
-          "-Command",
-          psScript
+          "-EncodedCommand",
+          encodedPsScript
         ).call(cwd = tmpDir).out.text()
 
         val lines         = output.linesIterator.map(_.trim).filter(_.nonEmpty).toVector
