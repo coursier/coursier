@@ -184,6 +184,16 @@ object Launchers {
             System.err.println("Warning: not sure which zstd-jni library to embed")
             Nil
           }
+        val charsetOpts =
+          if (Properties.isWin)
+            // Preamble writes .bat files in the OEM code page, since that is what cmd.exe
+            // parses them with. Looking that charset up at run time only finds it if it is
+            // in the image, and an image otherwise carries just the handful of charsets
+            // reachable at build time. Costs a few MB, so only pay it where .bat files are
+            // written.
+            Seq("-H:+AddAllCharsets")
+          else
+            Nil
         val extraOpts =
           if (Properties.isLinux && arch == "aarch64")
             Seq(
@@ -195,6 +205,7 @@ object Launchers {
             Nil
         super.nativeImageOptions() ++
           extraOpts ++
+          charsetOpts ++
           zstdOpt
       }
     }
@@ -236,10 +247,7 @@ object Launchers {
           imageName = Docker.linuxBinaryBaseImage,
           prepareCommand =
             """apt-get update -q -y &&\
-              |apt-get install -q -y build-essential libz-dev zlib1g-dev git python3-pip curl zip
-              |export LANG=en_US.UTF-8
-              |export LANGUAGE=en_US:en
-              |export LC_ALL=en_US.UTF-8""".stripMargin,
+              |apt-get install -q -y build-essential libz-dev zlib1g-dev git python3-pip curl zip""".stripMargin + utf8Locale,
           csUrl = linuxCsLauncher,
           extraNativeImageArgs = Nil
         )
@@ -252,10 +260,7 @@ object Launchers {
           imageName = Docker.linuxBinaryBaseImage,
           prepareCommand =
             """apt-get update -q -y &&\
-              |apt-get install -q -y build-essential libz-dev zlib1g-dev git python3-pip curl zip
-              |export LANG=en_US.UTF-8
-              |export LANGUAGE=en_US:en
-              |export LC_ALL=en_US.UTF-8""".stripMargin,
+              |apt-get install -q -y build-essential libz-dev zlib1g-dev git python3-pip curl zip""".stripMargin + utf8Locale,
           csUrl = linuxCsLauncher,
           extraNativeImageArgs = Nil
         )
@@ -269,16 +274,31 @@ object Launchers {
       s"https://github.com/coursier/coursier/releases/download/v$version/cs-$archPart-pc-linux.gz"
     }
 
+    /** GraalVM freezes the image builder's encoding properties (file.encoding, sun.jnu.encoding,
+      * native.encoding, …) into the image, so a builder running under a non-UTF-8 locale produces
+      * launchers that mangle non-ASCII arguments and environment variables at run time, whatever
+      * locale the user has.
+      *
+      * C.UTF-8 rather than en_US.UTF-8 on purpose: it is built into glibc, where en_US.UTF-8 has to
+      * be generated first and silently falls back to ASCII when it has not been. The check below
+      * turns that silent fallback into a build failure.
+      */
+    private def utf8Locale: String =
+      """
+        |export LANG=C.UTF-8
+        |export LC_ALL=C.UTF-8
+        |if [ "$(locale charmap)" != "UTF-8" ]; then
+        |  echo "Image builder locale is not UTF-8, launchers built here would mangle non-ASCII values" >&2
+        |  exit 1
+        |fi""".stripMargin
+
     private def setupLocaleAndOptions(params: NativeImage.DockerParams): NativeImage.DockerParams =
       params.copy(
         prepareCommand = params.prepareCommand +
           """
             |set -v
             |apt-get update
-            |apt-get install -q -y locales
-            |export LANG=en_US.UTF-8
-            |export LANGUAGE=en_US:en
-            |export LC_ALL=en_US.UTF-8""".stripMargin
+            |apt-get install -q -y locales""".stripMargin + utf8Locale
       )
 
     object `static-image` extends CliNativeImage {

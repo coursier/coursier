@@ -6,6 +6,7 @@ import java.io.InputStream
 import java.nio.charset.{Charset, StandardCharsets}
 
 import scala.io.{Codec, Source}
+import scala.util.control.NonFatal
 
 @data(
   deprecatedSetters = true,
@@ -100,7 +101,7 @@ import scala.io.{Codec, Source}
         .mkString
     )
 
-    content0.getBytes(Charset.defaultCharset())
+    content0.getBytes(Preamble.batCharset)
   }
 
   def value: Array[Byte] =
@@ -130,6 +131,31 @@ object Preamble {
     }
     finally if (is != null)
         is.close()
+  }
+
+  /** The charset to write a .bat with.
+    *
+    * cmd.exe parses batch files in the console code page, which a console starts out with set to
+    * the system OEM code page - neither the JVM default charset nor the ANSI code page that
+    * sun.jnu.encoding reflects. Windows has to be asked at run time: in a GraalVM native image the
+    * JDK's encoding properties are all frozen at build time, and none of them reports the OEM code
+    * page anyway.
+    *
+    * Falls back to UTF-8 - when not on Windows (a .bat generated there is for some other machine,
+    * whose code page we cannot know), when JNI is unavailable or turned off, and when this runtime
+    * has no charset for the code page. That last one happens in a native image built without
+    * -H:+AddAllCharsets, which carries UTF-8 but no legacy code page.
+    */
+  private lazy val batCharset: Charset = {
+    val fromOs =
+      if (coursier.paths.Util.useJni())
+        try Option(coursier.jniutils.WindowsCodePages.oemCharset())
+        catch {
+          case NonFatal(_) => None
+        }
+      else
+        None
+    fromOs.getOrElse(StandardCharsets.UTF_8)
   }
 
   private lazy val batJarTemplate: String =
