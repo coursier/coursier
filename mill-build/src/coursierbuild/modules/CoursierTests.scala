@@ -1,6 +1,6 @@
 package coursierbuild.modules
 
-import coursierbuild.Deps.Deps
+import coursierbuild.Deps
 import com.github.lolgab.mill.mima._
 
 import mill._, mill.scalalib._

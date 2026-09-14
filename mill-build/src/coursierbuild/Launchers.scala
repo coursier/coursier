@@ -1,6 +1,6 @@
 package coursierbuild
 
-import coursierbuild.Deps.{Deps, Docker, graalVmJvmId}
+import coursierbuild.{Deps, Docker, Versions}
 import coursierbuild.modules.CsModule
 
 import io.github.alexarchambault.millnativeimage.NativeImage
@@ -164,7 +164,7 @@ object Launchers {
       def generateNativeImageWithFileSystemChecker = false
 
       def nativeImagePersist      = System.getenv("CI") != null
-      def nativeImageGraalVmJvmId = graalVmJvmId
+      def nativeImageGraalVmJvmId = Versions.graalVmJvmId
 
       def nativeImageName = "cs"
 
@@ -269,7 +269,7 @@ object Launchers {
     }
 
     private def linuxCsLauncher = {
-      val version  = coursierbuild.Deps.csDockerVersion
+      val version  = Versions.csDocker
       val archPart = if (arch == "aarch64") "aarch64" else "x86_64"
       s"https://github.com/coursier/coursier/releases/download/v$version/cs-$archPart-pc-linux.gz"
     }

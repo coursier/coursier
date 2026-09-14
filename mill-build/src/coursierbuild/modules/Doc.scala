@@ -1,6 +1,6 @@
 package coursierbuild.modules
 
-import coursierbuild.Deps.{Deps, sbtCoursierVersion}
+import coursierbuild.{Deps, Versions}
 import coursierbuild.Relativize.{relativize => doRelativize}
 import coursierbuild.modules.CoursierPublishModule.latestTaggedVersion
 import coursierbuild.DocHelpers
@@ -73,9 +73,9 @@ trait Doc extends ScalaModule {
       "--site.EXTRA_SBT",
       extraSbt(ver),
       "--site.PLUGIN_VERSION",
-      sbtCoursierVersion,
+      Versions.sbtCoursier,
       "--site.PLUGIN_EXTRA_SBT",
-      extraSbt(sbtCoursierVersion),
+      extraSbt(Versions.sbtCoursier),
       "--site.SCALA_VERSION",
       scalaVer
     ) ++ (if (watch) Seq("--watch") else Nil) ++ args0

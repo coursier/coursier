@@ -3,7 +3,7 @@ package coursierbuild.modules
 import com.github.lolgab.mill.mima.Mima
 import coursier.cache.ArchiveCache
 import coursier.jvm.{JavaHome, JvmCache}
-import coursierbuild.Deps.{Deps, ScalaVersions}
+import coursierbuild.{Deps, ScalaVersions}
 
 import mill.*
 import mill.api.*
