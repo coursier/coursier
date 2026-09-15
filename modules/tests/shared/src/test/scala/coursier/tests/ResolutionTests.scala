@@ -410,12 +410,55 @@ object ResolutionTests extends TestSuite {
     )
   )
 
-  val projectsMap = projects
-    .map { p =>
+  // POMs whose artifactId is (or contains) a property, like
+  //   <artifactId>${bare.name}-scala</artifactId>
+  // Those live in the repository under their *effective* coordinates, like a Maven
+  // repository would serve them, hence the explicit keys here (the module of the
+  // project itself still has the property in it, like the raw POM does).
+  val projectsWithPropertiesInArtifactId = Seq(
+    (mod"acme:frobnicator-scala", "1.0") -> Project(
+      mod"acme:$${bare.name}-scala",
+      "1.0",
+      dependencies = Seq(
+        Variant.emptyConfiguration -> dep"acme:config:1.3.0"
+      ),
+      properties = Seq("bare.name" -> "frobnicator")
+    ),
+    // Same, with the property defined in the parent POM rather than in the POM itself
+    (mod"acme:frobnicator-parent", "1.0") -> Project(
+      mod"acme:frobnicator-parent",
+      "1.0",
+      properties = Seq("bare.name" -> "frobnicator")
+    ),
+    (mod"acme:frobnicator-utils", "1.0") -> Project(
+      mod"acme:$${bare.name}-utils",
+      "1.0",
+      dependencies = Seq(
+        Variant.emptyConfiguration -> dep"acme:$${project.artifactId}-api:1.0"
+      ),
+      parent0 = Some((mod"acme:frobnicator-parent", "1.0"))
+    ),
+    (mod"acme:frobnicator-utils-api", "1.0") -> Project(
+      mod"acme:frobnicator-utils-api",
+      "1.0"
+    )
+  )
+
+  val projectsMap = (
+    projects.map { p =>
       (
         (p.module, VersionConstraint.fromVersion(p.version0)),
-        p.copy(configurations = MavenRepository.defaultConfigurations)
+        p
       )
+    } ++
+      projectsWithPropertiesInArtifactId.map {
+        case ((mod, ver), p) =>
+          ((mod, VersionConstraint(ver)), p)
+      }
+  )
+    .map {
+      case (key, p) =>
+        (key, p.copy(configurations = MavenRepository.defaultConfigurations))
     }
     .toMap
   val testRepository = TestRepository(projectsMap)
@@ -662,6 +705,66 @@ object ResolutionTests extends TestSuite {
           .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
+      }
+    }
+    test("propertiesInArtifactId") {
+      async {
+        val dep = dep"acme:frobnicator-scala:1.0"
+        val trDeps = Seq(
+          dep"acme:config:1.3.0"
+        )
+        val res = await(resolve0(
+          Seq(dep)
+        ))
+
+        val expected = Resolution()
+          .copy(rootDependencies = Seq(dep))
+          .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
+
+        assert(res.clearCaches == expected)
+
+        // the ${bare.name} in the artifactId of the POM must have been substituted
+        val proj = res.projectCache0(dep.moduleVersionConstraint)._2
+        assert(proj.module == mod"acme:frobnicator-scala")
+      }
+    }
+    test("propertiesInArtifactIdFromParent") {
+      async {
+        val dep = dep"acme:frobnicator-utils:1.0"
+        val trDeps = Seq(
+          dep"acme:frobnicator-utils-api:1.0"
+        )
+        val res = await(resolve0(
+          Seq(dep)
+        ))
+
+        val expected = Resolution()
+          .copy(rootDependencies = Seq(dep))
+          .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
+
+        assert(res.clearCaches == expected)
+
+        val proj = res.projectCache0(dep.moduleVersionConstraint)._2
+        assert(proj.module == mod"acme:frobnicator-utils")
+      }
+    }
+    test("propertiesInArtifactIdArtifactNames") {
+      // Artifact file names are derived from the artifactId of the POM, so a
+      // non-substituted one gives URLs like .../${bare.name}-scala-1.0.jar
+      async {
+        val dep = dep"acme:frobnicator-scala:1.0"
+        val res = await(resolve0(
+          Seq(dep)
+        ))
+
+        val proj = res.projectCache0(dep.moduleVersionConstraint)._2
+        val repo = MavenRepository("https://repo1.maven.org/maven2")
+        val urls = repo.artifacts(dep, proj, None).map(_._2.url)
+
+        val expected = Seq(
+          "https://repo1.maven.org/maven2/acme/frobnicator-scala/1.0/frobnicator-scala-1.0.jar"
+        )
+        assert(urls == expected)
       }
     }
     test("depMgmtInParentDeps") {
