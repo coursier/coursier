@@ -2160,6 +2160,11 @@ object Resolution {
 
     project0
       .copy(
+        module = {
+          val name0 = project0.module.name.map(propertiesWrapper0.substitution)
+          if (name0 == project0.module.name) project0.module
+          else project0.module.copy(name = name0)
+        },
         packagingOpt = project0.packagingOpt.map(_.map(propertiesWrapper0.substitution)),
         version0 = Version0(propertiesWrapper0.substitution.apply(project0.version0.asString)),
         dependencies0 =
