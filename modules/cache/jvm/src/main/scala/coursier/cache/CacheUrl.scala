@@ -310,13 +310,7 @@ object CacheUrl {
     * slow down, and it happens right away, without any of the backoff the retry loop would apply.
     */
   private def maybeNeedsAuthentication(conn: URLConnection): Boolean =
-    conn match {
-      case conn0: HttpURLConnection =>
-        val c = conn0.getResponseCode
-        c / 100 == 4 && c != tooManyRequestsResponseCode
-      case _ =>
-        false
-    }
+    responseCode(conn).exists(c => c / 100 == 4 && c != tooManyRequestsResponseCode)
 
   @deprecated("Create a ConnectionBuilder() and call connection() on it instead", "2.0.0")
   def urlConnection(

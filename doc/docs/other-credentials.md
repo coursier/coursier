@@ -157,6 +157,35 @@ a matching credential entry using the following rules:
 
 The first matching credential is used. No credential is used if none matches.
 
+## Repositories that don't ask for credentials
+
+Credentials read from the environment or from files are only sent once the server
+has answered `401` with a `WWW-Authenticate` header. A few repositories never send
+that challenge: Azure DevOps artifact feeds answer an anonymous request with
+`203 Non-Authoritative Information` and a sign-in page as the body. Coursier has
+nothing to react to there, and the sign-in page ends up in the cache under the
+artifact's name, where it looks like a successful download until something tries
+to read the jar.
+
+Pass `--reject-non-authoritative-responses`, or its shorter alias `--fail-203`,
+to fail on such a response instead:
+
+```text
+$ cs fetch --fail-203 -r https://pkgs.dev.azure.com/… …
+Error downloading com.example:lib:1.0.0
+  non-authoritative information: https://pkgs.dev.azure.com/…/lib-1.0.0.pom (HTTP 203)
+```
+
+That makes the problem visible, but it does not authenticate the request. To do
+that, embed the credentials in the repository URL
+(`-r https://user:password@pkgs.dev.azure.com/…`) - those are sent right away,
+without waiting for a challenge.
+
+From the API, `FileCache#withAuthRealm` covers the same case for credentials a
+repository carries: it tells the cache which realm to assume, so that credentials
+scoped to that realm go out on the first request rather than waiting for a
+challenge that never comes.
+
 ## Debugging
 
 To see what coursier does on the wire, set `COURSIER_HTTP_DEBUG=1` (or the

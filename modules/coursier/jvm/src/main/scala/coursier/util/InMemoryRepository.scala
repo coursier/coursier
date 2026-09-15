@@ -70,6 +70,7 @@ object InMemoryRepository {
                 cacheOpt.fold(false)(_.followHttpsToHttpRedirections),
               sslSocketFactoryOpt = cacheOpt.flatMap(_.sslSocketFactoryOpt),
               hostnameVerifierOpt = cacheOpt.flatMap(_.hostnameVerifierOpt),
+              authRealmOpt = cacheOpt.flatMap(_.authRealmOpt),
               method = "HEAD",
               maxRedirectionsOpt = cacheOpt.flatMap(_.maxRedirections)
             )

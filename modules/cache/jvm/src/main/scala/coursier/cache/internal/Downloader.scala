@@ -64,7 +64,10 @@ import scala.util.control.NonFatal
   @unroll
     userAgentOpt: Option[String] = None,
     hostThrottle: HostThrottle = CacheDefaults.hostThrottle,
-    maxThrottleWait: Option[FiniteDuration] = CacheDefaults.maxThrottleWait
+    maxThrottleWait: Option[FiniteDuration] = CacheDefaults.maxThrottleWait,
+  @unroll
+    authRealmOpt: Option[String] = None,
+    rejectNonAuthoritativeResponses: Boolean = false
 )(implicit
   S: Sync[F]
 ) {
@@ -167,6 +170,7 @@ import scala.util.control.NonFatal
             autoCredentials = allCredentials0,
             sslSocketFactoryOpt = sslSocketFactoryOpt,
             hostnameVerifierOpt = hostnameVerifierOpt,
+            authRealmOpt = authRealmOpt,
             method = "HEAD",
             maxRedirectionsOpt = maxRedirections,
             classLoaders = classLoaders,
@@ -330,6 +334,7 @@ import scala.util.control.NonFatal
             autoCredentials = allCredentials0.filter(_.matchHost), // just in case
             sslSocketFactoryOpt = sslSocketFactoryOpt,
             hostnameVerifierOpt = hostnameVerifierOpt,
+            authRealmOpt = authRealmOpt,
             method = "GET",
             maxRedirectionsOpt = maxRedirections,
             classLoaders = classLoaders,
@@ -362,6 +367,8 @@ import scala.util.control.NonFatal
           Left(new ArtifactError.Forbidden(url))
         else if (respCodeOpt.contains(401))
           Left(new ArtifactError.Unauthorized(url, realm = CacheUrl.realm(conn)))
+        else if (rejectNonAuthoritativeResponses && respCodeOpt.contains(203))
+          Left(new ArtifactError.NonAuthoritative(url))
         else if (respCodeOpt.contains(Downloader.tooManyRequestsResponseCode))
           Left(new ArtifactError.RetryableHttpError(url, respCodeOpt.get, retryAfterOpt))
         else if (respCodeOpt.exists(c => c / 100 == 5))
@@ -491,6 +498,7 @@ import scala.util.control.NonFatal
             allCredentials0,
             sslSocketFactoryOpt,
             hostnameVerifierOpt,
+            authRealmOpt,
             logger,
             maxRedirections,
             connectTimeout,
@@ -1145,6 +1153,7 @@ object Downloader {
     credentials: Seq[DirectCredentials],
     sslSocketFactoryOpt: Option[SSLSocketFactory],
     hostnameVerifierOpt: Option[HostnameVerifier],
+    authRealmOpt: Option[String],
     logger: CacheLogger,
     maxRedirectionsOpt: Option[Int],
     connectTimeout: Option[FiniteDuration],
@@ -1163,6 +1172,7 @@ object Downloader {
           autoCredentials = credentials,
           sslSocketFactoryOpt = sslSocketFactoryOpt,
           hostnameVerifierOpt = hostnameVerifierOpt,
+          authRealmOpt = authRealmOpt,
           method = "HEAD",
           maxRedirectionsOpt = maxRedirectionsOpt,
           connectTimeout = connectTimeout,

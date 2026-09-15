@@ -61,6 +61,12 @@ final case class CacheOptions(
     followHttpToHttpsRedirect: Boolean = true,
 
   @Group(OptionGroup.cache)
+  @Hidden
+  @HelpMessage("Fail on HTTP 203 (Non-Authoritative Information) responses, rather than caching the body they carry. Meant for repositories that answer 203 with a sign-in page instead of asking for credentials, like Azure DevOps artifact feeds - the sign-in page is otherwise cached under the artifact's name")
+  @ExtraName("fail-203")
+    rejectNonAuthoritativeResponses: Boolean = false,
+
+  @Group(OptionGroup.cache)
   @HelpMessage("Credentials to be used when fetching metadata or artifacts. Specify multiple times to pass multiple credentials. Alternatively, use the COURSIER_CREDENTIALS environment variable")
   @ValueDescription("host(realm) user:pass|host user:pass")
     credentials: List[String] = Nil,
@@ -186,6 +192,7 @@ final case class CacheOptions(
           .withUseEnvCredentials(useEnvCredentials)
           .withUserAgent(userAgent0)
           .withUserAgentComments(Seq("cli"))
+          .withRejectNonAuthoritativeResponses(rejectNonAuthoritativeResponses)
     }
   }
 }

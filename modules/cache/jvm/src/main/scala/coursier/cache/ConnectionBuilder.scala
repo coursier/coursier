@@ -28,7 +28,9 @@ import scala.concurrent.duration.FiniteDuration
     connectTimeout: Option[FiniteDuration] = CacheDefaults.connectTimeout,
     readTimeout: Option[FiniteDuration] = CacheDefaults.readTimeout,
   @unroll
-    userAgentOpt: Option[String] = None
+    userAgentOpt: Option[String] = None,
+  @unroll
+    authRealmOpt: Option[String] = None
 ) {
   // format: on
 
@@ -51,7 +53,7 @@ import scala.concurrent.duration.FiniteDuration
       hostnameVerifierOpt,
       proxy,
       method,
-      None,
+      authRealmOpt,
       redirectionCount = 0,
       maxRedirectionsOpt,
       classLoaders,
