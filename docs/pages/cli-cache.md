@@ -35,3 +35,18 @@ $ export COURSIER_TTL="1 hour"
 ```
 
 The value of `COURSIER_TTL` is parsed with `scala.concurrent.duration.Duration`.
+
+### HTTP debugging
+
+Set `COURSIER_HTTP_DEBUG=1` (or the `coursier.http.debug` Java property) to print
+every HTTP request coursier makes on stderr, with the status the server answered,
+the `WWW-Authenticate` challenge if any, and which credentials were attached:
+
+```text
+$ COURSIER_HTTP_DEBUG=1 cs resolve org.typelevel:cats-core_3:2.9.0
+[coursier http] GET https://repo1.maven.org/maven2/org/typelevel/cats-core_3/2.9.0/cats-core_3-2.9.0.pom (no credentials)
+[coursier http] HTTP 200 for https://repo1.maven.org/maven2/org/typelevel/cats-core_3/2.9.0/cats-core_3-2.9.0.pom
+```
+
+Passwords are never printed. Files already in the cache are not requested, so
+they do not appear in this output.

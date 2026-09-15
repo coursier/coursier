@@ -27,6 +27,7 @@ object CoursierProperties {
     "coursier.exception-retry-backoff-max-delay",
     "coursier.exception-retry-backoff-multiplier",
     "coursier.http.agent",
+    "coursier.http.debug",
     "coursier.http.maxRedirects",
     "coursier.ivy.home",
     "coursier.jni",

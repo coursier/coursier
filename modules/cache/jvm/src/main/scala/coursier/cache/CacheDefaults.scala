@@ -209,4 +209,11 @@ object CacheDefaults {
 
   lazy val cachePolicies: Seq[CachePolicy] =
     CacheEnv.defaultCachePolicies(CacheEnv.cachePolicy.read())
+
+  /** Whether to print every HTTP request coursier makes, and how it was authenticated, on stderr
+    *
+    * Read from `COURSIER_HTTP_DEBUG` or the `coursier.http.debug` Java property.
+    */
+  lazy val httpDebug: Boolean =
+    CacheEnv.defaultHttpDebug(CacheEnv.httpDebug.read())
 }
