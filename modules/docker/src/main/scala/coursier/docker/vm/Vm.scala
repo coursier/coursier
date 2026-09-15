@@ -119,6 +119,8 @@ final class Vm(
     val delay =
       if (System.getenv("CI") == null) 2.seconds
       else 10.seconds
+    // On CI, VMs run without hardware virtualization (see DockerTests), so booting
+    // them up to the point sshd accepts connections routinely takes several minutes.
     val maxWait =
       if (System.getenv("CI") == null) 2.minutes
       else 10.minutes
@@ -145,7 +147,12 @@ final class Vm(
             if (retry) {
               val remainingNanos = deadline - System.nanoTime()
               session.disconnect()
-              if (remainingNanos <= 0L)
+              if (!isRunning())
+                throw new Exception(
+                  s"VM ${params.name} exited before it could be connected to",
+                  e
+                )
+              else if (remainingNanos <= 0L)
                 throw new Exception(s"Timed out connecting to VM ${params.name} after $maxWait", e)
               else {
                 System.err.println(s"Caught $e, waiting $delay")

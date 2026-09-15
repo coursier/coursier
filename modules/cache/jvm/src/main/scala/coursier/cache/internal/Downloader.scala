@@ -1082,7 +1082,9 @@ object Downloader {
           throttleOutcome(hostThrottle, url)
         case _: AccessDeniedException if Properties.isWin => Retry.Failed(None)
         case _: javax.net.ssl.SSLException                => Retry.Failed(None)
-        case _: java.net.SocketException                  => Retry.Failed(None)
+        // a DNS lookup failure, which is transient often enough to be worth another attempt
+        case _: java.net.UnknownHostException => Retry.Failed(None)
+        case _: java.net.SocketException      => Retry.Failed(None)
         // a connect or read timeout: the connection went quiet rather than failed, and the next
         // attempt resumes from what the .part file already holds. Note this is an
         // InterruptedIOException, not a SocketException, so the case above doesn't cover it.
