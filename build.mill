@@ -64,23 +64,23 @@ trait DataClassModule extends CsScalaModule with CrossModuleBase {
 object util extends Module {
   object shared extends SharedScalaSources
   object jvm    extends Cross[UtilJvm](ScalaVersions.all)
-  object js     extends Cross[UtilJs](ScalaVersions.all)
+  object js     extends Cross[UtilJs](ScalaVersions.allJs)
 }
 object core extends Module {
   object shared extends SharedScalaSources
   object jvm    extends Cross[CoreJvm](ScalaVersions.all)
-  object js     extends Cross[CoreJs](ScalaVersions.all)
+  object js     extends Cross[CoreJs](ScalaVersions.allJs)
 }
 object `sbt-maven-repository` extends Module {
   object shared extends SharedScalaSources
   object jvm    extends Cross[SbtMavenRepositoryJvm](ScalaVersions.all)
-  object js     extends Cross[SbtMavenRepositoryJs](ScalaVersions.all)
+  object js     extends Cross[SbtMavenRepositoryJs](ScalaVersions.allJs)
 }
 object `cache-util` extends CacheUtil
 object cache extends Module {
   object shared extends SharedScalaSources
   object jvm    extends Cross[CacheJvm](ScalaVersions.all)
-  object js     extends Cross[CacheJs](ScalaVersions.all)
+  object js     extends Cross[CacheJs](ScalaVersions.allJs)
 }
 object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.all)
 object `benchmark` extends ScalaModule with JmhModule {
@@ -103,7 +103,7 @@ object `launcher-native_04` extends LauncherNative04
 object coursier extends Module {
   object shared extends SharedScalaSources
   object jvm    extends Cross[CoursierJvm](ScalaVersions.all)
-  object js     extends Cross[CoursierJs](ScalaVersions.all)
+  object js     extends Cross[CoursierJs](ScalaVersions.allJs)
 }
 
 object `proxy-setup` extends JavaModule with CoursierPublishModule with CsMima {
@@ -260,7 +260,7 @@ object proguard extends JavaModule {
 object tests extends Module {
   object shared extends TestsShared
   object jvm    extends Cross[TestsJvm](ScalaVersions.all)
-  object js     extends Cross[TestsJs](ScalaVersions.all)
+  object js     extends Cross[TestsJs](ScalaVersions.allJs)
 
   def handmadeMetadata = Task.Source("handmade-metadata/data")
   def metadata         = Task.Source("metadata")
@@ -272,12 +272,12 @@ object interop extends Module {
   object scalaz extends Module {
     object shared extends SharedScalaSources
     object jvm    extends Cross[ScalazJvm](ScalaVersions.all)
-    object js     extends Cross[ScalazJs](ScalaVersions.all)
+    object js     extends Cross[ScalazJs](ScalaVersions.allJs)
   }
   object cats extends Module {
     object shared extends SharedScalaSources
     object jvm    extends Cross[CatsJvm](ScalaVersions.all)
-    object js     extends Cross[CatsJs](ScalaVersions.all)
+    object js     extends Cross[CatsJs](ScalaVersions.allJs)
   }
 }
 
@@ -336,7 +336,7 @@ object web extends Web
 
 object `test-cache` extends Module {
   object jvm extends Cross[TestCacheJvm](ScalaVersions.all)
-  object js  extends Cross[TestCacheJs](ScalaVersions.all)
+  object js  extends Cross[TestCacheJs](ScalaVersions.allJs)
 }
 
 trait UtilJvm extends UtilJvmBase with DataClassModule {
@@ -378,11 +378,9 @@ trait CoreJvm extends Core with CoreJvmBase with Shading with DataClassModule {
   }
 }
 trait CoreJs extends Core with CsScalaJsModule with DataClassModule {
+  // Scala.js modules are only built for Scala 2.13, no need for the 2.12 sources here
   def sources = Task {
-    val versionSources =
-      if (scalaVersion().startsWith("2.12")) core.shared.sourcesScala212()
-      else core.shared.sourcesScala213()
-    super.sources() ++ core.shared.sources() ++ versionSources
+    super.sources() ++ core.shared.sources() ++ core.shared.sourcesScala213()
   }
   def moduleDeps = super.moduleDeps ++ Seq(
     util.js()
@@ -1644,7 +1642,7 @@ def jsTests(scalaVersion: String = "*") = {
   ).flatten
 
   val scalaVersions =
-    if (scalaVersion == "*") ScalaVersions.all
+    if (scalaVersion == "*") ScalaVersions.allJs
     else Seq(scalaVersion)
 
   val tasks = scalaVersions.flatMap(sv => crossTests(sv))
@@ -1770,9 +1768,10 @@ object ci extends Module {
     */
   def scalaVersions() = Task.Command[ujson.Value] {
     ujson.Obj(
-      "scala-versions" -> ujson.Arr.from(ScalaVersions.all),
-      "scala213"       -> ScalaVersions.scala213,
-      "scala212"       -> ScalaVersions.scala212
+      "scala-versions"    -> ujson.Arr.from(ScalaVersions.all),
+      "scala-versions-js" -> ujson.Arr.from(ScalaVersions.allJs),
+      "scala213"          -> ScalaVersions.scala213,
+      "scala212"          -> ScalaVersions.scala212
     )
   }
 
