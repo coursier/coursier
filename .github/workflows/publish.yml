@@ -1,0 +1,40 @@
+name: Publish
+
+on:
+  workflow_call:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          submodules: true
+      - name: Delete tag if building from a branch
+        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+        run: |
+          for tag in $(git tag --points-at HEAD); do
+            git tag -d "$tag"
+          done
+      - uses: coursier/cache-action@v8
+        with:
+          disableFallback: true
+      # cutting a release needs a 'v*' and an 'interface-v*' tag on the same commit
+      - name: Check publish versions
+        run: ./mill -i ci.checkPublishVersions
+      - name: Publish
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --bundleName "coursier-${GITHUB_REF#refs/tags/v}"
+          else
+            for tag in $(git tag --points-at HEAD); do
+              git tag -d "$tag"
+            done
+            ./mill -i mill.scalalib.SonatypeCentralPublishModule/
+          fi
+        env:
+          MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}
+          MILL_PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
+          MILL_SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          MILL_SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
