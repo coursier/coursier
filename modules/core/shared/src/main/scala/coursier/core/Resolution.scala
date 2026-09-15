@@ -2160,11 +2160,16 @@ object Resolution {
 
     project0
       .copy(
-        module = {
-          val name0 = project0.module.name.map(propertiesWrapper0.substitution)
-          if (name0 == project0.module.name) project0.module
-          else project0.module.copy(name = name0)
-        },
+        // Module.hasProperties is a cached lazy val on an interned instance, so this
+        // is a field read for the vast majority of projects, whose artifactId holds no
+        // property at all
+        module =
+          if (project0.module.hasProperties) {
+            val name0 = project0.module.name.map(propertiesWrapper0.substitution)
+            if (name0 == project0.module.name) project0.module
+            else project0.module.copy(name = name0)
+          }
+          else project0.module,
         packagingOpt = project0.packagingOpt.map(_.map(propertiesWrapper0.substitution)),
         version0 = Version0(propertiesWrapper0.substitution.apply(project0.version0.asString)),
         dependencies0 =
