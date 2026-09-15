@@ -1055,6 +1055,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#http-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      HTTP debugging
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1613,6 +1622,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#http-debugging" class="md-nav__link">
+    <span class="md-ellipsis">
+      HTTP debugging
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1672,6 +1690,16 @@ check is older than the <a href="../features-cache/#ttl">TTL</a>:
 <div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>$ export COURSIER_TTL=&quot;1 hour&quot;
 </span></code></pre></div></p>
 <p>The value of <code>COURSIER_TTL</code> is parsed with <code>scala.concurrent.duration.Duration</code>.</p>
+<h3 id="http-debugging">HTTP debugging<a class="headerlink" href="#http-debugging" title="Permanent link">&para;</a></h3>
+<p>Set <code>COURSIER_HTTP_DEBUG=1</code> (or the <code>coursier.http.debug</code> Java property) to print
+every HTTP request coursier makes on stderr, with the status the server answered,
+the <code>WWW-Authenticate</code> challenge if any, and which credentials were attached:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>$ COURSIER_HTTP_DEBUG=1 cs resolve org.typelevel:cats-core_3:2.9.0
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>[coursier http] GET https://repo1.maven.org/maven2/org/typelevel/cats-core_3/2.9.0/cats-core_3-2.9.0.pom (no credentials)
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>[coursier http] HTTP 200 for https://repo1.maven.org/maven2/org/typelevel/cats-core_3/2.9.0/cats-core_3-2.9.0.pom
+</span></code></pre></div>
+<p>Passwords are never printed. Files already in the cache are not requested, so
+they do not appear in this output.</p>
 
 
 
