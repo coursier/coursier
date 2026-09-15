@@ -66,7 +66,9 @@ import scala.util.control.NonFatal
     hostThrottle: HostThrottle = CacheDefaults.hostThrottle,
     maxThrottleWait: Option[FiniteDuration] = CacheDefaults.maxThrottleWait,
   @unroll
+    // the realm the server is assumed to ask for, see withAuthRealm
     authRealmOpt: Option[String] = None,
+    // whether to fail on HTTP 203 responses rather than cache their body, see ArtifactError.NonAuthoritative
     rejectNonAuthoritativeResponses: Boolean = false
 )(implicit
   val sync: Sync[F]
@@ -112,6 +114,22 @@ import scala.util.control.NonFatal
     copy(sslSocketFactoryOpt = Some(sslSocketFactory))
   def withHostnameVerifier(hostnameVerifier: HostnameVerifier): FileCache[F] =
     copy(hostnameVerifierOpt = Some(hostnameVerifier))
+
+  /** Assumes the servers we talk to ask for `realm`, before any of them has said so.
+    *
+    * Credentials that name a realm are held back until the server sends a challenge naming that
+    * same realm, which costs an anonymous round trip per artifact, and only works for servers that
+    * do challenge us. Ones that answer an unauthenticated request with something other than a 401 -
+    * Azure DevOps artifact feeds answer 203, with a sign-in page as the body - never get their
+    * credentials at all.
+    *
+    * Setting the realm up-front sends those credentials on the first request. It applies to every
+    * host this cache talks to, so it is only sensible when the realm is unambiguous.
+    *
+    * This covers the credentials an artifact or a repository carries, which are sent as soon as
+    * they apply. The ones picked up from credential files or the environment are optional, and stay
+    * held back until a server challenges us whatever realm is assumed here.
+    */
   def withAuthRealm(realm: String): FileCache[F] =
     copy(authRealmOpt = Some(realm))
   def withMaxRedirections(max: Int): FileCache[F] =

@@ -334,6 +334,7 @@ import scala.util.control.NonFatal
             autoCredentials = allCredentials0.filter(_.matchHost), // just in case
             sslSocketFactoryOpt = sslSocketFactoryOpt,
             hostnameVerifierOpt = hostnameVerifierOpt,
+            authRealmOpt = authRealmOpt,
             method = "GET",
             maxRedirectionsOpt = maxRedirections,
             classLoaders = classLoaders,

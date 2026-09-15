@@ -38,11 +38,22 @@ object ArtifactError {
   )
   // format: on
 
-
+  /** A response the origin server did not produce itself
+    *
+    * Only ever returned when the cache is asked to reject them (`rejectNonAuthoritativeResponses`
+    * on `FileCache`): a 203 is a valid response, and most of the time its body is the artifact,
+    * merely transformed by a proxy on the way.
+    *
+    * It is worth failing on when a repository answers 203 in place of an authentication challenge -
+    * Azure DevOps artifact feeds return a sign-in page that way - as the body then gets cached as
+    * if it were the artifact.
+    */
   // format: off
-  final class NonAuthoritative(url: String) extends ArtifactError(
-    `type` = "non-authoritative information",
-    message = url
+  final class NonAuthoritative(
+    val url: String
+  ) extends ArtifactError(
+    "non-authoritative information",
+    s"$url (HTTP 203)"
   )
   // format: on
 
