@@ -256,19 +256,11 @@ object Repository {
           Right(Complete.Result(nameInput, l0))
       }
 
-    private def hasOrg(
-      orgInput: Complete.Input.Org,
-      partial: Boolean
-    )(implicit
-      F: Monad[F]
-    ): F[Boolean] =
+    private def hasOrg(orgInput: Complete.Input.Org)(implicit F: Monad[F]): F[Boolean] =
       F.map(org(orgInput)) { res =>
         res
           .toOption
-          .exists { res =>
-            res.completions.contains(orgInput.input) ||
-            (partial && res.completions.exists(_.startsWith(orgInput.input + ".")))
-          }
+          .exists(_.completions.contains(orgInput.input))
       }
 
     private def hasName(nameInput: Complete.Input.Name)(implicit F: Monad[F]): F[Boolean] =
@@ -279,7 +271,7 @@ object Repository {
       }
 
     def hasModule(module: Module)(implicit F: Monad[F]): F[Boolean] =
-      hasOrg(Complete.Input.Org(module.organization.value), partial = false).flatMap {
+      hasOrg(Complete.Input.Org(module.organization.value)).flatMap {
         case false => F.point(false)
         case true =>
           val prefix              = s"${module.organization.value}:"
@@ -300,13 +292,18 @@ object Repository {
 
       // When completing names, we check if the org is there first.
       // When completing versions, we check if the org, then the name, are there first.
-      // Goal is to never hit 404, that aren't cached.
       // So completing 'org.scala-lang:scala-library:' goes like:
-      // - we complete first 'org', check that 'org' itself or 'org.' are in the results, stop if not
-      // - we complete 'org.scala-lang', check that just 'org.scala-lang' is in the results
-      // - we complete 'org.scala-lang:scala-library', check that 'org.scala-lang:scala-library' is in the results
+      // - we complete 'org.scala-lang' (listing 'org/'), check that just 'org.scala-lang' is in
+      //   the results
+      // - we complete 'org.scala-lang:scala-library', check that 'org.scala-lang:scala-library' is
+      //   in the results
       // - now that we know that 'org.scala-lang:scala-library' is a thing, we try to list its versions.
-      // Each time we request something, we know that the parent ~element exists.
+      //
+      // We deliberately don't walk further up than that (checking that 'org' is in the repository
+      // root listing, say). That only ever costs us extra listing requests - the biggest ones, as
+      // the closer to the root, the bigger the directory - and it makes completion fail entirely on
+      // repositories that don't allow listing their root, like the Sonatype snapshot repositories
+      // (see https://github.com/coursier/coursier/issues/1700).
 
       def ver(versionInput: Complete.Input.Ver): F[Either[Throwable, Complete.Result]] =
         F.map(versions(versionInput.module, versionInput.input.drop(versionInput.from))) {
@@ -327,21 +324,14 @@ object Repository {
 
       input match {
         case orgInput: Complete.Input.Org =>
-          val idx = orgInput.input.lastIndexOf('.')
-          if (idx < 0)
-            org(orgInput)
-          else
-            hasOrg(Complete.Input.Org(orgInput.input.take(idx)), partial = true).flatMap {
-              case false => empty
-              case true  => org(orgInput)
-            }
+          org(orgInput)
         case nameInput: Complete.Input.Name =>
-          hasOrg(nameInput.orgInput, partial = false).flatMap {
+          hasOrg(nameInput.orgInput).flatMap {
             case false => empty
             case true  => name(nameInput)
           }
         case verInput: Complete.Input.Ver =>
-          hasOrg(verInput.orgInput, partial = false).flatMap {
+          hasOrg(verInput.orgInput).flatMap {
             case false => empty
             case true =>
               hasName(verInput.nameInput).flatMap {
