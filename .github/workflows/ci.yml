@@ -42,6 +42,7 @@ jobs:
     name: Scala versions
     outputs:
       scala-versions: ${{ steps.versions.outputs.scala-versions }}
+      scala-versions-js: ${{ steps.versions.outputs.scala-versions-js }}
       scala213: ${{ steps.versions.outputs.scala213 }}
       scala212: ${{ steps.versions.outputs.scala212 }}
     steps:
@@ -136,7 +137,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        SCALA_VERSION: ${{ fromJSON(needs.scala-versions.outputs.scala-versions) }}
+        SCALA_VERSION: ${{ fromJSON(needs.scala-versions.outputs.scala-versions-js) }}
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
