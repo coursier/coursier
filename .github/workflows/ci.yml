@@ -284,7 +284,17 @@ jobs:
     - name: Test cs.sh with CS_VERSION=nightly
       run: ./mill -i csShTests --version nightly
 
+  # 'needs' cannot be made conditional, and a job's 'if' is only evaluated once its
+  # 'needs' are over anyway, so we need two jobs here: nightlies are published straightaway,
+  # while releases wait for the whole CI to pass.
+  publish-nightly:
+    name: Publish nightly
+    if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
+    uses: ./.github/workflows/publish.yml
+    secrets: inherit
+
   publish:
+    name: Publish release
     needs:
       - "compile-publish-all"
       - "test"
@@ -294,40 +304,9 @@ jobs:
       - "website-check"
       - "format"
       - "scalafix"
-    if: github.event_name == 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-          submodules: true
-      - name: Delete tag if building from a branch
-        if: ${{ !startsWith(github.ref, 'refs/tags/') }}
-        run: |
-          for tag in $(git tag --points-at HEAD); do
-            git tag -d "$tag"
-          done
-      - uses: coursier/cache-action@v8
-        with:
-          disableFallback: true
-      # cutting a release needs a 'v*' and an 'interface-v*' tag on the same commit
-      - name: Check publish versions
-        run: ./mill -i ci.checkPublishVersions
-      - name: Publish
-        run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --bundleName "coursier-${GITHUB_REF#refs/tags/v}"
-          else
-            for tag in $(git tag --points-at HEAD); do
-              git tag -d "$tag"
-            done
-            ./mill -i mill.scalalib.SonatypeCentralPublishModule/
-          fi
-        env:
-          MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}
-          MILL_PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
-          MILL_SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
-          MILL_SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    uses: ./.github/workflows/publish.yml
+    secrets: inherit
 
   generate-native-launchers:
     name: ${{ matrix.OS }} native
@@ -548,8 +527,10 @@ jobs:
 
   generate-jar-launchers:
     name: Upload JAR launchers
-    needs: publish
-    if: github.event_name == 'push'
+    needs:
+      - publish-nightly
+      - publish
+    if: github.event_name == 'push' && (needs.publish-nightly.result == 'success' || needs.publish.result == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
