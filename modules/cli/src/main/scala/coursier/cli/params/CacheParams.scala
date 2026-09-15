@@ -22,7 +22,8 @@ final case class CacheParams(
   credentials: Seq[coursier.credentials.Credentials] = Nil,
   useEnvCredentials: Boolean = true,
   userAgent: Option[String] = None,
-  userAgentComments: Seq[String] = Nil
+  userAgentComments: Seq[String] = Nil,
+  rejectNonAuthoritativeResponses: Boolean = false
 ) {
 
   def withCacheLocation(cacheLocation: java.io.File): CacheParams =
@@ -60,6 +61,13 @@ final case class CacheParams(
   def addUserAgentComments(comments: String*): CacheParams =
     copy(userAgentComments = userAgentComments ++ comments)
 
+  /** Whether an HTTP 203 fails the download instead of having its body cached.
+    *
+    * See `ArtifactError.NonAuthoritative`.
+    */
+  def withRejectNonAuthoritativeResponses(rejectNonAuthoritativeResponses: Boolean): CacheParams =
+    copy(rejectNonAuthoritativeResponses = rejectNonAuthoritativeResponses)
+
   def cache(
     pool: ExecutorService,
     logger: CacheLogger,
@@ -77,7 +85,8 @@ final case class CacheParams(
         retry = retryCount,
         followHttpToHttpsRedirections = followHttpToHttpsRedirections,
         localArtifactsShouldBeCached = cacheLocalArtifacts,
-        userAgent = userAgent.orElse(Some(CacheUrl.coursierUserAgent(userAgentComments: _*)))
+        userAgent = userAgent.orElse(Some(CacheUrl.coursierUserAgent(userAgentComments: _*))),
+        rejectNonAuthoritativeResponses = rejectNonAuthoritativeResponses
       )
 
     Cache.default match {

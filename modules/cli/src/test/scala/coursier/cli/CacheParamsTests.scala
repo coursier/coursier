@@ -51,6 +51,30 @@ object CacheParamsTests extends TestSuite {
       assert(params(parse("--user-agent", "  ")).userAgent.isEmpty)
     }
 
+    test("--reject-non-authoritative-responses is passed down to the cache") {
+      val params0 = params(parse("--reject-non-authoritative-responses"))
+      assert(params0.rejectNonAuthoritativeResponses)
+
+      params0.cache(coursier.cache.CacheDefaults.pool, coursier.cache.CacheLogger.nop) match {
+        case fc: FileCache[Task] => assert(fc.rejectNonAuthoritativeResponses)
+        case other               => sys.error(s"Expected a FileCache, got $other")
+      }
+    }
+
+    test("--fail-203 is an alias for it") {
+      assert(params(parse("--fail-203")).rejectNonAuthoritativeResponses)
+    }
+
+    test("203 responses are cached by default") {
+      val params0 = params(parse())
+      assert(!params0.rejectNonAuthoritativeResponses)
+
+      params0.cache(coursier.cache.CacheDefaults.pool, coursier.cache.CacheLogger.nop) match {
+        case fc: FileCache[Task] => assert(!fc.rejectNonAuthoritativeResponses)
+        case other               => sys.error(s"Expected a FileCache, got $other")
+      }
+    }
+
     // the format repositories ask for, see https://central.sonatype.org/faq/429-tooling-provider/
     test("the help spells out the user agent format") {
       val help = Help[CacheOptions].help(HelpFormat.default())
