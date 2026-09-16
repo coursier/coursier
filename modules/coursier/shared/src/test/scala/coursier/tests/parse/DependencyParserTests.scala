@@ -17,7 +17,7 @@ import coursier.core.{
   VariantSelector
 }
 import coursier.util.StringInterpolators._
-import coursier.version.VersionConstraint
+import coursier.version.{Latest, VersionConstraint}
 import utest._
 
 object DependencyParserTests extends TestSuite {
@@ -576,6 +576,73 @@ object DependencyParserTests extends TestSuite {
       DependencyParser.dependencyParams("org-apache-avro:avro\\avro:1.7.4", "2.11.11") match {
         case Left(err)       => assert(err.contains("avro\\avro"))
         case Right((dep, _)) => assert(false)
+      }
+    }
+
+    test("maven 2 meta versions") {
+      // RELEASE and LATEST stand for the release / latest fields of the module's
+      // maven-metadata.xml, which coursier handles as latest.release / latest.integration
+
+      test("RELEASE") {
+        DependencyParser.dependencyParams("org.apache.avro:avro:RELEASE", "2.11.11") match {
+          case Left(err) => assert(false)
+          case Right((dep, _)) =>
+            assert(dep.versionConstraint.latest == Some(Latest.Release))
+            assert(dep.versionConstraint.preferred.isEmpty)
+            // the constraint keeps the version we were passed
+            assert(dep.versionConstraint.asString == "RELEASE")
+            assert(dep.versionConstraint.generateString == "latest.release")
+        }
+      }
+
+      test("LATEST") {
+        DependencyParser.dependencyParams("org.apache.avro:avro:LATEST", "2.11.11") match {
+          case Left(err) => assert(false)
+          case Right((dep, _)) =>
+            assert(dep.versionConstraint.latest == Some(Latest.Integration))
+            assert(dep.versionConstraint.preferred.isEmpty)
+            assert(dep.versionConstraint.asString == "LATEST")
+            assert(dep.versionConstraint.generateString == "latest.integration")
+        }
+      }
+
+      test("macro") {
+        assert(dep"org.apache.avro:avro:RELEASE".versionConstraint.latest == Some(Latest.Release))
+        assert(
+          dep"org.apache.avro:avro:LATEST".versionConstraint.latest == Some(Latest.Integration)
+        )
+      }
+
+      test("moduleVersion") {
+        DependencyParser.moduleVersion0("org.apache.avro:avro:RELEASE", "2.11.11") match {
+          case Left(err) => assert(false)
+          case Right((_, version)) =>
+            assert(version.latest == Some(Latest.Release))
+        }
+      }
+
+      test("bom") {
+        DependencyParser.dependencyParams(
+          "org.apache.avro:avro:1.7.4,bom=org.apache.spark%spark-parent_2.13%RELEASE",
+          "2.13.15"
+        ) match {
+          case Left(err) => assert(false)
+          case Right((dep, _)) =>
+            val latests = dep.bomDependencies.map(_.versionConstraint.latest)
+            assert(latests == Seq(Some(Latest.Release)))
+        }
+      }
+
+      test("override") {
+        DependencyParser.dependencyParams(
+          "org.apache.avro:avro:1.7.4,override=org.apache.avro%avro-tools%LATEST",
+          "2.13.15"
+        ) match {
+          case Left(err) => assert(false)
+          case Right((dep, _)) =>
+            val latests = dep.overridesMap.flatten.toSeq.map(_._2.versionConstraint.latest)
+            assert(latests == Seq(Some(Latest.Integration)))
+        }
       }
     }
 

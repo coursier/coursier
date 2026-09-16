@@ -392,7 +392,7 @@ object AppDescriptor {
           s"Versions for ${dep0.module}: ${depVersions.toVector.sorted.mkString(", ")}"
         )
 
-      latestVersions(dep.versionConstraint.asString) || {
+      dep.versionConstraint.latest.nonEmpty || {
         val preferredSet = dep.versionConstraint.preferred.toSet
         if (preferredSet.isEmpty)
           depVersions.exists { v =>
@@ -569,8 +569,6 @@ object AppDescriptor {
 
     repositories.foldLeft(Set.empty[String])((acc, r) => acc ++ forRepo(r))
   }
-
-  private val latestVersions = Set("latest.release", "latest.integration", "latest.stable")
 
   private val placeholder = VersionConstraint("_")
 }
