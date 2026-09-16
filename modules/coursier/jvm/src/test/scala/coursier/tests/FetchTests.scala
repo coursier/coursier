@@ -9,6 +9,7 @@ import coursier.util.{InMemoryRepository, Task}
 import coursier.version.VersionConstraint
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 import scala.concurrent.{ExecutionContext, Future}
 

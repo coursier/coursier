@@ -1046,6 +1046,8 @@ object SnapshotVersioning {
   ext: Extension,
   classifier: Classifier
 ) {
+  override def toString: String =
+    ToStringHelper(this)
   def attributes: Attributes = Attributes(`type`, classifier)
   def isEmpty: Boolean =
     name.isEmpty && `type`.isEmpty && ext.isEmpty && classifier.isEmpty

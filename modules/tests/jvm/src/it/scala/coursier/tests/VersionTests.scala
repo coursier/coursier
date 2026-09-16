@@ -5,6 +5,7 @@ import coursier.core.{Organization, Module, ModuleName}
 import coursier.Versions
 import utest.{TestSuite, Tests, test}
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 import scala.concurrent.ExecutionContextExecutorService
 

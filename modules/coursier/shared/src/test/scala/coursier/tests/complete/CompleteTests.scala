@@ -6,6 +6,7 @@ import coursier.ivy.IvyRepository
 import coursier.util.Task
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 import scala.concurrent.Future
 

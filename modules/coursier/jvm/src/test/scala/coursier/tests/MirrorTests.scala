@@ -8,6 +8,7 @@ import coursier.params.MirrorConfFile
 import coursier.util.StringInterpolators._
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 
 object MirrorTests extends TestSuite {

@@ -1246,7 +1246,7 @@ object Resolution {
   @unroll
   defaultVariantAttributes: VariantSelector.AttributesBased =
     VariantSelector.AttributesBased.empty,
-  @since
+  @unroll
   ignoreOptionalFromDepMgmt: Boolean = false
 ) {
 

@@ -2,6 +2,7 @@ package coursier.tests
 
 import utest._
 
+import coursier.tests.AssertCompat.assert
 import scala.async.Async.{async, await}
 import coursier.core.{
   Attributes,

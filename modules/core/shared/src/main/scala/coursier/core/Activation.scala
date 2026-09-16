@@ -71,6 +71,9 @@ object Activation {
     name: Option[String],
     version: Option[String] // FIXME Could this be an interval?
   ) {
+    override def toString: String =
+      ToStringHelper(this)
+
     private lazy val archNormalized = arch
       .map(_.toLowerCase(Locale.US))
       .map {

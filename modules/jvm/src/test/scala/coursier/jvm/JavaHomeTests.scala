@@ -88,11 +88,12 @@ object JavaHomeTests extends TestSuite {
           Files.setPosixFilePermissions(javaBin, PosixFilePermissions.fromString("rwxr-xr-x"))
 
         val env = Map("JAVA_HOME" -> tmpDir.toAbsolutePath.toString)
-        val home = JavaHome()
-          .withGetEnv(Some(env.get))
-          .withCommandOutput(forbidCommands)
-          .withOs("linux")
-          .withPathExtensions(None) // test non-Windows behavior
+        val home = JavaHome().copy(
+          getEnv = Some(env.get),
+          commandOutput = forbidCommands,
+          os = "linux",
+          pathExtensions = None // test non-Windows behavior
+        )
 
         val expectedSystem = Some(tmpDir.toAbsolutePath.toString)
         val system = home.system()
@@ -124,11 +125,12 @@ object JavaHomeTests extends TestSuite {
         }
 
       val env = Map("JAVA_HOME" -> platformPath("/outer/space"))
-      val home = JavaHome()
-        .withGetEnv(Some(env.get))
-        .withCommandOutput(commandOutput)
-        .withOs("linux")
-        .withPathExtensions(None) // test non-Windows behavior
+      val home = JavaHome().copy(
+        getEnv = Some(env.get),
+        commandOutput = commandOutput,
+        os = "linux",
+        pathExtensions = None // test non-Windows behavior
+      )
 
       val expectedSystem = Some(platformPath("/usr/lib/jvm/oracle-39b07"))
       val system = home.system()
@@ -172,11 +174,12 @@ object JavaHomeTests extends TestSuite {
         Files.write(binDir.resolve("java.exe"), Array.empty[Byte])
 
         val env = Map("JAVA_HOME" -> tmpDir.toAbsolutePath.toString)
-        val home = JavaHome()
-          .withGetEnv(Some(env.get))
-          .withCommandOutput(forbidCommands)
-          .withOs("windows")
-          .withPathExtensions(JavaHome.pathExtensions(isWindows = true, _ => None))
+        val home = JavaHome().copy(
+          getEnv = Some(env.get),
+          commandOutput = forbidCommands,
+          os = "windows",
+          pathExtensions = JavaHome.pathExtensions(isWindows = true, _ => None)
+        )
 
         val expectedSystem = Some(tmpDir.toAbsolutePath.toString)
         val system = home.system()
