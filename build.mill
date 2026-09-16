@@ -114,11 +114,6 @@ object core extends Module {
   object jvm    extends Cross[CoreJvm](ScalaVersions.all)
   object js     extends Cross[CoreJs](ScalaVersions.allJs)
 }
-object `sbt-maven-repository` extends Module {
-  object shared extends SharedScalaSources
-  object jvm    extends Cross[SbtMavenRepositoryJvm](ScalaVersions.all)
-  object js     extends Cross[SbtMavenRepositoryJs](ScalaVersions.allJs)
-}
 object `cache-util` extends CacheUtil
 object cache extends Module {
   object shared extends SharedScalaSources
@@ -505,31 +500,6 @@ trait CoreJs extends Core with CsScalaJsModule with DataClassModule {
   }
 }
 
-trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase with DataClassModule
-    with Scala212SnapshotOnlyPublishModule {
-  def sources = Task {
-    val epochSources =
-      if (scalaVersion().startsWith("3.")) `sbt-maven-repository`.shared.sourcesScala3()
-      else `sbt-maven-repository`.shared.sourcesScala2()
-    super.sources() ++ `sbt-maven-repository`.shared.sources() ++ epochSources
-  }
-  def moduleDeps = super.moduleDeps ++ Seq(
-    core.jvm()
-  )
-}
-trait SbtMavenRepositoryJs extends SbtMavenRepository
-    with CsScalaJsModule with DataClassModule {
-  def sources = Task {
-    val epochSources =
-      if (scalaVersion().startsWith("3.")) `sbt-maven-repository`.shared.sourcesScala3()
-      else `sbt-maven-repository`.shared.sourcesScala2()
-    super.sources() ++ `sbt-maven-repository`.shared.sources() ++ epochSources
-  }
-  def moduleDeps = super.moduleDeps ++ Seq(
-    core.js()
-  )
-}
-
 trait CacheUtil extends CoursierPublishModule with CsMima {
   def mimaPreviousVersions = Task {
     import _root_.coursier.version.Version
@@ -803,8 +773,7 @@ trait TestsJvm extends TestsModule { self =>
     super.sources() ++ tests.shared.sources()
   }
   def moduleDeps = super.moduleDeps ++ Seq(
-    core.jvm(),
-    `sbt-maven-repository`.jvm()
+    core.jvm()
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoup
@@ -866,8 +835,7 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
     super.sources() ++ tests.shared.sources()
   }
   def moduleDeps = super.moduleDeps ++ Seq(
-    core.js(),
-    `sbt-maven-repository`.js()
+    core.js()
   )
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
   object test extends SbtTests with ScalaJSTests with CsScalaJsTests with CsTests
@@ -1147,7 +1115,6 @@ trait Cli extends CsModule
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion213Compat),
-    `sbt-maven-repository`.jvm(cliScalaVersion213Compat),
     install(cliScalaVersion213Compat),
     jvm(cliScalaVersion213Compat),
     docker(cliScalaVersion),
