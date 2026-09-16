@@ -531,7 +531,9 @@ jobs:
     needs:
       - publish-nightly
       - publish
-    if: github.event_name == 'push' && (needs.publish-nightly.result == 'success' || needs.publish.result == 'success')
+    # one of the two publish jobs is always skipped, and a skipped 'needs' skips this job too by
+    # default (the condition gets an implicit 'success()'): '!cancelled()' keeps it evaluated
+    if: ${{ !cancelled() && github.event_name == 'push' && (needs.publish-nightly.result == 'success' || needs.publish.result == 'success') }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
