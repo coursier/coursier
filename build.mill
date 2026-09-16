@@ -1904,13 +1904,25 @@ object ci extends Module {
   def checkPublishVersions() = Task.Command[Unit] {
     val versions            = allPublishVersions()
     val (snapshots, others) = versions.partition(_._2.endsWith("-SNAPSHOT"))
-    if (snapshots.nonEmpty && others.nonEmpty) {
+    def printVersions(): Unit =
       for ((name, version) <- versions.sortBy(_._1))
         System.err.println(s"$name: $version")
+    if (snapshots.nonEmpty && others.nonEmpty) {
+      printVersions()
       Task.fail(
         s"Found ${snapshots.length} snapshot and ${others.length} non-snapshot publish " +
           "versions, expected either all snapshots or all releases (releases need both a " +
           "'v*' and an 'interface-v*' tag on the same commit)"
+      )
+    }
+    // 2.1.25 got published as "interface-v1.0.29", from the wrong tag: make sure versions
+    // at least look like versions before anything gets published
+    val malformed = versions.filter(!_._2.matches("[0-9]+\\.[0-9]+\\.[0-9]+([-.+].*)?"))
+    if (malformed.nonEmpty) {
+      printVersions()
+      Task.fail(
+        s"Found ${malformed.length} malformed publish versions (expected X.Y.Z-like versions): " +
+          malformed.map { case (name, version) => s"$name: $version" }.mkString(", ")
       )
     }
   }
