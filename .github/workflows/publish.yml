@@ -28,9 +28,10 @@ jobs:
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             # the interface modules are versioned from the 'interface-v*' tags: with no such tag
-            # on this commit, they are snapshots, and get left out of the release
+            # on this commit, they are snapshots, and get left out of the release (like the
+            # LocalOnlyPublishModule ones, that ci.publishSonatypeCentral leaves out by default)
             if [ -z "$(git tag -l 'interface-v*' --points-at HEAD)" ]; then
-              PUBLISH_ARTIFACTS_OPTS=(--publishArtifacts '__:PublishModule:^InterfacePublishModule.publishArtifacts')
+              PUBLISH_ARTIFACTS_OPTS=(--publishArtifacts '__:PublishModule:^InterfacePublishModule:^LocalOnlyPublishModule.publishArtifacts')
             else
               PUBLISH_ARTIFACTS_OPTS=()
             fi

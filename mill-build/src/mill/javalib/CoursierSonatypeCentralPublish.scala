@@ -81,8 +81,9 @@ trait CoursierSonatypeCentralPublish extends MavenWorkerSupport, PgpWorkerSuppor
     *   look like)
     */
   def publishSonatypeCentral(
+    // LocalOnlyPublishModule modules are never published to remote repositories
     publishArtifacts: Tasks[PublishData] =
-      Tasks.resolveMainDefault("__:PublishModule.publishArtifacts"),
+      Tasks.resolveMainDefault("__:PublishModule:^LocalOnlyPublishModule.publishArtifacts"),
     shouldRelease: Boolean = true,
     bundleName: String = "",
     localRepo: String = "",

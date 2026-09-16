@@ -696,8 +696,9 @@ def launcherModule           = launcher
 // only accepts 17 and later, so the modules compiled with cliScalaVersion
 // cannot target an earlier one.
 def scala3LatestJvmRelease = "17"
+// only published locally, for the sake of `cli-tests`
 trait LauncherNative04 extends CsModule
-    with CoursierPublishModule {
+    with LocalOnlyPublishModule {
   def jvmRelease   = scala3LatestJvmRelease
   def scalaVersion = cliScalaVersion
   def artifactName = "coursier-launcher-native_0.4"
