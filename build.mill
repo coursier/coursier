@@ -1879,7 +1879,7 @@ def cliNativeImageLauncher() = Task.Command {
   cli.nativeImage()
 }
 
-object ci extends Module {
+object ci extends Module with mill.javalib.CoursierSonatypeCentralPublish {
   def copyJvm(jvm: String = Versions.graalVmJvmId, dest: String = "jvm") = Task.Command {
     import _root_.coursier.cache.{ArchiveCache, FileCache}
     import _root_.coursier.jvm.{JavaHome, JvmCache}

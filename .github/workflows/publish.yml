@@ -36,12 +36,12 @@ jobs:
             fi
             # --shouldRelease false: the bundle is uploaded and validated on Sonatype Central, but has
             # to be published manually from https://central.sonatype.com/publishing/deployments
-            ./mill -i mill.scalalib.SonatypeCentralPublishModule/ "${PUBLISH_ARTIFACTS_OPTS[@]}" --bundleName "coursier-${GITHUB_REF#refs/tags/v}" --shouldRelease false
+            ./mill -i ci.publishSonatypeCentral "${PUBLISH_ARTIFACTS_OPTS[@]}" --bundleName "coursier-${GITHUB_REF#refs/tags/v}" --shouldRelease false
           else
             for tag in $(git tag --points-at HEAD); do
               git tag -d "$tag"
             done
-            ./mill -i mill.scalalib.SonatypeCentralPublishModule/
+            ./mill -i ci.publishSonatypeCentral
           fi
         env:
           MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}

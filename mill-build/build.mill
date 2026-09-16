@@ -12,6 +12,10 @@ object `package` extends MillBuildRootModule {
     mvn"org.jsoup:jsoup:1.23.2",
     mvn"com.eed3si9n.jarjarabrams:jarjar-abrams-core_2.13:1.14.1",
     mvn"com.lihaoyi::mill-contrib-jmh:1.1.3",
+    // Provided-scope dependency of mill-libs-javalib, needed by the temporary
+    // mill-build/src/mill/javalib/CoursierSonatypeCentralPublish.scala - drop both once Mill
+    // stops checksumming PGP signatures
+    mvn"com.lumidion::sonatype-central-client-requests:0.6.0",
     mvn"org.apache.commons:commons-compress:1.27.0"
   )
 }
