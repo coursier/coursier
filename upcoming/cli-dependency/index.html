@@ -1007,6 +1007,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#version" class="md-nav__link">
+    <span class="md-ellipsis">
+      Version
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#bill-of-material" class="md-nav__link">
     <span class="md-ellipsis">
       Bill Of Material
@@ -1580,6 +1589,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#version" class="md-nav__link">
+    <span class="md-ellipsis">
+      Version
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#bill-of-material" class="md-nav__link">
     <span class="md-ellipsis">
       Bill Of Material
@@ -1641,32 +1659,43 @@
 <h2 id="syntax">Syntax<a class="headerlink" href="#syntax" title="Permanent link">&para;</a></h2>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>org:name:version
 </span></code></pre></div>
+<h2 id="version">Version<a class="headerlink" href="#version" title="Permanent link">&para;</a></h2>
+<p>Besides plain versions, like <code>1.0.2</code>, the version field accepts</p>
+<ul>
+<li>version intervals, like <code>[1.0,2.0)</code> or <code>2.0+</code>,</li>
+<li><code>latest.release</code>, <code>latest.integration</code>, and <code>latest.stable</code>, that pick the latest version
+  from the listing of the module in the repository,</li>
+<li>the Maven 2 meta versions <code>RELEASE</code> and <code>LATEST</code>, handled like <code>latest.release</code> and
+  <code>latest.integration</code> respectively.</li>
+</ul>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>org:name:RELEASE
+</span></code></pre></div>
 <h2 id="bill-of-material">Bill Of Material<a class="headerlink" href="#bill-of-material" title="Permanent link">&para;</a></h2>
 <p>One can pass a Bill-Of-Material, or BOM, via dependencies, like
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>com.google.protobuf:protobuf-java-util,bom=com.google.protobuf%protobuf-bom%4.28.1
+<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>com.google.protobuf:protobuf-java-util,bom=com.google.protobuf%protobuf-bom%4.28.1
 </span></code></pre></div></p>
 <p>Note the use of <code>%</code> rather than <code>:</code> to separate the components of the BOM coordinates.</p>
 <h2 id="fetching-artifacts-without-pom-files">Fetching artifacts without POM files<a class="headerlink" href="#fetching-artifacts-without-pom-files" title="Permanent link">&para;</a></h2>
 <p>Some artifacts do not have a POM or Ivy file in the repository. Coursier supports fetching
 such artifacts directly via the <code>url=</code> parameter:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>org:name:version,url=https%3A%2F%2Fexample.com%2Fpath%2Fto%2Fmy-artifact-1.0.jar
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>org:name:version,url=https%3A%2F%2Fexample.com%2Fpath%2Fto%2Fmy-artifact-1.0.jar
 </span></code></pre></div></p>
 <p>Note that the URL must be URL-encoded. The <code>url</code> parameter instructs coursier to fetch the
 artifact from the given URL directly, bypassing the usual POM resolution. For example, to
 fetch a JAR at <code>https://example.com/my-lib/1.0/my-lib-1.0.jar</code>:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>com.example:my-lib:1.0,url=https%3A%2F%2Fexample.com%2Fmy-lib%2F1.0%2Fmy-lib-1.0.jar
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>com.example:my-lib:1.0,url=https%3A%2F%2Fexample.com%2Fmy-lib%2F1.0%2Fmy-lib-1.0.jar
 </span></code></pre></div></p>
 <h2 id="gradle-module-variant">Gradle Module Variant<a class="headerlink" href="#gradle-module-variant" title="Permanent link">&para;</a></h2>
 <p>One can add Gradle Module attributes to a dependency, so that it checks if a Gradle Module
 file exists for that dependency, and uses it to pick a "variant" of that dependency:
-<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,variant.org.gradle.usage=kotlin-runtime,variant.org.jetbrains.kotlin.platform.type=js,variant.org.jetbrains.kotlin.js.compiler=ir,variant.org.gradle.category=library
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,variant.org.gradle.usage=kotlin-runtime,variant.org.jetbrains.kotlin.platform.type=js,variant.org.jetbrains.kotlin.js.compiler=ir,variant.org.gradle.category=library
 </span></code></pre></div></p>
 <p>If we split / indent that dependency for readability, we get
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>  variant.org.gradle.usage=kotlin-runtime,
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>  variant.org.jetbrains.kotlin.platform.type=js,
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>  variant.org.jetbrains.kotlin.js.compiler=ir,
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>  variant.org.gradle.category=library
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>org.jetbrains.kotlinx:kotlinx-html-js:0.11.0,
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>  variant.org.gradle.usage=kotlin-runtime,
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>  variant.org.jetbrains.kotlin.platform.type=js,
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>  variant.org.jetbrains.kotlin.js.compiler=ir,
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  variant.org.gradle.category=library
 </span></code></pre></div></p>
 <p>Gradle Module attributes are key-value pairs. These are added as parameters to dependencies.
 <code>variant.</code> is added as prefix to the key of the attribute, and the parameter value is the attribute
