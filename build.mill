@@ -1896,25 +1896,55 @@ object ci extends Module {
     destJavaHome
   }
 
-  /** Checks that all published modules are either all snapshots, or all releases.
+  /** Checks that the publish versions are consistent.
     *
     * The coursier modules are versioned from the `v*` tags, the interface ones from the
-    * `interface-v*` tags, so cutting a release requires both kinds of tags on the same commit.
+    * `interface-v*` tags. The coursier modules must either be all snapshots or all releases, and so
+    * must the interface ones. Releasing the interface modules requires a `v*` tag alongside the
+    * `interface-v*` one, while the coursier modules can be released without an `interface-v*` tag:
+    * the interface modules are then snapshots, and the publish workflow leaves them out of the
+    * release.
     */
   def checkPublishVersions() = Task.Command[Unit] {
-    val versions            = allPublishVersions()
-    val (snapshots, others) = versions.partition(_._2.endsWith("-SNAPSHOT"))
+    val versions = allPublishVersions()
     def printVersions(): Unit =
       for ((name, version) <- versions.sortBy(_._1))
         System.err.println(s"$name: $version")
-    if (snapshots.nonEmpty && others.nonEmpty) {
+    def isSnapshot(version: String) = version.endsWith("-SNAPSHOT")
+
+    val (interfaceVersions, coursierVersions) =
+      versions.partition { case (name, _) => interfacePublishModuleNames(name) }
+    val (coursierSnapshots, coursierReleases) = coursierVersions.partition(v => isSnapshot(v._2))
+    val (interfaceSnapshots, interfaceReleases) =
+      interfaceVersions.partition(v => isSnapshot(v._2))
+
+    if (coursierSnapshots.nonEmpty && coursierReleases.nonEmpty) {
       printVersions()
       Task.fail(
-        s"Found ${snapshots.length} snapshot and ${others.length} non-snapshot publish " +
-          "versions, expected either all snapshots or all releases (releases need both a " +
-          "'v*' and an 'interface-v*' tag on the same commit)"
+        s"Found ${coursierSnapshots.length} snapshot and ${coursierReleases.length} " +
+          "non-snapshot coursier publish versions, expected either all snapshots or all releases"
       )
     }
+    if (interfaceSnapshots.nonEmpty && interfaceReleases.nonEmpty) {
+      printVersions()
+      Task.fail(
+        s"Found ${interfaceSnapshots.length} snapshot and ${interfaceReleases.length} " +
+          "non-snapshot interface publish versions, expected either all snapshots or all releases"
+      )
+    }
+    if (coursierSnapshots.nonEmpty && interfaceReleases.nonEmpty) {
+      printVersions()
+      Task.fail(
+        "Found release interface publish versions along with snapshot coursier publish " +
+          "versions (releasing the interface modules needs a 'v*' tag alongside the " +
+          "'interface-v*' one)"
+      )
+    }
+    if (coursierReleases.nonEmpty && interfaceSnapshots.nonEmpty)
+      Task.log.info(
+        s"No 'interface-v*' tag on this commit, not releasing " +
+          interfaceSnapshots.map { case (name, version) => s"$name ($version)" }.mkString(", ")
+      )
     // 2.1.25 got published as "interface-v1.0.29", from the wrong tag: make sure versions
     // at least look like versions before anything gets published
     val malformed = versions.filter(!_._2.matches("[0-9]+\\.[0-9]+\\.[0-9]+([-.+].*)?"))
@@ -1952,6 +1982,12 @@ object ci extends Module {
     }
   }
 }
+
+/** Names (as in `allPublishVersions`) of the interface modules, versioned from the `interface-v*`
+  * tags
+  */
+lazy val interfacePublishModuleNames: Set[String] =
+  moduleInternal.modules.collect { case m: InterfacePublishModule => m.moduleSegments.render }.toSet
 
 lazy val allPublishVersions: Task[Seq[(String, String)]] =
   Task.traverse(moduleInternal.modules.collect { case m: PublishModule => m }) { m =>
@@ -2168,8 +2204,9 @@ trait CacheServer extends CrossSbtModule with CsModule with CoursierPublishModul
 // here, rather than dependencies on published coursier artifacts.
 //
 // Their versioning scheme (1.0.x) is unrelated to the tags of this repository: it is driven
-// by the `interface-v*` tags, see `InterfaceVersion`. `ci.checkPublishVersions` ensures a
-// release can only be cut with an `interface-v*` and a `v*` tag on the same commit.
+// by the `interface-v*` tags, see `InterfaceVersion`. Releasing them requires an `interface-v*`
+// and a `v*` tag on the same commit (see `ci.checkPublishVersions`), while a `v*` tag alone
+// releases all the other modules, and leaves these ones out.
 
 object interface extends Interface
 
