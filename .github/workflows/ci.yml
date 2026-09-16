@@ -447,6 +447,24 @@ jobs:
           --ref main \
           -f version="${TAG#v}"
 
+  update-sbt-coursier:
+    name: Update sbt-coursier version
+    needs:
+      - generate-jar-launchers
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+    # coursier/sbt-coursier has a workflow of its own opening a PR bumping the coursier version
+    # it depends on. That workflow reads the latest version from Maven Central, so it must only
+    # be triggered once the artifacts are synced there (which generate-jar-launchers waited for).
+    - name: Trigger the workflow bumping the coursier version in coursier/sbt-coursier
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: |
+        gh workflow run update-coursier-version.yml \
+          --repo coursier/sbt-coursier \
+          --ref main
+
   upload-nightly-launchers:
     name: Upload launchers to nightly GitHub release
     needs:
