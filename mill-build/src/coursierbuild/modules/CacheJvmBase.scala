@@ -24,8 +24,6 @@ trait CacheJvmBase extends Cache with CsMima {
       ProblemFilter.exclude[MissingClassProblem]("coursier.paths.*"),
       // added methods on a sealed abstract class
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.cache.loggers.RefreshInfo.*"),
-      // moved to cache-util module
-      ProblemFilter.exclude[MissingClassProblem]("coursier.cache.internal.SigWinch"),
       // removed private class
       ProblemFilter.exclude[MissingClassProblem]("coursier.cache.internal.TmpConfig$AsJson"),
       ProblemFilter.exclude[MissingClassProblem]("coursier.cache.internal.TmpConfig$AsJson$"),

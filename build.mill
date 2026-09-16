@@ -116,7 +116,6 @@ object core extends Module {
   object jvm    extends Cross[CoreJvm](ScalaVersions.all)
   object js     extends Cross[CoreJs](ScalaVersions.allJs)
 }
-object `cache-util` extends CacheUtil
 object cache extends Module {
   object shared extends SharedScalaSources
   object jvm    extends Cross[CacheJvm](ScalaVersions.all)
@@ -502,17 +501,6 @@ trait CoreJs extends Core with CsScalaJsModule with DataClassModule {
   }
 }
 
-trait CacheUtil extends CoursierPublishModule with CsMima {
-  def mimaPreviousVersions = Task {
-    import _root_.coursier.version.Version
-    val cutOff = Version("2.1.15")
-    super.mimaPreviousVersions()
-      .map(Version(_))
-      .filter(_ >= cutOff)
-      .map(_.repr)
-  }
-}
-
 trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOnlyPublishModule {
   def sources = Task {
     val epochSources =
@@ -521,7 +509,6 @@ trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOn
     super.sources() ++ cache.shared.sources() ++ epochSources
   }
   def moduleDeps = Seq(
-    `cache-util`,
     paths,
     util.jvm()
   )
