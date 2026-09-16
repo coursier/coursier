@@ -5,17 +5,26 @@ import mill.javalib.PublishModule.PublishData
 
 /** A module whose artifacts are only published for snapshot versions.
   *
-  * Its artifacts are not published for releases, but users can still try it out from a snapshot
-  * version.
+  * Its artifacts are not published for releases (unless `publishReleases` says otherwise), but
+  * users can still try it out from a snapshot version.
   */
 trait SnapshotOnlyPublishModule extends CoursierPublishModule {
+
+  /** Whether the artifacts of this module are published for release versions too */
+  def publishReleases: Boolean = false
+
+  /** First release version that this module's artifacts were not published for
+    *
+    * Used by `CsMima`: there is nothing to check binary compatibility against from that version on.
+    */
+  def firstUnpublishedReleaseVersion: String = "2.1.25"
 
   // We rely on the version computed when the build is loaded, rather than on publishVersion(),
   // so that we can decide upfront whether to publish artifacts or not - the "don't publish"
   // task doesn't depend on any task compiling this module. checkPublishVersion below ensures
   // both versions agree on whether we're building a snapshot version or not.
   def publishArtifacts =
-    if (CoursierPublishModule.buildVersionIsSnapshot)
+    if (CoursierPublishModule.buildVersionIsSnapshot || publishReleases)
       Task {
         checkPublishVersion(publishVersion())
         super.publishArtifacts()

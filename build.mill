@@ -434,7 +434,7 @@ trait DataClassCompat extends CrossScalaModule {
   )
 }
 
-trait UtilJvm extends UtilJvmBase with DataClassModule {
+trait UtilJvm extends UtilJvmBase with DataClassModule with Scala212SnapshotOnlyPublishModule {
   def sources = Task {
     super.sources() ++ util.shared.sources()
   }
@@ -448,7 +448,8 @@ trait UtilJs extends CsScalaJsModule with Util with DataClassModule {
   }
 }
 
-trait CoreJvm extends Core with CoreJvmBase with Shading with DataClassModule {
+trait CoreJvm extends Core with CoreJvmBase with Shading with DataClassModule
+    with Scala212SnapshotOnlyPublishModule {
   def sources = Task {
     val versionSources =
       if (scalaVersion().startsWith("2.12")) core.shared.sourcesScala212()
@@ -504,7 +505,8 @@ trait CoreJs extends Core with CsScalaJsModule with DataClassModule {
   }
 }
 
-trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase with DataClassModule {
+trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase with DataClassModule
+    with Scala212SnapshotOnlyPublishModule {
   def sources = Task {
     val epochSources =
       if (scalaVersion().startsWith("3.")) `sbt-maven-repository`.shared.sourcesScala3()
@@ -539,7 +541,7 @@ trait CacheUtil extends CoursierPublishModule with CsMima {
   }
 }
 
-trait CacheJvm extends CacheJvmBase with DataClassModule {
+trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOnlyPublishModule {
   def sources = Task {
     val epochSources =
       if (scalaVersion().startsWith("3.")) cache.shared.sourcesScala3()
@@ -608,7 +610,8 @@ trait CacheJs extends Cache with CsScalaJsModule with DataClassModule {
   )
 }
 
-trait ArchiveCache extends ArchiveCacheBase with DataClassModule {
+trait ArchiveCache extends ArchiveCacheBase with DataClassModule
+    with Scala212SnapshotOnlyPublishModule {
   def moduleDeps = Seq(
     cache.jvm()
   )
@@ -645,7 +648,7 @@ trait ArchiveCache extends ArchiveCacheBase with DataClassModule {
   }
 }
 
-trait Launcher extends LauncherBase with DataClassModule {
+trait Launcher extends LauncherBase with DataClassModule with Scala212SnapshotOnlyPublishModule {
   // paths brings in jni-utils, which Preamble uses to ask Windows for the OEM code page
   def moduleDeps = super.moduleDeps ++ Seq(paths)
   def mvnDeps = super.mvnDeps() ++ Seq(
@@ -665,7 +668,8 @@ trait Launcher extends LauncherBase with DataClassModule {
 }
 
 trait Env extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima with DataClassModule {
+    with CoursierPublishModule with CsMima with DataClassModule
+    with Scala212SnapshotOnlyPublishModule {
   def mimaPreviousVersions = Task {
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
@@ -701,7 +705,8 @@ trait LauncherNative04 extends CsModule
   )
 }
 
-trait CoursierJvm extends CoursierJvmBase with DataClassModule { self =>
+trait CoursierJvm extends CoursierJvmBase with DataClassModule
+    with Scala212SnapshotOnlyPublishModule { self =>
   def sources = Task {
     val versionSources =
       if (scalaVersion().startsWith("3.")) coursier.shared.sourcesScala3()
@@ -960,7 +965,8 @@ trait CatsJs extends Cats with CsScalaJsModule {
 }
 
 trait Install extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima with DataClassModule {
+    with CoursierPublishModule with CsMima with DataClassModule
+    with Scala212SnapshotOnlyPublishModule {
   def mimaPreviousVersions = Task {
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
@@ -1027,7 +1033,8 @@ trait Install extends CrossSbtModule with CsModule
 }
 
 trait Jvm extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima with DataClassModule {
+    with CoursierPublishModule with CsMima with DataClassModule
+    with Scala212SnapshotOnlyPublishModule {
   def mockCache = Task.Source(os.sub / "src/test/resources/mock-cache")
   def mimaPreviousVersions = Task {
     super.mimaPreviousVersions().filter(_ != "2.0.16")
@@ -2169,7 +2176,8 @@ object docs extends ScalaModule {
   }
 }
 
-trait CacheServer extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
+trait CacheServer extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima
+    with Scala212SnapshotOnlyPublishModule {
   def artifactName = "coursier-cache-server"
   def moduleDeps = super.moduleDeps ++ Seq(
     cache.jvm()
