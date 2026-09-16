@@ -26,7 +26,9 @@ Version reconciliation is handed several:
 
 Here, we're going to ignore:
 - `latest.*` versions like `latest.release` or `latest.integration`, that are
-handled via different mechanisms, and
+handled via different mechanisms (the Maven 2 meta versions `RELEASE` and `LATEST`
+are accepted too, and handled like `latest.release` and `latest.integration`
+respectively), and
 - unions of intervals, like `[1.0,1.2),[1.3,1.4)`, that are currently
 unsupported in coursier (only the last interval is retained, all the others
 are discarded).

@@ -23,7 +23,7 @@ import coursier.maven.{MavenRepository, MavenRepositoryLike}
 import coursier.params.{MavenMirror, Mirror, ResolutionParams, TreeMirror}
 import coursier.util.{Artifact, EitherT, ModuleMatchers, Task}
 import coursier.util.StringInterpolators._
-import coursier.version.{ConstraintReconciliation, Version, VersionConstraint}
+import coursier.version.{ConstraintReconciliation, Latest, Version, VersionConstraint}
 import utest._
 
 import coursier.tests.AssertCompat.assert
@@ -394,6 +394,40 @@ object ResolveTests extends TestSuite {
                 .addDependencies(dep"com.chuusai:shapeless_2.12:latest.release")
                 .future()
             }
+
+            await(validateDependencies(res))
+          }
+        }
+
+        // Maven 2 meta versions, handled like their latest.* counterparts
+
+        test("LATEST") {
+          async {
+
+            val res = await {
+              resolve0
+                .addDependencies(dep"com.chuusai:shapeless_2.12:LATEST")
+                .future()
+            }
+
+            val found = res.rootDependencies.map(_.versionConstraint.latest)
+            assert(found == Seq(Some(Latest.Integration)))
+
+            await(validateDependencies(res))
+          }
+        }
+
+        test("RELEASE") {
+          async {
+
+            val res = await {
+              resolve0
+                .addDependencies(dep"com.chuusai:shapeless_2.12:RELEASE")
+                .future()
+            }
+
+            val found = res.rootDependencies.map(_.versionConstraint.latest)
+            assert(found == Seq(Some(Latest.Release)))
 
             await(validateDependencies(res))
           }

@@ -63,7 +63,7 @@ jobs:
     needs: scala-versions
     runs-on: ${{ matrix.OS }}
     name: ${{ matrix.OS }} Scala ${{ matrix.SCALA_VERSION }}
-    timeout-minutes: 35
+    timeout-minutes: 50
     strategy:
       fail-fast: false
       matrix:

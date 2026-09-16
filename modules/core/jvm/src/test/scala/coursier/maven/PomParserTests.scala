@@ -2,8 +2,8 @@ package coursier.maven
 
 import utest._
 
-import coursier.core.{Info, Module, ModuleName, Organization}
-import coursier.version.VersionConstraint
+import coursier.core.{Info, Module, ModuleName, Organization, Project}
+import coursier.version.{Latest, VersionConstraint}
 
 object PomParserTests extends TestSuite {
 
@@ -346,6 +346,65 @@ object PomParserTests extends TestSuite {
       assert(sax.map(_.version0.asString) == Right("[1.0,2.0)"))
       assert(dom.map(_.version0.asString) == Right("[1.0,2.0)"))
       assert(sax.map(_.parent0) == dom.map(_.parent0))
+    }
+
+    test("maven 2 meta versions") {
+      // RELEASE and LATEST stand for the release / latest fields of the module's
+      // maven-metadata.xml, which coursier handles as latest.release / latest.integration
+      val pom =
+        """
+          |<project xmlns="http://maven.apache.org/POM/4.0.0">
+          |    <modelVersion>4.0.0</modelVersion>
+          |    <groupId>com.example</groupId>
+          |    <artifactId>child</artifactId>
+          |    <version>1.0</version>
+          |    <dependencies>
+          |        <dependency>
+          |            <groupId>com.example</groupId>
+          |            <artifactId>lib1</artifactId>
+          |            <version>RELEASE</version>
+          |        </dependency>
+          |        <dependency>
+          |            <groupId>com.example</groupId>
+          |            <artifactId>lib2</artifactId>
+          |            <version>LATEST</version>
+          |        </dependency>
+          |    </dependencies>
+          |    <dependencyManagement>
+          |        <dependencies>
+          |            <dependency>
+          |                <groupId>com.example</groupId>
+          |                <artifactId>lib3</artifactId>
+          |                <version>RELEASE</version>
+          |            </dependency>
+          |        </dependencies>
+          |    </dependencyManagement>
+          |</project>""".stripMargin
+
+      val expectedDeps = Right(Seq(
+        "lib1" -> Some(Latest.Release),
+        "lib2" -> Some(Latest.Integration)
+      ))
+      val expectedDepMgmt = Right(Seq("lib3" -> Some(Latest.Release)))
+
+      def deps(proj: Project) =
+        proj.dependencies0.map {
+          case (_, dep) =>
+            dep.module.name.value -> dep.versionConstraint.latest
+        }
+      def depMgmt(proj: Project) =
+        proj.dependencyManagement0.map {
+          case (_, dep) =>
+            dep.module.name.value -> dep.versionConstraint.latest
+        }
+
+      val sax = MavenRepository.parseRawPomSax(pom)
+      val dom = MavenRepository.parseRawPomDom(pom)
+
+      assert(sax.map(deps) == expectedDeps)
+      assert(dom.map(deps) == expectedDeps)
+      assert(sax.map(depMgmt) == expectedDepMgmt)
+      assert(dom.map(depMgmt) == expectedDepMgmt)
     }
   }
 }

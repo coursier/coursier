@@ -6,6 +6,20 @@
 org:name:version
 ```
 
+## Version
+
+Besides plain versions, like `1.0.2`, the version field accepts
+
+- version intervals, like `[1.0,2.0)` or `2.0+`,
+- `latest.release`, `latest.integration`, and `latest.stable`, that pick the latest version
+  from the listing of the module in the repository,
+- the Maven 2 meta versions `RELEASE` and `LATEST`, handled like `latest.release` and
+  `latest.integration` respectively.
+
+```text
+org:name:RELEASE
+```
+
 ## Bill Of Material
 
 One can pass a Bill-Of-Material, or BOM, via dependencies, like
