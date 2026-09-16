@@ -1187,8 +1187,8 @@ trait Cli extends CsModule
   }
 }
 
-trait CliTests extends CsModule
-    with CoursierPublishModule { self =>
+// not published: only hosts the tests of the CLI launchers
+trait CliTests extends CsModule { self =>
   def jvmRelease   = scala3LatestJvmRelease
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
