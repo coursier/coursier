@@ -428,6 +428,25 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
+  update-cs-docker:
+    name: Update cs version building the Linux launchers
+    needs:
+      - upload-launchers
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - name: Open a PR bumping csDocker in mill-build/src/coursierbuild/Versions.scala
+      run: ./mill -i updateCsDockerVersion
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
   update-setup-action:
     name: Update setup-action version
     needs:

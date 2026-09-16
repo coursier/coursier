@@ -13,12 +13,14 @@ import coursierbuild.Relativize.{relativize => doRelativize}
 import coursierbuild.{
   Check,
   CoursierProperties,
+  CsDocker,
   CsSh,
   DocHelpers,
   GitHubReleaseAssets,
   InterfaceVersion,
   Shading,
   Sync,
+  VersionPin,
   ZipUtil
 }
 import coursierbuild.modules._
@@ -1577,19 +1579,40 @@ def copyBatLauncher(
   os.copy(bootstrap, dir / "coursier.bat", createFolders = true, replaceExisting = true)
 }
 
+private def updateVersionPin(
+  pin: VersionPin,
+  version: String,
+  dryRun: Boolean,
+  cloneUnder: os.Path
+): Unit = {
+  val tokenOpt = Option(System.getenv("GH_TOKEN"))
+  if (!dryRun && tokenOpt.isEmpty)
+    sys.error("GH_TOKEN not set")
+  VersionPin.update(
+    pin = pin,
+    newVersion = version,
+    ghTokenOpt = tokenOpt,
+    dryRun = dryRun,
+    cloneUnder = cloneUnder
+  )
+}
+
+/** Opens a pull request bumping `CS_VERSION` in `cs.sh` */
 def updateCsShVersion(
   version: String = CoursierPublishModule.buildVersion,
   dryRun: Boolean = false
 ) = Task.Command[Unit] {
-  val tokenOpt = Option(System.getenv("GH_TOKEN"))
-  if (!dryRun && tokenOpt.isEmpty)
-    sys.error("GH_TOKEN not set")
-  CsSh.updateVersion(
-    newVersion = version,
-    ghTokenOpt = tokenOpt,
-    dryRun = dryRun,
-    cloneUnder = Task.dest / "repo"
-  )
+  updateVersionPin(CsSh, version, dryRun, Task.dest / "repo")
+}
+
+/** Opens a pull request bumping `Versions.csDocker`, the cs version downloaded in the docker images
+  * building our Linux launchers
+  */
+def updateCsDockerVersion(
+  version: String = CoursierPublishModule.buildVersion,
+  dryRun: Boolean = false
+) = Task.Command[Unit] {
+  updateVersionPin(CsDocker, version, dryRun, Task.dest / "repo")
 }
 
 private val docScalaVersion = ScalaVersions.scala213
