@@ -125,7 +125,7 @@ object cache extends Module {
   object jvm    extends Cross[CacheJvm](ScalaVersions.all)
   object js     extends Cross[CacheJs](ScalaVersions.allJs)
 }
-object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.all)
+object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.allButScala212)
 object `benchmark` extends ScalaModule with JmhModule {
   def scalaVersion: mill.api.Task.Simple[String] = ScalaVersions.scala213
   def moduleDeps = Seq(
@@ -137,10 +137,10 @@ object `benchmark` extends ScalaModule with JmhModule {
   def jmhCoreVersion = "1.37"
 }
 
-object `cache-server` extends Cross[CacheServer](ScalaVersions.all)
+object `cache-server` extends Cross[CacheServer](ScalaVersions.allButScala212)
 
-object launcher             extends Cross[Launcher](ScalaVersions.all)
-object env                  extends Cross[Env](ScalaVersions.all)
+object launcher             extends Cross[Launcher](ScalaVersions.allButScala212)
+object env                  extends Cross[Env](ScalaVersions.allButScala212)
 object `launcher-native_04` extends LauncherNative04
 
 object coursier extends Module {
@@ -314,12 +314,12 @@ object `proxy-tests` extends Cross[ProxyTests](ScalaVersions.all)
 object interop extends Module {
   object scalaz extends Module {
     object shared extends SharedScalaSources
-    object jvm    extends Cross[ScalazJvm](ScalaVersions.allScala2)
+    object jvm    extends Cross[ScalazJvm](Seq(ScalaVersions.scala213))
     object js     extends Cross[ScalazJs](ScalaVersions.allJsScala2)
   }
   object cats extends Module {
     object shared extends SharedScalaSources
-    object jvm    extends Cross[CatsJvm](ScalaVersions.allScala2)
+    object jvm    extends Cross[CatsJvm](Seq(ScalaVersions.scala213))
     object js     extends Cross[CatsJs](ScalaVersions.allJsScala2)
   }
 }
@@ -355,8 +355,8 @@ object `execve-test` extends CoursierJavaModule with coursierbuild.Launchers.CsJ
   }
 }
 
-object jvm     extends Cross[Jvm](ScalaVersions.all)
-object install extends Cross[Install](ScalaVersions.all)
+object jvm     extends Cross[Jvm](ScalaVersions.allButScala212)
+object install extends Cross[Install](ScalaVersions.allButScala212)
 
 object docker extends Cross[Docker](Seq(ScalaVersions.scala3))
 
@@ -569,11 +569,17 @@ trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOn
     def sources = Task {
       super.sources() ++ cache.shared.testSources()
     }
+    // cache-server isn't built for Scala 2.12, so its tests (RemoteCacheTests) can't run there
+    private def withCacheServer = !crossValue.startsWith("2.12.")
+    def allSourceFiles = Task {
+      val files = super.allSourceFiles()
+      if (withCacheServer) files
+      else files.filterNot(_.path.last == "RemoteCacheTests.scala")
+    }
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm(),
-      `cache-server`(crossValue),
       `test-compat`.jvm()
-    )
+    ) ++ (if (withCacheServer) Seq(`cache-server`(crossValue)) else Nil)
     def mvnDeps = Task {
       super.mvnDeps() ++
         Seq(
@@ -610,8 +616,7 @@ trait CacheJs extends Cache with CsScalaJsModule with DataClassModule {
   )
 }
 
-trait ArchiveCache extends ArchiveCacheBase with DataClassModule
-    with Scala212SnapshotOnlyPublishModule {
+trait ArchiveCache extends ArchiveCacheBase with DataClassModule {
   def moduleDeps = Seq(
     cache.jvm()
   )
@@ -648,7 +653,7 @@ trait ArchiveCache extends ArchiveCacheBase with DataClassModule
   }
 }
 
-trait Launcher extends LauncherBase with DataClassModule with Scala212SnapshotOnlyPublishModule {
+trait Launcher extends LauncherBase with DataClassModule {
   // paths brings in jni-utils, which Preamble uses to ask Windows for the OEM code page
   def moduleDeps = super.moduleDeps ++ Seq(paths)
   def mvnDeps = super.mvnDeps() ++ Seq(
@@ -668,8 +673,7 @@ trait Launcher extends LauncherBase with DataClassModule with Scala212SnapshotOn
 }
 
 trait Env extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima with DataClassModule
-    with Scala212SnapshotOnlyPublishModule {
+    with CoursierPublishModule with CsMima with DataClassModule {
   def mimaPreviousVersions = Task {
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
@@ -965,8 +969,7 @@ trait CatsJs extends Cats with CsScalaJsModule {
 }
 
 trait Install extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima with DataClassModule
-    with Scala212SnapshotOnlyPublishModule {
+    with CoursierPublishModule with CsMima with DataClassModule {
   def mimaPreviousVersions = Task {
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
@@ -1033,8 +1036,7 @@ trait Install extends CrossSbtModule with CsModule
 }
 
 trait Jvm extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima with DataClassModule
-    with Scala212SnapshotOnlyPublishModule {
+    with CoursierPublishModule with CsMima with DataClassModule {
   def mockCache = Task.Source(os.sub / "src/test/resources/mock-cache")
   def mimaPreviousVersions = Task {
     super.mimaPreviousVersions().filter(_ != "2.0.16")
@@ -1704,10 +1706,14 @@ def crossModule[M <: Cross.Module[?]](cross: Cross[M], sv: String): M =
     )
   )
 
-/** Like `crossModule`, for the modules that are deliberately cross-built for Scala 2 only */
-def scala2CrossModule[M <: Cross.Module[?]](cross: Cross[M], sv: String): Option[M] =
-  if (sv.startsWith("3.")) None
-  else Some(crossModule(cross, sv))
+/** Like `crossModule`, for the modules that are deliberately cross-built for `versions` only */
+def crossModuleIn[M <: Cross.Module[?]](
+  cross: Cross[M],
+  sv: String,
+  versions: Seq[String]
+): Option[M] =
+  if (versions.contains(sv)) Some(crossModule(cross, sv))
+  else None
 
 def dockerTests(): Task.Command[Unit] = {
   val cmd = crossModule(docker, ScalaVersions.scala3).test.testForked()
@@ -1732,18 +1738,19 @@ def jvmTests(scalaVersion: String = defaultScalaVersion) = {
     // format: off
     crossModule(core.jvm     , sv).test.testForked(),
     crossModule(cache.jvm    , sv).test.testForked(),
-    crossModule(env          , sv).test.testForked(),
     crossModule(coursier.jvm , sv).test.testForked(),
-    crossModule(tests.jvm    , sv).test.testForked(),
-    crossModule(install      , sv).test.testForked(),
-    crossModule(jvm          , sv).test.testForked(),
-    crossModule(launcher     , sv).test.testForked()
+    crossModule(tests.jvm    , sv).test.testForked()
     // format: on
   ) ++ Seq(
-    // the cats and scalaz interop modules are cross-built for Scala 2 only
+    // these modules aren't cross-built for Scala 2.12, see ScalaVersions
     // format: off
-    scala2CrossModule(interop.scalaz.jvm , sv).map(_.test.testForked()),
-    scala2CrossModule(interop.cats.jvm   , sv).map(_.test.testForked())
+    crossModuleIn(env      , sv, ScalaVersions.allButScala212).map(_.test.testForked()),
+    crossModuleIn(install  , sv, ScalaVersions.allButScala212).map(_.test.testForked()),
+    crossModuleIn(jvm      , sv, ScalaVersions.allButScala212).map(_.test.testForked()),
+    crossModuleIn(launcher , sv, ScalaVersions.allButScala212).map(_.test.testForked()),
+    // the cats and scalaz interop modules are cross-built for Scala 2.13 only
+    crossModuleIn(interop.scalaz.jvm , sv, Seq(ScalaVersions.scala213)).map(_.test.testForked()),
+    crossModuleIn(interop.cats.jvm   , sv, Seq(ScalaVersions.scala213)).map(_.test.testForked())
     // format: on
   ).flatten
 
@@ -2176,8 +2183,7 @@ object docs extends ScalaModule {
   }
 }
 
-trait CacheServer extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima
-    with Scala212SnapshotOnlyPublishModule {
+trait CacheServer extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
   def artifactName = "coursier-cache-server"
   def moduleDeps = super.moduleDeps ++ Seq(
     cache.jvm()
