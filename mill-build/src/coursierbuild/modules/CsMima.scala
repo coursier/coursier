@@ -16,7 +16,16 @@ import scala.util.Properties
 
 trait CsMima extends Mima with PublishModule {
   def mimaPreviousVersions: T[Seq[String]] = Task {
-    val previous = CsMima.mimaPreviousVersions()
+    val previous0 = CsMima.mimaPreviousVersions()
+    // The releases of snapshot-only modules are not published, so there is nothing to check
+    // binary compatibility against from the first unpublished release on.
+    val previous = this match {
+      case m: SnapshotOnlyPublishModule if !m.publishReleases =>
+        val cutOff = Version(m.firstUnpublishedReleaseVersion)
+        previous0.filter(Version(_) < cutOff)
+      case _ =>
+        previous0
+    }
     // Scala 3 artifacts are only published from 2.1.25 on, so there is nothing to check
     // binary compatibility against before that. Scala 3 is the only cross value whose
     // artifacts carry a `_3` suffix; anything else uses a Scala 2 (`_2.13` / `_2.12`) suffix

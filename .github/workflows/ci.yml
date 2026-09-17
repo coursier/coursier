@@ -526,12 +526,15 @@ jobs:
           if-no-files-found: error
           retention-days: 2
 
+  # the JAR launchers are built the same way for a nightly and for a release, but a job whose
+  # 'needs' contains a skipped job is skipped too - and so is everything downstream of it, as a
+  # job's implicit 'success()' looks at the whole chain, not only at its direct 'needs'. Depending
+  # on both publish jobs here, one of which is always skipped, would take the whole release down
+  # with it, so there is one job per publish job, and each side of the CI depends on its own.
   generate-jar-launchers:
     name: Upload JAR launchers
-    needs:
-      - publish-nightly
-      - publish
-    if: github.event_name == 'push' && (needs.publish-nightly.result == 'success' || needs.publish.result == 'success')
+    needs: publish
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -547,9 +550,35 @@ jobs:
     - name: Copy artifacts
       run: ./mill -i copyJarLaunchers
     - uses: actions/attest-build-provenance@v4
-      if: startsWith(github.ref, 'refs/tags/v')
       with:
         subject-path: 'artifacts/*'
+    - uses: actions/upload-artifact@v7
+      with:
+        name: launchers-jar
+        path: artifacts/
+        if-no-files-found: error
+        retention-days: 2
+
+  # same as 'generate-jar-launchers', for nightlies (no build provenance attestation, we only
+  # attest the launchers we release)
+  generate-jar-launchers-nightly:
+    name: Upload JAR launchers (nightly)
+    needs: publish-nightly
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - name: Wait for sync to Central
+      run: ./mill -i waitForSync
+    - name: Copy artifacts
+      run: ./mill -i copyJarLaunchers
     - uses: actions/upload-artifact@v7
       with:
         name: launchers-jar
@@ -576,7 +605,6 @@ jobs:
     - name: Copy artifacts
       run: ./mill -i copyBatLauncher
     - uses: actions/attest-build-provenance@v4
-      if: startsWith(github.ref, 'refs/tags/v')
       with:
         subject-path: 'artifacts/*'
     - uses: actions/upload-artifact@v7
@@ -708,6 +736,25 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
+  update-cs-docker:
+    name: Update cs version building the Linux launchers
+    needs:
+      - upload-launchers
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - name: Open a PR bumping csDocker in mill-build/src/coursierbuild/Versions.scala
+      run: ./mill -i updateCsDockerVersion
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+
   update-setup-action:
     name: Update setup-action version
     needs:
@@ -727,6 +774,24 @@ jobs:
           --ref main \
           -f version="${TAG#v}"
 
+  update-sbt-coursier:
+    name: Update sbt-coursier version
+    needs:
+      - generate-jar-launchers
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+    # coursier/sbt-coursier has a workflow of its own opening a PR bumping the coursier version
+    # it depends on. That workflow reads the latest version from Maven Central, so it must only
+    # be triggered once the artifacts are synced there (which generate-jar-launchers waited for).
+    - name: Trigger the workflow bumping the coursier version in coursier/sbt-coursier
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: |
+        gh workflow run update-coursier-version.yml \
+          --repo coursier/sbt-coursier \
+          --ref main
+
   upload-nightly-launchers:
     name: Upload launchers to nightly GitHub release
     needs:
@@ -736,7 +801,7 @@ jobs:
       - generate-native-container-launcher
       - generate-standalone-launchers
       - generate-standalone-launcher-windows-arm-tmp
-      - generate-jar-launchers
+      - generate-jar-launchers-nightly
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:

@@ -87,6 +87,9 @@ object MinimizedExclusions {
 
     assert(byOrg.nonEmpty || byModule.nonEmpty || specific.nonEmpty)
 
+    override def toString: String =
+      ToStringHelper(this)
+
     override def apply(org: Organization, module: ModuleName): Boolean =
       !byModule(module) &&
       !byOrg(org) &&

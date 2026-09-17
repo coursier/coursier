@@ -8,7 +8,7 @@ Prefer minimal, local, reversible changes and follow existing patterns.
 - Build tool: Mill (`./mill`) with config in `build.mill`.
 - Languages: Scala (JVM + Scala.js), some Java, docs tooling.
 - Test framework: uTest (`utest.runner.Framework`).
-- Active cross Scala versions: `2.13.16`, `2.12.20`.
+- Active cross Scala versions: `2.13.18`, `3.9.0`. `2.12.21` only for the modules sbt-coursier depends on (util, core, cache, coursier) and the modules testing them, see `ScalaVersions` in `mill-build`.
 - Formatting: Scalafmt (`.scalafmt.conf`, max column 100).
 - CI source of truth: `.github/workflows/ci.yml`.
 

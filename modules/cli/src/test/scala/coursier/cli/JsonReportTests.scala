@@ -462,7 +462,7 @@ object JsonReportTests extends TestSuite {
           fetch,
           Seq(
             dep"org.apache.commons:commons-compress:1.5"
-              .withTransitive(false)
+              .copy(transitive = false)
           ),
           extraReportKeyPart = "_addurls",
           addUrls = true

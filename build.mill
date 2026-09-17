@@ -13,12 +13,14 @@ import coursierbuild.Relativize.{relativize => doRelativize}
 import coursierbuild.{
   Check,
   CoursierProperties,
+  CsDocker,
   CsSh,
   DocHelpers,
   GitHubReleaseAssets,
   InterfaceVersion,
   Shading,
   Sync,
+  VersionPin,
   ZipUtil
 }
 import coursierbuild.modules._
@@ -65,20 +67,22 @@ implicit def millModuleBasePath: ModuleCtx.Nested =
 // On Scala 2, data-class expands those itself (macro annotations). On Scala 3, data-class is
 // replaced by the vendored unroll compiler plugin, and by the `unroll.dataclass` stand-in that
 // defines a no-op `@data` and aliases `@since` to `@com.lihaoyi.unroll` (see modules/unroll/README.md).
-trait DataClassModule extends CsScalaModule with CrossModuleBase {
-  def usesUnrollPlugin: Boolean = crossScalaVersion.startsWith("3.")
+trait DataClassModuleBase extends CsScalaModule {
+  // Needed when the build loads (not in a task), to pick the module dependencies below
+  protected def dataClassScalaVersion: String
+  def usesUnrollPlugin: Boolean = dataClassScalaVersion.startsWith("3.")
   def compileMvnDeps = super.compileMvnDeps() ++ {
     if (usesUnrollPlugin) Seq(Deps.unrollAnnotation)
     else Seq(Deps.dataClass)
   }
   def compileModuleDeps = super.compileModuleDeps ++ {
-    if (usesUnrollPlugin) Seq(unroll.dataclass(crossScalaVersion))
+    if (usesUnrollPlugin) Seq(unroll.dataclass(dataClassScalaVersion))
     else Nil
   }
   // Resolved outside of tasks: Mill registers task dependencies regardless of `if` branches,
   // and there is no unroll plugin module for the Scala 2 cross values.
   def unrollPlugin: Seq[ScalaModule] =
-    if (usesUnrollPlugin) Seq(unroll.plugin(crossScalaVersion))
+    if (usesUnrollPlugin) Seq(unroll.plugin(dataClassScalaVersion))
     else Nil
   def unrollPluginJars = Task {
     Task.traverse(unrollPlugin)(_.jar)()
@@ -94,6 +98,17 @@ trait DataClassModule extends CsScalaModule with CrossModuleBase {
       else Nil
     super.scalacOptions() ++ pluginOpts ++ requireOpts
   }
+}
+
+/** `DataClassModuleBase` for cross-built modules */
+trait DataClassModule extends DataClassModuleBase with CrossModuleBase {
+  protected def dataClassScalaVersion = crossScalaVersion
+}
+
+/** `DataClassModuleBase` for the modules only built for Scala 3 */
+trait Scala3DataClassModule extends DataClassModuleBase {
+  def scalaVersion                    = ScalaVersions.scala3
+  protected def dataClassScalaVersion = ScalaVersions.scala3
 }
 
 object unroll extends Module {
@@ -114,18 +129,12 @@ object core extends Module {
   object jvm    extends Cross[CoreJvm](ScalaVersions.all)
   object js     extends Cross[CoreJs](ScalaVersions.allJs)
 }
-object `sbt-maven-repository` extends Module {
-  object shared extends SharedScalaSources
-  object jvm    extends Cross[SbtMavenRepositoryJvm](ScalaVersions.all)
-  object js     extends Cross[SbtMavenRepositoryJs](ScalaVersions.allJs)
-}
-object `cache-util` extends CacheUtil
 object cache extends Module {
   object shared extends SharedScalaSources
   object jvm    extends Cross[CacheJvm](ScalaVersions.all)
   object js     extends Cross[CacheJs](ScalaVersions.allJs)
 }
-object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.all)
+object `archive-cache` extends Cross[ArchiveCache](ScalaVersions.allButScala212)
 object `benchmark` extends ScalaModule with JmhModule {
   def scalaVersion: mill.api.Task.Simple[String] = ScalaVersions.scala213
   def moduleDeps = Seq(
@@ -137,20 +146,19 @@ object `benchmark` extends ScalaModule with JmhModule {
   def jmhCoreVersion = "1.37"
 }
 
-object `cache-server` extends Cross[CacheServer](ScalaVersions.all)
+object `cache-server` extends CacheServer
 
-object launcher             extends Cross[Launcher](ScalaVersions.all)
-object env                  extends Cross[Env](ScalaVersions.all)
+object launcher             extends Cross[Launcher](ScalaVersions.allButScala212)
+object env                  extends Cross[Env](ScalaVersions.allButScala212)
 object `launcher-native_04` extends LauncherNative04
 
 object coursier extends Module {
   object shared extends SharedScalaSources
   object jvm    extends Cross[CoursierJvm](ScalaVersions.all)
   object js     extends Cross[CoursierJs](ScalaVersions.allJs)
-}
-
-object `proxy-setup` extends JavaModule with CoursierPublishModule with CsMima {
-  def artifactName = "coursier-proxy-setup"
+  // `coursier.proxy.SetupProxy`, pure Java: part of coursier.jvm, and also copied under another
+  // package in bootstrap-launcher, see its `proxySources`
+  def proxySetupSources = Task.Sources(os.sub / "jvm/src/main/java/coursier/proxy")
 }
 
 object paths extends Paths
@@ -212,7 +220,7 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
   )
   def proxySources = Task {
     val dest = Task.dest / "sources"
-    val orig = `proxy-setup`.sources()
+    val orig = coursier.proxySetupSources()
     for ((pathRef, idx) <- orig.zipWithIndex)
       os.copy.into(pathRef.path, dest / s"dir-$idx", copyAttributes = true, createFolders = true)
     os.walk(dest)
@@ -314,12 +322,12 @@ object `proxy-tests` extends Cross[ProxyTests](ScalaVersions.all)
 object interop extends Module {
   object scalaz extends Module {
     object shared extends SharedScalaSources
-    object jvm    extends Cross[ScalazJvm](ScalaVersions.allScala2)
+    object jvm    extends Cross[ScalazJvm](Seq(ScalaVersions.scala213))
     object js     extends Cross[ScalazJs](ScalaVersions.allJsScala2)
   }
   object cats extends Module {
     object shared extends SharedScalaSources
-    object jvm    extends Cross[CatsJvm](ScalaVersions.allScala2)
+    object jvm    extends Cross[CatsJvm](Seq(ScalaVersions.scala213))
     object js     extends Cross[CatsJs](ScalaVersions.allJsScala2)
   }
 }
@@ -355,8 +363,8 @@ object `execve-test` extends CoursierJavaModule with coursierbuild.Launchers.CsJ
   }
 }
 
-object jvm     extends Cross[Jvm](ScalaVersions.all)
-object install extends Cross[Install](ScalaVersions.all)
+object jvm     extends Cross[Jvm](ScalaVersions.allButScala212)
+object install extends Install
 
 object docker extends Cross[Docker](Seq(ScalaVersions.scala3))
 
@@ -366,7 +374,7 @@ object cli extends Cli {
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
-      coursier.jvm(cliScalaVersion213Compat).test
+      coursier.jvm(cliScalaVersion).test
     )
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.ujson
@@ -434,7 +442,7 @@ trait DataClassCompat extends CrossScalaModule {
   )
 }
 
-trait UtilJvm extends UtilJvmBase with DataClassModule {
+trait UtilJvm extends UtilJvmBase with DataClassModule with Scala212SnapshotOnlyPublishModule {
   def sources = Task {
     super.sources() ++ util.shared.sources()
   }
@@ -448,7 +456,8 @@ trait UtilJs extends CsScalaJsModule with Util with DataClassModule {
   }
 }
 
-trait CoreJvm extends Core with CoreJvmBase with Shading with DataClassModule {
+trait CoreJvm extends Core with CoreJvmBase with Shading with DataClassModule
+    with Scala212SnapshotOnlyPublishModule {
   def sources = Task {
     val versionSources =
       if (scalaVersion().startsWith("2.12")) core.shared.sourcesScala212()
@@ -504,42 +513,7 @@ trait CoreJs extends Core with CsScalaJsModule with DataClassModule {
   }
 }
 
-trait SbtMavenRepositoryJvm extends SbtMavenRepositoryJvmBase with DataClassModule {
-  def sources = Task {
-    val epochSources =
-      if (scalaVersion().startsWith("3.")) `sbt-maven-repository`.shared.sourcesScala3()
-      else `sbt-maven-repository`.shared.sourcesScala2()
-    super.sources() ++ `sbt-maven-repository`.shared.sources() ++ epochSources
-  }
-  def moduleDeps = super.moduleDeps ++ Seq(
-    core.jvm()
-  )
-}
-trait SbtMavenRepositoryJs extends SbtMavenRepository
-    with CsScalaJsModule with DataClassModule {
-  def sources = Task {
-    val epochSources =
-      if (scalaVersion().startsWith("3.")) `sbt-maven-repository`.shared.sourcesScala3()
-      else `sbt-maven-repository`.shared.sourcesScala2()
-    super.sources() ++ `sbt-maven-repository`.shared.sources() ++ epochSources
-  }
-  def moduleDeps = super.moduleDeps ++ Seq(
-    core.js()
-  )
-}
-
-trait CacheUtil extends CoursierPublishModule with CsMima {
-  def mimaPreviousVersions = Task {
-    import _root_.coursier.version.Version
-    val cutOff = Version("2.1.15")
-    super.mimaPreviousVersions()
-      .map(Version(_))
-      .filter(_ >= cutOff)
-      .map(_.repr)
-  }
-}
-
-trait CacheJvm extends CacheJvmBase with DataClassModule {
+trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOnlyPublishModule {
   def sources = Task {
     val epochSources =
       if (scalaVersion().startsWith("3.")) cache.shared.sourcesScala3()
@@ -547,7 +521,6 @@ trait CacheJvm extends CacheJvmBase with DataClassModule {
     super.sources() ++ cache.shared.sources() ++ epochSources
   }
   def moduleDeps = Seq(
-    `cache-util`,
     paths,
     util.jvm()
   )
@@ -567,11 +540,17 @@ trait CacheJvm extends CacheJvmBase with DataClassModule {
     def sources = Task {
       super.sources() ++ cache.shared.testSources()
     }
+    // cache-server is only built for Scala 3, so its tests (RemoteCacheTests) only run there
+    private def withCacheServer = crossValue.startsWith("3.")
+    def allSourceFiles = Task {
+      val files = super.allSourceFiles()
+      if (withCacheServer) files
+      else files.filterNot(_.path.last == "RemoteCacheTests.scala")
+    }
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm(),
-      `cache-server`(crossValue),
       `test-compat`.jvm()
-    )
+    ) ++ (if (withCacheServer) Seq(`cache-server`) else Nil)
     def mvnDeps = Task {
       super.mvnDeps() ++
         Seq(
@@ -681,27 +660,28 @@ trait Env extends CrossSbtModule with CsModule
   }
 }
 
-def cliScalaVersion          = ScalaVersions.scala3
-def cliScalaVersion213Compat = ScalaVersions.scala213
-def launcherModule           = launcher
+def cliScalaVersion = ScalaVersions.scala3
+def launcherModule  = launcher
 // Lowest JVM release the latest Scala 3 can emit bytecode for: Scala 3.8+
 // only accepts 17 and later, so the modules compiled with cliScalaVersion
 // cannot target an earlier one.
 def scala3LatestJvmRelease = "17"
+// only published locally, for the sake of `cli-tests`
 trait LauncherNative04 extends CsModule
-    with CoursierPublishModule {
+    with LocalOnlyPublishModule {
   def jvmRelease   = scala3LatestJvmRelease
   def scalaVersion = cliScalaVersion
   def artifactName = "coursier-launcher-native_0.4"
   def compileModuleDeps = Seq(
-    launcherModule(cliScalaVersion213Compat)
+    launcherModule(cliScalaVersion)
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalaNativeTools040
   )
 }
 
-trait CoursierJvm extends CoursierJvmBase with DataClassModule { self =>
+trait CoursierJvm extends CoursierJvmBase with DataClassModule
+    with Scala212SnapshotOnlyPublishModule { self =>
   def sources = Task {
     val versionSources =
       if (scalaVersion().startsWith("3.")) coursier.shared.sourcesScala3()
@@ -710,8 +690,7 @@ trait CoursierJvm extends CoursierJvmBase with DataClassModule { self =>
   }
   def moduleDeps = Seq(
     core.jvm(),
-    cache.jvm(),
-    `proxy-setup`
+    cache.jvm()
   )
   // Put CoursierTests right after TestModule, and see what happens
   object test extends CrossSbtTests with CoursierTests with CsResourcesTests {
@@ -793,8 +772,7 @@ trait TestsJvm extends TestsModule { self =>
     super.sources() ++ tests.shared.sources()
   }
   def moduleDeps = super.moduleDeps ++ Seq(
-    core.jvm(),
-    `sbt-maven-repository`.jvm()
+    core.jvm()
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoup
@@ -856,8 +834,7 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
     super.sources() ++ tests.shared.sources()
   }
   def moduleDeps = super.moduleDeps ++ Seq(
-    core.js(),
-    `sbt-maven-repository`.js()
+    core.js()
   )
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
   object test extends SbtTests with ScalaJSTests with CsScalaJsTests with CsTests
@@ -881,9 +858,6 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
 }
 
 trait ProxyTests extends CrossSbtModule with CsModule {
-  def moduleDeps = super.moduleDeps ++ Seq(
-    `proxy-setup`
-  )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.dockerClient,
     Deps.slf4JNop
@@ -959,8 +933,9 @@ trait CatsJs extends Cats with CsScalaJsModule {
   )
 }
 
-trait Install extends CrossSbtModule with CsModule
-    with CoursierPublishModule with CsMima with DataClassModule {
+// Scala 3 only, like the cli that uses it
+trait Install extends CsModule
+    with CoursierPublishModule with CsMima with Scala3DataClassModule {
   def mimaPreviousVersions = Task {
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
@@ -993,10 +968,10 @@ trait Install extends CrossSbtModule with CsModule
     )
   )
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(),
-    env(),
-    jvm(),
-    launcherModule()
+    coursier.jvm(cliScalaVersion),
+    env(cliScalaVersion),
+    jvm(cliScalaVersion),
+    launcherModule(cliScalaVersion)
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.jsoniterMacros
@@ -1005,19 +980,19 @@ trait Install extends CrossSbtModule with CsModule
     Deps.catsCore,
     Deps.jsoniterCore
   )
-  object test extends CrossSbtTests with CsScalaTests with CsResourcesTests {
+  object test extends SbtTests with CsScalaTests with CsResourcesTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
-      `test-cache`.jvm()
+      `test-cache`.jvm(cliScalaVersion)
     )
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.pprint,
       Deps.ujson
     )
     def forkArgs = Task {
-      val httpServerCp = `test-cache`.jvm().httpServerClassPath()
+      val httpServerCp = `test-cache`.jvm(cliScalaVersion).httpServerClassPath()
         .map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.http-server.classpath=$httpServerCp"
@@ -1098,8 +1073,8 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
   def jvmRelease   = scala3LatestJvmRelease
   def artifactName = "coursier-docker"
   def moduleDeps = super.moduleDeps ++ Seq(
-    cache.jvm(cliScalaVersion213Compat),
-    `archive-cache`(cliScalaVersion213Compat),
+    cache.jvm(cliScalaVersion),
+    `archive-cache`(cliScalaVersion),
     exec
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
@@ -1126,7 +1101,7 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
   }
   object test extends CrossSbtTests with CsTests {
     def moduleDeps = super.moduleDeps ++ Seq(
-      cache.jvm(cliScalaVersion213Compat).test
+      cache.jvm(cliScalaVersion).test
     )
   }
 }
@@ -1136,13 +1111,12 @@ trait Cli extends CsModule
   def jvmRelease   = scala3LatestJvmRelease
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(cliScalaVersion213Compat),
-    `sbt-maven-repository`.jvm(cliScalaVersion213Compat),
-    install(cliScalaVersion213Compat),
-    jvm(cliScalaVersion213Compat),
+    coursier.jvm(cliScalaVersion),
+    install,
+    jvm(cliScalaVersion),
     docker(cliScalaVersion),
-    launcherModule(cliScalaVersion213Compat),
-    `cache-server`(cliScalaVersion213Compat)
+    launcherModule(cliScalaVersion),
+    `cache-server`
   )
   def artifactName = "coursier-cli"
   def mvnDeps = super.mvnDeps() ++ Seq(
@@ -1208,12 +1182,12 @@ trait Cli extends CsModule
   }
 }
 
-trait CliTests extends CsModule
-    with CoursierPublishModule { self =>
+// not published: only hosts the tests of the CLI launchers
+trait CliTests extends CsModule { self =>
   def jvmRelease   = scala3LatestJvmRelease
   def scalaVersion = cliScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(cliScalaVersion213Compat)
+    coursier.jvm(cliScalaVersion)
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.jsoniterMacros
@@ -1257,6 +1231,7 @@ trait CliTests extends CsModule
     )
   }
   object test extends SbtTests with CsTests {
+    def compileMvnDeps = super.compileMvnDeps() ++ Seq(Deps.svm)
     def forkEnv = Task {
       super.forkEnv() ++ Seq(cli.csInPathForkEnv())
     }
@@ -1600,19 +1575,40 @@ def copyBatLauncher(
   os.copy(bootstrap, dir / "coursier.bat", createFolders = true, replaceExisting = true)
 }
 
+private def updateVersionPin(
+  pin: VersionPin,
+  version: String,
+  dryRun: Boolean,
+  cloneUnder: os.Path
+): Unit = {
+  val tokenOpt = Option(System.getenv("GH_TOKEN"))
+  if (!dryRun && tokenOpt.isEmpty)
+    sys.error("GH_TOKEN not set")
+  VersionPin.update(
+    pin = pin,
+    newVersion = version,
+    ghTokenOpt = tokenOpt,
+    dryRun = dryRun,
+    cloneUnder = cloneUnder
+  )
+}
+
+/** Opens a pull request bumping `CS_VERSION` in `cs.sh` */
 def updateCsShVersion(
   version: String = CoursierPublishModule.buildVersion,
   dryRun: Boolean = false
 ) = Task.Command[Unit] {
-  val tokenOpt = Option(System.getenv("GH_TOKEN"))
-  if (!dryRun && tokenOpt.isEmpty)
-    sys.error("GH_TOKEN not set")
-  CsSh.updateVersion(
-    newVersion = version,
-    ghTokenOpt = tokenOpt,
-    dryRun = dryRun,
-    cloneUnder = Task.dest / "repo"
-  )
+  updateVersionPin(CsSh, version, dryRun, Task.dest / "repo")
+}
+
+/** Opens a pull request bumping `Versions.csDocker`, the cs version downloaded in the docker images
+  * building our Linux launchers
+  */
+def updateCsDockerVersion(
+  version: String = CoursierPublishModule.buildVersion,
+  dryRun: Boolean = false
+) = Task.Command[Unit] {
+  updateVersionPin(CsDocker, version, dryRun, Task.dest / "repo")
 }
 
 private val docScalaVersion = ScalaVersions.scala213
@@ -1697,10 +1693,14 @@ def crossModule[M <: Cross.Module[?]](cross: Cross[M], sv: String): M =
     )
   )
 
-/** Like `crossModule`, for the modules that are deliberately cross-built for Scala 2 only */
-def scala2CrossModule[M <: Cross.Module[?]](cross: Cross[M], sv: String): Option[M] =
-  if (sv.startsWith("3.")) None
-  else Some(crossModule(cross, sv))
+/** Like `crossModule`, for the modules that are deliberately cross-built for `versions` only */
+def crossModuleIn[M <: Cross.Module[?]](
+  cross: Cross[M],
+  sv: String,
+  versions: Seq[String]
+): Option[M] =
+  if (versions.contains(sv)) Some(crossModule(cross, sv))
+  else None
 
 def dockerTests(): Task.Command[Unit] = {
   val cmd = crossModule(docker, ScalaVersions.scala3).test.testForked()
@@ -1725,18 +1725,20 @@ def jvmTests(scalaVersion: String = defaultScalaVersion) = {
     // format: off
     crossModule(core.jvm     , sv).test.testForked(),
     crossModule(cache.jvm    , sv).test.testForked(),
-    crossModule(env          , sv).test.testForked(),
     crossModule(coursier.jvm , sv).test.testForked(),
-    crossModule(tests.jvm    , sv).test.testForked(),
-    crossModule(install      , sv).test.testForked(),
-    crossModule(jvm          , sv).test.testForked(),
-    crossModule(launcher     , sv).test.testForked()
+    crossModule(tests.jvm    , sv).test.testForked()
     // format: on
   ) ++ Seq(
-    // the cats and scalaz interop modules are cross-built for Scala 2 only
+    // these modules aren't cross-built for Scala 2.12, see ScalaVersions
     // format: off
-    scala2CrossModule(interop.scalaz.jvm , sv).map(_.test.testForked()),
-    scala2CrossModule(interop.cats.jvm   , sv).map(_.test.testForked())
+    crossModuleIn(env      , sv, ScalaVersions.allButScala212).map(_.test.testForked()),
+    crossModuleIn(jvm      , sv, ScalaVersions.allButScala212).map(_.test.testForked()),
+    crossModuleIn(launcher , sv, ScalaVersions.allButScala212).map(_.test.testForked()),
+    // install isn't cross-built (Scala 3 only), its tests run along with the Scala 3 ones
+    Option.when(sv == ScalaVersions.scala3)(install.test.testForked()),
+    // the cats and scalaz interop modules are cross-built for Scala 2.13 only
+    crossModuleIn(interop.scalaz.jvm , sv, Seq(ScalaVersions.scala213)).map(_.test.testForked()),
+    crossModuleIn(interop.cats.jvm   , sv, Seq(ScalaVersions.scala213)).map(_.test.testForked())
     // format: on
   ).flatten
 
@@ -1879,7 +1881,7 @@ def cliNativeImageLauncher() = Task.Command {
   cli.nativeImage()
 }
 
-object ci extends Module {
+object ci extends Module with mill.javalib.CoursierSonatypeCentralPublish {
   def copyJvm(jvm: String = Versions.graalVmJvmId, dest: String = "jvm") = Task.Command {
     import _root_.coursier.cache.{ArchiveCache, FileCache}
     import _root_.coursier.jvm.{JavaHome, JvmCache}
@@ -1896,21 +1898,63 @@ object ci extends Module {
     destJavaHome
   }
 
-  /** Checks that all published modules are either all snapshots, or all releases.
+  /** Checks that the publish versions are consistent.
     *
     * The coursier modules are versioned from the `v*` tags, the interface ones from the
-    * `interface-v*` tags, so cutting a release requires both kinds of tags on the same commit.
+    * `interface-v*` tags. The coursier modules must either be all snapshots or all releases, and so
+    * must the interface ones. Releasing the interface modules requires a `v*` tag alongside the
+    * `interface-v*` one, while the coursier modules can be released without an `interface-v*` tag:
+    * the interface modules are then snapshots, and the publish workflow leaves them out of the
+    * release.
     */
   def checkPublishVersions() = Task.Command[Unit] {
-    val versions            = allPublishVersions()
-    val (snapshots, others) = versions.partition(_._2.endsWith("-SNAPSHOT"))
-    if (snapshots.nonEmpty && others.nonEmpty) {
+    val versions = allPublishVersions()
+    def printVersions(): Unit =
       for ((name, version) <- versions.sortBy(_._1))
         System.err.println(s"$name: $version")
+    def isSnapshot(version: String) = version.endsWith("-SNAPSHOT")
+
+    val (interfaceVersions, coursierVersions) =
+      versions.partition { case (name, _) => interfacePublishModuleNames(name) }
+    val (coursierSnapshots, coursierReleases) = coursierVersions.partition(v => isSnapshot(v._2))
+    val (interfaceSnapshots, interfaceReleases) =
+      interfaceVersions.partition(v => isSnapshot(v._2))
+
+    if (coursierSnapshots.nonEmpty && coursierReleases.nonEmpty) {
+      printVersions()
       Task.fail(
-        s"Found ${snapshots.length} snapshot and ${others.length} non-snapshot publish " +
-          "versions, expected either all snapshots or all releases (releases need both a " +
-          "'v*' and an 'interface-v*' tag on the same commit)"
+        s"Found ${coursierSnapshots.length} snapshot and ${coursierReleases.length} " +
+          "non-snapshot coursier publish versions, expected either all snapshots or all releases"
+      )
+    }
+    if (interfaceSnapshots.nonEmpty && interfaceReleases.nonEmpty) {
+      printVersions()
+      Task.fail(
+        s"Found ${interfaceSnapshots.length} snapshot and ${interfaceReleases.length} " +
+          "non-snapshot interface publish versions, expected either all snapshots or all releases"
+      )
+    }
+    if (coursierSnapshots.nonEmpty && interfaceReleases.nonEmpty) {
+      printVersions()
+      Task.fail(
+        "Found release interface publish versions along with snapshot coursier publish " +
+          "versions (releasing the interface modules needs a 'v*' tag alongside the " +
+          "'interface-v*' one)"
+      )
+    }
+    if (coursierReleases.nonEmpty && interfaceSnapshots.nonEmpty)
+      Task.log.info(
+        s"No 'interface-v*' tag on this commit, not releasing " +
+          interfaceSnapshots.map { case (name, version) => s"$name ($version)" }.mkString(", ")
+      )
+    // 2.1.25 got published as "interface-v1.0.29", from the wrong tag: make sure versions
+    // at least look like versions before anything gets published
+    val malformed = versions.filter(!_._2.matches("[0-9]+\\.[0-9]+\\.[0-9]+([-.+].*)?"))
+    if (malformed.nonEmpty) {
+      printVersions()
+      Task.fail(
+        s"Found ${malformed.length} malformed publish versions (expected X.Y.Z-like versions): " +
+          malformed.map { case (name, version) => s"$name: $version" }.mkString(", ")
       )
     }
   }
@@ -1940,6 +1984,12 @@ object ci extends Module {
     }
   }
 }
+
+/** Names (as in `allPublishVersions`) of the interface modules, versioned from the `interface-v*`
+  * tags
+  */
+lazy val interfacePublishModuleNames: Set[String] =
+  moduleInternal.modules.collect { case m: InterfacePublishModule => m.moduleSegments.render }.toSet
 
 lazy val allPublishVersions: Task[Seq[(String, String)]] =
   Task.traverse(moduleInternal.modules.collect { case m: PublishModule => m }) { m =>
@@ -2121,10 +2171,12 @@ object docs extends ScalaModule {
   }
 }
 
-trait CacheServer extends CrossSbtModule with CsModule with CoursierPublishModule with CsMima {
+// Scala 3 only, like the cli that uses it
+trait CacheServer extends CsModule with CoursierPublishModule with CsMima {
+  def scalaVersion = cliScalaVersion
   def artifactName = "coursier-cache-server"
   def moduleDeps = super.moduleDeps ++ Seq(
-    cache.jvm()
+    cache.jvm(cliScalaVersion)
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.osLib,
@@ -2156,8 +2208,9 @@ trait CacheServer extends CrossSbtModule with CsModule with CoursierPublishModul
 // here, rather than dependencies on published coursier artifacts.
 //
 // Their versioning scheme (1.0.x) is unrelated to the tags of this repository: it is driven
-// by the `interface-v*` tags, see `InterfaceVersion`. `ci.checkPublishVersions` ensures a
-// release can only be cut with an `interface-v*` and a `v*` tag on the same commit.
+// by the `interface-v*` tags, see `InterfaceVersion`. Releasing them requires an `interface-v*`
+// and a `v*` tag on the same commit (see `ci.checkPublishVersions`), while a `v*` tag alone
+// releases all the other modules, and leaves these ones out.
 
 object interface extends Interface
 

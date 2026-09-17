@@ -45,9 +45,11 @@ object CoursierPublishModule extends ExternalModule {
     val gitHead = os.proc("git", "rev-parse", "HEAD")
       .call(cwd = BuildCtx.workspaceRoot, stderr = os.Pipe)
       .out.trim()
+    // '--match v*' is needed, as git describe otherwise prefers annotated tags, and picks the
+    // 'interface-v*' one when both kinds of tags sit on the same commit, like for releases
     val maybeExactTag = scala.util.Try {
       // FIXME Print stderr if command fails
-      os.proc("git", "describe", "--exact-match", "--tags", "--always", gitHead)
+      os.proc("git", "describe", "--exact-match", "--tags", "--match", "v*", gitHead)
         .call(cwd = BuildCtx.workspaceRoot, stderr = os.Pipe).out
         .trim()
         .stripPrefix("v")
