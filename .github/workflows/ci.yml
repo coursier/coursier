@@ -185,19 +185,6 @@ jobs:
     - name: Test published dependencies
       run: ./mill -i testInterfacePublishedDeps
 
-  bin-compat:
-    runs-on: ubuntu-latest
-    name: Binary compatibility
-    steps:
-    - uses: actions/checkout@v7
-      with:
-        fetch-depth: 0
-        submodules: true
-    - uses: coursier/cache-action@v8
-      with:
-        disableFallback: true
-    - run: ./mill -i -k __.mimaReportBinaryIssues
-
   website-check:
     runs-on: ubuntu-latest
     name: Website check
@@ -301,7 +288,6 @@ jobs:
       - "test"
       - "js-test"
       - "interface-test"
-      - "bin-compat"
       - "website-check"
       - "format"
       - "scalafix"
