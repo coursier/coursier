@@ -11,9 +11,11 @@ import java.nio.charset.{MalformedInputException, StandardCharsets}
 import java.nio.file.Files
 import java.util.zip.{ZipException, ZipFile}
 
+import sttp.client4.Response
 import sttp.client4.quick._
 
 import scala.annotation.tailrec
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
 import scala.util.control.NonFatal
 import scala.util.{Properties, Using}
 
@@ -44,6 +46,15 @@ object GitHubReleaseAssets {
     else "application/octet-stream"
   }
 
+  /** `quickRequest` reads responses with `asStringAlways`, so a failed request looks like a
+    * successful one unless its status code is checked
+    */
+  private def checkResponse(resp: Response[String], what: String): Unit =
+    if (!resp.code.isSuccess) {
+      val details = Some(resp.body.trim).filter(_.nonEmpty).fold("")(body => s": $body")
+      sys.error(s"Error $what (status code ${resp.code.code})$details")
+    }
+
   private def releaseId(
     ghOrg: String,
     ghProj: String,
@@ -56,6 +67,7 @@ object GitHubReleaseAssets {
       .header("Authorization", s"token $ghToken")
       .get(url)
       .send()
+    checkResponse(resp, s"getting the releases of $ghOrg/$ghProj")
 
     val json = ujson.read(resp.body)
     val releaseId =
@@ -78,27 +90,55 @@ object GitHubReleaseAssets {
     releaseId
   }
 
+  final case class Asset(id: Long, size: Long, state: String)
+
   def currentAssets(
     releaseId: Long,
     ghOrg: String,
     ghProj: String,
     ghToken: String
-  ): Map[String, Long] = {
+  ): Map[String, Asset] = {
 
     val resp = quickRequest
       .header("Accept", "application/vnd.github.v3+json")
       .header("Authorization", s"token $ghToken")
       .get(uri"https://api.github.com/repos/$ghOrg/$ghProj/releases/$releaseId/assets")
       .send()
+    checkResponse(resp, s"listing the assets of release $releaseId")
     val json = ujson.read(resp.body)
     json
       .arr
       .iterator
       .map { obj =>
-        obj("name").str -> obj("id").num.toLong
+        obj("name").str -> Asset(
+          obj("id").num.toLong,
+          obj("size").num.toLong,
+          obj("state").str
+        )
       }
       .toMap
   }
+
+  private def deleteAsset(
+    ghOrg: String,
+    ghProj: String,
+    ghToken: String,
+    assetId: Long
+  ): Unit = {
+    val resp = quickRequest
+      .header("Accept", "application/vnd.github.v3+json")
+      .header("Authorization", s"token $ghToken")
+      .delete(uri"https://api.github.com/repos/$ghOrg/$ghProj/releases/assets/$assetId")
+      .send()
+    checkResponse(resp, s"deleting asset $assetId")
+  }
+
+  /** sttp defaults to a one minute read timeout, which uploads.github.com happens to exceed even
+    * for assets of a few hundred kB
+    */
+  private def uploadReadTimeout: FiniteDuration = 10.minutes
+  private def uploadAttempts                    = 3
+  private def uploadRetryDelay: FiniteDuration  = 5.seconds
 
   /** Uploads files as GitHub release assets.
     *
@@ -130,19 +170,16 @@ object GitHubReleaseAssets {
     val releaseId0 = releaseId(ghOrg, ghProj, ghToken, tag)
 
     val currentAssets0 =
-      if (overwrite) currentAssets(releaseId0, ghOrg, ghProj, ghToken) else Map.empty[String, Long]
+      if (overwrite) currentAssets(releaseId0, ghOrg, ghProj, ghToken)
+      else Map.empty[String, Asset]
 
     for ((f0, name) <- uploads) {
 
       currentAssets0
         .get(name)
         .filter(_ => overwrite)
-        .foreach { assetId =>
-          val resp = quickRequest
-            .header("Accept", "application/vnd.github.v3+json")
-            .header("Authorization", s"token $ghToken")
-            .delete(uri"https://api.github.com/repos/$ghOrg/$ghProj/releases/assets/$assetId")
-            .send()
+        .foreach { asset =>
+          deleteAsset(ghOrg, ghProj, ghToken, asset.id)
         }
 
       val uri =
@@ -153,13 +190,56 @@ object GitHubReleaseAssets {
         System.err.println(s"Would have uploaded $f0 as $name")
       else {
         System.err.println(s"Uploading $f0 as $name")
-        quickRequest
-          .header("Accept", "application/vnd.github.v3+json")
-          .header("Authorization", s"token $ghToken")
-          .body(f0.toNIO)
-          .header("Content-Type", contentType0)
-          .post(uri)
-          .send()
+
+        @tailrec
+        def upload0(remainingAttempts: Int): Unit = {
+          val errorOpt =
+            try {
+              val resp = quickRequest
+                .header("Accept", "application/vnd.github.v3+json")
+                .header("Authorization", s"token $ghToken")
+                .body(f0.toNIO)
+                .header("Content-Type", contentType0)
+                .readTimeout(uploadReadTimeout)
+                .post(uri)
+                .send()
+              checkResponse(resp, s"uploading $name")
+              None
+            }
+            catch {
+              case NonFatal(e) => Some(e)
+            }
+
+          errorOpt match {
+            case None => ()
+            case Some(e) =>
+              System.err.println(s"Error while uploading $name: $e")
+              // GitHub can have accepted the whole asset and only failed to answer in time, so
+              // look at what actually landed on the release rather than blindly uploading again
+              // (a second upload under the same name is rejected)
+              val uploadedOpt  = currentAssets(releaseId0, ghOrg, ghProj, ghToken).get(name)
+              val expectedSize = os.size(f0)
+              uploadedOpt match {
+                case Some(asset) if asset.state == "uploaded" && asset.size == expectedSize =>
+                  System.err.println(s"$name was uploaded nonetheless, moving on")
+                case _ =>
+                  uploadedOpt.foreach { asset =>
+                    System.err.println(
+                      s"Removing partially uploaded $name (${asset.size} B, state ${asset.state})"
+                    )
+                    deleteAsset(ghOrg, ghProj, ghToken, asset.id)
+                  }
+                  if (remainingAttempts <= 1) throw e
+                  System.err.println(
+                    s"Uploading $name again in $uploadRetryDelay (${remainingAttempts - 1} attempts left)"
+                  )
+                  Thread.sleep(uploadRetryDelay.toMillis)
+                  upload0(remainingAttempts - 1)
+              }
+          }
+        }
+
+        upload0(uploadAttempts)
       }
     }
   }
