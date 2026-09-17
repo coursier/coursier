@@ -6,7 +6,7 @@ import com.github.lolgab.mill.mima._
 
 import mill._, mill.scalalib._
 
-trait CoursierJvmBase extends Coursier with CsMima with Shading {
+trait CoursierJvmBase extends Coursier with CsCrossJvmModule with CsMima with Shading {
 
   def manifest = super[Shading].manifest
 

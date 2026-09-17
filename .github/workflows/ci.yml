@@ -42,7 +42,6 @@ jobs:
     name: Scala versions
     outputs:
       scala-versions: ${{ steps.versions.outputs.scala-versions }}
-      scala-versions-js: ${{ steps.versions.outputs.scala-versions-js }}
       scala213: ${{ steps.versions.outputs.scala213 }}
       scala212: ${{ steps.versions.outputs.scala212 }}
     steps:
@@ -130,14 +129,9 @@ jobs:
         COURSIER_JNI: force
 
   js-test:
-    needs: scala-versions
     runs-on: ubuntu-latest
-    name: Scala.js Scala ${{ matrix.SCALA_VERSION }}
+    name: Scala.js
     timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        SCALA_VERSION: ${{ fromJSON(needs.scala-versions.outputs.scala-versions-js) }}
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
@@ -156,11 +150,9 @@ jobs:
         disableFallback: true
     - run: |
         npm install --ignore-scripts
-        ./mill -i -j1 '__.js['"$SCALA_VERSION"'].__.compile'
-        ./mill -i jsTests --scalaVersion "$SCALA_VERSION"
+        ./mill -i -j1 __.js.__.compile
+        ./mill -i jsTests
       shell: bash
-      env:
-        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
 
   interface-test:
     needs: scala-versions

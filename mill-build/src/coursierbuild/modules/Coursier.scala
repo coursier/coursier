@@ -4,7 +4,7 @@ import coursierbuild.Deps
 
 import mill._, mill.scalalib._
 
-trait Coursier extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
+trait Coursier extends CsModule with CoursierPublishModule {
   def artifactName = "coursier"
   def compileMvnDeps = Task {
     val sv          = scalaVersion()

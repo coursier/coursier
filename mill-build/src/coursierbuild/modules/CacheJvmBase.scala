@@ -4,7 +4,7 @@ import coursierbuild.Deps
 import mill._
 import com.github.lolgab.mill.mima._
 
-trait CacheJvmBase extends Cache with CsMima {
+trait CacheJvmBase extends Cache with CsCrossJvmModule with CsMima {
   def customLoaderCp: T[Seq[PathRef]]
 
   def mimaBinaryIssueFilters =

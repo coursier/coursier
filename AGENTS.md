@@ -25,7 +25,7 @@ Prefer minimal, local, reversible changes and follow existing patterns.
 - Compile all modules:
   - `./mill __.compile`
 - Compile Scala.js modules (CI pattern):
-  - `./mill -j1 __.js[_].compile`
+  - `./mill -j1 __.js.__.compile`
 - Publish all modules locally (heavy):
   - `./mill -i __.publishLocal`
 - Build docs markdown and mkdocs site:
@@ -58,8 +58,6 @@ Prefer minimal, local, reversible changes and follow existing patterns.
   - `./mill -i jvmTests --scalaVersion 2.13.16`
 - Run all Scala.js aggregate tests:
   - `./mill -i jsTests`
-- Run Scala.js aggregate tests for one Scala version:
-  - `./mill -i jsTests --scalaVersion 2.13.16`
 - Run docker-focused tests:
   - `./mill -i dockerTests`
 - Run native-launcher tests:
@@ -82,7 +80,8 @@ Cross module names include brackets, so quote task paths in shells.
 
 Notes:
 - Most suites are `object ... extends TestSuite` with names ending in `Tests`.
-- For JS tests, use task paths like `*.js[2.13.16].test.*`.
+- The Scala.js modules are Scala 3 only and are not cross-built, so their task paths carry no
+  bracket: `*.js.test.*`, e.g. `./mill 'tests.js.test.testForked'`.
 
 ## High-value verification patterns
 
@@ -91,8 +90,8 @@ Notes:
   - `./mill -i jvmTests --scalaVersion 2.13.16`
 - Scala.js code changes:
   - `npm install --ignore-scripts`
-  - `./mill -i -j1 '__.js[2.13.16].compile'`
-  - `./mill -i jsTests --scalaVersion 2.13.16`
+  - `./mill -i -j1 __.js.__.compile`
+  - `./mill -i jsTests`
 - Docs changes:
   - `./mill -i docs.mdoc`
   - `./mill -i docs.mkdocsBuild`

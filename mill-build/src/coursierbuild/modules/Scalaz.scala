@@ -4,6 +4,6 @@ import coursierbuild.Deps
 
 import mill._, mill.scalalib._
 
-trait Scalaz extends CsModule with CsCrossJvmJsModule with SnapshotOnlyPublishModule {
+trait Scalaz extends CsModule with SnapshotOnlyPublishModule {
   def artifactName = "coursier-scalaz-interop"
 }
