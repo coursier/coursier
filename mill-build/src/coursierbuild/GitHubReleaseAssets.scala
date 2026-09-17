@@ -169,77 +169,90 @@ object GitHubReleaseAssets {
 
     val releaseId0 = releaseId(ghOrg, ghProj, ghToken, tag)
 
-    val currentAssets0 =
-      if (overwrite) currentAssets(releaseId0, ghOrg, ghProj, ghToken)
-      else Map.empty[String, Asset]
+    val currentAssets0 = currentAssets(releaseId0, ghOrg, ghProj, ghToken)
 
     for ((f0, name) <- uploads) {
 
-      currentAssets0
-        .get(name)
-        .filter(_ => overwrite)
-        .foreach { asset =>
-          deleteAsset(ghOrg, ghProj, ghToken, asset.id)
-        }
+      val existingOpt = currentAssets0.get(name)
 
-      val uri =
-        uri"https://uploads.github.com/repos/$ghOrg/$ghProj/releases/$releaseId0/assets?name=$name"
-      val contentType0 = contentType(f0)
-      System.err.println(s"Detected content type of $f0: $contentType0")
-      if (dryRun)
-        System.err.println(s"Would have uploaded $f0 as $name")
+      // re-running a release upload finds the assets its earlier attempts managed to upload;
+      // uploading those again is only good for a "already_exists" error from GitHub
+      val alreadyThere = !overwrite && existingOpt.exists { asset =>
+        asset.state == "uploaded" && asset.size == os.size(f0)
+      }
+
+      if (alreadyThere)
+        System.err.println(s"$name is already on the release with the same size, not uploading it")
       else {
-        System.err.println(s"Uploading $f0 as $name")
 
-        @tailrec
-        def upload0(remainingAttempts: Int): Unit = {
-          val errorOpt =
-            try {
-              val resp = quickRequest
-                .header("Accept", "application/vnd.github.v3+json")
-                .header("Authorization", s"token $ghToken")
-                .body(f0.toNIO)
-                .header("Content-Type", contentType0)
-                .readTimeout(uploadReadTimeout)
-                .post(uri)
-                .send()
-              checkResponse(resp, s"uploading $name")
-              None
-            }
-            catch {
-              case NonFatal(e) => Some(e)
-            }
-
-          errorOpt match {
-            case None => ()
-            case Some(e) =>
-              System.err.println(s"Error while uploading $name: $e")
-              // GitHub can have accepted the whole asset and only failed to answer in time, so
-              // look at what actually landed on the release rather than blindly uploading again
-              // (a second upload under the same name is rejected)
-              val uploadedOpt  = currentAssets(releaseId0, ghOrg, ghProj, ghToken).get(name)
-              val expectedSize = os.size(f0)
-              uploadedOpt match {
-                case Some(asset) if asset.state == "uploaded" && asset.size == expectedSize =>
-                  System.err.println(s"$name was uploaded nonetheless, moving on")
-                case _ =>
-                  uploadedOpt.foreach { asset =>
-                    System.err.println(
-                      s"Removing partially uploaded $name (${asset.size} B, state ${asset.state})"
-                    )
-                    deleteAsset(ghOrg, ghProj, ghToken, asset.id)
-                  }
-                  if (remainingAttempts <= 1) throw e
-                  System.err.println(
-                    s"Uploading $name again in $uploadRetryDelay (${remainingAttempts - 1} attempts left)"
-                  )
-                  Thread.sleep(uploadRetryDelay.toMillis)
-                  upload0(remainingAttempts - 1)
-              }
+        // get the asset that is in the way out of the way: the one we were asked to overwrite,
+        // or what an upload GitHub failed to save left behind (those keep the size they should
+        // have had, but a state other than "uploaded")
+        existingOpt
+          .filter(asset => overwrite || asset.state != "uploaded")
+          .foreach { asset =>
+            deleteAsset(ghOrg, ghProj, ghToken, asset.id)
           }
-        }
 
-        upload0(uploadAttempts)
+        val uri =
+          uri"https://uploads.github.com/repos/$ghOrg/$ghProj/releases/$releaseId0/assets?name=$name"
+        val contentType0 = contentType(f0)
+        System.err.println(s"Detected content type of $f0: $contentType0")
+        if (dryRun)
+          System.err.println(s"Would have uploaded $f0 as $name")
+        else {
+          System.err.println(s"Uploading $f0 as $name")
+
+          @tailrec
+          def upload0(remainingAttempts: Int): Unit = {
+            val errorOpt =
+              try {
+                val resp = quickRequest
+                  .header("Accept", "application/vnd.github.v3+json")
+                  .header("Authorization", s"token $ghToken")
+                  .body(f0.toNIO)
+                  .header("Content-Type", contentType0)
+                  .readTimeout(uploadReadTimeout)
+                  .post(uri)
+                  .send()
+                checkResponse(resp, s"uploading $name")
+                None
+              }
+              catch {
+                case NonFatal(e) => Some(e)
+              }
+
+            errorOpt match {
+              case None => ()
+              case Some(e) =>
+                System.err.println(s"Error while uploading $name: $e")
+                // GitHub can have accepted the whole asset and only failed to answer in time, so
+                // look at what actually landed on the release rather than blindly uploading again
+                // (a second upload under the same name is rejected)
+                val uploadedOpt  = currentAssets(releaseId0, ghOrg, ghProj, ghToken).get(name)
+                val expectedSize = os.size(f0)
+                uploadedOpt match {
+                  case Some(asset) if asset.state == "uploaded" && asset.size == expectedSize =>
+                    System.err.println(s"$name was uploaded nonetheless, moving on")
+                  case _ =>
+                    uploadedOpt.foreach { asset =>
+                      System.err.println(
+                        s"Removing partially uploaded $name (${asset.size} B, state ${asset.state})"
+                      )
+                      deleteAsset(ghOrg, ghProj, ghToken, asset.id)
+                    }
+                    if (remainingAttempts <= 1) throw e
+                    System.err.println(
+                      s"Uploading $name again in $uploadRetryDelay (${remainingAttempts - 1} attempts left)"
+                    )
+                    Thread.sleep(uploadRetryDelay.toMillis)
+                    upload0(remainingAttempts - 1)
+                }
+            }
+          }
+
+          upload0(uploadAttempts)
+        }
       }
     }
   }
