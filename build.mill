@@ -143,10 +143,9 @@ object coursier extends Module {
   object shared extends SharedScalaSources
   object jvm    extends Cross[CoursierJvm](ScalaVersions.all)
   object js     extends Cross[CoursierJs](ScalaVersions.allJs)
-}
-
-object `proxy-setup` extends JavaModule with CoursierPublishModule with CsMima {
-  def artifactName = "coursier-proxy-setup"
+  // `coursier.proxy.SetupProxy`, pure Java: part of coursier.jvm, and also copied under another
+  // package in bootstrap-launcher, see its `proxySources`
+  def proxySetupSources = Task.Sources(os.sub / "jvm/src/main/java/coursier/proxy")
 }
 
 object paths extends Paths
@@ -208,7 +207,7 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
   )
   def proxySources = Task {
     val dest = Task.dest / "sources"
-    val orig = `proxy-setup`.sources()
+    val orig = coursier.proxySetupSources()
     for ((pathRef, idx) <- orig.zipWithIndex)
       os.copy.into(pathRef.path, dest / s"dir-$idx", copyAttributes = true, createFolders = true)
     os.walk(dest)
@@ -679,8 +678,7 @@ trait CoursierJvm extends CoursierJvmBase with DataClassModule
   }
   def moduleDeps = Seq(
     core.jvm(),
-    cache.jvm(),
-    `proxy-setup`
+    cache.jvm()
   )
   // Put CoursierTests right after TestModule, and see what happens
   object test extends CrossSbtTests with CoursierTests with CsResourcesTests {
@@ -848,9 +846,6 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
 }
 
 trait ProxyTests extends CrossSbtModule with CsModule {
-  def moduleDeps = super.moduleDeps ++ Seq(
-    `proxy-setup`
-  )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.dockerClient,
     Deps.slf4JNop
