@@ -1,7 +1,10 @@
-package coursier.exec;
+package coursier.exec.graalvm;
 
 import java.io.FileNotFoundException;
 import java.lang.reflect.Method;
+
+import coursier.exec.ErrnoException;
+import coursier.exec.Execve;
 
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;

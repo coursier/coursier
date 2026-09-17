@@ -1,4 +1,4 @@
-package coursier.exec;
+package coursier.exec.graalvm;
 
 import com.oracle.svm.core.posix.headers.PosixDirectives;
 import org.graalvm.nativeimage.Platform;
