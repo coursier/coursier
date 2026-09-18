@@ -41,6 +41,12 @@ trait CacheJvmBase extends Cache with CsCrossJvmModule with CsMima {
       ProblemFilter.exclude[Problem]("coursier.cache.CacheUrl#Args*"),
       ProblemFilter.exclude[Problem]("coursier.cache.CacheUrl$Args*"),
       ProblemFilter.exclude[Problem]("coursier.cache.CacheUrl.BasicRealm*"),
+      // moved to coursier.cache.internal.graalvm, so that its @Platforms annotation - which
+      // references GraalVM classes that users don't have on their class path - sits in a package
+      // the Scala 3 compiler has no reason to look into (it crashes parsing it otherwise)
+      ProblemFilter.exclude[MissingClassProblem](
+        "coursier.cache.internal.SigWinchNativeWindows"
+      ),
       // internal, in spite of what their compiled visibility says
       ProblemFilter.exclude[Problem]("coursier.cache.internal.Retry*"),
       ProblemFilter.exclude[Problem]("coursier.cache.internal.Downloader#Blocking*"),
