@@ -58,6 +58,10 @@ Prefer minimal, local, reversible changes and follow existing patterns.
   - `./mill -i jvmTests --scalaVersion 2.13.16`
 - Run all Scala.js aggregate tests:
   - `./mill -i jsTests`
+- On pull requests, the CI only runs the tests affected by the changes, through
+  `.github/scripts/selective-tests.sh` and the `ci.*TestSelectors` commands of `build.mill`
+  (Mill selective execution). A new test module reaches the CI by being added to the
+  `*TestTasks` methods of `build.mill`, next to the existing ones.
 - Run docker-focused tests:
   - `./mill -i dockerTests`
 - Run native-launcher tests:
