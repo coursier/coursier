@@ -96,10 +96,19 @@ jobs:
       if: runner.os == 'Linux'
     # - run: .github/scripts/scala-native-setup.sh
     #   if: runner.os != 'Windows'
+    # On pull requests, only the tests affected by the changes run, see the script
+    - name: Snapshot test inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare ci.dockerTestSelectors ci.jvmTestSelectors
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        COURSIER_JNI: force
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
     - name: Run Docker tests
       id: docker-tests
       continue-on-error: true
-      run: ./mill -i dockerTests
+      run: .github/scripts/selective-tests.sh run ci.dockerTestSelectors -- dockerTests
+      shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
@@ -107,7 +116,8 @@ jobs:
       id: docker-tests-retry
       if: steps.docker-tests.outcome == 'failure' && matrix.OS == 'macos-15-intel'
       continue-on-error: true
-      run: ./mill -i dockerTests
+      run: .github/scripts/selective-tests.sh run ci.dockerTestSelectors -- dockerTests
+      shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
@@ -123,7 +133,9 @@ jobs:
         steps.docker-tests.outcome == 'failure' &&
         (matrix.OS != 'macos-15-intel' || steps.docker-tests-retry.outcome == 'failure')
       run: exit 1
-    - run: ./mill -i jvmTests
+    - name: Run JVM tests
+      run: .github/scripts/selective-tests.sh run ci.jvmTestSelectors -- jvmTests
+      shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
@@ -148,10 +160,16 @@ jobs:
     - uses: coursier/cache-action@v8
       with:
         disableFallback: true
+    - run: npm install --ignore-scripts
+    # On pull requests, only the tests affected by the changes run, see the script
+    - name: Snapshot test inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare ci.jsTestSelectors
+      shell: bash
+      env:
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
     - run: |
-        npm install --ignore-scripts
         ./mill -i -j1 __.js.__.compile
-        ./mill -i jsTests
+        .github/scripts/selective-tests.sh run ci.jsTestSelectors -- jsTests
       shell: bash
 
   interface-test:
@@ -171,7 +189,13 @@ jobs:
     - uses: coursier/cache-action@v8
       with:
         disableFallback: true
-    - run: ./mill -i interfaceTests --scalaVersion "$SCALA_VERSION"
+    # On pull requests, only the tests affected by the changes run, see the script
+    - name: Snapshot test inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare ci.interfaceTestSelectors
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - run: .github/scripts/selective-tests.sh run ci.interfaceTestSelectors -- interfaceTests --scalaVersion "$SCALA_VERSION"
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
     - name: Test published dependencies
