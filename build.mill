@@ -1008,6 +1008,14 @@ trait Jvm extends CrossSbtModule with CsModule
     super.mimaPreviousVersions().filter(_ != "2.0.16")
   }
   def artifactName = "coursier-jvm"
+  // Deprecated and unused duplicates of the coursier.exec.graalvm ones. They could only ever
+  // work from within a native image, and their annotations reference GraalVM classes that
+  // users don't have on their class path, which makes the Scala 3 compiler crash when it
+  // looks up the coursier.jvm package.
+  def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
+    ProblemFilter.exclude[MissingClassProblem]("coursier.jvm.GraalvmErrnoExtras"),
+    ProblemFilter.exclude[MissingClassProblem]("coursier.jvm.GraalvmUnistdExtras")
+  )
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(),
     `archive-cache`(),
@@ -1050,6 +1058,14 @@ trait Exec extends JavaModule with CoursierPublishModule with CsMima {
   )
   def compileMvnDeps = Seq(
     Deps.svm
+  )
+
+  // Moved to coursier.exec.graalvm, so that the GraalVM-only classes, whose annotations
+  // reference GraalVM classes that users don't have on their class path, don't sit in a
+  // package that user code looks up (that makes the Scala 3 compiler crash)
+  def mimaBinaryIssueFilters = super.mimaBinaryIssueFilters() ++ Seq(
+    ProblemFilter.exclude[MissingClassProblem]("coursier.exec.GraalvmErrnoExtras"),
+    ProblemFilter.exclude[MissingClassProblem]("coursier.exec.GraalvmUnistdExtras")
   )
 
   def mimaPreviousVersions = Task {

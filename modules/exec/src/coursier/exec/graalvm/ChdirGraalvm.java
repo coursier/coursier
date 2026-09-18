@@ -1,7 +1,9 @@
 // based on https://github.com/VirtusLab/scala-cli/blob/e782348c196b99ed028de11867149f4d400ec083/modules/build/src/main/java/scala/build/internal/ChdirGraalvm.java
-package coursier.exec;
+package coursier.exec.graalvm;
 
 import java.io.FileNotFoundException;
+
+import coursier.exec.ErrnoException;
 
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;

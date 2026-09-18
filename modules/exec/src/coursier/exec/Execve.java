@@ -30,7 +30,8 @@ public final class Execve {
     return osName.contains("linux") || osName.contains("mac");
   }
 
-  static void runShutdownHooks() {
+  // public so that the GraalVM substitution in coursier.exec.graalvm can fall back to it
+  public static void runShutdownHooks() {
     try {
       Class<?> shutdown = Class.forName("java.lang.Shutdown");
       Method runHooks = shutdown.getDeclaredMethod("runHooks");
