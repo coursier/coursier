@@ -268,10 +268,26 @@ object Launchers {
       def nativeImageOptions = super.nativeImageOptions() ++ compatNativeImageOptions
     }
 
-    private def linuxCsLauncher = {
+    /** The dynamically linked cs launcher, run in the containers building the launchers.
+      *
+      * Only fine in containers whose glibc is at least as recent as that of the image this launcher
+      * was built in ([[Docker.linuxBinaryBaseImage]], as of the `Versions.csDocker` release) - use
+      * [[linuxStaticCsLauncher]] elsewhere.
+      */
+    private def linuxCsLauncher = linuxCsLauncher0("")
+
+    /** The statically linked cs launcher, run in the containers building the launchers.
+      *
+      * Runs in any Linux container, whatever its glibc - the musl builder images are way older than
+      * [[Docker.linuxBinaryBaseImage]], and too old for the glibc the dynamically linked launchers
+      * require.
+      */
+    private def linuxStaticCsLauncher = linuxCsLauncher0("-static")
+
+    private def linuxCsLauncher0(suffix: String) = {
       val version  = Versions.csDocker
       val archPart = if (arch == "aarch64") "aarch64" else "x86_64"
-      s"https://github.com/coursier/coursier/releases/download/v$version/cs-$archPart-pc-linux.gz"
+      s"https://github.com/coursier/coursier/releases/download/v$version/cs-$archPart-pc-linux$suffix.gz"
     }
 
     /** GraalVM freezes the image builder's encoding properties (file.encoding, sun.jnu.encoding,
@@ -305,7 +321,7 @@ object Launchers {
       def nativeImageDockerParams = Task {
         val baseDockerParams = NativeImage.linuxStaticParams(
           Docker.muslBuilder,
-          linuxCsLauncher
+          linuxStaticCsLauncher
         )
         val dockerParams = setupLocaleAndOptions(baseDockerParams)
         buildHelperImage()
