@@ -1,4 +1,4 @@
-package coursier.cache.internal;
+package coursier.cache.internal.graalvm;
 
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
