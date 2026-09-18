@@ -7,13 +7,13 @@ import coursier.util.{Artifact, EitherT, Gather, Task}
 import coursier.util.StringInterpolators._
 import coursier.version.VersionConstraint
 import japgolly.scalajs.react._
-import org.scalajs.dom
+import _root_.org.scalajs.dom
 
 import scala.scalajs.js
 import scala.scalajs.js.Dynamic.{global => g}
 import scala.util.{Failure, Success}
 
-final class Backend($ : BackendScope[_, State]) {
+final class Backend($ : BackendScope[Unit, State]) {
 
   def fetch(
     repositories: Seq[Repository],
@@ -167,7 +167,7 @@ final class Backend($ : BackendScope[_, State]) {
 
       implicit val ec = scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
-      task.map { res: Resolution =>
+      task.map { (res: Resolution) =>
         $.modState { s =>
           updateDepGraph(res)
           updateTree(res, "#deptree", reverse = s.reverseTree)

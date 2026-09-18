@@ -5,7 +5,7 @@ import coursierbuild.Shading
 import mill._
 import com.github.lolgab.mill.mima._
 
-trait CoreJvmBase extends Core with Shading with CsMima {
+trait CoreJvmBase extends Core with CsCrossJvmModule with Shading with CsMima {
 
   def manifest = super[Shading].manifest
 

@@ -3,7 +3,7 @@ package coursierbuild.modules
 import coursierbuild.Deps
 import mill._
 
-trait Core extends CsModule with CsCrossJvmJsModule with CoursierPublishModule {
+trait Core extends CsModule with CoursierPublishModule {
   def artifactName = "coursier-core"
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.jsoniterMacros
