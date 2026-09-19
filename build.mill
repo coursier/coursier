@@ -1389,7 +1389,7 @@ trait TestCacheJvm extends Cross.Module[String] with CsCrossJvmModule {
     Deps.utest
   )
   def scalacOptions = Task {
-    CsScalaTests.removeReleaseOption(super.scalacOptions())
+    CsScalaTests.removeReleaseOption(super.scalacOptions(), scalaVersion())
   }
   def httpServerClassPath = Task {
     defaultResolver().classpath(

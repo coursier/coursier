@@ -16,11 +16,16 @@ trait CsScalaModule extends ScalaModule with CoursierJavaModule with ScalafixMod
     val scala2Opts =
       if (sv.startsWith("2.")) Seq("-Xasync")
       else Nil
+    // Use the JDK 25+ compatible lazy vals implementation (the default from Scala 3.8 on).
+    // It requires an explicit output version, which the `--release` option below provides.
+    val scala3Opts =
+      if (sv.startsWith("3.")) Seq("-Yfuture-lazy-vals")
+      else Nil
     // Scala 3.8.x only supports Java 17+ output targets; bump the release there.
     val releaseVersion =
       if (sv.startsWith("3.") && jvmRelease.toInt < 17) "17"
       else jvmRelease
-    super.scalacOptions() ++ scala212Opts ++ scala213Opts ++ scala2Opts ++ Seq(
+    super.scalacOptions() ++ scala212Opts ++ scala213Opts ++ scala2Opts ++ scala3Opts ++ Seq(
       "-deprecation",
       "-feature",
       "--release",
