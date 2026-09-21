@@ -125,6 +125,25 @@ $ ./mill jvmTests
 $ ./mill jvmTests --scalaVersion 2.13.3
 ```
 
+### Run only the tests affected by your changes
+
+On pull requests, the CI only runs the tests that depend on something that changed since the
+base commit, via Mill's selective execution (see `.github/scripts/selective-tests.sh`). To do
+the same locally, snapshot the inputs of the tests before your changes, then run the tests after
+them. Mill's `selective.*` commands only take their first positional argument into account, so
+several tasks have to be passed as a single `{a,b,…}` selector, and `COURSIER_SELECTIVE_TESTING`
+makes the build use a fixed version instead of the git-derived one, which would invalidate every
+test on every commit:
+
+```text
+$ export COURSIER_SELECTIVE_TESTING=true
+$ tests="{$(./mill --ticker false show ci.jvmTestSelectors | jq -r '.tests | join(",")')}"
+$ ./mill selective.prepare "$tests"
+… make changes …
+$ ./mill selective.resolve "$tests" # only lists the affected tests
+$ ./mill selective.run "$tests"
+```
+
 ### Validate the documentation markdown files
 
 ```text

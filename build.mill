@@ -1708,11 +1708,19 @@ def crossModuleIn[M <: Cross.Module[?]](
   if (versions.contains(sv)) Some(crossModule(cross, sv))
   else None
 
+// The *TestTasks methods below list the test tasks that the CI test commands run. `ci.*TestSelectors`
+// print their selectors, so that the CI can hand them to Mill's selective execution one by one,
+// see .github/scripts/selective-tests.sh: passing the aggregating command to `selective.run` would
+// re-run every test as soon as a single one is affected by a change.
+
+def dockerTestTasks: Seq[Task.Named[?]] =
+  Seq(crossModule(docker, ScalaVersions.scala3).test.testForked())
+
 def dockerTests(): Task.Command[Unit] = {
-  val cmd = crossModule(docker, ScalaVersions.scala3).test.testForked()
+  val tasks = dockerTestTasks
 
   Task.Command[Unit] {
-    cmd()
+    Task.sequence(tasks.map(_.map(_ => ())))()
 
     ()
   }
@@ -1725,7 +1733,14 @@ def defaultScalaVersion = {
     else None
   fromEnvOpt.getOrElse(ScalaVersions.scala213)
 }
-def jvmTests(scalaVersion: String = defaultScalaVersion) = {
+
+/** Tasks that `jvmTests` runs before the tests themselves, and that the tests rely on */
+def jvmTestPrerequisites: Seq[Task.Named[?]] = Seq(
+  // required for some tests of `cli-tests`
+  `launcher-native_04`.publishLocal()
+)
+
+def jvmTestTasks(scalaVersion: String): Seq[Task.Named[?]] = {
 
   def crossTests(sv: String) = Seq(
     // format: off
@@ -1755,11 +1770,6 @@ def jvmTests(scalaVersion: String = defaultScalaVersion) = {
     // format: on
   )
 
-  val prerequisites = Seq(
-    // required for some tests of `cli-tests`
-    `launcher-native_04`.publishLocal()
-  )
-
   val nonCrossTests = Seq(
     // format: off
     `bootstrap-launcher` .test .testForked(),
@@ -1780,11 +1790,15 @@ def jvmTests(scalaVersion: String = defaultScalaVersion) = {
     if (scalaVersion == "*") ScalaVersions.all
     else Seq(scalaVersion)
 
-  val tasks = prerequisites ++ nonCrossTests ++
+  nonCrossTests ++
     // extraTests ++ // disabled for now (issues on GitHub actions)
     scalaVersions.flatMap { sv =>
       crossTests(sv) ++ crossIts(sv)
     }
+}
+
+def jvmTests(scalaVersion: String = defaultScalaVersion) = {
+  val tasks = jvmTestPrerequisites ++ jvmTestTasks(scalaVersion)
 
   Task.Command {
     Task.sequence(tasks.map(_.map(_ => ())))()
@@ -1793,16 +1807,19 @@ def jvmTests(scalaVersion: String = defaultScalaVersion) = {
   }
 }
 
-def jsTests() = {
+def jsTestTasks: Seq[Task.Named[?]] = Seq(
+  core.js.test.testForked(),
+  coursier.js.test.testForked(),
+  tests.js.test.testForked()
+)
 
-  val tasks = Seq(
-    core.js.test.testForked(),
-    coursier.js.test.testForked(),
-    tests.js.test.testForked()
-  )
+def jsTests() = {
+  val tasks = jsTestTasks
 
   Task.Command[Unit] {
-    Task.sequence(tasks)()
+    Task.sequence(tasks.map(_.map(_ => ())))()
+
+    ()
   }
 }
 
@@ -1956,6 +1973,36 @@ object ci extends Module with mill.javalib.CoursierSonatypeCentralPublish {
       )
     }
   }
+
+  /** The tasks of a CI test command, as JSON, for selective execution
+    *
+    * `prerequisites` are run unconditionally, `tests` are handed to `selective.run`. Printed by
+    * `./mill show ci.jvmTestSelectors` and the like, and read by
+    * `.github/scripts/selective-tests.sh`.
+    */
+  private def testSelectors(
+    tests: Seq[Task.Named[?]],
+    prerequisites: Seq[Task.Named[?]] = Nil
+  ): Map[String, Seq[String]] =
+    Map(
+      "prerequisites" -> prerequisites.map(mill.api.TaskSelector.render),
+      "tests"         -> tests.map(mill.api.TaskSelector.render)
+    )
+
+  def dockerTestSelectors() = Task.Command[Map[String, Seq[String]]] {
+    testSelectors(dockerTestTasks)
+  }
+  def jvmTestSelectors(scalaVersion: String = defaultScalaVersion) =
+    Task.Command[Map[String, Seq[String]]] {
+      testSelectors(jvmTestTasks(scalaVersion), jvmTestPrerequisites)
+    }
+  def jsTestSelectors() = Task.Command[Map[String, Seq[String]]] {
+    testSelectors(jsTestTasks)
+  }
+  def interfaceTestSelectors(scalaVersion: String = defaultScalaVersion) =
+    Task.Command[Map[String, Seq[String]]] {
+      testSelectors(interfaceTestTasks(scalaVersion))
+    }
 
   /** The Scala versions the build uses, as JSON
     *
@@ -2217,7 +2264,10 @@ object `interface-test` extends Cross[InterfaceTest](ScalaVersions.all)
 
 /** The interface modules are versioned from the `interface-v*` tags, not the `v*` ones */
 trait InterfacePublishModule extends CoursierPublishModule {
-  def publishVersion = Task.Input(InterfaceVersion.computeBuildVersion())
+  def publishVersion = Task.Input {
+    CoursierPublishModule.fixedVersionOpt(Task.env)
+      .getOrElse(InterfaceVersion.computeBuildVersion())
+  }
 }
 
 /** Input of the proguarding and shading of `interface-proguarded`, not published itself */
@@ -2468,7 +2518,7 @@ trait InterfaceTest extends CrossSbtModule with CsModule with DependsOnInterface
   }
 }
 
-def interfaceTests(scalaVersion: String = defaultScalaVersion) = {
+def interfaceTestTasks(scalaVersion: String): Seq[Task.Named[?]] = {
 
   def crossTests(sv: String) =
     Seq(crossModule(`interface-test`, sv).test.testForked())
@@ -2478,7 +2528,11 @@ def interfaceTests(scalaVersion: String = defaultScalaVersion) = {
     else Seq(scalaVersion)
 
   // `interface` is built with Scala 2.13 only, its tests are run whatever `scalaVersion` is
-  val tasks = interface.test.testForked() +: scalaVersions.flatMap(crossTests)
+  interface.test.testForked() +: scalaVersions.flatMap(crossTests)
+}
+
+def interfaceTests(scalaVersion: String = defaultScalaVersion) = {
+  val tasks = interfaceTestTasks(scalaVersion)
 
   Task.Command {
     Task.sequence(tasks.map(_.map(_ => ())))()

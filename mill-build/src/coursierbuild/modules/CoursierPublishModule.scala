@@ -22,7 +22,10 @@ trait CoursierPublishModule extends PublishModule
       Developer("alexarchambault", "Alex Archambault", "https://github.com/alexarchambault")
     )
   )
-  def publishVersion = Task.Input(CoursierPublishModule.computeBuildVersion())
+  def publishVersion = Task.Input {
+    CoursierPublishModule.fixedVersionOpt(Task.env)
+      .getOrElse(CoursierPublishModule.computeBuildVersion())
+  }
 }
 
 object CoursierPublishModule extends ExternalModule {
@@ -68,6 +71,22 @@ object CoursierPublishModule extends ExternalModule {
   }
 
   lazy val buildVersion = computeBuildVersion()
+
+  /** Environment variable making the build use a fixed, commit-independent version
+    *
+    * Set by `.github/scripts/selective-tests.sh`. Mill's selective execution re-runs every task
+    * downstream of a `Task.Input` whose value changed since `selective.prepare` ran, and the
+    * git-derived version ends up in a generated source of `core`, at the root of the module graph:
+    * left as is, it would make every commit invalidate every test. The fixed version keeps the
+    * snapshot-ness of the real one, so that the checks of `SnapshotOnlyPublishModule` still pass.
+    */
+  val fixedVersionEnvVar = "COURSIER_SELECTIVE_TESTING"
+
+  def fixedVersionOpt(env: Map[String, String]): Option[String] =
+    if (env.contains(fixedVersionEnvVar))
+      Some(if (buildVersionIsSnapshot) "0.0.0-SNAPSHOT" else "0.0.0")
+    else
+      None
 
   def isSnapshot(version: String): Boolean =
     version.endsWith("-SNAPSHOT")
