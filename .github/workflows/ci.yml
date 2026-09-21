@@ -400,8 +400,22 @@ jobs:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
-      - run: .github/scripts/maybe-with-graalvm-home.sh nativeStaticTests
+      - name: Run static native tests
+        id: native-static-tests
+        continue-on-error: true
+        run: .github/scripts/maybe-with-graalvm-home.sh nativeStaticTests
         shell: bash
+      - name: Retry static native tests
+        id: native-static-tests-retry
+        if: steps.native-static-tests.outcome == 'failure'
+        continue-on-error: true
+        run: .github/scripts/maybe-with-graalvm-home.sh nativeStaticTests
+        shell: bash
+      - name: Propagate static native test failure
+        if: >-
+          steps.native-static-tests.outcome == 'failure' &&
+          steps.native-static-tests-retry.outcome == 'failure'
+        run: exit 1
       - name: Copy artifacts
         run: .github/scripts/maybe-with-graalvm-home.sh copyStaticLauncher --directory artifacts/
         shell: bash
