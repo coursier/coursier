@@ -105,7 +105,7 @@ class FileTypeRefreshDisplay(
       }
 
       val total = perExt.map(_._2).sum
-      val line = perExt
+      val line  = perExt
         .map {
           case (ext, count) =>
             val ext0 =
@@ -121,7 +121,7 @@ class FileTypeRefreshDisplay(
         else
           sizeHintOpt match {
             case None =>
-              val pos = (done.count { case (url, _) => !excluded(url) } / 4) % 19
+              val pos  = (done.count { case (url, _) => !excluded(url) } / 4) % 19
               val pos0 =
                 if (pos < 10) pos
                 else 18 - pos

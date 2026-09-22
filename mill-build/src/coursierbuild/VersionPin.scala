@@ -174,7 +174,7 @@ object VersionPin {
       if (resp.code.isSuccess) ujson.read(resp.body)
       else sys.error(s"Error $description: got HTTP ${resp.code.code}, response: ${resp.body}")
 
-    val head = s"$ghOrg:$branch"
+    val head             = s"$ghOrg:$branch"
     val openPullRequests = request
       .get(uri"https://api.github.com/repos/$ghOrg/$ghName/pulls?head=$head&state=open")
       .send()
@@ -192,7 +192,7 @@ object VersionPin {
           "title" -> pin.title(newVersion),
           "head"  -> branch,
           "base"  -> baseBranch,
-          "body" ->
+          "body"  ->
             s"""Bumps `${pin.what}` in `${pin.relPath}` from `$currentVersion` to `$newVersion`,
                |released in https://github.com/$ghOrg/$ghName/releases/tag/v$newVersion.
                |

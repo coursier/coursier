@@ -89,7 +89,7 @@ object DependencyParams {
         // meh, I/O
 
         val source = Source.fromFile(options.localExcludeFile) // default codec...
-        val lines =
+        val lines  =
           try source.mkString.split("\n")
           finally source.close()
 

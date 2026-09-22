@@ -91,7 +91,7 @@ object ReverseModuleTree {
     //   different children dependencies.
 
     val alreadySeen = new mutable.HashSet[ModuleTree]
-    val dependees =
+    val dependees   =
       new mutable.HashMap[Module, mutable.HashSet[(Module, VersionConstraint, Boolean, Boolean)]]
     val versions = new mutable.HashMap[Module, (VersionConstraint, Version)]
     val toCheck  = new mutable.Queue[ModuleTree]
@@ -155,7 +155,7 @@ object ReverseModuleTree {
   ): Seq[ReverseModuleTree] = {
 
     val alreadySeen = new mutable.HashSet[DependencyTree]
-    val dependees =
+    val dependees   =
       new mutable.HashMap[Module, mutable.HashSet[(Module, VersionConstraint, Boolean, Boolean)]]
     val versions = new mutable.HashMap[Module, (VersionConstraint, Version)]
     val toCheck  = new mutable.Queue[DependencyTree]

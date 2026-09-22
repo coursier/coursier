@@ -279,7 +279,7 @@ class RefreshLogger(
         case None =>
           val (scheduler, managedSchedulerOpt) = schedulerOpt match {
             case Some(scheduler0) => (scheduler0, None)
-            case None =>
+            case None             =>
               val scheduler0 =
                 ThreadUtil.fixedScheduledThreadPool(1, name = "coursier-progress-bars")
               (scheduler0, Some(scheduler0))

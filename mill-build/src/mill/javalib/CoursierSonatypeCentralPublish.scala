@@ -178,7 +178,7 @@ trait CoursierSonatypeCentralPublish extends MavenWorkerSupport, PgpWorkerSuppor
     */
   def generateTestPgpKey(userId: String = "Test <test@example.invalid>") = Task.Command[Unit] {
     val material = pgpWorker().generateKeyPair(userId, None)
-    val secret =
+    val secret   =
       java.util.Base64.getEncoder.encodeToString(material.secretKeyArmored.getBytes("UTF-8"))
     Task.log.streams.out.println(s"key id: ${material.keyIdHex}")
     Task.log.streams.out.println(secret)

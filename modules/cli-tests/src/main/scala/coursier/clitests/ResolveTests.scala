@@ -17,7 +17,7 @@ abstract class ResolveTests extends TestSuite {
         "--rule",
         "SameVersion(com.fasterxml.jackson.core:jackson-*)"
       )
-      val output = proc.call().out.text()
+      val output        = proc.call().out.text()
       val jacksonOutput = output
         .linesIterator
         .filter(_.startsWith("com.fasterxml.jackson.core:jackson-"))

@@ -42,7 +42,7 @@ object BootstrapTests extends TestSuite {
     new Iterator[String] {
       var e                = zis.getNextEntry
       def hasNext: Boolean = e != null
-      def next(): String = {
+      def next(): String   = {
         val e0 = e
         e = zis.getNextEntry
         e0.getName
@@ -68,7 +68,7 @@ object BootstrapTests extends TestSuite {
       withFile() {
 
         (bootstrapFile, _) =>
-          val artifactOptions = ArtifactOptions()
+          val artifactOptions     = ArtifactOptions()
           val sharedLoaderOptions = SharedLoaderOptions(
             sharedTarget = List("foo"),
             isolated = List("foo:org.scalameta:trees_2.12:1.7.0")
@@ -135,7 +135,7 @@ object BootstrapTests extends TestSuite {
       withFile() {
 
         (bootstrapFile, _) =>
-          val artifactOptions = ArtifactOptions()
+          val artifactOptions     = ArtifactOptions()
           val sharedLoaderOptions = SharedLoaderOptions(
             shared = List("org.scalameta:trees_2.12")
           )
@@ -272,7 +272,7 @@ object BootstrapTests extends TestSuite {
 
           def zis = new ZipInputStream(new ByteArrayInputStream(actualContent(bootstrapFile)))
 
-          val suffix = if (standalone.exists(identity)) "resources" else "urls"
+          val suffix   = if (standalone.exists(identity)) "resources" else "urls"
           val fooLines =
             new String(zipEntryContent(zis, resourceDir + s"bootstrap-jar-$suffix-1"), UTF_8)
               .linesIterator

@@ -9,10 +9,10 @@ import java.io.{PrintWriter, Writer}
 object LoggerTests extends TestSuite {
 
   private final class RecordingWriter extends Writer {
-    private val b               = new StringBuilder
-    @volatile private var used0 = false
-    def used: Boolean           = used0
-    def content: String         = b.synchronized(b.toString)
+    private val b                                          = new StringBuilder
+    @volatile private var used0                            = false
+    def used: Boolean                                      = used0
+    def content: String                                    = b.synchronized(b.toString)
     def write(cbuf: Array[Char], off: Int, len: Int): Unit = {
       used0 = true
       b.synchronized(b.appendAll(cbuf, off, len))

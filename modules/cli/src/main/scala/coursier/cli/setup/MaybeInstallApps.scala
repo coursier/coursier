@@ -19,7 +19,7 @@ case class MaybeInstallApps(
         for {
           appInfo      <- channels.appDescriptor(id)
           installedOpt <- Task.delay(installDir.createOrUpdate(appInfo))
-          _ <- Task.delay {
+          _            <- Task.delay {
             val message = installedOpt match {
               case None        => s"Could not install $id (concurrent operation ongoing)"
               case Some(true)  => s"Installed $id"
@@ -41,7 +41,7 @@ case class MaybeInstallApps(
           appInfo <- channels.appDescriptor(id)
           installedName = appInfo.appDescriptor.nameOpt.getOrElse(id)
           deletedOpt <- Task.delay(installDir.delete(installedName))
-          _ <- Task.delay {
+          _          <- Task.delay {
             val message = deletedOpt match {
               case None        => s"Could not delete $installedName (concurrent operation ongoing)"
               case Some(true)  => s"Uninstalled $installedName"

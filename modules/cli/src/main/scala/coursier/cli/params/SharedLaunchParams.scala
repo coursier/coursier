@@ -61,8 +61,8 @@ object SharedLaunchParams {
 
   def apply(options: SharedLaunchOptions): ValidatedNel[String, SharedLaunchParams] = {
 
-    val resolveV  = SharedResolveParams(options.resolveOptions)
-    val artifactV = ArtifactParams(options.artifactOptions)
+    val resolveV      = SharedResolveParams(options.resolveOptions)
+    val artifactV     = ArtifactParams(options.artifactOptions)
     val sharedLoaderV = resolveV.map(_.resolution).toOption match {
       case None =>
         Validated.validNel(SharedLoaderParams(Nil, Map.empty))

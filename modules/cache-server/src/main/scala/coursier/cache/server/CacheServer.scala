@@ -101,7 +101,7 @@ object CacheServer {
 
                 maybeRequest match {
                   case Success(request) =>
-                    val promise = Promise[Unit]()
+                    val promise         = Promise[Unit]()
                     def attempt(): Unit = {
                       val f = promise.future
                       Option(onGoingGetRequests.putIfAbsent(request.artifact.url, f)) match {

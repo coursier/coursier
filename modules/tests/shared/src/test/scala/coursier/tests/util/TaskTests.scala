@@ -41,7 +41,7 @@ object TaskTests extends TestSuite {
       import ExecutionContext.Implicits.global
 
       val count = new AtomicInteger
-      val task = Task.delay {
+      val task  = Task.delay {
         count.incrementAndGet()
         sys.error("nope")
       }.memoize
