@@ -4,7 +4,7 @@ object Versions {
   def cats          = "2.13.0"
   def http4s        = "0.23.37"
   def jniUtils      = "0.4.0"
-  def jsoniterScala = "2.13.5"
+  def jsoniterScala = "2.13.8"
   def junit         = "4.13.2"
   def scalaz        = "7.2.36"
 
