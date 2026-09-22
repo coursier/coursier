@@ -12,7 +12,7 @@ object LauncherType {
   case object Hybrid     extends BootstrapLike
   case object Standalone extends BootstrapLike
 
-  case object Assembly extends LauncherType
+  case object Assembly    extends LauncherType
   case object ScalaNative extends LauncherType {
     override def isNative: Boolean = true
   }

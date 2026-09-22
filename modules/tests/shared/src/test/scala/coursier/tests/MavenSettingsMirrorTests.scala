@@ -81,7 +81,7 @@ object MavenSettingsMirrorTests extends TestSuite {
 
     test("keepsRepositoryType") {
       val mirrored = MavenSettingsMirror("*", mirrorUrl + "/").matches(central)
-      val repo = mirrored match {
+      val repo     = mirrored match {
         case Some(m: MavenRepository) => m
         case other                    => sys.error(s"Expected a MavenRepository, got $other")
       }

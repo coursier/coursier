@@ -27,7 +27,7 @@ object MainClass {
 
       val mainClasses = byFile.map(_.map { f =>
         var is: InputStream = null
-        val attributes =
+        val attributes      =
           try {
             is = f()
             new JManifest(is).getMainAttributes
@@ -65,7 +65,7 @@ object MainClass {
       // Trying to get the main class of the first artifact
       val mainClassOpt = for {
         (mainOrg, mainName) <- mainDependencyOpt
-        mainClass <- mainClasses.collectFirst {
+        mainClass           <- mainClasses.collectFirst {
           case ((org, name), mainClass)
               if org == mainOrg && (
                 mainName == name ||

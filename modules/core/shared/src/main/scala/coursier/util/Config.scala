@@ -36,7 +36,7 @@ object Config {
         val filteredAllDepsByConfig = allDepsByConfig.map {
           case (config, allDeps) =>
             val allExtendedConfigs = configs.getOrElse(config, Set.empty) - config
-            val inherited = allExtendedConfigs
+            val inherited          = allExtendedConfigs
               .flatMap(allDepsByConfig.getOrElse(_, Set.empty))
 
             config -> (allDeps -- inherited)

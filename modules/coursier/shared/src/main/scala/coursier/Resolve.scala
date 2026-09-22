@@ -93,7 +93,7 @@ import scala.language.higherKinds
 
   def finalRepositories: F[Seq[Repository]] = {
     val repositories0 = gradleModuleSupport match {
-      case None => repositories
+      case None         => repositories
       case Some(enable) =>
         repositories.map {
           case m: MavenRepositoryLike.WithModuleSupport => m.withCheckModule(enable)
@@ -385,7 +385,7 @@ object Resolve extends PlatformResolve {
     val scalaOrgSwap: Option[Dependency => Dependency] =
       if (scalaOrg == Organization("org.scala-lang")) None
       else {
-        val mainLineOrg = Organization("org.scala-lang")
+        val mainLineOrg   = Organization("org.scala-lang")
         val scala2Modules = Set(
           ModuleName("scala-library"),
           ModuleName("scala-library-all"),

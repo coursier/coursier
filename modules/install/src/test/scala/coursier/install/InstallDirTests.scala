@@ -19,7 +19,7 @@ object InstallDirTests extends TestSuite {
       // https://github.com/coursier/coursier/pull/2652
 
       val mainClass = "main.class"
-      val params = InstallDir().params(
+      val params    = InstallDir().params(
         AppDescriptor().copy(launcherType = LauncherType.GraalvmNativeImage),
         AppArtifacts(),
         Nil,

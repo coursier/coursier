@@ -29,7 +29,7 @@ object CsSh extends VersionPin {
     if (Properties.isWin) {
       val programFiles = sys.env.getOrElse("ProgramFiles", """C:\Program Files""")
       val gitBash      = os.Path(programFiles) / "Git" / "bin" / "bash.exe"
-      val fromPath = sys.env
+      val fromPath     = sys.env
         .getOrElse("PATH", "")
         .split(File.pathSeparator)
         .iterator
@@ -72,7 +72,7 @@ object CsSh extends VersionPin {
     os.makeDir.all(homeDir)
 
     val script = versionOverride match {
-      case None => csSh
+      case None             => csSh
       case Some(newVersion) =>
         val dest = workDir / csSh.last
         os.write(dest, withVersion(os.read(csSh), newVersion))

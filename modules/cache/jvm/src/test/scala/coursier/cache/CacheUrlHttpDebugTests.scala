@@ -51,7 +51,7 @@ object CacheUrlHttpDebugTests extends TestSuite {
     authentication: Option[Authentication] = None
   ): (Int, List[String]) = {
     val lines = ListBuffer.empty[String]
-    val args = CacheUrl.Args(
+    val args  = CacheUrl.Args(
       initialUrl = url,
       url0 = url,
       authentication = authentication,

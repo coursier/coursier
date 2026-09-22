@@ -14,7 +14,7 @@ import java.io.File
 )(implicit
   sync: Sync[F]
 ) {
-  private def S = sync
+  private def S                     = sync
   def get(artifact: DigestArtifact) =
     archiveCache.get0(
       new File(

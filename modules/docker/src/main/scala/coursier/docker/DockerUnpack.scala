@@ -27,7 +27,7 @@ object DockerUnpack {
     }
 
     layerDirErrors match {
-      case Seq() =>
+      case Seq()                   =>
       case Seq(first, others @ _*) =>
         val ex = new Exception(first)
         for (other <- others)

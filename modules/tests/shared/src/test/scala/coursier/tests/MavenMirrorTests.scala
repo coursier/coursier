@@ -18,10 +18,10 @@ object MavenMirrorTests extends TestSuite {
 
   val tests = Tests {
     test("trailingSlashInMirrorToUrlIsNormalized") {
-      val mirror = MavenMirror(Seq("*"), "https://proxy.example.com/")
+      val mirror   = MavenMirror(Seq("*"), "https://proxy.example.com/")
       val replaced = mirror.matches(MavenRepository("https://repo1.maven.org/maven2")) match {
         case Some(r: MavenRepository) => r
-        case other =>
+        case other                    =>
           sys.error(s"Expected Some(MavenRepository instance), got $other")
       }
       assert(replaced.root == "https://proxy.example.com")
@@ -35,7 +35,7 @@ object MavenMirrorTests extends TestSuite {
 
       val replaced = mirror.matches(sbtRepo) match {
         case Some(r: SbtMavenRepository) => r
-        case other =>
+        case other                       =>
           sys.error(s"Expected Some(SbtMavenRepository instance), got $other")
       }
       val moduleDir = replaced.moduleDirectory(sbtPluginModule)

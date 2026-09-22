@@ -287,7 +287,7 @@ object RetryTests extends TestSuite {
 
       withTmpDir { dir =>
         val reported = new ConcurrentLinkedQueue[(String, FiniteDuration)]
-        val logger = new CacheLogger {
+        val logger   = new CacheLogger {
           override def rateLimited(url: String, duration: FiniteDuration): Unit =
             reported.add((url, duration))
         }
@@ -316,7 +316,7 @@ object RetryTests extends TestSuite {
         assert(TestretryHandler.attempts.get() == retryCount)
         result match {
           case Left(e: ArtifactError.InternalServerError) =>
-          case other =>
+          case other                                      =>
             throw new Exception(s"Unexpected result: $other", other.left.toOption.orNull)
         }
       }

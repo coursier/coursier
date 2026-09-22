@@ -10,7 +10,7 @@ object ModuleMatcherTests extends TestSuite {
   val tests = Tests {
 
     test {
-      val matcher = ModuleMatcher(org"io.circe", name"circe-*")
+      val matcher     = ModuleMatcher(org"io.circe", name"circe-*")
       val shouldMatch = Seq(
         mod"io.circe:circe-core_2.12",
         mod"io.circe:circe-generic_2.12",
@@ -31,7 +31,7 @@ object ModuleMatcherTests extends TestSuite {
     }
 
     test {
-      val matcher = ModuleMatcher(org"org.*", name"scala-library")
+      val matcher     = ModuleMatcher(org"org.*", name"scala-library")
       val shouldMatch = Seq(
         mod"org.scala-lang:scala-library",
         mod"org.typelevel:scala-library"
@@ -49,7 +49,7 @@ object ModuleMatcherTests extends TestSuite {
     }
 
     test {
-      val matcher = ModuleMatcher(org"io.foo", name"foo-*_2.12")
+      val matcher     = ModuleMatcher(org"io.foo", name"foo-*_2.12")
       val shouldMatch = Seq(
         mod"io.foo:foo-core_2.12",
         mod"io.foo:foo-data_2.12"
@@ -69,7 +69,7 @@ object ModuleMatcherTests extends TestSuite {
     }
 
     test("all") {
-      val matcher = ModuleMatcher(org"*", name"*")
+      val matcher     = ModuleMatcher(org"*", name"*")
       val shouldMatch = Seq(
         mod"io.foo:foo-core_2.12",
         mod"io.foo:foo-data_2.12",

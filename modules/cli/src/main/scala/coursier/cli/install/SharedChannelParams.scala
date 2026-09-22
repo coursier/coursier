@@ -17,7 +17,7 @@ object SharedChannelParams {
   def apply(options: SharedChannelOptions): ValidatedNel[String, SharedChannelParams] = {
 
     val noDefaultChannels = options.channel.exists(_.startsWith("!"))
-    val channelsInput = options
+    val channelsInput     = options
       .channel
       .map(_.stripPrefix("!"))
       .filter(_.nonEmpty)
@@ -39,7 +39,7 @@ object SharedChannelParams {
     val fileChannelsV =
       if (options.fileChannels) {
         val configDirs = coursier.paths.CoursierPaths.configDirectories().toSeq
-        val files = configDirs
+        val files      = configDirs
           .flatMap { configDir =>
             val channelDir = new File(configDir, "channels")
             Option(channelDir.listFiles()).getOrElse(Array.empty[File])

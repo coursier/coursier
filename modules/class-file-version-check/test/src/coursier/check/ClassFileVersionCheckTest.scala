@@ -49,7 +49,7 @@ object ClassFileVersionCheckTest extends TestSuite {
             zf.entries().asScala
               .filter(_.getName.endsWith(".class"))
               .flatMap { entry =>
-                val subPath = os.SubPath(entry.getName)
+                val subPath       = os.SubPath(entry.getName)
                 val maxAllowedJvm =
                   if (subPath.startsWith(classOverridesPrefix))
                     subPath.segments.drop(classOverridesPrefix.segments.length).head.toInt

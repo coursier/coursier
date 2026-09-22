@@ -62,7 +62,7 @@ object VersionTests extends TestSuite {
 
       test("shouldNotParseMetadata") {
         test {
-          val items = Version("1.2+bar.2").items
+          val items         = Version("1.2+bar.2").items
           val expectedItems = Seq(
             Version.Number(1),
             Version.Number(2),
@@ -71,7 +71,7 @@ object VersionTests extends TestSuite {
           assert(items == expectedItems)
         }
         test {
-          val items = Version("1.2+bar-2").items
+          val items         = Version("1.2+bar-2").items
           val expectedItems = Seq(
             Version.Number(1),
             Version.Number(2),
@@ -80,7 +80,7 @@ object VersionTests extends TestSuite {
           assert(items == expectedItems)
         }
         test {
-          val items = Version("1.2+bar+foo").items
+          val items         = Version("1.2+bar+foo").items
           val expectedItems = Seq(
             Version.Number(1),
             Version.Number(2),
@@ -448,7 +448,7 @@ object VersionTests extends TestSuite {
 //    }
 
     test("specialStartChar") {
-      val items = Version("[1.2.0]").items
+      val items         = Version("[1.2.0]").items
       val expectedItems = Seq(
         Version.Tag("["),
         Version.Number(1),
@@ -460,7 +460,7 @@ object VersionTests extends TestSuite {
     }
 
     test("xhandling") {
-      val items = Version("1.x.0-alpha").items
+      val items         = Version("1.x.0-alpha").items
       val expectedItems =
         Seq(Version.Number(1), Version.Max, Version.Number(0), Version.Tag("alpha"))
       assert(items == expectedItems)

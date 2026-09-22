@@ -16,7 +16,7 @@ object VersionConstraintTests extends TestSuite {
         assert(c0 == VersionConstraint.from(VersionInterval.zero, Some(Version("1.2")), None))
       }
       test("basicVersionInterval") {
-        val c0 = VersionParse.versionConstraint("(,1.2]")
+        val c0               = VersionParse.versionConstraint("(,1.2]")
         val expectedInterval = VersionInterval(
           None,
           Some(Version("1.2")),
@@ -26,7 +26,7 @@ object VersionConstraintTests extends TestSuite {
         assert(c0 == VersionConstraint.from(expectedInterval, None, None))
       }
       test("latestSubRevision") {
-        val c0 = VersionParse.versionConstraint("1.2.3-+")
+        val c0               = VersionParse.versionConstraint("1.2.3-+")
         val expectedInterval = VersionInterval(
           Some(Version("1.2.3")),
           Some(Version("1.2.3-max")),
@@ -40,7 +40,7 @@ object VersionConstraintTests extends TestSuite {
         ).generateString)
       }
       test("latestSubRevisionWithLiteral") {
-        val c0 = VersionParse.versionConstraint("1.2.3-rc-+")
+        val c0               = VersionParse.versionConstraint("1.2.3-rc-+")
         val expectedInterval = VersionInterval(
           Some(Version("1.2.3-rc")),
           Some(Version("1.2.3-rc-max")),
@@ -54,7 +54,7 @@ object VersionConstraintTests extends TestSuite {
         ).generateString)
       }
       test("latestSubRevisionWithZero") {
-        val c0 = VersionParse.versionConstraint("1.0.+")
+        val c0               = VersionParse.versionConstraint("1.0.+")
         val expectedInterval = VersionInterval(
           Some(Version("1.0")),
           Some(Version("1.0.max")),
