@@ -1,0 +1,381 @@
+## Changes with compatibility implications
+
+- Use VersionConstraint and Version rather than String for versions by @alexarchambault in https://github.com/coursier/coursier/pull/3242
+
+## Gradle Module support
+
+Coursier 2.1.25 adds Gradle Module support.
+
+- Gradle Module support by @alexarchambault in #3271, #3320, #3353, #3383, #3384, #3387, #3388, #3389, #3392, #3402, #3534, #3539
+- Don't report Gradle BOM endorseStrictVersions pins as dependency edges by @Dolfik1 in #3725
+
+## Download retry / HTTP robustness
+
+- Retry on `OverlappingFileLockException` by @eed3si9n in https://github.com/coursier/coursier/pull/3318
+- Mark HTTP 500 errors as retryable in `Downloader.scala` to mitigate download endpoint flakiness by @lihaoyi in https://github.com/coursier/coursier/pull/3515
+- Retry `SocketException`s when performing downloads by @lihaoyi in https://github.com/coursier/coursier/pull/3540
+- Catch and retry ConnectException on downloads by @lihaoyi in https://github.com/coursier/coursier/pull/3550
+- Retry cs downloads in cs.sh by @alexarchambault in https://github.com/coursier/coursier/pull/3791
+- Slightly better handling of HTTP 429 response code by @alexarchambault in https://github.com/coursier/coursier/pull/3800
+- Add HostThrottle for better retries after HTTP 429 by @alexarchambault in https://github.com/coursier/coursier/pull/3804
+
+## Other updates
+
+- Allow users to reject 203 responses by @markoutso in https://github.com/coursier/coursier/pull/2068
+- Remove recursion from Complete.hasOrg by @jackkoenig in https://github.com/coursier/coursier/pull/2655
+- feat: add maven 2 meta version support by @yzia2000 in https://github.com/coursier/coursier/pull/3238
+- Don't assume /lib and /usr/sbin exist in musl check by @alexarchambault in https://github.com/coursier/coursier/pull/3251
+- Remove superfluous override by @alexarchambault in https://github.com/coursier/coursier/pull/3260
+- Add Variant and VariantSelector ADTs by @alexarchambault in https://github.com/coursier/coursier/pull/3269
+- Get rid of legacy report stuff by @alexarchambault in https://github.com/coursier/coursier/pull/3276
+- Updates by @alexarchambault in https://github.com/coursier/coursier/pull/3277
+- Parse dependencies more strictly by @alexarchambault in https://github.com/coursier/coursier/pull/3280
+- Compile cli sources with Scala 3 by @alexarchambault in https://github.com/coursier/coursier/pull/3281
+- Various things by @alexarchambault in https://github.com/coursier/coursier/pull/3287
+- Add in-progress new website by @alexarchambault in https://github.com/coursier/coursier/pull/3299
+- Address Java unchecked warning by @alexarchambault in https://github.com/coursier/coursier/pull/3303
+- Default to JDK 21 in 'cs launch' and 'cs setup' commands by @alexarchambault in https://github.com/coursier/coursier/pull/3311
+- Substitute properties in module name by @JohnnyMorganz in https://github.com/coursier/coursier/pull/3341
+- Remove many unused imports and address some warnings too by @alexarchambault in https://github.com/coursier/coursier/pull/3346
+- Various minor things by @alexarchambault in https://github.com/coursier/coursier/pull/3356
+- Better default JVM on Windows ARM by @alexarchambault in https://github.com/coursier/coursier/pull/3360
+- Use java.nio.file.Path in CoursierPaths instead of java.io.File by @vasilmkd in https://github.com/coursier/coursier/pull/3364
+- In AnyOf variant matcher, give decreasing scores to passed matchers by @alexarchambault in https://github.com/coursier/coursier/pull/3386
+- Read repositories in config files from Resolve.defaultRepositories by @alexarchambault in https://github.com/coursier/coursier/pull/3426
+- Add CoursierEnv by @alexarchambault in https://github.com/coursier/coursier/pull/3427
+- Preserve multi-release flag in JARs with shading by @alexarchambault in https://github.com/coursier/coursier/pull/3442
+- Shade directories library in new coursier-paths module by @alexarchambault in https://github.com/coursier/coursier/pull/3452
+- Allow users to disable FFM use via a global Java property by @alexarchambault in https://github.com/coursier/coursier/pull/3456
+- Try to micro-optimize `coursier.core.compatibility.substituteEntities` and `entityIdx` by @lihaoyi in https://github.com/coursier/coursier/pull/3468
+- Recall more not-found errors from cache by @alexarchambault in https://github.com/coursier/coursier/pull/3483
+- Default to jar type when adding overrides by @alexarchambault in https://github.com/coursier/coursier/pull/3493
+- Add Repositories.centralMavenSnapshots and accept 'central:maven-snapshots' by @alexarchambault in https://github.com/coursier/coursier/pull/3504
+- Allow users to customize module / version rendering in trees by @alexarchambault in https://github.com/coursier/coursier/pull/3509
+- Cache default coursier config file in Coursier by @lihaoyi in https://github.com/coursier/coursier/pull/3514
+- More micro-optimizations for `entityIdx` by @lihaoyi in https://github.com/coursier/coursier/pull/3532
+- Accept "default" in COURSIER_REPOSITORIES by @alexarchambault in https://github.com/coursier/coursier/pull/3555
+- Cache `hashCode` in `ReverseModuleTree.Node` by @nguyenyou in https://github.com/coursier/coursier/pull/3568
+- Add `scalaOrganizationOverride` to `ResolutionParams` by @mbovel in https://github.com/coursier/coursier/pull/3571
+- Add back since annotation by @alexarchambault in https://github.com/coursier/coursier/pull/3576
+- Run shutdown hooks right before doing execve by @alexarchambault in https://github.com/coursier/coursier/pull/3579
+- Add `--json-report-add-urls` flag to include artifact download URLs in JSON reports by @Copilot in https://github.com/coursier/coursier/pull/3583
+- Include source URL in POM XML parse error messages by @Copilot in https://github.com/coursier/coursier/pull/3589
+- Add `--versions` option to `cs list` by @Copilot in https://github.com/coursier/coursier/pull/3598
+- Validate JAVA_HOME contains bin/java before trusting it by @Copilot in https://github.com/coursier/coursier/pull/3605
+- Add experimental cache server stuff for agent-based development by @alexarchambault in https://github.com/coursier/coursier/pull/3614
+- Preserve `SbtMavenRepository` semantics in `MavenMirror` and normalize mirror destination URLs by @Copilot in https://github.com/coursier/coursier/pull/3632
+- perf: Improve performance of Overrides by @retronym in https://github.com/coursier/coursier/pull/3635
+- perf: Improve performance of XML processing by @retronym in https://github.com/coursier/coursier/pull/3636
+- perf: Release memory sooner during iterations of resolution by @retronym in https://github.com/coursier/coursier/pull/3640
+- Cycle detection in DependencyTree relocation walk by @retronym in https://github.com/coursier/coursier/pull/3641
+- perf: Performance micro-optimisations in resolution hot paths by @retronym in https://github.com/coursier/coursier/pull/3642
+- Use cachedHashCode rather than lazy val by @retronym in https://github.com/coursier/coursier/pull/3648
+- Use version listing less by @alexarchambault in https://github.com/coursier/coursier/pull/3649
+- Cache allConfigurations by @retronym in https://github.com/coursier/coursier/pull/3650
+- Remove ammonite from `cs setup` default apps (deprecated) by @Copilot in https://github.com/coursier/coursier/pull/3656
+- perf: Improve performance of property substitution, by @retronym and @alexarchambault in https://github.com/coursier/coursier/pull/3662
+- Various things by @alexarchambault in https://github.com/coursier/coursier/pull/3672
+- Add Chdir to exec module by @alexarchambault in https://github.com/coursier/coursier/pull/3673
+- Allow users to generate assemblies with no main class by @alexarchambault in https://github.com/coursier/coursier/pull/3734
+- Add support for relocation in generated bootstraps by @alexarchambault in https://github.com/coursier/coursier/pull/3740
+- perf: Optimize resolution hot paths and POM parsing by @alexarchambault in https://github.com/coursier/coursier/pull/3741
+- Allow users to ignore optional stuff from dep mgmt via ResolutionParams by @alexarchambault in https://github.com/coursier/coursier/pull/3745
+- Support version ranges in parent POM coordinates by @shuch3ng in https://github.com/coursier/coursier/pull/3766
+- Add cs.sh script by @alexarchambault in https://github.com/coursier/coursier/pull/3770
+- Add connect and read timeouts by @alexarchambault in https://github.com/coursier/coursier/pull/3775
+- Honor custom cache credentials for artifacts by @alexarchambault in https://github.com/coursier/coursier/pull/3801
+- interface: Support progress bars with arbitrary Writers by @alexarchambault in https://github.com/coursier/coursier/pull/3803
+- Add API in interface module for (JVM-wide) proxy setup by @alexarchambault in https://github.com/coursier/coursier/pull/3806
+- Remove interface-svm-subs module by @alexarchambault in https://github.com/coursier/coursier/pull/3807
+- Default to URL-based channels for apps by @alexarchambault in https://github.com/coursier/coursier/pull/3811
+- Remove deprecated interface-interpolators modules by @alexarchambault in https://github.com/coursier/coursier/pull/3820
+- Better resource management in MockCache by @alexarchambault in https://github.com/coursier/coursier/pull/3823
+- Make dependency management key substitution deterministic by @alexarchambault in https://github.com/coursier/coursier/pull/3837
+- Use case class copy methods instead of generated setters by @alexarchambault in https://github.com/coursier/coursier/pull/3839
+- Deprecate generated setters in data classes by @alexarchambault in https://github.com/coursier/coursier/pull/3840
+- Allow User Agent to be customized by @eed3si9n in https://github.com/coursier/coursier/pull/3842
+- Read mirrors from Maven's settings.xml too by @alexarchambault in https://github.com/coursier/coursier/pull/3843
+- Update default user agent and give more options to users for customizing it by @alexarchambault in https://github.com/coursier/coursier/pull/3844
+- Memoize JVM index loading across lookups by @alexarchambault in https://github.com/coursier/coursier/pull/3848
+- Allow users to debug HTTP issues with COURSIER_HTTP_DEBUG in the env by @alexarchambault in https://github.com/coursier/coursier/pull/3849
+
+## ArchiveCache
+
+- Have ArchiveCache handle `.jar` files by @alexarchambault in https://github.com/coursier/coursier/pull/3272
+- Add support for more formats in ArchiveCache by @alexarchambault in https://github.com/coursier/coursier/pull/3282
+- `ArchiveType.Ar` shouldn't inherit from `ArchiveType.Tar` by @alexarchambault in https://github.com/coursier/coursier/pull/3286
+- Add "archive in archive" support to ArchiveCache by @alexarchambault in https://github.com/coursier/coursier/pull/3349
+- Add `ArchiveCache#shortPathDirectory` by @alexarchambault in https://github.com/coursier/coursier/pull/3373
+- Check for the integrity of archives before attempting to extract them by @alexarchambault in https://github.com/coursier/coursier/pull/3482
+- Fix corrupted `tar.gz` detection by @alexarchambault in https://github.com/coursier/coursier/pull/3486
+- Cache ArchiveCache integrity checks by @alexarchambault in https://github.com/coursier/coursier/pull/3528
+- Fix corrupted archive detection by @alexarchambault in https://github.com/coursier/coursier/pull/3542
+- Ensure users can extract `aar` files in archive cache by @alexarchambault in https://github.com/coursier/coursier/pull/3644
+
+## Bug Fixes
+
+- Fix dependency import vs parent precedence in BOMs by @alexarchambault in https://github.com/coursier/coursier/pull/3226
+- Revert "Fix JSON reports - a dependency can have several artifacts" by @alexarchambault in https://github.com/coursier/coursier/pull/3248
+- Fix fallback logger messages, and change Repository#find0 signature by @alexarchambault in https://github.com/coursier/coursier/pull/3268
+- Fix publish job by @alexarchambault in https://github.com/coursier/coursier/pull/3295
+- Fix website building by @alexarchambault in https://github.com/coursier/coursier/pull/3300
+- Fix empty version handling by @alexarchambault in https://github.com/coursier/coursier/pull/3301
+- Fix tree printing by @alexarchambault in https://github.com/coursier/coursier/pull/3302
+- Fix homebrew stuff by @alexarchambault in https://github.com/coursier/coursier/pull/3307
+- Fix bin compat issue by @alexarchambault in https://github.com/coursier/coursier/pull/3314
+- Fix pre-2.1.25 Versions.latest by @Gedochao in https://github.com/coursier/coursier/pull/3343
+- Fix conflict trees involving root dependencies and accept patterns like 'some-org:\*' to force versions by @alexarchambault in https://github.com/coursier/coursier/pull/3394
+- Use timestamp to compute snapshot version. Fixes #3416 by @Iilun in https://github.com/coursier/coursier/pull/3417
+- Fix homebrew stuff by @alexarchambault in https://github.com/coursier/coursier/pull/3453
+- Fix shading by @alexarchambault in https://github.com/coursier/coursier/pull/3487
+- Fix deprecation message for `coursierIndexUrl` by @Gedochao in https://github.com/coursier/coursier/pull/3510
+- Fix launch command example by @mwisnicki in https://github.com/coursier/coursier/pull/3530
+- fix(gmm): include sources/javadoc classifiers in coordinates by @albertocavalcante in https://github.com/coursier/coursier/pull/3547
+- Fix exception thrown sometimes when printing conflicts by @alexarchambault in https://github.com/coursier/coursier/pull/3577
+- Fix Windows batch launchers masking negative exit codes by @Copilot in https://github.com/coursier/coursier/pull/3580
+- Fix negative download speed values by @Copilot in https://github.com/coursier/coursier/pull/3591
+- Fix AssemblyGenerator producing broken META-INF/services files by @Copilot in https://github.com/coursier/coursier/pull/3595
+- Fix setting default JVM version in Windows by @Copilot in https://github.com/coursier/coursier/pull/3597
+- Fix compat launcher still requiring AVX/BMI on x86-64-v2 CPUs (e.g. Jasper Lake) by @Copilot in https://github.com/coursier/coursier/pull/3601
+- Fix Unicode corruption on Windows in the native-image launcher by @Copilot in https://github.com/coursier/coursier/pull/3604
+- Fix Scala 3-only artifact version auto-detection when Complete API returns empty results by @Copilot in https://github.com/coursier/coursier/pull/3613
+- Fix things in MinimizedExclusions by @alexarchambault in https://github.com/coursier/coursier/pull/3622
+- Fix retry stuff by @alexarchambault in https://github.com/coursier/coursier/pull/3629
+- Fix possible race / concurrency issue on Windows by @alexarchambault in https://github.com/coursier/coursier/pull/3666
+- Fix OOM in reverse dependency tree via global visited set by @retronym in https://github.com/coursier/coursier/pull/3671
+- Fix 'cs install' bug with fallback JVM launchers by @alexarchambault in https://github.com/coursier/coursier/pull/3769
+- Fixup for property substitution in artifactId by @alexarchambault in https://github.com/coursier/coursier/pull/3851
+
+## Documentation updates
+
+- Add more docs by @alexarchambault in https://github.com/coursier/coursier/pull/3304
+- New bits of doc by @alexarchambault in https://github.com/coursier/coursier/pull/3310
+- Add more in progress doc by @alexarchambault in https://github.com/coursier/coursier/pull/3313
+- Add documentation page about accepted repository syntaxes by @alexarchambault in https://github.com/coursier/coursier/pull/3415
+- doc: surface the compat Linux launcher for CPUs without AVX2 by @Copilot in https://github.com/coursier/coursier/pull/3573
+- Update documentation for platform-specific default JVM (Java 21) by @Copilot in https://github.com/coursier/coursier/pull/3581
+- docs: document dependency verification and SCA capabilities by @Copilot in https://github.com/coursier/coursier/pull/3582
+- Document that mill is not supported for installation via coursier by @Copilot in https://github.com/coursier/coursier/pull/3590
+- docs: exhaustive coverage of credentials and proxy handling by @Copilot in https://github.com/coursier/coursier/pull/3599
+- Doc: Add url= parameter for fetching artifacts without POM files by @Copilot in https://github.com/coursier/coursier/pull/3603
+- docs(security): add binary attestation verification guidance for release artifacts by @Copilot in https://github.com/coursier/coursier/pull/3659
+- Add mirror documentation by @alexarchambault in https://github.com/coursier/coursier/pull/3748
+- Clarify qualifier ordering in version handling docs by @alexarchambault in https://github.com/coursier/coursier/pull/3813
+- Bump @babel/plugin-transform-modules-systemjs from 7.24.7 to 7.29.4 in /doc/website by @dependabot[bot] in https://github.com/coursier/coursier/pull/3653
+- Bump brace-expansion from 1.1.11 to 1.1.18 in /doc/website by @dependabot[bot] in https://github.com/coursier/coursier/pull/3784
+- Bump express from 4.21.1 to 4.22.0 in /doc/website by @dependabot[bot] in https://github.com/coursier/coursier/pull/3527
+- Bump js-yaml from 3.14.1 to 3.14.2 in /doc/website by @dependabot[bot] in https://github.com/coursier/coursier/pull/3518
+- Bump js-yaml from 3.14.2 to 3.15.2 in /doc/website by @dependabot[bot] in https://github.com/coursier/coursier/pull/3838
+- Bump lodash and globule in /doc/website by @dependabot[bot] in https://github.com/coursier/coursier/pull/3624
+- Bump lodash.template from 4.5.0 to 4.18.1 in /doc/website by @dependabot[bot] in https://github.com/coursier/coursier/pull/3623
+- Bump picomatch from 2.3.1 to 2.3.2 in /doc/website by @dependabot[bot] in https://github.com/coursier/coursier/pull/3615
+- Bump prismjs from 1.29.0 to 1.30.0 in /doc/website by @dependabot[bot] in https://github.com/coursier/coursier/pull/3333
+- Bump websocket-driver from 0.7.0 to 0.7.5 in /doc/website by @dependabot[bot] in https://github.com/coursier/coursier/pull/3739
+
+## Updates / maintenance
+
+- Pin slf4j-api to 1.x by @alexarchambault in https://github.com/coursier/coursier/pull/3809
+- Add back some tests for JVM CLI launcher by @alexarchambault in https://github.com/coursier/coursier/pull/3221
+- Update GraalVM by @alexarchambault in https://github.com/coursier/coursier/pull/3222
+- Detect when we're running on linux-musl (like Alpine Linux) by @alexarchambault in https://github.com/coursier/coursier/pull/3227
+- Get Java 8 boot class path from a native ARM JDK on Mac ARM by @alexarchambault in https://github.com/coursier/coursier/pull/3228
+- Update cs download url for Apple Silicon by @leonheldattoradex in https://github.com/coursier/coursier/pull/3232
+- Tweak format by @alexarchambault in https://github.com/coursier/coursier/pull/3243
+- Update Scala.JS to 1.18.1 by @alexarchambault in https://github.com/coursier/coursier/pull/3244
+- NIT by @alexarchambault in https://github.com/coursier/coursier/pull/3245
+- Add more json report tests by @alexarchambault in https://github.com/coursier/coursier/pull/3246
+- Fix JSON report tests and tweak report generation by @alexarchambault in https://github.com/coursier/coursier/pull/3247
+- Add more JSON report tests by @alexarchambault in https://github.com/coursier/coursier/pull/3249
+- Build launchers for Linux ARM64 by @alexarchambault in https://github.com/coursier/coursier/pull/3250
+- Add JSON report bouncy castle test by @alexarchambault in https://github.com/coursier/coursier/pull/3252
+- Increase helper server launch timeout by @alexarchambault in https://github.com/coursier/coursier/pull/3253
+- Rework auth proxy stuff by @alexarchambault in https://github.com/coursier/coursier/pull/3256
+- Rework latest handling by @alexarchambault in https://github.com/coursier/coursier/pull/3257
+- Use more standard syntax to define tests by @alexarchambault in https://github.com/coursier/coursier/pull/3261
+- Minor things by @alexarchambault in https://github.com/coursier/coursier/pull/3262
+- Extra report tests by @alexarchambault in https://github.com/coursier/coursier/pull/3263
+- Minor refactorings by @alexarchambault in https://github.com/coursier/coursier/pull/3270
+- NIT by @alexarchambault in https://github.com/coursier/coursier/pull/3273
+- Update GraalVM to 20.0.2 by @alexarchambault in https://github.com/coursier/coursier/pull/3274
+- Update GraalVM to 21.0.2 by @alexarchambault in https://github.com/coursier/coursier/pull/3275
+- Tweak ResolutionParams handling in tests by @alexarchambault in https://github.com/coursier/coursier/pull/3279
+- Update case-app to 2.1.0-M30 by @alexarchambault in https://github.com/coursier/coursier/pull/3283
+- Increase timeout of test on Windows by @alexarchambault in https://github.com/coursier/coursier/pull/3285
+- Fix Linux ARM CI by @alexarchambault in https://github.com/coursier/coursier/pull/3312
+- Add experimental docker commands by @alexarchambault in https://github.com/coursier/coursier/pull/3316
+- Minor refactoring around config handling by @alexarchambault in https://github.com/coursier/coursier/pull/3319
+- Update / clean-up test metadata by @alexarchambault in https://github.com/coursier/coursier/pull/3347
+- Handle 404 (and other errors) in Scala.js helper by @alexarchambault in https://github.com/coursier/coursier/pull/3354
+- NIT by @alexarchambault in https://github.com/coursier/coursier/pull/3355
+- More for (very) experimental docker support by @alexarchambault in https://github.com/coursier/coursier/pull/3363
+- Catch initialization issues early on CI by @alexarchambault in https://github.com/coursier/coursier/pull/3379
+- Try to address disappearing bios package issues by @alexarchambault in https://github.com/coursier/coursier/pull/3380
+- Build binaries that ought to work on older x86-64 flavors by @alexarchambault in https://github.com/coursier/coursier/pull/3381
+- Update scala-cli-config for Scala 2.13 and 3 by @alexarchambault in https://github.com/coursier/coursier/pull/3424
+- Update scalafmt to 3.9.6 by @alexarchambault in https://github.com/coursier/coursier/pull/3425
+- Don't pull jsoniter-scala-core_3 from scala-cli-config by @alexarchambault in https://github.com/coursier/coursier/pull/3435
+- Publish paths module, slim down cache module dependencies by @alexarchambault in https://github.com/coursier/coursier/pull/3447
+- Publish via SonatypeCentralPublishModule by @alexarchambault in https://github.com/coursier/coursier/pull/3448
+- Fix docker tests by @alexarchambault in https://github.com/coursier/coursier/pull/3479
+- Tweak integration test ports use by @alexarchambault in https://github.com/coursier/coursier/pull/3480
+- Bump utest by @alexarchambault in https://github.com/coursier/coursier/pull/3484
+- Update Scala.js to 1.19.0 by @alexarchambault in https://github.com/coursier/coursier/pull/3485
+- Clean-up dead code by @alexarchambault in https://github.com/coursier/coursier/pull/3494
+- ci: Stop using deprecated macos-13 image by @alexarchambault in https://github.com/coursier/coursier/pull/3517
+- Add timeouts on some CI jobs by @alexarchambault in https://github.com/coursier/coursier/pull/3541
+- Increase timeout when waiting for Maven Central sync during releases by @alexarchambault in https://github.com/coursier/coursier/pull/3544
+- Update to node 18 by @alexarchambault in https://github.com/coursier/coursier/pull/3566
+- Update node to 18 (missing job) by @alexarchambault in https://github.com/coursier/coursier/pull/3569
+- Make test output more quiet by @alexarchambault in https://github.com/coursier/coursier/pull/3575
+- Add check ensuring all test modules have at least one test class by @alexarchambault in https://github.com/coursier/coursier/pull/3584
+- Remove unused code in build file by @xuwei-k in https://github.com/coursier/coursier/pull/3585
+- Stop building "mostly static" binaries by @Copilot in https://github.com/coursier/coursier/pull/3592
+- Test platform property resolution in ND4J artifacts by @Copilot in https://github.com/coursier/coursier/pull/3593
+- Tweak .bat launchers by @Copilot in https://github.com/coursier/coursier/pull/3596
+- Update liberica-nik to 25.0.2 by @alexarchambault in https://github.com/coursier/coursier/pull/3607
+- Update Scala to 2.13.18 by @alexarchambault in https://github.com/coursier/coursier/pull/3608
+- Update / fix docker tests by @alexarchambault in https://github.com/coursier/coursier/pull/3616
+- Add missing GraalVM config by @alexarchambault in https://github.com/coursier/coursier/pull/3617
+- Minor refactoring by @alexarchambault in https://github.com/coursier/coursier/pull/3619
+- Bump some dependencies to get their CVE fixes by @alexarchambault in https://github.com/coursier/coursier/pull/3620
+- Add .gitattributes to recognize .mill files as Scala by @xuwei-k in https://github.com/coursier/coursier/pull/3628
+- Integrate benchmarks into build and address bitrot by @retronym in https://github.com/coursier/coursier/pull/3630
+- Remove now unnecessary job by @alexarchambault in https://github.com/coursier/coursier/pull/3637
+- Manage helper server in redirection tests from the test suite itself by @alexarchambault in https://github.com/coursier/coursier/pull/3638
+- Update coursier/setup-action to 3.x and cache-action to 8.x by @alexarchambault in https://github.com/coursier/coursier/pull/3645
+- Update to versions 1.5.3 by @retronym in https://github.com/coursier/coursier/pull/3646
+- Tweaking by @alexarchambault in https://github.com/coursier/coursier/pull/3651
+- Manage test repo server from the tests themselves, build clean-ups, harden some tests by @alexarchambault in https://github.com/coursier/coursier/pull/3652
+- Add jpackage-based standalone JVM launcher generation, test coverage, and release artifact publishing by @Copilot in https://github.com/coursier/coursier/pull/3658
+- Add "golden" tests for cs install JSON formats by @alexarchambault in https://github.com/coursier/coursier/pull/3661
+- Stop requiring a cs launcher during the build by @alexarchambault in https://github.com/coursier/coursier/pull/3663
+- Mitigate transient redirecting server startup failures by @alexarchambault in https://github.com/coursier/coursier/pull/3664
+- Retry Docker auth token retrieval by @alexarchambault in https://github.com/coursier/coursier/pull/3665
+- Disable cache-action fallbacks by @alexarchambault in https://github.com/coursier/coursier/pull/3667
+- Update jni-utils to 0.3.4 by @alexarchambault in https://github.com/coursier/coursier/pull/3669
+- Update proguard to 7.9.1 by @alexarchambault in https://github.com/coursier/coursier/pull/3670
+- Build standalone launcher for Windows ARM64 by @alexarchambault in https://github.com/coursier/coursier/pull/3674
+- Upload bootstrap launcher for Windows in GitHub release assets by @alexarchambault in https://github.com/coursier/coursier/pull/3675
+- Tweak workflow, stop requiring pre-installed cs command in build and tests by @alexarchambault in https://github.com/coursier/coursier/pull/3676
+- Update actions/{download,upload}-artifact actions by @alexarchambault in https://github.com/coursier/coursier/pull/3677
+- Updates related to docker images where Linux binaries are built by @alexarchambault in https://github.com/coursier/coursier/pull/3678
+- Updates related to docker images where Linux binaries are built, re-enable Scala.js 2.13 job by @alexarchambault in https://github.com/coursier/coursier/pull/3680
+- Ensure all modules have class file versions no higher than expected by @alexarchambault in https://github.com/coursier/coursier/pull/3715
+- Prevent branch builds from publishing tags by @alexarchambault in https://github.com/coursier/coursier/pull/3722
+- Specify a bundle name so that one tag == one Sonatype release by @alexarchambault in https://github.com/coursier/coursier/pull/3726
+- Cross-compile things with Scala 3 too by @alexarchambault in https://github.com/coursier/coursier/pull/3742
+- Tweak optional dependencies handling by @alexarchambault in https://github.com/coursier/coursier/pull/3743
+- Try to make CI more reliable by @alexarchambault in https://github.com/coursier/coursier/pull/3752
+- Push nightly launchers to a dedicated Nightly release by @alexarchambault in https://github.com/coursier/coursier/pull/3767
+- Add tests for no-packaging-tag-and-no-JAR dependencies by @alexarchambault in https://github.com/coursier/coursier/pull/3768
+- Add non-regression tests for many FileCache aspects by @alexarchambault in https://github.com/coursier/coursier/pull/3772
+- Add scalafix checks by @alexarchambault in https://github.com/coursier/coursier/pull/3776
+- Publish empty doc JARs by @alexarchambault in https://github.com/coursier/coursier/pull/3777
+- Fold coursier/interface module here by @alexarchambault in https://github.com/coursier/coursier/pull/3796
+- Try to fix main branch CI by @alexarchambault in https://github.com/coursier/coursier/pull/3799
+- Stop publishing io.get-coursier::interface-no-shading by @alexarchambault in https://github.com/coursier/coursier/pull/3808
+- Remove the argonaut dependency by @alexarchambault in https://github.com/coursier/coursier/pull/3810
+- NIT by @alexarchambault in https://github.com/coursier/coursier/pull/3812
+- Update coursier-versions to 0.6.0 by @alexarchambault in https://github.com/coursier/coursier/pull/3814
+- Clean-up Deps.scala in build by @alexarchambault in https://github.com/coursier/coursier/pull/3821
+- Don't add os-lib in test Scala.js modules by @alexarchambault in https://github.com/coursier/coursier/pull/3822
+- refactor: Enforce no isInstanceOf and return statement via scalafix by @alexarchambault in https://github.com/coursier/coursier/pull/3824
+- Compile the interface module with 2.13 only by @alexarchambault in https://github.com/coursier/coursier/pull/3825
+- Stop publishing interop modules by @alexarchambault in https://github.com/coursier/coursier/pull/3826
+- Prepare things for Scala 3 by @alexarchambault in https://github.com/coursier/coursier/pull/3827
+- Derive CI Scala versions from the build by @alexarchambault in https://github.com/coursier/coursier/pull/3828
+- More thing preparing the ground for Scala 3 / unroll by @alexarchambault in https://github.com/coursier/coursier/pull/3829
+- Make the handmade metadata tests not leave waste behind by @alexarchambault in https://github.com/coursier/coursier/pull/3830
+- Trigger setup-action updates upon release by @alexarchambault in https://github.com/coursier/coursier/pull/3831
+- Refactor build slightly by @alexarchambault in https://github.com/coursier/coursier/pull/3847
+- Publish nightlies independently of release CI by @alexarchambault in https://github.com/coursier/coursier/pull/3850
+- Build Scala.js modules only for Scala 2.13 by @alexarchambault in https://github.com/coursier/coursier/pull/3852
+- Skip successfully uploaded release assets by @alexarchambault in https://github.com/coursier/coursier/pull/3860
+- Update Mill to 0.12.5 by @alexarchambault in https://github.com/coursier/coursier/pull/3218
+- Update to Mill 1.0 by @alexarchambault in https://github.com/coursier/coursier/pull/3457
+- Prepare build for Mill 1.0 by @alexarchambault in https://github.com/coursier/coursier/pull/3478
+- Update Mill to 1.1.0-RC3 by @alexarchambault in https://github.com/coursier/coursier/pull/3535
+- Update Mill to 1.1.3 by @alexarchambault in https://github.com/coursier/coursier/pull/3574
+- Update mill-native-image to 0.2.5-1 by @alexarchambault in https://github.com/coursier/coursier/pull/3655
+- Update Mill to 1.1.5 by @alexarchambault in https://github.com/coursier/coursier/pull/3679
+- Update Mill to 1.1.6 by @alexarchambault in https://github.com/coursier/coursier/pull/3681
+- Update Mill to 1.1.7 by @alexarchambault in https://github.com/coursier/coursier/pull/3744
+- Update Mill to 1.2.0-RC1-46-16168f by @alexarchambault in https://github.com/coursier/coursier/pull/3783
+- Mill 1.2 fixes? by @alexarchambault in https://github.com/coursier/coursier/pull/3797
+- Bump actions/attest-build-provenance from 2 to 3 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3490
+- Bump actions/attest-build-provenance from 3 to 4 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3565
+- Bump actions/checkout from 4 to 5 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3473
+- Bump actions/checkout from 5 to 6 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3526
+- Bump actions/checkout from 6 to 7 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3723
+- Bump actions/download-artifact from 4 to 5 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3472
+- Bump actions/download-artifact from 5 to 6 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3513
+- Bump actions/setup-java from 4 to 5 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3712
+- Bump actions/setup-java from 5 to 6 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3802
+- Bump actions/setup-node from 4 to 6 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3511
+- Bump actions/setup-node from 6 to 7 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3747
+- Bump actions/upload-artifact from 4 to 5 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3512
+- Bump coursier/cache-action from 6.4 to 7.0 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3516
+- Bump coursier/cache-action from 7.0 to 8.0 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3554
+- Bump coursier/setup-action from 1.3 to 2.0 by @dependabot[bot] in https://github.com/coursier/coursier/pull/3531
+- Update asm to 9.10.1 by @scala-steward in https://github.com/coursier/coursier/pull/3720
+- Update case-app to 2.1.0 by @scala-steward in https://github.com/coursier/coursier/pull/3474
+- Update cats-core, cats-free to 2.13.0 by @scala-steward in https://github.com/coursier/coursier/pull/3255
+- Update cats-effect to 3.7.1 by @scala-steward in https://github.com/coursier/coursier/pull/3795
+- Update config_3 to 1.17.0 by @scala-steward in https://github.com/coursier/coursier/pull/3846
+- Update data-class to 0.2.11 by @scala-steward in https://github.com/coursier/coursier/pull/3845
+- Update http4s-blaze-server to 0.23.18 by @scala-steward in https://github.com/coursier/coursier/pull/3757
+- Update http4s-dsl, http4s-server to 0.23.37 by @scala-steward in https://github.com/coursier/coursier/pull/3834
+- Update jarjar-abrams-core to 1.18.1 by @scala-steward in https://github.com/coursier/coursier/pull/3815
+- Update java-diff-utils to 4.17 by @scala-steward in https://github.com/coursier/coursier/pull/3692
+- Update jimfs to 1.3.2 by @scala-steward in https://github.com/coursier/coursier/pull/3780
+- Update jmh-core to 1.37 by @scala-steward in https://github.com/coursier/coursier/pull/3701
+- Update jna to 5.19.1 by @scala-steward in https://github.com/coursier/coursier/pull/3711
+- Update jsch to 2.28.7 by @scala-steward in https://github.com/coursier/coursier/pull/3785
+- Update jsoniter-scala-core, ... to 2.13.39 by @scala-steward in https://github.com/coursier/coursier/pull/3368
+- Update jsoup to 1.23.2 by @scala-steward in https://github.com/coursier/coursier/pull/3794
+- Update logback-classic to 1.6.3 by @scala-steward in https://github.com/coursier/coursier/pull/3778
+- Update maven-model to 3.9.16 by @scala-steward in https://github.com/coursier/coursier/pull/3695
+- Update mdoc to 2.9.2 by @scala-steward in https://github.com/coursier/coursier/pull/3818
+- Update mill-main to 0.12.15 by @scala-steward in https://github.com/coursier/coursier/pull/3469
+- Update os-lib to 0.11.8 by @scala-steward in https://github.com/coursier/coursier/pull/3688
+- Update plexus-archiver to 4.14.0 by @scala-steward in https://github.com/coursier/coursier/pull/3788
+- Update plexus-utils to 4.1.0 by @scala-steward in https://github.com/coursier/coursier/pull/3781
+- Update pprint to 0.9.6 by @scala-steward in https://github.com/coursier/coursier/pull/3689
+- Update proguard-base to 7.10.0 by @scala-steward in https://github.com/coursier/coursier/pull/3790
+- Update python-native-libs to 0.2.5 by @scala-steward in https://github.com/coursier/coursier/pull/3683
+- Update scala-collection-compat to 2.14.0 by @scala-steward in https://github.com/coursier/coursier/pull/3703
+- Update scala-library, scala-reflect to 2.12.21 by @scala-steward in https://github.com/coursier/coursier/pull/3702
+- Update scala-library, scala-reflect to 2.13.16 by @scala-steward in https://github.com/coursier/coursier/pull/3234
+- Update scala-xml to 2.5.0 by @scala-steward in https://github.com/coursier/coursier/pull/3835
+- Update scala3-library to 3.9.0 by @scala-steward in https://github.com/coursier/coursier/pull/3817
+- Update scalafix-core to 0.14.8 by @scala-steward in https://github.com/coursier/coursier/pull/3832
+- Update scalafmt-core to 3.9.5 by @scala-steward in https://github.com/coursier/coursier/pull/3399
+- Update scalajs-library to 1.22.0 by @scala-steward in https://github.com/coursier/coursier/pull/3724
+- Update scalajs-react:core to 2.1.4 by @scala-steward in https://github.com/coursier/coursier/pull/3685
+- Update scodec-core to 2.3.3 by @scala-steward in https://github.com/coursier/coursier/pull/3464
+- Update slf4j-nop to 2.0.19 by @scala-steward in https://github.com/coursier/coursier/pull/3819
+- Update svm to 25.0.4.1 by @scala-steward in https://github.com/coursier/coursier/pull/3833
+- Update tika-core to 4.0.0 by @scala-steward in https://github.com/coursier/coursier/pull/3787
+- Update ujson to 4.4.3 by @scala-steward in https://github.com/coursier/coursier/pull/3690
+- Update undertow-core to 2.4.3.Final by @scala-steward in https://github.com/coursier/coursier/pull/3793
+- Update utest to 0.9.5 by @scala-steward in https://github.com/coursier/coursier/pull/3691
+- Update zstd-jni to 1.5.7-16 by @scala-steward in https://github.com/coursier/coursier/pull/3798
+
+## New Contributors
+
+- @markoutso made their first contribution in https://github.com/coursier/coursier/pull/2068
+- @jackkoenig made their first contribution in https://github.com/coursier/coursier/pull/2655
+- @leonheldattoradex made their first contribution in https://github.com/coursier/coursier/pull/3232
+- @yzia2000 made their first contribution in https://github.com/coursier/coursier/pull/3238
+- @JohnnyMorganz made their first contribution in https://github.com/coursier/coursier/pull/3341
+- @Gedochao made their first contribution in https://github.com/coursier/coursier/pull/3343
+- @vasilmkd made their first contribution in https://github.com/coursier/coursier/pull/3364
+- @Iilun made their first contribution in https://github.com/coursier/coursier/pull/3417
+- @mwisnicki made their first contribution in https://github.com/coursier/coursier/pull/3530
+- @albertocavalcante made their first contribution in https://github.com/coursier/coursier/pull/3547
+- @nguyenyou made their first contribution in https://github.com/coursier/coursier/pull/3568
+- @mbovel made their first contribution in https://github.com/coursier/coursier/pull/3571
+- @Dolfik1 made their first contribution in https://github.com/coursier/coursier/pull/3725
+- @shuch3ng made their first contribution in https://github.com/coursier/coursier/pull/3766
+
+**Full Changelog**: https://github.com/coursier/coursier/compare/v2.1.24...v2.1.25
