@@ -1130,7 +1130,6 @@ trait Cli extends CsModule
   def artifactName = "coursier-cli"
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.caseApp,
-    Deps.catsFree213,
     Deps.classPathUtil,
     Deps.collectionCompat,
     Deps.noCrcZis,
@@ -1181,13 +1180,105 @@ trait Cli extends CsModule
   }
 
   def csInPathForkEnv = Task {
+    csInPathForkEnv0(cli.assembly().path, Task.dest)
+  }
+
+  /** Same as [[csInPathForkEnv]], with [[publishedAssemblyLauncher]] as `cs` */
+  def publishedCsInPathForkEnv = Task {
+    csInPathForkEnv0(publishedAssemblyLauncher().path, Task.dest)
+  }
+
+  private def csInPathForkEnv0(assembly: os.Path, dir: os.Path): (String, String) = {
     val ext = if (Properties.isWin) ".bat" else ""
-    os.copy(cli.assembly().path, Task.dest / s"cs$ext")
+    os.copy(assembly, dir / s"cs$ext")
     val (pathVarName, pathBaseValue) = System.getenv()
       .asScala
       .find(_._1.toLowerCase(Locale.ROOT) == "path")
       .getOrElse(("PATH", ""))
-    pathVarName -> s"${PathRef.toResolvedPathString(Task.dest)}${File.pathSeparator}$pathBaseValue"
+    pathVarName -> s"${PathRef.toResolvedPathString(dir)}${File.pathSeparator}$pathBaseValue"
+  }
+
+  /** Maven repository holding this module and its module dependencies, as the build publishes them.
+    *
+    * The `coursier` and `coursier.jar` launchers of a release aren't built from the class path the
+    * build computes for this module: `cs bootstrap` resolves the published coursier-cli artifact
+    * from its POM, and its dependencies from theirs. The order of the resulting class path can
+    * differ from the build's, and when a class is on it twice, which copy gets loaded changes with
+    * that order (the 2.1.25 launchers picked cats-core_2.13 over cats-core_3 that way, see #3865).
+    * [[publishedJarLauncher]] and [[publishedAssemblyLauncher]] get built from this repository like
+    * the released launchers from Central, so that `cli-tests.jar-launcher-tests` exercises what
+    * actually gets released.
+    */
+  private def localPublishModules: Seq[PublishModule] =
+    (transitiveModuleDeps ++ transitiveRunModuleDeps).distinct.collect {
+      case m: PublishModule => m
+    }
+  def localPublishRepo = Task {
+    val repos = Task.traverse(localPublishModules)(_.publishLocalTestRepo)()
+    val dest  = Task.dest / "repo"
+    for (repo <- repos)
+      os.copy(repo.path, dest, mergeFolders = true, replaceExisting = true, createFolders = true)
+    PathRef(dest)
+  }
+
+  /** The `coursier` launcher, built from [[localPublishRepo]] the way `copyJarLaunchers` builds the
+    * released one from Central
+    */
+  def publishedJarLauncher = Task {
+    val dest = Task.dest / "coursier"
+    generateJarLauncher(
+      mainClass0 = finalMainClass(),
+      classPath = runClasspath().map(_.path),
+      repo = PathRef.toResolvedOsPath(localPublishRepo().path),
+      version = publishVersion(),
+      dest = dest,
+      assembly = false
+    )
+    // on Windows, `cs bootstrap` writes a `.bat` file alongside the launcher
+    PathRef(dest / os.up / s"${dest.last}$platformBootstrapExtension")
+  }
+
+  /** The `coursier.jar` launcher, built from [[localPublishRepo]] the way `copyJarLaunchers` builds
+    * the released one from Central
+    */
+  def publishedAssemblyLauncher = Task {
+    val dest = Task.dest / "coursier.jar"
+    generateJarLauncher(
+      mainClass0 = finalMainClass(),
+      classPath = runClasspath().map(_.path),
+      repo = PathRef.toResolvedOsPath(localPublishRepo().path),
+      version = publishVersion(),
+      dest = dest,
+      assembly = true
+    )
+    PathRef(dest / os.up / s"${dest.last}$platformBootstrapExtension")
+  }
+
+  private def generateJarLauncher(
+    mainClass0: String,
+    classPath: Seq[os.Path],
+    repo: os.Path,
+    version: String,
+    dest: os.Path,
+    assembly: Boolean
+  )(implicit ctx: TaskCtx): Unit = {
+    mill.util.Jvm.callProcess(
+      mainClass = mainClass0,
+      classPath = classPath,
+      mainArgs = jarLauncherArgs(
+        version = version,
+        dest = dest.toString,
+        assembly = assembly,
+        // no default repositories: a stale ~/.ivy2/local copy of the same snapshot version
+        // (like the one `__.publishLocal` leaves) would shadow the freshly published one
+        repositories = Seq("central", repo.toNIO.toUri.toASCIIString),
+        defaultRepositories = false
+      ),
+      cwd = dest / os.up,
+      stdout = os.Inherit,
+      stderr = os.Inherit
+    )
+    ()
   }
 }
 
@@ -1322,6 +1413,31 @@ trait CliTests extends CsModule { self =>
         "-Dcoursier-test-is-standalone=true",
         s"-Dcoursier-test-launcher-dir=$launcherDir",
         s"-Dcoursier-test-launcher-sub-path=${cli.launcherSubPath}",
+        s"-Dcoursier.test.auth-proxy-data-dir=${PathRef.toResolvedPathString(BuildCtx.workspaceRoot / "project/authenticated-proxy")}",
+        s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-image=${coursierbuild.Docker.alpineImage}",
+        s"-Dcoursier.test.alpine-java-image=${coursierbuild.Docker.alpineJavaImage}"
+      )
+    }
+  }
+
+  /** The CLI test suite run against launchers built like the released `coursier` and
+    * `coursier.jar`, see [[Cli.localPublishRepo]]
+    */
+  object `jar-launcher-tests` extends SbtTests with CsTests {
+    def testModuleName = "test"
+    def forkEnv = Task {
+      super.forkEnv() ++ Seq(cli.publishedCsInPathForkEnv())
+    }
+    def forkArgs = Task {
+      super.forkArgs() ++ sharedTestArgs ++ Seq(
+        s"-Dcoursier-test-launcher=${PathRef.toResolvedPathString(cli.publishedJarLauncher().path)}",
+        s"-Dcoursier-test-assembly=${PathRef.toResolvedPathString(cli.publishedAssemblyLauncher().path)}",
+        "-Dcoursier-test-launcher-accepts-D=false",
+        "-Dcoursier-test-launcher-accepts-J=true",
+        "-Dcoursier-test-is-native=false",
+        "-Dcoursier-test-is-native-static=false",
+        "-Dcoursier-test-is-standalone=false",
         s"-Dcoursier.test.auth-proxy-data-dir=${PathRef.toResolvedPathString(BuildCtx.workspaceRoot / "project/authenticated-proxy")}",
         s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-image=${coursierbuild.Docker.alpineImage}",
@@ -1497,24 +1613,65 @@ def uploadLaunchersSpecialRepo(directory: String = "artifacts") = Task.Command {
   )
 }
 
+/** Arguments of the `cs bootstrap` command generating a JAR launcher of the CLI for `version`: the
+  * `coursier` bootstrap (a JAR fetching its dependencies at first run), or `coursier.jar`, an
+  * assembly, with `assembly`. The launchers are generated from the published coursier-cli artifact
+  * and its POM, so `version` has to be published in one of the repositories the command uses.
+  */
+def jarLauncherArgs(
+  version: String,
+  dest: String,
+  assembly: Boolean = false,
+  bat: Boolean = false,
+  repositories: Seq[String] = Nil,
+  defaultRepositories: Boolean = true
+): Seq[String] =
+  Seq("bootstrap") ++
+    (if (assembly) Seq("--assembly") else Nil) ++
+    (if (bat) Seq("--bat") else Nil) ++
+    (if (defaultRepositories) Nil else Seq("--no-default")) ++
+    repositories.flatMap(repo => Seq("-r", repo)) ++
+    Seq("-o", dest, "-f", s"$mavenOrg::coursier-cli:$version", "--scala", cliScalaVersion)
+
+/** The repositories to pass `cs bootstrap` along the default ones, for the coursier-cli `version`
+  * to be found (snapshots aren't on Central proper)
+  */
+def jarLauncherRepositories(version: String): Seq[String] =
+  if (version.endsWith("SNAPSHOT")) Seq("central:maven-snapshots") else Nil
+
+/** Runs a resolution with a freshly generated JAR launcher, so that a launcher failing at run time
+  * doesn't get released: the 2.1.25 ones resolved nothing (see #3865), with `--help` and `version`
+  * still working, and only `cli-tests.jar-launcher-tests` running that kind of launcher on CI.
+  */
+def smokeTestJarLauncher(launcher: os.Path): Unit = {
+  val java =
+    os.Path(sys.props("java.home")) / "bin" / (if (Properties.isWin) "java.exe" else "java")
+  System.err.println(s"Smoke-testing $launcher")
+  // the launchers are JARs with a shell / batch preamble, that java ignores
+  os.proc(
+    java,
+    "-jar",
+    launcher,
+    "resolve",
+    s"org.scala-lang:scala-library:${ScalaVersions.scala213}"
+  )
+    .call(cwd = launcher / os.up, stdout = os.Inherit, stderr = os.Inherit)
+}
+
 def bootstrapLauncher(
   version: String = CoursierPublishModule.buildVersion,
   dest: String = s"coursier$platformBootstrapExtension",
   bat: Boolean = false
 ) = Task.Command {
   cli.run(Task.Anon {
-    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "central:maven-snapshots") else Nil
-    val batArgs   = if (bat) Seq("--bat") else Nil
-    Args(Seq(
-      "bootstrap",
-      "-o",
-      dest
-    ) ++ batArgs ++ Seq(
-      "-f",
-      s"$mavenOrg::coursier-cli:$version",
-      "--scala",
-      cliScalaVersion
-    ) ++ extraArgs)
+    Args(
+      jarLauncherArgs(
+        version = version,
+        dest = dest,
+        bat = bat,
+        repositories = jarLauncherRepositories(version)
+      )
+    )
   })()
   os.Path(dest, BuildCtx.workspaceRoot)
 }
@@ -1524,18 +1681,13 @@ def assemblyLauncher(
   dest: String = "coursier.jar"
 ) = Task.Command {
   cli.run(Task.Anon {
-    val extraArgs = if (version.endsWith("SNAPSHOT")) Seq("-r", "central:maven-snapshots") else Nil
     Args(
-      Seq(
-        "bootstrap",
-        "--assembly",
-        "-o",
-        dest,
-        "-f",
-        s"$mavenOrg::coursier-cli:$version",
-        "--scala",
-        cliScalaVersion
-      ) ++ extraArgs
+      jarLauncherArgs(
+        version = version,
+        dest = dest,
+        assembly = true,
+        repositories = jarLauncherRepositories(version)
+      )
     )
   })()
   os.Path(dest, BuildCtx.workspaceRoot)
@@ -1570,6 +1722,8 @@ def copyJarLaunchers(
     replaceExisting = true
   )
   os.copy(assembly, dir / "coursier.jar", createFolders = true, replaceExisting = true)
+  smokeTestJarLauncher(dir / s"coursier$platformBootstrapExtension")
+  smokeTestJarLauncher(dir / "coursier.jar")
 }
 
 def copyBatLauncher(
@@ -1579,6 +1733,7 @@ def copyBatLauncher(
   val bootstrap: os.Path = bootstrapLauncher(version = version, dest = "coursier.bat", bat = true)()
   val dir                = os.Path(directory, BuildCtx.workspaceRoot)
   os.copy(bootstrap, dir / "coursier.bat", createFolders = true, replaceExisting = true)
+  smokeTestJarLauncher(dir / "coursier.bat")
 }
 
 private def updateVersionPin(
@@ -1866,6 +2021,13 @@ def standaloneJvmTests() = Task.Command[Unit] {
   `cli-tests`.`standalone-jvm-tests`.testForked()()
 }
 
+/** Runs the CLI test suite against `coursier` and `coursier.jar` launchers built the way the
+  * released ones are, see [[Cli.localPublishRepo]]
+  */
+def jarLauncherTests() = Task.Command[Unit] {
+  `cli-tests`.`jar-launcher-tests`.testForked()()
+}
+
 def csShTests(version: String = "") = Task.Command[Unit] {
   CsSh.test(
     BuildCtx.workspaceRoot / "cs.sh",
@@ -1968,6 +2130,46 @@ object ci extends Module with mill.javalib.CoursierSonatypeCentralPublish {
       "scala213"       -> ScalaVersions.scala213,
       "scala212"       -> ScalaVersions.scala212
     )
+  }
+
+  /** Checks that no class path carries a library compiled for several Scala binary versions at
+    * once, like cats-core_2.13 alongside cats-core_3.
+    *
+    * Only one of the copies of a class such a class path holds gets loaded, and which one depends
+    * on the class path order, so these tend to break with a `NoSuchMethodError` only once that
+    * order changes: the build's class path of the CLI had cats-core_3 first, the POM of the
+    * published coursier-cli artifact, that the `coursier` and `coursier.jar` launchers get built
+    * from, had cats-core_2.13 first (#3865).
+    *
+    * Typically run as `ci.noMixedScalaBinaryVersions --tasks __.resolvedRunMvnDeps`.
+    */
+  def noMixedScalaBinaryVersions(tasks: Tasks[Seq[PathRef]]) = Task.Command[Unit] {
+    assert(tasks.value.nonEmpty)
+    // artifact name, Scala binary version suffix, and the rest of the JAR file name
+    val scalaJar = "^(.+)_(2\\.1[0-3]|3)-(.*)\\.jar$".r
+    val results  = tasks.value.zip(Task.sequence(tasks.value)())
+    val conflicts = results.flatMap { case (task, classPath) =>
+      val mixed = classPath
+        .map(_.path.last)
+        .collect { case scalaJar(name, binaryVersion, _) => (name, binaryVersion) }
+        .distinct
+        .groupMap(_._1)(_._2)
+        .toSeq
+        .collect {
+          case (name, binaryVersions) if binaryVersions.length > 1 =>
+            s"$name (${binaryVersions.sorted.map("_" + _).mkString(", ")})"
+        }
+      mixed.sorted.map(conflict => (task, conflict))
+    }
+    if (conflicts.nonEmpty) {
+      for ((task, conflict) <- conflicts)
+        System.err.println(s"$task: $conflict")
+      Task.fail(
+        s"Found ${conflicts.length} librar${if (conflicts.length == 1) "y" else "ies"} " +
+          "pulled for several Scala binary versions at once (a class of these gets loaded from " +
+          "whichever comes first on the class path)"
+      )
+    }
   }
 
   def noEmptyDiscoveredTestClasses(tasks: Tasks[Seq[String]]) = Task.Command[Unit] {

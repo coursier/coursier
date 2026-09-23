@@ -34,6 +34,8 @@ jobs:
         ./mill -i __.compile
     - name: No test modules with no test classes
       run: ./mill -i ci.noEmptyDiscoveredTestClasses --tasks __.discoveredTestClasses
+    - name: No class path mixing Scala binary versions
+      run: ./mill -i ci.noMixedScalaBinaryVersions --tasks __.resolvedRunMvnDeps
     - run: ./mill -i __.publishLocal
 
   scala-versions:
@@ -126,6 +128,26 @@ jobs:
     - run: ./mill -i jvmTests
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        COURSIER_JNI: force
+
+  # Runs the CLI tests against the coursier and coursier.jar launchers, built like the released
+  # ones: from the published coursier-cli artifact and its POM (via a local repository here),
+  # rather than from the class path the build computes. Their class path can differ (#3865).
+  jar-launcher-tests:
+    runs-on: ubuntu-latest
+    name: JAR launchers
+    timeout-minutes: 50
+    steps:
+    - uses: actions/checkout@v7
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v8
+      with:
+        disableFallback: true
+    - run: sudo apt-get install -y nailgun
+    - run: ./mill -i jarLauncherTests
+      env:
         COURSIER_JNI: force
 
   js-test:
@@ -291,6 +313,7 @@ jobs:
     needs:
       - "compile-publish-all"
       - "test"
+      - "jar-launcher-tests"
       - "js-test"
       - "interface-test"
       - "bin-compat"
