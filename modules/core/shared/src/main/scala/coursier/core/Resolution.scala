@@ -693,6 +693,19 @@ object Resolution {
     else
       dep
 
+  /** Makes `optional0 = Some(false)` and `optional0 = None` indistinguishable.
+    *
+    * Both mean the same thing for a dependency in the dependency graph. Keeping them distinct would
+    * make the same module appear twice in the dependency set (once with each value), which in turn
+    * duplicates it in `minDependencies`, in the trees, in conflicts, etc.
+    *
+    * `Some(false)` is only meaningful before that, in dependency management, where it allows to
+    * override an `optional = true` coming from elsewhere.
+    */
+  private def withNormalizedOptional(dep: Dependency): Dependency =
+    if (dep.optional0.contains(false)) dep.copy(optional0 = None)
+    else dep
+
   /** Filters `dependencies` with `exclusions`.
     */
   def withExclusions0(
@@ -993,7 +1006,7 @@ object Resolution {
             if (from.optional0.contains(true) && !dep0.optional0.contains(true))
               dep0.copy(optional0 = Some(true))
             else
-              dep0
+              withNormalizedOptional(dep0)
 
           val variant: Variant =
             if (variant0.isEmpty)
@@ -1615,7 +1628,9 @@ object Resolution {
   lazy val processedRootDependencies =
     if (hasAllBoms) {
       val rootDependenciesWithDefaultConfig =
-        rootDependencies.map(withDefaultConfig(_, defaultConfiguration))
+        rootDependencies.map { dep =>
+          withNormalizedOptional(withDefaultConfig(dep, defaultConfiguration))
+        }
       val rootDependencies0 =
         if (bomDepMgmtOverrides.isEmpty) rootDependenciesWithDefaultConfig
         else
@@ -2503,6 +2518,7 @@ object Resolution {
 
     val dependencies0 = dependencies
       .map(withDefaultConfig(_, defaultConfiguration))
+      .map(withNormalizedOptional)
       .map(updateVersion)
 
     val allDependenciesOrError = helper(dependencies0.toSet)

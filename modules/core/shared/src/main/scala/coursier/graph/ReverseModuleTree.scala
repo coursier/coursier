@@ -220,8 +220,10 @@ object ReverseModuleTree {
     roots: Seq[Module] = null,
     withExclusions: Boolean = false
   ): Seq[ReverseModuleTree] = {
-    val t      = DependencyTree(resolution, withExclusions = withExclusions)
-    val roots0 = Option(roots).getOrElse(resolution.minDependencies.toVector.map(_.module))
+    val t = DependencyTree(resolution, withExclusions = withExclusions)
+    // distinct: minDependencies can contain the same module several times (with different
+    // configurations for example), and each occurrence would yield the same nodes and conflicts
+    val roots0 = Option(roots).getOrElse(resolution.minDependencies.toVector.map(_.module).distinct)
     fromDependencyTree(
       roots0,
       t,

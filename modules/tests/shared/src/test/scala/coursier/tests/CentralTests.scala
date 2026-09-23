@@ -1235,7 +1235,10 @@ abstract class CentralTests extends TestSuite {
               VersionConstraint("1.1.0-M10")
             )
           }
-          val conflicts = Conflict(res).toSet
+          val conflicts0 = Conflict(res)
+          // no duplicates expected, see https://github.com/coursier/coursier/issues/3861
+          assert(conflicts0.distinct == conflicts0)
+          val conflicts = conflicts0.toSet
           val expectedConflicts = Set(
             Conflict(
               mod"org.scala-lang:scala-library",
