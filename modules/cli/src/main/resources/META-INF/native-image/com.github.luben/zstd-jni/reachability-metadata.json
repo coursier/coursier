@@ -1,0 +1,87 @@
+{
+  "comment": [
+    "TEMPORARY: remove this file once zstd-jni ships this metadata itself (it does not as of",
+    "1.5.7-19). Same approach as ../../dev.dirs/reachability-metadata.json.",
+    "",
+    "Since 1.5.7-17, zstd-jni is a multi-release JAR: on JDK 22+, its stream classes",
+    "(ZstdInputStreamNoFinalizer, ZstdOutputStreamNoFinalizer, the buffer streams) come from",
+    "META-INF/versions/22 and call libzstd through java.lang.foreign rather than JNI. The image",
+    "builder runs on JDK 25, so native images get that implementation, and every downcall it",
+    "makes has to be registered here, or the image throws MissingForeignRegistrationError when",
+    "cs unpacks a .tar.zst archive.",
+    "",
+    "The entries below are the distinct function descriptors of the downcall handles in",
+    "com.github.luben.zstd.ZstdBinding (META-INF/versions/22), in this order:",
+    "  1. ZSTD_CStreamOutSize, ZSTD_DStreamInSize, ZSTD_DStreamOutSize",
+    "  2. ZSTD_createCStream, ZSTD_createDStream",
+    "  3. ZSTD_freeCStream, ZSTD_freeDCtx, ZSTD_initDStream",
+    "  4. ZSTD_CCtx_reset, ZSTD_initCStream",
+    "  5. ZSTD_CCtx_setParameter",
+    "  6. ZSTD_CCtx_refCDict",
+    "  7. ZSTD_CCtx_loadDictionary (critical)",
+    "  8. ZSTD_compressStream2_simpleArgs (critical)",
+    "  9. ZSTD_decompressStream_simpleArgs (critical)",
+    "ZstdBinding types every size_t as the linker's canonical 'size_t' layout and pointers as",
+    "plain ValueLayout.ADDRESS, hence 'size_t' and 'void*' here. The 'critical' ones are linked",
+    "with Linker.Option.critical(true) so heap byte[]s can be passed as pointers, which changes",
+    "the generated stub, hence the option on those entries.",
+    "",
+    "The --enable-native-access=ALL-UNNAMED that goes with this lives in",
+    "../../io.get-coursier/coursier-cli/native-image.properties."
+  ],
+  "foreign": {
+    "downcalls": [
+      {
+        "returnType": "size_t",
+        "parameterTypes": []
+      },
+      {
+        "returnType": "void*",
+        "parameterTypes": []
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": ["void*"]
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": ["void*", "int"]
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": ["void*", "int", "int"]
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": ["void*", "void*"]
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": ["void*", "void*", "size_t"],
+        "options": {
+          "critical": {
+            "allowHeapAccess": true
+          }
+        }
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": ["void*", "void*", "size_t", "void*", "void*", "size_t", "void*", "int"],
+        "options": {
+          "critical": {
+            "allowHeapAccess": true
+          }
+        }
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": ["void*", "void*", "size_t", "void*", "void*", "size_t", "void*"],
+        "options": {
+          "critical": {
+            "allowHeapAccess": true
+          }
+        }
+      }
+    ]
+  }
+}
