@@ -38,7 +38,7 @@ object Deps {
   def jsch = mvn"com.github.mwiede:jsch:2.28.7"
   // The Scala 2 and Scala 3 modules use different jsoniter-scala versions, see Versions.scala
   private def jsoniterScalaVersion(sv: String) =
-    if (sv.startsWith("3.")) Versions.jsoniterScalaScala3 else Versions.jsoniterScala
+    if (sv.startsWith("3.")) Versions.jsoniterScala else Versions.jsoniterScalaScala2
   def jsoniterCore(sv: String) =
     mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${jsoniterScalaVersion(sv)}"
   def jsoniterMacros(sv: String) =

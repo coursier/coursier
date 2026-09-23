@@ -524,7 +524,8 @@ trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOn
     util.jvm()
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
-    Deps.jsoniterCore(scalaVersion()), // required alongside scalaCliConfig, given we exclude its version of jsoniter-scala
+    // required alongside scalaCliConfig, given we exclude its version of jsoniter-scala
+    Deps.jsoniterCore(scalaVersion()),
     Deps.scalaCliConfig(scalaVersion()),
     Deps.windowsAnsi
   )
