@@ -1130,7 +1130,7 @@ trait Cli extends CsModule
   def artifactName = "coursier-cli"
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.caseApp,
-    Deps.catsFree213,
+    Deps.catsCore,
     Deps.classPathUtil,
     Deps.collectionCompat,
     Deps.noCrcZis,
