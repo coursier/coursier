@@ -81,7 +81,7 @@ trait CoreJvmBase extends Core with CsCrossJvmModule with Shading with CsMima {
 
   def shadedDependencies = Seq(
     Deps.fastParse,
-    Deps.jsoniterCore,
+    Deps.jsoniterCore(scalaVersion()),
     Deps.pprint
   )
   def validNamespaces = Seq("coursier")
