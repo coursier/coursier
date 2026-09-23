@@ -35,10 +35,13 @@ object Deps {
     mvn"io.get-coursier.jniutils:windows-jni-utils-coursierapi:${Versions.jniUtils}"
   def jol  = mvn"org.openjdk.jol:jol-core:0.17"
   def jsch = mvn"com.github.mwiede:jsch:2.28.7"
-  def jsoniterCore =
-    mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${Versions.jsoniterScala}"
-  def jsoniterMacros =
-    mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${Versions.jsoniterScala}"
+  // The Scala 2 and Scala 3 modules use different jsoniter-scala versions, see Versions.scala
+  private def jsoniterScalaVersion(sv: String) =
+    if (sv.startsWith("3.")) Versions.jsoniterScala else Versions.jsoniterScalaScala2
+  def jsoniterCore(sv: String) =
+    mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-core::${jsoniterScalaVersion(sv)}"
+  def jsoniterMacros(sv: String) =
+    mvn"com.github.plokhotnyuk.jsoniter-scala::jsoniter-scala-macros:${jsoniterScalaVersion(sv)}"
   def jsoup          = mvn"org.jsoup:jsoup:1.23.2"
   def logbackClassic = mvn"ch.qos.logback:logback-classic:1.6.3"
   def macroParadise  = mvn"org.scalamacros:::paradise:2.1.1"

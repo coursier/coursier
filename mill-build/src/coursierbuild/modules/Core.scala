@@ -6,11 +6,11 @@ import mill._
 trait Core extends CsModule with CoursierPublishModule {
   def artifactName = "coursier-core"
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.jsoniterMacros
+    Deps.jsoniterMacros(scalaVersion())
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.fastParse,
-    Deps.jsoniterCore,
+    Deps.jsoniterCore(scalaVersion()),
     Deps.versions
   )
 

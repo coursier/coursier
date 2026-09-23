@@ -524,12 +524,13 @@ trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOn
     util.jvm()
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
-    Deps.jsoniterCore, // required alongside scalaCliConfig, given we exclude its version of jsoniter-scala
+    // required alongside scalaCliConfig, given we exclude its version of jsoniter-scala
+    Deps.jsoniterCore(scalaVersion()),
     Deps.scalaCliConfig(scalaVersion()),
     Deps.windowsAnsi
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.jsoniterMacros,
+    Deps.jsoniterMacros(scalaVersion()),
     Deps.svm
   )
   def customLoaderCp = Task {
@@ -560,7 +561,7 @@ trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOn
         Deps.asyncMvnDeps(crossValue)
     }
     def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-      Deps.jsoniterMacros
+      Deps.jsoniterMacros(scalaVersion())
     )
     def forkEnv = super.forkEnv() ++ Seq(
       "COURSIER_CUSTOMPROTOCOL_BASE" -> PathRef.toResolvedPathString(BuildCtx.workspaceRoot),
@@ -599,7 +600,7 @@ trait ArchiveCache extends ArchiveCacheBase with DataClassModule {
     def moduleDeps = super.moduleDeps ++ Seq(`test-compat`.jvm())
     def mvnDeps    = super.mvnDeps() ++ Deps.asyncMvnDeps(crossValue)
     def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-      Deps.jsoniterMacros
+      Deps.jsoniterMacros(scalaVersion())
     )
   }
 
@@ -967,11 +968,11 @@ trait Install extends CsModule
     launcherModule(cliScalaVersion)
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.jsoniterMacros
+    Deps.jsoniterMacros(scalaVersion())
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.catsCore,
-    Deps.jsoniterCore
+    Deps.jsoniterCore(scalaVersion())
   )
   object test extends SbtTests with CsScalaTests with CsResourcesTests {
     def testDataDir             = tests.shared.testDataDir
@@ -1016,11 +1017,11 @@ trait Jvm extends CrossSbtModule with CsModule
     exec
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.jsoniterMacros,
+    Deps.jsoniterMacros(scalaVersion()),
     Deps.svm
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
-    Deps.jsoniterCore
+    Deps.jsoniterCore(scalaVersion())
   )
   object test extends CrossSbtTests with CsTests with CsResourcesTests {
     def testDataDir             = tests.shared.testDataDir
@@ -1087,11 +1088,11 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
     exec
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.jsoniterMacros
+    Deps.jsoniterMacros(scalaVersion())
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsch,
-    Deps.jsoniterCore,
+    Deps.jsoniterCore(scalaVersion()),
     Deps.osLib,
     Deps.pprint,
     Deps.scodec
@@ -1138,7 +1139,7 @@ trait Cli extends CsModule
     Deps.slf4JNop
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.jsoniterMacros,
+    Deps.jsoniterMacros(scalaVersion()),
     Deps.svm
   )
   def mainClass = Some("coursier.cli.Coursier")
@@ -1290,7 +1291,7 @@ trait CliTests extends CsModule { self =>
     coursier.jvm(cliScalaVersion)
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.jsoniterMacros
+    Deps.jsoniterMacros(scalaVersion())
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.caseApp,
@@ -2382,7 +2383,7 @@ trait CacheServer extends CsModule with CoursierPublishModule with CsMima {
     Deps.undertow
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
-    Deps.jsoniterMacros
+    Deps.jsoniterMacros(scalaVersion())
   )
 
   def mimaPreviousVersions = Task {
