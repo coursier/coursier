@@ -1,4 +1,4 @@
-//| mill-version: 1.2.0-RC1-46-16168f
+//| mill-version: 2.0.0-M2
 //| mill-jvm-version: 21
 
 import com.github.lolgab.mill.mima.{
