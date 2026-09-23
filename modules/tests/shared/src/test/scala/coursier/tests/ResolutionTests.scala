@@ -15,11 +15,12 @@ import coursier.core.{
   Variant,
   VariantSelector
 }
+import coursier.graph.Conflict
 import coursier.maven.MavenRepository
 import coursier.tests.TestUtil._
 import coursier.tests.compatibility._
 import coursier.util.StringInterpolators._
-import coursier.version.VersionConstraint
+import coursier.version.{Version, VersionConstraint}
 import utest._
 
 import coursier.tests.AssertCompat.assert
@@ -1136,6 +1137,72 @@ object ResolutionTests extends TestSuite {
           .withDependencies(Set(dep.withDefaultScope) ++ trDeps.map(_.withDefaultScope))
 
         assert(res == expected)
+      }
+    }
+
+    // A dependency with optional0 = Some(false) should be one and the same as the same dependency
+    // with optional0 = None in the dependency graph, see https://github.com/coursier/coursier/issues/3861
+    test("explicitlyNonOptional") {
+      test("rootAndTransitive") - async {
+        val res = await(resolve0(
+          Seq(
+            dep"acme:play-json:2.4.0".copy(optional0 = Some(false)),
+            dep"acme:play:2.4.1"
+          )
+        ))
+
+        val playJsonDeps    = res.dependencies.filter(_.module == mod"acme:play-json")
+        val playJsonMinDeps = res.minDependencies.filter(_.module == mod"acme:play-json")
+        assert(playJsonDeps.size == 1)
+        assert(playJsonMinDeps.size == 1)
+        assert(playJsonDeps.head.optional0.isEmpty)
+      }
+
+      test("conflicts") - async {
+        val res = await(resolve0(
+          Seq(
+            dep"acme:play:2.4.0".copy(optional0 = Some(false)),
+            dep"acme:play-extra-no-config:2.4.1"
+          )
+        ))
+
+        val playMinDeps = res.minDependencies.filter(_.module == mod"acme:play")
+        assert(playMinDeps.size == 1)
+
+        val conflicts = Conflict(res)
+        val expectedConflicts = Seq(
+          Conflict(
+            mod"acme:play",
+            Version("2.4.1"),
+            VersionConstraint("2.4.0"),
+            wasExcluded = false,
+            mod"acme:play",
+            VersionConstraint("2.4.0")
+          )
+        )
+        assert(conflicts == expectedConflicts)
+      }
+
+      test("subset") - async {
+        val res = await(resolve0(
+          Seq(
+            dep"acme:play-json:2.4.0".copy(optional0 = Some(false)),
+            dep"acme:play:2.4.1"
+          )
+        ))
+
+        val subRes = res
+          .subset0(
+            Seq(
+              dep"acme:play-json:2.4.0".copy(optional0 = Some(false)),
+              dep"acme:play:2.4.1"
+            )
+          )
+          .fold(throw _, identity)
+        val playJsonDeps    = subRes.dependencies.filter(_.module == mod"acme:play-json")
+        val playJsonMinDeps = subRes.minDependencies.filter(_.module == mod"acme:play-json")
+        assert(playJsonDeps.size == 1)
+        assert(playJsonMinDeps.size == 1)
       }
     }
   }
