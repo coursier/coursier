@@ -70,7 +70,7 @@ object Deps {
   def scalafixCore             = mvn"ch.epfl.scala::scalafix-core:0.14.9"
   def scalaJsDom               = mvn"org.scala-js::scalajs-dom::2.4.0"
   def scalaJsReact             = mvn"com.github.japgolly.scalajs-react::core::2.1.4"
-  def scalaNativeTools040      = mvn"org.scala-native::tools:0.4.17"
+  def scalaNativeTools040      = mvn"org.scala-native::tools:0.5.12"
   def scalaReflect(sv: String) = mvn"org.scala-lang:scala-reflect:$sv"
   def scalaXml                 = mvn"org.scala-lang.modules::scala-xml:2.5.0"
   def scalazCore               = mvn"org.scalaz::scalaz-core::${Versions.scalaz}"
