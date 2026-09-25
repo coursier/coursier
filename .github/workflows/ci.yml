@@ -81,6 +81,8 @@ jobs:
             SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
           - OS: "ubuntu-latest"
             SCALA_VERSION: "${{ needs.scala-versions.outputs.scala212 }}"
+    env:
+      DOCKER_TESTS: "docker[_].test.testForked"
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
@@ -98,9 +100,22 @@ jobs:
       if: runner.os == 'Linux'
     # - run: .github/scripts/scala-native-setup.sh
     #   if: runner.os != 'Windows'
+    # The tests of the cross-built modules run in the jobs of their Scala version, the other JVM
+    # tests in the Scala 2.13 jobs, see JvmCiTests in mill-build
+    - name: Select tests
+      run: |
+        jvm_tests="__[$SCALA_VERSION].__:CrossJvmCiTests"
+        if [ "$SCALA_VERSION" = "$SCALA213" ]; then
+          jvm_tests="{$jvm_tests,__:JvmCiTests}"
+        fi
+        echo "JVM_TESTS=$jvm_tests.testForked" >> "$GITHUB_ENV"
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        SCALA213: ${{ needs.scala-versions.outputs.scala213 }}
     # On pull requests, only the tests affected by the changes run, see the script
     - name: Snapshot test inputs at the base commit
-      run: .github/scripts/selective-tests.sh prepare ci.dockerTestSelectors ci.jvmTestSelectors
+      run: .github/scripts/selective-tests.sh prepare "$DOCKER_TESTS" "$JVM_TESTS"
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
@@ -109,7 +124,7 @@ jobs:
     - name: Run Docker tests
       id: docker-tests
       continue-on-error: true
-      run: .github/scripts/selective-tests.sh run ci.dockerTestSelectors -- dockerTests
+      run: .github/scripts/selective-tests.sh run "$DOCKER_TESTS"
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
@@ -118,7 +133,7 @@ jobs:
       id: docker-tests-retry
       if: steps.docker-tests.outcome == 'failure' && matrix.OS == 'macos-15-intel'
       continue-on-error: true
-      run: .github/scripts/selective-tests.sh run ci.dockerTestSelectors -- dockerTests
+      run: .github/scripts/selective-tests.sh run "$DOCKER_TESTS"
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
@@ -136,7 +151,7 @@ jobs:
         (matrix.OS != 'macos-15-intel' || steps.docker-tests-retry.outcome == 'failure')
       run: exit 1
     - name: Run JVM tests
-      run: .github/scripts/selective-tests.sh run ci.jvmTestSelectors -- jvmTests
+      run: .github/scripts/selective-tests.sh run "$JVM_TESTS"
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
@@ -149,6 +164,8 @@ jobs:
     runs-on: ubuntu-latest
     name: JAR launchers
     timeout-minutes: 50
+    env:
+      JAR_LAUNCHER_TESTS: cli-tests.jar-launcher-tests.testForked
     steps:
     - uses: actions/checkout@v7
       with:
@@ -158,7 +175,13 @@ jobs:
       with:
         disableFallback: true
     - run: sudo apt-get install -y nailgun
-    - run: ./mill -i jarLauncherTests
+    # On pull requests, only run if affected by the changes, see the script
+    - name: Snapshot test inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "$JAR_LAUNCHER_TESTS"
+      env:
+        COURSIER_JNI: force
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - run: .github/scripts/selective-tests.sh run "$JAR_LAUNCHER_TESTS"
       env:
         COURSIER_JNI: force
 
@@ -166,6 +189,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Scala.js
     timeout-minutes: 30
+    env:
+      JS_TESTS: "__:CsScalaJsTests.testForked"
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
@@ -185,13 +210,12 @@ jobs:
     - run: npm install --ignore-scripts
     # On pull requests, only the tests affected by the changes run, see the script
     - name: Snapshot test inputs at the base commit
-      run: .github/scripts/selective-tests.sh prepare ci.jsTestSelectors
+      run: .github/scripts/selective-tests.sh prepare "$JS_TESTS"
       shell: bash
       env:
         SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-    - run: |
-        ./mill -i -j1 __.js.__.compile
-        .github/scripts/selective-tests.sh run ci.jsTestSelectors -- jsTests
+    # -j1, as compiling the Scala.js modules in parallel is not reliable
+    - run: .github/scripts/selective-tests.sh run -j1 "$JS_TESTS"
       shell: bash
 
   interface-test:
@@ -203,6 +227,9 @@ jobs:
       fail-fast: false
       matrix:
         SCALA_VERSION: ${{ fromJSON(needs.scala-versions.outputs.scala-versions) }}
+    env:
+      # `interface` is built with Scala 2.13 only, its tests run whatever the Scala version is
+      INTERFACE_TESTS: "{interface,interface-test[${{ matrix.SCALA_VERSION }}]}.test.testForked"
     steps:
     - uses: actions/checkout@v7
       with:
@@ -213,11 +240,11 @@ jobs:
         disableFallback: true
     # On pull requests, only the tests affected by the changes run, see the script
     - name: Snapshot test inputs at the base commit
-      run: .github/scripts/selective-tests.sh prepare ci.interfaceTestSelectors
+      run: .github/scripts/selective-tests.sh prepare "$INTERFACE_TESTS"
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
-    - run: .github/scripts/selective-tests.sh run ci.interfaceTestSelectors -- interfaceTests --scalaVersion "$SCALA_VERSION"
+    - run: .github/scripts/selective-tests.sh run "$INTERFACE_TESTS"
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
     - name: Test published dependencies

@@ -271,13 +271,13 @@ object `bootstrap-launcher` extends BootstrapLauncher { self =>
   def proguardClassPath = Task {
     proguard.runClasspath()
   }
-  object test extends SbtTests with CsTests {
+  object test extends SbtTests with CsTests with JvmCiTests {
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.collectionCompat,
       Deps.java8Compat
     )
   }
-  object it extends SbtTests with CsTests {
+  object it extends SbtTests with CsTests with JvmCiTests {
     def sources = Task.Sources(
       os.sub / "src/it/scala",
       os.sub / "src/it/java"
@@ -369,7 +369,7 @@ object install extends Install
 object docker extends Cross[Docker](Seq(ScalaVersions.scala3))
 
 object cli extends Cli {
-  object test extends SbtTests with CsTests with CsResourcesTests {
+  object test extends SbtTests with CsTests with CsResourcesTests with JvmCiTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
@@ -476,7 +476,7 @@ trait CoreJvm extends Core with CoreJvmBase with Shading with DataClassModule
     Deps.scalaXml
   )
   def commitHash = `build-util`.commitHash
-  object test extends CrossSbtTests with CsTests {
+  object test extends CrossSbtTests with CsTests with CrossJvmCiTests {
     def sources = Task {
       super.sources() ++ core.shared.testSources()
     }
@@ -537,7 +537,7 @@ trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOn
   def customLoaderCp = Task {
     `custom-protocol-for-test`.runClasspath()
   }
-  object test extends CacheJvmBaseTests with CsTests {
+  object test extends CacheJvmBaseTests with CsTests with CrossJvmCiTests {
     def sources = Task {
       super.sources() ++ cache.shared.testSources()
     }
@@ -638,7 +638,7 @@ trait Launcher extends LauncherBase with DataClassModule {
   def noProguardBootstrap         = `bootstrap-launcher`.assembly()
   def noProguardResourceBootstrap = `bootstrap-launcher`.resourceAssembly()
 
-  object test extends CrossSbtTests with CsTests
+  object test extends CrossSbtTests with CsTests with CrossJvmCiTests
 }
 
 trait Env extends CrossSbtModule with CsModule
@@ -651,7 +651,7 @@ trait Env extends CrossSbtModule with CsModule
     Deps.collectionCompat,
     Deps.jniUtils
   )
-  object test extends CrossSbtTests with CsTests {
+  object test extends CrossSbtTests with CsTests with CrossJvmCiTests {
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.jimfs
     )
@@ -659,7 +659,6 @@ trait Env extends CrossSbtModule with CsModule
 }
 
 def cliScalaVersion = ScalaVersions.scala3
-def launcherModule  = launcher
 // Lowest JVM release the latest Scala 3 can emit bytecode for: Scala 3.8+
 // only accepts 17 and later, so the modules compiled with cliScalaVersion
 // cannot target an earlier one.
@@ -671,7 +670,7 @@ trait LauncherNative04 extends CsModule
   def scalaVersion = cliScalaVersion
   def artifactName = "coursier-launcher-native_0.4"
   def compileModuleDeps = Seq(
-    launcherModule(cliScalaVersion)
+    build.launcher(cliScalaVersion)
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalaNativeTools040
@@ -691,7 +690,7 @@ trait CoursierJvm extends CoursierJvmBase with DataClassModule
     cache.jvm()
   )
   // Put CoursierTests right after TestModule, and see what happens
-  object test extends CrossSbtTests with CoursierTests with CsResourcesTests {
+  object test extends CrossSbtTests with CoursierTests with CsResourcesTests with CrossJvmCiTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
@@ -711,7 +710,7 @@ trait CoursierJvm extends CoursierJvmBase with DataClassModule
       )
     }
   }
-  object it extends CrossSbtTests with CoursierTests {
+  object it extends CrossSbtTests with CoursierTests with CrossJvmCiTests {
     def sources = Task.Sources(
       os.sub / "src/it/scala",
       os.sub / "src/it/java"
@@ -772,7 +771,7 @@ trait TestsJvm extends TestsModule with CsCrossJvmModule { self =>
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoup
   )
-  object test extends CrossSbtTests with CsTests with CsResourcesTests {
+  object test extends CrossSbtTests with CsTests with CsResourcesTests with CrossJvmCiTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
@@ -795,7 +794,7 @@ trait TestsJvm extends TestsModule with CsCrossJvmModule { self =>
       )
     }
   }
-  object it extends CrossSbtTests with CsScalaTests with CsResourcesTests {
+  object it extends CrossSbtTests with CsScalaTests with CsResourcesTests with CrossJvmCiTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
@@ -882,7 +881,7 @@ trait ScalazJvm extends Scalaz with CsCrossJvmModule with CsMima {
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalazConcurrent
   )
-  object test extends CrossSbtTests with CsTests with CsResourcesTests {
+  object test extends CrossSbtTests with CsTests with CsResourcesTests with CrossJvmCiTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
@@ -910,7 +909,7 @@ trait CatsJvm extends Cats with CsCrossJvmModule with CsMima {
   def moduleDeps = Seq(
     cache.jvm()
   )
-  object test extends CrossSbtTests with CsTests with CsResourcesTests {
+  object test extends CrossSbtTests with CsTests with CsResourcesTests with CrossJvmCiTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
@@ -966,7 +965,7 @@ trait Install extends CsModule
     coursier.jvm(cliScalaVersion),
     env(cliScalaVersion),
     jvm(cliScalaVersion),
-    launcherModule(cliScalaVersion)
+    build.launcher(cliScalaVersion)
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.jsoniterMacros(scalaVersion())
@@ -1024,7 +1023,7 @@ trait Jvm extends CrossSbtModule with CsModule
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoniterCore(scalaVersion())
   )
-  object test extends CrossSbtTests with CsTests with CsResourcesTests {
+  object test extends CrossSbtTests with CsTests with CsResourcesTests with CrossJvmCiTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
@@ -1126,7 +1125,7 @@ trait Cli extends CsModule
     install,
     jvm(cliScalaVersion),
     docker(cliScalaVersion),
-    launcherModule(cliScalaVersion),
+    build.launcher(cliScalaVersion),
     `cache-server`
   )
   def artifactName = "coursier-cli"
@@ -1332,12 +1331,15 @@ trait CliTests extends CsModule { self =>
       s"-Dcoursier-test.jni-utils-version=${Deps.jniUtils.dep.versionConstraint.asString}"
     )
   }
-  object test extends SbtTests with CsTests {
+  object test extends SbtTests with CsTests with JvmCiTests {
     def compileMvnDeps = super.compileMvnDeps() ++ Seq(Deps.svm)
     def forkEnv = Task {
       super.forkEnv() ++ Seq(cli.csInPathForkEnv())
     }
     def forkArgs = Task {
+      // `cs bootstrap --native` loads coursier-launcher-native_0.4 at run time, from the local
+      // Ivy repository
+      `launcher-native_04`.publishLocalCached()
       super.forkArgs() ++ sharedTestArgs ++ Seq(
         s"-Dcoursier-test-launcher=${PathRef.toResolvedPathString(cli.launcher().path)}",
         s"-Dcoursier-test-assembly=${PathRef.toResolvedPathString(cli.assembly().path)}",
@@ -1842,146 +1844,6 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command 
   )
 }
 
-/** The module of `cross` for Scala version `sv`
-  *
-  * Unlike `cross.valuesToModules.get(List(sv))`, this fails rather than yielding no module when
-  * `cross` isn't cross-built for `sv`. A silent miss means the tests of that module simply don't
-  * run, and the CI job for that Scala version goes green without them - which is how the Scala 3
-  * `interface-test` tests went unnoticed as never running.
-  */
-def crossModule[M <: Cross.Module[?]](cross: Cross[M], sv: String): M =
-  cross.valuesToModules.getOrElse(
-    List(sv),
-    sys.error(
-      s"${cross.moduleSegments.render} is not cross-built for Scala $sv " +
-        cross.valuesToModules.keys.map(_.mkString(", ")).mkString("(cross values: ", " / ", ")")
-    )
-  )
-
-/** Like `crossModule`, for the modules that are deliberately cross-built for `versions` only */
-def crossModuleIn[M <: Cross.Module[?]](
-  cross: Cross[M],
-  sv: String,
-  versions: Seq[String]
-): Option[M] =
-  if (versions.contains(sv)) Some(crossModule(cross, sv))
-  else None
-
-// The *TestTasks methods below list the test tasks that the CI test commands run. `ci.*TestSelectors`
-// print their selectors, so that the CI can hand them to Mill's selective execution one by one,
-// see .github/scripts/selective-tests.sh: passing the aggregating command to `selective.run` would
-// re-run every test as soon as a single one is affected by a change.
-
-def dockerTestTasks: Seq[Task.Named[?]] =
-  Seq(crossModule(docker, ScalaVersions.scala3).test.testForked())
-
-def dockerTests(): Task.Command[Unit] = {
-  val tasks = dockerTestTasks
-
-  Task.Command[Unit] {
-    Task.sequence(tasks.map(_.map(_ => ())))()
-
-    ()
-  }
-}
-
-def defaultScalaVersion = {
-  val isCI = System.getenv("CI") != null
-  val fromEnvOpt =
-    if (isCI) Option(System.getenv("SCALA_VERSION"))
-    else None
-  fromEnvOpt.getOrElse(ScalaVersions.scala213)
-}
-
-/** Tasks that `jvmTests` runs before the tests themselves, and that the tests rely on */
-def jvmTestPrerequisites: Seq[Task.Named[?]] = Seq(
-  // required for some tests of `cli-tests`
-  `launcher-native_04`.publishLocal()
-)
-
-def jvmTestTasks(scalaVersion: String): Seq[Task.Named[?]] = {
-
-  def crossTests(sv: String) = Seq(
-    // format: off
-    crossModule(core.jvm     , sv).test.testForked(),
-    crossModule(cache.jvm    , sv).test.testForked(),
-    crossModule(coursier.jvm , sv).test.testForked(),
-    crossModule(tests.jvm    , sv).test.testForked()
-    // format: on
-  ) ++ Seq(
-    // these modules aren't cross-built for Scala 2.12, see ScalaVersions
-    // format: off
-    crossModuleIn(env      , sv, ScalaVersions.allButScala212).map(_.test.testForked()),
-    crossModuleIn(jvm      , sv, ScalaVersions.allButScala212).map(_.test.testForked()),
-    crossModuleIn(launcher , sv, ScalaVersions.allButScala212).map(_.test.testForked()),
-    // install isn't cross-built (Scala 3 only), its tests run along with the Scala 3 ones
-    Option.when(sv == ScalaVersions.scala3)(install.test.testForked()),
-    // the cats and scalaz interop modules are cross-built for Scala 2.13 only
-    crossModuleIn(interop.scalaz.jvm , sv, Seq(ScalaVersions.scala213)).map(_.test.testForked()),
-    crossModuleIn(interop.cats.jvm   , sv, Seq(ScalaVersions.scala213)).map(_.test.testForked())
-    // format: on
-  ).flatten
-
-  def crossIts(sv: String) = Seq(
-    // format: off
-    crossModule(coursier.jvm , sv).it.testForked(),
-    crossModule(tests.jvm    , sv).it.testForked()
-    // format: on
-  )
-
-  val nonCrossTests = Seq(
-    // format: off
-    `bootstrap-launcher` .test .testForked(),
-    `bootstrap-launcher` .it   .testForked(),
-    cli                  .test .testForked(),
-    `cli-tests`          .test .testForked()
-    // format: on
-  )
-
-  val extraTests =
-    if (Properties.isWin) Nil
-    else
-      Seq(
-        simpleNative04CliTest()
-      )
-
-  val scalaVersions =
-    if (scalaVersion == "*") ScalaVersions.all
-    else Seq(scalaVersion)
-
-  nonCrossTests ++
-    // extraTests ++ // disabled for now (issues on GitHub actions)
-    scalaVersions.flatMap { sv =>
-      crossTests(sv) ++ crossIts(sv)
-    }
-}
-
-def jvmTests(scalaVersion: String = defaultScalaVersion) = {
-  val tasks = jvmTestPrerequisites ++ jvmTestTasks(scalaVersion)
-
-  Task.Command {
-    Task.sequence(tasks.map(_.map(_ => ())))()
-
-    ()
-  }
-}
-
-def jsTestTasks: Seq[Task.Named[?]] = Seq(
-  core.js.test.testForked(),
-  coursier.js.test.testForked(),
-  tests.js.test.testForked()
-)
-
-def jsTests() = {
-  val tasks = jsTestTasks
-
-  Task.Command[Unit] {
-    Task.sequence(tasks.map(_.map(_ => ())))()
-
-    ()
-  }
-}
-
 def nativeTests() = Task.Command[Unit] {
   `cli-tests`.`native-tests`.testForked()()
 }
@@ -2040,13 +1902,6 @@ def nativeContainerTests() = Task.Command[Unit] {
 
 def standaloneJvmTests() = Task.Command[Unit] {
   `cli-tests`.`standalone-jvm-tests`.testForked()()
-}
-
-/** Runs the CLI test suite against `coursier` and `coursier.jar` launchers built the way the
-  * released ones are, see [[Cli.localPublishRepo]]
-  */
-def jarLauncherTests() = Task.Command[Unit] {
-  `cli-tests`.`jar-launcher-tests`.testForked()()
 }
 
 def csShTests(version: String = "") = Task.Command[Unit] {
@@ -2139,36 +1994,6 @@ object ci extends Module {
       )
     }
   }
-
-  /** The tasks of a CI test command, as JSON, for selective execution
-    *
-    * `prerequisites` are run unconditionally, `tests` are handed to `selective.run`. Printed by
-    * `./mill show ci.jvmTestSelectors` and the like, and read by
-    * `.github/scripts/selective-tests.sh`.
-    */
-  private def testSelectors(
-    tests: Seq[Task.Named[?]],
-    prerequisites: Seq[Task.Named[?]] = Nil
-  ): Map[String, Seq[String]] =
-    Map(
-      "prerequisites" -> prerequisites.map(mill.api.TaskSelector.render),
-      "tests"         -> tests.map(mill.api.TaskSelector.render)
-    )
-
-  def dockerTestSelectors() = Task.Command[Map[String, Seq[String]]] {
-    testSelectors(dockerTestTasks)
-  }
-  def jvmTestSelectors(scalaVersion: String = defaultScalaVersion) =
-    Task.Command[Map[String, Seq[String]]] {
-      testSelectors(jvmTestTasks(scalaVersion), jvmTestPrerequisites)
-    }
-  def jsTestSelectors() = Task.Command[Map[String, Seq[String]]] {
-    testSelectors(jsTestTasks)
-  }
-  def interfaceTestSelectors(scalaVersion: String = defaultScalaVersion) =
-    Task.Command[Map[String, Seq[String]]] {
-      testSelectors(interfaceTestTasks(scalaVersion))
-    }
 
   /** The Scala versions the build uses, as JSON
     *
@@ -2735,29 +2560,6 @@ trait InterfaceTest extends CrossSbtModule with CsModule with DependsOnInterface
         .mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(s"-Dcoursier-interface.test-classpath=$classPath")
     }
-  }
-}
-
-def interfaceTestTasks(scalaVersion: String): Seq[Task.Named[?]] = {
-
-  def crossTests(sv: String) =
-    Seq(crossModule(`interface-test`, sv).test.testForked())
-
-  val scalaVersions =
-    if (scalaVersion == "*") ScalaVersions.all
-    else Seq(scalaVersion)
-
-  // `interface` is built with Scala 2.13 only, its tests are run whatever `scalaVersion` is
-  interface.test.testForked() +: scalaVersions.flatMap(crossTests)
-}
-
-def interfaceTests(scalaVersion: String = defaultScalaVersion) = {
-  val tasks = interfaceTestTasks(scalaVersion)
-
-  Task.Command {
-    Task.sequence(tasks.map(_.map(_ => ())))()
-
-    ()
   }
 }
 

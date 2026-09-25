@@ -52,18 +52,24 @@ Prefer minimal, local, reversible changes and follow existing patterns.
 
 ## Test commands
 
-- Run all JVM aggregate tests:
-  - `./mill -i jvmTests`
-- Run JVM aggregate tests for one Scala version:
-  - `./mill -i jvmTests --scalaVersion 2.13.16`
-- Run all Scala.js aggregate tests:
-  - `./mill -i jsTests`
-- On pull requests, the CI only runs the tests affected by the changes, through
-  `.github/scripts/selective-tests.sh` and the `ci.*TestSelectors` commands of `build.mill`
-  (Mill selective execution). A new test module reaches the CI by being added to the
-  `*TestTasks` methods of `build.mill`, next to the existing ones.
+- There are no commands aggregating test tasks: the CI selects test modules with Mill type
+  selectors on marker traits of `mill-build` (`JvmCiTests`, `CrossJvmCiTests`), so that Mill's
+  selective execution can skip the unaffected ones on pull requests
+  (`.github/scripts/selective-tests.sh`). A new JVM test module reaches the CI by extending
+  `CrossJvmCiTests` (under a cross module, runs in the job of its Scala version) or
+  `JvmCiTests` (otherwise, runs in the Scala 2.13 jobs).
+- Run the JVM tests the CI runs for Scala 2.13:
+  - `./mill -i '{__[2.13.18].__:CrossJvmCiTests,__:JvmCiTests}.testForked'`
+- Run the JVM tests of the cross-built modules for another Scala version:
+  - `./mill -i '__[2.12.21].__:CrossJvmCiTests.testForked'`
+- Run all Scala.js tests:
+  - `./mill -i -j1 '__:CsScalaJsTests.testForked'`
 - Run docker-focused tests:
-  - `./mill -i dockerTests`
+  - `./mill -i 'docker[_].test.testForked'`
+- Only run the tests affected by local changes (like the CI does for pull requests):
+  - `export COURSIER_SELECTIVE_TESTING=true` (fixed version, see `CoursierPublishModule`)
+  - `./mill selective.prepare '<selector>'` before the changes
+  - `./mill selective.run '<selector>'` after them (`selective.resolve` only lists them)
 - Run native-launcher tests:
   - `./mill -i nativeTests`
 - Run the `cs.sh` launcher script tests:
@@ -91,11 +97,11 @@ Notes:
 
 - Scala/JVM code changes:
   - `./mill __.compile`
-  - `./mill -i jvmTests --scalaVersion 2.13.16`
+  - `./mill -i '{__[2.13.18].__:CrossJvmCiTests,__:JvmCiTests}.testForked'`
 - Scala.js code changes:
   - `npm install --ignore-scripts`
   - `./mill -i -j1 __.js.__.compile`
-  - `./mill -i jsTests`
+  - `./mill -i -j1 '__:CsScalaJsTests.testForked'`
 - Docs changes:
   - `./mill -i docs.mdoc`
   - `./mill -i docs.mkdocsBuild`

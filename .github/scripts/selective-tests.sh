@@ -4,22 +4,23 @@
 #
 # Mill snapshots the inputs of the requested tasks (sources, `Task.Input` values, and the code
 # signature of the build methods) at the base commit of a pull request, and only runs the tests
-# that transitively depend on something that changed since then.
+# that transitively depend on something that changed since then. Tests that don't exist at the
+# base commit count as changed.
 #
 # Usage:
-#   selective-tests.sh prepare <selectors command>...
-#   selective-tests.sh run <selectors command> -- <Mill command running all the tests> [args]...
+#   selective-tests.sh prepare <selector>...
+#   selective-tests.sh run [Mill option]... <selector>
+#
+# Selectors are Mill task selectors of test tasks, like `__:CsScalaJsTests.testForked` (see the
+# `*CiTests` traits in mill-build). They must list the test tasks themselves: a command
+# depending on several test tasks would be re-run, along with all of these tests, as soon as a
+# single one of them is affected by a change.
 #
 # `prepare` must run once per job, before any `run`. It checks out the base commit of the pull
-# request, snapshots the inputs of the tests listed by the selectors commands, and checks out the
-# pull request again. When selective execution can't be used - the build isn't a pull request
-# build, the pull request changes the Mill version, or the base commit doesn't have the selectors
-# commands - `run` falls back to the command given after `--`, and all the tests run.
-#
-# Selectors commands are the `ci.*TestSelectors` commands of build.mill: they print the tasks that
-# the corresponding `*Tests` command runs, so that the tests can be handed to `selective.run` one by
-# one. Passing the `*Tests` command itself to `selective.run` would re-run every test as soon as
-# a single one is affected by a change.
+# request, snapshots the inputs of the tests of all the selectors, and checks out the pull request
+# again. When selective execution can't be used - the build isn't a pull request build, the pull
+# request changes the Mill version, or the selectors can't be resolved at the base commit - `run`
+# runs all the tests of its selector.
 #
 # Environment:
 #   SELECTIVE_TESTS_BASE_SHA  base commit of the pull request (empty or unset otherwise)
@@ -45,28 +46,15 @@ snapshot="$out_dir/mill-selective-execution.json"
 # our own copy of it, so that several `run`s can follow a single `prepare`
 saved_snapshot="$out_dir/ci-selective-execution.json"
 
-# Prints the tasks under the given key ("prerequisites" or "tests") of a selectors command
-selectors() {
-  local cmd="$1"
-  local key="$2"
-  "$MILL" -i --ticker false show "$cmd" | jq -r ".${key}[]"
-}
-
-read_lines_into() {
-  local -n arr="$1"
-  arr=()
-  while IFS= read -r line; do
-    if [ -n "$line" ]; then
-      arr+=("$line")
-    fi
-  done
-}
-
-# Joins tasks into a single `{a,b,c}` selector: the `selective.*` commands only take
+# Joins selectors into a single `{a,b,c}` one: the `selective.*` commands only take
 # their first positional argument into account, extra ones are silently dropped.
 brace_selector() {
-  local IFS=","
-  echo "{$*}"
+  if [ "$#" -eq 1 ]; then
+    echo "$1"
+  else
+    local IFS=","
+    echo "{$*}"
+  fi
 }
 
 prepare() {
@@ -100,24 +88,10 @@ prepare() {
   git submodule update --init --quiet
 
   local ok=true
-  local tasks=()
-  local cmd_tasks=()
-  local list
-  for cmd in "$@"; do
-    if list="$(selectors "$cmd" tests)"; then
-      read_lines_into cmd_tasks <<< "$list"
-      tasks+=("${cmd_tasks[@]}")
-    else
-      # the base commit doesn't have the selectors command, most likely
-      ok=false
-      break
-    fi
-  done
-
-  if $ok && [ "${#tasks[@]}" -gt 0 ]; then
-    if ! "$MILL" -i selective.prepare "$(brace_selector "${tasks[@]}")"; then
-      ok=false
-    fi
+  # fails if a selector can't be resolved at the base commit, like when it relies on a trait
+  # the pull request adds
+  if ! "$MILL" -i selective.prepare "$(brace_selector "$@")"; then
+    ok=false
   fi
 
   git checkout --quiet "$head"
@@ -132,52 +106,35 @@ prepare() {
 }
 
 run() {
-  local cmd="$1"
-  shift
-  if [ "${1:-}" != "--" ]; then
-    echo "Usage: $0 run <selectors command> -- <Mill command running all the tests> [args]..." >&2
+  if [ "$#" -eq 0 ]; then
+    echo "Usage: $0 run [Mill option]... <selector>" >&2
     exit 1
   fi
-  shift
-  local fallback=("$@")
+  local selector="${!#}"
+  local mill_opts=("${@:1:$#-1}")
+  # `${a[@]+"${a[@]}"}`: with `set -u`, bash < 4.4 (macOS) rejects "${a[@]}" for an empty array
 
   if [ ! -f "$saved_snapshot" ]; then
     echo "Running all tests"
-    "$MILL" -i "${fallback[@]}"
+    "$MILL" -i ${mill_opts[@]+"${mill_opts[@]}"} "$selector"
     return
   fi
-
-  # `set -e` makes a failure of the selectors command fatal here
-  local list
-  local prerequisites=()
-  list="$(selectors "$cmd" prerequisites)"
-  read_lines_into prerequisites <<< "$list"
-  for task in "${prerequisites[@]}"; do
-    "$MILL" -i "$task"
-  done
-
-  local tests=()
-  list="$(selectors "$cmd" tests)"
-  read_lines_into tests <<< "$list"
-  if [ "${#tests[@]}" -eq 0 ]; then
-    echo "No tests to run"
-    return
-  fi
-
-  local selector
-  selector="$(brace_selector "${tests[@]}")"
 
   cp "$saved_snapshot" "$snapshot"
   echo "Inputs that changed since the base commit:"
   "$MILL" -i --ticker false selective.resolveChanged "$selector" || true
   echo "Tests affected by those changes:"
   "$MILL" -i --ticker false selective.resolve "$selector"
-  "$MILL" -i selective.run "$selector"
+  "$MILL" -i ${mill_opts[@]+"${mill_opts[@]}"} selective.run "$selector"
 }
 
 case "${1:-}" in
   prepare)
     shift
+    if [ "$#" -eq 0 ]; then
+      echo "Usage: $0 prepare <selector>..." >&2
+      exit 1
+    fi
     prepare "$@"
     ;;
   run)
@@ -185,7 +142,7 @@ case "${1:-}" in
     run "$@"
     ;;
   *)
-    echo "Usage: $0 prepare <selectors command>... | run <selectors command> -- <Mill command> [args]..." >&2
+    echo "Usage: $0 prepare <selector>... | run [Mill option]... <selector>" >&2
     exit 1
     ;;
 esac
