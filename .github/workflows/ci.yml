@@ -305,6 +305,10 @@ jobs:
   publish-nightly:
     name: Publish nightly
     if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
+    # to publish to GitHub Packages
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/publish.yml
     secrets: inherit
 
@@ -321,6 +325,10 @@ jobs:
       - "format"
       - "scalafix"
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    # to publish to GitHub Packages
+    permissions:
+      contents: read
+      packages: write
     uses: ./.github/workflows/publish.yml
     secrets: inherit
 
