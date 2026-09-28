@@ -24,28 +24,41 @@ jobs:
       # 'interface-v*' tag sits on the same commit (they are left out of the release otherwise)
       - name: Check publish versions
         run: ./mill -i ci.checkPublishVersions
-      - name: Publish
+      - name: Select artifacts to publish
+        run: |
+          # LocalOnlyPublishModule modules are never published to remote repositories. On tags,
+          # the interface modules are versioned from the 'interface-v*' tags: with no such tag on
+          # this commit, they are snapshots, and get left out of the release too.
+          if [[ "$GITHUB_REF" == refs/tags/* ]] && [ -z "$(git tag -l 'interface-v*' --points-at HEAD)" ]; then
+            echo "PUBLISH_ARTIFACTS=__:PublishModule:^InterfacePublishModule:^LocalOnlyPublishModule.publishArtifacts" >> "$GITHUB_ENV"
+          else
+            echo "PUBLISH_ARTIFACTS=__:PublishModule:^LocalOnlyPublishModule.publishArtifacts" >> "$GITHUB_ENV"
+          fi
+      - name: Publish to Sonatype Central
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            # the interface modules are versioned from the 'interface-v*' tags: with no such tag
-            # on this commit, they are snapshots, and get left out of the release (like the
-            # LocalOnlyPublishModule ones, that ci.publishSonatypeCentral leaves out by default)
-            if [ -z "$(git tag -l 'interface-v*' --points-at HEAD)" ]; then
-              PUBLISH_ARTIFACTS_OPTS=(--publishArtifacts '__:PublishModule:^InterfacePublishModule:^LocalOnlyPublishModule.publishArtifacts')
-            else
-              PUBLISH_ARTIFACTS_OPTS=()
-            fi
             # --shouldRelease false: the bundle is uploaded and validated on Sonatype Central, but has
             # to be published manually from https://central.sonatype.com/publishing/deployments
-            ./mill -i ci.publishSonatypeCentral "${PUBLISH_ARTIFACTS_OPTS[@]}" --bundleName "coursier-${GITHUB_REF#refs/tags/v}" --shouldRelease false
+            ./mill -i ci.publishSonatypeCentral --publishArtifacts "$PUBLISH_ARTIFACTS" --bundleName "coursier-${GITHUB_REF#refs/tags/v}" --shouldRelease false
           else
-            for tag in $(git tag --points-at HEAD); do
-              git tag -d "$tag"
-            done
-            ./mill -i ci.publishSonatypeCentral
+            ./mill -i ci.publishSonatypeCentral --publishArtifacts "$PUBLISH_ARTIFACTS"
           fi
         env:
           MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}
           MILL_PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
           MILL_SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           MILL_SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+      # Same artifacts, snapshots included, to https://github.com/orgs/coursier/packages
+      # (needs the 'packages: write' permission, granted by the calling jobs in ci.yml).
+      # Best effort: Sonatype Central is the source of truth, so a failure here shouldn't hold
+      # back the jobs uploading launchers and bumping versions after a release.
+      - name: Publish to GitHub Packages
+        continue-on-error: true
+        run: |
+          ./mill -i mill.javalib.MavenPublishModule/publishAll \
+            --publishArtifacts "$PUBLISH_ARTIFACTS" \
+            --releaseUri "https://maven.pkg.github.com/$GITHUB_REPOSITORY" \
+            --snapshotUri "https://maven.pkg.github.com/$GITHUB_REPOSITORY"
+        env:
+          MILL_MAVEN_USERNAME: ${{ github.actor }}
+          MILL_MAVEN_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
