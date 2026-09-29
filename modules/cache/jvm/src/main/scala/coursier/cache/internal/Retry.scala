@@ -6,13 +6,19 @@ import java.util.concurrent.TimeUnit.MILLISECONDS
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import scala.annotation.tailrec
 
+import coursier.cache.CacheDefaults
+
 /** Retries around the blocking parts of the cache.
   *
   * Three rather different things share this loop, and they want different delays, and different
   * budgets:
   *
-  *   - an attempt that *failed* (an SSL error, a 503, a read timeout, …) is worth backing off from,
-  *     exponentially, up to `maxDelay`, for `count` attempts;
+  *   - an attempt that *failed* (an SSL error, a read timeout, …) is worth backing off from,
+  *     exponentially, up to `maxDelay`, for `count` attempts. One that the server answered with an
+  *     error worth trying again (a 503, a 408, …) is too, from the same budget of attempts, but
+  *     starting from `httpInitialDelay` and up to `httpMaxDelay`, like curl's `--retry` does: a
+  *     server that is down or overloaded doesn't come back in the milliseconds a dropped connection
+  *     can;
   *   - an attempt that has *no answer yet* - typically one waiting on a download another thread of
   *     this JVM has in flight - only needs to be polled again, so its delay is kept under
   *     `maxPollDelay`. Backing off exponentially there means sleeping through the moment the
@@ -32,7 +38,9 @@ final case class Retry(
   delayMultiplier: Double,
   maxDelay: Option[FiniteDuration] = None,
   maxPollDelay: Option[FiniteDuration] = None,
-  maxThrottleWait: Option[FiniteDuration] = None
+  maxThrottleWait: Option[FiniteDuration] = None,
+  httpInitialDelay: FiniteDuration = CacheDefaults.httpRetryBackoffInitialDelay,
+  httpMaxDelay: Option[FiniteDuration] = CacheDefaults.httpRetryBackoffMaxDelay
 ) {
 
   /** The delay for the attempt after this one, kept under `max`
@@ -65,6 +73,7 @@ final case class Retry(
     def loop(
       attempt: Int,
       failureDelay: FiniteDuration,
+      httpFailureDelay: FiniteDuration,
       pollDelay: FiniteDuration,
       throttleDeadline: Option[Long]
     ): T = {
@@ -82,11 +91,33 @@ final case class Retry(
           // nothing failed, there is only something to wait for, so the attempt count is left
           // alone: polling shouldn't eat the budget meant for actual failures
           Thread.sleep(pollDelay.toMillis)
-          loop(attempt, failureDelay, next(pollDelay, maxPollDelay), throttleDeadline)
+          loop(
+            attempt,
+            failureDelay,
+            httpFailureDelay,
+            next(pollDelay, maxPollDelay),
+            throttleDeadline
+          )
         case Left(Retry.Attempt(Retry.Failed(forcedDelayOpt), ex)) =>
           if (attempt >= count) throw ex
           Thread.sleep(forcedDelayOpt.getOrElse(failureDelay).toMillis)
-          loop(attempt + 1, next(failureDelay, maxDelay), pollDelay, throttleDeadline)
+          loop(
+            attempt + 1,
+            next(failureDelay, maxDelay),
+            httpFailureDelay,
+            pollDelay,
+            throttleDeadline
+          )
+        case Left(Retry.Attempt(Retry.HttpFailed(forcedDelayOpt), ex)) =>
+          if (attempt >= count) throw ex
+          Thread.sleep(forcedDelayOpt.getOrElse(httpFailureDelay).toMillis)
+          loop(
+            attempt + 1,
+            failureDelay,
+            next(httpFailureDelay, httpMaxDelay),
+            pollDelay,
+            throttleDeadline
+          )
         case Left(Retry.Attempt(Retry.Throttled(delayOpt), ex)) =>
           // the attempt count is left alone here too - see the class doc
           val deadline =
@@ -96,13 +127,19 @@ final case class Retry(
           // we would, and never come back sooner than the server asked either
           if (deadline.exists(System.nanoTime() + delay.toNanos > _)) throw ex
           Thread.sleep(delay.toMillis)
-          loop(attempt, failureDelay, pollDelay, deadline)
+          loop(attempt, failureDelay, httpFailureDelay, pollDelay, deadline)
         case Left(Retry.Attempt(Retry.GiveUp, ex)) =>
           throw ex
       }
     }
 
-    loop(1, capped(initialDelay, maxDelay), capped(initialDelay, maxPollDelay), None)
+    loop(
+      1,
+      capped(initialDelay, maxDelay),
+      capped(httpInitialDelay, httpMaxDelay),
+      capped(initialDelay, maxPollDelay),
+      None
+    )
   }
 
 }
@@ -116,6 +153,13 @@ object Retry {
 
   /** The attempt failed, and is worth backing off from - for `count` attempts */
   private[internal] final case class Failed(forcedDelay: Option[FiniteDuration]) extends Outcome
+
+  /** The server answered with an error worth trying again, like the ones curl's `--retry` retries
+    *
+    * Spends the same attempts as `Failed`, but backs off in seconds rather than milliseconds.
+    */
+  private[internal] final case class HttpFailed(forcedDelay: Option[FiniteDuration])
+      extends Outcome
 
   /** The attempt was turned away by a working server, which we should come back to in `delay` */
   private[internal] final case class Throttled(delay: Option[FiniteDuration]) extends Outcome

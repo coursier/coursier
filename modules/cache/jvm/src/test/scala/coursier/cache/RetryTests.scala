@@ -42,6 +42,7 @@ object RetryTests extends TestSuite {
   ): FileCache[Task] =
     FileCache[Task]((dir / "cache").toIO).copy(
       retryBackoffInitialDelay = 0.millis,
+      httpRetryBackoffInitialDelay = 0.millis,
       checksums = Seq(None),
       retry = retryCount,
       // its own, so that a pause one test records doesn't hold up the next one
@@ -270,7 +271,7 @@ object RetryTests extends TestSuite {
       // never fail the download itself, only rate limit it - for more attempts than `retryCount`,
       // which under a budget shared with actual failures could only ever end in giving up
       TestretryHandler.reset(failUntil = 0)
-      TestretryHandler.rateLimitUntilConnection = retryCount + 3
+      TestretryHandler.transientErrorUntilConnection = retryCount + 3
 
       withTmpDir { dir =>
         val result = get(fileCache(dir, maxThrottleWait = 30.seconds), artifact)
@@ -308,7 +309,7 @@ object RetryTests extends TestSuite {
 
     test("stop if server keeps returning 5xx") {
       TestretryHandler.reset()
-      TestretryHandler.responseCode = 501
+      TestretryHandler.responseCode = 503
 
       withTmpDir { dir =>
         val result = get(dir)
@@ -316,9 +317,116 @@ object RetryTests extends TestSuite {
         assert(TestretryHandler.attempts.get() == retryCount)
         result match {
           case Left(e: ArtifactError.InternalServerError) =>
+            assert(e.responseCode == 503)
           case other =>
             throw new Exception(s"Unexpected result: $other", other.left.toOption.orNull)
         }
+      }
+    }
+
+    test("retry on the same HTTP 5xx as curl") {
+      for (code <- Seq(500, 502, 503, 504, 522, 524)) {
+        TestretryHandler.reset(failUntil = 0)
+        TestretryHandler.transientResponseCode = code
+        TestretryHandler.transientErrorUntilConnection = retryCount - 1
+
+        withTmpDir { dir =>
+          val result = get(dir)
+          assert(result.isRight)
+          assert(TestretryHandler.connections.get() == retryCount)
+        }
+      }
+    }
+
+    test("don't retry on the HTTP 5xx curl doesn't retry") {
+      for (code <- Seq(501, 505)) {
+        TestretryHandler.reset()
+        TestretryHandler.responseCode = code
+
+        withTmpDir { dir =>
+          val result = get(dir)
+          result match {
+            case Left(e: ArtifactError.InternalServerError) =>
+              assert(e.responseCode == code)
+            case other =>
+              throw new Exception(s"Unexpected result: $other", other.left.toOption.orNull)
+          }
+          assert(TestretryHandler.connections.get() == 1)
+        }
+      }
+    }
+
+    test("retry on HTTP 408") {
+      TestretryHandler.reset(failUntil = 0)
+      TestretryHandler.transientResponseCode = 408
+      TestretryHandler.transientErrorUntilConnection = retryCount - 1
+
+      withTmpDir { dir =>
+        val result = get(dir)
+        assert(result.isRight)
+        assert(TestretryHandler.connections.get() == retryCount)
+      }
+    }
+
+    test("stop if server keeps returning HTTP 408") {
+      TestretryHandler.reset()
+      TestretryHandler.responseCode = 408
+
+      withTmpDir { dir =>
+        val result = get(dir)
+        result match {
+          case Left(_: ArtifactError.RequestTimeout) =>
+          case other =>
+            throw new Exception(s"Unexpected result: $other", other.left.toOption.orNull)
+        }
+        assert(TestretryHandler.connections.get() == retryCount)
+      }
+    }
+
+    test("don't re-send the request with credentials on HTTP 408") {
+      TestretryHandler.reset()
+      TestretryHandler.responseCode = 408
+
+      withTmpDir { dir =>
+        val artifact0 = artifact.copy(
+          authentication = Some(Authentication("user", "pass").copy(optional = true))
+        )
+        val result = get(fileCache(dir), artifact0)
+        assert(result.isLeft)
+        // one request per attempt, and no extra "same request, now with credentials" on top of it
+        assert(TestretryHandler.connections.get() == retryCount)
+      }
+    }
+
+    test("back off from HTTP errors with the HTTP backoff") {
+      TestretryHandler.reset(failUntil = 0)
+      TestretryHandler.transientResponseCode = 503
+      TestretryHandler.transientErrorUntilConnection = 2
+
+      withTmpDir { dir =>
+        val cache   = fileCache(dir).copy(httpRetryBackoffInitialDelay = 200.millis)
+        val start   = System.nanoTime()
+        val result  = get(cache, artifact)
+        val elapsed = (System.nanoTime() - start).nanos
+        assert(result.isRight)
+        assert(TestretryHandler.connections.get() == 3)
+        // 200 ms after the first 503, twice as long after the second one
+        assert(elapsed >= 600.millis)
+      }
+    }
+
+    test("back off from connection errors with the non-HTTP backoff") {
+      TestretryHandler.reset(failUntil = 2)
+
+      withTmpDir { dir =>
+        // far longer than the test could take otherwise, so that it only passes if this isn't used
+        val cache   = fileCache(dir).copy(httpRetryBackoffInitialDelay = 30.seconds)
+        val start   = System.nanoTime()
+        val result  = get(cache, artifact)
+        val elapsed = (System.nanoTime() - start).nanos
+        assert(result.isRight)
+        assert(TestretryHandler.attempts.get() == 3)
+        assert(elapsed < 30.seconds)
       }
     }
   }

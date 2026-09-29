@@ -107,6 +107,28 @@ object CacheDefaults {
   lazy val retryPollMaxDelay: Option[FiniteDuration] =
     maxDelay("coursier.retry-poll-max-delay", defaultRetryPollMaxDelay)
 
+  private def defaultHttpRetryBackoffInitialDelay = 1.second
+  private def defaultHttpRetryBackoffMaxDelay     = 10.minutes
+
+  /** First delay after a server answered with an error worth trying again (a 503, a 408, …)
+    *
+    * The same as curl's `--retry`: a server that is down or overloaded doesn't come back in the
+    * milliseconds a dropped connection can, so this starts far higher than
+    * `retryBackoffInitialDelay`.
+    */
+  lazy val httpRetryBackoffInitialDelay: FiniteDuration =
+    sys.props
+      .get("coursier.http-retry-backoff-initial-delay")
+      .flatMap(s => parseDuration(s).toOption)
+      .collect {
+        case f: FiniteDuration => f
+      }
+      .getOrElse(defaultHttpRetryBackoffInitialDelay)
+
+  /** Ceiling on the delay between attempts the server answered with an error worth trying again */
+  lazy val httpRetryBackoffMaxDelay: Option[FiniteDuration] =
+    maxDelay("coursier.http-retry-backoff-max-delay", defaultHttpRetryBackoffMaxDelay)
+
   private def defaultThrottleInitialDelay = 1.second
   private def defaultThrottleMaxDelay     = 1.minute
 

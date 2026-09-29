@@ -67,7 +67,10 @@ import scala.util.control.NonFatal
     maxThrottleWait: Option[FiniteDuration] = CacheDefaults.maxThrottleWait,
   @unroll
     authRealmOpt: Option[String] = None,
-    rejectNonAuthoritativeResponses: Boolean = false
+    rejectNonAuthoritativeResponses: Boolean = false,
+  @unroll
+    httpRetryBackoffInitialDelay: FiniteDuration = CacheDefaults.httpRetryBackoffInitialDelay,
+    httpRetryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.httpRetryBackoffMaxDelay
 )(implicit
   S: Sync[F]
 ) {
@@ -80,8 +83,53 @@ import scala.util.control.NonFatal
       retryBackoffMultiplier,
       retryBackoffMaxDelay,
       retryPollMaxDelay,
-      maxThrottleWait
+      maxThrottleWait,
+      httpRetryBackoffInitialDelay,
+      httpRetryBackoffMaxDelay
     )
+
+  /** Binary compatibility stub, not meant to be called from source
+    *
+    * The default of `copy`'s implicit parameter list, as coursier 2.1.25 compiled it: code built
+    * against that version calls it, then the `copy` overload with the same fields, when it calls
+    * `copy` without an implicit `Sync` in scope. Its index moves with every field added, and the
+    * compiler only generates the current one, so the former ones have to be kept by hand, with the
+    * fields of their time.
+    */
+  // format: off
+  private[cache] def copy$default$31(
+    artifact: Artifact,
+    cachePolicy: CachePolicy,
+    location: File,
+    actualChecksums: Seq[String],
+    allCredentials: F[Seq[DirectCredentials]],
+    logger: CacheLogger,
+    pool: ExecutorService,
+    ttl: Option[Duration],
+    localArtifactsShouldBeCached: Boolean,
+    followHttpToHttpsRedirections: Boolean,
+    followHttpsToHttpRedirections: Boolean,
+    maxRedirections: Option[Int],
+    sslRetry: Int,
+    sslSocketFactoryOpt: Option[SSLSocketFactory],
+    hostnameVerifierOpt: Option[HostnameVerifier],
+    bufferSize: Int,
+    classLoaders: Seq[ClassLoader],
+    clock: Clock,
+    retryCount: Int,
+    retryBackoffInitialDelay: FiniteDuration,
+    retryBackoffMultiplier: Double,
+    retryBackoffMaxDelay: Option[FiniteDuration],
+    retryPollMaxDelay: Option[FiniteDuration],
+    connectTimeout: Option[FiniteDuration],
+    readTimeout: Option[FiniteDuration],
+    userAgentOpt: Option[String],
+    hostThrottle: HostThrottle,
+    maxThrottleWait: Option[FiniteDuration],
+    authRealmOpt: Option[String],
+    rejectNonAuthoritativeResponses: Boolean
+  ): Sync[F] = S
+  // format: on
 
   private def blockingIO[T](f: => T): F[T] =
     S.schedule(pool)(f)
@@ -371,8 +419,10 @@ import scala.util.control.NonFatal
           Left(new ArtifactError.NonAuthoritative(url))
         else if (respCodeOpt.contains(Downloader.tooManyRequestsResponseCode))
           Left(new ArtifactError.RetryableHttpError(url, respCodeOpt.get, retryAfterOpt))
+        else if (respCodeOpt.contains(Downloader.requestTimeoutResponseCode))
+          Left(new ArtifactError.RequestTimeout(url, Downloader.retryAfter(conn, clock)))
         else if (respCodeOpt.exists(c => c / 100 == 5))
-          // Mark http 500 errors as retryable, to mitigate flakiness
+          // only retried for the codes in CacheUrl.retryableResponseCodes, see downloading below
           Left(
             new ArtifactError.InternalServerError(
               url,
@@ -947,15 +997,14 @@ object Downloader {
   private val httpResponseCodeMessage = ".*HTTP response code: ([0-9]+).*".r
 
   private[internal] def tooManyRequestsResponseCode = 429
+  private def requestTimeoutResponseCode            = 408
 
   private def retryableHttpResponseCode(e: IOException): Option[Int] =
     Option(e.getMessage)
       .collect {
         case httpResponseCodeMessage(responseCode) => responseCode.toInt
       }
-      .filter(responseCode =>
-        responseCode == tooManyRequestsResponseCode || responseCode / 100 == 5
-      )
+      .filter(CacheUrl.retryableResponseCodes)
 
   private def retryAfter(conn: URLConnection, clock: Clock): Option[FiniteDuration] =
     conn match {
@@ -1075,7 +1124,11 @@ object Downloader {
         }
 
         res0.orElse(ifLocked) match {
-          case Some(Left(e: ArtifactError.InternalServerError)) =>
+          case Some(Left(e: ArtifactError.InternalServerError))
+              if CacheUrl.retryableResponseCodes(e.responseCode) =>
+            // throw the exception, so that Retry catches it and can make other attempts
+            throw e
+          case Some(Left(e: ArtifactError.RequestTimeout)) =>
             // throw the exception, so that Retry catches it and can make other attempts
             throw e
           case Some(Left(e: ArtifactError.RetryableHttpError)) =>
@@ -1085,7 +1138,9 @@ object Downloader {
         }
       } {
         case e: ArtifactError.InternalServerError =>
-          Retry.Failed(e.retryAfterOpt.map(retryAfterValue))
+          Retry.HttpFailed(e.retryAfterOpt.map(retryAfterValue))
+        case e: ArtifactError.RequestTimeout =>
+          Retry.HttpFailed(e.retryAfterOpt.map(retryAfterValue))
         case _: ArtifactError.RetryableHttpError =>
           throttleOutcome(hostThrottle, url)
         case _: AccessDeniedException if Properties.isWin => Retry.Failed(None)
@@ -1106,7 +1161,7 @@ object Downloader {
             throttleOutcome(hostThrottle, url)
           }
           else
-            Retry.Failed(None)
+            Retry.HttpFailed(None)
       }
     catch {
       case UnknownProtocol(e, msg0) =>

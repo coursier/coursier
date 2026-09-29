@@ -122,6 +122,17 @@ object ArtifactError {
   // format: on
 
   // format: off
+  /** The server answered with an HTTP 408: it gave up waiting for our request */
+  final class RequestTimeout(
+    val url: String,
+    val retryAfterOpt: Option[FiniteDuration]
+  ) extends ArtifactError(
+    "request timeout",
+    s"$url (HTTP 408)"
+  )
+  // format: on
+
+  // format: off
   final class RetryableHttpError(
     val url: String,
     val responseCode: Int,
