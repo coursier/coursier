@@ -6,7 +6,8 @@ import java.nio.file.{Files, Paths}
 
 import coursier.clitests.util.{DockerTestUtil, TestAuthProxy}
 import utest._
-import scala.util.Properties
+import scala.jdk.CollectionConverters._
+import scala.util.{Properties, Using}
 
 abstract class GetTests extends TestSuite {
 
@@ -159,6 +160,16 @@ abstract class GetTests extends TestSuite {
         val expectedContent = "a\n"
         assert(content == expectedContent)
       }
+
+      // nothing should be written next to local archives that aren't copied to the cache
+      val archiveDir = Paths.get(archiveUrl.toURI).getParent
+      val auxiliaryFiles = Using.resource(Files.list(archiveDir)) { stream =>
+        stream.iterator().asScala
+          .map(_.getFileName.toString)
+          .filter(_.startsWith("."))
+          .toVector
+      }
+      assert(auxiliaryFiles.isEmpty)
     }
 
     test("tgz archive") {
