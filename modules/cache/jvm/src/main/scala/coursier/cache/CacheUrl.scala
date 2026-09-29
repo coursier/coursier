@@ -174,7 +174,15 @@ object CacheUrl {
 
   private def partialContentResponseCode        = 206
   private def invalidPartialContentResponseCode = 416
-  private def tooManyRequestsResponseCode       = 429
+
+  /** The HTTP response codes worth sending the request again for, later
+    *
+    * The same as curl's `--retry`: a request timeout, a rate limit, and the 5xx that say that the
+    * server, or a proxy or CDN in front of it, is down, overloaded, or too slow, rather than that
+    * it can't handle the request at all (like a 501 or a 505 do).
+    */
+  private[cache] val retryableResponseCodes: Set[Int] =
+    Set(408, 429, 500, 502, 503, 504, 522, 524)
 
   /** The timeout in milliseconds, as the `int` `URLConnection` wants (which a long enough duration
     * would otherwise overflow into a negative value it rejects)
@@ -305,12 +313,13 @@ object CacheUrl {
 
   /** Whether the response is a 4xx we may be able to get past by authenticating
     *
-    * 429 is excluded: it means we are being rate limited, not that we need credentials. Re-issuing
-    * the request with authentication only adds a request against a server that just asked us to
-    * slow down, and it happens right away, without any of the backoff the retry loop would apply.
+    * The retryable ones (408 and 429) are excluded: they mean the server timed out waiting for our
+    * request, or is rate limiting us, not that we need credentials. Re-issuing the request with
+    * authentication only adds a request against a server that just asked us to slow down, and it
+    * happens right away, without any of the backoff the retry loop would apply.
     */
   private def maybeNeedsAuthentication(conn: URLConnection): Boolean =
-    responseCode(conn).exists(c => c / 100 == 4 && c != tooManyRequestsResponseCode)
+    responseCode(conn).exists(c => c / 100 == 4 && !retryableResponseCodes(c))
 
   @deprecated("Create a ConnectionBuilder() and call connection() on it instead", "2.0.0")
   def urlConnection(

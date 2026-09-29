@@ -34,20 +34,35 @@ the URL of every file being downloaded.
 
 ## Failed requests
 
-A request that fails - a connection error, a connect or read timeout, an SSL error, or an HTTP 5xx
-response - is retried, with an exponential backoff between attempts. By default, coursier makes up
-to 5 attempts, waiting 10 ms after the first failure and twice as long after each of the next ones,
-up to 20 seconds.
+A request that fails is retried, with an exponential backoff between attempts. By default, coursier
+makes up to 5 attempts in total, whatever made them fail.
+
+A connection error, a connect or read timeout, or an SSL error is retried after 10 ms, then twice as
+long after each of the next failures, up to 20 seconds.
+
+The HTTP responses [curl's `--retry`](https://curl.se/docs/manpage.html#--retry) retries are retried
+too, with the same backoff as curl: 1 second after the first one, twice as long after each of the
+next ones, up to 10 minutes. These are
+
+- 408 (Request Timeout),
+- 500 (Internal Server Error), 502 (Bad Gateway), 503 (Service Unavailable), 504 (Gateway Timeout),
+- 522 (Connection Timed Out) and 524 (A Timeout Occurred), which Cloudflare sends when it can't
+  reach the server behind it.
+
+Other 5xx responses, like 501 (Not Implemented), fail right away. 429 (Too Many Requests) is handled
+separately, see [Rate limiting](#rate-limiting) below.
 
 | Java property | Default | Meaning |
 |---|---|---|
 | `coursier.exception-retry` | `5` | Number of attempts, including the first one. `1` means no retry. |
-| `coursier.exception-retry-backoff-initial-delay` | `10 ms` | Delay before the second attempt |
-| `coursier.exception-retry-backoff-multiplier` | `2.0` | How much the delay grows after each failed attempt |
+| `coursier.exception-retry-backoff-initial-delay` | `10 ms` | Delay before the next attempt, after a connection error |
 | `coursier.exception-retry-backoff-max-delay` | `20 s` | Ceiling on that delay |
+| `coursier.http-retry-backoff-initial-delay` | `1 s` | Delay before the next attempt, after an HTTP error |
+| `coursier.http-retry-backoff-max-delay` | `10 min` | Ceiling on that delay |
+| `coursier.exception-retry-backoff-multiplier` | `2.0` | How much both delays grow after each failed attempt |
 
-A `Retry-After` header on a 503 response is honoured, up to the `COURSIER_MAX_HTTP_RETRY_AFTER`
-limit described below.
+A `Retry-After` header on those HTTP responses is honoured in place of the delay, up to the
+`COURSIER_MAX_HTTP_RETRY_AFTER` limit described below.
 
 ## Rate limiting
 
@@ -165,6 +180,8 @@ val cache = FileCache[Task]().copy(
   retryBackoffInitialDelay = 10.millis,
   retryBackoffMultiplier = 2.0,
   retryBackoffMaxDelay = Some(20.seconds),
+  httpRetryBackoffInitialDelay = 1.second,
+  httpRetryBackoffMaxDelay = Some(10.minutes),
   // rate limiting: the total time one download may spend being told to come back later
   maxThrottleWait = Some(1.minute)
 )

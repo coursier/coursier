@@ -25,12 +25,14 @@ object TestretryHandler {
   var responseCode: Int                    = defaultResponseCode
   var responseHeaders: Map[String, String] = Map.empty
 
-  /** Answer 429 to that many connections, then go back to `responseCode`
+  /** Answer `transientResponseCode` to that many connections, then go back to `responseCode`
     *
-    * A server that rate limits for a while and then lets us through, which is what most of them do
-    *   - and the only way to tell "waited it out" apart from "gave up" from the outside.
+    * A server that rate limits, or fails, for a while and then lets us through, which is what most
+    * of them do - and the only way to tell "waited it out" apart from "gave up" from the outside.
     */
-  @volatile var rateLimitUntilConnection: Int = 0
+  @volatile var transientErrorUntilConnection: Int = 0
+  private def defaultTransientResponseCode         = 429
+  @volatile var transientResponseCode: Int         = defaultTransientResponseCode
 
   def reset(failUntil: Int = -1): Unit = {
     attempts.set(0)
@@ -39,7 +41,8 @@ object TestretryHandler {
     createException = defaultCreateException
     responseCode = defaultResponseCode
     responseHeaders = Map.empty
-    rateLimitUntilConnection = 0
+    transientErrorUntilConnection = 0
+    transientResponseCode = defaultTransientResponseCode
   }
 }
 
@@ -62,7 +65,8 @@ class TestretryHandler extends URLStreamHandlerFactory {
             def usingProxy(): Boolean = false
 
             override def getResponseCode: Int =
-              if (connection <= TestretryHandler.rateLimitUntilConnection) 429
+              if (connection <= TestretryHandler.transientErrorUntilConnection)
+                TestretryHandler.transientResponseCode
               else TestretryHandler.responseCode
 
             override def getHeaderField(name: String): String =

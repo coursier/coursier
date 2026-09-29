@@ -69,13 +69,59 @@ import scala.util.control.NonFatal
     // the realm the server is assumed to ask for, see withAuthRealm
     authRealmOpt: Option[String] = None,
     // whether to fail on HTTP 203 responses rather than cache their body, see ArtifactError.NonAuthoritative
-    rejectNonAuthoritativeResponses: Boolean = false
+    rejectNonAuthoritativeResponses: Boolean = false,
+  @unroll
+    // backoff after a server answered with an error worth retrying (a 503, a 408, …)
+    httpRetryBackoffInitialDelay: FiniteDuration = CacheDefaults.httpRetryBackoffInitialDelay,
+    httpRetryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.httpRetryBackoffMaxDelay
 )(implicit
   val sync: Sync[F]
 ) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext with Cache.WithLogger[F, FileCache[F]] with Cache.Default[F] with FileCacheHelpers[F] {
   // format: on
 
   private def S = sync
+
+  /** Binary compatibility stub, not meant to be called from source
+    *
+    * The default of `copy`'s implicit parameter list, as coursier 2.1.25 compiled it: code built
+    * against that version calls it, then the `copy` overload with the same fields, when it calls
+    * `copy` without an implicit `Sync` in scope. Its index moves with every field added, and the
+    * compiler only generates the current one, so the former ones have to be kept by hand, with the
+    * fields of their time.
+    */
+  // format: off
+  private[cache] def copy$default$30(
+    location: File,
+    cachePolicies: Seq[CachePolicy],
+    checksums: Seq[Option[String]],
+    credentials: Seq[Credentials],
+    logger: CacheLogger,
+    pool: ExecutorService,
+    ttl: Option[Duration],
+    localArtifactsShouldBeCached: Boolean,
+    followHttpToHttpsRedirections: Boolean,
+    followHttpsToHttpRedirections: Boolean,
+    maxRedirections: Option[Int],
+    sslRetry: Int,
+    sslSocketFactoryOpt: Option[SSLSocketFactory],
+    hostnameVerifierOpt: Option[HostnameVerifier],
+    retry: Int,
+    bufferSize: Int,
+    classLoaders: Seq[ClassLoader],
+    clock: Clock,
+    retryBackoffInitialDelay: FiniteDuration,
+    retryBackoffMultiplier: Double,
+    retryBackoffMaxDelay: Option[FiniteDuration],
+    retryPollMaxDelay: Option[FiniteDuration],
+    connectTimeout: Option[FiniteDuration],
+    readTimeout: Option[FiniteDuration],
+    userAgent: Option[String],
+    hostThrottle: HostThrottle,
+    maxThrottleWait: Option[FiniteDuration],
+    authRealmOpt: Option[String],
+    rejectNonAuthoritativeResponses: Boolean
+  ): Sync[F] = sync
+  // format: on
 
   private val retry0 =
     Retry(
@@ -84,7 +130,9 @@ import scala.util.control.NonFatal
       retryBackoffMultiplier,
       retryBackoffMaxDelay,
       retryPollMaxDelay,
-      maxThrottleWait
+      maxThrottleWait,
+      httpRetryBackoffInitialDelay,
+      httpRetryBackoffMaxDelay
     )
 
   private def readAllBytes(path: Path): Array[Byte] =
@@ -199,7 +247,9 @@ import scala.util.control.NonFatal
       hostThrottle = hostThrottle,
       maxThrottleWait = maxThrottleWait,
       authRealmOpt = authRealmOpt,
-      rejectNonAuthoritativeResponses = rejectNonAuthoritativeResponses
+      rejectNonAuthoritativeResponses = rejectNonAuthoritativeResponses,
+      httpRetryBackoffInitialDelay = httpRetryBackoffInitialDelay,
+      httpRetryBackoffMaxDelay = httpRetryBackoffMaxDelay
     ).download
 
   // Should have been private[coursier]
