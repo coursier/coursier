@@ -46,8 +46,8 @@ final case class CacheOptions(
 
   @Group(OptionGroup.cache)
   @Hidden
-  @HelpMessage("Retry limit for Checksum error when fetching a file")
-    retryCount: Int = 1,
+  @HelpMessage("Maximum number of attempts to download a file, on network errors, server errors, or checksum errors (default: 5, or the coursier.exception-retry Java property)")
+    retryCount: Option[Int] = None,
 
   @Group(OptionGroup.cache)
   @Hidden
@@ -150,11 +150,11 @@ final case class CacheOptions(
       Validated.validNel(res)
     }
 
-    val retryCountV =
-      if (retryCount > 0)
-        Validated.validNel(retryCount)
-      else
-        Validated.invalidNel(s"Retry count must be > 0 (got $retryCount)")
+    val retryCountV = retryCount match {
+      case None                     => Validated.validNel(CacheDefaults.retryCount)
+      case Some(count) if count > 0 => Validated.validNel(count)
+      case Some(count)              => Validated.invalidNel(s"Retry count must be > 0 (got $count)")
+    }
 
     // FIXME Here, we're giving direct credentials a higher priority than file credentials,
     //       even if some of the latter were passed before the former on the command-line
