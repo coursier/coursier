@@ -81,23 +81,36 @@ has expired. The artifact itself is downloaded again only when the server report
 or <code>--parallel</code> (<code>-n</code>) on the command line, change that. The command-line progress display prints
 the URL of every file being downloaded.</p>
 <h2><a class="anchor" aria-hidden="true" id="failed-requests"></a><a href="#failed-requests" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Failed requests</h2>
-<p>A request that fails - a connection error, a connect or read timeout, an SSL error, or an HTTP 5xx
-response - is retried, with an exponential backoff between attempts. By default, coursier makes up
-to 5 attempts, waiting 10 ms after the first failure and twice as long after each of the next ones,
-up to 20 seconds.</p>
+<p>A request that fails is retried, with an exponential backoff between attempts. By default, coursier
+makes up to 5 attempts in total, whatever made them fail.</p>
+<p>A connection error, a connect or read timeout, or an SSL error is retried after 10 ms, then twice as
+long after each of the next failures, up to 20 seconds.</p>
+<p>The HTTP responses <a href="https://curl.se/docs/manpage.html#--retry">curl's <code>--retry</code></a> retries are retried
+too, with the same backoff as curl: 1 second after the first one, twice as long after each of the
+next ones, up to 10 minutes. These are</p>
+<ul>
+<li>408 (Request Timeout),</li>
+<li>500 (Internal Server Error), 502 (Bad Gateway), 503 (Service Unavailable), 504 (Gateway Timeout),</li>
+<li>522 (Connection Timed Out) and 524 (A Timeout Occurred), which Cloudflare sends when it can't
+reach the server behind it.</li>
+</ul>
+<p>Other 5xx responses, like 501 (Not Implemented), fail right away. 429 (Too Many Requests) is handled
+separately, see <a href="#rate-limiting">Rate limiting</a> below.</p>
 <table>
 <thead>
 <tr><th>Java property</th><th>Default</th><th>Meaning</th></tr>
 </thead>
 <tbody>
 <tr><td><code>coursier.exception-retry</code></td><td><code>5</code></td><td>Number of attempts, including the first one. <code>1</code> means no retry.</td></tr>
-<tr><td><code>coursier.exception-retry-backoff-initial-delay</code></td><td><code>10 ms</code></td><td>Delay before the second attempt</td></tr>
-<tr><td><code>coursier.exception-retry-backoff-multiplier</code></td><td><code>2.0</code></td><td>How much the delay grows after each failed attempt</td></tr>
+<tr><td><code>coursier.exception-retry-backoff-initial-delay</code></td><td><code>10 ms</code></td><td>Delay before the next attempt, after a connection error</td></tr>
 <tr><td><code>coursier.exception-retry-backoff-max-delay</code></td><td><code>20 s</code></td><td>Ceiling on that delay</td></tr>
+<tr><td><code>coursier.http-retry-backoff-initial-delay</code></td><td><code>1 s</code></td><td>Delay before the next attempt, after an HTTP error</td></tr>
+<tr><td><code>coursier.http-retry-backoff-max-delay</code></td><td><code>10 min</code></td><td>Ceiling on that delay</td></tr>
+<tr><td><code>coursier.exception-retry-backoff-multiplier</code></td><td><code>2.0</code></td><td>How much both delays grow after each failed attempt</td></tr>
 </tbody>
 </table>
-<p>A <code>Retry-After</code> header on a 503 response is honoured, up to the <code>COURSIER_MAX_HTTP_RETRY_AFTER</code>
-limit described below.</p>
+<p>A <code>Retry-After</code> header on those HTTP responses is honoured in place of the delay, up to the
+<code>COURSIER_MAX_HTTP_RETRY_AFTER</code> limit described below.</p>
 <h2><a class="anchor" aria-hidden="true" id="rate-limiting"></a><a href="#rate-limiting" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Rate limiting</h2>
 <p>An HTTP 429 response is not a failure: the server works, and asked to be left alone for a while.
 Coursier handles it separately from the failures above.</p>
@@ -194,6 +207,8 @@ explicitly:</p>
   retryBackoffInitialDelay = <span class="hljs-number">10.</span>millis,
   retryBackoffMultiplier = <span class="hljs-number">2.0</span>,
   retryBackoffMaxDelay = <span class="hljs-type">Some</span>(<span class="hljs-number">20.</span>seconds),
+  httpRetryBackoffInitialDelay = <span class="hljs-number">1.</span>second,
+  httpRetryBackoffMaxDelay = <span class="hljs-type">Some</span>(<span class="hljs-number">10.</span>minutes),
   <span class="hljs-comment">// rate limiting: the total time one download may spend being told to come back later</span>
   maxThrottleWait = <span class="hljs-type">Some</span>(<span class="hljs-number">1.</span>minute)
 )
