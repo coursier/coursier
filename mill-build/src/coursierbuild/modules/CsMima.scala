@@ -30,7 +30,11 @@ trait CsMima extends Mima with PublishModule {
     // binary compatibility against before that. Scala 3 is the only cross value whose
     // artifacts carry a `_3` suffix; anything else uses a Scala 2 (`_2.13` / `_2.12`) suffix
     // or none.
-    if (artifactId().endsWith("_3")) {
+    // Scala 2.12 artifacts are only built for sbt-coursier, and aren't checked for binary
+    // compatibility.
+    if (artifactId().endsWith("_2.12"))
+      Nil
+    else if (artifactId().endsWith("_3")) {
       val cutOff = Version("2.1.25")
       previous.filter(Version(_) >= cutOff)
     }
