@@ -75,6 +75,37 @@ object CacheParamsTests extends TestSuite {
       }
     }
 
+    // the cache retries network errors (connect timeouts, 5xx, …) that many times, so the CLI
+    // shouldn't cut that down to a single attempt unless asked to
+    test("downloads get the cache's default retry count") {
+      val params0 = params(parse())
+      assert(params0.retryCount == coursier.cache.CacheDefaults.retryCount)
+
+      params0.cache(coursier.cache.CacheDefaults.pool, coursier.cache.CacheLogger.nop) match {
+        case fc: FileCache[Task] => assert(fc.retry == coursier.cache.CacheDefaults.retryCount)
+        case other               => sys.error(s"Expected a FileCache, got $other")
+      }
+    }
+
+    test("--retry-count is passed down to the cache") {
+      val params0 = params(parse("--retry-count", "2"))
+      assert(params0.retryCount == 2)
+
+      params0.cache(coursier.cache.CacheDefaults.pool, coursier.cache.CacheLogger.nop) match {
+        case fc: FileCache[Task] => assert(fc.retry == 2)
+        case other               => sys.error(s"Expected a FileCache, got $other")
+      }
+    }
+
+    test("a non-positive --retry-count is rejected") {
+      assert(parse("--retry-count", "0").params.isInvalid)
+    }
+
+    test("the help states the actual default retry count") {
+      val help = Help[CacheOptions].help(HelpFormat.default(), showHidden = true)
+      assert(help.contains(s"default: ${coursier.cache.CacheDefaults.defaultRetryCount},"))
+    }
+
     // the format repositories ask for, see https://central.sonatype.org/faq/429-tooling-provider/
     test("the help spells out the user agent format") {
       val help = Help[CacheOptions].help(HelpFormat.default())
