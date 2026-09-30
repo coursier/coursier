@@ -101,7 +101,9 @@ final case class CacheParams(
           location = cacheLocation,
           logger = logger,
           pool = pool,
-          fileFallback = Some(basicCustomizations(Cache.defaultLocalCache))
+          fileFallback = Some(basicCustomizations(Cache.defaultLocalCache)),
+          cachePolicies = cachePolicies,
+          ttl = overrideTtl.orElse(ttl)
         )
       // .withLocalArtifactsShouldBeCached(cacheLocalArtifacts)
       case other =>

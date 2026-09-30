@@ -218,7 +218,8 @@ import scala.util.control.NonFatal
 
   private def download(
     artifact: Artifact,
-    cachePolicy: CachePolicy
+    cachePolicy: CachePolicy,
+    ttl: Option[Duration]
   ): F[Seq[DownloadResult]] =
     Downloader(
       artifact,
@@ -334,6 +335,15 @@ import scala.util.control.NonFatal
     artifact: Artifact,
     policy: CachePolicy,
     retry: Int = retry
+  ): EitherT[F, ArtifactError, File] =
+    filePerPolicy(artifact, policy, retry, ttl)
+
+  /** Like the public `filePerPolicy`, but with a TTL other than this cache's */
+  private[coursier] def filePerPolicy(
+    artifact: Artifact,
+    policy: CachePolicy,
+    retry: Int,
+    ttl: Option[Duration]
   ): EitherT[F, ArtifactError, File] = {
 
     val artifact0 = allCredentials.map { allCredentials =>
@@ -349,19 +359,21 @@ import scala.util.control.NonFatal
 
     EitherT[F, ArtifactError, Artifact](artifact0.map(Right(_)))
       .flatMap { a =>
-        filePerPolicy0(a, policy, retry)
+        filePerPolicy0(a, policy, retry, ttl)
       }
   }
 
   private def filePerPolicy0(
     artifact: Artifact,
     policy: CachePolicy,
-    retry: Int
+    retry: Int,
+    ttl: Option[Duration]
   ): EitherT[F, ArtifactError, File] =
     EitherT {
       download(
         artifact,
-        cachePolicy = policy
+        cachePolicy = policy,
+        ttl = ttl
       ).map { results =>
         val resultsMap = results
           .map {
@@ -428,13 +440,13 @@ import scala.util.control.NonFatal
               Right(())
             }
           }.flatMap { _ =>
-            filePerPolicy0(artifact, policy, retry - 1)
+            filePerPolicy0(artifact, policy, retry - 1, ttl)
           }
       case err: ArtifactError.ChecksumNotFound =>
         if (retry <= 0)
           EitherT(S.point(Left(err)))
         else
-          filePerPolicy0(artifact, policy, retry - 1)
+          filePerPolicy0(artifact, policy, retry - 1, ttl)
       case err =>
         EitherT(S.point(Left(err)))
     }
@@ -443,14 +455,26 @@ import scala.util.control.NonFatal
     file(artifact, retry)
 
   def file(artifact: Artifact, retry: Int): EitherT[F, ArtifactError, File] =
+    remoteCacheSubstitute match {
+      case Some(remoteCache) =>
+        ensureLoggerIsInitialized[ArtifactError].flatMap(_ => remoteCache.file(artifact))
+      case None =>
+        fileWith(artifact, retry, cachePolicies, ttl)
+    }
+
+  /** Gets `artifact` from this cache, with cache policies and a TTL other than this cache's
+    *
+    * Unlike [[file]], this never goes through a cache server.
+    */
+  private[coursier] def fileWith(
+    artifact: Artifact,
+    retry: Int,
+    cachePolicies: Seq[CachePolicy],
+    ttl: Option[Duration]
+  ): EitherT[F, ArtifactError, File] =
     ensureLoggerIsInitialized[ArtifactError].flatMap { _ =>
-      remoteCacheSubstitute match {
-        case Some(remoteCache) =>
-          remoteCache.file(artifact)
-        case None =>
-          cachePolicies.tail.map(filePerPolicy(artifact, _, retry))
-            .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry))(_ orElse _)
-      }
+      cachePolicies.tail.map(filePerPolicy(artifact, _, retry, ttl))
+        .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry, ttl))(_ orElse _)
     }
 
   private[coursier] def fetchPerPolicy(

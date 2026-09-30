@@ -2,6 +2,8 @@ package coursier.cache
 
 import java.util.concurrent.{ExecutorService, Executors}
 
+import scala.concurrent.duration.Duration
+
 import scala.cli.config.Secret
 import utest._
 
@@ -23,7 +25,8 @@ object CacheSubstitutionTests extends TestSuite {
           val fileCache = FileCache[Task]((dir / "cache").toIO).copy(
             pool = pool,
             logger = logger,
-            cachePolicies = Seq(CachePolicy.LocalOnly)
+            cachePolicies = Seq(CachePolicy.LocalOnly),
+            ttl = Some(Duration.Inf)
           )
           // same location, written differently
           val defaultCache = RemoteCache[Task]("http://localhost:1234", (dir / "cache").toIO)
@@ -42,6 +45,7 @@ object CacheSubstitutionTests extends TestSuite {
           assert(substituted.pool eq pool)
           assert(substituted.logger eq logger)
           assert(substituted.cachePolicies == Seq(CachePolicy.LocalOnly))
+          assert(substituted.ttl == Some(Duration.Inf))
           assert(substituted.fileFallback.exists(_ eq fileCache))
         }
       }

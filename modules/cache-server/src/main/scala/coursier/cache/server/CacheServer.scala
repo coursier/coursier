@@ -1,13 +1,14 @@
 package coursier.cache.server
 
 import com.github.plokhotnyuk.jsoniter_scala.core._
-import coursier.cache.{ArtifactError, FileCache}
+import coursier.cache.{ArtifactError, CachePolicy, FileCache}
 import coursier.util.Task
 import io.undertow.server.{HttpHandler, HttpServerExchange}
 import io.undertow.util.{Headers, StatusCodes}
 
 import java.util.concurrent.ConcurrentHashMap
 
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContextExecutor, Future, Promise}
 import scala.util.control.NonFatal
 import scala.util.{Failure, Success, Try}
@@ -28,6 +29,32 @@ object CacheServer {
     exchange.getResponseHeaders.put(Headers.CONTENT_TYPE, "text/plain")
     exchange.setStatusCode(StatusCodes.INTERNAL_SERVER_ERROR)
     exchange.getResponseSender.send("Internal error")
+  }
+
+  private def parseCachePolicy(name: String): Either[String, CachePolicy] =
+    Model.parseCachePolicy(name).toRight(s"Unknown cache policy '$name'")
+
+  /** The cache policies and TTL to use for a request, defaulting to those of `cache` */
+  private def policiesAndTtl(
+    request: GetRequest,
+    cache: FileCache[Task]
+  ): Either[String, (Seq[CachePolicy], Option[Duration])] = {
+    val policiesEither = request.cachePolicy match {
+      case Some(name) =>
+        parseCachePolicy(name).map(Seq(_))
+      case None if request.cachePolicies.isEmpty =>
+        Right(cache.cachePolicies)
+      case None =>
+        request.cachePolicies.foldLeft[Either[String, Seq[CachePolicy]]](Right(Vector.empty)) {
+          (acc, name) =>
+            for (l <- acc; policy <- parseCachePolicy(name)) yield l :+ policy
+        }
+    }
+    val ttlEither = request.ttl match {
+      case Some(input) => Model.parseTtl(input)
+      case None        => Right(cache.ttl)
+    }
+    for (policies <- policiesEither; ttl <- ttlEither) yield (policies, ttl)
   }
 
   def handler(cache0: FileCache[Task], pool: ExecutionContextExecutor): HttpHandler = {
@@ -52,11 +79,15 @@ object CacheServer {
                     //   s"Was asked ${artifact.url}" +
                     //     request.cachePolicy.map(" (" + _ + ")").getOrElse("")
                     // )
-                    val fileTask = request.cachePolicy.flatMap(Model.parseCachePolicy) match {
-                      case Some(policy) => cache.filePerPolicy(artifact, policy)
-                      case None         => cache.file(artifact)
+                    val fileTask = policiesAndTtl(request, cache) match {
+                      case Left(message) =>
+                        Task.point[Either[ArtifactError, java.io.File]](
+                          Left(new ArtifactError.DownloadError(message, None))
+                        )
+                      case Right((policies, ttl)) =>
+                        cache.fileWith(artifact, cache.retry, policies, ttl).run
                     }
-                    fileTask.run.future()(cache.ec)
+                    fileTask.future()(cache.ec)
                   }
 
                   maybeFutureResult match {

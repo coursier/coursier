@@ -2,10 +2,11 @@ package coursier.cache
 
 import com.github.plokhotnyuk.jsoniter_scala.core._
 import coursier.cache.internal.RemoteCacheHelpers
+import coursier.cache.server.Model
 import coursier.cache.server.Model.{Artifact => ModelArtifact, _}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
-import dataclass.data
+import dataclass.{data, since => unroll}
 
 import java.io.{ByteArrayOutputStream, File}
 import java.net.{HttpURLConnection, URI, URL}
@@ -16,6 +17,7 @@ import java.util.Base64
 import java.util.concurrent.{ConcurrentHashMap, ExecutorService}
 
 import scala.cli.config.Secret
+import scala.concurrent.duration.Duration
 import scala.concurrent.{ExecutionContext, ExecutionContextExecutorService}
 import scala.util.Try
 
@@ -31,11 +33,37 @@ import scala.util.Try
   logger: CacheLogger = CacheLogger.nop,
   cachePolicies: Seq[CachePolicy] = CacheDefaults.cachePolicies,
   watchLenPool: ExecutorService = CacheDefaults.watchLenPool,
-  fileFallback: Option[FileCache[F]] = None
+  fileFallback: Option[FileCache[F]] = None,
+  /** TTL for changing artifacts, sent to the server along with each request
+    *
+    * Same meaning as `FileCache.ttl`. Servers predating this field ignore it, and use their own
+    * TTL.
+    */
+  @unroll
+  ttl: Option[Duration] = CacheDefaults.ttl
 )(implicit
   val sync: Sync[F]
 ) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext
     with Cache.WithLogger[F, RemoteCache[F]] with Cache.Default[F] with RemoteCacheHelpers[F] {
+
+  /** Binary compatibility stub, not meant to be called from source
+    *
+    * The default of `copy`'s implicit parameter list, as coursier 2.1.25 compiled it: code built
+    * against that version calls it, then the `copy` overload with the same fields, when it calls
+    * `copy` without an implicit `Sync` in scope. Its index moves with every field added, and the
+    * compiler only generates the current one, so the former ones have to be kept by hand, with the
+    * fields of their time.
+    */
+  private[cache] def copy$default$9(
+    serverUrl: String,
+    location: File,
+    basicAuth: Option[Secret[String]],
+    pool: ExecutorService,
+    logger: CacheLogger,
+    cachePolicies: Seq[CachePolicy],
+    watchLenPool: ExecutorService,
+    fileFallback: Option[FileCache[F]]
+  ): Sync[F] = sync
 
   lazy val ec: ExecutionContextExecutorService =
     ExecutionContext.fromExecutorService(pool)
@@ -194,8 +222,15 @@ import scala.util.Try
           }
 
         pathInfoEither.flatMap { relativePath =>
-          val request = GetRequest(ModelArtifact.fromArtifact(artifact), cachePolicy)
-          val body    = writeToArray(request)
+          val request = GetRequest(
+            ModelArtifact.fromArtifact(artifact),
+            cachePolicy = cachePolicy,
+            // without a specific policy, the server tries ours in order, like FileCache.file does
+            cachePolicies =
+              if (cachePolicy.isEmpty) cachePolicies.map(Model.cachePolicyName) else Nil,
+            ttl = Some(Model.serializeTtl(ttl))
+          )
+          val body = writeToArray(request)
 
           val entry = {
             val file    = new File(location, relativePath)
@@ -299,7 +334,7 @@ import scala.util.Try
 
   override def fetchs: Seq[Cache.Fetch[F]] =
     cachePolicies.map { policy =>
-      val default = fetchWithPolicy(Some(policy.toString))
+      val default = fetchWithPolicy(Some(Model.cachePolicyName(policy)))
       val fallback =
         fileFallback0.map(fallback => (art: Artifact) => fallback.fetchPerPolicy(art, policy))
       (art: Artifact) =>
@@ -314,7 +349,7 @@ object RemoteCache {
     *
     * Only non-empty if `defaultCache` is a [[RemoteCache]] with the same location as `fileCache`.
     * The returned [[RemoteCache]] talks to the server of `defaultCache`, and has the pool, logger,
-    * and cache policies of `fileCache`. `fileCache` handles `file:` URLs.
+    * cache policies, and TTL of `fileCache`. `fileCache` handles `file:` URLs.
     */
   private[cache] def substituteFor[F[_]](
     fileCache: FileCache[F],
@@ -331,7 +366,8 @@ object RemoteCache {
             logger = fileCache.logger,
             cachePolicies = fileCache.cachePolicies,
             watchLenPool = rc.watchLenPool,
-            fileFallback = Some(fileCache)
+            fileFallback = Some(fileCache),
+            ttl = fileCache.ttl
           )(fileCache.sync)
         )
       case _ =>
