@@ -30,7 +30,9 @@ object CacheServer {
     exchange.getResponseSender.send("Internal error")
   }
 
-  def handler(cache: FileCache[Task], pool: ExecutionContextExecutor): HttpHandler = {
+  def handler(cache0: FileCache[Task], pool: ExecutionContextExecutor): HttpHandler = {
+    // The server does the actual downloads, it mustn't defer to a cache server itself
+    val cache              = cache0.copy(allowCacheSubstitution = false)
     val cachePath          = os.Path(cache.location)
     val onGoingGetRequests = new ConcurrentHashMap[String, Future[_]]
 

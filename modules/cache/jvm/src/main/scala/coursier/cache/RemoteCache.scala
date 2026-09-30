@@ -42,6 +42,9 @@ import scala.util.Try
 
   private val onGoing = new ConcurrentHashMap[String, RemoteCache.OnGoingDownload]
 
+  // The fallback handles file: URLs locally, it mustn't defer to a cache server itself
+  private lazy val fileFallback0 = fileFallback.map(_.copy(allowCacheSubstitution = false))
+
   private lazy val (getUrl, pathUrl, actualBasicAuthOpt) = {
     val rawGetUri  = new URI(s"$serverUrl/get")
     val rawPathUri = new URI(s"$serverUrl/path")
@@ -248,7 +251,7 @@ import scala.util.Try
     val artifact0 =
       if (artifact.url.endsWith("/.links")) artifact.copy(url = artifact.url.stripSuffix(".links"))
       else artifact
-    fileFallback.filter(_ => artifact0.url.startsWith("file:/")) match {
+    fileFallback0.filter(_ => artifact0.url.startsWith("file:/")) match {
       case Some(fallback) =>
         fallback.file(artifact0)
       case None =>
@@ -288,7 +291,7 @@ import scala.util.Try
 
   def fetch: Cache.Fetch[F] = {
     val default     = fetchWithPolicy(None)
-    val fallbackOpt = fileFallback.map(_.fetch)
+    val fallbackOpt = fileFallback0.map(_.fetch)
     art =>
       val f = fallbackOpt.filter(_ => art.url.startsWith("file:/")).getOrElse(default)
       f(art)
@@ -298,7 +301,7 @@ import scala.util.Try
     cachePolicies.map { policy =>
       val default = fetchWithPolicy(Some(policy.toString))
       val fallback =
-        fileFallback.map(fallback => (art: Artifact) => fallback.fetchPerPolicy(art, policy))
+        fileFallback0.map(fallback => (art: Artifact) => fallback.fetchPerPolicy(art, policy))
       (art: Artifact) =>
         val f = fallback.filter(_ => art.url.startsWith("file:/")).getOrElse(default)
         f(art)
@@ -306,6 +309,37 @@ import scala.util.Try
 }
 
 object RemoteCache {
+
+  /** The [[RemoteCache]] a [[FileCache]] defers to, given the default cache
+    *
+    * Only non-empty if `defaultCache` is a [[RemoteCache]] with the same location as `fileCache`.
+    * The returned [[RemoteCache]] talks to the server of `defaultCache`, and has the pool, logger,
+    * and cache policies of `fileCache`. `fileCache` handles `file:` URLs.
+    */
+  private[cache] def substituteFor[F[_]](
+    fileCache: FileCache[F],
+    defaultCache: Cache[Task]
+  ): Option[RemoteCache[F]] =
+    defaultCache match {
+      case rc: RemoteCache[Task] if sameLocation(fileCache.location, rc.location) =>
+        Some(
+          RemoteCache[F](
+            serverUrl = rc.serverUrl,
+            location = fileCache.location,
+            basicAuth = rc.basicAuth,
+            pool = fileCache.pool,
+            logger = fileCache.logger,
+            cachePolicies = fileCache.cachePolicies,
+            watchLenPool = rc.watchLenPool,
+            fileFallback = Some(fileCache)
+          )(fileCache.sync)
+        )
+      case _ =>
+        None
+    }
+
+  private def sameLocation(a: File, b: File): Boolean =
+    a.toPath.toAbsolutePath.normalize == b.toPath.toAbsolutePath.normalize
 
   final class OnGoingDownload(
     val file: File,

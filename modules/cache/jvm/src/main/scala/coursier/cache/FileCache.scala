@@ -73,7 +73,10 @@ import scala.util.control.NonFatal
   @unroll
     // backoff after a server answered with an error worth retrying (a 503, a 408, …)
     httpRetryBackoffInitialDelay: FiniteDuration = CacheDefaults.httpRetryBackoffInitialDelay,
-    httpRetryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.httpRetryBackoffMaxDelay
+    httpRetryBackoffMaxDelay: Option[FiniteDuration] = CacheDefaults.httpRetryBackoffMaxDelay,
+  @unroll
+    // whether to go through the cache server the environment points at, see remoteCacheSubstitute
+    allowCacheSubstitution: Boolean = true
 )(implicit
   val sync: Sync[F]
 ) extends Cache[F] with Cache.HasLocation with Cache.HasExecutionContext with Cache.WithLogger[F, FileCache[F]] with Cache.Default[F] with FileCacheHelpers[F] {
@@ -441,8 +444,13 @@ import scala.util.control.NonFatal
 
   def file(artifact: Artifact, retry: Int): EitherT[F, ArtifactError, File] =
     ensureLoggerIsInitialized[ArtifactError].flatMap { _ =>
-      cachePolicies.tail.map(filePerPolicy(artifact, _, retry))
-        .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry))(_ orElse _)
+      remoteCacheSubstitute match {
+        case Some(remoteCache) =>
+          remoteCache.file(artifact)
+        case None =>
+          cachePolicies.tail.map(filePerPolicy(artifact, _, retry))
+            .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry))(_ orElse _)
+      }
     }
 
   private[coursier] def fetchPerPolicy(
@@ -556,19 +564,43 @@ import scala.util.control.NonFatal
     }
 
   def fetch: Cache.Fetch[F] =
-    a =>
-      ensureLoggerIsInitialized[String].flatMap { _ =>
-        cachePolicies.tail
-          .foldLeft(fetchPerPolicy(a, cachePolicies.head))(_ orElse fetchPerPolicy(a, _))
-      }
+    remoteCacheSubstitute match {
+      case Some(remoteCache) =>
+        remoteCache.fetch
+      case None =>
+        a =>
+          ensureLoggerIsInitialized[String].flatMap { _ =>
+            cachePolicies.tail
+              .foldLeft(fetchPerPolicy(a, cachePolicies.head))(_ orElse fetchPerPolicy(a, _))
+          }
+    }
 
   override def fetchs: Seq[Cache.Fetch[F]] =
-    // format: off
-    cachePolicies.map { p =>
-      (a: Artifact) =>
-        fetchPerPolicy(a, p)
+    remoteCacheSubstitute match {
+      case Some(remoteCache) =>
+        remoteCache.fetchs
+      case None =>
+        // format: off
+        cachePolicies.map { p =>
+          (a: Artifact) =>
+            fetchPerPolicy(a, p)
+        }
+        // format: on
     }
-    // format: on
+
+  /** The cache server client this cache defers to, if any
+    *
+    * If the default cache is a [[RemoteCache]] (a cache server was configured via the environment
+    * or Java properties) with the same location as this cache, and [[allowCacheSubstitution]] is
+    * true, [[file]], [[fetch]], and [[fetchs]] go through a [[RemoteCache]] talking to that server.
+    * That way, tools that create a [[FileCache]] of their own still use the cache server that users
+    * asked for.
+    *
+    * See [[RemoteCache.substituteFor]] for the settings that [[RemoteCache]] gets from this cache.
+    */
+  private[cache] lazy val remoteCacheSubstitute: Option[RemoteCache[F]] =
+    if (allowCacheSubstitution) RemoteCache.substituteFor(this, Cache.default)
+    else None
 
   lazy val ec = ExecutionContext.fromExecutorService(pool)
 
