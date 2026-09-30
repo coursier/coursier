@@ -1,5 +1,6 @@
 //| mill-version: 2.0.0-M2
 //| mill-jvm-version: 21
+//| bspScriptIgnore: ["*"]
 
 import com.github.lolgab.mill.mima.{
   DirectMissingMethodProblem,
@@ -2641,25 +2642,39 @@ trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
   }
 }
 
-/** Depends on the shaded and proguarded interface JAR, like downstream users do */
-trait DependsOnInterfaceProguarded extends JavaModule {
-  def mvnDeps = super.mvnDeps() ++ Seq(
-    mvn"$mavenOrg:interface:${`interface-proguarded`.publishVersion()}"
-  )
-  def repositories = super.repositories() ++ Seq(
-    // This value is cached, so it has to be a real absolute path. `os.Path.toNIO` can hand back
-    // the relative `../mill-workspace/…` alias, that only resolves from the sandbox of the mill
-    // run that computed it, and that mill wipes when it exits. `toResolvedPathString` follows
-    // the forwarder symlinks and never routes through `os.Path`, unlike `toResolvedOsPath`.
-    java.nio.file.Paths
+/** Resolves dependencies against a local repository with the published `interface-proguarded`
+  *
+  * The repository is added to `allRepositories`, that only the resolution of the dependencies of
+  * the module itself uses, rather than to `repositories`. Everything that fetches a tool
+  * (`scalaCompilerClasspath`, scalac plugins, …) depends on the latter, and those tasks are
+  * evaluated on BSP `workspace/buildTargets` requests, that shouldn't have to build, proguard and
+  * shade the interface JAR.
+  */
+trait InterfaceProguardedRepository extends JavaModule {
+  def allRepositories = Task.Anon {
+    // The class paths resolved from this repository are cached, so it has to be a real absolute
+    // path. `os.Path.toNIO` can hand back the relative `../mill-workspace/…` alias, that only
+    // resolves from the sandbox of the mill run that computed it, and that mill wipes when it
+    // exits. `toResolvedPathString` follows the forwarder symlinks and never routes through
+    // `os.Path`, unlike `toResolvedOsPath`.
+    val repo = java.nio.file.Paths
       .get(PathRef.toResolvedPathString(`interface-proguarded`.publishLocalTestRepo().path))
       .toUri
       .toASCIIString
+    super.allRepositories() :+ _root_.coursier.maven.MavenRepository(repo)
+  }
+}
+
+/** Depends on the shaded and proguarded interface JAR, like downstream users do */
+trait DependsOnInterfaceProguarded extends InterfaceProguardedRepository {
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    mvn"$mavenOrg:interface:${`interface-proguarded`.publishVersion()}"
   )
 }
 
 trait InterfaceTest extends CrossSbtModule with CsModule with DependsOnInterfaceProguarded {
-  object test extends CrossSbtTests with TestModule.Junit4 {
+  // test modules get the repositories of their outer module, but not its `allRepositories`
+  object test extends CrossSbtTests with TestModule.Junit4 with InterfaceProguardedRepository {
     def junit4Version = Versions.junit
     // SystemPropertyTests starts JVMs of its own, and needs our class path for that
     def forkArgs = Task {
