@@ -8,7 +8,7 @@
 # base commit count as changed.
 #
 # Usage:
-#   selective-tests.sh prepare <selector>...
+#   selective-tests.sh prepare <selector>...    (empty selectors are ignored)
 #   selective-tests.sh run [Mill option]... <selector>
 #
 # Selectors are Mill task selectors of test tasks, like `__:CsScalaJsTests.testForked` (see the
@@ -48,17 +48,34 @@ saved_snapshot="$out_dir/ci-selective-execution.json"
 
 # Joins selectors into a single `{a,b,c}` one: the `selective.*` commands only take
 # their first positional argument into account, extra ones are silently dropped.
+# Empty selectors are ignored, and a single selector is left as is (`{a}` isn't expanded).
 brace_selector() {
-  if [ "$#" -eq 1 ]; then
-    echo "$1"
+  local selectors=()
+  local selector
+  for selector in "$@"; do
+    if [ -n "$selector" ]; then
+      selectors+=("$selector")
+    fi
+  done
+  if [ "${#selectors[@]}" -eq 0 ]; then
+    echo ""
+  elif [ "${#selectors[@]}" -eq 1 ]; then
+    echo "${selectors[0]}"
   else
     local IFS=","
-    echo "{$*}"
+    echo "{${selectors[*]}}"
   fi
 }
 
 prepare() {
   rm -f "$saved_snapshot"
+
+  local selector
+  selector="$(brace_selector "$@")"
+  if [ -z "$selector" ]; then
+    echo "No tests to snapshot"
+    return
+  fi
 
   local base="${SELECTIVE_TESTS_BASE_SHA:-}"
   if [ "${GITHUB_EVENT_NAME:-}" != "pull_request" ] || [ -z "$base" ]; then
@@ -90,7 +107,7 @@ prepare() {
   local ok=true
   # fails if a selector can't be resolved at the base commit, like when it relies on a trait
   # the pull request adds
-  if ! "$MILL" -i selective.prepare "$(brace_selector "$@")"; then
+  if ! "$MILL" -i selective.prepare "$selector"; then
     ok=false
   fi
 

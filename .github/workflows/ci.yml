@@ -46,6 +46,7 @@ jobs:
       scala-versions: ${{ steps.versions.outputs.scala-versions }}
       scala213: ${{ steps.versions.outputs.scala213 }}
       scala212: ${{ steps.versions.outputs.scala212 }}
+      scala3: ${{ steps.versions.outputs.scala3 }}
     steps:
     - uses: actions/checkout@v7
       with:
@@ -81,8 +82,8 @@ jobs:
             SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
           - OS: "ubuntu-latest"
             SCALA_VERSION: "${{ needs.scala-versions.outputs.scala212 }}"
-    env:
-      DOCKER_TESTS: "docker[_].test.testForked"
+          - OS: "ubuntu-latest"
+            SCALA_VERSION: "${{ needs.scala-versions.outputs.scala3 }}"
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
@@ -101,14 +102,18 @@ jobs:
     # - run: .github/scripts/scala-native-setup.sh
     #   if: runner.os != 'Windows'
     # The tests of the cross-built modules run in the jobs of their Scala version, the other JVM
-    # tests in the Scala 2.13 jobs, see JvmCiTests in mill-build
+    # tests and the Docker ones (which don't depend on the job's Scala version) in the Scala 2.13
+    # jobs only, see JvmCiTests in mill-build
     - name: Select tests
       run: |
         jvm_tests="__[$SCALA_VERSION].__:CrossJvmCiTests"
+        docker_tests=""
         if [ "$SCALA_VERSION" = "$SCALA213" ]; then
           jvm_tests="{$jvm_tests,__:JvmCiTests}"
+          docker_tests="docker[_].test.testForked"
         fi
         echo "JVM_TESTS=$jvm_tests.testForked" >> "$GITHUB_ENV"
+        echo "DOCKER_TESTS=$docker_tests" >> "$GITHUB_ENV"
       shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
@@ -123,6 +128,7 @@ jobs:
         SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
     - name: Run Docker tests
       id: docker-tests
+      if: env.DOCKER_TESTS != ''
       continue-on-error: true
       run: .github/scripts/selective-tests.sh run "$DOCKER_TESTS"
       shell: bash
@@ -227,9 +233,6 @@ jobs:
       fail-fast: false
       matrix:
         SCALA_VERSION: ${{ fromJSON(needs.scala-versions.outputs.scala-versions) }}
-    env:
-      # `interface` is built with Scala 2.13 only, its tests run whatever the Scala version is
-      INTERFACE_TESTS: "{interface,interface-test[${{ matrix.SCALA_VERSION }}]}.test.testForked"
     steps:
     - uses: actions/checkout@v7
       with:
@@ -238,6 +241,17 @@ jobs:
     - uses: coursier/cache-action@v8
       with:
         disableFallback: true
+    # `interface` is built with Scala 2.13 only, its tests run in the Scala 2.13 job
+    - name: Select tests
+      run: |
+        interface_tests="interface-test[$SCALA_VERSION].test"
+        if [ "$SCALA_VERSION" = "$SCALA213" ]; then
+          interface_tests="{interface.test,$interface_tests}"
+        fi
+        echo "INTERFACE_TESTS=$interface_tests.testForked" >> "$GITHUB_ENV"
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        SCALA213: ${{ needs.scala-versions.outputs.scala213 }}
     # On pull requests, only the tests affected by the changes run, see the script
     - name: Snapshot test inputs at the base commit
       run: .github/scripts/selective-tests.sh prepare "$INTERFACE_TESTS"

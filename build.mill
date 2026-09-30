@@ -974,7 +974,7 @@ trait Install extends CsModule
     Deps.catsCore,
     Deps.jsoniterCore(scalaVersion())
   )
-  object test extends SbtTests with CsScalaTests with CsResourcesTests {
+  object test extends SbtTests with CsScalaTests with CsResourcesTests with JvmCiTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
@@ -2004,7 +2004,8 @@ object ci extends Module {
     ujson.Obj(
       "scala-versions" -> ujson.Arr.from(ScalaVersions.all),
       "scala213"       -> ScalaVersions.scala213,
-      "scala212"       -> ScalaVersions.scala212
+      "scala212"       -> ScalaVersions.scala212,
+      "scala3"         -> ScalaVersions.scala3
     )
   }
 
