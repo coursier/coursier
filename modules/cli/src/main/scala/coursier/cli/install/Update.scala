@@ -53,21 +53,31 @@ object Update extends CoursierCommand[UpdateOptions] {
         args.all
 
     val tasks = names.map { name =>
-      installDir.maybeUpdate(
-        name,
-        source =>
-          Channels(Seq(source.channel), params.selectedRepositories(source.repositories), cache)
-            .find(source.id)
-            .map(_.map(data => (data.origin, data.data))),
-        now,
-        params.force
-      ).map {
+      for {
+        formerVersionOpt <- Task.delay(installDir.installedVersion(name))
+        updatedOpt <- installDir.maybeUpdate(
+          name,
+          source =>
+            Channels(Seq(source.channel), params.selectedRepositories(source.repositories), cache)
+              .find(source.id)
+              .map(_.map(data => (data.origin, data.data))),
+          now,
+          params.force
+        )
+      } yield updatedOpt match {
         case None =>
           if (params.output.verbosity >= 0)
             System.err.println(s"Could not update $name (concurrent operation ongoing)")
         case Some(true) =>
-          if (params.output.verbosity >= 0)
-            System.err.println(s"Updated $name")
+          if (params.output.verbosity >= 0) {
+            val versions = (formerVersionOpt, installDir.installedVersion(name)) match {
+              case (Some(former), Some(current)) if former != current =>
+                s" ($former -> $current)"
+              case (_, Some(current)) => s" ($current)"
+              case (_, None)          => ""
+            }
+            System.err.println(s"Updated $name$versions")
+          }
         case Some(false) =>
       }
     }

@@ -507,11 +507,20 @@ import scala.util.matching.Regex
     * from its launcher.
     */
   def listWithVersions(): Seq[(String, Option[String])] =
-    listLaunchers().map { p =>
-      val versionOpt = InfoFile.readDescriptorAndLock(p).flatMap {
-        case (desc, lock) => InstallDir.versionOf(desc, lock)
-      }
-      (actualName(p), versionOpt)
+    listLaunchers().map(p => (actualName(p), launcherVersion(p)))
+
+  /** The version the application `name` is installed at, when it is installed and its version can
+    * be inferred from its launcher.
+    */
+  def installedVersion(name: String): Option[String] = {
+    val launcher = actualDest(name)
+    if (Files.isRegularFile(launcher)) launcherVersion(launcher)
+    else None
+  }
+
+  private def launcherVersion(launcher: Path): Option[String] =
+    InfoFile.readDescriptorAndLock(launcher).flatMap {
+      case (desc, lock) => InstallDir.versionOf(desc, lock)
     }
 }
 
