@@ -5,11 +5,13 @@ import coursier.core.Authentication
 import coursier.util.{Artifact, Task}
 import utest._
 
-import java.io.File
+import java.io.{ByteArrayOutputStream, File}
+import java.nio.charset.StandardCharsets
+import java.util.zip.GZIPOutputStream
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
-import scala.util.Properties
+import scala.util.{Properties, Try, Using}
 
 abstract class ArchiveCacheTests extends TestSuite {
 
@@ -346,6 +348,40 @@ abstract class ArchiveCacheTests extends TestSuite {
       }
       test("truncate") {
         zipIntegrityTest(truncate = true)
+      }
+    }
+
+    test("no integrity check on local files outside the cache") {
+      withTmpDir { dir =>
+        val archiveCache0 = archiveCache(dir / "arc").copy(
+          cache = defaultCache().copy(location = (dir / "cache").toIO)
+        )
+        val localDir = dir / "local"
+        def get(file: os.Path) =
+          archiveCache0.get(Artifact(file.toNIO.toUri.toASCIIString)).unsafeRun()(
+            archiveCache0.cache.ec
+          )
+
+        val content = "Hello\n".getBytes(StandardCharsets.UTF_8)
+        val baos    = new ByteArrayOutputStream
+        Using.resource(new GZIPOutputStream(baos))(_.write(content))
+        val gzContent = baos.toByteArray
+
+        val valid = localDir / "valid.gz"
+        os.write(valid, gzContent, createFolders = true)
+        get(valid) match {
+          case Left(err) => throw new Exception(err)
+          case Right(f)  => assert(os.read.bytes(os.Path(f)).toSeq == content.toSeq)
+        }
+
+        val corrupted = localDir / "corrupted.gz"
+        os.write(corrupted, gzContent.take(gzContent.length - 4))
+        val res = Try(get(corrupted))
+        assert(res.isFailure || res.toOption.exists(_.isLeft))
+
+        // no integrity files written next to local files, and corrupted ones not deleted
+        val listing = os.list(localDir).map(_.last).sorted
+        assert(listing == Seq("corrupted.gz", "valid.gz"))
       }
     }
 
