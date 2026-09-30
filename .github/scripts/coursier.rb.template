@@ -23,7 +23,10 @@ class Coursier < Formula
     sha256 "@JAR_LAUNCHER_SHA256@"
   end
 
-  depends_on "openjdk"
+  # No dependency on openjdk: its java would end up on the PATH, shadowing the JVMs
+  # that coursier manages (https://github.com/coursier/coursier/issues/3763).
+  # The native launcher "cs" doesn't need a JVM. The JAR-based launcher "coursier" uses the
+  # JVM from JAVA_HOME or the PATH, such as the one "cs setup" installs.
 
   def install
     on_intel do
@@ -33,10 +36,13 @@ class Coursier < Formula
       bin.install "cs-aarch64-apple-darwin" => "cs"
     end
     resource("jar-launcher").stage { bin.install "coursier" }
+    chmod 0555, bin/"coursier"
 
     unless build.without? "shell-completions"
-      chmod 0555, bin/"coursier"
-      generate_completions_from_executable(bin/"coursier", "completions", shells: [:bash, :zsh])
+      # The native launcher writes its argv[0] in the completion scripts. Running it
+      # through the PATH makes them refer to "cs" rather than to its path in the Cellar.
+      ENV.prepend_path "PATH", bin
+      generate_completions_from_executable("cs", "completions", base_name: "cs", shells: [:bash, :zsh])
     end
   end
 
@@ -45,8 +51,5 @@ class Coursier < Formula
 
     output = shell_output("#{bin}/cs launch io.get-coursier:echo:1.0.2 -- foo")
     assert_equal ["foo\n"], output.lines
-
-    jar_output = shell_output("#{bin}/coursier launch io.get-coursier:echo:1.0.2 -- foo")
-    assert_equal ["foo\n"], jar_output.lines
   end
 end
