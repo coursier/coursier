@@ -215,6 +215,10 @@ object InstallDirTests extends TestSuite {
         val installedApps = InstallDir(tempDir).listWithVersions()
         assert(installedApps == Seq("no-lock" -> None, "scalafmt" -> Some("3.9.6")))
         assert(InstallDir(tempDir).list() == installedApps.map(_._1))
+
+        assert(InstallDir(tempDir).installedVersion("scalafmt") == Some("3.9.6"))
+        assert(InstallDir(tempDir).installedVersion("no-lock") == None)
+        assert(InstallDir(tempDir).installedVersion("not-installed") == None)
       }
       finally
         Files.walk(tempDir).sorted(Comparator.reverseOrder()).forEach(Files.delete(_))
