@@ -4,6 +4,8 @@ import mill.*
 import mill.api.*
 import mill.scalalib.*
 
+import coursierbuild.SnapshotVersion
+
 trait CoursierPublishModule extends PublishModule
     with CoursierJavaModule {
   import mill.scalalib.publish._
@@ -40,31 +42,17 @@ object CoursierPublishModule extends ExternalModule {
   lazy val latestTaggedVersion = os.proc("git", "describe", "--abbrev=0", "--tags", "--match", "v*")
     .call().out
     .trim()
-  private def computeBuildVersion() = {
-    // FIXME Print stderr if command fails
-    val gitHead = os.proc("git", "rev-parse", "HEAD")
-      .call(cwd = BuildCtx.workspaceRoot, stderr = os.Pipe)
-      .out.trim()
+
+  /** The version after `v` if `HEAD` has a `v*` tag, else the version following the latest `v*` tag
+    * (`2.1.25` -> `2.1.26-SNAPSHOT`)
+    */
+  private def computeBuildVersion(): String = {
     // '--match v*' is needed, as git describe otherwise prefers annotated tags, and picks the
     // 'interface-v*' one when both kinds of tags sit on the same commit, like for releases
-    val maybeExactTag = scala.util.Try {
-      // FIXME Print stderr if command fails
-      os.proc("git", "describe", "--exact-match", "--tags", "--match", "v*", gitHead)
-        .call(cwd = BuildCtx.workspaceRoot, stderr = os.Pipe).out
-        .trim()
-        .stripPrefix("v")
-    }
-    maybeExactTag.toOption.getOrElse {
-      // FIXME Print stderr if command fails
-      val commitsSinceTaggedVersion =
-        os.proc("git", "rev-list", gitHead, "--not", latestTaggedVersion, "--count")
-          .call(cwd = BuildCtx.workspaceRoot, stderr = os.Pipe).out.trim()
-          .toInt
-      val gitHash = os.proc("git", "rev-parse", "--short", "HEAD")
-        .call(cwd = BuildCtx.workspaceRoot)
-        .out.trim()
-      s"${latestTaggedVersion.stripPrefix("v")}-$commitsSinceTaggedVersion-$gitHash-SNAPSHOT"
-    }
+    val res = os.proc("git", "describe", "--exact-match", "--tags", "--match", "v*", "HEAD")
+      .call(cwd = BuildCtx.workspaceRoot, stderr = os.Pipe, check = false)
+    if (res.exitCode == 0) res.out.trim().stripPrefix("v")
+    else SnapshotVersion.next(latestTaggedVersion.stripPrefix("v"))
   }
 
   lazy val buildVersion = computeBuildVersion()

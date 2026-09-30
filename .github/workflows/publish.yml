@@ -6,6 +6,12 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # Never publish to Sonatype Central from two jobs at a time (nightlies of successive pushes,
+    # or a nightly and a release). A job waits for the running one rather than cancelling it.
+    # GitHub keeps only one waiting job per group though, and cancels an older waiting one.
+    concurrency:
+      group: sonatype-central-publish-${{ github.repository }}
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v7
         with:
@@ -39,9 +45,9 @@ jobs:
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             # --shouldRelease false: the bundle is uploaded and validated on Sonatype Central, but has
             # to be published manually from https://central.sonatype.com/publishing/deployments
-            ./mill -i ci.publishSonatypeCentral --publishArtifacts "$PUBLISH_ARTIFACTS" --bundleName "coursier-${GITHUB_REF#refs/tags/v}" --shouldRelease false
+            ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --publishArtifacts "$PUBLISH_ARTIFACTS" --bundleName "coursier-${GITHUB_REF#refs/tags/v}" --shouldRelease false
           else
-            ./mill -i ci.publishSonatypeCentral --publishArtifacts "$PUBLISH_ARTIFACTS"
+            ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --publishArtifacts "$PUBLISH_ARTIFACTS"
           fi
         env:
           MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}
