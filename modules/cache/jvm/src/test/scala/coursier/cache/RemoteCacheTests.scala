@@ -1,9 +1,12 @@
 package coursier.cache
 
-import java.net.ServerSocket
+import java.net.{ServerSocket, URI}
+import java.net.http.{HttpClient, HttpRequest, HttpResponse}
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.{ExecutorService, Executors}
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.Duration
 
 import io.undertow.Undertow
 import utest._
@@ -44,10 +47,15 @@ object RemoteCacheTests extends TestSuite {
     }
 
   private def withRemoteCache[T](f: (os.Path, RemoteCache[Task]) => T): T =
+    withRemoteCache0(identity)((cacheDir, _, remoteCache) => f(cacheDir, remoteCache))
+
+  private def withRemoteCache0[T](
+    customizeServerCache: FileCache[Task] => FileCache[Task]
+  )(f: (os.Path, String, RemoteCache[Task]) => T): T =
     withTmpDir { dir =>
       withExecutorService(Executors.newFixedThreadPool(4)) { serverPool =>
         val cacheDir = dir / "cache"
-        val serverCache = FileCache[Task](cacheDir.toIO)
+        val serverCache = customizeServerCache(FileCache[Task](cacheDir.toIO))
           .copy(pool = serverPool)
 
         withCacheServer(serverCache) { cacheServerUrl =>
@@ -56,13 +64,99 @@ object RemoteCacheTests extends TestSuite {
               pool = remotePool,
               watchLenPool = remotePool
             )
-            f(cacheDir, remoteCache)
+            f(cacheDir, cacheServerUrl, remoteCache)
           }
         }
       }
     }
 
+  /** An upstream server serving `/changing.txt` and `/other.txt`, and 404 for anything else */
+  private def withUpstream[T](f: (String, RequestLog) => T): T = {
+    val log = new RequestLog
+    val server = new RawHttpServer(
+      log,
+      entry =>
+        if (entry.path == "/changing.txt" || entry.path == "/other.txt")
+          RawHttpServer.ok("hello".getBytes(StandardCharsets.UTF_8))
+        else
+          RawHttpServer.Response("HTTP/1.1 404 Not Found", Seq("Content-Length" -> "0"))
+    )
+    try f(server.baseUrl, log)
+    finally server.close()
+  }
+
+  private def upstreamRequests(log: RequestLog, path: String): Int =
+    log.entries.count(_.path == path)
+
+  private def get(remoteCache: RemoteCache[Task], artifact: Artifact) =
+    remoteCache.file(artifact).run.unsafeRun(wrapExceptions = true)(remoteCache.ec)
+
+  private def postGetRequest(cacheServerUrl: String, body: String): String = {
+    val client = HttpClient.newHttpClient()
+    val request = HttpRequest.newBuilder(new URI(s"$cacheServerUrl/get"))
+      .header("Content-Type", "application/json")
+      .POST(HttpRequest.BodyPublishers.ofString(body))
+      .build()
+    client.send(request, HttpResponse.BodyHandlers.ofString()).body()
+  }
+
   val tests = Tests {
+
+    test("TTL is sent to the server") {
+      withUpstream { (upstreamUrl, log) =>
+        // the server never re-checks changing artifacts on its own
+        withRemoteCache0(_.copy(ttl = Some(Duration.Inf))) { (_, _, remoteCache) =>
+          val artifact = Artifact(s"$upstreamUrl/changing.txt").copy(changing = true)
+
+          val first = get(remoteCache.copy(ttl = Some(Duration.Inf)), artifact)
+          assert(first.isRight)
+          assert(upstreamRequests(log, "/changing.txt") > 0)
+
+          log.reset()
+          val withInfiniteTtl = get(remoteCache.copy(ttl = Some(Duration.Inf)), artifact)
+          assert(withInfiniteTtl.isRight)
+          assert(upstreamRequests(log, "/changing.txt") == 0)
+
+          log.reset()
+          val withZeroTtl = get(remoteCache.copy(ttl = Some(Duration.Zero)), artifact)
+          assert(withZeroTtl.isRight)
+          assert(upstreamRequests(log, "/changing.txt") > 0)
+        }
+      }
+    }
+
+    test("cache policies are sent to the server") {
+      withUpstream { (upstreamUrl, log) =>
+        withRemoteCache0(identity) { (_, _, remoteCache) =>
+          val artifact = Artifact(s"$upstreamUrl/other.txt")
+
+          val offline = get(remoteCache.copy(cachePolicies = Seq(CachePolicy.LocalOnly)), artifact)
+          // errors come back from the server as download errors, with the original type in the message
+          assert(offline.left.exists(_.describe.contains("not found")))
+          assert(upstreamRequests(log, "/other.txt") == 0)
+
+          val online = get(remoteCache, artifact)
+          assert(online.isRight)
+          assert(upstreamRequests(log, "/other.txt") > 0)
+        }
+      }
+    }
+
+    test("server rejects unknown cache policies and malformed TTLs") {
+      withRemoteCache0(identity) { (_, cacheServerUrl, _) =>
+        val unknownPolicy = postGetRequest(
+          cacheServerUrl,
+          """{"artifact":{"url":"https://example.com/a"},"cachePolicies":["Nope"]}"""
+        )
+        assert(unknownPolicy.contains("Unknown cache policy 'Nope'"))
+
+        val malformedTtl = postGetRequest(
+          cacheServerUrl,
+          """{"artifact":{"url":"https://example.com/a"},"ttl":"soon"}"""
+        )
+        assert(malformedTtl.contains("Malformed TTL 'soon'"))
+      }
+    }
 
     test("get POM") {
       withRemoteCache { (_, remoteCache) =>

@@ -80,6 +80,8 @@ abstract class ServerTests extends TestSuite {
     "https://repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.8.2/scala3-library_3-3.8.2.pom"
   private val otherPomUrl =
     "https://repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.8.1/scala3-library_3-3.8.1.pom"
+  private val offlinePomUrl =
+    "https://repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.8.0/scala3-library_3-3.8.0.pom"
 
   val tests = Tests {
     test("server get POM") {
@@ -164,6 +166,27 @@ abstract class ServerTests extends TestSuite {
         )
         assert(os.exists(csGetOtherPath))
         assert(Arrays.equals(os.read.bytes(cachedViaRemoteCache), os.read.bytes(csGetOtherPath)))
+
+        // the client cache policies are sent to the server, which mustn't download anything here
+        val remoteCacheEnv = Map(
+          "COURSIER_CACHE"                 -> serverCache.toString,
+          "COURSIER_CACHE_SERVER"          -> s"http://$host:$port",
+          "COURSIER_CACHE_SERVER_USER"     -> user,
+          "COURSIER_CACHE_SERVER_PASSWORD" -> password
+        )
+        val offlineRes = os.proc(launcher, "get", "--mode", "offline", offlinePomUrl)
+          .call(env = remoteCacheEnv, check = false, mergeErrIntoOut = true)
+        assert(offlineRes.exitCode != 0)
+        val offlineFile =
+          serverCache / "https/repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.8.0" /
+            "scala3-library_3-3.8.0.pom"
+        assert(!os.exists(offlineFile))
+
+        val onlinePath = os.Path(
+          os.proc(launcher, "get", offlinePomUrl).call(env = remoteCacheEnv).out.trim()
+        )
+        assert(onlinePath == offlineFile)
+        assert(os.exists(offlineFile))
       }
       finally {
         serverProcess.destroy()
