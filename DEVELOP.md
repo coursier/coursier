@@ -107,11 +107,7 @@ Use the command in the previous section to print the path to the generated nativ
 $ ./mill jsTests
 ```
 
-### Run all Scala.JS tests for a specific Scala version
-
-```text
-$ ./mill jsTests --scalaVersion 2.13.3
-```
+The Scala.JS modules are only built for Scala 3, so `jsTests` takes no Scala version argument.
 
 ### Run all JVM-based tests
 
@@ -122,7 +118,7 @@ $ ./mill jvmTests
 ### Run all JVM-based tests for a specific Scala version
 
 ```text
-$ ./mill jvmTests --scalaVersion 2.13.3
+$ ./mill jvmTests --scalaVersion 2.13.18
 ```
 
 ### Validate the documentation markdown files
