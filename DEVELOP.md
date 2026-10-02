@@ -104,21 +104,44 @@ Use the command in the previous section to print the path to the generated nativ
 ### Run all Scala.JS tests
 
 ```text
-$ ./mill jsTests
+$ ./mill -j1 '__:CsScalaJsTests.testForked'
 ```
 
-The Scala.JS modules are only built for Scala 3, so `jsTests` takes no Scala version argument.
+The Scala.JS modules are only built for Scala 3, so their task paths carry no Scala version.
 
 ### Run all JVM-based tests
 
+The CI picks the JVM test modules it runs with the `CrossJvmCiTests` and `JvmCiTests` traits
+(see `mill-build`): the former for the tests of cross-built modules, run for each Scala version,
+the latter for the other ones, run along with the Scala 2.13 tests.
+
 ```text
-$ ./mill jvmTests
+$ ./mill '{__[2.13.18].__:CrossJvmCiTests,__:JvmCiTests}.testForked'
 ```
 
 ### Run all JVM-based tests for a specific Scala version
 
 ```text
-$ ./mill jvmTests --scalaVersion 2.13.18
+$ ./mill '__[2.12.21].__:CrossJvmCiTests.testForked'
+```
+
+### Run only the tests affected by your changes
+
+On pull requests, the CI only runs the tests that depend on something that changed since the
+base commit, via Mill's selective execution (see `.github/scripts/selective-tests.sh`). To do
+the same locally, snapshot the inputs of the tests before your changes, then run the tests after
+them. `COURSIER_SELECTIVE_TESTING` makes the build use a fixed version instead of the git-derived
+one, which would invalidate every test on every commit. Mill's `selective.*` commands only take
+their first positional argument into account, so several selectors have to be passed as a single
+`{a,b,…}` one:
+
+```text
+$ export COURSIER_SELECTIVE_TESTING=true
+$ tests='{__[2.13.18].__:CrossJvmCiTests,__:JvmCiTests}.testForked'
+$ ./mill selective.prepare "$tests"
+… make changes …
+$ ./mill selective.resolve "$tests" # only lists the affected tests
+$ ./mill selective.run "$tests"
 ```
 
 ### Validate the documentation markdown files

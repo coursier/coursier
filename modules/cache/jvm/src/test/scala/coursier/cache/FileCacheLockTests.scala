@@ -163,7 +163,12 @@ object FileCacheLockTests extends TestSuite {
           assert(lock != null)
 
           val owner = daemonThread("lock-owner") {
-            Thread.sleep(300L)
+            // wait for the cache to watch the download, rather than for a fixed delay that a slow
+            // machine can exceed before the cache even gets to the lock (it then finds the
+            // artifact in cache, and watches nothing)
+            val deadline = System.nanoTime() + 30.seconds.toNanos
+            while (!logger.watched.get() && System.nanoTime() < deadline)
+              Thread.sleep(20L)
             // the owner completes its download…
             val tmp = new File(file.getParentFile, "owner-tmp")
             Files.write(tmp.toPath, content.getBytes("UTF-8"))
