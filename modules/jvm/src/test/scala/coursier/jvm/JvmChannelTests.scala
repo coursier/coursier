@@ -19,6 +19,10 @@ object JvmChannelTests extends TestSuite {
         assert(JvmChannel.architecture(Some("aarch64")) == Right("arm64"))
         assert(JvmChannel.architecture(Some("arm")) == Right("arm"))
       }
+      test("ppc64le and s390x") {
+        assert(JvmChannel.architecture(Some("ppc64le")) == Right("ppc64le"))
+        assert(JvmChannel.architecture(Some("s390x")) == Right("s390x"))
+      }
       test("unrecognized") {
         assert(JvmChannel.architecture(Some("sparc")).isLeft)
         assert(JvmChannel.architecture(None).isLeft)

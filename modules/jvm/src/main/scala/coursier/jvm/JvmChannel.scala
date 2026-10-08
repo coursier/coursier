@@ -173,6 +173,8 @@ object JvmChannel {
       case Some("x86" | "i386" | "i486" | "i586" | "i686") => Right("x86")
       case Some("aarch64")                                 => Right("arm64")
       case Some("arm")                                     => Right("arm")
+      case Some("ppc64le")                                 => Right("ppc64le")
+      case Some("s390x")                                   => Right("s390x")
       case unrecognized => Left(s"Unrecognized CPU architecture: ${unrecognized.getOrElse("")}")
     }
 
