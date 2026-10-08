@@ -165,12 +165,29 @@ object JvmChannel {
     }
 
   lazy val currentArchitecture: Either[String, String] =
-    Option(System.getProperty("os.arch")).map(_.toLowerCase(Locale.ROOT)) match {
-      case Some("x86_64" | "amd64") => Right("amd64")
-      case Some("aarch64")          => Right("arm64")
-      case Some("arm")              => Right("arm")
+    architecture(Option(System.getProperty("os.arch")))
+
+  private[jvm] def architecture(osArch: Option[String]): Either[String, String] =
+    osArch.map(_.toLowerCase(Locale.ROOT)) match {
+      case Some("x86_64" | "amd64")                        => Right("amd64")
+      case Some("x86" | "i386" | "i486" | "i586" | "i686") => Right("x86")
+      case Some("aarch64")                                 => Right("arm64")
+      case Some("arm")                                     => Right("arm")
       case unrecognized => Left(s"Unrecognized CPU architecture: ${unrecognized.getOrElse("")}")
     }
+
+  // Like defaultOs() and defaultArchitecture(), but don't throw on unrecognized values.
+  // Meant for default parameter values, so that merely instantiating classes like JvmCache
+  // or JavaHome doesn't fail, as these may end up not needing to look up a JVM in an index.
+  // Lookups with unrecognized values fail later on, when they don't match anything in the index.
+  private[jvm] def defaultOsOrRaw(): String =
+    currentOs.getOrElse(
+      Option(System.getProperty("os.name")).getOrElse("").toLowerCase(Locale.ROOT)
+    )
+  private[jvm] def defaultArchitectureOrRaw(): String =
+    currentArchitecture.getOrElse(
+      Option(System.getProperty("os.arch")).getOrElse("").toLowerCase(Locale.ROOT)
+    )
 
   def defaultOs(): String =
     currentOs match {
@@ -215,7 +232,7 @@ object JvmChannel {
   def default(os: String, arch: String): JvmChannel =
     gitHub()
   def default(): JvmChannel =
-    default(defaultOs(), defaultArchitecture())
+    default(defaultOsOrRaw(), defaultArchitectureOrRaw())
 
   private lazy val ghUrlMatcher =
     (quote("https://github.com/") + "([^/]*)/([^/]*)" + quote("/blob/") + "([^/]*)" + quote(
