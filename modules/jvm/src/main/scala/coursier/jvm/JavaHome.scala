@@ -19,7 +19,7 @@ import coursier.util.Task
 ) case class JavaHome(
   cache: Option[JvmCache] = None,
   getEnv: Option[String => Option[String]] = Some(k => Option(System.getenv(k))),
-  os: String = JvmChannel.defaultOs(),
+  os: String = JvmChannel.defaultOsOrRaw(),
   commandOutput: CommandOutput = CommandOutput.default(),
   pathExtensions: Option[Seq[String]] = JavaHome.defaultPathExtensions,
   allowSystem: Boolean = true,

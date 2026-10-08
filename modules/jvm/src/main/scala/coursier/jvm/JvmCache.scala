@@ -11,8 +11,8 @@ import scala.concurrent.duration.Duration
 
 // format: off
 @data(deprecatedSetters = true, deprecatedSettersMessage = "Use copy instead", deprecatedSettersSince = "2.1.25") case class JvmCache(
-  os: String = JvmChannel.defaultOs(),
-  architecture: String = JvmChannel.defaultArchitecture(),
+  os: String = JvmChannel.defaultOsOrRaw(),
+  architecture: String = JvmChannel.defaultArchitectureOrRaw(),
   defaultJdkNameOpt: Option[String] = Some(""), // empty value means use the default one for the passed os and architecure
   defaultVersionOpt: Option[String] = Some(JvmCache.defaultVersion),
 
@@ -174,9 +174,11 @@ object JvmCache {
     }
   def defaultJdkNameFor(os: String, arch: String): String =
     // Seems zulu and liberica are the distributions
-    // that support best Mac ARM and Windows ARM respectively
+    // that support best Mac ARM and Windows ARM respectively,
+    // and liberica is the only one still shipping recent JDKs for 32-bit x86
     if (os == "darwin" && arch == "arm64") "zulu"
     else if (os == "windows" && arch == "arm64") "liberica"
+    else if (arch == "x86") "liberica"
     else "temurin"
   def defaultVersion: String =
     "[1,)"
