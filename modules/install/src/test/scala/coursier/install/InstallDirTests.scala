@@ -178,7 +178,8 @@ object InstallDirTests extends TestSuite {
         descriptor: String,
         lock: Option[String]
       ): Unit = {
-        val app = dir.resolve(name)
+        // "name.bat" on Windows, where installedVersion looks for that
+        val app = InstallDir(dir).actualDest(name)
         val out = new ZipOutputStream(new FileOutputStream(app.toFile))
         try {
           out.putNextEntry(new ZipEntry("META-INF/coursier/info.json"))

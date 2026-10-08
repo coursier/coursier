@@ -46,6 +46,7 @@ jobs:
       scala-versions: ${{ steps.versions.outputs.scala-versions }}
       scala213: ${{ steps.versions.outputs.scala213 }}
       scala212: ${{ steps.versions.outputs.scala212 }}
+      scala3: ${{ steps.versions.outputs.scala3 }}
     steps:
     - uses: actions/checkout@v7
       with:
@@ -81,6 +82,8 @@ jobs:
             SCALA_VERSION: "${{ needs.scala-versions.outputs.scala213 }}"
           - OS: "ubuntu-latest"
             SCALA_VERSION: "${{ needs.scala-versions.outputs.scala212 }}"
+          - OS: "ubuntu-latest"
+            SCALA_VERSION: "${{ needs.scala-versions.outputs.scala3 }}"
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
@@ -98,10 +101,37 @@ jobs:
       if: runner.os == 'Linux'
     # - run: .github/scripts/scala-native-setup.sh
     #   if: runner.os != 'Windows'
+    # The tests of the cross-built modules run in the jobs of their Scala version, the other JVM
+    # tests and the Docker ones (which don't depend on the job's Scala version) in the Scala 2.13
+    # jobs only, see JvmCiTests in mill-build
+    - name: Select tests
+      run: |
+        jvm_tests="__[$SCALA_VERSION].__:CrossJvmCiTests"
+        docker_tests=""
+        if [ "$SCALA_VERSION" = "$SCALA213" ]; then
+          jvm_tests="{$jvm_tests,__:JvmCiTests}"
+          docker_tests="docker[_].test.testForked"
+        fi
+        echo "JVM_TESTS=$jvm_tests.testForked" >> "$GITHUB_ENV"
+        echo "DOCKER_TESTS=$docker_tests" >> "$GITHUB_ENV"
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        SCALA213: ${{ needs.scala-versions.outputs.scala213 }}
+    # On pull requests, only the tests affected by the changes run, see the script
+    - name: Snapshot test inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "$DOCKER_TESTS" "$JVM_TESTS"
+      shell: bash
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        COURSIER_JNI: force
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
     - name: Run Docker tests
       id: docker-tests
+      if: env.DOCKER_TESTS != ''
       continue-on-error: true
-      run: ./mill -i dockerTests
+      run: .github/scripts/selective-tests.sh run "$DOCKER_TESTS"
+      shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
@@ -109,7 +139,8 @@ jobs:
       id: docker-tests-retry
       if: steps.docker-tests.outcome == 'failure' && matrix.OS == 'macos-15-intel'
       continue-on-error: true
-      run: ./mill -i dockerTests
+      run: .github/scripts/selective-tests.sh run "$DOCKER_TESTS"
+      shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
@@ -125,7 +156,9 @@ jobs:
         steps.docker-tests.outcome == 'failure' &&
         (matrix.OS != 'macos-15-intel' || steps.docker-tests-retry.outcome == 'failure')
       run: exit 1
-    - run: ./mill -i jvmTests
+    - name: Run JVM tests
+      run: .github/scripts/selective-tests.sh run "$JVM_TESTS"
+      shell: bash
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
@@ -137,6 +170,8 @@ jobs:
     runs-on: ubuntu-latest
     name: JAR launchers
     timeout-minutes: 50
+    env:
+      JAR_LAUNCHER_TESTS: cli-tests.jar-launcher-tests.testForked
     steps:
     - uses: actions/checkout@v7
       with:
@@ -146,7 +181,13 @@ jobs:
       with:
         disableFallback: true
     - run: sudo apt-get install -y nailgun
-    - run: ./mill -i jarLauncherTests
+    # On pull requests, only run if affected by the changes, see the script
+    - name: Snapshot test inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "$JAR_LAUNCHER_TESTS"
+      env:
+        COURSIER_JNI: force
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - run: .github/scripts/selective-tests.sh run "$JAR_LAUNCHER_TESTS"
       env:
         COURSIER_JNI: force
 
@@ -154,6 +195,8 @@ jobs:
     runs-on: ubuntu-latest
     name: Scala.js
     timeout-minutes: 30
+    env:
+      JS_TESTS: "__:CsScalaJsTests.testForked"
     steps:
     - name: Don't convert LF to CRLF during checkout
       if: runner.os == 'Windows'
@@ -170,10 +213,15 @@ jobs:
     - uses: coursier/cache-action@v8
       with:
         disableFallback: true
-    - run: |
-        npm install --ignore-scripts
-        ./mill -i -j1 __.js.__.compile
-        ./mill -i jsTests
+    - run: npm install --ignore-scripts
+    # On pull requests, only the tests affected by the changes run, see the script
+    - name: Snapshot test inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "$JS_TESTS"
+      shell: bash
+      env:
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    # -j1, as compiling the Scala.js modules in parallel is not reliable
+    - run: .github/scripts/selective-tests.sh run -j1 "$JS_TESTS"
       shell: bash
 
   interface-test:
@@ -193,7 +241,24 @@ jobs:
     - uses: coursier/cache-action@v8
       with:
         disableFallback: true
-    - run: ./mill -i interfaceTests --scalaVersion "$SCALA_VERSION"
+    # `interface` is built with Scala 2.13 only, its tests run in the Scala 2.13 job
+    - name: Select tests
+      run: |
+        interface_tests="interface-test[$SCALA_VERSION].test"
+        if [ "$SCALA_VERSION" = "$SCALA213" ]; then
+          interface_tests="{interface.test,$interface_tests}"
+        fi
+        echo "INTERFACE_TESTS=$interface_tests.testForked" >> "$GITHUB_ENV"
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        SCALA213: ${{ needs.scala-versions.outputs.scala213 }}
+    # On pull requests, only the tests affected by the changes run, see the script
+    - name: Snapshot test inputs at the base commit
+      run: .github/scripts/selective-tests.sh prepare "$INTERFACE_TESTS"
+      env:
+        SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+    - run: .github/scripts/selective-tests.sh run "$INTERFACE_TESTS"
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
     - name: Test published dependencies
