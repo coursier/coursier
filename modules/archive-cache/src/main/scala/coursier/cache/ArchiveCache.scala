@@ -293,6 +293,9 @@ import scala.util.Using
     }
   }
 
+  private def isInCache(file: File, cacheLocation: File): Boolean =
+    file.toPath.toAbsolutePath.normalize.startsWith(cacheLocation.toPath.toAbsolutePath.normalize)
+
   def get(artifact: Artifact): F[Either[ArtifactError, File]] = {
     val (dir0, subPaths) = localDir(artifact)
     val artifact0        = artifact.copy(url = artifact.url.takeWhile(_ != '!'))
@@ -310,6 +313,11 @@ import scala.util.Using
               S.delay[Either[ArtifactError, Boolean]] {
                 Right {
                   cacheLocationOpt match {
+                    case Some(cacheLocation) if !isInCache(f, cacheLocation) =>
+                      // Local file used in place (file: URL not copied to the cache). We
+                      // mustn't write integrity files next to it or delete it, and
+                      // "re-downloading" it wouldn't change anything anyway.
+                      false
                     case Some(cacheLocation) =>
                       val invalid0 = CacheLocks.withLockOr(cacheLocation, f)(
                         {

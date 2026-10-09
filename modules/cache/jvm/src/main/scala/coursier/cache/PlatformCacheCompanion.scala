@@ -11,6 +11,7 @@ abstract class PlatformCacheCompanion {
 
   def defaultLocalCacheFor[F[_]: Sync]: FileCache[F] =
     FileCache[F](CacheDefaults.location)
+      .copy(allowCacheSubstitution = false)
 
   def defaultFor[F[_]: Sync]: Default[F] =
     CacheDefaults.cacheServerAddress match {

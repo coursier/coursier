@@ -411,6 +411,7 @@ object InstallTests extends TestSuite {
 
         assertHasEntry(launcher.toFile, "coursier/bootstrap/launcher/jars/echo-1.0.1.jar")
         assertHasNotEntry(launcher.toFile, "coursier/bootstrap/launcher/jars/echo-1.0.2.jar")
+        assert(installDir0.installedVersion(id) == Some("1.0.1"))
 
         def testRun(): Unit = {
           val output         = commandOutput(launcher.toAbsolutePath.toString, "-n", "foo")
@@ -448,6 +449,7 @@ object InstallTests extends TestSuite {
         assert(updated.exists(identity))
         assertHasNotEntry(launcher.toFile, "coursier/bootstrap/launcher/jars/echo-1.0.1.jar")
         assertHasEntry(launcher.toFile, "coursier/bootstrap/launcher/jars/echo-1.0.2.jar")
+        assert(installDir0.installedVersion(id) == Some("1.0.2"))
 
         if (currentOs == os)
           testRun()

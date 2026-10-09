@@ -136,6 +136,9 @@ $ brew install coursier/formulas/coursier
 $ coursier
 ```
 
+The formula doesn't install a JVM: like above, `coursier` requires Java 8 or later.
+If needed, `cs setup`, installed by the same formula, can install one.
+
 ### Windows
 
 Install and run the JAR-based coursier launcher from the current directory at the Windows prompt, with

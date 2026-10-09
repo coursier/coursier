@@ -1,5 +1,6 @@
 //| mill-version: 2.0.0-M2
 //| mill-jvm-version: 21
+//| bspScriptIgnore: ["*"]
 
 import com.github.lolgab.mill.mima.{
   DirectMissingMethodProblem,
@@ -959,6 +960,10 @@ trait Install extends CsModule
     // private class, whose `prebuiltBinaries` lost its default value (see the comment there)
     ProblemFilter.exclude[DirectMissingMethodProblem](
       "coursier.install.RawAppDescriptor#RawAppDescriptorJson*"
+    ),
+    // private class, that got a `shared` field
+    ProblemFilter.exclude[DirectMissingMethodProblem](
+      "coursier.install.RawAppDescriptor#RawVersionOverride#RawVersionOverrideJson*"
     )
   )
   def moduleDeps = super.moduleDeps ++ Seq(
@@ -1649,10 +1654,12 @@ def smokeTestJarLauncher(launcher: os.Path): Unit = {
     os.Path(sys.props("java.home")) / "bin" / (if (Properties.isWin) "java.exe" else "java")
   System.err.println(s"Smoke-testing $launcher")
   // the launchers are JARs with a shell / batch preamble, that java ignores
+  // (resolved paths, as the `../mill-home/…` / `../mill-workspace/…` forms os.Path renders to
+  // don't resolve from the launcher directory we run in)
   os.proc(
-    java,
+    PathRef.toResolvedPathString(java),
     "-jar",
-    launcher,
+    PathRef.toResolvedPathString(launcher),
     "resolve",
     s"org.scala-lang:scala-library:${ScalaVersions.scala213}"
   )
@@ -2042,7 +2049,7 @@ def cliNativeImageLauncher() = Task.Command {
   cli.nativeImage()
 }
 
-object ci extends Module with mill.javalib.CoursierSonatypeCentralPublish {
+object ci extends Module {
   def copyJvm(jvm: String = Versions.graalVmJvmId, dest: String = "jvm") = Task.Command {
     import _root_.coursier.cache.{ArchiveCache, FileCache}
     import _root_.coursier.jvm.{JavaHome, JvmCache}
@@ -2641,25 +2648,39 @@ trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
   }
 }
 
-/** Depends on the shaded and proguarded interface JAR, like downstream users do */
-trait DependsOnInterfaceProguarded extends JavaModule {
-  def mvnDeps = super.mvnDeps() ++ Seq(
-    mvn"$mavenOrg:interface:${`interface-proguarded`.publishVersion()}"
-  )
-  def repositories = super.repositories() ++ Seq(
-    // This value is cached, so it has to be a real absolute path. `os.Path.toNIO` can hand back
-    // the relative `../mill-workspace/…` alias, that only resolves from the sandbox of the mill
-    // run that computed it, and that mill wipes when it exits. `toResolvedPathString` follows
-    // the forwarder symlinks and never routes through `os.Path`, unlike `toResolvedOsPath`.
-    java.nio.file.Paths
+/** Resolves dependencies against a local repository with the published `interface-proguarded`
+  *
+  * The repository is added to `allRepositories`, that only the resolution of the dependencies of
+  * the module itself uses, rather than to `repositories`. Everything that fetches a tool
+  * (`scalaCompilerClasspath`, scalac plugins, …) depends on the latter, and those tasks are
+  * evaluated on BSP `workspace/buildTargets` requests, that shouldn't have to build, proguard and
+  * shade the interface JAR.
+  */
+trait InterfaceProguardedRepository extends JavaModule {
+  def allRepositories = Task.Anon {
+    // The class paths resolved from this repository are cached, so it has to be a real absolute
+    // path. `os.Path.toNIO` can hand back the relative `../mill-workspace/…` alias, that only
+    // resolves from the sandbox of the mill run that computed it, and that mill wipes when it
+    // exits. `toResolvedPathString` follows the forwarder symlinks and never routes through
+    // `os.Path`, unlike `toResolvedOsPath`.
+    val repo = java.nio.file.Paths
       .get(PathRef.toResolvedPathString(`interface-proguarded`.publishLocalTestRepo().path))
       .toUri
       .toASCIIString
+    super.allRepositories() :+ _root_.coursier.maven.MavenRepository(repo)
+  }
+}
+
+/** Depends on the shaded and proguarded interface JAR, like downstream users do */
+trait DependsOnInterfaceProguarded extends InterfaceProguardedRepository {
+  def mvnDeps = super.mvnDeps() ++ Seq(
+    mvn"$mavenOrg:interface:${`interface-proguarded`.publishVersion()}"
   )
 }
 
 trait InterfaceTest extends CrossSbtModule with CsModule with DependsOnInterfaceProguarded {
-  object test extends CrossSbtTests with TestModule.Junit4 {
+  // test modules get the repositories of their outer module, but not its `allRepositories`
+  object test extends CrossSbtTests with TestModule.Junit4 with InterfaceProguardedRepository {
     def junit4Version = Versions.junit
     // SystemPropertyTests starts JVMs of its own, and needs our class path for that
     def forkArgs = Task {

@@ -87,14 +87,23 @@ object JvmIndex {
     arch: Option[String]
   ): Task[Either[Exception, JvmIndex]] = {
 
-    val os0   = os.getOrElse(JvmChannel.defaultOs())
-    val arch0 = arch.getOrElse(JvmChannel.defaultArchitecture())
-    val paths = Seq(
-      (s"coursier/jvm/indices/v1/$os0-$arch0.json", true),
-      ("index.json", false)
-    )
+    val osArchTask = Task.fromEither {
+      val res =
+        for {
+          os0   <- os.map(Right(_)).getOrElse(JvmChannel.currentOs)
+          arch0 <- arch.map(Right(_)).getOrElse(JvmChannel.currentArchitecture)
+        } yield (os0, arch0)
+      res.left.map(new Exception(_))
+    }
 
     for {
+      osArch <- osArchTask
+      (os0, arch0) = osArch
+      paths = Seq(
+        (s"coursier/jvm/indices/v1/$os0-$arch0.json", true),
+        ("index.json", false)
+      )
+
       res <- coursier.Fetch(cache)
         .withDependencies(Seq(Dependency(channel.module, channel.versionConstraint)))
         .withRepositories(repositories)

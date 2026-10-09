@@ -252,13 +252,7 @@ import scala.util.control.NonFatal
               else {
                 hostThrottle.succeeded(url)
 
-                val remoteLastModified = c.getLastModified
-
-                val res =
-                  if (remoteLastModified > 0L)
-                    Some(remoteLastModified)
-                  else
-                    None
+                val res = Downloader.lastModified(c)
 
                 success = true
                 logger.checkingUpdatesResult(url, currentLastModifiedOpt, res)
@@ -448,7 +442,7 @@ import scala.util.control.NonFatal
               case _ => Map()
             }
 
-          val lastModifiedOpt = Option(conn.getLastModified).filter(_ > 0L)
+          val lastModifiedOpt = Downloader.lastModified(conn)
 
           val in = {
             val baseStream =
@@ -1031,6 +1025,32 @@ object Downloader {
         .map(millis => FiniteDuration(millis, MILLISECONDS))
 
     fromSeconds.orElse(fromHttpDate)
+  }
+
+  /** The `Last-Modified` time of a response, in milliseconds since the epoch
+    *
+    * `URLConnection#getLastModified` parses the header with the deprecated `Date.parse`, which
+    * rejects some of the names of UTC servers send - JitPack used to send
+    * `Wed, 09 Jan 2019 18:50:09 Z` - and returns 0 for those. Downloaded files then get the time
+    * they were written at rather than the remote one, and update checks, having no remote time to
+    * compare to, download the file again every time.
+    */
+  private def lastModified(conn: URLConnection): Option[Long] =
+    Some(conn.getLastModified)
+      .filter(_ > 0L)
+      .orElse(Option(conn.getHeaderField("Last-Modified")).flatMap(parseHttpDate))
+
+  private val utcZoneSuffix = "(.*)\\s+(?i:Z|UTC|UT)".r
+
+  private[cache] def parseHttpDate(value: String): Option[Long] = {
+    val trimmed = value.trim
+    val normalized = trimmed match {
+      case utcZoneSuffix(dateTime) => s"$dateTime GMT"
+      case _                       => trimmed
+    }
+    Try(Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(normalized)).toEpochMilli)
+      .toOption
+      .filter(_ > 0L)
   }
 
   private def readFullyTo(

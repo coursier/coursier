@@ -22,6 +22,9 @@ trait CacheJvmBase extends Cache with CsCrossJvmModule with CsMima {
       ProblemFilter.exclude[MissingClassProblem]("coursier.cache.UnArchiver$*"),
       // moved a different module (pulled transitively)
       ProblemFilter.exclude[MissingClassProblem]("coursier.paths.*"),
+      // cache server wire model, only meant to be used by RemoteCache and the cache server
+      ProblemFilter.exclude[Problem]("coursier.cache.server.Model#GetRequest*"),
+      ProblemFilter.exclude[Problem]("coursier.cache.server.Model$GetRequest*"),
       // added methods on a sealed abstract class
       ProblemFilter.exclude[ReversedMissingMethodProblem]("coursier.cache.loggers.RefreshInfo.*"),
       // removed private class
