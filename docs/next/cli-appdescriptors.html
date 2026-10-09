@@ -358,6 +358,43 @@ URLs are specific to platforms.</p>
 <p>For version <code>2.1.0</code> on Windows, this gets transformed as
 <a href="https://github.com/coursier/coursier/releases/download/v2.1.0/cs-x86_64-pc-win32.zip">this URL</a>.</p>
 <p>The possible values for platforms are listed in the previous section.</p>
+<h4><a class="anchor" aria-hidden="true" id="shared"></a><a href="#shared" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>shared</code></h4>
+<p>Modules whose JARs, along with those of their dependencies, should be loaded by a class loader
+of their own, that the class loader of the rest of the application has as parent. Applications
+can then load code relying only on those modules in another class loader, that shares that class
+loader. Modules can be Java modules (<code>org:name</code>), or binary or fully cross-versioned Scala modules
+(<code>org::name</code>, <code>org:::name</code>), with no version: the ones the dependency resolution picks are used.</p>
+<p>Example</p>
+<pre><code class="hljs css language-json">"shared": [
+  "sh.almond::scala-kernel-api"
+]
+</code></pre>
+<h4><a class="anchor" aria-hidden="true" id="versionoverrides"></a><a href="#versionoverrides" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a><code>versionOverrides</code></h4>
+<p>Changes some fields of the descriptor for the application versions in a given range. Each
+override has a <code>versionRange</code> (like <code>(,0.15.0)</code> or <code>[1.0.0,2.0.0)</code>), and can set
+<code>dependencies</code>, <code>repositories</code>, <code>mainClass</code>, <code>properties</code>, <code>prebuilt</code>, <code>prebuiltBinaries</code>,
+<code>launcherType</code>, and <code>shared</code> (<code>shared</code> only from coursier versions newer than 2.1.26 on, that
+older versions ignore). These replace the top-level fields of the same name for the versions in
+the range. The ranges of the overrides of a descriptor can't overlap.</p>
+<p>Example</p>
+<pre><code class="hljs css language-json">"dependencies": [
+  "sh.almond::scala-kernel:latest.release"
+],
+"shared": [
+  "sh.almond::scala-kernel-api"
+],
+"versionOverrides": [
+  {
+    "versionRange": "(,0.15.0)",
+    "dependencies": [
+      "sh.almond:::scala-kernel:latest.release"
+    ],
+    "shared": [
+      "sh.almond:::scala-kernel-api"
+    ]
+  }
+]
+</code></pre>
 </span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/next/cli-setup"><span class="arrow-prev">← </span><span>Previous</span></a><a class="docs-next button" href="/docs/next/overview-motivations"><span>Motivations</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#creating-your-own-applications">Creating your own applications</a><ul class="toc-headings"><li><a href="#publish-your-application">Publish your application</a></li><li><a href="#run-your-application-via-bootstrap">Run your application via <code>bootstrap</code></a></li><li><a href="#create-an-application-descriptor">Create an application descriptor</a></li><li><a href="#publish-your-application-descriptor">Publish your application descriptor</a></li></ul></li><li><a href="#channel-types">Channel types</a><ul class="toc-headings"><li><a href="#jar-based-channels">JAR-based channels</a></li><li><a href="#url-based-channels">URL-based channels</a></li><li><a href="#directory-based-channels">Directory-based channels</a></li></ul></li><li><a href="#application-metadata">Application metadata</a></li><li><a href="#application-descriptor-reference">Application descriptor reference</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><h2><a href="/" class="nav-home">Coursier</a></h2><div><h5><a href="/docs/overview">Docs</a></h5><a href="/docs/overview">Overview</a><a href="/docs/cli-installation">Install CLI</a><a href="/docs/sbt-coursier">Setup sbt</a><a href="/docs/api">Use the API</a></div><div><h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5><a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"/></a><a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"/></a></div></section><section class="copyright">Copyright © 2026 coursier contributors</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
