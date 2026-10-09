@@ -1,7 +1,7 @@
 {
   "comment": [
     "TEMPORARY: remove this file once zstd-jni ships this metadata itself (it does not as of",
-    "1.5.7-20). Same approach as ../../dev.dirs/reachability-metadata.json.",
+    "1.5.7-21). Same approach as ../../dev.dirs/reachability-metadata.json.",
     "",
     "Since 1.5.7-17, zstd-jni is a multi-release JAR: on JDK 22+, its stream classes",
     "(ZstdInputStreamNoFinalizer, ZstdOutputStreamNoFinalizer, the buffer streams) come from",
@@ -12,21 +12,40 @@
     "",
     "The entries below are the distinct function descriptors of the downcall handles in",
     "com.github.luben.zstd.ZstdBinding (META-INF/versions/22), in this order:",
-    "  1. ZSTD_CStreamOutSize, ZSTD_DStreamInSize, ZSTD_DStreamOutSize",
-    "  2. ZSTD_createCStream, ZSTD_createDStream",
-    "  3. ZSTD_freeCStream, ZSTD_freeDCtx, ZSTD_initDStream",
-    "  4. ZSTD_CCtx_reset, ZSTD_initCStream",
-    "  5. ZSTD_CCtx_setParameter",
-    "  6. ZSTD_CCtx_refCDict",
-    "  7. ZSTD_CCtx_loadDictionary (critical)",
-    "  8. ZSTD_compressStream2_simpleArgs (critical)",
-    "  9. ZSTD_decompressStream_simpleArgs (critical)",
-    " 10. ZSTD_CCtx_setPledgedSrcSize ('long long' is the unsigned long long it takes)",
-    " 11. ZSTD_compress2 (critical)",
-    " 12. ZSTD_getFrameProgression, which returns ZSTD_frameProgression by value",
-    "ZSTD_createCCtx and ZSTD_freeCCtx have the same descriptors as 2 and 3. Every handle is",
-    "built in ZstdBinding's static initializer, so all of them get registered as soon as any",
-    "zstd stream is touched, even the compression-only ones cs never calls.",
+    "  1. the zstd_java_* constant getters (zstd_java_e_continue, ...), ZSTD_minCLevel, ZSTD_maxCLevel",
+    "  2. ZSTD_CCtx_setParameter, ZSTD_DCtx_setParameter",
+    "  3. ZSTD_registerSequenceProducer",
+    "  4. ZSTD_compressBound",
+    "  5. ZSTD_isError, ZSTD_getErrorCode",
+    "  6. ZSTD_getErrorName",
+    "  7. ZSTD_createCDict (critical)",
+    "  8. ZSTD_createCDict_byReference",
+    "  9. ZSTD_freeCDict, ZSTD_freeDDict, ZSTD_freeCStream, ZSTD_freeCCtx, ZSTD_freeDCtx, ZSTD_initDStream",
+    " 10. ZSTD_createDDict (critical)",
+    " 11. ZSTD_createDDict_byReference",
+    " 12. ZSTD_CStreamOutSize, ZSTD_DStreamInSize, ZSTD_DStreamOutSize",
+    " 13. ZSTD_createCStream, ZSTD_createCCtx, ZSTD_createDStream, ZSTD_createDCtx",
+    " 14. ZSTD_CCtx_reset, ZSTD_DCtx_reset, ZSTD_initCStream",
+    " 15. ZSTD_CCtx_loadDictionary, ZSTD_DCtx_loadDictionary (critical)",
+    " 16. ZSTD_CCtx_refCDict, ZSTD_DCtx_refDDict",
+    " 17. ZSTD_CCtx_setPledgedSrcSize ('long long' is the unsigned long long it takes)",
+    " 18. ZSTD_compress2, ZSTD_decompressDCtx (critical)",
+    " 19. ZSTD_compress2, ZSTD_decompressDCtx (non-critical variants, for native memory)",
+    " 20. ZSTD_getFrameProgression, which returns ZSTD_frameProgression by value",
+    " 21. ZSTD_compressStream2_simpleArgs (critical)",
+    " 22. ZSTD_decompressStream_simpleArgs (critical)",
+    " 23. ZSTD_findFrameCompressedSize (critical)",
+    " 24. ZSTD_findFrameCompressedSize (non-critical)",
+    " 25. zstd_java_decompressedSize (critical)",
+    " 26. zstd_java_decompressedSize (non-critical)",
+    " 27. ZSTD_getDictID_fromFrame, ZSTD_getDictID_fromDict (critical)",
+    " 28. ZSTD_getDictID_fromFrame (non-critical)",
+    " 29. ZSTD_decompress",
+    " 30. ZDICT_trainFromBuffer",
+    " 31. ZDICT_trainFromBuffer_legacy, which takes ZDICT_legacy_params_t by value",
+    "Every handle is built in ZstdBinding's static initializer (which also calls each constant",
+    "getter right away), so all of them get registered as soon as any zstd stream is touched,",
+    "even the compression and dictionary ones cs never calls.",
     "ZstdBinding types every size_t as the linker's canonical 'size_t' layout and pointers as",
     "plain ValueLayout.ADDRESS, hence 'size_t' and 'void*' here. The 'critical' ones are linked",
     "with Linker.Option.critical(true) so heap byte[]s can be passed as pointers, which changes",
@@ -38,25 +57,8 @@
   "foreign": {
     "downcalls": [
       {
-        "returnType": "size_t",
+        "returnType": "int",
         "parameterTypes": []
-      },
-      {
-        "returnType": "void*",
-        "parameterTypes": []
-      },
-      {
-        "returnType": "size_t",
-        "parameterTypes": [
-          "void*"
-        ]
-      },
-      {
-        "returnType": "size_t",
-        "parameterTypes": [
-          "void*",
-          "int"
-        ]
       },
       {
         "returnType": "size_t",
@@ -67,10 +69,90 @@
         ]
       },
       {
+        "returnType": "void",
+        "parameterTypes": [
+          "void*",
+          "void*",
+          "void*"
+        ]
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": [
+          "size_t"
+        ]
+      },
+      {
+        "returnType": "int",
+        "parameterTypes": [
+          "size_t"
+        ]
+      },
+      {
+        "returnType": "void*",
+        "parameterTypes": [
+          "size_t"
+        ]
+      },
+      {
+        "returnType": "void*",
+        "parameterTypes": [
+          "void*",
+          "size_t",
+          "int"
+        ],
+        "options": {
+          "critical": {
+            "allowHeapAccess": true
+          }
+        }
+      },
+      {
+        "returnType": "void*",
+        "parameterTypes": [
+          "void*",
+          "size_t",
+          "int"
+        ]
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": [
+          "void*"
+        ]
+      },
+      {
+        "returnType": "void*",
+        "parameterTypes": [
+          "void*",
+          "size_t"
+        ],
+        "options": {
+          "critical": {
+            "allowHeapAccess": true
+          }
+        }
+      },
+      {
+        "returnType": "void*",
+        "parameterTypes": [
+          "void*",
+          "size_t"
+        ]
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": []
+      },
+      {
+        "returnType": "void*",
+        "parameterTypes": []
+      },
+      {
         "returnType": "size_t",
         "parameterTypes": [
           "void*",
-          "void*"
+          "int"
         ]
       },
       {
@@ -90,36 +172,8 @@
         "returnType": "size_t",
         "parameterTypes": [
           "void*",
-          "void*",
-          "size_t",
-          "void*",
-          "void*",
-          "size_t",
-          "void*",
-          "int"
-        ],
-        "options": {
-          "critical": {
-            "allowHeapAccess": true
-          }
-        }
-      },
-      {
-        "returnType": "size_t",
-        "parameterTypes": [
-          "void*",
-          "void*",
-          "size_t",
-          "void*",
-          "void*",
-          "size_t",
           "void*"
-        ],
-        "options": {
-          "critical": {
-            "allowHeapAccess": true
-          }
-        }
+        ]
       },
       {
         "returnType": "size_t",
@@ -144,9 +198,144 @@
         }
       },
       {
+        "returnType": "size_t",
+        "parameterTypes": [
+          "void*",
+          "void*",
+          "size_t",
+          "void*",
+          "size_t"
+        ]
+      },
+      {
         "returnType": "struct(long long, long long, long long, long long, int, int)",
         "parameterTypes": [
           "void*"
+        ]
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": [
+          "void*",
+          "void*",
+          "size_t",
+          "void*",
+          "void*",
+          "size_t",
+          "void*",
+          "int"
+        ],
+        "options": {
+          "critical": {
+            "allowHeapAccess": true
+          }
+        }
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": [
+          "void*",
+          "void*",
+          "size_t",
+          "void*",
+          "void*",
+          "size_t",
+          "void*"
+        ],
+        "options": {
+          "critical": {
+            "allowHeapAccess": true
+          }
+        }
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": [
+          "void*",
+          "size_t"
+        ],
+        "options": {
+          "critical": {
+            "allowHeapAccess": true
+          }
+        }
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": [
+          "void*",
+          "size_t"
+        ]
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": [
+          "void*",
+          "size_t",
+          "int"
+        ],
+        "options": {
+          "critical": {
+            "allowHeapAccess": true
+          }
+        }
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": [
+          "void*",
+          "size_t",
+          "int"
+        ]
+      },
+      {
+        "returnType": "int",
+        "parameterTypes": [
+          "void*",
+          "size_t"
+        ],
+        "options": {
+          "critical": {
+            "allowHeapAccess": true
+          }
+        }
+      },
+      {
+        "returnType": "int",
+        "parameterTypes": [
+          "void*",
+          "size_t"
+        ]
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": [
+          "void*",
+          "size_t",
+          "void*",
+          "size_t"
+        ]
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": [
+          "void*",
+          "size_t",
+          "void*",
+          "void*",
+          "int",
+          "int"
+        ]
+      },
+      {
+        "returnType": "size_t",
+        "parameterTypes": [
+          "void*",
+          "size_t",
+          "void*",
+          "void*",
+          "int",
+          "struct(int, struct(int, int, int))"
         ]
       }
     ]
