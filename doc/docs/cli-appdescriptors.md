@@ -396,3 +396,48 @@ For version `2.1.0` on Windows, this gets transformed as
 [this URL](https://github.com/coursier/coursier/releases/download/v2.1.0/cs-x86_64-pc-win32.zip).
 
 The possible values for platforms are listed in the previous section.
+
+#### `shared`
+
+Modules whose JARs, along with those of their dependencies, should be loaded by a class loader
+of their own, that the class loader of the rest of the application has as parent. Applications
+can then load code relying only on those modules in another class loader, that shares that class
+loader. Modules can be Java modules (`org:name`), or binary or fully cross-versioned Scala modules
+(`org::name`, `org:::name`), with no version: the ones the dependency resolution picks are used.
+
+Example
+```json
+"shared": [
+  "sh.almond::scala-kernel-api"
+]
+```
+
+#### `versionOverrides`
+
+Changes some fields of the descriptor for the application versions in a given range. Each
+override has a `versionRange` (like `(,0.15.0)` or `[1.0.0,2.0.0)`), and can set
+`dependencies`, `repositories`, `mainClass`, `properties`, `prebuilt`, `prebuiltBinaries`,
+`launcherType`, and `shared` (`shared` only from coursier versions newer than 2.1.26 on, that
+older versions ignore). These replace the top-level fields of the same name for the versions in
+the range. The ranges of the overrides of a descriptor can't overlap.
+
+Example
+```json
+"dependencies": [
+  "sh.almond::scala-kernel:latest.release"
+],
+"shared": [
+  "sh.almond::scala-kernel-api"
+],
+"versionOverrides": [
+  {
+    "versionRange": "(,0.15.0)",
+    "dependencies": [
+      "sh.almond:::scala-kernel:latest.release"
+    ],
+    "shared": [
+      "sh.almond:::scala-kernel-api"
+    ]
+  }
+]
+```

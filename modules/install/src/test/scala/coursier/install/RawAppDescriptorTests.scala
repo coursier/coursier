@@ -151,6 +151,44 @@ object RawAppDescriptorTests extends TestSuite {
       assertMatch(validated) { case Validated.Invalid(_) => () }
     }
 
+    test("version overrides override shared dependencies") {
+      val raw = RawAppDescriptor(List("sh.almond::scala-kernel:latest.release"))
+        .copy(
+          shared = List("sh.almond::scala-kernel-api"),
+          versionOverrides = List(
+            RawAppDescriptor.RawVersionOverride("(,0.15.0)")
+              .copy(
+                dependencies = Some(List("sh.almond:::scala-kernel:latest.release")),
+                shared = Some(List("sh.almond:::scala-kernel-api"))
+              ),
+            RawAppDescriptor.RawVersionOverride("[0.16.0,)")
+              .copy(
+                dependencies = Some(List("sh.almond::scala-kernel:latest.release"))
+              )
+          )
+        )
+      val desc = raw.appDescriptor.fold(
+        errors => sys.error(s"Invalid descriptor: ${errors.toList.mkString(", ")}"),
+        identity
+      )
+      def shared(version: String): Seq[String] =
+        desc.overrideVersion(version).sharedDependencies.map(_.toString)
+
+      // from the override
+      assert(shared("0.14.3") == Seq("sh.almond:::scala-kernel-api"))
+      // no override
+      assert(shared("0.15.0") == Seq("sh.almond::scala-kernel-api"))
+      // from an override that doesn't change the shared dependencies
+      assert(shared("0.16.0") == Seq("sh.almond::scala-kernel-api"))
+
+      // same when applying the overrides on the raw descriptor, like the CLI does
+      def rawShared(version: String): Seq[String] =
+        raw.overrideVersion(version, useVersionOverrides = true).shared
+      assert(rawShared("0.14.3") == Seq("sh.almond:::scala-kernel-api"))
+      assert(rawShared("0.15.0") == Seq("sh.almond::scala-kernel-api"))
+      assert(rawShared("0.16.0") == Seq("sh.almond::scala-kernel-api"))
+    }
+
     test("RawAppDescriptor JSON golden files") {
       val goldenFiles = Seq(
         "/golden/install/raw-app-descriptor/minimal.json",

@@ -960,6 +960,10 @@ trait Install extends CsModule
     // private class, whose `prebuiltBinaries` lost its default value (see the comment there)
     ProblemFilter.exclude[DirectMissingMethodProblem](
       "coursier.install.RawAppDescriptor#RawAppDescriptorJson*"
+    ),
+    // private class, that got a `shared` field
+    ProblemFilter.exclude[DirectMissingMethodProblem](
+      "coursier.install.RawAppDescriptor#RawVersionOverride#RawVersionOverrideJson*"
     )
   )
   def moduleDeps = super.moduleDeps ++ Seq(

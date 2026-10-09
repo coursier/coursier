@@ -51,6 +51,8 @@ import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
         copy(
           repositories = versionOverride.repositories.getOrElse(repositories),
           dependencies = versionOverride.dependencies.getOrElse(dependencies),
+          sharedDependencies =
+            versionOverride.sharedDependencies.getOrElse(sharedDependencies),
           mainClass =
             versionOverride.mainClass
               .map(mc => if (mc.isEmpty) None else Some(mc))

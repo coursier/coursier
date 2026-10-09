@@ -198,6 +198,7 @@ import scala.language.implicitConversions
           copy(
             dependencies = versionOverride.dependencies.getOrElse(dependencies),
             repositories = versionOverride.repositories.getOrElse(repositories),
+            shared = versionOverride.shared.getOrElse(shared),
             mainClass = versionOverride.mainClass.orElse(mainClass),
             properties = versionOverride.properties.getOrElse(properties)
           )
@@ -328,13 +329,17 @@ object RawAppDescriptor {
     prebuilt: Option[String] = None,
     prebuiltBinaries: Option[Map[String, String]] = None,
     @unroll
-    launcherType: Option[String] = None
+    launcherType: Option[String] = None,
+    @unroll
+    shared: Option[List[String]] = None
   ) {
     def versionOverride: ValidatedNel[String, VersionOverride] = {
       val versionRangeV = VersionParse.versionInterval(versionRange)
         .toValidNel(s"""versionRange "$versionRange" is invalid""")
       val repositoriesV = repositories.map(parseRepositories).sequence
       val dependenciesV = dependencies.map(parseDependenices).sequence
+      val sharedDependenciesV =
+        shared.map(s => validationNelToCats(ModuleParser.javaOrScalaModules(s))).sequence
       val (mainClassOpt, defaultMainClassOpt) = mainClass.map(parseMainClass) match {
         case Some(Left(mainClass))         => (Some(mainClass), Some(""))
         case Some(Right(defaultMainClass)) => (Some(""), Some(defaultMainClass))
@@ -346,11 +351,12 @@ object RawAppDescriptor {
           Validated.fromEither(LauncherType.parse(lt).left.map(NonEmptyList.one))
         ).sequence
 
-      (versionRangeV, repositoriesV, dependenciesV, launcherTypeV).mapN {
-        (versionRange, repositories, dependencies, launcherType) =>
+      (versionRangeV, repositoriesV, dependenciesV, sharedDependenciesV, launcherTypeV).mapN {
+        (versionRange, repositories, dependencies, sharedDependencies, launcherType) =>
           VersionOverride(versionRange)
             .copy(
               dependencies = dependencies,
+              sharedDependencies = sharedDependencies,
               repositories = repositories,
               mainClass = mainClassOpt,
               defaultMainClass = defaultMainClassOpt,
@@ -373,7 +379,8 @@ object RawAppDescriptor {
       properties: Option[Properties] = None,
       prebuilt: Option[String] = None,
       prebuiltBinaries: Option[Map[String, String]] = None,
-      launcherType: Option[String] = None
+      launcherType: Option[String] = None,
+      shared: Option[List[String]] = None
     ) {
       def get: RawVersionOverride =
         RawVersionOverride(versionRange)
@@ -384,7 +391,8 @@ object RawAppDescriptor {
             properties = properties,
             prebuilt = prebuilt,
             prebuiltBinaries = prebuiltBinaries,
-            launcherType = launcherType
+            launcherType = launcherType,
+            shared = shared
           )
     }
 
@@ -397,7 +405,8 @@ object RawAppDescriptor {
         properties = o.properties,
         prebuilt = o.prebuilt,
         prebuiltBinaries = o.prebuiltBinaries,
-        launcherType = o.launcherType
+        launcherType = o.launcherType,
+        shared = o.shared
       )
 
     // all fields are always written out, absent ones as null, like the former

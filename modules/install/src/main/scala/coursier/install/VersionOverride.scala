@@ -3,7 +3,7 @@ package coursier.install
 import dataclass.{data, since => unroll}
 
 import coursier.core.Repository
-import coursier.parse.JavaOrScalaDependency
+import coursier.parse.{JavaOrScalaDependency, JavaOrScalaModule}
 import coursier.version.{Version, VersionInterval}
 // format: off
 @data(deprecatedSetters = true, deprecatedSettersMessage = "Use copy instead", deprecatedSettersSince = "2.1.25") case class VersionOverride(
@@ -17,7 +17,9 @@ import coursier.version.{Version, VersionInterval}
     prebuiltLauncher: Option[String] = None,
   prebuiltBinaries: Option[Map[String, String]] = None,
   @unroll
-    launcherType: Option[LauncherType] = None
+    launcherType: Option[LauncherType] = None,
+  @unroll
+    sharedDependencies: Option[Seq[JavaOrScalaModule]] = None
 ) {
   // format: on
 
