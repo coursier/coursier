@@ -2,7 +2,6 @@ package coursierbuild
 
 import coursierbuild.{Deps, Docker, Versions}
 import coursierbuild.modules.CsModule
-
 import io.github.alexarchambault.millnativeimage.NativeImage
 import mill.*
 import mill.api.*
@@ -113,7 +112,7 @@ object Launchers {
           Extension("lib"),
           Classifier("x86_64-pc-win32")
         )
-        .withTransitive(false)
+        .copy(transitive = false)
 
       val files = Fetch()
         .addDependencies(dep0)
@@ -143,7 +142,7 @@ object Launchers {
       val usesDocker = nativeImageDockerParams().nonEmpty
       val cLibPath =
         if (usesDocker) s"/data/$staticLibDirName"
-        else PathRef.toResolvedPathString(staticLibDir().path)
+        else staticLibDir().path.toString
       super.nativeImageOptions() ++
         Seq(
           s"-H:CLibraryPath=$cLibPath",
@@ -364,7 +363,7 @@ object Launchers {
     }
 
     def runWithAssistedConfig(args: String*) = Task.Command {
-      val cp = jarClassPath().map(ref => PathRef.toResolvedPathString(ref.path))
+      val cp = jarClassPath().map(_.path.toString)
         .mkString(File.pathSeparator)
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
       val graalVmHome = Option(System.getenv("GRAALVM_HOME")).getOrElse {
@@ -393,7 +392,7 @@ object Launchers {
     }
 
     def runFromJars(args: String*) = Task.Command {
-      val cp = jarClassPath().map(ref => PathRef.toResolvedPathString(ref.path))
+      val cp = jarClassPath().map(_.path.toString)
         .mkString(File.pathSeparator)
       val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
       val command    = Seq("java", "-cp", cp, mainClass0) ++ args
@@ -416,7 +415,7 @@ object Launchers {
       * values that go through Mill's cache come back in the aliased form again.
       */
     private def resolvedJarClassPath: Task[Seq[os.Path]] = Task.Anon {
-      jarClassPath().map(ref => PathRef.toResolvedOsPath(ref.path))
+      jarClassPath().map(_.path)
     }
 
     def launcher = Task {
@@ -437,7 +436,7 @@ object Launchers {
         .withOsKind(isWin)
         .callsItself(isWin)
       val entries =
-        cp.map(path => ClassPathEntry.Url(PathRef.toAbsNioPath(path).toUri.toASCIIString))
+        cp.map(path => ClassPathEntry.Url(path.toNIO.toUri.toASCIIString))
       val loaderContent = coursier.launcher.ClassLoaderContent(entries)
       val params = Parameters.Bootstrap(Seq(loaderContent), mainClass0)
         .withDeterministic(true)
@@ -450,9 +449,7 @@ object Launchers {
 
     def standaloneLauncher = Task {
 
-      val cachePath = PathRef.toResolvedOsPath(
-        os.Path(coursier.cache.FileCache().location, BuildCtx.workspaceRoot)
-      )
+      val cachePath = os.Path(coursier.cache.FileCache().location, BuildCtx.workspaceRoot)
       def urlOf(path: os.Path): Option[String] =
         if (path.startsWith(cachePath)) {
           val segments = path.relativeTo(cachePath).segments
@@ -527,9 +524,9 @@ object Launchers {
         "--name",
         "cs",
         "--dest",
-        PathRef.toResolvedPathString(outputDir),
+        outputDir.toString,
         "--input",
-        PathRef.toResolvedPathString(inputDir),
+        inputDir.toString,
         "--main-jar",
         "coursier.jar",
         "--main-class",

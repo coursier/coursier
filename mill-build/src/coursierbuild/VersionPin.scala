@@ -2,7 +2,6 @@ package coursierbuild
 
 import java.util.regex.Matcher
 
-import mill.api.PathRef
 import sttp.client4.Response
 import sttp.client4.quick._
 
@@ -107,7 +106,7 @@ object VersionPin {
       "1",
       "-b",
       baseBranch,
-      PathRef.toResolvedPathString(cloneUnder)
+      cloneUnder.toString
     )
       .call(stdin = os.Inherit, stdout = os.Inherit, stderr = os.Inherit)
 
