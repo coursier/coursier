@@ -39,9 +39,9 @@ trait NativeImage extends Module {
         import scala.concurrent.duration.Duration
 
         val csCache      = FileCache[CsTask]().withTtl(Duration.Zero)
-        val archiveCache = ArchiveCache().withCache(csCache)
-        val jvmCache     = JvmCache().withArchiveCache(archiveCache).withIndex(jvmIndex)
-        val javaHome     = CsJavaHome().withCache(jvmCache).withUpdate(true)
+        val archiveCache = ArchiveCache().copy(cache = csCache)
+        val jvmCache     = JvmCache().copy(archiveCache = archiveCache).withIndex(jvmIndex)
+        val javaHome     = CsJavaHome().withCache(jvmCache).copy(update = true)
         javaHome.get(nativeImageGraalVmJvmId())
           .unsafeRun(wrapExceptions = true)(
             using csCache.ec
@@ -301,7 +301,7 @@ trait NativeImage extends Module {
 
 }
 
-object NativeImage extends NativeImageCompat {
+object NativeImage {
   def defaultGraalVmVersion: String = "22.3.0"
 
   def defaultLinuxStaticDockerImage: String =
@@ -443,13 +443,13 @@ object NativeImage extends NativeImageCompat {
         val manifest   = new Manifest
         val attributes = manifest.getMainAttributes
         attributes.put(Attributes.Name.MANIFEST_VERSION, "1.0")
-        attributes.put(Attributes.Name.CLASS_PATH, classPath.map(absPath).mkString(" "))
+        attributes.put(Attributes.Name.CLASS_PATH, classPath.map(_.toString).mkString(" "))
         val jarFile = File.createTempFile("classpathJar", ".jar")
         val jos     = new JarOutputStream(new java.io.FileOutputStream(jarFile), manifest)
         jos.close()
         jarFile.getAbsolutePath
       } else
-        classPath.map(absPath).mkString(File.pathSeparator)
+        classPath.map(_.toString).mkString(File.pathSeparator)
 
     def command(
       nativeImage:          String,
@@ -472,10 +472,10 @@ object NativeImage extends NativeImageCompat {
     }
 
     def defaultCommand: Seq[String] = {
-      val absDest    = absNioPath(dest).normalize
+      val absDest    = dest.toNIO.normalize
       val destDirOpt = Option(absDest.getParent).map(_.toString)
       val destName   = absDest.getFileName.toString
-      command(absPath(nativeImage), Nil, destDirOpt, destName, finalCp)
+      command(nativeImage.toString, Nil, destDirOpt, destName, finalCp)
     }
 
     def default: (Seq[String], Option[os.Path], Map[String, String]) = {
@@ -513,7 +513,7 @@ object NativeImage extends NativeImageCompat {
             val f = () => {
               val scriptPath = workingDir / "run-native-image.bat"
               os.write.over(scriptPath, script.getBytes, createFolders = true)
-              (Seq("cmd", "/c", absPath(scriptPath)), None, Map.empty[String, String])
+              (Seq("cmd", "/c", scriptPath.toString), None, Map.empty[String, String])
             }
             if withFilesystemChecker then f()
             else
@@ -591,7 +591,7 @@ object NativeImage extends NativeImageCompat {
               val dockerCmd = Seq("docker", "run") ++ termOpt ++ Seq(
                 "--rm",
                 "-v",
-                s"${absPath(dockerWorkingDir)}:/data",
+                s"$dockerWorkingDir:/data",
                 "-e",
                 "COURSIER_JVM_CACHE=/data/jvm-cache",
                 "-e",

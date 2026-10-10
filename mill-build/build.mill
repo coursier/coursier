@@ -11,7 +11,7 @@ object `package` extends MillBuildRootModule {
     mvn"io.get-coursier:coursier-launcher_2.13:2.1.25-M13",
     mvn"org.jsoup:jsoup:1.23.2",
     mvn"com.eed3si9n.jarjarabrams:jarjar-abrams-core_2.13:1.14.1",
-    mvn"com.lihaoyi::mill-contrib-jmh:2.0.0-M2",
+    mvn"com.lihaoyi::mill-contrib-jmh:${mill.api.BuildInfo.millVersion}",
     mvn"org.apache.commons:commons-compress:1.27.0"
   )
 }

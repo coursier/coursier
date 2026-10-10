@@ -9,14 +9,14 @@ trait CsResourcesTests extends TestModule {
   def testHandmadeMetadataDir: T[PathRef]
   def testMetadataDir: T[PathRef]
   private def dirUri(dir: PathRef): String =
-    PathRef.toAbsNioPath(PathRef.toResolvedOsPath(dir.path)).toUri.toASCIIString
+    dir.path.toNIO.toUri.toASCIIString
   def forkEnv = super.forkEnv() ++ Seq(
     "COURSIER_TEST_DATA_DIR" ->
-      PathRef.toResolvedPathString(testDataDir().path),
+      testDataDir().path.toString,
     "COURSIER_TESTS_METADATA_DIR" ->
-      PathRef.toResolvedPathString(testMetadataDir().path),
+      testMetadataDir().path.toString,
     "COURSIER_TESTS_HANDMADE_METADATA_DIR" ->
-      PathRef.toResolvedPathString(testHandmadeMetadataDir().path),
+      testHandmadeMetadataDir().path.toString,
     "COURSIER_TESTS_METADATA_DIR_URI" ->
       dirUri(testMetadataDir()),
     "COURSIER_TESTS_HANDMADE_METADATA_DIR_URI" ->

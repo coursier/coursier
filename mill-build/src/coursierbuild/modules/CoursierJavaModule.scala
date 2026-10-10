@@ -4,7 +4,6 @@ import com.github.lolgab.mill.mima.Mima
 import coursier.cache.ArchiveCache
 import coursier.jvm.{JavaHome, JvmCache}
 import coursierbuild.{Deps, ScalaVersions}
-
 import mill.*
 import mill.api.*
 import mill.scalalib.*
@@ -27,7 +26,7 @@ trait CoursierJavaModule extends JavaModule {
     val javaHome = JavaHome()
       .withCache(
         JvmCache()
-          .withArchiveCache(ArchiveCache().withCache(cache))
+          .copy(archiveCache = ArchiveCache().copy(cache = cache))
           .withDefaultIndex
       )
       .get(javacSystemJvmId())
@@ -48,8 +47,8 @@ trait CoursierJavaModule extends JavaModule {
     // keeps the ephemeral out/mill-no-daemon/<id>/mill-home forwarder, that mill wipes when it
     // exits, in the path. `toResolvedPathString` follows it.
     val extraOpts =
-      if (hasModules) Seq("--system", PathRef.toResolvedPathString(javaHome))
-      else Seq("-bootclasspath", PathRef.toResolvedPathString(rtJar))
+      if (hasModules) Seq("--system", javaHome.toString)
+      else Seq("-bootclasspath", rtJar.toString)
     Seq("-source", jvmRelease, "-target", jvmRelease) ++ extraOpts
   }
   def javacOptions = Task {

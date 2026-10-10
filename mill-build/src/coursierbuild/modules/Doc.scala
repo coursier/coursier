@@ -4,7 +4,6 @@ import coursierbuild.{Deps, Versions}
 import coursierbuild.Relativize.{relativize => doRelativize}
 import coursierbuild.modules.CoursierPublishModule.latestTaggedVersion
 import coursierbuild.DocHelpers
-
 import java.io.File
 
 import mill.*
@@ -63,11 +62,11 @@ trait Doc extends ScalaModule {
 
     val allArgs: Seq[String] = Seq(
       "--classpath",
-      classPath().map(ref => PathRef.toResolvedPathString(ref.path)).mkString(File.pathSeparator),
+      classPath().map(_.path.toString).mkString(File.pathSeparator),
       "--in",
-      PathRef.toResolvedPathString(BuildCtx.workspaceRoot / "doc" / "docs"),
+      (BuildCtx.workspaceRoot / "doc" / "docs").toString,
       "--out",
-      PathRef.toResolvedPathString(outputDir),
+      outputDir.toString,
       "--site.VERSION",
       ver,
       "--site.EXTRA_SBT",

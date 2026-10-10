@@ -1,7 +1,5 @@
 package coursierbuild
 
-import mill.api.PathRef
-
 object DocHelpers {
   def copyDocusaurusVersionedData(
     repo: String,
@@ -14,7 +12,7 @@ object DocHelpers {
 
     os.makeDir.all(cloneUnder)
 
-    os.proc("git", "clone", remote, "-b", branch, PathRef.toResolvedPathString(cloneUnder)).call(
+    os.proc("git", "clone", remote, "-b", branch, cloneUnder.toString).call(
       stdin = os.Inherit,
       stdout = os.Inherit,
       stderr = os.Inherit
@@ -70,7 +68,7 @@ object DocHelpers {
       remote,
       "-b",
       branch,
-      PathRef.toResolvedPathString(cloneUnder)
+      cloneUnder.toString
     ).call(
       stdin = os.Inherit,
       stdout = os.Inherit,
@@ -147,7 +145,7 @@ object DocHelpers {
 
     os.makeDir.all(dest)
 
-    os.proc("git", "clone", remote, "-q", "-b", branch, PathRef.toResolvedPathString(dest)).call(
+    os.proc("git", "clone", remote, "-q", "-b", branch, dest.toString).call(
       stdin = os.Inherit,
       stdout = os.Inherit,
       stderr = os.Inherit
