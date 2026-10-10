@@ -1305,6 +1305,24 @@ trait CliTests extends CsModule { self =>
     Deps.ujson,
     Deps.utest
   )
+  // Same as GetCs.download, which can't be used here: get-cs is compiled against coursier 2.1.2,
+  // and calls an ArchiveCache.apply overload that the coursier version of Mill doesn't have anymore
+  private def downloadAndExtract(url: String): String = {
+    val cache        = _root_.coursier.cache.FileCache()
+    val archiveCache = _root_.coursier.cache.ArchiveCache().copy(cache = cache)
+    val file = cache.logger.using(archiveCache.get(_root_.coursier.util.Artifact(url)))
+      .unsafeRun()(using cache.ec)
+      .fold(err => throw new Exception(s"Error getting and extracting $url", err), identity)
+    val exec =
+      if (Properties.isWin && file.isDirectory && file.getName.endsWith(".zip"))
+        file.listFiles.find(_.getName.endsWith(".exe"))
+          .getOrElse(sys.error(s"No .exe found under $file"))
+      else
+        file
+    if (!Properties.isWin)
+      exec.setExecutable(true)
+    exec.toString
+  }
   private def sharedTestArgs = {
     val arch = sys.props.getOrElse("os.arch", "").toLowerCase(java.util.Locale.ROOT)
     val (scalaCli, scalaCliIsJar) = GetCs.scalaCliUrl(
@@ -1314,7 +1332,7 @@ trait CliTests extends CsModule { self =>
       Properties.isMac,
       Properties.isLinux
     )
-      .map(GetCs.download)
+      .map(downloadAndExtract)
       .map((_, false))
       .getOrElse {
         if (Properties.isWin && (arch == "aarch64" || arch == "arm64")) {
