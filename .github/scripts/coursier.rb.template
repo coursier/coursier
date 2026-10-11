@@ -37,6 +37,7 @@ class Coursier < Formula
     end
     resource("jar-launcher").stage { bin.install "coursier" }
     chmod 0555, bin/"coursier"
+    chmod 0555, bin/"cs"
 
     unless build.without? "shell-completions"
       # The native launcher writes its argv[0] in the completion scripts. Running it
