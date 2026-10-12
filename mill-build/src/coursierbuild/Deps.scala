@@ -18,7 +18,7 @@ object Deps {
   def diffUtils    = mvn"io.github.java-diff-utils:java-diff-utils:4.17"
   def dockerClient = mvn"com.spotify:docker-client:8.16.0"
   // Backs `shimScalaAsync` below; used directly by the `async-compat` module, for Scala.js
-  def dottyCpsAsync     = mvn"io.github.dotty-cps-async::dotty-cps-async::1.3.4"
+  def dottyCpsAsync     = mvn"io.github.dotty-cps-async::dotty-cps-async::1.4.0"
   def fastParse         = mvn"com.lihaoyi::fastparse::3.1.1"
   def http4sBlazeServer = mvn"org.http4s::http4s-blaze-server:0.23.18"
   def http4sDsl         = mvn"org.http4s::http4s-dsl:${Versions.http4s}"
