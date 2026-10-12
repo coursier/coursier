@@ -374,7 +374,7 @@ object cli extends Cli {
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
-      coursier.jvm(cliScalaVersion).test
+      coursier.jvm(ScalaVersions.scala3).test
     )
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.ujson
@@ -658,25 +658,19 @@ trait Env extends CrossSbtModule with CsModule
   }
 }
 
-def cliScalaVersion = ScalaVersions.scala3
-def launcherModule  = launcher
-
-// Scala version of the cli module itself, its module dependencies being built with
-// cliScalaVersion (see ScalaVersions.scala3Cli)
-def cliModuleScalaVersion = ScalaVersions.scala3Cli
-
+def launcherModule = launcher
 // Lowest JVM release the latest Scala 3 can emit bytecode for: Scala 3.8+
-// only accepts 17 and later, so the modules compiled with cliScalaVersion
+// only accepts 17 and later, so the modules compiled with ScalaVersions.scala3Cli
 // cannot target an earlier one.
 def scala3LatestJvmRelease = "17"
 // only published locally, for the sake of `cli-tests`
 trait LauncherNative04 extends CsModule
     with LocalOnlyPublishModule {
   def jvmRelease   = scala3LatestJvmRelease
-  def scalaVersion = cliScalaVersion
+  def scalaVersion = ScalaVersions.scala3
   def artifactName = "coursier-launcher-native_0.4"
   def compileModuleDeps = Seq(
-    launcherModule(cliScalaVersion)
+    launcherModule(ScalaVersions.scala3)
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalaNativeTools040
@@ -972,10 +966,10 @@ trait Install extends CsModule
     )
   )
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(cliScalaVersion),
-    env(cliScalaVersion),
-    jvm(cliScalaVersion),
-    launcherModule(cliScalaVersion)
+    coursier.jvm(ScalaVersions.scala3),
+    env(ScalaVersions.scala3),
+    jvm(ScalaVersions.scala3),
+    launcherModule(ScalaVersions.scala3)
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.jsoniterMacros(scalaVersion())
@@ -989,14 +983,14 @@ trait Install extends CsModule
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
     def moduleDeps = super.moduleDeps ++ Seq(
-      `test-cache`.jvm(cliScalaVersion)
+      `test-cache`.jvm(ScalaVersions.scala3)
     )
     def mvnDeps = super.mvnDeps() ++ Seq(
       Deps.pprint,
       Deps.ujson
     )
     def forkArgs = Task {
-      val httpServerCp = `test-cache`.jvm(cliScalaVersion).httpServerClassPath()
+      val httpServerCp = `test-cache`.jvm(ScalaVersions.scala3).httpServerClassPath()
         .map(_.path.toString).mkString(File.pathSeparator)
       super.forkArgs() ++ Seq(
         s"-Dtest.http-server.classpath=$httpServerCp"
@@ -1093,8 +1087,8 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
   def jvmRelease   = scala3LatestJvmRelease
   def artifactName = "coursier-docker"
   def moduleDeps = super.moduleDeps ++ Seq(
-    cache.jvm(cliScalaVersion),
-    `archive-cache`(cliScalaVersion),
+    cache.jvm(ScalaVersions.scala3),
+    `archive-cache`(ScalaVersions.scala3),
     exec
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
@@ -1121,7 +1115,7 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
   }
   object test extends CrossSbtTests with CsTests {
     def moduleDeps = super.moduleDeps ++ Seq(
-      cache.jvm(cliScalaVersion).test
+      cache.jvm(ScalaVersions.scala3).test
     )
   }
 }
@@ -1129,21 +1123,21 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
 trait Cli extends CsModule
     with CoursierPublishModule with Launchers {
   def jvmRelease   = scala3LatestJvmRelease
-  def scalaVersion = cliModuleScalaVersion
+  def scalaVersion = ScalaVersions.scala3Cli
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(cliScalaVersion),
+    coursier.jvm(ScalaVersions.scala3),
     install,
-    jvm(cliScalaVersion),
-    docker(cliScalaVersion),
-    launcherModule(cliScalaVersion),
+    jvm(ScalaVersions.scala3),
+    docker(ScalaVersions.scala3),
+    launcherModule(ScalaVersions.scala3),
     `cache-server`
   )
   def artifactName = "coursier-cli"
   def mvnDeps = super.mvnDeps() ++ Seq(
     // From Scala 3.8 on, scala3-library is empty, and the standard library is all in scala-library.
-    // The module dependencies, built with cliScalaVersion, pull an earlier scala3-library, that
-    // has its own copy of many scala-library classes. This evicts it, both on the class path the
-    // build computes and when resolving the published POM.
+    // The module dependencies, built with ScalaVersions.scala3, pull an earlier scala3-library,
+    // that has its own copy of many scala-library classes. This evicts it, both on the class path
+    // the build computes and when resolving the published POM.
     Deps.scala3Library(scalaVersion()),
     Deps.caseApp,
     Deps.classPathUtil,
@@ -1301,9 +1295,9 @@ trait Cli extends CsModule
 // not published: only hosts the tests of the CLI launchers
 trait CliTests extends CsModule { self =>
   def jvmRelease   = scala3LatestJvmRelease
-  def scalaVersion = cliScalaVersion
+  def scalaVersion = ScalaVersions.scala3
   def moduleDeps = super.moduleDeps ++ Seq(
-    coursier.jvm(cliScalaVersion)
+    coursier.jvm(ScalaVersions.scala3)
   )
   def compileMvnDeps = super.compileMvnDeps() ++ Seq(
     Deps.jsoniterMacros(scalaVersion())
@@ -1665,7 +1659,7 @@ def jarLauncherArgs(
     (if (bat) Seq("--bat") else Nil) ++
     (if (defaultRepositories) Nil else Seq("--no-default")) ++
     repositories.flatMap(repo => Seq("-r", repo)) ++
-    Seq("-o", dest, "-f", s"$mavenOrg::coursier-cli:$version", "--scala", cliModuleScalaVersion)
+    Seq("-o", dest, "-f", s"$mavenOrg::coursier-cli:$version", "--scala", ScalaVersions.scala3Cli)
 
 /** The repositories to pass `cs bootstrap` along the default ones, for the coursier-cli `version`
   * to be found (snapshots aren't on Central proper)
@@ -2408,10 +2402,10 @@ object docs extends ScalaModule {
 
 // Scala 3 only, like the cli that uses it
 trait CacheServer extends CsModule with CoursierPublishModule with CsMima {
-  def scalaVersion = cliScalaVersion
+  def scalaVersion = ScalaVersions.scala3
   def artifactName = "coursier-cache-server"
   def moduleDeps = super.moduleDeps ++ Seq(
-    cache.jvm(cliScalaVersion)
+    cache.jvm(ScalaVersions.scala3)
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.osLib,
