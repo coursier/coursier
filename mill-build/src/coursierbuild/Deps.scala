@@ -61,7 +61,7 @@ object Deps {
     if (sv.startsWith("2.12"))
       mvn"org.virtuslab.scala-cli::config:1.1.3"
     else
-      mvn"org.virtuslab.scala-cli:config_3:1.17.1"
+      mvn"org.virtuslab.scala-cli:config_3:1.18.0"
         .exclude(("com.github.plokhotnyuk.jsoniter-scala", "jsoniter-scala-core_3"))
   def scala3Library(sv: String) = mvn"org.scala-lang::scala3-library:$sv"
   def scalaCompiler(sv: String) =
