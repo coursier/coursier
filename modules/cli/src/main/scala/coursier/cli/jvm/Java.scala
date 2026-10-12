@@ -91,7 +91,7 @@ object Java extends CoursierCommand[JavaOptions] {
           }
         } yield maybeError
 
-      val maybeError = task.unsafeRun(wrapExceptions = true)(coursierCache.ec)
+      val maybeError = task.unsafeRun(wrapExceptions = true)(using coursierCache.ec)
       maybeError match {
         case Left(error) =>
           System.err.println(error)
@@ -109,7 +109,7 @@ object Java extends CoursierCommand[JavaOptions] {
       val (isSystem, home) = logger.use {
         try task.unsafeRun(wrapExceptions =
             true
-          )(coursierCache.ec) // TODO Better error messages for relevant exceptions
+          )(using coursierCache.ec) // TODO Better error messages for relevant exceptions
         catch {
           case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
             System.err.println(e.getMessage)
@@ -178,7 +178,7 @@ object Java extends CoursierCommand[JavaOptions] {
           MaybeInstallJvm.headerComment,
           javaHome.managedJvmsDir
         )
-        task.unsafeRun(wrapExceptions = true)(coursierCache.ec)
+        task.unsafeRun(wrapExceptions = true)(using coursierCache.ec)
       }
       else if (Execve.available()) {
         val extraEnv = envUpdate.transientUpdates()
@@ -196,7 +196,7 @@ object Java extends CoursierCommand[JavaOptions] {
       }
       else {
         val extraEnv = envUpdate.transientUpdates()
-        val b        = new ProcessBuilder((javaBin.getAbsolutePath +: args0): _*)
+        val b        = new ProcessBuilder((javaBin.getAbsolutePath +: args0)*)
         b.inheritIO()
         val env = b.environment()
         for ((k, v) <- extraEnv)

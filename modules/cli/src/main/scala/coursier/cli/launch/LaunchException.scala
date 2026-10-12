@@ -10,9 +10,9 @@ object LaunchException {
   final class NoMainClassFound extends LaunchException("Cannot find default main class")
   final class MainClassNotFound(mainClass: String, cause: Throwable)
       extends LaunchException(s"Class $mainClass not found", cause)
-  final class MainMethodNotFound(mainClass: Class[_], cause: Throwable)
+  final class MainMethodNotFound(mainClass: Class[?], cause: Throwable)
       extends LaunchException(s"Main method not found in $mainClass", cause)
-  final class NonStaticMainMethod(mainClass: Class[_], method: Method)
+  final class NonStaticMainMethod(mainClass: Class[?], method: Method)
       extends LaunchException(s"Main method in $mainClass is not static")
 
   // format: off

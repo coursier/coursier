@@ -37,7 +37,7 @@ object JavaHome extends CoursierCommand[JavaHomeOptions] {
     val (isSystem, home) = logger.use {
       try task.unsafeRun(wrapExceptions =
           true
-        )(coursierCache.ec) // TODO Better error messages for relevant exceptions
+        )(using coursierCache.ec) // TODO Better error messages for relevant exceptions
       catch {
         case e: JvmCache.JvmCacheException if params.output.verbosity <= 1 =>
           System.err.println(e.getMessage)
@@ -72,7 +72,7 @@ object JavaHome extends CoursierCommand[JavaHomeOptions] {
         MaybeInstallJvm.headerComment,
         javaHome.managedJvmsDir
       )
-      setupTask.unsafeRun(wrapExceptions = true)(coursierCache.ec)
+      setupTask.unsafeRun(wrapExceptions = true)(using coursierCache.ec)
     }
     else
       println(home.getAbsolutePath)

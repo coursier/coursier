@@ -4,6 +4,12 @@ object ScalaVersions {
   def scala3   = "3.3.8"
   def scala213 = "2.13.18"
   def scala212 = "2.12.21"
+
+  // Only for the cli module itself: as an application rather than a library, it doesn't
+  // force its Scala 3 version onto anyone, and can use the latest one. Its module
+  // dependencies stay on `scala3`, whose TASTy files later Scala 3 versions can read.
+  def scala3Cli = "3.10.0"
+
   // TODO SCALA_213_BASELINE search for this TODO in the codebase
   // for cleanup tasks when we move to Scala 2.13 as as the baseline
   //

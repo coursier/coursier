@@ -16,7 +16,9 @@ object Search extends CoursierCommand[SearchOptions] {
     val cache  = params.cache.cache(pool, params.output.logger())
     val channels = Channels(params.channels.channels, params.repositories.repositories, cache)
       .copy(verbosity = params.output.verbosity)
-    channels.searchAppName(args.all).attempt.unsafeRun(wrapExceptions = true)(cache.ec) match {
+    channels.searchAppName(args.all).attempt.unsafeRun(wrapExceptions = true)(using
+      cache.ec
+    ) match {
       case Left(err: Channels.ChannelsException) =>
         System.err.println(err.getMessage)
         sys.exit(1)

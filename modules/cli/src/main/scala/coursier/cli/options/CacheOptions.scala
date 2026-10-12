@@ -162,7 +162,7 @@ final case class CacheOptions(
     val credentialsV = credentials.traverse { s =>
       CredentialsParser.parseSeq(s).either match {
         case Left(errors) =>
-          Validated.invalid(NonEmptyList.of(errors.head, errors.tail: _*))
+          Validated.invalid(NonEmptyList.of(errors.head, errors.tail*))
         case Right(l) =>
           Validated.validNel(l)
       }

@@ -134,7 +134,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
       args
 
     lazy val b = {
-      val b0 = new ProcessBuilder(cmd: _*)
+      val b0 = new ProcessBuilder(cmd*)
       b0.inheritIO()
 
       val env = b0.environment()
@@ -452,10 +452,11 @@ object Launch extends CoursierCommand[LaunchOptions] {
           else
             sys.error(s"Async-profiler not supported on current OS (${sys.props("os.name")})")
 
-        val dir = archiveCache.get(Artifact(url)).unsafeRun(wrapExceptions = true)(cache.ec) match {
-          case Left(err)  => throw new Exception(err)
-          case Right(res) => res
-        }
+        val dir =
+          archiveCache.get(Artifact(url)).unsafeRun(wrapExceptions = true)(using cache.ec) match {
+            case Left(err)  => throw new Exception(err)
+            case Right(res) => res
+          }
         val agentFile = new File(dir, pathInArchive)
         Seq(s"-agentpath:$agentFile=${params.asyncProfilerOptions.mkString(",")}")
       case None =>
@@ -667,7 +668,7 @@ object Launch extends CoursierCommand[LaunchOptions] {
         fetchCacheTask(params, pool, deps, args.unparsed)
 
     val (mainClass, run) =
-      try t.unsafeRun(wrapExceptions = true)(ec)
+      try t.unsafeRun(wrapExceptions = true)(using ec)
       catch {
         case e: ResolveException if params.shared.resolve.output.verbosity <= 1 =>
           System.err.println(e.message)

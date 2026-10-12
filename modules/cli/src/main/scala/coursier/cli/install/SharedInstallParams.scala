@@ -41,7 +41,7 @@ object SharedInstallParams {
     v: coursier.util.ValidationNel[L, R]
   ): ValidatedNel[L, R] =
     v.either match {
-      case Left(h :: t) => Validated.invalid(NonEmptyList.of(h, t: _*))
+      case Left(h :: t) => Validated.invalid(NonEmptyList.of(h, t*))
       case Right(r)     => Validated.validNel(r)
     }
 

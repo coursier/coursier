@@ -212,7 +212,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
       }
 
       fetch
-        .addDependencies(deps0: _*)
+        .addDependencies(deps0*)
         .run()
   }
 
@@ -254,7 +254,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
     )
 
     val (res, scalaVersionOpt, platformOpt, files, mainClassOpt) =
-      t.attempt.unsafeRun(wrapExceptions = true)(ec) match {
+      t.attempt.unsafeRun(wrapExceptions = true)(using ec) match {
         case Left(e: ResolveException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
           System.err.println(e.message)
           sys.exit(1)
@@ -347,7 +347,9 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
           )
         val javaHomeTask = handle.get(s"graalvm:$graalvmVersion")
         val javaHome =
-          javaHomeTask.unsafeRun(wrapExceptions = true)(ExecutionContext.fromExecutorService(pool))
+          javaHomeTask.unsafeRun(wrapExceptions = true)(using
+            ExecutionContext.fromExecutorService(pool)
+          )
 
         Parameters.NativeImage(mainClass, fetch0).copy(
           jars = files.map(_._2),
@@ -446,17 +448,19 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
               pool,
               Seq("io.github.alexarchambault.python:interface:0.1.0")
             )
-            val (_, _, _, pythonFiles) = task.attempt.unsafeRun(wrapExceptions = true)(ec) match {
-              case Left(e: ResolveException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
-                System.err.println(e.message)
-                sys.exit(1)
-              case Left(e: coursier.error.FetchError)
-                  if params.sharedLaunch.resolve.output.verbosity <= 1 =>
-                System.err.println(e.getMessage)
-                sys.exit(1)
-              case Left(e)   => throw e
-              case Right(t0) => t0
-            }
+            val (_, _, _, pythonFiles) =
+              task.attempt.unsafeRun(wrapExceptions = true)(using ec) match {
+                case Left(e: ResolveException)
+                    if params.sharedLaunch.resolve.output.verbosity <= 1 =>
+                  System.err.println(e.message)
+                  sys.exit(1)
+                case Left(e: coursier.error.FetchError)
+                    if params.sharedLaunch.resolve.output.verbosity <= 1 =>
+                  System.err.println(e.getMessage)
+                  sys.exit(1)
+                case Left(e)   => throw e
+                case Right(t0) => t0
+              }
 
             val pythonContent = Seq(
               classloaderContent(params.specific.bootstrapPackaging, pythonFiles)

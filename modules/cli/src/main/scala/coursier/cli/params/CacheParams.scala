@@ -85,7 +85,7 @@ final case class CacheParams(
         retry = retryCount,
         followHttpToHttpsRedirections = followHttpToHttpsRedirections,
         localArtifactsShouldBeCached = cacheLocalArtifacts,
-        userAgent = userAgent.orElse(Some(CacheUrl.coursierUserAgent(userAgentComments: _*))),
+        userAgent = userAgent.orElse(Some(CacheUrl.coursierUserAgent(userAgentComments*))),
         rejectNonAuthoritativeResponses = rejectNonAuthoritativeResponses
       )
 
@@ -94,7 +94,7 @@ final case class CacheParams(
         var c = basicCustomizations(fc)
         if (!useEnvCredentials)
           c = c.copy(credentials = Nil)
-        c = c.addCredentials(credentials: _*)
+        c = c.addCredentials(credentials*)
         c
       case rc: RemoteCache[Task] =>
         rc.copy(
