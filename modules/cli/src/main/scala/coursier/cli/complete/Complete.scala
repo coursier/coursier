@@ -37,7 +37,7 @@ object Complete extends CoursierCommand[CompleteOptions] {
         input = params.toComplete
       )
       .result()
-      .unsafeRun(wrapExceptions = true)(ec)
+      .unsafeRun(wrapExceptions = true)(using ec)
 
     if (params.output.verbosity >= 2)
       System.err.println(s"Completing ${result.input}")

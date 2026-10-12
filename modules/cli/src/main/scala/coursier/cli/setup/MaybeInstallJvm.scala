@@ -168,7 +168,7 @@ case class MaybeInstallJvm(
     val maybeRemoveJvm = javaHome.cache
       .map { jvmCache =>
         val entryOpt = jvmCache.entries(defaultId)
-          .unsafeRun(wrapExceptions = true)(coursierCache.ec) // meh
+          .unsafeRun(wrapExceptions = true)(using coursierCache.ec) // meh
           .toOption
           .map(_.last)
         // replaces version ranges with actual versions in particular

@@ -81,7 +81,7 @@ object FetchTests extends TestSuite {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-        .unsafeRun(wrapExceptions = true)(ec)
+        .unsafeRun(wrapExceptions = true)(using ec)
       assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
     }
 
@@ -92,7 +92,7 @@ object FetchTests extends TestSuite {
       val options = FetchOptions(artifactOptions = artifactOpt)
       val params  = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-        .unsafeRun(wrapExceptions = true)(ec)
+        .unsafeRun(wrapExceptions = true)(using ec)
       assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
     }
 
@@ -106,7 +106,7 @@ object FetchTests extends TestSuite {
         val params        = paramsOrThrow(options)
 
         val (_, _, _, files) = Fetch.task(params, pool, Seq.empty)
-          .unsafeRun(wrapExceptions = true)(ec)
+          .unsafeRun(wrapExceptions = true)(using ec)
 
         assert(files.map(_._2.getName).toSet.equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
       }
@@ -122,7 +122,7 @@ object FetchTests extends TestSuite {
         val params        = paramsOrThrow(options)
 
         assertThrows[ResolveException] {
-          Fetch.task(params, pool, Seq.empty).unsafeRun()(ec)
+          Fetch.task(params, pool, Seq.empty).unsafeRun()(using ec)
         }
       }
     }
@@ -148,7 +148,7 @@ object FetchTests extends TestSuite {
       val options = FetchOptions(artifactOptions = artifactOpt)
       val params  = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-        .unsafeRun(wrapExceptions = true)(ec)
+        .unsafeRun(wrapExceptions = true)(using ec)
       assert(files.map(_._2.getName).toSet.equals(Set(
         "junit-4.12.jar",
         "junit-4.12-sources.jar",
@@ -167,7 +167,7 @@ object FetchTests extends TestSuite {
       )
       val params = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-        .unsafeRun(wrapExceptions = true)(ec)
+        .unsafeRun(wrapExceptions = true)(using ec)
       assert(files.map(_._2.getName).toSet.equals(Set(
         "junit-4.12.jar",
         "junit-4.12-sources.jar",
@@ -180,7 +180,7 @@ object FetchTests extends TestSuite {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("com.geirsson:scalafmt-cli_2.12:1.4.0"))
-        .unsafeRun(wrapExceptions = true)(ec)
+        .unsafeRun(wrapExceptions = true)(using ec)
       assert(MainClass.mainClasses(files.map(_._2)) == Map(
         ("", "")                -> "com.martiansoftware.nailgun.NGServer",
         ("com.geirsson", "cli") -> "org.scalafmt.cli.Cli"
@@ -192,7 +192,7 @@ object FetchTests extends TestSuite {
       val params  = paramsOrThrow(options)
       val (_, _, _, files) =
         Fetch.task(params, pool, Seq("ch.epfl.scala:scalafix-cli_2.12.4:0.5.10"))
-          .unsafeRun(wrapExceptions = true)(ec)
+          .unsafeRun(wrapExceptions = true)(using ec)
       val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
       assert(MainClass.mainClasses(files.map(_._2)) == Map(
         ("", "")                 -> "com.martiansoftware.nailgun.NGServer",
@@ -204,7 +204,7 @@ object FetchTests extends TestSuite {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("com.lihaoyi:ammonite_2.12.4:1.1.0"))
-        .unsafeRun(wrapExceptions = true)(ec)
+        .unsafeRun(wrapExceptions = true)(using ec)
       val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
       assert(MainClass.mainClasses(files.map(_._2)) == Map(
         ("", "Javassist")                -> "javassist.CtClass",
@@ -217,7 +217,7 @@ object FetchTests extends TestSuite {
       val options = FetchOptions()
       val params  = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("lt.dvim.sssio:sssio_2.12:0.0.1"))
-        .unsafeRun(wrapExceptions = true)(ec)
+        .unsafeRun(wrapExceptions = true)(using ec)
       val loader = new URLClassLoader(files.map(_._2.toURI.toURL).toArray, Launch.baseLoader)
       assert(MainClass.mainClasses(files.map(_._2)) == Map(
         ("", "")                   -> "com.kenai.jffi.Main",
@@ -251,7 +251,7 @@ object FetchTests extends TestSuite {
                   "a:b:c,url=" + encodedUrl
                 )
               )
-              val (_, _, _, artifactFiles) = task.unsafeRun(wrapExceptions = true)(ec)
+              val (_, _, _, artifactFiles) = task.unsafeRun(wrapExceptions = true)(using ec)
 
               val file = artifactFiles.map(_._2) match {
                 case Seq(f) => f
@@ -264,7 +264,7 @@ object FetchTests extends TestSuite {
 
               file.delete()
 
-              val (_, _, _, artifactFiles0) = task.unsafeRun(wrapExceptions = true)(ec)
+              val (_, _, _, artifactFiles0) = task.unsafeRun(wrapExceptions = true)(using ec)
               val testFile0 = artifactFiles0.map(_._2) match {
                 case Seq(f) => f
                 case _      => sys.error("Expected a single artifact")
@@ -303,7 +303,7 @@ object FetchTests extends TestSuite {
                 Seq(
                   "org.apache.commons:commons-compress:1.5,url=" + externalUrl
                 )
-              ).unsafeRun(wrapExceptions = true)(ec)
+              ).unsafeRun(wrapExceptions = true)(using ec)
               false
             }
             catch {
@@ -333,7 +333,7 @@ object FetchTests extends TestSuite {
               "org.apache.commons:commons-compress:1.4.1",
               "org.apache.commons:commons-compress:1.5,url=" + externalUrl
             )
-          ).unsafeRun(wrapExceptions = true)(ec)
+          ).unsafeRun(wrapExceptions = true)(using ec)
 
           val files = artifactFiles.map(_._2)
           assert(files.length == 1)
@@ -356,7 +356,7 @@ object FetchTests extends TestSuite {
             val params     = paramsOrThrow(options)
             val (_, _, _, files) = mayThrow {
               Fetch.task(params, pool, Seq("junit:junit:4.12"))
-                .unsafeRun(wrapExceptions = true)(ec)
+                .unsafeRun(wrapExceptions = true)(using ec)
             }
             assert(files.map(_._2.getName).toSet
               .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
@@ -400,7 +400,7 @@ object FetchTests extends TestSuite {
             val options    = FetchOptions(resolveOptions = resolveOpt)
             val params     = paramsOrThrow(options)
             val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-              .unsafeRun(wrapExceptions = true)(ec)
+              .unsafeRun(wrapExceptions = true)(using ec)
             assert(files.map(_._2.getName).toSet
               .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
             val junitJarPath =
@@ -444,7 +444,7 @@ object FetchTests extends TestSuite {
             val options    = FetchOptions(resolveOptions = resolveOpt)
             val params     = paramsOrThrow(options)
             val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-              .unsafeRun(wrapExceptions = true)(ec)
+              .unsafeRun(wrapExceptions = true)(using ec)
             assert(files.map(_._2.getName).toSet
               .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
             val junitJarPath =
@@ -479,7 +479,7 @@ object FetchTests extends TestSuite {
             val options    = FetchOptions(resolveOptions = resolveOpt)
             val params     = paramsOrThrow(options)
             val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.12"))
-              .unsafeRun(wrapExceptions = true)(ec)
+              .unsafeRun(wrapExceptions = true)(using ec)
             assert(files.map(_._2.getName).toSet
               .equals(Set("junit-4.12.jar", "hamcrest-core-1.3.jar")))
             val junitJarPath =
@@ -523,7 +523,7 @@ object FetchTests extends TestSuite {
             val options    = FetchOptions(resolveOptions = resolveOpt)
             val params     = paramsOrThrow(options)
             val (_, _, _, files) = Fetch.task(params, pool, Seq("junit:junit:4.6"))
-              .unsafeRun(wrapExceptions = true)(ec)
+              .unsafeRun(wrapExceptions = true)(using ec)
             assert(files.map(_._2.getName).toSet
               .equals(Set("junit-4.6.jar")))
             val junitJarPath = files.map(_._2.getAbsolutePath()).filter(_.contains("junit-4.6.jar"))
@@ -551,7 +551,7 @@ object FetchTests extends TestSuite {
       val params  = paramsOrThrow(options)
       val a = Fetch.task(params, pool, Seq("sh.almond:scala-kernel_2.12.8:0.2.2"))
         .attempt
-        .unsafeRun(wrapExceptions = true)(ec)
+        .unsafeRun(wrapExceptions = true)(using ec)
 
       a match {
         case Right(_) =>
@@ -571,7 +571,7 @@ object FetchTests extends TestSuite {
       )
       val params = paramsOrThrow(options)
       val (_, _, _, l) = Fetch.task(params, pool, Seq("sh.almond:scala-kernel_2.12.8:0.2.2"))
-        .unsafeRun(wrapExceptions = true)(ec)
+        .unsafeRun(wrapExceptions = true)(using ec)
 
       val expectedUrls = Seq(
         "co/fs2/fs2-core_2.12/0.10.7/fs2-core_2.12-0.10.7.jar",
@@ -732,7 +732,7 @@ object FetchTests extends TestSuite {
         val params         = paramsOrThrow(options)
         val a = Fetch.task(params, pool, Seq("org:name:0.1"))
           .attempt
-          .unsafeRun(wrapExceptions = true)(ec)
+          .unsafeRun(wrapExceptions = true)(using ec)
 
         assert(a.isLeft)
 
@@ -758,7 +758,7 @@ object FetchTests extends TestSuite {
       val options = FetchOptions(resolveOptions = resolveOpt)
       val params  = paramsOrThrow(options)
       val (_, _, _, files) = Fetch.task(params, pool, Seq("com.lihaoyi:::ammonite:1.8.1"))
-        .unsafeRun(wrapExceptions = true)(ec)
+        .unsafeRun(wrapExceptions = true)(using ec)
       val expectedFiles = Set(
         "ammonite-interp-api_2.12.10-1.8.1.jar",
         "ammonite-interp_2.12.10-1.8.1.jar",
@@ -823,7 +823,7 @@ object FetchTests extends TestSuite {
         )
         val params = paramsOrThrow(options)
         val (_, _, _, files) =
-          Fetch.task(params, pool, Seq.empty).unsafeRun(wrapExceptions = true)(ec)
+          Fetch.task(params, pool, Seq.empty).unsafeRun(wrapExceptions = true)(using ec)
 
         val obtained = files.map(_._2.getName).toSet
         assert(obtained == expectedJars.toSet)

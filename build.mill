@@ -660,6 +660,11 @@ trait Env extends CrossSbtModule with CsModule
 
 def cliScalaVersion = ScalaVersions.scala3
 def launcherModule  = launcher
+
+// Scala version of the cli module itself, its module dependencies being built with
+// cliScalaVersion (see ScalaVersions.scala3Cli)
+def cliModuleScalaVersion = ScalaVersions.scala3Cli
+
 // Lowest JVM release the latest Scala 3 can emit bytecode for: Scala 3.8+
 // only accepts 17 and later, so the modules compiled with cliScalaVersion
 // cannot target an earlier one.
@@ -1124,7 +1129,7 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
 trait Cli extends CsModule
     with CoursierPublishModule with Launchers {
   def jvmRelease   = scala3LatestJvmRelease
-  def scalaVersion = cliScalaVersion
+  def scalaVersion = cliModuleScalaVersion
   def moduleDeps = super.moduleDeps ++ Seq(
     coursier.jvm(cliScalaVersion),
     install,
@@ -1135,6 +1140,11 @@ trait Cli extends CsModule
   )
   def artifactName = "coursier-cli"
   def mvnDeps = super.mvnDeps() ++ Seq(
+    // From Scala 3.8 on, scala3-library is empty, and the standard library is all in scala-library.
+    // The module dependencies, built with cliScalaVersion, pull an earlier scala3-library, that
+    // has its own copy of many scala-library classes. This evicts it, both on the class path the
+    // build computes and when resolving the published POM.
+    Deps.scala3Library(scalaVersion()),
     Deps.caseApp,
     Deps.classPathUtil,
     Deps.collectionCompat,
@@ -1655,7 +1665,7 @@ def jarLauncherArgs(
     (if (bat) Seq("--bat") else Nil) ++
     (if (defaultRepositories) Nil else Seq("--no-default")) ++
     repositories.flatMap(repo => Seq("-r", repo)) ++
-    Seq("-o", dest, "-f", s"$mavenOrg::coursier-cli:$version", "--scala", cliScalaVersion)
+    Seq("-o", dest, "-f", s"$mavenOrg::coursier-cli:$version", "--scala", cliModuleScalaVersion)
 
 /** The repositories to pass `cs bootstrap` along the default ones, for the coursier-cli `version`
   * to be found (snapshots aren't on Central proper)

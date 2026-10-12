@@ -32,7 +32,7 @@ object JsonReportTests extends TestSuite {
 
   implicit class StringStuff(val sc: StringContext) extends AnyVal {
     def dep(args: Any*): Dependency = {
-      val str = sc.s(args: _*)
+      val str = sc.s(args*)
       DependencyParser.dependency(
         str,
         scala.util.Properties.versionNumberString,
@@ -43,7 +43,7 @@ object JsonReportTests extends TestSuite {
       }
     }
     def mod(args: Any*): Module = {
-      val str = sc.s(args: _*)
+      val str = sc.s(args*)
       ModuleParser.module(
         str,
         scala.util.Properties.versionNumberString
@@ -53,11 +53,11 @@ object JsonReportTests extends TestSuite {
       }
     }
     def org(args: Any*): Organization = {
-      val str = sc.s(args: _*)
+      val str = sc.s(args*)
       Organization(str)
     }
     def name(args: Any*): ModuleName = {
-      val str = sc.s(args: _*)
+      val str = sc.s(args*)
       ModuleName(str)
     }
   }
@@ -97,7 +97,7 @@ object JsonReportTests extends TestSuite {
   ): Future[Unit] =
     for {
       res <- fetch
-        .addDependencies(dependencies: _*)
+        .addDependencies(dependencies*)
         .futureResult()
       _ <- TestHelpers.validateDependencies(
         res.resolution,

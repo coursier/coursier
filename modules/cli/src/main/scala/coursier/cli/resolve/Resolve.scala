@@ -385,7 +385,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
               case Left(e)                             => Task.fail(new Exception(e))
               case Right(res)                          => Task.point(Right(res))
             }
-            .unsafeRun(wrapExceptions = true)(channels.cache.ec)
+            .unsafeRun(wrapExceptions = true)(using channels.cache.ec)
           rawDesc <- RawAppDescriptor.parse(
             new String(info.appDescriptorBytes, StandardCharsets.UTF_8)
           )
@@ -450,7 +450,7 @@ object Resolve extends CoursierCommand[ResolveOptions] {
       benchmarkCache = params.benchmarkCache
     )
 
-    t.attempt.unsafeRun(wrapExceptions = true)(ec) match {
+    t.attempt.unsafeRun(wrapExceptions = true)(using ec) match {
       case Left(e: ResolveException) if params.output.verbosity <= 1 =>
         Output.errPrintln(e.getMessage)
         sys.exit(1)

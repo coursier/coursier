@@ -100,7 +100,7 @@ object Install extends CoursierCommand[InstallOptions] {
         params.output.verbosity,
         MaybeSetupPath.headerComment
       )
-      task.unsafeRun(wrapExceptions = true)(cache.ec)
+      task.unsafeRun(wrapExceptions = true)(using cache.ec)
     }
     else {
 
@@ -116,7 +116,9 @@ object Install extends CoursierCommand[InstallOptions] {
       try for (id <- args.all) {
 
           val appInfo =
-            channels.appDescriptor(id).attempt.unsafeRun(wrapExceptions = true)(cache.ec) match {
+            channels.appDescriptor(id).attempt.unsafeRun(wrapExceptions = true)(using
+              cache.ec
+            ) match {
               case Left(err: Channels.ChannelsException) =>
                 System.err.println(err.getMessage)
                 sys.exit(1)

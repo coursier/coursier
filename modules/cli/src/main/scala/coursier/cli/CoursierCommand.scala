@@ -8,7 +8,7 @@ import coursier.cli.options.OptionGroup
 import java.util.Locale
 
 abstract class CoursierCommand[T](implicit parser: Parser[T], help: Help[T])
-    extends Command[T]()(parser, help) {
+    extends Command[T]()(using parser, help) {
 
   override def helpFormat: HelpFormat =
     HelpFormat.default().withSortedGroups(Some(OptionGroup.order))

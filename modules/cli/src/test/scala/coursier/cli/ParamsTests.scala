@@ -12,7 +12,7 @@ object ParamsTests extends TestSuite {
 
   implicit class StringStuff(val sc: StringContext) extends AnyVal {
     def mod(args: Any*): Module = {
-      val str = sc.s(args: _*)
+      val str = sc.s(args*)
       ModuleParser.module(
         str,
         scala.util.Properties.versionNumberString

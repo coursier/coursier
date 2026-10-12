@@ -82,7 +82,7 @@ object Setup extends CoursierCommand[SetupOptions] {
       if (params.tryRevert) {
         val message =
           "Warning: the --try-revert option is experimental. Keep going only if you know what you are doing."
-        confirm.confirm(message, default = false)
+        confirm.confirm(message, default = false).map(_ => ())
       }
       else
         Task.point(())
@@ -104,7 +104,7 @@ object Setup extends CoursierCommand[SetupOptions] {
       )
 
     // TODO Better error messages for relevant exceptions
-    task.attempt.unsafeRun(wrapExceptions = true)(cache.ec) match {
+    task.attempt.unsafeRun(wrapExceptions = true)(using cache.ec) match {
       case Left(e: InstallDirException) if params.output.verbosity <= 1 =>
         System.err.println(e.getMessage)
         sys.exit(1)
