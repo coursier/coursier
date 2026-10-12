@@ -1156,6 +1156,16 @@ trait Cli extends CsModule
     Deps.jsoniterMacros(scalaVersion()),
     Deps.svm
   )
+  // Bytecode optimizer, ported from Scala 2 in Scala 3.10: `-opt` enables all the intra-method
+  // optimizations, `-opt-inline` enables the inliner. As an application, the cli runs with the
+  // very class path it's compiled against, so it can inline from all its dependencies, but
+  // GraalVM's, that are only on the compile class path, and provided by native-image itself.
+  def scalacOptions = Task {
+    super.scalacOptions() ++ Seq(
+      "-opt",
+      "-opt-inline:**,!org.graalvm.**,!com.oracle.**"
+    )
+  }
   def mainClass = Some("coursier.cli.Coursier")
   def finalMainClassOpt = Task {
     Right("coursier.cli.Coursier"): Either[String, String]
