@@ -34,7 +34,7 @@ object Deps {
   def jniUtilsCoursierApi =
     mvn"io.get-coursier.jniutils:windows-jni-utils-coursierapi:${Versions.jniUtils}"
   def jol  = mvn"org.openjdk.jol:jol-core:0.17"
-  def jsch = mvn"com.github.mwiede:jsch:2.28.7"
+  def jsch = mvn"com.github.mwiede:jsch:2.28.8"
   // The Scala 2 and Scala 3 modules use different jsoniter-scala versions, see Versions.scala
   private def jsoniterScalaVersion(sv: String) =
     if (sv.startsWith("3.")) Versions.jsoniterScala else Versions.jsoniterScalaScala2
