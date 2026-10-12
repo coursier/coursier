@@ -1692,6 +1692,10 @@ def jarLauncherArgs(
     (if (bat) Seq("--bat") else Nil) ++
     (if (defaultRepositories) Nil else Seq("--no-default")) ++
     repositories.flatMap(repo => Seq("-r", repo)) ++
+    // Scala 3 lazy vals compiled before 3.8 (in our modules and in dependencies like case-app)
+    // go through sun.misc.Unsafe, which JDK 24+ warns about on stderr (JEP 498). Unlike
+    // --sun-misc-unsafe-memory-access=allow, the property form doesn't make JDK < 23 refuse to start.
+    Seq("--java-opt", "-Dsun.misc.unsafe.memory.access=allow") ++
     Seq("-o", dest, "-f", s"$mavenOrg::coursier-cli:$version", "--scala", ScalaVersions.scala3Cli)
 
 /** The repositories to pass `cs bootstrap` along the default ones, for the coursier-cli `version`
