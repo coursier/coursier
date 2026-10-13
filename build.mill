@@ -600,8 +600,16 @@ trait ArchiveCache extends ArchiveCacheBase with DataClassModule {
     Deps.zstdJni
   )
   object test extends CrossSbtTests with CsTests with CrossJvmCiTests {
-    def moduleDeps = super.moduleDeps ++ Seq(`test-compat`.jvm())
-    def mvnDeps    = super.mvnDeps() ++ Deps.asyncMvnDeps(crossValue)
+    // cache-server is only built for Scala 3, so its tests (RemoteArchiveCacheTests) only run there
+    private def withCacheServer = crossValue.startsWith("3.")
+    def allSourceFiles = Task {
+      val files = super.allSourceFiles()
+      if (withCacheServer) files
+      else files.filterNot(_.path.last == "RemoteArchiveCacheTests.scala")
+    }
+    def moduleDeps = super.moduleDeps ++ Seq(`test-compat`.jvm()) ++
+      (if (withCacheServer) Seq(`cache-server`) else Nil)
+    def mvnDeps = super.mvnDeps() ++ Deps.asyncMvnDeps(crossValue)
     def compileMvnDeps = super.compileMvnDeps() ++ Seq(
       Deps.jsoniterMacros(scalaVersion())
     )

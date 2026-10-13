@@ -57,12 +57,17 @@ object Model {
     *   - if empty, the server uses its own cache policies
     * @param ttl
     *   TTL for changing artifacts, see `serializeTtl` - if empty, the server uses its own TTL
+    * @param archiveIntegrityCheck
+    *   whether the server should check the integrity of the artifact, an archive, and download it
+    *   again if it's corrupted (sent on behalf of `ArchiveCache`) - servers predating this field
+    *   ignore it, and don't check anything
     */
   final case class GetRequest(
     artifact: Artifact,
     cachePolicy: Option[String] = None,
     cachePolicies: Seq[String] = Nil,
-    ttl: Option[String] = None
+    ttl: Option[String] = None,
+    archiveIntegrityCheck: Boolean = false
   )
 
   final case class GetResponse(

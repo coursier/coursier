@@ -17,7 +17,14 @@ import java.util.Locale
 import java.util.concurrent.ExecutorService
 import javax.net.ssl.{HostnameVerifier, SSLSocketFactory}
 
-import coursier.cache.internal.{Downloader, DownloadResult, FileCacheHelpers, FileUtil, Retry}
+import coursier.cache.internal.{
+  ArchiveIntegrity,
+  Downloader,
+  DownloadResult,
+  FileCacheHelpers,
+  FileUtil,
+  Retry
+}
 import coursier.credentials.{Credentials, DirectCredentials, FileCredentials}
 import coursier.paths.CachePath
 import coursier.util.{Artifact, EitherT, Sync, Task, WebPage}
@@ -462,20 +469,51 @@ import scala.util.control.NonFatal
         fileWith(artifact, retry, cachePolicies, ttl)
     }
 
+  /** Like [[file]], also checking the integrity of archives
+    *
+    * An integrity file is written next to valid archives, so that they're not checked again. If
+    * this cache defers to a cache server, the server is the one checking archives.
+    */
+  override def fileWithIntegrityCheck(
+    artifact: Artifact
+  )(implicit S: Sync[F]): EitherT[F, ArtifactError, File] =
+    fileWithIntegrityCheck0(artifact)
+
+  private def fileWithIntegrityCheck0(artifact: Artifact): EitherT[F, ArtifactError, File] =
+    remoteCacheSubstitute match {
+      case Some(remoteCache) =>
+        ensureLoggerIsInitialized[ArtifactError].flatMap { _ =>
+          remoteCache.fileWithIntegrityCheck(artifact)
+        }
+      case None =>
+        fileWith(artifact, retry, cachePolicies, ttl, archiveIntegrityCheck = true)
+    }
+
   /** Gets `artifact` from this cache, with cache policies and a TTL other than this cache's
     *
     * Unlike [[file]], this never goes through a cache server.
+    *
+    * @param archiveIntegrityCheck
+    *   whether to check the integrity of `artifact`, an archive, like [[fileWithIntegrityCheck]]
+    *   does
     */
   private[coursier] def fileWith(
     artifact: Artifact,
     retry: Int,
     cachePolicies: Seq[CachePolicy],
-    ttl: Option[Duration]
-  ): EitherT[F, ArtifactError, File] =
-    ensureLoggerIsInitialized[ArtifactError].flatMap { _ =>
-      cachePolicies.tail.map(filePerPolicy(artifact, _, retry, ttl))
-        .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry, ttl))(_ orElse _)
-    }
+    ttl: Option[Duration],
+    archiveIntegrityCheck: Boolean = false
+  ): EitherT[F, ArtifactError, File] = {
+    def download: EitherT[F, ArtifactError, File] =
+      ensureLoggerIsInitialized[ArtifactError].flatMap { _ =>
+        cachePolicies.tail.map(filePerPolicy(artifact, _, retry, ttl))
+          .foldLeft(filePerPolicy(artifact, cachePolicies.head, retry, ttl))(_ orElse _)
+      }
+    if (archiveIntegrityCheck)
+      EitherT(ArchiveIntegrity.checkedDownload(location, artifact.url, download.run))
+    else
+      download
+  }
 
   private[coursier] def fetchPerPolicy(
     artifact: Artifact,
