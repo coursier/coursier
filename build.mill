@@ -2105,40 +2105,35 @@ object ci extends Module {
     }
   }
 
-  /** Writes the SHA-256 checksums of the files `publishArtifacts` publishes, in the format of
-    * `sha256sum`, each file named after its path in a Maven repository
-    * (`io/get-coursier/coursier_2.13/2.1.26/coursier_2.13-2.1.26.jar`)
+  /** Writes the files of `publishArtifacts` to `CoursierPublishModule.stagedRepository`, laid out
+    * like a Maven repository, as they are (no signatures, checksums, or metadata)
     *
-    * The publish workflow gets build provenance attestations for these, via the `subject-checksums`
-    * input of `actions/attest-build-provenance`. Typically run as `ci.publishChecksums
-    * --publishArtifacts __:PublishModule.publishArtifacts --output checksums.txt`, with the same
-    * `--publishArtifacts` as the command publishing them.
+    * Our JARs aren't reproducible (Mill stamps their entries with the files' last modified times),
+    * so the publish workflow attests the staged files, then publishes these very files, via the
+    * `stagedPublishArtifacts` tasks of the modules. Typically run with the same
+    * `--publishArtifacts` as the publish command would get otherwise.
+    *
+    * Stopgap for `mill.javalib.PublishModule/stageAll`, which does the same, until a Mill release
+    * has it. `SonatypeCentralPublishModule/publishStaged` and `MavenPublishModule/publishStaged`
+    * then replace the `stagedPublishArtifacts` tasks.
     */
-  def publishChecksums(
-    publishArtifacts: Tasks[PublishModule.PublishData],
-    output: String
-  ) = Task.Command[PathRef] {
-    val entries = Task.sequence(publishArtifacts.value)().flatMap { data =>
-      val dir =
-        (data.meta.group.split('.').toSeq :+ data.meta.id :+ data.meta.version).mkString("/")
-      data.payload.map { case (file, name) =>
-        val digest = java.security.MessageDigest.getInstance("SHA-256")
-          .digest(os.read.bytes(file.path))
-        (s"$dir/$name", digest.map(b => f"$b%02x").mkString)
-      }
+  def stageAll(publishArtifacts: Tasks[PublishModule.PublishData]) = Task.Command[PathRef] {
+    val dest      = CoursierPublishModule.stagedRepository
+    val artifacts = Task.sequence(publishArtifacts.value)()
+    val duplicates = artifacts.groupBy(_.meta).collect {
+      case (artifact, data) if data.length > 1 => artifact
     }
-    val duplicates = entries.groupBy(_._1).collect { case (name, l) if l.length > 1 => name }
     if (duplicates.nonEmpty)
-      Task.fail(s"Found several files to publish under ${duplicates.toSeq.sorted.mkString(", ")}")
-    if (entries.isEmpty)
+      Task.fail(s"Found several modules publishing ${duplicates.mkString(", ")}")
+    os.remove.all(dest)
+    for (data <- artifacts; (file, name) <- data.payload) {
+      val target = dest / data.meta.group.split('.') / data.meta.id / data.meta.version / name
+      os.copy(file.path, target, createFolders = true)
+    }
+    val count = artifacts.map(_.payload.length).sum
+    if (count == 0)
       Task.fail("No files to publish")
-    val dest = os.Path(output, BuildCtx.workspaceRoot)
-    os.write.over(
-      dest,
-      entries.sorted.map { case (name, checksum) => s"$checksum  $name\n" }.mkString,
-      createFolders = true
-    )
-    Task.log.info(s"Wrote the checksums of ${entries.length} files to $dest")
+    Task.log.info(s"Staged $count files of ${artifacts.length} artifacts in $dest")
     PathRef(dest)
   }
 

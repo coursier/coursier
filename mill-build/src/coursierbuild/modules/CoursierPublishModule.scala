@@ -28,6 +28,33 @@ trait CoursierPublishModule extends PublishModule
     CoursierPublishModule.fixedVersionOpt(Task.env)
       .getOrElse(CoursierPublishModule.computeBuildVersion())
   }
+
+  /** Tracks changes in [[CoursierPublishModule.stagedRepository]] (an input can't depend on
+    * `artifactMetadata`, to only track this module's directory there)
+    */
+  def stagedRepositoryRef = Task.Input {
+    PathRef(CoursierPublishModule.stagedRepository, quick = true)
+  }
+
+  /** The artifacts of this module, as `ci.stageAll` staged them
+    *
+    * Publish these rather than `publishArtifacts`, to publish the exact same files as those that
+    * got staged (and attested).
+    */
+  def stagedPublishArtifacts: T[PublishModule.PublishData] = Task {
+    val repo = stagedRepositoryRef().path
+    if (!os.isDir(repo))
+      Task.fail(s"$repo not found, run ci.stageAll first")
+    val meta  = artifactMetadata()
+    val dir   = repo / meta.group.split('.') / meta.id / meta.version
+    val files = if (os.isDir(dir)) os.list(dir).filter(os.isFile(_)) else Nil
+    // Copied to Task.dest, as PGP signing writes temporary files next to the signed ones
+    val payload = files.map { f =>
+      os.copy(f, Task.dest / f.last)
+      PathRef(Task.dest / f.last) -> f.last
+    }
+    PublishModule.PublishData(meta, payload)
+  }
 }
 
 object CoursierPublishModule extends ExternalModule {
@@ -80,6 +107,9 @@ object CoursierPublishModule extends ExternalModule {
     version.endsWith("-SNAPSHOT")
 
   lazy val buildVersionIsSnapshot = isSnapshot(buildVersion)
+
+  /** Where `ci.stageAll` writes the artifacts to publish, laid out like a Maven repository */
+  def stagedRepository: os.Path = BuildCtx.workspaceRoot / "out" / "staged-repository"
 
   lazy val millDiscover: Discover = Discover[this.type]
 }
