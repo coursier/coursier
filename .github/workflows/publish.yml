@@ -40,6 +40,11 @@ jobs:
           else
             echo "PUBLISH_ARTIFACTS=__:PublishModule:^LocalOnlyPublishModule.publishArtifacts" >> "$GITHUB_ENV"
           fi
+      # Checksums of the files about to be uploaded, for the build provenance attestation below.
+      # Our JARs aren't reproducible, so these only match the uploaded files if Mill doesn't
+      # rebuild anything in between, which the "Check published artifact checksums" step checks.
+      - name: Compute checksums of the artifacts to publish
+        run: ./mill -i ci.publishChecksums --publishArtifacts "$PUBLISH_ARTIFACTS" --output "$RUNNER_TEMP/checksums.txt"
       - name: Publish to Sonatype Central
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
@@ -54,6 +59,17 @@ jobs:
           MILL_PGP_PASSPHRASE: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
           MILL_SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
           MILL_SONATYPE_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+      - name: Check published artifact checksums
+        run: |
+          ./mill -i ci.publishChecksums --publishArtifacts "$PUBLISH_ARTIFACTS" --output "$RUNNER_TEMP/checksums-after.txt"
+          diff "$RUNNER_TEMP/checksums.txt" "$RUNNER_TEMP/checksums-after.txt"
+      # Like the launchers, only releases get attested (needs the 'id-token: write' and
+      # 'attestations: write' permissions, granted by the 'publish' job in ci.yml). Check with
+      # 'gh attestation verify coursier_2.13-X.Y.Z.jar --repo coursier/coursier'.
+      - uses: actions/attest-build-provenance@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          subject-checksums: ${{ runner.temp }}/checksums.txt
       # Same artifacts, snapshots included, to https://github.com/orgs/coursier/packages
       # (needs the 'packages: write' permission, granted by the calling jobs in ci.yml).
       # Best effort: Sonatype Central is the source of truth, so a failure here shouldn't hold

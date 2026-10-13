@@ -397,10 +397,12 @@ jobs:
       - "format"
       - "scalafix"
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-    # to publish to GitHub Packages
+    # to publish to GitHub Packages, and get build provenance attestations for the published files
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
     uses: ./.github/workflows/publish.yml
     secrets: inherit
 
