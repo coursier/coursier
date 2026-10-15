@@ -83,7 +83,7 @@ abstract class ArchiveCacheTests extends TestSuite {
 
     test("zst") {
       checkArchiveHas(
-        "https://europe.mirror.pkgbuild.com/extra/os/x86_64/busybox-1.36.1-2-x86_64.pkg.tar.zst",
+        "https://archive.archlinux.org/packages/b/busybox/busybox-1.36.1-2-x86_64.pkg.tar.zst",
         os.sub / "usr/bin/busybox"
       )
     }
