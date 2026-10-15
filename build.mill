@@ -2373,7 +2373,11 @@ trait InterfaceProguarded extends JavaModule with InterfacePublishModule {
         "-dontwarn",
         "-dontobfuscate",
         "-dontoptimize",
-        "-keep class coursierapi.** {\n  public protected *;\n}"
+        "-keep class coursierapi.** {\n  public protected *;\n}",
+        // Scala 3 lazy vals look their backing field up by name from the static initializer
+        // (findVarHandle since Scala 3.8, getDeclaredField before), so proguard doesn't see
+        // it's used when nothing calls the lazy val accessor, and removes it.
+        "-keepclassmembers class ** {\n  *** *$lzy*;\n}"
       )
       val maybeJava9Options =
         if (sys.props.get("java.version").exists(!_.startsWith("1."))) {
