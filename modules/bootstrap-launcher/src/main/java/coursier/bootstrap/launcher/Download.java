@@ -102,8 +102,7 @@ class Download {
                 .filter(DirectCredentials::isMatchHost)
                 .filter(credentials -> credentials.getUsernameOpt().isPresent() && (!userInfoUserOpt.isPresent() || credentials.getUsernameOpt().get().equals(userInfoUserOpt.get())))
                 .filter(credentials -> credentials.getPasswordOpt().isPresent())
-                .filter(credentials -> ("http".equals(url.getProtocol()) && !credentials.isHttpsOnly()) || "https".equals(url.getProtocol()))
-                .filter(credentials -> credentials.getHost().equals(url.getHost()))
+                .filter(credentials -> credentials.urlMatches(url))
                 .findFirst();
             final Optional<String> userOpt = userInfoUserOpt.map(Optional::of).orElse(directCredentialsOpt.flatMap(credentials -> credentials.getUsernameOpt())); // Java 9: .or(() -> directCredentialsOpt.flatMap(credentials -> credentials.getUsername()));
             final Optional<String> basicAuthOpt = userOpt.flatMap(user ->

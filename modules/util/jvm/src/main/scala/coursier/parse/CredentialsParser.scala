@@ -6,7 +6,9 @@ import coursier.util.ValidationNel
 
 object CredentialsParser {
 
-  private val pattern = """([a-zA-Z0-9.-]*)(\(.*\))?[ ]+([^ :][^:]*):(.*)""".r.pattern
+  // host, optionally with a scheme and a port, like https://repo.example.com:8443
+  private val pattern =
+    """((?:[a-zA-Z][a-zA-Z0-9+.-]*://)?[a-zA-Z0-9.-]*(?::[0-9]+)?)(\(.*\))?[ ]+([^ :][^:]*):(.*)""".r.pattern
 
   def parse(s: String): Either[String, DirectCredentials] = {
     val m = pattern.matcher(s)

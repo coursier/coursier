@@ -412,10 +412,17 @@ object CacheUrl {
       case Some(auth) =>
         s"$url: ${describeAuth(auth)} rejected, giving up"
       case None =>
-        val host  = Try(new URI(url)).toOption.flatMap(u => Option(u.getHost)).getOrElse("?")
-        val realm = realmOpt.fold("no realm in the response")(r => s"realm ${quoted(r)}")
+        val host   = Try(new URI(url)).toOption.flatMap(u => Option(u.getHost)).getOrElse("?")
+        val realm  = realmOpt.fold("no realm in the response")(r => s"realm ${quoted(r)}")
+        val isHttp = url.startsWith("http://")
         val known = autoCredentials
-          .map(c => c.host + c.realm.fold("")(r => s"($r)"))
+          .map { c =>
+            // over HTTP, these can't match whatever their host, which is easy to miss now that
+            // credentials are HTTPS-only by default
+            val httpsOnlyHint =
+              if (isHttp && c.httpsOnly && !c.host.contains("://")) " (HTTPS only)" else ""
+            c.host + c.realm.fold("")(r => s"($r)") + httpsOnlyHint
+          }
           .distinct
         val configured =
           if (known.isEmpty) "no credentials are configured"

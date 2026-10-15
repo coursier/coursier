@@ -90,7 +90,8 @@ object CacheUrlHttpDebugTests extends TestSuite {
 
     test("credentials from the environment are sent after the challenge") {
       withProtectedServer { (url, log) =>
-        val (code, lines) = connect(url, Seq(DirectCredentials("localhost", user, password)))
+        val credentials   = DirectCredentials("localhost", user, password).copy(httpsOnly = false)
+        val (code, lines) = connect(url, Seq(credentials))
         assert(code == 200)
         val expected = List(
           s"GET $url (no credentials)",
@@ -123,7 +124,9 @@ object CacheUrlHttpDebugTests extends TestSuite {
     test("says which credentials are configured when none match") {
       test("other host") {
         withProtectedServer { (url, _) =>
-          val (code, lines) = connect(url, Seq(DirectCredentials("example.com", user, password)))
+          val credentials =
+            DirectCredentials("example.com", user, password).copy(httpsOnly = false)
+          val (code, lines) = connect(url, Seq(credentials))
           assert(code == 401)
           val expected = List(
             s"GET $url (no credentials)",
@@ -138,10 +141,19 @@ object CacheUrlHttpDebugTests extends TestSuite {
       test("other realm") {
         withProtectedServer { (url, _) =>
           val credentials = DirectCredentials("localhost", user, password)
-            .copy(realm = Some("other realm"))
+            .copy(realm = Some("other realm"), httpsOnly = false)
           val (code, lines) = connect(url, Seq(credentials))
           assert(code == 401)
           assert(lines.last.contains("credentials are configured for: localhost(other realm)"))
+        }
+      }
+
+      test("HTTPS only") {
+        withProtectedServer { (url, log) =>
+          val (code, lines) = connect(url, Seq(DirectCredentials("localhost", user, password)))
+          assert(code == 401)
+          assert(lines.last.contains("credentials are configured for: localhost (HTTPS only)"))
+          assert(log.count("GET") == 1)
         }
       }
 

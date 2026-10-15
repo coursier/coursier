@@ -35,15 +35,15 @@ public final class Credentials implements Serializable {
     }
 
     public static Credentials of(String user, String password) {
-        return new Credentials("", user, password, null, true, true, false, false);
+        return new Credentials("", user, password, null, true, true, true, false);
     }
 
     public static Credentials of(String host, String user, String password) {
-        return new Credentials(host, user, password, null, true, true, false, false);
+        return new Credentials(host, user, password, null, true, true, true, false);
     }
 
     public static Credentials of(String host, String user, String password, String realm) {
-        return new Credentials(host, user, password, realm, true, true, false, false);
+        return new Credentials(host, user, password, realm, true, true, true, false);
     }
 
     public Credentials withHost(String host) {

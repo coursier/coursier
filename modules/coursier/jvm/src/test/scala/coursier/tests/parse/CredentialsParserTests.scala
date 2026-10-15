@@ -27,6 +27,25 @@ object CredentialsParserTests extends TestSuite {
       assert(res == expectedRes)
     }
 
+    test("port") {
+      val s           = "artifacts.foo.com:8443 alex:my-pass"
+      val res         = CredentialsParser.parse(s)
+      val expectedRes = Right(DirectCredentials("artifacts.foo.com:8443", "alex", "my-pass"))
+      assert(res == expectedRes)
+    }
+
+    test("scheme and port") {
+      val s   = "http://artifacts.foo.com:8081(tha realm) alex:my-pass"
+      val res = CredentialsParser.parse(s)
+      val expectedRes =
+        Right(DirectCredentials(
+          "http://artifacts.foo.com:8081",
+          "alex",
+          "my-pass"
+        ).copy(realm = Some("tha realm")))
+      assert(res == expectedRes)
+    }
+
     test("space in user name") {
       val s   = "artifacts.foo.com(tha realm) alex a:my-pass"
       val res = CredentialsParser.parse(s)

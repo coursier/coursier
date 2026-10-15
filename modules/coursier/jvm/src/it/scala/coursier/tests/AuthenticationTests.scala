@@ -21,6 +21,11 @@ object AuthenticationTests extends TestSuite with TestRepositoryServer.Test {
   private def password = localTestRepo().password
 
   private lazy val testHost = new URI(testRepo).getHost
+  // the test repository is served over plain HTTP, which credentials only go to if asked to
+  private lazy val testOrigin = {
+    val uri = new URI(testRepo)
+    s"${uri.getScheme}://${uri.getHost}:${uri.getPort}"
+  }
 
   private def deleteRecursive(f: File): Unit = {
     if (f.isDirectory)
@@ -78,7 +83,7 @@ object AuthenticationTests extends TestSuite with TestRepositoryServer.Test {
     }
 
     test {
-      val credentialsStr = s"$testHost $user:$password"
+      val credentialsStr = s"$testOrigin $user:$password"
       val credentials = CredentialsParser.parse(credentialsStr) match {
         case Left(error) => sys.error(s"Error parsing credentials: $error")
         case Right(c)    => c
@@ -90,7 +95,7 @@ object AuthenticationTests extends TestSuite with TestRepositoryServer.Test {
       val content =
         s"""foo.username=$user
            |foo.password=$password
-           |foo.host=$testHost
+           |foo.host=$testOrigin
            |""".stripMargin
       val allCredentials = FileCredentials.parse(content, s"'$content'")
       assert(allCredentials.length == 1)
