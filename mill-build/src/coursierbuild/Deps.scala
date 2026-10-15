@@ -92,7 +92,7 @@ object Deps {
   // stick to the 2.x line: tika 3.x is compiled for Java 11, and we still support Java 8.
   // Pinned in .scala-steward.conf too, so that it doesn't get bumped back to 3.x.
   def tika             = mvn"org.apache.tika:tika-core:2.9.4"
-  def undertow         = mvn"io.undertow:undertow-core:2.4.3.Final"
+  def undertow         = mvn"io.undertow:undertow-core:2.4.4.Final"
   def ujson            = mvn"com.lihaoyi::ujson:4.4.3"
   def unrollAnnotation = mvn"com.lihaoyi::unroll-annotation:0.3.0"
   def utest            = mvn"com.lihaoyi::utest::0.9.5"
