@@ -13,6 +13,7 @@ import java.nio.file.{
   Files,
   LinkOption,
   Path,
+  Paths,
   SimpleFileVisitor,
   StandardCopyOption
 }
@@ -21,7 +22,7 @@ import java.security.MessageDigest
 import java.util.zip.{GZIPInputStream, ZipException, ZipFile}
 
 import scala.jdk.CollectionConverters._
-import scala.util.Using
+import scala.util.{Failure, Success, Try, Using}
 
 @data(
   deprecatedSetters = true,
@@ -81,7 +82,6 @@ import scala.util.Using
         new File(shortPathBase, sha1.take(8))
       case None => dir
     }
-    // FIXME security
     (finalDir, subPaths)
   }
 
@@ -107,6 +107,15 @@ import scala.util.Using
     * @return
     */
   def getIfExists(
+    artifact: Artifact,
+    isSingleFile: Boolean
+  ): F[Either[ArtifactError, Option[File]]] =
+    ArchiveCache.invalidSubPathError(artifact.url) match {
+      case Some(err) => S.point(Left(err))
+      case None      => getIfExists0(artifact, isSingleFile)
+    }
+
+  private def getIfExists0(
     artifact: Artifact,
     isSingleFile: Boolean
   ): F[Either[ArtifactError, Option[File]]] = {
@@ -304,7 +313,13 @@ import scala.util.Using
   private def isInCache(file: File, cacheLocation: File): Boolean =
     file.toPath.toAbsolutePath.normalize.startsWith(cacheLocation.toPath.toAbsolutePath.normalize)
 
-  def get(artifact: Artifact): F[Either[ArtifactError, File]] = {
+  def get(artifact: Artifact): F[Either[ArtifactError, File]] =
+    ArchiveCache.invalidSubPathError(artifact.url) match {
+      case Some(err) => S.point(Left(err))
+      case None      => get1(artifact)
+    }
+
+  private def get1(artifact: Artifact): F[Either[ArtifactError, File]] = {
     val (dir0, subPaths) = localDir(artifact)
     val artifact0        = artifact.copy(url = artifact.url.takeWhile(_ != '!'))
     val download: F[Either[ArtifactError, File]] = {
@@ -448,6 +463,42 @@ object ArchiveCache {
           }
         }
       )
+
+  /** Checks that the paths following `!` in an archive URL stay within their archive
+    *
+    * Only the last one can be empty (trailing `!`, to get the directory of the extracted archive).
+    */
+  private def invalidSubPathError(url: String): Option[ArtifactError] = {
+    val subPaths = url.split("\\!", -1).toSeq.drop(1)
+    def invalidReason(subPath: String, isLast: Boolean): Option[String] =
+      if (subPath.isEmpty)
+        if (isLast) None
+        else Some("empty path to an inner archive")
+      else
+        Try(Paths.get(subPath)) match {
+          case Failure(ex) =>
+            Some(s"invalid path (${ex.getMessage})")
+          case Success(path) =>
+            if (path.getRoot != null || path.isAbsolute)
+              Some("absolute paths are not allowed")
+            else if (path.iterator().asScala.map(_.toString).exists(n => n == "." || n == ".."))
+              Some("'.' and '..' are not allowed")
+            else
+              None
+        }
+    val lastIdx = subPaths.length - 1
+    subPaths
+      .iterator
+      .zipWithIndex
+      .map { case (subPath, idx) => subPath -> invalidReason(subPath, isLast = idx == lastIdx) }
+      .collectFirst {
+        case (subPath, Some(reason)) =>
+          new ArtifactError.DownloadError(
+            s"Invalid path '$subPath' in archive URL $url: $reason",
+            None
+          )
+      }
+  }
 
   private def archiveType(url: String): Option[ArchiveType] =
     // TODO Case-insensitive comparisons?
