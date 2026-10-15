@@ -82,7 +82,7 @@ import scala.util.matching.Regex
 
     val name = appInfo.appDescriptor.nameOpt
       .getOrElse(appInfo.source.id)
-    val dest = baseDir.resolve(name)
+    val dest = launcherPath(name)
 
     createOrUpdate(
       Some((appInfo.appDescriptor, appInfo.appDescriptorBytes)),
@@ -94,12 +94,22 @@ import scala.util.matching.Regex
   }
 
   def delete(appName: String): Option[Boolean] = {
-    val launcher = actualDest(baseDir.resolve(appName))
+    val launcher = actualDest(appName)
     Updatable.delete(baseDir, launcher, auxExtension, verbosity)
   }
 
   private[install] def actualDest(name: String): Path =
-    actualDest(baseDir.resolve(name))
+    actualDest(launcherPath(name))
+
+  /** Where the launcher of app `name` goes, throwing if that's not right under `baseDir`
+    *
+    * `name` can come from app descriptors, that is from third-party channels.
+    */
+  private def launcherPath(name: String): Path = {
+    for (reason <- appNameError(name))
+      throw new InvalidAppName(name, reason)
+    baseDir.resolve(name)
+  }
 
   private def actualName(dest: Path): String = {
     val name = dest.getFileName.toString
@@ -512,11 +522,14 @@ import scala.util.matching.Regex
   /** The version the application `name` is installed at, when it is installed and its version can
     * be inferred from its launcher.
     */
-  def installedVersion(name: String): Option[String] = {
-    val launcher = actualDest(name)
-    if (Files.isRegularFile(launcher)) launcherVersion(launcher)
-    else None
-  }
+  def installedVersion(name: String): Option[String] =
+    if (appNameError(name).isEmpty) {
+      val launcher = actualDest(name)
+      if (Files.isRegularFile(launcher)) launcherVersion(launcher)
+      else None
+    }
+    else
+      None
 
   private def launcherVersion(launcher: Path): Option[String] =
     InfoFile.readDescriptorAndLock(launcher).flatMap {
@@ -541,6 +554,20 @@ object InstallDir {
 
   def defaultDir: Path =
     defaultDir0
+
+  /** Why `name` can't be the name of an installed app, if it can't
+    *
+    * App names are used as is as file names in the installation directory. Names that could make us
+    * write anywhere else are rejected, like names with path separators or `..`, along with names of
+    * hidden files, that [[InstallDir.list]] doesn't report.
+    */
+  def appNameError(name: String): Option[String] =
+    if (name.isEmpty) Some("empty name")
+    else if (name.startsWith(".")) Some("names cannot start with '.'")
+    else if (name.exists(c => c == '/' || c == '\\')) Some("names cannot contain path separators")
+    else if (name.contains(':')) Some("names cannot contain ':'")
+    else if (name.exists(_.isControl)) Some("names cannot contain control characters")
+    else None
 
   /** Infers the version an application was installed at, from the URLs its artifacts were
     * downloaded from.

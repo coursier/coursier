@@ -121,13 +121,21 @@ import scala.language.implicitConversions
     val versionOverridesV =
       versionOverrides.map(_.versionOverride).sequence.andThen(validateRanges)
 
+    val nameV: ValidatedNel[String, Option[String]] =
+      name.traverse { name0 =>
+        InstallDir.appNameError(name0)
+          .map(reason => s"""name "$name0" is invalid: $reason""")
+          .toInvalidNel(name0)
+      }
+
     (
       repositoriesV,
       dependenciesV,
       sharedDependenciesV,
       exclusionsV,
       launcherTypeV,
-      versionOverridesV
+      versionOverridesV,
+      nameV
     ).mapN {
       (
         repositories,
@@ -135,7 +143,8 @@ import scala.language.implicitConversions
         sharedDependencies,
         exclusions,
         launcherType,
-        versionOverrides
+        versionOverrides,
+        name
       ) =>
         AppDescriptor()
           .copy(

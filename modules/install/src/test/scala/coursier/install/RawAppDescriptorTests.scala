@@ -189,6 +189,18 @@ object RawAppDescriptorTests extends TestSuite {
       assert(rawShared("0.16.0") == Seq("sh.almond::scala-kernel-api"))
     }
 
+    test("reject invalid app names") {
+      val raw = RawAppDescriptor(List("org.scalameta::scalafmt-cli:latest.stable"))
+      assert(raw.copy(name = Some("scalafmt")).appDescriptor.isValid)
+      assert(raw.appDescriptor.isValid)
+
+      val invalid = RawAppDescriptor.parse(
+        """{"dependencies": ["org.scalameta::scalafmt-cli:latest.stable"], "name": "../../../.local/bin/sudo"}"""
+      ).fold(sys.error(_), identity)
+      val errors = invalid.appDescriptor.fold(_.toList, _ => Nil)
+      assert(errors.exists(_.contains("../../../.local/bin/sudo")))
+    }
+
     test("RawAppDescriptor JSON golden files") {
       val goldenFiles = Seq(
         "/golden/install/raw-app-descriptor/minimal.json",
