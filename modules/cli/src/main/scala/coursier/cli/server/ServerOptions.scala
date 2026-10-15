@@ -32,9 +32,9 @@ final case class ServerOptions(
     defaultAllow: Option[Boolean] = None,
   @HelpMessage("Default to disallowing requests")
     defaultDisallow: Option[Boolean] = None,
-  @HelpMessage("Allow requests for artifacts whose URL starts with these prefixes (comma-separated)")
+  @HelpMessage("Allow requests for artifacts whose URL is under these prefixes (comma-separated). A prefix matches the URL equal to it and the URLs under it as a path, like https://repo1.maven.org/maven2 matches https://repo1.maven.org/maven2/org/… but not https://repo1.maven.org/maven2-other/…. End a prefix with * to match any URL starting with it, like http://169.254.*")
     allow: List[String] = Nil,
-  @HelpMessage("Disallow requests for artifacts whose URL starts with these prefixes (comma-separated)")
+  @HelpMessage("Disallow requests for artifacts whose URL is under these prefixes (comma-separated). Prefixes match like those of --allow")
     disallow: List[String] = Nil
 )
 // format: on

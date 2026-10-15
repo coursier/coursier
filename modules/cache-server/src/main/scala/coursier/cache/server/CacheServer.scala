@@ -57,11 +57,34 @@ object CacheServer {
     for (policies <- policiesEither; ttl <- ttlEither) yield (policies, ttl)
   }
 
-  def handler(cache0: FileCache[Task], pool: ExecutionContextExecutor): HttpHandler = {
+  /** All the URLs the cache might be asked to download for `artifact` */
+  private def urls(artifact: Artifact): Seq[String] =
+    Seq(artifact.url) ++ artifact.checksumUrls.values ++ artifact.extra.values.flatMap(urls)
+
+  private def forbidden(exchange: HttpServerExchange, url: String): Unit = {
+    exchange.getResponseHeaders.put(Headers.CONTENT_TYPE, "text/plain")
+    exchange.setStatusCode(StatusCodes.FORBIDDEN)
+    exchange.getResponseSender.send(s"Forbidden URL: $url")
+  }
+
+  def handler(cache0: FileCache[Task], pool: ExecutionContextExecutor): HttpHandler =
+    handler(cache0, pool, UrlFilter.allowAll)
+
+  /** @param urlFilter
+    *   artifact URLs the server accepts, requests involving other URLs get a 403 response
+    */
+  def handler(
+    cache0: FileCache[Task],
+    pool: ExecutionContextExecutor,
+    urlFilter: UrlFilter
+  ): HttpHandler = {
     // The server does the actual downloads, it mustn't defer to a cache server itself
     val cache              = cache0.copy(allowCacheSubstitution = false)
     val cachePath          = os.Path(cache.location)
     val onGoingGetRequests = new ConcurrentHashMap[String, Future[_]]
+
+    def disallowedUrl(artifact: Artifact): Option[String] =
+      urls(artifact).find(!urlFilter.isAllowed(_))
 
     (exchange: HttpServerExchange) =>
       if (exchange.getRequestPath == "/get" && exchange.getRequestMethod.toString == "POST")
@@ -132,8 +155,10 @@ object CacheServer {
                   }
                 }
 
-                maybeRequest match {
-                  case Success(request) =>
+                maybeRequest.map(r => (r, disallowedUrl(r.artifact))) match {
+                  case Success((_, Some(url))) =>
+                    forbidden(exchange, url)
+                  case Success((request, None)) =>
                     val promise = Promise[Unit]()
                     def attempt(): Unit = {
                       val f = promise.future
@@ -163,43 +188,48 @@ object CacheServer {
             exchange.dispatch(
               pool,
               () => {
-                val maybeFutureResult = Try {
-                  val request  = readFromArray[PathRequest](bytes)
-                  val artifact = request.artifact.toArtifact
-                  // System.err.println(s"Was asked the path of ${artifact.url}")
-                  val fileTask = cache.finalLocalPath(artifact)
-                  fileTask.future()(cache.ec)
-                }
+                val maybeRequest = Try(readFromArray[PathRequest](bytes))
+                maybeRequest.map(r => disallowedUrl(r.artifact)) match {
+                  case Success(Some(url)) =>
+                    forbidden(exchange, url)
+                  case _ =>
+                    val maybeFutureResult = maybeRequest.map { request =>
+                      val artifact = request.artifact.toArtifact
+                      // System.err.println(s"Was asked the path of ${artifact.url}")
+                      val fileTask = cache.finalLocalPath(artifact)
+                      fileTask.future()(cache.ec)
+                    }
 
-                maybeFutureResult match {
-                  case Success(futureResult) =>
-                    futureResult.onComplete { result =>
-                      val response = result match {
-                        case Success(file) =>
-                          // pprint.err.log(file)
-                          val relativePath = os.Path(file).subRelativeTo(cachePath).toString
-                          PathResponse(
-                            path = Some(relativePath),
-                            error = None
-                          )
-                        case Failure(t) =>
-                          PathResponse(
-                            path = None,
-                            error = Some(SerializedArtifactError(
-                              "exception",
-                              Option(t.getMessage).getOrElse(""),
-                              SerializedException.fromThrowable(t)
-                            ))
-                          )
-                      }
+                    maybeFutureResult match {
+                      case Success(futureResult) =>
+                        futureResult.onComplete { result =>
+                          val response = result match {
+                            case Success(file) =>
+                              // pprint.err.log(file)
+                              val relativePath = os.Path(file).subRelativeTo(cachePath).toString
+                              PathResponse(
+                                path = Some(relativePath),
+                                error = None
+                              )
+                            case Failure(t) =>
+                              PathResponse(
+                                path = None,
+                                error = Some(SerializedArtifactError(
+                                  "exception",
+                                  Option(t.getMessage).getOrElse(""),
+                                  SerializedException.fromThrowable(t)
+                                ))
+                              )
+                          }
 
-                      // System.err.println(response)
+                          // System.err.println(response)
 
-                      exchange.getResponseHeaders.put(Headers.CONTENT_TYPE, "application/json")
-                      exchange.getResponseSender.send(writeToString(response))
-                    }(pool)
-                  case Failure(t) =>
-                    internalError(bytes, exchange, t)
+                          exchange.getResponseHeaders.put(Headers.CONTENT_TYPE, "application/json")
+                          exchange.getResponseSender.send(writeToString(response))
+                        }(pool)
+                      case Failure(t) =>
+                        internalError(bytes, exchange, t)
+                    }
                 }
               }
             )

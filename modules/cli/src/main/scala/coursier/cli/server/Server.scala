@@ -3,7 +3,7 @@ package coursier.cli.server
 import caseapp.core.RemainingArgs
 import coursier.cache.FileCache
 import coursier.cache.internal.ThreadUtil
-import coursier.cache.server.CacheServer
+import coursier.cache.server.{CacheServer, UrlFilter}
 import coursier.cli.CoursierCommand
 import coursier.util.{Sync, Task}
 import io.undertow.Undertow
@@ -45,32 +45,9 @@ object Server extends CoursierCommand[ServerOptions] {
     val requestsPool = Executors.newCachedThreadPool(
       ThreadUtil.daemonThreadFactory("coursier-cache-server-requests")
     )
-    val baseHandler = CacheServer.handler(cache, ExecutionContext.fromExecutorService(requestsPool))
-
-    val filteredHandler: HttpHandler =
-      (exchange: HttpServerExchange) => {
-        def checkPrefix(prefix: String): Boolean = {
-          val url = exchange.getRequestURL
-          if (prefix.endsWith("*"))
-            url.startsWith(prefix.dropRight("*".length))
-          else
-            url == prefix ||
-            url.startsWith(prefix + "/")
-        }
-        val allowed =
-          if (params.defaultAllow)
-            !params.disallow.exists(checkPrefix) ||
-            params.allow.exists(checkPrefix)
-          else
-            params.allow.exists(checkPrefix) &&
-            !params.disallow.exists(checkPrefix)
-        if (allowed)
-          baseHandler.handleRequest(exchange)
-        else
-          exchange
-            .setStatusCode(StatusCodes.FORBIDDEN)
-            .getResponseSender.send("Forbidden")
-      }
+    val urlFilter = new UrlFilter(params.defaultAllow, params.allow, params.disallow)
+    val filteredHandler =
+      CacheServer.handler(cache, ExecutionContext.fromExecutorService(requestsPool), urlFilter)
 
     val handler: HttpHandler = expectedAuthOpt match {
       case None => filteredHandler
