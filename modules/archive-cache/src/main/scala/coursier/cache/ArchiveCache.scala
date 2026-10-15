@@ -6,9 +6,17 @@ import coursier.util.Monad.ops._
 import dataclass.{data, since => unroll}
 import org.apache.tika.Tika
 
-import java.io.{EOFException, File, InputStream}
+import java.io.{EOFException, File, IOException, InputStream}
 import java.math.BigInteger
-import java.nio.file.{Files, Path, StandardCopyOption}
+import java.nio.file.{
+  FileVisitResult,
+  Files,
+  LinkOption,
+  Path,
+  SimpleFileVisitor,
+  StandardCopyOption
+}
+import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
 import java.util.zip.{GZIPInputStream, ZipException, ZipFile}
 
@@ -418,11 +426,28 @@ object ArchiveCache {
     ArchiveCache(CacheDefaults.priviledgedArchiveCacheLocation, Cache.defaultFor[F])(S)
       .copy(unArchiver = UnArchiver.priviledged())
 
-  private def deleteRecursive(f: File): Unit = {
-    if (f.isDirectory)
-      f.listFiles().foreach(deleteRecursive)
-    f.delete()
-  }
+  /** Deletes `f` and its content, without following symbolic links
+    *
+    * Extracted archives can contain symbolic links pointing anywhere, so following them here could
+    * delete files outside of the archive cache.
+    */
+  private def deleteRecursive(f: File): Unit =
+    if (Files.exists(f.toPath, LinkOption.NOFOLLOW_LINKS))
+      Files.walkFileTree(
+        f.toPath,
+        new SimpleFileVisitor[Path] {
+          override def visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult = {
+            Files.delete(file)
+            FileVisitResult.CONTINUE
+          }
+          override def postVisitDirectory(dir: Path, exc: IOException): FileVisitResult = {
+            if (exc != null)
+              throw exc
+            Files.delete(dir)
+            FileVisitResult.CONTINUE
+          }
+        }
+      )
 
   private def archiveType(url: String): Option[ArchiveType] =
     // TODO Case-insensitive comparisons?
