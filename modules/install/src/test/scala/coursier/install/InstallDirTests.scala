@@ -1,6 +1,7 @@
 package coursier.install
 
 import coursier.cache.{ArtifactError, FileCache}
+import coursier.install.error.InvalidAppName
 import coursier.install.internal.PrebuiltApp
 import coursier.launcher.Parameters
 import coursier.util.Artifact
@@ -11,6 +12,8 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
 import java.util.Comparator
 import java.util.zip.{ZipEntry, ZipOutputStream}
+
+import scala.jdk.CollectionConverters._
 
 object InstallDirTests extends TestSuite {
 
@@ -69,6 +72,69 @@ object InstallDirTests extends TestSuite {
 
         val installedApps = InstallDir(tempDir).list()
         assert(installedApps == Seq("app1"))
+      }
+      finally
+        Files.walk(tempDir).sorted(Comparator.reverseOrder()).forEach(Files.delete(_))
+    }
+
+    test("app names") {
+      val validNames = Seq("scala", "scala-cli", "scala3-compiler", "amm-2.13", "foo_bar+baz")
+      for (name <- validNames)
+        assert(InstallDir.appNameError(name).isEmpty)
+
+      val invalidNames = Seq(
+        "",
+        ".",
+        "..",
+        ".hidden",
+        "../../../.local/bin/sudo",
+        "foo/bar",
+        "/usr/local/bin/foo",
+        "..\\..\\Startup\\foo",
+        "C:\\Users\\foo",
+        "C:foo",
+        "foo\u0000bar",
+        "foo\nbar"
+      )
+      for (name <- invalidNames)
+        assert(InstallDir.appNameError(name).nonEmpty)
+    }
+
+    test("reject app names escaping the installation directory") {
+      val tempDir = Files.createTempDirectory("installDirTests")
+      try {
+        val baseDir    = Files.createDirectories(tempDir.resolve("bin"))
+        val installDir = InstallDir(baseDir)
+
+        def appInfo(nameOpt: Option[String], id: String): AppInfo =
+          AppInfo(
+            AppDescriptor().copy(nameOpt = nameOpt),
+            Array.emptyByteArray,
+            Source(Nil, Channel.Inline(), id),
+            Array.emptyByteArray
+          )
+
+        // via the descriptor name, that comes from channels
+        val fromName = assertThrows[InvalidAppName] {
+          installDir.createOrUpdate(appInfo(Some("../escaped"), "foo"))
+        }
+        assert(fromName.name == "../escaped")
+        // via the app id, used when the descriptor has no name
+        assertThrows[InvalidAppName] {
+          installDir.createOrUpdate(appInfo(None, "../escaped"))
+        }
+
+        val outside = Files.write(tempDir.resolve("outside"), Array[Byte](1, 2, 3))
+        assertThrows[InvalidAppName] {
+          installDir.delete("../outside")
+        }
+        assert(Files.exists(outside))
+
+        assert(installDir.installedVersion("../outside") == None)
+
+        val created = Files.list(tempDir).iterator().asScala.map(_.getFileName.toString).toSet
+        assert(created == Set("bin", "outside"))
+        assert(Files.list(baseDir).count() == 0L)
       }
       finally
         Files.walk(tempDir).sorted(Comparator.reverseOrder()).forEach(Files.delete(_))
