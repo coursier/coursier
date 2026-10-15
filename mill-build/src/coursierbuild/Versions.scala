@@ -2,9 +2,9 @@ package coursierbuild
 
 object Versions {
   def cats          = "2.13.0"
-  def http4s        = "0.23.37"
+  def http4s        = "0.23.38"
   def jniUtils      = "0.4.0"
-  def jsoniterScala = "2.41.0"
+  def jsoniterScala = "2.41.5"
   def junit         = "4.13.2"
   def scalaz        = "7.2.36"
 

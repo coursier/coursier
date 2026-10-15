@@ -5,7 +5,7 @@ import mill.scalalib.*
 
 object Deps {
   def asm              = mvn"org.ow2.asm:asm:9.11"
-  def caseApp          = mvn"com.github.alexarchambault::case-app:2.1.0"
+  def caseApp          = mvn"com.github.alexarchambault::case-app:2.1.1"
   def catsCore         = mvn"org.typelevel::cats-core:${Versions.cats}"
   def catsEffect       = mvn"org.typelevel::cats-effect::3.7.1"
   def classPathUtil    = mvn"io.get-coursier::class-path-util:0.1.4"
@@ -34,7 +34,7 @@ object Deps {
   def jniUtilsCoursierApi =
     mvn"io.get-coursier.jniutils:windows-jni-utils-coursierapi:${Versions.jniUtils}"
   def jol  = mvn"org.openjdk.jol:jol-core:0.17"
-  def jsch = mvn"com.github.mwiede:jsch:2.28.7"
+  def jsch = mvn"com.github.mwiede:jsch:2.28.8"
   // The Scala 2 and Scala 3 modules use different jsoniter-scala versions, see Versions.scala
   private def jsoniterScalaVersion(sv: String) =
     if (sv.startsWith("3.")) Versions.jsoniterScala else Versions.jsoniterScalaScala2
@@ -87,12 +87,12 @@ object Deps {
   // applications still relying on a 1.x binding silently fall back to NOP.
   // Pinned in .scala-steward.conf too, so that it doesn't get bumped to 2.x.
   def slf4jApi = mvn"org.slf4j:slf4j-api:1.7.36"
-  def slf4JNop = mvn"org.slf4j:slf4j-nop:2.0.19"
+  def slf4JNop = mvn"org.slf4j:slf4j-nop:2.0.20"
   def svm      = mvn"org.graalvm.nativeimage:svm:25.0.4.1.1"
   // stick to the 2.x line: tika 3.x is compiled for Java 11, and we still support Java 8.
   // Pinned in .scala-steward.conf too, so that it doesn't get bumped back to 3.x.
   def tika             = mvn"org.apache.tika:tika-core:2.9.4"
-  def undertow         = mvn"io.undertow:undertow-core:2.4.3.Final"
+  def undertow         = mvn"io.undertow:undertow-core:2.4.4.Final"
   def ujson            = mvn"com.lihaoyi::ujson:4.4.3"
   def unrollAnnotation = mvn"com.lihaoyi::unroll-annotation:0.3.0"
   def utest            = mvn"com.lihaoyi::utest::0.9.5"
@@ -100,7 +100,7 @@ object Deps {
   def windowsAnsi      = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
   def windowsAnsiPs =
     mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
-  def zstdJni = mvn"com.github.luben:zstd-jni:1.5.7-21"
+  def zstdJni = mvn"com.github.luben:zstd-jni:1.5.7-23"
 
   /** The async/await implementation the test sources are written against.
     *

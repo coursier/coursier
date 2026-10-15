@@ -120,10 +120,12 @@ final class Vm(
       if (System.getenv("CI") == null) 2.seconds
       else 10.seconds
     // On CI, VMs run without hardware virtualization (see DockerTests), so booting
-    // them up to the point sshd accepts connections routinely takes several minutes.
+    // them up to the point sshd accepts connections routinely takes several minutes (1.5 to 4.5
+    // on macos-15-intel runners). A VM that isn't up after that is usually stuck: better to give
+    // up and let the caller start a fresh one.
     val maxWait =
       if (System.getenv("CI") == null) 2.minutes
-      else 10.minutes
+      else 6.minutes
     val deadline = System.nanoTime() + maxWait.toNanos
     @tailrec
     def connect(): Session = {

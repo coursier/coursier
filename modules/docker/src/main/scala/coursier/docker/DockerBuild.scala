@@ -70,6 +70,31 @@ object DockerBuild {
     }
   }
 
+  /** Resolves the source of a `COPY` instruction against the build context
+    *
+    * Like Docker (see https://docs.docker.com/reference/dockerfile/#copy), absolute sources are
+    * relative to the context root, and '..' elements can't go above it. As the copy runs as root,
+    * this also rejects sources whose parent directories go through symlinks pointing outside of the
+    * context. The source itself can be a symlink, as it's copied as is (not followed).
+    */
+  def copySource(contextDir: os.Path, source: String): Either[String, os.Path] = {
+    // RelPath normalizes '.' and '..', leaving only leading '..' elements, which we discard
+    val subPath        = os.SubPath(os.RelPath(source.dropWhile(_ == '/')).segments)
+    val realContextDir = os.Path(contextDir.toNIO.toRealPath())
+    val path           = realContextDir / subPath
+    if (subPath.segments.isEmpty) Right(path)
+    else {
+      val parent = path / os.up
+      if (!os.isDir(parent))
+        Left(s"COPY source $source not found in build context $contextDir")
+      else {
+        val realParent = os.Path(parent.toNIO.toRealPath())
+        if (realParent.startsWith(realContextDir)) Right(path)
+        else Left(s"COPY source $source points outside of the build context $contextDir")
+      }
+    }
+  }
+
   def build(
     contextDir: os.Path,
     dockerFile: Option[os.Path],
@@ -170,13 +195,9 @@ object DockerBuild {
           )
           System.err.println(s"Ignore exposed instruction $expose")
         case copy: DockerInstruction.Copy =>
-          val from = os.FilePath(copy.from) match {
-            case p: os.Path    => p
-            case s: os.SubPath => contextDir / s
-            case r: os.RelPath =>
-              // just discard the superfluous '..' elements
-              // (Docker is supposed to do the same per https://docs.docker.com/reference/dockerfile/#copy)
-              contextDir / os.SubPath(r.segments)
+          val from = copySource(contextDir, copy.from) match {
+            case Left(err) => sys.error(s"$dockerFile:${inst.lines.head}: $err")
+            case Right(p)  => p
           }
           if (!copy.to.startsWith("/"))
             sys.error(
