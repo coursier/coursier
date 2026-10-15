@@ -2,6 +2,7 @@ package coursier.web
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel, JSImport}
+import japgolly.scalajs.react.ReactDOMClient
 import org.scalajs.dom.document
 
 // Initializing bootstrap, like
@@ -28,8 +29,9 @@ object Main {
     val bootstrapTreeView = BootstrapTreeView
 
     println("Initializing")
-    App.app()
-      .renderIntoDOM(document.getElementById("demoContent"))
+    ReactDOMClient
+      .createRoot(document.getElementById("demoContent"))
+      .render(App.app())
     println("Initialized")
   }
 }
