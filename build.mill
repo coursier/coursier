@@ -541,12 +541,13 @@ trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOn
     def sources = Task {
       super.sources() ++ cache.shared.testSources()
     }
-    // cache-server is only built for Scala 3, so its tests (RemoteCacheTests) only run there
-    private def withCacheServer = crossValue.startsWith("3.")
+    // cache-server is only built for Scala 3, so its tests only run there
+    private def withCacheServer      = crossValue.startsWith("3.")
+    private def cacheServerTestFiles = Set("RemoteCacheTests.scala", "UrlFilterTests.scala")
     def allSourceFiles = Task {
       val files = super.allSourceFiles()
       if (withCacheServer) files
-      else files.filterNot(_.path.last == "RemoteCacheTests.scala")
+      else files.filterNot(f => cacheServerTestFiles(f.path.last))
     }
     def moduleDeps = super.moduleDeps ++ Seq(
       coursier.jvm(),

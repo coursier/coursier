@@ -13,7 +13,7 @@ import utest._
 
 import coursier.{Fetch, Resolve}
 import coursier.cache.TestUtil._
-import coursier.cache.server.CacheServer
+import coursier.cache.server.{CacheServer, UrlFilter}
 import coursier.maven.MavenRepository
 import coursier.util.{Artifact, Task}
 import coursier.util.StringInterpolators._
@@ -34,12 +34,17 @@ object RemoteCacheTests extends TestSuite {
     try f(pool)
     finally pool.shutdownNow()
 
-  private def withCacheServer[T](cache: FileCache[Task])(f: String => T): T =
+  private def withCacheServer[T](
+    cache: FileCache[Task],
+    urlFilter: UrlFilter
+  )(f: String => T): T =
     withExecutorService(Executors.newCachedThreadPool()) { requestsPool =>
       val port = freePort()
+      val handler =
+        CacheServer.handler(cache, ExecutionContext.fromExecutorService(requestsPool), urlFilter)
       val server = Undertow.builder()
         .addHttpListener(port, "localhost")
-        .setHandler(CacheServer.handler(cache, ExecutionContext.fromExecutorService(requestsPool)))
+        .setHandler(handler)
         .build()
       server.start()
       try f(s"http://localhost:$port")
@@ -50,7 +55,8 @@ object RemoteCacheTests extends TestSuite {
     withRemoteCache0(identity)((cacheDir, _, remoteCache) => f(cacheDir, remoteCache))
 
   private def withRemoteCache0[T](
-    customizeServerCache: FileCache[Task] => FileCache[Task]
+    customizeServerCache: FileCache[Task] => FileCache[Task],
+    urlFilter: UrlFilter = UrlFilter.allowAll
   )(f: (os.Path, String, RemoteCache[Task]) => T): T =
     withTmpDir { dir =>
       withExecutorService(Executors.newFixedThreadPool(4)) { serverPool =>
@@ -58,7 +64,7 @@ object RemoteCacheTests extends TestSuite {
         val serverCache = customizeServerCache(FileCache[Task](cacheDir.toIO))
           .copy(pool = serverPool)
 
-        withCacheServer(serverCache) { cacheServerUrl =>
+        withCacheServer(serverCache, urlFilter) { cacheServerUrl =>
           withExecutorService(Executors.newCachedThreadPool()) { remotePool =>
             val remoteCache = RemoteCache[Task](cacheServerUrl, cacheDir.toIO).copy(
               pool = remotePool,
@@ -91,14 +97,17 @@ object RemoteCacheTests extends TestSuite {
   private def get(remoteCache: RemoteCache[Task], artifact: Artifact) =
     remoteCache.file(artifact).run.unsafeRun(wrapExceptions = true)(remoteCache.ec)
 
-  private def postGetRequest(cacheServerUrl: String, body: String): String = {
+  private def postRequest(cacheServerUrl: String, path: String, body: String) = {
     val client = HttpClient.newHttpClient()
-    val request = HttpRequest.newBuilder(new URI(s"$cacheServerUrl/get"))
+    val request = HttpRequest.newBuilder(new URI(s"$cacheServerUrl$path"))
       .header("Content-Type", "application/json")
       .POST(HttpRequest.BodyPublishers.ofString(body))
       .build()
-    client.send(request, HttpResponse.BodyHandlers.ofString()).body()
+    client.send(request, HttpResponse.BodyHandlers.ofString())
   }
+
+  private def postGetRequest(cacheServerUrl: String, body: String): String =
+    postRequest(cacheServerUrl, "/get", body).body()
 
   val tests = Tests {
 
@@ -155,6 +164,75 @@ object RemoteCacheTests extends TestSuite {
           """{"artifact":{"url":"https://example.com/a"},"ttl":"soon"}"""
         )
         assert(malformedTtl.contains("Malformed TTL 'soon'"))
+      }
+    }
+
+    test("server rejects disallowed URLs") {
+      withUpstream { (upstreamUrl, log) =>
+        val urlFilter = new UrlFilter(defaultAllow = true, Nil, Seq(upstreamUrl))
+        withRemoteCache0(identity, urlFilter) { (cacheDir, cacheServerUrl, remoteCache) =>
+          val url = s"$upstreamUrl/other.txt"
+
+          for (path <- Seq("/get", "/path")) {
+            val response = postRequest(cacheServerUrl, path, s"""{"artifact":{"url":"$url"}}""")
+            assert(response.statusCode() == 403)
+            assert(response.body() == s"Forbidden URL: $url")
+          }
+
+          val res = get(remoteCache, Artifact(url))
+          assert(res.left.exists(_.describe.contains("HTTP 403")))
+          assert(upstreamRequests(log, "/other.txt") == 0)
+
+          // URLs not matching the filter are still fetched
+          val allowed = get(remoteCache, Artifact(scalaLibraryPomUrl))
+          assert(allowed.isRight)
+          assert(os.walk(cacheDir).forall(!_.last.startsWith("other.txt")))
+        }
+      }
+    }
+
+    test("server only accepts allowed URLs") {
+      withUpstream { (upstreamUrl, log) =>
+        val allowedUrl = s"$upstreamUrl/other.txt"
+        val urlFilter  = new UrlFilter(defaultAllow = false, Seq(allowedUrl), Nil)
+        withRemoteCache0(identity, urlFilter) { (_, cacheServerUrl, remoteCache) =>
+          val allowed = get(remoteCache, Artifact(allowedUrl))
+          assert(allowed.isRight)
+          assert(upstreamRequests(log, "/other.txt") > 0)
+
+          val disallowed = get(remoteCache, Artifact(s"$upstreamUrl/changing.txt"))
+          assert(disallowed.left.exists(_.describe.contains("HTTP 403")))
+          assert(upstreamRequests(log, "/changing.txt") == 0)
+
+          val pom = get(remoteCache, Artifact(scalaLibraryPomUrl))
+          assert(pom.left.exists(_.describe.contains("HTTP 403")))
+
+          // malformed requests are still reported as such
+          val malformed = postGetRequest(cacheServerUrl, "{")
+          assert(malformed == "Internal error")
+        }
+      }
+    }
+
+    test("server checks checksum and extra artifact URLs too") {
+      withUpstream { (upstreamUrl, log) =>
+        val allowedUrl    = s"$upstreamUrl/other.txt"
+        val disallowedUrl = s"$upstreamUrl/changing.txt"
+        val urlFilter     = new UrlFilter(defaultAllow = false, Seq(allowedUrl), Nil)
+        withRemoteCache0(identity, urlFilter) { (_, cacheServerUrl, remoteCache) =>
+          val withChecksum = Artifact(allowedUrl).copy(checksumUrls = Map("SHA-1" -> disallowedUrl))
+          val checksumRes  = get(remoteCache, withChecksum)
+          assert(checksumRes.left.exists(_.describe.contains(s"Forbidden URL: $disallowedUrl")))
+
+          val nestedBody =
+            s"""{"artifact":{"url":"$allowedUrl","extra":{"sig":{"url":"$disallowedUrl"}}}}"""
+          val nested = postRequest(cacheServerUrl, "/get", nestedBody)
+          assert(nested.statusCode() == 403)
+          assert(nested.body() == s"Forbidden URL: $disallowedUrl")
+
+          assert(upstreamRequests(log, "/other.txt") == 0)
+          assert(upstreamRequests(log, "/changing.txt") == 0)
+        }
       }
     }
 

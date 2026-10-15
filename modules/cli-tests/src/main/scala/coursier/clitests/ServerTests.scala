@@ -61,6 +61,8 @@ abstract class ServerTests extends TestSuite {
       .asInstanceOf[HttpURLConnection]
     conn.setRequestMethod("POST")
     conn.setDoOutput(true)
+    // fail rather than hang if the server never answers
+    conn.setReadTimeout(60000)
     conn.setRequestProperty("Content-Type", "application/json")
     val credentials = Base64.getEncoder.encodeToString(
       s"$user:$password".getBytes(StandardCharsets.UTF_8)
@@ -86,6 +88,51 @@ abstract class ServerTests extends TestSuite {
       else ""
     (code, response)
   }
+
+  /** Starts `cs server` with the cache at `serverCache`, then runs `f` with its port, user and
+    * password
+    */
+  private def withServer[T](serverCache: os.Path, extraArgs: String*)(
+    f: (Int, String, String) => T
+  ): T = {
+    val port     = freePort()
+    val user     = UUID.randomUUID().toString
+    val password = UUID.randomUUID().toString
+    val serverProcess = os.proc(
+      launcher,
+      "server",
+      "--host",
+      "localhost",
+      "--port",
+      port.toString,
+      "--user",
+      "env:COURSIER_CACHE_SERVER_USER",
+      "--password",
+      "env:COURSIER_CACHE_SERVER_PASSWORD",
+      extraArgs
+    )
+      .spawn(
+        env = Map(
+          "COURSIER_CACHE"                 -> serverCache.toString,
+          "COURSIER_CACHE_SERVER_USER"     -> user,
+          "COURSIER_CACHE_SERVER_PASSWORD" -> password
+        ),
+        stderr = os.Inherit
+      )
+    try {
+      waitForServer("localhost", port)
+      f(port, user, password)
+    }
+    finally serverProcess.destroy()
+  }
+
+  private def isArtifact(path: os.Path): Boolean =
+    path.last.endsWith(".pom") || path.last == "secret.txt"
+
+  private def responsePath(responseBody: String): Option[String] =
+    ujson.read(responseBody).obj
+      .get("path")
+      .flatMap(v => if (v.isNull) None else Some(v.str))
 
   private val pomUrl =
     "https://repo1.maven.org/maven2/org/scala-lang/scala3-library_3/3.8.2/scala3-library_3-3.8.2.pom"
@@ -203,6 +250,104 @@ abstract class ServerTests extends TestSuite {
         serverProcess.destroy()
         os.remove.all(tmpDir)
       }
+    }
+
+    test("server --disallow") {
+      val tmpDir      = os.temp.dir(prefix = "coursier-cli-test")
+      val serverCache = tmpDir / "server-cache"
+      os.makeDir(serverCache)
+      val secret = tmpDir / "secret.txt"
+      os.write(secret, "secret")
+      val secretUrl = secret.toNIO.toUri.toASCIIString
+      try
+        withServer(
+          serverCache,
+          "--disallow",
+          "file:,https://repo1.maven.org/maven2/org/scala-lang"
+        ) {
+          (port, user, password) =>
+            for (url <- Seq(pomUrl, secretUrl, secretUrl.replace("file:", "FILE:"))) {
+              val (code, responseBody) =
+                postJson(
+                  "localhost",
+                  port,
+                  user,
+                  password,
+                  "/get",
+                  s"""{"artifact":{"url":"$url"}}"""
+                )
+              assert(code == 403)
+              assert(responseBody == s"Forbidden URL: $url")
+            }
+            assert(!os.walk(serverCache).exists(isArtifact))
+
+            val res = os.proc(launcher, "get", otherPomUrl)
+              .call(
+                env = Map(
+                  "COURSIER_CACHE"                 -> (tmpDir / "client-cache").toString,
+                  "COURSIER_CACHE_SERVER"          -> s"http://localhost:$port",
+                  "COURSIER_CACHE_SERVER_USER"     -> user,
+                  "COURSIER_CACHE_SERVER_PASSWORD" -> password
+                ),
+                check = false,
+                mergeErrIntoOut = true
+              )
+            assert(res.exitCode != 0)
+            assert(res.out.text().contains("HTTP 403"))
+            assert(!os.walk(serverCache).exists(isArtifact))
+        }
+      finally os.remove.all(tmpDir)
+    }
+
+    test("server --default-disallow --allow") {
+      val tmpDir      = os.temp.dir(prefix = "coursier-cli-test")
+      val serverCache = tmpDir / "server-cache"
+      os.makeDir(serverCache)
+      val secret = tmpDir / "secret.txt"
+      os.write(secret, "secret")
+      val secretUrl = secret.toNIO.toUri.toASCIIString
+      try
+        withServer(
+          serverCache,
+          "--default-disallow",
+          "--allow",
+          "https://repo1.maven.org/maven2/org/scala-lang"
+        ) {
+          (port, user, password) =>
+            val disallowedUrls = Seq(
+              secretUrl,
+              "https://repo1.maven.org/maven2/org/scala-lang-other/a/1.0/a-1.0.pom",
+              "https://repo1.maven.org/maven2/org/scala-lang/../../com/a/1.0/a-1.0.pom"
+            )
+            for (url <- disallowedUrls) {
+              val (code, responseBody) =
+                postJson(
+                  "localhost",
+                  port,
+                  user,
+                  password,
+                  "/get",
+                  s"""{"artifact":{"url":"$url"}}"""
+                )
+              assert(code == 403)
+              assert(responseBody == s"Forbidden URL: $url")
+            }
+
+            val (code, responseBody) =
+              postJson(
+                "localhost",
+                port,
+                user,
+                password,
+                "/get",
+                s"""{"artifact":{"url":"$pomUrl"}}"""
+              )
+            assert(code == 200)
+            val path = responsePath(responseBody)
+            assert(path.nonEmpty)
+            assert(os.exists(serverCache / os.SubPath(path.get)))
+        }
+      finally os.remove.all(tmpDir)
     }
   }
 }
