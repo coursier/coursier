@@ -5,7 +5,7 @@ import mill.scalalib.*
 
 object Deps {
   def asm              = mvn"org.ow2.asm:asm:9.10.1"
-  def caseApp          = mvn"com.github.alexarchambault::case-app:2.1.0"
+  def caseApp          = mvn"com.github.alexarchambault::case-app:2.1.1"
   def catsCore         = mvn"org.typelevel::cats-core:${Versions.cats}"
   def catsEffect       = mvn"org.typelevel::cats-effect::3.7.1"
   def classPathUtil    = mvn"io.get-coursier::class-path-util:0.1.4"
