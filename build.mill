@@ -4,6 +4,7 @@
 
 import com.github.lolgab.mill.mima.{
   DirectMissingMethodProblem,
+  IncompatibleResultTypeProblem,
   InterfaceMima,
   MissingClassProblem,
   ProblemFilter
@@ -964,6 +965,10 @@ trait Install extends CsModule
     // private class, that got a `shared` field
     ProblemFilter.exclude[DirectMissingMethodProblem](
       "coursier.install.RawAppDescriptor#RawVersionOverride#RawVersionOverrideJson*"
+    ),
+    // private[install], now returns the errors of the repositories rather than swallowing them
+    ProblemFilter.exclude[IncompatibleResultTypeProblem](
+      "coursier.install.AppDescriptor.listVersions"
     )
   )
   def moduleDeps = super.moduleDeps ++ Seq(
