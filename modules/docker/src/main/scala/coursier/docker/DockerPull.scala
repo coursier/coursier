@@ -93,6 +93,7 @@ object DockerPull {
       case Left(err) => throw new Exception(err)
       case Right(f)  => f
     }
+    DockerUtil.checkDigest(manifestFile, selectedManifestEntry.digest)
 
     val manifest = {
       val content = Files.readAllBytes(manifestFile.toPath)
@@ -109,6 +110,7 @@ object DockerPull {
       case Left(err) => throw new Exception(err)
       case Right(f)  => f
     }
+    DockerUtil.checkDigest(configFile, manifest.config.digest)
 
     val config = {
       val content = Files.readAllBytes(configFile.toPath)
@@ -142,6 +144,9 @@ object DockerPull {
     }
 
     assert(layerArtifacts.length == layerFiles.length)
+
+    for ((layer, file) <- manifest.layers.zip(layerFiles))
+      DockerUtil.checkDigest(file, layer.digest)
 
     DockerPull.Result(
       (indexArtifact, indexFile, index),
