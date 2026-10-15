@@ -5,6 +5,8 @@ import java.net.{HttpURLConnection, ServerSocket, URL}
 import java.nio.charset.StandardCharsets
 import java.util.{Arrays, Base64, UUID}
 
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
+
 import utest._
 
 abstract class ServerTests extends TestSuite {
@@ -17,10 +19,21 @@ abstract class ServerTests extends TestSuite {
     finally socket.close()
   }
 
-  private def waitForServer(host: String, port: Int, maxAttempts: Int = 50): Unit = {
-    var attempts = 0
+  // The JAR launchers fetch the whole CLI class path on their first run, alongside other test
+  // forks doing the same, so the server can take well over 10 seconds to come up on CI
+  private def waitForServer(
+    serverProcess: os.SubProcess,
+    host: String,
+    port: Int,
+    maxWait: FiniteDuration = 2.minutes
+  ): Unit = {
+    val deadline = System.nanoTime() + maxWait.toNanos
     var ready    = false
-    while (!ready && attempts < maxAttempts)
+    while (!ready) {
+      if (!serverProcess.isAlive())
+        sys.error(s"Server exited with code ${serverProcess.exitCode()} before being ready")
+      if (System.nanoTime() > deadline)
+        sys.error(s"Server not ready after $maxWait")
       try {
         val conn = new URL(s"http://$host:$port/").openConnection()
           .asInstanceOf[HttpURLConnection]
@@ -31,11 +44,9 @@ abstract class ServerTests extends TestSuite {
       }
       catch {
         case _: Exception =>
-          attempts += 1
           Thread.sleep(200)
       }
-    if (!ready)
-      sys.error(s"Server not ready after $maxAttempts attempts")
+    }
   }
 
   private def postJson(
@@ -116,7 +127,7 @@ abstract class ServerTests extends TestSuite {
         )
 
       try {
-        waitForServer(host, port)
+        waitForServer(serverProcess, host, port)
 
         val requestBody          = s"""{"artifact":{"url":"$pomUrl"}}"""
         val (code, responseBody) = postJson(host, port, user, password, "/get", requestBody)

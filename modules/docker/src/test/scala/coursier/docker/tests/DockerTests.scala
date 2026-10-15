@@ -26,6 +26,7 @@ object DockerTests extends TestSuite {
   private var vmOpt0 =
     if (debugUseDefaultVm && !Properties.isLinux) Some(Vm.readFrom(Vm.defaultVmDir(), "default"))
     else Option.empty[Vm]
+  private var vmStartupFailure = Option.empty[Throwable]
 
   private def vmOpt: Option[Vm] =
     vmOpt0.orElse {
@@ -48,24 +49,36 @@ object DockerTests extends TestSuite {
                 outputTo = Some(Vm.defaultVmOutputDir() / "cs-tests")
               )
 
-            def spawnConnected(attemptsLeft: Int): Vm = {
-              val vm = spawn()
+            // Vm.spawn itself waits for SSH (and closes the VM if that fails), so it has to run
+            // inside the try for a slow boot to be retried
+            def spawnConnected(attemptsLeft: Int): Vm =
               try {
-                vm.withSession(_ => ())
-                vm
+                val vm = spawn()
+                try {
+                  vm.withSession(_ => ())
+                  vm
+                }
+                catch {
+                  case NonFatal(e) =>
+                    vm.close()
+                    throw e
+                }
               }
               catch {
                 case NonFatal(e) if attemptsLeft > 1 =>
                   System.err.println(s"VM startup failed, retrying with a fresh VM: $e")
-                  vm.close()
                   spawnConnected(attemptsLeft - 1)
-                case NonFatal(e) =>
-                  vm.close()
-                  throw e
               }
-            }
 
-            vmOpt0 = Some(spawnConnected(if (System.getenv("CI") == null) 1 else 2))
+            // don't make each remaining test wait for a VM boot that already failed
+            for (e <- vmStartupFailure)
+              throw new Exception("VM startup failed earlier in this suite", e)
+            try vmOpt0 = Some(spawnConnected(if (System.getenv("CI") == null) 1 else 2))
+            catch {
+              case NonFatal(e) =>
+                vmStartupFailure = Some(e)
+                throw e
+            }
             vmOpt0
           }
         }
