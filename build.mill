@@ -1160,10 +1160,16 @@ trait Cli extends CsModule
   // optimizations, `-opt-inline` enables the inliner. As an application, the cli runs with the
   // very class path it's compiled against, so it can inline from all its dependencies, but
   // GraalVM's, that are only on the compile class path, and provided by native-image itself.
+  // The JDK is excluded too: the cli runs on other JDKs than the one compiling it, and
+  // `--release` doesn't keep the inliner from reading its bytecode (inlining `URI#toURL` from
+  // JDK 21 made the cli call `URL.of`, which only exists from JDK 20 on).
   def scalacOptions = Task {
+    val jdkPackages =
+      Seq("java", "javax", "jdk", "sun", "com.sun", "org.w3c", "org.xml", "org.ietf")
+    val excluded = jdkPackages ++ Seq("org.graalvm", "com.oracle")
     super.scalacOptions() ++ Seq(
       "-opt",
-      "-opt-inline:**,!org.graalvm.**,!com.oracle.**"
+      ("**" +: excluded.map(pkg => s"!$pkg.**")).mkString("-opt-inline:", ",", "")
     )
   }
   def mainClass = Some("coursier.cli.Coursier")
