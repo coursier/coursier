@@ -141,7 +141,11 @@ object FileCacheAuthRealmTests extends TestSuite {
       withServer(challenging) { (url, log) =>
         withTmpDir { dir =>
           val cache = testCache(dir)
-            .addCredentials(DirectCredentials("localhost", user, password).withRealm(realm))
+            .addCredentials(
+              DirectCredentials("localhost", user, password)
+                .withRealm(realm)
+                .copy(httpsOnly = false)
+            )
             .withAuthRealm(realm)
           expectContent(cache, url, jarContent, artifactAuthentication = None)
           assert(log.methods == List("GET", "GET"))

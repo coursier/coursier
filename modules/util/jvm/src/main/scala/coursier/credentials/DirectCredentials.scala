@@ -1,6 +1,7 @@
 package coursier.credentials
 
 import java.net.URI
+import java.util.Locale
 
 import coursier.core.Authentication
 
@@ -38,11 +39,8 @@ import dataclass.{data, since => unroll}
   // Can be called during redirections, to check whether these credentials apply to the redirection target
   def autoMatches(url: String, realm0: Option[String]): Boolean =
     nonEmpty && matchHost && {
-      val uriOpt    = Try(new URI(url)).toOption
-      val schemeOpt = uriOpt.flatMap(uri => Option(uri.getScheme))
-      val hostOpt   = uriOpt.flatMap(uri => Option(uri.getHost))
-      ((schemeOpt.contains("http") && !httpsOnly) || schemeOpt.contains("https")) &&
-      hostOpt.contains(host) &&
+      val uriOpt = Try(new URI(url)).toOption
+      uriOpt.exists(urlMatches) &&
       realm.forall(realm0.contains)
     }
 
@@ -50,15 +48,35 @@ import dataclass.{data, since => unroll}
   def matches(url: String, user: String): Boolean =
     nonEmpty && {
       val uriOpt      = Try(new URI(url)).toOption
-      val schemeOpt   = uriOpt.flatMap(uri => Option(uri.getScheme))
-      val hostOpt     = uriOpt.flatMap(uri => Option(uri.getHost))
       val userInfoOpt = uriOpt.flatMap(uri => Option(uri.getUserInfo))
       // !matchHost && // ?
       userInfoOpt.isEmpty &&
-      ((schemeOpt.contains("http") && !httpsOnly) || schemeOpt.contains("https")) &&
-      hostOpt.contains(host) &&
+      uriOpt.exists(urlMatches) &&
       usernameOpt.contains(user)
     }
+
+  /** Whether these credentials can be sent to `uri`, judging from its scheme, host, and port
+    *
+    * `host` is either a bare host name, that matches HTTPS URLs on any port (and HTTP ones too if
+    * `httpsOnly` is false), or an origin like `https://repo.example.com:8443`, that only matches
+    * that scheme, host, and port (the scheme's default port if none is specified). A bare host can
+    * also be followed by a port, like `repo.example.com:8443`, to only match that port.
+    */
+  private def urlMatches(uri: URI): Boolean = {
+    val (hostSchemeOpt, hostName, hostPortOpt) = DirectCredentials.parseHost(host)
+    val schemeOpt = Option(uri.getScheme).map(_.toLowerCase(Locale.ROOT))
+    val schemeMatches = hostSchemeOpt match {
+      case Some(scheme) => schemeOpt.contains(scheme)
+      case None         => schemeOpt.contains("https") || (schemeOpt.contains("http") && !httpsOnly)
+    }
+    val portOpt = Some(uri.getPort)
+      .filter(_ >= 0)
+      .orElse(schemeOpt.flatMap(DirectCredentials.defaultPort))
+    val expectedPortOpt = hostPortOpt.orElse(hostSchemeOpt.flatMap(DirectCredentials.defaultPort))
+    schemeMatches &&
+    Option(uri.getHost).contains(hostName) &&
+    expectedPortOpt.forall(portOpt.contains)
+  }
 
   def authentication: Authentication =
     Authentication(
@@ -91,7 +109,33 @@ object DirectCredentials {
   def defaultMatchHost: Boolean =
     true
   def defaultHttpsOnly: Boolean =
-    false
+    true
   def defaultPassOnRedirect: Boolean =
     false
+
+  private val hostPattern =
+    """(?:([a-zA-Z][a-zA-Z0-9+.-]*)://)?(\[[^\]/]*\]|[^:/\[\]]*)(?::([0-9]+))?/?""".r.pattern
+
+  /** Splits a `host` value into its optional scheme (lower-cased), host name, and optional port
+    *
+    * Values that don't look like `[scheme://]host[:port]` are returned as is, as a host name.
+    */
+  private[credentials] def parseHost(host: String): (Option[String], String, Option[Int]) = {
+    val m = hostPattern.matcher(host)
+    if (m.matches())
+      (
+        Option(m.group(1)).map(_.toLowerCase(Locale.ROOT)),
+        m.group(2),
+        Option(m.group(3)).flatMap(p => Try(p.toInt).toOption)
+      )
+    else
+      (None, host, None)
+  }
+
+  private def defaultPort(scheme: String): Option[Int] =
+    scheme match {
+      case "https" => Some(443)
+      case "http"  => Some(80)
+      case _       => None
+    }
 }

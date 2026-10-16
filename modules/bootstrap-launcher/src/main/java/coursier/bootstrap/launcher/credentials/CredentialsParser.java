@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class CredentialsParser {
 
   private static final Pattern CREDENTIALS_PARSER_PATTERN = Pattern
-      .compile("([a-zA-Z0-9.-]*)(\\(.*\\))?[ ]+([^ :][^:]*):(.*)");
+      .compile("((?:[a-zA-Z][a-zA-Z0-9+.-]*://)?[a-zA-Z0-9.-]*(?::[0-9]+)?)(\\(.*\\))?[ ]+([^ :][^:]*):(.*)");
 
   public static final Optional<DirectCredentials> parse(String s) {
     final Matcher m = CREDENTIALS_PARSER_PATTERN.matcher(s);

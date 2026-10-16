@@ -132,7 +132,7 @@ public class CredentialsTests {
         try (AuthenticatedRepository repository = new AuthenticatedRepository()) {
             Cache cache = Cache.create()
                     .withLocation(cacheLocation.toFile())
-                    .addCredentials(Credentials.of(repository.host(), USER, PASSWORD));
+                    .addCredentials(Credentials.of(repository.host(), USER, PASSWORD).withHttpsOnly(false));
             checkFetches(cache, repository, cacheLocation);
         }
     }
@@ -146,6 +146,7 @@ public class CredentialsTests {
                     "test.host=" + repository.host(),
                     "test.username=" + USER,
                     "test.password=" + PASSWORD,
+                    "test.https-only=false",
                     "").getBytes(StandardCharsets.UTF_8));
             Cache cache = Cache.create()
                     .withLocation(cacheLocation.toFile())

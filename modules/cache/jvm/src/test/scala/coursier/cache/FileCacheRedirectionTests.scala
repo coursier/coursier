@@ -351,6 +351,17 @@ object FileCacheRedirectionTests extends TestSuite {
               )
             }
           }
+
+          test("HTTPS only by default") {
+            // someone able to redirect a request to an HTTP URL shouldn't get credentials in clear
+            withHttpServer(routes) { base =>
+              error(
+                base / "redirect",
+                _.startsWith("unauthorized: "),
+                _.addCredentials(credentials(base, userPass).copy(realm = Some(realm)))
+              )
+            }
+          }
         }
       }
 

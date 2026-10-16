@@ -1,9 +1,13 @@
 package coursier.bootstrap.launcher.credentials;
 
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Java copy of coursier.credentials.DirectCredentials
@@ -13,7 +17,7 @@ public final class DirectCredentials extends Credentials {
   private static final long serialVersionUID = 1L;
 
   public static final boolean DEFAULT_MATCH_HOST = true;
-  public static final boolean DEFAULT_HTTPS_ONLY = false;
+  public static final boolean DEFAULT_HTTPS_ONLY = true;
   public static final boolean DEFAULT_PASS_ON_REDIRECT = false;
 
   private static final String DEFAULT_HOST = "";
@@ -137,6 +141,56 @@ public final class DirectCredentials extends Credentials {
 
   public boolean isPassOnRedirect() {
     return passOnRedirect;
+  }
+
+  private static final Pattern HOST_PATTERN =
+    Pattern.compile("(?:([a-zA-Z][a-zA-Z0-9+.-]*)://)?(\\[[^\\]/]*\\]|[^:/\\[\\]]*)(?::([0-9]+))?/?");
+
+  private static int defaultPort(String scheme) {
+    if ("https".equals(scheme))
+      return 443;
+    if ("http".equals(scheme))
+      return 80;
+    return -1;
+  }
+
+  /**
+   * Whether these credentials can be sent to url, judging from its scheme, host, and port
+   *
+   * Same logic as coursier.credentials.DirectCredentials#urlMatches: host is either a bare host
+   * name, that matches HTTPS URLs on any port (and HTTP ones too if httpsOnly is false), or an
+   * origin like https://repo.example.com:8443, that only matches that scheme, host, and port (the
+   * scheme's default port if none is specified). A bare host can also be followed by a port, like
+   * repo.example.com:8443, to only match that port.
+   */
+  public boolean urlMatches(URL url) {
+    String hostScheme = null;
+    String hostName = host;
+    int hostPort = -1;
+    Matcher m = HOST_PATTERN.matcher(host);
+    if (m.matches()) {
+      hostScheme = (m.group(1) == null) ? null : m.group(1).toLowerCase(Locale.ROOT);
+      hostName = m.group(2);
+      if (m.group(3) != null) {
+        try {
+          hostPort = Integer.parseInt(m.group(3));
+        } catch (NumberFormatException e) {
+          return false;
+        }
+      }
+    }
+
+    String scheme = (url.getProtocol() == null) ? null : url.getProtocol().toLowerCase(Locale.ROOT);
+    boolean schemeMatches = (hostScheme == null)
+      ? ("https".equals(scheme) || ("http".equals(scheme) && !httpsOnly))
+      : hostScheme.equals(scheme);
+
+    int port = (url.getPort() >= 0) ? url.getPort() : defaultPort(scheme);
+    int expectedPort = (hostPort >= 0) ? hostPort : ((hostScheme == null) ? -1 : defaultPort(hostScheme));
+
+    return schemeMatches &&
+      hostName.equals(url.getHost()) &&
+      (expectedPort < 0 || expectedPort == port);
   }
 
   public DirectCredentials withHost(String host) {

@@ -28,6 +28,13 @@ It should contain lines like
 The first one matches any realm.
 The second one only matches a specific HTTP Basic auth realm.
 
+`host` can also specify a port, like `artifacts.foo.com:8443`, or a scheme, like
+`https://artifacts.foo.com` or `http://nexus.local:8081` (see
+[How credentials are matched](#how-credentials-are-matched)).
+
+Inline credentials are only sent over HTTPS, unless `host` starts with `http://`
+(see [Plain HTTP repositories](#plain-http-repositories)).
+
 Space characters at the beginning of each line are ignored. Empty lines
 are ignored too.
 
@@ -86,7 +93,7 @@ The following optional properties can also be set per prefix:
 | Property | Default | Description |
 |---|---|---|
 | `prefix.realm` | (unset) | Match only if the server's HTTP Basic auth realm equals this value |
-| `prefix.https-only` | `false` | Only send credentials over HTTPS connections |
+| `prefix.https-only` | `true` (`false` up to coursier 2.1.26) | Only send credentials over HTTPS connections (ignored if `prefix.host` has a scheme, see [Plain HTTP repositories](#plain-http-repositories)) |
 | `prefix.auto` | `true` | Automatically match based on the host name (used during redirections) |
 | `prefix.pass-on-redirect` | `false` | Forward credentials when the server issues an HTTP redirect |
 
@@ -146,7 +153,15 @@ When coursier makes an HTTP request that requires authentication, it looks for
 a matching credential entry using the following rules:
 
 - The credential's `host` must match the URL's host.
-- If `https-only` is `true`, the URL must use HTTPS.
+- If `host` is a bare host name, like `repo.example.com`, the URL can use any port.
+  It must use HTTPS, unless `https-only` is `false`, in which case plain HTTP is
+  accepted too.
+- If `host` has a port, like `repo.example.com:8443`, the URL must use that port.
+- If `host` has a scheme, like `https://repo.example.com` or
+  `http://nexus.local:8081`, the URL must use that scheme, and that port (or the
+  scheme's default port, 443 for HTTPS and 80 for HTTP, if `host` has none).
+  `https-only` is ignored then, so that's the way to send credentials to a single
+  plain HTTP repository.
 - If a `realm` is specified, it must match the realm advertised in the server's
   `WWW-Authenticate` response header.
 - If `auto` is `true` (the default), the credential is also eligible to
@@ -156,6 +171,57 @@ a matching credential entry using the following rules:
   only if you explicitly need cross-host credential forwarding.
 
 The first matching credential is used. No credential is used if none matches.
+
+## Plain HTTP repositories
+
+In coursier versions newer than 2.1.26, credentials are only sent over HTTPS by
+default. Up to 2.1.26, `https-only` defaulted to `false`, and credentials that
+didn't set it were sent over plain HTTP too. Since credentials were matched on
+the host name only, anyone able to tamper with a plain HTTP request, by
+redirecting it to `http://` and the host of your repository, could then
+get them in clear, even if you only ever accessed that repository over HTTPS.
+
+That changes things for setups that rely on the former default to send
+credentials to a repository served over plain HTTP. Such repositories now answer
+`401 Unauthorized`, as credentials aren't sent to them anymore. With
+`COURSIER_HTTP_DEBUG=1` (see [Debugging](#debugging)), the credentials that
+were skipped for that reason are marked `(HTTPS only)`:
+
+```text
+[coursier http] http://nexus.local:8081/…/lib-1.0.0.pom: no credentials match host nexus.local (realm "Sonatype Nexus Repository Manager"), credentials are configured for: nexus.local (HTTPS only), giving up
+```
+
+To keep sending credentials to such a repository, either:
+- put its scheme and port in `host`, like `http://nexus.local:8081`, so that the
+  credentials only go to that repository over plain HTTP, or
+- set `https-only` to `false`, so that they go to any port of that host over plain
+  HTTP, like before.
+
+The first option is the safer one, but coursier 2.1.26 and older don't understand
+a scheme or a port in `host`. They never send such credentials from a property
+file or the Scala CLI config file. Inline, they reject the `--credentials` value,
+and ignore *all* the credentials in `COURSIER_CREDENTIALS` / `coursier.credentials`
+if any line has one. If the same credentials have to work with these versions too,
+use the second option.
+
+Depending on where the credentials come from:
+
+| Source | Scheme in `host` | Allowing plain HTTP for a bare host |
+|---|---|---|
+| [Inline](#inline) | `http://nexus.local:8081 user:password` | not possible, put the scheme in `host` |
+| [Property file](#property-file) | `prefix.host=http://nexus.local:8081` | `prefix.https-only=false` |
+| [Scala CLI config file](#scala-cli-config-file) | `"host": "http://nexus.local:8081"` | `"httpsOnly": false` |
+| [API](#api), `DirectCredentials` | `DirectCredentials("http://nexus.local:8081", user, password)` | `.copy(httpsOnly = false)` |
+| `coursierapi.Credentials` (interface versions newer than 1.0.30) | `Credentials.of("http://nexus.local:8081", user, password)` | `.withHttpsOnly(false)` |
+
+This also applies to bootstrap launchers (generated by `cs bootstrap`) that
+download their JARs at startup: those generated by coursier versions newer than
+2.1.26 only send credentials over HTTPS by default too. Launchers generated
+by older versions keep their former behavior.
+
+Credentials embedded in a repository URL, like `-r http://user:password@nexus.local:8081/…`
+(see [Per host](#per-host)), aren't concerned: they're sent to that
+repository whatever its scheme.
 
 ## Repositories that don't ask for credentials
 
