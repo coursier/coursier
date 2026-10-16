@@ -216,7 +216,7 @@ object ApiHelper {
 
   def dependency(dep: coursierapi.Dependency): Dependency = {
 
-    val module0 = module(dep.getModule)
+    val module0    = module(dep.getModule)
     val exclusions = dep
       .getExclusions
       .iterator()
@@ -285,7 +285,7 @@ object ApiHelper {
 
   def repository(repo: coursierapi.Repository): Repository =
     repo match {
-      case ApiRepo(repo0) => repo0
+      case ApiRepo(repo0)                   => repo0
       case mvn: coursierapi.MavenRepository =>
         MavenRepository(
           mvn.getBase,
@@ -682,7 +682,7 @@ object ApiHelper {
       .toVector
 
     val binVersionOpt = Option(complete.getScalaBinaryVersion)
-    val res = coursier.complete.Complete(cache0)
+    val res           = coursier.complete.Complete(cache0)
       .copy(repositories = repositories, scalaBinaryVersionOpt = binVersionOpt)
       .withScalaVersionOpt(Option(complete.getScalaVersion), binVersionOpt.isEmpty)
       .copy(input = complete.getInput)

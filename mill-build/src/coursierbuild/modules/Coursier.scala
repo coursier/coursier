@@ -5,7 +5,7 @@ import coursierbuild.Deps
 import mill._, mill.scalalib._
 
 trait Coursier extends CsModule with CoursierPublishModule {
-  def artifactName = "coursier"
+  def artifactName   = "coursier"
   def compileMvnDeps = Task {
     val sv          = scalaVersion()
     val scala2Extra = if (sv.startsWith("2.")) Seq(Deps.scalaReflect(sv)) else Nil

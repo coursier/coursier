@@ -56,7 +56,7 @@ object FileCacheNonAuthoritativeTests extends TestSuite {
       withServer(nonAuthoritative) { (url, log) =>
         withTmpDir { dir =>
           val cache = testCache(dir)
-          val file = run(cache, url) match {
+          val file  = run(cache, url) match {
             case Right(f)  => f
             case Left(err) => sys.error(s"Expected the 203 body to be cached, got $err")
           }
@@ -89,7 +89,7 @@ object FileCacheNonAuthoritativeTests extends TestSuite {
       withServer(RawHttpServer.ok(jarContent)) { (url, log) =>
         withTmpDir { dir =>
           val cache = testCache(dir).copy(rejectNonAuthoritativeResponses = true)
-          val file = run(cache, url) match {
+          val file  = run(cache, url) match {
             case Right(f)  => f
             case Left(err) => sys.error(s"Expected a successful download, got $err")
           }

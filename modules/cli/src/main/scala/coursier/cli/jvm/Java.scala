@@ -54,7 +54,7 @@ object Java extends CoursierCommand[JavaOptions] {
     if (params.available || params.installed) {
       val task =
         for {
-          index <- jvmCache.index.getOrElse(sys.error("should not happen"))
+          index          <- jvmCache.index.getOrElse(sys.error("should not happen"))
           maybeErrorTask <- Task.delay {
             index.available().map { map =>
               val available = for {
@@ -72,7 +72,7 @@ object Java extends CoursierCommand[JavaOptions] {
 
                 // Look ids up in the index we already have at hand, rather than
                 // letting each getIfInstalled call load the index on its own.
-                val jvmCache0 = jvmCache.withIndex(Task.point(index))
+                val jvmCache0   = jvmCache.withIndex(Task.point(index))
                 val resultsTask = Task.gather.gather {
                   available.map { id =>
                     jvmCache0.getIfInstalled(id).map((id, _))
@@ -182,7 +182,7 @@ object Java extends CoursierCommand[JavaOptions] {
       }
       else if (Execve.available()) {
         val extraEnv = envUpdate.transientUpdates()
-        val fullEnv = (sys.env ++ extraEnv)
+        val fullEnv  = (sys.env ++ extraEnv)
           .iterator
           .map {
             case (k, v) =>

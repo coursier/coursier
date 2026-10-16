@@ -226,7 +226,7 @@ import java.util.concurrent.ConcurrentMap
   def configuration: Configuration =
     variantSelector match {
       case c: VariantSelector.ConfigurationBased => c.configuration
-      case _: VariantSelector.AttributesBased =>
+      case _: VariantSelector.AttributesBased    =>
         sys.error("Deprecated method doesn't support Gradle Module variant selectors")
     }
   @deprecated("Use withVariantSelector instead", "2.1.25")
@@ -483,7 +483,7 @@ import java.util.concurrent.ConcurrentMap
       overridesMap = Overrides.add(overridesMap, Overrides(Map(key -> values)))
     )
   def addOverride(org: Organization, name: ModuleName, version: VersionConstraint0): Dependency = {
-    val key = DependencyManagement.Key(org, name, Type.jar, Classifier.empty)
+    val key    = DependencyManagement.Key(org, name, Type.jar, Classifier.empty)
     val values = DependencyManagement.Values(
       Configuration.empty,
       version,
@@ -501,7 +501,7 @@ import java.util.concurrent.ConcurrentMap
     version: VersionConstraint0,
     exclusions: Set[(Organization, ModuleName)]
   ): Dependency = {
-    val key = DependencyManagement.Key(org, name, Type.jar, Classifier.empty)
+    val key    = DependencyManagement.Key(org, name, Type.jar, Classifier.empty)
     val values = DependencyManagement.Values(
       Configuration.empty,
       version,

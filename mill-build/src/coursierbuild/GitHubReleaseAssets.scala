@@ -61,7 +61,7 @@ object GitHubReleaseAssets {
     ghToken: String,
     tag: String
   ): Long = {
-    val url = uri"https://api.github.com/repos/$ghOrg/$ghProj/releases"
+    val url  = uri"https://api.github.com/repos/$ghOrg/$ghProj/releases"
     val resp = quickRequest
       .header("Accept", "application/vnd.github.v3+json")
       .header("Authorization", s"token $ghToken")
@@ -69,7 +69,7 @@ object GitHubReleaseAssets {
       .send()
     checkResponse(resp, s"getting the releases of $ghOrg/$ghProj")
 
-    val json = ujson.read(resp.body)
+    val json      = ujson.read(resp.body)
     val releaseId =
       try json
           .arr
@@ -223,7 +223,7 @@ object GitHubReleaseAssets {
               }
 
             errorOpt match {
-              case None => ()
+              case None    => ()
               case Some(e) =>
                 System.err.println(s"Error while uploading $name: $e")
                 // GitHub can have accepted the whole asset and only failed to answer in time, so

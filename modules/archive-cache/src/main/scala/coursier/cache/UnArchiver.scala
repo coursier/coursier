@@ -228,7 +228,7 @@ object UnArchiver {
             case ArchiveType.Tzst => ("", Seq("--zstd"))
           }
           val maybeSudo = if (useSudo) Seq("sudo") else Nil
-          val command = maybeSudo ++ Seq("tar") ++ compressionArgs ++
+          val command   = maybeSudo ++ Seq("tar") ++ compressionArgs ++
             Seq("-" + compressionOptionOneLetter + "xf", archive.toString)
           Files.createDirectories(destDir.toPath)
           val proc = new ProcessBuilder()
@@ -320,7 +320,7 @@ object UnArchiver {
         fail(entry, target, "has an absolute target")
       else
         target.iterator().asScala.map(_.toString).foldLeft(Option((dir, linkCount))) {
-          case (None, _) => None
+          case (None, _)                                     => None
           case (Some((current, _)), "..") if current == root =>
             None
           case (Some((current, count)), "..") =>
@@ -341,7 +341,7 @@ object UnArchiver {
     // `entry` is relative to root
     private def checkLink(entry: Path, target: Path): Unit = {
       // where the directory of entry actually is, following symbolic links
-      val dirOpt = resolve(entry, root, Option(entry.getParent).getOrElse(Paths.get("")), 0)
+      val dirOpt   = resolve(entry, root, Option(entry.getParent).getOrElse(Paths.get("")), 0)
       val isInside = dirOpt.exists {
         case (dir, _) =>
           resolve(entry, dir, target, 0).nonEmpty

@@ -41,7 +41,7 @@ object Fetch extends CoursierCommand[FetchOptions] {
     for {
       t <- resolveTask
       (res, scalaVersionOpt, platformOpt, _) = t
-      artifacts = coursier.Artifacts.artifacts0(
+      artifacts                              = coursier.Artifacts.artifacts0(
         res,
         params.artifact.classifiers,
         params.artifact.attributes,
@@ -61,7 +61,7 @@ object Fetch extends CoursierCommand[FetchOptions] {
           case Some(output) =>
             Task.delay {
               val byArtifacts = artifacts.groupMap(_._3) { case (dep, pub, _) => (dep, pub) }
-              val report = JsonReport.report(
+              val report      = JsonReport.report(
                 res,
                 for {
                   (art, fileOpt) <- artifactFiles

@@ -26,7 +26,7 @@ class NoIsInstanceOf extends SyntacticRule("NoIsInstanceOf") {
 object NoIsInstanceOf {
   private final case class IsInstanceOfDiagnostic(tree: Tree) extends Diagnostic {
     def position: Position = tree.pos
-    def message: String =
+    def message: String    =
       "isInstanceOf is not allowed, pattern match on the type instead " +
         "(x match { case _: Foo => true; case _ => false })"
     override def categoryID: String = "isInstanceOf"
