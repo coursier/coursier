@@ -6,7 +6,7 @@ import coursier.util.Monad.ops._
 import dataclass.{data, since => unroll}
 import org.apache.tika.Tika
 
-import java.io.{EOFException, File, IOException, InputStream}
+import java.io.{File, IOException}
 import java.math.BigInteger
 import java.nio.file.{
   FileVisitResult,
@@ -19,7 +19,6 @@ import java.nio.file.{
 }
 import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
-import java.util.zip.{GZIPInputStream, ZipException, ZipFile}
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try, Using}
@@ -259,60 +258,6 @@ import scala.util.{Failure, Success, Try, Using}
     }
   }
 
-  private def integrityCheck0(
-    url: String,
-    file: File
-  ): Option[Boolean] = {
-    def readAndDiscard(is: InputStream): Unit = {
-      val buf  = Array.ofDim[Byte](64 * 1024)
-      var read = 0
-      while ({
-        read = is.read(buf)
-        read >= 0
-      }) {}
-    }
-    ArchiveCache.archiveType(url).collect {
-      case ArchiveType.Gzip | ArchiveType.Tgz =>
-        // read uncompressed content fully to validate GZIP checksum
-        var fis: InputStream = null
-        try {
-          fis = Files.newInputStream(file.toPath)
-          try {
-            readAndDiscard(new GZIPInputStream(fis))
-            true
-          }
-          catch {
-            case _: ZipException =>
-              false
-            case ex: EOFException if ex.getMessage.contains("ZLIB") =>
-              false
-          }
-        }
-        finally
-          if (fis != null)
-            fis.close()
-      case ArchiveType.Zip =>
-        // read all uncompressed entries fully to validate entries' checksums
-        var zf: ZipFile = null
-        try {
-          zf = new ZipFile(file)
-          for (ent <- zf.entries().asScala)
-            readAndDiscard(zf.getInputStream(ent))
-          true
-        }
-        catch {
-          case _: ZipException =>
-            false
-        }
-        finally
-          if (zf != null)
-            zf.close()
-    }
-  }
-
-  private def isInCache(file: File, cacheLocation: File): Boolean =
-    file.toPath.toAbsolutePath.normalize.startsWith(cacheLocation.toPath.toAbsolutePath.normalize)
-
   def get(artifact: Artifact): F[Either[ArtifactError, File]] =
     ArchiveCache.invalidSubPathError(artifact.url) match {
       case Some(err) => S.point(Left(err))
@@ -322,71 +267,9 @@ import scala.util.{Failure, Success, Try, Using}
   private def get1(artifact: Artifact): F[Either[ArtifactError, File]] = {
     val (dir0, subPaths) = localDir(artifact)
     val artifact0        = artifact.copy(url = artifact.url.takeWhile(_ != '!'))
-    val download: F[Either[ArtifactError, File]] = {
-      def doDownload: F[Either[ArtifactError, File]] = cache.file(artifact0).run
-      if (integrityCheck.getOrElse(true)) {
-        val eitherT = for {
-          f <- EitherT(doDownload)
-          invalid <- {
-            val cacheLocationOpt = cache match {
-              case fc: FileCache[F] => Some(fc.location)
-              case _                => None
-            }
-            EitherT(
-              S.delay[Either[ArtifactError, Boolean]] {
-                Right {
-                  cacheLocationOpt match {
-                    case Some(cacheLocation) if !isInCache(f, cacheLocation) =>
-                      // Local file used in place (file: URL not copied to the cache). We
-                      // mustn't write integrity files next to it or delete it, and
-                      // "re-downloading" it wouldn't change anything anyway.
-                      false
-                    case Some(cacheLocation) =>
-                      val invalid0 = CacheLocks.withLockOr(cacheLocation, f)(
-                        {
-                          val integrityFile = FileCache.auxiliaryFile(f, "integrity").toPath
-                          val hasValidIntegrityFile = Files.exists(integrityFile) && {
-                            val lastModified          = Files.getLastModifiedTime(f.toPath)
-                            val integrityLastModified = Files.getLastModifiedTime(integrityFile)
-                            integrityLastModified.toMillis() >= lastModified.toMillis()
-                          }
-                          if (!hasValidIntegrityFile)
-                            Files.deleteIfExists(integrityFile)
-                          !hasValidIntegrityFile && {
-                            val invalid0 = integrityCheck0(artifact0.url, f).contains(false)
-                            if (invalid0) {
-                              Files.delete(f.toPath)
-                              // clear all but the lock file for Windows?
-                              FileCache.clearAuxiliaryFiles(f)
-                            }
-                            else
-                              Files.write(integrityFile, Array.emptyByteArray)
-                            invalid0
-                          }
-                        },
-                        None
-                      )
-                      invalid0
-                    case None =>
-                      val invalid0 = integrityCheck0(artifact0.url, f).contains(false)
-                      if (invalid0)
-                        Files.delete(f.toPath)
-                      invalid0
-                  }
-                }
-              }
-            )
-          }
-          f0 <- EitherT[F, ArtifactError, File](
-            if (invalid) doDownload
-            else S.point(Right(f))
-          )
-        } yield f0
-        eitherT.run
-      }
-      else
-        doDownload
-    }
+    val download: F[Either[ArtifactError, File]] =
+      if (integrityCheck.getOrElse(true)) cache.fileWithIntegrityCheck(artifact0).run
+      else cache.file(artifact0).run
 
     val main = get0(
       dir0,

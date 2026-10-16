@@ -190,7 +190,8 @@ import scala.util.Try
 
   private def fileWithPolicy(
     artifact: Artifact,
-    cachePolicy: Option[String]
+    cachePolicy: Option[String],
+    archiveIntegrityCheck: Boolean = false
   ): EitherT[F, ArtifactError, File] =
     EitherT {
       Sync[F].schedule(pool) {
@@ -228,7 +229,8 @@ import scala.util.Try
             // without a specific policy, the server tries ours in order, like FileCache.file does
             cachePolicies =
               if (cachePolicy.isEmpty) cachePolicies.map(Model.cachePolicyName) else Nil,
-            ttl = Some(Model.serializeTtl(ttl))
+            ttl = Some(Model.serializeTtl(ttl)),
+            archiveIntegrityCheck = archiveIntegrityCheck
           )
           val body = writeToArray(request)
 
@@ -293,6 +295,22 @@ import scala.util.Try
         fileWithPolicy(artifact0, None)
     }
   }
+
+  /** Like [[file]], also checking the integrity of archives
+    *
+    * The cache server is in charge of the cache, so it's the one checking archives, and downloading
+    * them again if they're corrupted. Servers predating archive integrity checks don't check
+    * anything.
+    */
+  override def fileWithIntegrityCheck(
+    artifact: Artifact
+  )(implicit S: Sync[F]): EitherT[F, ArtifactError, File] =
+    fileFallback0.filter(_ => artifact.url.startsWith("file:/")) match {
+      case Some(fallback) =>
+        fallback.fileWithIntegrityCheck(artifact)(sync)
+      case None =>
+        fileWithPolicy(artifact, None, archiveIntegrityCheck = true)
+    }
 
   private def fetchWithPolicy(cachePolicy: Option[String]): Cache.Fetch[F] =
     artifact => {

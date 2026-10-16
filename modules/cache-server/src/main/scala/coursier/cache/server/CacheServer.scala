@@ -108,7 +108,13 @@ object CacheServer {
                           Left(new ArtifactError.DownloadError(message, None))
                         )
                       case Right((policies, ttl)) =>
-                        cache.fileWith(artifact, cache.retry, policies, ttl).run
+                        cache.fileWith(
+                          artifact,
+                          cache.retry,
+                          policies,
+                          ttl,
+                          archiveIntegrityCheck = request.archiveIntegrityCheck
+                        ).run
                     }
                     fileTask.future()(cache.ec)
                   }
