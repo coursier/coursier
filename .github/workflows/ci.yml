@@ -11,6 +11,13 @@ permissions:
   id-token: write
   attestations: write
 
+# A push to main cancels the CI run of the previous push to main, if it's still running. Other
+# runs (pull requests, tags) get a group of their own, so that they're neither cancelled nor
+# made to wait for one another.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref == 'refs/heads/main' && github.ref || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   compile-publish-all:
     runs-on: ubuntu-latest
