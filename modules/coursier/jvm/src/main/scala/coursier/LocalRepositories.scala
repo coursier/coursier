@@ -41,7 +41,7 @@ object LocalRepositories {
       // TODO Add a small unit test for that repo…
 
       // a bit touchy on Windows... - don't try to manually write down the URI with s"file://..."
-      val str = new File(sys.props("user.home")).toURI.toString
+      val str     = new File(sys.props("user.home")).toURI.toString
       val homeUri =
         if (str.endsWith("/"))
           str

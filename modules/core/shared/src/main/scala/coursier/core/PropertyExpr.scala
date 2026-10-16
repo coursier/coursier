@@ -27,7 +27,7 @@ private[coursier] sealed abstract class PropertyExpr {
           if (resolvedExpr == null) rawValue
           else {
             val result = resolvedExpr match {
-              case PropertyLiteral(v) => v
+              case PropertyLiteral(v)      => v
               case spe: SimplePropertyExpr =>
                 PropertyExpr.resolvePartToString(spe, lookup, trim, Nil, 1)
               case Composite(ps, _) => PropertyExpr.renderSubstitutions(
@@ -97,15 +97,15 @@ private[coursier] object PropertyExpr {
     case PropertyLiteral(value)     => value
     case PropertyReference(name, _) =>
       // Skip cycle tracking below depth CycleTrackingDepthStart: no allocation, no list scan
-      val isCycle = depth >= CycleTrackingDepthStart && seen.contains(name)
+      val isCycle      = depth >= CycleTrackingDepthStart && seen.contains(name)
       val resolvedExpr =
         if (isCycle) throw new CyclicPropertyException else lookup.lookupOrNull(name)
       if (resolvedExpr == null)
         s"$${$name}"
       else {
         val nextSeen = if (depth < CycleTrackingDepthStart) Nil else name :: seen
-        val result = resolvedExpr match {
-          case PropertyLiteral(v) => v
+        val result   = resolvedExpr match {
+          case PropertyLiteral(v)      => v
           case spe: SimplePropertyExpr =>
             resolvePartToString(spe, lookup, trim, nextSeen, depth + 1)
           case Composite(ps, _) =>

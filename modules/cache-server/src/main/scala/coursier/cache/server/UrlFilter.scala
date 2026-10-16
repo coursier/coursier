@@ -33,7 +33,7 @@ final class UrlFilter(
     !(hasRules && UrlFilter.hasDotSegments(url)) && matchesRules(url)
 
   private def matchesRules(url: String): Boolean = {
-    val url0 = UrlFilter.normalize(url)
+    val url0                             = UrlFilter.normalize(url)
     def matches(prefix: String): Boolean =
       if (prefix.endsWith("*"))
         url0.startsWith(prefix.stripSuffix("*"))

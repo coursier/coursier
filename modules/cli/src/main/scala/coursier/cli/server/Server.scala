@@ -36,21 +36,21 @@ object Server extends CoursierCommand[ServerOptions] {
     }
 
     val cachePool = Sync.fixedThreadPool(params.cache.parallel)
-    val cache = params.cache.cache(cachePool, params.output.logger()) match {
+    val cache     = params.cache.cache(cachePool, params.output.logger()) match {
       case fc: FileCache[Task] => fc
-      case other =>
+      case other               =>
         System.err.println(s"Unexpected cache type: $other")
         sys.exit(1)
     }
     val requestsPool = Executors.newCachedThreadPool(
       ThreadUtil.daemonThreadFactory("coursier-cache-server-requests")
     )
-    val urlFilter = new UrlFilter(params.defaultAllow, params.allow, params.disallow)
+    val urlFilter       = new UrlFilter(params.defaultAllow, params.allow, params.disallow)
     val filteredHandler =
       CacheServer.handler(cache, ExecutionContext.fromExecutorService(requestsPool), urlFilter)
 
     val handler: HttpHandler = expectedAuthOpt match {
-      case None => filteredHandler
+      case None               => filteredHandler
       case Some(expectedAuth) =>
         (exchange: HttpServerExchange) => {
           val authorized = Option(exchange.getRequestHeaders.getFirst(Headers.AUTHORIZATION))

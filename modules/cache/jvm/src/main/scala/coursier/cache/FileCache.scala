@@ -264,7 +264,7 @@ import scala.util.control.NonFatal
 
     val localFile0 = localFile(artifact.url, artifact.authentication.flatMap(_.userOpt))
 
-    val headerSumFile = Seq(auxiliaryFile(localFile0, sumType))
+    val headerSumFile     = Seq(auxiliaryFile(localFile0, sumType))
     val downloadedSumFile = artifact.checksumUrls.get(sumType).map { sumUrl =>
       localFile(sumUrl, artifact.authentication.flatMap(_.userOpt))
     }
@@ -382,7 +382,7 @@ import scala.util.control.NonFatal
           .toMap
 
         val checksumResults = checksums0.map {
-          case None => None
+          case None    => None
           case Some(c) =>
             val url = artifact.checksumUrls.getOrElse(
               c,
@@ -391,7 +391,7 @@ import scala.util.control.NonFatal
             Some((c, url, resultsMap.get(url)))
         }
         val checksum = checksumResults.collectFirst {
-          case None => None
+          case None                                             => None
           case Some((c, _, Some(errorOpt))) if errorOpt.isEmpty =>
             Some(c)
         }
@@ -415,7 +415,7 @@ import scala.util.control.NonFatal
         }
       }
     }.flatMap {
-      case (f, None) => EitherT(S.point[Either[ArtifactError, File]](Right(f)))
+      case (f, None)    => EitherT(S.point[Either[ArtifactError, File]](Right(f)))
       case (f, Some(c)) =>
         validateChecksum(artifact, c).map(_ => f)
     }.leftFlatMap {
@@ -644,7 +644,7 @@ object FileCache extends FileCachePlatformCompanion {
     s".${file.getName}__"
 
   private[coursier] def clearAuxiliaryFiles(file: File): Unit = {
-    val prefix = auxiliaryFilePrefix(file)
+    val prefix                 = auxiliaryFilePrefix(file)
     val filter: FilenameFilter = new FilenameFilter {
       def accept(dir: File, name: String): Boolean =
         name.startsWith(prefix)

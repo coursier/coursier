@@ -84,7 +84,7 @@ object Structs {
         },
       dtOpt =>
         dtOpt match {
-          case None => empty
+          case None     => empty
           case Some(dt) =>
             val str = "%04d%02d%02d%02d%02d%02d%02d".format(
               dt.getYear,

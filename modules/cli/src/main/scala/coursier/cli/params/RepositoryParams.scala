@@ -28,7 +28,7 @@ object RepositoryParams {
 
     val noDefaultShortcut = options.repository.exists(_.startsWith("!"))
     val repositoryInput   = options.repository.map(_.stripPrefix("!")).filter(_.nonEmpty)
-    val repositoriesV = Validated.fromEither(
+    val repositoriesV     = Validated.fromEither(
       RepositoryParser.repositories(repositoryInput)
         .either
         .left

@@ -15,7 +15,7 @@ object HostThrottleTests extends TestSuite {
     override def withZone(zone: ZoneId): Clock = this
     def instant(): Instant                     = Instant.ofEpochMilli(now)
     override def millis(): Long                = now
-    def advance(by: FiniteDuration): Unit =
+    def advance(by: FiniteDuration): Unit      =
       now += by.toMillis
   }
 

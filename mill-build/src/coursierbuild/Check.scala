@@ -11,7 +11,7 @@ object Check {
 
   /** Checks that `jar` only contains classes and resources under the `ns` namespace */
   def onlyNamespace(ns: String, jar: File): Unit = {
-    val zf = new ZipFile(jar)
+    val zf           = new ZipFile(jar)
     val unrecognized = zf.entries()
       .asScala
       .map(_.getName)
@@ -54,7 +54,7 @@ object Check {
     // element starts with a lower case letter is one (class names start with an upper case one)
     val propertyLike = "coursierapi\\.shaded\\.coursier(\\.[A-Za-z0-9_-]+)*\\.[a-z][A-Za-z0-9_-]*".r
     val zf           = new ZipFile(jar)
-    val shaded =
+    val shaded       =
       try
         zf.entries()
           .asScala

@@ -42,7 +42,7 @@ object ArchiveCacheSymbolicLinkTests extends TestSuite {
     archive: os.Path,
     victim: os.Path
   ) {
-    def artifact: Artifact = Artifact(archive.toNIO.toUri.toASCIIString)
+    def artifact: Artifact                    = Artifact(archive.toNIO.toUri.toASCIIString)
     def get(): Either[ArtifactError, os.Path] =
       archiveCache.get(artifact).unsafeRun()(archiveCache.cache.ec).map(os.Path(_))
     // where the archive cache extracts the archive
@@ -130,7 +130,7 @@ object ArchiveCacheSymbolicLinkTests extends TestSuite {
             writeTar(setup.archive, Seq("s" -> Right("../victim"), "file" -> Left("content")))
             Try(setup.get()) match {
               case Failure(_: ArchiverException) =>
-              case other =>
+              case other                         =>
                 throw new Exception(s"Expected extraction to fail, got $other")
             }
             val tmp = os.Path(CachePath.temporaryFile(setup.extractionDir.toIO))

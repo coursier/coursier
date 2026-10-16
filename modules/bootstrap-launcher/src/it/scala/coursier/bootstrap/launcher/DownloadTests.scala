@@ -29,7 +29,7 @@ object DownloadTests extends TestSuite with TestRepositoryServer.Test {
   }
 
   private def withTmpDir[T](f: Path => T): T = {
-    val dir = Files.createTempDirectory("coursier-test")
+    val dir                  = Files.createTempDirectory("coursier-test")
     val shutdownHook: Thread =
       new Thread {
         override def run() =
