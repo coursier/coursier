@@ -31,4 +31,22 @@ object AppArtifacts {
   ) extends AppArtifactsException(
         s"Can't find a scala version suffix for ${scalaDependencies.map(_.repr).mkString(", ")} (likely a non existing module or version)"
       )
+
+  /** Raised when none of the repositories could list the available Scala (or Scala platform)
+    * versions, so that no Scala version suffix can be tried for the dependencies
+    *
+    * @param versionsOf
+    *   what we tried to list the versions of, like "Scala" or "Scala Native"
+    * @param errors
+    *   the errors of each repository we tried to list versions from
+    */
+  final class CannotListScalaVersions(
+    val scalaDependencies: Seq[JavaOrScalaDependency.ScalaDependency],
+    val versionsOf: String,
+    val errors: Seq[String]
+  ) extends AppArtifactsException(
+        s"Can't find a scala version suffix for ${scalaDependencies.map(_.repr).mkString(", ")}: " +
+          s"could not list the available $versionsOf versions" +
+          errors.map("\n  " + _).mkString
+      )
 }

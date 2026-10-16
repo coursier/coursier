@@ -211,31 +211,42 @@ import coursier.version.{Latest, Version, VersionConstraint, VersionParse}
           case s: JavaOrScalaDependency.ScalaDependency =>
             s
         }
+        def toException[T](
+          res: Either[AppDescriptor.ListingErrors, Option[T]]
+        ): Either[AppArtifacts.AppArtifactsException, T] =
+          res match {
+            case Left(err) =>
+              Left(new AppArtifacts.CannotListScalaVersions(scalaDeps, err.versionsOf, err.errors))
+            case Right(None)    => Left(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
+            case Right(Some(t)) => Right(t)
+          }
         platformOpt0 match {
           case Some(platform) =>
-            AppDescriptor.dependenciesMaxScalaVersionAndPlatform(
-              cache,
-              repositories,
-              dependencies,
-              constraintOpt,
-              verbosity,
-              platform
+            toException(
+              AppDescriptor.dependenciesMaxScalaVersionAndPlatform(
+                cache,
+                repositories,
+                dependencies,
+                constraintOpt,
+                verbosity,
+                platform
+              )
             ).map { case (v, p) => (Some(v), Some(platform.suffix(p))) }
-              .toRight(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
           case None =>
             scalaVersionOpt match {
               case Some(v)
                   if v.split('.').length >= 3 && constraintOpt.forall(_.preferred.nonEmpty) =>
                 Right((Some(v), None))
               case _ =>
-                AppDescriptor.dependenciesMaxScalaVersion(
-                  cache,
-                  repositories,
-                  dependencies,
-                  constraintOpt,
-                  verbosity
+                toException(
+                  AppDescriptor.dependenciesMaxScalaVersion(
+                    cache,
+                    repositories,
+                    dependencies,
+                    constraintOpt,
+                    verbosity
+                  )
                 ).map(v => (Some(v), None))
-                  .toRight(new AppArtifacts.ScalaDependenciesNotFound(scalaDeps))
             }
         }
       }
@@ -371,6 +382,13 @@ object AppDescriptor {
     options: Seq[String] = Nil
   )
 
+  /** Errors of the repositories, when none of them could list the versions of something
+    *
+    * @param versionsOf
+    *   what we tried to list the versions of, like "Scala" or "Scala Native"
+    */
+  private final case class ListingErrors(versionsOf: String, errors: Seq[String])
+
   /** Tries to find a scala version that all passed dependencies are available for.
     */
   private def dependenciesMaxScalaVersion(
@@ -379,15 +397,33 @@ object AppDescriptor {
     dependencies: Seq[JavaOrScalaDependency],
     constraintOpt: Option[VersionConstraint],
     verbosity: Int
-  ): Option[String] = {
+  ): Either[ListingErrors, Option[String]] =
+    modulesScalaVersions(cache, repositories, dependencies.map(_.module), verbosity).map {
+      okScalaVersions =>
+        dependenciesMaxScalaVersion0(
+          cache,
+          repositories,
+          dependencies,
+          constraintOpt,
+          verbosity,
+          okScalaVersions
+        )
+    }
 
-    val okScalaVersions =
-      modulesScalaVersions(cache, repositories, dependencies.map(_.module), verbosity)
+  private def dependenciesMaxScalaVersion0(
+    cache: Cache[Task],
+    repositories: Seq[Repository],
+    dependencies: Seq[JavaOrScalaDependency],
+    constraintOpt: Option[VersionConstraint],
+    verbosity: Int,
+    okScalaVersions: Set[String]
+  ): Option[String] = {
 
     def scalaVersionIsOk(dep: JavaOrScalaDependency.ScalaDependency, sv: String): Boolean = {
 
-      val dep0        = dep.dependency(sv)
-      val depVersions = listVersions(cache, repositories, dep0.module)
+      val dep0 = dep.dependency(sv)
+      // Errors are expected here, as dep0 doesn't exist for most Scala versions we try
+      val depVersions = listVersions(cache, repositories, dep0.module).getOrElse(Set.empty)
 
       if (verbosity >= 2)
         System.err.println(
@@ -435,97 +471,106 @@ object AppDescriptor {
     constraintOpt: Option[VersionConstraint],
     verbosity: Int,
     platform: ScalaPlatform
-  ): Option[(String, String)] = {
-
-    def platformVersions = platform
-      .availableVersions(cache, repositories)
-      .toVector
-      .map(Version(_))
-      .sorted
-      .reverseIterator
-
-    val it = platformVersions.flatMap { pfVer =>
-      val pfSuffix = platform.suffix(pfVer.repr)
-      val deps0    = dependencies.map(_.withPlatform(pfSuffix))
-      dependenciesMaxScalaVersion(cache, repositories, deps0, constraintOpt, verbosity)
-        .iterator
-        .map((_, pfVer.repr))
-    }
-
-    if (it.hasNext)
-      Some(it.next())
-    else
-      None
-  }
+  ): Either[ListingErrors, Option[(String, String)]] =
+    platform
+      .listAvailableVersions(cache, repositories)
+      .left.map(ListingErrors(platform.description, _))
+      .flatMap { platformVersions =>
+        val it = platformVersions
+          .toVector
+          .map(Version(_))
+          .sorted
+          .reverseIterator
+          .map { pfVer =>
+            val pfSuffix = platform.suffix(pfVer.repr)
+            val deps0    = dependencies.map(_.withPlatform(pfSuffix))
+            dependenciesMaxScalaVersion(cache, repositories, deps0, constraintOpt, verbosity)
+              .map(_.map((_, pfVer.repr)))
+          }
+        // stop at the first error, or at the first platform version that works
+        it.find(res => res.isLeft || res.exists(_.nonEmpty))
+          .getOrElse(Right(None))
+      }
 
   private def modulesScalaVersions(
     cache: Cache[Task],
     repositories: Seq[Repository],
     modules: Seq[JavaOrScalaModule],
     verbosity: Int
-  ): Set[String] = {
+  ): Either[ListingErrors, Set[String]] = {
 
     val scalaModules = modules.collect {
       case m: JavaOrScalaModule.ScalaModule => m
     }
 
-    val availableScalaVersions =
-      listVersions(cache, repositories, mod"org.scala-lang:scala-library") ++
-        listVersions(cache, repositories, mod"org.scala-lang:scala3-library_3")
-          .filterNot(_.endsWith("NIGHTLY")) // Nightlies cannot be used as a "binary" version
+    val scala2Versions = listVersions(cache, repositories, mod"org.scala-lang:scala-library")
+    val scala3Versions = listVersions(cache, repositories, mod"org.scala-lang:scala3-library_3")
+      .map(_.filterNot(_.endsWith("NIGHTLY"))) // Nightlies cannot be used as a "binary" version
 
-    if (verbosity >= 2) {
-      System.err.println(s"Found ${availableScalaVersions.size} scala versions:")
-      for (v <- availableScalaVersions.toVector.map(Version(_)).sorted)
-        System.err.println(s"  ${v.repr}")
+    // Only bail out if we know no Scala version at all: some repositories (or mirrors of them)
+    // may legitimately lack the Scala 2 or Scala 3 library
+    val availableScalaVersions0 = (scala2Versions, scala3Versions) match {
+      case (Left(scala2Errors), Left(scala3Errors)) =>
+        Left(ListingErrors("Scala", scala2Errors ++ scala3Errors))
+      case _ =>
+        Right(scala2Versions.getOrElse(Set.empty) ++ scala3Versions.getOrElse(Set.empty))
     }
 
-    // FIXME Throw if scalaModules.nonEmpty && availableScalaVersions.isEmpty?
+    availableScalaVersions0.map { availableScalaVersions =>
 
-    val sets = scalaModules.map { m =>
-      val base = m.baseModule.orgName + "_"
-      if (verbosity >= 2)
-        System.err.println(
-          s"Completing '$base' (org: ${m.baseModule.organization.value}, name: ${m.baseModule.name.value})"
-        )
-      val (n, compl) = coursier.complete.Complete(cache)
-        .copy(repositories = repositories, input = base)
-        .complete()
-        .unsafeRun(wrapExceptions = true)(cache.ec)
       if (verbosity >= 2) {
-        System.err.println(s"Found ${compl.length} completions:")
-        for (c <- compl)
-          System.err.println("  " + c)
+        System.err.println(s"Found ${availableScalaVersions.size} scala versions:")
+        for (v <- availableScalaVersions.toVector.map(Version(_)).sorted)
+          System.err.println(s"  ${v.repr}")
       }
-      val completed = compl
-        .map(s => base.take(n) + s)
-        .filter(_.startsWith(base)) // just in case
-        .map(_.stripPrefix(base))
-        .toSet
-      val filter: String => Boolean =
-        if (m.fullCrossVersion)
-          completed
-        else
-          v => completed(JavaOrScalaModule.scalaBinaryVersion(v))
-      if (verbosity >= 2) {
-        System.err.println(s"Module $m supports ${completed.size} scala versions:")
-        for (v <- completed.toVector.map(Version(_)).sorted) {
-          val msg =
-            if (filter(v.repr)) " (found)"
-            else " (not found)"
-          System.err.println(s"  ${v.repr}$msg")
+
+      // FIXME Throw if scalaModules.nonEmpty && availableScalaVersions.isEmpty?
+
+      val sets = scalaModules.map { m =>
+        val base = m.baseModule.orgName + "_"
+        if (verbosity >= 2)
+          System.err.println(
+            s"Completing '$base' (org: ${m.baseModule.organization.value}, name: ${m.baseModule.name.value})"
+          )
+        val (n, compl) = coursier.complete.Complete(cache)
+          .copy(repositories = repositories, input = base)
+          .complete()
+          .unsafeRun(wrapExceptions = true)(cache.ec)
+        if (verbosity >= 2) {
+          System.err.println(s"Found ${compl.length} completions:")
+          for (c <- compl)
+            System.err.println("  " + c)
         }
+        val completed = compl
+          .map(s => base.take(n) + s)
+          .filter(_.startsWith(base)) // just in case
+          .map(_.stripPrefix(base))
+          .toSet
+        val filter: String => Boolean =
+          if (m.fullCrossVersion)
+            completed
+          else
+            v => completed(JavaOrScalaModule.scalaBinaryVersion(v))
+        if (verbosity >= 2) {
+          System.err.println(s"Module $m supports ${completed.size} scala versions:")
+          for (v <- completed.toVector.map(Version(_)).sorted) {
+            val msg =
+              if (filter(v.repr)) " (found)"
+              else " (not found)"
+            System.err.println(s"  ${v.repr}$msg")
+          }
+        }
+        val filtered = availableScalaVersions.filter(filter)
+        // If the filter yields no results (e.g. because the Complete API could not list
+        // module names for this organisation, or because availableScalaVersions does not
+        // yet include versions for the detected binary version), fall back to trying *all*
+        // known Scala versions.  scalaVersionIsOk will then do the right thing by
+        // checking the actual artifact existence in the repositories.
+        if (filtered.isEmpty) availableScalaVersions else filtered
       }
-      val filtered = availableScalaVersions.filter(filter)
-      // If the filter yields no results (e.g. because the Complete API could not list
-      // module names for this organisation, or because availableScalaVersions does not
-      // yet include versions for the detected binary version), fall back to trying *all*
-      // known Scala versions.  scalaVersionIsOk will then do the right thing by
-      // checking the actual artifact existence in the repositories.
-      if (filtered.isEmpty) availableScalaVersions else filtered
-    }
 
-    sets.foldLeft(availableScalaVersions)(_ intersect _)
+      sets.foldLeft(availableScalaVersions)(_ intersect _)
+    }
   }
 
   private def satisfiesConstraint(
@@ -544,13 +589,19 @@ object AppDescriptor {
         lowerPreferredExists && inInterval
     }
 
+  /** Lists the versions of `mod` in `repositories`
+    *
+    * @return
+    *   the versions found in all the repositories, or the error of each repository if none of them
+    *   could list versions
+    */
   private[install] def listVersions(
     cache: Cache[Task],
     repositories: Seq[Repository],
     mod: Module
-  ): Set[String] = {
+  ): Either[Seq[String], Set[String]] = {
 
-    def forRepo(repo: Repository): Set[String] = {
+    def forRepo(repo: Repository): Either[String, Set[String]] = {
 
       val logger = cache.loggerOpt.getOrElse(CacheLogger.nop)
       val t = for {
@@ -560,16 +611,16 @@ object AppDescriptor {
         res <- Task.fromEither(a)
       } yield res
 
-      t.unsafeRun(wrapExceptions = true)(cache.ec) match {
-        case Left(err) =>
-          // FIXME Trapped error
-          Set.empty
-        case Right((v, _)) =>
-          v.available0.map(_.repr).toSet
-      }
+      t.unsafeRun(wrapExceptions = true)(cache.ec)
+        .map { case (v, _) => v.available0.map(_.repr).toSet }
     }
 
-    repositories.foldLeft(Set.empty[String])((acc, r) => acc ++ forRepo(r))
+    val results = repositories.map(forRepo)
+    val found   = results.collect { case Right(versions) => versions }
+    if (found.isEmpty && results.nonEmpty)
+      Left(results.collect { case Left(err) => err })
+    else
+      Right(found.foldLeft(Set.empty[String])(_ ++ _))
   }
 
   private val placeholder = VersionConstraint("_")

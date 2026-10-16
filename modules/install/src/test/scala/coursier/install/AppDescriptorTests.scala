@@ -178,6 +178,14 @@ object AppDescriptorTests extends TestSuite {
       case other => sys.error(s"Expected a ScalaDependenciesNotFound error, got $other")
     }
 
+  private def expectCannotListScalaVersions(
+    res: Either[AppArtifacts.AppArtifactsException, _]
+  ): AppArtifacts.CannotListScalaVersions =
+    res match {
+      case Left(e: AppArtifacts.CannotListScalaVersions) => e
+      case other => sys.error(s"Expected a CannotListScalaVersions error, got $other")
+    }
+
   val tests = Tests {
 
     test("scala 3 only module") {
@@ -300,6 +308,53 @@ object AppDescriptorTests extends TestSuite {
 
         val desc = descriptor(repoDir, "com.example::lib:1.0.0", "com.example::other-lib:1.0.0")
         expectScalaDependenciesNotFound(processDependencies(desc, repoDir))
+      }
+    }
+
+    // like when the repositories are unreachable or rate-limit us - with "latest.release",
+    // we used to report the dependency as not existing in that case, hiding the actual errors
+    test("scala versions not listable") {
+      withTempDir { repoDir =>
+        writeVersions(repoDir, "com.example", "lib_3", Seq("1.0.0"))
+
+        val desc = descriptor(repoDir, "com.example::lib:latest.release")
+        val err  = expectCannotListScalaVersions(processDependencies(desc, repoDir))
+
+        assert(err.versionsOf == "Scala")
+        // one error for scala-library, one for scala3-library_3
+        assert(err.errors.length == 2)
+        assert(err.errors.exists(_.contains("scala-library")))
+        assert(err.errors.exists(_.contains("scala3-library_3")))
+        assert(err.getMessage.contains("could not list the available Scala versions"))
+      }
+    }
+
+    test("only scala 3 versions listable") {
+      withTempDir { repoDir =>
+        writeVersions(repoDir, "org.scala-lang", "scala3-library_3", scala3LibraryVersions)
+        writeVersions(repoDir, "com.example", "lib_3", Seq("1.0.0"))
+
+        val desc                           = descriptor(repoDir, "com.example::lib:latest.release")
+        val (scalaVersionOpt, moduleNames) = scalaVersionAndModules(desc, repoDir)
+
+        assert(scalaVersionOpt == Some("3.7.2"))
+        assert(moduleNames == Seq("lib_3"))
+      }
+    }
+
+    test("scala native versions not listable") {
+      withTempDir { repoDir =>
+        initRepo(repoDir)
+        writeVersions(repoDir, "com.example", "lib_native0.5_3", Seq("1.0.0"))
+
+        val desc = descriptor(repoDir, "com.example::lib::latest.release")
+        val err = expectCannotListScalaVersions(
+          desc.processDependencies(cache(repoDir), Some(ScalaPlatform.Native), verbosity = 0)
+        )
+
+        assert(err.versionsOf == "Scala Native")
+        assert(err.errors.length == 1)
+        assert(err.errors.forall(_.contains("tools_2.12")))
       }
     }
   }
