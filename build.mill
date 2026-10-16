@@ -599,7 +599,7 @@ trait ArchiveCache extends ArchiveCacheBase with DataClassModule {
     // here only for the sake of bumping it, to work around JNI loading issues with earlier versions on macOS
     Deps.zstdJni
   )
-  object test extends CrossSbtTests with CsTests {
+  object test extends CrossSbtTests with CsTests with CrossJvmCiTests {
     def moduleDeps = super.moduleDeps ++ Seq(`test-compat`.jvm())
     def mvnDeps    = super.mvnDeps() ++ Deps.asyncMvnDeps(crossValue)
     def compileMvnDeps = super.compileMvnDeps() ++ Seq(

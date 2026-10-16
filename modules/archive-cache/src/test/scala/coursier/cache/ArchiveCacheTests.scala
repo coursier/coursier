@@ -7,7 +7,7 @@ import utest._
 
 import java.io.{ByteArrayOutputStream, File}
 import java.nio.charset.StandardCharsets
-import java.util.zip.GZIPOutputStream
+import java.util.zip.{GZIPOutputStream, ZipEntry, ZipOutputStream}
 
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -83,7 +83,7 @@ abstract class ArchiveCacheTests extends TestSuite {
 
     test("zst") {
       checkArchiveHas(
-        "https://europe.mirror.pkgbuild.com/extra/os/x86_64/busybox-1.36.1-2-x86_64.pkg.tar.zst",
+        "https://archive.archlinux.org/packages/b/busybox/busybox-1.36.1-2-x86_64.pkg.tar.zst",
         os.sub / "usr/bin/busybox"
       )
     }
@@ -382,6 +382,75 @@ abstract class ArchiveCacheTests extends TestSuite {
         // no integrity files written next to local files, and corrupted ones not deleted
         val listing = os.list(localDir).map(_.last).sorted
         assert(listing == Seq("corrupted.gz", "valid.gz"))
+      }
+    }
+
+    test("sub-paths stay within their archive") {
+      withTmpDir { dir =>
+        val archiveCache0 = archiveCache(dir / "arc").copy(
+          cache = defaultCache().copy(location = (dir / "cache").toIO)
+        )
+        def get(url: String) =
+          archiveCache0.get(Artifact(url)).unsafeRun()(archiveCache0.cache.ec)
+        def getIfExists(url: String) =
+          archiveCache0.getIfExists(Artifact(url), isSingleFile = false)
+            .unsafeRun()(archiveCache0.cache.ec)
+
+        def zip(entries: (String, Array[Byte])*): Array[Byte] = {
+          val baos = new ByteArrayOutputStream
+          Using.resource(new ZipOutputStream(baos)) { zos =>
+            for ((name, content) <- entries) {
+              zos.putNextEntry(new ZipEntry(name))
+              zos.write(content)
+              zos.closeEntry()
+            }
+          }
+          baos.toByteArray
+        }
+
+        val hello    = "Hello\n".getBytes(StandardCharsets.UTF_8)
+        val localDir = dir / "local"
+        val archive  = localDir / "archive.zip"
+        val other    = localDir / "other.zip"
+        os.write(
+          archive,
+          zip("a/hello.txt" -> hello, "inner.zip" -> zip("b.txt" -> hello)),
+          createFolders = true
+        )
+        os.write(other, zip("secret.txt" -> hello))
+        val archiveUrl = archive.toNIO.toUri.toASCIIString
+
+        for (subPath <- Seq("!a/hello.txt", "!inner.zip!b.txt"))
+          get(archiveUrl + subPath) match {
+            case Left(err) => throw new Exception(s"Getting $subPath", err)
+            case Right(f)  => assert(os.read.bytes(os.Path(f)).toSeq == hello.toSeq)
+          }
+
+        val invalidSubPaths = Seq(
+          "!" + other.toString + "!secret.txt",
+          "!" + other.toString + "!",
+          "!../other.zip!secret.txt",
+          "!a/../../../local/other.zip!",
+          "!inner.zip/..!a/hello.txt",
+          "!inner.zip!../a/hello.txt",
+          "!./inner.zip!b.txt",
+          "!inner.zip/.!b.txt",
+          "!!a/hello.txt"
+        )
+        for (subPath <- invalidSubPaths) {
+          val url = archiveUrl + subPath
+          for (res <- Seq(get(url), getIfExists(url)))
+            res match {
+              case Left(err) =>
+                assert(err.getMessage.contains("Invalid path"))
+              case Right(f) =>
+                throw new Exception(s"Expected an error for $subPath, got $f")
+            }
+        }
+
+        // nothing got extracted next to the local archives
+        val listing = os.list(localDir).map(_.last).sorted
+        assert(listing == Seq("archive.zip", "other.zip"))
       }
     }
 
