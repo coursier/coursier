@@ -120,7 +120,7 @@ abstract class ServerTests extends TestSuite {
         stderr = os.Inherit
       )
     try {
-      waitForServer("localhost", port)
+      waitForServer(serverProcess, "localhost", port)
       f(port, user, password)
     }
     finally serverProcess.destroy()
