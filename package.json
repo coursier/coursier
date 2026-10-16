@@ -16,8 +16,8 @@
     "bootstrap-treeview": "1.2.0",
     "browserify": "^16.2.3",
     "graphdracula": "1.2.1",
-    "react": "16.13.1",
-    "react-dom": "16.13.1",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
     "requirejs": "2.3.7",
     "sax": "1.2.4"
   },
