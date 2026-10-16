@@ -77,6 +77,11 @@ $ cs fetch -r https://artifacts.foo.com/maven …
 </ul>
 <p>The first one matches any realm.
 The second one only matches a specific HTTP Basic auth realm.</p>
+<p><code>host</code> can also specify a port, like <code>artifacts.foo.com:8443</code>, or a scheme, like
+<code>https://artifacts.foo.com</code> or <code>http://nexus.local:8081</code> (see
+<a href="#how-credentials-are-matched">How credentials are matched</a>).</p>
+<p>Inline credentials are only sent over HTTPS, unless <code>host</code> starts with <code>http://</code>
+(see <a href="#plain-http-repositories">Plain HTTP repositories</a>).</p>
 <p>Space characters at the beginning of each line are ignored. Empty lines
 are ignored too.</p>
 <p>Usernames can contain spaces (but not colons). Passwords can contain any
@@ -123,7 +128,7 @@ to the host, no matter its HTTP Basic auth realm.</p>
 </thead>
 <tbody>
 <tr><td><code>prefix.realm</code></td><td>(unset)</td><td>Match only if the server's HTTP Basic auth realm equals this value</td></tr>
-<tr><td><code>prefix.https-only</code></td><td><code>false</code></td><td>Only send credentials over HTTPS connections</td></tr>
+<tr><td><code>prefix.https-only</code></td><td><code>true</code> (<code>false</code> up to coursier 2.1.26)</td><td>Only send credentials over HTTPS connections (ignored if <code>prefix.host</code> has a scheme, see <a href="#plain-http-repositories">Plain HTTP repositories</a>)</td></tr>
 <tr><td><code>prefix.auto</code></td><td><code>true</code></td><td>Automatically match based on the host name (used during redirections)</td></tr>
 <tr><td><code>prefix.pass-on-redirect</code></td><td><code>false</code></td><td>Forward credentials when the server issues an HTTP redirect</td></tr>
 </tbody>
@@ -174,7 +179,15 @@ credentials from it as well.</p>
 a matching credential entry using the following rules:</p>
 <ul>
 <li>The credential's <code>host</code> must match the URL's host.</li>
-<li>If <code>https-only</code> is <code>true</code>, the URL must use HTTPS.</li>
+<li>If <code>host</code> is a bare host name, like <code>repo.example.com</code>, the URL can use any port.
+It must use HTTPS, unless <code>https-only</code> is <code>false</code>, in which case plain HTTP is
+accepted too.</li>
+<li>If <code>host</code> has a port, like <code>repo.example.com:8443</code>, the URL must use that port.</li>
+<li>If <code>host</code> has a scheme, like <code>https://repo.example.com</code> or
+<code>http://nexus.local:8081</code>, the URL must use that scheme, and that port (or the
+scheme's default port, 443 for HTTPS and 80 for HTTP, if <code>host</code> has none).
+<code>https-only</code> is ignored then, so that's the way to send credentials to a single
+plain HTTP repository.</li>
 <li>If a <code>realm</code> is specified, it must match the realm advertised in the server's
 <code>WWW-Authenticate</code> response header.</li>
 <li>If <code>auto</code> is <code>true</code> (the default), the credential is also eligible to
@@ -184,6 +197,53 @@ forwarded when the server redirects to a different host. Set it to <code>true</c
 only if you explicitly need cross-host credential forwarding.</li>
 </ul>
 <p>The first matching credential is used. No credential is used if none matches.</p>
+<h2><a class="anchor" aria-hidden="true" id="plain-http-repositories"></a><a href="#plain-http-repositories" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Plain HTTP repositories</h2>
+<p>In coursier versions newer than 2.1.26, credentials are only sent over HTTPS by
+default. Up to 2.1.26, <code>https-only</code> defaulted to <code>false</code>, and credentials that
+didn't set it were sent over plain HTTP too. Since credentials were matched on
+the host name only, anyone able to tamper with a plain HTTP request, by
+redirecting it to <code>http://</code> and the host of your repository, could then
+get them in clear, even if you only ever accessed that repository over HTTPS.</p>
+<p>That changes things for setups that rely on the former default to send
+credentials to a repository served over plain HTTP. Such repositories now answer
+<code>401 Unauthorized</code>, as credentials aren't sent to them anymore. With
+<code>COURSIER_HTTP_DEBUG=1</code> (see <a href="#debugging">Debugging</a>), the credentials that
+were skipped for that reason are marked <code>(HTTPS only)</code>:</p>
+<pre><code class="hljs css language-text">[coursier http] http://nexus.local:8081/…/lib-1.0.0.pom: no credentials match host nexus.local (realm "Sonatype Nexus Repository Manager"), credentials are configured for: nexus.local (HTTPS only), giving up
+</code></pre>
+<p>To keep sending credentials to such a repository, either:</p>
+<ul>
+<li>put its scheme and port in <code>host</code>, like <code>http://nexus.local:8081</code>, so that the
+credentials only go to that repository over plain HTTP, or</li>
+<li>set <code>https-only</code> to <code>false</code>, so that they go to any port of that host over plain
+HTTP, like before.</li>
+</ul>
+<p>The first option is the safer one, but coursier 2.1.26 and older don't understand
+a scheme or a port in <code>host</code>. They never send such credentials from a property
+file or the Scala CLI config file. Inline, they reject the <code>--credentials</code> value,
+and ignore <em>all</em> the credentials in <code>COURSIER_CREDENTIALS</code> / <code>coursier.credentials</code>
+if any line has one. If the same credentials have to work with these versions too,
+use the second option.</p>
+<p>Depending on where the credentials come from:</p>
+<table>
+<thead>
+<tr><th>Source</th><th>Scheme in <code>host</code></th><th>Allowing plain HTTP for a bare host</th></tr>
+</thead>
+<tbody>
+<tr><td><a href="#inline">Inline</a></td><td><code>http://nexus.local:8081 user:password</code></td><td>not possible, put the scheme in <code>host</code></td></tr>
+<tr><td><a href="#property-file">Property file</a></td><td><code>prefix.host=http://nexus.local:8081</code></td><td><code>prefix.https-only=false</code></td></tr>
+<tr><td><a href="#scala-cli-config-file">Scala CLI config file</a></td><td><code>&quot;host&quot;: &quot;http://nexus.local:8081&quot;</code></td><td><code>&quot;httpsOnly&quot;: false</code></td></tr>
+<tr><td><a href="#api">API</a>, <code>DirectCredentials</code></td><td><code>DirectCredentials(&quot;http://nexus.local:8081&quot;, user, password)</code></td><td><code>.copy(httpsOnly = false)</code></td></tr>
+<tr><td><code>coursierapi.Credentials</code> (interface versions newer than 1.0.30)</td><td><code>Credentials.of(&quot;http://nexus.local:8081&quot;, user, password)</code></td><td><code>.withHttpsOnly(false)</code></td></tr>
+</tbody>
+</table>
+<p>This also applies to bootstrap launchers (generated by <code>cs bootstrap</code>) that
+download their JARs at startup: those generated by coursier versions newer than
+2.1.26 only send credentials over HTTPS by default too. Launchers generated
+by older versions keep their former behavior.</p>
+<p>Credentials embedded in a repository URL, like <code>-r http://user:password@nexus.local:8081/…</code>
+(see <a href="#per-host">Per host</a>), aren't concerned: they're sent to that
+repository whatever its scheme.</p>
 <h2><a class="anchor" aria-hidden="true" id="repositories-that-dont-ask-for-credentials"></a><a href="#repositories-that-dont-ask-for-credentials" aria-hidden="true" class="hash-link"><svg class="hash-link-icon" aria-hidden="true" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Repositories that don't ask for credentials</h2>
 <p>Credentials read from the environment or from files are only sent once the server
 has answered <code>401</code> with a <code>WWW-Authenticate</code> header. A few repositories never send
@@ -282,7 +342,7 @@ if that's a possibility.</p>
 are <em>not</em> passed upon redirection. If you want to pass some credentials
 when a redirection happens, pass them either <a href="#inline">inline</a> or
 via a <a href="#property-file">property file</a>, for the host of the redirection.</p>
-</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/next/other-mirrors"><span class="arrow-prev">← </span><span>Repository mirrors</span></a><a class="docs-next button" href="/docs/next/other-proxy"><span>Proxy</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#inline">Inline</a></li><li><a href="#property-file">Property file</a><ul class="toc-headings"><li><a href="#format">Format</a></li></ul></li><li><a href="#scala-cli-config-file">Scala CLI config file</a></li><li><a href="#how-credentials-are-matched">How credentials are matched</a></li><li><a href="#repositories-that-dont-ask-for-credentials">Repositories that don't ask for credentials</a></li><li><a href="#debugging">Debugging</a></li><li><a href="#api">API</a><ul class="toc-headings"><li><a href="#directcredentials">DirectCredentials</a></li><li><a href="#filecredentials">FileCredentials</a></li><li><a href="#using-credentials-when-resolving">Using credentials when resolving</a></li></ul></li><li><a href="#per-host">Per host</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><h2><a href="/" class="nav-home">Coursier</a></h2><div><h5><a href="/docs/overview">Docs</a></h5><a href="/docs/overview">Overview</a><a href="/docs/cli-installation">Install CLI</a><a href="/docs/sbt-coursier">Setup sbt</a><a href="/docs/api">Use the API</a></div><div><h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5><a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"/></a><a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"/></a></div></section><section class="copyright">Copyright © 2026 coursier contributors</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
+</span></div></article></div><div class="docs-prevnext"><a class="docs-prev button" href="/docs/next/other-mirrors"><span class="arrow-prev">← </span><span>Repository mirrors</span></a><a class="docs-next button" href="/docs/next/other-proxy"><span>Proxy</span><span class="arrow-next"> →</span></a></div></div></div><nav class="onPageNav"><ul class="toc-headings"><li><a href="#inline">Inline</a></li><li><a href="#property-file">Property file</a><ul class="toc-headings"><li><a href="#format">Format</a></li></ul></li><li><a href="#scala-cli-config-file">Scala CLI config file</a></li><li><a href="#how-credentials-are-matched">How credentials are matched</a></li><li><a href="#plain-http-repositories">Plain HTTP repositories</a></li><li><a href="#repositories-that-dont-ask-for-credentials">Repositories that don't ask for credentials</a></li><li><a href="#debugging">Debugging</a></li><li><a href="#api">API</a><ul class="toc-headings"><li><a href="#directcredentials">DirectCredentials</a></li><li><a href="#filecredentials">FileCredentials</a></li><li><a href="#using-credentials-when-resolving">Using credentials when resolving</a></li></ul></li><li><a href="#per-host">Per host</a></li></ul></nav></div><footer class="nav-footer" id="footer"><section class="sitemap"><h2><a href="/" class="nav-home">Coursier</a></h2><div><h5><a href="/docs/overview">Docs</a></h5><a href="/docs/overview">Overview</a><a href="/docs/cli-installation">Install CLI</a><a href="/docs/sbt-coursier">Setup sbt</a><a href="/docs/api">Use the API</a></div><div><h5><a href="https://gitter.im/coursier/coursier" target="_blank">Community</a></h5><a href="https://gitter.im/coursier/coursier" target="_blank"><img src="https://img.shields.io/gitter/room/coursier/coursier.svg?logo=gitter&amp;style=social"/></a><a href="https://github.com/coursier/coursier" target="_blank"><img src="https://img.shields.io/github/stars/coursier/coursier.svg?color=%23087e8b&amp;label=stars&amp;logo=github&amp;style=social"/></a></div></section><section class="copyright">Copyright © 2026 coursier contributors</section></footer></div><script type="text/javascript" src="https://cdn.jsdelivr.net/docsearch.js/1/docsearch.min.js"></script><script>
                 document.addEventListener('keyup', function(e) {
                   if (e.target !== document.body) {
                     return;
