@@ -15,7 +15,7 @@ object Deps {
   def dataClass    = mvn"io.github.alexarchambault::data-class:0.2.11"
   def dependency   = mvn"io.get-coursier::dependency::0.3.3"
   def directories  = mvn"io.get-coursier.util:directories-jni:0.1.4"
-  def diffUtils    = mvn"io.github.java-diff-utils:java-diff-utils:4.17"
+  def diffUtils    = mvn"io.github.java-diff-utils:java-diff-utils:4.18"
   def dockerClient = mvn"com.spotify:docker-client:8.16.0"
   // Backs `shimScalaAsync` below; used directly by the `async-compat` module, for Scala.js
   def dottyCpsAsync     = mvn"io.github.dotty-cps-async::dotty-cps-async::1.3.4"
