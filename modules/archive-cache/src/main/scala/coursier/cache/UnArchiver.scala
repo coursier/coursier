@@ -1,8 +1,11 @@
 package coursier.cache
 
 import org.apache.commons.compress.archivers.ar.{ArArchiveEntry, ArArchiveInputStream}
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
-import org.apache.commons.io.input.BoundedInputStream
+import org.apache.commons.compress.compressors.zstandard.ZstdCompressorInputStream
+import org.apache.commons.io.input.{BoundedInputStream, CountingInputStream}
 import org.codehaus.plexus.archiver.{AbstractUnArchiver, ArchiverException}
 import org.codehaus.plexus.archiver.tar.{
   TarBZip2UnArchiver,
@@ -29,7 +32,7 @@ import java.util.zip.GZIPInputStream
 
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
-import scala.util.{Try, Using}
+import scala.util.{Failure, Success, Try, Using}
 
 import coursier.util.EnvEntry
 
@@ -260,13 +263,47 @@ object UnArchiver {
   }
 
   /** Extracts archives with plexus-archiver and commons-compress, apart from tar archives, that are
-    * extracted by running the `tar` command (with sudo if `useSudo` is true)
+    * extracted by running the `tar` command (with sudo if `useSudo` is true), so that ownership and
+    * permissions are kept
     *
-    * The extraction limits of [[default]] don't apply to archives extracted with `tar`.
+    * Tar archives are decompressed and read in the JVM, and piped to `tar -xf -`, so that the
+    * extraction limits apply to them too. For them, the size limit applies to the uncompressed tar
+    * stream given to `tar` (headers and padding included), that bounds what `tar` can write
+    * whatever the way it parses entries, and the entry limit to the entries commons-compress reads.
     */
-  private final class SudoAbleUnArchiver(useSudo: Boolean) extends UnArchiver with OpenStream {
+  private final class SudoAbleUnArchiver(useSudo: Boolean, maxSize: Long, maxEntries: Long)
+      extends UnArchiver with OpenStream {
+
+    // for binary compatibility
+    def this(useSudo: Boolean) = this(useSudo, priviledgedMaxSize, defaultMaxEntries)
+
     private def defaultUnArchiver(): DefaultUnArchiver =
-      new DefaultUnArchiver(defaultMaxSize, defaultMaxEntries)
+      new DefaultUnArchiver(maxSize, maxEntries)
+
+    private def decompress(tar: ArchiveType.Tar, is: InputStream): InputStream =
+      tar match {
+        case ArchiveType.Tar  => is
+        case ArchiveType.Tgz  => new GZIPInputStream(is)
+        case ArchiveType.Tbz2 => new BZip2CompressorInputStream(is, true)
+        case ArchiveType.Txz  => new XZCompressorInputStream(is)
+        case ArchiveType.Tzst => new ZstdCompressorInputStream(is)
+      }
+
+    // Reads the tar stream of archive, and writes it to os as it goes
+    private def pipeTar(
+      tar: ArchiveType.Tar,
+      archive: File,
+      limits: ExtractionLimits,
+      os: OutputStream
+    ): Unit =
+      Using.resource(Files.newInputStream(archive.toPath)) { fis =>
+        val tarStream = limits.limit(decompress(tar, new BufferedInputStream(fis)))
+        val tis       = new TarArchiveInputStream(new CopyInputStream(tarStream, os))
+        while (tis.getNextEntry != null)
+          limits.newEntry()
+        // the end-of-archive records and the rest of the last block were read and copied too
+        os.flush()
+      }
 
     def extract(
       archiveType: ArchiveType,
@@ -281,31 +318,80 @@ object UnArchiver {
           Files.createDirectories(destDir.toPath)
           proceed()
         case tar: ArchiveType.Tar =>
-          val (compressionOptionOneLetter, compressionArgs) = tar match {
-            case ArchiveType.Tar  => ("", Nil)
-            case ArchiveType.Tgz  => ("z", Nil)
-            case ArchiveType.Tbz2 => ("j", Nil)
-            case ArchiveType.Txz  => ("J", Nil)
-            case ArchiveType.Tzst => ("", Seq("--zstd"))
-          }
           val maybeSudo = if (useSudo) Seq("sudo") else Nil
-          val command = maybeSudo ++ Seq("tar") ++ compressionArgs ++
-            Seq("-" + compressionOptionOneLetter + "xf", archive.toString)
+          val command   = maybeSudo ++ Seq("tar", "-xf", "-")
           Files.createDirectories(destDir.toPath)
+          val limits = new ExtractionLimits(archive, maxSize, maxEntries)
           val proc = new ProcessBuilder()
             .command(command.asJava)
             .directory(destDir)
-            .inheritIO()
+            .redirectInput(ProcessBuilder.Redirect.PIPE)
+            .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+            .redirectError(ProcessBuilder.Redirect.INHERIT)
             .start()
-          val retCode = proc.waitFor()
-          if (retCode != 0)
-            sys.error(s"Error extracting $archive under $destDir (see tar command messages above)")
+          def closeStdin(): Unit =
+            try proc.getOutputStream.close()
+            catch {
+              case _: IOException => // tar exited already
+            }
+          def error(cause: Throwable) =
+            new RuntimeException(
+              s"Error extracting $archive under $destDir (see tar command messages above)",
+              cause
+            )
+          Try(pipeTar(tar, archive, limits, proc.getOutputStream)) match {
+            case Success(()) =>
+              closeStdin()
+              val retCode = proc.waitFor()
+              if (retCode != 0)
+                throw error(null)
+            case Failure(e: ExtractionLimitException) =>
+              // stop tar right away, and wait for it to exit, so that it doesn't write anything
+              // more, and the partial extraction can be removed
+              proc.destroy()
+              closeStdin()
+              proc.waitFor()
+              throw e
+            case Failure(e) =>
+              // tar exited early (broken pipe), or the archive couldn't be read
+              closeStdin()
+              val retCode = proc.waitFor()
+              if (retCode != 0)
+                throw error(e)
+              else
+                throw new ArchiverException(s"Error reading $archive", e)
+          }
         case other =>
           defaultUnArchiver().extract(archiveType, archive, destDir, overwrite)
       }
 
     def inputStream(archiveType: ArchiveType.Compressed, is: InputStream): InputStream =
       defaultUnArchiver().inputStream(archiveType, is)
+  }
+
+  /** Copies to `os` everything read from `is`, including skipped bytes */
+  private final class CopyInputStream(is: InputStream, os: OutputStream)
+      extends FilterInputStream(is) {
+    private lazy val skipBuffer   = Array.ofDim[Byte](16 * 1024)
+    override def markSupported()  = false
+    override def mark(limit: Int) = ()
+    override def reset(): Unit    = throw new IOException("mark / reset not supported")
+    override def read(): Int = {
+      val b = super.read()
+      if (b >= 0) os.write(b)
+      b
+    }
+    override def read(b: Array[Byte], off: Int, len: Int): Int = {
+      val read = super.read(b, off, len)
+      if (read > 0) os.write(b, off, read)
+      read
+    }
+    override def skip(n: Long): Long =
+      if (n <= 0) 0L
+      else {
+        val read = this.read(skipBuffer, 0, Math.min(n, skipBuffer.length.toLong).toInt)
+        if (read < 0) 0L else read.toLong
+      }
   }
 
   /** Limits on the total size and number of entries written when extracting an archive
@@ -353,7 +439,9 @@ object UnArchiver {
       }
   }
 
-  /** Thrown when extracting an archive exceeds the limits of [[UnArchiver.default]] */
+  /** Thrown when extracting an archive exceeds the limits of [[UnArchiver.default]] or
+    * [[UnArchiver.priviledged]]
+    */
   final class ExtractionLimitException(message: String) extends ArchiverException(message)
 
   /** Mixed into plexus unarchivers, to enforce extraction limits */
@@ -585,8 +673,40 @@ object UnArchiver {
     */
   def default(maxSize: Long, maxEntries: Long): UnArchiver with OpenStream =
     new DefaultUnArchiver(maxSize, maxEntries)
+
+  /** Default maximum size of the content extracted from an archive by [[priviledged]], in bytes (32
+    * GiB)
+    *
+    * Higher than [[defaultMaxSizeFallback]], as [[priviledged]] is meant to extract Docker image
+    * layers, that are whole file systems, and can legitimately be bigger than 8 GiB (CUDA or
+    * machine learning images…). The `COURSIER_ARCHIVE_MAX_SIZE` environment variable and the
+    * `coursier.archive.max-size` Java property override it too.
+    */
+  def priviledgedMaxSizeFallback: Long = 32L * 1024L * 1024L * 1024L
+
+  private def priviledgedMaxSize: Long =
+    readLimit(maxSizeEntry, priviledgedMaxSizeFallback)
+
+  /** An [[UnArchiver]] extracting tar archives with `sudo tar`, so that ownership and permissions
+    * are kept
+    *
+    * Limits the size of the extracted content to [[priviledgedMaxSizeFallback]], and its number of
+    * entries to [[defaultMaxEntries]], unless changed via the `COURSIER_ARCHIVE_MAX_SIZE` /
+    * `COURSIER_ARCHIVE_MAX_ENTRIES` environment variables or the `coursier.archive.max-size` /
+    * `coursier.archive.max-entries` Java properties.
+    */
   def priviledged(): UnArchiver =
-    new SudoAbleUnArchiver(true)
+    new SudoAbleUnArchiver(true, priviledgedMaxSize, defaultMaxEntries)
+
+  /** Like [[priviledged()]], with explicit limits (zero or negative values disable them) */
+  def priviledged(maxSize: Long, maxEntries: Long): UnArchiver =
+    new SudoAbleUnArchiver(true, maxSize, maxEntries)
+
+  /** Like [[priviledged()]], but runs `tar` without sudo */
   def priviledgedTestMode(): UnArchiver =
-    new SudoAbleUnArchiver(false)
+    new SudoAbleUnArchiver(false, priviledgedMaxSize, defaultMaxEntries)
+
+  /** Like [[priviledged(maxSize:Long,maxEntries:Long)*]], but runs `tar` without sudo */
+  def priviledgedTestMode(maxSize: Long, maxEntries: Long): UnArchiver =
+    new SudoAbleUnArchiver(false, maxSize, maxEntries)
 }
