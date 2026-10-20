@@ -1849,20 +1849,53 @@ object doc extends Doc {
   def classPath    = `doc-deps`.runClasspath()
 }
 
-def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command {
-
+private def websiteDocusaurusDir(rootDir: String): os.Path = {
   val rootDir0 =
     if (rootDir.isEmpty) BuildCtx.workspaceRoot else os.Path(rootDir, BuildCtx.workspaceRoot)
-  val docusaurusDir       = rootDir0 / "doc/website"
-  val versionedDocsRepo   = "coursier/versioned-docs"
-  val versionedDocsBranch = "master"
+  rootDir0 / "doc/website"
+}
 
+private def websiteVersionOpt(): Option[String] = {
   val versionOpt =
     Option(System.getenv("GITHUB_REF"))
       .filter(_.startsWith("refs/tags/v"))
       .map(_.stripPrefix("refs/tags/v"))
-
   pprint.err.log(versionOpt)
+  versionOpt
+}
+
+/** Builds the website under doc/website/build, for [[publishWebsite]] to push it
+  *
+  * This runs npm, Docusaurus, mdoc, and mkdocs, so it shouldn't be run with secrets (GH_TOKEN, …)
+  * in its environment.
+  */
+def buildWebsite(rootDir: String = "") = Task.Command {
+
+  val docusaurusDir = websiteDocusaurusDir(rootDir)
+
+  doc.copyVersionedData()()
+  doc.generate("--npm-install", "--yarn-run-build")()
+
+  for (version <- websiteVersionOpt())
+    DocHelpers.addVersionedDocs(docusaurusDir, version)
+
+  // copyDemoFiles()
+
+  val newSiteDir = docs.mkdocsBuild()().path
+  os.copy(newSiteDir, docusaurusDir / "build/coursier/upcoming")
+}
+
+/** Pushes the website built by [[buildWebsite]] to gh-pages, and the docs of the new version to
+  * coursier/versioned-docs when building a tag
+  *
+  * Requires GH_TOKEN, unless `--dryRun true` is passed. This only runs git, so that GH_TOKEN
+  * doesn't reach the tools building the website.
+  */
+def publishWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command {
+
+  val docusaurusDir       = websiteDocusaurusDir(rootDir)
+  val versionedDocsRepo   = "coursier/versioned-docs"
+  val versionedDocsBranch = "master"
 
   val token =
     if (dryRun) ""
@@ -1871,11 +1904,11 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command 
         sys.error("GH_TOKEN not set")
       }
 
-  doc.copyVersionedData()()
-  doc.generate("--npm-install", "--yarn-run-build")()
+  if (!os.isDir(docusaurusDir / "build"))
+    sys.error(s"${docusaurusDir / "build"} not found, run buildWebsite first")
 
-  for (version <- versionOpt)
-    DocHelpers.updateVersionedDocs(
+  for (version <- websiteVersionOpt())
+    DocHelpers.pushVersionedDocs(
       docusaurusDir,
       versionedDocsRepo,
       versionedDocsBranch,
@@ -1884,11 +1917,6 @@ def updateWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command 
       dryRun = dryRun,
       cloneUnder = Task.dest / "repo"
     )
-
-  // copyDemoFiles()
-
-  val newSiteDir = docs.mkdocsBuild()().path
-  os.copy(newSiteDir, docusaurusDir / "build/coursier/upcoming")
 
   DocHelpers.updateGhPages(
     docusaurusDir / "build",
@@ -2203,11 +2231,21 @@ object docs extends ScalaModule {
     )
   }
 
+  // Like run, but keeping secrets (GH_TOKEN, …) out of the environment of mdoc, that runs code
+  // from the pages and from their dependencies
+  private def runMdoc(args: Task[Args]) = Task.Anon {
+    runner().run(
+      args().value,
+      workingDir = forkWorkingDir(),
+      forkEnv = DocHelpers.withoutSecrets(Task.env) ++ allForkEnv(),
+      propagateEnv = false
+    )
+  }
   def mdoc() = Task.Command[Unit] {
-    run(mdocArgs)()
+    runMdoc(mdocArgs)()
   }
   def mdocWatch() = Task.Command[Unit] {
-    run(mdocWatchArgs)()
+    runMdoc(mdocWatchArgs)()
   }
 
   def mkdocsConfigArgs = Task {

@@ -101,7 +101,9 @@ trait Doc extends ScalaModule {
         mainClass = finalMainClass(),
         classPath = runClasspath().map(_.path),
         jvmArgs = Nil,
-        env = forkEnv(),
+        // mdoc runs code from the pages and from their dependencies, keep secrets out of its env
+        env = DocHelpers.withoutSecrets(Task.env) ++ forkEnv(),
+        propagateEnv = false,
         mainArgs = allArgs,
         cwd = forkWorkingDir(),
         stdout = os.Inherit

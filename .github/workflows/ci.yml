@@ -1073,10 +1073,10 @@ jobs:
         with:
           disableFallback: true
       - run: .github/scripts/setup-mkdocs.sh
-      # GH_TOKEN only for the step that needs it (updateWebsite pushes to gh-pages, and keeps
-      # it out of the environment of the tools building the website, see DocHelpers)
+      # GH_TOKEN only for the step pushing the website, not for the ones building it
       - run: npm install --ignore-scripts
-      - run: ./mill -i updateWebsite
+      - run: ./mill -i buildWebsite
+      - run: ./mill -i publishWebsite
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
@@ -1099,9 +1099,9 @@ jobs:
         with:
           disableFallback: true
       - run: .github/scripts/setup-mkdocs.sh
-      # GH_TOKEN only for the step that needs it (updateWebsite pushes to gh-pages, and keeps
-      # it out of the environment of the tools building the website, see DocHelpers)
+      # GH_TOKEN only for the step pushing the website, not for the ones building it
       - run: npm install --ignore-scripts
-      - run: ./mill -i updateWebsite
+      - run: ./mill -i buildWebsite
+      - run: ./mill -i publishWebsite
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

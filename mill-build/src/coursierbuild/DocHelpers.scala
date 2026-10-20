@@ -13,6 +13,10 @@ object DocHelpers {
   def withoutSecretsEnv: Map[String, String] =
     secretEnvVars.map(_ -> (null: String)).toMap
 
+  /** Removes [[secretEnvVars]] from `env`, for processes started with `propagateEnv = false` */
+  def withoutSecrets(env: Map[String, String]): Map[String, String] =
+    env -- secretEnvVars
+
   def copyDocusaurusVersionedData(
     repo: String,
     branch: String,
@@ -59,7 +63,20 @@ object DocHelpers {
     os.proc(command *)
   }
 
-  def updateVersionedDocs(
+  /** Snapshots the docs of `newVersion` with `docusaurus-version`, under `docusaurusDir` */
+  def addVersionedDocs(docusaurusDir: os.Path, newVersion: String): Unit = {
+    runAndLog(Nil)("yarn", "run", "version", newVersion).call(
+      cwd = docusaurusDir,
+      env = withoutSecretsEnv,
+      stdin = os.Inherit,
+      stdout = os.Inherit,
+      stderr = os.Inherit
+    )
+    ()
+  }
+
+  /** Pushes the versioned docs under `docusaurusDir` (see [[addVersionedDocs]]) to `repo` */
+  def pushVersionedDocs(
     docusaurusDir: os.Path,
     repo: String,
     branch: String,
@@ -98,13 +115,6 @@ object DocHelpers {
     )
     runAndLog(ghTokenOpt.toSeq)("git", "config", "user.email", "actions@github.com").call(
       cwd = cloneUnder,
-      stdin = os.Inherit,
-      stdout = os.Inherit,
-      stderr = os.Inherit
-    )
-
-    runAndLog(ghTokenOpt.toSeq)("yarn", "run", "version", newVersion).call(
-      cwd = docusaurusDir,
       stdin = os.Inherit,
       stdout = os.Inherit,
       stderr = os.Inherit
