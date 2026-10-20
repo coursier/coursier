@@ -2,6 +2,7 @@ package coursier.docker.tests
 
 import coursier.cache.TestUtil._
 import coursier.docker.{DockerBuild, DockerUtil}
+import coursier.docker.vm.Vm
 import utest._
 
 import scala.util.Properties
@@ -12,6 +13,15 @@ object DockerSecurityTests extends TestSuite {
   private val helloSha256 = "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
 
   val tests = Tests {
+
+    test("vmSshPortBoundToLoopback") {
+      val netdev = Vm.netdevOption(2222)
+      assert(netdev == "id=net00,type=user,hostfwd=tcp:127.0.0.1:2222-:22")
+      // every port forward must be bound to the loopback interface
+      val forwards = netdev.split(',').filter(_.startsWith("hostfwd=")).toSeq
+      assert(forwards.nonEmpty)
+      assert(forwards.forall(_.startsWith("hostfwd=tcp:127.0.0.1:")))
+    }
 
     test("checkDigest") {
       test("valid") {
