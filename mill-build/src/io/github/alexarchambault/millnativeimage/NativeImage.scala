@@ -58,6 +58,13 @@ trait NativeImage extends Module {
       }
   }
 
+  /**
+   * Whether docker builds use the GraalVM of `nativeImageGraalvmHome`, mounted read-only in
+   * the container, rather than having coursier fetch `nativeImageGraalVmJvmId` from the JVM
+   * index there
+   */
+  def nativeImageDockerMountGraalvmHome: Boolean = false
+
   def nativeImageClassPath: T[Seq[PathRef]]
   def nativeImageMainClass: T[String]
   def nativeImageOptions:   T[Seq[String]] = Task {
@@ -118,6 +125,7 @@ trait NativeImage extends Module {
       useJpms = nativeImageUseJpms(),
       workspace = BuildCtx.workspaceRoot,
       withFilesystemChecker = generateNativeImageWithFileSystemChecker,
+      mountGraalVmHome = nativeImageDockerMountGraalvmHome,
     )
 
     val scriptName = if Properties.isWin then "generate.bat" else "generate.sh"
@@ -234,6 +242,7 @@ trait NativeImage extends Module {
             useJpms = nativeImageUseJpms(),
             workspace = BuildCtx.workspaceRoot,
             withFilesystemChecker = generateNativeImageWithFileSystemChecker,
+            mountGraalVmHome = nativeImageDockerMountGraalvmHome,
           )
 
           val res = os.proc(command.map(x => x: os.Shellable)*).call(
@@ -277,6 +286,7 @@ trait NativeImage extends Module {
           useJpms = nativeImageUseJpms(),
           workspace = BuildCtx.workspaceRoot,
           withFilesystemChecker = generateNativeImageWithFileSystemChecker,
+          mountGraalVmHome = nativeImageDockerMountGraalvmHome,
         )
 
         val res = os.proc(command.map(x => x: os.Shellable)*).call(
@@ -367,6 +377,8 @@ object NativeImage {
 
   def platformExtension: String = if Properties.isWin then ".exe" else ""
 
+  private def dockerGraalVmHome: String = "/graalvm"
+
   // should be the default index in the upcoming coursier release (> 2.0.16)
   def jvmIndex: String = "https://github.com/coursier/jvm-index/raw/master/index.json"
 
@@ -421,6 +433,7 @@ object NativeImage {
     useJpms:               Option[Boolean],
     workspace:             os.Path,
     withFilesystemChecker: Boolean,
+    mountGraalVmHome:      Boolean = false,
   ): (Seq[String], Option[os.Path], Map[String, String]) = {
 
     val ext         = if Properties.isWin then ".cmd" else ""
@@ -561,12 +574,18 @@ object NativeImage {
                 case None    => ""
                 case Some(v) => s"export USE_NATIVE_IMAGE_JAVA_PLATFORM_MODULE_SYSTEM=$v" + System.lineSeparator()
               }
+              val javaSetup =
+                if mountGraalVmHome then
+                  s"""export JAVA_HOME=$dockerGraalVmHome
+                     |export PATH="$dockerGraalVmHome/bin:$$PATH"""".stripMargin
+                else
+                  s"""eval "$$(/data/cs java --env --jvm "$jvmId" --jvm-index "$jvmIndex")""""
               val backTick = "\\"
               val script   =
                 s"""#!/usr/bin/env bash
                    |set -e
                    |${params.prepareCommand}
-                   |${jpmsLine}eval "$$(/data/cs java --env --jvm "$jvmId" --jvm-index "$jvmIndex")"
+                   |${jpmsLine}$javaSetup
                    |native-image --help >/dev/null || gu install native-image
                    |${escapedCommand.head}""".stripMargin + escapedCommand.drop(1).map("\\\n  " + _).mkString + "\n"
               val scriptPath = dockerWorkingDir / "run-native-image.sh"
@@ -592,6 +611,10 @@ object NativeImage {
                 "--rm",
                 "-v",
                 s"$dockerWorkingDir:/data",
+              ) ++ (
+                if mountGraalVmHome then Seq("-v", s"$graalVmHome:$dockerGraalVmHome:ro")
+                else Nil
+              ) ++ Seq(
                 "-e",
                 "COURSIER_JVM_CACHE=/data/jvm-cache",
                 "-e",

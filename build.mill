@@ -1974,15 +1974,25 @@ def cliNativeImageLauncher() = Task.Command {
 }
 
 object ci extends Module {
-  def copyJvm(jvm: String = Versions.graalVmJvmId, dest: String = "jvm") = Task.Command {
+
+  /** Copies a JVM to `dest`
+    *
+    * By default, the GraalVM the native launchers are built with, pinned and checked by
+    * `coursierbuild.GraalVm`. Pass a JVM id via `jvm` to get one from the JVM index instead.
+    */
+  def copyJvm(jvm: String = "", dest: String = "jvm") = Task.Command {
     import _root_.coursier.cache.{ArchiveCache, FileCache}
     import _root_.coursier.jvm.{JavaHome, JvmCache}
-    val fileCache = FileCache().withTtl(Duration.Zero)
-    val jvmCache = JvmCache()
-      .copy(archiveCache = ArchiveCache().copy(cache = fileCache))
-      .withDefaultIndex
-    val javaHome     = JavaHome().withCache(jvmCache).copy(update = true)
-    val baseJavaHome = os.Path(javaHome.get(jvm).unsafeRun()(using fileCache.ec).getAbsolutePath)
+    val baseJavaHome =
+      if (jvm.isEmpty) coursierbuild.GraalVm.javaHome()
+      else {
+        val fileCache = FileCache().withTtl(Duration.Zero)
+        val jvmCache = JvmCache()
+          .copy(archiveCache = ArchiveCache().copy(cache = fileCache))
+          .withDefaultIndex
+        val javaHome = JavaHome().withCache(jvmCache).copy(update = true)
+        os.Path(javaHome.get(jvm).unsafeRun()(using fileCache.ec).getAbsolutePath)
+      }
     System.err.println(s"Initial Java home $baseJavaHome")
     val destJavaHome = os.Path(dest, BuildCtx.workspaceRoot)
     os.copy(baseJavaHome, destJavaHome, createFolders = true)
