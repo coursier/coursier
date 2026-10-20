@@ -288,6 +288,12 @@ object CacheUrl {
         (followHttpsToHttpRedirections && isHttps && redirToHttp)
       }
 
+  /** Sends a `Range` request if part of the file is already there, and checks the response
+    *
+    * @return
+    *   `None` if no range was asked for, `Some(true)` if the download needs to start over (416, or
+    *   206 not starting where the part already downloaded ends), `Some(false)` otherwise
+    */
   private def rangeResOpt(conn: URLConnection, alreadyDownloaded: Long): Option[Boolean] =
     if (alreadyDownloaded > 0L)
       conn match {
@@ -295,13 +301,10 @@ object CacheUrl {
           conn0.setRequestProperty("Range", s"bytes=$alreadyDownloaded-")
 
           val startOver = {
-            val isPartial = conn0.getResponseCode == partialContentResponseCode ||
-              conn0.getResponseCode == invalidPartialContentResponseCode
-            isPartial && {
-              val hasMatchingHeader = Option(conn0.getHeaderField("Content-Range"))
-                .exists(_.startsWith(s"bytes $alreadyDownloaded-"))
-              !hasMatchingHeader
-            }
+            val code = conn0.getResponseCode
+            // a 416 means the part already downloaded doesn't fit in what the server has
+            code == invalidPartialContentResponseCode ||
+            (code == partialContentResponseCode && !isExpectedRange(conn0, alreadyDownloaded))
           }
 
           Some(startOver)
@@ -310,6 +313,10 @@ object CacheUrl {
       }
     else
       None
+
+  private def isExpectedRange(conn: URLConnection, alreadyDownloaded: Long): Boolean =
+    Option(conn.getHeaderField("Content-Range"))
+      .exists(_.trim.startsWith(s"bytes $alreadyDownloaded-"))
 
   /** Whether the response is a 4xx we may be able to get past by authenticating
     *
@@ -529,7 +536,12 @@ object CacheUrl {
             closeConn(conn)
             Left(args.copy(alreadyDownloaded = 0L))
           case _ =>
-            val partialDownload = rangeResOpt0.nonEmpty
+            // Only append to what was already downloaded if the server did send us the rest of
+            // it. A server ignoring the Range header answers a 200 with the whole content, which
+            // overwrites the part already there.
+            // (a 206 here starts where expected, rangeResOpt0 would be Some(true) otherwise)
+            val partialDownload = rangeResOpt0.contains(false) &&
+              responseCode(conn).contains(partialContentResponseCode)
             val redirectOpt =
               redirect(url0, conn, followHttpToHttpsRedirections, followHttpsToHttpRedirections)
 

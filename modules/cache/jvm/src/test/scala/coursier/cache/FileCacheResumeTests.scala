@@ -148,12 +148,8 @@ object FileCacheResumeTests extends TestSuite {
 
     test("a server that ignores Range") {
 
-      // The client sent `Range: bytes=40-` and got a plain 200 carrying the *whole* body back.
-      //
-      // Current behaviour, pinned here as a baseline rather than endorsed: `CacheUrl.rangeResOpt`
-      // only asks to start over when the response *is* a 206 whose Content-Range doesn't line up.
-      // A 200 leaves `partialDownload` set, so the full body is appended to the 40 bytes already
-      // on disk and a corrupt artifact lands in cache. See CacheUrl.scala:209.
+      // The client sent `Range: bytes=40-` and got a plain 200 carrying the *whole* body back. That
+      // body must replace the 40 bytes already on disk, not be appended to them.
 
       val log = new RequestLog
 
@@ -175,11 +171,123 @@ object FileCacheResumeTests extends TestSuite {
           val res = run(cache, url)
           val f   = res.fold(e => throw new Exception(e.describe), identity)
 
+          assert(log.methods == List("GET"))
           assert(log.entries.head.range.contains(s"bytes=$truncateAt-"))
 
           val downloaded = os.read.bytes(os.Path(f))
-          assert(downloaded.length == truncateAt + body.length)
-          assert(!java.util.Arrays.equals(downloaded, body))
+          assert(java.util.Arrays.equals(downloaded, body))
+          assert(layout(cache, url) == Seq(
+            (".foo.jar.checked", 0L),
+            ("foo.jar", body.length.toLong)
+          ))
+        }
+      }
+    }
+
+    test("a server that ignores Range overwrites a pre-existing .part file") {
+
+      // bytes that aren't a prefix of the body, so that keeping any of them would show
+      val garbage = Array.fill[Byte](truncateAt)('X'.toByte)
+
+      val log = new RequestLog
+
+      RawHttpServer.withServer(log) { _ =>
+        RawHttpServer.ok(body) // Range simply ignored
+      } { baseUrl =>
+        withTmpDir { dir =>
+
+          val cache = testCache(dir)
+          val url   = s"$baseUrl/dir/foo.jar"
+
+          os.write(os.Path(partFile(cache, url)), garbage, createFolders = true)
+
+          val res = run(cache, url)
+          val f   = res.fold(e => throw new Exception(e.describe), identity)
+
+          assert(log.methods == List("GET"))
+          assert(log.entries.head.range.contains(s"bytes=$truncateAt-"))
+
+          val downloaded = os.read.bytes(os.Path(f))
+          assert(java.util.Arrays.equals(downloaded, body))
+          assert(layout(cache, url) == Seq(
+            (".foo.jar.checked", 0L),
+            ("foo.jar", body.length.toLong)
+          ))
+        }
+      }
+    }
+
+    test("a 206 with a wrong Content-Range starts over") {
+
+      val garbage = Array.fill[Byte](truncateAt)('X'.toByte)
+
+      val log = new RequestLog
+
+      RawHttpServer.withServer(log) { req =>
+        RawHttpServer.rangeStart(req) match {
+          // a partial response, but not starting at the offset asked for
+          case Some(from) => RawHttpServer.partialContent(body, from + 10)
+          case None       => RawHttpServer.ok(body)
+        }
+      } { baseUrl =>
+        withTmpDir { dir =>
+
+          val cache = testCache(dir)
+          val url   = s"$baseUrl/dir/foo.jar"
+
+          os.write(os.Path(partFile(cache, url)), garbage, createFolders = true)
+
+          val res = run(cache, url)
+          val f   = res.fold(e => throw new Exception(e.describe), identity)
+
+          // the mismatching 206 is dropped, and the whole artifact is asked for again
+          assert(log.methods == List("GET", "GET"))
+          assert(log.entries.head.range.contains(s"bytes=$truncateAt-"))
+          assert(log.entries(1).range.isEmpty)
+
+          val downloaded = os.read.bytes(os.Path(f))
+          assert(java.util.Arrays.equals(downloaded, body))
+          assert(layout(cache, url) == Seq(
+            (".foo.jar.checked", 0L),
+            ("foo.jar", body.length.toLong)
+          ))
+        }
+      }
+    }
+
+    test("a 416 starts over") {
+
+      // a .part file longer than the artifact on the server, e.g. as the latter changed since
+      val garbage = Array.fill[Byte](body.length + 10)('X'.toByte)
+
+      val log = new RequestLog
+
+      RawHttpServer.withServer(log) { req =>
+        RawHttpServer.rangeStart(req) match {
+          case Some(_) =>
+            RawHttpServer.Response(
+              "HTTP/1.1 416 Range Not Satisfiable",
+              Seq("Content-Length" -> "0", "Content-Range" -> s"bytes */${body.length}")
+            )
+          case None => RawHttpServer.ok(body)
+        }
+      } { baseUrl =>
+        withTmpDir { dir =>
+
+          val cache = testCache(dir)
+          val url   = s"$baseUrl/dir/foo.jar"
+
+          os.write(os.Path(partFile(cache, url)), garbage, createFolders = true)
+
+          val res = run(cache, url)
+          val f   = res.fold(e => throw new Exception(e.describe), identity)
+
+          assert(log.methods == List("GET", "GET"))
+          assert(log.entries.head.range.contains(s"bytes=${garbage.length}-"))
+          assert(log.entries(1).range.isEmpty)
+
+          val downloaded = os.read.bytes(os.Path(f))
+          assert(java.util.Arrays.equals(downloaded, body))
         }
       }
     }
