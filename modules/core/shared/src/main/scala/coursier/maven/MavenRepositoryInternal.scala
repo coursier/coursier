@@ -22,7 +22,7 @@ import coursier.version.Version
 
 import scala.collection.compat._
 import coursier.core.VariantSelector
-import java.net.URI
+import java.util.Locale
 
 private[coursier] class MavenRepositoryInternal(
   root: String,
@@ -318,7 +318,8 @@ private[coursier] class MavenRepositoryInternal(
                 module,
                 version.asString,
                 content,
-                moduleArtifact.url
+                moduleArtifact.url,
+                directoryPath
               ).run.map(_.map(Right(_)))
           }
         }
@@ -367,7 +368,13 @@ private[coursier] class MavenRepositoryInternal(
       } yield finalProj
     }
 
-  private def parseModule[F[_]](module: Module, version: String, str: String, uri: String)(implicit
+  private def parseModule[F[_]](
+    module: Module,
+    version: String,
+    str: String,
+    uri: String,
+    directoryPath: Seq[String]
+  )(implicit
     F: Monad[F]
   ): EitherT[F, String, Project] =
     EitherT.fromEither {
@@ -378,7 +385,15 @@ private[coursier] class MavenRepositoryInternal(
             Left(s"Error reading $uri: $ex")
         }
 
-      res.map { gradleMod =>
+      val checkedRes = res.flatMap { gradleMod =>
+        val invalidFileUrls = gradleMod.variants.iterator
+          .flatMap(_.files.iterator)
+          .flatMap(file => resolveModuleFileUrl(directoryPath, file.url).left.toOption.iterator)
+        if (invalidFileUrls.hasNext) Left(s"Error reading $uri: ${invalidFileUrls.next()}")
+        else Right(gradleMod)
+      }
+
+      checkedRes.map { gradleMod =>
         val project = gradleMod.project(
           Some(
             GradleModule.Component(
@@ -620,18 +635,15 @@ private[coursier] class MavenRepositoryInternal(
             else
               maybeAttr.toOption
           }
+          val directoryPath = moduleVersionPath(dependency.module, project.actualVersion0)
           attrOpt.toSeq.flatMap(project.variantPublications.getOrElse(_, Nil)).map { pub =>
-            val baseUri = new URI(pub.url)
-            val uri =
-              if (baseUri.isAbsolute) baseUri
-              else
-                new URI(
-                  urlFor(
-                    moduleVersionPath(dependency.module, project.actualVersion0),
-                    isDir = true
-                  )
-                ).resolve(baseUri)
-            val art = Artifact(uri.toASCIIString).copy(optional = false)
+            // Module files with invalid URLs are rejected when parsed, so this only throws
+            // for projects that didn't come from parseModule
+            val path = resolveModuleFileUrl(directoryPath, pub.url) match {
+              case Left(err)    => throw new IllegalArgumentException(err)
+              case Right(path0) => path0
+            }
+            val art = Artifact(urlFor(path)).withDefaultChecksums.copy(optional = false)
             (pub, art)
           }
         }
@@ -651,6 +663,62 @@ private[coursier] object MavenRepositoryInternal {
     coursier.core.compatibility.xmlParseSax(str, new PomParser).project
   private[maven] def parseRawPomSaxMemoized(str: String): Either[String, Project] =
     coursier.util.Cache.memoizeMethod(pomParseCache)(str)(parseRawPomSax)
+
+  /** Resolves the URL of a file listed in a Gradle module file
+    *
+    * Like Gradle, this URL is taken as relative to the directory of the module file. It must not
+    * have a scheme or a host, start with '/', or point outside of the repository: Gradle module
+    * files on public repositories could otherwise make us download files from arbitrary hosts, or
+    * read local files.
+    *
+    * @param directoryPath
+    *   path of the directory of the module file, relative to the repository root
+    * @param url
+    *   file URL, as found in the module file
+    * @return
+    *   path of the file, relative to the repository root, or an error message
+    */
+  def resolveModuleFileUrl(
+    directoryPath: Seq[String],
+    url: String
+  ): Either[String, Seq[String]] = {
+    def error(reason: String) = Left(s"Invalid file URL '$url' in Gradle module ($reason)")
+    // servers and file-based repositories may decode those, so we treat them as if they were
+    def decodedSeparatorsAndDots(segment: String) =
+      segment
+        .toLowerCase(Locale.ROOT)
+        .replace("%2e", ".")
+        .replace("%2f", "/")
+        .replace("%5c", "\\")
+    val segments = url.split("/", -1).toSeq
+    if (url.isEmpty)
+      error("empty URL")
+    else if (url.startsWith("/"))
+      error("absolute path")
+    else if (segments.head.contains(":"))
+      error("absolute URL")
+    else if (url.exists(c => c == '\\' || c == '?' || c == '#'))
+      error("unexpected character")
+    else if (decodedSeparatorsAndDots(segments.last).forall(_ == '.'))
+      error("not a file")
+    else
+      segments.foldLeft[Either[String, List[String]]](Right(directoryPath.reverse.toList)) {
+        case (Left(err), _) => Left(err)
+        case (Right(acc), segment) =>
+          decodedSeparatorsAndDots(segment) match {
+            case ""  => error("empty path segment")
+            case "." => Right(acc)
+            case ".." =>
+              acc match {
+                case _ :: tail => Right(tail)
+                case Nil       => error("points outside of the repository")
+              }
+            case decoded if decoded.exists(c => c == '/' || c == '\\') =>
+              error("encoded path separator")
+            case _ => Right(segment :: acc)
+          }
+      }.map(_.reverse)
+  }
 
   def isSnapshot(version: Version): Boolean =
     version.repr.endsWith("SNAPSHOT") || SnapshotTimestamp.pattern.matcher(version.repr).matches()
