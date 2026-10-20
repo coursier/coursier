@@ -7,7 +7,7 @@ import javax.xml.parsers.SAXParserFactory
 import javax.xml.XMLConstants
 import coursier.util.{SaxHandler, Xml}
 import org.xml.sax
-import org.xml.sax.{InputSource, XMLReader}
+import org.xml.sax.{EntityResolver, InputSource, XMLReader}
 import org.xml.sax.helpers.DefaultHandler
 
 import java.lang.ThreadLocal
@@ -189,8 +189,8 @@ package object compatibility {
     // Disallow external entities
     trySetFeature("http://xml.org/sax/features/external-general-entities", false)
     trySetFeature("http://xml.org/sax/features/external-parameter-entities", false)
-    // Allow external dtd
-    trySetFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", true)
+    // Don't load external DTDs (entities like &nbsp; are substituted by EntitySubstitution beforehand)
+    trySetFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
     // Disallow XInclude processing
     try spf0.setXIncludeAware(false)
     catch {
@@ -200,9 +200,25 @@ package object compatibility {
     spf0
   }
 
+  // Never read anything external (DTDs, entities), whatever the JAXP implementation
+  private object NoExternalEntityResolver extends EntityResolver {
+    def resolveEntity(publicId: String, systemId: String): InputSource =
+      new InputSource(new StringReader(""))
+  }
+
   private def newXmlReader = {
     val saxParser = spf.newSAXParser()
-    saxParser.getXMLReader
+    def trySetProperty(property: String, value: String): Unit =
+      try saxParser.setProperty(property, value)
+      catch {
+        case _: sax.SAXNotRecognizedException | _: sax.SAXNotSupportedException =>
+          ()
+      }
+    trySetProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "")
+    trySetProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "")
+    val xmlReader = saxParser.getXMLReader
+    xmlReader.setEntityResolver(NoExternalEntityResolver)
+    xmlReader
   }
   private val reusedParser = ThreadLocal.withInitial(() => newXmlReader)
   def xmlParseSax(str: String, handler: SaxHandler): handler.type = {
