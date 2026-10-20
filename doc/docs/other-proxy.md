@@ -22,6 +22,25 @@ The following Java system properties control proxy behaviour:
 | `http.proxyPassword` | Password for proxy authentication (HTTP) |
 | `http.nonProxyHosts` | Pipe-separated list of host patterns that bypass the proxy (e.g. `localhost\|*.internal.example.com`) |
 
+## Basic authentication for HTTPS proxy tunnels
+
+Since 8u111, the JDK refuses to send Basic credentials when tunneling HTTPS
+connections through a proxy (`Basic` is listed in the
+`jdk.http.auth.tunneling.disabledSchemes` property, in
+`$JAVA_HOME/conf/net.properties`).
+
+When proxy credentials are configured (via the `http.proxyUser` / `https.proxyUser`
+properties, the `<username>` of a proxy in Maven `settings.xml`, or the proxy
+user of the Scala CLI configuration), coursier removes `Basic` from the
+`jdk.http.auth.tunneling.disabledSchemes` property, so that authenticated proxies
+work. This setting applies to the whole JVM. coursier leaves the property alone
+when no proxy credentials are configured, or when the property was already set,
+like with
+```
+$ java -Djdk.http.auth.tunneling.disabledSchemes=Basic …
+```
+which keeps Basic authentication disabled for proxy tunnels.
+
 ## Maven settings.xml
 
 Coursier automatically reads proxy settings from the Maven `settings.xml` file.
@@ -106,4 +125,6 @@ SetupProxy.setup(); // reads ~/.m2/settings.xml and registers a proxy Authentica
 `SetupProxy.setup()` both configures the proxy system properties
 (`https.proxyHost`, etc.) from the Maven settings file and registers a
 [`java.net.Authenticator`](https://docs.oracle.com/javase/8/docs/api/java/net/Authenticator.html)
-so that authenticated proxies work correctly.
+so that authenticated proxies work correctly. If proxy credentials are configured,
+it also enables Basic authentication for HTTPS proxy tunnels, see
+[above](#basic-authentication-for-https-proxy-tunnels).

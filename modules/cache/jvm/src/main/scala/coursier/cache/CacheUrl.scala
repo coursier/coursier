@@ -723,7 +723,11 @@ object CacheUrl {
         }
       }
     )
-    if (System.getProperty("jdk.http.auth.tunneling.disabledSchemes") == null)
+    // Allow Basic auth for proxy tunnels (disabled by default by the JDK) only if we have
+    // proxy credentials
+    if (
+      credentials.nonEmpty && System.getProperty("jdk.http.auth.tunneling.disabledSchemes") == null
+    )
       System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "")
   }
 

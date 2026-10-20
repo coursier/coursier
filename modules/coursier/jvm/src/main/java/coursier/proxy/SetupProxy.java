@@ -17,9 +17,60 @@ import java.util.*;
 
 public final class SetupProxy {
 
+    private final static String TUNNELING_DISABLED_SCHEMES = "jdk.http.auth.tunneling.disabledSchemes";
+
+    /**
+     * Allows Basic authentication when tunneling HTTPS connections through a proxy.
+     *
+     * The JDK disables it by default (see the {@code jdk.http.auth.tunneling.disabledSchemes}
+     * property in {@code $JAVA_HOME/conf/net.properties}). This removes {@code Basic} from the
+     * schemes disabled by default, and keeps the other ones. It leaves the property untouched
+     * if users set it themselves.
+     *
+     * This changes the behaviour of the whole JVM, so this should only be called if proxy
+     * credentials were configured.
+     */
     public static void setupTunnelingProp() {
-        if (System.getProperty("jdk.http.auth.tunneling.disabledSchemes") == null)
-            System.setProperty("jdk.http.auth.tunneling.disabledSchemes", "");
+        if (System.getProperty(TUNNELING_DISABLED_SCHEMES) == null)
+            setProperty(
+                TUNNELING_DISABLED_SCHEMES,
+                removeScheme(jdkDefaultNetProperty(TUNNELING_DISABLED_SCHEMES, "Basic"), "Basic")
+            );
+    }
+
+    static String removeScheme(String schemes, String scheme) {
+        StringBuilder b = new StringBuilder();
+        for (String elem : schemes.split(",")) {
+            String trimmed = elem.trim();
+            if (!trimmed.isEmpty() && !trimmed.equalsIgnoreCase(scheme)) {
+                if (b.length() > 0)
+                    b.append(',');
+                b.append(trimmed);
+            }
+        }
+        return b.toString();
+    }
+
+    // Value of key in the JDK net.properties file, or defaultValue if it can't be read
+    private static String jdkDefaultNetProperty(String key, String defaultValue) {
+        String javaHome = System.getProperty("java.home");
+        if (javaHome == null)
+            return defaultValue;
+        for (String dir : new String[] {"conf", "lib"}) {
+            File f = new File(new File(javaHome, dir), "net.properties");
+            if (f.isFile()) {
+                Properties props = new Properties();
+                try (java.io.InputStream is = new java.io.FileInputStream(f)) {
+                    props.load(is);
+                } catch (IOException | RuntimeException e) {
+                    if (debug)
+                        System.err.println("cs-proxy: error reading " + f + ": " + e);
+                    return defaultValue;
+                }
+                return props.getProperty(key, defaultValue);
+            }
+        }
+        return defaultValue;
     }
 
     private final static boolean debug;
@@ -170,7 +221,9 @@ public final class SetupProxy {
         String propertyPrefix
     ) {
 
-        setupTunnelingProp();
+        // Only allow Basic auth for proxy tunnels if we have proxy credentials
+        if (usernameValue != null)
+            setupTunnelingProp();
 
         String protocol = protocolValue == null ? "https" : protocolValue;
 
