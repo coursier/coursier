@@ -13,7 +13,7 @@ jobs:
       group: sonatype-central-publish-${{ github.repository }}
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           submodules: true
@@ -23,7 +23,7 @@ jobs:
           for tag in $(git tag --points-at HEAD); do
             git tag -d "$tag"
           done
-      - uses: coursier/cache-action@v8
+      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
         with:
           disableFallback: true
       # a 'v*' tag releases the coursier modules, and the interface ones too if an
