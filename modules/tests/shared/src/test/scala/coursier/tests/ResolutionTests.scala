@@ -157,6 +157,58 @@ object ResolutionTests extends TestSuite {
       "1.0",
       parent0 = Some((mod"com.example:ranged-parent", "[1.0,2.0)"))
     ),
+    // POMs whose parent chain loops back on itself
+    Project(
+      mod"acme:self-parent",
+      "1.0",
+      Seq(
+        Variant.emptyConfiguration -> dep"acme:config:1.3.0"
+      ),
+      parent0 = Some((mod"acme:self-parent", "1.0"))
+    ),
+    Project(
+      mod"acme:cycle-a",
+      "1.0",
+      parent0 = Some((mod"acme:cycle-b", "1.0"))
+    ),
+    Project(
+      mod"acme:cycle-b",
+      "1.0",
+      parent0 = Some((mod"acme:cycle-a", "1.0"))
+    ),
+    Project(
+      mod"acme:cycle-child",
+      "1.0",
+      parent0 = Some((mod"acme:cycle-a", "1.0"))
+    ),
+    Project(
+      mod"acme:version-cycle",
+      "1.0",
+      parent0 = Some((mod"acme:version-cycle", "2.0"))
+    ),
+    Project(
+      mod"acme:version-cycle",
+      "2.0",
+      parent0 = Some((mod"acme:version-cycle", "1.0"))
+    ),
+    // BOMs importing each other
+    Project(
+      mod"acme:bom-cycle-a",
+      "1.0",
+      Seq(
+        Variant.emptyConfiguration -> dep"acme:config:1.3.0"
+      ),
+      dependencyManagement = Seq(
+        Variant.Configuration(Configuration.`import`) -> dep"acme:bom-cycle-b:1.0"
+      )
+    ),
+    Project(
+      mod"acme:bom-cycle-b",
+      "1.0",
+      dependencyManagement = Seq(
+        Variant.Configuration(Configuration.`import`) -> dep"acme:bom-cycle-a:1.0"
+      )
+    ),
     Project(
       mod"gov.nsa:secure-pgp",
       "10.0",
@@ -518,6 +570,40 @@ object ResolutionTests extends TestSuite {
         assert(
           errors == Seq((mod"acme:missing-pom", VersionConstraint("1.0.0")) -> List("Not found"))
         )
+      }
+    }
+    test("parentCycle") {
+      def check(dep: Dependency, cycleModule: Module) =
+        async {
+          val res    = await(resolve0(Seq(dep)))
+          val errors = res.errors0
+          assert(errors.map(_._1) == Seq(dep.moduleVersionConstraint))
+          val messages = errors.flatMap(_._2)
+          assert(messages.length == 1)
+          assert(messages.forall(_.contains("Cycle in parent POMs")))
+          assert(messages.forall(_.contains(cycleModule.repr)))
+        }
+      test("self") {
+        check(dep"acme:self-parent:1.0", mod"acme:self-parent")
+      }
+      test("twoModules") {
+        check(dep"acme:cycle-a:1.0", mod"acme:cycle-b")
+      }
+      test("viaChild") {
+        check(dep"acme:cycle-child:1.0", mod"acme:cycle-b")
+      }
+      test("twoVersions") {
+        check(dep"acme:version-cycle:1.0", mod"acme:version-cycle")
+      }
+    }
+    test("bomImportCycle") {
+      async {
+        val dep = dep"acme:bom-cycle-a:1.0"
+        val res = await(resolve0(Seq(dep)))
+        assert(res.isDone)
+        assert(res.errors0.isEmpty)
+        assert(res.projectCache0.contains((mod"acme:bom-cycle-b", VersionConstraint("1.0"))))
+        assert(res.minDependencies.map(_.module).contains(mod"acme:config"))
       }
     }
     test("single") {
