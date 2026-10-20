@@ -4,7 +4,7 @@ import java.io.{Serializable => _, _}
 import java.net.{HttpURLConnection, URLConnection, MalformedURLException}
 import java.nio.ByteBuffer
 import java.nio.charset.StandardCharsets.UTF_8
-import java.nio.file.{AccessDeniedException, Files, StandardCopyOption, StandardOpenOption}
+import java.nio.file.{AccessDeniedException, Files, StandardCopyOption}
 import java.time.{Clock, Duration => JDuration, Instant}
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -286,8 +286,8 @@ import scala.util.control.NonFatal
     def doTouchCheckFile(file: File, url: String, updateLinks: Boolean): Unit = {
       val ts = clock.millis()
       val f  = ttlFile(file)
-      if (!f.exists())
-        Files.write(f.toPath, Array.emptyByteArray)
+      if (Files.isSymbolicLink(f.toPath) || !f.exists())
+        FileUtil.writeNoFollow(f.toPath, Array.emptyByteArray)
       f.setLastModified(ts)
 
       if (updateLinks && file.getName == ".directory") {
@@ -308,7 +308,7 @@ import scala.util.control.NonFatal
                 )
               ).mkString("\n")
 
-            Files.write(linkFile.toPath, content.getBytes(UTF_8))
+            FileUtil.writeNoFollow(linkFile.toPath, content.getBytes(UTF_8))
             true
           }
           catch {
@@ -346,6 +346,9 @@ import scala.util.control.NonFatal
       tmp: File
     ): Either[ArtifactError, Unit] = {
 
+      // we hold the lock of file here: a symbolic link at tmp can only have been planted by
+      // someone else, don't resume a download from (nor write to) what it points to
+      Util.deleteIfSymbolicLink(tmp.toPath)
       val alreadyDownloaded = tmp.length()
 
       var conn: URLConnection = null
@@ -471,10 +474,7 @@ import scala.util.control.NonFatal
                       Files.move(tmpLen, lenFile)
                   }
                 }
-                if (partialDownload)
-                  Files.newOutputStream(tmp.toPath, StandardOpenOption.APPEND)
-                else
-                  Files.newOutputStream(tmp.toPath)
+                FileUtil.newOutputStreamNoFollow(tmp.toPath, append = partialDownload)
               }
               try Downloader.readFullyTo(
                   in,
@@ -498,7 +498,7 @@ import scala.util.control.NonFatal
             val dest    = FileCache.auxiliaryFile(file, key)
             val tmpDest = CachePath.temporaryFile(dest)
             Util.createDirectories(tmpDest.toPath.getParent)
-            Files.write(tmpDest.toPath, data)
+            FileUtil.writeNoFollow(tmpDest.toPath, data)
             for (lastModified <- lastModifiedOpt)
               tmpDest.setLastModified(lastModified)
             Util.createDirectories(dest.toPath.getParent)
@@ -779,7 +779,7 @@ import scala.util.control.NonFatal
       if (cacheErrors0) {
         val p = errFile0.toPath
         Util.createDirectories(p.getParent)
-        Files.write(p, Array.emptyByteArray)
+        FileUtil.writeNoFollow(p, Array.emptyByteArray)
       }
 
     def deleteErrFileBlocking() =

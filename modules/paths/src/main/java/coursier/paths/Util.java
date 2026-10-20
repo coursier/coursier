@@ -90,6 +90,19 @@ public class Util {
         }
     }
 
+    /**
+     * Deletes the file at {@code path} if it is a symbolic link.
+     *
+     * Meant to be called before opening with {@code LinkOption.NOFOLLOW_LINKS} a file of the cache
+     * that coursier writes to (temporary files, lock files, …), so that a symbolic link planted
+     * there by someone else having write access to the cache is removed (deleting a link leaves
+     * its target alone) rather than followed.
+     */
+    public static void deleteIfSymbolicLink(Path path) throws IOException {
+        if (Files.isSymbolicLink(path))
+            Files.deleteIfExists(path);
+    }
+
     private static volatile Boolean useColorOutput0 = null;
     private static boolean computeUseColorOutput() {
 
