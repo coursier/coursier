@@ -2290,7 +2290,12 @@ object docs extends ScalaModule {
   def mkdocsBuild() = Task.Command[PathRef] {
     mdoc()()
     os.proc("mkdocs", "build", mkdocsConfigArgs(), mkdocsSiteDirArgs())
-      .call(cwd = BuildCtx.workspaceRoot / "docs", stdin = os.Inherit, stdout = os.Inherit)
+      .call(
+        cwd = BuildCtx.workspaceRoot / "docs",
+        env = DocHelpers.withoutSecretsEnv,
+        stdin = os.Inherit,
+        stdout = os.Inherit
+      )
 
     site()
   }

@@ -1,6 +1,18 @@
 package coursierbuild
 
 object DocHelpers {
+
+  /** Environment variables holding secrets, that third-party tools (npm and the packages it
+    * installs, mkdocs and its plugins, …) building the website shouldn't see
+    */
+  val secretEnvVars: Seq[String] = Seq("GH_TOKEN", "UPLOAD_GH_TOKEN")
+
+  /** To be passed as `env` to `os.proc(…).call`, removes [[secretEnvVars]] from the environment of
+    * the process (os-lib removes variables whose value is `null`)
+    */
+  def withoutSecretsEnv: Map[String, String] =
+    secretEnvVars.map(_ -> (null: String)).toMap
+
   def copyDocusaurusVersionedData(
     repo: String,
     branch: String,
