@@ -1,6 +1,6 @@
 package coursier.launcher.internal
 
-import java.io.{ByteArrayOutputStream, InputStream, OutputStream}
+import java.io.{BufferedOutputStream, ByteArrayOutputStream, InputStream, OutputStream}
 import java.nio.file.attribute.PosixFilePermission
 import java.nio.file.{Files, LinkOption, Path}
 
@@ -39,7 +39,9 @@ private[coursier] object FileUtil {
   def withOutputStream[T](path: Path)(f: OutputStream => T): T = {
     var os: OutputStream = null
     try {
-      os = Files.newOutputStream(path)
+      // Buffered: ZipOutputStream writes entry headers a few bytes at a time,
+      // which would otherwise be one write syscall each
+      os = new BufferedOutputStream(Files.newOutputStream(path), 1 << 16)
       f(os)
     }
     finally if (os != null)
