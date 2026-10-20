@@ -133,16 +133,34 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
 
   def next0_(results: ResolutionProcess.MD0): ResolutionProcess = {
 
+    // projects fetched in former rounds, still waiting for their parents or imported BOMs
+    val (pending, cont1) = cont match {
+      case withPending: ResolutionProcess.WithPending =>
+        (withPending.pending, withPending.cont)
+      case other =>
+        (Nil, other)
+    }
+
     val errors = results.collect {
       case (modVer, Left(errs)) =>
         modVer -> errs
     }
-    val successes = results.collect {
+    val successes = pending ++ results.collect {
       case (modVer, Right(repoProj)) =>
         modVer -> repoProj
     }
 
-    def cont0(res: Resolution): ResolutionProcess = {
+    /** Adds to the cache the projects whose parents and imported BOMs are all there, until none is
+      * left or some wait for modules not fetched yet, returned on the right
+      */
+    @tailrec
+    def addReady(
+      res: Resolution
+    ): (
+      Resolution,
+      Seq[((Module, VersionConstraint0), (ArtifactSource, Project))],
+      Set[(Module, VersionConstraint0)]
+    ) = {
 
       val remainingSuccesses = successes.filter {
         case (modVer, _) =>
@@ -154,47 +172,39 @@ sealed abstract class ResolutionProcess extends Product with Serializable {
           elem -> res.dependencyManagementMissing0(proj)
       }
 
-      val depMgmtMissing = depMgmtMissing0.map(_._2).fold(Set.empty)(_ ++ _)
-
-      if (depMgmtMissing.isEmpty) {
-
-        type Elem = ((Module, VersionConstraint0), (ArtifactSource, Project))
-        val modVer = depMgmtMissing0.map(_._1._1).toSet
-
-        @tailrec
-        def order(map: Map[Elem, Set[(Module, VersionConstraint0)]], acc: List[Elem]): List[Elem] =
-          if (map.isEmpty)
-            acc.reverse
-          else {
-            val min = map.map(_._2.size).min // should be 0
-            val (toAdd, remaining) = map.partition {
-              case (_, v) => v.size == min
-            }
-            val acc0                                             = toAdd.keys.foldLeft(acc)(_.::(_))
-            val remainingKeys: Set[(Module, VersionConstraint0)] = remaining.keySet.map(_._1)
-            val map0 = remaining.map {
-              case (k, v) =>
-                k -> v.intersect(remainingKeys)
-            }
-            order(map0, acc0)
-          }
-
-        val orderedSuccesses = order(
-          depMgmtMissing0.map { case (k, v) => k -> v.intersect(modVer) }.toMap,
-          Nil
-        )
-
-        val res0 = orderedSuccesses.foldLeft(res) {
-          case (acc, (modVer0, (source, proj))) =>
-            acc.addToProjectCache0(
-              modVer0 -> (source, proj)
-            )
-        }
-
-        Continue(res0, cont)
+      val ready = depMgmtMissing0.collect {
+        case (elem, missing) if missing.isEmpty =>
+          elem
       }
+
+      if (remainingSuccesses.isEmpty)
+        (res, Nil, Set.empty)
+      else if (ready.nonEmpty)
+        addReady(res.addToProjectCache0(ready: _*))
+      else {
+        val remainingModVers = remainingSuccesses.map(_._1).toSet
+        val depMgmtMissing   = depMgmtMissing0.map(_._2).fold(Set.empty)(_ ++ _) -- remainingModVers
+
+        if (depMgmtMissing.isEmpty)
+          // The remaining projects only wait for each other: their parents or imported BOMs
+          // form a cycle. Add one of them, to break it. Resolution later reports the
+          // cycles in parent POMs as errors.
+          addReady(res.addToProjectCache0(remainingSuccesses.head))
+        else
+          (res, remainingSuccesses, depMgmtMissing)
+      }
+    }
+
+    def cont0(res: Resolution): ResolutionProcess = {
+      val (res0, remainingSuccesses, depMgmtMissing) = addReady(res)
+      if (depMgmtMissing.isEmpty)
+        Continue(res0, cont1)
       else
-        Missing(depMgmtMissing.toSeq, res, cont0)
+        Missing(
+          depMgmtMissing.toSeq,
+          res0,
+          new ResolutionProcess.WithPending(remainingSuccesses, cont1, cont0)
+        )
     }
 
     val current0 = current.addToErrorCache0(errors)
@@ -415,6 +425,21 @@ object ResolutionProcess {
   }
 
   def defaultMaxIterations: Int = 100
+
+  /** Continuation of a [[Missing]], keeping the projects already fetched that wait for the missing
+    * ones
+    *
+    * Passing these projects along, rather than fetching them again, ensures projects whose parents
+    * or imported BOMs form a cycle don't make resolution fetch them over and over again.
+    */
+  private[core] final class WithPending(
+    val pending: Seq[((Module, VersionConstraint0), (ArtifactSource, Project))],
+    val cont: Resolution => ResolutionProcess,
+    fallback: Resolution => ResolutionProcess
+  ) extends (Resolution => ResolutionProcess) {
+    def apply(res: Resolution): ResolutionProcess =
+      fallback(res)
+  }
 
   def apply(resolution: Resolution): ResolutionProcess = {
     val resolution0 = resolution.nextIfNoMissing

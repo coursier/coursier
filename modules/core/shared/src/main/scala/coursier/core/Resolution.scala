@@ -1,7 +1,7 @@
 package coursier.core
 
 import coursier.core.LazyProperties.{PropertyEntry, PropertyLayer}
-import coursier.error.{DependencyError, VariantError}
+import coursier.error.{DependencyError, ParentCycleError, VariantError}
 import coursier.util.Artifact
 import coursier.version.{
   ConstraintReconciliation,
@@ -873,15 +873,46 @@ object Resolution {
   def projectProperties(project: Project): Seq[(String, String)] =
     LazyProperties.merge(project.properties, staticProjectPropertiesLayer(project))
 
+  /** Parents of `project`, closest first
+    *
+    * Stops at the first parent already seen in the chain, if any, returning an error describing the
+    * cycle along with the parents found until then.
+    */
+  private def parentsAndCycle(
+    project: Project,
+    projectCache: ((Module, VersionConstraint0)) => Option[Project]
+  ): (Vector[Project], Option[ParentCycleError]) = {
+
+    @tailrec
+    def helper(
+      current: Project,
+      acc: Vector[Project],
+      chain: Vector[ModuleVersionConstraint]
+    ): (Vector[Project], Option[ParentCycleError]) =
+      current.parent0 match {
+        case Some(key) if chain.contains(key) =>
+          (acc, Some(new ParentCycleError(chain :+ key)))
+        case Some(key) =>
+          projectCache(key) match {
+            case Some(parent) => helper(parent, acc :+ parent, chain :+ key)
+            case None         => (acc, None)
+          }
+        case None =>
+          (acc, None)
+      }
+
+    helper(
+      project,
+      Vector.empty,
+      Vector((project.module, VersionConstraint0.fromVersion(project.version0)))
+    )
+  }
+
   private def parents(
     project: Project,
     projectCache: ((Module, VersionConstraint0)) => Option[Project]
-  ): LazyList[Project] =
-    project.parent0
-      .flatMap(projectCache) match {
-      case None         => LazyList.empty
-      case Some(parent) => parent #:: parents(parent, projectCache)
-    }
+  ): Vector[Project] =
+    parentsAndCycle(project, projectCache)._1
 
   /** Get the dependencies of `project`, knowing that it came from dependency `from` (that is,
     * `from.module == project.module`).
@@ -903,11 +934,9 @@ object Resolution {
 
     // section numbers in the comments refer to withDependencyManagement
 
-    val parentProperties0 = LazyProperties.merge(
-      parents(project, projectCache)
-        .toVector
-        .map(_.properties)
-    )
+    val (parents0, parentCycleOpt) = parentsAndCycle(project, projectCache)
+
+    val parentProperties0 = LazyProperties.merge(parents0.map(_.properties))
 
     val projectWithProperties: Project = withFinalProperties(
       project.copy(properties = LazyProperties.merge(parentProperties0, project.properties))
@@ -944,7 +973,9 @@ object Resolution {
     }
     val properties = project0.properties.toMap
 
-    val configurationsOrVariantOrError = actualConfigOrError.flatMap {
+    val configurationsOrVariantOrError = parentCycleOpt.toLeft(()).flatMap { _ =>
+      actualConfigOrError
+    }.flatMap {
       case c: VariantSelector.ConfigurationBased =>
         Right(Right(parentConfigurations(c.configuration, project0.configurations)))
       case attr: VariantSelector.AttributesBased =>
@@ -1873,7 +1904,6 @@ object Resolution {
 
       val parentProperties0 = LazyProperties.merge(
         parents(project, k => projectCache0.get(k).map(_._2))
-          .toVector
           .map(_.properties)
       )
 
@@ -2031,7 +2061,6 @@ object Resolution {
 
     val parentProperties0 = LazyProperties.merge(
       parents(project, k => projectCache0.get(k).map(_._2))
-        .toVector
         .map(_.properties)
     )
 
