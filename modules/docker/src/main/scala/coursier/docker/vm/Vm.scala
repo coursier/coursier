@@ -298,6 +298,15 @@ object Vm {
       case Cpu.Arm64  => "virt"
     }
 
+  /** Value of the QEMU `-netdev` option, forwarding `sshLocalPort` on the host to the guest SSH
+    * port
+    *
+    * The forwarded port is bound to the loopback interface, so that only the host can reach the
+    * guest SSH server.
+    */
+  def netdevOption(sshLocalPort: Int): String =
+    s"id=net00,type=user,hostfwd=tcp:127.0.0.1:$sshLocalPort-:22"
+
   def spawn(
     id: String,
     vmFiles: VmFiles,
@@ -350,7 +359,7 @@ object Vm {
       "none",
       outputOpts,
       "-netdev",
-      s"id=net00,type=user,hostfwd=tcp::$port-:22",
+      netdevOption(port),
       "-device",
       s"virtio-net-pci,netdev=net00,romfile=${vmFiles.qemu.virtioRom}",
       "-drive",
