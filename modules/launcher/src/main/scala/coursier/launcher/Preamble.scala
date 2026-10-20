@@ -40,12 +40,21 @@ import scala.util.control.NonFatal
   def addExtraEnvVar(key: String, value: String): Preamble =
     copy(extraEnv = extraEnv + (key -> value))
 
+  /** The sh preamble.
+    *
+    * `javaOpts`, `extraEnv` values and `jvmOptionFile` are written so that the script passes them
+    * verbatim. `jarPath` and `command` are shell snippets on the other hand, put as is between
+    * double quotes (so that they can reference things like `$0`): callers need to escape whatever
+    * they interpolate in them, with [[Preamble.shDoubleQuoteEscape]].
+    */
   def sh: Array[Byte] = {
     val setVars = extraEnv
       .toVector
       .sorted
-      // escaping possibly a bit loose :-|
-      .map { case (k, v) => s"""export $k="$v"""" }
+      .map { case (k, v) =>
+        Preamble.checkEnvVarName(k)
+        s"""export $k="${Preamble.shDoubleQuoteEscape(v)}""""
+      }
 
     val lines = command match {
       case None =>
@@ -53,8 +62,7 @@ import scala.util.control.NonFatal
           """[ -x "$JAVA_HOME/bin/java" ] && JAVA_CMD="$JAVA_HOME/bin/java" || JAVA_CMD=java"""
 
         val javaCmd = Seq("\"$JAVA_CMD\"") ++
-          // escaping possibly a bit loose :-|
-          javaOpts.map(s => "'" + s.replace("'", "\\'") + "'") ++
+          javaOpts.map(Preamble.shSingleQuote) ++
           jvmOptionFile.toSeq.map(_ => "${extra_jvm_opts[@]}") ++
           Seq("$JAVA_OPTS", "\"$@\"")
 
@@ -63,7 +71,7 @@ import scala.util.control.NonFatal
         Seq(s"#!/usr/bin/env $sh") ++
           setVars ++
           Seq(Preamble.shArgsPartitioner(jarPath.getOrElse("$0"))) ++
-          jvmOptionFile.toSeq.map(f => Preamble.bashJvmOptFile(f)) ++
+          jvmOptionFile.toSeq.map(f => Preamble.bashJvmOptFile(Preamble.shDoubleQuoteEscape(f))) ++
           Seq(setJavaCmd) ++
           Seq("exec " + javaCmd.mkString(" "))
 
@@ -78,15 +86,21 @@ import scala.util.control.NonFatal
     lines.mkString("", "\n", "\n").getBytes(StandardCharsets.UTF_8)
   }
 
+  /** The .bat preamble.
+    *
+    * `javaOpts` and `extraEnv` values are written so that the script passes them verbatim, and are
+    * rejected if they contain characters that cannot be (`"`, line breaks, NUL). `jarPath` and
+    * `command` are cmd snippets on the other hand, put as is in the script (so that they can
+    * reference things like `%~dp0`): callers need to escape whatever they interpolate in them, with
+    * [[Preamble.batDoubleQuoteEscape]].
+    */
   def bat: Array[Byte] = {
     val content = command match {
       case None =>
-        // FIXME no escaping for javaOpts :|
         Preamble.batJarTemplate
-          .replace("@JVM_OPTS@", javaOpts.mkString(" "))
+          .replace("@JVM_OPTS@", javaOpts.map(Preamble.batArg).mkString(" "))
           .replace("@JAR_PATH@", jarPath.getOrElse("%~dpnx0"))
       case Some(c) =>
-        // FIXME no escaping :|
         Preamble.batCommandTemplate
           .replace("@COMMAND@", c)
     }
@@ -96,8 +110,10 @@ import scala.util.control.NonFatal
       extraEnv
         .toVector
         .sorted
-        // FIXME no escaping :|
-        .map { case (k, v) => s"set $k=$v\r\n" }
+        .map { case (k, v) =>
+          Preamble.checkEnvVarName(k)
+          Preamble.batSetVar(k, v)
+        }
         .mkString
     )
 
@@ -156,6 +172,77 @@ object Preamble {
       else
         None
     fromOs.getOrElse(StandardCharsets.UTF_8)
+  }
+
+  private def checkValue(value: String, forbidden: Char => Boolean, what: String): Unit =
+    for (c <- value.find(forbidden))
+      throw new IllegalArgumentException(
+        f"Cannot write $what containing character U+${c.toInt}%04X in a launcher: $value"
+      )
+
+  private def checkEnvVarName(name: String): Unit =
+    if (
+      name.isEmpty || name.head.isDigit ||
+      !name.forall(c => c == '_' || (c < 128 && c.isLetterOrDigit))
+    )
+      throw new IllegalArgumentException(
+        s"Invalid environment variable name for a launcher: $name"
+      )
+
+  /** Quotes `value` as a single sh word, that sh reads back verbatim */
+  private[coursier] def shSingleQuote(value: String): String = {
+    checkValue(value, _ == '\u0000', "a value")
+    "'" + value.replace("'", "'\\''") + "'"
+  }
+
+  /** Escapes `value`, so that sh reads it back verbatim when it's put between double quotes */
+  private[coursier] def shDoubleQuoteEscape(value: String): String = {
+    checkValue(value, _ == '\u0000', "a value")
+    if (value.exists(shDoubleQuoteSpecial))
+      value.flatMap(c => if (shDoubleQuoteSpecial(c)) "\\" + c else c.toString)
+    else
+      value
+  }
+
+  private def shDoubleQuoteSpecial(c: Char): Boolean =
+    c == '"' || c == '$' || c == '`' || c == '\\'
+
+  // cmd can't escape double quotes within double quotes, nor line breaks
+  private def batForbidden(c: Char): Boolean =
+    c == '"' || c == '\r' || c == '\n' || c == '\u0000'
+
+  // characters that cmd interprets outside of double quotes, or that split arguments
+  private def batSpecial(c: Char): Boolean =
+    c == ' ' || c == '\t' || c == '&' || c == '|' || c == '<' || c == '>' || c == '^'
+
+  /** Escapes `value`, so that cmd reads it back verbatim when it's put between double quotes in a
+    * .bat file
+    *
+    * Throws if `value` contains characters that cannot be escaped there (`"`, line breaks, NUL).
+    * Note that `!` is not escaped: it's only special if delayed expansion is enabled, which the
+    * launchers don't do.
+    */
+  private[coursier] def batDoubleQuoteEscape(value: String): String = {
+    checkValue(value, batForbidden, "a value")
+    value.replace("%", "%%")
+  }
+
+  /** Writes `value` as a single command-line argument in a .bat file, as the program receives it */
+  private def batArg(value: String): String = {
+    val escaped = batDoubleQuoteEscape(value)
+    if (value.exists(batSpecial)) {
+      // backslashes before the closing quote need to be doubled, or they escape it
+      val trailingBackslashes = escaped.reverseIterator.takeWhile(_ == '\\').length
+      "\"" + escaped + "\\" * trailingBackslashes + "\""
+    }
+    else
+      escaped
+  }
+
+  private def batSetVar(name: String, value: String): String = {
+    val escaped = batDoubleQuoteEscape(value)
+    if (value.exists(batSpecial)) "set \"" + name + "=" + escaped + "\"\r\n"
+    else s"set $name=$escaped\r\n"
   }
 
   private lazy val batJarTemplate: String =

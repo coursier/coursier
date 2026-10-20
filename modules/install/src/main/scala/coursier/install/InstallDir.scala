@@ -404,14 +404,19 @@ import scala.util.matching.Regex
                     kind = Preamble.Kind.Sh,
                     // FIXME needs directory
                     command = Some(
-                      """$(cd "$(dirname "$0")"; pwd)/""" + auxName(dest0.getFileName.toString, "")
+                      """$(cd "$(dirname "$0")"; pwd)/""" +
+                        Preamble.shDoubleQuoteEscape(auxName(dest0.getFileName.toString, ""))
                     )
                   )
               else {
                 assert(launcherIsElsewhere)
+                val path = actualLauncher.toAbsolutePath.toString
                 basePreamble.copy(
                   kind = if (isWin) Preamble.Kind.Bat else Preamble.Kind.Sh,
-                  command = Some(actualLauncher.toAbsolutePath.toString)
+                  command = Some(
+                    if (isWin) Preamble.batDoubleQuoteEscape(path)
+                    else Preamble.shDoubleQuoteEscape(path)
+                  )
                 )
               }
             writing(tmpDest, verbosity, Some(currentTime)) {
