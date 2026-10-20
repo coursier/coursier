@@ -139,14 +139,15 @@ object UnArchiver {
           case ArchiveType.Zip =>
             Right {
               new ZipUnArchiver with CheckSymbolicLinks with LimitExtraction
-                with LimitZipSymbolicLinks {
+                with LimitZipSymbolicLinks with MaskPermissions {
                 def checker = linkChecker
                 def limits  = limits0
               }
             }
           case ArchiveType.Ar =>
             val unArc: org.codehaus.plexus.archiver.UnArchiver =
-              new org.codehaus.plexus.archiver.AbstractUnArchiver with LimitExtraction {
+              new org.codehaus.plexus.archiver.AbstractUnArchiver with LimitExtraction
+                with MaskPermissions {
                 def limits = limits0
                 def fileInfo(entry: ArArchiveEntry): PlexusIoResource =
                   new PlexusIoResource {
@@ -208,35 +209,39 @@ object UnArchiver {
             Right(unArc)
           case ArchiveType.Tar =>
             Right {
-              new TarUnArchiver with CheckSymbolicLinks with LimitExtraction {
+              new TarUnArchiver with CheckSymbolicLinks with LimitExtraction with MaskPermissions {
                 def checker = linkChecker
                 def limits  = limits0
               }
             }
           case ArchiveType.Tgz =>
             Right {
-              new TarGZipUnArchiver with CheckSymbolicLinks with LimitExtraction {
+              new TarGZipUnArchiver with CheckSymbolicLinks with LimitExtraction
+                with MaskPermissions {
                 def checker = linkChecker
                 def limits  = limits0
               }
             }
           case ArchiveType.Tbz2 =>
             Right {
-              new TarBZip2UnArchiver with CheckSymbolicLinks with LimitExtraction {
+              new TarBZip2UnArchiver with CheckSymbolicLinks with LimitExtraction
+                with MaskPermissions {
                 def checker = linkChecker
                 def limits  = limits0
               }
             }
           case ArchiveType.Txz =>
             Right {
-              new TarXZUnArchiver with CheckSymbolicLinks with LimitExtraction {
+              new TarXZUnArchiver with CheckSymbolicLinks with LimitExtraction
+                with MaskPermissions {
                 def checker = linkChecker
                 def limits  = limits0
               }
             }
           case ArchiveType.Tzst =>
             Right {
-              new TarZstdUnArchiver with CheckSymbolicLinks with LimitExtraction {
+              new TarZstdUnArchiver with CheckSymbolicLinks with LimitExtraction
+                with MaskPermissions {
                 def checker = linkChecker
                 def limits  = limits0
               }
@@ -473,6 +478,39 @@ object UnArchiver {
     }
   }
 
+  /** Mixed into plexus unarchivers, to mask the permissions of the files they extract
+    *
+    * plexus-archiver applies the permissions of archive entries as is, ignoring the umask, so that
+    * archives can create group or world-writable files (like a JVM's `bin/java`), that other local
+    * users could modify. The JVM can't read the umask, so this drops the group and other write
+    * bits, like a `022` umask does, and keeps the execution bits. setuid / setgid / sticky bits are
+    * dropped too (plexus-archiver can't set them anyway).
+    */
+  private trait MaskPermissions extends AbstractUnArchiver {
+    override protected def extractFile(
+      srcF: File,
+      dir: File,
+      compressedInputStream: InputStream,
+      entryName: String,
+      entryDate: Date,
+      isDirectory: Boolean,
+      mode: Integer,
+      symlinkDestination: String,
+      fileMappers: Array[FileMapper]
+    ): Unit =
+      super.extractFile(
+        srcF,
+        dir,
+        compressedInputStream,
+        entryName,
+        entryDate,
+        isDirectory,
+        Option(mode).map(m => (m & UnArchiver.permissionMask): Integer).orNull,
+        symlinkDestination,
+        fileMappers
+      )
+  }
+
   /** Mixed into plexus unarchivers, to check the symbolic links they extract
     *
     * plexus-archiver checks that archive entries aren't written outside of the extraction
@@ -684,6 +722,9 @@ object UnArchiver {
     */
   def defaultMaxEntries: Long =
     ArchiveLimits.maxEntries
+
+  /** Permission bits kept from archive entries: `rwxr-xr-x` */
+  private def permissionMask: Int = Integer.parseInt("755", 8)
 
   def default(): UnArchiver with OpenStream =
     new DefaultUnArchiver(defaultMaxSize, defaultMaxEntries)
