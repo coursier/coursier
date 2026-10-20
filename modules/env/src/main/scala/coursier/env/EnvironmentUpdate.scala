@@ -40,37 +40,42 @@ import scala.collection.mutable
       upfront = true
     )
 
-  def bashScript: String = {
-    val q = "\""
-    bashScriptUpdates
+  // values are escaped before the references to former values are added, so that the latter
+  // still get expanded
+  private def escapedUpdates(
+    escape: (String, String) => String,
+    reference: String => String,
+    pathSeparator: String
+  ): Seq[(String, String)] =
+    EnvironmentUpdate(
+      set.map { case (k, v) => k -> escape(k, v) },
+      pathLikeAppends.map { case (k, v) => k -> escape(k, v) }
+    ).updatedEnv(k => Some(reference(k)), pathSeparator, upfront = true)
+
+  def bashScript: String =
+    escapedUpdates(ShellQuoting.posix, k => s"$$$k", ":")
       .map {
         case (k, v) =>
-          // FIXME Escape more?
-          s"export $k=$q${v.replace(q, "\\" + q)}$q"
+          s"""export $k="$v""""
       }
       .mkString("\n")
-  }
 
-  def fishScript: String = {
-    val q = "\""
-    bashScriptUpdates
+  def fishScript: String =
+    escapedUpdates(ShellQuoting.fish, k => s"$$$k", ":")
       .map {
         case (k, v) =>
-          s"""set -x $k "${v.replace(q, "\\" + q)}""""
+          s"""set -x $k "$v""""
       }
       .mkString("\n")
-  }
 
-  def batScript: String = {
-    val q = "\""
-    batScriptUpdates
+  def batScript: String =
+    escapedUpdates(ShellQuoting.bat, k => s"%$k%", ";")
       .map {
         case (k, v) =>
-          // FIXME Correct way of escaping in bat scripts? Escape more?
-          s"set $q$k=${v.replace(q, "\\" + q)}$q"
+          // FIXME '%' in values still gets expanded
+          s"""set "$k=$v""""
       }
       .mkString("\r\n")
-  }
 
   // puts the "path-like appends" upfront, better not to persist these updates
   def transientUpdates(): Seq[(String, String)] =

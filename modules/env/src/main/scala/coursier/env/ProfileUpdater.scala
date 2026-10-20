@@ -160,7 +160,7 @@ import dataclass.data
           .set
           .map {
             case (k, v) =>
-              s"""set -gx $k "${v.replace("\"", "\\\"")}"""" + "\n"
+              s"""set -gx $k "${ShellQuoting.fish(k, v)}"""" + "\n"
           }
           .mkString
 
@@ -168,7 +168,7 @@ import dataclass.data
           .pathLikeAppends
           .map {
             case (k, v) =>
-              s"""set -gx $k "$$$k$pathSeparator${v.replace("\"", "\\\"")}"""" + "\n"
+              s"""set -gx $k "$$$k$pathSeparator${ShellQuoting.fish(k, v)}"""" + "\n"
           }
           .mkString
 
@@ -179,8 +179,7 @@ import dataclass.data
           .set
           .map {
             case (k, v) =>
-              // FIXME Needs more escaping?
-              s"""export $k="${v.replace("\"", "\\\"")}"""" + "\n"
+              s"""export $k="${ShellQuoting.posix(k, v)}"""" + "\n"
           }
           .mkString
 
@@ -188,8 +187,7 @@ import dataclass.data
           .pathLikeAppends
           .map {
             case (k, v) =>
-              // FIXME Needs more escaping?
-              s"""export $k="$$$k$pathSeparator${v.replace("\"", "\\\"")}"""" + "\n"
+              s"""export $k="$$$k$pathSeparator${ShellQuoting.posix(k, v)}"""" + "\n"
           }
           .mkString
 

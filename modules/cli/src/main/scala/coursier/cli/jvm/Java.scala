@@ -151,7 +151,15 @@ object Java extends CoursierCommand[JavaOptions] {
           if (params.env.windowsScript)
             coursier.jvm.JavaHome.finalBatScript(envUpdate)
           else if (params.env.windowsPosixScript)
-            coursier.jvm.JavaHome.finalBashScript(envUpdate).replace('\\', '/')
+            // replacing backslashes in values only, so that the escaping of the script is left intact
+            coursier.jvm.JavaHome.finalBashScript(
+              envUpdate.copy(
+                set = envUpdate.set.map { case (k, v) => k -> v.replace('\\', '/') },
+                pathLikeAppends = envUpdate.pathLikeAppends.map { case (k, v) =>
+                  k -> v.replace('\\', '/')
+                }
+              )
+            )
           else
             ShellUtil.shell() match {
               case Some(Shell.Fish) => coursier.jvm.JavaHome.finalFishScript(envUpdate)
