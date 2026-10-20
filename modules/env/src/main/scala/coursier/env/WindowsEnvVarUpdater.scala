@@ -160,17 +160,23 @@ import scala.jdk.CollectionConverters._
 
 object WindowsEnvVarUpdater {
 
-  private def getEnvVarScript(name: String): String =
-    s"""[Environment]::GetEnvironmentVariable("$name", "User")
+  // single-quoted literals, as PowerShell expands variables and $(…) in double-quoted strings
+  private[env] def getEnvVarScript(name: String): String = {
+    val name0 = ShellQuoting.powershellLiteral(name)
+    s"""[Environment]::GetEnvironmentVariable($name0, "User")
        |""".stripMargin
-  private def setEnvVarScript(name: String, value: String): String =
-    // FIXME value might need some escaping here
-    s"""[Environment]::SetEnvironmentVariable("$name", "$value", "User")
+  }
+  private[env] def setEnvVarScript(name: String, value: String): String = {
+    val name0  = ShellQuoting.powershellLiteral(name)
+    val value0 = ShellQuoting.powershellLiteral(value)
+    s"""[Environment]::SetEnvironmentVariable($name0, $value0, "User")
        |""".stripMargin
-  private def clearEnvVarScript(name: String): String =
-    // FIXME value might need some escaping here
-    s"""[Environment]::SetEnvironmentVariable("$name", $$null, "User")
+  }
+  private[env] def clearEnvVarScript(name: String): String = {
+    val name0 = ShellQuoting.powershellLiteral(name)
+    s"""[Environment]::SetEnvironmentVariable($name0, $$null, "User")
        |""".stripMargin
+  }
 
   private def windowsPathSeparator: String =
     ";"

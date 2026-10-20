@@ -402,6 +402,91 @@ object ProfileUpdaterTests extends TestSuite {
       assert(exportPathIndices.length == 1)
     }
 
+    test("escape special characters in ~/.profile") {
+      for (value <- ShellEval.nastyValues) {
+        val fs   = Jimfs.newFileSystem(Configuration.unix())
+        val home = fs.getPath("/home/alex")
+        val updater = ProfileUpdater()
+          .copy(
+            home = Some(home),
+            getEnv = Some(_ => None),
+            charset = StandardCharsets.UTF_8,
+            pathSeparator = ":"
+          )
+
+        val update = EnvironmentUpdate().copy(
+          set = Seq("JAVA_HOME" -> value),
+          pathLikeAppends = Seq("PATH" -> s"$value/bin")
+        )
+        updater.applyUpdate(update, "coursier")
+
+        val dotProfile =
+          new String(Files.readAllBytes(home.resolve(".profile")), StandardCharsets.UTF_8)
+
+        for (shell <- ShellEval.shells) {
+          val (javaHome, createdJavaHome) = ShellEval.eval(shell, dotProfile, "JAVA_HOME")
+          assert(javaHome == value)
+          assert(createdJavaHome.isEmpty)
+          val (path, createdPath) =
+            ShellEval.eval(shell, dotProfile, "PATH", Map("PATH" -> "/usr/bin:/bin"))
+          assert(path == s"/usr/bin:/bin:$value/bin")
+          assert(createdPath.isEmpty)
+        }
+
+        // reverting needs to find the escaped content
+        assert(updater.tryRevertUpdate("coursier"))
+        val newDotProfile =
+          new String(Files.readAllBytes(home.resolve(".profile")), StandardCharsets.UTF_8)
+        assert(newDotProfile.isEmpty)
+      }
+    }
+
+    test("escape special characters in fish config") {
+      val fs   = Jimfs.newFileSystem(Configuration.unix())
+      val home = fs.getPath("/home/alex")
+      val updater = ProfileUpdater()
+        .copy(
+          home = Some(home),
+          getEnv = Some(Map("SHELL" -> "/bin/fish").get),
+          charset = StandardCharsets.UTF_8,
+          pathSeparator = ":"
+        )
+
+      val update = EnvironmentUpdate().copy(
+        set = Seq("JAVA_HOME" -> "/a\\b\"c$(d)`e`"),
+        pathLikeAppends = Seq("PATH" -> "/a$(b)/bin")
+      )
+      updater.applyUpdate(update)
+
+      val expectedInFishConfig =
+        """
+          |set -gx JAVA_HOME "/a\\b\"c\$(d)`e`"
+          |set -gx PATH "$PATH:/a\$(b)/bin"
+          |""".stripMargin
+      val fishConfig =
+        new String(
+          Files.readAllBytes(home.resolve(".config/fish/config.fish")),
+          StandardCharsets.UTF_8
+        )
+      assert(fishConfig.contains(expectedInFishConfig))
+    }
+
+    test("reject new lines") {
+      val fs   = Jimfs.newFileSystem(Configuration.unix())
+      val home = fs.getPath("/home/alex")
+      val updater = ProfileUpdater()
+        .copy(
+          home = Some(home),
+          getEnv = Some(_ => None),
+          charset = StandardCharsets.UTF_8,
+          pathSeparator = ":"
+        )
+
+      val update = EnvironmentUpdate().copy(set = Seq("JAVA_HOME" -> "/jvm/jdk\ntouch pwned"))
+      assertThrows[IllegalArgumentException](updater.applyUpdate(update))
+      assert(!Files.exists(home.resolve(".profile")))
+    }
+
     test("leave previous content intact") {
       val fs   = Jimfs.newFileSystem(Configuration.unix())
       val home = fs.getPath("/home/alex")
