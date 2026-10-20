@@ -4,6 +4,7 @@ import coursier.cache.TestUtil._
 import coursier.util.{Artifact, Task}
 import org.apache.commons.compress.archivers.tar.{TarArchiveEntry, TarArchiveOutputStream}
 import org.apache.commons.compress.archivers.zip.{ZipArchiveEntry, ZipArchiveOutputStream}
+import org.codehaus.plexus.components.io.attributes.AttributeUtils
 import utest._
 
 import java.nio.charset.StandardCharsets
@@ -29,18 +30,17 @@ object ArchiveCachePermissionsTests extends TestSuite {
     "group-write" -> "664"
   )
 
-  // what extracted files are expected to end up with
-  private val expected = Map(
-    "rwx-all"     -> "rwxr-xr-x",
-    "rw-all"      -> "rw-r--r--",
-    "setuid"      -> "rwxr-xr-x",
-    "setgid"      -> "rwxr-xr-x",
-    "sticky"      -> "rwxr-xr-x",
-    "bin/java"    -> "rwxr-xr-x",
-    "regular"     -> "rw-r--r--",
-    "owner-only"  -> "rwx------",
-    "group-write" -> "rw-r--r--"
-  )
+  // read independently of coursier.exec.Umask, which the archive cache relies on
+  private lazy val umask = octal(os.proc("sh", "-c", "umask").call().out.trim())
+
+  // what extracted files are expected to end up with: no setuid / setgid / sticky bits, and the
+  // umask applied
+  private def expected: Map[String, String] =
+    entries.map {
+      case (name, mode) =>
+        val perms = octal(mode) & octal("777") & ~umask
+        name -> PosixFilePermissions.toString(AttributeUtils.getPermissions(perms))
+    }.toMap
 
   private def content(name: String): Array[Byte] =
     s"content of $name".getBytes(StandardCharsets.UTF_8)
@@ -87,6 +87,9 @@ object ArchiveCachePermissionsTests extends TestSuite {
           name -> PosixFilePermissions.toString(Files.getPosixFilePermissions(f.toNIO))
       }.toMap
       assert(perms == expected)
+      // with the common 022 umask, nothing is group or world-writable
+      if (umask == octal("022"))
+        assert(perms.values.forall(p => p(4) != 'w' && p(7) != 'w'))
     }
 
   val tests =

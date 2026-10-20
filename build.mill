@@ -590,7 +590,8 @@ trait CacheJs extends Cache with CsScalaJsModule with Scala3DataClassModule {
 
 trait ArchiveCache extends ArchiveCacheBase with DataClassModule {
   def moduleDeps = Seq(
-    cache.jvm()
+    cache.jvm(),
+    exec // to read the umask
   )
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.plexusArchiver,
