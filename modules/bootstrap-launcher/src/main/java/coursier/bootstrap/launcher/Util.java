@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.charset.StandardCharsets;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
@@ -84,7 +86,15 @@ class Util {
         BufferedOutputStream bos = null;
 
         try {
-            OutputStream fos = Files.newOutputStream(file.toPath());
+            // not following symbolic links, file being in the cache, possibly writable by others
+            coursier.paths.Util.deleteIfSymbolicLink(file.toPath());
+            OutputStream fos = Files.newOutputStream(
+                file.toPath(),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING,
+                StandardOpenOption.WRITE,
+                LinkOption.NOFOLLOW_LINKS
+            );
             bos = new BufferedOutputStream(fos);
             bos.write(bytes);
         } finally {

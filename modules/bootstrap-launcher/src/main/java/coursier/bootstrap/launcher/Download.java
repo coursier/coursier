@@ -1,18 +1,20 @@
 package coursier.bootstrap.launcher;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collections;
@@ -171,15 +173,24 @@ class Download {
                 while (!dest.exists() && retry) {
                     retry = false;
 
-                    try (FileOutputStream out = CachePath.withStructureLock(cacheDir, () -> {
+                    try (FileChannel out = CachePath.withStructureLock(cacheDir, () -> {
                         coursier.paths.Util.createDirectories(tmpDest.toPath().getParent());
                         coursier.paths.Util.createDirectories(lockFile.toPath().getParent());
                         coursier.paths.Util.createDirectories(dest.toPath().getParent());
 
-                        return new FileOutputStream(lockFile);
+                        // not following symbolic links, so that a link planted here by someone
+                        // else having write access to the cache can't make us create or open
+                        // another file
+                        coursier.paths.Util.deleteIfSymbolicLink(lockFile.toPath());
+                        return FileChannel.open(
+                            lockFile.toPath(),
+                            StandardOpenOption.CREATE,
+                            StandardOpenOption.WRITE,
+                            LinkOption.NOFOLLOW_LINKS
+                        );
                     })) {
 
-                        try (FileLock lock = out.getChannel().tryLock()) {
+                        try (FileLock lock = out.tryLock()) {
                             if (lock == null) {
                                 if (!warnedConcurrentDownload) {
                                     System.err.println("Waiting for ongoing concurrent download for " + url);

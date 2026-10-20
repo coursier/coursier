@@ -2,7 +2,7 @@ package coursier.cache
 
 import java.io.{File, IOException}
 import java.nio.channels.{FileChannel, FileLock, OverlappingFileLockException}
-import java.nio.file.{AccessDeniedException, Files, Path, StandardOpenOption}
+import java.nio.file.{AccessDeniedException, Files, LinkOption, Path, StandardOpenOption}
 import java.util.concurrent.{Callable, ConcurrentHashMap}
 
 import coursier.cache.internal.Retry
@@ -54,10 +54,14 @@ object CacheLocks {
     withStructureLock(cache) {
       Util.createDirectories(lockFile.getParent)
       channel = retry.retry {
+        // not following symbolic links, so that a link planted here by someone else having
+        // write access to the cache can't make us create or open another file
+        Util.deleteIfSymbolicLink(lockFile)
         FileChannel.open(
           lockFile,
           StandardOpenOption.CREATE,
-          StandardOpenOption.WRITE
+          StandardOpenOption.WRITE,
+          LinkOption.NOFOLLOW_LINKS
         )
       } {
         case _: AccessDeniedException if Properties.isWin =>

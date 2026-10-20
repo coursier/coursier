@@ -1,8 +1,34 @@
 package coursier.cache.internal
 
-import java.io.{ByteArrayOutputStream, InputStream}
+import java.io.{ByteArrayOutputStream, InputStream, OutputStream}
+import java.nio.file.{Files, LinkOption, Path, StandardOpenOption}
+
+import coursier.paths.Util
 
 object FileUtil {
+
+  /** Opens `path` for writing, replacing a symbolic link there rather than following it
+    *
+    * So that a link planted in the cache by someone else having write access to it can't make us
+    * write to another file.
+    */
+  def newOutputStreamNoFollow(path: Path, append: Boolean = false): OutputStream = {
+    Util.deleteIfSymbolicLink(path)
+    Files.newOutputStream(
+      path,
+      StandardOpenOption.CREATE,
+      StandardOpenOption.WRITE,
+      if (append) StandardOpenOption.APPEND else StandardOpenOption.TRUNCATE_EXISTING,
+      LinkOption.NOFOLLOW_LINKS
+    )
+  }
+
+  /** Writes `content` to `path`, replacing a symbolic link there rather than following it */
+  def writeNoFollow(path: Path, content: Array[Byte]): Unit = {
+    val os = newOutputStreamNoFollow(path)
+    try os.write(content)
+    finally os.close()
+  }
 
   // Won't be necessary anymore with Java 9
   // (https://docs.oracle.com/javase/9/docs/api/java/io/InputStream.html#readAllBytes--,

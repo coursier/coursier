@@ -7,6 +7,7 @@ import java.nio.file.{Files, Path, Paths, StandardCopyOption}
 import java.security.MessageDigest
 
 import coursier.cache.CacheLocks
+import coursier.cache.internal.FileUtil
 import coursier.core.{Classifier, Dependency, Repository, Type}
 import coursier.params.ResolutionParams
 import coursier.paths.CachePath
@@ -49,7 +50,7 @@ import dataclass.data
     val tmpFile     = CachePath.temporaryFile(resultFile0.toFile).toPath
 
     def doWrite(): Unit = {
-      Files.write(
+      FileUtil.writeNoFollow(
         tmpFile,
         artifacts.map(_.getAbsolutePath).mkString("\n").getBytes(StandardCharsets.UTF_8)
       )

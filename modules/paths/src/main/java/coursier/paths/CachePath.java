@@ -2,7 +2,6 @@ package coursier.paths;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -10,6 +9,8 @@ import java.net.URISyntaxException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
+import java.nio.file.FileSystemException;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -185,19 +186,29 @@ public class CachePath {
         synchronized (intraProcessLock) {
             File lockFile = new File(cache, ".structure.lock");
             Util.createDirectories(lockFile.toPath().getParent());
-            FileOutputStream out = null;
+            FileChannel out = null;
 
             try {
                 try {
-                    out = new FileOutputStream(lockFile);
-                } catch (FileNotFoundException ex) {
+                    // not following symbolic links, so that a link planted here can't make us
+                    // create or open another file
+                    Util.deleteIfSymbolicLink(lockFile.toPath());
+                    out = FileChannel.open(
+                            lockFile.toPath(),
+                            StandardOpenOption.CREATE,
+                            StandardOpenOption.WRITE,
+                            LinkOption.NOFOLLOW_LINKS
+                    );
+                } catch (FileSystemException ex) {
+                    // what the former FileOutputStream-based implementation got as
+                    // FileNotFoundException
                     throw throwExceptions ? ex : new StructureLockException(ex);
                 }
 
                 FileLock lock = null;
                 try {
                     try {
-                        lock = out.getChannel().lock();
+                        lock = out.lock();
                     } catch (FileNotFoundException ex) {
                         throw throwExceptions ? ex : new StructureLockException(ex);
                     } catch (OverlappingFileLockException ex) {
@@ -257,11 +268,15 @@ public class CachePath {
             try {
 
                 try {
+                    // not following symbolic links, so that a link planted here can't make us
+                    // create, open, or delete another file
+                    Util.deleteIfSymbolicLink(lockFile);
                     channel = FileChannel.open(
                             lockFile,
                             StandardOpenOption.CREATE,
                             StandardOpenOption.WRITE,
-                            StandardOpenOption.DELETE_ON_CLOSE
+                            StandardOpenOption.DELETE_ON_CLOSE,
+                            LinkOption.NOFOLLOW_LINKS
                     );
                 } catch (FileNotFoundException ex) {
                     throw throwExceptions ? ex : new StructureLockException(ex);
