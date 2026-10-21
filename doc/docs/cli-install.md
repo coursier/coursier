@@ -106,6 +106,23 @@ val res1: String = 123
 …
 ```
 
+## Checksums
+
+Pass `--validate-checksums` to `install` so that the JVM launchers it generates
+record the SHA-256 of the JARs they download at run time, and check these JARs
+before using them, whether they're already in the coursier cache or freshly downloaded:
+```bash
+$ cs install scalafmt --validate-checksums
+```
+See the [`bootstrap` documentation](cli-bootstrap.md#checksums) for more details.
+
+`update` and [`setup`](cli-installation.md#application-checksums) accept that option too.
+`update` doesn't remember that an application was installed with it: pass it again
+when updating, like
+```bash
+$ cs update --validate-checksums
+```
+
 ## Search
 
 Search for the application you are looking for with `cs search`:

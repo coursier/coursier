@@ -352,6 +352,17 @@ $ tmp-install/scala-cli repl
 …
 ```
 
+#### Application checksums
+
+Pass `--validate-checksums` to have the JVM launchers of the installed applications check
+the JARs they download against the SHA-256 recorded when they were installed:
+
+```bash
+$ cs setup --validate-checksums
+```
+
+See the [`install` documentation](cli-install.md#checksums) for more details.
+
 #### Profile files directory
 
 Pass a custom directory that contains `.profile` / `.bash_profile` / `.zprofile` files with:
