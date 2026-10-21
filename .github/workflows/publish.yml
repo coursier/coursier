@@ -40,14 +40,28 @@ jobs:
           else
             echo "PUBLISH_ARTIFACTS=__:PublishModule:^LocalOnlyPublishModule.publishArtifacts" >> "$GITHUB_ENV"
           fi
+      # Write the files to publish to out/staged-repository, then publish these rather than
+      # publishArtifacts below: our JARs aren't reproducible, so this makes sure the attested
+      # files are the published ones
+      - name: Stage artifacts to publish
+        run: |
+          ./mill -i ci.stageAll --publishArtifacts "$PUBLISH_ARTIFACTS"
+          echo "STAGED_ARTIFACTS=${PUBLISH_ARTIFACTS%.publishArtifacts}.stagedPublishArtifacts" >> "$GITHUB_ENV"
+      # Like the launchers, only releases get attested (needs the 'id-token: write' and
+      # 'attestations: write' permissions, granted by the 'publish' job in ci.yml). Check with
+      # 'gh attestation verify coursier_2.13-X.Y.Z.jar --repo coursier/coursier'.
+      - uses: actions/attest-build-provenance@v4
+        if: startsWith(github.ref, 'refs/tags/v')
+        with:
+          subject-path: out/staged-repository/**
       - name: Publish to Sonatype Central
         run: |
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             # --shouldRelease false: the bundle is uploaded and validated on Sonatype Central, but has
             # to be published manually from https://central.sonatype.com/publishing/deployments
-            ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --publishArtifacts "$PUBLISH_ARTIFACTS" --bundleName "coursier-${GITHUB_REF#refs/tags/v}" --shouldRelease false
+            ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --publishArtifacts "$STAGED_ARTIFACTS" --bundleName "coursier-${GITHUB_REF#refs/tags/v}" --shouldRelease false
           else
-            ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --publishArtifacts "$PUBLISH_ARTIFACTS"
+            ./mill -i mill.scalalib.SonatypeCentralPublishModule/ --publishArtifacts "$STAGED_ARTIFACTS"
           fi
         env:
           MILL_PGP_SECRET_BASE64: ${{ secrets.PUBLISH_SECRET_KEY }}
@@ -62,7 +76,7 @@ jobs:
         continue-on-error: true
         run: |
           ./mill -i mill.javalib.MavenPublishModule/publishAll \
-            --publishArtifacts "$PUBLISH_ARTIFACTS" \
+            --publishArtifacts "$STAGED_ARTIFACTS" \
             --releaseUri "https://maven.pkg.github.com/$GITHUB_REPOSITORY" \
             --snapshotUri "https://maven.pkg.github.com/$GITHUB_REPOSITORY"
         env:

@@ -2105,6 +2105,38 @@ object ci extends Module {
     }
   }
 
+  /** Writes the files of `publishArtifacts` to `CoursierPublishModule.stagedRepository`, laid out
+    * like a Maven repository, as they are (no signatures, checksums, or metadata)
+    *
+    * Our JARs aren't reproducible (Mill stamps their entries with the files' last modified times),
+    * so the publish workflow attests the staged files, then publishes these very files, via the
+    * `stagedPublishArtifacts` tasks of the modules. Typically run with the same
+    * `--publishArtifacts` as the publish command would get otherwise.
+    *
+    * Stopgap for `mill.javalib.PublishModule/stageAll`, which does the same, until a Mill release
+    * has it. `SonatypeCentralPublishModule/publishStaged` and `MavenPublishModule/publishStaged`
+    * then replace the `stagedPublishArtifacts` tasks.
+    */
+  def stageAll(publishArtifacts: Tasks[PublishModule.PublishData]) = Task.Command[PathRef] {
+    val dest      = CoursierPublishModule.stagedRepository
+    val artifacts = Task.sequence(publishArtifacts.value)()
+    val duplicates = artifacts.groupBy(_.meta).collect {
+      case (artifact, data) if data.length > 1 => artifact
+    }
+    if (duplicates.nonEmpty)
+      Task.fail(s"Found several modules publishing ${duplicates.mkString(", ")}")
+    os.remove.all(dest)
+    for (data <- artifacts; (file, name) <- data.payload) {
+      val target = dest / data.meta.group.split('.') / data.meta.id / data.meta.version / name
+      os.copy(file.path, target, createFolders = true)
+    }
+    val count = artifacts.map(_.payload.length).sum
+    if (count == 0)
+      Task.fail("No files to publish")
+    Task.log.info(s"Staged $count files of ${artifacts.length} artifacts in $dest")
+    PathRef(dest)
+  }
+
   def noEmptyDiscoveredTestClasses(tasks: Tasks[Seq[String]]) = Task.Command[Unit] {
     assert(tasks.value.nonEmpty)
     val results       = tasks.value.zip(Task.sequence(tasks.value)())
