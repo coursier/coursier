@@ -124,6 +124,18 @@ object Launchers {
       os.copy.over(libPath, destDir / "csjniutils.lib")
     }
 
+    // The pinned and checked GraalVM rather than an unchecked one from the JVM index, unless
+    // GRAALVM_HOME is set. Docker builds mount it too, rather than fetching one in the container.
+    // PathRef reads the home too, and on Windows CI GRAALVM_HOME points within the workspace
+    def nativeImageGraalvmHome = Task {
+      val envHome = Task.env.get("GRAALVM_HOME")
+      BuildCtx.withFilesystemCheckerDisabled {
+        val home = envHome.map(os.Path(_)).getOrElse(GraalVm.javaHome())
+        PathRef(home, quick = true)
+      }
+    }
+    def nativeImageDockerMountGraalvmHome = true
+
     protected def staticLibDirName = "native-libs"
 
     def staticLibDir = Task {
@@ -365,17 +377,9 @@ object Launchers {
     def runWithAssistedConfig(args: String*) = Task.Command {
       val cp = jarClassPath().map(_.path.toString)
         .mkString(File.pathSeparator)
-      val mainClass0 = mainClass().getOrElse(sys.error("No main class"))
-      val graalVmHome = Option(System.getenv("GRAALVM_HOME")).getOrElse {
-        import coursier.jvm.{JavaHome, JvmCache}
-        val jvmCache = JvmCache()
-        JavaHome()
-          .withCache(jvmCache)
-          .get(`base-image`.nativeImageGraalVmJvmId())
-          .unsafeRun()(using jvmCache.archiveCache.cache.ec)
-          .getAbsolutePath
-      }
-      val outputDir = Task.dest / "config"
+      val mainClass0  = mainClass().getOrElse(sys.error("No main class"))
+      val graalVmHome = `base-image`.nativeImageGraalvmHome().path
+      val outputDir   = Task.dest / "config"
       val command = Seq(
         s"$graalVmHome/bin/java",
         s"-agentlib:native-image-agent=config-output-dir=$outputDir",
