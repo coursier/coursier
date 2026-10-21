@@ -7,8 +7,13 @@ import utest._
 
 object CsLookupTests extends TestSuite {
 
-  private def withTmpDir[T](f: Path => T): T = {
-    val dir = Files.createTempDirectory("cs-lookup-tests")
+  private def withTmpDir[T](f: Path => T): T =
+    withTmpDir(null: Path)(f)
+
+  private def withTmpDir[T](parent: Path)(f: Path => T): T = {
+    val dir =
+      if (parent == null) Files.createTempDirectory("cs-lookup-tests")
+      else Files.createTempDirectory(parent, "cs-lookup-tests")
     try f(dir)
     finally
       Files.walk(dir)
@@ -38,12 +43,14 @@ object CsLookupTests extends TestSuite {
     }
 
     test("skip relative and empty entries") {
-      withTmpDir { tmp =>
+      // under the working directory, so that it can be relativized against it
+      // (the temporary directory can be on another drive on Windows)
+      val cwd = new File(".").getCanonicalFile.toPath
+      withTmpDir(cwd) { tmp =>
         executable(tmp, "cs")
         val bin = tmp.resolve("bin")
         val cs  = executable(bin, "cs")
         // relative entries pointing at a directory that contains a cs file
-        val cwd    = new File(".").getCanonicalFile.toPath
         val relTmp = cwd.relativize(tmp).toString
         val res =
           Config.findInPath("cs", pathOf("", ".", relTmp, bin.toString), null, false)
