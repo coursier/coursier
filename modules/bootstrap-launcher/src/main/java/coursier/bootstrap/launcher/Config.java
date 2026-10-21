@@ -21,41 +21,55 @@ import java.util.Arrays;
 
 public final class Config {
 
-    private static String csInWindowsPath = null;
+    private static String csPath = null;
 
     private static boolean isWindows = System.getProperty("os.name")
         .toLowerCase(java.util.Locale.ROOT)
         .contains("windows");
 
-    private static String csCommand() {
-        if (isWindows) {
-            if (csInWindowsPath == null) {
-
-                String rawExts = System.getenv("PATHEXT");
-                String[] exts = rawExts == null ? new String[] {} : rawExts.split(File.pathSeparator);
-
-                String rawPath = System.getenv("PATH");
-                String[] paths = rawPath == null ? new String[] {} : rawPath.split(File.pathSeparator);
-
-                for (String path : paths) {
-                    File p = new File(path);
-                    for (String ext : exts) {
-                        File candidate = new File(p, "cs" + ext);
-                        if (candidate.canExecute()) {
-                            csInWindowsPath = candidate.getAbsolutePath();
-                            break;
-                        }
-                    }
-                    if (csInWindowsPath != null)
-                        break;
-                }
-            }
-            if (csInWindowsPath == null)
-                csInWindowsPath = "cs";
-            return csInWindowsPath;
+    /**
+     * Looks for an executable named {@code name} in the entries of {@code rawPath}.
+     *
+     * Relative and empty entries are ignored, so that the lookup never depends on the
+     * current directory. On Windows, the extensions of {@code rawPathExt} are tried.
+     *
+     * @return the absolute path of the executable, or null if it can't be found
+     */
+    static String findInPath(String name, String rawPath, String rawPathExt, boolean windows) {
+        String[] exts;
+        if (windows) {
+            exts = rawPathExt == null ? new String[] {} : rawPathExt.split(File.pathSeparator);
         } else {
-            return "cs";
+            exts = new String[] {""};
         }
+
+        String[] paths = rawPath == null ? new String[] {} : rawPath.split(File.pathSeparator);
+
+        for (String path : paths) {
+            if (path.isEmpty())
+                continue;
+            File p = new File(path);
+            if (!p.isAbsolute())
+                continue;
+            for (String ext : exts) {
+                if (windows && ext.isEmpty())
+                    continue;
+                File candidate = new File(p, name + ext);
+                if (candidate.isFile() && candidate.canExecute())
+                    return candidate.getAbsolutePath();
+            }
+        }
+
+        return null;
+    }
+
+    private static String csCommand() throws IOException {
+        if (csPath == null) {
+            csPath = findInPath("cs", System.getenv("PATH"), System.getenv("PATHEXT"), isWindows);
+            if (csPath == null)
+                throw new IOException("cs command not found in PATH");
+        }
+        return csPath;
     }
 
     private static void printVersionMessage() {
