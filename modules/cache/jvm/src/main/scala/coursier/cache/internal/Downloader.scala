@@ -430,8 +430,13 @@ import scala.util.control.NonFatal
         else {
           val lenOpt = Option(conn.getContentLengthLong).filter(_ >= 0L)
           for (len0 <- lenOpt) {
-            val len = len0 + (if (partialDownload) alreadyDownloaded else 0L)
-            logger.downloadLength(url, len, alreadyDownloaded, watching = false)
+            val previouslyDownloaded = if (partialDownload) alreadyDownloaded else 0L
+            logger.downloadLength(
+              url,
+              len0 + previouslyDownloaded,
+              previouslyDownloaded,
+              watching = false
+            )
           }
 
           val auxiliaryData: Map[String, Array[Byte]] =
