@@ -1007,8 +1007,12 @@ object InstallTests extends TestSuite {
         val scala3path = {
           val original =
             "github.com/scala/scala3/releases/download/3.3.3/scala3-3.3.3.zip/scala3-3.3.3/bin/scala"
-          if (currentOs == "windows") original.replace('/', '\\')
-          else original
+          val path =
+            if (currentOs == "windows") original.replace('/', '\\')
+            else original
+          // sh launchers have the path between double quotes, with backslashes escaped
+          if (os == "windows") path
+          else Preamble.shDoubleQuoteEscape(path)
         }
 
         def testRun(expectedUrls: Seq[String], expectedProperties: Seq[String]): Unit = {
