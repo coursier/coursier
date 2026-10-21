@@ -65,6 +65,12 @@ object CacheEnv {
   /** Env var and Java prop names for HTTP request debugging */
   val httpDebug = EnvEntry("COURSIER_HTTP_DEBUG", "coursier.http.debug")
 
+  /** Env var and Java prop names for the checksum types to check
+    *
+    * A comma-separated list such as `SHA-256,SHA-1,none`, see [[parseChecksums]].
+    */
+  val checksums = EnvEntry("COURSIER_CHECKSUMS", "coursier.checksums")
+
   /** Env var and Java prop names for the cache policies */
   val cachePolicy = EnvEntry("COURSIER_MODE", "coursier.mode")
 
@@ -315,5 +321,42 @@ object CacheEnv {
     fromEnv
       .orElse(fromProps)
       .getOrElse(noEnvCachePolicies)
+  }
+
+  /** Parses a comma-separated list of checksum types, such as `SHA-256,SHA-1,none`
+    *
+    * Types are tried in order, and the first one available for an artifact is the one checked. A
+    * trailing `none` accepts artifacts that have none of the listed checksums - without it, a
+    * missing checksum is an error. Known names are normalized (`sha256` becomes `SHA-256`), so that
+    * they match the keys of `Artifact#checksumUrls`.
+    */
+  def parseChecksums(input: String): Seq[Option[String]] =
+    input
+      .split(',')
+      .toSeq
+      .map(_.trim)
+      .filter(_.nonEmpty)
+      .map { value =>
+        value.toLowerCase(java.util.Locale.ROOT).filter(_ != '-') match {
+          case "none"   => None
+          case "md5"    => Some("MD5")
+          case "sha1"   => Some("SHA-1")
+          case "sha256" => Some("SHA-256")
+          case "sha512" => Some("SHA-512")
+          case _        => Some(value)
+        }
+      }
+      .distinct
+
+  /** Computes the default checksum types from the passed env var and Java property */
+  def defaultChecksums(values: EnvValues): Seq[Option[String]] = {
+    val fromEnv   = values.env.map(parseChecksums).filter(_.nonEmpty)
+    def fromProps = values.prop.map(parseChecksums).filter(_.nonEmpty)
+    // Check SHA-1 if available, else be fine with no checksum
+    def default = Seq(Some("SHA-1"), None)
+
+    fromEnv
+      .orElse(fromProps)
+      .getOrElse(default)
   }
 }

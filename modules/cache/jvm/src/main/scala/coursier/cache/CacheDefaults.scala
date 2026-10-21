@@ -62,8 +62,14 @@ object CacheDefaults {
   lazy val ttl: Option[Duration] =
     CacheEnv.defaultTtl(CacheEnv.ttl.read())
 
-  // Check SHA-1 if available, else be fine with no checksum
-  val checksums = Seq(Some("SHA-1"), None)
+  /** Checksum types to check, in order of preference
+    *
+    * `Seq(Some("SHA-1"), None)` (check SHA-1 if available, else be fine with no checksum), unless
+    * the `COURSIER_CHECKSUMS` environment variable or the `coursier.checksums` Java property say
+    * otherwise, see [[CacheEnv.parseChecksums]].
+    */
+  lazy val checksums: Seq[Option[String]] =
+    CacheEnv.defaultChecksums(CacheEnv.checksums.read())
 
   def defaultRetryCount                       = 5
   private def defaultRetryBackoffInitialDelay = 10.milliseconds

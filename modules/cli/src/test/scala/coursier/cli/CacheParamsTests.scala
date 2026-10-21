@@ -114,6 +114,31 @@ object CacheParamsTests extends TestSuite {
       assert(help.contains(coursier.cache.CacheUrl.userAgent("Coursier", "cli")))
     }
 
+    test("--checksum is passed down to the cache") {
+      // "sha256" has to become "SHA-256", the key of Artifact#checksumUrls, or SHA-256
+      // checksums are never fetched, and a strict list rejects every artifact
+      val params0 = params(parse("--checksum", "sha256,SHA-1"))
+      assert(params0.checksum == Seq(Some("SHA-256"), Some("SHA-1")))
+
+      params0.cache(coursier.cache.CacheDefaults.pool, coursier.cache.CacheLogger.nop) match {
+        case fc: FileCache[Task] => assert(fc.checksums == Seq(Some("SHA-256"), Some("SHA-1")))
+        case other               => sys.error(s"Expected a FileCache, got $other")
+      }
+
+      assert(params(parse("--checksum", "SHA-256", "--checksum", "none")).checksum ==
+        Seq(Some("SHA-256"), None))
+    }
+
+    test("checksums default to the cache's") {
+      assert(params(parse()).checksum == coursier.cache.CacheDefaults.checksums)
+    }
+
+    test("--checksum is shown in the help") {
+      val help = Help[CacheOptions].help(HelpFormat.default())
+      assert(help.contains("--checksum"))
+      assert(help.contains("COURSIER_CHECKSUMS"))
+    }
+
     test("extra comment tokens land after the contact, in order") {
       assert(
         coursier.cache.CacheUrl.userAgent("Coursier", "ci", "json") ==

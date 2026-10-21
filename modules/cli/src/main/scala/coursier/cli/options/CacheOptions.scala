@@ -5,7 +5,7 @@ import java.io.File
 import caseapp._
 import cats.data.{NonEmptyList, Validated, ValidatedNel}
 import cats.implicits._
-import coursier.cache.CacheDefaults
+import coursier.cache.{CacheDefaults, CacheEnv}
 import coursier.cli.params.CacheParams
 import coursier.credentials.FileCredentials
 import coursier.parse.{CachePolicyParser, CredentialsParser}
@@ -39,8 +39,7 @@ final case class CacheOptions(
     parallel: Int = 6,
 
   @Group(OptionGroup.cache)
-  @Hidden
-  @HelpMessage("Checksum types to check - end with none to allow for no checksum validation if no checksum is available, example: SHA-256,SHA-1,none")
+  @HelpMessage("Checksum types to check, the first one available being used - end with none to accept artifacts with none of these checksums, else a missing checksum is an error (default: COURSIER_CHECKSUMS environment variable, coursier.checksums Java property, or SHA-1,none), example: SHA-256,SHA-1,none")
   @ValueDescription("checksum1,checksum2,...")
     checksum: List[String] = Nil,
 
@@ -136,16 +135,13 @@ final case class CacheOptions(
 
       // TODO Validate those more thoroughly
 
-      val splitChecksumArgs = checksum.flatMap(_.split(',').toSeq).filter(_.nonEmpty)
+      val parsedChecksums = CacheEnv.parseChecksums(checksum.mkString(","))
 
       val res =
-        if (splitChecksumArgs.isEmpty)
+        if (parsedChecksums.isEmpty)
           CacheDefaults.checksums
         else
-          splitChecksumArgs.map {
-            case none if none.toLowerCase == "none" => None
-            case sumType                            => Some(sumType)
-          }
+          parsedChecksums
 
       Validated.validNel(res)
     }
