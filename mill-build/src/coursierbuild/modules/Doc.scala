@@ -83,9 +83,13 @@ trait Doc extends ScalaModule {
 
     val websiteDir = BuildCtx.workspaceRoot / "doc" / "website"
 
+    // --ignore-scripts: the install scripts of some dependencies (the imagemin *-bin
+    // packages notably) download and run binaries with no integrity check, and
+    // nothing we use needs them (image compression is disabled in package.json)
     if (npmInstall)
-      os.proc("npm", "install").call(
+      os.proc("npm", "ci", "--ignore-scripts").call(
         cwd = websiteDir,
+        env = DocHelpers.withoutSecretsEnv,
         stdin = os.Inherit,
         stdout = os.Inherit,
         stderr = os.Inherit
@@ -97,7 +101,9 @@ trait Doc extends ScalaModule {
         mainClass = finalMainClass(),
         classPath = runClasspath().map(_.path),
         jvmArgs = Nil,
-        env = forkEnv(),
+        // mdoc runs code from the pages and from their dependencies, keep secrets out of its env
+        env = DocHelpers.withoutSecrets(Task.env) ++ forkEnv(),
+        propagateEnv = false,
         mainArgs = allArgs,
         cwd = forkWorkingDir(),
         stdout = os.Inherit
@@ -119,6 +125,7 @@ trait Doc extends ScalaModule {
       if (yarnRunBuild)
         os.proc("yarn", "run", "build").call(
           cwd = websiteDir,
+          env = DocHelpers.withoutSecretsEnv,
           stdin = os.Inherit,
           stdout = os.Inherit,
           stderr = os.Inherit
@@ -141,6 +148,8 @@ object Doc {
     val b = new ProcessBuilder(cmd *)
     b.inheritIO()
     b.directory(dir)
+    for (name <- DocHelpers.secretEnvVars)
+      b.environment().remove(name)
     var p: Process = null
 
     Option(waitFor) match {
