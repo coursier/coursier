@@ -15,6 +15,7 @@ object CoursierProperties {
     "coursier.cache.server.password",
     "coursier.cache.server.user",
     "coursier.cache.throw-exceptions",
+    "coursier.checksums",
     "coursier.config-dir",
     "coursier.connect-timeout",
     "coursier.core.throw-exceptions",
