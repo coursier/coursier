@@ -29,7 +29,14 @@ private[coursier] sealed abstract class PropertyExpr {
             val result = resolvedExpr match {
               case PropertyLiteral(v) => v
               case spe: SimplePropertyExpr =>
-                PropertyExpr.resolvePartToString(spe, lookup, trim, Nil, 1)
+                PropertyExpr.resolvePartToString(
+                  spe,
+                  lookup,
+                  trim,
+                  Nil,
+                  1,
+                  new PropertyExpr.ExpansionState
+                )
               case Composite(ps, _) => PropertyExpr.renderSubstitutions(
                   rawValue,
                   ps,
@@ -47,6 +54,8 @@ private[coursier] sealed abstract class PropertyExpr {
       }
     catch {
       case _: PropertyExpr.CyclicPropertyException =>
+        rawValue0
+      case _: PropertyExpr.PropertyExpansionLimitException =>
         rawValue0
     }
 
@@ -87,12 +96,47 @@ private[coursier] object PropertyExpr {
   }
 
   private val CycleTrackingDepthStart = 8
+
+  /** Maximum depth of nested property references, beyond which a value is left unsubstituted */
+  private[core] val MaxDepth = 256
+
+  /** Maximum number of characters a value can expand to, beyond which it's left unsubstituted
+    *
+    * This is also the maximum number of characters of all the intermediate values of an expansion
+    * that are kept in memory, see `ExpansionState`.
+    */
+  private[core] val MaxExpandedLength = 1 << 20
+
+  /** State shared by the nested resolutions of a single top-level substitution
+    *
+    * Memoizes resolved references, so that chains of properties each referencing the previous one
+    * several times don't take exponential time to expand. The memoized values don't depend on the
+    * reference path that led to them, as a cycle aborts the whole top-level substitution.
+    */
+  private final class ExpansionState {
+    private var memo: java.util.HashMap[String, String] = null
+    private var memoLength                              = 0L
+
+    def getOrNull(name: String): String =
+      if (memo == null) null else memo.get(name)
+
+    def put(name: String, value: String): Unit = {
+      memoLength += value.length
+      if (memoLength > MaxExpandedLength)
+        throw new PropertyExpansionLimitException
+      if (memo == null)
+        memo = new java.util.HashMap[String, String]
+      memo.put(name, value)
+    }
+  }
+
   private def resolvePartToString(
     part: SimplePropertyExpr,
     lookup: PropertyValueLookup,
     trim: Boolean,
     seen: List[String],
-    depth: Int
+    depth: Int,
+    state: ExpansionState
   ): String = part match {
     case PropertyLiteral(value)     => value
     case PropertyReference(name, _) =>
@@ -102,20 +146,41 @@ private[coursier] object PropertyExpr {
         if (isCycle) throw new CyclicPropertyException else lookup.lookupOrNull(name)
       if (resolvedExpr == null)
         s"$${$name}"
-      else {
-        val nextSeen = if (depth < CycleTrackingDepthStart) Nil else name :: seen
-        val result = resolvedExpr match {
-          case PropertyLiteral(v) => v
-          case spe: SimplePropertyExpr =>
-            resolvePartToString(spe, lookup, trim, nextSeen, depth + 1)
-          case Composite(ps, _) =>
-            renderSubstitutions("", ps, lookup, trim, nextSeen, forceSubstitute = true, depth + 1)
+      else
+        resolvedExpr match {
+          case PropertyLiteral(v) => if (trim) v.trim else v
+          case _ =>
+            val memoized = state.getOrNull(name)
+            if (memoized != null) memoized
+            else {
+              if (depth >= MaxDepth)
+                throw new PropertyExpansionLimitException
+              val nextSeen = if (depth < CycleTrackingDepthStart) Nil else name :: seen
+              val result = resolvedExpr match {
+                case spe: SimplePropertyExpr =>
+                  resolvePartToString(spe, lookup, trim, nextSeen, depth + 1, state)
+                case Composite(ps, _) =>
+                  renderSubstitutions(
+                    "",
+                    ps,
+                    lookup,
+                    trim,
+                    nextSeen,
+                    forceSubstitute = true,
+                    depth + 1,
+                    state
+                  )
+              }
+              val result0 = if (trim) result.trim else result
+              state.put(name, result0)
+              result0
+            }
         }
-        if (trim) result.trim else result
-      }
   }
   private class CyclicPropertyException
       extends RuntimeException("Cyclic property reference detected")
+  private class PropertyExpansionLimitException
+      extends RuntimeException("Property expansion too deep or too large")
 
   private def renderSubstitutions(
     raw: String,
@@ -124,7 +189,8 @@ private[coursier] object PropertyExpr {
     trim: Boolean,
     seen: List[String] = Nil,
     forceSubstitute: Boolean = false,
-    depth: Int = 0
+    depth: Int = 0,
+    state: ExpansionState = null
   ): String = {
     val n = parts.length
 
@@ -148,18 +214,23 @@ private[coursier] object PropertyExpr {
 
     if (noSubst)
       raw
-    else if (n == 1)
-      // Single-part fast path: no StringBuilder needed
-      resolvePartToString(parts(0), lookup, trim, seen, depth)
     else {
-      // Single forward pass: capacity heuristic avoids resizing in the common case
-      val sb = new java.lang.StringBuilder(if (raw.nonEmpty) raw.length else 16)
-      var i  = 0
-      while (i < n) {
-        sb.append(resolvePartToString(parts(i), lookup, trim, seen, depth))
-        i += 1
+      val state0 = if (state == null) new ExpansionState else state
+      if (n == 1)
+        // Single-part fast path: no StringBuilder needed
+        resolvePartToString(parts(0), lookup, trim, seen, depth, state0)
+      else {
+        // Single forward pass: capacity heuristic avoids resizing in the common case
+        val sb = new java.lang.StringBuilder(if (raw.nonEmpty) raw.length else 16)
+        var i  = 0
+        while (i < n) {
+          sb.append(resolvePartToString(parts(i), lookup, trim, seen, depth, state0))
+          if (sb.length > MaxExpandedLength)
+            throw new PropertyExpansionLimitException
+          i += 1
+        }
+        sb.toString
       }
-      sb.toString
     }
   }
 
