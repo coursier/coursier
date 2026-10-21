@@ -49,6 +49,7 @@ class Coursier < Formula
 
   test do
     ENV["COURSIER_CACHE"] = "#{testpath}/cache"
+    ENV["COURSIER_ARCHIVE_CACHE"] = "#{testpath}/arc"
 
     output = shell_output("#{bin}/cs launch io.get-coursier:echo:1.0.2 -- foo")
     assert_equal ["foo\n"], output.lines
