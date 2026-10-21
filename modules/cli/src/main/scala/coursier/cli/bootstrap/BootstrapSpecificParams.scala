@@ -34,7 +34,8 @@ final case class BootstrapSpecificParams(
   graalvmJvmOptions: Seq[String],
   graalvmOptions: Seq[String],
   disableJarCheckingOpt: Option[Boolean],
-  jvmIndexUrlOpt: Option[String]
+  jvmIndexUrlOpt: Option[String],
+  validateChecksums: Boolean = false
 ) {
   import BootstrapSpecificParams.BootstrapPackaging
   def batOutput: Path =
@@ -43,7 +44,8 @@ final case class BootstrapSpecificParams(
     BootstrapPackaging(
       standalone,
       hybrid,
-      embedFiles
+      embedFiles,
+      validateChecksums
     )
 
   def jvmCache(cache: Cache[Task]): JvmCache = {
@@ -218,7 +220,8 @@ object BootstrapSpecificParams {
           graalvmJvmOptions,
           graalvmOptions,
           options.disableJarChecking,
-          jvmIndex
+          jvmIndex,
+          options.validateChecksums
         )
     }
   }
@@ -226,6 +229,7 @@ object BootstrapSpecificParams {
   final case class BootstrapPackaging(
     standalone: Boolean,
     hybrid: Boolean,
-    embedFiles: Boolean
+    embedFiles: Boolean,
+    validateChecksums: Boolean = false
   )
 }

@@ -78,7 +78,10 @@ final case class BootstrapSpecificOptions(
     disableJarChecking: Option[Boolean] = None,
   @Group(OptionGroup.bootstrap)
   @Hidden
-    jvmIndex: Option[String] = None
+    jvmIndex: Option[String] = None,
+  @Group(OptionGroup.bootstrap)
+  @HelpMessage("Record the SHA-256 of the JARs the launcher downloads at run time, and have the launcher check them, downloaded or already in cache, before using them")
+    validateChecksums: Boolean = false
 ) {
   // format: on
 

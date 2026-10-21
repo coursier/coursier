@@ -1156,6 +1156,93 @@ abstract class BootstrapTests extends TestSuite with LauncherOptions {
       }
     }
 
+    test("class path JARs checked against their SHA-256") {
+      TestUtil.withTempDir { tmpDir0 =>
+        val tmpDir = os.Path(tmpDir0, os.pwd)
+        val cache  = tmpDir / "cache"
+
+        val propsLauncher = tmpDir / "props"
+        os.proc(
+          launcher,
+          "bootstrap",
+          "io.get-coursier:props:1.0.7",
+          "--cache",
+          cache,
+          "-o",
+          propsLauncher,
+          "--validate-checksums",
+          extraOptions
+        )
+          .call(stdin = os.Inherit, stdout = os.Inherit)
+
+        def stringEntryOpt(launcher: os.Path, name: String): Option[Vector[String]] =
+          Using.resource(new ZipFile(launcher.toIO)) { zf =>
+            Option(zf.getEntry(s"coursier/bootstrap/launcher/$name")).map { e =>
+              val is = zf.getInputStream(e)
+              try Source.fromInputStream(is)(Codec.UTF8).mkString.linesIterator.toVector
+              finally is.close()
+            }
+          }
+        def stringEntry(name: String): Vector[String] = {
+          val res = stringEntryOpt(propsLauncher, name)
+          assert(res.nonEmpty)
+          res.get
+        }
+
+        // no checksums by default
+        val noChecksumsLauncher = tmpDir / "props-no-checksums"
+        os.proc(
+          launcher,
+          "bootstrap",
+          "io.get-coursier:props:1.0.7",
+          "--cache",
+          cache,
+          "-o",
+          noChecksumsLauncher,
+          extraOptions
+        )
+          .call(stdin = os.Inherit, stdout = os.Inherit)
+        assert(stringEntryOpt(noChecksumsLauncher, "bootstrap-jar-urls").nonEmpty)
+        assert(stringEntryOpt(noChecksumsLauncher, "bootstrap-jar-sha256").isEmpty)
+        val urls    = stringEntry("bootstrap-jar-urls")
+        val sha256s = stringEntry("bootstrap-jar-sha256")
+        assert(urls.nonEmpty)
+        assert(sha256s.length == urls.length)
+        assert(sha256s.forall(_.matches("[0-9a-f]{64}")))
+
+        val propsLauncher0 =
+          if (Properties.isWin) propsLauncher / os.up / (propsLauncher.last + ".bat")
+          else propsLauncher
+        def run() =
+          os.proc(propsLauncher0, "java.class.path")
+            .call(
+              env = Map("COURSIER_CACHE" -> cache.toString),
+              check = false,
+              stdout = os.Pipe,
+              mergeErrIntoOut = true
+            )
+
+        val res0 = run()
+        assert(res0.exitCode == 0)
+
+        val cachedJar = cache / os.SubPath(urls.head.replace("://", "/"))
+        assert(os.isFile(cachedJar))
+        os.write.over(cachedJar, "tampered with".getBytes(StandardCharsets.UTF_8))
+
+        val res1   = run()
+        val output = res1.out.text()
+        assert(res1.exitCode != 0)
+        assert(output.contains("SHA-256 mismatch"))
+        assert(output.contains(urls.head))
+
+        // downloaded again, and checked, if not in cache
+        os.remove(cachedJar)
+        val res2 = run()
+        assert(res2.exitCode == 0)
+        assert(os.isFile(cachedJar))
+      }
+    }
+
     test("credentials from properties") {
       credentialsTest(useConfig = false)
     }

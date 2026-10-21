@@ -64,6 +64,7 @@ class ResourcesClassLoaders extends ClassLoaders {
         while (true) {
             String[] strUrls = Util.readStringSequence(ClassLoaders.resourceDir + prefix + "-jar-urls-" + i, baseLoader);
             String[] resources = Util.readStringSequence(ClassLoaders.resourceDir + prefix + "-jar-resources-" + i, baseLoader);
+            String[] sha256s = Util.readStringSequence(ClassLoaders.resourceDir + prefix + "-jar-sha256-" + i, baseLoader);
 
             if (strUrls.length == 0 && resources.length == 0)
                 break;
@@ -71,7 +72,7 @@ class ResourcesClassLoaders extends ClassLoaders {
             List<URL> urls = getURLs(strUrls);
             List<URL> resourceURLs = getResourceURLs(resources);
             urls.addAll(resourceURLs);
-            List<URL> localURLs = download.getLocalURLs(urls);
+            List<URL> localURLs = download.getLocalURLs(urls, sha256s);
 
             parentLoader = new URLClassLoader(localURLs.toArray(new URL[0]), parentLoader);
 
@@ -85,10 +86,12 @@ class ResourcesClassLoaders extends ClassLoaders {
 
         String[] strUrls = Util.readStringSequence(defaultURLResource, contextLoader);
         String[] resources = Util.readStringSequence(defaultJarResource, contextLoader);
+        String[] sha256s = Util.readStringSequence(defaultSha256Resource, contextLoader);
         List<URL> urls = getURLs(strUrls);
         List<URL> resourceURLs = getResourceURLs(resources);
+        // resource URLs come after the downloaded ones, and have no digest
         urls.addAll(resourceURLs);
-        List<URL> localURLs = download.getLocalURLs(urls);
+        List<URL> localURLs = download.getLocalURLs(urls, sha256s);
 
         ClassLoader parentClassLoader = readBaseLoaders(contextLoader);
 

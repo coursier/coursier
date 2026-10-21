@@ -160,7 +160,15 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
       else
         (Nil, artifactFiles)
 
-    val urls0 = asUrls.map(_._1.url).map(ClassPathEntry.Url(_))
+    val urls0 = asUrls.map {
+      case (a, f) =>
+        // no digest for changing artifacts, whose content is expected to change, nor for local
+        // files, that bootstrap launchers don't copy to the cache
+        val sha256Opt =
+          if (!packaging.validateChecksums || a.changing || a.url.startsWith("file:")) None
+          else Some(ClassPathEntry.sha256(f.toPath))
+        ClassPathEntry.Url(a.url, sha256Opt)
+    }
     val files0 = asFiles.map { f =>
       ClassPathEntry.Resource(
         f.getName,
