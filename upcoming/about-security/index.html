@@ -1711,10 +1711,28 @@ checksums, which can be provided either via dedicated checksum files (<code>.md5
 both a header checksum and a checksum file are available, the header checksum takes
 precedence. If no checksum is available at all, coursier accepts the artifact without
 checksum verification.</p>
+<p>By default, coursier checks SHA-1 checksums, and accepts artifacts that have none. Note that
+checksums are fetched from the same server as the artifacts, so they protect against corrupted
+downloads, not against a repository serving tampered artifacts along with matching checksums.</p>
 <p>Which checksum types are checked, and whether missing checksums are accepted, can be
-customized via coursier's API using <code>FileCache#checksums</code> and <code>FileCache#withChecksums</code>.</p>
-<p>As of now, checksum behavior can only be changed through coursier's API, not via
-environment variables or Java system properties.</p>
+customized with a comma-separated list of checksum types, tried in order, the first one
+available for an artifact being the one checked. A trailing <code>none</code> accepts artifacts that
+have none of the listed checksums. Without it, a missing checksum is an error. This list
+can be passed:</p>
+<ul>
+<li>via the <code>COURSIER_CHECKSUMS</code> environment variable, or the <code>coursier.checksums</code> Java
+  property (the environment variable takes precedence),</li>
+<li>via the <code>--checksum</code> option of the CLI commands that download artifacts,</li>
+<li>via coursier's API, using the <code>checksums</code> field of <code>FileCache</code> (e.g.
+  <code>cache.copy(checksums = Seq(Some("SHA-256"), Some("SHA-1")))</code>), whose default is read from
+  the environment variable and Java property above.</li>
+</ul>
+<p>For example, <code>COURSIER_CHECKSUMS=SHA-256,SHA-1</code> checks SHA-256 checksums when a repository
+has them, SHA-1 ones otherwise, and fails on artifacts that have neither. Trying SHA-256
+first costs an extra request for each artifact on repositories that don't have SHA-256
+checksums, which is the case of most artifacts on Maven Central, so that this isn't the
+default. Note that a strict list (without <code>none</code>) also applies to downloads that come with
+no checksum at all, like the JVM archives <code>cs java</code> downloads.</p>
 <h3 id="signature-verification">Signature verification<a class="headerlink" href="#signature-verification" title="Permanent link">&para;</a></h3>
 <p>coursier does not perform PGP signature verification. It is possible to make coursier
 fetch <code>.asc</code> signature files via the API, but no verification of those signatures is
