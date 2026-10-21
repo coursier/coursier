@@ -2,16 +2,90 @@ package coursier.cli.config
 
 import caseapp.core.RemainingArgs
 import caseapp.core.app.Command
-import coursier.cache.ArchiveCache
 import coursier.paths.CoursierPaths
 
 import java.nio.file.{Files, Paths}
 
-import scala.cli.config.{ConfigDb, Key, Keys, PasswordOption, RepositoryCredentials}
+import scala.cli.config.{ConfigDb, Key, Keys, PasswordOption, Secret}
 import scala.collection.mutable.ListBuffer
 
 object Config extends Command[ConfigOptions] {
   override def hidden = true
+
+  private def mask = "****"
+
+  /** How to print a password option without leaking its value
+    *
+    * Passwords stored as is (`value:…`) are masked, while references to environment variables,
+    * files, or commands are printed as is, as they're not secrets themselves.
+    */
+  private def maskedPasswordOption(passwordOption: PasswordOption): String =
+    passwordOption match {
+      case _: PasswordOption.Value => s"value:$mask"
+      case other                   => other.asString.value
+    }
+
+  /** Lines to print for a config entry
+    *
+    * @param showSecrets
+    *   whether to print passwords in clear, rather than masking them
+    */
+  def valueLines(
+    db: ConfigDb,
+    entry: Key[?],
+    showSecrets: Boolean
+  ): Option[Seq[String]] =
+    entry match {
+      case cred: Key.RepositoryCredentialsEntry =>
+        // We're basically inlining db.getAsString(entry) here, except
+        // we call PasswordOption#get() rather than PasswordOption#asString
+        // on user and password below (password only if showSecrets is true)
+        db.get(cred).fold(e => throw new Exception(e), identity).map { value =>
+          value
+            .zipWithIndex
+            .map {
+              case (cred, idx) =>
+                val prefix = s"configRepo$idx."
+
+                val lines = new ListBuffer[String]
+                if (cred.host.nonEmpty)
+                  lines += s"${prefix}host=${cred.host}"
+                for (u <- cred.user)
+                  lines += s"${prefix}username=${u.get().value}"
+                for (p <- cred.password)
+                  lines += s"${prefix}password=${if (showSecrets) p.get().value else mask}"
+                for (r <- cred.realm)
+                  lines += s"${prefix}realm=$r"
+                for (b <- cred.httpsOnly)
+                  lines += s"${prefix}https-only=$b"
+                for (b <- cred.matchHost)
+                  lines += s"${prefix}auto=$b"
+                for (b <- cred.passOnRedirect)
+                  lines += s"${prefix}pass-on-redirect=$b"
+
+                lines.map(_ + System.lineSeparator()).mkString
+            }
+        }
+      case cred: Key.PublishCredentialsEntry if !showSecrets =>
+        // PublishCredentials#asString calls PasswordOption#get() on the password
+        db.get(cred).fold(e => throw new Exception(e), identity).map { value =>
+          value.map { cred =>
+            cred
+              .copy(password = cred.password.map(_ => PasswordOption.Value(Secret(mask))))
+              .asString
+          }
+        }
+      case _ =>
+        val valueOpt = db.getAsString(entry).fold(e => throw new Exception(e), identity)
+        if (entry.isPasswordOption && !showSecrets)
+          valueOpt.map { values =>
+            values.map { v =>
+              PasswordOption.parse(v).fold(_ => mask, maskedPasswordOption)
+            }
+          }
+        else
+          valueOpt
+    }
 
   def run(options: ConfigOptions, args: RemainingArgs): Unit = {
 
@@ -51,40 +125,7 @@ object Config extends Command[ConfigOptions] {
                   db.save(configPath).fold(e => throw new Exception(e), identity)
                 }
                 else {
-                  val valueOpt = entry match {
-                    case cred: Key.RepositoryCredentialsEntry =>
-                      // We're basically inlining db.getAsString(entry) here, except
-                      // we call PasswordOption#get() rather than PasswordOption#asString
-                      // on user and password below
-                      db.get(cred).fold(e => throw new Exception(e), identity).map { value =>
-                        value
-                          .zipWithIndex
-                          .map {
-                            case (cred, idx) =>
-                              val prefix = s"configRepo$idx."
-
-                              val lines = new ListBuffer[String]
-                              if (cred.host.nonEmpty)
-                                lines += s"${prefix}host=${cred.host}"
-                              for (u <- cred.user)
-                                lines += s"${prefix}username=${u.get().value}"
-                              for (p <- cred.password)
-                                lines += s"${prefix}password=${p.get().value}"
-                              for (r <- cred.realm)
-                                lines += s"${prefix}realm=$r"
-                              for (b <- cred.httpsOnly)
-                                lines += s"${prefix}https-only=$b"
-                              for (b <- cred.matchHost)
-                                lines += s"${prefix}auto=$b"
-                              for (b <- cred.passOnRedirect)
-                                lines += s"${prefix}pass-on-redirect=$b"
-
-                              lines.map(_ + System.lineSeparator()).mkString
-                          }
-                      }
-                    case _ =>
-                      db.getAsString(entry).fold(e => throw new Exception(e), identity)
-                  }
+                  val valueOpt = valueLines(db, entry, showSecrets = options.password)
                   valueOpt match {
                     case Some(value) =>
                       for (v <- value)
