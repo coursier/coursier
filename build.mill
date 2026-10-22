@@ -1365,6 +1365,9 @@ trait CliTests extends CsModule { self =>
       exec.setExecutable(true)
     exec.toString
   }
+  // a source, so that changing it re-runs the CLI tests on pull requests (selective execution
+  // doesn't see files read straight from the workspace)
+  def authProxyDataDir = Task.Source(BuildCtx.workspaceRoot / "project/authenticated-proxy")
   private def sharedTestArgs = {
     val arch = sys.props.getOrElse("os.arch", "").toLowerCase(java.util.Locale.ROOT)
     val (scalaCli, scalaCliIsJar) = GetCs.scalaCliUrl(
@@ -1413,7 +1416,7 @@ trait CliTests extends CsModule { self =>
         "-Dcoursier-test-is-native=false",
         "-Dcoursier-test-is-native-static=false",
         "-Dcoursier-test-is-standalone=false",
-        s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
+        s"-Dcoursier.test.auth-proxy-data-dir=${self.authProxyDataDir().path}",
         s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-image=${coursierbuild.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-java-image=${coursierbuild.Docker.alpineJavaImage}"
@@ -1447,7 +1450,7 @@ trait CliTests extends CsModule { self =>
           "-Dcoursier-test-is-native=true",
           s"-Dcoursier-test-is-native-static=$isStatic",
           "-Dcoursier-test-is-standalone=false",
-          s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
+          s"-Dcoursier.test.auth-proxy-data-dir=${self.authProxyDataDir().path}",
           s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Docker.alpineImage}",
           s"-Dcoursier.test.alpine-image=${coursierbuild.Docker.alpineImage}",
           s"-Dcoursier.test.alpine-java-image=${coursierbuild.Docker.alpineJavaImage}"
@@ -1482,7 +1485,7 @@ trait CliTests extends CsModule { self =>
         "-Dcoursier-test-is-standalone=true",
         s"-Dcoursier-test-launcher-dir=$launcherDir",
         s"-Dcoursier-test-launcher-sub-path=${cli.launcherSubPath}",
-        s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
+        s"-Dcoursier.test.auth-proxy-data-dir=${self.authProxyDataDir().path}",
         s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-image=${coursierbuild.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-java-image=${coursierbuild.Docker.alpineJavaImage}"
@@ -1507,7 +1510,7 @@ trait CliTests extends CsModule { self =>
         "-Dcoursier-test-is-native=false",
         "-Dcoursier-test-is-native-static=false",
         "-Dcoursier-test-is-standalone=false",
-        s"-Dcoursier.test.auth-proxy-data-dir=${BuildCtx.workspaceRoot / "project/authenticated-proxy"}",
+        s"-Dcoursier.test.auth-proxy-data-dir=${self.authProxyDataDir().path}",
         s"-Dcoursier.test.auth-proxy-image=${coursierbuild.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-image=${coursierbuild.Docker.alpineImage}",
         s"-Dcoursier.test.alpine-java-image=${coursierbuild.Docker.alpineJavaImage}"

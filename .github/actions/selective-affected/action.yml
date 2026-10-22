@@ -1,0 +1,27 @@
+name: Check whether the changes affect tasks
+description: >-
+  Tells whether the changes of a pull request affect some task of a Mill selector, so that a job
+  can skip the steps building, testing and uploading a launcher when they don't. Outside of pull
+  requests (pushes to main, tags), and whenever selective execution can't be used, everything is
+  considered affected. See the 'prepare' and 'affected' sub-commands of
+  .github/scripts/selective-tests.sh. Needs a checkout with 'fetch-depth: 0'.
+inputs:
+  selector:
+    description: >-
+      Mill task selector, listing the tasks the job runs, like '{nativeTests,copyLauncher}'
+    required: true
+outputs:
+  affected:
+    description: "'false' if the changes don't affect any task of the selector, 'true' otherwise"
+    value: ${{ steps.affected.outputs.affected }}
+runs:
+  using: composite
+  steps:
+    - id: affected
+      run: |
+        .github/scripts/selective-tests.sh prepare "$SELECTOR"
+        .github/scripts/selective-tests.sh affected "$SELECTOR"
+      shell: bash
+      env:
+        SELECTOR: ${{ inputs.selector }}
+        SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}

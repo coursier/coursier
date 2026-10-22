@@ -440,16 +440,12 @@ jobs:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
-      # On pull requests, the launcher is only built and tested if the changes affect it
+      # On pull requests, the launcher is only built, tested and uploaded if the changes affect it
       - name: Check whether the changes affect the launcher
         id: selective
-        run: |
-          .github/scripts/selective-tests.sh prepare "$NATIVE_TESTS"
-          .github/scripts/selective-tests.sh affected "$NATIVE_TESTS"
-        shell: bash
-        env:
-          NATIVE_TESTS: "nativeTests"
-          SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        uses: ./.github/actions/selective-affected
+        with:
+          selector: "{nativeTests,copyLauncher}"
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeTests
         if: steps.selective.outputs.affected != 'false'
         shell: bash
@@ -491,16 +487,12 @@ jobs:
         with:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
-      # On pull requests, the launcher is only built and tested if the changes affect it
+      # On pull requests, the launcher is only built, tested and uploaded if the changes affect it
       - name: Check whether the changes affect the launcher
         id: selective
-        run: |
-          .github/scripts/selective-tests.sh prepare "$NATIVE_TESTS"
-          .github/scripts/selective-tests.sh affected "$NATIVE_TESTS"
-        shell: bash
-        env:
-          NATIVE_TESTS: "{nativeCompatTests,qemuCompatTests}"
-          SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        uses: ./.github/actions/selective-affected
+        with:
+          selector: "{nativeCompatTests,qemuCompatTests,copyCompatLauncher}"
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeCompatTests
         if: steps.selective.outputs.affected != 'false'
         shell: bash
@@ -550,16 +542,12 @@ jobs:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
-      # On pull requests, the launcher is only built and tested if the changes affect it
+      # On pull requests, the launcher is only built, tested and uploaded if the changes affect it
       - name: Check whether the changes affect the launcher
         id: selective
-        run: |
-          .github/scripts/selective-tests.sh prepare "$NATIVE_TESTS"
-          .github/scripts/selective-tests.sh affected "$NATIVE_TESTS"
-        shell: bash
-        env:
-          NATIVE_TESTS: "nativeStaticTests"
-          SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        uses: ./.github/actions/selective-affected
+        with:
+          selector: "{nativeStaticTests,copyStaticLauncher}"
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeStaticTests
         if: steps.selective.outputs.affected != 'false'
         shell: bash
@@ -605,16 +593,12 @@ jobs:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
-      # On pull requests, the launcher is only built and tested if the changes affect it
+      # On pull requests, the launcher is only built, tested and uploaded if the changes affect it
       - name: Check whether the changes affect the launcher
         id: selective
-        run: |
-          .github/scripts/selective-tests.sh prepare "$NATIVE_TESTS"
-          .github/scripts/selective-tests.sh affected "$NATIVE_TESTS"
-        shell: bash
-        env:
-          NATIVE_TESTS: "nativeContainerTests"
-          SELECTIVE_TESTS_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        uses: ./.github/actions/selective-affected
+        with:
+          selector: "{nativeContainerTests,copyContainerLauncher}"
       - run: .github/scripts/maybe-with-graalvm-home.sh nativeContainerTests
         if: steps.selective.outputs.affected != 'false'
         shell: bash
@@ -661,15 +645,24 @@ jobs:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
         if: runner.os == 'Linux'
+      # On pull requests, the launcher is only built, tested and uploaded if the changes affect it
+      - name: Check whether the changes affect the launcher
+        id: selective
+        uses: ./.github/actions/selective-affected
+        with:
+          selector: "{standaloneJvmTests,copyStandaloneJvmLauncher}"
       - run: ./mill -i standaloneJvmTests
+        if: steps.selective.outputs.affected != 'false'
         timeout-minutes: 35
       - name: Copy artifacts
+        if: steps.selective.outputs.affected != 'false'
         run: ./mill -i copyStandaloneJvmLauncher --directory artifacts/
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: steps.selective.outputs.affected != 'false'
         with:
           name: launchers-${{ matrix.OSSHORT }}-standalone
           path: artifacts/
@@ -694,15 +687,24 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+      # On pull requests, the launcher is only built, tested and uploaded if the changes affect it
+      - name: Check whether the changes affect the launcher
+        id: selective
+        uses: ./.github/actions/selective-affected
+        with:
+          selector: "{standaloneJvmTests,copyStandaloneJvmLauncher}"
       - run: ./mill -i standaloneJvmTests
+        if: steps.selective.outputs.affected != 'false'
         timeout-minutes: 35
       - name: Copy artifacts
+        if: steps.selective.outputs.affected != 'false'
         run: ./mill -i copyStandaloneJvmLauncher --directory artifacts/
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: steps.selective.outputs.affected != 'false'
         with:
           name: launchers-windows-arm-standalone
           path: artifacts/
