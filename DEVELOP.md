@@ -157,6 +157,9 @@ $ ./mill -i doc.generate --npm-install --yarn-run-build
 $ npx http-server doc/website/build/coursier
 ```
 
+Add `--copy-versioned-data` to include the docs of former versions, from
+[coursier/versioned-docs](https://github.com/coursier/versioned-docs), like `./mill -i buildWebsite` does.
+
 In watch mode (only watches markdown files):
 ```text
 $ ./mill -i doc.generate --npm-install --yarn-run-build --watch

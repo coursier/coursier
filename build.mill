@@ -1886,8 +1886,7 @@ def buildWebsite(rootDir: String = "") = Task.Command {
 
   val docusaurusDir = websiteDocusaurusDir(rootDir)
 
-  doc.copyVersionedData()()
-  doc.generate("--npm-install", "--yarn-run-build")()
+  doc.generate("--copy-versioned-data", "--npm-install", "--yarn-run-build")()
 
   for (version <- websiteVersionOpt())
     DocHelpers.addVersionedDocs(docusaurusDir, version)
@@ -1907,8 +1906,8 @@ def buildWebsite(rootDir: String = "") = Task.Command {
 def publishWebsite(rootDir: String = "", dryRun: Boolean = false) = Task.Command {
 
   val docusaurusDir       = websiteDocusaurusDir(rootDir)
-  val versionedDocsRepo   = "coursier/versioned-docs"
-  val versionedDocsBranch = "master"
+  val versionedDocsRepo   = Doc.versionedDocsRepo
+  val versionedDocsBranch = Doc.versionedDocsBranch
 
   val token =
     if (dryRun) ""
