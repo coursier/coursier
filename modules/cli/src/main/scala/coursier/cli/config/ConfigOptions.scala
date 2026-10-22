@@ -9,7 +9,7 @@ final case class ConfigOptions(
   @Hidden
     dump: Boolean = false,
   @Group("Config")
-  @HelpMessage("If the entry is a password, print the password value rather than how to get the password")
+  @HelpMessage("Print passwords in clear: if the entry is a password, print its value rather than how to get it, and print the passwords of credentials entries rather than masking them")
     password: Boolean = false,
   @Group("Config")
   @HelpMessage("If the entry is a password, save the password value rather than how to get the password")

@@ -214,7 +214,7 @@ public final class Config {
 
     public static String repositoriesCredentials(String configFile) throws IOException, InterruptedException {
 
-        Process proc = new ProcessBuilder(csCommand(), "config", "repositories.credentials", "--config-file", configFile)
+        Process proc = new ProcessBuilder(csCommand(), "config", "repositories.credentials", "--password", "--config-file", configFile)
                 .redirectOutput(ProcessBuilder.Redirect.PIPE)
                 .redirectError(ProcessBuilder.Redirect.INHERIT)
                 .redirectInput(ProcessBuilder.Redirect.INHERIT)
