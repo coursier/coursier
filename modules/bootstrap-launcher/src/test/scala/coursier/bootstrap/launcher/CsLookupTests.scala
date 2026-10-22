@@ -52,7 +52,7 @@ object CsLookupTests extends TestSuite {
         val cs  = executable(bin, "cs")
         // relative entries pointing at a directory that contains a cs file
         val relTmp = cwd.relativize(tmp).toString
-        val res =
+        val res    =
           Config.findInPath("cs", pathOf("", ".", relTmp, bin.toString), null, false)
         assert(res == cs.toAbsolutePath.toString)
         val res0 = Config.findInPath("cs", pathOf("", ".", relTmp), null, false)
@@ -79,7 +79,7 @@ object CsLookupTests extends TestSuite {
         val cs = executable(b, "cs.bat")
         // file system lookups are case-sensitive here, unlike on Windows
         val exts = pathOf(".exe", "", ".bat")
-        val res =
+        val res  =
           Config.findInPath("cs", pathOf(a.toString, b.toString), exts, true)
         assert(res == cs.toAbsolutePath.toString)
         assert(Config.findInPath("cs", pathOf(a.toString, b.toString), null, true) == null)

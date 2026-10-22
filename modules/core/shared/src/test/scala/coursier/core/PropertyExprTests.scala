@@ -41,7 +41,7 @@ object PropertyExprTests extends TestSuite {
       }
       test("tooLargeMemoized") {
         // Every memoized value is below the limit, but not their sum
-        val half = PropertyExpr.MaxExpandedLength / 2 + 1
+        val half  = PropertyExpr.MaxExpandedLength / 2 + 1
         val props = Map("big" -> ("x" * half)) ++
           (1 to 3).map(i => s"q$i" -> s"$${big}$i").toMap ++
           Map("all" -> s"$${q1}$${q2}$${q3}")
@@ -58,9 +58,9 @@ object PropertyExprTests extends TestSuite {
       }
       test("longComposite") {
         val length = PropertyExpr.MaxDepth - 10
-        val props = (1 to length).map(i => s"p$i" -> s"$${p${i - 1}}-").toMap +
+        val props  = (1 to length).map(i => s"p$i" -> s"$${p${i - 1}}-").toMap +
           ("p0" -> "value")
-        val res   = substitute(s"$${p$length}", props)
+        val res = substitute(s"$${p$length}", props)
         assert(res == "value" + "-" * length)
       }
       test("tooDeep") {

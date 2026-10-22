@@ -90,7 +90,7 @@ private[coursier] object ArchiveIntegrity {
   private def checkCached(cacheLocation: File, url: String, file: File): Boolean =
     CacheLocks.withLockOr(cacheLocation, file)(
       {
-        val integrityFile = FileCache.auxiliaryFile(file, "integrity").toPath
+        val integrityFile         = FileCache.auxiliaryFile(file, "integrity").toPath
         val hasValidIntegrityFile = Files.exists(integrityFile) && {
           val lastModified          = Files.getLastModifiedTime(file.toPath)
           val integrityLastModified = Files.getLastModifiedTime(integrityFile)
@@ -124,7 +124,7 @@ private[coursier] object ArchiveIntegrity {
     download: => F[Either[ArtifactError, File]]
   )(implicit S: Sync[F]): F[Either[ArtifactError, File]] = {
     val eitherT = for {
-      f <- EitherT(download)
+      f       <- EitherT(download)
       invalid <- EitherT(
         S.delay[Either[ArtifactError, Boolean]] {
           Right {

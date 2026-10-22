@@ -53,7 +53,7 @@ object FetchTests extends TestSuite {
         async {
 
           val classifiers = Set(Classifier.sources)
-          val res = await {
+          val res         = await {
             fetch
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
               .withClassifiers(classifiers)
@@ -73,7 +73,7 @@ object FetchTests extends TestSuite {
 
           val classifiers   = Set(Classifier.sources)
           val mainArtifacts = true
-          val res = await {
+          val res           = await {
             fetch
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
               .withClassifiers(classifiers)
@@ -96,7 +96,7 @@ object FetchTests extends TestSuite {
         async {
 
           val classifiers = Set(Classifier.javadoc)
-          val res = await {
+          val res         = await {
             fetch
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
               .withClassifiers(classifiers)
@@ -116,7 +116,7 @@ object FetchTests extends TestSuite {
 
           val classifiers   = Set(Classifier.javadoc)
           val mainArtifacts = true
-          val res = await {
+          val res           = await {
             fetch
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
               .withClassifiers(classifiers)
@@ -139,7 +139,7 @@ object FetchTests extends TestSuite {
         async {
 
           val classifiers = Set(Classifier.javadoc, Classifier.sources)
-          val res = await {
+          val res         = await {
             fetch
               .addDependencies(dep"io.get-coursier:coursier-cli_2.12:1.1.0-M8")
               .withClassifiers(classifiers)
@@ -302,7 +302,7 @@ object FetchTests extends TestSuite {
 
       test - async {
         val fetch = fetch0.mapResolutionParams(_.addForcedProperties(prop))
-        val res = await {
+        val res   = await {
           fetch.futureResult()
         }
 
@@ -311,7 +311,7 @@ object FetchTests extends TestSuite {
 
       test - async {
         val fetch = fetch0.mapResolutionParams(_.addProperties(prop))
-        val res = await {
+        val res   = await {
           fetch.futureResult()
         }
 
@@ -575,7 +575,7 @@ object FetchTests extends TestSuite {
 
         def testVariants(map: Map[String, VariantSelector.VariantMatcher]): Future[Unit] = async {
           val params = fetch.resolutionParams
-          val res = await {
+          val res    = await {
             enableModules(fetch.addRepositories(Repositories.google))
               .withResolutionParams(params)
               .addDependencies(
@@ -678,7 +678,7 @@ object FetchTests extends TestSuite {
               )
             val classifiers = Set(Classifier.sources)
             val attr        = Seq(VariantSelector.AttributesBased.sources)
-            val res = await {
+            val res         = await {
               enableModules(fetch.addRepositories(Repositories.google))
                 .addDependencies(dep"org.jetbrains.kotlin:kotlin-stdlib:2.1.20")
                 .withClassifiers(classifiers)
@@ -708,7 +708,7 @@ object FetchTests extends TestSuite {
             )
             val classifiers = Set(Classifier.sources)
             val attr        = Seq(VariantSelector.AttributesBased.sources)
-            val res = await {
+            val res         = await {
               enableModules(fetch.addRepositories(Repositories.google))
                 .addDependencies(dep"androidx.compose.material3:material3:1.3.1")
                 .withClassifiers(classifiers)

@@ -78,7 +78,7 @@ object EnvironmentUpdateTests extends TestSuite {
     }
 
     test("quote PowerShell literals") {
-      val script = WindowsEnvVarUpdater.setEnvVarScript("JAVA_HOME", "C:\\jdk$(calc)'\u2019\"")
+      val script   = WindowsEnvVarUpdater.setEnvVarScript("JAVA_HOME", "C:\\jdk$(calc)'\u2019\"")
       val expected =
         "[Environment]::SetEnvironmentVariable('JAVA_HOME', 'C:\\jdk$(calc)''\u2019\u2019\"', " +
           "\"User\")\n"

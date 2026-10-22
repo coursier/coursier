@@ -40,7 +40,7 @@ object RepositoryCompleteTests extends TestSuite {
     }
 
     def organization(prefix: String): Either[Throwable, Seq[String]] = {
-      val idx = prefix.lastIndexOf('.')
+      val idx                  = prefix.lastIndexOf('.')
       val (base, dir, prefix0) =
         if (idx < 0) ("", Nil, prefix)
         else (prefix.take(idx + 1), prefix.take(idx).split('.').toSeq, prefix.drop(idx + 1))

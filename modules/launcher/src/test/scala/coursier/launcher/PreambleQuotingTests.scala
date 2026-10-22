@@ -96,7 +96,7 @@ object PreambleQuotingTests extends TestSuite {
 
       test("JVM option file") {
         unixOnly {
-          val fileName = "opts'\"$(touch pwned-file)`touch pwned-file2`\\$HOME"
+          val fileName  = "opts'\"$(touch pwned-file)`touch pwned-file2`\\$HOME"
           val (args, _) = runSh(
             Preamble().copy(jvmOptionFile = Some(fileName)),
             dir => os.write(dir / fileName, "-Dfrom=file\n")

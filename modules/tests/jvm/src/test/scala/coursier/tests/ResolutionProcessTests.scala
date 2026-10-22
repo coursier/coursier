@@ -29,7 +29,7 @@ object ResolutionProcessTests extends TestSuite {
       // rather than all at once
       def check(extra: Int): Unit = {
 
-        val mod = mod"org:name"
+        val mod     = mod"org:name"
         val modVers = (1 to (9 + extra))
           .map(_.toString)
           .map(VersionConstraint(_))
@@ -73,7 +73,7 @@ object ResolutionProcessTests extends TestSuite {
           }
         }
 
-        val called0 = called.asScala.iterator.map(_._1).toSet
+        val called0        = called.asScala.iterator.map(_._1).toSet
         val expectedCalled = (0 to extra)
           .map(9 + _)
           .map(_.toString)

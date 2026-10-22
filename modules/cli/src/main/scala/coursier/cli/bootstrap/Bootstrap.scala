@@ -277,7 +277,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
         case Left(e: LaunchException) if params.sharedLaunch.resolve.output.verbosity <= 1 =>
           System.err.println(e.getMessage)
           sys.exit(1)
-        case Left(e) => throw e
+        case Left(e)   => throw e
         case Right(t0) =>
           t0
       }
@@ -354,7 +354,7 @@ object Bootstrap extends CoursierCommand[BootstrapOptions] {
             )
           )
         val javaHomeTask = handle.get(s"graalvm:$graalvmVersion")
-        val javaHome =
+        val javaHome     =
           javaHomeTask.unsafeRun(wrapExceptions = true)(using
             ExecutionContext.fromExecutorService(pool)
           )

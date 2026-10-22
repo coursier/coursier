@@ -20,7 +20,7 @@ import coursier.util.StringInterpolators._
 
 object RemoteCacheTests extends TestSuite {
 
-  private val central = "https://repo1.maven.org/maven2"
+  private val central            = "https://repo1.maven.org/maven2"
   private val scalaLibraryPomUrl =
     s"$central/org/scala-lang/scala-library/2.13.16/scala-library-2.13.16.pom"
 
@@ -39,7 +39,7 @@ object RemoteCacheTests extends TestSuite {
     urlFilter: UrlFilter
   )(f: String => T): T =
     withExecutorService(Executors.newCachedThreadPool()) { requestsPool =>
-      val port = freePort()
+      val port    = freePort()
       val handler =
         CacheServer.handler(cache, ExecutionContext.fromExecutorService(requestsPool), urlFilter)
       val server = Undertow.builder()
@@ -60,7 +60,7 @@ object RemoteCacheTests extends TestSuite {
   )(f: (os.Path, String, RemoteCache[Task]) => T): T =
     withTmpDir { dir =>
       withExecutorService(Executors.newFixedThreadPool(4)) { serverPool =>
-        val cacheDir = dir / "cache"
+        val cacheDir    = dir / "cache"
         val serverCache = customizeServerCache(FileCache[Task](cacheDir.toIO))
           .copy(pool = serverPool)
 
@@ -78,7 +78,7 @@ object RemoteCacheTests extends TestSuite {
 
   /** An upstream server serving `/changing.txt` and `/other.txt`, and 404 for anything else */
   private def withUpstream[T](f: (String, RequestLog) => T): T = {
-    val log = new RequestLog
+    val log    = new RequestLog
     val server = new RawHttpServer(
       log,
       entry =>
@@ -98,7 +98,7 @@ object RemoteCacheTests extends TestSuite {
     remoteCache.file(artifact).run.unsafeRun(wrapExceptions = true)(remoteCache.ec)
 
   private def postRequest(cacheServerUrl: String, path: String, body: String) = {
-    val client = HttpClient.newHttpClient()
+    val client  = HttpClient.newHttpClient()
     val request = HttpRequest.newBuilder(new URI(s"$cacheServerUrl$path"))
       .header("Content-Type", "application/json")
       .POST(HttpRequest.BodyPublishers.ofString(body))
@@ -278,7 +278,7 @@ object RemoteCacheTests extends TestSuite {
     test("fetch dependency artifacts") {
       withRemoteCache { (cacheDir, remoteCache) =>
         val dependency = dep"org.scala-lang:scala-compiler:2.13.16"
-        val result = Fetch()
+        val result     = Fetch()
           .noMirrors
           .withRepositories(Seq(MavenRepository(central)))
           .withCache(remoteCache)

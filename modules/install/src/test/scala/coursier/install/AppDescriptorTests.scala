@@ -121,7 +121,7 @@ object AppDescriptorTests extends TestSuite {
       writeDirectoryListings(dir.resolve(subDir))
   }
 
-  private val scalaLibraryVersions = Seq("2.12.20", "2.13.16")
+  private val scalaLibraryVersions  = Seq("2.12.20", "2.13.16")
   private val scala3LibraryVersions =
     Seq("3.3.6", "3.7.2", "3.8.0-RC1-bin-20250601-1234abc-NIGHTLY")
 
@@ -165,7 +165,7 @@ object AppDescriptorTests extends TestSuite {
     repoDir: Path
   ): (Option[String], Seq[String]) =
     processDependencies(desc, repoDir) match {
-      case Left(err) => throw err
+      case Left(err)                         => throw err
       case Right((scalaVersionOpt, _, deps)) =>
         (scalaVersionOpt.map(_.asString), deps.map(_.module.name.value))
     }
@@ -348,7 +348,7 @@ object AppDescriptorTests extends TestSuite {
         writeVersions(repoDir, "com.example", "lib_native0.5_3", Seq("1.0.0"))
 
         val desc = descriptor(repoDir, "com.example::lib::latest.release")
-        val err = expectCannotListScalaVersions(
+        val err  = expectCannotListScalaVersions(
           desc.processDependencies(cache(repoDir), Some(ScalaPlatform.Native), verbosity = 0)
         )
 

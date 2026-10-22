@@ -85,7 +85,7 @@ object ArchiveCacheLimitsTests extends TestSuite {
     maxSize: Long,
     maxEntries: Long
   ): Try[Either[ArtifactError, os.Path]] = {
-    val unArchiver = UnArchiver.default(maxSize, maxEntries)
+    val unArchiver   = UnArchiver.default(maxSize, maxEntries)
     val archiveCache = ArchiveCache.create[Task]((dir / "arc").toIO)
       .copy(cache = FileCache[Task]((dir / "cache").toIO), unArchiver = unArchiver)
     val archive = dir / "archives" / s"archive.$ext"
@@ -160,7 +160,7 @@ object ArchiveCacheLimitsTests extends TestSuite {
         withTmpDir { dir =>
           val res = get(dir, ext, content, maxSize = bigSize + 2, maxEntries = 2).get
           res match {
-            case Left(err) => throw new Exception(s"Extracting $ext archive", err)
+            case Left(err)        => throw new Exception(s"Extracting $ext archive", err)
             case Right(extracted) =>
               assert(os.size(extracted / "big") == bigSize.toLong)
           }

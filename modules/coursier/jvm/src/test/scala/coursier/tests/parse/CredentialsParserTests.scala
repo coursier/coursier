@@ -9,8 +9,8 @@ object CredentialsParserTests extends TestSuite {
   val tests = Tests {
 
     test("simple") {
-      val s   = "artifacts.foo.com(tha realm) alex:my-pass"
-      val res = CredentialsParser.parse(s)
+      val s           = "artifacts.foo.com(tha realm) alex:my-pass"
+      val res         = CredentialsParser.parse(s)
       val expectedRes =
         Right(DirectCredentials(
           "artifacts.foo.com",
@@ -35,8 +35,8 @@ object CredentialsParserTests extends TestSuite {
     }
 
     test("scheme and port") {
-      val s   = "http://artifacts.foo.com:8081(tha realm) alex:my-pass"
-      val res = CredentialsParser.parse(s)
+      val s           = "http://artifacts.foo.com:8081(tha realm) alex:my-pass"
+      val res         = CredentialsParser.parse(s)
       val expectedRes =
         Right(DirectCredentials(
           "http://artifacts.foo.com:8081",
@@ -47,8 +47,8 @@ object CredentialsParserTests extends TestSuite {
     }
 
     test("space in user name") {
-      val s   = "artifacts.foo.com(tha realm) alex a:my-pass"
-      val res = CredentialsParser.parse(s)
+      val s           = "artifacts.foo.com(tha realm) alex a:my-pass"
+      val res         = CredentialsParser.parse(s)
       val expectedRes =
         Right(DirectCredentials(
           "artifacts.foo.com",
@@ -59,8 +59,8 @@ object CredentialsParserTests extends TestSuite {
     }
 
     test("special chars in password") {
-      val s   = "artifacts.foo.com(tha realm) alex:$%_^12//,.;:"
-      val res = CredentialsParser.parse(s)
+      val s           = "artifacts.foo.com(tha realm) alex:$%_^12//,.;:"
+      val res         = CredentialsParser.parse(s)
       val expectedRes =
         Right(DirectCredentials(
           "artifacts.foo.com",
@@ -78,7 +78,7 @@ object CredentialsParserTests extends TestSuite {
       }
 
       test("one") {
-        val res = CredentialsParser.parseSeq("artifacts.foo.com alex:my-pass").either
+        val res         = CredentialsParser.parseSeq("artifacts.foo.com alex:my-pass").either
         val expectedRes =
           Right(Seq(DirectCredentials("artifacts.foo.com", "alex", "my-pass")))
         assert(res == expectedRes)
