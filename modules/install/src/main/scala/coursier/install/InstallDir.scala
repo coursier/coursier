@@ -50,7 +50,10 @@ import scala.util.matching.Regex
   @unroll
   overrideProguardedBootstraps: Option[Boolean] = None,
   @unroll
-  archiveCache: ArchiveCache[Task] = ArchiveCache()
+  archiveCache: ArchiveCache[Task] = ArchiveCache(),
+  // whether bootstrap launchers record the SHA-256 of the JARs they download, and check them
+  @unroll
+  validateChecksums: Boolean = false
 ) {
 
   private lazy val isWin = platform.exists(_.endsWith("-pc-win32"))
@@ -140,7 +143,12 @@ import scala.util.matching.Regex
       else {
         val entries = appArtifacts.shared.map {
           case (a, f) =>
-            classpathEntry(a, f, forceResource = isStandalone)
+            classpathEntry(
+              a,
+              f,
+              forceResource = isStandalone,
+              validateChecksums = validateChecksums
+            )
         }
 
         Some(ClassLoaderContent(entries))
@@ -148,7 +156,7 @@ import scala.util.matching.Regex
     val mainContent = ClassLoaderContent(
       appArtifacts.fetchResult.artifacts.map {
         case (a, f) =>
-          classpathEntry(a, f, forceResource = isStandalone)
+          classpathEntry(a, f, forceResource = isStandalone, validateChecksums = validateChecksums)
       }
     )
 
@@ -692,7 +700,12 @@ object InstallDir {
     if (it.hasNext) Some(parts(it.next() + 1)) else None
   }
 
-  private def classpathEntry(a: Artifact, f: File, forceResource: Boolean = false): ClassPathEntry =
+  private def classpathEntry(
+    a: Artifact,
+    f: File,
+    forceResource: Boolean,
+    validateChecksums: Boolean
+  ): ClassPathEntry =
     if (forceResource || a.changing || a.url.startsWith("file:"))
       ClassPathEntry.Resource(
         f.getName,
@@ -700,7 +713,10 @@ object InstallDir {
         Files.readAllBytes(f.toPath)
       )
     else
-      ClassPathEntry.Url(a.url)
+      ClassPathEntry.Url(
+        a.url,
+        if (validateChecksums) Some(ClassPathEntry.sha256(f.toPath)) else None
+      )
 
   private def foundMainClassOpt(
     shared: Seq[File],

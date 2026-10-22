@@ -19,7 +19,8 @@ final case class SharedInstallParams(
   onlyPrebuilt: Boolean,
   platformOpt: Option[String],
   preferPrebuilt: Boolean,
-  proguarded: Option[Boolean]
+  proguarded: Option[Boolean],
+  validateChecksums: Boolean = false
 ) {
 
   def installDir(cache: Cache[Task], repositories: Seq[Repository]): InstallDir =
@@ -29,7 +30,8 @@ final case class SharedInstallParams(
       onlyPrebuilt = onlyPrebuilt,
       platform = platformOpt,
       preferPrebuilt = preferPrebuilt,
-      overrideProguardedBootstraps = proguarded
+      overrideProguardedBootstraps = proguarded,
+      validateChecksums = validateChecksums
     )
 }
 
@@ -69,7 +71,8 @@ object SharedInstallParams {
       onlyPrebuilt,
       platformOpt,
       preferPrebuilt,
-      options.proguarded
+      options.proguarded,
+      options.validateChecksums
     )
   }
 }

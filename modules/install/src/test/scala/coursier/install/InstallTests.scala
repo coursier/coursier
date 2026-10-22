@@ -243,6 +243,36 @@ object InstallTests extends TestSuite {
       }
     }
 
+    test("record JAR checksums only if asked to") {
+      def run(validateChecksums: Boolean) = withTempDir { tmpDir =>
+        val id = "echo"
+        val appInfo0 = appInfo(
+          RawAppDescriptor(List("io.get-coursier:echo:1.0.2"))
+            .copy(repositories = List("central")),
+          id
+        )
+        val installDir0 = installDir(tmpDir).copy(validateChecksums = validateChecksums)
+        assert(installDir0.createOrUpdate(appInfo0).exists(identity))
+        val launcher    = installDir0.actualDest(id)
+        val sha256Entry = "coursier/bootstrap/launcher/bootstrap-jar-sha256"
+        if (validateChecksums) {
+          val sha256s = stringEntry(launcher.toFile, sha256Entry).split('\n').toSeq
+          assert(sha256s.length == 1)
+          assert(sha256s.forall(_.matches("[0-9a-f]{64}")))
+        }
+        else {
+          val hasEntry = withZipFile(launcher.toFile)(_.getEntry(sha256Entry) != null)
+          assert(!hasEntry)
+        }
+      }
+      test("enabled") {
+        run(validateChecksums = true)
+      }
+      test("disabled by default") {
+        run(validateChecksums = false)
+      }
+    }
+
     test("generate an echo assembly") {
       def run(os: String, arch: String) = withTempDir { tmpDir =>
 

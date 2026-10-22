@@ -73,6 +73,14 @@ class Download {
     }
 
     List<URL> getLocalURLs(List<URL> urls) throws MalformedURLException {
+        return getLocalURLs(urls, new String[0]);
+    }
+
+    /**
+     * @param sha256s hex-encoded SHA-256 of the files at urls, in the same order, recorded when
+     *                the launcher was generated (missing or empty elements: unknown, not checked)
+     */
+    List<URL> getLocalURLs(List<URL> urls, String[] sha256s) throws MalformedURLException {
 
         ThreadFactory threadFactory = new ThreadFactory() {
             AtomicInteger counter = new AtomicInteger(1);
@@ -89,13 +97,13 @@ class Download {
         ExecutorService pool = Executors.newFixedThreadPool(concurrentDownloadCount, threadFactory);
 
         try {
-            return getLocalURLs(urls, pool);
+            return getLocalURLs(urls, sha256s, pool);
         } finally {
             pool.shutdown();
         }
     }
 
-    private void doDownload(URL url, File tmpDest, File dest) throws IOException {
+    private void doDownload(URL url, String sha256OrNull, File tmpDest, File dest) throws IOException {
         URLConnection conn = url.openConnection();
         if (conn instanceof HttpURLConnection) {
             final Optional<String> userInfoOpt = Optional.ofNullable(url.getUserInfo());
@@ -128,21 +136,35 @@ class Download {
                             "(expected " + size + " B, got " + b.length + " B), " +
                             "try again");
         }
+        Util.checkSha256(sha256OrNull, Util.sha256(b), url.toString(), "downloaded");
         tmpDest.deleteOnExit();
         Util.writeBytesToFile(tmpDest, b);
         tmpDest.setLastModified(lastModified);
         Files.move(tmpDest.toPath(), dest.toPath(), StandardCopyOption.ATOMIC_MOVE);
     }
 
-    private List<URL> getLocalURLs(List<URL> urls, ExecutorService pool) throws MalformedURLException {
+    private static void checkCachedFile(URL url, String sha256, File file) throws IOException {
+        try {
+            Util.checkSha256(sha256, Util.sha256(file), url.toString(), file.toString());
+        } catch (IOException e) {
+            System.err.println("Error while checking " + url + ": " + e.getMessage());
+            throw e;
+        }
+    }
+
+    private List<URL> getLocalURLs(List<URL> urls, String[] sha256s, ExecutorService pool) throws MalformedURLException {
 
         CompletionService<URL> completionService =
                 new ExecutorCompletionService<>(pool);
 
         List<URL> localURLs = new ArrayList<>();
         List<URL> missingURLs = new ArrayList<>();
+        List<String> missingSha256s = new ArrayList<>();
+        List<Future<?>> cachedChecks = new ArrayList<>();
 
-        for (URL url : urls) {
+        for (int i = 0; i < urls.size(); i++) {
+            final URL url = urls.get(i);
+            final String sha256OrNull = i < sha256s.length && !sha256s[i].isEmpty() ? sha256s[i] : null;
 
             String protocol = url.getProtocol();
 
@@ -154,18 +176,28 @@ class Download {
 
                 if (dest.exists()) {
                     localURLs.add(dest.toURI().toURL());
+                    // the cache might have been tampered with since the launcher was generated
+                    if (sha256OrNull != null)
+                        cachedChecks.add(pool.submit(() -> {
+                            checkCachedFile(url, sha256OrNull, dest);
+                            return null;
+                        }));
                 } else {
                     missingURLs.add(url);
+                    missingSha256s.add(sha256OrNull);
                 }
             }
         }
 
-        for (final URL url : missingURLs) {
+        for (int i = 0; i < missingURLs.size(); i++) {
+            final URL url = missingURLs.get(i);
+            final String sha256OrNull = missingSha256s.get(i);
             completionService.submit(() -> {
                 // fourth argument is false because we don't want to store local files when bootstrapping
                 final File dest = CachePath.localFile(url.toString(), cacheDir, null, false);
                 boolean retry = true;
                 boolean warnedConcurrentDownload = false;
+                boolean downloaded = false;
 
                 final File tmpDest = CachePath.temporaryFile(dest);
                 final File lockFile = CachePath.lockFile(tmpDest);
@@ -200,7 +232,8 @@ class Download {
                                 retry = true;
                             } else
                                 try {
-                                    doDownload(url, tmpDest, dest);
+                                    doDownload(url, sha256OrNull, tmpDest, dest);
+                                    downloaded = true;
                                 }
                                 finally {
                                     lockFile.delete();
@@ -227,6 +260,10 @@ class Download {
                     }
                 }
 
+                // downloaded concurrently by another process
+                if (!downloaded && sha256OrNull != null)
+                    checkCachedFile(url, sha256OrNull, dest);
+
                 return dest.toURI().toURL();
             });
         }
@@ -250,6 +287,14 @@ class Download {
                     localURLs.add(url);
                     int nowMissing = urls.size() - localURLs.size();
                     System.err.print(clearLine + "Downloaded " + (missingURLs.size() - nowMissing) + " missing file(s) / " + missingURLs.size() + "\n" + up);
+                } catch (ExecutionException ex) {
+                    // Error message already printed from the Callable above
+                    System.exit(255);
+                }
+            }
+            for (Future<?> check : cachedChecks) {
+                try {
+                    check.get();
                 } catch (ExecutionException ex) {
                     // Error message already printed from the Callable above
                     System.exit(255);

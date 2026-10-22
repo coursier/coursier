@@ -38,7 +38,11 @@ final case class SharedInstallOptions(
 
   @Group(OptionGroup.install)
   @Hidden
-    proguarded: Option[Boolean] = None
+    proguarded: Option[Boolean] = None,
+
+  @Group(OptionGroup.install)
+  @HelpMessage("Record the SHA-256 of the JARs bootstrap launchers download at run time, and have the launchers check them, downloaded or already in cache, before using them")
+    validateChecksums: Boolean = false
 
 )
 // format: on

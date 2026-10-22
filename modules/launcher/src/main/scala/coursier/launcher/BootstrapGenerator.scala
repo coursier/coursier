@@ -180,10 +180,11 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
       val len = content0.length
       for ((c, idx) <- content0.zipWithIndex) {
 
-        val urls = c.entries.collect {
+        val urlEntries = c.entries.collect {
           case u: ClassPathEntry.Url =>
-            u.url
+            u
         }
+        val urls = urlEntries.map(_.url)
         val resources = c.entries.collect {
           case r: ClassPathEntry.Resource =>
             r.fileName
@@ -193,6 +194,13 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
 
         // really needed to sort here?
         putStringEntry(resourceDir + s"$name-jar-urls" + suffix, urls.mkString("\n"))
+        // One line per URL above, empty when no digest is known for it.
+        // Older launchers ignore this entry, and newer ones accept launchers without it.
+        if (urlEntries.exists(_.sha256.nonEmpty))
+          putStringEntry(
+            resourceDir + s"$name-jar-sha256" + suffix,
+            urlEntries.map(_.sha256.getOrElse("")).mkString("\n")
+          )
         putStringEntry(
           resourceDir + s"$name-jar-resources" + suffix,
           resources.mkString("\n")

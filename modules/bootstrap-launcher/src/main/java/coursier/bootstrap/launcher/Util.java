@@ -8,8 +8,11 @@ import java.nio.file.LinkOption;
 import java.nio.file.StandardOpenOption;
 import java.nio.charset.StandardCharsets;
 import java.security.CodeSource;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.security.ProtectionDomain;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 
@@ -106,6 +109,54 @@ class Util {
                 } catch (Exception ignored) {}
             }
         }
+    }
+
+    static MessageDigest sha256Digest() {
+        try {
+            return MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException ex) {
+            // every Java platform is required to support SHA-256
+            throw new RuntimeException(ex);
+        }
+    }
+
+    static String toHex(byte[] digest) {
+        StringBuilder builder = new StringBuilder(digest.length * 2);
+        for (byte b : digest)
+            builder.append(String.format("%02x", b & 0xff));
+        return builder.toString();
+    }
+
+    static String sha256(byte[] content) {
+        return toHex(sha256Digest().digest(content));
+    }
+
+    static String sha256(File file) throws IOException {
+        MessageDigest md = sha256Digest();
+        try (InputStream is = Files.newInputStream(file.toPath())) {
+            byte[] buf = new byte[16384];
+            int read = is.read(buf);
+            while (read >= 0) {
+                md.update(buf, 0, read);
+                read = is.read(buf);
+            }
+        }
+        return toHex(md.digest());
+    }
+
+    /**
+     * Checks that the actual SHA-256 of a class path JAR matches the one recorded in the launcher.
+     *
+     * @param expected hex-encoded SHA-256 recorded in the launcher, null or empty if unknown
+     */
+    static void checkSha256(String expected, String actual, String url, String location) throws IOException {
+        if (expected == null || expected.isEmpty())
+            return;
+        if (!expected.trim().toLowerCase(Locale.ROOT).equals(actual))
+            throw new IOException(
+                "SHA-256 mismatch for " + url + " (" + location + "): " +
+                    "expected " + expected.trim() + ", got " + actual + ". " +
+                    "The JAR differs from the one this launcher was generated with, refusing to use it.");
     }
 
 }
