@@ -407,7 +407,7 @@ object `test-compat` extends Module {
 trait TestCompat extends CsModule {
   def mvnDeps = super.mvnDeps() ++ Seq(Deps.utest)
 }
-trait TestCompatJvm extends TestCompat with CsCrossJvmModule {
+trait TestCompatJvm extends TestCompat with CsCrossJvmModule with LatestScala3Module {
   def sources = Task {
     val versionSources =
       if (scalaVersion().startsWith("3.")) `test-compat`.shared.sourcesScala3()
@@ -415,7 +415,7 @@ trait TestCompatJvm extends TestCompat with CsCrossJvmModule {
     super.sources() ++ versionSources
   }
 }
-trait TestCompatJs extends TestCompat with CsScalaJsModule {
+trait TestCompatJs extends TestCompat with CsScalaJsModule with LatestScala3Module {
   def sources = Task(super.sources() ++ `test-compat`.shared.sourcesScala3())
   def mvnDeps = super.mvnDeps() ++ Seq(Deps.dottyCpsAsync)
 }
@@ -539,7 +539,7 @@ trait CacheJvm extends CacheJvmBase with DataClassModule with Scala212SnapshotOn
   def customLoaderCp = Task {
     `custom-protocol-for-test`.runClasspath()
   }
-  object test extends CacheJvmBaseTests with CsTests with CrossJvmCiTests {
+  object test extends CacheJvmBaseTests with CsTests with CrossJvmCiTests with LatestScala3Module {
     def sources = Task {
       super.sources() ++ cache.shared.testSources()
     }
@@ -600,7 +600,7 @@ trait ArchiveCache extends ArchiveCacheBase with DataClassModule {
     // here only for the sake of bumping it, to work around JNI loading issues with earlier versions on macOS
     Deps.zstdJni
   )
-  object test extends CrossSbtTests with CsTests with CrossJvmCiTests {
+  object test extends CrossSbtTests with CsTests with CrossJvmCiTests with LatestScala3Module {
     // cache-server is only built for Scala 3, so its tests (RemoteArchiveCacheTests) only run there
     private def withCacheServer = crossValue.startsWith("3.")
     def allSourceFiles = Task {
@@ -700,7 +700,8 @@ trait CoursierJvm extends CoursierJvmBase with DataClassModule
     cache.jvm()
   )
   // Put CoursierTests right after TestModule, and see what happens
-  object test extends CrossSbtTests with CoursierTests with CsResourcesTests with CrossJvmCiTests {
+  object test extends CrossSbtTests with CoursierTests with CsResourcesTests with CrossJvmCiTests
+      with LatestScala3Module {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
@@ -720,7 +721,7 @@ trait CoursierJvm extends CoursierJvmBase with DataClassModule
       )
     }
   }
-  object it extends CrossSbtTests with CoursierTests with CrossJvmCiTests {
+  object it extends CrossSbtTests with CoursierTests with CrossJvmCiTests with LatestScala3Module {
     def sources = Task.Sources(
       os.sub / "src/it/scala",
       os.sub / "src/it/java"
@@ -750,6 +751,7 @@ trait CoursierJs extends Coursier with CsScalaJsModule with Scala3DataClassModul
     cache.js
   )
   object test extends SbtTests with ScalaJSTests with CsScalaJsTests with CsResourcesTests
+      with LatestScala3Module
       with CoursierTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
@@ -781,7 +783,8 @@ trait TestsJvm extends TestsModule with CsCrossJvmModule { self =>
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoup
   )
-  object test extends CrossSbtTests with CsTests with CsResourcesTests with CrossJvmCiTests {
+  object test extends CrossSbtTests with CsTests with CsResourcesTests with CrossJvmCiTests
+      with LatestScala3Module {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
@@ -804,7 +807,8 @@ trait TestsJvm extends TestsModule with CsCrossJvmModule { self =>
       )
     }
   }
-  object it extends CrossSbtTests with CsScalaTests with CsResourcesTests with CrossJvmCiTests {
+  object it extends CrossSbtTests with CsScalaTests with CsResourcesTests with CrossJvmCiTests
+      with LatestScala3Module {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
@@ -842,6 +846,7 @@ trait TestsJs extends TestsModule with CsScalaJsModule {
   )
   // testOptions := testOptions.dependsOn(runNpmInstallIfNeeded).value
   object test extends SbtTests with ScalaJSTests with CsScalaJsTests with CsTests
+      with LatestScala3Module
       with CsResourcesTests {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
@@ -866,7 +871,7 @@ trait ProxyTests extends CrossSbtModule with CsModule {
     Deps.dockerClient,
     Deps.slf4JNop
   )
-  object it extends CrossSbtTests with CsTests {
+  object it extends CrossSbtTests with CsTests with LatestScala3Module {
     def sources = Task.Sources(
       os.sub / "src/it/scala",
       os.sub / "src/it/java"
@@ -891,7 +896,8 @@ trait ScalazJvm extends Scalaz with CsCrossJvmModule with CsMima {
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.scalazConcurrent
   )
-  object test extends CrossSbtTests with CsTests with CsResourcesTests with CrossJvmCiTests {
+  object test extends CrossSbtTests with CsTests with CsResourcesTests with CrossJvmCiTests
+      with LatestScala3Module {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
@@ -919,7 +925,8 @@ trait CatsJvm extends Cats with CsCrossJvmModule with CsMima {
   def moduleDeps = Seq(
     cache.jvm()
   )
-  object test extends CrossSbtTests with CsTests with CsResourcesTests with CrossJvmCiTests {
+  object test extends CrossSbtTests with CsTests with CsResourcesTests with CrossJvmCiTests
+      with LatestScala3Module {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
@@ -1041,7 +1048,8 @@ trait Jvm extends CrossSbtModule with CsModule
   def mvnDeps = super.mvnDeps() ++ Seq(
     Deps.jsoniterCore(scalaVersion())
   )
-  object test extends CrossSbtTests with CsTests with CsResourcesTests with CrossJvmCiTests {
+  object test extends CrossSbtTests with CsTests with CsResourcesTests with CrossJvmCiTests
+      with LatestScala3Module {
     def testDataDir             = tests.shared.testDataDir
     def testHandmadeMetadataDir = tests.handmadeMetadata
     def testMetadataDir         = tests.metadata
@@ -1127,7 +1135,7 @@ trait Docker extends CrossSbtModule with CsModule with CoursierPublishModule wit
     val artifactId0  = artifactId()
     versions.map(version => mvn"$organization:$artifactId0:$version")
   }
-  object test extends CrossSbtTests with CsTests {
+  object test extends CrossSbtTests with CsTests with LatestScala3Module {
     def moduleDeps = super.moduleDeps ++ Seq(
       cache.jvm(ScalaVersions.scala3).test
     )

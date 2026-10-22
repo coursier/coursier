@@ -18,7 +18,7 @@ object Deps {
   def diffUtils    = mvn"io.github.java-diff-utils:java-diff-utils:4.18"
   def dockerClient = mvn"com.spotify:docker-client:8.16.0"
   // Backs `shimScalaAsync` below; used directly by the `async-compat` module, for Scala.js
-  def dottyCpsAsync     = mvn"io.github.dotty-cps-async::dotty-cps-async::1.3.4"
+  def dottyCpsAsync     = mvn"io.github.dotty-cps-async::dotty-cps-async::1.4.0"
   def fastParse         = mvn"com.lihaoyi::fastparse::3.1.1"
   def http4sBlazeServer = mvn"org.http4s::http4s-blaze-server:0.23.18"
   def http4sDsl         = mvn"org.http4s::http4s-dsl:${Versions.http4s}"
@@ -79,7 +79,9 @@ object Deps {
   def scodec                   = mvn"org.scodec::scodec-core:2.3.3"
   // Exposes dotty-cps-async's SIP-22 compatible interface as `scala.async.Async`, so that the
   // test sources' `import scala.async.Async.{async, await}` also works on Scala 3
-  def shimScalaAsync = mvn"io.github.dotty-cps-async::shim-scala-async:1.3.3"
+  // (1.4.0 and later are built with Scala 3.9: only the test modules, built with
+  // ScalaVersions.scala3Tests, can use them, see LatestScala3Module)
+  def shimScalaAsync = mvn"io.github.dotty-cps-async::shim-scala-async:1.4.0"
   // stick to slf4j 1.x here, so that the interface module can be used from
   // applications relying on either slf4j 1.x or 2.x. slf4j-api is the only
   // unshaded dependency of the published interface module, so the version
