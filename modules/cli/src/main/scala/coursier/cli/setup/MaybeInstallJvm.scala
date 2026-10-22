@@ -63,7 +63,7 @@ case class MaybeInstallJvm(
               confirm.confirm(msg, default = true)
                 .flatMap {
                   case false => Task.point(false)
-                  case true =>
+                  case true  =>
                     Task.delay {
                       // Former coursier versions added the bin directory of the JVM they set up
                       // to the PATH, so that those piled up there, and the JVM set up first kept
@@ -89,7 +89,7 @@ case class MaybeInstallJvm(
                 default = true
               ).flatMap {
                 case false => Task.point(false)
-                case true =>
+                case true  =>
                   Task.delay {
                     profileUpdater.applyUpdate(envUpdate, headerComment)
                   }
@@ -175,9 +175,9 @@ case class MaybeInstallJvm(
         val id = entryOpt.fold(defaultId)(_.id)
 
         for {
-          dirOpt <- jvmCache.getIfInstalled(id)
+          dirOpt      <- jvmCache.getIfInstalled(id)
           removedOpt0 <- dirOpt match {
-            case None => Task.point(Option(false))
+            case None      => Task.point(Option(false))
             case Some(dir) =>
               ???
           }

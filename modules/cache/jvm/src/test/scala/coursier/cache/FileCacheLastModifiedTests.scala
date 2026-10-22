@@ -31,7 +31,7 @@ object FileCacheLastModifiedTests extends TestSuite {
 
   private def check(lastModified: String): Unit = {
 
-    val log = new RequestLog
+    val log      = new RequestLog
     val response = {
       val ok = RawHttpServer.ok(body)
       ok.copy(headers = ok.headers :+ ("Last-Modified" -> lastModified))

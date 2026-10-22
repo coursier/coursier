@@ -26,8 +26,8 @@ object Update extends CoursierCommand[UpdateOptions] {
 
     val now = Instant.now()
 
-    val pool  = Sync.fixedThreadPool(params.cache.parallel)
-    val cache = params.cache.cache(pool, params.output.logger())
+    val pool                  = Sync.fixedThreadPool(params.cache.parallel)
+    val cache                 = params.cache.cache(pool, params.output.logger())
     val noUpdateCoursierCache =
       params.cache.cache(pool, params.output.logger(), overrideTtl = Some(Duration.Inf))
 
@@ -55,7 +55,7 @@ object Update extends CoursierCommand[UpdateOptions] {
     val tasks = names.map { name =>
       for {
         formerVersionOpt <- Task.delay(installDir.installedVersion(name))
-        updatedOpt <- installDir.maybeUpdate(
+        updatedOpt       <- installDir.maybeUpdate(
           name,
           source =>
             Channels(Seq(source.channel), params.selectedRepositories(source.repositories), cache)

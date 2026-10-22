@@ -207,7 +207,7 @@ package object compatibility {
   }
 
   private def newXmlReader = {
-    val saxParser = spf.newSAXParser()
+    val saxParser                                             = spf.newSAXParser()
     def trySetProperty(property: String, value: String): Unit =
       try saxParser.setProperty(property, value)
       catch {

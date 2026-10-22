@@ -56,7 +56,7 @@ import scala.util.matching.Regex
   validateChecksums: Boolean = false
 ) {
 
-  private lazy val isWin = platform.exists(_.endsWith("-pc-win32"))
+  private lazy val isWin        = platform.exists(_.endsWith("-pc-win32"))
   private lazy val auxExtension =
     if (isWin) ".exe"
     else ""
@@ -137,7 +137,7 @@ import scala.util.matching.Regex
     mainClass: String,
     baseJarPreamble: Preamble
   ): Parameters = {
-    val isStandalone = desc.launcherType != LauncherType.Bootstrap
+    val isStandalone     = desc.launcherType != LauncherType.Bootstrap
     val sharedContentOpt =
       if (appArtifacts.shared.isEmpty) None
       else {
@@ -221,7 +221,7 @@ import scala.util.matching.Regex
       case LauncherType.ScalaNative =>
         assert(appArtifacts.shared.isEmpty) // just in case
 
-        val fetch = simpleFetch(cache, coursierRepositories)
+        val fetch         = simpleFetch(cache, coursierRepositories)
         val nativeVersion = appArtifacts.platformSuffixOpt
           .fold("" /* FIXME throw instead? */ )(_.stripPrefix("_native"))
         // FIXME Allow options to be tweaked
@@ -466,7 +466,7 @@ import scala.util.matching.Regex
 
             pathDescriptorBytes <- update(source).flatMap {
               case Some(res) => Task.point(res)
-              case None =>
+              case None      =>
                 Task.fail(new Exception(s"${source.id} not found in ${source.channel.repr}"))
             }
             (path, descriptorBytes) = pathDescriptorBytes
@@ -474,7 +474,7 @@ import scala.util.matching.Regex
             desc <- Task.fromEither(InfoFile.appDescriptor(path, descriptorBytes))
 
             appInfo = {
-              val info = AppInfo(desc, descriptorBytes, source, sourceBytes)
+              val info      = AppInfo(desc, descriptorBytes, source, sourceBytes)
               val foundName = info.appDescriptor.nameOpt
                 .getOrElse(info.source.id)
               if (foundName == name)
@@ -661,7 +661,7 @@ object InstallDir {
     val mainDeps = desc.dependencies.headOption.toSeq ++
       desc.versionOverrides.flatMap(_.dependencies.toSeq.flatMap(_.headOption))
     val modules = mainDeps.map(_.module).distinct
-    val it = for {
+    val it      = for {
       mod <- modules.iterator
       (org, name, exactName) = mod match {
         case j: JavaOrScalaModule.JavaModule =>
@@ -686,8 +686,8 @@ object InstallDir {
     exactName: Boolean,
     url: String
   ): Option[String] = {
-    val orgParts = org.split('.').toVector
-    val parts    = url.split('/').toVector
+    val orgParts               = org.split('.').toVector
+    val parts                  = url.split('/').toVector
     def nameMatches(s: String) =
       s == name || (!exactName && s.startsWith(name + "_"))
     val it = parts.indices.iterator.filter { idx =>

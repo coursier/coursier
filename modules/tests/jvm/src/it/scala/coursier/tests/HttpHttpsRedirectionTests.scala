@@ -48,7 +48,7 @@ object HttpHttpsRedirectionTests extends TestSuite {
         sys.error("Server already running")
 
       val javaHome = new File(sys.props("java.home"))
-      val javaBin = new File(
+      val javaBin  = new File(
         new File(javaHome, "bin"),
         if (Properties.isWin) "java.exe" else "java"
       )
@@ -113,7 +113,7 @@ object HttpHttpsRedirectionTests extends TestSuite {
     test {
       // no redirections -> should fail
 
-      val repo = MavenRepository(testRepo)
+      val repo   = MavenRepository(testRepo)
       val failed =
         try {
           CacheFetchTests.check(

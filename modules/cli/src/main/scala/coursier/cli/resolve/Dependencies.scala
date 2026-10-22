@@ -78,7 +78,7 @@ object Dependencies {
     perModuleExclude: Map[Module, Set[Module]]
   ): Dependency =
     perModuleExclude.get(dep.module) match {
-      case None => dep
+      case None             => dep
       case Some(exclusions) =>
         dep.copy(
           minimizedExclusions = dep.minimizedExclusions.join(

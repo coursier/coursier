@@ -64,7 +64,7 @@ import dataclass.{data, since => unroll}
     */
   private def urlMatches(uri: URI): Boolean = {
     val (hostSchemeOpt, hostName, hostPortOpt) = DirectCredentials.parseHost(host)
-    val schemeOpt = Option(uri.getScheme).map(_.toLowerCase(Locale.ROOT))
+    val schemeOpt     = Option(uri.getScheme).map(_.toLowerCase(Locale.ROOT))
     val schemeMatches = hostSchemeOpt match {
       case Some(scheme) => schemeOpt.contains(scheme)
       case None         => schemeOpt.contains("https") || (schemeOpt.contains("http") && !httpsOnly)

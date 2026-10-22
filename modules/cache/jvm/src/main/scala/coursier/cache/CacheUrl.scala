@@ -69,7 +69,7 @@ object CacheUrl {
     if (classLoaders.isEmpty)
       Option(handlerClsCache.get(protocol)) match {
         case Some(handlerOpt) => handlerOpt
-        case None =>
+        case None             =>
           val handlerOpt = lookupHandler(protocol, classLoaders)
           val prevOpt    = Option(handlerClsCache.putIfAbsent(protocol, handlerOpt))
           prevOpt.getOrElse(handlerOpt)
@@ -422,7 +422,7 @@ object CacheUrl {
         val host   = Try(new URI(url)).toOption.flatMap(u => Option(u.getHost)).getOrElse("?")
         val realm  = realmOpt.fold("no realm in the response")(r => s"realm ${quoted(r)}")
         val isHttp = url.startsWith("http://")
-        val known = autoCredentials
+        val known  = autoCredentials
           .map { c =>
             // over HTTP, these can't match whatever their host, which is easy to miss now that
             // credentials are HTTPS-only by default

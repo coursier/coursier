@@ -85,7 +85,7 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
     extraContent: Map[String, Seq[ClassLoaderContent]]
   ): Unit = {
 
-    val content0 = ClassLoaderContent.withUniqueFileNames(content)
+    val content0      = ClassLoaderContent.withUniqueFileNames(content)
     val extraContent0 = extraContent.toVector.map {
       case (name, content) =>
         (name, ClassLoaderContent.withUniqueFileNames(content))
@@ -184,7 +184,7 @@ object BootstrapGenerator extends Generator[Parameters.Bootstrap] {
           case u: ClassPathEntry.Url =>
             u
         }
-        val urls = urlEntries.map(_.url)
+        val urls      = urlEntries.map(_.url)
         val resources = c.entries.collect {
           case r: ClassPathEntry.Resource =>
             r.fileName

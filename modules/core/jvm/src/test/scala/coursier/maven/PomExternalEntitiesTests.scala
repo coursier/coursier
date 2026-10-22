@@ -51,7 +51,7 @@ object PomExternalEntitiesTests extends TestSuite {
   private def check(doctype: String => String, description: String, mustParse: Boolean): Unit = {
     val ((saxRes, domRes), requests) = withServer { url =>
       val content = pom(doctype(url), description)
-      val saxRes =
+      val saxRes  =
         try MavenRepository.parseRawPomSax(content).map(_.info.description)
         catch {
           case e: org.xml.sax.SAXException => Left(e.toString)
@@ -103,7 +103,7 @@ object PomExternalEntitiesTests extends TestSuite {
         Files.write(dtd, """<!ENTITY leaked "LEAKED">""".getBytes(StandardCharsets.UTF_8))
         val ((saxRes, domRes), _) = withServer { _ =>
           val content = pom(s"""<!DOCTYPE project SYSTEM "${dtd.toUri}">""", "Foo &leaked;")
-          val saxRes =
+          val saxRes  =
             try MavenRepository.parseRawPomSax(content).map(_.info.description)
             catch {
               case e: org.xml.sax.SAXException => Left(e.toString)

@@ -25,7 +25,7 @@ trait Shading extends PublishModule {
     val bindDependency0 = bindDependency()
     val depToDependency = (d: Dep) => bindDependency0(d).dep
     val resolution      = millResolver().resolution(Seq(coursierDependencyTask()))
-    val types = Set(
+    val types           = Set(
       coursier.Type.jar,
       coursier.Type.testJar,
       coursier.Type.bundle,
@@ -35,7 +35,7 @@ trait Shading extends PublishModule {
     )
 
     def load(resolution: coursier.Resolution) = {
-      val artifacts = resolution.artifacts(types = types)
+      val artifacts       = resolution.artifacts(types = types)
       val loadedArtifacts = Gather[CsTask].gather(
         for (a <- artifacts)
           yield coursier.cache.Cache.default.file(a).run.map(a.optional -> _)
@@ -53,7 +53,7 @@ trait Shading extends PublishModule {
     val shadedDepSeq = shadedDependencies().iterator.map(depToDependency).toVector
 
     val allJars = load(resolution)
-    val subset =
+    val subset  =
       Task.sequence(moduleDepsChecked.map(_.coursierDependencyTask))() ++
         mvnDeps().map(depToDependency).toSeq.filterNot(shadedDepSeq.toSet)
     val subset0 = subset.map { dep =>
@@ -224,13 +224,13 @@ trait Shading extends PublishModule {
   }
 
   def onlyNamespaces(namespaces: Seq[String], jar: File): Unit = {
-    val allowedPrefixes = namespaces.map(_.replace('.', '/') + "/")
+    val allowedPrefixes  = namespaces.map(_.replace('.', '/') + "/")
     val extraAllowedDirs = namespaces.iterator
       .flatMap { ns =>
         ns.split('.').inits.filter(_.nonEmpty).map(_.map(_ + "/").mkString)
       }
       .toSet
-    val zf = new ZipFile(jar)
+    val zf           = new ZipFile(jar)
     val unrecognized = zf.entries()
       .asScala
       .map(_.getName)

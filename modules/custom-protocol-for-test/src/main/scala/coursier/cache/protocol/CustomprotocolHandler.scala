@@ -15,7 +15,7 @@ class CustomprotocolHandler extends URLStreamHandlerFactory {
   def createURLStreamHandler(protocol: String): URLStreamHandler = new URLStreamHandler {
     protected def openConnection(url0: URL): URLConnection =
       new URLConnection(url0) {
-        def connect(): Unit = ()
+        def connect(): Unit                        = ()
         override def getInputStream(): InputStream =
           Files.newInputStream(customProtocolBase.resolve(url0.getPath.stripPrefix("/")))
       }

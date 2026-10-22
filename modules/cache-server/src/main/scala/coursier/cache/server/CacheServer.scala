@@ -165,7 +165,7 @@ object CacheServer {
                   case Success((_, Some(url))) =>
                     forbidden(exchange, url)
                   case Success((request, None)) =>
-                    val promise = Promise[Unit]()
+                    val promise         = Promise[Unit]()
                     def attempt(): Unit = {
                       val f = promise.future
                       Option(onGoingGetRequests.putIfAbsent(request.artifact.url, f)) match {
