@@ -1,0 +1,84 @@
+name: Homebrew
+
+# Checks that the formula published in https://github.com/coursier/homebrew-formulas installs,
+# and that the launchers it installs work. That formula is generated from
+# .github/scripts/coursier.rb.template upon releases, see .github/scripts/UpdateBrewFormula.scala.
+on:
+  schedule:
+    # every other day
+    - cron: "0 5 */2 * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/homebrew.yml
+
+permissions:
+  contents: read
+
+jobs:
+  homebrew:
+    name: Homebrew formula (${{ matrix.OS }})
+    runs-on: ${{ matrix.OS }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # The formula installs a different native launcher on Intel and ARM
+        OS: ["macos-15", "macos-15-intel"]
+    env:
+      HOMEBREW_NO_ANALYTICS: "1"
+      HOMEBREW_NO_INSTALL_CLEANUP: "1"
+      # Formula name as documented in doc/docs/cli-installation.md. A bare "coursier" picks
+      # the homebrew-core formula (and its bottle) rather than the one of our tap.
+      FORMULA: coursier/formulas/coursier
+    steps:
+      - name: Install coursier
+        run: brew install "$FORMULA"
+      - name: Check the installed version
+        run: |
+          set -euo pipefail
+          brew info "$FORMULA"
+          expected="$(brew info --json=v2 "$FORMULA" | jq -r '.formulae[0].versions.stable')"
+          actual="$(cs version)"
+          echo "Formula version: $expected, cs version: $actual"
+          test "$actual" = "$expected"
+      - name: Check the installed files
+        run: |
+          set -euxo pipefail
+          prefix="$(brew --prefix)"
+          test "$(command -v cs)" = "$prefix/bin/cs"
+          test "$(command -v coursier)" = "$prefix/bin/coursier"
+          test -x "$prefix/bin/cs"
+          test -x "$prefix/bin/coursier"
+          file -L "$prefix/bin/cs"
+      - name: Check shell completions
+        run: |
+          set -euxo pipefail
+          prefix="$(brew --prefix)"
+          bash_completion="$prefix/etc/bash_completion.d/cs"
+          zsh_completion="$prefix/share/zsh/site-functions/_cs"
+          test -s "$bash_completion"
+          test -s "$zsh_completion"
+          # The completions should refer to "cs", not to its path in the Cellar
+          if grep -n Cellar "$bash_completion" "$zsh_completion"; then
+            echo "Completions refer to the Cellar" >&2
+            exit 1
+          fi
+          bash -n "$bash_completion"
+          zsh -n "$zsh_completion"
+      - name: Run the native launcher
+        run: |
+          set -euxo pipefail
+          cs --help
+          cs fetch io.get-coursier:echo:1.0.2
+          test "$(cs launch io.get-coursier:echo:1.0.2 -- foo)" = "foo"
+      - name: Run the JAR-based launcher
+        run: |
+          set -euxo pipefail
+          # The formula doesn't depend on a JVM, use one from cs
+          eval "$(cs java --jvm 21 --env)"
+          java -version
+          test "$(coursier version)" = "$(cs version)"
+          test "$(coursier launch io.get-coursier:echo:1.0.2 -- foo)" = "foo"
+      - name: Run the formula test
+        run: brew test "$FORMULA"
