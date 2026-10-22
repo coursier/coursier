@@ -31,11 +31,11 @@ jobs:
       run: |
         git config --global core.autocrlf false
         git config --global core.eol lf
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     - run: |
@@ -57,10 +57,10 @@ jobs:
       scala212: ${{ steps.versions.outputs.scala212 }}
       scala3: ${{ steps.versions.outputs.scala3 }}
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     - name: Get Scala versions from the build
@@ -99,11 +99,11 @@ jobs:
       run: |
         git config --global core.autocrlf false
         git config --global core.eol lf
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     - run: sudo apt-get install -y nailgun
@@ -153,7 +153,7 @@ jobs:
       env:
         SCALA_VERSION: ${{ matrix.SCALA_VERSION }}
         COURSIER_JNI: force
-    - uses: actions/upload-artifact@v7
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       if: steps.docker-tests.outcome == 'failure'
       continue-on-error: true
       with:
@@ -182,11 +182,11 @@ jobs:
     env:
       JAR_LAUNCHER_TESTS: cli-tests.jar-launcher-tests.testForked
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     - run: sudo apt-get install -y nailgun
@@ -212,14 +212,14 @@ jobs:
       run: |
         git config --global core.autocrlf false
         git config --global core.eol lf
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: actions/setup-node@v7
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: '18'
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     - run: npm install --ignore-scripts
@@ -243,11 +243,11 @@ jobs:
       matrix:
         SCALA_VERSION: ${{ fromJSON(needs.scala-versions.outputs.scala-versions) }}
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     # `interface` is built with Scala 2.13 only, its tests run in the Scala 2.13 job
@@ -277,11 +277,11 @@ jobs:
     runs-on: ubuntu-latest
     name: Binary compatibility
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     - run: ./mill -i -k __.mimaReportBinaryIssues
@@ -295,14 +295,14 @@ jobs:
       run: |
         git config --global core.autocrlf false
         git config --global core.eol lf
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: actions/setup-node@v7
+    - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
         node-version: '18'
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     - run: ./mill -i docs.mdoc
@@ -319,14 +319,14 @@ jobs:
   format:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
-    - uses: coursier/setup-action@v3
+    - uses: coursier/setup-action@648df969f41ef15fda2baba8b37f9fa3d16390a3 # v3.0.4
     - run: cs launch scalafmt -- --check
 
   scalafix:
@@ -334,11 +334,11 @@ jobs:
     name: Scalafix
     timeout-minutes: 30
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     - run: ./mill -i __.fix --check
@@ -362,11 +362,11 @@ jobs:
       run: |
         git config --global core.autocrlf false
         git config --global core.eol lf
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     - run: ./mill -i csShTests
@@ -431,11 +431,11 @@ jobs:
           - OS: "ubuntu-24.04-arm"
             OSSHORT: "linux-arm"
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8
+      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
         with:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
@@ -462,11 +462,11 @@ jobs:
         if: steps.selective.outputs.affected != 'false'
         run: .github/scripts/generate-os-packages.sh
         shell: bash
-      - uses: actions/attest-build-provenance@v4
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: steps.selective.outputs.affected != 'false'
         with:
           name: launchers-${{ matrix.OSSHORT }}
@@ -483,11 +483,11 @@ jobs:
       id-token: write
       attestations: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8
+      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
         with:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
@@ -512,11 +512,11 @@ jobs:
         if: steps.selective.outputs.affected != 'false'
         run: .github/scripts/maybe-with-graalvm-home.sh copyCompatLauncher --directory artifacts/
         shell: bash
-      - uses: actions/attest-build-provenance@v4
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: steps.selective.outputs.affected != 'false'
         with:
           name: launchers-linux-compat
@@ -541,11 +541,11 @@ jobs:
           - OS: "ubuntu-24.04-arm"
             OSSHORT: "linux-arm"
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8
+      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
         with:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
@@ -567,11 +567,11 @@ jobs:
         if: steps.selective.outputs.affected != 'false'
         run: .github/scripts/maybe-with-graalvm-home.sh copyStaticLauncher --directory artifacts/
         shell: bash
-      - uses: actions/attest-build-provenance@v4
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: steps.selective.outputs.affected != 'false'
         with:
           name: launchers-${{ matrix.OSSHORT }}-static
@@ -596,11 +596,11 @@ jobs:
           - OS: "ubuntu-24.04-arm"
             OSSHORT: "linux-arm"
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8
+      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
         with:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
@@ -622,11 +622,11 @@ jobs:
         if: steps.selective.outputs.affected != 'false'
         run: .github/scripts/maybe-with-graalvm-home.sh copyContainerLauncher --directory artifacts/
         shell: bash
-      - uses: actions/attest-build-provenance@v4
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: steps.selective.outputs.affected != 'false'
         with:
           name: launchers-${{ matrix.OSSHORT }}-container
@@ -652,11 +652,11 @@ jobs:
         #   - OS: "windows-11-arm"
         #     OSSHORT: "windows-arm"
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8
+      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
         with:
           disableFallback: true
       - run: sudo apt-get install -y nailgun
@@ -665,11 +665,11 @@ jobs:
         timeout-minutes: 35
       - name: Copy artifacts
         run: ./mill -i copyStandaloneJvmLauncher --directory artifacts/
-      - uses: actions/attest-build-provenance@v4
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: launchers-${{ matrix.OSSHORT }}-standalone
           path: artifacts/
@@ -685,12 +685,12 @@ jobs:
       id-token: write
       attestations: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v8
-      - uses: actions/setup-java@v6
+      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -698,11 +698,11 @@ jobs:
         timeout-minutes: 35
       - name: Copy artifacts
         run: ./mill -i copyStandaloneJvmLauncher --directory artifacts/
-      - uses: actions/attest-build-provenance@v4
+      - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         if: startsWith(github.ref, 'refs/tags/v')
         with:
           subject-path: 'artifacts/*'
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: launchers-windows-arm-standalone
           path: artifacts/
@@ -726,21 +726,21 @@ jobs:
       attestations: write
     timeout-minutes: 45
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     - name: Wait for sync to Central
       run: ./mill -i waitForSync
     - name: Copy artifacts
       run: ./mill -i copyJarLaunchers
-    - uses: actions/attest-build-provenance@v4
+    - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
       with:
         subject-path: 'artifacts/*'
-    - uses: actions/upload-artifact@v7
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: launchers-jar
         path: artifacts/
@@ -756,18 +756,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     - name: Wait for sync to Central
       run: ./mill -i waitForSync
     - name: Copy artifacts
       run: ./mill -i copyJarLaunchers
-    - uses: actions/upload-artifact@v7
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: launchers-jar
         path: artifacts/
@@ -786,21 +786,21 @@ jobs:
       attestations: write
     timeout-minutes: 45
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     - name: Wait for sync to Central
       run: ./mill -i waitForSync
     - name: Copy artifacts
       run: ./mill -i copyBatLauncher
-    - uses: actions/attest-build-provenance@v4
+    - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
       with:
         subject-path: 'artifacts/*'
-    - uses: actions/upload-artifact@v7
+    - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       with:
         name: launchers-bat
         path: artifacts/
@@ -823,66 +823,66 @@ jobs:
     # for GH_TOKEN
     environment: release
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux-compat
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux-arm
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-windows
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-mac
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-mac-arm
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux-static
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux-arm-static
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux-container
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux-arm-container
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux-standalone
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-windows-arm-standalone
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-jar
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-bat
         path: artifacts/
@@ -921,11 +921,11 @@ jobs:
     # for GH_TOKEN
     environment: release
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     - name: Open a PR bumping CS_VERSION in cs.sh
@@ -942,11 +942,11 @@ jobs:
     # for GH_TOKEN
     environment: release
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
     - name: Open a PR bumping csDocker in mill-build/src/coursierbuild/Versions.scala
@@ -1010,14 +1010,14 @@ jobs:
     # for GH_TOKEN
     environment: release
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         pattern: launchers-*
         path: artifacts/
@@ -1039,54 +1039,54 @@ jobs:
     # for GH_TOKEN
     environment: release
     steps:
-    - uses: actions/checkout@v7
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v8
+    - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
       with:
         disableFallback: true
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux-compat
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux-arm
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-windows
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-mac
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-mac-arm
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux-static
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux-arm-static
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux-container
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-linux-arm-container
         path: artifacts/
-    - uses: actions/download-artifact@v8
+    - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
       with:
         name: launchers-jar
         path: artifacts/
@@ -1103,14 +1103,14 @@ jobs:
     # for GH_TOKEN
     environment: release
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/setup-action@v3
+      - uses: coursier/setup-action@648df969f41ef15fda2baba8b37f9fa3d16390a3 # v3.0.4
         with:
           apps: scala-cli
-      - uses: coursier/cache-action@v8
+      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
         with:
           disableFallback: true
       - run: scala-cli run --server=false .github/scripts/UpdateBrewFormula.scala
@@ -1124,14 +1124,14 @@ jobs:
     # for GH_TOKEN
     environment: release
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           submodules: true
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '18'
-      - uses: coursier/cache-action@v8
+      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
         with:
           disableFallback: true
       - run: .github/scripts/setup-mkdocs.sh
@@ -1152,14 +1152,14 @@ jobs:
     # for GH_TOKEN
     environment: release
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           submodules: true
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '18'
-      - uses: coursier/cache-action@v8
+      - uses: coursier/cache-action@95e5b1029b6b86e7bac033ee44a0697d8a527d2d # v8.1.1
         with:
           disableFallback: true
       - run: .github/scripts/setup-mkdocs.sh
