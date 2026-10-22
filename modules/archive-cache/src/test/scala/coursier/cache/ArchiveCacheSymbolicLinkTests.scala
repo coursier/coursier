@@ -134,7 +134,8 @@ object ArchiveCacheSymbolicLinkTests extends TestSuite {
                 throw new Exception(s"Expected extraction to fail, got $other")
             }
             val tmp = os.Path(CachePath.temporaryFile(setup.extractionDir.toIO))
-            assert(os.list(tmp).isEmpty)
+            // the partial extraction is removed on failure
+            assert(!os.exists(tmp))
             setup.checkVictim()
           }
         }

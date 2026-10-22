@@ -22,6 +22,7 @@ import java.security.MessageDigest
 
 import scala.jdk.CollectionConverters._
 import scala.util.{Failure, Success, Try, Using}
+import scala.util.control.NonFatal
 
 @data(
   deprecatedSetters = true,
@@ -195,7 +196,17 @@ import scala.util.{Failure, Success, Try, Using}
               val tmp = CachePath.temporaryFile(dir)
               ArchiveCache.deleteRecursive(tmp)
               Files.createDirectories(tmp.toPath)
-              unArchiver.extract(archiveType0, f, tmp, overwrite = false)
+              try unArchiver.extract(archiveType0, f, tmp, overwrite = false)
+              catch {
+                case NonFatal(e) =>
+                  // don't leave a partial extraction behind, that can be huge (archive bombs…)
+                  try ArchiveCache.deleteRecursive(tmp)
+                  catch {
+                    case NonFatal(e0) =>
+                      e.addSuppressed(e0)
+                  }
+                  throw e
+              }
               val lastModifiedTime = Files.getLastModifiedTime(f.toPath)
               Files.setLastModifiedTime(tmp.toPath, lastModifiedTime)
               def moveToDest(): Unit =

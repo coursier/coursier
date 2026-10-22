@@ -10,6 +10,8 @@ object CoursierProperties {
     */
   def list = Seq(
     "coursier.archive.cache",
+    "coursier.archive.max-entries",
+    "coursier.archive.max-size",
     "coursier.cache",
     "coursier.cache.server",
     "coursier.cache.server.password",

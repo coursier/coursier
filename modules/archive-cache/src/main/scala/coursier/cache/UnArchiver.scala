@@ -15,14 +15,23 @@ import org.codehaus.plexus.archiver.zip.ZipUnArchiver
 import org.codehaus.plexus.components.io.filemappers.FileMapper
 import org.codehaus.plexus.components.io.resources.PlexusIoResource
 
-import java.io.{BufferedInputStream, File, IOException, InputStream, OutputStream}
+import java.io.{
+  BufferedInputStream,
+  File,
+  FilterInputStream,
+  IOException,
+  InputStream,
+  OutputStream
+}
 import java.nio.file.{Files, Path, Paths}
 import java.util.Date
 import java.util.zip.GZIPInputStream
 
 import scala.collection.mutable
 import scala.jdk.CollectionConverters._
-import scala.util.Using
+import scala.util.{Try, Using}
+
+import coursier.util.EnvEntry
 
 trait UnArchiver {
   def extract(archiveType: ArchiveType, archive: File, destDir: File, overwrite: Boolean): Unit
@@ -33,7 +42,11 @@ object UnArchiver {
     def inputStream(archiveType: ArchiveType.Compressed, is: InputStream): InputStream
   }
 
-  private final class DefaultUnArchiver extends UnArchiver with OpenStream {
+  private final class DefaultUnArchiver(maxSize: Long, maxEntries: Long) extends UnArchiver
+      with OpenStream {
+
+    // for binary compatibility
+    def this() = this(defaultMaxSize, defaultMaxEntries)
 
     def extractCompressed(
       archiveType: ArchiveType.Compressed,
@@ -50,14 +63,17 @@ object UnArchiver {
             var fos: OutputStream     = null
             var gzis: GZIPInputStream = null
             try {
+              val limits = new ExtractionLimits(archive, maxSize, maxEntries)
+              limits.newEntry()
               fis = Files.newInputStream(archive.toPath)
               gzis = new GZIPInputStream(fis)
+              val is = limits.limit(gzis)
               fos = Files.newOutputStream(dest.toPath)
 
               val buf  = Array.ofDim[Byte](16 * 1024)
               var read = -1
               while ({
-                read = gzis.read(buf)
+                read = is.read(buf)
                 read >= 0
               })
                 if (read > 0)
@@ -79,14 +95,17 @@ object UnArchiver {
             var fos: OutputStream            = null
             var xis: XZCompressorInputStream = null
             try {
+              val limits = new ExtractionLimits(archive, maxSize, maxEntries)
+              limits.newEntry()
               fis = Files.newInputStream(archive.toPath)
               xis = new XZCompressorInputStream(fis)
+              val is = limits.limit(xis)
               fos = Files.newOutputStream(dest.toPath)
 
               val buf  = Array.ofDim[Byte](16 * 1024)
               var read = -1
               while ({
-                read = xis.read(buf)
+                read = is.read(buf)
                 read >= 0
               })
                 if (read > 0)
@@ -108,15 +127,22 @@ object UnArchiver {
       overwrite: Boolean
     ): Unit = {
       lazy val linkChecker = new SymbolicLinkChecker(destDir.toPath)
+      lazy val limits0     = new ExtractionLimits(archive, maxSize, maxEntries)
       val unArchiver: Either[() => Unit, org.codehaus.plexus.archiver.UnArchiver] =
         archiveType match {
           case c: ArchiveType.Compressed =>
             Left(extractCompressed(c, archive, destDir))
           case ArchiveType.Zip =>
-            Right(new ZipUnArchiver with CheckSymbolicLinks { def checker = linkChecker })
+            Right {
+              new ZipUnArchiver with CheckSymbolicLinks with LimitExtraction {
+                def checker = linkChecker
+                def limits  = limits0
+              }
+            }
           case ArchiveType.Ar =>
             val unArc: org.codehaus.plexus.archiver.UnArchiver =
-              new org.codehaus.plexus.archiver.AbstractUnArchiver {
+              new org.codehaus.plexus.archiver.AbstractUnArchiver with LimitExtraction {
+                def limits = limits0
                 def fileInfo(entry: ArArchiveEntry): PlexusIoResource =
                   new PlexusIoResource {
                     def getName         = entry.getName
@@ -174,15 +200,40 @@ object UnArchiver {
               }
             Right(unArc)
           case ArchiveType.Tar =>
-            Right(new TarUnArchiver with CheckSymbolicLinks { def checker = linkChecker })
+            Right {
+              new TarUnArchiver with CheckSymbolicLinks with LimitExtraction {
+                def checker = linkChecker
+                def limits  = limits0
+              }
+            }
           case ArchiveType.Tgz =>
-            Right(new TarGZipUnArchiver with CheckSymbolicLinks { def checker = linkChecker })
+            Right {
+              new TarGZipUnArchiver with CheckSymbolicLinks with LimitExtraction {
+                def checker = linkChecker
+                def limits  = limits0
+              }
+            }
           case ArchiveType.Tbz2 =>
-            Right(new TarBZip2UnArchiver with CheckSymbolicLinks { def checker = linkChecker })
+            Right {
+              new TarBZip2UnArchiver with CheckSymbolicLinks with LimitExtraction {
+                def checker = linkChecker
+                def limits  = limits0
+              }
+            }
           case ArchiveType.Txz =>
-            Right(new TarXZUnArchiver with CheckSymbolicLinks { def checker = linkChecker })
+            Right {
+              new TarXZUnArchiver with CheckSymbolicLinks with LimitExtraction {
+                def checker = linkChecker
+                def limits  = limits0
+              }
+            }
           case ArchiveType.Tzst =>
-            Right(new TarZstdUnArchiver with CheckSymbolicLinks { def checker = linkChecker })
+            Right {
+              new TarZstdUnArchiver with CheckSymbolicLinks with LimitExtraction {
+                def checker = linkChecker
+                def limits  = limits0
+              }
+            }
         }
 
       Files.createDirectories(destDir.toPath)
@@ -206,7 +257,15 @@ object UnArchiver {
       }
   }
 
+  /** Extracts archives with plexus-archiver and commons-compress, apart from tar archives, that are
+    * extracted by running the `tar` command (with sudo if `useSudo` is true)
+    *
+    * The extraction limits of [[default]] don't apply to archives extracted with `tar`.
+    */
   private final class SudoAbleUnArchiver(useSudo: Boolean) extends UnArchiver with OpenStream {
+    private def defaultUnArchiver(): DefaultUnArchiver =
+      new DefaultUnArchiver(defaultMaxSize, defaultMaxEntries)
+
     def extract(
       archiveType: ArchiveType,
       archive: File,
@@ -216,7 +275,7 @@ object UnArchiver {
       archiveType match {
         case compressed: ArchiveType.Compressed =>
           // single file to decompress
-          val proceed = new DefaultUnArchiver().extractCompressed(compressed, archive, destDir)
+          val proceed = defaultUnArchiver().extractCompressed(compressed, archive, destDir)
           Files.createDirectories(destDir.toPath)
           proceed()
         case tar: ArchiveType.Tar =>
@@ -240,11 +299,88 @@ object UnArchiver {
           if (retCode != 0)
             sys.error(s"Error extracting $archive under $destDir (see tar command messages above)")
         case other =>
-          new DefaultUnArchiver().extract(archiveType, archive, destDir, overwrite)
+          defaultUnArchiver().extract(archiveType, archive, destDir, overwrite)
       }
 
     def inputStream(archiveType: ArchiveType.Compressed, is: InputStream): InputStream =
-      new DefaultUnArchiver().inputStream(archiveType, is)
+      defaultUnArchiver().inputStream(archiveType, is)
+  }
+
+  /** Limits on the total size and number of entries written when extracting an archive
+    *
+    * Guards against archive bombs, small archives that expand to huge sizes or numbers of files.
+    * Limits that are zero or negative are ignored.
+    */
+  private final class ExtractionLimits(archive: File, maxSize: Long, maxEntries: Long) {
+    private var size    = 0L
+    private var entries = 0L
+
+    private def fail(what: String, limit: Long, entry: EnvEntry): Nothing =
+      throw new ExtractionLimitException(
+        s"Extracting $archive exceeds the maximum $what ($limit). " +
+          s"Set ${entry.envName} in the environment, or the ${entry.propName} Java property, " +
+          "to change that limit (0 to disable it)."
+      )
+
+    /** To be called before each entry is extracted */
+    def newEntry(): Unit = {
+      entries += 1
+      if (maxEntries > 0 && entries > maxEntries)
+        fail("number of entries", maxEntries, maxEntriesEntry)
+    }
+
+    /** Wraps a stream of extracted content, so that it fails if the size limit is exceeded */
+    def limit(is: InputStream): InputStream =
+      new FilterInputStream(is) {
+        private def count(read: Long): Unit =
+          if (read > 0) {
+            size += read
+            if (maxSize > 0 && size > maxSize)
+              fail("extracted size", maxSize, maxSizeEntry)
+          }
+        override def read(): Int = {
+          val b = super.read()
+          if (b >= 0) count(1L)
+          b
+        }
+        override def read(b: Array[Byte], off: Int, len: Int): Int = {
+          val read = super.read(b, off, len)
+          count(read)
+          read
+        }
+      }
+  }
+
+  /** Thrown when extracting an archive exceeds the limits of [[UnArchiver.default]] */
+  final class ExtractionLimitException(message: String) extends ArchiverException(message)
+
+  /** Mixed into plexus unarchivers, to enforce extraction limits */
+  private trait LimitExtraction extends AbstractUnArchiver {
+    def limits: ExtractionLimits
+    override protected def extractFile(
+      srcF: File,
+      dir: File,
+      compressedInputStream: InputStream,
+      entryName: String,
+      entryDate: Date,
+      isDirectory: Boolean,
+      mode: Integer,
+      symlinkDestination: String,
+      fileMappers: Array[FileMapper]
+    ): Unit = {
+      limits.newEntry()
+      super.extractFile(
+        srcF,
+        dir,
+        if (compressedInputStream == null) null else limits.limit(compressedInputStream),
+        entryName,
+        entryDate,
+        isDirectory,
+        mode,
+        symlinkDestination,
+        fileMappers
+      )
+    }
   }
 
   /** Mixed into plexus unarchivers, to check the symbolic links they extract
@@ -370,8 +506,73 @@ object UnArchiver {
       }
   }
 
+  private def maxSizeEntry =
+    EnvEntry("COURSIER_ARCHIVE_MAX_SIZE", "coursier.archive.max-size")
+  private def maxEntriesEntry =
+    EnvEntry("COURSIER_ARCHIVE_MAX_ENTRIES", "coursier.archive.max-entries")
+
+  /** Default maximum size of the content extracted from an archive, in bytes (8 GiB)
+    *
+    * JDK or GraalVM archives are several hundreds of MB once extracted, so that leaves a lot of
+    * room, while preventing archive bombs from filling the disk.
+    */
+  def defaultMaxSizeFallback: Long = 8L * 1024L * 1024L * 1024L
+
+  /** Default maximum number of entries extracted from an archive */
+  def defaultMaxEntriesFallback: Long = 1000000L
+
+  // accepts a number of bytes, optionally followed by a K, M, G, or T suffix (powers of 1024)
+  private def parseSize(input: String): Option[Long] = {
+    val s = input.trim
+    val (num, factor) = s.lastOption.map(_.toUpper) match {
+      case Some('K') => (s.init, 1024L)
+      case Some('M') => (s.init, 1024L * 1024L)
+      case Some('G') => (s.init, 1024L * 1024L * 1024L)
+      case Some('T') => (s.init, 1024L * 1024L * 1024L * 1024L)
+      case _         => (s, 1L)
+    }
+    Try(Math.multiplyExact(num.trim.toLong, factor)).toOption
+  }
+
+  private def readLimit(entry: EnvEntry, fallback: Long): Long = {
+    val values = entry.read()
+    values.env.map(v => (v, s"environment variable ${entry.envName}"))
+      .orElse(values.prop.map(v => (v, s"Java property ${entry.propName}")))
+      .fold(fallback) {
+        case (value, from) =>
+          parseSize(value).getOrElse {
+            throw new IllegalArgumentException(s"Invalid value '$value' for $from")
+          }
+      }
+  }
+
+  /** Maximum size of the content extracted from an archive by [[default]], in bytes
+    *
+    * Can be set via the `COURSIER_ARCHIVE_MAX_SIZE` environment variable or the
+    * `coursier.archive.max-size` Java property, as a number of bytes, optionally followed by K, M,
+    * G, or T (like `32G`). 0 disables the limit.
+    */
+  def defaultMaxSize: Long =
+    readLimit(maxSizeEntry, defaultMaxSizeFallback)
+
+  /** Maximum number of entries extracted from an archive by [[default]]
+    *
+    * Can be set via the `COURSIER_ARCHIVE_MAX_ENTRIES` environment variable or the
+    * `coursier.archive.max-entries` Java property. 0 disables the limit.
+    */
+  def defaultMaxEntries: Long =
+    readLimit(maxEntriesEntry, defaultMaxEntriesFallback)
+
   def default(): UnArchiver with OpenStream =
-    new DefaultUnArchiver
+    new DefaultUnArchiver(defaultMaxSize, defaultMaxEntries)
+
+  /** An [[UnArchiver]] failing with [[ExtractionLimitException]] if an archive has more than
+    * `maxEntries` entries, or more than `maxSize` bytes of content once extracted
+    *
+    * Zero or negative values disable the corresponding limit.
+    */
+  def default(maxSize: Long, maxEntries: Long): UnArchiver with OpenStream =
+    new DefaultUnArchiver(maxSize, maxEntries)
   def priviledged(): UnArchiver =
     new SudoAbleUnArchiver(true)
   def priviledgedTestMode(): UnArchiver =
