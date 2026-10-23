@@ -102,6 +102,9 @@ object Deps {
   def windowsAnsi      = mvn"io.github.alexarchambault.windows-ansi:windows-ansi:0.0.6"
   def windowsAnsiPs =
     mvn"io.github.alexarchambault.windows-ansi:windows-ansi-ps:${windowsAnsi.version}"
+  // plexus-archiver pulls it with the runtime scope, so only at run time: tests creating xz
+  // archives need it at compile time, keep the version in sync with plexus-archiver's
+  def xz = mvn"org.tukaani:xz:1.12"
   def zstdJni = mvn"com.github.luben:zstd-jni:1.5.7-24"
 
   /** The async/await implementation the test sources are written against.
