@@ -288,6 +288,38 @@ when generating the bootstrap, like
 $ cs bootstrap scalafmt:2.0.5-SNAPSHOT -o scalafmt --embed-files=false
 ```
 
+### Checksums
+
+By default, [standard bootstraps](#bootstraps) use the files they find in the coursier cache
+for the URLs they list, or download, as is. If someone can tamper with these downloads (a
+compromised repository, or one accessed via plain HTTP) or with the coursier cache, the
+launcher runs code it wasn't generated with. To protect against that, pass
+`--validate-checksums` when generating the launcher:
+```bash
+$ cs bootstrap scalafmt -o scalafmt --validate-checksums
+```
+The launcher then also records the SHA-256 of each JAR it lists, in
+`coursier/bootstrap/launcher/bootstrap-jar-sha256` (one line per URL in
+`coursier/bootstrap/launcher/bootstrap-jar-urls`):
+```bash
+$ unzip -c scalafmt coursier/bootstrap/launcher/bootstrap-jar-sha256
+f2b3a6e5…
+1c4a96d8…
+…
+```
+When it starts, the launcher checks each JAR against its SHA-256, whether the JAR is
+already in the cache or was just downloaded. It refuses to start on a mismatch:
+```text
+$ ./scalafmt --version
+Error while checking https://repo1.maven.org/maven2/…/scalafmt-cli_2.13-2.4.2.jar: SHA-256 mismatch for … (…): expected …, got …. The JAR differs from the one this launcher was generated with, refusing to use it.
+```
+A JAR that fails the check is never put in the cache.
+
+No checksum is recorded for changing artifacts (snapshots), whose content is expected
+to change, nor for `file:` URLs, which the launcher reads in place. [Standalone bootstraps](#standalone-bootstraps),
+[assemblies](#assemblies), and the [local JARs embedded in standard bootstraps](#local-artifacts)
+don't download anything, so this option doesn't change them.
+
 ### Preamble
 
 If you wish [standard bootstraps](#bootstraps), [standalone bootstraps](#standalone-bootstraps),
