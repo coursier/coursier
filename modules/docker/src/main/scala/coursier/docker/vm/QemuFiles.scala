@@ -81,7 +81,7 @@ object QemuFiles {
             val packageName = "qemu-efi-aarch64"
             val detailsFromIndexOpt = Using.resource(os.read.inputStream(debIndexFile)) { is =>
               val reader = new BufferedReader(new InputStreamReader(
-                new GZIPInputStream(is),
+                new GZIPInputStream(is, 64 * 1024),
                 StandardCharsets.UTF_8
               ))
               val it = reader.lines().iterator().asScala

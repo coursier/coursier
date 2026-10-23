@@ -42,7 +42,7 @@ private[coursier] object ArchiveIntegrity {
       try {
         fis = Files.newInputStream(file.toPath)
         try {
-          readAndDiscard(new GZIPInputStream(fis))
+          readAndDiscard(new GZIPInputStream(fis, 64 * 1024))
           Some(true)
         }
         catch {

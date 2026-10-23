@@ -115,8 +115,8 @@ object ArchiveUtil {
     try {
       fis = Files.newInputStream(file.toPath)
       is = archiveType match {
-        case ArchiveType.Gzip => new GZIPInputStream(fis)
-        case ArchiveType.Xz   => new XZCompressorInputStream(fis)
+        case ArchiveType.Gzip => new GZIPInputStream(fis, 64 * 1024)
+        case ArchiveType.Xz => new XZCompressorInputStream(new BufferedInputStream(fis, 64 * 1024))
       }
       f(is)
     }

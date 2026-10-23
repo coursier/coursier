@@ -66,7 +66,7 @@ object UnArchiver {
               val limits = new ExtractionLimits(archive, maxSize, maxEntries)
               limits.newEntry()
               fis = Files.newInputStream(archive.toPath)
-              gzis = new GZIPInputStream(fis)
+              gzis = new GZIPInputStream(fis, 64 * 1024)
               val is = limits.limit(gzis)
               fos = Files.newOutputStream(dest.toPath)
 
@@ -98,7 +98,7 @@ object UnArchiver {
               val limits = new ExtractionLimits(archive, maxSize, maxEntries)
               limits.newEntry()
               fis = Files.newInputStream(archive.toPath)
-              xis = new XZCompressorInputStream(fis)
+              xis = new XZCompressorInputStream(new BufferedInputStream(fis, 64 * 1024))
               val is = limits.limit(xis)
               fos = Files.newOutputStream(dest.toPath)
 
