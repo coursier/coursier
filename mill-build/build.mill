@@ -7,7 +7,7 @@ object `package` extends MillBuildRootModule {
     mvn"com.github.lolgab:mill-mima_mill1_3:0.2.2",
     mvn"com.goyeau:mill-scalafix_mill1_3:0.6.2",
     mvn"io.get-coursier.util:get-cs_2.13:0.1.1",
-    mvn"com.softwaremill.sttp.client4::core:4.0.9",
+    mvn"com.softwaremill.sttp.client4::core:4.1.0",
     mvn"io.get-coursier:coursier-launcher_2.13:2.1.25-M13",
     mvn"org.jsoup:jsoup:1.23.2",
     mvn"com.eed3si9n.jarjarabrams:jarjar-abrams-core_2.13:1.14.1",
