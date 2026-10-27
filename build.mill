@@ -1,5 +1,6 @@
 //| mill-version: 1.3.0
 //| mill-jvm-version: 21
+//| mill-jvm-opts: ["-Xmx4g"]
 //| bspScriptIgnore: ["*"]
 
 import com.github.lolgab.mill.mima.{
